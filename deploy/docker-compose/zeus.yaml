@@ -1,0 +1,39 @@
+version: '3.3'
+services:
+  zeus-ui:
+    image: ${zeus_repository}zeus-ui:${zeus_version}
+    restart: always
+    ports:
+    - 30088:30088
+    links:
+    - zeus
+    depends_on:
+    - zeus 
+    volumes:
+    - $PWD/conf/zeus-ui/nginx.conf:/etc/nginx/nginx.conf
+
+  zeus:
+    image: ${zeus_repository}zeus:${zeus_version}
+    restart: always
+    environment:
+    - JAVA_OPTS=-Xmx1024m -Xms1024m -Dspring.config.location=/cfg/application.yml
+    links:
+    - zeus-mysql
+    ports:
+    - 30089:8080
+    depends_on:
+    - zeus-mysql
+    volumes:
+    - $PWD/conf/zeus/application-prd.yml:/cfg/application.yml
+    - /data/zeus/helm:/usr/local/zeus-pv/helm
+
+  zeus-mysql:
+    image: ${zeus_repository}zeus-mysql:v1.0.0
+    restart: always
+    environment:
+    - MYSQL_ROOT_PASSWORD=ZeuS@Middleware01
+    ports:
+    - 3306:3306
+    volumes:
+    - /data/zeus-mysql/data:/var/lib/mysql
+    - $PWD/conf/mysql/init:/docker-entrypoint-initdb.d/

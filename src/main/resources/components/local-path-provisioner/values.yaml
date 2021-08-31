@@ -1,0 +1,33 @@
+image:
+  repository: harmonyware.harbor.cn/library/local-path-provisioner
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "v0.0.19"
+
+helperImage:
+  repository:  harmonyware.harbor.cn/library/busybox
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "1.0"
+
+storage:
+  default: true
+  storageClassName: local-path
+  path: /opt/local-path-provisioner
+
+nameOverride: ""
+fullnameOverride: ""
+
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

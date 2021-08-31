@@ -1,0 +1,12 @@
+name: ingress-nginx
+version: 1.0.0-2
+provider: harmonycloud.cn
+description: "Harmonycloud Ingress Nginx"
+serviceInstances:
+- ingress-nginx
+changes:
+  ## [1.0.0-2] - 2021-04-16
+  ### Changed
+  - 修复与ADP lvscare 冲突问题
+
+

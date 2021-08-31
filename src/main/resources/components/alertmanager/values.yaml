@@ -1,0 +1,9 @@
+image:
+  alertmanager:
+    repository: 10.1.11.100/middleware/alertmanager
+    tag: v0.21.0
+
+
+
+
+

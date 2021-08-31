@@ -1,0 +1,148 @@
+{{- if eq .Values.keepalived.enable true }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "ingress.fullname" . }}-controller
+  labels:
+    {{- include "ingress.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "ingress.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "ingress.selectorLabels" . | nindent 8 }}
+        app: {{ include "ingress.fullname" . }}-controller
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      terminationGracePeriodSeconds: 60
+      volumes:
+        - configMap:
+            defaultMode: 420
+            items:
+              - key: nginx.tmpl
+                path: nginx.tmpl
+            name: {{ include "ingress.fullname" . }}-nginx-tmpl
+          name: nginx-tmpl-cm
+        - name: modules
+          hostPath:
+            path: /lib/modules
+        - name: dev
+          hostPath:
+            path: /dev
+      hostNetwork: {{ .Values.hostNetwork }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccount: {{ include "ingress.fullname" . }}
+      containers:
+        - image: "{{ .Values.image.ingressRepository }}/nginx-ingress-controller:{{ .Values.image.ingressImageTag | default .Chart.AppVersion }}"
+          name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.healthzPort }}
+              scheme: HTTP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.healthzPort }}
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 1
+          # use downward API
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          ports:
+            - containerPort: {{ .Values.httpPort }}
+              {{- if eq .Values.hostNetwork true }}
+              hostPort: {{ .Values.httpPort }}
+              {{- end }}
+            - containerPort: {{ .Values.httpsPort }}
+              {{- if eq .Values.hostNetwork true }}
+              hostPort: {{ .Values.httpsPort }}
+              {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: /etc/nginx/template/nginx.tmpl
+              name: nginx-tmpl-cm
+              subPath: nginx.tmpl
+          args:
+            - /nginx-ingress-controller
+            - --healthz-port={{ .Values.healthzPort }}
+            - --default-server-port={{ .Values.defaultServerPort }}
+            - --configmap=$(POD_NAMESPACE)/{{ include "ingress.fullname" . }}
+            - --default-backend-service=$(POD_NAMESPACE)/{{ include "ingress.fullname" . }}-default-http-backend
+            - --udp-services-configmap=$(POD_NAMESPACE)/{{ include "ingress.fullname" . }}-system-expose-nginx-config-udp
+            - --tcp-services-configmap=$(POD_NAMESPACE)/{{ include "ingress.fullname" . }}-system-expose-nginx-config-tcp
+            - --ingress-class={{ .Values.ingressClass }}
+            - --http-port={{ .Values.httpPort }}
+            - --https-port={{ .Values.httpsPort }}
+        - image: {{ .Values.image.keepalivedRepository }}/kube-keepalived-vip:{{ .Values.image.keepalivedImageTag }}
+          name: kube-keepalived-vip
+          imagePullPolicy: Always
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            timeoutSeconds: 3
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - mountPath: /lib/modules
+              name: modules
+              readOnly: true
+            - mountPath: /dev
+              name: dev
+          # use downward API
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          # to use unicast
+          args:
+            - --services-configmap={{ .Release.Namespace }}/{{ include "ingress.fullname" . }}-keepalived
+            # unicast uses the ip of the nodes instead of multicast
+            # this is useful if running in cloud providers (like AWS)
+            #- --use-unicast=true
+  {{- end }}

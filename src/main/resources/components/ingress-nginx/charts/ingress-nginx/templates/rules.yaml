@@ -1,0 +1,52 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    prometheus: k8s
+    role: alert-rules
+  name: ingress-nginx-rules
+spec:
+  groups:
+  - name: ingress-nginx-rules
+    rules:
+    - alert:  NginxHighHttp4xxErrorRate
+      annotations:
+        message:  NginxHighHttp4xxErrorRate
+        product: harmonycloud
+        service: metrics
+        summary: Nginx high HTTP 4xx error rate (instance {{`{{ $labels.instance }}`}})
+      expr: sum(rate(nginx_ingress_controller_requests{status=~"4.."}[1m])) / sum(rate(nginx_ingress_controller_requests[1m])) * 100 > 5
+      for: 1m
+      labels:
+        severity: warning
+    - alert: NginxHighHttp5xxErrorRate
+      annotations:
+        message: Too many HTTP requests with status 5xx (> 5%)
+        product: harmonycloud
+        service: metrics
+        summary: Nginx high HTTP 5xx error rate (instance {{`{{ $labels.instance }}`}})
+      expr: sum(rate(nginx_ingress_controller_requests{status=~"^5.."}[1m])) / sum(rate(nginx_ingress_controller_requests[1m])) * 100 > 5
+      for: 30s
+      labels:
+        severity: critical
+    - alert: NginxLatencyHigh
+      annotations:
+        message: Nginx p99 latency is higher than 10 seconds
+        product: harmonycloud
+        service: metrics
+        summary: Nginx latency high (instance {{`{{ $labels.instance }}`}})
+      expr:  histogram_quantile(0.99, sum(rate(nginx_ingress_controller_request_duration_seconds_bucket[30m])) by (host, node)) > 10
+      for: 30s
+      labels:
+        severity: critical
+    - alert: process_max_fds too low
+      annotations:
+        message: process_max_fds less than 65535
+        product: harmonycloud
+        service: metrics
+        summary:  process_max_fds less than 65535
+      expr: process_max_fds < 65535
+      for: 30s
+      labels:
+        severity: critical

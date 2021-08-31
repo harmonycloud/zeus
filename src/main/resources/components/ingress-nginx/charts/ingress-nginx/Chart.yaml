@@ -1,0 +1,6 @@
+apiVersion: v2
+name: ingress-nginx
+description: Ingress Nginx by Harmonycloud
+type: application
+version: 0.24.1
+appVersion: 0.24.1

@@ -1,0 +1,15 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: {{ .Values.ingress.prometheus.ingressClass }}
+  name: prometheus-ingress
+spec:
+  rules:
+  - host: {{ .Values.ingress.prometheus.host }}
+    http:
+      paths:
+      - backend:
+          serviceName: prometheus-svc
+          servicePort: 9090
+        path: /

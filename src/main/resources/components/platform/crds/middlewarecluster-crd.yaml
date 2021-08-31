@@ -1,0 +1,21 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: middlewareclusters.harmonycloud.cn
+spec:
+  conversion:
+    strategy: None
+  group: harmonycloud.cn
+  names:
+    kind: MiddlewareCluster
+    listKind: MiddlewareClusterList
+    plural: middlewareclusters
+    shortNames:
+    - mwc
+    singular: middlewarecluster
+  preserveUnknownFields: true
+  scope: Namespaced
+  versions:
+  - name: v1
+    served: true
+    storage: true

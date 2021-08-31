@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ingress.fullname" . }}-default-http-backend
+  labels:
+    app: {{ include "ingress.fullname" . }}-default-http-backend
+spec:
+  selector:
+    matchLabels:
+      app: {{ include "ingress.fullname" . }}-default-http-backend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: {{ include "ingress.fullname" . }}-default-http-backend
+    spec:
+      terminationGracePeriodSeconds: 60
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      containers:
+      - name: {{ include "ingress.fullname" . }}-default-http-backend
+        # Any image is permissable as long as:
+        # 1. It serves a 404 page at /
+        # 2. It serves 200 on a /healthz endpoint
+        image: {{ .Values.image.backendRepository }}/defaultbackend:{{ .Values.image.backendImageTag }}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: 50m
+            memory: 100Mi
+          requests:
+            cpu: 50m
+            memory: 100Mi
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ingress.fullname" . }}-default-http-backend
+  labels:
+    app: {{ include "ingress.fullname" . }}-default-http-backend
+spec:
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: {{ include "ingress.fullname" . }}-default-http-backend
+
