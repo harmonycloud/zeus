@@ -551,7 +551,7 @@ public class ClusterServiceImpl implements ClusterService {
                 prometheus(repository, cluster);
             }
         } catch (Exception e) {
-            throw new BusinessException(ErrorMessage.HELM_INSTALL_PROMETHEUS_FAILED);
+            log.error(ErrorMessage.HELM_INSTALL_PROMETHEUS_FAILED.getZhMsg());
         }
         // 安装ingress nginx
         try {
@@ -559,7 +559,7 @@ public class ClusterServiceImpl implements ClusterService {
                 ingress(repository, cluster);
             }
         } catch (Exception e) {
-            throw new BusinessException(ErrorMessage.HELM_INSTALL_NGINX_INGRESS_FAILED);
+            log.error(ErrorMessage.HELM_INSTALL_NGINX_INGRESS_FAILED.getZhMsg());
         }
         // 安装grafana
         try {
