@@ -39,6 +39,15 @@ git clone https://github.com/harmonycloud/zeus.git
 make install
 ```
 
+访问方式
+
+```
+http://<your ip>:30088
+
+用户名：admin
+密码：Ab123456!
+```
+
 ## 支持组件版本
 
 |中间件|支持版本|支持模式|
