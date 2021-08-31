@@ -34,18 +34,9 @@
 
 Zeus平台使用docker-compose进行部署。
 
-> 获取离线安装包
 ```
-wget urlxxx
-```
-> 获取在线安装包
-```
-wget urlxxx
-```
-完成下载&解压后执行
-```
-tar -zxvf zeus-v0.0.1.tar
-cd zeus-v0.0.1 && make install
+git clone https://github.com/harmonycloud/zeus.git
+make install
 ```
 
 ## 支持组件版本
