@@ -1,0 +1,56 @@
+httpPort: 80
+httpsPort: 443
+healthzPort: 10254
+defaultServerPort: 8181
+ingressClass: nginx-ingress-controller
+workerProcesses: 8
+
+image:
+  ingressRepository: middleware
+  backendRepository: middleware
+  keepalivedRepository: middleware
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  ingressImageTag: 0.24.1-hc4
+  backendImageTag: "1.0"
+  keepalivedImageTag: 1.02
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+hostNetwork: true
+
+podAnnotations: {}
+
+podSecurityContext: {}
+# fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+# runAsUser: 1000
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+
+nodeSelector:
+  beta.kubernetes.io/os: linux
+
+tolerations:
+- operator: Exists
+
+affinity: {}
+
+keepalived:
+  enable: false
+  vip: 10.100.100.198
+  lvsmode: NAT

@@ -1,0 +1,48 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    k8s-app: kubelet
+  name: kubelet
+  namespace: monitoring
+spec:
+  endpoints:
+  - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    honorLabels: true
+    interval: 30s
+    port: http-metrics
+    scheme: http
+    tlsConfig:
+      insecureSkipVerify: true
+  - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    honorLabels: true
+    interval: 30s
+    metricRelabelings:
+    - action: drop
+      regex: container_(network_tcp_usage_total|network_udp_usage_total|tasks_state|cpu_load_average_10s)
+      sourceLabels:
+      - __name__
+    relabelConfigs:
+    - action: labelmap
+      regex: __meta_kubernetes_node_label_(.+)
+    - targetLabel: __address__
+      replacement: kubernetes.default.svc.cluster.local:443
+    - sourceLabels: [__meta_kubernetes_node_name]
+      regex: (.+)
+      targetLabel: __metrics_path__
+      replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
+    - sourceLabels: [__meta_kubernetes_node_address_InternalIP]
+      regex: (.*)
+      targetLabel: kubernetes_node_address_InternalIP
+    path: /metrics/cadvisor
+    port: http-metrics
+    scheme: http
+    tlsConfig:
+      insecureSkipVerify: true
+  jobLabel: k8s-app
+  namespaceSelector:
+    matchNames:
+    - kube-system
+  selector:
+    matchLabels:
+      k8s-app: kubelet

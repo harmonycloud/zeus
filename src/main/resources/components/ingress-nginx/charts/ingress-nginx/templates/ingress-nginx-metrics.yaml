@@ -1,0 +1,11 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "ingress.fullname" . }}
+spec:
+  endpoints:
+  - interval: 15s
+    port: metrics
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "ingress.fullname" . }}

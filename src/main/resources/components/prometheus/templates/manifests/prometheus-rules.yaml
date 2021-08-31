@@ -1,0 +1,154 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  name: prometheus-k8s-rules
+  namespace: monitoring
+spec:
+  groups:
+  - name: node_pod.rules
+    rules:
+      - alert: Pod_all_cpu_usage
+        expr: (sum by(name)(rate(container_cpu_usage_seconds_total{image!=""}[5m]))*100) > 10
+        for: 5m
+        labels:
+          severity: critical
+          service: pods
+        annotations:
+          description: container CPU > 10% , (current value is )
+          summary: Dev CPU alertmanagers
+  - name: clusterNodeResource
+    rules:
+      - record: harmonycloud_node_cpu_total
+        expr: count(node_cpu_seconds_total{ mode='system'}) by (kubernetes_pod_node_name)
+      - record: harmonycloud_node_cpu_using
+        expr: sum(irate(node_cpu_seconds_total{mode!="idle"}[5m])) by (kubernetes_pod_node_name)
+      - record: harmonycloud_node_cpu_rate
+        expr: round(harmonycloud_node_cpu_using/harmonycloud_node_cpu_total * 100, 0.1)
+      - record: harmonycloud_node_filesystem_total
+        expr: sum(node_filesystem_size_bytes{device=~"/dev/.+"}/1024/1024/1024) by (kubernetes_pod_node_name)
+      - record: harmonycloud_node_filesystem_using
+        expr: sum by(kubernetes_pod_node_name) (node_filesystem_size_bytes{device=~"/dev/.+"}/1024/1024/1024)-sum by(kubernetes_pod_node_name) (node_filesystem_free_bytes{device=~"/dev/.+"}/1024/1024/1024)
+      - record: harmonycloud_node_pv_using
+        expr: sum(kubelet_volume_stats_used_bytes) by(namespace, persistentvolumeclaim,HarmonyCloud_Status)
+      - record: harmonycloud_node_memory_total
+        expr: node_memory_MemTotal_bytes/1024/1024/1024
+      - record: harmonycloud_node_memory_using
+        expr: ((node_memory_MemTotal_bytes - node_memory_MemFree_bytes - node_memory_Cached_bytes - node_memory_Buffers_bytes - node_memory_Slab_bytes)/1024/1024/1024)
+      - record: harmonycloud_node_memory_rate
+        expr: round(harmonycloud_node_memory_using/harmonycloud_node_memory_total*100,0.1)
+      - record: harmonycloud_node_network_receive
+        expr: sum by (kubernetes_pod_node_name) (rate(node_network_receive_bytes_total{device != "lo"}[3m])/1024)
+      - record: harmonycloud_node_network_transmit
+        expr: sum by (kubernetes_pod_node_name) (rate(node_network_transmit_bytes_total{device != "lo"}[3m])/1024)
+  - name: clusterContainerResource
+    rules:
+      - record: harmonycloud_container_network_transmit_bytes_total
+        expr: sum(rate(container_network_transmit_bytes_total[3m])/1024) by (pod,namespace,container)
+      - record: harmonycloud_container_network_receive_bytes_total
+        expr: sum(rate(container_network_receive_bytes_total[3m])/1024) by (pod,namespace,container)
+      - record: harmonycloud_container_cpu_usage_seconds_total
+        expr: sum(rate(container_cpu_usage_seconds_total[3m])) by (pod,namespace,container)*1000
+      - record: harmonycloud_container_spec_cpu_quota
+        expr: sum(container_spec_cpu_quota) by (pod,namespace,container)/100
+      - record: harmonycloud_container_cpu_rate
+        expr: round(harmonycloud_container_cpu_usage_seconds_total/(harmonycloud_container_spec_cpu_quota!=0)*100,0.1)
+      - record: harmonycloud_container_memory_usage_seconds_total
+        expr: (sum(container_memory_usage_bytes)by (pod,namespace,container))/1024/1024
+      - record: harmonycloud_container_spec_memory_limit_bytes
+        expr: (sum(container_spec_memory_limit_bytes)by (pod,namespace,container))/1024/1024
+      - record: harmonycloud_container_memory_rate
+        expr: round(harmonycloud_container_memory_usage_seconds_total/(harmonycloud_container_spec_memory_limit_bytes!=0)*100,0.1)
+      - record: harmonycloud_container_fs_reads_bytes_total
+        expr: (sum(container_fs_reads_bytes_total)by (pod,namespace,container))/1024/1024
+      - record: harmonycloud_container_fs_writes_bytes_total
+        expr: (sum(container_fs_writes_bytes_total)by (pod,namespace,container))/1024/1024
+  - name: projectNamespaceResource
+    rules:
+      - record: harmonycloud_namespace_network_transmit_bytes_total
+        expr: sum(rate(container_network_transmit_bytes_total[3m])/1024) by (namespace)
+      - record: harmonycloud_namespace_network_receive_bytes_total
+        expr: sum(rate(container_network_receive_bytes_total[3m])/1024) by (namespace)
+      - record: harmonycloud_namespace_cpu_usage_seconds_total
+        expr: sum(rate(container_cpu_usage_seconds_total[3m])) by (namespace)*1000
+      - record: harmonycloud_namespace_spec_cpu_quota
+        expr: sum(container_spec_cpu_quota) by (namespace)/100
+      - record: harmonycloud_namespace_memory_usage_seconds_total
+        expr: (sum(container_memory_usage_bytes) by (namespace))/1024/1024
+      - record: harmonycloud_namespace_spec_memory_limit_bytes
+        expr: (sum(container_spec_memory_limit_bytes) by (namespace))/1024/1024
+      - record: harmonycloud_namespace_fs_reads_bytes_total
+        expr: (sum(container_fs_reads_bytes_total) by (namespace))/1024
+      - record: harmonycloud_namespace_fs_writes_bytes_total
+        expr: (sum(container_fs_writes_bytes_total) by (namespace))/1024
+      - record: harmonycloud_namespace_pv_usage_total
+        expr: sum(kubelet_volume_stats_used_bytes/1024/1024) by(namespace)
+  - name: healthMetrics
+    rules:
+      - record: harmonycloud_health_node_cpu_using_rate
+        expr: round(sum by(kubernetes_pod_node_name) (irate(node_cpu_seconds_total{mode!="idle"}[5m]))/(count by(kubernetes_pod_node_name) (node_cpu_seconds_total{mode="system"})!=0)*100,0.01) != +Inf
+      - record: harmonycloud_health_node_memory_using_rate
+        expr: round((1-sum by(kubernetes_pod_node_name) (node_memory_MemAvailable_bytes)/(sum by(kubernetes_pod_node_name) (node_memory_MemTotal_bytes)!=0))*100,0.01)!= +Inf
+      - record: harmonycloud_health_node_disk_using_rate
+        expr: round((1-sum by(kubernetes_pod_node_name) (node_filesystem_free_bytes{device=~"/dev/.+"})/(sum by(kubernetes_pod_node_name) (node_filesystem_size_bytes{device=~"/dev/.+"})!=0))*100,0.01)!= +Inf
+      - record: harmonycloud_health_node_disk_io_rate
+        expr: round(avg(irate(node_disk_io_time_seconds_total[3m])) by(kubernetes_pod_node_name)* 100,0.01)
+      - record: harmonycloud_health_node_load1
+        expr: round(count by(kubernetes_pod_node_name) (node_cpu_seconds_total{mode="system"})-(sum by(kubernetes_pod_node_name)(node_load1)!=0),0.01)
+      - record: harmonycloud_health_node_load5
+        expr: round(count by(kubernetes_pod_node_name) (node_cpu_seconds_total{mode="system"})-sum by(kubernetes_pod_node_name)(node_load5),0.01)
+      - record: harmonycloud_health_node_load15
+        expr: sum by(kubernetes_pod_node_name)(node_load15)
+      - record: harmonycloud_health_node_network_receive_rate
+        expr: sum(round(irate(node_network_receive_bytes_total{device!~"cali.*|docker.*|cali.*|lo.*|tunl.*|veth.*"}[5m])/(node_network_speed_bytes{device!~"cali.*|docker.*|cali.*|lo.*|tunl.*|veth.*"}*100!=0),0.01))by(kubernetes_pod_node_name,device)
+      - record: harmonycloud_health_node_network_transmit_rate
+        expr: sum(round(irate(node_network_transmit_bytes_total{device!~"cali.*|docker.*|cali.*|lo.*|tunl.*|veth.*"}[5m])/(node_network_speed_bytes{device!~"cali.*|docker.*|cali.*|lo.*|tunl.*|veth.*"}*100!=0),0.01))by(kubernetes_pod_node_name,device)
+      - record: harmonycloud_health_node_netword_receive_drop_rate
+        expr: round((sum by(kubernetes_pod_node_name, device) (node_network_receive_drop_total{device!~"cali.*|docker.*|cali.*|lo.*|tunl.*|veth.*"})/(sum by(kubernetes_pod_node_name, device) (node_network_receive_packets_total{device!~"cali.*|docker.*|cali.*|lo.*|tunl.*|veth.*"})!=0))*100,0.01)!= +Inf
+      - record: harmonycloud_health_node_netword_transmit_drop_rate
+        expr: round((sum by(kubernetes_pod_node_name, device) (node_network_transmit_drop_total{device!~"cali.*|docker.*|cali.*|lo.*|tunl.*|veth.*"})/(sum by(kubernetes_pod_node_name, device) (node_network_transmit_packets_total{device!~"cali.*|docker.*|cali.*|lo.*|tunl.*|veth.*"})!=0))*100,0.01)!= +Inf
+      - record: harmonycloud_health_node_network_receive_errs_rate
+        expr: round((sum by(kubernetes_pod_node_name, device) (node_network_receive_errs_total{device!~"cali.*|docker.*|cali.*|lo.*|tunl.*|veth.*"})/(sum by(kubernetes_pod_node_name, device) (node_network_receive_packets_total{device!~"cali.*|docker.*|cali.*|lo.*|tunl.*|veth.*"})!=0))*100,0.01)!= +Inf
+      - record: harmonycloud_health_node_network_transmit_errs_rate
+        expr: round((sum by(kubernetes_pod_node_name, device) (node_network_transmit_errs_total{device!~"cali.*|docker.*|cali.*|lo.*|tunl.*|veth.*"})/(sum by(kubernetes_pod_node_name, device) (node_network_transmit_packets_total{device!~"cali.*|docker.*|cali.*|lo.*|tunl.*|veth.*"})!=0))*100,0.01)!= +Inf
+      - record: harmonycloud_health_node_filefd_rate
+        expr: round((sum by(kubernetes_pod_node_name)(node_filefd_allocated)/(sum by(kubernetes_pod_node_name)(node_filefd_maximum)!=0))*100,0.01)!= +Inf
+      - record: harmonycloud_health_node_nf_conntrack_using_rate
+        expr: round((sum by(kubernetes_pod_node_name)(node_nf_conntrack_entries)/(sum by(kubernetes_pod_node_name)(node_nf_conntrack_entries_limit)!=0))*100,0.01)!= +Inf
+      - record: harmonycloud_health_node_sub_health
+        expr: (sum(label_replace(kube_node_status_condition{condition=~"NetworkUnavailable|OutOfDisk|MemoryPressure|DiskPressure|PIDPressure",status="true"},"kubernetes_pod_node_name", "$1","node","(.*)"))by(kubernetes_pod_node_name,condition))+(sum(label_replace(kube_node_status_condition{condition="Ready",status="false"},"kubernetes_pod_node_name", "$1","node","(.*)"))by(kubernetes_pod_node_name,condition))!=0
+      - record: harmonycloud_health_node_ntp_offset
+        expr: round(abs(sum(node_ntp_offset_seconds)by(kubernetes_pod_node_name)),0.01)
+      - record: harmonycloud_health_node_ntp_state
+        expr: sum(node_scrape_collector_success!=1)by(kubernetes_pod_node_name)
+      - record: harmonycloud_health_node_zombie_process
+        expr: sum(node_processes_state{state="Z"})by(kubernetes_pod_node_name)
+      - record: harmonycloud_health_module_deployment_abnormal
+        expr: sum(kube_deployment_spec_replicas{namespace=~"monitoring|kube-system"}) by (namespace, deployment)-sum(kube_deployment_status_replicas_available{namespace=~"monitoring|kube-system"}) by (namespace, deployment)>0
+      - record: harmonycloud_health_module_daemonset_abnormal
+        expr: sum(kube_daemonset_status_desired_number_scheduled{namespace=~"monitoring|kube-system"}) by (namespace, daemonset)-sum(kube_daemonset_status_number_available{namespace=~"monitoring|kube-system"}) by (namespace, daemonset)>0
+      - record: harmonycloud_health_module_statefulset_abnormal
+        expr: sum(kube_statefulset_replicas{namespace=~"monitoring|kube-system"}) by (namespace, statefulset)-sum(kube_statefulset_status_replicas_current{namespace=~"monitoring|kube-system"}) by (namespace, statefulset)>0
+      - record: harmonycloud_health_module_pod_abnormal
+        expr: count(sum(kube_pod_status_phase{phase!~"Running|Succeeded",namespace=~"monitoring|kube-system"})by(namespace,pod, phase)==1) by(namespace,pod,phase)
+      - record: harmonycloud_health_module_cpu_rate
+        expr: round((sum by(pod, namespace, container) (rate(container_cpu_usage_seconds_total{namespace=~"monitoring|kube-system"}[3m])) * 1000) / (sum by(pod, namespace, container) (container_spec_cpu_quota{namespace=~"monitoring|kube-system"}) != 0 / 100) * 100, 0.01) != +Inf
+      - record: harmonycloud_health_module_memory_rate
+        expr: round((sum by(namespace, pod, node) (container_memory_rss{namespace=~"monitoring|kube-system"}) / (sum by(namespace, pod, node) (container_spec_memory_limit_bytes{namespace=~"monitoring|kube-system"})!=0) )* 100,0.01) != +Inf
+      - record: harmonycloud_health_module_apiserver_latencies
+        expr: round(apiserver_request_latencies_summary{quantile="0.99", scope="namespace",resource="pods", subresource=""}/1000>0,0.01)
+      - record: harmonycloud_health_module_etcd_fsync_delayed
+        expr: round(histogram_quantile(0.99, sum(rate(etcd_disk_wal_fsync_duration_seconds_bucket[3m])) by (instance,le))*1000,0.01)
+      - record: harmonycloud_health_module_etcd_commit_delayed
+        expr: round(sum(irate(etcd_disk_backend_commit_duration_seconds_sum[3m]))by(instance)*1000,0.01)
+      - record: harmonycloud_health_module_etcd_server_has_leader
+        expr: etcd_server_has_leader
+      - record: harmonycloud_health_module_coredns_memory_bytes
+        expr: round(process_resident_memory_bytes{service="prometheus-operator-coredns"}/1024/1024/1024,0.01)
+      - record: harmonycloud_health_module_coredns_servfail
+        expr: round(sum(coredns_dns_response_rcode_count_total{rcode="SERVFAIL",zone="."})by(instance)/(sum(coredns_dns_response_rcode_count_total{zone="."})by(instance)!=0)*100,0.01)
+      - record: harmonycloud_health_module_coredns_nxdomain
+        expr: round(sum(coredns_dns_response_rcode_count_total{rcode="NXDOMAIN",zone="."})by(instance)/(sum(coredns_dns_response_rcode_count_total{zone="."})by(instance)!=0)*100,0.01)
+

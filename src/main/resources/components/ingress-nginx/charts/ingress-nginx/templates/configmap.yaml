@@ -1,0 +1,30 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "ingress.fullname" . }}
+  labels:
+    k8s-addon: {{ include "ingress.fullname" . }}.addons.k8s.io
+data:
+  client-body-buffer-size: 1024k
+  client-header-buffer-size: 4k
+  max-worker-connections: "65535"
+  worker-processes: "{{ .Values.workerProcesses }}"
+  server-name-hash-bucket-size: "128"
+  keep-alive: "15"
+  enable-underscores-in-headers: "true"
+  gzip-level: "2"
+  large-client-header-buffers: 4 16k
+  log-format-stream: '''$time_local || $remote_addr || $upstream_addr || $status ||
+      $protocol || $bytes_sent || $bytes_received || $session_time || $upstream_bytes_sent
+      || $upstream_bytes_received || $upstream_connect_time'''
+  log-format-upstream: $time_local || $remote_addr || $upstream_addr || $status ||
+    $request_time || $upstream_status || $upstream_response_time || $upstream_cache_status
+    || $body_bytes_sent || $http_referer || $remote_user || $http_user_agent  || $cookie_cmos_vision
+    || $http_x_forwarded_for || $request
+  proxy-buffer-size: 16k
+  proxy-buffering: "on"
+  proxy-buffers-number: "4"
+  proxy-read-timeout: "300"
+  proxy-send-timeout: "300"
+  worker-cpu-affinity: auto
+  proxy-body-size: 100m

@@ -1,0 +1,59 @@
+replicas:
+  grafana: 1
+  prometheus: 2
+storage:
+  storageClass: caas-lvm
+  size:
+    grafana: 5Gi
+    prometheus: 10Gi
+retention: 168h    
+image:
+  prometheus:
+    repository: 10.1.11.100/middleware/prometheus
+    tag: v2.11.0
+  configmapReload:
+    repository: 10.1.11.100/middleware/configmap-reload
+    tag: v0.0.1
+  prometheusConfigReloader:
+    repository: 10.1.11.100/middleware/prometheus-config-reloader
+    tag: v0.33.0
+  nodeExporter:
+    repository: 10.1.11.100/middleware/node-exporter
+    tag: v0.18.1
+  kubeRbacProxy:
+    repository: 10.1.11.100/middleware/kube-rbac-proxy
+    tag: v0.4.1
+  prometheusAdapter:
+    repository: 10.1.11.100/middleware/k8s-prometheus-adapter-amd64
+    tag: v0.5.0
+  prometheusOperator:
+    repository: 10.1.11.100/middleware/prometheus-operator
+    tag: v0.33.0
+  kubeStateMetrics:
+    repository: 10.1.11.100/middleware/kube-state-metrics
+    tag: v1.7.2
+  dashboard:
+    repository: 10.1.11.100/middleware/k8s-sidecar
+    tag: 1.1.0
+  alertmanager:
+    repository: 10.1.11.100/middleware/alertmanager
+    tag: v0.21.0
+
+
+nodeSelector:
+
+tolerations:
+- operator: Exists
+
+ingress:
+  prometheus:
+    host: prometheus.middleware.com
+    ingressClass: nginx-ingress-controller
+  alertmanager:
+    host: alertmanager.middleware.com
+    ingressClass: nginx-ingress-controller
+
+
+
+
+

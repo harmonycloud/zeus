@@ -1,0 +1,13 @@
+global:
+  repository: 10.1.11.100/middleware
+  middleware_controller:
+    image: middleware-controller
+    tag: v1.1.0
+    resources:
+      limits:
+        cpu: 200m
+        memory: 512Mi
+      requests:
+        cpu: 200m
+        memory: 512Mi
+    nodeSelector: {}

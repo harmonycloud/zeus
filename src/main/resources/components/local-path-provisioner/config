@@ -1,0 +1,4 @@
+APPLY helm upgrade --install lvm-csi-plugin ./lvm-csi-plugin --set image.repository=middleware --set storage.vgName=vg_middleware
+LOAD docker load -i lvm-csi-plugin-images.tar
+DELETE helm delete lvm-csi-plugin
+REMOVE helm delete lvm-csi-plugin

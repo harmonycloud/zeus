@@ -1,0 +1,30 @@
+HELP.md
+target/
+.target
+release/
+!.mvn/wrapper/maven-wrapper.jar
+.mvn
+mvnw
+mvnw.cmd
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+*.log
+
+####################################
+######## OS generated files ########
+####################################
+.DS_Store
+.DS_Store?
