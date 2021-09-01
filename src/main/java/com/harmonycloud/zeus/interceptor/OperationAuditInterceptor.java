@@ -26,7 +26,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -108,7 +107,7 @@ public class OperationAuditInterceptor {
         Class<?> aClass = joinPoint.getTarget().getClass();
 
         operationAudit.setUrl(request.getRequestURI());
-        operationAudit.setRemoteIp(getIPAddress(request));
+        operationAudit.setRemoteIp(request.getRemoteHost());
         operationAudit.setRequestMethod(request.getMethod());
 
         if (result != null) {
@@ -193,26 +192,5 @@ public class OperationAuditInterceptor {
         operationAuditService.insert(operationAudit);
     }
 
-    /**
-     * @description 获取真实ip
-     * @author  liyinlong
-     * @since 2021/9/1 11:46 上午
-     * @param request
-     * @return
-     */
-    public String getIPAddress(HttpServletRequest request) {
-        String ipAddresses = request.getHeader("X-Forwarded-For");
-        log.info("X-Forwarded-For:{}", ipAddresses);
-        Enumeration<String> headerNames = request.getHeaderNames();
-        while (headerNames.hasMoreElements()) {
-            String element = headerNames.nextElement();
-            String header = request.getHeader(element);
-            log.info("headerName:{}--->headerValue={}", element, header);
-        }
 
-        if (ipAddresses != null) {
-            return ipAddresses;
-        }
-        return request.getRemoteAddr();
-    }
 }
