@@ -26,6 +26,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -202,6 +203,13 @@ public class OperationAuditInterceptor {
     public String getIPAddress(HttpServletRequest request) {
         String ipAddresses = request.getHeader("X-Forwarded-For");
         log.info("X-Forwarded-For:{}", ipAddresses);
+        Enumeration<String> headerNames = request.getHeaderNames();
+        while (headerNames.hasMoreElements()) {
+            String element = headerNames.nextElement();
+            String header = request.getHeader(element);
+            log.info("headerName:{}--->headerValue={}", element, header);
+        }
+
         if (ipAddresses != null) {
             return ipAddresses;
         }
