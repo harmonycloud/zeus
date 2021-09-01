@@ -2,15 +2,23 @@
 
 DEPLOY_TYPE=$1
 LINE_TYPE=$2
+IMAGE_REPO=$3
 
 if [ $LINE_TYPE == "offline" ]; then
-  echo "######  Load docker images ######"
-  tars=$(ls ./images | grep '.tar')
-  for i in tars ; do
-    echo "Load "i
-    docker load -i i
+  echo "######  Load images ######"
+  docker load -i ./release/zeus-image.tar
+  echo "######  Load images done !  ######"
+  echo
+  echo "######  Push images  ######"
+  IMAGES = $(cat ./build/image.conf)
+  for IMG in $IMAGES
+  do
+  {
+    docker tag $IMG $IMAGE_REPO"/"$IMG
+    docker push $IMAGE_REPO"/"$IMG
+  }
   done
-  echo "######  Load docker images done !  ######"
+  echo "######  Push images done !  ######"
 fi
 
 function deploy_docker() {

@@ -15,6 +15,7 @@ do
 {
   echo "Docker pulling "$REPO"/"$IMG
   docker pull $REPO"/"$IMG
+  docker tag $REPO"/"$IMG $IMG
   NAME=$(echo $IMG | sed 's/:/-/')
   ALL_NAME=$(echo $ALL_NAME" "$REPO"/"$IMG)
 }
