@@ -61,5 +61,5 @@ spec:
         resources:
           requests:
             storage: 5G
-        storageClassName: {{ .Values.global.zeus_mysql.storageClass }}
+        storageClassName: {{ .Values.global.storageClass }}
         volumeMode: Filesystem

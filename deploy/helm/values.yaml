@@ -1,6 +1,7 @@
 global:
   repository: middleware.harmonycloud.cn:38080/middleware
   namespace: zeus
+  storageClass: default
   zeus:
     replicaCount: 1
     image: zeus
@@ -33,7 +34,6 @@ global:
     image: zeus-mysql
     tag: v1.0.0
     pullPolicy: Always
-    storageClass: default
     resources:
       requests:
         cpu: 200m

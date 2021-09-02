@@ -74,6 +74,8 @@ spec:
           name: zeus-upload
         - mountPath: /var/run
           name: docker
+        - mountPath: /usr/local/zeus-pv/helm
+          name: zeus-helm
       dnsPolicy: ClusterFirst
       {{- with .Values.global.zeus.nodeSelector }}
       nodeSelector:
@@ -98,3 +100,14 @@ spec:
           path: /var/run
           type: ""
         name: docker
+  volumeClaimTemplates:
+    - metadata:
+        name: zeus-helm
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5G
+        storageClassName: {{ .Values.global.storageClass }}
+        volumeMode: Filesystem
