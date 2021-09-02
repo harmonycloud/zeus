@@ -100,14 +100,6 @@ spec:
           path: /var/run
           type: ""
         name: docker
-  volumeClaimTemplates:
-    - metadata:
-        name: zeus-helm
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        resources:
-          requests:
-            storage: 5G
-        storageClassName: {{ .Values.global.storageClass }}
-        volumeMode: Filesystem
+      - name: zeus-helm
+        persistentVolumeClaim:
+          claimName: zeus-helm
