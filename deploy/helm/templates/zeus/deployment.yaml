@@ -82,7 +82,7 @@ spec:
       restartPolicy: Always
       schedulerName: default-scheduler
       securityContext: {}
-      serviceAccount: middleware-api
+      serviceAccount: zeus
       terminationGracePeriodSeconds: 30
       volumes:
       - configMap:

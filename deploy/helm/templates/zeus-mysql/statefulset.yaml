@@ -10,6 +10,7 @@ spec:
   selector:
     matchLabels:
       app: zeus-mysql
+  serviceName: zeus-mysql-headless
   template:
     metadata:
       labels:
@@ -140,5 +141,5 @@ spec:
         resources:
           requests:
             storage: 5G
-        storageClassName: local-path
+        storageClassName: {{ .Values.global.zeus_mysql.storageClass }}
         volumeMode: Filesystem

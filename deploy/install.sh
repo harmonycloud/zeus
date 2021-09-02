@@ -3,6 +3,7 @@
 DEPLOY_TYPE=$1
 LINE_TYPE=$2
 IMAGE_REPO=$3
+STORAGE_CLASS=$4
 
 if [ $LINE_TYPE == "offline" ]; then
   echo "######  Load images ######"
@@ -32,12 +33,16 @@ function deploy_kubernetes() {
 }
 
 function deploy_helm() {
-    helm install
+  echo "######  Deployed by docker-compose ######"
+  kubectl create ns zeus
+  helm install -n zeus zeus deploy/zeus --set global.repository=$IMAGE_REPO"/middleware",global.zeus_mysql.storageClass=$STORAGE_CLASS
+  echo "######  Success ######"
 }
 
 if [ $DEPLOY_TYPE == "docker-compose" ]; then
-    echo "######  Deploy by docker-compose ######"
+    echo "######  Deployed by docker-compose ######"
     deploy_docker
+    echo "######  Success ######"
 fi
 
 if [ $DEPLOY_TYPE == "kubernetes" ]; then
