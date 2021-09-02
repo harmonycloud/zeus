@@ -33,7 +33,7 @@ function deploy_kubernetes() {
 }
 
 function deploy_helm() {
-  helm install --create-namespace -n zeus zeus deploy/zeus --set global.repository=$IMAGE_REPO"/middleware",global.zeus_mysql.storageClass=$STORAGE_CLASS
+  helm install --create-namespace -n zeus zeus deploy/helm --set global.repository=$IMAGE_REPO"/middleware",global.zeus_mysql.storageClass=$STORAGE_CLASS
 }
 
 if [ $DEPLOY_TYPE == "docker-compose" ]; then
