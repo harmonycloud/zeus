@@ -1,6 +1,7 @@
 IMAGE_REPO ?= middleware.harmonycloud.cn:38080
 TYPE ?= docker-compose
 DEPLOY ?= online
+STORAGE_CLASS ?= default
 
 release:
 	build/release.sh build/image.conf $(IMAGE_REPO)
@@ -12,4 +13,4 @@ image:
 	make build && docker build -t zeus:v1.0.0 .
 
 install:
-	chmod +x ./deploy/install.sh && sh deploy/install.sh  $(TYPE) $(DEPLOY) $(IMAGE_REPO)
+	chmod +x ./deploy/install.sh && sh deploy/install.sh $(TYPE) $(DEPLOY) $(IMAGE_REPO) $(STORAGE_CLASS)

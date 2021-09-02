@@ -33,10 +33,8 @@ function deploy_kubernetes() {
 }
 
 function deploy_helm() {
-  echo "######  Deployed by docker-compose ######"
   kubectl create ns zeus
   helm install -n zeus zeus deploy/zeus --set global.repository=$IMAGE_REPO"/middleware",global.zeus_mysql.storageClass=$STORAGE_CLASS
-  echo "######  Success ######"
 }
 
 if [ $DEPLOY_TYPE == "docker-compose" ]; then
@@ -48,4 +46,10 @@ fi
 if [ $DEPLOY_TYPE == "kubernetes" ]; then
     echo "######  Deploy by kubernetes ######"
     deploy_kubernetes
+fi
+
+if [ $DEPLOY_TYPE == "helm" ]; then
+    echo "######  Deployed by docker-compose ######"
+    deploy_helm
+    echo "######  Success ######"
 fi
