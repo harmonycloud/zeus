@@ -23,8 +23,7 @@ fi
 
 function deploy_docker() {
   cd deploy/docker-compose/
-  zeus_repository=$IMAGE_REPO
-  docker-compose -f zeus.yaml up -d
+  zeus_repository=$IMAGE_REPO"/middleware/" docker-compose -f zeus.yaml up -d
 }
 
 function deploy_kubernetes() {
