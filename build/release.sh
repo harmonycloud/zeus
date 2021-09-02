@@ -12,7 +12,7 @@ do
   docker pull $REPO"/"$IMG
   docker tag $REPO"/"$IMG $IMG
   NAME=$(echo $IMG | sed 's/:/-/')
-  ALL_NAME=$(echo $ALL_NAME" "$REPO"/"$IMG)
+  ALL_NAME=$(echo $ALL_NAME" "$IMG)
 }
 done
 

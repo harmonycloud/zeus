@@ -6,11 +6,11 @@ IMAGE_REPO=$3
 
 if [ $LINE_TYPE == "offline" ]; then
   echo "######  Load images ######"
-  docker load -i ./release/zeus-image.tar
+  docker load -i ./deploy/zeus-offline.tar
   echo "######  Load images done !  ######"
   echo
   echo "######  Push images  ######"
-  IMAGES = $(cat ./build/image.conf)
+  IMAGES=$(cat ./build/image.conf)
   for IMG in $IMAGES
   do
   {
@@ -23,6 +23,7 @@ fi
 
 function deploy_docker() {
   cd deploy/docker-compose/
+  zeus_repository=$IMAGE_REPO
   docker-compose -f zeus.yaml up -d
 }
 
