@@ -472,7 +472,6 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         String cmd = String.format("helm upgrade --install %s %s --set %s -n %s --kube-apiserver %s --kubeconfig %s ",
             name, chartUrl, setValues, namespace, cluster.getAddress(),
             clusterCertService.getKubeConfigFilePath(cluster.getId()));
-
         execCmd(cmd, null);
     }
 
@@ -517,15 +516,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
                 List<Namespace> namespaceList = namespaceService.list(clusterId, false, "middleware-operator");
                 // 检验分区是否存在
                 if (CollectionUtils.isEmpty(namespaceList)) {
-                    // 创建namespace
-                    io.fabric8.kubernetes.api.model.Namespace ns = new io.fabric8.kubernetes.api.model.Namespace();
-                    Map<String, String> label = new HashMap<>(1);
-                    label.put("middleware", "middleware");
-                    ObjectMeta meta = new ObjectMeta();
-                    meta.setName("middleware-operator");
-                    meta.setLabels(label);
-                    ns.setMetadata(meta);
-                    namespaceService.save(clusterId, ns);
+                    namespaceService.save(clusterId, "middleware-operator");
                 }
             }
             // 检验operator是否已创建

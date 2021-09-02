@@ -334,17 +334,7 @@ public class ClusterServiceImpl implements ClusterService {
                 .setPassword("Hc@Cloud01").setType("harbor").setChartRepo("middleware");
             cluster.setRegistry(registry);
         }
-
-        // 校验集群使用的ingress信息
-        if (cluster.getIngress() == null || StringUtils.isEmpty(cluster.getIngress().getAddress())) {
-            MiddlewareClusterIngress ingress = new MiddlewareClusterIngress().setAddress(cluster.getHost())
-                .setIngressClassName("ingress-ingress-nginx-controller");
-            MiddlewareClusterIngress.IngressConfig config = new MiddlewareClusterIngress.IngressConfig();
-            config.setEnabled(true).setNamespace("middleware-operator")
-                .setConfigMapName("ingress-ingress-nginx-system-expose-nginx-config-tcp");
-            ingress.setTcp(config);
-            cluster.setIngress(ingress);
-        }
+        
 
         // 设置默认参数
         // 如果没有数据中心，默认用default命名空间
@@ -480,46 +470,6 @@ public class ClusterServiceImpl implements ClusterService {
         return new MiddlewareCluster().setMetadata(meta).setSpec(new MiddlewareClusterSpec().setInfo(clusterInfo));
     }
 
-    private void createMiddlewareCrd(MiddlewareClusterDTO cluster, String path){
-        //MiddlewareClusterDTO middlewareClusterDTO = clusterService.findById(clusterId);
-
-        boolean error = false;
-        Process process = null;
-        try {
-            String execCommand;
-            execCommand = MessageFormat.format(
-                    "kubectl create -f {0} --server={1} --token={2} --insecure-skip-tls-verify=true",
-                    path, cluster.getAddress(), cluster.getAccessToken());
-            log.info("执行kubectl命令：{}", execCommand);
-            String[] commands = execCommand.split(" ");
-            process = Runtime.getRuntime().exec(commands);
-
-            BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-
-            String line;
-            while ((line = stdInput.readLine()) != null) {
-                log.info("执行指令执行成功:{}", line);
-            }
-
-            while ((line = stdError.readLine()) != null) {
-                log.error("执行指令错误:{}", line);
-                error = true;
-            }
-            if (error) {
-                throw new Exception();
-            }
-
-        } catch (Exception e) {
-            log.error("出现异常:", e);
-            throw new CaasRuntimeException(String.valueOf(ErrorCodeMessage.RUN_COMMAND_ERROR));
-        } finally {
-            if (null != process) {
-                process.destroy();
-            }
-        }
-    }
-
     public void createOperator(String clusterId) {
         File file = new File(middlewarePath);
         for (String name : file.list()) {
@@ -545,51 +495,104 @@ public class ClusterServiceImpl implements ClusterService {
         } catch (Exception e) {
             throw new BusinessException(ErrorMessage.HELM_INSTALL_LOCAL_PATH_FAILED);
         }
+        if (cluster.getMonitor() == null) {
+            MiddlewareClusterMonitor monitor = new MiddlewareClusterMonitor();
+            cluster.setMonitor(monitor);
+        }
         // 安装prometheus
         try {
-            if (helmListInfos.stream().noneMatch(helm -> "prometheus".equals(helm.getName()))) {
+            if (cluster.getMonitor().getPrometheus() == null
+                && helmListInfos.stream().noneMatch(helm -> "prometheus".equals(helm.getName()))) {
                 prometheus(repository, cluster);
+                // 记录数据
+                MiddlewareClusterMonitorInfo prometheus = new MiddlewareClusterMonitorInfo();
+                prometheus.setProtocol("http").setPort("31901").setHost(cluster.getHost());
+                cluster.getMonitor().setPrometheus(prometheus);
             }
         } catch (Exception e) {
             log.error(ErrorMessage.HELM_INSTALL_PROMETHEUS_FAILED.getZhMsg());
         }
         // 安装ingress nginx
         try {
-            if (helmListInfos.stream().noneMatch(helm -> "ingress".equals(helm.getName()))) {
-                ingress(repository, cluster);
+            if (cluster.getIngress() == null || StringUtils.isEmpty(cluster.getIngress().getAddress())) {
+                if (helmListInfos.stream().noneMatch(helm -> "ingress".equals(helm.getName()))) {
+                    ingress(repository, cluster);
+                }
+                MiddlewareClusterIngress ingress = new MiddlewareClusterIngress().setAddress(cluster.getHost())
+                    .setIngressClassName("ingress-ingress-nginx-controller");
+                MiddlewareClusterIngress.IngressConfig config = new MiddlewareClusterIngress.IngressConfig();
+                config.setEnabled(true).setNamespace("middleware-operator")
+                    .setConfigMapName("ingress-ingress-nginx-system-expose-nginx-config-tcp");
+                ingress.setTcp(config);
+                cluster.setIngress(ingress);
             }
         } catch (Exception e) {
             log.error(ErrorMessage.HELM_INSTALL_NGINX_INGRESS_FAILED.getZhMsg());
         }
         // 安装grafana
         try {
-            grafana(repository, cluster);
+            if (cluster.getMonitor().getGrafana() == null){
+                grafana(repository, cluster);
+                //记录数据
+                MiddlewareClusterMonitorInfo grafana = new MiddlewareClusterMonitorInfo();
+                grafana.setProtocol("http").setPort("31900").setHost(cluster.getHost()).setToken(
+                        "eyJhbGciOiJSUzI1NiIsImtpZCI6ImxNRlk4dEk2QlktYzJNUEZRem9kLUVDUnprMkFXRG5LTDZ0c2tZTDFBWjgifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJhZG1pbi11c2VyLXRva2VuLTdtcWpkIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImFkbWluLXVzZXIiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiJlNDFmMWMzMy02YWIxLTQ5NzktODMwYS1kNjU2M2ZlYTE4ZTUiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6a3ViZS1zeXN0ZW06YWRtaW4tdXNlciJ9.byMKYjzw-eXurnHJGjPEO1PJoH_cdFs-zEM9T5fEzKUIi1nBUF-rYXi-rHI1vq27mwzL3lVrbkGQxO0ckHndg-6x3dOdjtxF5xXLARbkT1mYnFiTAsC2AyS4GJPkCsjz8q902AxgQ5jtrWIjZjYcKNsOqSwNKBrw2JS5zTRS-ELYQuu21iIZnobHy51pVzkdZxT6IhrD6ONaaxloBp4VaOBh9kzCX4YnJGr3yzd14iuJA3X1LUrvgEthm_kSC9ql4g6DuCY4wbZOVMimPTwh6cJzSPm4Er653JMGSZDc5M2_4sTetmCLYhiwdHBVGMj0NHyqjRIBq7t4zGNp_3B4iA");
+                cluster.getMonitor().setGrafana(grafana);
+            }
         } catch (Exception e) {
             log.error(ErrorMessage.HELM_INSTALL_GRAFANA_FAILED.getZhMsg());
         }
         // 安装alertManager
         try {
-            alertManager(repository, cluster);
+            if (cluster.getMonitor().getAlertManager() == null){
+                alertManager(repository, cluster);
+                // 记录数据
+                MiddlewareClusterMonitorInfo alertManager = new MiddlewareClusterMonitorInfo();
+                alertManager.setProtocol("http").setPort("31902").setHost(cluster.getHost());
+                cluster.getMonitor().setAlertManager(alertManager);
+            }
         } catch (Exception e) {
             log.error(ErrorMessage.HELM_INSTALL_ALERT_MANAGER_FAILED.getZhMsg());
         }
-        //更新集群信息
-        MiddlewareClusterMonitor monitor = new MiddlewareClusterMonitor();
-        //prometheus
-        MiddlewareClusterMonitorInfo prometheus = new MiddlewareClusterMonitorInfo();
-        prometheus.setProtocol("http").setPort("31901").setHost(cluster.getHost());
-        monitor.setPrometheus(prometheus);
-        //grafana
-        MiddlewareClusterMonitorInfo grafana = new MiddlewareClusterMonitorInfo();
-        grafana.setProtocol("http").setPort("31900").setHost(cluster.getHost()).setToken(
-            "eyJhbGciOiJSUzI1NiIsImtpZCI6ImxNRlk4dEk2QlktYzJNUEZRem9kLUVDUnprMkFXRG5LTDZ0c2tZTDFBWjgifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJhZG1pbi11c2VyLXRva2VuLTdtcWpkIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImFkbWluLXVzZXIiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiJlNDFmMWMzMy02YWIxLTQ5NzktODMwYS1kNjU2M2ZlYTE4ZTUiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6a3ViZS1zeXN0ZW06YWRtaW4tdXNlciJ9.byMKYjzw-eXurnHJGjPEO1PJoH_cdFs-zEM9T5fEzKUIi1nBUF-rYXi-rHI1vq27mwzL3lVrbkGQxO0ckHndg-6x3dOdjtxF5xXLARbkT1mYnFiTAsC2AyS4GJPkCsjz8q902AxgQ5jtrWIjZjYcKNsOqSwNKBrw2JS5zTRS-ELYQuu21iIZnobHy51pVzkdZxT6IhrD6ONaaxloBp4VaOBh9kzCX4YnJGr3yzd14iuJA3X1LUrvgEthm_kSC9ql4g6DuCY4wbZOVMimPTwh6cJzSPm4Er653JMGSZDc5M2_4sTetmCLYhiwdHBVGMj0NHyqjRIBq7t4zGNp_3B4iA");
-        monitor.setGrafana(grafana);
-        //alertManager
-        MiddlewareClusterMonitorInfo alertManager = new MiddlewareClusterMonitorInfo();
-        alertManager.setProtocol("http").setPort("31902").setHost(cluster.getHost());
-        monitor.setAlertManager(alertManager);
-        //update
-        cluster.setMonitor(monitor);
+        // 安装minio
+        try {
+            minio(repository, cluster);
+            // 记录数据
+            Map<String, String> storage = new HashMap<>();
+            storage.put("name", "minio");
+            storage.put("bucketName", "velero");
+            storage.put("accessKeyId", "minio");
+            storage.put("secretAccessKey", "minio123");
+            storage.put("endpoint", "http://" + cluster.getHost() + ":31909");
+            Map<String, Object> backup = new HashMap<>();
+            backup.put("type", "minio");
+            backup.put("storage", storage);
+            cluster.getStorage().put("backup", backup);
+        } catch (Exception e) {
+            log.error(ErrorMessage.HELM_INSTALL_MINIO_FAILED.getZhMsg());
+        }
+        //安装日志组件
+        try {
+            namespaceService.save(cluster.getId(), "logging");
+            if (cluster.getLogging() == null || cluster.getLogging().getElasticSearch() == null){
+                MiddlewareClusterLoggingInfo es = new MiddlewareClusterLoggingInfo();
+                elasticsearch(repository, cluster);
+                es.setHost(cluster.getHost());
+                es.setUser("elastic");
+                es.setPassword("Hc@Cloud01");
+                es.setProtocol("http");
+                es.setPort("9200");
+                MiddlewareClusterLogging logging = new MiddlewareClusterLogging();
+                logging.setElasticSearch(es);
+                cluster.setLogging(logging);
+            }
+            else if(cluster.getLogging().getElasticSearch().getLogCollect()){
+                logging(repository, cluster);
+            }
+        } catch (Exception e) {
+            log.error(ErrorMessage.HELM_INSTALL_LOG_FAILED.getZhMsg());
+        }
+        //更新
         this.update(cluster);
     }
 
@@ -647,6 +650,33 @@ public class ClusterServiceImpl implements ClusterService {
                 ",clusterHost=" + cluster.getHost();
         helmChartService.upgradeInstall("alertmanager", "monitoring", setValues,
             componentsPath + File.separator + "alertmanager", cluster);
+    }
+
+    public void minio(String repository, MiddlewareClusterDTO cluster){
+        String setValues = "image.repository=" + repository +
+                ",persistence.storageClass=local-path" +
+                ",minioArgs.bucketName=velero" +
+                ",service.nodePort=31904";
+        helmChartService.upgradeInstall("minio", "default", setValues,
+                componentsPath + File.separator + "minio/charts/minio", cluster);
+    }
+
+    public void elasticsearch(String repository, MiddlewareClusterDTO cluster){
+        String setValues = "image.repository=" + repository +
+                ",elasticsearch-operator.enabled=false" +
+                ",elasticPassword=Hc@Cloud01" +
+                ",storage.masterClass=local-path" +
+                ",logging.collection.filelog.enable=false" +
+                ",logging.collection.stdout.enable=false";
+        helmChartService.upgradeInstall("middleware-elasticsearch", "logging", setValues,
+                componentsPath + File.separator + "elasticsearch", cluster);
+    }
+
+    public void logging(String repository, MiddlewareClusterDTO cluster){
+        String setValues = "image.logpilotRepository=" + repository + "/log-pilot" +
+                ",image.logstashRepository=" + repository + "/logstash";
+        helmChartService.upgradeInstall("log", "logging", setValues,
+                componentsPath + File.separator + "logging", cluster);
     }
 
 }

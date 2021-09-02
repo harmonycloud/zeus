@@ -14,6 +14,7 @@ import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
 import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -175,7 +176,14 @@ public class NamespaceServiceImpl implements NamespaceService {
     }
 
     @Override
-    public void save(String clusterId, io.fabric8.kubernetes.api.model.Namespace ns) {
+    public void save(String clusterId, String name) {
+        // 创建namespace
+        io.fabric8.kubernetes.api.model.Namespace ns = new io.fabric8.kubernetes.api.model.Namespace();
+        Map<String, String> label = new HashMap<>(1);
+        ObjectMeta meta = new ObjectMeta();
+        meta.setName(name);
+        meta.setLabels(label);
+        ns.setMetadata(meta);
         namespaceWrapper.save(clusterId, ns);
     }
 }
