@@ -1,0 +1,144 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: zeus-mysql
+  name: zeus-mysql
+  namespace: {{ .Values.global.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zeus-mysql
+  template:
+    metadata:
+      labels:
+        app: zeus-mysql
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - zeus-mysql
+                topologyKey: kubernetes.io/hostname
+              weight: 100
+      containers:
+        - args:
+            - --defaults-file=/data/mysql/db_middleware-mysql/conf/my.cnf
+            - --user=root
+          env:
+            - name: DBNAME
+              value: zeus-mysql
+            - name: MYSQL_ROOT_PASSWORD
+              value: ZeuS@Middleware01
+            - name: MYSQL_USER_HOST
+              value: '%'
+            - name: MYSQL_ROOT_HOST
+              value: '%'
+            - name: MYSQL_PORT
+              value: "3306"
+            - name: TZ
+              value: Asia/Shanghai
+            - name: LANG
+              value: en_US.UTF-8
+            - name: MYSQL_DATABASE
+              value: '*'
+            - name: MYSQL_CPU
+              value: 200m
+            - name: MYSQL_MEMORY
+              value: 512Mi
+            - name: MYSQL_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+          image: "{{ .Values.global.repository }}/{{ .Values.global.zeus_mysql.image }}:{{ .Values.global.zeus_mysql.tag }}"
+          imagePullPolicy: {{ .Values.global.zeus_mysql.pullPolicy }}
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - mysqladmin shutdown -uroot --port=${MYSQL_PORT} -p${MYSQL_ROOT_PASSWORD}
+                    -S/data/mysql/db_${DBNAME}/conf/mysql.sock && sleep 10
+          name: mysql
+          ports:
+            - containerPort: 3306
+              name: mysql
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.global.zeus_mysql.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: /data/mysql/db_zeus-mysql
+              name: mysql-data
+            - mountPath: /docker-entrypoint-initdb.d/
+              name: zeus-mysql-init-sql-file
+      dnsPolicy: ClusterFirst
+      initContainers:
+        - command:
+            - sh
+            - init.sh
+          env:
+            - name: DBNAME
+              value: middleware-mysql
+            - name: MYSQL_PORT
+              value: "3306"
+            - name: PodName
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+            - name: BufferPoolSize
+              value: 0M
+            - name: PodIP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+            - name: MINIO_ENDPOINT
+            - name: MINIO_ACCESS_KEY_ID
+            - name: MINIO_SECRET_ACCESS_KEY
+            - name: BUCKET_NAME
+            - name: BACKUP_FILE_NAME
+          image: "{{ .Values.global.repository }}/{{ .Values.global.zeus_mysql.init_image }}:{{ .Values.global.zeus.init_tag }}"
+          imagePullPolicy: {{ .Values.global.zeus.pullPolicy }}
+          name: init
+          resources:
+            limits:
+              cpu: "1"
+              memory: 2000Mi
+            requests:
+              cpu: 200m
+              memory: 512Mi
+          volumeMounts:
+            - mountPath: /my.cnf.tmpl
+              name: mysql-init-config
+              subPath: my.cnf.tmpl
+            - mountPath: /data/mysql/db_middleware-mysql
+              name: mysql-data
+      volumes:
+        - configMap:
+            defaultMode: 420
+            name: zeus-mysql-config
+          name: mysql-init-config
+        - configMap:
+            defaultMode: 420
+            name: zeus-mysql-init-sql-file
+          name: zues-mysql-init-sql-file
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5G
+        storageClassName: local-path
+        volumeMode: Filesystem

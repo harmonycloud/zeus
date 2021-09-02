@@ -31,6 +31,10 @@ function deploy_kubernetes() {
   kubectl create -f zeus-ui.yaml
 }
 
+function deploy_helm() {
+    helm install
+}
+
 if [ $DEPLOY_TYPE == "docker-compose" ]; then
     echo "######  Deploy by docker-compose ######"
     deploy_docker
