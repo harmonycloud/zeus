@@ -4,7 +4,7 @@ metadata:
   labels:
     app: zeus-mysql
   name: zeus-mysql
-  namespace: { { .Values.global.namespace } }
+  namespace: {{ .Values.global.namespace }}
 spec:
   replicas: 1
   selector:
@@ -33,14 +33,14 @@ spec:
             - name: MYSQL_ROOT_PASSWORD
               value: ZeuS@Middleware01
           image: "{{ .Values.global.repository }}/{{ .Values.global.zeus_mysql.image }}:{{ .Values.global.zeus_mysql.tag }}"
-          imagePullPolicy: { { .Values.global.zeus_mysql.pullPolicy } }
+          imagePullPolicy: {{ .Values.global.zeus_mysql.pullPolicy }}
           name: mysql
           ports:
             - containerPort: 3306
               name: mysql
               protocol: TCP
           resources:
-            { { - toYaml .Values.global.zeus_mysql.resources | nindent 12 } }
+            {{- toYaml .Values.global.zeus.resources | nindent 12 }}
           volumeMounts:
             - mountPath: /data/mysql/db_zeus-mysql
               name: mysql-data
@@ -61,5 +61,5 @@ spec:
         resources:
           requests:
             storage: 5G
-        storageClassName: { { .Values.global.zeus_mysql.storageClass } }
+        storageClassName: {{ .Values.global.zeus_mysql.storageClass }}
         volumeMode: Filesystem
