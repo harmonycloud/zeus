@@ -31,8 +31,6 @@ global:
   zeus_mysql:
     replicaCount: 1
     image: zeus-mysql
-    init_image: mysql-init
-    init_tag: 1.0.4
     tag: v1.0.0
     pullPolicy: Always
     storageClass: default
