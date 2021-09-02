@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: zeus-mysql
+  namespace: {{ .Values.global.namespace }}
+spec:
+  ports:
+  - port: 3306
+    protocol: TCP
+    targetPort: 3306
+  selector:
+    app: zeus-mysql
+  sessionAffinity: None
+  type: ClusterIP
