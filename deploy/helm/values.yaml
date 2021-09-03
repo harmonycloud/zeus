@@ -1,0 +1,43 @@
+global:
+  repository: middleware.harmonycloud.cn:38080/middleware
+  namespace: zeus
+  storageClass: default
+  zeus:
+    replicaCount: 1
+    image: zeus
+    tag: v0.0.1
+    pullPolicy: Always
+    resources:
+      requests:
+        cpu: 1000m
+        memory: 2Gi
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+    nodeSelector: {}
+  zeus_ui:
+    replicaCount: 1
+    image: zeus-ui
+    tag: v0.0.1
+    pullPolicy: Always
+    nodePort: 30088
+    resources:
+      requests:
+        cpu: 200m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    nodeSelector: {}
+  zeus_mysql:
+    replicaCount: 1
+    image: zeus-mysql
+    tag: v1.0.0
+    pullPolicy: Always
+    resources:
+      requests:
+        cpu: 200m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi

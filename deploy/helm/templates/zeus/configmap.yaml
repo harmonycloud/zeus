@@ -1,0 +1,69 @@
+apiVersion: v1
+data:
+  application-prd.yml: |-
+    spring:
+      datasource:
+        username: root # change this
+        password: ZeuS@Middleware01 # change this
+        url: jdbc:mysql://zeus-mysql/middleware_platform?useUnicode=true&characterEncoding=utf-8 # change this
+        driver-class-name: com.mysql.cj.jdbc.Driver
+      servlet:
+        multipart:
+          max-file-size: 10GB
+          max-request-size: 10GB
+      resources:
+        static-locations: file:/usr/local/zeus-pv,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/
+    mybatis-plus:
+      mapper-locations: classpath:mapping/*.xml
+
+    management:
+      endpoint:
+        health:
+          show-components: always
+      health:
+        elasticsearch:
+          enabled: false
+
+    #调用远程服务
+    feign:
+      hystrix:
+        enabled: false
+
+    ribbon:
+      ReadTimeout: 10000
+      ConnectTimeout: 5000
+
+    #分页pageHelper
+    pagehelper:
+      helper-dialect: mysql
+      reasonable: true
+      support-methods-arguments: true
+
+    k8s:
+      namespace:
+        protect: default,kube-system,kube-node-lease,kube-public,caas-system,harbor-system,logging,monitoring,velero,middleware-system
+        label: middleware=true
+      kubeconfig:
+        path: /usr/local/kubeconfig
+      crd:
+        middlewareCrdYamlPath: /usr/local/zeus-pv/middleware-crd.yaml
+    system:
+      upload:
+        path: /usr/local/zeus-pv/upload
+      images:
+        path: /usr/local/zeus-pv/images/middleware
+
+    overview:
+      overall:
+        monitor:
+          realtime:
+            before: 300
+            duration: 60
+
+    license:
+      public:
+        key: MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAIr+NmJD0FCffQNOgas9IU7SyzuuioVIWeVjuI9KOdjCmLfBzsSmMVy0JcfMkV7rP+YpOwXlQiVq2QJlsxyynb2jF7S0HH9Dr356OinoVNieaHsOxXvC6A53DnUhcViHtTxXCIa1ZjqqIiDGgSmSMdLSMNaL/YyJzInXnnGlxpn3AgMBAAECgYBXCoViGheNNaNi+7nmU3zVUNpmwJIMj1eEeGNukEwTeyGKCbuDmJPW+xWhvnDW4Tl92BoXQg+fQP8vKiL1eMGgu7pU2D0X0SJdgNPW5BFYHltnj4sMtEuMGSCUVcrHZ0bGG6Bk4pHhIBm+mLrwKAJ76W4LoLgVsjcNomOFxNlaqQJBAOkl12h8YoSZy+F9wyewMkoI1vRhH/56evNwOl93K77n5PUSptUJ43wVm4QRBC8bnSkr79dwy/5Un3Es9pyr2oUCQQCYndVR82jjX9WlFZoLn+oHYPuOM/PgeJO3PJ0JOriYVZgwguepRwDek1yuOLmgH+J83OxznhWBk7lc9geuG9FLAkEA520NlgSp0g/Lpges2M94C68cl7V1CahQNSa4epyTSstqpK2f9qX7LedQ2FX/vjb92KlpSIQJqWocXj4QiVG49QJALUnpG8CXx6GQzMR0Si7STA5DmBdir6IYc6/RCgQa81mzJ/IwvNMNNv+T6T98FkBf/Z2xrT2kNCeaQjPgY5JtsQJAD7NjonNfh7vV7hGRNmw+2lm+7l9a18A/X3zfl3faGwsQzlqfdNNpvvCe5CsSvNPdTithe7dM6v8Ff1sQsRQUyg==
+kind: ConfigMap
+metadata:
+  name: zeus-config
+  namespace: {{ .Values.global.namespace }}

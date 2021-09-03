@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zeus-ui
+  namespace: {{ .Values.global.namespace }}
+spec:
+  progressDeadlineSeconds: 600
+  replicas: {{ .Values.global.zeus_ui.replicaCount }}
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: zeus-ui
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: zeus-ui
+    spec:
+      containers:
+      - image: "{{ .Values.global.repository }}/{{ .Values.global.zeus_ui.image }}:{{ .Values.global.zeus_ui.tag }}"
+        imagePullPolicy: {{ .Values.global.zeus_ui.pullPolicy }}
+        name: zeus-ui
+        ports:
+        - containerPort: 30088
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 5
+          httpGet:
+            path: /
+            port: 30088
+            scheme: HTTP
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        resources:
+          {{- toYaml .Values.global.zeus_ui.resources | nindent 12 }}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /etc/nginx/nginx.conf
+          name: nginx-config-volume
+          subPath: nginx.conf
+      {{- with .Values.global.zeus_ui.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 420
+          items:
+          - key: nginx.conf
+            path: nginx.conf
+          name: zeus-ui-nginx-config
+        name: nginx-config-volume
