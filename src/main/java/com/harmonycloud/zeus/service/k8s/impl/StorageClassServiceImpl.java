@@ -67,7 +67,7 @@ public class StorageClassServiceImpl implements StorageClassService {
                 continue;
             }
 
-            StorageClass s = new StorageClass().setName(sc.getMetadata().getName()).setType(provisionerEnum.getType())
+            StorageClass s = new StorageClass().setName(sc.getMetadata().getName())
                 .setLabels(sc.getMetadata().getLabels()).setParameters(sc.getParameters())
                 .setProvisioner(sc.getProvisioner()).setReclaimPolicy(sc.getReclaimPolicy())
                 .setVolumeBindingMode(sc.getVolumeBindingMode());
