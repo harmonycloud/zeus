@@ -292,11 +292,11 @@ public class ClusterServiceImpl implements ClusterService {
         registryService.validate(cluster.getRegistry());
 
         // 校验es（包含重置es客户端）
-        if (StringUtils.isNotBlank(cluster.getLogging().getElasticSearch().getHost())
+        /*if (StringUtils.isNotBlank(cluster.getLogging().getElasticSearch().getHost())
             && (!esComponentService.checkEsConnection(cluster) || esComponentService.resetEsClient(cluster) == null)) {
             throw new BusinessException(DictEnum.ES_COMPONENT, cluster.getLogging().getElasticSearch().getAddress(),
                 ErrorMessage.VALIDATE_FAILED);
-        }
+        }*/
 
         // 只修改昵称，证书，ingress，制品服务，es
         oldCluster.setNickname(cluster.getNickname());
