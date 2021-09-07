@@ -76,6 +76,8 @@ spec:
           name: docker
         - mountPath: /usr/local/zeus-pv/helm
           name: zeus-helm
+        - mountPath: /cfg/zeus.jks
+          name: zeus-ssl-volume
       dnsPolicy: ClusterFirst
       {{- with .Values.global.zeus.nodeSelector }}
       nodeSelector:
@@ -94,6 +96,13 @@ spec:
             path: application.yml
           name: zeus-config
         name: zeus-config
+      - configMap:
+          defaultMode: 420
+          items:
+            - key: zeus.jks
+              path: zeus.jks
+          name: zeus-jks
+        name: zeus-ssl-volume
       - emptyDir: {}
         name: zeus-upload
       - hostPath:
