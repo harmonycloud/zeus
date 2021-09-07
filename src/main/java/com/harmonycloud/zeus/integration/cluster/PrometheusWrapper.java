@@ -58,8 +58,11 @@ public class PrometheusWrapper {
     public void setSilence(String clusterId, String prometheusApiVersion, Map<String, Object> body) throws Exception {
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         MiddlewareClusterMonitorInfo alertManager = getAlertManagerInfo(cluster);
-        PrometheusApi prometheusApi =
-                new PrometheusApi(new PrometheusClient(alertManager.getAddress() + prometheusApiVersion));
+        PrometheusApi prometheusApi = new PrometheusApi(new PrometheusClient(alertManager.getProtocol(),
+            alertManager.getHost(), Integer.parseInt(alertManager.getPort()),
+            alertManager.getAddress()
+                .replace(alertManager.getProtocol() + "://" + alertManager.getHost() + ":" + alertManager.getPort(), "")
+                + prometheusApiVersion));
         prometheusApi.setSilence(body);
     }
 
