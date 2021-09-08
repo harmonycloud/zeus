@@ -9,7 +9,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -19,6 +22,8 @@ import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
 import com.harmonycloud.zeus.service.k8s.PodService;
 import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
+import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -41,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 import static com.harmonycloud.caas.common.constants.CommonConstant.DOT;
 import static com.harmonycloud.caas.common.constants.CommonConstant.LINE;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.HARMONY_CLOUD;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.ICON_SVG;
 import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.SVG;
 
@@ -57,6 +63,10 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
 
     @Autowired
     private BeanMiddlewareInfoMapper middlewareInfoMapper;
+    @Autowired
+    private MiddlewareCRDService middlewareCRDService;
+    @Autowired
+    private MiddlewareService middlewareService;
     @Autowired
     private ClusterMiddlewareInfoService clusterMiddlewareInfoService;
     @Autowired
@@ -107,71 +117,6 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         if (mwInfoList.size() == 0) {
             return new ArrayList<>(0);
         }
-        Map<String, List<BeanMiddlewareInfo>> mwInfoMap =
-                mwInfoList.stream().collect(Collectors.groupingBy(BeanMiddlewareInfo::getChartName));
-        //获取集群中间件关联信息
-        List<BeanClusterMiddlewareInfo> clusterMwInfoList = clusterMiddlewareInfoService.list(clusterId);
-        //校验数据完整性
-        if (CollectionUtils.isEmpty(clusterMwInfoList) || clusterMwInfoList.size() < mwInfoMap.size()) {
-            for (String key : mwInfoMap.keySet()) {
-                if (clusterMwInfoList.stream().noneMatch(
-                    clusterMwInfo -> clusterMwInfo.getChartName().equals(mwInfoMap.get(key).get(0).getChartName()))) {
-                    //获取最新版本的中间件写入集群中间件关联关系
-                    List<BeanMiddlewareInfo> list = mwInfoMap.get(key);
-                    list.sort(Comparator.comparing(BeanMiddlewareInfo::getChartVersion).reversed());
-                    BeanClusterMiddlewareInfo clusterMwInfo = new BeanClusterMiddlewareInfo();
-                    clusterMwInfo.setClusterId(clusterId);
-                    clusterMwInfo.setChartName(list.get(0).getChartName());
-                    clusterMwInfo.setChartVersion(list.get(0).getChartVersion());
-                    clusterMwInfo.setStatus(2);
-                    clusterMiddlewareInfoService.insert(clusterMwInfo);
-                    clusterMwInfoList.add(clusterMwInfo);
-                }
-            }
-        }
-        //过滤中间件
-        mwInfoList =
-            mwInfoList.stream()
-                .filter(mwInfo -> clusterMwInfoList.stream()
-                    .anyMatch(clusterMwInfo -> clusterMwInfo.getChartName().equals(mwInfo.getChartName())
-                        && clusterMwInfo.getChartVersion().equals(mwInfo.getChartVersion())))
-                .collect(Collectors.toList());
-        Map<String, BeanClusterMiddlewareInfo> clusterMwInfoMap = clusterMwInfoList.stream()
-            .collect(Collectors.toMap(info -> info.getChartName() + "-" + info.getChartVersion(), info -> info));
-        //0-创建中 1-创建成功  2-待安装  3-运行异常
-        // todo 获取状态 目前默认所有operator都装在此指定分区 (是否有必要异步)
-        List<PodInfo> podList = podService.list(clusterId, "middleware-operator");
-        podList = podList.stream().filter(pod -> pod.getPodName().contains("operator")).collect(Collectors.toList());
-        // 转化为map，并去除pod name 后缀中的随机码
-        Map<String,
-            PodInfo> podMap =
-                podList.stream()
-                    .collect(
-                        Collectors.toMap(
-                            info -> info.getPodName().substring(0,
-                                info.getPodName().lastIndexOf("-", info.getPodName().lastIndexOf("-") - 1)),
-                            info -> info));
-        mwInfoList.forEach(mwInfo -> {
-            String key = mwInfo.getChartName() + "-" + mwInfo.getChartVersion();
-            if (podMap.containsKey(mwInfo.getOperatorName())) {
-                if ("Running".equals(podMap.get(mwInfo.getOperatorName()).getStatus())) {
-                    clusterMwInfoMap.get(key).setStatus(1);
-                } else if (clusterMwInfoMap.get(key).getStatus() != 0) {
-                    clusterMwInfoMap.get(key).setStatus(3);
-                }
-            } else {
-                clusterMwInfoMap.get(key).setStatus(2);
-            }
-        });
-        //保存状态
-       saveStatus(clusterMwInfoMap);
-        return mwInfoList.stream().map(info -> {
-            MiddlewareInfoDTO dto = new MiddlewareInfoDTO();
-            BeanUtils.copyProperties(info, dto);
-            dto.setStatus(clusterMwInfoMap.get(info.getChartName() + "-" + info.getChartVersion()).getStatus());
-            return dto;
-        }).collect(Collectors.toList());
-    }
 
     @Override
     public List<MiddlewareInfoDTO> version(String clusterId, String type) {
@@ -308,4 +253,46 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         }
     }
 
+
+
+    @Override
+    public List listAllMiddleware(String clusterId, String namespace) {
+        List<MiddlewareInfoDTO> middlewareInfoDTOList = list(clusterId, namespace);
+        List<Map<String, Object>> serviceList = new ArrayList<>();
+        middlewareInfoDTOList.forEach(middlewareInfoDTO -> {
+            List<Middleware> middlewareServiceList = middlewareService.simpleList(clusterId, namespace, middlewareInfoDTO.getChartName(), null);
+            middlewareServiceList.forEach(middlewareService -> {
+                MiddlewareCRD middlewareCRD = middlewareCRDService.getCR(clusterId, namespace, middlewareInfoDTO.getType(), middlewareService.getName());
+                if (middlewareCRD != null) {
+                    List<MiddlewareInfo> middlewareInfos = middlewareCRD.getStatus().getInclude().get(PODS);
+                    middlewareService.setPodNum(middlewareInfos.size());
+                }
+            });
+
+            Map<String, Object> middlewareMap = new HashMap<>();
+            middlewareMap.put("name", middlewareInfoDTO.getChartName());
+            middlewareMap.put("image", middlewareInfoDTO.getImage());
+            middlewareMap.put("imagePath", middlewareInfoDTO.getImagePath());
+            middlewareMap.put("serviceList", middlewareServiceList);
+            middlewareMap.put("serviceNum", middlewareServiceList.size());
+            serviceList.add(middlewareMap);
+        });
+        Collections.sort(serviceList, new ServiceMapComparator());
+
+        return serviceList;
+    }
+
+    /**
+     * 服务排序类，按服务数量进行排序
+     */
+    public static class ServiceMapComparator implements Comparator<Map> {
+        @Override
+        public int compare(Map service1, Map service2) {
+            if (Integer.parseInt(service1.get("serviceNum").toString()) > Integer.parseInt(service2.get("serviceNum").toString())) {
+                return -1;
+            } else {
+                return 1;
+            }
+        }
+    }
 }

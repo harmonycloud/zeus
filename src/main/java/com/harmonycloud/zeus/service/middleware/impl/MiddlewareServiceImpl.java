@@ -243,6 +243,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         return helmInfoList.stream().map(HelmListInfo::getName).collect(Collectors.toList());
     }
 
+    @Override
     public <T, R> T getOperator(Class<T> funClass, Class<R> baseClass, Object... types) {
         return super.getOperator(funClass, baseClass, types);
     }

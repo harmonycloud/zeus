@@ -6,6 +6,7 @@ import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author dengyulong
@@ -71,4 +72,13 @@ public interface MiddlewareInfoService {
      */
     void insert(HelmChartFile helmChartFile, File file, String clusterId);
 
+    /**
+     * @description 查询所有中间件
+     * @author  liyinlong
+     * @since 2021/9/7 10:55 上午
+     * @param clusterId
+     * @param namespace
+     * @return
+     */
+    List listAllMiddleware(String clusterId, String namespace);
 }

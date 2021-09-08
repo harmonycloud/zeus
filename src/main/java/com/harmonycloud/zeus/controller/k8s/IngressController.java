@@ -34,7 +34,7 @@ public class IngressController {
     public BaseResult<List<IngressDTO>> list(@PathVariable("clusterId") String clusterId,
                                              @PathVariable(value = "namespace") String namespace,
                                              @RequestParam(value = "keyword", required = false) String keyword) {
-        return BaseResult.ok(ingressService.list(clusterId, namespace, keyword));
+        return BaseResult.ok(ingressService.listAllIngress(clusterId, namespace, keyword));
     }
 
     @ApiOperation(value = "创建中间件对外访问", notes = "创建中间件对外访问")
@@ -85,25 +85,5 @@ public class IngressController {
                                       @RequestParam("type") String type) {
         return BaseResult.ok(ingressService.get(clusterId, namespace, type, middlewareName));
     }
-
-    /*@ApiOperation(value = "获取某个对外访问", notes = "获取某个对外访问")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class)
-            @ApiImplicitParam(name = "name", value = "对外路由名称", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "exposeType", value = "对外暴露方式", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "protocol", value = "协议", paramType = "query", dataTypeClass = String.class)
-    })
-    @GetMapping("/{middlewareName}/ingress/{name}")
-    public BaseResult<IngressDTO> get(@PathVariable("clusterId") String clusterId, @PathVariable("namespace") String namespace,
-                                      @PathVariable("middlewareName") String middlewareName,
-                                      @RequestParam("type") String type,
-                                      @PathVariable("name") String name,
-                                      @RequestParam("exposeType") String exposeType,
-                                      @RequestParam("protocol") String protocol) {
-        return BaseResult.ok(ingressService.get(clusterId, namespace, type, middlewareName, name, exposeType, protocol));
-    }*/
 
 }

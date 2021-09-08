@@ -97,4 +97,15 @@ public interface IngressService {
      */
     List<IngressRuleDTO> getHelmIngress(String clusterId, String namespace, String helmReleaseName);
 
+    /**
+     *  查询所有ingress
+     * @author  liyinlong
+     * @since 2021/9/7 5:52 下午
+     * @param clusterId
+     * @param namespace
+     * @param keyword
+     * @return
+     */
+    List listAllIngress(String clusterId, String namespace, String keyword);
+
 }
