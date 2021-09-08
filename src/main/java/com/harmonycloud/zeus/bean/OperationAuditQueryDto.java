@@ -66,4 +66,9 @@ public class OperationAuditQueryDto {
      * 请求时间排序 true：正序   false：倒序
      */
     private Boolean executeTimeNormalOrder;
+
+    /**
+     * 状态码排序 true：正序 false：倒序
+     */
+    private Boolean statusOrder;
 }
