@@ -221,8 +221,8 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         middlewareInfo.setDescription(helmChartFile.getDescription());
         middlewareInfo.setClusterId(clusterId);
         middlewareInfo.setOfficial(HARMONY_CLOUD.equals(helmChartFile.getOfficial()));
-        LocalDateTime now = LocalDateTime.now();
-        middlewareInfo.setUpdateTime(now);
+        //LocalDateTime now = LocalDateTime.now();
+        middlewareInfo.setUpdateTime(new Date());
         List<Path> iconFiles = searchFiles(file.getParent() + File.separator + helmChartFile.getTarFileName(), ICON_SVG);
         if (!CollectionUtils.isEmpty(iconFiles)) {
             // 获取image路径
@@ -241,7 +241,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         if (CollectionUtils.isEmpty(beanMiddlewareInfos)) {
             middlewareInfo.setChartVersion(helmChartFile.getChartVersion());
             middlewareInfo.setVersion(helmChartFile.getAppVersion());
-            middlewareInfo.setCreateTime(now);
+            middlewareInfo.setCreateTime(new Date());
             middlewareInfoMapper.insert(middlewareInfo);
         } else {
             middlewareInfo.setId(beanMiddlewareInfos.get(0).getId());

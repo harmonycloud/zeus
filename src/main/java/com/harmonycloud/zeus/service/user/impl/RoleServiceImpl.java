@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.caas.common.model.user.RoleDto;
+import com.harmonycloud.caas.common.model.user.UserRole;
 import com.harmonycloud.caas.filters.token.JwtTokenComponent;
 import com.harmonycloud.caas.filters.user.CurrentUser;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
@@ -20,6 +21,7 @@ import com.harmonycloud.zeus.service.user.UserRoleService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -82,7 +84,9 @@ public class RoleServiceImpl implements RoleService {
         //校验角色是否有绑定用户
         checkUserBind(roleId);
         //删除角色
+        beanRoleMapper.deleteById(roleId);
         //删除角色菜单绑定
+        resourceMenuRoleService.delete(roleId);
     }
 
     @Override
@@ -140,5 +144,10 @@ public class RoleServiceImpl implements RoleService {
      * 校验角色用户绑定
      */
     public void checkUserBind(Integer roleId){
+        List<UserRole> userRoleList = userRoleService.findByRoleId(roleId);
+        if (CollectionUtils.isEmpty(userRoleList)){
+            //todo
+            throw new BusinessException(ErrorMessage.NOT_FOUND);
+        }
     }
 }

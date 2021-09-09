@@ -40,4 +40,10 @@ public class ResourceMenuRoleServiceImpl implements ResourceMenuRoleService {
         beanResourceMenuRole.setAvailable(true);
         beanResourceMenuRoleMapper.insert(beanResourceMenuRole);
     }
+
+    @Override
+    public void delete(Integer roleId) {
+        QueryWrapper<BeanResourceMenuRole> wrapper = new QueryWrapper<BeanResourceMenuRole>().eq("roleId", roleId);
+        beanResourceMenuRoleMapper.delete(wrapper);
+    }
 }
