@@ -1,0 +1,159 @@
+{{- if eq .Values.mode "distributed" }}
+{{ $zoneCount := .Values.zones | int }}
+{{ $nodeCount := .Values.replicas | int }}
+{{ $drivesPerNode := .Values.drivesPerNode | int }}
+{{ $scheme := "http" }}
+{{- if .Values.tls.enabled }}
+{{ $scheme = "https" }}
+{{ end }}
+{{ $mountPath := .Values.mountPath }}
+{{ $bucketRoot := or ($.Values.bucketRoot) ($.Values.mountPath) }}
+{{ $subPath := .Values.persistence.subPath }}
+{{ $penabled := .Values.persistence.enabled }}
+{{ $accessMode := .Values.persistence.accessMode }}
+{{ $storageClass := .Values.persistence.storageClass }}
+{{ $psize := .Values.persistence.size }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "minio.fullname" . }}-svc
+  labels:
+    app: {{ include "minio.fullname" . }}
+spec:
+  type: NodePort
+  ports:
+    - port: 9000
+      nodePort: {{ .Values.service.nodePort }}
+      name: minio
+      targetPort: 9000
+  selector:
+    app: {{ include "minio.fullname" . }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "minio.fullname" . }}
+spec:
+  serviceName: {{ include "minio.fullname" . }}-svc
+  selector:
+    matchLabels:
+      app: {{ include "minio.fullname" . }}
+  replicas: {{ .Values.replicas }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "minio.fullname" . }}
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - "{{ include "minio.fullname" . }}"
+            topologyKey: kubernetes.io/hostname
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: {{ include "minio.fullname" . }}
+        env:
+        - name: MINIO_ACCESS_KEY
+          value: {{ .Values.accessKey }}
+        - name: MINIO_SECRET_KEY
+          value: {{ .Values.secretKey }}
+        - name: MINIO_PROMETHEUS_AUTH_TYPE
+          value: "public"
+        image: {{ .Values.image.repository }}/minio:{{ .Values.image.minioTag }}
+        args:
+        - server
+        - {{- range $i := until $zoneCount }}{{ $factor := mul $i $nodeCount }}{{ $endIndex := add $factor $nodeCount }}{{ $beginIndex := mul $i $nodeCount }}  {{ $scheme }}://{{ template `minio.fullname` $ }}-{{ `{` }}{{ $beginIndex }}...{{ sub $endIndex 1 }}{{ `}`}}.{{ template `minio.fullname` $ }}-svc.{{ $.Release.Namespace }}.svc.{{ $.Values.clusterDomain }}{{if (gt $drivesPerNode 1)}}{{ $bucketRoot }}-{{ `{` }}0...{{ sub $drivesPerNode 1 }}{{ `}` }}{{else}}{{ $bucketRoot }}{{end}}{{- end}}{{- template `minio.extraArgs` . }}
+        ports:
+        - containerPort: 9000
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        # These volume mounts are persistent. Each pod in the PetSet
+        # gets a volume mounted based on this field.
+        volumeMounts:
+          {{- if $penabled }}
+          {{- if (gt $drivesPerNode 1) }}
+          {{- range $i := until $drivesPerNode }}
+          - name: export-{{ $i }}
+            mountPath: {{ $mountPath }}-{{ $i }}
+            {{- if and $penabled $subPath }}
+            subPath: {{ $subPath }}
+            {{- end }}
+          {{- end }}
+          {{- else }}
+          - name: export
+            mountPath: {{ $mountPath }}
+            {{- if and $penabled $subPath }}
+            subPath: {{ $subPath }}
+            {{- end }}
+          {{- end }}
+          {{- end }}
+          
+  # These are converted to volume claims by the controller
+  # and mounted at the paths mentioned above.
+  volumeClaimTemplates:
+  {{- if gt $drivesPerNode 1 }}
+    {{- range $diskId := until $drivesPerNode}}
+    - metadata:
+        name: export-{{ $diskId }}
+      spec:
+        accessModes: [ {{ $accessMode | quote }} ]
+        {{- if $storageClass }}
+        storageClassName: {{ $storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ $psize }}
+    {{- end }}
+  {{- else }}
+    - metadata:
+        name: export
+      spec:
+        accessModes: [ {{ $accessMode | quote }} ]
+        {{- if $storageClass }}
+        storageClassName: {{ $storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ $psize }}
+  {{- end }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "minio.fullname" . }}-setup
+  labels:
+    app: {{ include "minio.fullname" . }}
+spec:
+  template:
+    metadata:
+      name: {{ include "minio.fullname" . }}-setup
+    spec:
+      restartPolicy: OnFailure
+      volumes:
+      - name: config
+        emptyDir: {}
+      containers:
+      - name: mc
+        image: {{ .Values.image.repository }}/minio-mc:{{ .Values.image.mcTag }}
+        imagePullPolicy: IfNotPresent
+        command:
+        - /bin/sh
+        - -c
+        - mc --config-dir=/config config host add minio http://{{ include "minio.fullname" . }}-svc.{{ .Release.Namespace }}.svc.{{ $.Values.clusterDomain }}:9000 {{ .Values.accessKey }} {{ .Values.secretKey }} && mc --config-dir=/config mb --region={{ .Values.minioArgs.regionName }} -p minio/{{ .Values.minioArgs.bucketName }}
+        volumeMounts:
+        - name: config
+          mountPath: "/config"
+{{- end }}

@@ -1,0 +1,97 @@
+minioArgs:
+  bucketName: minio-test
+  regionName: cn-north-1
+
+## Provide a name in place of minio for `app:` labels
+##
+nameOverride: ""
+
+## Provide a name to substitute for the full names of resources
+fullnameOverride: ""
+
+replicas: 2
+zones: 1
+#Number of disks per node
+drivesPerNode: 2
+
+mode: distributed
+image:
+  repository: harmonyware.harbor.cn/middleware
+  minioTag: RELEASE.2020-12-03T05-49-24Z
+  mcTag: RELEASE.2020-06-16T19-24-41Z
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart version.
+
+imagePullSecrets: []
+clusterDomain: cluster.local
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+StatefulSetUpdate:
+  updateStrategy: RollingUpdate
+service:
+  type: ClusterIP
+  port: 9000
+  nodePort: 31902
+
+accessKey: "minio"
+secretKey: "minio123"
+mountPath: "/export"
+bucketRoot: ""
+persistence:
+  enabled: true
+  #storageClass: default
+  VolumeName: cluster-minio
+  accessMode: ReadWriteOnce
+  size: 5Gi
+  subPath: ""
+
+tls:
+  enabled: false
+  certSecret: ""
+  publicCrt: public.crt
+  privateKey: private.key
+
+## Additional arguments to pass to minio binary
+extraArgs: []
+
+resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+   limits:
+     cpu: 200m
+     memory: 512Mi
+   requests:
+     cpu: 200m
+     memory: 512Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+ingress:
+  host: minio.middleware.com
+  ingressClass: nginx-ingress-controller
