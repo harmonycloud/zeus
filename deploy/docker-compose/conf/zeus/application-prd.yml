@@ -63,6 +63,9 @@ license:
 
 #ssl
 server:
+  http:
+    port: 8080
+  port: 8443
   ssl:
     key-alias: zeushttps
     key-store-password: Ab123456
