@@ -55,7 +55,7 @@ public class RoleController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "roleDto", value = "角色", paramType = "query", dataTypeClass = String.class)
     })
-    @DeleteMapping("/{roleId}")
+    @PutMapping("/{roleId}")
     public BaseResult delete(@PathVariable("roleId") Integer roleId) {
         roleService.delete(roleId);
         return BaseResult.ok();
