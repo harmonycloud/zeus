@@ -36,11 +36,11 @@ public interface RoleService {
 
     /**
      * 获取角色
-     * @param withAdmin 是否携带admin
+     * @param key 关键字查找
      *
      * @return List<BeanSysRole>
      */
-    List<RoleDto> list(Boolean withAdmin);
+    List<RoleDto> list(String key);
 
     /**
      * 获取角色

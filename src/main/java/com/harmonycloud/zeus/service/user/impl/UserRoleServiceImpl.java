@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.user.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -7,8 +8,10 @@ import java.util.stream.Collectors;
 import com.harmonycloud.caas.common.model.user.RoleDto;
 import com.harmonycloud.zeus.service.user.RoleService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -55,7 +58,7 @@ public class UserRoleServiceImpl implements UserRoleService {
         Map<String, Integer> beanSysRoleUserMap =
             beanUserRole.stream().collect(Collectors.toMap(BeanUserRole::getUserName, BeanUserRole::getRoleId));
         // 获取所有角色信息
-        List<RoleDto> beanRoleList = roleService.list(true);
+        List<RoleDto> beanRoleList = roleService.list(null);
         Map<Integer, String> beanSysRoleMap =
             beanRoleList.stream().collect(Collectors.toMap(RoleDto::getId, RoleDto::getName));
         // 封装返回信息
@@ -63,6 +66,20 @@ public class UserRoleServiceImpl implements UserRoleService {
             UserRole userRole = new UserRole();
             userRole.setUserName(beanUser.getUserName()).setRoleId(beanSysRoleUserMap.get(beanUser.getUserName()))
                 .setRoleName(beanSysRoleMap.get(beanSysRoleUserMap.get(beanUser.getUserName())));
+            return userRole;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<UserRole> findByRoleId(Integer roleId) {
+        QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("roleId", roleId);
+        List<BeanUserRole> beanUserRoleList = beanUserRoleMapper.selectList(wrapper);
+        if (CollectionUtils.isEmpty(beanUserRoleList)){
+            return new ArrayList<>();
+        }
+        return beanUserRoleList.stream().map(beanUserRole -> {
+            UserRole userRole = new UserRole();
+            BeanUtils.copyProperties(beanUserRole, userRole);
             return userRole;
         }).collect(Collectors.toList());
     }

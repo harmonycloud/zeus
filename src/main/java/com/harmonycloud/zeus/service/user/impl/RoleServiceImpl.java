@@ -16,6 +16,7 @@ import com.harmonycloud.zeus.service.user.ResourceMenuRoleService;
 import com.harmonycloud.zeus.service.user.ResourceMenuService;
 import com.harmonycloud.zeus.dao.user.BeanRoleMapper;
 import com.harmonycloud.zeus.service.user.RoleService;
+import com.harmonycloud.zeus.service.user.UserRoleService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -41,6 +42,8 @@ public class RoleServiceImpl implements RoleService {
     private ResourceMenuRoleService resourceMenuRoleService;
     @Autowired
     private ResourceMenuService resourceMenuService;
+    @Autowired
+    private UserRoleService userRoleService;
 
     @Override
     public void add(RoleDto roleDto) {
@@ -76,21 +79,20 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public void delete(Integer roleId) {
-
+        //校验角色是否有绑定用户
+        checkUserBind(roleId);
+        //删除角色
+        //删除角色菜单绑定
     }
 
     @Override
-    public List<RoleDto> list(Boolean withAdmin) {
+    public List<RoleDto> list(String key) {
         // 获取当前用户的角色id
         CurrentUser currentUser = CurrentUserRepository.getUser();
         String currentRoleId = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString("roleId");
         // 获取所有角色信息
         QueryWrapper<BeanRole> roleWrapper = new QueryWrapper<>();
         List<BeanRole> beanRoleList = beanRoleMapper.selectList(roleWrapper);
-        if (!withAdmin) {
-            beanRoleList = beanRoleList.stream().filter(beanRole -> !beanRole.getName().equals(ADMIN))
-                .collect(Collectors.toList());
-        }
         // 获取所有角色菜单(权限)映照
         List<BeanResourceMenuRole> beanResourceMenuRoleList = resourceMenuRoleService.list(null);
         Map<Integer, List<BeanResourceMenuRole>> rmRoleMap =
@@ -106,7 +108,8 @@ public class RoleServiceImpl implements RoleService {
             RoleDto roleDto = new RoleDto();
             BeanUtils.copyProperties(beanRole, roleDto);
             return roleDto;
-        }).collect(Collectors.toList());
+        }).filter(roleDto -> roleDto.getName().contains(key) || roleDto.getDescription().contains(key))
+            .collect(Collectors.toList());
     }
 
     @Override
@@ -131,5 +134,11 @@ public class RoleServiceImpl implements RoleService {
         QueryWrapper<BeanRole> wrapper = new QueryWrapper<BeanRole>().eq("name", roleDto.getName()).eq("status", true);
         BeanRole beanRole = beanRoleMapper.selectOne(wrapper);
         roleDto.getMenu().forEach(menu -> resourceMenuRoleService.add(beanRole.getId(), menu.getId()));
+    }
+
+    /**
+     * 校验角色用户绑定
+     */
+    public void checkUserBind(Integer roleId){
     }
 }

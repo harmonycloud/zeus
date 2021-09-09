@@ -37,13 +37,13 @@ public class RoleController {
 
     @ApiOperation(value = "获取角色列表", notes = "获取角色列表")
     @GetMapping("/list")
-    public BaseResult<List<RoleDto>> list() {
-        return BaseResult.ok(roleService.list(false));
+    public BaseResult<List<RoleDto>> list(@RequestParam("key") String key) {
+        return BaseResult.ok(roleService.list(key));
     }
 
     @ApiOperation(value = "删除角色", notes = "删除角色")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "roleDto", value = "角色", paramType = "query", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "roleId", value = "角色id", paramType = "path", dataTypeClass = String.class)
     })
     @DeleteMapping("/{roleId}")
     public BaseResult add(@PathVariable("roleId") Integer roleId) {

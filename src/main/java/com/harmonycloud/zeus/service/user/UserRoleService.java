@@ -21,6 +21,14 @@ public interface UserRoleService {
     UserRole get(String userName) throws Exception;
 
     /**
+     * 获取绑定制定角色的用户
+     *
+     * @param roleId 角色id
+     * @return BeanSysRole
+     */
+    List<UserRole> findByRoleId(Integer roleId);
+
+    /**
      * 获取角色
      *
      * @return List<BeanSysRole>
