@@ -33,12 +33,19 @@ public class MiddlewareInfoController {
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping
-    public BaseResult list(@RequestParam(value = "clusterId") String clusterId,
-                           @RequestParam(value = "namespace", required = false) String namespace) {
-        if (StringUtils.isBlank(namespace)) {
-            return BaseResult.ok(middlewareInfoService.list(clusterId));
-        }
-        return BaseResult.ok(middlewareInfoService.list(clusterId, namespace));
+    public BaseResult list(@RequestParam(value = "clusterId") String clusterId) {
+        return BaseResult.ok(middlewareInfoService.list(clusterId));
+    }
+
+    @ApiOperation(value = "查询指定中间件版本", notes = "查询指定中间件版本")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "类型", paramType = "query", dataTypeClass = String.class)
+    })
+    @GetMapping("/version")
+    public BaseResult version(@RequestParam(value = "clusterId") String clusterId,
+                              @RequestParam(value = "type") String type) {
+        return BaseResult.ok(middlewareInfoService.version(clusterId, type));
     }
 
 }

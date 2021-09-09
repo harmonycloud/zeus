@@ -1,7 +1,7 @@
 spring:
   datasource:
     username: root # change this
-    password: root # change this
+    password: Ab123456 # change this
     url: jdbc:mysql://127.0.0.1:3306/middleware_platform?useUnicode=true&characterEncoding=utf-8 # change this
     driver-class-name: com.mysql.cj.jdbc.Driver
   servlet:
@@ -9,7 +9,7 @@ spring:
       max-file-size: 10GB
       max-request-size: 10GB
   resources:
-    static-locations: file:/MyPath/upload,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/ # change this
+    static-locations: file:/Users/Aive/Desktop/upload,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/
 mybatis-plus:
   mapper-locations: classpath:mapping/*.xml
 logging:
@@ -45,14 +45,18 @@ k8s:
     label: middleware=true
   token:
     # debug时填写本地的token文件路径，有默认值，仅开发使用
-    path: /MyPath/kube-token # change this
+    path: /Users/Aive/Desktop/upload/token-12 # change me
   service:
-    # 默认kubernetes fabric8客户端的地址，有默认值，仅开发使用
-    host: 127.0.0.1
+    # 默认fabric8客户端的地址，有默认值，仅开发使用
+    host: 10.1.10.12
     port: 6443
   kubeconfig:
     # debug时填写本地的kube config文件路径，有默认值，仅开发使用
-    path: /MyPath/upload # change this
+    path: /Users/Aive/Desktop/upload
+  component:
+    helm: /Users/Aive/Desktop/helm
+    middleware: /Users/Aive/Desktop/middleware
+    components: /Users/Aive/Desktop/components
 
 #分页pageHelper
 pagehelper:
@@ -62,17 +66,13 @@ pagehelper:
 
 system:
   upload:
-    # debug时填写自己本地的一个可访问的目录，仅开发使用，默认值：/usr/local/Zeus-pv/upload
-    path: /MyPath/upload
+    # debug时填写自己本地的一个可访问的目录，仅开发使用，默认值：/usr/local/zeus-pv/upload
+    path: /Users/Aive/Desktop/upload
   images:
-    path: /MyPath/upload/images
+    path: /Users/aive/Desktop/upload/images
   user:
     username: admin
     # 密码Ab123456!
     password: 5B99164F828AED74140E5FDA077B634C
     # token有效期，8小时
     expire: 8
-
-license:
-  public:
-    key: MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAIr+NmJD0FCffQNOgas9IU7SyzuuioVIWeVjuI9KOdjCmLfBzsSmMVy0JcfMkV7rP+YpOwXlQiVq2QJlsxyynb2jF7S0HH9Dr356OinoVNieaHsOxXvC6A53DnUhcViHtTxXCIa1ZjqqIiDGgSmSMdLSMNaL/YyJzInXnnGlxpn3AgMBAAECgYBXCoViGheNNaNi+7nmU3zVUNpmwJIMj1eEeGNukEwTeyGKCbuDmJPW+xWhvnDW4Tl92BoXQg+fQP8vKiL1eMGgu7pU2D0X0SJdgNPW5BFYHltnj4sMtEuMGSCUVcrHZ0bGG6Bk4pHhIBm+mLrwKAJ76W4LoLgVsjcNomOFxNlaqQJBAOkl12h8YoSZy+F9wyewMkoI1vRhH/56evNwOl93K77n5PUSptUJ43wVm4QRBC8bnSkr79dwy/5Un3Es9pyr2oUCQQCYndVR82jjX9WlFZoLn+oHYPuOM/PgeJO3PJ0JOriYVZgwguepRwDek1yuOLmgH+J83OxznhWBk7lc9geuG9FLAkEA520NlgSp0g/Lpges2M94C68cl7V1CahQNSa4epyTSstqpK2f9qX7LedQ2FX/vjb92KlpSIQJqWocXj4QiVG49QJALUnpG8CXx6GQzMR0Si7STA5DmBdir6IYc6/RCgQa81mzJ/IwvNMNNv+T6T98FkBf/Z2xrT2kNCeaQjPgY5JtsQJAD7NjonNfh7vV7hGRNmw+2lm+7l9a18A/X3zfl3faGwsQzlqfdNNpvvCe5CsSvNPdTithe7dM6v8Ff1sQsRQUyg==

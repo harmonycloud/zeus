@@ -60,12 +60,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private HelmChartService helmChartService;
     @Autowired
     private MiddlewareInfoService middlewareInfoService;
-    @Autowired
-    private ServiceService serviceService;
-    @Autowired
-    private IngressService ingressService;
-    @Autowired
-    private MysqlReplicateCRDService mysqlReplicateCRDService;
 
     private final static Map<String, String> titleMap = new HashMap<String, String>(7) {
         {
@@ -236,7 +230,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     
     public List<String> getNameList(String clusterId, String namespace, String type) {
         // 获取中间件chartName + chartVersion
-        List<BeanMiddlewareInfo> mwInfoList = middlewareInfoService.list(clusterId);
+        List<BeanMiddlewareInfo> mwInfoList = middlewareInfoService.list();
         mwInfoList =
             mwInfoList.stream().filter(mwInfo -> mwInfo.getChartName().equals(type)).collect(Collectors.toList());
         List<String> chartList = mwInfoList.stream()

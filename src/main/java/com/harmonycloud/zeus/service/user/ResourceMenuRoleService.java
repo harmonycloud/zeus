@@ -18,4 +18,13 @@ public interface ResourceMenuRoleService {
      */
     List<BeanResourceMenuRole> list(String roleId);
 
+    /**
+     * 添加角色菜单映照列表
+     *
+     * @param roleId 角色id
+     * @param resourceMenuId 菜单id
+     *
+     */
+    void add(Integer roleId, Integer resourceMenuId);
+
 }

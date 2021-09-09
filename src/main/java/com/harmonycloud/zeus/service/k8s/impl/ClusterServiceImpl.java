@@ -478,7 +478,7 @@ public class ClusterServiceImpl implements ClusterService {
                 if (f.getAbsolutePath().contains(".tgz")) {
                     HelmChartFile chartFile = helmChartService.getHelmChartFromFile(null, null, f);
                     helmChartService.createOperator(middlewarePath, clusterId, chartFile);
-                    middlewareInfoService.insert(chartFile, middlewarePath, clusterId);
+                    middlewareInfoService.insert(chartFile, f, clusterId);
                 }
             });
         }

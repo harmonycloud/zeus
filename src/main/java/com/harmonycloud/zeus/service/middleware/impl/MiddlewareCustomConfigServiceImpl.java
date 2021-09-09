@@ -330,6 +330,9 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             args = new JSONObject();
         }
         for (String key : dataMap.keySet()) {
+            if (StringUtils.isEmpty(dataMap.get(key))) {
+                continue;
+            }
             Pattern pattern = Pattern.compile("[0-9]*");
             Matcher isNum = pattern.matcher(dataMap.get(key));
             if (isNum.matches()) {

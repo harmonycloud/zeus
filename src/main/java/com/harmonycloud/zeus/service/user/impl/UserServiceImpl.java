@@ -78,9 +78,9 @@ public class UserServiceImpl implements UserService {
     public List<UserDto> list(String keyword) throws Exception {
         CurrentUser currentUser = CurrentUserRepository.getUser();
         QueryWrapper<BeanUser> userWrapper = new QueryWrapper<>();
-        // 非admin自身，过滤admin
-        if (!currentUser.getUsername().equals(ADMIN)) {
-            userWrapper.ne("username", ADMIN);
+        // 获取创建者为自身的用户
+        if(!"admin".equals(currentUser.getUsername())){
+            userWrapper.eq("creator", currentUser.getUsername());
         }
         List<BeanUser> beanUserList = beanUserMapper.selectList(userWrapper);
         // 获取角色
@@ -247,12 +247,15 @@ public class UserServiceImpl implements UserService {
      * 写入用户表
      */
     public void insertUser(UserDto userDto) {
+        CurrentUser currentUser = CurrentUserRepository.getUser();
         BeanUser beanUser = new BeanUser();
         BeanUtils.copyProperties(userDto, beanUser);
         if (StringUtils.isEmpty(beanUser.getPassword())) {
             beanUser.setPassword(PasswordUtils.md5("Ab123456!"));
         }
+        beanUser.setCreator(currentUser.getUsername());
         beanUser.setCreateTime(new Date());
+        beanUser.setPasswordTime(new Date());
         beanUserMapper.insert(beanUser);
     }
 

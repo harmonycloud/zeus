@@ -86,6 +86,12 @@ public class BeanMiddlewareInfo implements Serializable {
     private String chartVersion;
 
     /**
+     * operator名称
+     */
+    @TableField("operator_name")
+    private String operatorName;
+
+    /**
      * grafanna的id
      */
     @TableField("grafana_id")
@@ -126,5 +132,11 @@ public class BeanMiddlewareInfo implements Serializable {
      */
     @TableField("official")
     private Boolean official;
+
+    /**
+     * 是否可用：0-非官方 1-官方
+     */
+    @TableField("chart")
+    private byte[] chart;
 
 }

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.model.user.RoleDto;
 import com.harmonycloud.zeus.service.user.RoleService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,9 +55,9 @@ public class UserRoleServiceImpl implements UserRoleService {
         Map<String, Integer> beanSysRoleUserMap =
             beanUserRole.stream().collect(Collectors.toMap(BeanUserRole::getUserName, BeanUserRole::getRoleId));
         // 获取所有角色信息
-        List<BeanRole> beanRoleList = roleService.list(true);
+        List<RoleDto> beanRoleList = roleService.list(true);
         Map<Integer, String> beanSysRoleMap =
-            beanRoleList.stream().collect(Collectors.toMap(BeanRole::getId, BeanRole::getName));
+            beanRoleList.stream().collect(Collectors.toMap(RoleDto::getId, RoleDto::getName));
         // 封装返回信息
         return beanUserList.stream().map(beanUser -> {
             UserRole userRole = new UserRole();

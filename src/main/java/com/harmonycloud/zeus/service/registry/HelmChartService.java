@@ -213,6 +213,15 @@ public interface HelmChartService {
     void uninstall(Middleware middleware, MiddlewareClusterDTO cluster);
 
     /**
+     * 卸载已发布的helm chart
+     *
+     * @param cluster    集群信息
+     * @param operatorName 中间件信息
+     * @param namespace 分区
+     */
+    void uninstall(MiddlewareClusterDTO cluster, String namespace, String operatorName);
+
+    /**
      * 获取helm中的question.yaml
      *
      * @param helmChartFile helm包
@@ -227,6 +236,14 @@ public interface HelmChartService {
      * @param operatorChartPath chart包位置
      */
     void editOperatorChart(String clusterId, String operatorChartPath);
+
+    /**
+     * 从mysql中取出helm chart
+     *
+     * @param chartName chart名称
+     * @param chartVersion chart版本
+     */
+    HelmChartFile getHelmChartFromMysql(String chartName, String chartVersion) throws Exception;
 
     /**
      * 创建operator

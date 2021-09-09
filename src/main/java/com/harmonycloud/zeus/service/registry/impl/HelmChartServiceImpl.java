@@ -2,8 +2,7 @@ package com.harmonycloud.zeus.service.registry.impl;
 
 import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.*;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -123,11 +122,41 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     public HelmChartFile getHelmChartFromRegistry(String clusterId, String namespace, String name, String type) {
         Middleware middleware = middlewareService.detail(clusterId, namespace, name, type);
         if (StringUtils.isEmpty(middleware.getChartVersion())){
-            BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoService.list(clusterId).stream()
+            BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoService.list().stream()
                 .filter(info -> info.getChartName().equals(type)).collect(Collectors.toList()).get(0);
             return getHelmChartFromLocal(type, beanMiddlewareInfo.getChartVersion());
         }
         return getHelmChartFromLocal(type, middleware.getChartVersion());
+    }
+
+    @Override
+    public HelmChartFile getHelmChartFromMysql(String chartName, String chartVersion) throws Exception {
+        BeanMiddlewareInfo mwInfo = middlewareInfoService.get(chartName, chartVersion);
+        if (mwInfo.getChart() == null || mwInfo.getChart().length == 0){
+            throw new BusinessException(ErrorMessage.NOT_FOUND);
+        }
+        File file = new File(uploadPath + File.separator + "mysql.tgz");
+        if (!file.exists()) {
+            InputStream in = new ByteArrayInputStream(mwInfo.getChart());
+            FileOutputStream fileOutputStream = null;
+            try {
+                fileOutputStream = new FileOutputStream(file);
+                byte[] buf = new byte[mwInfo.getChart().length];
+                int len;
+                while ((len = in.read(buf)) != -1) {
+                    fileOutputStream.write(buf, 0, len);
+                }
+                fileOutputStream.flush();
+            } catch (Exception e) {
+                log.error("中间件{} 图片初始化加载失败", mwInfo.getChartName() + "-" + mwInfo.getChartVersion());
+            } finally {
+                in.close();
+                if (fileOutputStream != null) {
+                    fileOutputStream.close();
+                }
+            }
+        }
+        return this.getHelmChartFromFile(chartName, chartVersion, file);
     }
 
     @Override
@@ -486,6 +515,18 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         // delete helm
         String cmd = String.format("helm uninstall %s -n %s --kube-apiserver %s --kubeconfig %s", middleware.getName(),
             middleware.getNamespace(), cluster.getAddress(), clusterCertService.getKubeConfigFilePath(cluster.getId()));
+        execCmd(cmd, null);
+    }
+
+    @Override
+    public void uninstall(MiddlewareClusterDTO cluster, String namespace, String operatorName) {
+        List<HelmListInfo> helms = listHelm(namespace, operatorName, cluster);
+        if (CollectionUtils.isEmpty(helms)) {
+            return;
+        }
+        // delete helm
+        String cmd = String.format("helm uninstall %s -n %s --kube-apiserver %s --kubeconfig %s", operatorName,
+                namespace, cluster.getAddress(), clusterCertService.getKubeConfigFilePath(cluster.getId()));
         execCmd(cmd, null);
     }
 

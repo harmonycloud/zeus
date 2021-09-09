@@ -34,7 +34,7 @@ public class InitMiddlewareImage {
 
     @PostConstruct
     public void init() throws Exception {
-        List<BeanMiddlewareInfo> mwInfoList = middlewareInfoService.list(null);
+        List<BeanMiddlewareInfo> mwInfoList = middlewareInfoService.list();
         for (BeanMiddlewareInfo mwInfo : mwInfoList) {
             if (StringUtils.isEmpty(mwInfo.getImagePath())){
                 return;
