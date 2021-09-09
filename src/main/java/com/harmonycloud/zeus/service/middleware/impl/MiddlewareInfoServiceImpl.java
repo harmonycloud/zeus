@@ -24,6 +24,7 @@ import com.harmonycloud.zeus.service.k8s.PodService;
 import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
+import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -261,11 +262,15 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         List<Map<String, Object>> serviceList = new ArrayList<>();
         middlewareInfoDTOList.forEach(middlewareInfoDTO -> {
             List<Middleware> middlewareServiceList = middlewareService.simpleList(clusterId, namespace, middlewareInfoDTO.getChartName(), null);
-            middlewareServiceList.forEach(middlewareService -> {
-                MiddlewareCRD middlewareCRD = middlewareCRDService.getCR(clusterId, namespace, middlewareInfoDTO.getType(), middlewareService.getName());
+            middlewareServiceList.forEach(middleware -> {
+                MiddlewareCRD middlewareCRD = middlewareCRDService.getCR(clusterId, namespace, middlewareInfoDTO.getType(), middleware.getName());
                 if (middlewareCRD != null) {
                     List<MiddlewareInfo> middlewareInfos = middlewareCRD.getStatus().getInclude().get(PODS);
-                    middlewareService.setPodNum(middlewareInfos.size());
+                    middleware.setPodNum(middlewareInfos.size());
+                    if (middleware.getManagePlatform() != null && middleware.getManagePlatform()) {
+                        String managePlatformAddress = middlewareService.getManagePlatformAddress(middleware, clusterId);
+                        middleware.setManagePlatformAddress(managePlatformAddress);
+                    }
                 }
             });
 

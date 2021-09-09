@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.middleware;
 
+import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MonitorDto;
 import com.harmonycloud.caas.common.model.middleware.MysqlSlowSqlDTO;
@@ -86,4 +87,12 @@ public interface MiddlewareService {
     PageObject<MysqlSlowSqlDTO> slowsql(SlowLogQuery slowLogQuery) throws Exception;
 
     void slowsqlExcel(SlowLogQuery slowLogQuery, HttpServletResponse response, HttpServletRequest request) throws Exception;
+
+    /**
+     * 查询中间件管理控制台地址(仅kafka、es、rocket-mq支持)
+     *
+     * @param middleware
+     * @return
+     */
+    String getManagePlatformAddress(Middleware middleware, String clusterId);
 }

@@ -5,6 +5,7 @@ import static com.harmonycloud.caas.common.constants.NameConstant.MODE;
 import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
 import static com.harmonycloud.caas.common.constants.NameConstant.STORAGE;
 
+import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.operator.miiddleware.AbstractEsOperator;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -132,6 +133,7 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
             middleware.setPassword(values.getString("elasticPassword"));
         }
 
+        middleware.setManagePlatform(true);
         return middleware;
     }
 
@@ -290,5 +292,11 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
             }
         }
         configMap.getData().put("elasticsearch.yml", temp.toString());
+    }
+
+    @Override
+    public void create(Middleware middleware, MiddlewareClusterDTO cluster) {
+        super.create(middleware, cluster);
+        tryCreateOpenService(middleware, new MiddlewareServiceNameIndex("kibana-nodeport", "-kibana"));
     }
 }

@@ -1,0 +1,78 @@
+package com.harmonycloud.zeus.util;
+
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
+import com.harmonycloud.caas.common.model.middleware.Middleware;
+
+/**
+ * 中间件服务名称转换工具类
+ * @author liyinlong
+ * @since 2021/9/8 4:09 下午
+ */
+public class ServiceNameConvertUtil {
+
+    /**
+     * 转换mysql服务名称
+     * @param isReadonlyService
+     * @param middlewareName
+     * @return
+     */
+    public static MiddlewareServiceNameIndex convertMysql(String middlewareName, Boolean isReadonlyService) {
+        String nodePortServiceName;
+        String middlewareServiceNameSuffix;
+        if (isReadonlyService) {
+            nodePortServiceName = String.format("%s-readonly-nodeport", middlewareName);
+            middlewareServiceNameSuffix = "readonly";
+        } else {
+            nodePortServiceName = String.format("%s-nodeport", middlewareName);
+            middlewareServiceNameSuffix = middlewareName;
+        }
+        return new MiddlewareServiceNameIndex(nodePortServiceName, middlewareServiceNameSuffix);
+    }
+
+    /**
+     * 转换es服务名称
+     * @param middlewareName
+     * @return
+     */
+    public static MiddlewareServiceNameIndex convertEs(String middlewareName){
+        return new MiddlewareServiceNameIndex(middlewareName + "-kibana-nodeport", "-kibana");
+    }
+
+    /**
+     * 转换rocket-mq服务名称
+     * @param middlewareName
+     * @return
+     */
+    public static MiddlewareServiceNameIndex convertMq(String middlewareName) {
+        return new MiddlewareServiceNameIndex(middlewareName + "-console-svc-nodeport", "console-svc");
+    }
+
+    /**
+     * 转换kakfa服务名称
+     * @return
+     */
+    public static MiddlewareServiceNameIndex convertKafka(String middlewareName){
+        return new MiddlewareServiceNameIndex("kafkamanage-nodeport", "kafka-manage");
+    }
+
+    /**
+     * 根据中间件类型返回服务名称
+     *
+     * @param middleware
+     * @return
+     */
+    public static MiddlewareServiceNameIndex convert(Middleware middleware) {
+        String middlewareType = middleware.getType();
+        String middlewareName = middleware.getName();
+        if (middlewareType.equals(MiddlewareTypeEnum.ELASTIC_SEARCH.getType())) {
+            return convertEs(middlewareName);
+        } else if (middlewareType.equals(MiddlewareTypeEnum.KAFKA.getType())) {
+            return convertKafka(middlewareName);
+        } else if (middlewareType.equals(MiddlewareTypeEnum.ROCKET_MQ.getType())) {
+            return convertMq(middlewareName);
+        } else {
+            return null;
+        }
+    }
+}

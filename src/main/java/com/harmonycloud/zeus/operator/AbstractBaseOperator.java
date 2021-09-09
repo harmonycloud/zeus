@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.operator;
 
 import static com.harmonycloud.caas.common.constants.NameConstant.*;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_NODEPORT;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
 import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.CHART_YAML_NAME;
 
@@ -9,6 +10,8 @@ import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
@@ -16,6 +19,7 @@ import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.schedule.MiddlewareManageTask;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.K8sConvert;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -75,7 +79,10 @@ public abstract class AbstractBaseOperator {
     private MiddlewareCustomConfigService middlewareCustomConfigService;
     @Autowired
     private ConfigMapService configMapService;
-
+    @Autowired
+    private MiddlewareService middlewareService;
+    @Autowired
+    private ServiceService serviceService;
     /**
      * 是否支持该中间件
      */
@@ -669,6 +676,87 @@ public abstract class AbstractBaseOperator {
                 middleware.getName());
         }
         
+    }
+
+    /**
+     * 尝试创建对外服务，当实例状态为Running时才创建对外服务
+     * @param middleware 中间件信息
+     * @param middlewareServiceNameIndex 服务名称
+     */
+    public void tryCreateOpenService(Middleware middleware, MiddlewareServiceNameIndex middlewareServiceNameIndex) {
+        boolean success = false;
+        for (int i = 0; i < 600 && !success; i++) {
+            Middleware detail = middlewareService.detail(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
+            log.info("为实例：{}创建对外服务：状态：{},已用时：{}s", detail.getName(), detail.getStatus(), i);
+            if (detail != null) {
+                if (detail.getStatus() != null && "Running".equals(detail.getStatus())) {
+                    createOpenService(middleware, middlewareServiceNameIndex);
+                    success = true;
+                }
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * 创建NodePort服务
+     * @param middleware 中间件信息
+     * @param middlewareServiceNameIndex 中间件服务名称
+     */
+    public void createOpenService(Middleware middleware, MiddlewareServiceNameIndex middlewareServiceNameIndex) {
+        //1.获取所有对外服务，判断指定类型的服务是否已创建，如果已创建则直接返回
+        List<IngressDTO> ingressDTOS = ingressService.get(middleware.getClusterId(), middleware.getNamespace(),
+                middleware.getType(), middleware.getName());
+        if (!CollectionUtils.isEmpty(ingressDTOS)) {
+            String finalServiceName = middlewareServiceNameIndex.getNodePortServiceName();
+            List<IngressDTO> ingressDTOList = ingressDTOS.stream().filter(ingressDTO -> (
+                    ingressDTO.getName().contains(finalServiceName) && ingressDTO.getExposeType().equals(MIDDLEWARE_EXPOSE_NODEPORT))
+            ).collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(ingressDTOList)) {
+                return;
+            }
+        }
+
+        List<ServicePortDTO> servicePortDTOS = serviceService.list(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
+        String finalMiddlewareServiceNameSuffix = middlewareServiceNameIndex.getMiddlewareServiceNameSuffix();
+        List<ServicePortDTO> serviceList = servicePortDTOS.stream().filter(servicePortDTO -> servicePortDTO.getServiceName().endsWith(finalMiddlewareServiceNameSuffix)).collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(serviceList)) {
+            ServicePortDTO servicePortDTO = serviceList.get(0);
+            PortDetailDTO portDetailDTO = servicePortDTO.getPortDetailDtoList().get(0);
+            //2.将服务通过NodePort暴露为对外服务
+            boolean successCreateService = false;
+            int servicePort = 31000;
+            while (!successCreateService) {
+                log.info("开始创建对外服务,clusterId={},namespace={},middlewareName={},port={}",
+                        middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), servicePort);
+                try {
+                    IngressDTO ingressDTO = new IngressDTO();
+                    List<ServiceDTO> serviceDTOList = new ArrayList<>();
+                    ServiceDTO serviceDTO = new ServiceDTO();
+                    serviceDTO.setExposePort(String.valueOf(servicePort));
+                    serviceDTO.setTargetPort(portDetailDTO.getTargetPort());
+                    serviceDTO.setServicePort(portDetailDTO.getPort());
+                    serviceDTO.setServiceName(servicePortDTO.getServiceName());
+                    serviceDTOList.add(serviceDTO);
+
+                    ingressDTO.setMiddlewareType(MiddlewareTypeEnum.MYSQL.getType());
+                    ingressDTO.setServiceList(serviceDTOList);
+                    ingressDTO.setExposeType(MIDDLEWARE_EXPOSE_NODEPORT);
+                    ingressDTO.setProtocol("TCP");
+                    ingressService.create(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), ingressDTO);
+                    successCreateService = true;
+                    log.info("对外服务创建成功");
+                } catch (Exception e) {
+                    servicePort++;
+                    log.error("对外服务创建失败，尝试端口：{}", servicePort);
+                    successCreateService = false;
+                }
+            }
+        }
     }
 
 }

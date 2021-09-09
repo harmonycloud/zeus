@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.constants.CommonConstant;
+import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MysqlReplicateCRD;
@@ -19,6 +20,7 @@ import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.excel.ExcelUtil;
 import com.harmonycloud.tool.page.PageObject;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
+import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -246,5 +248,26 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Override
     public <T, R> T getOperator(Class<T> funClass, Class<R> baseClass, Object... types) {
         return super.getOperator(funClass, baseClass, types);
+    }
+
+    @Override
+    public String getManagePlatformAddress(Middleware middleware, String clusterId) {
+        List<IngressDTO> ingressDTOS = ingressService.get(clusterId, middleware.getNamespace(), middleware.getType(), middleware.getName());
+        MiddlewareServiceNameIndex serviceNameIndex = ServiceNameConvertUtil.convert(middleware);
+        List<IngressDTO> serviceDTOList = ingressDTOS.stream().filter(ingressDTO -> (
+                ingressDTO.getName().equals(serviceNameIndex.getNodePortServiceName()) && ingressDTO.getExposeType().equals(MIDDLEWARE_EXPOSE_NODEPORT))
+        ).collect(Collectors.toList());
+
+        if (!CollectionUtils.isEmpty(serviceDTOList)) {
+            IngressDTO ingressDTO = serviceDTOList.get(0);
+            String exposeIP = ingressDTO.getExposeIP();
+            List<ServiceDTO> serviceList = ingressDTO.getServiceList();
+            if (!CollectionUtils.isEmpty(serviceList)) {
+                ServiceDTO serviceDTO = serviceList.get(0);
+                String exposePort = serviceDTO.getExposePort();
+                return exposeIP + ":" + exposePort;
+            }
+        }
+        return "";
     }
 }
