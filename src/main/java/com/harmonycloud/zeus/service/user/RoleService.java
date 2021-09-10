@@ -43,6 +43,13 @@ public interface RoleService {
     List<RoleDto> list(String key);
 
     /**
+     * 更新角色
+     *
+     * @param roleDto 角色对象
+     */
+    void update(RoleDto roleDto);
+
+    /**
      * 获取角色
      * @param roleId 角色id
      *

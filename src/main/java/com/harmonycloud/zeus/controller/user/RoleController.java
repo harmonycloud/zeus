@@ -46,7 +46,7 @@ public class RoleController {
             @ApiImplicitParam(name = "roleId", value = "角色id", paramType = "path", dataTypeClass = String.class)
     })
     @DeleteMapping("/{roleId}")
-    public BaseResult add(@PathVariable("roleId") Integer roleId) {
+    public BaseResult delete(@PathVariable("roleId") Integer roleId) {
         roleService.delete(roleId);
         return BaseResult.ok();
     }
@@ -56,8 +56,8 @@ public class RoleController {
             @ApiImplicitParam(name = "roleDto", value = "角色", paramType = "query", dataTypeClass = String.class)
     })
     @PutMapping("/{roleId}")
-    public BaseResult delete(@PathVariable("roleId") Integer roleId) {
-        roleService.delete(roleId);
+    public BaseResult update(@RequestBody RoleDto roleDto) {
+        roleService.update(roleDto);
         return BaseResult.ok();
     }
 }

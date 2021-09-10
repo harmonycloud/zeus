@@ -49,8 +49,8 @@ public class MiddlewareManagerController {
     @PostMapping("/install")
     public BaseResult install(@PathVariable("clusterId") String clusterId,
                               @RequestParam("chartName") String chartName,
-                              @RequestParam("chartVersion") String chartVersion) {
-        middlewareManagerService.delete(clusterId, chartName, chartVersion);
+                              @RequestParam("chartVersion") String chartVersion) throws Exception {
+        middlewareManagerService.install(clusterId, chartName, chartVersion);
         return BaseResult.ok();
     }
 
@@ -65,6 +65,20 @@ public class MiddlewareManagerController {
                                  @RequestParam("chartName") String chartName,
                                  @RequestParam("chartVersion") String chartVersion) {
         middlewareManagerService.delete(clusterId, chartName, chartVersion);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "中间件下架", notes = "中间件下架")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "chartName", value = "chart名称", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "chartVersion", value = "chart版本", paramType = "query", dataTypeClass = String.class)
+    })
+    @PutMapping("/update")
+    public BaseResult update(@PathVariable("clusterId") String clusterId,
+                             @RequestParam("chartName") String chartName,
+                             @RequestParam("chartVersion") String chartVersion) {
+        middlewareManagerService.update(clusterId, chartName, chartVersion);
         return BaseResult.ok();
     }
 }

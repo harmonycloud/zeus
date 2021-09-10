@@ -25,7 +25,7 @@ public interface ResourceMenuRoleService {
      * @param resourceMenuId 菜单id
      *
      */
-    void add(Integer roleId, Integer resourceMenuId);
+    void add(Integer roleId, Integer resourceMenuId, Boolean available);
 
     /**
      * 删除角色菜单映照列表

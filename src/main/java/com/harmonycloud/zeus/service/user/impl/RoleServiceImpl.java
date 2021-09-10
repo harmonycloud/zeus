@@ -54,6 +54,7 @@ public class RoleServiceImpl implements RoleService {
         CurrentUser currentUser = CurrentUserRepository.getUser();
         String currentRoleId = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString("roleId");
         List<BeanResourceMenuRole> rmRoleList = resourceMenuRoleService.list(currentRoleId);
+        //判断创建角色的权限是否是当前登陆用户角色权限的子集
         if (!roleDto.getMenu().stream().map(ResourceMenuDto::getId).collect(Collectors.toList())
             .containsAll(rmRoleList.stream().map(BeanResourceMenuRole::getId).collect(Collectors.toList()))) {
             //todo
@@ -117,6 +118,11 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    public void update(RoleDto roleDto) {
+
+    }
+
+    @Override
     public List<ResourceMenuDto> listMenuByRoleId(String roleId) {
         // 获取角色菜单映照
         List<BeanResourceMenuRole> beanResourceMenuRoleList = resourceMenuRoleService.list(roleId);
@@ -137,7 +143,7 @@ public class RoleServiceImpl implements RoleService {
     private void bind(RoleDto roleDto) {
         QueryWrapper<BeanRole> wrapper = new QueryWrapper<BeanRole>().eq("name", roleDto.getName()).eq("status", true);
         BeanRole beanRole = beanRoleMapper.selectOne(wrapper);
-        roleDto.getMenu().forEach(menu -> resourceMenuRoleService.add(beanRole.getId(), menu.getId()));
+        roleDto.getMenu().forEach(menu -> resourceMenuRoleService.add(beanRole.getId(), menu.getId(), menu.getOwn()));
     }
 
     /**

@@ -32,4 +32,12 @@ public interface MiddlewareManagerService {
      * @param chartVersion chart版本
      */
     void delete(String clusterId, String chartName, String chartVersion);
+
+    /**
+     * 中间件operator更新升级
+     * @param clusterId 集群id
+     * @param chartName chart名称
+     * @param chartVersion chart版本
+     */
+    void update(String clusterId, String chartName, String chartVersion);
 }

@@ -33,11 +33,11 @@ public class ResourceMenuRoleServiceImpl implements ResourceMenuRoleService {
     }
 
     @Override
-    public void add(Integer roleId, Integer resourceMenuId) {
+    public void add(Integer roleId, Integer resourceMenuId, Boolean available) {
         BeanResourceMenuRole beanResourceMenuRole = new BeanResourceMenuRole();
         beanResourceMenuRole.setRoleId(roleId);
         beanResourceMenuRole.setResourceMenuId(resourceMenuId);
-        beanResourceMenuRole.setAvailable(true);
+        beanResourceMenuRole.setAvailable(available);
         beanResourceMenuRoleMapper.insert(beanResourceMenuRole);
     }
 
