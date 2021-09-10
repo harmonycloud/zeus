@@ -295,6 +295,7 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
                     for (Object globalWhiteRemoteAddress : globalWhiteRemoteAddresses) {
                         builder.append(globalWhiteRemoteAddress).append(";");
                     }
+                    builder.deleteCharAt(builder.length() - 1);
                     acl.setGlobalWhiteRemoteAddresses(builder.toString());
                 }
 

@@ -14,3 +14,6 @@ image:
 
 install:
 	chmod +x ./deploy/install.sh && sh deploy/install.sh $(TYPE) $(DEPLOY) $(IMAGE_REPO) $(STORAGE_CLASS)
+
+upgrade:
+	sh build/upgrade.sh $(TYPE) $(IMAGE_REPO) $(STORAGE_CLASS)

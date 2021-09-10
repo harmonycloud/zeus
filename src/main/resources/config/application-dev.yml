@@ -1,7 +1,7 @@
 spring:
   datasource:
     username: root # change this
-    password: Ab123456 # change this
+    password: root # change this
     url: jdbc:mysql://127.0.0.1:3306/middleware_platform?useUnicode=true&characterEncoding=utf-8 # change this
     driver-class-name: com.mysql.cj.jdbc.Driver
   servlet:
@@ -9,7 +9,7 @@ spring:
       max-file-size: 10GB
       max-request-size: 10GB
   resources:
-    static-locations: file:/Users/Aive/Desktop/upload,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/
+    static-locations: file:/MyPath/upload,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/ # change this
 mybatis-plus:
   mapper-locations: classpath:mapping/*.xml
 logging:
@@ -45,18 +45,14 @@ k8s:
     label: middleware=true
   token:
     # debug时填写本地的token文件路径，有默认值，仅开发使用
-    path: /Users/Aive/Desktop/upload/token-12 # change me
+    path: /MyPath/kube-token # change this
   service:
-    # 默认fabric8客户端的地址，有默认值，仅开发使用
-    host: 10.1.10.12
+    # 默认kubernetes fabric8客户端的地址，有默认值，仅开发使用
+    host: 127.0.0.1
     port: 6443
   kubeconfig:
     # debug时填写本地的kube config文件路径，有默认值，仅开发使用
-    path: /Users/Aive/Desktop/upload
-  component:
-    helm: /Users/Aive/Desktop/helm
-    middleware: /Users/Aive/Desktop/middleware
-    components: /Users/Aive/Desktop/components
+    path: /MyPath/upload # change this
 
 #分页pageHelper
 pagehelper:
@@ -66,13 +62,19 @@ pagehelper:
 
 system:
   upload:
-    # debug时填写自己本地的一个可访问的目录，仅开发使用，默认值：/usr/local/zeus-pv/upload
-    path: /Users/Aive/Desktop/upload
+    # debug时填写自己本地的一个可访问的目录，仅开发使用，默认值：/usr/local/Zeus-pv/upload
+    path: /MyPath/upload
   images:
-    path: /Users/aive/Desktop/upload/images
+    path: /MyPath/upload/images
   user:
     username: admin
     # 密码Ab123456!
     password: 5B99164F828AED74140E5FDA077B634C
     # token有效期，8小时
     expire: 8
+#ssl
+server:
+  ssl:
+    key-alias: zeushttps
+    key-store-password: Ab123456
+    key-store: classpath:config/zeus.jks

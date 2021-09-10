@@ -191,7 +191,7 @@ public class OperationAuditInterceptor {
             operationAudit.setRequestParams(paramJson.toString());
         }
 
-        log.info("操作日志：" + operationAudit);
+        log.info("操作日志：{}", operationAudit);
         operationAuditService.insert(operationAudit);
     }
 

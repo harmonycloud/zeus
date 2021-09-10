@@ -104,6 +104,14 @@ public class OperationAuditServiceImpl implements OperationAuditService {
             }
         }
 
+        if (operationAuditQueryDto.getStatusOrder() != null) {
+            if (operationAuditQueryDto.getStatusOrder()) {
+                queryWrapper.orderByAsc("status");
+            } else {
+                queryWrapper.orderByDesc("status");
+            }
+        }
+
         Page<BeanOperationAudit> page = new Page<>(operationAuditQueryDto.getCurrent(), operationAuditQueryDto.getSize());
         Page<BeanOperationAudit> beanOperationAuditPage = operationAuditMapper.selectPage(page, queryWrapper);
         return BaseResult.ok(beanOperationAuditPage);

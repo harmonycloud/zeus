@@ -1,0 +1,14 @@
+name: minio
+version: 1.4.0-4
+provider: harmonycloud.cn
+description: "Harmonycloud minio"
+serviceInstances:
+- minio
+changes: |
+  ## [1.4.0-4] - 2021-03-18
+  ### Added
+  - 添加dashboard,servicemonitor,alertrule
+  ### Changed
+  - 添加bucketName,regionName参数
+
+

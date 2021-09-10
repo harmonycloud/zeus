@@ -656,7 +656,7 @@ public class ClusterServiceImpl implements ClusterService {
         String setValues = "image.repository=" + repository +
                 ",persistence.storageClass=local-path" +
                 ",minioArgs.bucketName=velero" +
-                ",service.nodePort=31904";
+                ",service.nodePort=31909";
         helmChartService.upgradeInstall("minio", "default", setValues,
                 componentsPath + File.separator + "minio/charts/minio", cluster);
     }

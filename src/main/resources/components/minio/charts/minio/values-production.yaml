@@ -1,0 +1,12 @@
+replicas: 4
+
+resources:
+   limits:
+     cpu: 200m
+     memory: 512Mi
+   requests:
+     cpu: 200m
+     memory: 512Mi
+
+persistence:
+  size: 50Gi
