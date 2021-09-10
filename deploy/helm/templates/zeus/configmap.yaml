@@ -67,7 +67,7 @@ data:
       ssl:
         key-alias: zeushttps
         key-store-password: Ab123456
-        key-store: classpath:config/zeus.jks
+        key-store: /cfg/zeus.jks
 kind: ConfigMap
 metadata:
   name: zeus-config
