@@ -26,7 +26,6 @@ services:
     - zeus-mysql
     volumes:
     - $PWD/conf/zeus/application-prd.yml:/cfg/application.yml
-    - $PWD/conf/zeus/zeus.jks:/cfg/zeus.jks
     - /data/zeus/helm:/usr/local/zeus-pv/helm
 
   zeus-mysql:
