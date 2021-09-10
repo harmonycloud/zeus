@@ -212,6 +212,9 @@ public class UserServiceImpl implements UserService {
         List<ResourceMenuDto> firstMenuList = resourceMenuDtoMap.get(0);
         resourceMenuDtoMap.remove(0);
         firstMenuList.forEach(firstMenu -> {
+            if (!resourceMenuDtoMap.containsKey(firstMenu.getId())){
+                return;
+            }
             firstMenu.setSubMenu(resourceMenuDtoMap.get(firstMenu.getId()));
             Collections.sort(firstMenu.getSubMenu());
         });

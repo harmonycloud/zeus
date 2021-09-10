@@ -38,7 +38,7 @@ public class BeanRole {
     /**
      * 创建时间
      */
-    @TableField("createTime")
+    @TableField("create_Time")
     private Date createTime;
     /**
      * 是否可用
