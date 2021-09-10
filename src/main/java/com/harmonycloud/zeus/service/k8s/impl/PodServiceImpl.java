@@ -97,6 +97,32 @@ public class PodServiceImpl implements PodService {
         return list.stream().map(this::convertPodInfo).collect(Collectors.toList());
     }
 
+    /**
+     * 获取pod真实状态
+     * @param pod
+     * @return
+     */
+    private String getPodRealState(Pod pod) {
+        // 1. Terminating
+        if (StringUtils.isNotBlank(pod.getMetadata().getDeletionTimestamp())) {
+            return "Terminating";
+        }
+
+        // 2. Complete
+        if ("Success".equals(pod.getStatus())) {
+            return "Completed";
+        }
+
+        // 3. container not ready
+        List<ContainerStatus> containerStatuses = pod.getStatus().getContainerStatuses();
+        for (ContainerStatus containerStatus : containerStatuses) {
+            if (!containerStatus.getReady()) {
+                return "NotReady";
+            }
+        }
+        return pod.getStatus().getPhase();
+    }
+
     private PodInfo convertPodInfo(Pod pod) {
         PodInfo pi = new PodInfo()
                 .setPodName(pod.getMetadata().getName())
