@@ -339,6 +339,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
             middlewareMap.put("imagePath", middlewareInfoDTO.getImagePath());
             middlewareMap.put("chartName", middlewareInfoDTO.getChartName());
             middlewareMap.put("chartVersion", middlewareInfoDTO.getChartVersion());
+            middlewareMap.put("version", middlewareInfoDTO.getVersion());
             middlewareMap.put("serviceList", middlewareServiceList);
             middlewareMap.put("serviceNum", middlewareServiceList.size());
             serviceList.add(middlewareMap);
