@@ -883,7 +883,7 @@ public class IngressServiceImpl implements IngressService {
 
     @Override
     public List listAllIngress(String clusterId, String namespace, String keyword) {
-        List<MiddlewareInfoDTO> middlewareInfoDTOList = middlewareInfoService.list(clusterId, namespace);
+        List<MiddlewareInfoDTO> middlewareInfoDTOList = middlewareInfoService.list(clusterId);
         List<Map<String, Object>> ingressList = new ArrayList<>();
         boolean filter = StringUtils.isBlank(keyword);
         middlewareInfoDTOList.forEach(middlewareInfoDTO -> {

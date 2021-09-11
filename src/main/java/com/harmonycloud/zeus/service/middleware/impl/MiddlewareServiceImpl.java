@@ -62,6 +62,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private HelmChartService helmChartService;
     @Autowired
     private MiddlewareInfoService middlewareInfoService;
+    @Autowired
+    private IngressService ingressService;
 
     private final static Map<String, String> titleMap = new HashMap<String, String>(7) {
         {
