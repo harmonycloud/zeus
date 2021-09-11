@@ -69,12 +69,6 @@ public class BeanMiddlewareInfo implements Serializable {
     private String imagePath;
 
     /**
-     * 是否可用：0-不可用 1-可用
-     */
-    @TableField("status")
-    private Boolean status;
-
-    /**
      * chart包名称
      */
     @TableField("chart_name")
@@ -121,12 +115,6 @@ public class BeanMiddlewareInfo implements Serializable {
      */
     @TableField("update_time")
     private Date updateTime;
-
-    /**
-     * 集群id
-     */
-    @TableField("cluster_id")
-    private String clusterId;
 
     /**
      * 是否可用：0-非官方 1-官方

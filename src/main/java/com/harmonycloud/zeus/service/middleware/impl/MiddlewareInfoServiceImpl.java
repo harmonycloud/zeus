@@ -210,7 +210,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         LambdaQueryWrapper<BeanMiddlewareInfo> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(BeanMiddlewareInfo::getChartName, helmChartFile.getChartName())
                 .eq(BeanMiddlewareInfo::getChartVersion, helmChartFile.getChartVersion())
-                .eq(BeanMiddlewareInfo::getClusterId, clusterId).orderByDesc(BeanMiddlewareInfo::getUpdateTime);
+                .orderByDesc(BeanMiddlewareInfo::getUpdateTime);
         List<BeanMiddlewareInfo> beanMiddlewareInfos = middlewareInfoMapper.selectList(queryWrapper);
 
         BeanMiddlewareInfo middlewareInfo = new BeanMiddlewareInfo();
@@ -219,7 +219,6 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         middlewareInfo.setType(helmChartFile.getType());
         middlewareInfo.setName(helmChartFile.getChartName());
         middlewareInfo.setDescription(helmChartFile.getDescription());
-        middlewareInfo.setClusterId(clusterId);
         middlewareInfo.setOfficial(HARMONY_CLOUD.equals(helmChartFile.getOfficial()));
         //LocalDateTime now = LocalDateTime.now();
         middlewareInfo.setUpdateTime(new Date());
