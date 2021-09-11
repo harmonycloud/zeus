@@ -156,7 +156,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             log.info("数据库中无此类中间件告警规则，开始数据同步");
             try {
                 HelmChartFile helmChart =
-                    helmChartService.getHelmChartFromRegistry(clusterId, namespace, middlewareName, type);
+                    helmChartService.getHelmChart(clusterId, namespace, middlewareName, type);
                 data = updateAlerts2Mysql(helmChart, false);
             } catch (Exception ee) {
                 throw new CaasRuntimeException(ErrorMessage.PROMETHEUS_RULES_NOT_EXIST);

@@ -68,7 +68,7 @@ public class MiddlewareManagerController {
         return BaseResult.ok();
     }
 
-    @ApiOperation(value = "中间件下架", notes = "中间件下架")
+    @ApiOperation(value = "中间件更新升级", notes = "中间件更新升级")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "chartName", value = "chart名称", paramType = "query", dataTypeClass = String.class),
@@ -77,7 +77,7 @@ public class MiddlewareManagerController {
     @PutMapping("/update")
     public BaseResult update(@PathVariable("clusterId") String clusterId,
                              @RequestParam("chartName") String chartName,
-                             @RequestParam("chartVersion") String chartVersion) {
+                             @RequestParam("chartVersion") String chartVersion){
         middlewareManagerService.update(clusterId, chartName, chartVersion);
         return BaseResult.ok();
     }

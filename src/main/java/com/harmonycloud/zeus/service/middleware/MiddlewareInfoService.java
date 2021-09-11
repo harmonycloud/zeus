@@ -69,7 +69,7 @@ public interface MiddlewareInfoService {
      *
      * @param helmChartFile 中间件内容
      */
-    void insert(HelmChartFile helmChartFile, File file, String clusterId);
+    void insert(HelmChartFile helmChartFile, File file);
 
     List listAllMiddleware(String clusterId, String namespace, String keyword);
 }

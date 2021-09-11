@@ -146,22 +146,16 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         Map<String, BeanClusterMiddlewareInfo> clusterMwInfoMap = clusterMwInfoList.stream()
                 .collect(Collectors.toMap(info -> info.getChartName() + "-" + info.getChartVersion(), info -> info));
         //0-创建中 1-创建成功  2-待安装  3-运行异常
-        // todo 获取状态 目前默认所有operator都装在此指定分区 (是否有必要异步)
         List<PodInfo> podList = podService.list(clusterId, "middleware-operator");
         podList = podList.stream().filter(pod -> pod.getPodName().contains("operator")).collect(Collectors.toList());
         // 转化为map，并去除pod name 后缀中的随机码
-        Map<String,
-                PodInfo> podMap =
-                podList.stream()
-                        .collect(
-                                Collectors.toMap(
-                                        info -> info.getPodName().substring(0,
-                                                info.getPodName().lastIndexOf("-", info.getPodName().lastIndexOf("-") - 1)),
-                                        info -> info));
+        Map<String, List<PodInfo>> podMap = podList.stream().collect(Collectors.groupingBy(info -> info.getPodName()
+            .substring(0, info.getPodName().lastIndexOf("-", info.getPodName().lastIndexOf("-") - 1))));
         mwInfoList.forEach(mwInfo -> {
             String key = mwInfo.getChartName() + "-" + mwInfo.getChartVersion();
             if (podMap.containsKey(mwInfo.getOperatorName())) {
-                if ("Running".equals(podMap.get(mwInfo.getOperatorName()).getStatus())) {
+                List<PodInfo> podInfoList = podMap.get(mwInfo.getOperatorName());
+                if (podInfoList.size() == 1 && "Running".equals(podMap.get(mwInfo.getOperatorName()).get(0).getStatus())) {
                     clusterMwInfoMap.get(key).setStatus(1);
                 } else if (clusterMwInfoMap.get(key).getStatus() != 0) {
                     clusterMwInfoMap.get(key).setStatus(3);
@@ -213,11 +207,10 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     }
 
     @Override
-    public void insert(HelmChartFile helmChartFile, File file, String clusterId) {
+    public void insert(HelmChartFile helmChartFile, File file) {
         LambdaQueryWrapper<BeanMiddlewareInfo> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(BeanMiddlewareInfo::getChartName, helmChartFile.getChartName())
-                .eq(BeanMiddlewareInfo::getChartVersion, helmChartFile.getChartVersion())
-                .orderByDesc(BeanMiddlewareInfo::getUpdateTime);
+                .eq(BeanMiddlewareInfo::getChartVersion, helmChartFile.getChartVersion());
         List<BeanMiddlewareInfo> beanMiddlewareInfos = middlewareInfoMapper.selectList(queryWrapper);
 
         BeanMiddlewareInfo middlewareInfo = new BeanMiddlewareInfo();
@@ -226,6 +219,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         middlewareInfo.setType(helmChartFile.getType());
         middlewareInfo.setName(helmChartFile.getChartName());
         middlewareInfo.setDescription(helmChartFile.getDescription());
+        middlewareInfo.setOperatorName(helmChartFile.getDependency().get("alias"));
         middlewareInfo.setOfficial(HARMONY_CLOUD.equals(helmChartFile.getOfficial()));
         //LocalDateTime now = LocalDateTime.now();
         middlewareInfo.setUpdateTime(new Date());

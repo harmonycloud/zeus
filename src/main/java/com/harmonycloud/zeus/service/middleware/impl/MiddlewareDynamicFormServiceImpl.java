@@ -36,12 +36,7 @@ public class MiddlewareDynamicFormServiceImpl implements MiddlewareDynamicFormSe
     @Override
     public QuestionYaml dynamicForm(String clusterId, String chartName, String chartVersion) {
         HelmChartFile helmChartFile =
-            helmChartService.getHelmChartFromLocal(chartName, chartVersion);
+            helmChartService.getHelmChartFromMysql(chartName, chartVersion);
         return helmChartService.getQuestionYaml(helmChartFile);
-    }
-    
-    public boolean filterBasicMiddleware(String tar) {
-        return !"mysql-0.1.0".equals(tar) && !"redis-5.0.8".equals(tar) && !"rocketmq-4.1.0".equals(tar)
-            && !"elasticsearch-6.8.10-1".equals(tar);
     }
 }

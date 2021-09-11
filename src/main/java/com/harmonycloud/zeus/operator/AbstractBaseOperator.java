@@ -114,7 +114,7 @@ public abstract class AbstractBaseOperator {
         }
         // 1. download and read helm chart from registry
         HelmChartFile helmChart =
-            helmChartService.getHelmChartFromLocal(middleware.getChartName(), middleware.getChartVersion());
+            helmChartService.getHelmChartFromMysql(middleware.getChartName(), middleware.getChartVersion());
 
         // 2. deal with values.yaml andChart.yaml
         // load values.yaml to map
@@ -227,7 +227,7 @@ public abstract class AbstractBaseOperator {
     }
 
     public void updateGrafanaId(BeanMiddlewareInfo mwInfo, Middleware middleware) {
-        HelmChartFile helm = helmChartService.getHelmChartFromRegistry(middleware.getClusterId(),
+        HelmChartFile helm = helmChartService.getHelmChart(middleware.getClusterId(),
             middleware.getNamespace(), middleware.getName(), middleware.getType());
         String alias;
         if (!CollectionUtils.isEmpty(helm.getDependency())){
@@ -397,7 +397,7 @@ public abstract class AbstractBaseOperator {
     }
 
     public void convertDynamicValues(Middleware middleware, JSONObject values) {
-        HelmChartFile helm = helmChartService.getHelmChartFromLocal(middleware.getType(), middleware.getChartVersion());
+        HelmChartFile helm = helmChartService.getHelmChartFromMysql(middleware.getType(), middleware.getChartVersion());
         QuestionYaml questionYaml = helmChartService.getQuestionYaml(helm);
         Map<String, String> dynamicValues = new HashMap<>();
         //解析question.yaml

@@ -28,25 +28,6 @@ public interface HelmChartService {
     List<V1HelmChartVersion> listHelmChartVersions(Registry registry, String chartName);
 
     /**
-     *从本地获取chart包并解析文件
-     *
-     * @param chartName    chart名称
-     * @param chartVersion chart版本
-     * @return
-     */
-    HelmChartFile getHelmChartFromLocal(String chartName, String chartVersion);
-
-    /**
-     * 下载chart包并解析文件
-     *
-     * @param registry     制品服务信息
-     * @param chartName    chart名称
-     * @param chartVersion chart版本
-     * @return
-     */
-    HelmChartFile getHelmChartFromRegistry(Registry registry, String chartName, String chartVersion);
-
-    /**
      * 下载chart包并解析文件
      *
      * @param clusterId 集群
@@ -55,7 +36,7 @@ public interface HelmChartService {
      * @param name 名称
      * @return
      */
-    HelmChartFile getHelmChartFromRegistry(String clusterId, String namespace, String name, String type);
+    HelmChartFile getHelmChart(String clusterId, String namespace, String name, String type);
 
     /**
      * 下载helm chart包
@@ -243,7 +224,7 @@ public interface HelmChartService {
      * @param chartName chart名称
      * @param chartVersion chart版本
      */
-    HelmChartFile getHelmChartFromMysql(String chartName, String chartVersion) throws Exception;
+    HelmChartFile getHelmChartFromMysql(String chartName, String chartVersion);
 
     /**
      * 创建operator

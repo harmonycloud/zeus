@@ -81,61 +81,23 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     }
 
     @Override
-    public HelmChartFile getHelmChartFromLocal(String chartName, String chartVersion) {
-        String tgzFilePath = getTgzFilePath(chartName, chartVersion);
-        File file = new File(tgzFilePath);
-        if (!file.exists()) {
-            File f = new File(getLocalTgzPath(chartName, chartVersion));
-            try {
-                FileUtils.copyFile(f, file);
-            } catch (Exception e) {
-                throw new BusinessException(ErrorMessage.NOT_FOUND);
-            }
-        }
-        try {
-            return getHelmChartFromFile(chartName, chartVersion, file);
-        } finally {
-            file.delete();
-        }
-    }
-
-    @Override
-    public HelmChartFile getHelmChartFromRegistry(Registry registry, String chartName, String chartVersion) {
-        String tgzFilePath = getTgzFilePath(chartName, chartVersion);
-        File file = new File(tgzFilePath);
-        boolean download = false;
-        if (!file.exists()) {
-            file = downloadHelmChart(registry, chartName, chartVersion);
-            download = true;
-        }
-        try {
-            return getHelmChartFromFile(chartName, chartVersion, file);
-        } finally {
-            // 把下载的临时文件删除
-            if (download) {
-                file.delete();
-            }
-        }
-    }
-
-    @Override
-    public HelmChartFile getHelmChartFromRegistry(String clusterId, String namespace, String name, String type) {
+    public HelmChartFile getHelmChart(String clusterId, String namespace, String name, String type) {
         Middleware middleware = middlewareService.detail(clusterId, namespace, name, type);
         if (StringUtils.isEmpty(middleware.getChartVersion())){
             BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoService.list().stream()
                 .filter(info -> info.getChartName().equals(type)).collect(Collectors.toList()).get(0);
-            return getHelmChartFromLocal(type, beanMiddlewareInfo.getChartVersion());
+            return getHelmChartFromMysql(type, beanMiddlewareInfo.getChartVersion());
         }
-        return getHelmChartFromLocal(type, middleware.getChartVersion());
+        return getHelmChartFromMysql(type, middleware.getChartVersion());
     }
 
     @Override
-    public HelmChartFile getHelmChartFromMysql(String chartName, String chartVersion) throws Exception {
+    public HelmChartFile getHelmChartFromMysql(String chartName, String chartVersion) {
         BeanMiddlewareInfo mwInfo = middlewareInfoService.get(chartName, chartVersion);
-        if (mwInfo.getChart() == null || mwInfo.getChart().length == 0){
+        if (mwInfo.getChart() == null || mwInfo.getChart().length == 0) {
             throw new BusinessException(ErrorMessage.NOT_FOUND);
         }
-        File file = new File(uploadPath + File.separator + "mysql.tgz");
+        File file = new File(uploadPath + File.separator + chartName + "-" + chartVersion + ".tgz");
         if (!file.exists()) {
             InputStream in = new ByteArrayInputStream(mwInfo.getChart());
             FileOutputStream fileOutputStream = null;
@@ -148,17 +110,25 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
                 }
                 fileOutputStream.flush();
             } catch (Exception e) {
-                log.error("中间件{} 图片初始化加载失败", mwInfo.getChartName() + "-" + mwInfo.getChartVersion());
+                throw new BusinessException(ErrorMessage.HELM_CHART_WRITE_ERROR);
             } finally {
-                in.close();
-                if (fileOutputStream != null) {
-                    fileOutputStream.close();
+                try {
+                    in.close();
+                    if (fileOutputStream != null) {
+                        fileOutputStream.close();
+                    }
+                } catch (IOException io) {
                 }
             }
         }
-        return this.getHelmChartFromFile(chartName, chartVersion, file);
+        try {
+            return this.getHelmChartFromFile(chartName, chartVersion, file);
+        } finally {
+            file.delete();
+        }
     }
 
+    @Deprecated
     @Override
     public File downloadHelmChart(Registry registry, String chartName, String chartVersion) {
         if (!RegistryType.isSelfType(registry.getType())) {
@@ -407,7 +377,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         String chartVersion = middleware.getChartVersion();
 
         // 先获取chart文件
-        HelmChartFile helmChart = getHelmChartFromLocal(chartName, chartVersion);
+        HelmChartFile helmChart = getHelmChartFromMysql(chartName, chartVersion);
 
         JSONObject values = getInstalledValues(middleware, cluster);
         Yaml yaml = new Yaml();
@@ -448,7 +418,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         String tempValuesYamlDir = getTempValuesYamlDir();
 
         // 先获取chart文件
-        HelmChartFile helmChart = getHelmChartFromLocal(chartName, chartVersion);
+        HelmChartFile helmChart = getHelmChartFromMysql(chartName, chartVersion);
 
         String tempValuesYamlName =
             chartName + "-" + chartVersion + "-" + "temp" + "-" + System.currentTimeMillis() + ".yaml";
@@ -482,6 +452,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         }
     }
 
+    @Deprecated
     @Override
     public void upgradeInstall(String name, String namespace, String setValues, String chartName, String chartVersion,
                                MiddlewareClusterDTO cluster) {
