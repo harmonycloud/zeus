@@ -915,7 +915,7 @@ public class IngressServiceImpl implements IngressService {
             middlewareMap.put("chartVersion", middlewareInfoDTO.getChartVersion());
             middlewareMap.put("version", middlewareInfoDTO.getVersion());
             middlewareMap.put("ingressList", ingressDTOList);
-            middlewareMap.put("serviceNum", middlewareServiceList.size());
+            middlewareMap.put("serviceNum", ingressDTOList.size());
             ingressList.add(middlewareMap);
         });
 
