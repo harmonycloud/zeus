@@ -1,0 +1,72 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    prometheus: k8s
+    role: alert-rules
+  name: {{ include "minio.fullname" . }}
+spec:
+  groups:
+  - name: minio-rules
+    rules:
+    - alert: MinioDiskOffline
+      annotations:
+        message: MinioDiskOffline
+        product: harmonycloud
+        service: metrics
+        summary: "Minio disk offline (instance {{`{{ $labels.instance }}`}})"
+      expr: minio_disks_offline > 0
+      for: 0m
+      labels:
+        severity: critical
+    - alert: MinioDiskSpaceUsage less than 20%
+      annotations:
+        message: MinioDiskSpaceUsage less than 20%
+        product: harmonycloud
+        service: metrics
+        summary: "Minio disk space usage (instance {{`{{ $labels.instance }}`}})"
+      expr: disk_storage_available / disk_storage_total * 100 < 20
+      for: 30s
+      labels:
+        severity: warning
+    - alert: MinioDiskSpaceUsage less than 10%
+      annotations:
+        message: MinioDiskSpaceUsage less than 10%
+        product: harmonycloud
+        service: metrics
+        summary: "Minio disk space usage (instance {{`{{ $labels.instance }}`}})"
+      expr: disk_storage_available / disk_storage_total * 100 < 10
+      for: 30s
+      labels:
+        severity: warning
+    - alert: MinioDiskSpaceUsage less than 5%
+      annotations:
+        message: MinioDiskSpaceUsage less than 5%
+        product: harmonycloud
+        service: metrics
+        summary: "Minio disk space usage (instance {{`{{ $labels.instance }}`}})"
+      expr: disk_storage_available / disk_storage_total * 100 < 5
+      for: 30s
+      labels:
+        severity: critical
+    - alert: self_heal_objects_heal_failed  larger than 30%
+      annotations:
+        message: self_heal_objects_heal_failed  larger than 30%
+        product: harmonycloud
+        service: metrics
+        summary:  self_heal_objects_heal_failed  larger than 30%
+      expr: self_heal_objects_heal_failed / self_heal_objects_scanned * 100 > 30
+      for: 30s
+      labels:
+        severity: critical
+    - alert: s3_errors  larger than 10%
+      annotations:
+        message: s3_errors  larger than 10%
+        product: harmonycloud
+        service: metrics
+        summary:  s3_errors  larger than 10%
+      expr: s3_errors_total / s3_requests_current * 100 > 10
+      for: 30s
+      labels:
+        severity: critical

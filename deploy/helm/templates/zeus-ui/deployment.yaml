@@ -45,6 +45,8 @@ spec:
         - mountPath: /etc/nginx/nginx.conf
           name: nginx-config-volume
           subPath: nginx.conf
+        - mountPath: /etc/ssl
+          name: middleware-ui-tls-volume
       {{- with .Values.global.zeus_ui.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -62,3 +64,12 @@ spec:
             path: nginx.conf
           name: zeus-ui-nginx-config
         name: nginx-config-volume
+      - configMap:
+          defaultMode: 420
+          items:
+            - key: tls.key
+              path: tls.key
+            - key: tls.cert
+              path: tls.cert
+          name: ssl-config
+        name: middleware-ui-tls-volume

@@ -52,6 +52,9 @@ spec:
         - containerPort: 8080
           name: api
           protocol: TCP
+        - containerPort: 8443
+          name: https
+          protocol: TCP
         readinessProbe:
           failureThreshold: 3
           httpGet:

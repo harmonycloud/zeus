@@ -1,0 +1,16 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: {{ include "minio.fullname" . }}
+  name: {{ include "minio.fullname" . }}
+ 
+spec:
+  endpoints:
+  - interval: 30s
+    port: http-metrics
+    path: /minio/prometheus/metrics
+  jobLabel: app
+  selector:
+    matchLabels:
+      app: {{ include "minio.fullname" . }}

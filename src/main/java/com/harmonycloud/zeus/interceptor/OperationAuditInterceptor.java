@@ -24,6 +24,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -119,9 +120,11 @@ public class OperationAuditInterceptor {
                     operationAudit.setResponse(JSON.toJSONString(baseResult.getData()));
                 }
             }
-            operationAudit.setStatus(baseResult.getSuccess().toString());
         }
 
+        // 从获取RequestAttributes中获取HttpServletResponse的信息
+        HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
+        operationAudit.setStatus(String.valueOf(response.getStatus()));
         JwtTokenComponent.JWTResultEnum resultEnum = JwtTokenComponent.checkToken(request.getHeader("userToken"));
         JSONObject userJson = resultEnum.getValue();
 
@@ -188,7 +191,7 @@ public class OperationAuditInterceptor {
             operationAudit.setRequestParams(paramJson.toString());
         }
 
-        log.info("操作日志：" + operationAudit);
+        log.info("操作日志：{}", operationAudit);
         operationAuditService.insert(operationAudit);
     }
 

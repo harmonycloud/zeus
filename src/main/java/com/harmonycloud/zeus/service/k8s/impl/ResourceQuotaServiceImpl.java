@@ -94,13 +94,13 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
         Map<String, Quantity> hard = resourceQuota.getSpec().getHard();
         Map<String, Quantity> used = resourceQuota.getStatus().getUsed();
         hard.forEach((k, v) -> {
-            if (CPU.equals(k)) {
+            if (CPU.equals(k) || "requests.cpu".equals(k)) {
                 double hardCpu = ResourceCalculationUtil.getResourceValue(v.toString(), CPU, "");
                 double usedCpu = ResourceCalculationUtil.getResourceValue(used.get(k).toString(), CPU, "");
                 // 总量，配额，使用量
                 List<String> quota = Arrays.asList("0", String.valueOf(hardCpu), String.valueOf(usedCpu));
                 rqMap.put(CPU, quota);
-            } else if (MEMORY.equals(k)) {
+            } else if (MEMORY.equals(k) || "requests.memory".equals(k)) {
                 double hardMemory =
                     ResourceCalculationUtil.getResourceValue(v.toString(), MEMORY, ResourceUnitEnum.GI.getUnit());
                 double usedMemory = ResourceCalculationUtil.getResourceValue(used.get(k).toString(), MEMORY,
@@ -115,8 +115,8 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
                     ResourceUnitEnum.GI.getUnit());
                 // 总量，配额，使用量
                 List<String> quota = Arrays.asList("0", String.valueOf(hardStorage), String.valueOf(usedStorage));
-                String scName = k.substring(0, k.indexOf(".storageclass"));
-                rqMap.put(scName, quota);
+                //String scName = k.substring(0, k.indexOf(".storageclass"));
+                rqMap.put("storage", quota);
             }
         });
         return rqMap;

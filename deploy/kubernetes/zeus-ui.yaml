@@ -41,6 +41,8 @@ spec:
             - mountPath: /etc/nginx/nginx.conf
               name: nginx-config-volume
               subPath: nginx.conf
+            - mountPath: /etc/ssl
+              name: middleware-ui-tls-volume
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       volumes:
@@ -51,6 +53,15 @@ spec:
                 path: nginx.conf
             name: zeus-ui-nginx-config
           name: nginx-config-volume
+        - configMap:
+            defaultMode: 420
+            items:
+              - key: tls.key
+                path: tls.key
+              - key: tls.cert
+                path: tls.cert
+            name: ssl-config
+          name: middleware-ui-tls-volume
 ---
 apiVersion: v1
 data:
@@ -93,10 +104,18 @@ data:
         #
 
         server {
-            listen 30088;
+            listen 30088 ssl;
             server_name _;
             #server_name_in_redirect off;
             #port_in_redirect off;
+            #ssl
+            ssl_certificate      /etc/ssl/tls.cert;
+            ssl_certificate_key  /etc/ssl/tls.key;
+            ssl_session_timeout 5m;
+            ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+            ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:HIGH:!aNULL:!MD5:!RC4:!DHE;
+            ssl_prefer_server_ciphers on;
+
             proxy_set_header X-Forwarded-Host $host;
             proxy_set_header X-Forwarded-Server $host;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -108,7 +127,7 @@ data:
             }
 
             location /api/ {
-                proxy_pass http://caas-middleware:8080/;
+                proxy_pass https://caas-middleware:8080/;
                 proxy_http_version 1.1;
                 proxy_set_header Host $host;
                 proxy_set_header X-Real-IP $remote_addr;
@@ -116,7 +135,7 @@ data:
             }
 
             location /user/ {
-                proxy_pass http://caas-middleware:8080/;
+                proxy_pass https://caas-middleware:8080/;
                 proxy_http_version 1.1;
                 proxy_set_header Host $host;
                 proxy_set_header X-Real-IP $remote_addr;
@@ -163,3 +182,56 @@ spec:
     app: zeus-ui
   sessionAffinity: None
   type: NodePort
+---
+apiVersion: v1
+data:
+  tls.cert: |
+    -----BEGIN CERTIFICATE-----
+    MIICuDCCAaACCQC0snrJ2ahUoTANBgkqhkiG9w0BAQsFADAeMRwwGgYDVQQDDBN3
+    d3cuaGFybW9ueWNsb3VkLmNuMB4XDTIxMDkwMzA3NTQxNVoXDTMxMDkwMTA3NTQx
+    NVowHjEcMBoGA1UEAwwTd3d3Lmhhcm1vbnljbG91ZC5jbjCCASIwDQYJKoZIhvcN
+    AQEBBQADggEPADCCAQoCggEBAKrxQq/Q7cLwPxeV2lilDXLqvCBOkxWYIBeo6x4z
+    3NNMOk8f7LB/qpb1EbPm6plPlD/jXL+lhE8EDpWGxYtKGmtNaaf5+fd6TwTM2ZFs
+    7/V3csrzIXJjT3ZI9+tQC9MtIE5YixHjHREVaQNq9JA7kGDmAaYSmm5xhq0EM5LK
+    qUDaBBsTL/aMMl89QYMwD0qJs2wgDZ00IuaKKniB84K1pdNshYvt5zRB5zAH+ssy
+    3OgpKkvKM6EUFJe9pbsi5s/AXoK8/4YCxVM0IGyjza2LFTY/uwX2QiIbK4PfA2mJ
+    gh67W5+tHtn/XrcTGBz3ulEBlSUcEGvRqhOxY25q6gHmP4kCAwEAATANBgkqhkiG
+    9w0BAQsFAAOCAQEAP0ce+a0pgDDymDjY+4DHMeOOX0zrUdFRL6qfXdBNn++5l7g9
+    3thw+DtLtv17rJFdnnFYX734G/tPNXPYrYYhSf8n88VIW5MwolIcjcIOuT0lSXES
+    PbR6AbAXSWvKBKLbKSaTFYO+tc/JH69BX1ybovo9i5ELBcIoZxf9cbI99r3e0Kjr
+    EgwE0mv21icWg1hQd+L+ziiPXso6qX+H7jL6tBCk0fiu/8gQHuRbPDCPK8l0rhq1
+    Up9VEWr8iT+GO3Quy03X26igkVHoPZ1aabNBf9i7XRSvCnrn0MnezifFvU9wVXBO
+    untYuZ3ENoj84BdLGH2Vuu34XfvsKg0EE0pnQg==
+    -----END CERTIFICATE-----
+  tls.key: |
+    -----BEGIN RSA PRIVATE KEY-----
+    MIIEpAIBAAKCAQEAqvFCr9DtwvA/F5XaWKUNcuq8IE6TFZggF6jrHjPc00w6Tx/s
+    sH+qlvURs+bqmU+UP+Ncv6WETwQOlYbFi0oaa01pp/n593pPBMzZkWzv9XdyyvMh
+    cmNPdkj361AL0y0gTliLEeMdERVpA2r0kDuQYOYBphKabnGGrQQzksqpQNoEGxMv
+    9owyXz1BgzAPSomzbCANnTQi5ooqeIHzgrWl02yFi+3nNEHnMAf6yzLc6CkqS8oz
+    oRQUl72luyLmz8Begrz/hgLFUzQgbKPNrYsVNj+7BfZCIhsrg98DaYmCHrtbn60e
+    2f9etxMYHPe6UQGVJRwQa9GqE7FjbmrqAeY/iQIDAQABAoIBAQCqZl80hY9NIFG0
+    QBPtA3L5l9a6Wbky8HclPqRJcidxle4WC9vUQR8a5eakr84xz2sXmJxPCj5uybuE
+    AFmRNOhLCFsHMB+mO4zjWxSSa8ZzqYOLnXs83JRMdAZ20k9HTheDIa5XwU6rRe1t
+    k8OAt29/uCfylV7OM2qts595d33qfwbpOUWz35jmE6QK94C6/3FYWmGg/L74PCQJ
+    2mDyvoQeyBY153lAZnVGp8HkJmB7m3ex4IdY3nKRiqPQ2A7pcG5JNYxOwtIzVt+J
+    YKAcDq73V6non3ykOcouhzi19qwMSGOfs1O/oTxn0JUj2o3S7n0nSADl+fdeXY0J
+    IF6GZXkRAoGBAOK2ecRFsasmyiR5MjH0Tf3K2cqqUvIZrF33EmPtM64gOZyH9lxg
+    Kg1TluYMqbKLIqdz8HbFTiKUKgIWKtsBx31F0ThMZsnc/CM90AYl0xJboYVzP2XD
+    NmrSFXXkEMPgKJgVR1LBVZwaqyenvsBbH0ZAIdYP5Qadf1dqKLRX0J/dAoGBAMEG
+    bRbrKWA0Oijd8rSdzmjocRSXBosL2595B1iD2zsDVH8uZisf1WJww/s6/4lx7HV5
+    smHPwW7tl6eIoUHfMXZDyH4tO9jEAM+wyrS00K7HnDW0iM/fEven6SnXr9bIddI7
+    L8v7nUl9auTkbzUiPt2mo6ovXb6SyT7ftD85DDmdAoGBAL5TBkJZZ+AQ/l5ESHlb
+    aSYIZ3IWLvAD0YpI4u10spAZiYP5OD8wk90AMYwLUWMMHxmI4XQ0C3ZIAEQkK/IT
+    uk9Wj1+99AS/OgSz3bFri5i7yAtqRuy9Ry/CEjYYMmLeCfYy1t+IYsBcOxddYWvG
+    k6i8Kiu0yEYXblIKUwWjOwcZAoGAIGy07JGqTKfZUT4fZCnSH5tUS5InHjpqtTo+
+    eqcDr8Eac5bWwM3DKZspwM0jWfJSN1WvGnEs3DZ7MEBqXkdg5q3yQwfUMtCSFlFr
+    a7moCIQtgHQIO2sMo5+IMmgx+JGKATvCBrEIteykhTi+WZ2cE93HRnJYfAfqWG55
+    t9kcbZ0CgYB84gwmImt4JxhLrFOlw9XMAKJYgqi/jQmPufUKQh891nsfkzgfRChR
+    rfTPfxLMXg0mzHNIzFWFqHvp9XO3FAet/nLe8ADxG/6ggXVQ7OvQt0k99DjnQNPJ
+    sgi8KNB98e9Ciq64FGUYIWS7RVlNHE3Cn7W5jeuxiToyskCeABF3sw==
+    -----END RSA PRIVATE KEY-----
+kind: ConfigMap
+metadata:
+  name: ssl-config
+  namespace: zeus

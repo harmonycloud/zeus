@@ -78,7 +78,7 @@ public class UserController {
         return BaseResult.ok(userService.delete(userName));
     }
 
-    @ApiOperation(value = "重制密码", notes = "重制密码")
+    @ApiOperation(value = "重置密码", notes = "重置密码")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "userName", value = "账户", paramType = "path", dataTypeClass = String.class),
     })

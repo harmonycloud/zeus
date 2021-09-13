@@ -45,29 +45,17 @@ public class StorageClassServiceImpl implements StorageClassService {
         }
         Map<String, Object> support = (Map<String, Object>)cluster.getStorage().get("support");
         List<StorageClass> list = new ArrayList<>();
-        boolean namespaced = false;
 
         // 取出存储配额
         Map<String, List<String>> rqMap;
         if (StringUtils.isNotBlank(namespace)) {
-            namespaced = true;
             rqMap = resourceQuotaService.get(clusterId, namespace, namespace + "quota");
         } else {
             rqMap = resourceQuotaService.statistics(clusterId);
         }
 
         for (io.fabric8.kubernetes.api.model.storage.StorageClass sc : scList) {
-            StorageClassProvisionerEnum provisionerEnum =
-                StorageClassProvisionerEnum.findByProvisioner(sc.getProvisioner());
-            if (provisionerEnum == null
-                || namespaced && rqMap.size() > 0 && rqMap.get(sc.getMetadata().getName()) == null) {
-                continue;
-            }
-            if (onlyMiddleware && !support.containsKey(provisionerEnum.getType())) {
-                continue;
-            }
-
-            StorageClass s = new StorageClass().setName(sc.getMetadata().getName()).setType(provisionerEnum.getType())
+            StorageClass s = new StorageClass().setName(sc.getMetadata().getName())
                 .setLabels(sc.getMetadata().getLabels()).setParameters(sc.getParameters())
                 .setProvisioner(sc.getProvisioner()).setReclaimPolicy(sc.getReclaimPolicy())
                 .setVolumeBindingMode(sc.getVolumeBindingMode());

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name:  {{ include "minio.fullname" . }}-metrics
+  labels:
+    app:  {{ include "minio.fullname" . }}-metrics
+spec:
+  ports:
+  - name: http-metrics
+    port: 9000
+    targetPort: 9000
+    protocol: TCP
+  selector:
+    app:  {{ include "minio.fullname" . }}
+  type: ClusterIP
+

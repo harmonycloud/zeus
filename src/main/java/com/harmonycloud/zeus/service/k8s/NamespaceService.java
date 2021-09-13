@@ -53,8 +53,8 @@ public interface NamespaceService {
      * 创建命名空间
      *
      * @param clusterId     集群id
-     * @param ns            命名空间
+     * @param name          命名空间名称
      */
-    void save(String clusterId, io.fabric8.kubernetes.api.model.Namespace ns);
+    void save(String clusterId, String name);
 
 }
