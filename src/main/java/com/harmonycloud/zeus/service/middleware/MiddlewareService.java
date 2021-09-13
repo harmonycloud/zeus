@@ -95,4 +95,13 @@ public interface MiddlewareService {
      * @return
      */
     String getManagePlatformAddress(Middleware middleware, String clusterId);
+
+    /**
+     * 查询可用中间件列表及服务列表
+     * @param clusterId
+     * @param namespace
+     * @param keyword
+     * @return
+     */
+    List listAllMiddleware(String clusterId, String namespace,String keyword);
 }

@@ -71,5 +71,4 @@ public interface MiddlewareInfoService {
      */
     void insert(HelmChartFile helmChartFile, File file);
 
-    List listAllMiddleware(String clusterId, String namespace, String keyword);
 }

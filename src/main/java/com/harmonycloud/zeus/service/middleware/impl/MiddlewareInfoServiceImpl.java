@@ -1,26 +1,19 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
-
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareInfoDTO;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
+import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
+import com.harmonycloud.zeus.dao.BeanMiddlewareInfoMapper;
+import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
 import com.harmonycloud.zeus.service.k8s.PodService;
 import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -29,21 +22,20 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareInfoDTO;
-import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
-import com.harmonycloud.zeus.dao.BeanMiddlewareInfoMapper;
-import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
-
-import lombok.extern.slf4j.Slf4j;
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.harmonycloud.caas.common.constants.CommonConstant.DOT;
 import static com.harmonycloud.caas.common.constants.CommonConstant.LINE;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.HARMONY_CLOUD;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.ICON_SVG;
 import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.SVG;
 
@@ -306,54 +298,6 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     public void saveStatus(Map<String, BeanClusterMiddlewareInfo> clusterMwInfoMap) {
         for (String key : clusterMwInfoMap.keySet()) {
             clusterMiddlewareInfoService.update(clusterMwInfoMap.get(key));
-        }
-    }
-
-    @Override
-    public List listAllMiddleware(String clusterId, String namespace,String keyword) {
-        List<MiddlewareInfoDTO> middlewareInfoDTOList = list(clusterId);
-        List<Map<String, Object>> serviceList = new ArrayList<>();
-        middlewareInfoDTOList.forEach(middlewareInfoDTO -> {
-            List<Middleware> middlewareServiceList = middlewareService.simpleList(clusterId, namespace, middlewareInfoDTO.getChartName(), keyword);
-            middlewareServiceList.forEach(middleware -> {
-                MiddlewareCRD middlewareCRD = middlewareCRDService.getCR(clusterId, namespace, middlewareInfoDTO.getType(), middleware.getName());
-                if (middlewareCRD != null) {
-                    List<MiddlewareInfo> middlewareInfos = middlewareCRD.getStatus().getInclude().get(PODS);
-                    middleware.setPodNum(middlewareInfos.size());
-                    if (middleware.getManagePlatform() != null && middleware.getManagePlatform()) {
-                        String managePlatformAddress = middlewareService.getManagePlatformAddress(middleware, clusterId);
-                        middleware.setManagePlatformAddress(managePlatformAddress);
-                    }
-                }
-            });
-
-            Map<String, Object> middlewareMap = new HashMap<>();
-            middlewareMap.put("name", middlewareInfoDTO.getChartName());
-            middlewareMap.put("image", middlewareInfoDTO.getImage());
-            middlewareMap.put("imagePath", middlewareInfoDTO.getImagePath());
-            middlewareMap.put("chartName", middlewareInfoDTO.getChartName());
-            middlewareMap.put("chartVersion", middlewareInfoDTO.getChartVersion());
-            middlewareMap.put("version", middlewareInfoDTO.getVersion());
-            middlewareMap.put("serviceList", middlewareServiceList);
-            middlewareMap.put("serviceNum", middlewareServiceList.size());
-            serviceList.add(middlewareMap);
-        });
-        Collections.sort(serviceList, new ServiceMapComparator());
-
-        return serviceList;
-    }
-
-    /**
-     * 服务排序类，按服务数量进行排序
-     */
-    public static class ServiceMapComparator implements Comparator<Map> {
-        @Override
-        public int compare(Map service1, Map service2) {
-            if (Integer.parseInt(service1.get("serviceNum").toString()) > Integer.parseInt(service2.get("serviceNum").toString())) {
-                return -1;
-            } else {
-                return 1;
-            }
         }
     }
 

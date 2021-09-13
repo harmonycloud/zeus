@@ -21,6 +21,7 @@ import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareInfoServiceImpl;
+import com.harmonycloud.zeus.service.middleware.impl.MiddlewareServiceImpl;
 import com.harmonycloud.zeus.util.DateUtil;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.*;
@@ -919,7 +920,7 @@ public class IngressServiceImpl implements IngressService {
             ingressList.add(middlewareMap);
         });
 
-        Collections.sort(ingressList, new MiddlewareInfoServiceImpl.ServiceMapComparator());
+        Collections.sort(ingressList, new MiddlewareServiceImpl.ServiceMapComparator());
         return ingressList;
     }
 

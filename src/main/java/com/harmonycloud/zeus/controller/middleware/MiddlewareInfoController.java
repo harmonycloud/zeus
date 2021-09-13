@@ -48,17 +48,4 @@ public class MiddlewareInfoController {
         return BaseResult.ok(middlewareInfoService.version(clusterId, type));
     }
 
-    @ApiOperation(value = "查询中间件服务列表", notes = "查询中间件服务列表")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "keyword", value = "命名空间", paramType = "query", dataTypeClass = String.class)
-    })
-    @GetMapping("listAllMiddleware")
-    public BaseResult listAllMiddleware(@RequestParam(value = "clusterId") String clusterId,
-                                        @RequestParam(value = "namespace", required = false) String namespace,
-                                        @RequestParam(value = "keyword", required = false) String keyword) {
-        return BaseResult.ok(middlewareInfoService.listAllMiddleware(clusterId, namespace, keyword));
-    }
-
 }

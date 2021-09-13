@@ -40,11 +40,11 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping
-    public BaseResult<List<Middleware>> list(@PathVariable("clusterId") String clusterId,
+    public BaseResult list(@PathVariable("clusterId") String clusterId,
                                              @PathVariable("namespace") String namespace,
                                              @RequestParam(value = "type", required = false) String type,
                                              @RequestParam(value = "keyword", required = false) String keyword) {
-        return BaseResult.ok(middlewareService.simpleList(clusterId, namespace, type, keyword));
+        return BaseResult.ok(middlewareService.listAllMiddleware(clusterId, namespace, keyword));
     }
 
     @ApiOperation(value = "查询中间件详情", notes = "查询中间件详情")

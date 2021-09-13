@@ -8,6 +8,7 @@ import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MysqlReplicateCRD;
 import com.harmonycloud.zeus.integration.cluster.bean.MysqlReplicateSpec;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
@@ -38,6 +39,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_NODEPORT;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
 /**
  * @author dengyulong
@@ -272,4 +274,54 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         }
         return "";
     }
+
+    @Override
+    public List listAllMiddleware(String clusterId, String namespace,String keyword) {
+        List<MiddlewareInfoDTO> middlewareInfoDTOList = middlewareInfoService.list(clusterId);
+
+        List<Map<String, Object>> serviceList = new ArrayList<>();
+        middlewareInfoDTOList.forEach(middlewareInfoDTO -> {
+            List<Middleware> middlewareServiceList = simpleList(clusterId, namespace, middlewareInfoDTO.getChartName(), keyword);
+            middlewareServiceList.forEach(middleware -> {
+                MiddlewareCRD middlewareCRD = middlewareCRDService.getCR(clusterId, namespace, middlewareInfoDTO.getType(), middleware.getName());
+                if (middlewareCRD != null) {
+                    List<MiddlewareInfo> middlewareInfos = middlewareCRD.getStatus().getInclude().get(PODS);
+                    middleware.setPodNum(middlewareInfos.size());
+                    if (middleware.getManagePlatform() != null && middleware.getManagePlatform()) {
+                        String managePlatformAddress = getManagePlatformAddress(middleware, clusterId);
+                        middleware.setManagePlatformAddress(managePlatformAddress);
+                    }
+                }
+            });
+
+            Map<String, Object> middlewareMap = new HashMap<>();
+            middlewareMap.put("name", middlewareInfoDTO.getChartName());
+            middlewareMap.put("image", middlewareInfoDTO.getImage());
+            middlewareMap.put("imagePath", middlewareInfoDTO.getImagePath());
+            middlewareMap.put("chartName", middlewareInfoDTO.getChartName());
+            middlewareMap.put("chartVersion", middlewareInfoDTO.getChartVersion());
+            middlewareMap.put("version", middlewareInfoDTO.getVersion());
+            middlewareMap.put("serviceList", middlewareServiceList);
+            middlewareMap.put("serviceNum", middlewareServiceList.size());
+            serviceList.add(middlewareMap);
+        });
+        Collections.sort(serviceList, new ServiceMapComparator());
+
+        return serviceList;
+    }
+
+    /**
+     * 服务排序类，按服务数量进行排序
+     */
+    public static class ServiceMapComparator implements Comparator<Map> {
+        @Override
+        public int compare(Map service1, Map service2) {
+            if (Integer.parseInt(service1.get("serviceNum").toString()) > Integer.parseInt(service2.get("serviceNum").toString())) {
+                return -1;
+            } else {
+                return 1;
+            }
+        }
+    }
+
 }
