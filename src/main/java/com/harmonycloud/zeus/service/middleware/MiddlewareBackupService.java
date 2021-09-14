@@ -1,7 +1,10 @@
 package com.harmonycloud.zeus.service.middleware;
 
+import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackup;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupSpec;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -11,7 +14,7 @@ import java.util.List;
 public interface MiddlewareBackupService {
 
     /**
-     * 查询备份列表
+     * 查询备份数据列表
      *
      * @param clusterId      集群id
      * @param namespace      命名空间
@@ -19,7 +22,7 @@ public interface MiddlewareBackupService {
      * @param middlewareName 中间件名称
      * @return
      */
-    List<MiddlewareBackup> list(String clusterId, String namespace, String type, String middlewareName);
+    List list(String clusterId, String namespace, String type, String middlewareName);
 
     /**
      * 创建备份
@@ -30,7 +33,27 @@ public interface MiddlewareBackupService {
      * @param middlewareName 中间件名称
      * @return
      */
-    void create(String clusterId, String namespace, String type, String middlewareName);
+    BaseResult create(String clusterId, String namespace, String type, String middlewareName, String cron, Integer limitRecord);
 
+    /**
+     * 更新备份配置
+     *
+     * @param clusterId      集群id
+     * @param namespace      命名空间
+     * @param type           中间件类型
+     * @param middlewareName 中间件名称
+     * @return
+     */
+    BaseResult update(String clusterId, String namespace, String type, String middlewareName, String cron, Integer limitRecord);
+
+    /**
+     * 查询备份设置
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param middlewareName
+     * @return
+     */
+    BaseResult get(String clusterId, String namespace, String type, String middlewareName);
 
 }
