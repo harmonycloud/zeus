@@ -6,74 +6,47 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
+/**
+ * 中间件备份记录spec
+ * @author  liyinlong
+ * @since 2021/9/15 10:06 上午
+ */
 @Data
 @Accessors(chain = true)
 public class MiddlewareBackupSpec {
 
     /**
-     * 备份名称
+     * 备份记录名称
      */
     private String name;
 
     /**
-     * pod名称（选填）
+     * pod名称
      */
     private String pod;
 
     /**
-     * pod存储pvc(选填)
+     * 中间件备份记录存储信息
      */
-    private List<String> pvcs;
-
-    /**
-     * 备份存储
-     */
-    private String backendStorage;
-
-    /**
-     * 备份时间规则
-     */
-    private Schedule schedule;
+    private StorageProvider storageProvider;
 
     public MiddlewareBackupSpec() {
     }
 
-    public MiddlewareBackupSpec(String name, String cron, Integer limitRecord) {
-        this.name = name;
-        if (StringUtils.isNotBlank(cron)) {
-            this.schedule = new Schedule(cron, limitRecord, null);
-        }
-    }
-
-    /**
-     * 备份时间规则
-     */
     @Data
-    public static class Schedule {
-        /**
-         * cron表达式
-         */
-        private String cron;
+    public static class StorageProvider{
 
-        /**
-         * 备份保留个数
-         */
-        private Integer limitRecord;
+        private Minio minio;
 
-        /**
-         * 开始时间
-         */
-        private String startTime;
+        @Data
+        public static class Minio{
+            private String bucketName;
 
-        public Schedule() {
-        }
+            private String endpoint;
 
-        public Schedule(String cron, Integer limitRecord, String startTime) {
-            this.cron = cron;
-            this.limitRecord = limitRecord;
-            this.startTime = startTime;
+            public Minio() {
+            }
         }
     }
-
 }
 

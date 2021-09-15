@@ -5,13 +5,13 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 /**
- * 中间件备份记录crd
+ * 中间件备份crd
  * @author  liyinlong
  * @since 2021/9/13 4:33 下午
  */
 @Data
 @Accessors(chain = true)
-public class MiddlewareBackupCRD {
+public class MiddlewareBackupScheduleCRD {
 
     private String apiVersion = "harmonycloud.cn/v1";
 
@@ -19,8 +19,8 @@ public class MiddlewareBackupCRD {
 
     private ObjectMeta metadata;
 
-    private MiddlewareBackupSpec spec;
+    private MiddlewareBackupScheduleSpec spec;
 
-    private MiddlewareBackupStatus status;
+    private MiddlewareBackupScheduleStatus status;
 
 }

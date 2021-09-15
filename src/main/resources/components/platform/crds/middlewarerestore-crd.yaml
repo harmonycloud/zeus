@@ -33,22 +33,14 @@ spec:
             spec:
               description: MiddlewareRestoreSpec defines the desired state of MiddlewareRestore
               properties:
-                restoreName:
-                  type: string
-                restorePod:
-                  type: string
                 name:
                   type: string
                 pod:
                   type: string
-                pvcs:
-                  items:
-                    type: string
-                  type: array
                 backupName:
                   type: string
-                backupId:
-                  type: string
+              #                backupId:
+              #                  type: string
               type: object
             status:
               description: MiddlewareBackupStatus defines the observed state of MiddlewareBackup

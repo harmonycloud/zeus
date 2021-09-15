@@ -6,42 +6,30 @@ import lombok.experimental.Accessors;
 import java.util.List;
 
 /**
- * 中间件备份状态
+ * 中间件备份记录状态
  */
 @Data
 @Accessors(chain = true)
 public class MiddlewareBackupStatus {
 
-    private String creationTimestamp;
+    private String backupTime;
 
-    private List<Record> records;
+    private List<BackupInfo> backupInfos;
 
     private String phase;
 
-    private String reason;
+    private String message;
 
     /**
      * 备份记录
      */
     @Data
-    public static class Record {
-        private String creationTimestamp;
+    public static class BackupInfo {
+        private String repository;
 
-        private String uuid;
+        private String volumeSnapshot;
 
-        private Detail detail;
-
-        public static class Detail {
-            private String name;
-
-            private String pod;
-
-            private String pvc;
-
-            private String volumeSnapshot;
-
-            private String phase;
+        public BackupInfo() {
         }
-
     }
 }

@@ -1,21 +1,23 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
-import com.harmonycloud.caas.common.model.middleware.MiddlewareBackup;
 import com.harmonycloud.zeus.integration.cluster.MiddlewareBackupWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupList;
 import com.harmonycloud.zeus.service.k8s.MiddlewareBackupCRDService;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author liyinlong
- * @since 2021/9/14 10:50 上午
+ * @since 2021/9/15 10:33 上午
  */
+
 @Service
-@Slf4j
 public class MiddlewareBackupCRDServiceImpl implements MiddlewareBackupCRDService {
 
     @Autowired
@@ -27,12 +29,12 @@ public class MiddlewareBackupCRDServiceImpl implements MiddlewareBackupCRDServic
     }
 
     @Override
-    public void update(String clusterId, MiddlewareBackupCRD middlewareBackupCRD) throws IOException {
-        middlewareBackupWrapper.update(clusterId, middlewareBackupCRD);
+    public void delete(String clusterId, String namespace, String name) throws IOException {
+        middlewareBackupWrapper.delete(clusterId, namespace, name);
     }
 
     @Override
-    public MiddlewareBackupCRD get(String clusterId, String namespace, String backupName) {
-        return middlewareBackupWrapper.get(clusterId, namespace, backupName);
+    public MiddlewareBackupList list(String clusterId, String namespace, Map<String, String> labels) {
+        return middlewareBackupWrapper.list(clusterId, namespace, labels);
     }
 }

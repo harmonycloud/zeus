@@ -1,10 +1,7 @@
 package com.harmonycloud.zeus.service.middleware;
 
 import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareBackup;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupSpec;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -22,7 +19,7 @@ public interface MiddlewareBackupService {
      * @param middlewareName 中间件名称
      * @return
      */
-    List list(String clusterId, String namespace, String type, String middlewareName);
+    List list(String clusterId, String namespace, String middlewareName, String type);
 
     /**
      * 创建备份
@@ -33,7 +30,7 @@ public interface MiddlewareBackupService {
      * @param middlewareName 中间件名称
      * @return
      */
-    BaseResult create(String clusterId, String namespace, String type, String middlewareName, String cron, Integer limitRecord);
+    BaseResult create(String clusterId, String namespace, String middlewareName, String type, String cron, Integer limitRecord);
 
     /**
      * 更新备份配置
@@ -44,16 +41,45 @@ public interface MiddlewareBackupService {
      * @param middlewareName 中间件名称
      * @return
      */
-    BaseResult update(String clusterId, String namespace, String type, String middlewareName, String cron, Integer limitRecord);
+    BaseResult update(String clusterId, String namespace, String middlewareName, String type, String cron, Integer limitRecord);
 
     /**
-     * 查询备份设置
+     * 删除备份记录
      * @param clusterId
      * @param namespace
-     * @param type
-     * @param middlewareName
+     * @param backupName
      * @return
      */
-    BaseResult get(String clusterId, String namespace, String type, String middlewareName);
+    BaseResult delete(String clusterId, String namespace, String backupName);
+    /**
+     * 查询备份设置
+     *
+     * @param clusterId 集群id
+     * @param namespace 命名空间
+     * @param type 中间件类型
+     * @param middlewareName 中间件名称
+     * @return
+     */
+    BaseResult get(String clusterId, String namespace, String middlewareName, String type);
+
+    /**
+     * 创建定时备份
+     * @param clusterId 集群id
+     * @param namespace 命名空间
+     * @param middlewareRealName 中间件名称
+     * @param cron cron表达式
+     * @param limitRecord 备份保留个数
+     * @return
+     */
+    BaseResult createScheduleBackup(String clusterId,String namespace,String middlewareRealName,String cron,Integer limitRecord);
+
+    /**
+     * 立即备份
+     * @param clusterId 集群id
+     * @param namespace 命名空间
+     * @param middlewareRealName 中间件名称
+     * @return
+     */
+    BaseResult createNormalBackup(String clusterId,String namespace,String middlewareRealName);
 
 }
