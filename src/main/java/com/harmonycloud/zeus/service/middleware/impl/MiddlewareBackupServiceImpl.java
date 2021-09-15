@@ -85,9 +85,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         String backupName = MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType() + "-" + middlewareName + "-backup";
         MiddlewareBackupScheduleCRD middlewareBackupScheduleCRD = middlewareBackupScheduleCRDService.get(clusterId, namespace, backupName);
         try {
-            MiddlewareBackupScheduleSpec.Schedule schedule = middlewareBackupScheduleCRD.getSpec().getSchedule();
-            schedule.setCron(cron);
-            schedule.setLimitRecord(limitRecord);
+            MiddlewareBackupScheduleSpec spec = middlewareBackupScheduleCRD.getSpec();
+            spec.setCron(cron);
+            spec.setLimitRecord(limitRecord);
             middlewareBackupScheduleCRDService.update(clusterId, middlewareBackupScheduleCRD);
             return BaseResult.ok();
         } catch (IOException e) {
@@ -112,9 +112,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         String backupName = MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType() + "-" + middlewareName + "-backup";
         MiddlewareBackupScheduleCRD middlewareBackupScheduleCRD = middlewareBackupScheduleCRDService.get(clusterId, namespace, backupName);
         MiddlewareBackupScheduleSpec spec = middlewareBackupScheduleCRD.getSpec();
-        MiddlewareBackupScheduleSpec.Schedule schedule = spec.getSchedule();
-        if (schedule != null) {
-            MiddlewareBackupScheduleConfig config = new MiddlewareBackupScheduleConfig(schedule.getCron(), schedule.getLimitRecord(), CronUtils.calculateNextDate(schedule.getCron()));
+        if (spec != null) {
+            MiddlewareBackupScheduleConfig config = new MiddlewareBackupScheduleConfig(spec.getCron(), spec.getLimitRecord(), CronUtils.calculateNextDate(spec.getCron()));
             return BaseResult.ok(config);
         }
         return BaseResult.ok();

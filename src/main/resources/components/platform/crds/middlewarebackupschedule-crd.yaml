@@ -121,19 +121,22 @@ spec:
                   type: object
                 backendStorage:
                   type: string
+                cron:
+                  description: The Cron format, see https://en.wikipedia.org/wiki/Cron.
+                  type: string
+                limitRecord:
+                  description: Defaults to 3.
+                  format: int32
+                  type: integer
+                startTime:
+                  format: date-time
+                  type: string
+                pause:
+                  type: string
                 schedule:
                   description: MiddlewareBackupSchedule defines the desired state of MiddlewareBackupSpec
                   properties:
-                    cron:
-                      description: The Cron format, see https://en.wikipedia.org/wiki/Cron.
-                      type: string
-                    limitRecord:
-                      description: Defaults to 3.
-                      format: int32
-                      type: integer
-                    startTime:
-                      format: date-time
-                      type: string
+
                   type: object
               type: object
             status:
