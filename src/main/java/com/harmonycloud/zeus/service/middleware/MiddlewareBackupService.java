@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.middleware;
 
 import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
 
 import java.util.List;
 
@@ -19,7 +20,7 @@ public interface MiddlewareBackupService {
      * @param middlewareName 中间件名称
      * @return
      */
-    List list(String clusterId, String namespace, String middlewareName, String type);
+    List<MiddlewareBackupRecord> list(String clusterId, String namespace, String middlewareName, String type);
 
     /**
      * 创建备份
@@ -81,5 +82,4 @@ public interface MiddlewareBackupService {
      * @return
      */
     BaseResult createNormalBackup(String clusterId,String namespace,String middlewareRealName);
-
 }

@@ -24,8 +24,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author dengyulong
- * @date 2021/03/24
+ * 中间件备份
+ * @author  liyinlong
+ * @since 2021/9/15 3:22 下午
  */
 @Slf4j
 @Service
@@ -37,7 +38,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private MiddlewareBackupCRDService middlewareBackupCRDService;
 
     @Override
-    public List list(String clusterId, String namespace, String middlewareName, String type) {
+    public List<MiddlewareBackupRecord> list(String clusterId, String namespace, String middlewareName, String type) {
         String middlewareRealName = MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType() + "-" + middlewareName;
         Map<String, String> labels = new HashMap<>();
         labels.put("middleware", middlewareRealName);
@@ -53,13 +54,15 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                     List<MiddlewareBackupStatus.BackupInfo> backupInfos = backupStatus.getBackupInfos();
                     MiddlewareBackupSpec.StorageProvider.Minio minio = item.getSpec().getStorageProvider().getMinio();
                     String backupAddressPrefix = minio.getEndpoint() + "/" + minio.getBucketName() + "/";
+                    MiddlewareBackupRecord backupRecord = new MiddlewareBackupRecord();
+                    backupRecord.setBackupName(backupName);
+                    backupRecord.setBackupTime(backupStatus.getBackupTime());
+                    List<String> backupAddressList = new ArrayList<>();
                     backupInfos.forEach(backInfo -> {
-                        MiddlewareBackupRecord backupRecord = new MiddlewareBackupRecord();
-                        backupRecord.setBackupName(backupName);
-                        backupRecord.setBackupTime(backupStatus.getBackupTime());
-                        backupRecord.setBackupAddress(backupAddressPrefix + backInfo.getRepository());
-                        recordList.add(backupRecord);
+                        backupAddressList.add(backupAddressPrefix + backInfo.getRepository());
                     });
+                    backupRecord.setBackupAddressList(backupAddressList);
+                    recordList.add(backupRecord);
                 }
             });
         }
@@ -82,15 +85,15 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         String backupName = MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType() + "-" + middlewareName + "-backup";
         MiddlewareBackupScheduleCRD middlewareBackupScheduleCRD = middlewareBackupScheduleCRDService.get(clusterId, namespace, backupName);
         try {
-            MiddlewareBackupScheduleSpec.Schedule schedule = middlewareBackupScheduleCRD.getSpec().getSchedule();
-            schedule.setCron(cron);
-            schedule.setLimitRecord(limitRecord);
+            MiddlewareBackupScheduleSpec spec = middlewareBackupScheduleCRD.getSpec();
+            spec.setCron(cron);
+            spec.setLimitRecord(limitRecord);
             middlewareBackupScheduleCRDService.update(clusterId, middlewareBackupScheduleCRD);
             return BaseResult.ok();
         } catch (IOException e) {
             log.error("中间件{}备份设置更新失败", middlewareName);
+            return BaseResult.error();
         }
-        return BaseResult.error();
     }
 
     @Override
@@ -109,9 +112,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         String backupName = MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType() + "-" + middlewareName + "-backup";
         MiddlewareBackupScheduleCRD middlewareBackupScheduleCRD = middlewareBackupScheduleCRDService.get(clusterId, namespace, backupName);
         MiddlewareBackupScheduleSpec spec = middlewareBackupScheduleCRD.getSpec();
-        MiddlewareBackupScheduleSpec.Schedule schedule = spec.getSchedule();
-        if (schedule != null) {
-            MiddlewareBackupScheduleConfig config = new MiddlewareBackupScheduleConfig(schedule.getCron(), schedule.getLimitRecord(), CronUtils.calculateNextDate(schedule.getCron()));
+        if (spec != null) {
+            MiddlewareBackupScheduleConfig config = new MiddlewareBackupScheduleConfig(spec.getCron(), spec.getLimitRecord(), CronUtils.calculateNextDate(spec.getCron()));
             return BaseResult.ok(config);
         }
         return BaseResult.ok();
@@ -135,7 +137,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             log.error("备份创建失败", e);
             return BaseResult.error();
         }
-
     }
 
     public BaseResult createNormalBackup(String clusterId, String namespace, String middlewareRealName) {
