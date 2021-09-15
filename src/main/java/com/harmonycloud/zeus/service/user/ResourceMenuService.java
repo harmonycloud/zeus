@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.user;
 
+import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.zeus.bean.user.BeanResourceMenu;
 
 import java.util.List;
@@ -16,6 +17,6 @@ public interface ResourceMenuService {
      *
      * @return List<BeanResourceMenu>
      */
-    List<BeanResourceMenu> list(List<Integer> ids);
+    List<ResourceMenuDto> list(List<Integer> ids);
 
 }

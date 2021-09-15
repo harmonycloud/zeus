@@ -86,6 +86,6 @@ public interface UserService {
     /**
      * 获取菜单栏
      */
-    List<ResourceMenuDto> menu(HttpServletRequest request) throws Exception;
+    List<ResourceMenuDto> menu() throws Exception;
 
 }

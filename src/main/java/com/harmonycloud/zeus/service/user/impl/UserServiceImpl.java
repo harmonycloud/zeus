@@ -202,9 +202,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<ResourceMenuDto> menu(HttpServletRequest request) throws Exception {
-
-        String roleId = JwtTokenComponent.checkToken(request.getHeader(USER_TOKEN)).getValue().getString("roleId");
+    public List<ResourceMenuDto> menu() {
+        CurrentUser currentUser = CurrentUserRepository.getUser();
+        String roleId = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString("roleId");
         List<ResourceMenuDto> resourceMenuDtoList = roleService.listMenuByRoleId(roleId);
 
         Map<Integer, List<ResourceMenuDto>> resourceMenuDtoMap =

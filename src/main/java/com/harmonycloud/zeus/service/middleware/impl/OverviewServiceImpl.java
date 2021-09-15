@@ -188,7 +188,7 @@ public class OverviewServiceImpl implements OverviewService {
             + "\",namespace=\"" + namespace + "\"}[1m]))";
         queryMap.put("query", cpuUsedQuery);
         PrometheusResponse prometheusCpuUsed =
-            prometheusWrapper.getMonitorInfo(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
+            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
         // 没有cpu使用量，不用继续查了，直接返回
         if (prometheusCpuUsed.getData().getResult().size() == 0) {
             return new ArrayList<>(0);
@@ -199,33 +199,33 @@ public class OverviewServiceImpl implements OverviewService {
             + "\",namespace=\"" + namespace + "\"}/100000)";
         queryMap.put("query", cpuRequestQuery);
         PrometheusResponse prometheusCpuRequest =
-            prometheusWrapper.getMonitorInfo(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
+            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
         // 获取memory使用情况
         String memoryUsedQuery = "sum by(container_name) (container_memory_working_set_bytes{namespace=\"" + namespace
             + "\", pod=~\"" + pods.toString() + "\"})";
         queryMap.put("query", memoryUsedQuery);
         PrometheusResponse prometheusMemoryUsed =
-            prometheusWrapper.getMonitorInfo(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
+            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
         // 获取memory申请配额
         String memoryRequestQuery = "sum by(container_name) (container_spec_memory_limit_bytes{namespace=\"" + namespace
             + "\", pod=~\"" + pods.toString() + "\"})";
         queryMap.put("query", memoryRequestQuery);
         PrometheusResponse prometheusMemoryRequest =
-            prometheusWrapper.getMonitorInfo(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
+            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
 
         // 获取卷使用量
         String storageUsedQuery = "sum(kubelet_volume_stats_used_bytes{namespace=\"" + namespace
             + "\",persistentvolumeclaim=~\"" + pvcs.toString() + "\"})";
         queryMap.put("query", storageUsedQuery);
         PrometheusResponse prometheusStorageUsed =
-            prometheusWrapper.getMonitorInfo(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
+            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
 
         // 获取卷申请量
         String storageRequestQuery = "sum(kubelet_volume_stats_capacity_bytes{namespace=\"" + namespace
             + "\",persistentvolumeclaim=~\"" + pvcs.toString() + "\"})";
         queryMap.put("query", storageRequestQuery);
         PrometheusResponse prometheusStorageRequest =
-            prometheusWrapper.getMonitorInfo(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
+            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
 
         List<PrometheusResult> cpuUsedResult = prometheusCpuUsed.getData().getResult();
         List<PrometheusResult> cpuRequestResult = prometheusCpuRequest.getData().getResult();

@@ -30,28 +30,14 @@ public class PrometheusWrapper {
     @Value("${k8s.monitoring.alertManager.port:31252}")
     private String alertManagerPort;
 
-    public PrometheusResponse getMonitorInfo(String clusterId, String prometheusApiVersion,
-                                             Map<String, String> queryMap) throws Exception {
-
-        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        MiddlewareClusterMonitorInfo prometheus = getPrometheusInfo(cluster);
-        PrometheusApi prometheusApi = new PrometheusApi(
-                new PrometheusClient(prometheus.getProtocol(), prometheus.getHost(), Integer.parseInt(prometheus.getPort()),
-                        prometheus.getAddress()
-                                .replace(prometheus.getProtocol() + "://" + prometheus.getHost() + ":" + prometheus.getPort(), "")
-                                + prometheusApiVersion));
-        return prometheusApi.getMonitorInfo("", queryMap);
+    public PrometheusResponse get(String clusterId, String prometheusApiVersion, Map<String, String> queryMap)
+        throws Exception {
+        PrometheusApi prometheusApi = createApi(clusterId, prometheusApiVersion);
+        return prometheusApi.get("", queryMap);
     }
 
-
     public PrometheusRulesResponse getRules(String clusterId, String prometheusApiVersion) throws Exception {
-        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        MiddlewareClusterMonitorInfo prometheus = getPrometheusInfo(cluster);
-        PrometheusApi prometheusApi = new PrometheusApi(
-                new PrometheusClient(prometheus.getProtocol(), prometheus.getHost(), Integer.parseInt(prometheus.getPort()),
-                        prometheus.getAddress()
-                                .replace(prometheus.getProtocol() + "://" + prometheus.getHost() + ":" + prometheus.getPort(), "")
-                                + prometheusApiVersion));
+        PrometheusApi prometheusApi = createApi(clusterId, prometheusApiVersion);
         return prometheusApi.getRules();
     }
 
@@ -64,6 +50,16 @@ public class PrometheusWrapper {
                         .replace(alertManager.getProtocol() + "://" + alertManager.getHost() + ":" + alertManager.getPort(), "")
                         + prometheusApiVersion));
         prometheusApi.setSilence(body);
+    }
+    
+    public PrometheusApi createApi(String clusterId, String prometheusApiVersion) {
+        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+        MiddlewareClusterMonitorInfo prometheus = getPrometheusInfo(cluster);
+        return new PrometheusApi(
+            new PrometheusClient(prometheus.getProtocol(), prometheus.getHost(), Integer.parseInt(prometheus.getPort()),
+                prometheus.getAddress()
+                    .replace(prometheus.getProtocol() + "://" + prometheus.getHost() + ":" + prometheus.getPort(), "")
+                    + prometheusApiVersion));
     }
 
     private MiddlewareClusterMonitorInfo getPrometheusInfo(MiddlewareClusterDTO cluster) {

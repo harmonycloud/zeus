@@ -43,7 +43,16 @@ public class ResourceMenuRoleServiceImpl implements ResourceMenuRoleService {
 
     @Override
     public void delete(Integer roleId) {
-        QueryWrapper<BeanResourceMenuRole> wrapper = new QueryWrapper<BeanResourceMenuRole>().eq("roleId", roleId);
+        QueryWrapper<BeanResourceMenuRole> wrapper = new QueryWrapper<BeanResourceMenuRole>().eq("role_id", roleId);
         beanResourceMenuRoleMapper.delete(wrapper);
+    }
+
+    @Override
+    public void update(Integer roleId, Integer resourceMenuId, Boolean available) {
+        QueryWrapper<BeanResourceMenuRole> wrapper =
+            new QueryWrapper<BeanResourceMenuRole>().eq("role_id", roleId).eq("resource_menu_id", resourceMenuId);
+        BeanResourceMenuRole beanResourceMenuRole = new BeanResourceMenuRole();
+        beanResourceMenuRole.setAvailable(available);
+        beanResourceMenuRoleMapper.update(beanResourceMenuRole, wrapper);
     }
 }

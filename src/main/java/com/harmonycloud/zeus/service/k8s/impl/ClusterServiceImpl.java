@@ -2,26 +2,26 @@ package com.harmonycloud.zeus.service.k8s.impl;
 
 import static com.harmonycloud.caas.common.constants.NameConstant.*;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.model.PrometheusResponse;
+import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
+import io.fabric8.kubernetes.api.model.ResourceQuota;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.DictEnum;
-import com.harmonycloud.caas.common.enums.ErrorCodeMessage;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.Protocol;
 import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
@@ -74,8 +74,6 @@ public class ClusterServiceImpl implements ClusterService {
     @Autowired
     private NamespaceService namespaceService;
     @Autowired
-    private EsComponentService esComponentService;
-    @Autowired
     private K8sDefaultClusterService k8SDefaultClusterService;
     @Autowired
     private EsService esService;
@@ -83,6 +81,8 @@ public class ClusterServiceImpl implements ClusterService {
     private HelmChartService helmChartService;
     @Autowired
     private MiddlewareInfoService middlewareInfoService;
+    @Autowired
+    private PrometheusWrapper prometheusWrapper;
 
     @Value("${k8s.component.logging.es.user:elastic}")
     private String esUser;
@@ -144,6 +144,10 @@ public class ClusterServiceImpl implements ClusterService {
                 } catch (Exception e) {
                     cluster.getAttributes().put(NS_COUNT, 0);
                     log.error("集群：{}，查询命名空间列表异常", cluster.getId(), e);
+                }
+                //计算集群cpu和memory
+                if (cluster.getMonitor() != null && cluster.getMonitor().getPrometheus() != null){
+                    clusterResource(cluster);
                 }
             });
         }
@@ -677,6 +681,44 @@ public class ClusterServiceImpl implements ClusterService {
                 ",image.logstashRepository=" + repository + "/logstash";
         helmChartService.upgradeInstall("log", "logging", setValues,
                 componentsPath + File.separator + "logging", cluster);
+    }
+
+    public void clusterResource(MiddlewareClusterDTO cluster){
+        Map<String, String> query = new HashMap<>();
+        Map<String, String> resource = new HashMap<>();
+        //获取cpu总量
+        try {
+            query.put("query", "sum(harmonycloud_node_cpu_total)");
+            PrometheusResponse cpuTotal = prometheusWrapper.get(cluster.getId(), PROMETHEUS_API_VERSION, query);
+            resource.put("cpuTotal", cpuTotal.getData().getResult().get(0).getValue().get(1));
+        } catch (Exception e){
+            log.error("集群查询cpu总量失败");
+        }
+        //获取cpu使用量
+        try {
+            query.put("query", "sum(harmonycloud_node_cpu_using)");
+            PrometheusResponse cpuUsing = prometheusWrapper.get(cluster.getId(), PROMETHEUS_API_VERSION, query);
+            resource.put("cpuUsing", cpuUsing.getData().getResult().get(0).getValue().get(1));
+        } catch (Exception e){
+            log.error("集群查询cpu使用量失败");
+        }
+        //获取memory总量
+        try {
+            query.put("query", "sum(harmonycloud_node_memory_total)");
+            PrometheusResponse memoryTotal = prometheusWrapper.get(cluster.getId(), PROMETHEUS_API_VERSION, query);
+            resource.put("memoryTotal", memoryTotal.getData().getResult().get(0).getValue().get(1));
+        } catch (Exception e){
+            log.error("集群查询memory总量失败");
+        }
+        //获取memory使用量
+        try {
+            query.put("query", "sum(harmonycloud_node_memory_using)");
+            PrometheusResponse memoryUsing = prometheusWrapper.get(cluster.getId(), PROMETHEUS_API_VERSION, query);
+            resource.put("memoryUsing", memoryUsing.getData().getResult().get(0).getValue().get(1));
+        } catch (Exception e){
+            log.error("集群查询memory使用量失败");
+        }
+        cluster.getStorage().put("resource", resource);
     }
 
 }

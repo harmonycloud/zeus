@@ -105,7 +105,7 @@ public class UserController {
 
     @ApiOperation(value = "获取菜单列表", notes = "获取菜单列表")
     @GetMapping("/menu")
-    public BaseResult<List<ResourceMenuDto>> menu(HttpServletRequest request) throws Exception {
-        return BaseResult.ok(userService.menu(request));
+    public BaseResult<List<ResourceMenuDto>> menu() throws Exception {
+        return BaseResult.ok(userService.menu());
     }
 }

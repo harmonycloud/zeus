@@ -25,7 +25,7 @@ public interface RoleService {
      * @param roleId 角色id
      * @return BeanSysRole
      */
-    BeanRole get(Integer roleId) throws Exception;
+    RoleDto get(Integer roleId);
 
     /**
      * 删除角色

@@ -37,7 +37,7 @@ public class RoleController {
 
     @ApiOperation(value = "获取角色列表", notes = "获取角色列表")
     @GetMapping("/list")
-    public BaseResult<List<RoleDto>> list(@RequestParam("key") String key) {
+    public BaseResult<List<RoleDto>> list(@RequestParam(value = "key", required = false) String key) {
         return BaseResult.ok(roleService.list(key));
     }
 
@@ -56,7 +56,9 @@ public class RoleController {
             @ApiImplicitParam(name = "roleDto", value = "角色", paramType = "query", dataTypeClass = String.class)
     })
     @PutMapping("/{roleId}")
-    public BaseResult update(@RequestBody RoleDto roleDto) {
+    public BaseResult update(@PathVariable("roleId") Integer roleId,
+                             @RequestBody RoleDto roleDto) {
+        roleDto.setId(roleId);
         roleService.update(roleDto);
         return BaseResult.ok();
     }

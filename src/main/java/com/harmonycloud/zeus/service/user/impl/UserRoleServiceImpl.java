@@ -45,9 +45,9 @@ public class UserRoleServiceImpl implements UserRoleService {
             throw new BusinessException(ErrorMessage.USER_ROLE_NOT_EXIT);
         }
         // 获取角色信息
-        BeanRole beanRole = roleService.get(beanUserRole.getRoleId());
+        RoleDto roleDto = roleService.get(beanUserRole.getRoleId());
 
-        return new UserRole().setUserName(userName).setRoleId(beanRole.getId()).setRoleName(beanRole.getName());
+        return new UserRole().setUserName(userName).setRoleId(roleDto.getId()).setRoleName(roleDto.getName());
     }
 
     @Override
@@ -72,7 +72,7 @@ public class UserRoleServiceImpl implements UserRoleService {
 
     @Override
     public List<UserRole> findByRoleId(Integer roleId) {
-        QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("roleId", roleId);
+        QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("role_id", roleId);
         List<BeanUserRole> beanUserRoleList = beanUserRoleMapper.selectList(wrapper);
         if (CollectionUtils.isEmpty(beanUserRoleList)){
             return new ArrayList<>();

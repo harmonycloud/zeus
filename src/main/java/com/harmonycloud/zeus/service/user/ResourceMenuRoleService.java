@@ -35,4 +35,13 @@ public interface ResourceMenuRoleService {
      */
     void delete(Integer roleId);
 
+    /**
+     * 更新角色菜单映照列表
+     *
+     * @param roleId 角色id
+     * @param resourceMenuId 菜单id
+     *
+     */
+    void update(Integer roleId, Integer resourceMenuId, Boolean available);
+
 }
