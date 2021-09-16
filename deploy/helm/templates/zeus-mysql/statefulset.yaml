@@ -42,7 +42,7 @@ spec:
           resources:
             {{- toYaml .Values.global.zeus.resources | nindent 12 }}
           volumeMounts:
-            - mountPath: /data/mysql/db_zeus-mysql
+            - mountPath: /var/lib/mysql
               name: mysql-data
             - mountPath: /docker-entrypoint-initdb.d/
               name: zeus-mysql-init-sql-file
