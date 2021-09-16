@@ -22,6 +22,7 @@ import java.io.PrintWriter;
 public class AuthFilter implements Filter {
 
     private static final String auth = "/auth";
+    private static final String swagger_ui = "/swagger-ui";
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -29,16 +30,19 @@ public class AuthFilter implements Filter {
     }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+        throws IOException, ServletException {
         log.debug("auth filter is in calling");
         HttpServletRequest httpRequest = (HttpServletRequest)request;
         HttpServletResponse httpResponse = (HttpServletResponse)response;
         String path = httpRequest.getRequestURI();
-        if (!path.contains(auth) && StringUtils.isEmpty(httpRequest.getHeader("userToken"))
+        if (!path.contains(swagger_ui) && !path.contains(auth)
+            && StringUtils.isEmpty(httpRequest.getHeader("userToken"))
             && StringUtils.isEmpty(httpRequest.getHeader("Sec-WebSocket-Protocol"))) {
             httpResponse.setContentType("application/json; charset=UTF-8");
             PrintWriter out = httpResponse.getWriter();
-            out.append(JSONObject.toJSONString(BaseResult.exception(HttpStatus.UNAUTHORIZED.value(), "auth failed", "用户未登录")));
+            out.append(
+                JSONObject.toJSONString(BaseResult.exception(HttpStatus.UNAUTHORIZED.value(), "auth failed", "用户未登录")));
             out.close();
             return;
         }
