@@ -64,7 +64,7 @@ public class RoleServiceImpl implements RoleService {
         beanRole.setCreateTime(new Date());
         beanRoleMapper.insert(beanRole);
         //绑定角色菜单权限
-        //bind(roleDto);
+        bind(roleDto);
     }
 
     @Override
