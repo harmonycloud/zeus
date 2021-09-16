@@ -22,7 +22,6 @@ import java.io.PrintWriter;
 public class AuthFilter implements Filter {
 
     private static final String auth = "/auth";
-    private static final String swagger_ui = "/swagger-ui";
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -36,7 +35,7 @@ public class AuthFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest)request;
         HttpServletResponse httpResponse = (HttpServletResponse)response;
         String path = httpRequest.getRequestURI();
-        if (!path.contains(swagger_ui) && !path.contains(auth)
+        if (!path.contains(auth) && !StringUtils.isEmpty(httpRequest.getHeader("authType"))
             && StringUtils.isEmpty(httpRequest.getHeader("userToken"))
             && StringUtils.isEmpty(httpRequest.getHeader("Sec-WebSocket-Protocol"))) {
             httpResponse.setContentType("application/json; charset=UTF-8");
