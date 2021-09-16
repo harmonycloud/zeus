@@ -108,5 +108,25 @@ public class MiddlewareBackupController {
         return middlewareBackupService.get(clusterId, namespace, middlewareName, type);
     }
 
+    @ApiOperation(value = "创建备份恢复", notes = "创建备份恢复")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupName", value = "备份记录名称", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "restoreName", value = "备份服务名称", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "aliasName", value = "服务别名", paramType = "query", dataTypeClass = String.class)
+    })
+    @PostMapping("restore")
+    public BaseResult createRestore(@PathVariable("clusterId") String clusterId,
+                                    @PathVariable("namespace") String namespace,
+                                    @PathVariable("middlewareName") String middlewareName,
+                                    @RequestParam("type") String type,
+                                    @RequestParam("backupName") String backupName,
+                                    @RequestParam("restoreName") String restoreName,
+                                    @RequestParam("aliasName") String aliasName) {
+        return middlewareBackupService.createRestore(clusterId, namespace, middlewareName, type, restoreName, backupName, aliasName);
+    }
 
 }

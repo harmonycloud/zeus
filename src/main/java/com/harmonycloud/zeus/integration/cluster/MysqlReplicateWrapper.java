@@ -63,7 +63,7 @@ public class MysqlReplicateWrapper {
         try {
             map = K8sClient.getClient(clusterId).customResource(CONTEXT).get(namespace, name);
         } catch (Exception e) {
-            log.error("查询mysql复制关系出错了");
+            log.error("查询mysql复制关系出错了",e);
             return null;
         }
         if (CollectionUtils.isEmpty(map)) {
