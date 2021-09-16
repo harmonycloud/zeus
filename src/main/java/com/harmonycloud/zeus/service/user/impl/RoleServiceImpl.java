@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.user.impl;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +64,7 @@ public class RoleServiceImpl implements RoleService {
         beanRole.setCreateTime(new Date());
         beanRoleMapper.insert(beanRole);
         //绑定角色菜单权限
-        bind(roleDto);
+        //bind(roleDto);
     }
 
     @Override
@@ -105,10 +106,15 @@ public class RoleServiceImpl implements RoleService {
         List<Integer> currentRoleMenuList = rmRoleMap.get(Integer.valueOf(currentRoleId)).stream()
             .map(BeanResourceMenuRole::getResourceMenuId).collect(Collectors.toList());
         // 过滤权限为当前用户子权限的角色
-        beanRoleList = beanRoleList.stream()
-            .filter(role -> currentRoleMenuList.containsAll(rmRoleMap.get(role.getId()).stream()
-                .map(BeanResourceMenuRole::getResourceMenuId).collect(Collectors.toList())))
-            .collect(Collectors.toList());
+        beanRoleList = beanRoleList.stream().filter(role -> {
+            if (rmRoleMap.containsKey(role.getId())) {
+                return currentRoleMenuList.containsAll(rmRoleMap.get(role.getId()).stream()
+                    .map(BeanResourceMenuRole::getResourceMenuId).collect(Collectors.toList()));
+            } else {
+                rmRoleMap.put(role.getId(), new ArrayList<>());
+                return true;
+            }
+        }).collect(Collectors.toList());
         return beanRoleList.stream().map(beanRole -> {
             RoleDto roleDto = new RoleDto();
             BeanUtils.copyProperties(beanRole, roleDto);

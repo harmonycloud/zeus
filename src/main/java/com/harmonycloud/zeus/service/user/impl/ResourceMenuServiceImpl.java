@@ -34,6 +34,8 @@ public class ResourceMenuServiceImpl implements ResourceMenuService {
             BeanUtils.copyProperties(beanResourceMenu, resourceMenuDto);
             if (ids.stream().anyMatch(id -> beanResourceMenu.getId().equals(id))) {
                 resourceMenuDto.setOwn(true);
+            }else {
+                resourceMenuDto.setOwn(false);
             }
             return resourceMenuDto;
         }).collect(Collectors.toList());
