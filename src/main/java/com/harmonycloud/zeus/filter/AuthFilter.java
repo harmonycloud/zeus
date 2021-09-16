@@ -21,6 +21,7 @@ import java.io.PrintWriter;
 @Slf4j
 public class AuthFilter implements Filter {
 
+    private static final String rsa = "/auth/rsa/public";
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -32,7 +33,8 @@ public class AuthFilter implements Filter {
         log.debug("auth filter is in calling");
         HttpServletRequest httpRequest = (HttpServletRequest)request;
         HttpServletResponse httpResponse = (HttpServletResponse)response;
-        if (StringUtils.isEmpty(httpRequest.getHeader("userToken"))
+        String path = httpRequest.getRequestURI();
+        if (!path.contains(rsa) && StringUtils.isEmpty(httpRequest.getHeader("userToken"))
             && StringUtils.isEmpty(httpRequest.getHeader("Sec-WebSocket-Protocol"))) {
             httpResponse.setContentType("application/json; charset=UTF-8");
             PrintWriter out = httpResponse.getWriter();
