@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.constants.MysqlConstant;
 import com.harmonycloud.caas.common.enums.DateType;
-import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.integration.cluster.MysqlClusterWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
@@ -25,7 +24,6 @@ import com.harmonycloud.zeus.service.middleware.impl.MiddlewareServiceImpl;
 import com.harmonycloud.zeus.util.DateUtil;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.common.rounding.DateTimeUnit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
@@ -74,7 +72,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     private MiddlewareServiceImpl middlewareService;
     @Autowired
     private ServiceService serviceService;
-
+    @Autowired
+    private BaseOperatorImpl baseOperator;
     @Override
     public boolean support(Middleware middleware) {
         return MiddlewareTypeEnum.MYSQL == MiddlewareTypeEnum.findByType(middleware.getType());
@@ -160,6 +159,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 mysqlDTO.setRelationNamespace(relationNamespace);
                 mysqlDTO.setRelationName(relationName);
                 mysqlDTO.setRelationAliasName(relationAliasName);
+                mysqlDTO.setRelationExist(baseOperator.checkIfExist(relationNamespace, relationName,cluster));
                 middleware.setChartName(chartName);
 
                 MysqlReplicateCRD mysqlReplicate;

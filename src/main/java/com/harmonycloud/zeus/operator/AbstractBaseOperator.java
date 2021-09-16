@@ -759,4 +759,22 @@ public abstract class AbstractBaseOperator {
         }
     }
 
+    /**
+     * 检查中间件是否已存在
+     *
+     * @param namespace
+     * @param middlewareName
+     * @param cluster
+     * @return
+     */
+    public boolean checkIfExist(String namespace, String middlewareName, MiddlewareClusterDTO cluster) {
+        if (StringUtils.isEmpty(middlewareName)) {
+            return false;
+        }
+        List<HelmListInfo> helms = helmChartService.listHelm(namespace, null, cluster);
+        if (helms.stream().anyMatch(h -> middlewareName.equals(h.getName()))) {
+            return true;
+        }
+        return false;
+    }
 }
