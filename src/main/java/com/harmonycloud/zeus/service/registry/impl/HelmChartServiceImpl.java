@@ -440,7 +440,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         String tempValuesYamlPath = tempValuesYamlDir + File.separator + tempValuesYamlName;
         String targetValuesYamlPath = tempValuesYamlDir + File.separator + targetValuesYamlName;
 
-        String cmd = String.format("helm upgrade %s %s -f %s -f %s -n %s --kube-apiserver %s --kubeconfig %s ",
+        String cmd = String.format("helm upgrade --install %s %s -f %s -f %s -n %s --kube-apiserver %s --kubeconfig %s ",
             middleware.getName(), helmPath, tempValuesYamlPath, targetValuesYamlPath, middleware.getNamespace(),
             cluster.getAddress(), clusterCertService.getKubeConfigFilePath(cluster.getId()));
         try {
@@ -452,17 +452,35 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         }
     }
 
-    @Deprecated
     @Override
-    public void upgradeInstall(String name, String namespace, String setValues, String chartName, String chartVersion,
-                               MiddlewareClusterDTO cluster) {
-        // 先下到本地
-        File file = downloadHelmChart(cluster.getRegistry(), chartName, chartVersion);
+    public void upgradeInstall(String name, String namespace, String path, JSONObject values, JSONObject newValues,
+        MiddlewareClusterDTO cluster) {
+        Yaml yaml = new Yaml();
+        String tempValuesYaml = yaml.dumpAsMap(values);
+        String targetValuesYaml = yaml.dumpAsMap(newValues);
+
+        String tempValuesYamlName = "temp" + "-" + System.currentTimeMillis() + ".yaml";
+        String targetValuesYamlName = "target" + "-" + System.currentTimeMillis() + ".yaml";
         try {
-            upgradeInstall(name, namespace, setValues, file.getAbsolutePath(), cluster);
+            FileUtil.writeToLocal(uploadPath, tempValuesYamlName, tempValuesYaml);
+            FileUtil.writeToLocal(uploadPath, targetValuesYamlName, targetValuesYaml);
+        } catch (IOException e) {
+            log.error("写出values.yaml文件异常：chart包", e);
+            throw new BusinessException(ErrorMessage.HELM_CHART_WRITE_ERROR);
+        }
+
+        String tempValuesYamlPath = uploadPath + File.separator + tempValuesYamlName;
+        String targetValuesYamlPath = uploadPath + File.separator + targetValuesYamlName;
+
+        String cmd =
+            String.format("helm upgrade --install %s %s -f %s -f %s -n %s --kube-apiserver %s --kubeconfig %s ", name,
+                path, tempValuesYamlPath, targetValuesYamlPath, namespace, cluster.getAddress(),
+                clusterCertService.getKubeConfigFilePath(cluster.getId()));
+        try {
+            execCmd(cmd, null);
         } finally {
-            // 把下载的临时文件删除
-            file.delete();
+            // 删除文件
+            FileUtil.deleteFile(tempValuesYamlPath, targetValuesYamlPath);
         }
     }
 

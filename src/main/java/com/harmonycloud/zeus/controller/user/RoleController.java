@@ -51,7 +51,7 @@ public class RoleController {
         return BaseResult.ok();
     }
 
-    @ApiOperation(value = "删除角色", notes = "删除角色")
+    @ApiOperation(value = "修改角色", notes = "修改角色")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "roleDto", value = "角色", paramType = "query", dataTypeClass = String.class)
     })

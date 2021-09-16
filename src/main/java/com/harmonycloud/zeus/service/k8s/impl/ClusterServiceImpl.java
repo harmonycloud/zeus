@@ -8,17 +8,15 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import com.harmonycloud.caas.common.model.PrometheusResponse;
-import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
-import io.fabric8.kubernetes.api.model.ResourceQuota;
+import com.harmonycloud.tool.cmd.HelmChartUtil;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.yaml.snakeyaml.Yaml;
 
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.DictEnum;
@@ -27,17 +25,19 @@ import com.harmonycloud.caas.common.enums.Protocol;
 import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
+import com.harmonycloud.caas.common.model.PrometheusResponse;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.tool.date.DateUtils;
+import com.harmonycloud.tool.file.FileUtil;
 import com.harmonycloud.zeus.integration.cluster.ClusterWrapper;
+import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCluster;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareClusterInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareClusterSpec;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.service.k8s.*;
-import com.harmonycloud.zeus.service.log.EsComponentService;
 import com.harmonycloud.zeus.service.middleware.EsService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
@@ -60,6 +60,8 @@ public class ClusterServiceImpl implements ClusterService {
      * 默认存储限额
      */
     private static final String DEFAULT_STORAGE_LIMIT = "100Gi";
+    @Value("${system.upload.path:/usr/local/zeus-pv/upload}")
+    private String uploadPath;
 
     @Autowired
     private ClusterWrapper clusterWrapper;
@@ -535,7 +537,7 @@ public class ClusterServiceImpl implements ClusterService {
         }
         // 安装grafana
         try {
-            if (cluster.getMonitor().getGrafana() == null){
+            if (cluster.getMonitor().getGrafana().getHost() == null){
                 grafana(repository, cluster);
                 //记录数据
                 MiddlewareClusterMonitorInfo grafana = new MiddlewareClusterMonitorInfo();
@@ -641,12 +643,45 @@ public class ClusterServiceImpl implements ClusterService {
             componentsPath + File.separator + "ingress-nginx/charts/ingress-nginx", cluster);
     }
 
-    public void grafana(String repository, MiddlewareClusterDTO cluster){
-        String setValues = "image.repository=" + repository + "/grafana" +
+    public void grafana(String repository, MiddlewareClusterDTO cluster) {
+        String values = HelmChartUtil.getValueYaml(componentsPath + File.separator + "grafana");
+        JSONObject jsonValues = new JSONObject();
+        JSONObject image = new JSONObject();
+        image.put("repository", repository + "/grafana");
+
+        JSONObject sidecar = new JSONObject();
+        JSONObject sidecarImage = new JSONObject();
+        sidecarImage.put("repository", repository + "/k8s-sidecar");
+        sidecar.put("image", sidecarImage);
+
+        JSONObject persistence = new JSONObject();
+        persistence.put("storageClassName", "local-path");
+
+        jsonValues.put("image", image);
+        jsonValues.put("sidecar", sidecar);
+        jsonValues.put("persistence", persistence);
+        /*        String setValues = "image.repository=" + repository + "/grafana" +
                 ",sidecar.image.repository=" + repository + "/k8s-sidecar" +
-                ",persistence.storageClassName=" + "local-path";
-        helmChartService.upgradeInstall("grafana", "monitoring", setValues,
-                componentsPath + File.separator + "grafana", cluster);
+                ",persistence.storageClassName=" + "local-path";*/
+        if ("https".equals(cluster.getMonitor().getGrafana().getProtocol())) {
+            JSONObject ini = new JSONObject();
+            JSONObject server = new JSONObject();
+            server.put("protocol", "https");
+            server.put("cert_file", "/etc/grafana/ssl/server.crt");
+            server.put("cert_key", "/etc/grafana/ssl/server.key");
+            ini.put("server", server);
+            JSONObject readinessProbe = new JSONObject();
+            JSONObject livenessProbe = new JSONObject();
+            JSONObject httpGet = new JSONObject();
+            httpGet.put("scheme", "HTTPS");
+            readinessProbe.put("httpGet", httpGet);
+            livenessProbe.put("httpGet", httpGet);
+            jsonValues.put("grafana.ini", ini);
+            jsonValues.put("readinessProbe", readinessProbe);
+            jsonValues.put("livenessProbe", livenessProbe);
+        }
+        helmChartService.upgradeInstall("grafana", "monitoring", componentsPath + File.separator + "grafana",
+            JSONObject.parseObject(values), jsonValues, cluster);
     }
 
     public void alertManager(String repository, MiddlewareClusterDTO cluster) {

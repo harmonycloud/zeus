@@ -35,7 +35,7 @@ public class AuthFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest)request;
         HttpServletResponse httpResponse = (HttpServletResponse)response;
         String path = httpRequest.getRequestURI();
-        if (!path.contains(auth) && !StringUtils.isEmpty(httpRequest.getHeader("authType"))
+        if (!acceptPath(path)
             && StringUtils.isEmpty(httpRequest.getHeader("userToken"))
             && StringUtils.isEmpty(httpRequest.getHeader("Sec-WebSocket-Protocol"))) {
             httpResponse.setContentType("application/json; charset=UTF-8");
@@ -51,5 +51,9 @@ public class AuthFilter implements Filter {
     @Override
     public void destroy() {
 
+    }
+
+    public Boolean acceptPath(String path) {
+        return path.contains(auth) || path.contains("/swagger") || path.contains("/v3") || path.contains("/swagger-ui");
     }
 }

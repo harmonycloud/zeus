@@ -135,8 +135,9 @@ public class ClusterComponentServiceImpl implements ClusterComponentService {
                 + ",minio.storageClassName=" + defaultStorageClassName 
                 + ",minioArgs.bucketName=" + bucketName + ",";
         // 发布
-        helmChartService.upgradeInstall(minioHelmChartName, namespace, setValues, minioHelmChartName,
-            version.getVersion(), cluster);
+        //删除该方法  后续有需求再修改
+        /*helmChartService.upgradeInstall(minioHelmChartName, namespace, setValues, minioHelmChartName,
+            version.getVersion(), cluster);*/
         JSONObject values = helmChartService.getInstalledValues(minioHelmChartName, namespace, cluster);
 
         // 添加Ingress TCP配置
@@ -202,8 +203,9 @@ public class ClusterComponentServiceImpl implements ClusterComponentService {
                 ",image.busybox.repository=" + repository + "/grafana" +
                 ",storage.storageClass=" + defaultStorageClassName;
         // 发布
-        helmChartService.upgradeInstall(monitorHelmChartName, namespace, setValues, monitorHelmChartName,
-            version.getVersion(), cluster);
+        //删除该方法 后续有需求再修改
+        /*helmChartService.upgradeInstall(monitorHelmChartName, namespace, setValues, monitorHelmChartName,
+            version.getVersion(), cluster);*/
 
         try {
             // todo values.yaml里没有配置service信息，因此直接使用默认配置

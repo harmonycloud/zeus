@@ -164,15 +164,13 @@ public interface HelmChartService {
     /**
      * 更新/发布 chart
      *
-     * @param name         helm发布的实例名称
-     * @param namespace    命名空间
-     * @param setValues    设置的值
-     * @param chartName    chart名称
-     * @param chartVersion chart版本
-     * @param cluster      集群信息
+     * @param name      helm发布的实例名称
+     * @param namespace 命名空间
+     * @param setValues 设置的值
+     * @param chartUrl  远端chart文件地址
+     * @param cluster   集群信息
      */
-    void upgradeInstall(String name, String namespace, String setValues, String chartName, String chartVersion,
-                        MiddlewareClusterDTO cluster);
+    void upgradeInstall(String name, String namespace, String path, JSONObject values, JSONObject newValues, MiddlewareClusterDTO cluster);
 
     /**
      * 更新/发布 chart
