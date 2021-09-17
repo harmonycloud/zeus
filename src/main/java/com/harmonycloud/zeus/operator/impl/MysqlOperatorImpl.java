@@ -72,7 +72,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     private MiddlewareServiceImpl middlewareService;
     @Autowired
     private ServiceService serviceService;
-
+    @Autowired
+    private BaseOperatorImpl baseOperator;
     @Override
     public boolean support(Middleware middleware) {
         return MiddlewareTypeEnum.MYSQL == MiddlewareTypeEnum.findByType(middleware.getType());
@@ -158,6 +159,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 mysqlDTO.setRelationNamespace(relationNamespace);
                 mysqlDTO.setRelationName(relationName);
                 mysqlDTO.setRelationAliasName(relationAliasName);
+                mysqlDTO.setRelationExist(baseOperator.checkIfExist(relationNamespace, relationName,cluster));
                 middleware.setChartName(chartName);
 
                 MysqlReplicateCRD mysqlReplicate;
