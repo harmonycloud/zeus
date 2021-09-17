@@ -6,16 +6,16 @@ metadata:
 spec:
   ports:
   - name: http
-    nodePort: 30288
+    nodePort: 30089
     port: 8080
     protocol: TCP
     targetPort: 8080
   - name: https
-    nodePort: 30299
+    nodePort: 30489
     port: 8443
     protocol: TCP
     targetPort: 8443
   selector:
     app: zeus
   sessionAffinity: None
-  type: ClusterIP
+  type: NodePort

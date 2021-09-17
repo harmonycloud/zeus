@@ -48,7 +48,7 @@ if [ $DEPLOY_TYPE == "kubernetes" ]; then
 fi
 
 if [ $DEPLOY_TYPE == "helm" ]; then
-    echo "######  Deployed by docker-compose ######"
+    echo "######  Deployed by helm ######"
     deploy_helm
     echo "######  Success ######"
 fi
