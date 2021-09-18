@@ -8,6 +8,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -78,6 +79,7 @@ public class ClusterServiceImpl implements ClusterService {
     @Autowired
     private K8sDefaultClusterService k8SDefaultClusterService;
     @Autowired
+    @Lazy
     private EsService esService;
     @Autowired
     @Lazy
@@ -88,6 +90,8 @@ public class ClusterServiceImpl implements ClusterService {
     @Autowired
     @Lazy
     private PrometheusWrapper prometheusWrapper;
+    @Autowired
+    private MiddlewareCRDService middlewareCRDService;
 
     @Value("${k8s.component.logging.es.user:elastic}")
     private String esUser;
@@ -398,6 +402,10 @@ public class ClusterServiceImpl implements ClusterService {
 
     @Override
     public void removeCluster(String clusterId) {
+        List<MiddlewareCRD> middlewareCRDList = middlewareCRDService.listCR(clusterId, null, null);
+        if (!CollectionUtils.isEmpty(middlewareCRDList)){
+            throw new BusinessException(ErrorMessage.CLUSTER_NOT_EMPTY);
+        }
         MiddlewareClusterDTO cluster = getFromClusterMap(clusterId);
         if (cluster == null) {
             return;
