@@ -8,14 +8,11 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -34,6 +31,7 @@ import com.harmonycloud.tool.cmd.HelmChartUtil;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.integration.cluster.ClusterWrapper;
 import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCluster;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareClusterInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareClusterSpec;
@@ -79,16 +77,12 @@ public class ClusterServiceImpl implements ClusterService {
     @Autowired
     private K8sDefaultClusterService k8SDefaultClusterService;
     @Autowired
-    @Lazy
     private EsService esService;
     @Autowired
-    @Lazy
     private HelmChartService helmChartService;
     @Autowired
-    @Lazy
     private MiddlewareInfoService middlewareInfoService;
     @Autowired
-    @Lazy
     private PrometheusWrapper prometheusWrapper;
     @Autowired
     private MiddlewareCRDService middlewareCRDService;
@@ -501,7 +495,6 @@ public class ClusterServiceImpl implements ClusterService {
         }
     }
 
-    @Async
     public void createComponents(MiddlewareClusterDTO cluster) {
         String repository = cluster.getRegistry().getRegistryAddress() + "/" + cluster.getRegistry().getChartRepo();
         List<HelmListInfo> helmListInfos = helmChartService.listHelm("", "", cluster);
