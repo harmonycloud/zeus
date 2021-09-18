@@ -542,11 +542,12 @@ public class ClusterServiceImpl implements ClusterService {
         }
         // 安装grafana
         try {
-            if (cluster.getMonitor().getGrafana().getHost() == null){
+            if (cluster.getMonitor().getGrafana().getHost() == null) {
                 grafana(repository, cluster);
-                //记录数据
+                // 记录数据
                 MiddlewareClusterMonitorInfo grafana = new MiddlewareClusterMonitorInfo();
-                grafana.setProtocol("http").setPort("31900").setHost(cluster.getHost()).setToken(
+                grafana.setProtocol("https").setPort("31900")
+                    .setHost(cluster.getHost()).setToken(
                         "eyJhbGciOiJSUzI1NiIsImtpZCI6ImxNRlk4dEk2QlktYzJNUEZRem9kLUVDUnprMkFXRG5LTDZ0c2tZTDFBWjgifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJhZG1pbi11c2VyLXRva2VuLTdtcWpkIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImFkbWluLXVzZXIiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiJlNDFmMWMzMy02YWIxLTQ5NzktODMwYS1kNjU2M2ZlYTE4ZTUiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6a3ViZS1zeXN0ZW06YWRtaW4tdXNlciJ9.byMKYjzw-eXurnHJGjPEO1PJoH_cdFs-zEM9T5fEzKUIi1nBUF-rYXi-rHI1vq27mwzL3lVrbkGQxO0ckHndg-6x3dOdjtxF5xXLARbkT1mYnFiTAsC2AyS4GJPkCsjz8q902AxgQ5jtrWIjZjYcKNsOqSwNKBrw2JS5zTRS-ELYQuu21iIZnobHy51pVzkdZxT6IhrD6ONaaxloBp4VaOBh9kzCX4YnJGr3yzd14iuJA3X1LUrvgEthm_kSC9ql4g6DuCY4wbZOVMimPTwh6cJzSPm4Er653JMGSZDc5M2_4sTetmCLYhiwdHBVGMj0NHyqjRIBq7t4zGNp_3B4iA");
                 cluster.getMonitor().setGrafana(grafana);
             }
@@ -668,7 +669,7 @@ public class ClusterServiceImpl implements ClusterService {
         /*        String setValues = "image.repository=" + repository + "/grafana" +
                 ",sidecar.image.repository=" + repository + "/k8s-sidecar" +
                 ",persistence.storageClassName=" + "local-path";*/
-        if ("https".equals(cluster.getMonitor().getGrafana().getProtocol())) {
+        //if ("https".equals(cluster.getMonitor().getGrafana().getProtocol())) {
             JSONObject ini = new JSONObject();
             JSONObject server = new JSONObject();
             server.put("protocol", "https");
@@ -684,7 +685,7 @@ public class ClusterServiceImpl implements ClusterService {
             jsonValues.put("grafana.ini", ini);
             jsonValues.put("readinessProbe", readinessProbe);
             jsonValues.put("livenessProbe", livenessProbe);
-        }
+        //}
         helmChartService.upgradeInstall("grafana", "monitoring", componentsPath + File.separator + "grafana",
             JSONObject.parseObject(values), jsonValues, cluster);
     }
