@@ -20,7 +20,7 @@ global:
     image: zeus-ui
     tag: v0.1.0
     pullPolicy: Always
-    nodePort: 30088
+    nodePort: 31088
     resources:
       requests:
         cpu: 200m
