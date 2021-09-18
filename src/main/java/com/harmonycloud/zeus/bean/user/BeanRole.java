@@ -36,6 +36,11 @@ public class BeanRole {
     @TableField("description")
     private String description;
     /**
+     * 父id
+     */
+    @TableField("parent")
+    private Integer parent;
+    /**
      * 创建时间
      */
     @TableField("create_Time")

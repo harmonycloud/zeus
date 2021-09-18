@@ -8,15 +8,15 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import com.harmonycloud.tool.cmd.HelmChartUtil;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.yaml.snakeyaml.Yaml;
 
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.DictEnum;
@@ -29,8 +29,8 @@ import com.harmonycloud.caas.common.model.PrometheusResponse;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
+import com.harmonycloud.tool.cmd.HelmChartUtil;
 import com.harmonycloud.tool.date.DateUtils;
-import com.harmonycloud.tool.file.FileUtil;
 import com.harmonycloud.zeus.integration.cluster.ClusterWrapper;
 import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCluster;
@@ -80,10 +80,13 @@ public class ClusterServiceImpl implements ClusterService {
     @Autowired
     private EsService esService;
     @Autowired
+    @Lazy
     private HelmChartService helmChartService;
     @Autowired
+    @Lazy
     private MiddlewareInfoService middlewareInfoService;
     @Autowired
+    @Lazy
     private PrometheusWrapper prometheusWrapper;
 
     @Value("${k8s.component.logging.es.user:elastic}")
@@ -490,6 +493,7 @@ public class ClusterServiceImpl implements ClusterService {
         }
     }
 
+    @Async
     public void createComponents(MiddlewareClusterDTO cluster) {
         String repository = cluster.getRegistry().getRegistryAddress() + "/" + cluster.getRegistry().getChartRepo();
         List<HelmListInfo> helmListInfos = helmChartService.listHelm("", "", cluster);

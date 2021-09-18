@@ -52,7 +52,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public void add(RoleDto roleDto) {
         // 校验角色名称是否已存在
-        if (checkExist(roleDto.getName())){
+        if (checkExist(roleDto.getName())) {
             throw new BusinessException(ErrorMessage.ROLE_EXIST);
         }
         if (!checkMenu(roleDto)) {
@@ -62,8 +62,11 @@ public class RoleServiceImpl implements RoleService {
         BeanUtils.copyProperties(roleDto, beanRole);
         beanRole.setStatus(true);
         beanRole.setCreateTime(new Date());
+        CurrentUser currentUser = CurrentUserRepository.getUser();
+        String currentRoleId = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString("roleId");
+        beanRole.setParent(Integer.parseInt(currentRoleId));
         beanRoleMapper.insert(beanRole);
-        //绑定角色菜单权限
+        // 绑定角色菜单权限
         bind(roleDto);
     }
 
