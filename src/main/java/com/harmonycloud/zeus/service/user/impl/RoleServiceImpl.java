@@ -176,7 +176,7 @@ public class RoleServiceImpl implements RoleService {
         List<BeanResourceMenuRole> rmRoleList = resourceMenuRoleService.list(currentRoleId);
         // 判断创建角色的权限是否是当前登陆用户角色权限的子集
         if (!rmRoleList.stream().map(BeanResourceMenuRole::getResourceMenuId).collect(Collectors.toList())
-            .containsAll(roleDto.getMenu().stream().map(ResourceMenuDto::getId).collect(Collectors.toList()))) {
+            .containsAll(roleDto.getMenu().stream().filter(ResourceMenuDto::getOwn).map(ResourceMenuDto::getId).collect(Collectors.toList()))) {
             log.error("创建/更新 角色的权限不能大于当前登陆用户的角色权限");
             return false;
         }
