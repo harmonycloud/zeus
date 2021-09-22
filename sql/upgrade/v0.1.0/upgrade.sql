@@ -8,7 +8,7 @@ ALTER TABLE `middleware_info` DROP COLUMN cluster_id;
 -- 3.删除middleware_info status列
 ALTER TABLE `middleware_info` DROP COLUMN status;
 -- 4.添加middleware_info operator_name列
-ALTER TABLE `middleware_info` ADD COLUMN chart varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'operator名称';
+ALTER TABLE `middleware_info` ADD COLUMN operator_name varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'operator名称';
 -- 5.添加集群-中间件关联表
 DROP TABLE IF EXISTS `cluster_middleware_info`;
 CREATE TABLE `cluster_middleware_info` (
