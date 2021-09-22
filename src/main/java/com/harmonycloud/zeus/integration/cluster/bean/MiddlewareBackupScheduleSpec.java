@@ -45,6 +45,11 @@ public class MiddlewareBackupScheduleSpec {
      */
     private String startTime;
 
+    /**
+     * 是否开启备份
+     */
+    private String pause;
+
     public MiddlewareBackupScheduleSpec() {
     }
 

@@ -61,8 +61,9 @@ public class MiddlewareBackupController {
                              @PathVariable("middlewareName") String middlewareName,
                              @RequestParam("type") String type,
                              @RequestParam(value = "cron", required = false) String cron,
-                             @RequestParam(value = "limitRecord", required = false) Integer limitRecord) {
-        return middlewareBackupService.update(clusterId, namespace, middlewareName, type, cron, limitRecord);
+                             @RequestParam(value = "limitRecord", required = false) Integer limitRecord,
+                             @RequestParam(value = "pause", required = false) String pause) {
+        return middlewareBackupService.update(clusterId, namespace, middlewareName, type, cron, limitRecord, pause);
     }
 
     @ApiOperation(value = "删除中间件备份", notes = "删除中间件备份")
@@ -125,7 +126,7 @@ public class MiddlewareBackupController {
                                     @RequestParam("type") String type,
                                     @RequestParam("backupName") String backupName,
                                     @RequestParam("restoreName") String restoreName,
-                                    @RequestParam("aliasName") String aliasName) {
+                                    @RequestParam(value = "aliasName", required = false) String aliasName) {
         return middlewareBackupService.createRestore(clusterId, namespace, middlewareName, type, restoreName, backupName, aliasName);
     }
 

@@ -42,7 +42,7 @@ public interface MiddlewareBackupService {
      * @param middlewareName 中间件名称
      * @return
      */
-    BaseResult update(String clusterId, String namespace, String middlewareName, String type, String cron, Integer limitRecord);
+    BaseResult update(String clusterId, String namespace, String middlewareName, String type, String cron, Integer limitRecord,String pause);
 
     /**
      * 删除备份记录
