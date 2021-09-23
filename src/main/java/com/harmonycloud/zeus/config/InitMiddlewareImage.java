@@ -13,8 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
-import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
+import com.harmonycloud.zeus.dao.BeanMiddlewareInfoMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,11 +31,12 @@ public class InitMiddlewareImage {
     private String imagePath;
 
     @Autowired
-    private MiddlewareInfoService middlewareInfoService;
+    private BeanMiddlewareInfoMapper middlewareInfoMapper;
 
     @PostConstruct
     public void init() throws Exception {
-        List<BeanMiddlewareInfo> mwInfoList = middlewareInfoService.list();
+        QueryWrapper<BeanMiddlewareInfo> wrapper = new QueryWrapper<>();
+        List<BeanMiddlewareInfo> mwInfoList = middlewareInfoMapper.selectList(wrapper);
         for (BeanMiddlewareInfo mwInfo : mwInfoList) {
             if (StringUtils.isEmpty(mwInfo.getImagePath())){
                 return;

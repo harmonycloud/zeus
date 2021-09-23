@@ -56,10 +56,6 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     private ClusterMiddlewareInfoService clusterMiddlewareInfoService;
     @Autowired
     private PodService podService;
-    @Autowired
-    private MiddlewareCRDService middlewareCRDService;
-    @Autowired
-    private MiddlewareService middlewareService;
 
     @Override
     public List<BeanMiddlewareInfo> list() {
