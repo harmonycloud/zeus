@@ -329,4 +329,4 @@ data:
 kind: ConfigMap
 metadata:
   name: zeus-init-sql-file
-  namespace: {{ .Values.global.namespace }}
+  namespace: zeus
