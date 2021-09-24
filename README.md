@@ -42,7 +42,7 @@ make install
 访问方式
 
 ```
-http://<your ip>:30088
+http://<your ip>:31088
 
 用户名：admin
 密码：Ab123456!
