@@ -40,11 +40,13 @@ function deploy_helm() {
   fi
   kubectl apply -f deploy/namespaces.yaml
   # install mysql-operator
-  helm install -n middleware-operator mysql-operator deploy/mysql-operator/charts/mysql-operator --set image.repository=$IMAGE_REPO"/middleware/mysql-operator"
+  helm install -n middleware-operator mysql-operator deploy/mysql-operator/charts/mysql-operator --set image.repository=$IMAGE_REPO"/middleware"
   # install mysql instance
-  helm install -n zeus zeus-mysql deploy/mysql-operator --set mysql-operator.enabled=false,image.repository=$IMAGE_REPO"/middleware",args.root_password="ZeuS@Middleware01"
+  helm install -n zeus zeus-mysql deploy/mysql-operator --set mysql-operator.enabled=false,image.repository=$IMAGE_REPO"/middleware",args.root_password="ZeuS@Middleware01",storageClassName=$STORAGE_CLASS
   # install zeus platform
-  helm install -n zeus zeus deploy/helm --set global.repository=$IMAGE_REPO"/middleware",global.storageClass=$STORAGE_CLASS,$HELM_ARGS
+  echo -n "请输入Zeus平台使用的共享存储服务名称:"
+  read ZEUS_SC
+  helm install -n zeus zeus deploy/helm --set global.repository=$IMAGE_REPO"/middleware",global.storageClass=$ZEUS_SC,$HELM_ARGS
 }
 
 if [ $DEPLOY_TYPE == "docker-compose" ]; then
