@@ -415,7 +415,11 @@ public class ClusterServiceImpl implements ClusterService {
 
     private void checkClusterExistent(MiddlewareClusterDTO cluster, boolean expectExisting) {
         // 获取已有集群信息
-        List<MiddlewareClusterDTO> clusterList = listClusters();
+        List<MiddlewareClusterDTO> clusterList = new ArrayList<>();
+        try {
+            clusterList.addAll(listClusters());
+        } catch (Exception e){
+        }
         // 校验内存中集群信息
         if (expectExisting) {
             // 期望集群存在 && 实际不存在
