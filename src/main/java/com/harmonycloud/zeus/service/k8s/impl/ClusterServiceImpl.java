@@ -433,7 +433,7 @@ public class ClusterServiceImpl implements ClusterService {
             }
         } else {
             // 获取所有集群
-            for (MiddlewareClusterDTO c : listClusters()) {
+            for (MiddlewareClusterDTO c : clusterList) {
                 // 集群名称
                 if (c.getId().equals(cluster.getId())) {
                     throw new BusinessException(DictEnum.CLUSTER, cluster.getName(), ErrorMessage.EXIST);
