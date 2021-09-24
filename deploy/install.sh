@@ -4,6 +4,7 @@ DEPLOY_TYPE=$1
 LINE_TYPE=$2
 IMAGE_REPO=$3
 STORAGE_CLASS=$4
+HA=$5
 
 if [ $LINE_TYPE == "offline" ]; then
   echo "######  Load images ######"
@@ -33,7 +34,17 @@ function deploy_kubernetes() {
 }
 
 function deploy_helm() {
-  helm install --create-namespace -n zeus zeus deploy/helm --set global.repository=$IMAGE_REPO"/middleware",global.storageClass=$STORAGE_CLASS
+  HELM_ARGS="global.replicaCount=1"
+  if [ $HA == "true" ]; then
+    HELM_ARGS="global.replicaCount=3"
+  fi
+  kubectl apply -f deploy/namespaces.yaml
+  # install mysql-operator
+  helm install -n middleware-operator mysql-operator deploy/mysql-operator/charts/mysql-operator --set image.repository=$IMAGE_REPO"/middleware/mysql-operator"
+  # install mysql instance
+  helm install -n zeus zeus-mysql deploy/mysql-operator --set mysql-operator.enabled=false,image.repository=$IMAGE_REPO"/middleware",args.root_password="ZeuS@Middleware01"
+  # install zeus platform
+  helm install -n zeus zeus deploy/helm --set global.repository=$IMAGE_REPO"/middleware",global.storageClass=$STORAGE_CLASS,$HELM_ARGS
 }
 
 if [ $DEPLOY_TYPE == "docker-compose" ]; then

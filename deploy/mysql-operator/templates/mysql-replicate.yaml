@@ -1,0 +1,13 @@
+{{- if .Values.replication.enabled }}
+apiVersion: mysql.middleware.harmonycloud.cn/v1alpha1
+kind: MysqlReplicate
+metadata:
+  name: {{ include "mysql.fullname" . }}-replicate
+  labels:
+    operatorname: mysql-operator
+spec:
+  enable: true
+  from:
+  {{- toYaml .Values.replication.from | nindent 4 }}
+  clusterName: {{ include "mysql.fullname" . }}
+{{- end }}

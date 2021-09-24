@@ -1,0 +1,119 @@
+apiVersion: mysql.middleware.harmonycloud.cn/v1alpha1
+kind: MysqlCluster
+metadata:
+  name: {{ include "mysql.fullname" . }}
+  labels:
+    operatorname: mysql-operator
+spec:
+{{- if .Values.init_at_setup.enabled }}
+  initScriptCMName: zeus-init-sql-file
+{{- end }}
+  clusterSwitch:
+    switched: false
+  cmName: {{ include "mysql.fullname" . }}-config
+  businessDeploy:
+{{- toYaml .Values.businessDeploy | nindent 4 }}
+  deployStrategy:
+    basicConfig: {}
+    migration: {}
+    type: AutoDeploy
+  migratePolicy: {}
+  replicas: {{ .Values.replicaCount }}
+  repository: {{ .Values.image.repository }}/mysql-cluster
+  secretName: mysql-secret
+  statefulset:
+    affinity:
+    {{- if eq .Values.podAntiAffinity "hard"}}
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - {{ include "mysql.fullname" . }}
+          topologyKey: {{ .Values.podAntiAffinityTopologKey }}
+    {{- else if eq .Values.podAntiAffinity "soft"}}
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            topologyKey: {{ .Values.podAntiAffinityTopologKey }}
+            labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - {{ include "mysql.fullname" . }}
+    {{- end}}
+      {{- with .Values.nodeAffinity }}
+      nodeAffinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    configmap: {{ include "mysql.fullname" . }}-config
+    env:
+    - name: DBNAME
+      value: {{ include "mysql.fullname" . }}
+    - name: MYSQL_ROOT_PASSWORD
+      value: {{ .Values.args.root_password | quote}}
+    - name: MYSQL_USER_HOST
+      value: "%"
+    - name: MYSQL_ROOT_HOST
+      value: "%"
+    - name: aliyun_logs_mysqlslow
+      value: /data/mysql/db_{{ include "mysql.fullname" . }}/elog/slow.log
+    - name: aliyun_logs_mysqlslow_format
+      value: mysql_slow_log
+    - name: aliyun_logs_mysqlslow_tags
+      value: middleware_name={{ include "mysql.fullname" . }}
+  {{- if ((((.Values.logging).collection).stdout).enabled)}}
+    - name: aliyun_logs_middlewarestdout
+      value: stdout
+    - name: aliyun_logs_middlewarestdout_tags
+      value: middleware_name={{ include "mysql.fullname" . }}
+  {{- end}}
+  {{- if ((((.Values.logging).collection).filelog).enabled)}}
+    - name: aliyun_logs_middlewarelogstash
+      value: /data/mysql/db_{{ include "mysql.fullname" . }}/elog/*.err
+    - name: aliyun_logs_middlewarelogstash_tags
+      value: middleware_name={{ include "mysql.fullname" . }}
+  {{- end}}
+  {{- if .Values.ssh.enabled }}
+    - name: SSH_ENABLE
+      value: "true"
+  {{- end }}
+    initImage: {{ .Values.image.repository }}/mysql-init:{{ .Values.image.initImageTag}}
+    monitorImage: {{ .Values.image.repository }}/mysqld-exporter:{{ .Values.image.monitorImageTag}}
+    middlewareImage: {{ .Values.image.repository }}/mysql-cluster:{{ .Values.image.middlewareImageTag}}
+    backupRestoreImage: {{ .Values.image.repository }}/mysql-xtrabackup:{{ .Values.image.backupRestoreImageTag}}
+    imagePullPolicy: {{ .Values.image.pullPolicy }}
+    serverPort: {{ .Values.args.server_port }}
+    nodePort: {{ .Values.service.nodePort }}
+    readOnlyNodePort: {{ .Values.service.readOnlyNodePort }}
+    hostNetwork: {{ .Values.hostNetwork | default "false" }}
+    annotations:
+      fixed-node-middleware-pod: "true"
+      fixed.ipam.harmonycloud.cn: "true"
+    labels:
+      app: {{ include "mysql.fullname" . }}
+      operatorname: mysql-operator
+    resources:
+      {{- toYaml .Values.resources | nindent 6 }}
+    updateStrategy:
+      type: RollingUpdate
+  type: {{ .Values.type}}
+  syncMode: {{ .Values.syncMode}}
+  version: {{ .Values.version}}
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        {{- if .Values.storageClassName }}
+        storageClassName: {{ .Values.storageClassName }}
+        {{- end}}
+        resources:
+          requests:
+            storage: {{ .Values.storageSize }}
+  storageProvider:
+    {{- toYaml .Values.storageProvider | nindent 6 }}

@@ -1,0 +1,55 @@
+parameters:
+  - wait_timeout:
+      - name: default
+        value: 600
+      - name: isReboot
+        value: y
+      - name: range
+        value: [1-31536000]
+      - name: describe
+        value: The number of seconds the server waits for activity on a connection before closing it.
+  - interactive_timeout:
+      - name: default
+        value: 600
+      - name: isReboot
+        value: y
+      - name: range
+        value: [10-86400]
+      - name: describe
+        value: The number of seconds the server waits for activity on an interactive connection before closing it.
+  - innodb_buffer_pool_size:
+      - name: default
+        value: 1G
+      - name: isReboot
+        value: y
+      - name: range
+        value: [134217728-18446744073709551615]
+      - name: describe
+        value: The size in bytes of the buffer pool, the memory area where InnoDB caches table and index data.
+  - innodb_flush_log_at_trx_commit:
+      - name: default
+        value: 2
+      - name: isReboot
+        value: y
+      - name: range
+        value: [0|1|2]
+      - name: describe
+        value: Controls the balance between strict ACID compliance for commit operations and higher performance that is possible when commit-related I/O operations are rearranged and done in batches.
+  - sql_mode:
+      - name: default
+        value: NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,ERROR_FOR_DIVISION_BY_ZERO
+      - name: isReboot
+        value: y
+      - name: range
+        value: (\支持空格及|REAL_AS_FLOAT|PIPES_AS_CONCAT|ANSI_QUOTES|IGNORE_SPACE|ONLY_FULL_GROUP_BY|NO_UNSIGNED_SUBTRACTION|NO_DIR_IN_CREATE|POSTGRESQL|ORACLE|MSSQL|DB2|MAXDB|NO_KEY_OPTIONS|NO_TABLE_OPTIONS|NO_FIELD_OPTIONS|MYSQL323|MYSQL40|ANSI|NO_AUTO_VALUE_ON_ZERO|NO_BACKSLASH_ESCAPES|STRICT_TRANS_TABLES|STRICT_ALL_TABLES|NO_ZERO_IN_DATE|NO_ZERO_DATE|ALLOW_INVALID_DATES|ERROR_FOR_DIVISION_BY_ZERO|TRADITIONAL|HIGH_NOT_PRECEDENCE|NO_ENGINE_SUBSTITUTION|PAD_CHAR_TO_FULL_LENGTH|NO_AUTO_CREATE_USER)(,NO_AUTO_CREATE_USER|,REAL_AS_FLOAT|,PIPES_AS_CONCAT|,ANSI_QUOTES|,IGNORE_SPACE|,ONLY_FULL_GROUP_BY|,NO_UNSIGNED_SUBTRACTION|,NO_DIR_IN_CREATE|,POSTGRESQL|,ORACLE|,MSSQL|,DB2|,MAXDB|,NO_KEY_OPTIONS|,NO_TABLE_OPTIONS|,NO_FIELD_OPTIONS|,MYSQL323|,MYSQL40|,ANSI|,NO_AUTO_VALUE_ON_ZERO|,NO_BACKSLASH_ESCAPES|,STRICT_TRANS_TABLES|,STRICT_ALL_TABLES|,NO_ZERO_IN_DATE|,NO_ZERO_DATE|,ALLOW_INVALID_DATES|,ERROR_FOR_DIVISION_BY_ZERO|,TRADITIONAL|,HIGH_NOT_PRECEDENCE|,NO_ENGINE_SUBSTITUTION|,PAD_CHAR_TO_FULL_LENGTH)*
+      - name: describe
+        value: "Syntax: sql-mode=mode[,mode[,mode...]]. See the manual for the complete list of valid sql modes"
+  - sync_binlog:
+      - name: default
+        value: 1
+      - name: isReboot
+        value: y
+      - name: range
+        value: [1-1000]
+      - name: describe
+        value: "Controls how often the MySQL server synchronizes the binary log to disk."

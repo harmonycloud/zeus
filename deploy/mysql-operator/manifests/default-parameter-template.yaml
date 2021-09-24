@@ -1,0 +1,6 @@
+name: default
+alias: "默认参数模版"
+describe: "数据安全性最高，但速度较慢"
+parameters:
+  - innodb_flush_log_at_trx_commit: 1
+  - sync_binlog: 1

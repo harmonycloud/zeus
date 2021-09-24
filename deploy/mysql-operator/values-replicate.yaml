@@ -1,0 +1,77 @@
+mysqlArgs:
+  root_password: "1234"
+  character_set_server: "utf8mb4"
+  max_connections: 600
+  wait_timeout: 600
+  interactive_timeout: 600
+  innodb_buffer_pool_size: 1G
+  innodb_flush_log_at_trx_commit: 2
+  sql_mode: NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,ERROR_FOR_DIVISION_BY_ZERO
+  server_port: 3306
+
+version: 5.7.21
+type: slave-slave
+
+ssh:
+  enabled: false
+
+storageSize: 1G
+storageClassName: local-path
+
+businessDeploy: []
+# - database: db01
+  # pwd: "yourpassword"
+  # user: user01
+
+init_at_setup:
+  enabled: false
+  #init_sql: |-
+  #  create database business_ability;
+
+replicaCount: 1
+
+image:
+  repository: 10.1.11.100/middleware
+  middlewareImageTag: v5.7.21-hc.2
+  initImageTag: 1.0.4
+  monitorImageTag: v0.12.1
+  backupRestoreImageTag: v1.2.0-hc.3
+  pullPolicy: IfNotPresent
+
+testImage:
+  repository:  harmonyware.harbor.cn/middleware/operator-test-framework
+  pullPolicy: IfNotPresent
+  tag: v0.3
+
+nameOverride: ""
+fullnameOverride: ""
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2048Mi
+  requests:
+    cpu: 10m
+    memory: 204Mi
+
+
+storageProvider: {}
+#  minio:
+#    endpoint: http://10.1.10.63:30894
+#    bucketName: mybucket
+#    backupFileName: mysql-example-2020-11-10-150727.gz
+#    accessKeyId: minio
+#    secretAccessKey: minio123
+
+nodeAffinity: {}
+
+podAntiAffinityTopologKey: "kubernetes.io/hostname"
+
+replication:
+  enabled: true
+  from:
+    host: 10.1.11.238
+    port: 30912
+    user: root
+    password: 1234
+    

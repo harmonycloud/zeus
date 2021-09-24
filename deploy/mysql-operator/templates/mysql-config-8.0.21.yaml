@@ -1,0 +1,163 @@
+{{- if eq .Values.version "8.0.21" }}
+apiVersion: v1
+data:
+  my.cnf.tmpl: |
+    # version 1
+      [mysqld]
+      #************** basic ***************
+      default-authentication-plugin   =mysql_native_password
+      plugin-load                     =rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so
+      datadir                         =/data/mysql/DBNAME/data
+      basedir                         =/usr/local/mysql
+      tmpdir                          =/data/mysql/DBNAME/tmp
+      secure_file_priv                =/data/mysql/DBNAME/tmp
+      port                            =MYSQLPORT
+      socket                          =/data/mysql/DBNAME/conf/mysql.sock
+      pid_file                        =/data/mysql/DBNAME/conf/mysql.pid
+      #************** connection ***************
+      max_connections                 ={{ .Values.args.max_connections }}
+      max_connect_errors              =100000
+      max_user_connections            =1200
+      #************** sql timeout & limits ***************
+      max_execution_time              =10000
+      group_concat_max_len            =1048576
+      lock_wait_timeout               =60
+      #autocommit                      =0
+      lower_case_table_names          =1
+      thread_cache_size               =64
+      disabled_storage_engines        ="MyISAM,FEDERATED"
+      character_set_server            ={{ .Values.args.character_set_server }}
+      transaction-isolation           ="READ-COMMITTED"
+      skip_name_resolve               =ON
+      explicit_defaults_for_timestamp =ON
+      log_timestamps                  =SYSTEM
+      local_infile                    =OFF
+      event_scheduler                 =OFF
+      #query_cache_type                =OFF
+      #query_cache_size                =0
+      lc_messages                     =en_US
+      lc_messages_dir                 =/usr/share/mysql-8.0/english
+      init_connect                    ="set names {{ .Values.args.character_set_server }}"
+      #sql_mode                        ={{ .Values.args.sql_mode }}
+      #init_file                       =/data/mysql/DBNAME/conf/init_file.sql
+      #init_slave
+      #******************* err & slow & general ***************
+      log_error                       =/data/mysql/DBNAME/elog/mysql.err
+      #log_output                      ="TABLE,FILE"
+      slow_query_log                  =ON
+      slow_query_log_file             =/data/mysql/DBNAME/elog/slow.log
+      long_query_time                 =1
+      log_queries_not_using_indexes   =1
+      log_throttle_queries_not_using_indexes = 10
+      general_log                     =OFF
+      general_log_file                =/data/mysql/DBNAME/elog/general.log
+      #************** binlog & relaylog ***************
+      expire_logs_days                =7
+      sync_binlog                     =1
+      log-bin                         =/data/mysql/DBNAME/log/mysql-bin
+      log-bin-index                   =/data/mysql/DBNAME/log/mysql-bin.index
+      max_binlog_size                 =500M
+      binlog_format                   =ROW
+      binlog_rows_query_log_events    =ON
+      binlog_cache_size               =128k
+      binlog_stmt_cache_size          =128k
+      max_binlog_cache_size           =2G
+      max_binlog_stmt_cache_size      =2G
+      relay_log                       =/data/mysql/DBNAME/log/relay
+      relay_log_index                 =/data/mysql/DBNAME/log/relay.index
+      max_relay_log_size              =500M
+      relay_log_purge                 =ON
+      relay_log_recovery              =ON
+      #*************** rpl_semi_sync ***************
+      plugin_dir=/usr/lib64/mysql/plugin/
+      #rpl_semi_sync_master_enabled                =ON
+      #rpl_semi_sync_master_timeout                =1000
+      #rpl_semi_sync_master_trace_level            =32
+      #rpl_semi_sync_master_wait_for_slave_count   =1
+      #rpl_semi_sync_master_wait_no_slave          =ON
+      #rpl_semi_sync_master_wait_point             =AFTER_SYNC
+      #rpl_semi_sync_slave_enabled                 =ON
+      #rpl_semi_sync_slave_trace_level             =32
+      #*************** group commit ***************
+      binlog_group_commit_sync_delay              =1
+      binlog_group_commit_sync_no_delay_count     =1000
+      #*************** gtid ***************
+      gtid_mode                       =ON
+      enforce_gtid_consistency        =ON
+      master_verify_checksum          =ON
+      sync_master_info                =1
+      #*************slave ***************
+      skip-slave-start                =1
+      #read_only                      =ON
+      #super_read_only                =ON
+      log_slave_updates               =ON
+      server_id                       =SERVER_ID
+      report_host                     =Other_Mysql
+      report_port                     =MYSQLPORT
+      slave_load_tmpdir               =/data/mysql/DBNAME/tmp
+      slave_sql_verify_checksum       =ON
+      slave_preserve_commit_order     =1
+      #*************** muti thread slave ***************
+      slave_parallel_type                         =LOGICAL_CLOCK
+      slave_parallel_workers                      =4
+      master_info_repository                      =TABLE
+      relay_log_info_repository                   =TABLE
+      #*************** buffer & timeout ***************
+      read_buffer_size                =1M
+      read_rnd_buffer_size            =2M
+      sort_buffer_size                =1M
+      join_buffer_size                =1M
+      tmp_table_size                  =64M
+      max_allowed_packet              =64M
+      max_heap_table_size             =64M
+      connect_timeout                 =10
+      wait_timeout                    ={{ .Values.args.wait_timeout }}
+      interactive_timeout             ={{ .Values.args.interactive_timeout }}
+      net_read_timeout                =30
+      net_write_timeout               =30
+      #*********** myisam ***************
+      skip_external_locking           =ON
+      key_buffer_size                 =16M
+      bulk_insert_buffer_size         =16M
+      concurrent_insert               =ALWAYS
+      open_files_limit                =65000
+      table_open_cache                =16000
+      table_definition_cache          =16000
+      #*********** innodb ***************
+      default_storage_engine              =InnoDB
+      default_tmp_storage_engine          =InnoDB
+      #internal_tmp_disk_storage_engine    =InnoDB
+      innodb_data_home_dir                =/data/mysql/DBNAME/data
+      innodb_log_group_home_dir           =/data/mysql/DBNAME/log
+      innodb_log_file_size                =1024M
+      innodb_log_files_in_group           =3
+      innodb_undo_directory               =/data/mysql/DBNAME/log
+      innodb_undo_log_truncate            =on
+      innodb_max_undo_log_size            =1024M
+      innodb_undo_tablespaces             =3
+      innodb_flush_log_at_trx_commit      ={{ .Values.args.innodb_flush_log_at_trx_commit }}
+      innodb_fast_shutdown                =1
+      innodb_flush_method                 =O_DIRECT
+      innodb_io_capacity                  =1000
+      innodb_io_capacity_max              =4000
+      innodb_buffer_pool_size             ={{ .Values.args.innodb_buffer_pool_size }}
+      innodb_log_buffer_size              =32M
+      innodb_autoinc_lock_mode            =1
+      innodb_buffer_pool_load_at_startup  =ON
+      innodb_buffer_pool_dump_at_shutdown =ON
+      innodb_buffer_pool_dump_pct         =15
+      innodb_max_dirty_pages_pct          =85
+      innodb_lock_wait_timeout            =10
+      #innodb_locks_unsafe_for_binlog      =1
+      innodb_old_blocks_time              =1000
+      innodb_open_files                   =63000
+      innodb_page_cleaners                =4
+      innodb_strict_mode                  =ON
+      innodb_thread_concurrency           =0
+      innodb_sort_buffer_size             =64M
+      innodb_print_all_deadlocks          =1
+      innodb_rollback_on_timeout          =ON
+kind: ConfigMap
+metadata:
+  name: {{ include "mysql.fullname" . }}-config
+{{- end }}

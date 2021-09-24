@@ -1,0 +1,6 @@
+name: high_performance
+alias: "高性能参数模版"
+describe: "数据安全性一般，但速度最快"
+parameters:
+  - innodb_flush_log_at_trx_commit: 2
+  - sync_binlog: 1000
