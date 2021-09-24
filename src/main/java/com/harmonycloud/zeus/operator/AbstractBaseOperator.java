@@ -215,7 +215,7 @@ public abstract class AbstractBaseOperator {
         MiddlewareClusterMonitorInfo monitorInfo =
             clusterService.findById(middleware.getClusterId()).getMonitor().getGrafana();
         if (monitorInfo == null
-            || StringUtils.isAnyEmpty(monitorInfo.getProtocol(), monitorInfo.getHost(), monitorInfo.getToken())) {
+            || StringUtils.isAnyEmpty(monitorInfo.getProtocol(), monitorInfo.getHost(), monitorInfo.getPort())) {
             throw new BusinessException(ErrorMessage.CLUSTER_MONITOR_INFO_NOT_FOUND);
         }
 
@@ -477,6 +477,7 @@ public abstract class AbstractBaseOperator {
      */
     protected void replaceValues(Middleware middleware, MiddlewareClusterDTO cluster, JSONObject values) {
         replaceSimplyCommonValues(middleware, cluster, values);
+        replaceDynamicValuesContent(middleware, cluster);
         replaceDynamicValues(middleware, values);
         //标记为自定义中间件
         values.put("custom", true);
@@ -559,6 +560,23 @@ public abstract class AbstractBaseOperator {
                 object.put(nested[length - 1], dynamicValues.get(key));
             } else {
                 values.put(key, dynamicValues.get(key));
+            }
+        }
+    }
+
+    private void replaceDynamicValuesContent(Middleware middleware, MiddlewareClusterDTO cluster) {
+        for (String key : middleware.getDynamicValues().keySet()) {
+            if (middleware.getDynamicValues().get(key).contains("${address}")) {
+                middleware.getDynamicValues().put(key,
+                    middleware.getDynamicValues().get(key).replace("${address}", cluster.getRegistry().getAddress()));
+            }
+            if (middleware.getDynamicValues().get(key).contains("${port}")) {
+                middleware.getDynamicValues().put(key, middleware.getDynamicValues().get(key).replace("${port}",
+                    String.valueOf(cluster.getRegistry().getPort())));
+            }
+            if (middleware.getDynamicValues().get(key).contains("${repository}")) {
+                middleware.getDynamicValues().put(key, middleware.getDynamicValues().get(key).replace("${repository}",
+                    cluster.getRegistry().getImageRepo()));
             }
         }
     }
