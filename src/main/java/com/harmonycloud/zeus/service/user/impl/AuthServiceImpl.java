@@ -8,6 +8,7 @@ import java.util.Date;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.service.user.AuthService;
 import com.harmonycloud.zeus.service.user.UserService;
 import org.apache.commons.lang3.StringUtils;
@@ -59,6 +60,11 @@ public class AuthServiceImpl implements AuthService {
         JSONObject res = new JSONObject();
         res.put("userName", userName);
         res.put("token", token);
+        //校验密码日期
+        long passwordTime = DateUtils.getIntervalDays(new Date(), userDto.getPasswordTime()) / 3600 / 24;
+        if (passwordTime > 165){
+            res.put("rePassword", passwordTime);
+        }
         return res;
     }
 
