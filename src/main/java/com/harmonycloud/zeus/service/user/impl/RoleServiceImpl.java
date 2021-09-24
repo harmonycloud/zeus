@@ -105,7 +105,7 @@ public class RoleServiceImpl implements RoleService {
         List<BeanResourceMenuRole> beanResourceMenuRoleList = resourceMenuRoleService.list(null);
         Map<Integer, List<BeanResourceMenuRole>> rmRoleMap =
             beanResourceMenuRoleList.stream().collect(Collectors.groupingBy(BeanResourceMenuRole::getRoleId));
-        //获取当前角色的菜单权限
+        // 获取当前角色的菜单权限
         List<Integer> currentRoleMenuList = rmRoleMap.get(Integer.valueOf(currentRoleId)).stream()
             .map(BeanResourceMenuRole::getResourceMenuId).collect(Collectors.toList());
         // 过滤权限为当前用户子权限的角色
@@ -122,7 +122,12 @@ public class RoleServiceImpl implements RoleService {
             RoleDto roleDto = new RoleDto();
             BeanUtils.copyProperties(beanRole, roleDto);
             roleDto.setMenu(resourceMenuService.list(rmRoleMap.get(beanRole.getId()).stream()
-                .map(BeanResourceMenuRole::getResourceMenuId).collect(Collectors.toList())));
+                .map(BeanResourceMenuRole::getResourceMenuId).collect(Collectors.toList())).stream()
+                .peek(resourceMenuDto -> {
+                    if (resourceMenuDto.getParentId() == 0) {
+                        resourceMenuDto.setOwn(false);
+                    }
+                }).collect(Collectors.toList()));
             return roleDto;
         }).filter(roleDto -> {
             if (StringUtils.isNotEmpty(key)) {
