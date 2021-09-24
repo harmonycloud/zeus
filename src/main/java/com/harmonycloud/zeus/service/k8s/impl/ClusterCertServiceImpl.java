@@ -35,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
@@ -88,10 +89,14 @@ public class ClusterCertServiceImpl implements ClusterCertService {
         configMapWrapper.create(K8sClient.DEFAULT_CLIENT, cluster.getDcId(), certCmName, data);
 
         // 记录文件到数据库
-        BeanKubeConfig kubeConfig = new BeanKubeConfig();
-        kubeConfig.setClusterId(cluster.getId());
-        kubeConfig.setConf(adminConfYaml);
-        beanKubeConfigMapper.insert(kubeConfig);
+        QueryWrapper<BeanKubeConfig> wrapper = new QueryWrapper<BeanKubeConfig>().eq("cluster_id", cluster.getId());
+        BeanKubeConfig exist = beanKubeConfigMapper.selectOne(wrapper);
+        if (ObjectUtils.isEmpty(exist)){
+            BeanKubeConfig kubeConfig = new BeanKubeConfig();
+            kubeConfig.setClusterId(cluster.getId());
+            kubeConfig.setConf(adminConfYaml);
+            beanKubeConfigMapper.insert(kubeConfig);
+        }
     }
 
 
