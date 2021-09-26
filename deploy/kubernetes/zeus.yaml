@@ -152,6 +152,8 @@ data:
             realtime:
               before: 300
               duration: 60
+      platform:
+        version: v0.1.0
     pagehelper:
       helper-dialect: mysql
       reasonable: true

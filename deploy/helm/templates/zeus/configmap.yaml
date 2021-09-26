@@ -52,6 +52,8 @@ data:
         path: /usr/local/zeus-pv/upload
       images:
         path: /usr/local/zeus-pv/images/middleware
+    platform:
+      version: v0.1.0
 
     overview:
       overall:

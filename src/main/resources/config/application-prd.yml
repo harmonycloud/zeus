@@ -53,6 +53,9 @@ system:
     username: admin
     password: 5B99164F828AED74140E5FDA077B634C
     expire: 8
+  platform:
+    #平台版本
+    version: v0.1.0
 
   # 总览参数配置
   overview:

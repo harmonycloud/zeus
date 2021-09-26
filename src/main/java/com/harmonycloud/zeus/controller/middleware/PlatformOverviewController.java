@@ -34,9 +34,12 @@ public class PlatformOverviewController {
     private ConfigMapService configMapService;
 
     @ApiOperation(value = "平台总览", notes = "平台总览")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", required = false, dataTypeClass = String.class)
+    })
     @GetMapping
-    public BaseResult getPlatformOverview() {
-        return overviewService.getPlatformOverview();
+    public BaseResult getPlatformOverview(@RequestParam(value = "clusterId", required = false) String clusterId) {
+        return overviewService.getClusterPlatformOverview(clusterId);
     }
 
     @ApiOperation(value = "查询告警记录", notes = "查询告警记录")

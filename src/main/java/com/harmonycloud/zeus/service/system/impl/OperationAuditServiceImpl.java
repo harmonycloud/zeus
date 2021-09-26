@@ -184,4 +184,15 @@ public class OperationAuditServiceImpl implements OperationAuditService {
         return operationAuditQueryDto;
     }
 
+    @Override
+    public List<BeanOperationAudit> listRecent(Integer num) {
+        if (num == null) {
+            num = 20;
+        }
+        QueryWrapper<BeanOperationAudit> queryWrapper = new QueryWrapper<>();
+        queryWrapper.orderByDesc("begin_time");
+        Page<BeanOperationAudit> page = new Page<>(1, num);
+        Page<BeanOperationAudit> beanOperationAuditPage = operationAuditMapper.selectPage(page, queryWrapper);
+        return beanOperationAuditPage.getRecords();
+    }
 }

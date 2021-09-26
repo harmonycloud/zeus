@@ -1,10 +1,52 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.LINE;
-import static com.harmonycloud.caas.common.constants.NameConstant.CPU;
-import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
+import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.constants.NameConstant;
+import com.harmonycloud.caas.common.enums.DateType;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
+import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.exception.CaasRuntimeException;
+import com.harmonycloud.caas.common.model.*;
+import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.tool.date.DateUtils;
+import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.harmonycloud.zeus.bean.BeanAlertRecord;
+import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
+import com.harmonycloud.zeus.bean.BeanOperationAudit;
+import com.harmonycloud.zeus.bean.PlatformOverviewDTO;
+import com.harmonycloud.zeus.dao.BeanAlertRecordMapper;
+import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
+import com.harmonycloud.zeus.integration.cluster.ResourceQuotaWrapper;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareSpec;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareStatus;
+import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
+import com.harmonycloud.zeus.service.k8s.ClusterService;
+import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
+import com.harmonycloud.zeus.service.k8s.NamespaceService;
+import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareService;
+import com.harmonycloud.zeus.service.middleware.OverviewService;
+import com.harmonycloud.zeus.service.registry.HelmChartService;
+import com.harmonycloud.zeus.service.system.OperationAuditService;
+import com.harmonycloud.zeus.util.DateUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -12,54 +54,11 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.alibaba.fastjson.JSONObject;
-import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.model.MiddlewareDTO;
-import com.harmonycloud.caas.common.model.middleware.*;
-import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
-import com.harmonycloud.zeus.integration.cluster.ResourceQuotaWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.*;
-import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
-import com.harmonycloud.zeus.service.middleware.MiddlewareService;
-import com.harmonycloud.zeus.service.registry.HelmChartService;
-import com.harmonycloud.zeus.service.middleware.OverviewService;
-import com.harmonycloud.zeus.util.DateUtil;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.ResourceQuota;
-import org.apache.commons.lang3.BooleanUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.units.qual.A;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.ObjectUtils;
-
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.constants.NameConstant;
-import com.harmonycloud.caas.common.enums.DateType;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.exception.CaasRuntimeException;
-import com.harmonycloud.caas.common.model.AlertDTO;
-import com.harmonycloud.caas.common.model.PrometheusResponse;
-import com.harmonycloud.caas.common.model.PrometheusResult;
-import com.harmonycloud.zeus.bean.BeanAlertRecord;
-import com.harmonycloud.zeus.dao.BeanAlertRecordMapper;
-import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
-import com.harmonycloud.zeus.service.k8s.ClusterService;
-import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
-import com.harmonycloud.zeus.service.k8s.NamespaceService;
-import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
-import com.harmonycloud.tool.date.DateUtils;
-import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
-
-import lombok.extern.slf4j.Slf4j;
+import static com.harmonycloud.caas.common.constants.CommonConstant.LINE;
+import static com.harmonycloud.caas.common.constants.NameConstant.CPU;
+import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
 /**
  * @author xutianhong
@@ -89,6 +88,11 @@ public class OverviewServiceImpl implements OverviewService {
     private ResourceQuotaWrapper resourceQuotaWrapper;
     @Autowired
     private MiddlewareService middlewareService;
+    @Autowired
+    private OperationAuditService operationAuditService;
+
+    @Value("${system.platform.version:v0.1.0}")
+    private String version;
     /**
      * 查询中间件状态
      *
@@ -674,4 +678,53 @@ public class OverviewServiceImpl implements OverviewService {
         chartPlatformOverview.setMiddlewareDTOList(this.getListPlatformOverview());
         return BaseResult.ok(chartPlatformOverview);
     }
+
+    @Override
+    public BaseResult getClusterPlatformOverview(String clusterId) {
+        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(true);
+        if (StringUtils.isNotBlank(clusterId)) {
+            clusterList = clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
+        }
+        PlatformOverviewDTO platformOverviewDTO = new PlatformOverviewDTO();
+        platformOverviewDTO.setZeusVersion(version);
+
+        //获取集群已注册分区
+        List<Namespace> registeredNamespaceList = clusterService.getRegisteredNamespaceNum(clusterList);
+        //获取集群CPU和内存的配额信息
+        ClusterQuotaDTO clusterQuota = clusterService.getClusterQuota(clusterList);
+        clusterQuota.setClusterNum(clusterList.size());
+        clusterQuota.setNamespaceNum(registeredNamespaceList.size());
+        platformOverviewDTO.setClusterQuota(clusterQuota);
+
+        //获取各中间件服务数量信息
+        List<MiddlewareBriefInfoDTO> middlewareBriefInfoList = middlewareService.getMiddlewareBriefInfoList(clusterList);
+        platformOverviewDTO.setBriefInfoList(middlewareBriefInfoList);
+
+        //获取控制器状态信息
+        MiddlewareOperatorDTO operatorInfo = middlewareInfoService.getOperatorInfo(clusterList);
+        platformOverviewDTO.setOperatorDTO(operatorInfo);
+
+        //获取异常告警信息
+        Date now = new Date();
+        Date ago = DateUtil.addHour(now, -24);
+        String beginTime = DateUtils.DateToString(ago, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
+        String endTime = DateUtils.DateToString(now, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
+        List<Map<String, Object>> criticalList = beanAlertRecordMapper.queryByTimeAndLevel(beginTime, endTime, "critical");
+        List<Map<String, Object>> infoList = beanAlertRecordMapper.queryByTimeAndLevel(beginTime, endTime, "info");
+        List<Map<String, Object>> warningList = beanAlertRecordMapper.queryByTimeAndLevel(beginTime, endTime, "warning");
+        AlertSummaryDTO alertSummaryDTO = new AlertSummaryDTO();
+        alertSummaryDTO.setCriticalList(criticalList);
+        alertSummaryDTO.setInfoList(infoList);
+        alertSummaryDTO.setWarningList(warningList);
+        alertSummaryDTO.setCriticalSum(criticalList.size());
+        alertSummaryDTO.setInfoSum(infoList.size());
+        alertSummaryDTO.setWarningSum(warningList.size());
+        platformOverviewDTO.setAlertSummary(alertSummaryDTO);
+
+        //获取审计信息
+        List<BeanOperationAudit> auditList = operationAuditService.listRecent(20);
+        platformOverviewDTO.setAuditList(auditList);
+        return BaseResult.ok(platformOverviewDTO);
+    }
+
 }

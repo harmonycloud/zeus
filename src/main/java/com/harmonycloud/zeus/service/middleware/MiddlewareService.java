@@ -100,5 +100,12 @@ public interface MiddlewareService {
      * @param keyword
      * @return
      */
-    List listAllMiddleware(String clusterId, String namespace,String keyword);
+    List<MiddlewareBriefInfoDTO> listAllMiddleware(String clusterId, String namespace,String keyword);
+
+    /**
+     * 获取集群下中间件简要信息
+     * @param clusterDTOList
+     * @return
+     */
+    List<MiddlewareBriefInfoDTO> getMiddlewareBriefInfoList(List<MiddlewareClusterDTO> clusterDTOList);
 }

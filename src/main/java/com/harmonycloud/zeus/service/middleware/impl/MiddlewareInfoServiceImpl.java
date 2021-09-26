@@ -2,7 +2,9 @@ package com.harmonycloud.zeus.service.middleware.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareInfoDTO;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareOperatorDTO;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
@@ -13,6 +15,7 @@ import com.harmonycloud.zeus.service.k8s.PodService;
 import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
+import com.harmonycloud.zeus.util.MathUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -31,6 +34,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.harmonycloud.caas.common.constants.CommonConstant.DOT;
@@ -297,4 +301,35 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         }
     }
 
+    public MiddlewareOperatorDTO getOperatorInfo(List<MiddlewareClusterDTO> clusterList){
+        MiddlewareOperatorDTO operatorDTO = new MiddlewareOperatorDTO();
+        List<MiddlewareOperatorDTO.MiddlewareOperator> operatorList = new ArrayList<>();
+        AtomicInteger runningOperator = new AtomicInteger();
+        AtomicInteger errorOperator = new AtomicInteger();
+
+        for (MiddlewareClusterDTO clusterDTO : clusterList) {
+            List<MiddlewareInfoDTO> middlewareInfoDTOS = list(clusterDTO.getId());
+            middlewareInfoDTOS.forEach(middleware -> {
+                MiddlewareOperatorDTO.MiddlewareOperator operator = new MiddlewareOperatorDTO.MiddlewareOperator();
+                operator.setName(middleware.getName());
+                operator.setClusterId(clusterDTO.getId());
+                operator.setClusterName(clusterDTO.getNickname());
+                operator.setStatus(middleware.getStatus());
+                if (middleware.getStatus() == 1) {
+                    runningOperator.getAndAdd(1);
+                } else {
+                    errorOperator.getAndAdd(1);
+                }
+                operatorList.add(operator);
+            });
+        }
+
+        operatorDTO.setError(errorOperator.get());
+        operatorDTO.setRunning(runningOperator.get());
+        operatorDTO.setOperatorList(operatorList);
+        operatorDTO.setTotal(operatorList.size());
+        operatorDTO.setErrorPercent(MathUtil.calcPercent(errorOperator.get(), operatorList.size()));
+        operatorDTO.setRunningPercent(MathUtil.calcPercent(runningOperator.get(), operatorList.size()));
+        return operatorDTO;
+    }
 }

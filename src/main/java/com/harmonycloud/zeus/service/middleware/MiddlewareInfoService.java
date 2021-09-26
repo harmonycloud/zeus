@@ -1,6 +1,8 @@
 package com.harmonycloud.zeus.service.middleware;
 
+import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareInfoDTO;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareOperatorDTO;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 
@@ -71,4 +73,10 @@ public interface MiddlewareInfoService {
      */
     void insert(HelmChartFile helmChartFile, File file);
 
+    /**
+     * 获取集群控制器状态信息
+     * @param clusterList
+     * @return
+     */
+    MiddlewareOperatorDTO getOperatorInfo(List<MiddlewareClusterDTO> clusterList);
 }

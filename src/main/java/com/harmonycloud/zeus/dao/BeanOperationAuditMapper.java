@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.harmonycloud.zeus.bean.BeanOperationAudit;
+import org.springframework.stereotype.Repository;
 
 /**
  * <p>
@@ -11,6 +12,7 @@ import com.harmonycloud.zeus.bean.BeanOperationAudit;
  * @author skyview
  * @since 2021-07-30
  */
+@Repository
 public interface BeanOperationAuditMapper extends BaseMapper<BeanOperationAudit> {
 
 }

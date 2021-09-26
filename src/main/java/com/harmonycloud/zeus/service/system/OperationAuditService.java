@@ -4,6 +4,8 @@ import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.zeus.bean.BeanOperationAudit;
 import com.harmonycloud.zeus.bean.OperationAuditQueryDto;
 
+import java.util.List;
+
 public interface OperationAuditService {
     void insert(BeanOperationAudit beanOperationAudit);
 
@@ -19,4 +21,12 @@ public interface OperationAuditService {
      * @return
      */
     BaseResult listAllCondition();
+
+    /**
+     * 查询最近num条审计信息
+     *
+     * @param num
+     * @return
+     */
+    List<BeanOperationAudit> listRecent(Integer num);
 }

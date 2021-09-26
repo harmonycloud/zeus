@@ -72,6 +72,9 @@ system:
     password: 5B99164F828AED74140E5FDA077B634C
     # token有效期，8小时
     expire: 8
+  platform:
+    #平台版本
+    version: v0.1.0
 #ssl
 server:
   ssl:

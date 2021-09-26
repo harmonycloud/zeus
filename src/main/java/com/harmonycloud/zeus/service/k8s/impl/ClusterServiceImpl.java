@@ -8,6 +8,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.zeus.util.MathUtil;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -753,4 +754,47 @@ public class ClusterServiceImpl implements ClusterService {
         cluster.getStorage().put("resource", resource);
     }
 
+    public List<Namespace> getRegisteredNamespaceNum(MiddlewareClusterDTO clusterDTO) {
+        if (clusterDTO == null) {
+            return new ArrayList();
+        }
+        List<Namespace> namespaces = namespaceService.list(clusterDTO.getId(), false, false, false, null);
+        return namespaces.stream().filter(namespace -> namespace.isRegistered()).collect(Collectors.toList());
+    }
+
+    public List<Namespace> getRegisteredNamespaceNum(List<MiddlewareClusterDTO> clusterDTOList) {
+        List<Namespace> namespaces = new ArrayList<>();
+        clusterDTOList.forEach(clusterDTO -> {
+            namespaces.addAll(getRegisteredNamespaceNum(clusterDTO));
+        });
+        return namespaces;
+    }
+
+    public ClusterQuotaDTO getClusterQuota(List<MiddlewareClusterDTO> clusterDTOList) {
+        ClusterQuotaDTO clusterQuotaSum = new ClusterQuotaDTO();
+        clusterDTOList.forEach(clusterDTO -> {
+            ClusterQuotaDTO clusterQuota = getClusterQuota(clusterDTO);
+            clusterQuotaSum.setTotalCpu(clusterQuotaSum.getTotalCpu() + clusterQuota.getTotalCpu());
+            clusterQuotaSum.setUsedCpu(clusterQuotaSum.getUsedCpu() + clusterQuota.getUsedCpu());
+            clusterQuotaSum.setTotalMemory(clusterQuotaSum.getTotalMemory() + clusterQuota.getTotalMemory());
+            clusterQuotaSum.setUsedMemory(clusterQuotaSum.getUsedMemory() + clusterQuota.getUsedMemory());
+        });
+        clusterQuotaSum.setCpuUsedPercent(MathUtil.calcPercent(clusterQuotaSum.getUsedCpu(), clusterQuotaSum.getTotalCpu()));
+        clusterQuotaSum.setMemoryUsedPercent(MathUtil.calcPercent(clusterQuotaSum.getUsedMemory(), clusterQuotaSum.getTotalMemory()));
+        return clusterQuotaSum;
+    }
+
+    public ClusterQuotaDTO getClusterQuota(MiddlewareClusterDTO clusterDTO) {
+        Map<String, Object> storage = clusterDTO.getStorage();
+        ClusterQuotaDTO clusterQuota = new ClusterQuotaDTO();
+        if (storage == null || storage.get("resource") == null) {
+            return clusterQuota;
+        }
+        HashMap<String, String> resource = (HashMap) storage.get("resource");
+        clusterQuota.setTotalCpu(Double.parseDouble(resource.get("cpuTotal")));
+        clusterQuota.setUsedCpu(Double.parseDouble(resource.get("cpuUsing")));
+        clusterQuota.setTotalMemory(Double.parseDouble(resource.get("memoryTotal")));
+        clusterQuota.setUsedMemory(Double.parseDouble(resource.get("memoryUsing")));
+        return clusterQuota;
+    }
 }
