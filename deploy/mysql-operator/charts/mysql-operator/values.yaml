@@ -1,0 +1,43 @@
+operatorpwd: "abcd!@#$"
+replicapwd: "abcd!@#$"
+sshpwd: "abcd!@#$"
+mysqlUserHost: "%"
+
+replicaCount: 1
+
+image:
+  repository: middleware.harmonycloud.cn:38080/middleware/mysql-operator
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: v1.1.1
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

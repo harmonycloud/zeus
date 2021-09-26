@@ -1,0 +1,11 @@
+type: master-slave
+replicaCount: 3
+image:
+  repository: 10.1.11.100/middleware
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2048Mi
+  requests:
+    cpu: 10m
+    memory: 204Mi

@@ -55,7 +55,6 @@ import org.yaml.snakeyaml.Yaml;
 @Service
 public class ClusterServiceImpl implements ClusterService {
 
-    private static final Map<String, MiddlewareClusterDTO> CLUSTER_MAP = new ConcurrentHashMap<>();
     /**
      * 默认存储限额
      */
@@ -101,6 +100,16 @@ public class ClusterServiceImpl implements ClusterService {
     private String middlewarePath;
 
     @Override
+    public MiddlewareClusterDTO get(String clusterId) {
+        List<MiddlewareClusterDTO> clusterList = listClusters().stream()
+            .filter(clusterDTO -> clusterDTO.getId().equals(clusterId)).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(clusterList)) {
+            throw new CaasRuntimeException(ErrorMessage.CLUSTER_NOT_FOUND);
+        }
+        return clusterList.get(0);
+    }
+
+    @Override
     public List<MiddlewareClusterDTO> listClusters() {
         return listClusters(false);
     }
@@ -108,7 +117,7 @@ public class ClusterServiceImpl implements ClusterService {
     @Override
     public List<MiddlewareClusterDTO> listClusters(boolean detail) {
         List<MiddlewareClusterDTO> clusters;
-        if (CLUSTER_MAP.size() <= 0) {
+        //if (CLUSTER_MAP.size() <= 0) {
             List<MiddlewareCluster> clusterList = clusterWrapper.listClusters();
             if (clusterList.size() <= 0) {
                 return new ArrayList<>(0);
@@ -127,15 +136,15 @@ public class ClusterServiceImpl implements ClusterService {
                 attributes.put(CREATE_TIME, DateUtils.parseUTCDate(c.getMetadata().getCreationTimestamp()));
                 cluster.setAttributes(attributes);
 
-                putIntoClusterMap(cluster);
+                //putIntoClusterMap(cluster);
                 // 返回深拷贝对象
                 return SerializationUtils.clone(cluster);
             }).collect(Collectors.toList());
-        } else {
+        /*} else {
             // 深拷贝返回列表，避免影响内存
             clusters = new ArrayList<>();
             CLUSTER_MAP.values().forEach(dto -> clusters.add(SerializationUtils.clone(dto)));
-        }
+        }*/
 
         // 返回命名空间信息
         if (detail && clusters.size() > 0) {
@@ -174,13 +183,13 @@ public class ClusterServiceImpl implements ClusterService {
         }
         nodeService.setClusterVersion(cluster);
         // 重新深拷贝个对象放入，避免参数传入的cluster被修改而导致map里的某些值为空
-        putIntoClusterMap(SerializationUtils.clone(cluster));
+        //putIntoClusterMap(SerializationUtils.clone(cluster));
     }
 
 
     @Override
     public MiddlewareClusterDTO findById(String clusterId) {
-        MiddlewareClusterDTO dto = getFromClusterMap(clusterId);
+        MiddlewareClusterDTO dto = get(clusterId);
         if (dto == null) {
             throw new CaasRuntimeException(ErrorMessage.CLUSTER_NOT_FOUND);
         }
@@ -270,7 +279,7 @@ public class ClusterServiceImpl implements ClusterService {
             log.error("集群:{}索引模板初始化失败", cluster.getName(), e);
         }
         // 放入map
-        putIntoClusterMap(cluster);
+        //putIntoClusterMap(cluster);
         // 创建mysql/es/redis/mq operator 并添加进数据库
         createOperator(cluster.getId());
         // 安装组件
@@ -325,7 +334,7 @@ public class ClusterServiceImpl implements ClusterService {
             throw new BusinessException(DictEnum.CLUSTER, cluster.getNickname(), ErrorMessage.UPDATE_FAIL);
         }
         // 放入map
-        putIntoClusterMap(cluster);
+        //putIntoClusterMap(cluster);
     }
 
     private void checkParams(MiddlewareClusterDTO cluster) {
@@ -401,7 +410,7 @@ public class ClusterServiceImpl implements ClusterService {
         if (!CollectionUtils.isEmpty(middlewareCRDList)){
             throw new BusinessException(ErrorMessage.CLUSTER_NOT_EMPTY);
         }
-        MiddlewareClusterDTO cluster = getFromClusterMap(clusterId);
+        MiddlewareClusterDTO cluster = get(clusterId);
         if (cluster == null) {
             return;
         }
@@ -412,58 +421,42 @@ public class ClusterServiceImpl implements ClusterService {
             throw new BusinessException(DictEnum.CLUSTER, cluster.getNickname(), ErrorMessage.DELETE_FAIL);
         }
         // 从map中移除
-        removeFromClusterMap(clusterId);
+        //removeFromClusterMap(clusterId);
         k8SDefaultClusterService.delete(clusterId);
     }
 
-    private MiddlewareClusterDTO getFromClusterMap(String clusterId) {
-        if (CollectionUtils.isEmpty(CLUSTER_MAP)){
-            k8sClient.initClients();
-        }
-        return CLUSTER_MAP.get(clusterId);
-    }
-
-    private Collection<MiddlewareClusterDTO> listFromClusterMap() {
-        return CLUSTER_MAP.values();
-    }
-    
-    private void putIntoClusterMap(MiddlewareClusterDTO cluster) {
-        CLUSTER_MAP.put(cluster.getId(), cluster);
-    }
-    
-    private void removeFromClusterMap(String clusterId) {
-        CLUSTER_MAP.remove(clusterId);
-    }
-
     private void checkClusterExistent(MiddlewareClusterDTO cluster, boolean expectExisting) {
+        // 获取已有集群信息
+        List<MiddlewareClusterDTO> clusterList = new ArrayList<>();
+        try {
+            clusterList.addAll(listClusters());
+        } catch (Exception e){
+        }
         // 校验内存中集群信息
         if (expectExisting) {
             // 期望集群存在 && 实际不存在
-            if (getFromClusterMap(cluster.getId()) == null) {
+            if (clusterList.stream().noneMatch(clusterDTO -> clusterDTO.getId().equals(cluster.getId()))) {
                 throw new BusinessException(DictEnum.CLUSTER, cluster.getName(), ErrorMessage.NOT_EXIST);
             }
             // 如果nickname重名
-            if (listFromClusterMap().stream()
+            if (clusterList.stream()
                 .anyMatch(c -> !c.getId().equals(cluster.getId()) && c.getNickname().equals(cluster.getNickname()))) {
                 throw new BusinessException(DictEnum.CLUSTER, cluster.getNickname(), ErrorMessage.EXIST);
             }
         } else {
             // 获取所有集群
-            Collection<MiddlewareClusterDTO> allClusters = listFromClusterMap();
-            if (!CollectionUtils.isEmpty(allClusters)) {
-                for (MiddlewareClusterDTO c : allClusters) {
-                    // 集群名称
-                    if (c.getId().equals(cluster.getId())) {
-                        throw new BusinessException(DictEnum.CLUSTER, cluster.getName(), ErrorMessage.EXIST);
-                    }
-                    // 集群昵称
-                    if (c.getNickname().equals(cluster.getNickname())) {
-                        throw new BusinessException(DictEnum.CLUSTER, cluster.getNickname(), ErrorMessage.EXIST);
-                    }
-                    // APIServer地址
-                    if (c.getHost().equals(cluster.getHost())) {
-                        throw new BusinessException(DictEnum.CLUSTER, cluster.getAddress(), ErrorMessage.EXIST);
-                    }
+            for (MiddlewareClusterDTO c : clusterList) {
+                // 集群名称
+                if (c.getId().equals(cluster.getId())) {
+                    throw new BusinessException(DictEnum.CLUSTER, cluster.getName(), ErrorMessage.EXIST);
+                }
+                // 集群昵称
+                if (c.getNickname().equals(cluster.getNickname())) {
+                    throw new BusinessException(DictEnum.CLUSTER, cluster.getNickname(), ErrorMessage.EXIST);
+                }
+                // APIServer地址
+                if (c.getHost().equals(cluster.getHost())) {
+                    throw new BusinessException(DictEnum.CLUSTER, cluster.getAddress(), ErrorMessage.EXIST);
                 }
             }
         }

@@ -73,6 +73,10 @@ public class K8sClient {
      * 获取client
      */
     public static KubernetesClient getClient(String clusterId) {
+        if (!K8S_CLIENT_MAP.containsKey(clusterId)) {
+            K8sClient k8sClient = new K8sClient();
+            k8sClient.initClients();
+        }
         KubernetesClient client = K8S_CLIENT_MAP.get(clusterId);
         if (client == null) {
             throw new CaasRuntimeException(ErrorMessage.CLUSTER_NOT_FOUND);

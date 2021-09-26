@@ -1,10 +1,13 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.ClusterCert;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.zeus.bean.BeanKubeConfig;
+import com.harmonycloud.zeus.dao.BeanKubeConfigMapper;
 import com.harmonycloud.zeus.integration.cluster.ClusterWrapper;
 import com.harmonycloud.zeus.integration.cluster.ConfigMapWrapper;
 import com.harmonycloud.zeus.integration.cluster.RbacWrapper;
@@ -32,8 +35,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 import org.yaml.snakeyaml.Yaml;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -61,7 +66,7 @@ public class ClusterCertServiceImpl implements ClusterCertService {
     @Autowired
     private SecretWrapper secretWrapper;
     @Autowired
-    private ClusterWrapper clusterWrapper;
+    private BeanKubeConfigMapper beanKubeConfigMapper;
 
     @Value("${k8s.kubeconfig.path:/usr/local/kubeconfig}")
     private String kubeConfigPath;
@@ -83,11 +88,14 @@ public class ClusterCertServiceImpl implements ClusterCertService {
         String certCmName = ClusterCertService.getCertCmName(cluster.getId());
         configMapWrapper.create(K8sClient.DEFAULT_CLIENT, cluster.getDcId(), certCmName, data);
 
-        // 写出文件到本地
-        try {
-            FileUtil.writeToLocal(kubeConfigPath, certCmName + ".conf", adminConfYaml);
-        } catch (IOException e) {
-            log.error("写出admin.conf文件到路径{}/{}异常", kubeConfigPath, certCmName, e);
+        // 记录文件到数据库
+        QueryWrapper<BeanKubeConfig> wrapper = new QueryWrapper<BeanKubeConfig>().eq("cluster_id", cluster.getId());
+        BeanKubeConfig exist = beanKubeConfigMapper.selectOne(wrapper);
+        if (ObjectUtils.isEmpty(exist)){
+            BeanKubeConfig kubeConfig = new BeanKubeConfig();
+            kubeConfig.setClusterId(cluster.getId());
+            kubeConfig.setConf(adminConfYaml);
+            beanKubeConfigMapper.insert(kubeConfig);
         }
     }
 
@@ -227,6 +235,17 @@ public class ClusterCertServiceImpl implements ClusterCertService {
 
     @Override
     public String getKubeConfigFilePath(String clusterId) {
+        File file = new File(kubeConfigPath + "/" + ClusterCertService.getCertCmName(clusterId) + ".conf");
+        if (!file.exists()) {
+            QueryWrapper<BeanKubeConfig> wrapper = new QueryWrapper<BeanKubeConfig>().eq("cluster_id", clusterId);
+            BeanKubeConfig kubeConfig = beanKubeConfigMapper.selectOne(wrapper);
+            String certCmName = ClusterCertService.getCertCmName(clusterId);
+            try {
+                FileUtil.writeToLocal(kubeConfigPath, certCmName + ".conf", kubeConfig.getConf());
+            } catch (IOException e) {
+                log.error("写出admin.conf文件到路径{}/{}异常", kubeConfigPath, certCmName, e);
+            }
+        }
         return kubeConfigPath + "/" + ClusterCertService.getCertCmName(clusterId) + ".conf";
     }
 

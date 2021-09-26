@@ -130,12 +130,8 @@ public class PodServiceImpl implements PodService {
                 .setNodeName(pod.getSpec().getNodeName())
                 .setCreateTime(pod.getMetadata().getCreationTimestamp())
                 .setRestartCount(0);
-
-        if (StringUtils.isNotBlank(pod.getMetadata().getDeletionTimestamp())) {
-            pi.setStatus("Terminating");
-        } else {
-            pi.setStatus(pod.getStatus().getPhase());
-        }
+        // set pod status
+        pi.setStatus(getPodRealState(pod));
 
         // restart count and time
         for (ContainerStatus containerStatus : pod.getStatus().getContainerStatuses()) {
