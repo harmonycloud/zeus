@@ -31,9 +31,6 @@ import com.harmonycloud.tool.encrypt.RSAUtils;
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    @Value("${system.user.expire:8}")
-    private String time;
-
     @Autowired
     private UserService userService;
 
@@ -55,7 +52,7 @@ public class AuthServiceImpl implements AuthService {
         JSONObject admin = convertUserInfo(userDto);
         long currentTime = System.currentTimeMillis();
         String token = JwtTokenComponent.generateToken("userInfo", admin,
-            new Date(currentTime + Long.parseLong(time) * 3600000L), new Date(currentTime - 300000L));
+            new Date(currentTime + 1800000L), new Date(currentTime - 300000L));
         response.setHeader(SET_TOKEN, token);
         JSONObject res = new JSONObject();
         res.put("userName", userName);

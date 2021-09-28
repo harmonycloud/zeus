@@ -1,12 +1,12 @@
 package com.harmonycloud.zeus.config;
 
 import com.harmonycloud.zeus.filter.AuthFilter;
+import com.harmonycloud.zeus.filter.TokenFilter;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.harmonycloud.caas.filters.filters.CurrentStateFilter;
-import com.harmonycloud.caas.filters.filters.TokenFilter;
 
 /**
  * @author chwetion
