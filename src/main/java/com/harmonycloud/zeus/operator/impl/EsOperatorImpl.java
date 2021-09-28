@@ -131,6 +131,11 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
                     case KIBANA:
                         middleware.getQuota().get(k).setNum(1);
                         // kibana不用存储，无需设置
+                    case COLD:
+                        middleware.getQuota().get(k).setNum(clusterInfo.getIntValue("coldReplacesCount"))
+                                .setStorageClassName(storage.getString("clientClass"))
+                                .setStorageClassQuota(storage.getString("clientSize"));
+                        break;
                     default:
                 }
             });
