@@ -77,4 +77,11 @@ public interface OverviewService {
      * @return
      */
     BaseResult getClusterPlatformOverview(String clusterId);
+
+    /**
+     * 平台总览获取服务信息
+     * @param clusterId
+     * @return
+     */
+    BaseResult getClusterMiddlewareInfo(String clusterId);
 }
