@@ -19,6 +19,15 @@ public interface ClusterMiddlewareInfoService {
     List<BeanClusterMiddlewareInfo> list(String clusterId);
 
     /**
+     * 查询集群关联中间件列表
+     *
+     * @param chartName 名称
+     * @param chartVersion 版本
+     * @return List<BeanClusterMiddlewareInfo>
+     */
+    List<BeanClusterMiddlewareInfo> listByChart(String chartName, String chartVersion);
+
+    /**
      * 查询指定集群关联中间件
      *
      * @param clusterId 集群id

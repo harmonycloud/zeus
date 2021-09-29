@@ -74,6 +74,14 @@ public interface MiddlewareInfoService {
     void insert(HelmChartFile helmChartFile, File file);
 
     /**
+     * 下架中间件指定版本
+     *
+     * @param chartName 名称
+     * @param chartVersion 版本
+     */
+    void delete(String chartName, String chartVersion);
+
+    /**
      * 获取集群控制器状态信息
      * @param clusterList
      * @return

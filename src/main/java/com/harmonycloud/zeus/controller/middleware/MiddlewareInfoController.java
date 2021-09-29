@@ -3,10 +3,7 @@ package com.harmonycloud.zeus.controller.middleware;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.harmonycloud.caas.common.base.BaseResult;
 
@@ -46,6 +43,18 @@ public class MiddlewareInfoController {
     public BaseResult version(@RequestParam(value = "clusterId") String clusterId,
                               @RequestParam(value = "type") String type) {
         return BaseResult.ok(middlewareInfoService.version(clusterId, type));
+    }
+
+    @ApiOperation(value = "中间件下架", notes = "中间件下架")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "chartName", value = "名称", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "chartVersion", value = "版本", paramType = "query", dataTypeClass = String.class)
+    })
+    @DeleteMapping("/delete")
+    public BaseResult delete(@RequestParam(value = "chartName") String chartName,
+                              @RequestParam(value = "chartVersion") String chartVersion) {
+        middlewareInfoService.delete(chartName, chartVersion);
+        return BaseResult.ok();
     }
 
 }

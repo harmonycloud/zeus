@@ -29,6 +29,13 @@ public class ClusterMiddlewareInfoServiceImpl implements ClusterMiddlewareInfoSe
     }
 
     @Override
+    public List<BeanClusterMiddlewareInfo> listByChart(String chartName, String chartVersion) {
+        QueryWrapper<BeanClusterMiddlewareInfo> wrapper =
+            new QueryWrapper<BeanClusterMiddlewareInfo>().eq("chart_name", chartName).eq("chart_version", chartVersion);
+        return beanClusterMiddlewareInfoMapper.selectList(wrapper);
+    }
+
+    @Override
     public BeanClusterMiddlewareInfo get(String clusterId, String type) {
         QueryWrapper<BeanClusterMiddlewareInfo> wrapper =
             new QueryWrapper<BeanClusterMiddlewareInfo>().eq("cluster_id", clusterId).eq("chart_name", type);

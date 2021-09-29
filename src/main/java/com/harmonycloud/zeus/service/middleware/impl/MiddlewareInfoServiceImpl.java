@@ -2,6 +2,8 @@ package com.harmonycloud.zeus.service.middleware.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareInfoDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareOperatorDTO;
@@ -239,6 +241,23 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
             middlewareInfo.setId(beanMiddlewareInfos.get(0).getId());
             middlewareInfoMapper.updateById(middlewareInfo);
         }
+    }
+
+    @Override
+    public void delete(String chartName, String chartVersion) {
+        // 查看此版本是否被某集群安装中
+        List<BeanClusterMiddlewareInfo> clusterMwInfoList =
+            clusterMiddlewareInfoService.listByChart(chartName, chartVersion);
+        if (clusterMwInfoList.stream().anyMatch(clusterMwInfo -> !clusterMwInfo.getStatus().equals(2))) {
+            throw new BusinessException(ErrorMessage.MIDDLEWARE_STILL_BE_USED);
+        }
+        // 删除中间件信息
+        QueryWrapper<BeanMiddlewareInfo> wrapper =
+            new QueryWrapper<BeanMiddlewareInfo>().eq("chart_name", chartName).eq("chart_version", chartVersion);
+        middlewareInfoMapper.delete(wrapper);
+        // 删除集群绑定信息
+        clusterMwInfoList.forEach(clusterMwInfo -> clusterMiddlewareInfoService.delete(clusterMwInfo.getClusterId(),
+            clusterMwInfo.getChartName(), clusterMwInfo.getChartVersion()));
     }
 
     /**

@@ -59,7 +59,7 @@ public class AuthServiceImpl implements AuthService {
         res.put("token", token);
         //校验密码日期
         if (userDto.getPasswordTime() != null) {
-            long passwordTime = DateUtils.getIntervalDays(new Date(), userDto.getPasswordTime()) / 3600 / 24;
+            long passwordTime = DateUtils.getIntervalDays(new Date(), userDto.getPasswordTime()) / 3600 / 24 / 1000;
             if (passwordTime > 165) {
                 res.put("rePassword", passwordTime);
             }

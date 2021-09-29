@@ -54,7 +54,7 @@ public class MiddlewareManagerController {
         return BaseResult.ok();
     }
 
-    @ApiOperation(value = "中间件下架", notes = "中间件下架")
+    @ApiOperation(value = "中间件卸载", notes = "中间件卸载")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "chartName", value = "chart名称", paramType = "query", dataTypeClass = String.class),
