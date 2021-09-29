@@ -118,7 +118,6 @@ public class ClusterServiceImpl implements ClusterService {
     @Override
     public List<MiddlewareClusterDTO> listClusters(boolean detail) {
         List<MiddlewareClusterDTO> clusters;
-        //if (CLUSTER_MAP.size() <= 0) {
             List<MiddlewareCluster> clusterList = clusterWrapper.listClusters();
             if (clusterList.size() <= 0) {
                 return new ArrayList<>(0);
@@ -136,17 +135,9 @@ public class ClusterServiceImpl implements ClusterService {
                 JSONObject attributes = new JSONObject();
                 attributes.put(CREATE_TIME, DateUtils.parseUTCDate(c.getMetadata().getCreationTimestamp()));
                 cluster.setAttributes(attributes);
-
-                //putIntoClusterMap(cluster);
-                // 返回深拷贝对象
+                
                 return SerializationUtils.clone(cluster);
             }).collect(Collectors.toList());
-        /*} else {
-            // 深拷贝返回列表，避免影响内存
-            clusters = new ArrayList<>();
-            CLUSTER_MAP.values().forEach(dto -> clusters.add(SerializationUtils.clone(dto)));
-        }*/
-
         // 返回命名空间信息
         if (detail && clusters.size() > 0) {
             clusters.parallelStream().forEach(cluster -> {
@@ -165,7 +156,6 @@ public class ClusterServiceImpl implements ClusterService {
                 }
             });
         }
-
         return clusters;
     }
 
@@ -183,8 +173,6 @@ public class ClusterServiceImpl implements ClusterService {
             return;
         }
         nodeService.setClusterVersion(cluster);
-        // 重新深拷贝个对象放入，避免参数传入的cluster被修改而导致map里的某些值为空
-        //putIntoClusterMap(SerializationUtils.clone(cluster));
     }
 
 
@@ -217,9 +205,8 @@ public class ClusterServiceImpl implements ClusterService {
         if (cluster == null || StringUtils.isAnyEmpty(cluster.getName(), cluster.getProtocol(), cluster.getHost())) {
             throw new IllegalArgumentException("cluster base info is null");
         }
-        checkParams(cluster);
-
         // 校验集群基本信息
+        checkParams(cluster);
         // 校验集群是否已存在
         checkClusterExistent(cluster, false);
         cluster.setId(K8sClient.getClusterId(cluster));
@@ -250,7 +237,6 @@ public class ClusterServiceImpl implements ClusterService {
         } catch (Exception e) {
             log.error("集群{}，保存证书异常", cluster.getId(), e);
         }
-
         // 安装middleware-controller
         try {
             List<HelmListInfo> helmInfos = helmChartService.listHelm("", "", cluster);
@@ -272,15 +258,13 @@ public class ClusterServiceImpl implements ClusterService {
             throw new BusinessException(DictEnum.CLUSTER, cluster.getNickname(), ErrorMessage.ADD_FAIL);
         }
 
-        // 初始化集群索引模板
-        try {
+        //todo 初始化集群索引模板
+        /*try {
             esService.initEsIndexTemplate();
             log.info("集群:{}索引模板初始化完成", cluster.getName());
         } catch (Exception e) {
             log.error("集群:{}索引模板初始化失败", cluster.getName(), e);
-        }
-        // 放入map
-        //putIntoClusterMap(cluster);
+        }*/
         // 创建mysql/es/redis/mq operator 并添加进数据库
         createOperator(cluster.getId());
         // 安装组件
@@ -334,8 +318,6 @@ public class ClusterServiceImpl implements ClusterService {
             log.error("集群{}的accessToken更新失败", cluster.getId());
             throw new BusinessException(DictEnum.CLUSTER, cluster.getNickname(), ErrorMessage.UPDATE_FAIL);
         }
-        // 放入map
-        //putIntoClusterMap(cluster);
     }
 
     private void checkParams(MiddlewareClusterDTO cluster) {
@@ -352,8 +334,6 @@ public class ClusterServiceImpl implements ClusterService {
                 .setPassword("Hc@Cloud01").setType("harbor").setChartRepo("middleware");
             cluster.setRegistry(registry);
         }
-        
-
         // 设置默认参数
         // 如果没有数据中心，默认用default命名空间
         if (StringUtils.isBlank(cluster.getDcId())) {
@@ -422,7 +402,6 @@ public class ClusterServiceImpl implements ClusterService {
             throw new BusinessException(DictEnum.CLUSTER, cluster.getNickname(), ErrorMessage.DELETE_FAIL);
         }
         // 从map中移除
-        //removeFromClusterMap(clusterId);
         k8SDefaultClusterService.delete(clusterId);
     }
 
@@ -580,9 +559,11 @@ public class ClusterServiceImpl implements ClusterService {
         //安装日志组件
         try {
             namespaceService.save(cluster.getId(), "logging");
-            if (cluster.getLogging() == null || cluster.getLogging().getElasticSearch() == null){
+            if (cluster.getLogging() == null || cluster.getLogging().getElasticSearch() == null
+                || cluster.getLogging().getElasticSearch().getHost() == null) {
                 MiddlewareClusterLoggingInfo es = new MiddlewareClusterLoggingInfo();
                 elasticsearch(repository, cluster);
+                logging(repository, cluster);
                 es.setHost(cluster.getHost());
                 es.setUser("elastic");
                 es.setPassword("Hc@Cloud01");
