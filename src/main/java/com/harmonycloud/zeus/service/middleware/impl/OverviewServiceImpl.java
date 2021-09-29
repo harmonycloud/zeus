@@ -37,6 +37,7 @@ import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.middleware.OverviewService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.service.system.OperationAuditService;
+import com.harmonycloud.zeus.util.AlertDataUtil;
 import com.harmonycloud.zeus.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
@@ -696,10 +697,6 @@ public class OverviewServiceImpl implements OverviewService {
         clusterQuota.setNamespaceNum(registeredNamespaceList.size());
         platformOverviewDTO.setClusterQuota(clusterQuota);
 
-        //获取各中间件服务数量信息
-        List<MiddlewareBriefInfoDTO> middlewareBriefInfoList = middlewareService.getMiddlewareBriefInfoList(clusterList);
-        platformOverviewDTO.setBriefInfoList(middlewareBriefInfoList);
-
         //获取控制器状态信息
         MiddlewareOperatorDTO operatorInfo = middlewareInfoService.getOperatorInfo(clusterList);
         platformOverviewDTO.setOperatorDTO(operatorInfo);
@@ -709,21 +706,36 @@ public class OverviewServiceImpl implements OverviewService {
         Date ago = DateUtil.addHour(now, -24);
         String beginTime = DateUtils.DateToString(ago, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
         String endTime = DateUtils.DateToString(now, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
+        List<String> hourList = DateUtil.calcHour(now);
         List<Map<String, Object>> criticalList = beanAlertRecordMapper.queryByTimeAndLevel(beginTime, endTime, "critical");
         List<Map<String, Object>> infoList = beanAlertRecordMapper.queryByTimeAndLevel(beginTime, endTime, "info");
         List<Map<String, Object>> warningList = beanAlertRecordMapper.queryByTimeAndLevel(beginTime, endTime, "warning");
+
         AlertSummaryDTO alertSummaryDTO = new AlertSummaryDTO();
-        alertSummaryDTO.setCriticalList(criticalList);
-        alertSummaryDTO.setInfoList(infoList);
-        alertSummaryDTO.setWarningList(warningList);
-        alertSummaryDTO.setCriticalSum(criticalList.size());
-        alertSummaryDTO.setInfoSum(infoList.size());
-        alertSummaryDTO.setWarningSum(warningList.size());
+        alertSummaryDTO.setCriticalList(AlertDataUtil.checkAndFillZero(criticalList, hourList));
+        alertSummaryDTO.setInfoList(AlertDataUtil.checkAndFillZero(infoList, hourList));
+        alertSummaryDTO.setWarningList(AlertDataUtil.checkAndFillZero(warningList, hourList));
+        alertSummaryDTO.setCriticalSum(AlertDataUtil.countAlertNum(criticalList));
+        alertSummaryDTO.setInfoSum(AlertDataUtil.countAlertNum(infoList));
+        alertSummaryDTO.setWarningSum(AlertDataUtil.countAlertNum(warningList));
         platformOverviewDTO.setAlertSummary(alertSummaryDTO);
 
         //获取审计信息
         List<BeanOperationAudit> auditList = operationAuditService.listRecent(20);
         platformOverviewDTO.setAuditList(auditList);
+        return BaseResult.ok(platformOverviewDTO);
+    }
+
+    @Override
+    public BaseResult getClusterMiddlewareInfo(String clusterId) {
+        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(true);
+        if (StringUtils.isNotBlank(clusterId)) {
+            clusterList = clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
+        }
+        PlatformOverviewDTO platformOverviewDTO = new PlatformOverviewDTO();
+        //获取各中间件服务数量信息
+        List<MiddlewareBriefInfoDTO> middlewareBriefInfoList = middlewareService.getMiddlewareBriefInfoList(clusterList);
+        platformOverviewDTO.setBriefInfoList(middlewareBriefInfoList);
         return BaseResult.ok(platformOverviewDTO);
     }
 

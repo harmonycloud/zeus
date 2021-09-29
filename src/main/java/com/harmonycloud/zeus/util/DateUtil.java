@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.util;
 
 import com.harmonycloud.caas.common.constants.DateStyle;
 import com.harmonycloud.caas.common.enums.DateType;
+import com.harmonycloud.tool.date.DateUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,9 +10,11 @@ import org.slf4j.LoggerFactory;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_NINE;
 import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_TEN;
@@ -1198,6 +1201,21 @@ public class DateUtil {
     public static String localDateTimeToString(LocalDateTime time, String format) {
         DateTimeFormatter dtf2 = DateTimeFormatter.ofPattern(format);
         return dtf2.format(time);
+    }
+
+    /**
+     * 获取近24小时的所有小时
+     * @param current
+     * @return
+     */
+    public static List<String> calcHour(Date current) {
+        List<String> hours = new ArrayList<>();
+        for (int i = 0; i < 24; i++) {
+            Date ago = DateUtil.addHour(current, -(24-i));
+            String agoStr = DateUtils.DateToString(ago, "yyyy-MM-dd HH:00:00");
+            hours.add(agoStr);
+        }
+        return hours;
     }
 
 }

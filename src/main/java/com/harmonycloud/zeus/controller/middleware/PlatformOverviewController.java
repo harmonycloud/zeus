@@ -42,6 +42,15 @@ public class PlatformOverviewController {
         return overviewService.getClusterPlatformOverview(clusterId);
     }
 
+    @ApiOperation(value = "平台总览-获取服务信息", notes = "服务信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", required = false, dataTypeClass = String.class)
+    })
+    @GetMapping("/middlewareInfo")
+    public BaseResult getMiddlewareInfo(@RequestParam(value = "clusterId", required = false) String clusterId) {
+        return overviewService.getClusterMiddlewareInfo(clusterId);
+    }
+
     @ApiOperation(value = "查询告警记录", notes = "查询告警记录")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", required = false, dataTypeClass = String.class),
