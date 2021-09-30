@@ -1,0 +1,31 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: esclusters.es.middleware.hc.cn
+  labels:
+    MiddlewareCluster: escluster
+spec:
+  conversion:
+    strategy: None
+  group: es.middleware.hc.cn
+  names:
+    kind: ESCluster
+    listKind: ESClusterList
+    plural: esclusters
+    shortNames:
+    - esc
+    singular: escluster
+  preserveUnknownFields: true
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            masterReplaces:
+              minimum: -1
+              type: integer
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true

@@ -1,0 +1,21 @@
+image:
+  repository: middleware.harmonycloud.cn:38080/middleware
+  pullPolicy: IfNotPresent
+  tag: v1.5.9
+replicaCount: 1
+tolerations: []
+nameOverride: ''
+podSecurityContext: {}
+imagePullSecrets: []
+fullnameOverride: ''
+resources:
+  limits:
+    cpu: 200m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+securityContext: {}
+podAnnotations: {}
+nodeSelector: {}
+affinity: {}

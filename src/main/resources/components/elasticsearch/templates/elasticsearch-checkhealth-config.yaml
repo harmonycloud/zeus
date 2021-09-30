@@ -1,0 +1,15 @@
+apiVersion: v1
+data:
+  checkHealth.sh: |
+    #!/usr/bin/env bash
+    statusCode=`curl -I -o /dev/null -s -w %{http_code}  -u elastic:{{ .Values.elasticPassword | quote}}  ${PODIP}:9200`
+    if [[ ${statusCode} == 503 || ${statusCode} == 200 || ${statusCode} == 401 ]];then
+        exit 0
+    else
+        exit 1
+    fi
+kind: ConfigMap
+metadata:
+  labels:
+    clusterName: {{ include "elasticsearch.fullname" . }}
+  name: {{ include "elasticsearch.fullname" . }}-checkhealth-config

@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: log-pilot
+  labels:
+    k8s-app: log-pilot
+    node-pool: ignore
+spec:
+  selector:
+    matchLabels:
+      k8s-app: log-pilot
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        k8s-app: log-pilot
+        node-pool: ignore
+    spec:
+      tolerations:
+      - operator: Exists
+      containers:
+      - name: log-pilot
+        image: "{{ .Values.image.logpilotRepository }}:{{ .Values.image.logpilotImageTag }}"
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        env:
+        - name: "LOGGING_OUTPUT"
+          value: "logstash"
+        - name: "LOGSTASH_HOST"
+          value: "logstash"
+        - name: "LOGSTASH_PORT"
+          value: "5044"
+        - name: LOGSTASH_BULK_MAX_SIZE
+          value: "3500"
+        - name: "LOGSTASH_LOADBALANCE"
+          value: "true"
+        - name: "NODE_NAME"
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: PILOT_LOG_PREFIX
+          value: aliyun
+        volumeMounts:
+        - name: sock
+          mountPath: /var/run/docker.sock
+        - name: logs
+          mountPath: /var/log/filebeat
+        - name: state
+          mountPath: /var/lib/filebeat
+        - name: root
+          mountPath: /host
+          readOnly: true
+        - name: localtime
+          mountPath: /etc/localtime
+        - name: filebeat-config
+          mountPath: /pilot/config.filebeat
+          subPath: config.filebeat
+        - mountPath: /pilot/filebeat.tpl
+          name: filebeat-tpl
+          subPath: filebeat.tpl
+        securityContext:
+          capabilities:
+            add:
+            - SYS_ADMIN
+      terminationGracePeriodSeconds: 30
+      hostNetwork: false
+      volumes:
+      - name: sock
+        hostPath:
+          path: /var/run/docker.sock
+      - name: logs
+        hostPath:
+          path: /var/log/filebeat
+      - name: state
+        hostPath:
+          path: /var/lib/filebeat
+      - name: root
+        hostPath:
+          path: /
+      - name: localtime
+        hostPath:
+          path: /etc/localtime
+      - name: filebeat-config
+        configMap:
+          defaultMode: 511
+          name: filebeat-config
+      - configMap:
+          defaultMode: 511
+          name: filebeat-tpl
+        name: filebeat-tpl
+

@@ -1,0 +1,26 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  generation: 1
+  labels:
+    app: {{ include "elasticsearch.fullname" . }}-exporter
+  name: {{ include "elasticsearch.fullname" . }}-exporter
+spec:
+  endpoints:
+  - interval: 30s
+    port: ui
+    scheme: http
+    relabelings:
+      - replacement: elasticsearch
+        targetLabel: middleware
+      - sourceLabels: [service]
+        replacement: {{ include "elasticsearch.fullname" . }}
+        targetLabel: service
+    metricRelabelings:
+      - sourceLabels: [name]
+        regex: "(.+)"
+        targetLabel: "pod"
+        replacement: "$1"
+  selector:
+    matchLabels:
+      app: {{ include "elasticsearch.fullname" . }}-exporter
