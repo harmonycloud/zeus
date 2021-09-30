@@ -732,7 +732,7 @@ public class ClusterServiceImpl implements ClusterService {
         } catch (Exception e){
             log.error("集群查询memory使用量失败");
         }
-        cluster.getStorage().put("resource", resource);
+        cluster.getResourceMap().put("resource", resource);
     }
 
     public List<Namespace> getRegisteredNamespaceNum(MiddlewareClusterDTO clusterDTO) {
@@ -766,12 +766,12 @@ public class ClusterServiceImpl implements ClusterService {
     }
 
     public ClusterQuotaDTO getClusterQuota(MiddlewareClusterDTO clusterDTO) {
-        Map<String, Object> storage = clusterDTO.getStorage();
+        Map<String, Object> resourceMap = clusterDTO.getResourceMap();
         ClusterQuotaDTO clusterQuota = new ClusterQuotaDTO();
-        if (storage == null || storage.get("resource") == null) {
+        if (resourceMap == null || resourceMap.get("resource") == null) {
             return clusterQuota;
         }
-        HashMap<String, String> resource = (HashMap) storage.get("resource");
+        HashMap<String, String> resource = (HashMap) resourceMap.get("resource");
         clusterQuota.setTotalCpu(Double.parseDouble(resource.get("cpuTotal")));
         clusterQuota.setUsedCpu(Double.parseDouble(resource.get("cpuUsing")));
         clusterQuota.setTotalMemory(Double.parseDouble(resource.get("memoryTotal")));
