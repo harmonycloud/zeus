@@ -1,0 +1,192 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: logstash
+data:
+  logstash.conf: |
+    input {
+      beats {
+        port => 5044
+      }
+    }
+    filter {
+      # 删除部分字段
+      mutate {
+        remove_field => ["tags","beat","@version","prospector","input","host","topic"]
+      }
+      # for nginx log
+      if [index] == "nginxlog" {
+        dissect {
+          mapping => { "message" => "%{time_local} || %{remote_addr} || %{upstream_addr} || %{status} || %{request_time} || %{upstream_status} || %{upstream_response_time} || %{upstream_cache_status} || %{body_bytes_sent} || %{http_referer} || %{remote_user} || %{http_user_agent} || %{cookie_cmos_vision} || %{http_x_forwarded_for} || %{request}"}
+          remove_field => ["message","k8s_container_name","k8s_node_name","k8s_pod_namespace","offset","k8s_pod","docker_container"]
+        }
+      }
+      # for es log
+      else if [index] == "esrunlog" {
+        dissect {
+          mapping => { "source" => "/%{}/%{}/%{}/%{k8s_pod_namespace}/%{k8s_resource_name}/%{k8s_pod}/%{}/%{}"}
+        }
+      }
+      else if [index] == "esslowlog" {
+        dissect {
+          mapping => { "message" => "[%{logTime}][%{level}][%{logType}] [%{nodeName}] [%{indexName}][%{shardId}] took[%{took}]%{}search_type[%{searchType}]%{}source[%{src}]"}
+          mapping => { "source" => "/%{}/%{}/%{}/%{namespace}/%{clusterName}/%{}"}
+          remove_field => ["message","offset"]
+        }
+      }
+      else if [index] == "mysqlslow" {
+        json {
+          source => "message"
+        }
+        grok {
+          match => [ "message", "^#\s+User@Host:\s+%{USER:user}\[[^\]]+\]\s+@\s+(?:(?<clienthost>\S*) )?\[(?:%{IP:clientip})?\]\s+Id:\s+%{NUMBER:id}\n# Query_time: %{NUMBER:query_time}\s+Lock_time: %{NUMBER:lock_time}\s+Rows_sent: %{NUMBER:rows_sent}\s+Rows_examined: %{NUMBER:rows_examined}\nSET\s+timestamp=%{NUMBER:timestamp_mysql};\n(?<query>[\s\S]*)" ]
+        }
+        #grok {
+        #  match => [ "message", "\s+FROM\s(?<db>\w+)" ]
+        #}
+        date {
+          match => ["timestamp_mysql","UNIX"]
+          target => "@timestamp"
+        }
+        mutate {
+          remove_field => "@version"
+          remove_field => "message"
+        }
+      }
+    }
+    # to-es
+    output {
+      if [index] == "nginxlog" {
+        elasticsearch {
+          hosts => ["middleware-elasticsearch-master:9200"]
+          index => "nginxlog-%{+YYYY.MM.dd}"
+          user => "elastic"
+          password => "Hc@Cloud01"
+        }
+      }
+      else if [index] == "esrunlog"{
+        elasticsearch {
+          hosts => ["middleware-elasticsearch-master:9200"]
+          index => "esrunlog-%{+YYYY.MM.dd}"
+          user => "elastic"
+          password => "Hc@Cloud01"
+        }
+      }
+      else if [index] == "esslowlog"{
+        elasticsearch {
+          hosts => ["middleware-elasticsearch-master:9200"]
+          index => "esslowlog-%{+YYYY.MM.dd}"
+          user => "elastic"
+          password => "Hc@Cloud01"
+        }
+      }
+      else if [index] == "stdout"{
+        elasticsearch {
+          hosts => ["middleware-elasticsearch-master:9200"]
+          index => "stdout-%{+YYYY.MM.dd}"
+          user => "elastic"
+          password => "Hc@Cloud01"
+        }
+      }
+      else if [index] == "mysqlslow"{
+        elasticsearch {
+          hosts => ["middleware-elasticsearch-master:9200"]
+          index => "mysqlslowlog-%{+YYYY.MM.dd}"
+          user => "elastic"
+          password => "Hc@Cloud01"
+        }
+      }
+      else {
+        elasticsearch {
+          hosts => ["middleware-elasticsearch-master:9200"]
+          index => "logstash-%{+YYYY.MM.dd}"
+          user => "elastic"
+          password => "Hc@Cloud01"
+        }
+      }
+    }
+  logstash.yml: |
+    pipeline.workers: 2
+    pipeline.output.workers: 2
+    pipeline.batch.size: 3500
+    pipeline.batch.delay: 50
+    http.host: 0.0.0.0
+  jvm.options: |
+    ## JVM configuration
+
+    # Xms represents the initial size of total heap space
+    # Xmx represents the maximum size of total heap space
+
+    -Xms1g
+    -Xmx1g
+
+    ################################################################
+    ## Expert settings
+    ################################################################
+    ##
+    ## All settings below this section are considered
+    ## expert settings. Don't tamper with them unless
+    ## you understand what you are doing
+    ##
+    ################################################################
+
+    ## GC configuration
+    -XX:+UseConcMarkSweepGC
+    -XX:CMSInitiatingOccupancyFraction=75
+    -XX:+UseCMSInitiatingOccupancyOnly
+
+    ## Locale
+    # Set the locale language
+    #-Duser.language=en
+
+    # Set the locale country
+    #-Duser.country=US
+
+    # Set the locale variant, if any
+    #-Duser.variant=
+
+    ## basic
+
+    # set the I/O temp directory
+    #-Djava.io.tmpdir=$HOME
+
+    # set to headless, just in case
+    -Djava.awt.headless=true
+
+    # ensure UTF-8 encoding by default (e.g. filenames)
+    -Dfile.encoding=UTF-8
+
+    # use our provided JNA always versus the system one
+    #-Djna.nosys=true
+
+    # Turn on JRuby invokedynamic
+    -Djruby.compile.invokedynamic=true
+    # Force Compilation
+    -Djruby.jit.threshold=0
+    # Make sure joni regexp interruptability is enabled
+    -Djruby.regexp.interruptible=true
+
+    ## heap dumps
+
+    # generate a heap dump when an allocation from the Java heap fails
+    # heap dumps are created in the working directory of the JVM
+    -XX:+HeapDumpOnOutOfMemoryError
+
+    # specify an alternative path for heap dumps
+    # ensure the directory exists and has sufficient space
+    #-XX:HeapDumpPath=${LOGSTASH_HOME}/heapdump.hprof
+
+    ## GC logging
+    #-XX:+PrintGCDetails
+    #-XX:+PrintGCTimeStamps
+    #-XX:+PrintGCDateStamps
+    #-XX:+PrintClassHistogram
+    #-XX:+PrintTenuringDistribution
+    #-XX:+PrintGCApplicationStoppedTime
+
+    # log GC status to a file with time stamps
+    # ensure the directory exists
+    #-Xloggc:${LS_GC_LOG_FILE}
+
+    # Entropy source for randomness
+    -Djava.security.egd=file:/dev/urandom

@@ -1,0 +1,17 @@
+apiVersion: v1
+data:
+  kibana.yml: |-
+    server.name: kibana
+    server.host: "0"
+    server.port: "5200"
+    elasticsearch.url: http://elasticsearch:9200
+    elasticsearch.username: elastic
+    elasticsearch.password: {{ .Values.elasticPassword | quote}}
+    server.defaultRoute: /app/monitoring
+    xpack.monitoring.ui.container.elasticsearch.enabled: false
+kind: ConfigMap
+metadata:
+  labels:
+    clusterName: {{ include "elasticsearch.fullname" . }}
+  name: {{ include "elasticsearch.fullname" . }}-kibana-config
+

@@ -1,0 +1,89 @@
+apiVersion: es.middleware.hc.cn/v1alpha1
+kind: ESCluster
+metadata:
+  annotations:
+    OperationType: Create
+    developerPass: es
+  name: {{ include "elasticsearch.fullname" . }}
+spec:
+  checkHealthConfigMap: {{ include "elasticsearch.fullname" . }}-checkhealth-config
+  clusterMode: {{ .Values.cluster.mode }}
+  elasticBusyImage: {{ .Values.image.repository }}/busybox:{{ .Values.image.busyImageTag }}
+  elasticKibanaConfigMap: {{ include "elasticsearch.fullname" . }}-kibana-config
+  elasticSearchConfigMap: {{ include "elasticsearch.fullname" . }}-es-config
+  esExporterPort: 19114
+  esHttpPort: 9200
+  esKibanaPort: 5200
+  esTcpPort: 9300
+  elasticPass: {{ .Values.elasticPassword | quote}}
+  {{- if .Values.kibanaPassword }}
+  kibanaPass: {{ .Values.kibanaPassword }}
+  {{- end}}
+  {{- with .Values.nodeSelector }}
+  nodeSelector:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  kibanaImage: {{ .Values.image.repository }}/kibana:{{ .Values.image.kibanaImageTag }}
+  masterReplaces: {{ .Values.cluster.masterReplacesCount }}
+  dataReplaces: {{ .Values.cluster.dataReplacesCount }}
+  clientReplaces: {{ .Values.cluster.clientReplacesCount }}
+  totalReplaces: {{ add .Values.cluster.masterReplacesCount .Values.cluster.dataReplacesCount .Values.cluster.clientReplacesCount  }}
+  pod:
+  - env:
+    - name: TZ
+      value: Asia/Shanghai
+  {{- if .Values.logging.collection.stdout.enabled}}
+    - name: aliyun_logs_middlewarestdout
+      value: stdout
+    - name: aliyun_logs_middlewarestdout_tags
+      value: middleware_name={{ include "elasticsearch.fullname" . }}
+  {{- end}}
+  {{- if .Values.logging.collection.filelog.enabled}}
+    - name: aliyun_logs_middlewarelogstash
+      value: /data/elastic/{{ include "elasticsearch.fullname" . }}/**/log/*.log
+    - name: aliyun_logs_middlewarelogstash_tags
+      value: middleware_name={{ include "elasticsearch.fullname" . }}
+  {{- end}}
+    initImage: {{ .Values.image.repository }}/es-init:{{ .Values.image.initImageTag }}
+    podAntiAffinityTopologKey: {{ .Values.podAntiAffinityTopologKey }}
+    podAntiAffinity: {{ .Values.podAntiAffinity }}
+    affinity:
+    {{- with .Values.nodeAffinity }}
+      nodeAffinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.storage }}
+    storage:
+    {{- toYaml .| nindent 6 }}
+    {{- end }}
+    {{- with .Values.esJavaOpts }}
+    jvm:
+    {{- toYaml .| nindent 6 }}
+    {{- end }}
+    middlewareImage: {{ .Values.image.repository }}/elastic:{{ .Values.image.elasticImageTag }}
+    monitorImage: {{ .Values.image.repository }}/es-exporter:{{ .Values.image.exporterImageTag }}
+    hostNetwork: {{ default false .Values.hostNetwork }}
+    resources:
+      {{- toYaml .Values.resources | nindent 6 }}
+    updateStrategy: {}
+  projectId: a9927d1581674f27
+  repository: {{ .Values.image.repository }}
+  type: {{ .Values.cluster.mode }}
+  updateStrategy: {}
+  version: 6.8.10
+  volumeClaimTemplates:
+  - metadata:
+      creationTimestamp: null
+      name: es-data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      dataSource: null
+      resources:
+        requests:
+          storage: {{ .Values.storageSize }}
+      {{- if .Values.storageClassName }}
+      storageClassName: {{ .Values.storageClassName }}
+      {{- end}}
+    status: {}
+  volumes: {}

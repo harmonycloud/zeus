@@ -1,0 +1,81 @@
+elasticPassword: "123456"
+storageSize: 1G
+storageClassName: local-path
+hostNetwork: false
+
+image:
+  repository: 10.1.11.100/middleware
+  busyImageTag: latest
+  kibanaImageTag: 6.8.10
+  initImageTag: 1.4.0
+  elasticImageTag: 6.8.10-5
+  exporterImageTag: 1.1.0rc1
+
+testImage:
+  repository:  harmonyware.harbor.cn/middleware/operator-test-framework
+  pullPolicy: IfNotPresent
+  tag: v0.3
+
+
+cluster:
+#  mode: simple
+#  masterReplacesCount: 3
+
+#  mode: regular
+#  masterReplacesCount: 3
+#  dataReplacesCount: 3
+
+  mode: complex
+  masterReplacesCount: 3
+  dataReplacesCount: 3
+  clientReplacesCount: 1
+
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Java 堆大小建议设置Pod 内存limit 的50%
+esJavaOpts:
+  masterXmx: 2g
+  dataXmx: 2g
+  clientXmx: 1g
+
+#storage:
+#  masterSize: 2Gi
+#  clientSize: 1Gi
+#  dataSize: 3Gi
+#  masterClass: default
+#  clientClass: default
+#  dataClass: default
+
+resources:
+  client:
+    limits:
+      cpu: "1"
+      memory: 4Gi
+    requests:
+      cpu: "0.1"
+      memory: 0.4Gi
+  data:
+    limits:
+      cpu: "1"
+      memory: 4Gi
+    requests:
+      cpu: "0.1"
+      memory: 0.4Gi
+  kibana:
+    limits:
+      cpu: "500m"
+      memory: 1Gi
+    requests:
+      cpu: "500m"
+      memory: 1Gi
+  master:
+    limits:
+      cpu: "1"
+      memory: 5Gi
+    requests:
+      cpu: "0.1"
+      memory: 0.4Gi
+
+
