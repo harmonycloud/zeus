@@ -124,7 +124,7 @@ public class RoleServiceImpl implements RoleService {
             roleDto.setMenu(resourceMenuService.list(rmRoleMap.get(beanRole.getId()).stream()
                 .map(BeanResourceMenuRole::getResourceMenuId).collect(Collectors.toList())).stream()
                 .peek(resourceMenuDto -> {
-                    if (resourceMenuDto.getParentId() == 0) {
+                    if (resourceMenuDto.getId() == 5 || resourceMenuDto.getId() == 6 || resourceMenuDto.getId() == 7) {
                         resourceMenuDto.setOwn(false);
                     }
                 }).collect(Collectors.toList()));
