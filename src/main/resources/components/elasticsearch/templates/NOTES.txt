@@ -1,0 +1,6 @@
+Please wait for several minutes for Elasticsearch cluster to complete.
+Then you should be able to visit the Elasticsearch at {{ include "elasticsearch.fullname" . }}-elasticsearch-master.{{ .Release.Namespace }}:9200,
+visit the kibana at {{ include "elasticsearch.fullname" . }}-kibana.{{ .Release.Namespace }}:5200.
+
+user:elastic
+password:{{ .Values.elasticPassword }}

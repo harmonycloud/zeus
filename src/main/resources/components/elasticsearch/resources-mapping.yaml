@@ -1,0 +1,48 @@
+replicas-resources:
+- replica-key: cluster.masterReplacesCount
+  resources:
+    cpu:
+      requests:
+      - resources.master.requests.cpu
+      limits:
+      - resources.master.limits.cpu
+    memory:
+      requests:
+      - resources.master.requests.memory
+      limits:
+      - resources.master.limits.memory
+- replica-key: cluster.dataReplacesCount
+  resources:
+    cpu:
+      requests:
+      - resources.data.requests.cpu
+      limits:
+      - resources.data.limits.cpu
+    memory:
+      requests:
+      - resources.data.requests.memory
+      limits:
+      - resources.data.limits.memory
+- replica-key: cluster.clientReplacesCount
+  resources:
+    cpu:
+      requests:
+      - resources.client.requests.cpu
+      limits:
+      - resources.client.limits.cpu
+    memory:
+      requests:
+      - resources.client.requests.memory
+      limits:
+      - resources.client.limits.memory
+- resources:
+    cpu:
+      requests:
+      - resources.kibana.requests.cpu
+      limits:
+      - resources.kibana.limits.cpu
+    memory:
+      requests:
+      - resources.kibana.requests.memory
+      limits:
+      - resources.kibana.limits.memory

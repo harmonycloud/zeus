@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logstash
+spec:
+  selector:
+    matchLabels:
+      k8s-app: logstash
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        k8s-app: logstash
+    spec:
+      containers:
+      - image: "{{ .Values.image.logstashRepository }}:{{ .Values.image.logstashImageTag }}"
+        name: logstash
+        ports:
+        - containerPort: 5044
+          name: beats
+        - containerPort: 9600
+          name: metrics
+        volumeMounts:
+        - name: config-volume
+          mountPath: /usr/share/logstash/pipeline/logstash.conf
+          subPath: logstash.conf
+        - name: config-volume
+          mountPath: /usr/share/logstash/config/logstash.yml
+          subPath: logstash.yml
+        - name: config-volume
+          mountPath: /usr/share/logstash/config/jvm.options
+          subPath: jvm.options
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 2048Mi
+#        securityContext:
+#          runAsUser: 0
+      volumes:
+      - name: config-volume
+        configMap:
+          name: logstash
+          items:
+          - key: logstash.conf
+            path: logstash.conf
+          - key: logstash.yml
+            path: logstash.yml
+          - key: jvm.options
+            path: jvm.options

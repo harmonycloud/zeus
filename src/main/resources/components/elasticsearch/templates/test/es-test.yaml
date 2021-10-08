@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "elasticsearch.fullname" . }}-test
+  annotations:
+    "helm.sh/hook": test-success
+  labels:
+    helm-test: elasticsearch
+spec:
+  containers:
+    - image: {{ .Values.image.repository}}/operator-test-framework:{{.Values.image.testImageTag}}
+      name: {{ include "elasticsearch.fullname" . }}-test
+      # args: ["-p","name={{ include "elasticsearch.fullname" . }}","-v","2"]
+      args: ["-p","name={{ include "elasticsearch.fullname" . }}"]
+      imagePullPolicy: {{.Values.image.pullPolicy}}
+      volumeMounts:
+        - name: config-volume
+          mountPath: /conf
+  volumes:
+    - name: config-volume
+      configMap:
+        name: {{ include "elasticsearch.fullname" . }}-test-config
+  serviceAccount: {{ include "elasticsearch.fullname" . }}-charts-tests-elasticsearch
+  serviceAccountName: {{ include "elasticsearch.fullname" . }}-charts-tests-elasticsearch
+  restartPolicy: Never
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "elasticsearch.fullname" . }}-charts-tests-elasticsearch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Release.Namespace }}-{{ include "elasticsearch.fullname" . }}-charts-tests-elasticsearch
+rules:
+  - apiGroups:
+      - "*"
+    resources:
+      - pods
+      - esclusters
+    verbs:
+      - get
+      - list
+      - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Release.Namespace }}-{{ include "elasticsearch.fullname" . }}-charts-tests-elasticsearch
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Release.Namespace }}-{{ include "elasticsearch.fullname" . }}-charts-tests-elasticsearch
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "elasticsearch.fullname" . }}-charts-tests-elasticsearch
+    namespace: {{ .Release.Namespace }}

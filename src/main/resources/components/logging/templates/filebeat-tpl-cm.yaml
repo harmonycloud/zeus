@@ -1,0 +1,52 @@
+apiVersion: v1
+data:
+  filebeat.tpl: |
+    {{`{{range $k, $v := .configList}}`}}
+    - type: log
+      enabled: true
+      paths:
+    {{`{{range $key, $value := $v.HostDir}}`}}
+          - {{`{{ $value }}`}}/{{`{{ $v.File }}`}}
+    {{`{{end}}`}}
+      scan_frequency: 10s
+      fields_under_root: true
+      {{`{{if .Stdout}}`}}
+      docker-json: true
+      {{`{{end}}`}}
+      {{`{{if eq .Format "json"}}`}}
+      json.keys_under_root: true
+      {{`{{end}}`}}
+      {{`{{if eq .Format "mysql_slow_log"}}`}}
+      exclude_lines: ['^\# Time']
+      multiline.negate: true
+      multiline.match: after
+      multiline.pattern: '^\# Time|^\# User'
+      {{`{{end}}`}}
+      fields:
+          {{`{{range $key, $value := .Tags}}`}}
+          {{`{{ $key }}`}}: {{`{{ $value }}`}}
+          {{`{{end}}`}}
+          {{`{{range $key, $value := $.container}}`}}
+          {{`{{ $key }}`}}: {{`{{ $value }}`}}
+          {{`{{end}}`}}
+      tail_files: false
+      {{`{{range $key, $value := .Tags}}`}}
+      {{`{{if eq $key "encoding"}}`}}
+      {{`{{if or (eq $value "utf-8") (eq $value "gbk") (eq $value "gb18030") (eq $value "gb2312")}}`}}
+      encoding: {{`{{ $value }}`}}
+      {{`{{end}}`}}
+      {{`{{end}}`}}
+      {{`{{end}}`}}
+      close_inactive: 1m
+      close_timeout: 3h
+      clean_inactive: 72h
+      ignore_older: 70h
+      close_eof: false
+      close_removed: true
+      clean_removed: true
+      close_renamed: false
+
+    {{`{{end}}`}}
+kind: ConfigMap
+metadata:
+  name: filebeat-tpl
