@@ -11,6 +11,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -44,6 +45,8 @@ public class MiddlewareClusterInfo {
     private JSONObject attributes;
     @ApiModelProperty("日志信息")
     private MiddlewareClusterLogging logging;
+    @ApiModelProperty("资源集合")
+    private Map<String, Object> resourceMap = new HashMap<>();
 
 
     public String getMasterUrl() {
