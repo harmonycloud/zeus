@@ -16,6 +16,11 @@ public class MiddlewareBackupScheduleSpec {
     private String name;
 
     /**
+     * 中间件类型
+     */
+    private String type;
+
+    /**
      * pod名称（选填）
      */
     private String pod;
@@ -31,31 +36,48 @@ public class MiddlewareBackupScheduleSpec {
     private String backendStorage;
 
     /**
-     * cron表达式
-     */
-    private String cron;
-
-    /**
-     * 备份保留个数
-     */
-    private Integer limitRecord;
-
-    /**
-     * 开始时间
-     */
-    private String startTime;
-
-    /**
      * 是否开启备份
      */
     private String pause;
 
+    /**
+     * 定时备份设置
+     */
+    private Schedule schedule;
+
     public MiddlewareBackupScheduleSpec() {
     }
 
-    public MiddlewareBackupScheduleSpec(String name, String cron, Integer limitRecord) {
+    public MiddlewareBackupScheduleSpec(String name, String type,String cron, Integer limitRecord) {
         this.name = name;
+        this.type = type;
         if (StringUtils.isNotBlank(cron)) {
+            this.schedule = new Schedule(cron, limitRecord);
+        }
+    }
+
+    @Data
+    public static class Schedule {
+
+        /**
+         * cron表达式
+         */
+        private String cron;
+
+        /**
+         * 备份保留个数
+         */
+        private Integer limitRecord;
+
+        /**
+         * 开始时间
+         */
+        private String startTime;
+
+        public Schedule() {
+        }
+
+        public Schedule(String cron, Integer limitRecord) {
             this.cron = cron;
             this.limitRecord = limitRecord;
         }

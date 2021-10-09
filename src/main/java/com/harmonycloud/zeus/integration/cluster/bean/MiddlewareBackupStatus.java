@@ -12,7 +12,7 @@ import java.util.List;
 @Accessors(chain = true)
 public class MiddlewareBackupStatus {
 
-    private String backupTime;
+    private String creationTimestamp;
 
     private List<BackupInfo> backupInfos;
 
@@ -20,6 +20,7 @@ public class MiddlewareBackupStatus {
 
     private String message;
 
+    private StorageProvider storageProvider;
     /**
      * 备份记录
      */
@@ -30,6 +31,22 @@ public class MiddlewareBackupStatus {
         private String volumeSnapshot;
 
         public BackupInfo() {
+        }
+    }
+
+    @Data
+    public static class StorageProvider{
+
+        private Minio minio;
+
+        @Data
+        public static class Minio{
+            private String bucket;
+
+            private String url;
+
+            public Minio() {
+            }
         }
     }
 }

@@ -26,27 +26,12 @@ public class MiddlewareBackupSpec {
     private String pod;
 
     /**
-     * 中间件备份记录存储信息
+     * 中间件类型
      */
-    private StorageProvider storageProvider;
+    private String type;
 
     public MiddlewareBackupSpec() {
     }
 
-    @Data
-    public static class StorageProvider{
-
-        private Minio minio;
-
-        @Data
-        public static class Minio{
-            private String bucketName;
-
-            private String endpoint;
-
-            public Minio() {
-            }
-        }
-    }
 }
 
