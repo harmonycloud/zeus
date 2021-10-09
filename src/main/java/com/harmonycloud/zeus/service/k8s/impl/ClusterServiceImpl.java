@@ -257,18 +257,19 @@ public class ClusterServiceImpl implements ClusterService {
             log.error("集群id：{}，添加集群异常", cluster.getId());
             throw new BusinessException(DictEnum.CLUSTER, cluster.getNickname(), ErrorMessage.ADD_FAIL);
         }
-
-        //todo 初始化集群索引模板
-        /*try {
-            esService.initEsIndexTemplate();
-            log.info("集群:{}索引模板初始化完成", cluster.getName());
-        } catch (Exception e) {
-            log.error("集群:{}索引模板初始化失败", cluster.getName(), e);
-        }*/
         // 创建mysql/es/redis/mq operator 并添加进数据库
         createOperator(cluster.getId());
         // 安装组件
         createComponents(cluster);
+        //初始化集群索引模板
+        ThreadPoolExecutorFactory.executor.execute(() -> {
+            try {
+                esService.initEsIndexTemplate();
+                log.info("集群:{}索引模板初始化完成", cluster.getName());
+            } catch (Exception e) {
+                log.error("集群:{}索引模板初始化失败", cluster.getName(), e);
+            }
+        });
     }
 
     @Override
@@ -388,7 +389,9 @@ public class ClusterServiceImpl implements ClusterService {
     @Override
     public void removeCluster(String clusterId) {
         List<MiddlewareCRD> middlewareCRDList = middlewareCRDService.listCR(clusterId, null, null);
-        if (!CollectionUtils.isEmpty(middlewareCRDList)){
+        if (!CollectionUtils.isEmpty(middlewareCRDList) && middlewareCRDList.stream().anyMatch(
+            middlewareCRD -> !"escluster-middleware-elasticsearch".equals(middlewareCRD.getMetadata().getName())
+                && !"mysqlcluster-zeus-mysql".equals(middlewareCRD.getMetadata().getName()))) {
             throw new BusinessException(ErrorMessage.CLUSTER_NOT_EMPTY);
         }
         MiddlewareClusterDTO cluster = get(clusterId);
@@ -685,7 +688,11 @@ public class ClusterServiceImpl implements ClusterService {
                 ",elasticPassword=Hc@Cloud01" +
                 ",storage.masterClass=local-path" +
                 ",logging.collection.filelog.enable=false" +
-                ",logging.collection.stdout.enable=false";
+                ",logging.collection.stdout.enable=false" +
+                ",resource.master.limits.cpu=0.5" +
+                ",resource.master.limits.memory=1" +
+                ",resource.master.request.cpu=0.5" +
+                ",resource.master.request.memory=1";
         helmChartService.upgradeInstall("middleware-elasticsearch", "logging", setValues,
                 componentsPath + File.separator + "elasticsearch", cluster);
     }
