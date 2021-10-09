@@ -177,12 +177,9 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                         String lastUpdateTime = podStatus.getLastUpdateTime();
                         mysqlDTO.setLastUpdateTime(DateUtil.utc2Local(lastUpdateTime, DateType.YYYY_MM_DD_HH_MM_SS.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue()));
                     }
-                }else{
-                    mysqlDTO.setOpenDisasterRecoveryMode(false);
                 }
             }
         }
-
         return middleware;
     }
 
