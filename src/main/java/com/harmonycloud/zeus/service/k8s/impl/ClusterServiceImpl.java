@@ -704,7 +704,7 @@ public class ClusterServiceImpl implements ClusterService {
         try {
             query.put("query", "sum(harmonycloud_node_cpu_total)");
             PrometheusResponse cpuTotal = prometheusWrapper.get(cluster.getId(), PROMETHEUS_API_VERSION, query);
-            resource.put("cpuTotal", cpuTotal.getData().getResult().get(0).getValue().get(1));
+            cluster.getClusterQuotaDTO().setTotalCpu(Double.parseDouble(cpuTotal.getData().getResult().get(0).getValue().get(1)));
         } catch (Exception e){
             log.error("集群查询cpu总量失败");
         }
@@ -712,7 +712,7 @@ public class ClusterServiceImpl implements ClusterService {
         try {
             query.put("query", "sum(harmonycloud_node_cpu_using)");
             PrometheusResponse cpuUsing = prometheusWrapper.get(cluster.getId(), PROMETHEUS_API_VERSION, query);
-            resource.put("cpuUsing", cpuUsing.getData().getResult().get(0).getValue().get(1));
+            cluster.getClusterQuotaDTO().setUsedCpu(Double.parseDouble(cpuUsing.getData().getResult().get(0).getValue().get(1)));
         } catch (Exception e){
             log.error("集群查询cpu使用量失败");
         }
@@ -720,7 +720,7 @@ public class ClusterServiceImpl implements ClusterService {
         try {
             query.put("query", "sum(harmonycloud_node_memory_total)");
             PrometheusResponse memoryTotal = prometheusWrapper.get(cluster.getId(), PROMETHEUS_API_VERSION, query);
-            resource.put("memoryTotal", memoryTotal.getData().getResult().get(0).getValue().get(1));
+            cluster.getClusterQuotaDTO().setTotalMemory(Double.parseDouble(memoryTotal.getData().getResult().get(0).getValue().get(1)));
         } catch (Exception e){
             log.error("集群查询memory总量失败");
         }
@@ -728,11 +728,10 @@ public class ClusterServiceImpl implements ClusterService {
         try {
             query.put("query", "sum(harmonycloud_node_memory_using)");
             PrometheusResponse memoryUsing = prometheusWrapper.get(cluster.getId(), PROMETHEUS_API_VERSION, query);
-            resource.put("memoryUsing", memoryUsing.getData().getResult().get(0).getValue().get(1));
+            cluster.getClusterQuotaDTO().setUsedMemory(Double.parseDouble(memoryUsing.getData().getResult().get(0).getValue().get(1)));
         } catch (Exception e){
             log.error("集群查询memory使用量失败");
         }
-        cluster.getResourceMap().put("resource", resource);
     }
 
     public List<Namespace> getRegisteredNamespaceNum(MiddlewareClusterDTO clusterDTO) {
@@ -766,16 +765,6 @@ public class ClusterServiceImpl implements ClusterService {
     }
 
     public ClusterQuotaDTO getClusterQuota(MiddlewareClusterDTO clusterDTO) {
-        Map<String, Object> resourceMap = clusterDTO.getResourceMap();
-        ClusterQuotaDTO clusterQuota = new ClusterQuotaDTO();
-        if (resourceMap == null || resourceMap.get("resource") == null) {
-            return clusterQuota;
-        }
-        HashMap<String, String> resource = (HashMap) resourceMap.get("resource");
-        clusterQuota.setTotalCpu(Double.parseDouble(resource.get("cpuTotal")));
-        clusterQuota.setUsedCpu(Double.parseDouble(resource.get("cpuUsing")));
-        clusterQuota.setTotalMemory(Double.parseDouble(resource.get("memoryTotal")));
-        clusterQuota.setUsedMemory(Double.parseDouble(resource.get("memoryUsing")));
-        return clusterQuota;
+        return clusterDTO.getClusterQuotaDTO();
     }
 }
