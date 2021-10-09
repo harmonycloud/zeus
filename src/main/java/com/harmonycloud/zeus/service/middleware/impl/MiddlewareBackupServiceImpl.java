@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
 import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.DateType;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.model.MiddlewareBackupScheduleConfig;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
@@ -17,6 +17,7 @@ import com.harmonycloud.zeus.service.k8s.MiddlewareRestoreCRDService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.util.CronUtils;
+import com.harmonycloud.zeus.util.DateUtil;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -68,11 +69,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 MiddlewareBackupStatus backupStatus = item.getStatus();
                 if (backupStatus != null) {
                     List<MiddlewareBackupStatus.BackupInfo> backupInfos = backupStatus.getBackupInfos();
-                    MiddlewareBackupSpec.StorageProvider.Minio minio = item.getSpec().getStorageProvider().getMinio();
-                    String backupAddressPrefix = minio.getEndpoint() + "/" + minio.getBucketName() + "/";
+                    MiddlewareBackupStatus.StorageProvider.Minio minio = item.getStatus().getStorageProvider().getMinio();
+                    String backupAddressPrefix = minio.getUrl() + "/" + minio.getBucket() + "/";
                     MiddlewareBackupRecord backupRecord = new MiddlewareBackupRecord();
                     backupRecord.setBackupName(backupName);
-                    backupRecord.setBackupTime(backupStatus.getBackupTime());
+                    String backupTime = DateUtil.utc2Local(backupStatus.getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
+                    backupRecord.setBackupTime(backupTime);
                     List<String> backupAddressList = new ArrayList<>();
                     backupAddressList.add(backupAddressPrefix);
                     backupRecord.setBackupAddressList(backupAddressList);
@@ -86,10 +88,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public BaseResult create(String clusterId, String namespace, String middlewareName, String type, String cron, Integer limitRecord) {
         String middlewareRealName = getRealMiddlewareName(type, middlewareName);
+        String middlewareCrdType = MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType();
         if (StringUtils.isBlank(cron)) {
-            return createNormalBackup(clusterId, namespace, middlewareRealName);
+            return createNormalBackup(clusterId, namespace, middlewareName, middlewareCrdType, middlewareRealName);
         } else {
-            return createScheduleBackup(clusterId, namespace, middlewareRealName, cron, limitRecord);
+            return createScheduleBackup(clusterId, namespace, middlewareName, middlewareCrdType, middlewareRealName, cron, limitRecord);
         }
     }
 
@@ -99,8 +102,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         MiddlewareBackupScheduleCRD middlewareBackupScheduleCRD = backupScheduleCRDService.get(clusterId, namespace, backupName);
         try {
             MiddlewareBackupScheduleSpec spec = middlewareBackupScheduleCRD.getSpec();
-            spec.setCron(cron);
-            spec.setLimitRecord(limitRecord);
+            spec.getSchedule().setCron(cron);
+            spec.getSchedule().setLimitRecord(limitRecord);
             spec.setPause(pause);
             backupScheduleCRDService.update(clusterId, middlewareBackupScheduleCRD);
             return BaseResult.ok();
@@ -133,23 +136,24 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
         MiddlewareBackupScheduleSpec spec = middlewareBackupScheduleCRD.getSpec();
         if (spec != null) {
-            config = new MiddlewareBackupScheduleConfig(spec.getCron(), spec.getLimitRecord(), CronUtils.calculateNextDate(spec.getCron()), spec.getPause(), true);
+            config = new MiddlewareBackupScheduleConfig(spec.getSchedule().getCron(),
+                    spec.getSchedule().getLimitRecord(), CronUtils.calculateNextDate(spec.getSchedule().getCron()), spec.getPause(), true);
             return BaseResult.ok(config);
         }
         return BaseResult.ok();
     }
 
 
-    public BaseResult createScheduleBackup(String clusterId, String namespace, String middlewareRealName, String cron, Integer limitRecord) {
+    public BaseResult createScheduleBackup(String clusterId, String namespace, String middlewareName, String crdType, String middlewareRealName, String cron, Integer limitRecord) {
         MiddlewareBackupScheduleCRD middlewareBackupScheduleCRD = new MiddlewareBackupScheduleCRD();
         middlewareBackupScheduleCRD.setKind("MiddlewareBackupSchedule");
         String backupName = middlewareRealName + "-backup";
         middlewareBackupScheduleCRD.setMetadata(getMiddlewareLabels(namespace, backupName, middlewareRealName));
 
-        MiddlewareBackupScheduleSpec middlewareBackupScheduleSpec = new MiddlewareBackupScheduleSpec(middlewareRealName, cron, limitRecord);
-        middlewareBackupScheduleSpec.setName(middlewareRealName);
+        MiddlewareBackupScheduleSpec middlewareBackupScheduleSpec = new MiddlewareBackupScheduleSpec(middlewareName, crdType, cron, limitRecord);
+        middlewareBackupScheduleSpec.setName(middlewareName);
+        middlewareBackupScheduleSpec.setType(crdType);
         middlewareBackupScheduleCRD.setSpec(middlewareBackupScheduleSpec);
-
         try {
             backupScheduleCRDService.create(clusterId, middlewareBackupScheduleCRD);
             return BaseResult.ok();
@@ -159,14 +163,15 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
     }
 
-    public BaseResult createNormalBackup(String clusterId, String namespace, String middlewareRealName) {
+    public BaseResult createNormalBackup(String clusterId, String namespace, String middlewareName, String crdType, String middlewareRealName) {
         MiddlewareBackupCRD middlewareBackupCRD = new MiddlewareBackupCRD();
         middlewareBackupCRD.setKind("MiddlewareBackup");
         String backupName = middlewareRealName + "-" + UUIDUtils.get8UUID();
         middlewareBackupCRD.setMetadata(getMiddlewareLabels(namespace, backupName, middlewareRealName));
 
         MiddlewareBackupSpec spec = new MiddlewareBackupSpec();
-        spec.setName(middlewareRealName);
+        spec.setName(middlewareName);
+        spec.setType(crdType);
         middlewareBackupCRD.setSpec(spec);
 
         try {
