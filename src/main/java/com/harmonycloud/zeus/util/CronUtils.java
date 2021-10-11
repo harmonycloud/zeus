@@ -22,6 +22,9 @@ public class CronUtils {
     public static String calculateNextDate(String cron) {
         try {
             String[] crons = cron.split(" ");
+            if (crons[4].startsWith(",")) {
+                crons[4] = crons[4].substring(1);
+            }
             String[] cronWeek = crons[4].split(",");
             List<Date> dateList = new ArrayList<>();
             for (String dayOfWeek : cronWeek) {
@@ -48,7 +51,7 @@ public class CronUtils {
             }
             return DateUtils.dateToString(DateUtils.addInteger(dateList.get(0), Calendar.DATE, 7), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
         } catch (Exception e) {
-            log.error("定时备份{} ,计算下次备份时间失败");
+            log.error("定时备份{} ,计算下次备份时间失败", e);
             return null;
         }
     }
