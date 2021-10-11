@@ -168,6 +168,7 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException(ErrorMessage.USER_NOT_EXIT);
         }
         beanUser.setPassword(PasswordUtils.md5("Ab123456!"));
+        beanUser.setPasswordTime(new Date());
         beanUserMapper.updateById(beanUser);
         return true;
     }
@@ -198,6 +199,7 @@ public class UserServiceImpl implements UserService {
         }
         // 更新密码
         beanUser.setPassword(PasswordUtils.md5(deNewPassword));
+        beanUser.setPasswordTime(new Date());
         beanUserMapper.updateById(beanUser);
     }
 
