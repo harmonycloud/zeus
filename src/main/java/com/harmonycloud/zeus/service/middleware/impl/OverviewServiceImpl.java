@@ -320,7 +320,7 @@ public class OverviewServiceImpl implements OverviewService {
         if (StringUtils.isNotEmpty(clusterId) && StringUtils.isNotEmpty(namespace)) {
             wrapper.eq("cluster_id", clusterId).eq("namespace", namespace);
         } else {
-            wrapper.isNotNull("cluster_id").isNotNull("namespace");
+            wrapper.isNotNull("cluster_id").isNotNull("namespace").ne("cluster_id", "");
         }
         if (StringUtils.isNotEmpty(level)) {
             wrapper.eq("level", level);

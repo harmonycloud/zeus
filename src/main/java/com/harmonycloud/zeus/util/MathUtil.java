@@ -15,6 +15,9 @@ public class MathUtil {
      * @return
      */
     public static String calcPercent(double used, double total) {
+        if (used == 0 || total == 0) {
+            return "";
+        }
         double res = (used / total) * 100;
         DecimalFormat df = new DecimalFormat("######0");
         String percent = df.format(res) + "%";
