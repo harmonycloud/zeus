@@ -9,6 +9,7 @@ import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * <p>
@@ -116,13 +117,13 @@ public class BeanOperationAudit implements Serializable {
      * 请求开始时间
      */
     @TableField("begin_time")
-    private LocalDateTime beginTime;
+    private Date beginTime;
 
     /**
      * 请求响应时间
      */
     @TableField("action_time")
-    private LocalDateTime actionTime;
+    private Date actionTime;
 
     /**
      * 执行时长(ms)

@@ -13,6 +13,11 @@ data:
           max-request-size: 10GB
       resources:
         static-locations: file:/usr/local/zeus-pv,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/
+      jackson:
+          time-zone: GMT+8
+          date-format: yyyy-MM-dd HH:mm:ss
+          serialization:
+            write-dates-as-timestamps: false
     mybatis-plus:
       mapper-locations: classpath:mapping/*.xml
 
