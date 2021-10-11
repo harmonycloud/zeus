@@ -114,7 +114,7 @@ public class OverviewServiceImpl implements OverviewService {
         Map<String, List<Middleware>> middlewareMap =
             middlewares.stream().collect(Collectors.groupingBy(Middleware::getType));
         //获取imagePath
-        List<BeanMiddlewareInfo> mwInfoList =  middlewareInfoService.list();
+        List<BeanMiddlewareInfo> mwInfoList =  middlewareInfoService.list(true);
 
         List<MiddlewareStatusDto> middlewareStatusDtoList = new ArrayList<>();
         middlewareMap.forEach((key, value) -> {
@@ -489,7 +489,7 @@ public class OverviewServiceImpl implements OverviewService {
                 chartVersionGroup.put(key, chartVersionMap);
             }
             //获取imagePath
-            List<BeanMiddlewareInfo> mwInfoList = middlewareInfoService.list();
+            List<BeanMiddlewareInfo> mwInfoList = middlewareInfoService.list(true);
             Map<String, String> imagePathMap = mwInfoList.stream().collect(Collectors.toMap(
                     mwInfo -> mwInfo.getChartName() + LINE + mwInfo.getChartVersion(), BeanMiddlewareInfo::getImagePath));
 

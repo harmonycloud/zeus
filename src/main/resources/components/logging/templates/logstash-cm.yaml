@@ -96,6 +96,24 @@ data:
           password => "Hc@Cloud01"
         }
       }
+      else if [index] == "middlewarestdout"{
+        elasticsearch {
+          hosts => ["middleware-elasticsearch-master:9200"]
+          index => "middlewarestdout-%{+YYYY.MM.dd}"
+          user => "elastic"
+          password => "Hc@Cloud01"
+          document_type =>"_doc"
+        }
+      }
+      else if [index] == "middlewarelogstash"{
+        elasticsearch {
+          hosts => ["middleware-elasticsearch-master:9200"]
+          index => "middlewarelogstash-%{+YYYY.MM.dd}"
+          user => "elastic"
+          password => "Hc@Cloud01"
+          document_type =>"_doc"
+        }
+      }
       else {
         elasticsearch {
           hosts => ["middleware-elasticsearch-master:9200"]

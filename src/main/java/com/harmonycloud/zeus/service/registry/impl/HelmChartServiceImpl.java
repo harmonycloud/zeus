@@ -84,7 +84,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     public HelmChartFile getHelmChart(String clusterId, String namespace, String name, String type) {
         Middleware middleware = middlewareService.detail(clusterId, namespace, name, type);
         if (StringUtils.isEmpty(middleware.getChartVersion())){
-            BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoService.list().stream()
+            BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoService.list(true).stream()
                 .filter(info -> info.getChartName().equals(type)).collect(Collectors.toList()).get(0);
             return getHelmChartFromMysql(type, beanMiddlewareInfo.getChartVersion());
         }

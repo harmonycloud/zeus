@@ -196,7 +196,7 @@ public abstract class AbstractBaseOperator {
 
 
     public MonitorDto monitor(Middleware middleware) {
-        List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.list();
+        List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.list(true);
         BeanMiddlewareInfo mwInfo = middlewareInfoList.stream()
             .collect(Collectors.toMap(
                 beanMiddlewareInfo -> beanMiddlewareInfo.getChartName() + ":" + beanMiddlewareInfo.getChartVersion(),

@@ -51,7 +51,6 @@ public class ClusterMiddlewareInfoServiceImpl implements ClusterMiddlewareInfoSe
     public void update(BeanClusterMiddlewareInfo beanClusterMiddlewareInfo) {
         QueryWrapper<BeanClusterMiddlewareInfo> wrapper =
             new QueryWrapper<BeanClusterMiddlewareInfo>().eq("chart_name", beanClusterMiddlewareInfo.getChartName())
-                .eq("chart_version", beanClusterMiddlewareInfo.getChartVersion())
                 .eq("cluster_id", beanClusterMiddlewareInfo.getClusterId());
         beanClusterMiddlewareInfoMapper.update(beanClusterMiddlewareInfo, wrapper);
     }

@@ -60,8 +60,6 @@ public class ClusterServiceImpl implements ClusterService {
      * 默认存储限额
      */
     private static final String DEFAULT_STORAGE_LIMIT = "100Gi";
-    @Value("${system.upload.path:/usr/local/zeus-pv/upload}")
-    private String uploadPath;
 
     @Autowired
     private ClusterWrapper clusterWrapper;
@@ -87,6 +85,8 @@ public class ClusterServiceImpl implements ClusterService {
     private PrometheusWrapper prometheusWrapper;
     @Autowired
     private MiddlewareCRDService middlewareCRDService;
+    @Autowired
+    private IngressService ingressService;
 
     @Value("${k8s.component.logging.es.user:elastic}")
     private String esUser;
@@ -571,10 +571,25 @@ public class ClusterServiceImpl implements ClusterService {
                 es.setUser("elastic");
                 es.setPassword("Hc@Cloud01");
                 es.setProtocol("http");
-                es.setPort("9200");
+                es.setPort("30092");
                 MiddlewareClusterLogging logging = new MiddlewareClusterLogging();
                 logging.setElasticSearch(es);
                 cluster.setLogging(logging);
+
+                //为es创建nodePort
+                IngressDTO ingressDTO = new IngressDTO();
+                ingressDTO.setExposeType("NodePort");
+                ingressDTO.setMiddlewareType("elasticsearch");
+                ingressDTO.setProtocol("TCP");
+                List<ServiceDTO> serviceList = new ArrayList<>();
+                ServiceDTO serviceDTO = new ServiceDTO();
+                serviceDTO.setExposePort("30092");
+                serviceDTO.setServiceName("middleware-elasticsearch-master");
+                serviceDTO.setServicePort("9200");
+                serviceDTO.setTargetPort("9200");
+                serviceList.add(serviceDTO);
+                ingressDTO.setServiceList(serviceList);
+                ingressService.create(cluster.getId(), "logging", "middleware-elasticsearch", ingressDTO);
             }
             else if(cluster.getLogging().getElasticSearch().getLogCollect()){
                 logging(repository, cluster);
@@ -689,10 +704,10 @@ public class ClusterServiceImpl implements ClusterService {
                 ",storage.masterClass=local-path" +
                 ",logging.collection.filelog.enable=false" +
                 ",logging.collection.stdout.enable=false" +
-                ",resource.master.limits.cpu=0.5" +
-                ",resource.master.limits.memory=1" +
-                ",resource.master.request.cpu=0.5" +
-                ",resource.master.request.memory=1";
+                ",resources.master.limits.cpu=0.5" +
+                ",resources.master.limits.memory=1" +
+                ",resources.master.request.cpu=0.5" +
+                ",resources.master.request.memory=1";
         helmChartService.upgradeInstall("middleware-elasticsearch", "logging", setValues,
                 componentsPath + File.separator + "elasticsearch", cluster);
     }

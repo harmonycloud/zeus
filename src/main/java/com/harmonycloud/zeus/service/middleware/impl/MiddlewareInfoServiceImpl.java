@@ -64,17 +64,23 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     private PodService podService;
 
     @Override
-    public List<BeanMiddlewareInfo> list() {
+    public List<BeanMiddlewareInfo> list(Boolean all) {
         QueryWrapper<BeanMiddlewareInfo> wrapper = new QueryWrapper<>();
         List<BeanMiddlewareInfo> list = middlewareInfoMapper.selectList(wrapper);
-        Map<String, List<BeanMiddlewareInfo>> map =
-                list.stream().collect(Collectors.groupingBy(BeanMiddlewareInfo::getChartName));
-        List<BeanMiddlewareInfo> mwInfo = new ArrayList<>();
-        for (String key : map.keySet()){
-            map.get(key).sort(Comparator.comparing(BeanMiddlewareInfo::getChartVersion).reversed());
-            mwInfo.add(map.get(key).get(0));
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>();
         }
-        return mwInfo;
+        if (!all) {
+            Map<String, List<BeanMiddlewareInfo>> map =
+                list.stream().collect(Collectors.groupingBy(BeanMiddlewareInfo::getChartName));
+            List<BeanMiddlewareInfo> mwInfoList = new ArrayList<>();
+            for (String key : map.keySet()) {
+                map.get(key).sort(Comparator.comparing(BeanMiddlewareInfo::getChartVersion).reversed());
+                mwInfoList.add(map.get(key).get(0));
+            }
+            return mwInfoList;
+        }
+        return list;
     }
 
     @Override
@@ -148,8 +154,10 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         mwInfoList.forEach(mwInfo -> {
             String key = mwInfo.getChartName() + "-" + mwInfo.getChartVersion();
             if (podMap.containsKey(mwInfo.getOperatorName())) {
-                List<PodInfo> podInfoList = podMap.get(mwInfo.getOperatorName());
-                if (podInfoList.size() == 1 && "Running".equals(podMap.get(mwInfo.getOperatorName()).get(0).getStatus())) {
+                //过滤被驱逐的pod
+                List<PodInfo> podInfoList = podMap.get(mwInfo.getOperatorName()).stream()
+                    .filter(podInfo -> !"Evicted".equals(podInfo.getStatus())).collect(Collectors.toList());
+                if (podInfoList.stream().allMatch(podInfo -> "Running".equals(podInfo.getStatus()))) {
                     clusterMwInfoMap.get(key).setStatus(1);
                 } else if (clusterMwInfoMap.get(key).getStatus() != 0) {
                     clusterMwInfoMap.get(key).setStatus(3);

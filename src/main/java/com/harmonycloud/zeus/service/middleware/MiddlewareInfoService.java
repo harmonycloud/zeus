@@ -20,7 +20,7 @@ public interface MiddlewareInfoService {
      *
      * @return List<BeanMiddlewareInfo>
      */
-    List<BeanMiddlewareInfo> list();
+    List<BeanMiddlewareInfo> list(Boolean all);
 
     /**
      * 查询中间件列表

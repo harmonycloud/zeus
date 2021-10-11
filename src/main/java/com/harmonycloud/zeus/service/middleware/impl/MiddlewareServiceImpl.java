@@ -239,7 +239,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     
     public List<String> getNameList(String clusterId, String namespace, String type) {
         // 获取中间件chartName + chartVersion
-        List<BeanMiddlewareInfo> mwInfoList = middlewareInfoService.list();
+        List<BeanMiddlewareInfo> mwInfoList = middlewareInfoService.list(true);
         mwInfoList =
             mwInfoList.stream().filter(mwInfo -> mwInfo.getChartName().equals(type)).collect(Collectors.toList());
         List<String> chartList = mwInfoList.stream()
@@ -317,7 +317,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     public List<MiddlewareBriefInfoDTO> getMiddlewareBriefInfoList(List<MiddlewareClusterDTO> clusterDTOList) {
-        List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.list();
+        List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.list(false);
         List<MiddlewareBriefInfoDTO> middlewareBriefInfoDTOList = new ArrayList<>();
 
         middlewareInfoList.forEach(middlewareInfo -> {
