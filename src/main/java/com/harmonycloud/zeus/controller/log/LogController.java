@@ -52,7 +52,7 @@ public class LogController {
             logger.info(logQueryDto.isPodLog() ? "查询pod标准输出,logQuery:{}" : "查询文件日志内容,logQuery:{}",
                     JSONObject.toJSONString(logQueryDto));
             LogQuery logQuery = logService.transLogQuery(logQueryDto);
-            return BaseResult.ok(logQuery);
+            return BaseResult.ok(logService.getLogContents(logQuery));
         } catch (Exception e) {
             logger.error("根据日志路径获取container日志失败：logQueryDto:{}",
                     logQueryDto.toString(), e);
@@ -99,7 +99,7 @@ public class LogController {
             logQueryDto.setMiddlewareName(middlewareName);
             logger.info("获取pod的日志文件列表,logQuery:{}", JSONObject.toJSONString(logQueryDto));
             LogQuery logQuery = logService.transLogQuery(logQueryDto);
-            return BaseResult.ok(logQuery);
+            return BaseResult.ok(logService.listfileName(logQuery));
         } catch (Exception e) {
             logger.error("获取pod的日志文件列表失败：middlewareName:{}", middlewareName, e);
             return BaseResult.error();
