@@ -707,38 +707,44 @@ public class ClusterServiceImpl implements ClusterService {
     public void clusterResource(MiddlewareClusterDTO cluster){
         Map<String, String> query = new HashMap<>();
         Map<String, String> resource = new HashMap<>();
+        ClusterQuotaDTO clusterQuotaDTO = new ClusterQuotaDTO();
         //获取cpu总量
         try {
             query.put("query", "sum(harmonycloud_node_cpu_total)");
             PrometheusResponse cpuTotal = prometheusWrapper.get(cluster.getId(), PROMETHEUS_API_VERSION, query);
-            cluster.getClusterQuotaDTO().setTotalCpu(Double.parseDouble(cpuTotal.getData().getResult().get(0).getValue().get(1)));
+            clusterQuotaDTO.setTotalCpu(Double.parseDouble(cpuTotal.getData().getResult().get(0).getValue().get(1)));
         } catch (Exception e){
+            clusterQuotaDTO.setTotalCpu(0);
             log.error("集群查询cpu总量失败");
         }
         //获取cpu使用量
         try {
             query.put("query", "sum(harmonycloud_node_cpu_using)");
             PrometheusResponse cpuUsing = prometheusWrapper.get(cluster.getId(), PROMETHEUS_API_VERSION, query);
-            cluster.getClusterQuotaDTO().setUsedCpu(Double.parseDouble(cpuUsing.getData().getResult().get(0).getValue().get(1)));
+            clusterQuotaDTO.setUsedCpu(Double.parseDouble(cpuUsing.getData().getResult().get(0).getValue().get(1)));
         } catch (Exception e){
+            clusterQuotaDTO.setUsedCpu(0);
             log.error("集群查询cpu使用量失败");
         }
         //获取memory总量
         try {
             query.put("query", "sum(harmonycloud_node_memory_total)");
             PrometheusResponse memoryTotal = prometheusWrapper.get(cluster.getId(), PROMETHEUS_API_VERSION, query);
-            cluster.getClusterQuotaDTO().setTotalMemory(Double.parseDouble(memoryTotal.getData().getResult().get(0).getValue().get(1)));
+            clusterQuotaDTO.setTotalMemory(Double.parseDouble(memoryTotal.getData().getResult().get(0).getValue().get(1)));
         } catch (Exception e){
+            clusterQuotaDTO.setTotalMemory(0);
             log.error("集群查询memory总量失败");
         }
         //获取memory使用量
         try {
             query.put("query", "sum(harmonycloud_node_memory_using)");
             PrometheusResponse memoryUsing = prometheusWrapper.get(cluster.getId(), PROMETHEUS_API_VERSION, query);
-            cluster.getClusterQuotaDTO().setUsedMemory(Double.parseDouble(memoryUsing.getData().getResult().get(0).getValue().get(1)));
+            clusterQuotaDTO.setUsedMemory(Double.parseDouble(memoryUsing.getData().getResult().get(0).getValue().get(1)));
         } catch (Exception e){
+            clusterQuotaDTO.setUsedMemory(0);
             log.error("集群查询memory使用量失败");
         }
+        cluster.setClusterQuotaDTO(clusterQuotaDTO);
     }
 
     public List<Namespace> getRegisteredNamespaceNum(MiddlewareClusterDTO clusterDTO) {
