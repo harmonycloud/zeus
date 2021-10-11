@@ -311,7 +311,7 @@ public class LogServiceImpl implements LogService {
         BoolQueryBuilder queryBuilder = getQueryBuilder(logQuery);
 
         if (StringUtils.isNotBlank(logQuery.getPod())) {
-            queryBuilder.must(QueryBuilders.termQuery("k8s_pod", logQuery.getPod()));
+            queryBuilder.must(QueryBuilders.matchPhraseQuery("k8s_pod", logQuery.getPod()));
         }
         SearchSourceBuilder builder = new SearchSourceBuilder();
 
@@ -485,10 +485,10 @@ public class LogServiceImpl implements LogService {
         QueryBuilder timeFilter = QueryBuilders.rangeQuery("@timestamp").from(logQuery.getLogDateStart())
                 .to(logQuery.getLogDateEnd());
         BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery().filter(timeFilter)
-                .filter(QueryBuilders.termQuery("k8s_pod_namespace", logQuery.getNamespace()));
-        queryBuilder.filter(QueryBuilders.termQuery("middleware_name", logQuery.getMiddlewareName()));
+                .filter(QueryBuilders.matchPhraseQuery("k8s_pod_namespace", logQuery.getNamespace()));
+        queryBuilder.filter(QueryBuilders.matchPhraseQuery("middleware_name", logQuery.getMiddlewareName()));
         if (StringUtils.isNotBlank(logQuery.getContainer())) {
-            queryBuilder.filter(QueryBuilders.termQuery("k8s_container_name", logQuery.getContainer()));
+            queryBuilder.filter(QueryBuilders.matchPhraseQuery("k8s_container_name", logQuery.getContainer()));
         }
         if (StringUtils.isNotBlank(logQuery.getLogPath())) {
             if (logQuery.getLogPath().contains(SLASH)) {
