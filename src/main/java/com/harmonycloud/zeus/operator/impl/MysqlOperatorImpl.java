@@ -136,6 +136,9 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         if (values != null) {
             convertResourcesByHelmChart(middleware, middleware.getType(), values.getJSONObject(RESOURCES));
             JSONObject args = values.getJSONObject("args");
+            if (args == null){
+                args = values.getJSONObject("mysqlArgs");
+            }
             middleware.setPassword(args.getString("root_password"));
             middleware.setCharSet(args.getString("character_set_server"));
             middleware.setPort(args.getIntValue("server_port"));

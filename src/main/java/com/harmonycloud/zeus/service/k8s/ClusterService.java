@@ -11,6 +11,12 @@ import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 public interface ClusterService {
 
     /**
+     * 获取指定集群
+     * @return
+     */
+    MiddlewareClusterDTO get(String clusterId);
+
+    /**
      * 获取所有集群
      * @return
      */

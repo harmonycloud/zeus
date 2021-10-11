@@ -1,0 +1,11 @@
+{{- if .Values.init_at_setup.enabled }}
+{{- if .Values.init_at_setup.init_sql }}
+apiVersion: v1
+data:
+  init.sql: |-
+{{ .Values.init_at_setup.init_sql | indent 4 }}
+kind: ConfigMap
+metadata:
+  name: {{ include "mysql.fullname" . }}-init-sql-file
+{{- end }}
+{{- end }}

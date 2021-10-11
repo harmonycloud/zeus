@@ -5,7 +5,7 @@ metadata:
   namespace: {{ .Values.global.namespace }}
 spec:
   progressDeadlineSeconds: 600
-  replicas: {{ .Values.global.zeus.replicaCount }}
+  replicas: {{ .Values.global.replicaCount }}
   revisionHistoryLimit: 10
   selector:
     matchLabels:
@@ -78,7 +78,7 @@ spec:
         - mountPath: /var/run
           name: docker
         - mountPath: /usr/local/zeus-pv/helm
-          name: zeus-helm
+          name: zeus
       dnsPolicy: ClusterFirst
       {{- with .Values.global.zeus.nodeSelector }}
       nodeSelector:
@@ -103,6 +103,6 @@ spec:
           path: /var/run
           type: ""
         name: docker
-      - name: zeus-helm
+      - name: zeus
         persistentVolumeClaim:
-          claimName: zeus-helm
+          claimName: zeus

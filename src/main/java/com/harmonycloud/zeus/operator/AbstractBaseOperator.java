@@ -208,7 +208,7 @@ public abstract class AbstractBaseOperator {
         MiddlewareClusterMonitorInfo monitorInfo =
             clusterService.findById(middleware.getClusterId()).getMonitor().getGrafana();
         if (monitorInfo == null
-            || StringUtils.isAnyEmpty(monitorInfo.getProtocol(), monitorInfo.getHost(), monitorInfo.getToken())) {
+            || StringUtils.isAnyEmpty(monitorInfo.getProtocol(), monitorInfo.getHost(), monitorInfo.getPort())) {
             throw new BusinessException(ErrorMessage.CLUSTER_MONITOR_INFO_NOT_FOUND);
         }
 

@@ -2,10 +2,10 @@ global:
   repository: middleware.harmonycloud.cn:38080/middleware
   namespace: zeus
   storageClass: default
+  replicaCount: 1
   zeus:
-    replicaCount: 1
     image: zeus
-    tag: v0.0.2
+    tag: v0.0.3
     pullPolicy: Always
     resources:
       requests:
@@ -16,9 +16,8 @@ global:
         memory: 4Gi
     nodeSelector: {}
   zeus_ui:
-    replicaCount: 1
     image: zeus-ui
-    tag: v0.0.2
+    tag: v0.0.3
     pullPolicy: Always
     nodePort: 30088
     resources:
