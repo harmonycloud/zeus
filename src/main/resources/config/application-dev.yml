@@ -10,6 +10,11 @@ spring:
       max-request-size: 10GB
   resources:
     static-locations: file:/MyPath/upload,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/ # change this
+  jackson:
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+    serialization:
+      write-dates-as-timestamps: false
 mybatis-plus:
   mapper-locations: classpath:mapping/*.xml
 logging:
