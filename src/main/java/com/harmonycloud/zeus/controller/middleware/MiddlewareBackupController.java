@@ -19,7 +19,7 @@ import io.swagger.annotations.ApiOperation;
  * @author dengyulong
  * @date 2021/03/23
  */
-@Api(tags = {"工作台", "实例列表"}, value = "中间件备份", description = "中间件备份")
+@Api(tags = {"容灾备份", "数据安全"}, value = "中间件备份", description = "中间件备份")
 @RestController
 @RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/middlewares/{middlewareName}/backups")
 public class MiddlewareBackupController {

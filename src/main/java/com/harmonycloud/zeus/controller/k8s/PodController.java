@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author dengyulong
  * @date 2021/03/23
  */
-@Api(tags = {"工作台","实例列表"}, value = "pod", description = "pod")
+@Api(tags = {"服务目录"}, value = "pod", description = "pod")
 @RestController
 @RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/middlewares/{middlewareName}/pods")
 public class PodController {
