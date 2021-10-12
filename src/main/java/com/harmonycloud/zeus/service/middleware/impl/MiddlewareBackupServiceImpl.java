@@ -78,6 +78,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                     List<String> backupAddressList = new ArrayList<>();
                     backupAddressList.add(backupAddressPrefix);
                     backupRecord.setBackupAddressList(backupAddressList);
+                    backupRecord.setPhrase(item.getStatus().getPhase());
                     recordList.add(backupRecord);
                 }
             });
