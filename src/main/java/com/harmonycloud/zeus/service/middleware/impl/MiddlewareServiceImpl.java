@@ -286,6 +286,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
         middlewareInfoDTOList.forEach(middlewareInfoDTO -> {
             AtomicInteger errServiceCount = new AtomicInteger(0);
+            List<Middleware> singleServiceList = new ArrayList<>();
             for (Middleware middleware : middlewareServiceList) {
                 if (middlewareInfoDTO.getChartName().equals(middleware.getType())) {
                     MiddlewareCRD middlewareCRD = middlewareCRDService.getCR(clusterId, namespace, middlewareInfoDTO.getType(), middleware.getName());
@@ -301,17 +302,18 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                             middleware.setManagePlatformAddress(managePlatformAddress);
                         }
                     }
+                    singleServiceList.add(middleware);
                 }
+                MiddlewareBriefInfoDTO briefInfoDTO = new MiddlewareBriefInfoDTO();
+                briefInfoDTO.setName(middlewareInfoDTO.getName());
+                briefInfoDTO.setImagePath(middlewareInfoDTO.getImagePath());
+                briefInfoDTO.setChartName(middlewareInfoDTO.getChartName());
+                briefInfoDTO.setChartVersion(middlewareInfoDTO.getChartVersion());
+                briefInfoDTO.setVersion(middlewareInfoDTO.getVersion());
+                briefInfoDTO.setServiceList(singleServiceList);
+                briefInfoDTO.setServiceNum(singleServiceList.size());
+                serviceList.add(briefInfoDTO);
             }
-            MiddlewareBriefInfoDTO briefInfoDTO = new MiddlewareBriefInfoDTO();
-            briefInfoDTO.setName(middlewareInfoDTO.getName());
-            briefInfoDTO.setImagePath(middlewareInfoDTO.getImagePath());
-            briefInfoDTO.setChartName(middlewareInfoDTO.getChartName());
-            briefInfoDTO.setChartVersion(middlewareInfoDTO.getChartVersion());
-            briefInfoDTO.setVersion(middlewareInfoDTO.getVersion());
-            briefInfoDTO.setServiceList(middlewareServiceList);
-            briefInfoDTO.setServiceNum(middlewareServiceList.size());
-            serviceList.add(briefInfoDTO);
         });
         Collections.sort(serviceList, new MiddlewareBriefInfoDTOComparator());
         return serviceList;
