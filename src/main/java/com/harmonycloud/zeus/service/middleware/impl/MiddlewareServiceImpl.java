@@ -305,16 +305,16 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                         }
                         singleServiceList.add(middleware);
                     }
-                    MiddlewareBriefInfoDTO briefInfoDTO = new MiddlewareBriefInfoDTO();
-                    briefInfoDTO.setName(middlewareInfoDTO.getName());
-                    briefInfoDTO.setImagePath(middlewareInfoDTO.getImagePath());
-                    briefInfoDTO.setChartName(middlewareInfoDTO.getChartName());
-                    briefInfoDTO.setChartVersion(middlewareInfoDTO.getChartVersion());
-                    briefInfoDTO.setVersion(middlewareInfoDTO.getVersion());
-                    briefInfoDTO.setServiceList(singleServiceList);
-                    briefInfoDTO.setServiceNum(singleServiceList.size());
-                    serviceList.add(briefInfoDTO);
                 }
+                MiddlewareBriefInfoDTO briefInfoDTO = new MiddlewareBriefInfoDTO();
+                briefInfoDTO.setName(middlewareInfoDTO.getName());
+                briefInfoDTO.setImagePath(middlewareInfoDTO.getImagePath());
+                briefInfoDTO.setChartName(middlewareInfoDTO.getChartName());
+                briefInfoDTO.setChartVersion(middlewareInfoDTO.getChartVersion());
+                briefInfoDTO.setVersion(middlewareInfoDTO.getVersion());
+                briefInfoDTO.setServiceList(singleServiceList);
+                briefInfoDTO.setServiceNum(singleServiceList.size());
+                serviceList.add(briefInfoDTO);
             }
             Collections.sort(serviceList, new MiddlewareBriefInfoDTOComparator());
         } catch (Exception e) {
