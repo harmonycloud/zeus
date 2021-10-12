@@ -39,7 +39,7 @@ public class InitMiddlewareImage {
         List<BeanMiddlewareInfo> mwInfoList = middlewareInfoMapper.selectList(wrapper);
         for (BeanMiddlewareInfo mwInfo : mwInfoList) {
             if (StringUtils.isEmpty(mwInfo.getImagePath())){
-                return;
+                continue;
             }
             File file = new File(imagePath + File.separator + mwInfo.getImagePath());
             if (!file.exists()) {
