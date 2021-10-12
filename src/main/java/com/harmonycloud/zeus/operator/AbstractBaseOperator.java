@@ -761,7 +761,7 @@ public abstract class AbstractBaseOperator {
                     serviceDTO.setServiceName(servicePortDTO.getServiceName());
                     serviceDTOList.add(serviceDTO);
 
-                    ingressDTO.setMiddlewareType(MiddlewareTypeEnum.MYSQL.getType());
+                    ingressDTO.setMiddlewareType(middleware.getType());
                     ingressDTO.setServiceList(serviceDTOList);
                     ingressDTO.setExposeType(MIDDLEWARE_EXPOSE_NODEPORT);
                     ingressDTO.setProtocol("TCP");
