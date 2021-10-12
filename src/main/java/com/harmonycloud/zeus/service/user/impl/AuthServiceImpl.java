@@ -46,6 +46,9 @@ public class AuthServiceImpl implements AuthService {
         //md5加密
         String md5Password = PasswordUtils.md5(decryptPassword);
         UserDto userDto = userService.get(userName, true);
+        if (userDto.getRoleId() == null){
+            throw new BusinessException(ErrorMessage.USER_ROLE_NOT_EXIT);
+        }
         if (!md5Password.equals(userDto.getPassword())) {
             throw new BusinessException(ErrorMessage.AUTH_FAILED);
         }

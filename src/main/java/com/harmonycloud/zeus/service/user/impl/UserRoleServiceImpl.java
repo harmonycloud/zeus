@@ -42,7 +42,7 @@ public class UserRoleServiceImpl implements UserRoleService {
         QueryWrapper<BeanUserRole> roleUserWrapper = new QueryWrapper<BeanUserRole>().eq("username", userName);
         BeanUserRole beanUserRole = beanUserRoleMapper.selectOne(roleUserWrapper);
         if (ObjectUtils.isEmpty(beanUserRole)) {
-            throw new BusinessException(ErrorMessage.USER_ROLE_NOT_EXIT);
+            return null;
         }
         // 获取角色信息
         RoleDto roleDto = roleService.get(beanUserRole.getRoleId());

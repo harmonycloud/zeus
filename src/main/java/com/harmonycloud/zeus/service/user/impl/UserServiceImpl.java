@@ -67,7 +67,9 @@ public class UserServiceImpl implements UserService {
         UserDto userDto = new UserDto();
         BeanUtils.copyProperties(beanUser, userDto);
         UserRole userRole = userRoleService.get(userName);
-        userDto.setRoleId(userRole.getRoleId()).setRoleName(userRole.getRoleName());
+        if (userRole != null) {
+            userDto.setRoleId(userRole.getRoleId()).setRoleName(userRole.getRoleName());
+        }
         if (!withPassword) {
             userDto.setPassword(null);
         }
@@ -118,8 +120,6 @@ public class UserServiceImpl implements UserService {
         }
         // 写入用户表
         insertUser(userDto);
-        // 记录用户角色关系
-        userRoleService.insert(userDto);
     }
 
     @Override
@@ -129,7 +129,8 @@ public class UserServiceImpl implements UserService {
 
         UserDto targetUser = this.get(userDto.getUserName(), false);
         String currentUser = CurrentUserRepository.getUser().getUsername();
-        if (targetUser.getRoleId() == 1 && !currentUser.equals(targetUser.getUserName())) {
+        if (targetUser.getRoleId() != null && targetUser.getRoleId() == 1
+            && !currentUser.equals(targetUser.getUserName())) {
             throw new BusinessException(ErrorMessage.NO_AUTHORITY);
         }
         // 修改用户基本信息
@@ -141,7 +142,7 @@ public class UserServiceImpl implements UserService {
         beanUser.setPhone(userDto.getPhone());
         beanUserMapper.update(beanUser, wrapper);
         // 修改角色
-        if (!userDto.getRoleId().equals(targetUser.getRoleId())) {
+        if (userDto.getRoleId() != null) {
             userRoleService.update(userDto);
         }
     }
@@ -231,9 +232,6 @@ public class UserServiceImpl implements UserService {
         // 校验参数是否完全
         if (StringUtils.isAnyBlank(userDto.getUserName(), userDto.getAliasName(), userDto.getPhone())) {
             throw new IllegalArgumentException("username/aliasName/phone should not be null");
-        }
-        if (userDto.getRoleId() == null){
-            throw new IllegalArgumentException("user shoule be assigned roles");
         }
     }
 

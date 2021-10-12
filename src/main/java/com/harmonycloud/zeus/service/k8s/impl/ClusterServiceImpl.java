@@ -705,9 +705,9 @@ public class ClusterServiceImpl implements ClusterService {
                 ",logging.collection.filelog.enable=false" +
                 ",logging.collection.stdout.enable=false" +
                 ",resources.master.limits.cpu=0.5" +
-                ",resources.master.limits.memory=1" +
-                ",resources.master.request.cpu=0.5" +
-                ",resources.master.request.memory=1";
+                ",resources.master.limits.memory=1Gi" +
+                ",resources.master.requests.cpu=0.5" +
+                ",resources.master.requests.memory=1Gi";
         helmChartService.upgradeInstall("middleware-elasticsearch", "logging", setValues,
                 componentsPath + File.separator + "elasticsearch", cluster);
     }
