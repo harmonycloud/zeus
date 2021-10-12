@@ -336,19 +336,22 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
 
         for (MiddlewareClusterDTO clusterDTO : clusterList) {
             List<MiddlewareInfoDTO> middlewareInfoDTOS = list(clusterDTO.getId());
-            middlewareInfoDTOS.forEach(middleware -> {
+            for (MiddlewareInfoDTO middlewareInfoDTO : middlewareInfoDTOS) {
                 MiddlewareOperatorDTO.MiddlewareOperator operator = new MiddlewareOperatorDTO.MiddlewareOperator();
-                operator.setName(middleware.getName());
+                if (middlewareInfoDTO.getStatus() == 2) {
+                    break;
+                }
+                operator.setName(middlewareInfoDTO.getName());
                 operator.setClusterId(clusterDTO.getId());
                 operator.setClusterName(clusterDTO.getNickname());
-                operator.setStatus(middleware.getStatus());
-                if (middleware.getStatus() == 1) {
+                operator.setStatus(middlewareInfoDTO.getStatus());
+                if (middlewareInfoDTO.getStatus() == 1) {
                     runningOperator.getAndAdd(1);
                 } else {
                     errorOperator.getAndAdd(1);
                 }
                 operatorList.add(operator);
-            });
+            }
         }
 
         operatorDTO.setError(errorOperator.get());

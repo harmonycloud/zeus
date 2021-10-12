@@ -27,6 +27,8 @@ import com.harmonycloud.tool.date.DateUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
+
 /**
  * @author xutianhong
  * @Date 2021/4/1 5:13 下午
@@ -185,7 +187,8 @@ public class MiddlewareCRDServiceImpl implements MiddlewareCRDService {
                 .setType(MiddlewareTypeEnum.findTypeByCrdType(mw.getSpec().getType()))
                 .setStatus(mw.getStatus().getPhase())
                 .setReason(mw.getStatus().getReason())
-                .setCreateTime(DateUtils.parseUTCDate(mw.getMetadata().getCreationTimestamp()));
+                .setCreateTime(DateUtils.parseUTCDate(mw.getMetadata().getCreationTimestamp()))
+                .setPodNum(mw.getStatus().getInclude().get(PODS).size());
     }
 
 }
