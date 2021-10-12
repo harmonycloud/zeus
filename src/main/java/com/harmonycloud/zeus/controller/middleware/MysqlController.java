@@ -17,7 +17,7 @@ import java.util.List;
  * @author dengyulong
  * @date 2021/03/23
  */
-@Api(tags = {"服务列表"}, value = "mysql中间件", description = "mysql中间件")
+@Api(tags = {"服务列表","服务管理"}, value = "mysql中间件", description = "mysql中间件")
 @RestController
 @RequestMapping("/clusters/{clusterId}/middlewares/mysql")
 public class MysqlController {

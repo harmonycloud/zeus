@@ -20,7 +20,7 @@ import io.swagger.annotations.ApiOperation;
  * @Author: zack chen
  * @Date: 2021/5/14 11:16 上午
  */
-@Api(tags = {"中间件市场"}, value = "中间件管理", description = "中间件管理")
+@Api(tags = {"中间件市场","中间件管理"}, value = "中间件管理", description = "中间件管理")
 @RestController
 @RequestMapping("/clusters/{clusterId}/middlewares")
 public class MiddlewareManagerController {

@@ -25,7 +25,7 @@ import javax.servlet.http.HttpServletResponse;
  * @author dengyulong
  * @date 2021/03/23
  */
-@Api(tags = {"服务列表"}, value = "分区下中间件", description = "分区下中间件")
+@Api(tags = {"服务列表","服务管理"}, value = "分区下中间件", description = "分区下中间件")
 @RestController
 @RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/middlewares")
 public class MiddlewareController {

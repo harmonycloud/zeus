@@ -362,9 +362,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             List<Middleware> middlewareServiceList = simpleList(clusterId, namespace.getName(), type, "");
             middlewareServiceList.forEach(middleware -> {
                 try {
-                    MiddlewareCRD middlewareCRD = middlewareCRDService.getCR(clusterId, namespace.getName(), type, middleware.getName());
                     serviceNum.getAndAdd(1);
-                    if (middlewareCRD != null && middlewareCRD.getStatus() != null) {
+                    if (middleware.getStatus() != null) {
                         if (!NameConstant.RUNNING.equalsIgnoreCase(middleware.getStatus())) {
                             //中间件服务状态异常
                             errServiceNum.getAndAdd(1);
