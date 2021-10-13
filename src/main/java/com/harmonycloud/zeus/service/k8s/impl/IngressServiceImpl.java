@@ -892,7 +892,7 @@ public class IngressServiceImpl implements IngressService {
             List<IngressDTO> ingressDTOList = new ArrayList<>();
             for (Middleware middleware : middlewareServiceList) {
                 if (!middlewareInfoDTO.getChartName().equals(middleware.getType())) {
-                    break;
+                    continue;
                 }
                 List<IngressDTO> singleIngressDTOList = get(clusterId, namespace, middlewareInfoDTO.getChartName(), middleware.getName());
                 singleIngressDTOList.forEach(ingressDTO -> {
