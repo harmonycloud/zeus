@@ -183,6 +183,13 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         //根据版本倒序排列
         mwInfoList.sort(Comparator.comparing(BeanMiddlewareInfo::getChartVersion).reversed());
         BeanClusterMiddlewareInfo clusterMwInfo = clusterMiddlewareInfoService.get(clusterId, type);
+        if (mwInfoList.size() == 1 && clusterMwInfo.getStatus() == 2) {
+            return mwInfoList.stream().map(info -> {
+                MiddlewareInfoDTO dto = new MiddlewareInfoDTO();
+                BeanUtils.copyProperties(info, dto);
+                return dto.setVersionStatus("future");
+            }).collect(Collectors.toList());
+        }
         return mwInfoList.stream().map(info -> {
             MiddlewareInfoDTO dto = new MiddlewareInfoDTO();
             BeanUtils.copyProperties(info, dto);
