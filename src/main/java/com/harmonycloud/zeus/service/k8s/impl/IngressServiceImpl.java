@@ -887,12 +887,14 @@ public class IngressServiceImpl implements IngressService {
         List<MiddlewareInfoDTO> middlewareInfoDTOList = middlewareInfoService.list(clusterId);
         List<Map<String, Object>> ingressList = new ArrayList<>();
         boolean filter = StringUtils.isBlank(keyword);
+        List<Middleware> middlewareServiceList = middlewareService.simpleList(clusterId, namespace, null, null);
         middlewareInfoDTOList.forEach(middlewareInfoDTO -> {
-            List<Middleware> middlewareServiceList = middlewareService.simpleList(clusterId, namespace, middlewareInfoDTO.getChartName(), null);
             List<IngressDTO> ingressDTOList = new ArrayList<>();
-
-            middlewareServiceList.forEach(middlewareService -> {
-                List<IngressDTO> singleIngressDTOList = get(clusterId, namespace, middlewareInfoDTO.getChartName(), middlewareService.getName());
+            for (Middleware middleware : middlewareServiceList) {
+                if (!middlewareInfoDTO.getChartName().equals(middleware.getType())) {
+                    break;
+                }
+                List<IngressDTO> singleIngressDTOList = get(clusterId, namespace, middlewareInfoDTO.getChartName(), middleware.getName());
                 singleIngressDTOList.forEach(ingressDTO -> {
                     List<ServiceDTO> serviceList = ingressDTO.getServiceList();
                     if (!CollectionUtils.isEmpty(serviceList)) {
@@ -906,7 +908,7 @@ public class IngressServiceImpl implements IngressService {
                         StringUtils.contains(ingress.getMiddlewareNickName(), keyword) || StringUtils.contains(ingress.getExposeIP(), keyword)
                 ).collect(Collectors.toList());
                 ingressDTOList.addAll(ingressDTOS);
-            });
+            }
 
             Map<String, Object> middlewareMap = new HashMap<>();
             middlewareMap.put("name", middlewareInfoDTO.getChartName());
