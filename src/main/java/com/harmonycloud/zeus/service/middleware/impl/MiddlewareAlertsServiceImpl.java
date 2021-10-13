@@ -292,8 +292,14 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                 .setTime(middlewareAlertsDTO.getTime()).setLabels(middlewareAlertsDTO.getLabels())
                 .setAnnotations(middlewareAlertsDTO.getAnnotations());
         // 替换{{``}}
-        prometheusRules.getAnnotations().put("summary", replaceValue(prometheusRules.getAnnotations().get("summary")));
-        prometheusRules.getAnnotations().put("message", replaceValue(prometheusRules.getAnnotations().get("message")));
+        if (prometheusRules.getAnnotations().containsKey("summary")) {
+            prometheusRules.getAnnotations().put("summary",
+                replaceValue(prometheusRules.getAnnotations().get("summary")));
+        }
+        if (prometheusRules.getAnnotations().containsKey("message")) {
+            prometheusRules.getAnnotations().put("message",
+                replaceValue(prometheusRules.getAnnotations().get("message")));
+        }
         if (prometheusRules.getLabels().containsKey("value")) {
             prometheusRules.getLabels().put("value", replaceValue(prometheusRules.getLabels().get("value")));
         }
