@@ -106,9 +106,14 @@ public class UserRoleServiceImpl implements UserRoleService {
     @Override
     public void update(UserDto userDto) {
         QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("username", userDto.getUserName());
+        BeanUserRole existBind = beanUserRoleMapper.selectOne(wrapper);
         BeanUserRole beanUserRole = new BeanUserRole();
         beanUserRole.setUserName(userDto.getUserName());
         beanUserRole.setRoleId(userDto.getRoleId());
-        beanUserRoleMapper.update(beanUserRole, wrapper);
+        if (ObjectUtils.isEmpty(existBind)) {
+            beanUserRoleMapper.insert(beanUserRole);
+        } else {
+            beanUserRoleMapper.update(beanUserRole, wrapper);
+        }
     }
 }

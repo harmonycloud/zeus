@@ -334,7 +334,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
                 JSONObject.class);
             return JSONObject.parseObject(JSONObject.toJSONString(question), QuestionYaml.class);
         } catch (Exception e) {
-            log.error("中间件{} 获取question.yml失败", helmChartFile.getChartName() + ":" + helmChartFile.getChartVersion());
+            log.error("中间件{} 获取question.yaml失败", helmChartFile.getChartName() + ":" + helmChartFile.getChartVersion());
             throw new CaasRuntimeException(ErrorMessage.CREATE_DYNAMIC_FORM_FAILED);
         }
     }

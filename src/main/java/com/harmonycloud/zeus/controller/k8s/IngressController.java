@@ -16,7 +16,7 @@ import java.util.List;
  * @author dengyulong
  * @date 2021/03/23
  */
-@Api(tags = {"服务暴露"}, value = "中间件对外访问")
+@Api(tags = {"服务暴露","对外访问"}, value = "中间件对外访问")
 @RestController
 @RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/middlewares")
 public class IngressController {
