@@ -279,7 +279,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public List<MiddlewareBriefInfoDTO> listAllMiddleware(String clusterId, String namespace,String keyword) {
+    public List<MiddlewareBriefInfoDTO> listAllMiddleware(String clusterId, String namespace, String keyword) {
         List<MiddlewareBriefInfoDTO> serviceList = null;
         try {
             List<MiddlewareInfoDTO> middlewareInfoDTOList = middlewareInfoService.list(clusterId);
@@ -289,22 +289,23 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 AtomicInteger errServiceCount = new AtomicInteger(0);
                 List<Middleware> singleServiceList = new ArrayList<>();
                 for (Middleware middleware : middlewareServiceList) {
-                    if (middlewareInfoDTO.getChartName().equals(middleware.getType())) {
-                        MiddlewareCRD middlewareCRD = middlewareCRDService.getCR(clusterId, namespace, middlewareInfoDTO.getType(), middleware.getName());
-                        if (middlewareCRD != null && middlewareCRD.getStatus() != null && middlewareCRD.getStatus().getInclude() != null) {
-                            List<MiddlewareInfo> middlewareInfos = middlewareCRD.getStatus().getInclude().get(PODS);
-                            middleware.setPodNum(middlewareInfos.size());
-                            if (!NameConstant.RUNNING.equalsIgnoreCase(middleware.getStatus())) {
-                                //中间件服务状态异常
-                                errServiceCount.getAndAdd(1);
-                            }
-                            if (middleware.getManagePlatform() != null && middleware.getManagePlatform()) {
-                                String managePlatformAddress = getManagePlatformAddress(middleware, clusterId);
-                                middleware.setManagePlatformAddress(managePlatformAddress);
-                            }
-                        }
-                        singleServiceList.add(middleware);
+                    if (!middlewareInfoDTO.getChartName().equals(middleware.getType())) {
+                        continue;
                     }
+                    MiddlewareCRD middlewareCRD = middlewareCRDService.getCR(clusterId, namespace, middlewareInfoDTO.getType(), middleware.getName());
+                    if (middlewareCRD != null && middlewareCRD.getStatus() != null && middlewareCRD.getStatus().getInclude() != null) {
+                        List<MiddlewareInfo> middlewareInfos = middlewareCRD.getStatus().getInclude().get(PODS);
+                        middleware.setPodNum(middlewareInfos.size());
+                        if (!NameConstant.RUNNING.equalsIgnoreCase(middleware.getStatus())) {
+                            //中间件服务状态异常
+                            errServiceCount.getAndAdd(1);
+                        }
+                        if (middleware.getManagePlatform() != null && middleware.getManagePlatform()) {
+                            String managePlatformAddress = getManagePlatformAddress(middleware, clusterId);
+                            middleware.setManagePlatformAddress(managePlatformAddress);
+                        }
+                    }
+                    singleServiceList.add(middleware);
                 }
                 MiddlewareBriefInfoDTO briefInfoDTO = new MiddlewareBriefInfoDTO();
                 briefInfoDTO.setName(middlewareInfoDTO.getName());
@@ -326,14 +327,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     public List<MiddlewareBriefInfoDTO> getMiddlewareBriefInfoList(List<MiddlewareClusterDTO> clusterDTOList) {
         List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.list(false);
         List<MiddlewareBriefInfoDTO> middlewareBriefInfoDTOList = new ArrayList<>();
-
+        List<Middleware> middlewares = queryAllClusterService(clusterDTOList);
         middlewareInfoList.forEach(middlewareInfo -> {
             AtomicInteger serviceNum = new AtomicInteger();
             AtomicInteger errServiceNum = new AtomicInteger();
             MiddlewareBriefInfoDTO middlewareBriefInfoDTO = new MiddlewareBriefInfoDTO();
-            clusterDTOList.forEach(clusterDTO -> {
-                countServiceNum(clusterDTO.getId(), middlewareInfo.getChartName(), middlewareInfo.getType(), serviceNum, errServiceNum);
-            });
+            countServiceNum(middlewares, middlewareInfo.getChartName(), serviceNum, errServiceNum);
             middlewareBriefInfoDTO.setName(middlewareInfo.getName());
             middlewareBriefInfoDTO.setChartName(middlewareInfo.getChartName());
             middlewareBriefInfoDTO.setVersion(middlewareInfo.getVersion());
@@ -343,41 +342,61 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             middlewareBriefInfoDTO.setErrServiceNum(errServiceNum.get());
             middlewareBriefInfoDTOList.add(middlewareBriefInfoDTO);
         });
-        Collections.sort(middlewareBriefInfoDTOList, new MiddlewareBriefInfoDTOComparator());
+        try {
+            Collections.sort(middlewareBriefInfoDTOList, new MiddlewareBriefInfoDTOComparator());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return middlewareBriefInfoDTOList;
     }
 
     /**
-     * 统计分区下服务数量和异常服务数量
-     * @param clusterId 集群id
-     * @param type 中间件类型
+     * @description 统计指定类型服务数量和异常服务数量
+     * @param middlewares 所有服务
      * @param chartName 中间件chartName
      * @param serviceNum 服务数量
      * @param errServiceNum 异常服务数量
      */
-    private void countServiceNum(String clusterId, String type, String chartName, AtomicInteger serviceNum, AtomicInteger errServiceNum) {
-        List<Namespace> namespaceList = namespaceService.list(clusterId, true, null);
-        namespaceList = namespaceList.stream().filter(Namespace::isRegistered).collect(Collectors.toList());
-        namespaceList.forEach(namespace -> {
-            List<Middleware> middlewareServiceList = simpleList(clusterId, namespace.getName(), type, "");
-            middlewareServiceList.forEach(middleware -> {
-                try {
-                    serviceNum.getAndAdd(1);
-                    if (middleware.getStatus() != null) {
-                        if (!NameConstant.RUNNING.equalsIgnoreCase(middleware.getStatus())) {
-                            //中间件服务状态异常
-                            errServiceNum.getAndAdd(1);
-                        }
-                    } else {
+    private void countServiceNum(List<Middleware> middlewares, String chartName, AtomicInteger serviceNum, AtomicInteger errServiceNum) {
+        for (Middleware middleware : middlewares) {
+            try {
+                if (!chartName.equals(middleware.getType())) {
+                    continue;
+                }
+                serviceNum.getAndAdd(1);
+                if (middleware.getStatus() != null) {
+                    if (!NameConstant.RUNNING.equalsIgnoreCase(middleware.getStatus())) {
+                        //中间件服务状态异常
                         errServiceNum.getAndAdd(1);
                     }
-                } catch (Exception e) {
-                    log.error("查询中间件CR出错了,chartName={},type={}", chartName, type, e);
+                } else {
+                    errServiceNum.getAndAdd(1);
                 }
-            });
-        });
+            } catch (Exception e) {
+                log.error("查询中间件CR出错了,chartName={},type={}", chartName, e);
+            }
+        }
     }
 
+    /**
+     * 查询集群所有服务
+     * @param clusterDTOList 集群列表
+     * @return
+     */
+    private List<Middleware> queryAllClusterService(List<MiddlewareClusterDTO> clusterDTOList) {
+        List<Namespace> namespaceList = new ArrayList<>();
+        clusterDTOList.forEach(cluster -> {
+            List<Namespace> namespaces = namespaceService.list(cluster.getId(), true, null);
+            namespaces = namespaces.stream().filter(Namespace::isRegistered).collect(Collectors.toList());
+            namespaceList.addAll(namespaces);
+        });
+        List<Middleware> middlewareServiceList = new ArrayList<>();
+        namespaceList.forEach(namespace -> {
+            List<Middleware> middlewares = simpleList(namespace.getClusterId(), namespace.getName(), null, "");
+            middlewareServiceList.addAll(middlewares);
+        });
+        return middlewareServiceList;
+    }
 
     /**
      * 服务排序类，按服务数量进行排序
@@ -387,6 +406,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         public int compare(Map service1, Map service2) {
             if (Integer.parseInt(service1.get("serviceNum").toString()) > Integer.parseInt(service2.get("serviceNum").toString())) {
                 return -1;
+            } else if (Integer.parseInt(service1.get("serviceNum").toString()) == Integer.parseInt(service2.get("serviceNum").toString())) {
+                return 0;
             } else {
                 return 1;
             }
@@ -401,6 +422,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         public int compare(MiddlewareBriefInfoDTO o1, MiddlewareBriefInfoDTO o2) {
             if (o1.getServiceNum() > o2.getServiceNum()) {
                 return -1;
+            } else if (o1.getServiceNum() == o2.getServiceNum()) {
+                return 0;
             } else {
                 return 1;
             }
