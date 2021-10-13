@@ -185,10 +185,10 @@ public class MiddlewareCRDServiceImpl implements MiddlewareCRDService {
                 .setNamespace(mw.getMetadata().getNamespace())
                 .setClusterId(mw.getMetadata().getClusterName())
                 .setType(MiddlewareTypeEnum.findTypeByCrdType(mw.getSpec().getType()))
-                .setStatus(mw.getStatus().getPhase())
-                .setReason(mw.getStatus().getReason())
+                .setStatus(mw.getStatus() != null ? mw.getStatus().getPhase() : "")
+                .setReason(mw.getStatus() != null ? mw.getStatus().getReason() : "")
                 .setCreateTime(DateUtils.parseUTCDate(mw.getMetadata().getCreationTimestamp()))
-                .setPodNum(mw.getStatus().getInclude().get(PODS).size());
+                .setPodNum(mw.getStatus() != null ? mw.getStatus().getInclude().get(PODS).size() : 0);
     }
 
 }

@@ -232,6 +232,9 @@ public class IngressServiceImpl implements IngressService {
         if (crd == null) {
             throw new BusinessException(DictEnum.MIDDLEWARE, middlewareName, ErrorMessage.NOT_EXIST);
         }
+        if (crd.getStatus() == null) {
+            return new ArrayList<>(0);
+        }
         Map<String, List<MiddlewareInfo>> include = crd.getStatus().getInclude();
         if (CollectionUtils.isEmpty(include)) {
             return new ArrayList<>(0);
