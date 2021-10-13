@@ -91,7 +91,7 @@ public interface MiddlewareService {
      * @param middleware
      * @return
      */
-    String getManagePlatformAddress(Middleware middleware, String clusterId);
+    void setManagePlatformAddress(Middleware middleware, String clusterId);
 
     /**
      * 查询可用中间件列表及服务列表
