@@ -911,7 +911,8 @@ public class IngressServiceImpl implements IngressService {
                         return true;
                     }
                     if (StringUtils.contains(ingress.getName(), keyword) || StringUtils.contains(ingress.getMiddlewareName(), keyword) ||
-                            StringUtils.contains(ingress.getMiddlewareNickName(), keyword) || StringUtils.contains(ingress.getExposeIP(), keyword)) {
+                            StringUtils.contains(ingress.getMiddlewareNickName(), keyword) || StringUtils.contains(ingress.getExposeIP(), keyword) ||
+                            StringUtils.contains(ingress.getExposeIP() + ":" + ingress.getExposePort(), keyword)) {
                         return true;
                     }
                     if (!CollectionUtils.isEmpty(ingress.getRules())) {
