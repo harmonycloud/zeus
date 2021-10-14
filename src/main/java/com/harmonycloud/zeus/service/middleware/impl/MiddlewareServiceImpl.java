@@ -258,7 +258,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public String getManagePlatformAddress(Middleware middleware, String clusterId) {
+    public void setManagePlatformAddress(Middleware middleware, String clusterId) {
         List<IngressDTO> ingressDTOS = ingressService.get(clusterId, middleware.getNamespace(), middleware.getType(), middleware.getName());
         MiddlewareServiceNameIndex serviceNameIndex = ServiceNameConvertUtil.convert(middleware);
         List<IngressDTO> serviceDTOList = ingressDTOS.stream().filter(ingressDTO -> (
@@ -272,10 +272,11 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             if (!CollectionUtils.isEmpty(serviceList)) {
                 ServiceDTO serviceDTO = serviceList.get(0);
                 String exposePort = serviceDTO.getExposePort();
-                return exposeIP + ":" + exposePort;
+                middleware.setManagePlatformAddress(exposeIP + ":" + exposePort);
             }
+        } else {
+            middleware.setManagePlatform(false);
         }
-        return "";
     }
 
     @Override
@@ -301,8 +302,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                             errServiceCount.getAndAdd(1);
                         }
                         if (middleware.getManagePlatform() != null && middleware.getManagePlatform()) {
-                            String managePlatformAddress = getManagePlatformAddress(middleware, clusterId);
-                            middleware.setManagePlatformAddress(managePlatformAddress);
+                            setManagePlatformAddress(middleware, clusterId);
                         }
                     }
                     singleServiceList.add(middleware);
