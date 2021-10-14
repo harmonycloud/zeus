@@ -26,6 +26,8 @@ public class MiddlewareBackupStatus {
      */
     @Data
     public static class BackupInfo {
+        private Boolean readyToUse;
+
         private String repository;
 
         private String volumeSnapshot;
@@ -44,6 +46,8 @@ public class MiddlewareBackupStatus {
             private String bucket;
 
             private String url;
+
+            private String prefix;
 
             public Minio() {
             }

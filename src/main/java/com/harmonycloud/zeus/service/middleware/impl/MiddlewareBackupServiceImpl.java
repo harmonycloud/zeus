@@ -58,8 +58,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     public List<MiddlewareBackupRecord> list(String clusterId, String namespace, String middlewareName, String type) {
         String middlewareRealName = getRealMiddlewareName(type, middlewareName);
         Map<String, String> labels = new HashMap<>();
-        labels.put("middleware", middlewareRealName);
-
+        labels.put("owner", middlewareRealName + "-backup");
         List<MiddlewareBackupRecord> recordList = new ArrayList<>();
         MiddlewareBackupList middlewareBackupList = backupCRDService.list(clusterId, namespace, labels);
         if (middlewareBackupList != null && !CollectionUtils.isEmpty(middlewareBackupList.getItems())) {
@@ -70,14 +69,18 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 if (backupStatus != null) {
                     List<MiddlewareBackupStatus.BackupInfo> backupInfos = backupStatus.getBackupInfos();
                     MiddlewareBackupStatus.StorageProvider.Minio minio = item.getStatus().getStorageProvider().getMinio();
-                    String backupAddressPrefix = minio.getUrl() + "/" + minio.getBucket() + "/";
+                    String backupAddressPrefix = minio.getUrl() + "/" + minio.getBucket() + "/" + minio.getPrefix();
                     MiddlewareBackupRecord backupRecord = new MiddlewareBackupRecord();
                     backupRecord.setBackupName(backupName);
                     String backupTime = DateUtil.utc2Local(backupStatus.getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
                     backupRecord.setBackupTime(backupTime);
-                    List<String> backupAddressList = new ArrayList<>();
-                    backupAddressList.add(backupAddressPrefix);
-                    backupRecord.setBackupAddressList(backupAddressList);
+                    for (MiddlewareBackupStatus.BackupInfo backupInfo : backupInfos) {
+                        if (!StringUtils.isBlank(backupInfo.getRepository())) {
+                            List<String> backupAddressList = new ArrayList<>();
+                            backupAddressList.add(backupAddressPrefix + "-" + backupInfo.getRepository());
+                            backupRecord.setBackupAddressList(backupAddressList);
+                        }
+                    }
                     backupRecord.setPhrase(item.getStatus().getPhase());
                     recordList.add(backupRecord);
                 }
@@ -169,12 +172,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         middlewareBackupCRD.setKind("MiddlewareBackup");
         String backupName = middlewareRealName + "-" + UUIDUtils.get8UUID();
         middlewareBackupCRD.setMetadata(getMiddlewareLabels(namespace, backupName, middlewareRealName));
-
         MiddlewareBackupSpec spec = new MiddlewareBackupSpec();
         spec.setName(middlewareName);
         spec.setType(crdType);
         middlewareBackupCRD.setSpec(spec);
-
         try {
             backupCRDService.create(clusterId, middlewareBackupCRD);
             return BaseResult.ok();
@@ -197,7 +198,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         metaData.setNamespace(namespace);
         metaData.setName(backupName);
         Map<String, String> labels = new HashMap<>();
-        labels.put("middleware", middlewareRealName);
+        labels.put("owner", middlewareRealName + "-backup");
         metaData.setLabels(labels);
         return metaData;
     }
