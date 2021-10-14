@@ -294,7 +294,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                         continue;
                     }
                     MiddlewareCRD middlewareCRD = middlewareCRDService.getCR(clusterId, namespace, middlewareInfoDTO.getType(), middleware.getName());
-                    if (middlewareCRD != null && middlewareCRD.getStatus() != null && middlewareCRD.getStatus().getInclude() != null) {
+                    if (middlewareCRD != null && middlewareCRD.getStatus() != null && middlewareCRD.getStatus().getInclude() != null && middlewareCRD.getStatus().getInclude().get(PODS) != null) {
                         List<MiddlewareInfo> middlewareInfos = middlewareCRD.getStatus().getInclude().get(PODS);
                         middleware.setPodNum(middlewareInfos.size());
                         if (!NameConstant.RUNNING.equalsIgnoreCase(middleware.getStatus())) {
