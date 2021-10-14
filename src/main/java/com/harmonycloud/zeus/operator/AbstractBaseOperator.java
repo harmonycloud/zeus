@@ -701,13 +701,16 @@ public abstract class AbstractBaseOperator {
      * @param middleware 中间件信息
      * @param middlewareServiceNameIndex 服务名称
      */
-    public void tryCreateOpenService(Middleware middleware, MiddlewareServiceNameIndex middlewareServiceNameIndex) {
+    public void tryCreateOpenService(Middleware middleware, MiddlewareServiceNameIndex middlewareServiceNameIndex, Boolean needRunningMiddleware) {
         boolean success = false;
         for (int i = 0; i < 600 && !success; i++) {
             Middleware detail = middlewareService.detail(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
             log.info("为实例：{}创建对外服务：状态：{},已用时：{}s", detail.getName(), detail.getStatus(), i);
             if (detail != null) {
-                if (detail.getStatus() != null && "Running".equals(detail.getStatus())) {
+                if (needRunningMiddleware && detail.getStatus() != null && "Running".equals(detail.getStatus())) {
+                    createOpenService(middleware, middlewareServiceNameIndex);
+                    success = true;
+                } else {
                     createOpenService(middleware, middlewareServiceNameIndex);
                     success = true;
                 }
