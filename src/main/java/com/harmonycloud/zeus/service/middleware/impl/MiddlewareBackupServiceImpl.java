@@ -67,18 +67,20 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 String backupName = item.getMetadata().getName();
                 MiddlewareBackupStatus backupStatus = item.getStatus();
                 if (backupStatus != null) {
-                    List<MiddlewareBackupStatus.BackupInfo> backupInfos = backupStatus.getBackupInfos();
                     MiddlewareBackupStatus.StorageProvider.Minio minio = item.getStatus().getStorageProvider().getMinio();
                     String backupAddressPrefix = minio.getUrl() + "/" + minio.getBucket() + "/" + minio.getPrefix();
                     MiddlewareBackupRecord backupRecord = new MiddlewareBackupRecord();
                     backupRecord.setBackupName(backupName);
                     String backupTime = DateUtil.utc2Local(backupStatus.getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
                     backupRecord.setBackupTime(backupTime);
-                    for (MiddlewareBackupStatus.BackupInfo backupInfo : backupInfos) {
-                        if (!StringUtils.isBlank(backupInfo.getRepository())) {
-                            List<String> backupAddressList = new ArrayList<>();
-                            backupAddressList.add(backupAddressPrefix + "-" + backupInfo.getRepository());
-                            backupRecord.setBackupAddressList(backupAddressList);
+                    List<MiddlewareBackupStatus.BackupInfo> backupInfos = backupStatus.getBackupInfos();
+                    if (backupInfos != null) {
+                        for (MiddlewareBackupStatus.BackupInfo backupInfo : backupInfos) {
+                            if (!StringUtils.isBlank(backupInfo.getRepository())) {
+                                List<String> backupAddressList = new ArrayList<>();
+                                backupAddressList.add(backupAddressPrefix + "-" + backupInfo.getRepository());
+                                backupRecord.setBackupAddressList(backupAddressList);
+                            }
                         }
                     }
                     backupRecord.setPhrase(item.getStatus().getPhase());
