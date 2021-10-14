@@ -56,6 +56,6 @@ public class AuthFilter implements Filter {
     public Boolean acceptPath(String path) {
         return path.contains(auth) || path.contains("/swagger") || path.contains("/v3")
                 || path.contains("/swagger-ui") || path.contains("/images") || path.contains("/webhook")
-                || path.contains("/export");
+                || path.contains("/export") || path.contains("/slowsql/file");
     }
 }
