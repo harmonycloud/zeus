@@ -349,6 +349,6 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
     @Override
     public void create(Middleware middleware, MiddlewareClusterDTO cluster) {
         super.create(middleware, cluster);
-        tryCreateOpenService(middleware, ServiceNameConvertUtil.convertMq(middleware.getName()));
+        tryCreateOpenService(middleware, ServiceNameConvertUtil.convertMq(middleware.getName()), false);
     }
 }
