@@ -180,7 +180,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     public List<MiddlewareInfoDTO> version(String clusterId, String type) {
         QueryWrapper<BeanMiddlewareInfo> wrapper = new QueryWrapper<BeanMiddlewareInfo>().eq("chart_name", type);
         List<BeanMiddlewareInfo> mwInfoList = middlewareInfoMapper.selectList(wrapper);
-        //根据版本倒序排列
+        // 根据版本倒序排列
         mwInfoList.sort(Comparator.comparing(BeanMiddlewareInfo::getChartVersion).reversed());
         BeanClusterMiddlewareInfo clusterMwInfo = clusterMiddlewareInfoService.get(clusterId, type);
         if (mwInfoList.size() == 1 && clusterMwInfo.getStatus() == 2) {
@@ -196,7 +196,11 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
             if (info.getChartVersion().compareTo(clusterMwInfo.getChartVersion()) < 0) {
                 dto.setVersionStatus("history");
             } else if (info.getChartVersion().compareTo(clusterMwInfo.getChartVersion()) == 0) {
-                dto.setVersionStatus("now");
+                if (clusterMwInfo.getStatus() == 0) {
+                    dto.setVersionStatus("updating");
+                } else {
+                    dto.setVersionStatus("now");
+                }
             } else {
                 dto.setVersionStatus("future");
             }
