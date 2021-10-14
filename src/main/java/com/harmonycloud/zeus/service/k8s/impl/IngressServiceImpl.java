@@ -889,7 +889,7 @@ public class IngressServiceImpl implements IngressService {
     public List listAllIngress(String clusterId, String namespace, String keyword) {
         List<MiddlewareInfoDTO> middlewareInfoDTOList = middlewareInfoService.list(clusterId);
         List<Map<String, Object>> ingressList = new ArrayList<>();
-        boolean filter = StringUtils.isBlank(keyword);
+        boolean filter = StringUtils.isNotBlank(keyword);
         List<Middleware> middlewareServiceList = middlewareService.simpleList(clusterId, namespace, null, null);
         middlewareInfoDTOList.forEach(middlewareInfoDTO -> {
             List<IngressDTO> ingressDTOList = new ArrayList<>();
@@ -906,10 +906,37 @@ public class IngressServiceImpl implements IngressService {
                         ingressDTO.setServicePort(serviceDTO.getServicePort());
                     }
                 });
-                List<IngressDTO> ingressDTOS = singleIngressDTOList.stream().filter(ingress -> filter ||
-                        StringUtils.contains(ingress.getName(), keyword) || StringUtils.contains(ingress.getMiddlewareName(), keyword) ||
-                        StringUtils.contains(ingress.getMiddlewareNickName(), keyword) || StringUtils.contains(ingress.getExposeIP(), keyword)
-                ).collect(Collectors.toList());
+                List<IngressDTO> ingressDTOS = singleIngressDTOList.stream().filter(ingress -> {
+                    if (!filter) {
+                        return true;
+                    }
+                    if (StringUtils.contains(ingress.getName(), keyword) || StringUtils.contains(ingress.getMiddlewareName(), keyword) ||
+                            StringUtils.contains(ingress.getMiddlewareNickName(), keyword) || StringUtils.contains(ingress.getExposeIP(), keyword)) {
+                        return true;
+                    }
+                    if (!CollectionUtils.isEmpty(ingress.getRules())) {
+                        List<String> urls = new ArrayList<>();
+                        for (IngressRuleDTO rule : ingress.getRules()) {
+                            if (!CollectionUtils.isEmpty(rule.getIngressHttpPaths())) {
+                                for (IngressHttpPath ingressHttpPath : rule.getIngressHttpPaths()) {
+                                    String url = "";
+                                    if (StringUtils.isNotBlank(ingress.getHttpExposePort())) {
+                                        url = rule.getDomain() + ":" + ingress.getHttpExposePort() + ingressHttpPath.getPath();
+                                    } else {
+                                        url = rule.getDomain() + ingressHttpPath.getPath();
+                                    }
+                                    urls.add(url);
+                                }
+                            }
+                        }
+                        for (String url : urls) {
+                            if (StringUtils.contains(url, keyword)) {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                }).collect(Collectors.toList());
                 ingressDTOList.addAll(ingressDTOS);
             }
 
