@@ -162,7 +162,7 @@ public class UserServiceImpl implements UserService {
         if (ObjectUtils.isEmpty(beanUser)) {
             throw new BusinessException(ErrorMessage.USER_NOT_EXIT);
         }
-        beanUser.setPassword(PasswordUtils.md5("Ab123456!"));
+        beanUser.setPassword(PasswordUtils.md5("zeus123.com"));
         beanUser.setPasswordTime(new Date());
         beanUserMapper.updateById(beanUser);
         return true;
@@ -248,7 +248,7 @@ public class UserServiceImpl implements UserService {
         BeanUser beanUser = new BeanUser();
         BeanUtils.copyProperties(userDto, beanUser);
         if (StringUtils.isEmpty(beanUser.getPassword())) {
-            beanUser.setPassword(PasswordUtils.md5("Ab123456!"));
+            beanUser.setPassword(PasswordUtils.md5("zeus123.com"));
         }
         beanUser.setCreator(currentUser.getUsername());
         beanUser.setCreateTime(new Date());

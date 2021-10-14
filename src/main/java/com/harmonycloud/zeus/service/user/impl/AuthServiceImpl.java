@@ -4,12 +4,15 @@ import static com.harmonycloud.caas.filters.base.GlobalKey.SET_TOKEN;
 import static com.harmonycloud.caas.filters.base.GlobalKey.USER_TOKEN;
 
 import java.util.Date;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.service.user.AuthService;
+import com.harmonycloud.zeus.service.user.RoleService;
 import com.harmonycloud.zeus.service.user.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +26,7 @@ import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.caas.filters.token.JwtTokenComponent;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.tool.encrypt.RSAUtils;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author dengyulong
@@ -33,6 +37,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private RoleService roleService;
 
     @Override
     public JSONObject login(String userName, String password, HttpServletResponse response) throws Exception {
@@ -46,9 +52,9 @@ public class AuthServiceImpl implements AuthService {
         //md5加密
         String md5Password = PasswordUtils.md5(decryptPassword);
         UserDto userDto = userService.get(userName, true);
-        if (userDto.getRoleId() == null){
-            throw new BusinessException(ErrorMessage.USER_ROLE_NOT_EXIT);
-        }
+        //校验用户权限
+        checkAuth(userDto);
+        //校验密码
         if (!md5Password.equals(userDto.getPassword())) {
             throw new BusinessException(ErrorMessage.AUTH_FAILED);
         }
@@ -91,6 +97,19 @@ public class AuthServiceImpl implements AuthService {
         admin.put("phone", userDto.getPhone());
         admin.put("email", userDto.getEmail());
         return admin;
+    }
+
+    /**
+     * 校验用户角色权限
+     */
+    public void checkAuth(UserDto userDto){
+        if (userDto.getRoleId() == null){
+            throw new BusinessException(ErrorMessage.USER_ROLE_NOT_EXIT);
+        }
+        List<ResourceMenuDto> menuDtoList = roleService.listMenuByRoleId(String.valueOf(userDto.getRoleId()));
+        if (CollectionUtils.isEmpty(menuDtoList)){
+            throw new BusinessException(ErrorMessage.ROLE_PERMISSION_IS_EMPTY);
+        }
     }
 
 }
