@@ -707,9 +707,11 @@ public abstract class AbstractBaseOperator {
             Middleware detail = middlewareService.detail(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
             log.info("为实例：{}创建对外服务：状态：{},已用时：{}s", detail.getName(), detail.getStatus(), i);
             if (detail != null) {
-                if (needRunningMiddleware && detail.getStatus() != null && "Running".equals(detail.getStatus())) {
-                    createOpenService(middleware, middlewareServiceNameIndex);
-                    success = true;
+                if (needRunningMiddleware) {
+                    if (detail.getStatus() != null && "Running".equals(detail.getStatus())) {
+                        createOpenService(middleware, middlewareServiceNameIndex);
+                        success = true;
+                    }
                 } else {
                     createOpenService(middleware, middlewareServiceNameIndex);
                     success = true;
