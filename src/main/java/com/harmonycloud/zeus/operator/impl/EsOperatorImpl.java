@@ -130,6 +130,7 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
                         break;
                     case KIBANA:
                         middleware.getQuota().get(k).setNum(1);
+                        break;
                         // kibana不用存储，无需设置
                     case COLD:
                         middleware.getQuota().get(k).setNum(clusterInfo.getIntValue("coldReplacesCount"))
@@ -139,7 +140,6 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
                     default:
                 }
             });
-
             // 密码
             middleware.setPassword(values.getString("elasticPassword"));
         }

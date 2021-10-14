@@ -79,9 +79,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserDto> list(String keyword) throws Exception {
         CurrentUser currentUser = CurrentUserRepository.getUser();
+        String roleId = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString("roleId");
         QueryWrapper<BeanUser> userWrapper = new QueryWrapper<>();
-        // 获取创建者为自身的用户
-        if(!"admin".equals(currentUser.getUsername())){
+        // 非超级管理员角色用户 获取创建者为自身的用户
+        if(!"1".equals(roleId)){
             userWrapper.eq("creator", currentUser.getUsername());
         }
         List<BeanUser> beanUserList = beanUserMapper.selectList(userWrapper);
@@ -126,13 +127,6 @@ public class UserServiceImpl implements UserService {
     public void update(UserDto userDto) throws Exception {
         // 校验参数
         checkParams(userDto);
-
-        UserDto targetUser = this.get(userDto.getUserName(), false);
-        String currentUser = CurrentUserRepository.getUser().getUsername();
-        if (targetUser.getRoleId() != null && targetUser.getRoleId() == 1
-            && !currentUser.equals(targetUser.getUserName())) {
-            throw new BusinessException(ErrorMessage.NO_AUTHORITY);
-        }
         // 修改用户基本信息
         QueryWrapper<BeanUser> wrapper = new QueryWrapper<BeanUser>().eq("username", userDto.getUserName());
         BeanUser beanUser = new BeanUser();
@@ -168,7 +162,7 @@ public class UserServiceImpl implements UserService {
         if (ObjectUtils.isEmpty(beanUser)) {
             throw new BusinessException(ErrorMessage.USER_NOT_EXIT);
         }
-        beanUser.setPassword(PasswordUtils.md5("Ab123456!"));
+        beanUser.setPassword(PasswordUtils.md5("zeus123.com"));
         beanUser.setPasswordTime(new Date());
         beanUserMapper.updateById(beanUser);
         return true;
@@ -254,7 +248,7 @@ public class UserServiceImpl implements UserService {
         BeanUser beanUser = new BeanUser();
         BeanUtils.copyProperties(userDto, beanUser);
         if (StringUtils.isEmpty(beanUser.getPassword())) {
-            beanUser.setPassword(PasswordUtils.md5("Ab123456!"));
+            beanUser.setPassword(PasswordUtils.md5("zeus123.com"));
         }
         beanUser.setCreator(currentUser.getUsername());
         beanUser.setCreateTime(new Date());
