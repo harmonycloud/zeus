@@ -159,6 +159,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         MiddlewareBackupScheduleSpec middlewareBackupScheduleSpec = new MiddlewareBackupScheduleSpec(middlewareName, crdType, cron, limitRecord);
         middlewareBackupScheduleSpec.setName(middlewareName);
         middlewareBackupScheduleSpec.setType(crdType);
+        middlewareBackupScheduleSpec.setPause("off");
         middlewareBackupScheduleCRD.setSpec(middlewareBackupScheduleSpec);
         try {
             backupScheduleCRDService.create(clusterId, middlewareBackupScheduleCRD);
