@@ -149,7 +149,15 @@ public class RoleServiceImpl implements RoleService {
         beanRole.setDescription(roleDto.getDescription());
         beanRoleMapper.updateById(beanRole);
         // 更新角色权限
-        roleDto.getMenu().forEach(menu -> resourceMenuRoleService.update(roleDto.getId(), menu.getId(), menu.getOwn()));
+        if (!CollectionUtils.isEmpty(roleDto.getMenu())) {
+            CurrentUser currentUser = CurrentUserRepository.getUser();
+            String roleId = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString("roleId");
+            if (roleId.equals(String.valueOf(roleDto.getId()))) {
+                throw new BusinessException(ErrorMessage.NO_AUTHORITY);
+            }
+            roleDto.getMenu()
+                .forEach(menu -> resourceMenuRoleService.update(roleDto.getId(), menu.getId(), menu.getOwn()));
+        }
     }
 
     @Override
