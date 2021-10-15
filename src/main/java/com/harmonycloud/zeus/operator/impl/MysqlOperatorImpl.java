@@ -664,7 +664,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         MysqlDTO mysqlDTO = middleware.getMysqlDTO();
         if (mysqlDTO.getOpenDisasterRecoveryMode() != null && mysqlDTO.getOpenDisasterRecoveryMode() && mysqlDTO.getIsSource()) {
             //1.为实例创建只读对外服务(NodePort)
-            createOpenService(middleware, ServiceNameConvertUtil.convertMysql(middleware.getName(), true));
+            tryCreateOpenService(middleware, ServiceNameConvertUtil.convertMysql(middleware.getName(), true), true);
             //2.设置灾备实例信息，创建灾备实例
             //2.1 设置灾备实例信息
             Middleware relationMiddleware = middleware.getRelationMiddleware();
