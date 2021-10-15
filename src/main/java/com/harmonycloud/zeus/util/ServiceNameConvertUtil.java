@@ -53,7 +53,7 @@ public class ServiceNameConvertUtil {
      * @return
      */
     public static MiddlewareServiceNameIndex convertKafka(String middlewareName){
-        return new MiddlewareServiceNameIndex("kafkamanage-nodeport", "kafka-manage");
+        return new MiddlewareServiceNameIndex(middlewareName + "-manager-svc-nodeport", "kafka-manager-svc");
     }
 
     /**
