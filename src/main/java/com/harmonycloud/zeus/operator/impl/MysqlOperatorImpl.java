@@ -770,14 +770,13 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 } catch (Exception e) {
                     log.error("更新关联实例信息出错了", e);
                 }
-
-                // 删除灾备关联关系
-                try {
-                    mysqlReplicateCRDService.deleteMysqlReplicate(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
-                    log.info("mysql灾备关联关系删除成功");
-                } catch (Exception e) {
-                    log.error("mysql灾备关联关系删除失败", e);
-                }
+            }
+            // 删除灾备关联关系
+            try {
+                mysqlReplicateCRDService.deleteMysqlReplicate(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
+                log.info("mysql灾备关联关系删除成功");
+            } catch (Exception e) {
+                log.error("mysql灾备关联关系删除失败", e);
             }
         }
     }
