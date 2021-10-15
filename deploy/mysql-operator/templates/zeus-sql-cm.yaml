@@ -308,7 +308,7 @@ data:
     -- Records of user
     -- ----------------------------
     BEGIN;
-    INSERT INTO `user` VALUES (1, 'admin', '超级管理员', '5B99164F828AED74140E5FDA077B634C', NULL, NULL, NULL, NULL, NULL);
+    INSERT INTO `user` VALUES (1, 'admin', '超级管理员', '6DA05F9A0ED31ABEEFD41C768B2E7233', NULL, NULL, NULL, NULL, NULL);
     COMMIT;
 
     SET FOREIGN_KEY_CHECKS = 1;

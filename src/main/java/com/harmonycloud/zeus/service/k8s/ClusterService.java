@@ -30,7 +30,7 @@ public interface ClusterService {
      * @param detail 是否返回明细信息
      * @return
      */
-    List<MiddlewareClusterDTO> listClusters(boolean detail);
+    List<MiddlewareClusterDTO> listClusters(boolean detail, String key);
 
     /**
      * 设置集群属性

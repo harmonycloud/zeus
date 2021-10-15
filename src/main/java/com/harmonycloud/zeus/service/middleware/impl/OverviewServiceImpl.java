@@ -682,7 +682,7 @@ public class OverviewServiceImpl implements OverviewService {
 
     @Override
     public BaseResult getClusterPlatformOverview(String clusterId) {
-        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(true);
+        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(true, null);
         if (StringUtils.isNotBlank(clusterId)) {
             clusterList = clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
         }
@@ -728,7 +728,7 @@ public class OverviewServiceImpl implements OverviewService {
 
     @Override
     public BaseResult getClusterMiddlewareInfo(String clusterId) {
-        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(true);
+        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(true, null);
         if (StringUtils.isNotBlank(clusterId)) {
             clusterList = clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
         }

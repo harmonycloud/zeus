@@ -112,32 +112,36 @@ public class ClusterServiceImpl implements ClusterService {
 
     @Override
     public List<MiddlewareClusterDTO> listClusters() {
-        return listClusters(false);
+        return listClusters(false, null);
     }
 
     @Override
-    public List<MiddlewareClusterDTO> listClusters(boolean detail) {
+    public List<MiddlewareClusterDTO> listClusters(boolean detail, String key) {
         List<MiddlewareClusterDTO> clusters;
-            List<MiddlewareCluster> clusterList = clusterWrapper.listClusters();
-            if (clusterList.size() <= 0) {
-                return new ArrayList<>(0);
+        List<MiddlewareCluster> clusterList = clusterWrapper.listClusters();
+        if (clusterList.size() <= 0) {
+            return new ArrayList<>(0);
+        }
+        clusters = clusterList.stream().map(c -> {
+            MiddlewareClusterInfo info = c.getSpec().getInfo();
+            MiddlewareClusterDTO cluster = new MiddlewareClusterDTO();
+            BeanUtils.copyProperties(info, cluster);
+            cluster.setId(K8sClient.getClusterId(c.getMetadata())).setHost(info.getAddress())
+                .setName(c.getMetadata().getName()).setDcId(c.getMetadata().getNamespace())
+                .setIngress(info.getIngress());
+            if (!CollectionUtils.isEmpty(c.getMetadata().getAnnotations())) {
+                cluster.setNickname(c.getMetadata().getAnnotations().get(NAME));
             }
-            clusters = clusterList.stream().map(c -> {
-                MiddlewareClusterInfo info = c.getSpec().getInfo();
-                MiddlewareClusterDTO cluster = new MiddlewareClusterDTO();
-                BeanUtils.copyProperties(info, cluster);
-                cluster.setId(K8sClient.getClusterId(c.getMetadata())).setHost(info.getAddress())
-                    .setName(c.getMetadata().getName()).setDcId(c.getMetadata().getNamespace())
-                    .setIngress(info.getIngress());
-                if (!CollectionUtils.isEmpty(c.getMetadata().getAnnotations())) {
-                    cluster.setNickname(c.getMetadata().getAnnotations().get(NAME));
-                }
-                JSONObject attributes = new JSONObject();
-                attributes.put(CREATE_TIME, DateUtils.parseUTCDate(c.getMetadata().getCreationTimestamp()));
-                cluster.setAttributes(attributes);
-                
-                return SerializationUtils.clone(cluster);
-            }).collect(Collectors.toList());
+            JSONObject attributes = new JSONObject();
+            attributes.put(CREATE_TIME, DateUtils.parseUTCDate(c.getMetadata().getCreationTimestamp()));
+            cluster.setAttributes(attributes);
+
+            return SerializationUtils.clone(cluster);
+        }).collect(Collectors.toList());
+        if (StringUtils.isNotEmpty(key)){
+            clusters = clusters.stream().filter(clusterDTO -> clusterDTO.getNickname().contains(key))
+                .collect(Collectors.toList());
+        }
         // 返回命名空间信息
         if (detail && clusters.size() > 0) {
             clusters.parallelStream().forEach(cluster -> {

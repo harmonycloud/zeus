@@ -26,3 +26,8 @@ ALTER TABLE `user` ADD COLUMN password_time timestamp NULL DEFAULT NULL COMMENT 
 ALTER TABLE `user` ADD COLUMN creator varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '创建者';
 -- 8.角色表添加列parent
 ALTER TABLE `role` ADD COLUMN parent int(64) DEFAULT NULL COMMENT '父角色id';
+
+
+-- 2021.10.14 xutianhong
+-- 修改admin初始化密码
+UPDATE `user` SET password = '6DA05F9A0ED31ABEEFD41C768B2E7233' WHERE username = 'admin';
