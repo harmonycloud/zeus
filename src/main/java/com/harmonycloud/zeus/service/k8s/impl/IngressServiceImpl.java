@@ -423,11 +423,10 @@ public class IngressServiceImpl implements IngressService {
     }
 
     private ServicePort covertServicePort(ServiceDTO serviceDTO) {
-        if (StringUtils.isBlank(serviceDTO.getExposePort())) {
-            return null;
-        }
         ServicePort servicePort = new ServicePort();
-        servicePort.setNodePort(Integer.parseInt(serviceDTO.getExposePort()));
+        if (StringUtils.isNotEmpty(serviceDTO.getExposePort())) {
+            servicePort.setNodePort(Integer.parseInt(serviceDTO.getExposePort()));
+        }
         servicePort.setProtocol(Protocol.TCP.getValue());
         servicePort.setPort(Integer.parseInt(serviceDTO.getServicePort()));
 
