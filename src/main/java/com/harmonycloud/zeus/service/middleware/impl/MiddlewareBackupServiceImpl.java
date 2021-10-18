@@ -217,27 +217,42 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         return MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType() + "-" + middlewareName;
     }
 
+    /**
+     * 获取中间件恢复名称
+     * @param type
+     * @param middlewareName
+     * @return
+     */
+    public String getRestoreName(String type, String middlewareName) {
+        return MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType() + "-" + middlewareName + "-restore" + UUIDUtils.get8UUID();
+    }
+
     @Override
     public BaseResult createRestore(String clusterId, String namespace, String middlewareName, String type, String restoreName, String backupName, String aliasName) {
-        //check if exit
+        //检查服务是否已存在
         Middleware middleware = middlewareService.detail(clusterId, namespace, middlewareName, type);
         middleware.setName(restoreName);
         middleware.setClusterId(clusterId);
         MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(middleware.getClusterId());
         baseOperator.createPreCheck(middleware, cluster);
-
+        //设置中间件恢复信息
         MiddlewareRestoreCRD crd = new MiddlewareRestoreCRD();
         ObjectMeta meta = new ObjectMeta();
         meta.setNamespace(namespace);
-        meta.setName(restoreName);
+        meta.setName(getRestoreName(type, middlewareName));
         crd.setMetadata(meta);
-
+        //创建中间件恢复
         MiddlewareRestoreSpec spec = new MiddlewareRestoreSpec();
         spec.setBackupName(backupName);
-        spec.setName(getRealMiddlewareName(type, middlewareName));
+        spec.setName(getRealMiddlewareName(type, restoreName));
+        spec.setType(MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType());
         crd.setSpec(spec);
         try {
             restoreCRDService.create(clusterId, crd);
+            middleware.setName(restoreName);
+            middleware.setAliasName(aliasName);
+            middleware.setChartName(type);
+            middlewareService.create(middleware);
             return BaseResult.ok();
         } catch (IOException e) {
             log.error("备份服务创建失败");

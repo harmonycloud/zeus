@@ -188,7 +188,19 @@ public class MiddlewareCRDServiceImpl implements MiddlewareCRDService {
                 .setStatus(mw.getStatus() != null ? mw.getStatus().getPhase() : "")
                 .setReason(mw.getStatus() != null ? mw.getStatus().getReason() : "")
                 .setCreateTime(DateUtils.parseUTCDate(mw.getMetadata().getCreationTimestamp()))
-                .setPodNum(mw.getStatus() != null && mw.getStatus().getInclude().get(PODS) != null ? mw.getStatus().getInclude().get(PODS).size() : 0);
+                .setPodNum(getPodNum(mw));
     }
 
+    /**
+     * 获取服务pod数量
+     * @param mw
+     * @return
+     */
+    private int getPodNum(MiddlewareCRD mw) {
+        if ((mw.getStatus() != null && mw.getStatus().getInclude() != null && mw.getStatus().getInclude().get(PODS) != null)) {
+            return mw.getStatus().getInclude().get(PODS).size();
+        } else {
+            return 0;
+        }
+    }
 }

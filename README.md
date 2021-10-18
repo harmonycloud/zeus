@@ -45,8 +45,10 @@ make install
 http://<your ip>:31088
 
 用户名：admin
-密码：Ab123456!
+密码：zeus123.com
 ```
+
+详细部署方式参考：[https://github.com/harmonycloud/zeus/blob/main/deploy/READEME.md](https://github.com/harmonycloud/zeus/blob/main/deploy/READEME.md)
 
 ## 支持组件版本
 
