@@ -65,3 +65,35 @@ INSERT INTO `resource_menu` VALUES (14, 'roleManagement', '角色管理', 'syste
 INSERT INTO `resource_menu` VALUES (15, 'operationAudit', '操作审计', 'systemManagement/operationAudit', 73, NULL, 7, NULL);
 INSERT INTO `resource_menu` VALUES (16, 'resourcePoolManagement', '资源池管理', 'systemManagement/resourcePoolManagement', 74, NULL, 7, NULL);
 COMMIT;
+
+-- admin角色权限更新
+DROP TABLE IF EXISTS `resource_menu_role`;
+CREATE TABLE `resource_menu_role` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `role_id` int(11) DEFAULT NULL,
+  `resource_menu_id` int(11) DEFAULT NULL,
+  `available` tinyint(1) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='资源菜单角色关联表';
+
+-- ----------------------------
+-- Records of resource_menu_role
+-- ----------------------------
+BEGIN;
+INSERT INTO `resource_menu_role` VALUES (1, 1, 1, 1);
+INSERT INTO `resource_menu_role` VALUES (2, 1, 2, 1);
+INSERT INTO `resource_menu_role` VALUES (3, 1, 3, 1);
+INSERT INTO `resource_menu_role` VALUES (4, 1, 4, 1);
+INSERT INTO `resource_menu_role` VALUES (5, 1, 5, 1);
+INSERT INTO `resource_menu_role` VALUES (6, 1, 6, 1);
+INSERT INTO `resource_menu_role` VALUES (7, 1, 7, 1);
+INSERT INTO `resource_menu_role` VALUES (8, 1, 8, 1);
+INSERT INTO `resource_menu_role` VALUES (9, 1, 9, 1);
+INSERT INTO `resource_menu_role` VALUES (10, 1, 10, 1);
+INSERT INTO `resource_menu_role` VALUES (11, 1, 11, 1);
+INSERT INTO `resource_menu_role` VALUES (12, 1, 12, 1);
+INSERT INTO `resource_menu_role` VALUES (13, 1, 13, 1);
+INSERT INTO `resource_menu_role` VALUES (14, 1, 14, 1);
+INSERT INTO `resource_menu_role` VALUES (15, 1, 15, 1);
+INSERT INTO `resource_menu_role` VALUES (16, 1, 16, 1);
+COMMIT;
