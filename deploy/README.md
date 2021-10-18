@@ -43,5 +43,5 @@ Helm部署方式make命令支持参数列表
 | IMAGE_REPO    | 指定平台部署镜像的仓库                               | 镜像仓库名         | [http://middleware.harmonycloud.cn:38080](http://middleware.harmonycloud.cn:38080/) |
 | TYPE          | 指定部署类型                                         | docker-compose / helm | docker-compose                                               |
 | DEPLOY        | 指定在线/离线部署                                    | online / offline      | online                                                       |
-| STORAGE_CLASS | helm部署在中给数据库和平台后端使用的storageclass名称 | <StorageClassName>   | default                                                      |
+| STORAGE_CLASS | helm部署在中给数据库和平台后端使用的storageclass名称 | Your StorageClassName   | default                                                      |
 
