@@ -66,26 +66,26 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             items.forEach(item -> {
                 String backupName = item.getMetadata().getName();
                 MiddlewareBackupStatus backupStatus = item.getStatus();
+                MiddlewareBackupRecord backupRecord = new MiddlewareBackupRecord();
+                String backupTime = DateUtil.utc2Local(item.getMetadata().getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
+                backupRecord.setBackupTime(backupTime);
+                backupRecord.setBackupName(backupName);
                 if (backupStatus != null) {
                     MiddlewareBackupStatus.StorageProvider.Minio minio = item.getStatus().getStorageProvider().getMinio();
                     String backupAddressPrefix = minio.getUrl() + "/" + minio.getBucket() + "/" + minio.getPrefix();
-                    MiddlewareBackupRecord backupRecord = new MiddlewareBackupRecord();
-                    backupRecord.setBackupName(backupName);
-                    String backupTime = DateUtil.utc2Local(backupStatus.getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
-                    backupRecord.setBackupTime(backupTime);
                     List<MiddlewareBackupStatus.BackupInfo> backupInfos = backupStatus.getBackupInfos();
                     if (backupInfos != null) {
+                        List<String> backupAddressList = new ArrayList<>();
                         for (MiddlewareBackupStatus.BackupInfo backupInfo : backupInfos) {
                             if (!StringUtils.isBlank(backupInfo.getRepository())) {
-                                List<String> backupAddressList = new ArrayList<>();
                                 backupAddressList.add(backupAddressPrefix + "-" + backupInfo.getRepository());
                                 backupRecord.setBackupAddressList(backupAddressList);
                             }
                         }
                     }
                     backupRecord.setPhrase(item.getStatus().getPhase());
-                    recordList.add(backupRecord);
                 }
+                recordList.add(backupRecord);
             });
         }
         return recordList;
