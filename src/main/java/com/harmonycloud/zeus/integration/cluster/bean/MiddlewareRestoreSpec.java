@@ -13,7 +13,7 @@ public class MiddlewareRestoreSpec {
 
     private String backupName;
 
-    private String pod;
+    private String type;
 
     public MiddlewareRestoreSpec() {
     }
