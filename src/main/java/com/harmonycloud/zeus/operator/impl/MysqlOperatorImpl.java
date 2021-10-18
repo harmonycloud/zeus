@@ -107,7 +107,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 replicaCount++;
                 values.put(MysqlConstant.REPLICA_COUNT, replicaCount);
             }
-            if (mysqlDTO.getOpenDisasterRecoveryMode()) {
+            if (mysqlDTO.getOpenDisasterRecoveryMode() != null && mysqlDTO.getOpenDisasterRecoveryMode()) {
                 mysqlArgs.put(MysqlConstant.IS_SOURCE, mysqlDTO.getIsSource());
                 mysqlArgs.put(MysqlConstant.RELATION_CLUSTER_ID, mysqlDTO.getRelationClusterId());
                 mysqlArgs.put(MysqlConstant.RELATION_NAMESPACE, mysqlDTO.getRelationNamespace());
