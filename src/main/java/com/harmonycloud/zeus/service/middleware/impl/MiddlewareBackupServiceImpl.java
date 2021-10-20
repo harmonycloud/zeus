@@ -1,19 +1,19 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
+import cn.hutool.db.ds.pooled.PooledDSFactory;
 import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant;
 import com.harmonycloud.caas.common.enums.DateType;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.model.MiddlewareBackupScheduleConfig;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareBriefInfoDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.operator.impl.BaseOperatorImpl;
-import com.harmonycloud.zeus.service.k8s.ClusterService;
-import com.harmonycloud.zeus.service.k8s.MiddlewareBackupCRDService;
-import com.harmonycloud.zeus.service.k8s.MiddlewareBackupScheduleCRDService;
-import com.harmonycloud.zeus.service.k8s.MiddlewareRestoreCRDService;
+import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.util.CronUtils;
@@ -26,10 +26,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.StringReader;
+import java.util.*;
 
 /**
  * 中间件备份
@@ -53,6 +51,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private MiddlewareService middlewareService;
     @Autowired
     private ClusterService clusterService;
+    @Autowired
+    private MiddlewareCRDService middlewareCRDService;
 
     @Override
     public List<MiddlewareBackupRecord> list(String clusterId, String namespace, String middlewareName, String type) {
@@ -72,13 +72,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 backupRecord.setBackupName(backupName);
                 if (backupStatus != null) {
                     MiddlewareBackupStatus.StorageProvider.Minio minio = item.getStatus().getStorageProvider().getMinio();
-                    String backupAddressPrefix = minio.getUrl() + "/" + minio.getBucket() + "/" + minio.getPrefix();
+                    String backupAddressPrefix = minio.getUrl() + "/" + minio.getBucket() + "/" + (minio.getPrefix() != null ? minio.getPrefix() + "-" : "");
                     List<MiddlewareBackupStatus.BackupInfo> backupInfos = backupStatus.getBackupInfos();
                     if (backupInfos != null) {
                         List<String> backupAddressList = new ArrayList<>();
                         for (MiddlewareBackupStatus.BackupInfo backupInfo : backupInfos) {
                             if (!StringUtils.isBlank(backupInfo.getRepository())) {
-                                backupAddressList.add(backupAddressPrefix + "-" + backupInfo.getRepository());
+                                backupAddressList.add(backupAddressPrefix + backupInfo.getRepository());
                                 backupRecord.setBackupAddressList(backupAddressList);
                             }
                         }
@@ -108,7 +108,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         MiddlewareBackupScheduleCRD middlewareBackupScheduleCRD = backupScheduleCRDService.get(clusterId, namespace, backupName);
         try {
             MiddlewareBackupScheduleSpec spec = middlewareBackupScheduleCRD.getSpec();
-            spec.getSchedule().setCron(cron);
+            spec.getSchedule().setCron(CronUtils.parseUtcCron(cron));
             spec.getSchedule().setLimitRecord(limitRecord);
             spec.setPause(pause);
             backupScheduleCRDService.update(clusterId, middlewareBackupScheduleCRD);
@@ -142,8 +142,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
         MiddlewareBackupScheduleSpec spec = middlewareBackupScheduleCRD.getSpec();
         if (spec != null) {
-            config = new MiddlewareBackupScheduleConfig(spec.getSchedule().getCron(),
-                    spec.getSchedule().getLimitRecord(), CronUtils.calculateNextDate(spec.getSchedule().getCron()), spec.getPause(), true);
+            String localCron = CronUtils.parseLocalCron(spec.getSchedule().getCron());
+            config = new MiddlewareBackupScheduleConfig(localCron,
+                    spec.getSchedule().getLimitRecord(), CronUtils.calculateNextDate(localCron), spec.getPause(), true);
             return BaseResult.ok(config);
         }
         return BaseResult.ok();
@@ -156,7 +157,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         String backupName = middlewareRealName + "-backup";
         middlewareBackupScheduleCRD.setMetadata(getMiddlewareLabels(namespace, backupName, middlewareRealName));
 
-        MiddlewareBackupScheduleSpec middlewareBackupScheduleSpec = new MiddlewareBackupScheduleSpec(middlewareName, crdType, cron, limitRecord);
+        MiddlewareBackupScheduleSpec middlewareBackupScheduleSpec = new MiddlewareBackupScheduleSpec(middlewareName, crdType, CronUtils.parseUtcCron(cron), limitRecord);
         middlewareBackupScheduleSpec.setName(middlewareName);
         middlewareBackupScheduleSpec.setType(crdType);
         middlewareBackupScheduleSpec.setPause("off");
@@ -219,6 +220,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     /**
      * 获取中间件恢复名称
+     *
      * @param type
      * @param middlewareName
      * @return
@@ -236,27 +238,166 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(middleware.getClusterId());
         baseOperator.createPreCheck(middleware, cluster);
         //设置中间件恢复信息
-        MiddlewareRestoreCRD crd = new MiddlewareRestoreCRD();
-        ObjectMeta meta = new ObjectMeta();
-        meta.setNamespace(namespace);
-        meta.setName(getRestoreName(type, middlewareName));
-        crd.setMetadata(meta);
-        //创建中间件恢复
-        MiddlewareRestoreSpec spec = new MiddlewareRestoreSpec();
-        spec.setBackupName(backupName);
-        spec.setName(getRealMiddlewareName(type, restoreName));
-        spec.setType(MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType());
-        crd.setSpec(spec);
         try {
-            restoreCRDService.create(clusterId, crd);
             middleware.setName(restoreName);
             middleware.setAliasName(aliasName);
             middleware.setChartName(type);
             middlewareService.create(middleware);
+            tryCreateMiddlewareRestore(clusterId, namespace, type, middlewareName, backupName, restoreName);
             return BaseResult.ok();
-        } catch (IOException e) {
-            log.error("备份服务创建失败");
+        } catch (Exception e) {
+            log.error("备份服务创建失败", e);
             return BaseResult.error();
         }
     }
+
+    /**
+     * 尝试创建中间件恢复实例
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param middlewareName
+     * @param backupName
+     * @param restoreName
+     */
+    public void tryCreateMiddlewareRestore(String clusterId, String namespace, String type, String middlewareName, String backupName, String restoreName) {
+        boolean success = false;
+        for (int i = 0; i < 600 && !success; i++) {
+            log.info("为实例：{}创建恢复实例:{}", middlewareName, restoreName);
+            MiddlewareCRD cr = middlewareCRDService.getCR(clusterId, namespace, type, restoreName);
+            MiddlewareStatus status = cr.getStatus();
+            if (status != null && "Running".equals(status.getPhase())) {
+                createMiddlewareRestore(clusterId, namespace, type, middlewareName, backupName, restoreName, status);
+                break;
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                log.error("创建恢复实例失败", e);
+            }
+        }
+    }
+
+    /**
+     * 创建中间件恢复
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param middlewareName
+     * @param backupName
+     * @param restoreName
+     * @param status
+     */
+    public void createMiddlewareRestore(String clusterId, String namespace, String type, String middlewareName, String backupName, String restoreName, MiddlewareStatus status) {
+        try {
+            List<MiddlewareInfo> podList = status.getInclude().get(MiddlewareConstant.PODS);
+            List<MiddlewareInfo> pvcs = status.getInclude().get(MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS);
+            List<String> pods = new ArrayList<>();
+            podList.forEach(pod -> {
+                pods.add(pod.getName());
+            });
+            MiddlewareBackupCRD backup = backupCRDService.get(clusterId, namespace, backupName);
+            List<MiddlewareBackupStatus.BackupInfo> backupInfos = backup.getStatus().getBackupInfos();
+            orderPvc(pvcs);
+            orderBackupInfo(backupInfos);
+            MiddlewareRestoreCRD crd = new MiddlewareRestoreCRD();
+            ObjectMeta meta = new ObjectMeta();
+            meta.setNamespace(namespace);
+            meta.setName(getRestoreName(type, middlewareName));
+            crd.setMetadata(meta);
+            MiddlewareRestoreSpec spec = new MiddlewareRestoreSpec();
+            spec.setBackupName(backupName);
+            spec.setName(getRealMiddlewareName(type, restoreName));
+            spec.setType(MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType());
+            spec.setPods(pods);
+            spec.setRestoreBind(convertRestoreBind(backupInfos, pvcs));
+            crd.setSpec(spec);
+            restoreCRDService.create(clusterId, crd);
+        } catch (IOException e) {
+            log.error("创建恢复实例出错了", e);
+        }
+    }
+
+    /**
+     * 转换并返回RestoreBind信息
+     *
+     * @param backupInfos 中间件备份backupInfos
+     * @param pvcs        中间件pvc
+     * @return
+     */
+    private Map<String, String> convertRestoreBind(List<MiddlewareBackupStatus.BackupInfo> backupInfos, List<MiddlewareInfo> pvcs) {
+        Map<String, String> restoreBind = new HashMap<>();
+        for (int i = 0; i < pvcs.size(); i++) {
+            restoreBind.put(pvcs.get(i).getName(), backupInfos.get(i).getVolumeSnapshot());
+        }
+        return restoreBind;
+    }
+
+    /**
+     * 对BackupInfo信息进行排序
+     *
+     * @param backupInfos
+     */
+    private void orderBackupInfo(List<MiddlewareBackupStatus.BackupInfo> backupInfos) {
+        if (backupInfos.size() == 0) {
+            return;
+        }
+        backupInfos.forEach(backupInfo -> {
+            String volumeSnapshot = backupInfo.getVolumeSnapshot();
+            String str1 = volumeSnapshot.substring(0, volumeSnapshot.lastIndexOf("-"));
+            String str2 = str1.substring(str1.lastIndexOf("-"));
+            backupInfo.setOrderNum(Integer.parseInt(str2));
+        });
+        Collections.sort(backupInfos, new BackInfoComparator());
+    }
+
+    /**
+     * 对pvc信息进行排序
+     *
+     * @param pvcs
+     */
+    private void orderPvc(List<MiddlewareInfo> pvcs) {
+        if (pvcs.size() == 0) {
+            return;
+        }
+        pvcs.forEach(pvc -> {
+            String name = pvc.getName();
+            int num = Integer.parseInt(name.substring(name.lastIndexOf("-")));
+            pvc.setOrderNum(num);
+        });
+        Collections.sort(pvcs, new MiddlewareInfoComparator());
+    }
+
+    /**
+     * MiddlewareInfo排序类，按中间件信息编号进行排序
+     */
+    public static class MiddlewareInfoComparator implements Comparator<MiddlewareInfo> {
+        @Override
+        public int compare(MiddlewareInfo o1, MiddlewareInfo o2) {
+            if (o1.getOrderNum() > o2.getOrderNum()) {
+                return -1;
+            } else if (o1.getOrderNum() == o2.getOrderNum()) {
+                return 0;
+            } else {
+                return 1;
+            }
+        }
+    }
+
+    /**
+     * BackInfo排序类，按中间件信息编号进行排序
+     */
+    public static class BackInfoComparator implements Comparator<MiddlewareBackupStatus.BackupInfo> {
+        @Override
+        public int compare(MiddlewareBackupStatus.BackupInfo o1, MiddlewareBackupStatus.BackupInfo o2) {
+            if (o1.getOrderNum() > o2.getOrderNum()) {
+                return -1;
+            } else if (o1.getOrderNum() == o2.getOrderNum()) {
+                return 0;
+            } else {
+                return 1;
+            }
+        }
+    }
+
 }

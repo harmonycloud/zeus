@@ -32,6 +32,8 @@ public class MiddlewareBackupStatus {
 
         private String volumeSnapshot;
 
+        private int orderNum;
+
         public BackupInfo() {
         }
     }

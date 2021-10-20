@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.util;
 import com.harmonycloud.caas.common.enums.DateType;
 import com.harmonycloud.tool.date.DateUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.joda.time.DateTimeUtils;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -54,5 +55,55 @@ public class CronUtils {
             log.error("定时备份{} ,计算下次备份时间失败", e);
             return null;
         }
+    }
+
+    public static String parseUtcCron(String cron) {
+        String newCron = cron.replaceAll("[?]", "*");
+        String[] items = newCron.split(" ");
+        items[1] = getUtcHour(items[1]);
+        return getCron(items);
+    }
+
+    public static String parseLocalCron(String cron) {
+        String newCron = cron.replaceAll("[*]", "?");
+        String[] items = newCron.split(" ");
+        items[1] = getLocalHour(items[1]);
+        return getCron(items);
+    }
+
+    private static String getCron(String[] items) {
+        StringBuffer sbf = new StringBuffer();
+        for (int i = 0; i < items.length; i++) {
+            if (i != items.length - 1) {
+                sbf.append(items[i] + " ");
+            } else {
+                sbf.append(items[i]);
+            }
+        }
+        return sbf.toString();
+    }
+
+    private static String getUtcHour(String hour) {
+        int h = Integer.parseInt(hour);
+        int temp = h - 8;
+        int res = 0;
+        if (temp < 0) {
+            res = 24 + temp;
+        } else {
+            res = temp;
+        }
+        return String.valueOf(res);
+    }
+
+    private static String getLocalHour(String hour) {
+        int h = Integer.parseInt(hour);
+        int temp = h + 8;
+        int res = 0;
+        if (temp > 23) {
+            res = temp - 24;
+        } else {
+            res = temp;
+        }
+        return String.valueOf(res);
     }
 }

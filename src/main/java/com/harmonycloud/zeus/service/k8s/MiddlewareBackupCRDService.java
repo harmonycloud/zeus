@@ -31,7 +31,7 @@ public interface MiddlewareBackupCRDService {
     void delete(String clusterId, String namespace,String name)  throws IOException;
 
     /**
-     * 查询备份
+     * 查询备份列表
      * @param clusterId
      * @param namespace
      * @param labels
@@ -39,4 +39,12 @@ public interface MiddlewareBackupCRDService {
      */
     MiddlewareBackupList list(String clusterId, String namespace, Map<String,String> labels);
 
+    /**
+     * 根据备份名称查询备份
+     * @param clusterId
+     * @param namespace
+     * @param name
+     * @return
+     */
+    MiddlewareBackupCRD get(String clusterId, String namespace,String name) throws IOException;
 }

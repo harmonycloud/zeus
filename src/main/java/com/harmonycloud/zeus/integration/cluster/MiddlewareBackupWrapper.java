@@ -58,7 +58,7 @@ public class MiddlewareBackupWrapper {
     }
 
     /**
-     * 查询备份记录
+     * 查询备份记录列表
      * @param clusterId
      * @param namespace
      * @param labels
@@ -69,13 +69,26 @@ public class MiddlewareBackupWrapper {
         try {
             map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace, labels);
         } catch (Exception e) {
-            log.error("查询MiddlewareBackup出错了", e);
+            log.error("查询MiddlewareBackupList出错了", e);
             return null;
         }
         if (CollectionUtils.isEmpty(map)) {
             return null;
         }
         return JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareBackupList.class);
+    }
+
+    public MiddlewareBackupCRD get(String clusterId, String namespace, String name) throws IOException {
+        Map<String, Object> map = null;
+        try {
+            map = K8sClient.getClient(clusterId).customResource(CONTEXT).get(namespace, name);
+        } catch (Exception e) {
+            log.error("查询middlewareBackup出错了", e);
+        }
+        if (CollectionUtils.isEmpty(map)) {
+            return null;
+        }
+        return JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareBackupCRD.class);
     }
 
 }
