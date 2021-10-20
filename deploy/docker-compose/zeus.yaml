@@ -4,7 +4,7 @@ services:
     image: ${zeus_repository}zeus-ui:${zeus_version}
     restart: always
     ports:
-    - 30088:30088
+    - 31088:30088
     links:
     - zeus
     depends_on:
@@ -21,7 +21,7 @@ services:
     links:
     - zeus-mysql
     ports:
-    - 30089:8080
+    - 31089:8080
     depends_on:
     - zeus-mysql
     volumes:
@@ -33,8 +33,6 @@ services:
     restart: always
     environment:
     - MYSQL_ROOT_PASSWORD=ZeuS@Middleware01
-    ports:
-    - 3306:3306
     volumes:
     - /data/zeus-mysql/data:/var/lib/mysql
     - $PWD/conf/mysql/init:/docker-entrypoint-initdb.d/
