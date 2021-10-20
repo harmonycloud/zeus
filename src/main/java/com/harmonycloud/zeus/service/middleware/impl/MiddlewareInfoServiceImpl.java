@@ -1,31 +1,10 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareInfoDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareOperatorDTO;
-import com.harmonycloud.caas.common.model.middleware.PodInfo;
-import com.harmonycloud.caas.common.model.registry.HelmChartFile;
-import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
-import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
-import com.harmonycloud.zeus.dao.BeanMiddlewareInfoMapper;
-import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
-import com.harmonycloud.zeus.service.k8s.PodService;
-import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareService;
-import com.harmonycloud.zeus.util.MathUtil;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
+import static com.harmonycloud.caas.common.constants.CommonConstant.DOT;
+import static com.harmonycloud.caas.common.constants.CommonConstant.LINE;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.HARMONY_CLOUD;
+import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.ICON_SVG;
+import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.SVG;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,11 +18,32 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.DOT;
-import static com.harmonycloud.caas.common.constants.CommonConstant.LINE;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.HARMONY_CLOUD;
-import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.ICON_SVG;
-import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.SVG;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareInfoDTO;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareOperatorDTO;
+import com.harmonycloud.caas.common.model.middleware.PodInfo;
+import com.harmonycloud.caas.common.model.registry.HelmChartFile;
+import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
+import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
+import com.harmonycloud.zeus.dao.BeanMiddlewareInfoMapper;
+import com.harmonycloud.zeus.service.k8s.PodService;
+import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
+import com.harmonycloud.zeus.util.MathUtil;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author dengyulong
@@ -145,7 +145,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
                         .collect(Collectors.toList());
         Map<String, BeanClusterMiddlewareInfo> clusterMwInfoMap = clusterMwInfoList.stream()
                 .collect(Collectors.toMap(info -> info.getChartName() + "-" + info.getChartVersion(), info -> info));
-        //0-创建中 1-创建成功  2-待安装  3-运行异常
+        //0-创建中 1-创建成功  2-待安装  3-运行异常  4-无operator
         List<PodInfo> podList = podService.list(clusterId, "middleware-operator");
         podList = podList.stream().filter(pod -> pod.getPodName().contains("operator")).collect(Collectors.toList());
         // 转化为map，并去除pod name 后缀中的随机码
@@ -153,6 +153,10 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
             .substring(0, info.getPodName().lastIndexOf("-", info.getPodName().lastIndexOf("-") - 1))));
         mwInfoList.forEach(mwInfo -> {
             String key = mwInfo.getChartName() + "-" + mwInfo.getChartVersion();
+            if (StringUtils.isEmpty(mwInfo.getOperatorName())){
+                clusterMwInfoMap.get(key).setStatus(4);
+                return;
+            }
             if (podMap.containsKey(mwInfo.getOperatorName())) {
                 //过滤被驱逐的pod
                 List<PodInfo> podInfoList = podMap.get(mwInfo.getOperatorName()).stream()
@@ -232,9 +236,10 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         middlewareInfo.setType(helmChartFile.getType());
         middlewareInfo.setName(helmChartFile.getChartName());
         middlewareInfo.setDescription(helmChartFile.getDescription());
-        middlewareInfo.setOperatorName(helmChartFile.getDependency().get("alias"));
+        if(!CollectionUtils.isEmpty(helmChartFile.getDependency())){
+            middlewareInfo.setOperatorName(helmChartFile.getDependency().get("alias"));
+        }
         middlewareInfo.setOfficial(HARMONY_CLOUD.equals(helmChartFile.getOfficial()));
-        //LocalDateTime now = LocalDateTime.now();
         middlewareInfo.setUpdateTime(new Date());
         List<Path> iconFiles = searchFiles(file.getParent() + File.separator + helmChartFile.getTarFileName(), ICON_SVG);
         if (!CollectionUtils.isEmpty(iconFiles)) {
