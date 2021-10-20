@@ -355,7 +355,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
             for (MiddlewareInfoDTO middlewareInfoDTO : middlewareInfoDTOS) {
                 MiddlewareOperatorDTO.MiddlewareOperator operator = new MiddlewareOperatorDTO.MiddlewareOperator();
                 if (middlewareInfoDTO.getStatus() == 2) {
-                    break;
+                    continue;
                 }
                 operator.setName(middlewareInfoDTO.getName());
                 operator.setClusterId(clusterDTO.getId());
