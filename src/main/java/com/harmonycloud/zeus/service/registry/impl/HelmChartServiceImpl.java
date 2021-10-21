@@ -97,6 +97,11 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         if (mwInfo.getChart() == null || mwInfo.getChart().length == 0) {
             throw new BusinessException(ErrorMessage.NOT_FOUND);
         }
+        //创建upload路径
+        File upload = new File(uploadPath);
+        if (!upload.exists() && !upload.mkdirs()) {
+            throw new BusinessException(ErrorMessage.CREATE_TEMPORARY_FILE_ERROR);
+        }
         File file = new File(uploadPath + File.separator + chartName + "-" + chartVersion + ".tgz");
         if (!file.exists()) {
             InputStream in = new ByteArrayInputStream(mwInfo.getChart());
