@@ -469,6 +469,10 @@ public class IngressServiceImpl implements IngressService {
         ingressDTO.setProtocol(Protocol.TCP.getValue());
         ingressDTO.setCreateTime(DateUtil.utc2Local(service.getMetadata().getCreationTimestamp(),
                 DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue()));
+        List<OwnerReference> ownerReferences = service.getMetadata().getOwnerReferences();
+        if (!CollectionUtils.isEmpty(ownerReferences)) {
+            ingressDTO.setOwnerReferences(ownerReferences);
+        }
 
         Map<String, String> labels = service.getMetadata().getLabels();
         if (labels != null && !labels.isEmpty()) {

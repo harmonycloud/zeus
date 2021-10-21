@@ -315,6 +315,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 briefInfoDTO.setVersion(middlewareInfoDTO.getVersion());
                 briefInfoDTO.setServiceList(singleServiceList);
                 briefInfoDTO.setServiceNum(singleServiceList.size());
+                briefInfoDTO.setOfficial(middlewareInfoDTO.getOfficial());
                 serviceList.add(briefInfoDTO);
             }
             Collections.sort(serviceList, new MiddlewareBriefInfoDTOComparator());

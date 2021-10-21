@@ -6,10 +6,7 @@ import com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant;
 import com.harmonycloud.caas.common.enums.DateType;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.model.MiddlewareBackupScheduleConfig;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareBriefInfoDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.operator.impl.BaseOperatorImpl;
@@ -19,6 +16,7 @@ import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.util.CronUtils;
 import com.harmonycloud.zeus.util.DateUtil;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.OwnerReference;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +51,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private ClusterService clusterService;
     @Autowired
     private MiddlewareCRDService middlewareCRDService;
+    @Autowired
+    private IngressService ingressService;
 
     @Override
     public List<MiddlewareBackupRecord> list(String clusterId, String namespace, String middlewareName, String type) {
@@ -95,10 +95,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     public BaseResult create(String clusterId, String namespace, String middlewareName, String type, String cron, Integer limitRecord) {
         String middlewareRealName = getRealMiddlewareName(type, middlewareName);
         String middlewareCrdType = MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType();
+        List<OwnerReference> ownerReference = getOwnerReference(clusterId, namespace, type, middlewareName);
         if (StringUtils.isBlank(cron)) {
-            return createNormalBackup(clusterId, namespace, middlewareName, middlewareCrdType, middlewareRealName);
+            return createNormalBackup(clusterId, namespace, middlewareName, middlewareCrdType, middlewareRealName, ownerReference);
         } else {
-            return createScheduleBackup(clusterId, namespace, middlewareName, middlewareCrdType, middlewareRealName, cron, limitRecord);
+            return createScheduleBackup(clusterId, namespace, middlewareName, middlewareCrdType, middlewareRealName, cron, limitRecord, ownerReference);
         }
     }
 
@@ -151,12 +152,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
 
-    public BaseResult createScheduleBackup(String clusterId, String namespace, String middlewareName, String crdType, String middlewareRealName, String cron, Integer limitRecord) {
+    public BaseResult createScheduleBackup(String clusterId, String namespace, String middlewareName, String crdType, String middlewareRealName, String cron, Integer limitRecord, List<OwnerReference> ownerReference) {
         MiddlewareBackupScheduleCRD middlewareBackupScheduleCRD = new MiddlewareBackupScheduleCRD();
         middlewareBackupScheduleCRD.setKind("MiddlewareBackupSchedule");
         String backupName = middlewareRealName + "-backup";
-        middlewareBackupScheduleCRD.setMetadata(getMiddlewareLabels(namespace, backupName, middlewareRealName));
-
+        ObjectMeta meta = getMiddlewareLabels(namespace, backupName, middlewareRealName);
+        meta.setOwnerReferences(ownerReference);
+        middlewareBackupScheduleCRD.setMetadata(meta);
         MiddlewareBackupScheduleSpec middlewareBackupScheduleSpec = new MiddlewareBackupScheduleSpec(middlewareName, crdType, CronUtils.parseUtcCron(cron), limitRecord);
         middlewareBackupScheduleSpec.setName(middlewareName);
         middlewareBackupScheduleSpec.setType(crdType);
@@ -171,11 +173,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
     }
 
-    public BaseResult createNormalBackup(String clusterId, String namespace, String middlewareName, String crdType, String middlewareRealName) {
+    public BaseResult createNormalBackup(String clusterId, String namespace, String middlewareName, String crdType, String middlewareRealName, List<OwnerReference> ownerReference) {
         MiddlewareBackupCRD middlewareBackupCRD = new MiddlewareBackupCRD();
         middlewareBackupCRD.setKind("MiddlewareBackup");
         String backupName = middlewareRealName + "-" + UUIDUtils.get8UUID();
-        middlewareBackupCRD.setMetadata(getMiddlewareLabels(namespace, backupName, middlewareRealName));
+        ObjectMeta meta = getMiddlewareLabels(namespace, backupName, middlewareRealName);
+        //获取ownerReferences
+        meta.setOwnerReferences(ownerReference);
+        middlewareBackupCRD.setMetadata(meta);
         MiddlewareBackupSpec spec = new MiddlewareBackupSpec();
         spec.setName(middlewareName);
         spec.setType(crdType);
@@ -233,6 +238,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     public BaseResult createRestore(String clusterId, String namespace, String middlewareName, String type, String restoreName, String backupName, String aliasName) {
         //检查服务是否已存在
         Middleware middleware = middlewareService.detail(clusterId, namespace, middlewareName, type);
+        fixStorageUnit(middleware);
         middleware.setName(restoreName);
         middleware.setClusterId(clusterId);
         MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(middleware.getClusterId());
@@ -251,20 +257,20 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
     }
 
-    /**
-     * 尝试创建中间件恢复实例
-     * @param clusterId
-     * @param namespace
-     * @param type
-     * @param middlewareName
-     * @param backupName
-     * @param restoreName
-     */
     public void tryCreateMiddlewareRestore(String clusterId, String namespace, String type, String middlewareName, String backupName, String restoreName) {
-        boolean success = false;
-        for (int i = 0; i < 600 && !success; i++) {
-            log.info("为实例：{}创建恢复实例:{}", middlewareName, restoreName);
-            MiddlewareCRD cr = middlewareCRDService.getCR(clusterId, namespace, type, restoreName);
+        for (int i = 0; i < 600; i++) {
+            log.info("第 {} 次为实例：{}创建恢复实例:{}", i, middlewareName, restoreName);
+            MiddlewareCRD cr = null;
+            try {
+                cr = middlewareCRDService.getCR(clusterId, namespace, type, restoreName);
+            } catch (Exception e1) {
+                try {
+                    Thread.sleep(1000);
+                    continue;
+                } catch (InterruptedException e2) {
+                    e2.printStackTrace();
+                }
+            }
             MiddlewareStatus status = cr.getStatus();
             if (status != null && "Running".equals(status.getPhase())) {
                 createMiddlewareRestore(clusterId, namespace, type, middlewareName, backupName, restoreName, status);
@@ -272,24 +278,26 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             }
             try {
                 Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                log.error("创建恢复实例失败", e);
+            } catch (InterruptedException e2) {
+                e2.printStackTrace();
             }
         }
     }
 
     /**
      * 创建中间件恢复
-     * @param clusterId
-     * @param namespace
-     * @param type
-     * @param middlewareName
-     * @param backupName
-     * @param restoreName
-     * @param status
+     *
+     * @param clusterId      集群id
+     * @param namespace      分区
+     * @param type           中间件类型
+     * @param middlewareName 源中间件名称
+     * @param backupName     备份名称
+     * @param restoreName    恢复中间件名称
+     * @param status         恢复中间件状态信息
      */
     public void createMiddlewareRestore(String clusterId, String namespace, String type, String middlewareName, String backupName, String restoreName, MiddlewareStatus status) {
         try {
+            List<OwnerReference> ownerReference = getOwnerReference(clusterId, namespace, type, restoreName);
             List<MiddlewareInfo> podList = status.getInclude().get(MiddlewareConstant.PODS);
             List<MiddlewareInfo> pvcs = status.getInclude().get(MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS);
             List<String> pods = new ArrayList<>();
@@ -304,6 +312,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             ObjectMeta meta = new ObjectMeta();
             meta.setNamespace(namespace);
             meta.setName(getRestoreName(type, middlewareName));
+            meta.setOwnerReferences(ownerReference);
             crd.setMetadata(meta);
             MiddlewareRestoreSpec spec = new MiddlewareRestoreSpec();
             spec.setBackupName(backupName);
@@ -398,6 +407,41 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 return 1;
             }
         }
+    }
+
+    /**
+     * 修复存储单位
+     *
+     * @param middleware
+     */
+    public void fixStorageUnit(Middleware middleware) {
+        Map<String, MiddlewareQuota> quota = middleware.getQuota();
+        if (quota != null) {
+            quota.forEach((k, v) -> {
+                if (v.getStorageClassQuota() != null)
+                    v.setStorageClassQuota(v.getStorageClassQuota().replaceAll("Gi", ""));
+            });
+        }
+    }
+
+    /**
+     * 获取实例ownerReference
+     *
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param name
+     * @return
+     */
+    public List<OwnerReference> getOwnerReference(String clusterId, String namespace, String type, String name) {
+        List<IngressDTO> ingressDTOS = ingressService.get(clusterId, namespace, type, name);
+        if (CollectionUtils.isEmpty(ingressDTOS)) {
+            OwnerReference ownerReference = (OwnerReference) ingressDTOS.get(0).getOwnerReferences();
+            ArrayList<OwnerReference> ownerReferences = new ArrayList<>();
+            ownerReferences.add(ownerReference);
+            return ownerReferences;
+        }
+        return null;
     }
 
 }
