@@ -205,6 +205,10 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     public void coverYamlFile(HelmChartFile helmChart) {
         String unzipTarFilePath = getHelmChartFilePath(helmChart.getChartName(), helmChart.getChartVersion())
             + File.separator + helmChart.getTarFileName();
+        //特殊处理logstash
+        if("logstash".equals(helmChart.getChartName())){
+            helmChart.setValueYaml(helmChart.getValueYaml().replace("|-", ""));
+        }
         try {
             // 覆盖写入values.yaml
             FileUtil.writeToLocal(unzipTarFilePath, VALUES_YAML_NAME,

@@ -1,14 +1,14 @@
-annotations:
-  owner: harmonycloud
 apiVersion: v2
 appVersion: 6.8.10-1
-dependencies:
-- alias: elasticsearch-operator-controller
-  condition: elasticsearch-operator.enabled
-  name: elasticsearch-operator
-  repository: file://./charts/elasticsearch-operator
-  version: 1.5.9
 description: Elasticsearch by Harmonycloud
 name: elasticsearch
 type: application
-version: 1.5.9
+version: 1.5.13-1
+dependencies:
+  - alias: elasticsearch-operator-controller
+    condition: elasticsearch-operator.enabled
+    name: elasticsearch-operator
+    repository: file://./charts/elasticsearch-operator
+    version: 1.5.13-1
+annotations:
+  owner: harmonycloud

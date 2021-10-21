@@ -11,6 +11,7 @@ spec:
   elasticBusyImage: {{ .Values.image.repository }}/busybox:{{ .Values.image.busyImageTag }}
   elasticKibanaConfigMap: {{ include "elasticsearch.fullname" . }}-kibana-config
   elasticSearchConfigMap: {{ include "elasticsearch.fullname" . }}-es-config
+  elasticSearchNoBoxTypeConfigMap: {{ include "elasticsearch.fullname" . }}-es-no-boxtype-config
   esExporterPort: 19114
   esHttpPort: 9200
   esKibanaPort: 5200
@@ -27,21 +28,22 @@ spec:
   masterReplaces: {{ .Values.cluster.masterReplacesCount }}
   dataReplaces: {{ .Values.cluster.dataReplacesCount }}
   clientReplaces: {{ .Values.cluster.clientReplacesCount }}
-  totalReplaces: {{ add .Values.cluster.masterReplacesCount .Values.cluster.dataReplacesCount .Values.cluster.clientReplacesCount  }}
+  coldReplaces: {{ .Values.cluster.coldReplacesCount }}
+  totalReplaces: {{ add .Values.cluster.masterReplacesCount .Values.cluster.dataReplacesCount .Values.cluster.clientReplacesCount .Values.cluster.coldReplacesCount  }}
   pod:
   - env:
     - name: TZ
       value: Asia/Shanghai
-  {{- if .Values.logging.collection.stdout.enabled}}
-    - name: aliyun_logs_middlewarestdout
+  {{- if ((((.Values.logging).collection).stdout).enabled)}}
+    - name: aliyun_logs_stdout
       value: stdout
-    - name: aliyun_logs_middlewarestdout_tags
+    - name: aliyun_logs_stdout_tags
       value: middleware_name={{ include "elasticsearch.fullname" . }}
   {{- end}}
-  {{- if .Values.logging.collection.filelog.enabled}}
-    - name: aliyun_logs_middlewarelogstash
+  {{- if ((((.Values.logging).collection).filelog).enabled)}}
+    - name: aliyun_logs_logstash
       value: /data/elastic/{{ include "elasticsearch.fullname" . }}/**/log/*.log
-    - name: aliyun_logs_middlewarelogstash_tags
+    - name: aliyun_logs_logstash_tags
       value: middleware_name={{ include "elasticsearch.fullname" . }}
   {{- end}}
     initImage: {{ .Values.image.repository }}/es-init:{{ .Values.image.initImageTag }}

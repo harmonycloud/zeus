@@ -2,7 +2,7 @@ global:
   repository: 10.1.11.100/middleware
   middleware_controller:
     image: middleware-controller
-    tag: v1.1.0
+    tag: v1.2.0
     resources:
       limits:
         cpu: 200m

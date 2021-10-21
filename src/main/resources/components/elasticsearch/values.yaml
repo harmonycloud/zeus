@@ -5,10 +5,10 @@ args: {}
 #  xpack_watcher_enabled: false
 
 storage:
-  masterSize: 5Gi
-  dataSize: 5Gi
-  clientSize: 5Gi
-
+  masterSize: 1Gi
+  dataSize: 1Gi
+  clientSize: 1Gi
+  coldSize: 1Gi
 hostNetwork: false
 
 image:
@@ -16,7 +16,7 @@ image:
   pullPolicy: IfNotPresent
   busyImageTag: "1.0"
   kibanaImageTag: 6.8.10
-  initImageTag: 1.4.0
+  initImageTag: 1.4.1
   elasticImageTag: 6.8.10-5
   exporterImageTag: 1.1.0rc1
   testImageTag: v0.3
@@ -24,16 +24,20 @@ image:
 cluster:
   mode: simple
   masterReplacesCount: 3
+# coldReplacesCount: 3
 
 #  mode: regular
 #  masterReplacesCount: 3
 #  dataReplacesCount: 3
+#  coldReplacesCount: 3
 
 #  mode: complex
 #  masterReplacesCount: 3
 #  dataReplacesCount: 3
 #  clientReplacesCount: 1
+#  coldReplacesCount: 3
 
+  
 nameOverride: ""
 fullnameOverride: ""
 
@@ -41,6 +45,13 @@ fullnameOverride: ""
 #esJavaOpts:
 
 resources:
+  cold:
+    limits:
+      cpu: "1"
+      memory: 4Gi
+    requests:
+      cpu: "1"
+      memory: 4Gi
   client:
     limits:
       cpu: "1"
@@ -86,6 +97,3 @@ podAntiAffinityTopologKey: "kubernetes.io/hostname"
 
 #取值[hard|soft] hard:强制反亲和 soft:非强制反亲和
 podAntiAffinity: "soft"
-
-
-

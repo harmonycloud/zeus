@@ -1,13 +1,28 @@
-image:
-  repository: middleware.harmonycloud.cn:38080/middleware
-  pullPolicy: IfNotPresent
-  tag: v1.5.9
 replicaCount: 1
-tolerations: []
-nameOverride: ''
-podSecurityContext: {}
+
+image:
+  repository: harbor.middleware.com/middleware
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: v1.5.13
+
 imagePullSecrets: []
-fullnameOverride: ''
+nameOverride: ""
+fullnameOverride: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+# fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+# runAsUser: 1000
+
 resources:
   limits:
     cpu: 200m
@@ -15,7 +30,9 @@ resources:
   requests:
     cpu: 100m
     memory: 256Mi
-securityContext: {}
-podAnnotations: {}
+
 nodeSelector: {}
+
+tolerations: []
+
 affinity: {}
