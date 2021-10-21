@@ -230,7 +230,8 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
      */
     public void replaceACL(Middleware middleware, JSONObject values) {
         JSONObject acl = new JSONObject();
-        if (middleware.getRocketMQParam().getAcl().getEnable()) {
+
+        if (middleware.getRocketMQParam() != null && middleware.getRocketMQParam().getAcl().getEnable()) {
             RocketMQACL rocketMQACL = middleware.getRocketMQParam().getAcl();
             acl.put("enable", rocketMQACL.getEnable());
             acl.put("globalWhiteRemoteAddresses", StringUtils.isNotEmpty(rocketMQACL.getGlobalWhiteRemoteAddresses())

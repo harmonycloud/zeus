@@ -76,7 +76,7 @@ public interface MiddlewareBackupService {
      * @param limitRecord        备份保留个数
      * @return
      */
-    BaseResult createScheduleBackup(String clusterId, String namespace, String middlewareName, String crdType, String middlewareRealName, String cron, Integer limitRecord, List<OwnerReference> ownerReference);
+    BaseResult createScheduleBackup(String clusterId, String namespace, String middlewareName, String crdType, String middlewareRealName, String cron, Integer limitRecord);
 
     /**
      * 立即备份
@@ -86,7 +86,7 @@ public interface MiddlewareBackupService {
      * @param middlewareRealName 中间件名称
      * @return
      */
-    BaseResult createNormalBackup(String clusterId, String namespace, String middlewareName, String crdType, String middlewareRealName, List<OwnerReference> ownerReference);
+    BaseResult createNormalBackup(String clusterId, String namespace, String middlewareName, String crdType, String middlewareRealName);
 
     /**
      * 创建恢复
