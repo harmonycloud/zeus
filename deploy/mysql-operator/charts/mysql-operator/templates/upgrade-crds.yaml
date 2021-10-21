@@ -1,0 +1,220 @@
+{{- if  .Values.kubectl.installCRDs}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "mysql-operator.fullname" . }}-install-crds
+  labels:
+    {{- include "mysql-operator.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade,pre-rollback
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "1"
+  labels:
+    app.kubernetes.io/name: {{ include "mysql-operator.fullname" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "mysql-operator.fullname" . }}-install-crds
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade,pre-rollback
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "1"
+  labels:
+    app.kubernetes.io/name: {{ include "mysql-operator.fullname" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "mysql-operator.fullname" . }}-install-crds
+subjects:
+- kind: ServiceAccount
+  name: {{ include "mysql-operator.fullname" . }}-install-crds
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "mysql-operator.fullname" . }}-install-crds
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade,pre-rollback
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "1"
+  labels:
+    app.kubernetes.io/name: {{ include "mysql-operator.fullname" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+rules:
+- apiGroups:
+    - "apiextensions.k8s.io"
+  resources:
+    - customresourcedefinitions
+  verbs:
+    - get
+    - list
+    - patch
+    - update
+    - create
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "mysql-operator.fullname" . }}-install-crds
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade,pre-rollback
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "1"
+  labels:
+    app.kubernetes.io/name: {{ include "mysql-operator.fullname" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  crds.yaml: |
+    apiVersion: apiextensions.k8s.io/v1beta1
+    kind: CustomResourceDefinition
+    metadata:
+      name:  mysqlclusters.mysql.middleware.harmonycloud.cn
+      labels:
+        MiddlewareCluster: mysqlcluster
+    spec:
+      group: mysql.middleware.harmonycloud.cn
+      names:
+        kind: MysqlCluster
+        listKind: MysqlClusterList
+        plural: mysqlclusters
+        shortNames:
+          - mc
+        singular: mysqlcluster
+      scope: Namespaced
+      version: v1alpha1
+      subresources: { }
+    ---
+    apiVersion: apiextensions.k8s.io/v1beta1
+    kind: CustomResourceDefinition
+    metadata:
+      name: mysqlbackups.mysql.middleware.harmonycloud.cn
+      labels:
+        MiddlewareCluster: mysqlbackup
+        parent: mysqlcluster
+    spec:
+      group: mysql.middleware.harmonycloud.cn
+      names:
+        kind: MysqlBackup
+        listKind: MysqlBackupList
+        plural: mysqlbackups
+        shortNames:
+          - mb
+        singular: mysqlbackup
+      scope: Namespaced
+      version: v1alpha1
+    ---
+    apiVersion: apiextensions.k8s.io/v1beta1
+    kind: CustomResourceDefinition
+    metadata:
+      name: mysqlbackupschedules.mysql.middleware.harmonycloud.cn
+      labels:
+        MiddlewareCluster: mysqlbackupschedule
+        parent: mysqlcluster
+    spec:
+      group: mysql.middleware.harmonycloud.cn
+      names:
+        kind: MysqlBackupSchedule
+        listKind: MysqlBackupScheduleList
+        plural: mysqlbackupschedules
+        shortNames:
+          - mbs
+        singular: mysqlbackupschedule
+      scope: Namespaced
+      version: v1alpha1
+    ---
+    apiVersion: apiextensions.k8s.io/v1beta1
+    kind: CustomResourceDefinition
+    metadata:
+      name: mysqlreplicates.mysql.middleware.harmonycloud.cn
+    spec:
+      group: mysql.middleware.harmonycloud.cn
+      names:
+        kind: MysqlReplicate
+        listKind: MysqlReplicateList
+        plural: mysqlreplicates
+        shortNames:
+          - mr
+        singular: mysqlreplicate
+      scope: Namespaced
+      version: v1alpha1
+      subresources:
+        status: {}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "mysql-operator.fullname" . }}-install-crds
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade,pre-rollback
+    "helm.sh/hook-delete-policy": before-hook-creation
+    "helm.sh/hook-weight": "2"
+  labels:
+    app.kubernetes.io/name: {{ include "mysql-operator.fullname" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      name: {{ include "mysql-operator.fullname" . }}-install-crds
+      {{- with .Values.kubectl.labels }}
+      labels:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.kubectl.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+    {{- if .Values.image.imagePullSecrets }}
+      imagePullSecrets:
+      {{- range .Values.image.imagePullSecrets }}
+        - name: {{ . }}
+      {{- end }}
+    {{- end }}
+      serviceAccountName: {{ include "mysql-operator.fullname" . }}-install-crds
+      containers:
+        - name: kubectl
+          image: "{{ .Values.image.repository }}/kubectl:{{ .Values.image.kubectlTag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - kubectl apply -f /tmp/crds.yaml
+          {{- with .Values.kubectl.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - mountPath: /tmp
+              name: crds
+      volumes:
+        - name: crds
+          configMap:
+            name: {{ include "mysql-operator.fullname" . }}-install-crds
+            items:
+            - key: "crds.yaml"
+              path: "crds.yaml"
+      restartPolicy: OnFailure
+      {{- with .Values.kubectl.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.kubectl.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.kubectl.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
