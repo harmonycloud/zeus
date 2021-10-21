@@ -1,9 +1,7 @@
 package com.harmonycloud.zeus.integration.cluster;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupCRD;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupList;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareRestoreCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.util.K8sClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import lombok.extern.slf4j.Slf4j;
@@ -56,5 +54,17 @@ public class MiddlewareRestoreWrapper {
         K8sClient.getClient(clusterId).customResource(CONTEXT).delete(namespace, name);
     }
 
-
+    public MiddlewareRestoreList list(String clusterId, String namespace, Map<String,String> labels){
+        Map<String, Object> map = null;
+        try {
+            map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace, labels);
+        } catch (Exception e) {
+            log.error("查询MiddlewareRestoreList出错了", e);
+            return null;
+        }
+        if (CollectionUtils.isEmpty(map)) {
+            return null;
+        }
+        return JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareRestoreList.class);
+    }
 }

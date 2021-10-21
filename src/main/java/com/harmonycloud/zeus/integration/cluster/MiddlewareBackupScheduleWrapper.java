@@ -1,7 +1,9 @@
 package com.harmonycloud.zeus.integration.cluster;
 
 import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupList;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupScheduleCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupScheduleList;
 import com.harmonycloud.zeus.util.K8sClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import lombok.extern.slf4j.Slf4j;
@@ -86,4 +88,17 @@ public class MiddlewareBackupScheduleWrapper {
         return JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareBackupScheduleCRD.class);
     }
 
+    public MiddlewareBackupScheduleList list(String clusterId, String namespace, Map<String,String> labels){
+        Map<String, Object> map = null;
+        try {
+            map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace, labels);
+        } catch (Exception e) {
+            log.error("查询MiddlewareBackupScheduleList出错了", e);
+            return null;
+        }
+        if (CollectionUtils.isEmpty(map)) {
+            return null;
+        }
+        return JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareBackupScheduleList.class);
+    }
 }

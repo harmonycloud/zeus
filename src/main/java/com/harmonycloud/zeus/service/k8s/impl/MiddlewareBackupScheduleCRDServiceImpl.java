@@ -2,12 +2,14 @@ package com.harmonycloud.zeus.service.k8s.impl;
 
 import com.harmonycloud.zeus.integration.cluster.MiddlewareBackupScheduleWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupScheduleCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupScheduleList;
 import com.harmonycloud.zeus.service.k8s.MiddlewareBackupScheduleCRDService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * @author liyinlong
@@ -33,5 +35,15 @@ public class MiddlewareBackupScheduleCRDServiceImpl implements MiddlewareBackupS
     @Override
     public MiddlewareBackupScheduleCRD get(String clusterId, String namespace, String backupName) {
         return middlewareBackupScheduleWrapper.get(clusterId, namespace, backupName);
+    }
+
+    @Override
+    public void delete(String clusterId, String namespace, String name) throws IOException {
+        middlewareBackupScheduleWrapper.delete(clusterId, namespace, name);
+    }
+
+    @Override
+    public MiddlewareBackupScheduleList list(String clusterId, String namespace, Map<String, String> labels) {
+        return middlewareBackupScheduleWrapper.list(clusterId, namespace, labels);
     }
 }

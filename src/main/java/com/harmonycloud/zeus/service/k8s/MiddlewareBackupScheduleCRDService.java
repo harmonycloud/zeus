@@ -1,8 +1,10 @@
 package com.harmonycloud.zeus.service.k8s;
 
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupScheduleCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupScheduleList;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * 中间件备份
@@ -36,4 +38,21 @@ public interface MiddlewareBackupScheduleCRDService {
      */
     MiddlewareBackupScheduleCRD get(String clusterId, String namespace, String backupName);
 
+    /**
+     * 删除定时备份
+     * @param clusterId
+     * @param namespace
+     * @param name
+     * @throws IOException
+     */
+    void delete(String clusterId, String namespace, String name)  throws IOException;
+
+    /**
+     *
+     * @param clusterId
+     * @param namespace
+     * @param labels
+     * @return
+     */
+    MiddlewareBackupScheduleList list(String clusterId, String namespace, Map<String,String> labels);
 }
