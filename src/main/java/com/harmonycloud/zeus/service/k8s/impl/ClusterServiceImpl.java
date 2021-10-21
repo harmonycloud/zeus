@@ -607,7 +607,7 @@ public class ClusterServiceImpl implements ClusterService {
 
     public void middlewareController(MiddlewareClusterDTO cluster){
         String setValues = "global.repository=" + cluster.getRegistry().getRegistryAddress() + "/" + cluster.getRegistry().getChartRepo();
-        helmChartService.upgradeInstall("middleware-controller", "default", setValues,
+        helmChartService.upgradeInstall("middleware-controller", "middleware-operator", setValues,
                 componentsPath + File.separator + "platform", cluster);
     }
 
