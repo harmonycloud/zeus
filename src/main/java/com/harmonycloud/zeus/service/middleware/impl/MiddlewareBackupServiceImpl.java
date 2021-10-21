@@ -255,9 +255,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public BaseResult createRestore(String clusterId, String namespace, String middlewareName, String type, String restoreName, String backupName, String aliasName) {
         //检查服务是否已存在
-
-        deleteMiddlewareBackupInfo(clusterId, namespace, type, middlewareName);
-
         Middleware middleware = middlewareService.detail(clusterId, namespace, middlewareName, type);
         fixStorageUnit(middleware);
         middleware.setName(restoreName);
