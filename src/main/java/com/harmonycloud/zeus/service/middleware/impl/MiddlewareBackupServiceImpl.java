@@ -10,6 +10,7 @@ import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.operator.impl.BaseOperatorImpl;
+import com.harmonycloud.zeus.schedule.MiddlewareManageTask;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
@@ -53,7 +54,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Autowired
     private MiddlewareCRDService middlewareCRDService;
     @Autowired
-    private ServiceService serviceService;
+    private MiddlewareManageTask middlewareManageTask;
 
     @Override
     public List<MiddlewareBackupRecord> list(String clusterId, String namespace, String middlewareName, String type) {
@@ -267,7 +268,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             middleware.setAliasName(aliasName);
             middleware.setChartName(type);
             middlewareService.create(middleware);
-            tryCreateMiddlewareRestore(clusterId, namespace, type, middlewareName, backupName, restoreName);
+            middlewareManageTask.asyncCreateBackupRestore(clusterId, namespace, type, middlewareName, backupName, restoreName,this);
             return BaseResult.ok();
         } catch (Exception e) {
             log.error("备份服务创建失败", e);
