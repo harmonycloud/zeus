@@ -145,7 +145,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
                         .collect(Collectors.toList());
         Map<String, BeanClusterMiddlewareInfo> clusterMwInfoMap = clusterMwInfoList.stream()
                 .collect(Collectors.toMap(info -> info.getChartName() + "-" + info.getChartVersion(), info -> info));
-        //0-创建中 1-创建成功  2-待安装  3-运行异常  4-无operator
+        //0-创建中 1-创建成功  2-待安装  3-运行异常
         List<PodInfo> podList = podService.list(clusterId, "middleware-operator");
         podList = podList.stream().filter(pod -> pod.getPodName().contains("operator")).collect(Collectors.toList());
         // 转化为map，并去除pod name 后缀中的随机码
@@ -154,7 +154,6 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         mwInfoList.forEach(mwInfo -> {
             String key = mwInfo.getChartName() + "-" + mwInfo.getChartVersion();
             if (StringUtils.isEmpty(mwInfo.getOperatorName())){
-                clusterMwInfoMap.get(key).setStatus(4);
                 return;
             }
             if (podMap.containsKey(mwInfo.getOperatorName())) {
