@@ -6,7 +6,7 @@ metadata:
     operatorname: mysql-operator
 spec:
 {{- if .Values.init_at_setup.enabled }}
-  initScriptCMName: {{ include "mysql.fullname" . }}-init-sql-file
+  initScriptCMName: zeus-init-sql-file
 {{- end }}
   clusterSwitch:
     switched: false
