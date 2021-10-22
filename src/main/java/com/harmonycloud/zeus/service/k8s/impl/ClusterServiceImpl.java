@@ -548,6 +548,8 @@ public class ClusterServiceImpl implements ClusterService {
         }
         // 安装minio
         try {
+            //创建minio分区
+            namespaceService.save(cluster.getId(), "minio");
             minio(repository, cluster);
             // 记录数据
             Map<String, String> storage = new HashMap<>();
@@ -697,7 +699,7 @@ public class ClusterServiceImpl implements ClusterService {
                 ",persistence.storageClass=local-path" +
                 ",minioArgs.bucketName=velero" +
                 ",service.nodePort=31909";
-        helmChartService.upgradeInstall("minio", "default", setValues,
+        helmChartService.upgradeInstall("minio", "minio", setValues,
                 componentsPath + File.separator + "minio/charts/minio", cluster);
     }
 
