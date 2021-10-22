@@ -115,7 +115,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             MiddlewareBackupScheduleSpec spec = middlewareBackupScheduleCRD.getSpec();
             spec.getSchedule().setCron(CronUtils.parseUtcCron(cron));
             spec.getSchedule().setLimitRecord(limitRecord);
-            spec.setPause(pause);
+            if (StringUtils.isBlank(pause)) {
+                spec.setPause("off");
+            } else {
+                spec.setPause(pause);
+            }
             backupScheduleCRDService.update(clusterId, middlewareBackupScheduleCRD);
             return BaseResult.ok();
         } catch (IOException e) {
@@ -261,13 +265,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         middleware.setName(restoreName);
         middleware.setClusterId(clusterId);
         MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(middleware.getClusterId());
-//        baseOperator.createPreCheck(middleware, cluster);
+        baseOperator.createPreCheck(middleware, cluster);
         //设置中间件恢复信息
         try {
             middleware.setName(restoreName);
             middleware.setAliasName(aliasName);
             middleware.setChartName(type);
-//            middlewareService.create(middleware);
+            middlewareService.create(middleware);
             middlewareManageTask.asyncCreateBackupRestore(clusterId, namespace, type, middlewareName, backupName, restoreName,this);
             return BaseResult.ok();
         } catch (Exception e) {
