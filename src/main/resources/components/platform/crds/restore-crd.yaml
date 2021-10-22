@@ -37,8 +37,10 @@ spec:
                   type: string
                 type:
                   type: string
-                pod:
-                  type: string
+                pods:
+                  items:
+                    type: string
+                  type: array
                 backupName:
                   type: string
                 restoreBind:
@@ -52,32 +54,32 @@ spec:
                 creationTimestamp:
                   format: date-time
                   type: string
-#                records:
-#                  description: MiddlewareBackupRecords defines the observed state of MiddlewareBackupStatus
-#                  items:
-#                    properties:
-#                      creationTimestamp:
-#                        format: date-time
-#                        type: string
-#                      details:
-#                        items:
-#                          properties:
-#                            name:
-#                              type: string
-#                            pod:
-#                              type: string
-#                            pvc:
-#                              type: string
-#                            volumeSnapshot:
-#                              type: string
-#                            phase:
-#                              type: string
-#                            reason:
-#                              type: string
-#                          type: object
-#                        type: array
-#                    type: object
-#                  type: array
+                #                records:
+                #                  description: MiddlewareBackupRecords defines the observed state of MiddlewareBackupStatus
+                #                  items:
+                #                    properties:
+                #                      creationTimestamp:
+                #                        format: date-time
+                #                        type: string
+                #                      details:
+                #                        items:
+                #                          properties:
+                #                            name:
+                #                              type: string
+                #                            pod:
+                #                              type: string
+                #                            pvc:
+                #                              type: string
+                #                            volumeSnapshot:
+                #                              type: string
+                #                            phase:
+                #                              type: string
+                #                            reason:
+                #                              type: string
+                #                          type: object
+                #                        type: array
+                #                    type: object
+                #                  type: array
                 phase:
                   type: string
                 reason:
