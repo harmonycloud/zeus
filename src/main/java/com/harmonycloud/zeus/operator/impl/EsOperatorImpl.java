@@ -248,7 +248,7 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
 
         // 数据节点
         MiddlewareQuota data = middleware.getQuota().get(ElasticSearchRoleEnum.DATA.getRole());
-        if (data != null && data.getNum() < 3) {
+        if (data != null && data.getStorageClassName() != null && data.getNum() < 3) {
             throw new IllegalArgumentException("Please confirm data node num greater than or equal to 3");
         }
     }
