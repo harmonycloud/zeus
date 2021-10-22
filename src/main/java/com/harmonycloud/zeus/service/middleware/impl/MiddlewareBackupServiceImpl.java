@@ -115,7 +115,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             MiddlewareBackupScheduleSpec spec = middlewareBackupScheduleCRD.getSpec();
             spec.getSchedule().setCron(CronUtils.parseUtcCron(cron));
             spec.getSchedule().setLimitRecord(limitRecord);
-            spec.setPause(pause);
+            if (StringUtils.isBlank(pause)) {
+                spec.setPause("off");
+            } else {
+                spec.setPause(pause);
+            }
             backupScheduleCRDService.update(clusterId, middlewareBackupScheduleCRD);
             return BaseResult.ok();
         } catch (IOException e) {
