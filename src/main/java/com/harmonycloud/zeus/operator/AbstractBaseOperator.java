@@ -20,6 +20,7 @@ import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.schedule.MiddlewareManageTask;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
+import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.K8sConvert;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -83,6 +84,8 @@ public abstract class AbstractBaseOperator {
     private MiddlewareService middlewareService;
     @Autowired
     private ServiceService serviceService;
+    @Autowired
+    private MiddlewareBackupServiceImpl middlewareBackupService;
     /**
      * 是否支持该中间件
      */
@@ -155,7 +158,7 @@ public abstract class AbstractBaseOperator {
         deletePvc(middleware);
         deleteIngress(middleware);
         deleteCustomConfigHistory(middleware);
-
+        middlewareBackupService.deleteMiddlewareBackupInfo(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
         // helm卸载需要放到最后，要不然一些资源的查询会404
         helmChartService.uninstall(middleware, clusterService.findByIdAndCheckRegistry(middleware.getClusterId()));
     }
@@ -292,6 +295,9 @@ public abstract class AbstractBaseOperator {
         }
     }
 
+    public void deleteMiddlewareBackupInfo(Middleware mw){
+
+    }
 
     public void switchMiddleware(Middleware middleware) {
 

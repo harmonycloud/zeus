@@ -20,6 +20,7 @@ import com.harmonycloud.zeus.operator.BaseOperator;
 import com.harmonycloud.zeus.service.k8s.MysqlReplicateCRDService;
 import com.harmonycloud.zeus.service.k8s.ServiceService;
 import com.harmonycloud.zeus.service.middleware.BackupService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareServiceImpl;
 import com.harmonycloud.zeus.util.DateUtil;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
@@ -74,6 +75,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     private ServiceService serviceService;
     @Autowired
     private BaseOperatorImpl baseOperator;
+    @Autowired
+    private MiddlewareBackupService middlewareBackupService;
     @Override
     public boolean support(Middleware middleware) {
         return MiddlewareTypeEnum.MYSQL == MiddlewareTypeEnum.findByType(middleware.getType());

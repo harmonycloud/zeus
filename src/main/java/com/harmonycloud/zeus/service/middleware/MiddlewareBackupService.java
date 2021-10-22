@@ -2,8 +2,10 @@ package com.harmonycloud.zeus.service.middleware;
 
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
+import io.fabric8.kubernetes.api.model.OwnerReference;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author dengyulong
@@ -42,7 +44,7 @@ public interface MiddlewareBackupService {
      * @param middlewareName 中间件名称
      * @return
      */
-    BaseResult update(String clusterId, String namespace, String middlewareName, String type, String cron, Integer limitRecord,String pause);
+    BaseResult update(String clusterId, String namespace, String middlewareName, String type, String cron, Integer limitRecord, String pause);
 
     /**
      * 删除备份记录
@@ -75,7 +77,8 @@ public interface MiddlewareBackupService {
      * @param limitRecord        备份保留个数
      * @return
      */
-    BaseResult createScheduleBackup(String clusterId, String namespace, String middlewareName,String crdType, String middlewareRealName, String cron, Integer limitRecord);
+    BaseResult createScheduleBackup(String clusterId, String namespace, String middlewareName, String crdType,
+                                    String middlewareRealName, String cron, Integer limitRecord, Map<String,String> labels);
 
     /**
      * 立即备份
@@ -85,7 +88,7 @@ public interface MiddlewareBackupService {
      * @param middlewareRealName 中间件名称
      * @return
      */
-    BaseResult createNormalBackup(String clusterId, String namespace, String middlewareName,String crdType,String middlewareRealName);
+    BaseResult createNormalBackup(String clusterId, String namespace, String middlewareName, String crdType, String middlewareRealName, Map<String,String> labels);
 
     /**
      * 创建恢复
@@ -98,4 +101,24 @@ public interface MiddlewareBackupService {
      */
     BaseResult createRestore(String clusterId, String namespace, String middlewareName, String type, String restoreName, String backupName, String aliasName);
 
+    /**
+     * 尝试创建中间件恢复实例
+     *
+     * @param clusterId      集群id
+     * @param namespace      分区
+     * @param type           中间件类型
+     * @param middlewareName 中间件名称
+     * @param backupName     备份名称
+     * @param restoreName    恢复中间件名称
+     */
+    void tryCreateMiddlewareRestore(String clusterId, String namespace, String type, String middlewareName, String backupName, String restoreName);
+
+    /**
+     * 删除中间件备份相关信息，包括定时备份、立即备份、备份恢复
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param middlewareName
+     */
+    void deleteMiddlewareBackupInfo(String clusterId, String namespace, String type, String middlewareName);
 }
