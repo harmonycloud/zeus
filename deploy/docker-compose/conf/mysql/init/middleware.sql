@@ -18,7 +18,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ----------------------------
 DROP TABLE IF EXISTS `alert_record`;
 CREATE TABLE `alert_record` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '自增id',
   `cluster_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '集群id',
   `namespace` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '分区',
   `name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '中间件名称',
@@ -36,7 +36,7 @@ CREATE TABLE `alert_record` (
 -- ----------------------------
 DROP TABLE IF EXISTS `alert_rule`;
 CREATE TABLE `alert_rule` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '自增id',
   `chart_name` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '类型名称',
   `chart_version` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '版本',
   `alert` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT 'prometheusRule内容',
@@ -48,7 +48,7 @@ CREATE TABLE `alert_rule` (
 -- ----------------------------
 DROP TABLE IF EXISTS `cluster_middleware_info`;
 CREATE TABLE `cluster_middleware_info` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '自增id',
   `cluster_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '集群id',
   `chart_name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'chart包名称',
   `chart_version` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'chart包版本',
@@ -61,7 +61,7 @@ CREATE TABLE `cluster_middleware_info` (
 -- ----------------------------
 DROP TABLE IF EXISTS `custom_config`;
 CREATE TABLE `custom_config` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '自增id',
   `name` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '字段名称',
   `chart_name` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'chart包名称',
   `default_value` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '默认值',
@@ -78,7 +78,7 @@ CREATE TABLE `custom_config` (
 -- ----------------------------
 DROP TABLE IF EXISTS `custom_config_history`;
 CREATE TABLE `custom_config_history` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '自增id',
   `cluster_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '集群id',
   `namespace` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '分区',
   `name` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '中间件名称',
@@ -96,7 +96,7 @@ CREATE TABLE `custom_config_history` (
 -- ----------------------------
 DROP TABLE IF EXISTS `custom_config_template`;
 CREATE TABLE `custom_config_template` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '自增id',
   `name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '模板名称',
   `alias_name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '模板中文名',
   `type` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '中间件类型',
@@ -109,10 +109,21 @@ CREATE TABLE `custom_config_template` (
 -- ----------------------------
 DROP TABLE IF EXISTS `k8s_default_cluster`;
 CREATE TABLE `k8s_default_cluster` (
-  `id` int(2) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '自增id',
   `cluster_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '集群id',
   `url` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '路径',
   `token` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT 'service account',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+-- ----------------------------
+-- Table structure for kube_config
+-- ----------------------------
+DROP TABLE IF EXISTS `kube_config`;
+CREATE TABLE `kube_config` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `cluster_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '集群id',
+  `conf` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT 'admin.conf',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
@@ -121,7 +132,7 @@ CREATE TABLE `k8s_default_cluster` (
 -- ----------------------------
 DROP TABLE IF EXISTS `middleware_info`;
 CREATE TABLE `middleware_info` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '中间件名称',
   `description` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '描述',
   `type` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '类型',
@@ -146,7 +157,7 @@ CREATE TABLE `middleware_info` (
 -- ----------------------------
 DROP TABLE IF EXISTS `operation_audit`;
 CREATE TABLE `operation_audit` (
-  `id` bigint(11) NOT NULL AUTO_INCREMENT,
+  `id` bigint NOT NULL AUTO_INCREMENT,
   `account` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '账户名称',
   `user_name` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '用户名称',
   `role_name` char(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '角色名称',
@@ -157,13 +168,13 @@ CREATE TABLE `operation_audit` (
   `action_ch_desc` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '操作名称',
   `method` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '方法',
   `request_method` char(8) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '请求方法类型',
-  `request_params` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '请求参数',
-  `response` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '响应内容',
+  `request_params` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '请求参数',
+  `response` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '响应内容',
   `remote_ip` char(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '请求ip',
-  `status` char(8) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '状态码',
+  `status` char(8) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '状态码',
   `begin_time` datetime NOT NULL COMMENT '请求开始时间',
   `action_time` datetime NOT NULL COMMENT '请求响应时间',
-  `execute_time` int(11) NOT NULL COMMENT '执行时长(ms)',
+  `execute_time` int NOT NULL COMMENT '执行时长(ms)',
   `cluster_id` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '集群id',
   `token` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '请求token',
   PRIMARY KEY (`id`),
@@ -178,16 +189,16 @@ CREATE TABLE `operation_audit` (
 -- ----------------------------
 DROP TABLE IF EXISTS `resource_menu`;
 CREATE TABLE `resource_menu` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '自增id',
   `name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '名称',
   `alias_name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '中文名称',
   `url` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '路径',
-  `weight` int(11) DEFAULT NULL COMMENT '权重(排序使用)',
+  `weight` int DEFAULT NULL COMMENT '权重(排序使用)',
   `icon_name` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT 'icon名称',
-  `parent_id` int(11) DEFAULT NULL COMMENT '父菜单id',
+  `parent_id` int DEFAULT NULL COMMENT '父菜单id',
   `module` varchar(0) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '模块',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='菜单资源表';
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='菜单资源表';
 
 -- ----------------------------
 -- Records of resource_menu
@@ -216,9 +227,9 @@ COMMIT;
 -- ----------------------------
 DROP TABLE IF EXISTS `resource_menu_role`;
 CREATE TABLE `resource_menu_role` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `role_id` int(11) DEFAULT NULL,
-  `resource_menu_id` int(11) DEFAULT NULL,
+  `id` int NOT NULL AUTO_INCREMENT,
+  `role_id` int DEFAULT NULL,
+  `resource_menu_id` int DEFAULT NULL,
   `available` tinyint(1) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='资源菜单角色关联表';
@@ -250,10 +261,10 @@ COMMIT;
 -- ----------------------------
 DROP TABLE IF EXISTS `role`;
 CREATE TABLE `role` (
-  `id` int(64) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '自增id',
   `name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '名称',
   `description` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '描述',
-  `parent` int(64) DEFAULT NULL COMMENT '父角色id',
+  `parent` int DEFAULT NULL COMMENT '父角色id',
   `status` tinyint(1) DEFAULT NULL COMMENT '是否已被删除',
   `create_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
   PRIMARY KEY (`id`)
@@ -271,9 +282,9 @@ COMMIT;
 -- ----------------------------
 DROP TABLE IF EXISTS `role_user`;
 CREATE TABLE `role_user` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '自增id',
   `username` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '用户名',
-  `role_id` int(11) DEFAULT NULL COMMENT '角色id',
+  `role_id` int DEFAULT NULL COMMENT '角色id',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='用户角色关联表';
 
@@ -289,7 +300,7 @@ COMMIT;
 -- ----------------------------
 DROP TABLE IF EXISTS `user`;
 CREATE TABLE `user` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '自增id',
   `username` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '用户名',
   `alias_name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '用户别名',
   `password` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '密码',
@@ -307,16 +318,5 @@ CREATE TABLE `user` (
 BEGIN;
 INSERT INTO `user` VALUES (1, 'admin', '超级管理员', '6DA05F9A0ED31ABEEFD41C768B2E7233', NULL, NULL, NULL, NULL, NULL);
 COMMIT;
-
--- ----------------------------
--- Table structure for kube_config
--- ----------------------------
-DROP TABLE IF EXISTS `kube_config`;
-CREATE TABLE `kube_config` (
-  `id` int(32) NOT NULL AUTO_INCREMENT COMMENT '自增id',
-  `cluster_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '集群id',
-  `conf` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT 'admin.conf',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 SET FOREIGN_KEY_CHECKS = 1;
