@@ -261,13 +261,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         middleware.setName(restoreName);
         middleware.setClusterId(clusterId);
         MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(middleware.getClusterId());
-//        baseOperator.createPreCheck(middleware, cluster);
+        baseOperator.createPreCheck(middleware, cluster);
         //设置中间件恢复信息
         try {
             middleware.setName(restoreName);
             middleware.setAliasName(aliasName);
             middleware.setChartName(type);
-//            middlewareService.create(middleware);
+            middlewareService.create(middleware);
             middlewareManageTask.asyncCreateBackupRestore(clusterId, namespace, type, middlewareName, backupName, restoreName,this);
             return BaseResult.ok();
         } catch (Exception e) {
