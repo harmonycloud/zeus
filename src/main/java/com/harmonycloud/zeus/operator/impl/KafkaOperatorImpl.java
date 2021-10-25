@@ -6,6 +6,7 @@ import com.harmonycloud.caas.common.constants.MysqlConstant;
 import com.harmonycloud.caas.common.enums.DateType;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.integration.cluster.bean.MysqlReplicateCRD;
 import com.harmonycloud.zeus.integration.cluster.bean.MysqlReplicateStatus;
@@ -48,7 +49,8 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
             JSONObject args = values.getJSONObject("zookeeper");
             KafkaDTO kafkaDTO = new KafkaDTO();
             kafkaDTO.setZkAddress(args.getString("address"));
-            kafkaDTO.setZkPort(args.getString("port"));
+            String[] ports = args.getString("port").split("/");
+            kafkaDTO.setZkPort(ports[0]);
             middleware.setKafkaDTO(kafkaDTO);
             JSONArray dynamicTabs = values.getJSONArray("dynamicTabs");
             List<String> capabilities = new ArrayList<>();
@@ -90,8 +92,8 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
         JSONObject zookeeper = values.getJSONObject("zookeeper");
         KafkaDTO kafkaDTO = middleware.getKafkaDTO();
         if (zookeeper != null && kafkaDTO != null) {
-            zookeeper.put("address", kafkaDTO.getZkPort());
-            zookeeper.put("port", kafkaDTO.getZkPort());
+            zookeeper.put("address", kafkaDTO.getZkAddress());
+            zookeeper.put("port", kafkaDTO.getZkPort() + "/kafka" + UUIDUtils.get8UUID());
         }
         values.put("custom", true);
         //设置dynamicTabs
