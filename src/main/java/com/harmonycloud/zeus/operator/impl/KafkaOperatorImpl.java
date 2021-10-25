@@ -45,7 +45,7 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
         convertCommonByHelmChart(middleware, values);
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
         // 处理kafka的特有参数
-        if (values != null) {
+        if (values != null && values.getJSONObject("zookeeper") != null) {
             JSONObject args = values.getJSONObject("zookeeper");
             KafkaDTO kafkaDTO = new KafkaDTO();
             kafkaDTO.setZkAddress(args.getString("address"));
@@ -54,10 +54,12 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
             middleware.setKafkaDTO(kafkaDTO);
             JSONArray dynamicTabs = values.getJSONArray("dynamicTabs");
             List<String> capabilities = new ArrayList<>();
-            for (Object dynamicTab : dynamicTabs) {
-                capabilities.add(dynamicTab.toString());
+            if (dynamicTabs != null) {
+                for (Object dynamicTab : dynamicTabs) {
+                    capabilities.add(dynamicTab.toString());
+                }
+                middleware.setCapabilities(capabilities);
             }
-            middleware.setCapabilities(capabilities);
         }
         middleware.setManagePlatform(true);
         return middleware;
@@ -84,20 +86,22 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
     }
 
     protected void replaceValues(Middleware middleware, MiddlewareClusterDTO cluster, JSONObject values) {
-        replaceCommonValues(middleware, cluster, values);
-        MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
-        replaceCommonResources(quota, values.getJSONObject(RESOURCES));
-        replaceCommonStorages(quota, values);
+        super.replaceValues(middleware, cluster, values);
+        if (middleware.getQuota() != null) {
+            MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
+            replaceCommonResources(quota, values.getJSONObject(RESOURCES));
+            replaceCommonStorages(quota, values);
+        }
         //设置zookeeper信息
         JSONObject zookeeper = values.getJSONObject("zookeeper");
         KafkaDTO kafkaDTO = middleware.getKafkaDTO();
         if (zookeeper != null && kafkaDTO != null) {
             zookeeper.put("address", kafkaDTO.getZkAddress());
             zookeeper.put("port", kafkaDTO.getZkPort() + "/kafka" + UUIDUtils.get8UUID());
+            values.put("custom", true);
+            //设置dynamicTabs
+            values.put("dynamicTabs", middleware.getCapabilities());
         }
-        values.put("custom", true);
-        //设置dynamicTabs
-        values.put("dynamicTabs", middleware.getCapabilities());
     }
 
 }
