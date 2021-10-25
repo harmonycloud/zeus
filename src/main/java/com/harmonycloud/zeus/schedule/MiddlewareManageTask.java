@@ -1,17 +1,13 @@
 package com.harmonycloud.zeus.schedule;
 
-import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
-import com.harmonycloud.zeus.operator.impl.MysqlOperatorImpl;
-import com.harmonycloud.zeus.service.middleware.MiddlewareService;
-import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
-
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.zeus.operator.BaseOperator;
-
+import com.harmonycloud.zeus.operator.impl.MysqlOperatorImpl;
+import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
 
 /**
  * @author dengyulong

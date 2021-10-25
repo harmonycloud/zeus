@@ -1,17 +1,28 @@
 package com.harmonycloud.zeus.operator.impl;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.caas.common.constants.MysqlConstant;
+import com.harmonycloud.caas.common.enums.DateType;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
-import com.harmonycloud.caas.common.model.middleware.CustomConfig;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.annotation.Operator;
+import com.harmonycloud.zeus.integration.cluster.bean.MysqlReplicateCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MysqlReplicateStatus;
 import com.harmonycloud.zeus.operator.api.KafkaOperator;
 import com.harmonycloud.zeus.operator.miiddleware.AbstractKafkaOperator;
+import com.harmonycloud.zeus.util.DateUtil;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
+import static com.harmonycloud.caas.common.constants.NameConstant.ZOOKEEPER;
 
 /**
  * 处理Kafka逻辑
@@ -29,9 +40,25 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
 
     @Override
     public Middleware convertByHelmChart(Middleware middleware, MiddlewareClusterDTO cluster) {
-        Middleware mw = super.convertByHelmChart(middleware, cluster);
-        mw.setManagePlatform(true);
-        return mw;
+        JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
+        convertCommonByHelmChart(middleware, values);
+        convertStoragesByHelmChart(middleware, middleware.getType(), values);
+        // 处理kafka的特有参数
+        if (values != null) {
+            JSONObject args = values.getJSONObject("zookeeper");
+            KafkaDTO kafkaDTO = new KafkaDTO();
+            kafkaDTO.setZkAddress(args.getString("address"));
+            kafkaDTO.setZkPort(args.getString("port"));
+            middleware.setKafkaDTO(kafkaDTO);
+            JSONArray dynamicTabs = values.getJSONArray("dynamicTabs");
+            List<String> capabilities = new ArrayList<>();
+            for (Object dynamicTab : dynamicTabs) {
+                capabilities.add(dynamicTab.toString());
+            }
+            middleware.setCapabilities(capabilities);
+        }
+        middleware.setManagePlatform(true);
+        return middleware;
     }
 
     @Override
@@ -53,4 +80,22 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
     public void updateConfigData(ConfigMap configMap, List<String> data) {
 
     }
+
+    protected void replaceValues(Middleware middleware, MiddlewareClusterDTO cluster, JSONObject values) {
+        replaceCommonValues(middleware, cluster, values);
+        MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
+        replaceCommonResources(quota, values.getJSONObject(RESOURCES));
+        replaceCommonStorages(quota, values);
+        //设置zookeeper信息
+        JSONObject zookeeper = values.getJSONObject("zookeeper");
+        KafkaDTO kafkaDTO = middleware.getKafkaDTO();
+        if (zookeeper != null && kafkaDTO != null) {
+            zookeeper.put("address", kafkaDTO.getZkPort());
+            zookeeper.put("port", kafkaDTO.getZkPort());
+        }
+        values.put("custom", true);
+        //设置dynamicTabs
+        values.put("dynamicTabs", middleware.getCapabilities());
+    }
+
 }
