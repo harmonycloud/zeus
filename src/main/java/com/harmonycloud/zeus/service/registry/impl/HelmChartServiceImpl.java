@@ -555,7 +555,9 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
                 List<Namespace> namespaceList = namespaceService.list(clusterId, false, "middleware-operator");
                 // 检验分区是否存在
                 if (CollectionUtils.isEmpty(namespaceList)) {
-                    namespaceService.save(clusterId, "middleware-operator");
+                    Map<String, String> label = new HashMap<>();
+                    label.put("middleware", "middleware");
+                    namespaceService.save(clusterId, "middleware-operator", label);
                 }
             }
             // 检验operator是否已创建

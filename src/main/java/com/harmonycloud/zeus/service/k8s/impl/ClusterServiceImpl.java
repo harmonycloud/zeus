@@ -549,7 +549,7 @@ public class ClusterServiceImpl implements ClusterService {
         // 安装minio
         try {
             //创建minio分区
-            namespaceService.save(cluster.getId(), "minio");
+            namespaceService.save(cluster.getId(), "minio", null);
             minio(repository, cluster);
             // 记录数据
             Map<String, String> storage = new HashMap<>();
@@ -567,7 +567,7 @@ public class ClusterServiceImpl implements ClusterService {
         }
         //安装日志组件
         try {
-            namespaceService.save(cluster.getId(), "logging");
+            namespaceService.save(cluster.getId(), "logging", null);
             if (cluster.getLogging() == null || cluster.getLogging().getElasticSearch() == null
                 || cluster.getLogging().getElasticSearch().getHost() == null) {
                 MiddlewareClusterLoggingInfo es = new MiddlewareClusterLoggingInfo();

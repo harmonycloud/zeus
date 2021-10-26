@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.k8s;
 
 import java.util.List;
+import java.util.Map;
 
 import com.harmonycloud.caas.common.model.middleware.Namespace;
 
@@ -55,6 +56,6 @@ public interface NamespaceService {
      * @param clusterId     集群id
      * @param name          命名空间名称
      */
-    void save(String clusterId, String name);
+    void save(String clusterId, String name, Map<String, String> label);
 
 }

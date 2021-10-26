@@ -176,10 +176,12 @@ public class NamespaceServiceImpl implements NamespaceService {
     }
 
     @Override
-    public void save(String clusterId, String name) {
+    public void save(String clusterId, String name, Map<String, String> label) {
         // 创建namespace
         io.fabric8.kubernetes.api.model.Namespace ns = new io.fabric8.kubernetes.api.model.Namespace();
-        Map<String, String> label = new HashMap<>(1);
+        if (CollectionUtils.isEmpty(label)){
+            label = new HashMap<>(1);
+        }
         ObjectMeta meta = new ObjectMeta();
         meta.setName(name);
         meta.setLabels(label);
