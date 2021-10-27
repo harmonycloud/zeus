@@ -48,13 +48,15 @@ public interface MiddlewareBackupService {
 
     /**
      * 删除备份记录
-     *
      * @param clusterId
      * @param namespace
+     * @param middlewareName
+     * @param type
      * @param backupName
+     * @param backupFileName
      * @return
      */
-    BaseResult delete(String clusterId, String namespace, String backupName);
+    BaseResult delete(String clusterId, String namespace,String middlewareName, String type, String backupName, String backupFileName);
 
     /**
      * 查询备份设置
@@ -99,7 +101,7 @@ public interface MiddlewareBackupService {
      * @param aliasName
      * @return
      */
-    BaseResult createRestore(String clusterId, String namespace, String middlewareName, String type, String restoreName, String backupName, String aliasName);
+    BaseResult createRestore(String clusterId, String namespace, String middlewareName, String type, String restoreName, String backupName, String backupFileName, String aliasName);
 
     /**
      * 尝试创建中间件恢复实例

@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.controller.middleware;
 import java.util.List;
 
 import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
+import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import io.swagger.models.auth.In;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +26,7 @@ import io.swagger.annotations.ApiOperation;
 public class MiddlewareBackupController {
 
     @Autowired
-    private MiddlewareBackupService middlewareBackupService;
+    private MiddlewareBackupServiceImpl middlewareBackupService;
 
     @ApiOperation(value = "创建中间件备份", notes = "创建中间件备份")
     @ApiImplicitParams({
@@ -75,8 +76,11 @@ public class MiddlewareBackupController {
     @DeleteMapping
     public BaseResult delete(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
-                             @RequestParam(value = "backupName") String backupName) {
-        return middlewareBackupService.delete(clusterId, namespace, backupName);
+                             @PathVariable("middlewareName") String middlewareName,
+                             @RequestParam(value = "backupName") String backupName,
+                             @RequestParam(value = "type") String type,
+                             @RequestParam(value = "backupFileName") String backupFileName) {
+        return middlewareBackupService.delete(clusterId, namespace, middlewareName, type, backupName, backupFileName);
     }
 
     @ApiOperation(value = "查询中间件备份数据列表", notes = "查询中间件备份数据列表")
@@ -125,9 +129,10 @@ public class MiddlewareBackupController {
                                     @PathVariable("middlewareName") String middlewareName,
                                     @RequestParam("type") String type,
                                     @RequestParam("backupName") String backupName,
+                                    @RequestParam("backupFileName") String backupFileName,
                                     @RequestParam("restoreName") String restoreName,
                                     @RequestParam(value = "aliasName", required = false) String aliasName) {
-        return middlewareBackupService.createRestore(clusterId, namespace, middlewareName, type, restoreName, backupName, aliasName);
+        return middlewareBackupService.createRestore(clusterId, namespace, middlewareName, type, restoreName, backupName, backupFileName, aliasName);
     }
 
 }
