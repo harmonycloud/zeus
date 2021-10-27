@@ -37,7 +37,7 @@ cluster:
 #  clientReplacesCount: 1
 #  coldReplacesCount: 3
 
-  
+
 nameOverride: ""
 fullnameOverride: ""
 

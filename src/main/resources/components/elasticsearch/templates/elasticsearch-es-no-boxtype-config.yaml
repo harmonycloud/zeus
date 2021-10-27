@@ -1,7 +1,7 @@
 apiVersion: v1
 data:
   elasticsearch.yml: "cluster.name: {ClusterName}\nbootstrap.memory_lock: false\nnode.name:
-    {PodName}\nnode.master: {IsMasterNode}\nnode.data: {IsDataNode}\nnetwork.host:
+    {ClusterName}\nnode.master: {IsMasterNode}\nnode.data: {IsDataNode}\nnetwork.host:
     {PodIP}\nnetwork.publish_host: {PodIP}\nhttp.port: 9200\ntransport.tcp.port: 9300\ndiscovery.zen.ping.unicast.hosts:
     {discoveryZenPingUnicastHosts}\nxpack.security.enabled: true\nxpack.ml.enabled:
     false\nxpack.monitoring.collection.enabled: true\nxpack.watcher.enabled: false\nhttp.cors.enabled:

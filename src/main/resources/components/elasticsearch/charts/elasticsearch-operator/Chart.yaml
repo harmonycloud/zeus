@@ -1,6 +1,6 @@
 apiVersion: v2
-appVersion: 1.5.13
+appVersion: 1.5.14
 description: Elasticsearch by Harmonycloud
 name: elasticsearch-operator
 type: application
-version: 1.5.13-1
+version: 1.5.14-1
