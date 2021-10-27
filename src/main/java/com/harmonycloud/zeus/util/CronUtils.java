@@ -64,6 +64,12 @@ public class CronUtils {
         return getCron(items);
     }
 
+    public static String parseMysqlUtcCron(String cron) {
+        String[] items = cron.split(" ");
+        items[1] = getUtcHour(items[1]);
+        return getCron(items);
+    }
+
     public static String parseLocalCron(String cron) {
         String newCron = cron.replaceAll("[*]", "?");
         String[] items = newCron.split(" ");

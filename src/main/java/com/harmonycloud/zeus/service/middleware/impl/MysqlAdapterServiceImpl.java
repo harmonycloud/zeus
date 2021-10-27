@@ -8,6 +8,7 @@ import com.harmonycloud.caas.common.model.middleware.MysqlBackupDto;
 import com.harmonycloud.caas.common.model.middleware.ScheduleBackupConfig;
 import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
 import com.harmonycloud.zeus.util.CronUtils;
+import com.harmonycloud.zeus.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.DateUtils;
@@ -38,7 +39,8 @@ public class MysqlAdapterServiceImpl implements MiddlewareBackupService {
             MiddlewareBackupRecord record = new MiddlewareBackupRecord();
             record.setBackupName(backup.getBackupName());
             record.setBackupFileName(backup.getBackupFileName());
-            record.setBackupTime(DateUtils.formatDate(backup.getDate(), DateType.YYYY_MM_DD_HH_MM_SS.getValue()));
+            String backupTime = DateUtil.utc2Local(backup.getDate(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
+            record.setBackupTime(backupTime);
             switch (backup.getStatus()){
                 case "Creating":
                 case "Running":

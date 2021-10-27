@@ -1152,6 +1152,19 @@ public class DateUtil {
     }
 
     /**
+     * UTC时间转本地时间格式
+     * @param date
+     * @param localTimePatten
+     * @return
+     */
+    public static String utc2Local(Date date, String localTimePatten) {
+        SimpleDateFormat localFormater = new SimpleDateFormat(localTimePatten);
+        localFormater.setTimeZone(TimeZone.getDefault());
+        String localTime = localFormater.format(date.getTime());
+        return localTime;
+    }
+
+    /**
      * 函数功能描述:UTC时间转本地时间格式
      * @param utcTime UTC时间
      * @param utcTimePatten UTC时间格式

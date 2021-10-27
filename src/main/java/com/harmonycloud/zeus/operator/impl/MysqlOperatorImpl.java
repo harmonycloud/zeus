@@ -23,6 +23,7 @@ import com.harmonycloud.zeus.service.middleware.BackupService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareServiceImpl;
+import com.harmonycloud.zeus.util.CronUtils;
 import com.harmonycloud.zeus.util.DateUtil;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -355,7 +356,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             .setStorageProvider(new BackupStorageProvider().setMinio(minio));
 
         ScheduleBackupSpec spec =
-            new ScheduleBackupSpec().setSchedule(cron).setBackupTemplate(backupTemplate).setKeepBackups(keepBackups);
+            new ScheduleBackupSpec().setSchedule(CronUtils.parseMysqlUtcCron(cron)).setBackupTemplate(backupTemplate).setKeepBackups(keepBackups);
         ObjectMeta metaData = new ObjectMeta();
         metaData.setName(getBackupName(middleware));
         Map<String, String> labels = new HashMap<>();
