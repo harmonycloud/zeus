@@ -79,7 +79,7 @@ public class MiddlewareBackupController {
                              @PathVariable("middlewareName") String middlewareName,
                              @RequestParam(value = "backupName") String backupName,
                              @RequestParam(value = "type") String type,
-                             @RequestParam(value = "backupFileName") String backupFileName) {
+                             @RequestParam(value = "backupFileName", required = false) String backupFileName) {
         return middlewareBackupService.delete(clusterId, namespace, middlewareName, type, backupName, backupFileName);
     }
 
