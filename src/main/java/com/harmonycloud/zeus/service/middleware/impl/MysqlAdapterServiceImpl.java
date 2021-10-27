@@ -99,6 +99,7 @@ public class MysqlAdapterServiceImpl implements MiddlewareBackupService {
         } else {
             config.setConfiged(true);
             config.setPause("off");
+            scheduleBackup.setCron(CronUtils.parseLocalCron(scheduleBackup.getCron()));
             config.setCron(scheduleBackup.getCron());
             config.setLimitRecord(scheduleBackup.getKeepBackups());
             config.setNextBackupTime(CronUtils.calculateNextDate(scheduleBackup.getCron()));
