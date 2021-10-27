@@ -7,6 +7,7 @@ import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
 import com.harmonycloud.caas.common.model.middleware.MysqlBackupDto;
 import com.harmonycloud.caas.common.model.middleware.ScheduleBackupConfig;
 import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
+import com.harmonycloud.zeus.util.CronUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.DateUtils;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
@@ -97,7 +99,7 @@ public class MysqlAdapterServiceImpl implements MiddlewareBackupService {
             config.setPause("off");
             config.setCron(scheduleBackup.getCron());
             config.setLimitRecord(scheduleBackup.getKeepBackups());
-            config.setNextBackupTime(DateUtils.formatDate(scheduleBackup.getNextBackupDate(), DateType.YYYY_MM_DD_HH_MM_SS.getValue()));
+            config.setNextBackupTime(CronUtils.calculateNextDate(scheduleBackup.getCron()));
         }
         return BaseResult.ok(config);
     }

@@ -1153,6 +1153,29 @@ public class DateUtil {
 
     /**
      * 函数功能描述:UTC时间转本地时间格式
+     * @param utcTime UTC时间
+     * @param utcTimePatten UTC时间格式
+     * @param localTimePatten   本地时间格式
+     * @return 本地时间格式的时间
+     * eg:utc2Local("2017-06-14 09:37:50.788+08:00", "yyyy-MM-dd HH:mm:ss.SSSSSS", "yyyy-MM-dd HH:mm:ss.SSS")
+     */
+    public static Date utc2LocalDate(String utcTime, String utcTimePatten, String localTimePatten) {
+        SimpleDateFormat utcFormater = new SimpleDateFormat(utcTimePatten);
+        //时区定义并进行时间获取
+        utcFormater.setTimeZone(TimeZone.getTimeZone("UTC"));
+        Date gpsUTCDate = new Date();
+        try {
+            gpsUTCDate = utcFormater.parse(utcTime);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return gpsUTCDate;
+        }
+        SimpleDateFormat localFormater = new SimpleDateFormat(localTimePatten);
+        localFormater.setTimeZone(TimeZone.getDefault());
+        return gpsUTCDate;
+    }
+    /**
+     * 函数功能描述:UTC时间转本地时间格式
      * @param localTime UTC时间
      * @param utcTimePatten UTC时间格式
      * @param localTimePatten   本地时间格式
