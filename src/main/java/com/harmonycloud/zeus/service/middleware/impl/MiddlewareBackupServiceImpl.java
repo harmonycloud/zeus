@@ -16,6 +16,7 @@ import com.harmonycloud.zeus.schedule.MiddlewareManageTask;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
+import com.harmonycloud.zeus.service.middleware.MysqlService;
 import com.harmonycloud.zeus.util.CronUtils;
 import com.harmonycloud.zeus.util.DateUtil;
 import com.harmonycloud.zeus.util.SortUtils;
@@ -57,9 +58,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private MiddlewareCRDService middlewareCRDService;
     @Autowired
     private MiddlewareManageTask middlewareManageTask;
+    @Autowired
+    private MysqlAdapterServiceImpl mysqlAdapterService;
 
     @Override
     public List<MiddlewareBackupRecord> list(String clusterId, String namespace, String middlewareName, String type) {
+        if ("mysql".equals(type)) {
+            return mysqlAdapterService.list(clusterId, namespace, middlewareName, type);
+        }
         String middlewareRealName = getRealMiddlewareName(type, middlewareName);
         Map<String, String> labels = new HashMap<>();
         labels.put("owner", middlewareRealName + "-backup");
@@ -97,6 +103,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public BaseResult create(String clusterId, String namespace, String middlewareName, String type, String cron, Integer limitRecord) {
+        if ("mysql".equals(type)) {
+            return mysqlAdapterService.create(clusterId, namespace, middlewareName, type, cron, limitRecord);
+        }
         String middlewareRealName = getRealMiddlewareName(type, middlewareName);
         String middlewareCrdType = MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType();
         Map<String, String> backupLabel = getBackupLabel(middlewareName, type);
@@ -111,6 +120,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public BaseResult update(String clusterId, String namespace, String middlewareName, String type, String cron, Integer limitRecord, String pause) {
+        if ("mysql".equals(type)) {
+            return mysqlAdapterService.update(clusterId, namespace, middlewareName, type, cron, limitRecord, null);
+        }
         String backupName = getRealMiddlewareName(type, middlewareName) + "-backup";
         MiddlewareBackupScheduleCRD middlewareBackupScheduleCRD = backupScheduleCRDService.get(clusterId, namespace, backupName);
         try {
@@ -131,8 +143,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public BaseResult delete(String clusterId, String namespace, String backupName) {
+    public BaseResult delete(String clusterId, String namespace, String middlewareName, String type, String backupName, String backupFileName) {
         try {
+            if ("mysql".equals(type)) {
+                return mysqlAdapterService.delete(clusterId, namespace, middlewareName, type, backupName, backupFileName);
+            }
             backupCRDService.delete(clusterId, namespace, backupName);
             return BaseResult.ok();
         } catch (IOException e) {
@@ -143,12 +158,16 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public BaseResult get(String clusterId, String namespace, String middlewareName, String type) {
+        if ("mysql".equals(type)) {
+            return mysqlAdapterService.get(clusterId, namespace, middlewareName, type);
+        }
         String backupName = MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType() + "-" + middlewareName + "-backup";
         MiddlewareBackupScheduleCRD middlewareBackupScheduleCRD = backupScheduleCRDService.get(clusterId, namespace, backupName);
         MiddlewareBackupScheduleConfig config;
         if (middlewareBackupScheduleCRD == null) {
             config = new MiddlewareBackupScheduleConfig();
             config.setConfiged(false);
+            config.setCanPause(true);
             return BaseResult.ok(config);
         }
         MiddlewareBackupScheduleSpec spec = middlewareBackupScheduleCRD.getSpec();
@@ -156,6 +175,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             String localCron = CronUtils.parseLocalCron(spec.getSchedule().getCron());
             config = new MiddlewareBackupScheduleConfig(localCron,
                     spec.getSchedule().getLimitRecord(), CronUtils.calculateNextDate(localCron), spec.getPause(), true);
+            config.setCanPause(true);
             return BaseResult.ok(config);
         }
         return BaseResult.ok();
@@ -260,7 +280,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public BaseResult createRestore(String clusterId, String namespace, String middlewareName, String type, String restoreName, String backupName, String aliasName) {
+    public BaseResult createRestore(String clusterId, String namespace, String middlewareName, String type, String restoreName, String backupName, String backupFileName, String aliasName) {
         //检查服务是否已存在
         Middleware middleware = middlewareService.detail(clusterId, namespace, middlewareName, type);
         fixStorageUnit(middleware);
@@ -273,6 +293,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             middleware.setName(restoreName);
             middleware.setAliasName(aliasName);
             middleware.setChartName(type);
+            if ("mysql".equals(type)) {
+                MiddlewareQuota mysql = middleware.getQuota().get("mysql");
+                String storageClassQuota = mysql.getStorageClassQuota();
+                mysql.setStorageClassQuota(String.valueOf(Integer.parseInt(storageClassQuota) + 3));
+                middleware.setBackupFileName(backupFileName);
+                middlewareService.create(middleware);
+                return BaseResult.ok();
+            }
             middlewareService.create(middleware);
             middlewareManageTask.asyncCreateBackupRestore(clusterId, namespace, type, middlewareName, backupName, restoreName,this);
             return BaseResult.ok();
