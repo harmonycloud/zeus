@@ -129,7 +129,7 @@ public class MiddlewareBackupController {
                                     @PathVariable("middlewareName") String middlewareName,
                                     @RequestParam("type") String type,
                                     @RequestParam("backupName") String backupName,
-                                    @RequestParam("backupFileName") String backupFileName,
+                                    @RequestParam(value = "backupFileName", required = false) String backupFileName,
                                     @RequestParam("restoreName") String restoreName,
                                     @RequestParam(value = "aliasName", required = false) String aliasName) {
         return middlewareBackupService.createRestore(clusterId, namespace, middlewareName, type, restoreName, backupName, backupFileName, aliasName);
