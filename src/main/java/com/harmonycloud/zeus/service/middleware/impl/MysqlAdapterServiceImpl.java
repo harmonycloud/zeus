@@ -37,6 +37,20 @@ public class MysqlAdapterServiceImpl implements MiddlewareBackupService {
             record.setBackupName(backup.getBackupName());
             record.setBackupFileName(backup.getBackupFileName());
             record.setBackupTime(DateUtils.formatDate(backup.getDate(), DateType.YYYY_MM_DD_HH_MM_SS.getValue()));
+            switch (backup.getStatus()){
+                case "Creating":
+                case "Running":
+                    record.setPhrase("Running");
+                    break;
+                case "Complete":
+                    record.setPhrase("Success");
+                    break;
+                case "Failed":
+                    record.setPhrase("Failed");
+                    break;
+                default:
+                    record.setPhrase("Unknown");
+            }
             List<String> addressList = new ArrayList<>();
             addressList.add(backup.getPosition());
             record.setBackupAddressList(addressList);
