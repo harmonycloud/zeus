@@ -19,6 +19,7 @@ import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.operator.BaseOperator;
 import com.harmonycloud.zeus.service.k8s.MysqlReplicateCRDService;
 import com.harmonycloud.zeus.service.k8s.ServiceService;
+import com.harmonycloud.zeus.service.k8s.StorageClassService;
 import com.harmonycloud.zeus.service.middleware.BackupService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
@@ -74,11 +75,10 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     @Autowired
     private MiddlewareServiceImpl middlewareService;
     @Autowired
-    private ServiceService serviceService;
-    @Autowired
     private BaseOperatorImpl baseOperator;
     @Autowired
-    private MiddlewareBackupServiceImpl middlewareBackupService;
+    private StorageClassService storageClassService;
+
     @Override
     public boolean support(Middleware middleware) {
         return MiddlewareTypeEnum.MYSQL == MiddlewareTypeEnum.findByType(middleware.getType());
@@ -147,6 +147,9 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
 
             MysqlDTO mysqlDTO = new MysqlDTO();
             mysqlDTO.setReplicaCount(args.getIntValue(MysqlConstant.REPLICA_COUNT));
+            // 设置是否允许备份
+            MiddlewareQuota mysql = middleware.getQuota().get("mysql");
+            mysqlDTO.setIsLvmStorage(storageClassService.checkLVMStorage(cluster.getId(), middleware.getNamespace(), mysql.getStorageClassName()));
             middleware.setMysqlDTO(mysqlDTO);
             // 获取关联实例信息
             Boolean isSource = args.getBoolean(MysqlConstant.IS_SOURCE);
