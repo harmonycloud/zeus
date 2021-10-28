@@ -18,4 +18,30 @@ public interface ResourceMenuRoleService {
      */
     List<BeanResourceMenuRole> list(String roleId);
 
+    /**
+     * 添加角色菜单映照列表
+     *
+     * @param roleId 角色id
+     * @param resourceMenuId 菜单id
+     *
+     */
+    void add(Integer roleId, Integer resourceMenuId, Boolean available);
+
+    /**
+     * 删除角色菜单映照列表
+     *
+     * @param roleId 角色id
+     *
+     */
+    void delete(Integer roleId);
+
+    /**
+     * 更新角色菜单映照列表
+     *
+     * @param roleId 角色id
+     * @param resourceMenuId 菜单id
+     *
+     */
+    void update(Integer roleId, Integer resourceMenuId, Boolean available);
+
 }

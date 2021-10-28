@@ -18,7 +18,7 @@ import io.swagger.annotations.ApiOperation;
  * @author xutianhong
  * @Date 2021/4/26 10:12 上午
  */
-@Api(tags = {"工作台","实例列表"}, value = "中间件告警", description = "中间件告警")
+@Api(tags = {"监控告警","告警中心"}, value = "中间件告警", description = "中间件告警")
 @RestController
 @RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/middlewares/{middlewareName}/rules")
 public class MiddlewareAlertsController {

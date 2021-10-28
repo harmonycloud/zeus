@@ -1,0 +1,99 @@
+elasticPassword: Hc@Cloud01
+args: {}
+#  thread_pool_write_queue_size: 200
+#  thread_pool_search_queue_size: 1000
+#  xpack_watcher_enabled: false
+
+storage:
+  masterSize: 1Gi
+  dataSize: 1Gi
+  clientSize: 1Gi
+  coldSize: 1Gi
+hostNetwork: false
+
+image:
+  repository: harbor.middleware.com/middleware
+  pullPolicy: IfNotPresent
+  busyImageTag: "1.0"
+  kibanaImageTag: 6.8.10
+  initImageTag: 1.4.1
+  elasticImageTag: 6.8.10-5
+  exporterImageTag: 1.1.0rc1
+  testImageTag: v0.3
+
+cluster:
+  mode: simple
+  masterReplacesCount: 3
+# coldReplacesCount: 3
+
+#  mode: regular
+#  masterReplacesCount: 3
+#  dataReplacesCount: 3
+#  coldReplacesCount: 3
+
+#  mode: complex
+#  masterReplacesCount: 3
+#  dataReplacesCount: 3
+#  clientReplacesCount: 1
+#  coldReplacesCount: 3
+
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Java 堆大小建议设置Pod 内存limit 的50%
+#esJavaOpts:
+
+resources:
+  cold:
+    limits:
+      cpu: "1"
+      memory: 4Gi
+    requests:
+      cpu: "1"
+      memory: 4Gi
+  client:
+    limits:
+      cpu: "1"
+      memory: 4Gi
+    requests:
+      cpu: "1"
+      memory: 4Gi
+  data:
+    limits:
+      cpu: "1"
+      memory: 4Gi
+    requests:
+      cpu: "1"
+      memory: 4Gi
+  kibana:
+    limits:
+      cpu: "500m"
+      memory: 1Gi
+    requests:
+      cpu: "500m"
+      memory: 1Gi
+  master:
+    limits:
+      cpu: "1"
+      memory: 4Gi
+    requests:
+      cpu: "1"
+      memory: 4Gi
+
+nodeSelector: {}
+
+#设置nodeAffinity
+nodeAffinity: {}
+#  requiredDuringSchedulingIgnoredDuringExecution:
+#    nodeSelectorTerms:
+#      - matchExpressions:
+#          - key: kubernetes.io/hostname
+#            operator: In
+#            values:
+#              - slave-100
+
+podAntiAffinityTopologKey: "kubernetes.io/hostname"
+
+#取值[hard|soft] hard:强制反亲和 soft:非强制反亲和
+podAntiAffinity: "soft"

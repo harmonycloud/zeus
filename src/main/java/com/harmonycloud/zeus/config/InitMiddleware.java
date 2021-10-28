@@ -1,14 +1,12 @@
 package com.harmonycloud.zeus.config;
 
-import java.io.File;
-
-import javax.annotation.PostConstruct;
-
-import org.apache.commons.io.FileUtils;
+import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import lombok.extern.slf4j.Slf4j;
+import javax.annotation.PostConstruct;
 
 /**
  * @author xutianhong
@@ -19,25 +17,14 @@ import lombok.extern.slf4j.Slf4j;
 public class InitMiddleware {
 
 
-    @Value("${k8s.component.helm:/usr/local/zeus-pv/helm}")
-    private String helmPath;
-    @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
-    private String middlewarePath;
+    @Value("${system.images.path:/usr/local/zeus-pv/images/middleware}")
+    private String imagePath;
+
+    @Autowired
+    private MiddlewareInfoService middlewareInfoService;
     
     @PostConstruct
-    public void init(){
-        File file = new File(helmPath);
-        for (String name : file.list()) {
-            if (name.contains(".tgz")) {
-                try {
-                    File f = new File(helmPath + File.separator + name);
-                    File targetFile = new File(middlewarePath + File.separator + name);
-                    FileUtils.copyFile(f, targetFile);
-                } catch (Exception e) {
-                    log.error("同步中间件{} 失败", name);
-                }
-            }
-        }
+    public void init() throws Exception{
     }
 
 }

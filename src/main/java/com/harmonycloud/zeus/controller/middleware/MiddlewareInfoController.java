@@ -3,10 +3,7 @@ package com.harmonycloud.zeus.controller.middleware;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.harmonycloud.caas.common.base.BaseResult;
 
@@ -19,7 +16,7 @@ import io.swagger.annotations.ApiOperation;
  * @author dengyulong
  * @date 2021/03/23
  */
-@Api(tags = "middlewareInfo", value = "中间件信息", description = "中间件信息")
+@Api(tags = {"中间件市场","中间件管理"}, value = "中间件信息", description = "中间件信息")
 @RestController
 @RequestMapping("/middlewares/info")
 public class MiddlewareInfoController {
@@ -33,12 +30,31 @@ public class MiddlewareInfoController {
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping
-    public BaseResult list(@RequestParam(value = "clusterId") String clusterId,
-                           @RequestParam(value = "namespace", required = false) String namespace) {
-        if (StringUtils.isBlank(namespace)) {
-            return BaseResult.ok(middlewareInfoService.list(clusterId));
-        }
-        return BaseResult.ok(middlewareInfoService.list(clusterId, namespace));
+    public BaseResult list(@RequestParam(value = "clusterId") String clusterId) {
+        return BaseResult.ok(middlewareInfoService.list(clusterId));
+    }
+
+    @ApiOperation(value = "查询指定中间件版本", notes = "查询指定中间件版本")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "类型", paramType = "query", dataTypeClass = String.class)
+    })
+    @GetMapping("/version")
+    public BaseResult version(@RequestParam(value = "clusterId") String clusterId,
+                              @RequestParam(value = "type") String type) {
+        return BaseResult.ok(middlewareInfoService.version(clusterId, type));
+    }
+
+    @ApiOperation(value = "中间件下架", notes = "中间件下架")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "chartName", value = "名称", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "chartVersion", value = "版本", paramType = "query", dataTypeClass = String.class)
+    })
+    @DeleteMapping("/delete")
+    public BaseResult delete(@RequestParam(value = "chartName") String chartName,
+                              @RequestParam(value = "chartVersion") String chartVersion) {
+        middlewareInfoService.delete(chartName, chartVersion);
+        return BaseResult.ok();
     }
 
 }

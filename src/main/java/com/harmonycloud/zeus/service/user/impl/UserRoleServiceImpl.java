@@ -1,13 +1,17 @@
 package com.harmonycloud.zeus.service.user.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.model.user.RoleDto;
 import com.harmonycloud.zeus.service.user.RoleService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -38,12 +42,12 @@ public class UserRoleServiceImpl implements UserRoleService {
         QueryWrapper<BeanUserRole> roleUserWrapper = new QueryWrapper<BeanUserRole>().eq("username", userName);
         BeanUserRole beanUserRole = beanUserRoleMapper.selectOne(roleUserWrapper);
         if (ObjectUtils.isEmpty(beanUserRole)) {
-            throw new BusinessException(ErrorMessage.USER_ROLE_NOT_EXIT);
+            return null;
         }
         // 获取角色信息
-        BeanRole beanRole = roleService.get(beanUserRole.getRoleId());
+        RoleDto roleDto = roleService.get(beanUserRole.getRoleId());
 
-        return new UserRole().setUserName(userName).setRoleId(beanRole.getId()).setRoleName(beanRole.getName());
+        return new UserRole().setUserName(userName).setRoleId(roleDto.getId()).setRoleName(roleDto.getName());
     }
 
     @Override
@@ -54,14 +58,28 @@ public class UserRoleServiceImpl implements UserRoleService {
         Map<String, Integer> beanSysRoleUserMap =
             beanUserRole.stream().collect(Collectors.toMap(BeanUserRole::getUserName, BeanUserRole::getRoleId));
         // 获取所有角色信息
-        List<BeanRole> beanRoleList = roleService.list(true);
+        List<RoleDto> beanRoleList = roleService.list(null);
         Map<Integer, String> beanSysRoleMap =
-            beanRoleList.stream().collect(Collectors.toMap(BeanRole::getId, BeanRole::getName));
+            beanRoleList.stream().collect(Collectors.toMap(RoleDto::getId, RoleDto::getName));
         // 封装返回信息
         return beanUserList.stream().map(beanUser -> {
             UserRole userRole = new UserRole();
             userRole.setUserName(beanUser.getUserName()).setRoleId(beanSysRoleUserMap.get(beanUser.getUserName()))
                 .setRoleName(beanSysRoleMap.get(beanSysRoleUserMap.get(beanUser.getUserName())));
+            return userRole;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<UserRole> findByRoleId(Integer roleId) {
+        QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("role_id", roleId);
+        List<BeanUserRole> beanUserRoleList = beanUserRoleMapper.selectList(wrapper);
+        if (CollectionUtils.isEmpty(beanUserRoleList)){
+            return new ArrayList<>();
+        }
+        return beanUserRoleList.stream().map(beanUserRole -> {
+            UserRole userRole = new UserRole();
+            BeanUtils.copyProperties(beanUserRole, userRole);
             return userRole;
         }).collect(Collectors.toList());
     }
@@ -88,9 +106,14 @@ public class UserRoleServiceImpl implements UserRoleService {
     @Override
     public void update(UserDto userDto) {
         QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("username", userDto.getUserName());
+        BeanUserRole existBind = beanUserRoleMapper.selectOne(wrapper);
         BeanUserRole beanUserRole = new BeanUserRole();
         beanUserRole.setUserName(userDto.getUserName());
         beanUserRole.setRoleId(userDto.getRoleId());
-        beanUserRoleMapper.update(beanUserRole, wrapper);
+        if (ObjectUtils.isEmpty(existBind)) {
+            beanUserRoleMapper.insert(beanUserRole);
+        } else {
+            beanUserRoleMapper.update(beanUserRole, wrapper);
+        }
     }
 }

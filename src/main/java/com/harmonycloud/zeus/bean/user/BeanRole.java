@@ -7,6 +7,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
+
 /**
  * @author xutianhong
  * @Date 2021/7/27 2:35 下午
@@ -34,8 +36,18 @@ public class BeanRole {
     @TableField("description")
     private String description;
     /**
+     * 父id
+     */
+    @TableField("parent")
+    private Integer parent;
+    /**
+     * 创建时间
+     */
+    @TableField("create_Time")
+    private Date createTime;
+    /**
      * 是否可用
      */
     @TableField("status")
-    private String status;
+    private Boolean status;
 }

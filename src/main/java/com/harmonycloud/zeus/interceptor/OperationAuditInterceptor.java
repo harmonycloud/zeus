@@ -26,7 +26,11 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -62,7 +66,10 @@ public class OperationAuditInterceptor {
     public Object around(ProceedingJoinPoint point) throws Throwable {
         log.info("记录操作日志");
         long beginTimeMillis = System.currentTimeMillis();
-        LocalDateTime beginTime = LocalDateTime.now();
+        LocalDateTime localDateTime = LocalDateTime.now();
+        ZoneId zone = ZoneId.systemDefault();
+        Instant instant = localDateTime.atZone(zone).toInstant();
+        Date beginTime = Date.from(instant);
         Object result = null;
         try {
             // 执行方法
@@ -70,7 +77,9 @@ public class OperationAuditInterceptor {
 
             Long actionTimeMillis = System.currentTimeMillis();
             Long executeTime = (actionTimeMillis - beginTimeMillis);
-            LocalDateTime actionTime = LocalDateTime.now();
+            LocalDateTime time = LocalDateTime.now();
+            Instant ins = time.atZone(zone).toInstant();
+            Date actionTime = Date.from(ins);
 
             try {
                 saveOperateLog(point, beginTime, actionTime, executeTime.intValue(), result);
@@ -96,7 +105,7 @@ public class OperationAuditInterceptor {
      * @author liyinlong
      * @date 2021/7/21 6:19 下午
      */
-    private void saveOperateLog(ProceedingJoinPoint joinPoint, LocalDateTime beginTime, LocalDateTime actionTime, int executeTime, Object result) {
+    private void saveOperateLog(ProceedingJoinPoint joinPoint, Date beginTime, Date actionTime, int executeTime, Object result) {
         // 获取HttpServletRequest的信息
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         if (HttpMethod.GET.equalsIgnoreCase(request.getMethod())) {

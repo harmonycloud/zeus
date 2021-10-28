@@ -1,13 +1,22 @@
-{{- if eq .Values.version "5.7.21" }}
 apiVersion: v1
 data:
   my.cnf.tmpl: |
     # version 1
     [mysqld]
     #************** basic ***************
+    {{- if eq .Values.version "8.0" }}
+    default-authentication-plugin   =mysql_native_password
+    plugin_dir=/usr/lib64/mysql/plugin/
+    {{- end }}
+    {{- if eq .Values.version "5.7" }}
+    query_cache_type                ={{ .Values.args.query_cache_type | default "OFF" }}
+    query_cache_size                ={{ .Values.args.query_cache_size | default 0 }}
+    sql_mode                        ={{ .Values.args.sql_mode | default "NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,ERROR_FOR_DIVISION_BY_ZERO" }}
+    internal_tmp_disk_storage_engine    =InnoDB
+    {{- end }}
     plugin-load                     =rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so
     datadir                         =/data/mysql/DBNAME/data
-    basedir                         =/usr/local/mysql
+    #basedir                         =/usr/local/mysql
     tmpdir                          =/data/mysql/DBNAME/tmp
     secure_file_priv                =/data/mysql/DBNAME/tmp
     port                            =MYSQLPORT
@@ -23,6 +32,12 @@ data:
     {{- else if or (contains "GI" (upper .Values.resources.limits.memory)) (contains "G" (upper .Values.resources.limits.memory)) }}
     {{- $maxConnectionsMemory := div (mul $memory  1024) 4 }}
     {{- $bufferMemory := printf "%d%s"  (div (mul $memory  4) 5) "G" }}
+    {{- if eq $maxConnectionsMemory 0 }}
+    {{- $maxConnectionsMemory = 256 }}
+    {{- end }}
+    {{- if eq $bufferMemory "0G" }}
+    {{- $bufferMemory = "400M" }}
+    {{- end }}
     max_connections                 ={{ .Values.args.max_connections | default $maxConnectionsMemory }}
     innodb_buffer_pool_size         ={{ .Values.args.innodb_buffer_pool_size | default $bufferMemory  }}
     {{- end }}
@@ -43,12 +58,9 @@ data:
     log_timestamps                  ={{ .Values.args.log_timestamps | default "SYSTEM" }}
     local_infile                    ={{ .Values.args.local_infile | default "OFF" }}
     event_scheduler                 ={{ .Values.args.event_scheduler | default "OFF" }}
-    query_cache_type                ={{ .Values.args.query_cache_type | default "OFF" }}
-    query_cache_size                ={{ .Values.args.query_cache_size | default 0 }}
     lc_messages                     ={{ .Values.args.lc_messages | default "en_US" }}
     lc_messages_dir                 =/usr/local/mysql/share
     init_connect                    ="set names {{ .Values.args.character_set_server }}"
-    sql_mode                        ={{ .Values.args.sql_mode | default "NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,ERROR_FOR_DIVISION_BY_ZERO" }}
     #init_file                       =/data/mysql/DBNAME/conf/init_file.sql
     #init_slave
     #******************* err & slow & general ***************
@@ -79,6 +91,7 @@ data:
     relay_log_purge                 ={{ .Values.args.relay_log_purge | default "ON" }}
     relay_log_recovery              ={{ .Values.args.relay_log_recovery | default "ON" }}
     #*************** rpl_semi_sync ***************
+    {{- if eq .Values.version "5.7" }}
     rpl_semi_sync_master_enabled                =ON
     rpl_semi_sync_master_timeout                =1000
     rpl_semi_sync_master_trace_level            =32
@@ -87,6 +100,7 @@ data:
     rpl_semi_sync_master_wait_point             =AFTER_SYNC
     rpl_semi_sync_slave_enabled                 =ON
     rpl_semi_sync_slave_trace_level             =32
+    {{- end }}
     #*************** group commit ***************
     binlog_group_commit_sync_delay              =1
     binlog_group_commit_sync_no_delay_count     =1000
@@ -137,7 +151,6 @@ data:
     #*********** innodb ***************
     default_storage_engine              =InnoDB
     default_tmp_storage_engine          =InnoDB
-    internal_tmp_disk_storage_engine    =InnoDB
     innodb_data_home_dir                =/data/mysql/DBNAME/data
     innodb_log_group_home_dir           =/data/mysql/DBNAME/log
     innodb_log_file_size                ={{ .Values.args.innodb_log_file_size | default "1024M" }}
@@ -170,4 +183,3 @@ data:
 kind: ConfigMap
 metadata:
   name: {{ include "mysql.fullname" . }}-config
-{{- end }}

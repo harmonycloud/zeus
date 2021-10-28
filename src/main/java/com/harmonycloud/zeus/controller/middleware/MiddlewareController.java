@@ -25,7 +25,7 @@ import javax.servlet.http.HttpServletResponse;
  * @author dengyulong
  * @date 2021/03/23
  */
-@Api(tags = {"工作台","实例列表"}, value = "分区下中间件", description = "分区下中间件")
+@Api(tags = {"服务列表","服务管理"}, value = "分区下中间件", description = "分区下中间件")
 @RestController
 @RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/middlewares")
 public class MiddlewareController {
@@ -40,11 +40,11 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping
-    public BaseResult<List<Middleware>> list(@PathVariable("clusterId") String clusterId,
+    public BaseResult list(@PathVariable("clusterId") String clusterId,
                                              @PathVariable("namespace") String namespace,
                                              @RequestParam(value = "type", required = false) String type,
                                              @RequestParam(value = "keyword", required = false) String keyword) {
-        return BaseResult.ok(middlewareService.simpleList(clusterId, namespace, type, keyword));
+        return BaseResult.ok(middlewareService.listAllMiddleware(clusterId, namespace, keyword));
     }
 
     @ApiOperation(value = "查询中间件详情", notes = "查询中间件详情")

@@ -15,8 +15,7 @@ import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.ResourceRequirements;
+import io.fabric8.kubernetes.api.model.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,10 +31,6 @@ import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.integration.cluster.PodWrapper;
 import com.harmonycloud.zeus.service.k8s.PodService;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
-
-import io.fabric8.kubernetes.api.model.ContainerStatus;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
-import io.fabric8.kubernetes.api.model.Pod;
 
 /**
  * @author dengyulong
@@ -166,15 +161,20 @@ public class PodServiceImpl implements PodService {
         // resource
         MiddlewareQuota resource = new MiddlewareQuota();
         ResourceRequirements resources = containers.get(0).getResources();
-        resource
-            .setCpu(String.valueOf(
-                ResourceCalculationUtil.getResourceValue(resources.getRequests().get(CPU).toString(), CPU, "")))
-            .setMemory(String.valueOf(ResourceCalculationUtil.getResourceValue(
-                resources.getRequests().get(MEMORY).toString(), MEMORY, ResourceUnitEnum.GI.getUnit())))
-            .setLimitCpu(String
-                .valueOf(ResourceCalculationUtil.getResourceValue(resources.getLimits().get(CPU).toString(), CPU, "")))
-            .setLimitMemory(String.valueOf(ResourceCalculationUtil.getResourceValue(
-                resources.getLimits().get(MEMORY).toString(), MEMORY, ResourceUnitEnum.GI.getUnit())));
+        if (!CollectionUtils.isEmpty(resources.getRequests())) {
+            resource
+                .setCpu(String.valueOf(
+                    ResourceCalculationUtil.getResourceValue(resources.getRequests().get(CPU).toString(), CPU, "")))
+                .setMemory(String.valueOf(ResourceCalculationUtil.getResourceValue(
+                    resources.getRequests().get(MEMORY).toString(), MEMORY, ResourceUnitEnum.GI.getUnit())));
+        }
+        if (!CollectionUtils.isEmpty(resources.getLimits())) {
+            resource
+                .setLimitCpu(String.valueOf(
+                    ResourceCalculationUtil.getResourceValue(resources.getLimits().get(CPU).toString(), CPU, "")))
+                .setLimitMemory(String.valueOf(ResourceCalculationUtil.getResourceValue(
+                    resources.getLimits().get(MEMORY).toString(), MEMORY, ResourceUnitEnum.GI.getUnit())));
+        }
         return pi.setResources(resource);
     }
 

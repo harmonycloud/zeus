@@ -21,7 +21,7 @@ import io.swagger.annotations.ApiOperation;
  * @author xutianhong
  * @Date 2021/4/23 4:28 下午
  */
-@Api(tags = {"工作台","实例列表"}, value = "中间件自定义参数", description = "中间件自定义参数")
+@Api(tags = {"服务列表","服务配置"}, value = "中间件自定义参数", description = "中间件自定义参数")
 @RestController
 @RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/middlewares/{middlewareName}/config")
 public class MiddlewareCustomConfigController {

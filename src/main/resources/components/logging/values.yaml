@@ -1,0 +1,10 @@
+image:
+  logpilotRepository: 10.1.11.121:8443/middleware/log-pilot
+  logstashRepository: 10.1.11.121:8443/k8s-deploy/logstash
+  logpilotImageTag: 0.9.7-filebeat-hc.2
+  logstashImageTag: "6.8.4"
+  imagePullPolicy: "Always"
+
+
+
+

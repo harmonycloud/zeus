@@ -6,10 +6,24 @@ mysqlUserHost: "%"
 replicaCount: 1
 
 image:
-  repository: middleware.harmonycloud.cn:38080/middleware/mysql-operator
-  pullPolicy: Always
+  repository: harbor.middleware.com/middleware
+  pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: v1.1.1
+  tag: v1.2.0
+  kubectlTag: 1.21
+
+kubectl:
+  installCRDs: true
+  resources:
+    limits:
+      cpu: 200m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
 
 imagePullSecrets: []
 nameOverride: ""

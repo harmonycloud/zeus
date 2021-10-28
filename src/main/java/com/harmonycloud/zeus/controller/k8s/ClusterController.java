@@ -39,8 +39,9 @@ public class ClusterController {
             @ApiImplicitParam(name = "detail", value = "是否返回集群明细信息", paramType = "query", dataTypeClass = Boolean.class)
     })
     @GetMapping
-    public BaseResult<List<MiddlewareClusterDTO>> list(@RequestParam(value = "detail", defaultValue = "false") boolean detail) {
-        List<MiddlewareClusterDTO> list = clusterService.listClusters(detail);
+    public BaseResult<List<MiddlewareClusterDTO>> list(@RequestParam(value = "detail", defaultValue = "false") boolean detail,
+                                                       @RequestParam(value = "key", required = false) String key) {
+        List<MiddlewareClusterDTO> list = clusterService.listClusters(detail, key);
         list.forEach(this::desensitize);
         return BaseResult.ok(list);
     }

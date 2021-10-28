@@ -14,6 +14,7 @@ spec:
     port: 30043
     protocol: TCP
     targetPort: 30043
+    nodePort: 31043
   selector:
     app: zeus-ui
   sessionAffinity: None

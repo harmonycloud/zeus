@@ -64,5 +64,6 @@ fi
 if [ $DEPLOY_TYPE == "helm" ]; then
     echo "######  Deployed by helm ######"
     deploy_helm
-    echo "######  Success ######"
 fi
+
+echo "######  Success!  ######"

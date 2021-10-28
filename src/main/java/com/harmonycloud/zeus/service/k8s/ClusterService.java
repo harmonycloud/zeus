@@ -1,8 +1,10 @@
 package com.harmonycloud.zeus.service.k8s;
 
-import java.util.List;
-
+import com.harmonycloud.caas.common.model.middleware.ClusterQuotaDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.caas.common.model.middleware.Namespace;
+
+import java.util.List;
 
 /**
  * @author dengyulong
@@ -28,7 +30,7 @@ public interface ClusterService {
      * @param detail 是否返回明细信息
      * @return
      */
-    List<MiddlewareClusterDTO> listClusters(boolean detail);
+    List<MiddlewareClusterDTO> listClusters(boolean detail, String key);
 
     /**
      * 设置集群属性
@@ -88,4 +90,35 @@ public interface ClusterService {
      */
     void removeCluster(String clusterId);
 
+    /**
+     * 获取集群注册的分区
+     *
+     * @param clusterDTO 集群dto
+     * @return
+     */
+    List<Namespace> getRegisteredNamespaceNum(MiddlewareClusterDTO clusterDTO);
+
+    /**
+     * 获取集群注册的分区
+     *
+     * @param clusterDTOList 集群dto集合
+     * @return
+     */
+    List<Namespace> getRegisteredNamespaceNum(List<MiddlewareClusterDTO> clusterDTOList);
+
+    /**
+     * 获取集群资源配额及使用量
+     *
+     * @param clusterDTOList 集群dto集合
+     * @return
+     */
+    ClusterQuotaDTO getClusterQuota(List<MiddlewareClusterDTO> clusterDTOList);
+
+    /**
+     * 获取集群资源配额及使用量
+     *
+     * @param clusterDTO 集群dto
+     * @return
+     */
+    ClusterQuotaDTO getClusterQuota(MiddlewareClusterDTO clusterDTO);
 }

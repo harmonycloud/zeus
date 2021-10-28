@@ -42,11 +42,13 @@ make install
 访问方式
 
 ```
-http://<your ip>:30088
+http://<your ip>:31088
 
 用户名：admin
-密码：Ab123456!
+密码：zeus123.com
 ```
+
+详细部署方式参考：[https://github.com/harmonycloud/zeus/blob/main/deploy/READEME.md](https://github.com/harmonycloud/zeus/blob/main/deploy/READEME.md)
 
 ## 支持组件版本
 
@@ -55,9 +57,9 @@ http://<your ip>:30088
 |Mysql| 5.7.21|主从|
 |Redis|5.0.8|哨兵、集群(三主三从、五主五从)|
 |Elasticsearch|6.8.10-1|主从、主从协调|
-|RocketMQ|4.5.0|双主、双主双从、三主三从|
+|RocketMQ|4.8.0|双主、双主双从、三主三从|
 |Kafka|2.13-2.6.0| |
-|Zookeeper|0.2.8| |
+|Zookeeper|3.6.1| |
 |Minio|RELEASE.2021-02-14T04-01-33Z| |
 |Nacos|1.4.1| |
 

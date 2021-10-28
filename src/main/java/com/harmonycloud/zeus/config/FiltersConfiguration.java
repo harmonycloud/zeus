@@ -1,11 +1,12 @@
 package com.harmonycloud.zeus.config;
 
+import com.harmonycloud.zeus.filter.AuthFilter;
+import com.harmonycloud.zeus.filter.TokenFilter;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.harmonycloud.caas.filters.filters.CurrentStateFilter;
-import com.harmonycloud.caas.filters.filters.TokenFilter;
 
 /**
  * @author chwetion
@@ -13,6 +14,16 @@ import com.harmonycloud.caas.filters.filters.TokenFilter;
  */
 @Configuration
 public class FiltersConfiguration {
+
+    @Bean
+    public FilterRegistrationBean<AuthFilter> authFilter() {
+        FilterRegistrationBean<AuthFilter> bean = new FilterRegistrationBean<>();
+        bean.setFilter(new AuthFilter());
+        bean.setName("authFilter");
+        bean.addUrlPatterns("/*");
+        bean.setOrder(-1);
+        return bean;
+    }
 
     @Bean
     public FilterRegistrationBean<TokenFilter> tokenFilter() {

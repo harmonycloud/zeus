@@ -72,7 +72,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         List<BeanCustomConfig> beanCustomConfigList = beanCustomConfigMapper.selectList(wrapper);
         if (CollectionUtils.isEmpty(beanCustomConfigList)) {
             HelmChartFile helmChart =
-                helmChartService.getHelmChartFromRegistry(clusterId, namespace, middlewareName, type);
+                helmChartService.getHelmChart(clusterId, namespace, middlewareName, type);
             beanCustomConfigList.addAll(updateConfig2MySQL(helmChart, false));
         }
         // 封装customConfigList

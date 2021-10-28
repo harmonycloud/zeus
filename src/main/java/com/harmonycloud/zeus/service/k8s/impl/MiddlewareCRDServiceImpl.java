@@ -27,6 +27,8 @@ import com.harmonycloud.tool.date.DateUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
+
 /**
  * @author xutianhong
  * @Date 2021/4/1 5:13 下午
@@ -183,9 +185,22 @@ public class MiddlewareCRDServiceImpl implements MiddlewareCRDService {
                 .setNamespace(mw.getMetadata().getNamespace())
                 .setClusterId(mw.getMetadata().getClusterName())
                 .setType(MiddlewareTypeEnum.findTypeByCrdType(mw.getSpec().getType()))
-                .setStatus(mw.getStatus().getPhase())
-                .setReason(mw.getStatus().getReason())
-                .setCreateTime(DateUtils.parseUTCDate(mw.getMetadata().getCreationTimestamp()));
+                .setStatus(mw.getStatus() != null ? mw.getStatus().getPhase() : "")
+                .setReason(mw.getStatus() != null ? mw.getStatus().getReason() : "")
+                .setCreateTime(DateUtils.parseUTCDate(mw.getMetadata().getCreationTimestamp()))
+                .setPodNum(getPodNum(mw));
     }
 
+    /**
+     * 获取服务pod数量
+     * @param mw
+     * @return
+     */
+    private int getPodNum(MiddlewareCRD mw) {
+        if ((mw.getStatus() != null && mw.getStatus().getInclude() != null && mw.getStatus().getInclude().get(PODS) != null)) {
+            return mw.getStatus().getInclude().get(PODS).size();
+        } else {
+            return 0;
+        }
+    }
 }

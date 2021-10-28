@@ -1,0 +1,163 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: middlewarebackups.harmonycloud.cn
+spec:
+  conversion:
+    strategy: None
+  group: harmonycloud.cn
+  names:
+    kind: MiddlewareBackup
+    listKind: MiddlewareBackupList
+    plural: middlewarebackups
+    singular: middlewarebackup
+  scope: Namespaced
+  versions:
+    - name: v1
+      schema:
+        openAPIV3Schema:
+          description: MiddlewareBackup is the Schema for the middlewarebackups API
+          properties:
+            apiVersion:
+              description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+              type: string
+            kind:
+              description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: MiddlewareBackupSpec defines the desired state of MiddlewareBackup
+              properties:
+                name:
+                  type: string
+                type:
+                  type: string
+                pod:
+                  type: string
+                pvcs:
+                  items:
+                    type: string
+                  type: array
+                prefixHooks:
+                  items:
+                    properties:
+                      exec:
+                        properties:
+                          command:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      httpGet:
+                        properties:
+                          path:
+                            type: string
+                          port:
+                            format: int32
+                            type: integer
+                          host:
+                            type: string
+                          scheme:
+                            type: string
+                          httpHeaders:
+                            items:
+                              properties:
+                                name:
+                                  type: string
+                                value:
+                                  type: string
+                              type: object
+                            type: array
+                        type: object
+                      tcpSocket:
+                        properties:
+                          port:
+                            format: int32
+                            type: integer
+                          host:
+                            type: string
+                        type: object
+                    type: object
+                  type: array
+                suffixHooks:
+                  items:
+                    properties:
+                      exec:
+                        properties:
+                          command:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      httpGet:
+                        properties:
+                          path:
+                            type: string
+                          port:
+                            format: int32
+                            type: integer
+                          host:
+                            type: string
+                          scheme:
+                            type: string
+                          httpHeaders:
+                            items:
+                              properties:
+                                name:
+                                  type: string
+                                value:
+                                  type: string
+                              type: object
+                            type: array
+                        type: object
+                      tcpSocket:
+                        properties:
+                          port:
+                            format: int32
+                            type: integer
+                          host:
+                            type: string
+                        type: object
+                    type: object
+                  type: array
+                backendStorage:
+                  type: string
+              type: object
+            status:
+              description: MiddlewareBackupStatus defines the observed state of MiddlewareBackup
+              properties:
+                creationTimestamp:
+                  format: date-time
+                  type: string
+                backupInfos:
+                  items:
+                    properties:
+                      repository:
+                        type: string
+                      volumeSnapshot:
+                        type: string
+                      readyToUse:
+                        type: boolean
+                    type: object
+                  type: array
+                phase:
+                  type: string
+                reason:
+                  type: string
+                storageProvider:
+                  additionalProperties:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  type: object
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: { }

@@ -20,10 +20,13 @@ import com.harmonycloud.zeus.operator.BaseOperator;
 import com.harmonycloud.zeus.service.k8s.MysqlReplicateCRDService;
 import com.harmonycloud.zeus.service.k8s.ServiceService;
 import com.harmonycloud.zeus.service.middleware.BackupService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
+import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareServiceImpl;
+import com.harmonycloud.zeus.util.CronUtils;
 import com.harmonycloud.zeus.util.DateUtil;
+import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.common.rounding.DateTimeUnit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
@@ -74,6 +77,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     private ServiceService serviceService;
     @Autowired
     private BaseOperatorImpl baseOperator;
+    @Autowired
+    private MiddlewareBackupServiceImpl middlewareBackupService;
     @Override
     public boolean support(Middleware middleware) {
         return MiddlewareTypeEnum.MYSQL == MiddlewareTypeEnum.findByType(middleware.getType());
@@ -107,7 +112,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 replicaCount++;
                 values.put(MysqlConstant.REPLICA_COUNT, replicaCount);
             }
-            if (mysqlDTO.getOpenDisasterRecoveryMode()) {
+            if (mysqlDTO.getOpenDisasterRecoveryMode() != null && mysqlDTO.getOpenDisasterRecoveryMode()) {
                 mysqlArgs.put(MysqlConstant.IS_SOURCE, mysqlDTO.getIsSource());
                 mysqlArgs.put(MysqlConstant.RELATION_CLUSTER_ID, mysqlDTO.getRelationClusterId());
                 mysqlArgs.put(MysqlConstant.RELATION_NAMESPACE, mysqlDTO.getRelationNamespace());
@@ -180,12 +185,9 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                         String lastUpdateTime = podStatus.getLastUpdateTime();
                         mysqlDTO.setLastUpdateTime(DateUtil.utc2Local(lastUpdateTime, DateType.YYYY_MM_DD_HH_MM_SS.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue()));
                     }
-                }else{
-                    mysqlDTO.setOpenDisasterRecoveryMode(false);
                 }
             }
         }
-
         return middleware;
     }
 
@@ -197,10 +199,10 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         if (mysqlDTO != null) {
             if (mysqlDTO.getIsSource() != null && !mysqlDTO.getIsSource()) {
                 //当前实例为灾备实例，灾备实例只读，不可写入，为该实例创建只读对外服务
-                middlewareManageTask.asyncCreateMysqlOpenService(this, middleware, true);
+                tryCreateOpenService(middleware, ServiceNameConvertUtil.convertMysql(middleware.getName(), true), true);
             } else {
                 //当前实例为源实例或普通实例，实例可读写，为该实例创建可读写对外服务
-                middlewareManageTask.asyncCreateMysqlOpenService(this, middleware, false);
+                tryCreateOpenService(middleware, ServiceNameConvertUtil.convertMysql(middleware.getName(), false), true);
             }
         }
         // 创建灾备实例
@@ -357,7 +359,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             .setStorageProvider(new BackupStorageProvider().setMinio(minio));
 
         ScheduleBackupSpec spec =
-            new ScheduleBackupSpec().setSchedule(cron).setBackupTemplate(backupTemplate).setKeepBackups(keepBackups);
+            new ScheduleBackupSpec().setSchedule(CronUtils.parseMysqlUtcCron(cron)).setBackupTemplate(backupTemplate).setKeepBackups(keepBackups);
         ObjectMeta metaData = new ObjectMeta();
         metaData.setName(getBackupName(middleware));
         Map<String, String> labels = new HashMap<>();
@@ -657,7 +659,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                     oldDisasterRecovery.setNamespace(namespace);
                     oldDisasterRecovery.setType(MiddlewareTypeEnum.MYSQL.getType());
                 }
-                middlewareManageTask.asyncCreateMysqlOpenService(this, oldDisasterRecovery, false);
+                tryCreateOpenService(oldDisasterRecovery, ServiceNameConvertUtil.convertMysql(oldDisasterRecovery.getName(), false), true);
             }
         }
     }
@@ -670,7 +672,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         MysqlDTO mysqlDTO = middleware.getMysqlDTO();
         if (mysqlDTO.getOpenDisasterRecoveryMode() != null && mysqlDTO.getOpenDisasterRecoveryMode() && mysqlDTO.getIsSource()) {
             //1.为实例创建只读对外服务(NodePort)
-            this.createOpenService(middleware,  true);
+            tryCreateOpenService(middleware, ServiceNameConvertUtil.convertMysql(middleware.getName(), true), true);
             //2.设置灾备实例信息，创建灾备实例
             //2.1 设置灾备实例信息
             Middleware relationMiddleware = middleware.getRelationMiddleware();
@@ -697,99 +699,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             this.create(relationMiddleware, cluster);
             //3.异步创建关联关系
             this.createMysqlReplicate(middleware, relationMiddleware);
-        }
-    }
-
-    /**
-     * 尝试创建mysql对外服务，当实例状态为Running时才创建对外服务
-     * @param middleware 中间件信息
-     * @param isReadonlyService 服务名称
-     */
-    public void tryCreateOpenService(Middleware middleware, Boolean isReadonlyService){
-        boolean success = false;
-        for (int i =0; i < 600 && !success; i++){
-            Middleware detail = middlewareService.detail(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
-            log.info("为实例：{}创建对外服务：状态：{},已用时：{}s", detail.getName(), detail.getStatus(), i);
-            if(detail != null){
-                if(detail.getStatus() != null && "Running".equals(detail.getStatus())){
-                    createOpenService(middleware, isReadonlyService);
-                    success = true;
-                }
-            }
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-    }
-
-    /**
-     * 创建对外服务(NodePort)
-     * @param middleware mysql实例
-     * @param isReadonlyService 是否是只读服务
-     */
-    public void createOpenService(Middleware middleware,Boolean isReadonlyService){
-        //1.获取所有对外服务，判断指定类型的服务是否已创建，如果已创建则直接返回
-        String nodePortServiceName;
-        String middlewareServiceNameSuffix;
-        if (isReadonlyService) {
-            nodePortServiceName = String.format("%s-readonly-nodeport", middleware.getName());
-            middlewareServiceNameSuffix = "readonly";
-        } else {
-            nodePortServiceName = String.format("%s-nodeport", middleware.getName());
-            middlewareServiceNameSuffix = middleware.getName();
-        }
-
-        List<IngressDTO> ingressDTOS = ingressService.get(middleware.getClusterId(), middleware.getNamespace(),
-                middleware.getType(), middleware.getName());
-        if (!CollectionUtils.isEmpty(ingressDTOS)) {
-            String finalServiceName = nodePortServiceName;
-            List<IngressDTO> ingressDTOList = ingressDTOS.stream().filter(ingressDTO -> (
-                    ingressDTO.getName().contains(finalServiceName) && ingressDTO.getExposeType().equals(MIDDLEWARE_EXPOSE_NODEPORT))
-            ).collect(Collectors.toList());
-            if (!CollectionUtils.isEmpty(ingressDTOList)) {
-                return;
-            }
-        }
-
-        log.info("创建对外服务，服务类型是否是只读；{}", isReadonlyService);
-        List<ServicePortDTO> servicePortDTOS = serviceService.list(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
-        String finalMiddlewareServiceNameSuffix = middlewareServiceNameSuffix;
-        List<ServicePortDTO> serviceList = servicePortDTOS.stream().filter(servicePortDTO -> servicePortDTO.getServiceName().endsWith(finalMiddlewareServiceNameSuffix)).collect(Collectors.toList());
-        if (!CollectionUtils.isEmpty(serviceList)) {
-            ServicePortDTO servicePortDTO = serviceList.get(0);
-            PortDetailDTO portDetailDTO = servicePortDTO.getPortDetailDtoList().get(0);
-            //2.将服务通过NodePort暴露为对外服务
-            boolean successCreateService = false;
-            int servicePort = 31000;
-            while (!successCreateService) {
-                log.info("开始创建对外服务,clusterId={},namespace={},middlewareName={},port={}",
-                        middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), servicePort);
-                try {
-                    IngressDTO ingressDTO = new IngressDTO();
-                    List<ServiceDTO> serviceDTOList = new ArrayList<>();
-                    ServiceDTO serviceDTO = new ServiceDTO();
-                    serviceDTO.setExposePort(String.valueOf(servicePort));
-                    serviceDTO.setTargetPort(portDetailDTO.getTargetPort());
-                    serviceDTO.setServicePort(portDetailDTO.getPort());
-                    serviceDTO.setServiceName(servicePortDTO.getServiceName());
-                    serviceDTOList.add(serviceDTO);
-
-                    ingressDTO.setMiddlewareType(MiddlewareTypeEnum.MYSQL.getType());
-                    ingressDTO.setServiceList(serviceDTOList);
-                    ingressDTO.setExposeType(MIDDLEWARE_EXPOSE_NODEPORT);
-                    ingressDTO.setProtocol("TCP");
-                    ingressService.create(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), ingressDTO);
-                    successCreateService = true;
-                    log.info("对外服务创建成功");
-                } catch (Exception e) {
-                    servicePort++;
-                    log.error("对外服务创建失败，尝试端口：{}", servicePort);
-                    successCreateService = false;
-                }
-            }
         }
     }
 
@@ -869,17 +778,15 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 } catch (Exception e) {
                     log.error("更新关联实例信息出错了", e);
                 }
-
-                // 删除灾备关联关系
-                try {
-                    mysqlReplicateCRDService.deleteMysqlReplicate(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
-                    log.info("mysql灾备关联关系删除成功");
-                } catch (Exception e) {
-                    log.error("mysql灾备关联关系删除失败", e);
-                }
+            }
+            // 删除灾备关联关系
+            try {
+                mysqlReplicateCRDService.deleteMysqlReplicate(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
+                log.info("mysql灾备关联关系删除成功");
+            } catch (Exception e) {
+                log.error("mysql灾备关联关系删除失败", e);
             }
         }
     }
-
 
 }

@@ -5,8 +5,10 @@ import static com.harmonycloud.caas.common.constants.NameConstant.MODE;
 import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
 
 import com.alibaba.fastjson.JSONArray;
+import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.service.k8s.PodService;
+import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import org.apache.commons.lang3.StringUtils;
 
@@ -91,6 +93,7 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
             middleware.setMode(clusterInfo.getString(MODE));
         }
 
+        middleware.setManagePlatform(true);
         return middleware;
     }
 
@@ -227,7 +230,8 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
      */
     public void replaceACL(Middleware middleware, JSONObject values) {
         JSONObject acl = new JSONObject();
-        if (middleware.getRocketMQParam().getAcl().getEnable()) {
+
+        if (middleware.getRocketMQParam() != null && middleware.getRocketMQParam().getAcl().getEnable()) {
             RocketMQACL rocketMQACL = middleware.getRocketMQParam().getAcl();
             acl.put("enable", rocketMQACL.getEnable());
             acl.put("globalWhiteRemoteAddresses", StringUtils.isNotEmpty(rocketMQACL.getGlobalWhiteRemoteAddresses())
@@ -343,4 +347,9 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
         }
     }
 
+    @Override
+    public void create(Middleware middleware, MiddlewareClusterDTO cluster) {
+        super.create(middleware, cluster);
+        tryCreateOpenService(middleware, ServiceNameConvertUtil.convertMq(middleware.getName()), false);
+    }
 }

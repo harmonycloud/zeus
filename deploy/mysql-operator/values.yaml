@@ -1,5 +1,5 @@
 args:
-  root_password: "Hc@Cloud01"
+  root_password: "ZeuS@Middleware01"
   character_set_server: "utf8mb4"
   wait_timeout: 600
   interactive_timeout: 600
@@ -10,7 +10,7 @@ args:
   #innodb_buffer_pool_size: 1G
   #slave_parallel_workers: 8
 
-version: 5.7.21
+version: "5.7"
 # master-master or master-slave or slave-slave
 type: master-master
 # semi-sync or group-replication
@@ -38,11 +38,14 @@ init_at_setup:
 replicaCount: 2
 
 image:
-  repository: middleware.harmonycloud.cn:38080/middleware
-  middlewareImageTag: v5.7.21-hc.3
+  repository: harbor.middleware.com/middleware
+  middlewareImageTag: v5.7.23-hc.1
+  middlewareImageTag_8: v8.0.26-hc.1
   initImageTag: 1.0.4
+  initImageTag_8: 1.0.4-8.0
   monitorImageTag: v0.12.1
   backupRestoreImageTag: v1.2.0-hc.3
+  backupRestoreImageTag_8: v8.0-1
   helmtestImageTag: v1.0.0
   pullPolicy: IfNotPresent
   testImageTag: v0.3
@@ -68,6 +71,11 @@ storageProvider: {}
 #    secretAccessKey: Hc@Cloud01
 
 nodeAffinity: {}
+
+tolerations: {} 
+#- key: "example-key"
+#  operator: "Exists"
+#  effect: "NoSchedule"
 
 podAntiAffinityTopologKey: "kubernetes.io/hostname"
 

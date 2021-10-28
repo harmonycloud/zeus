@@ -28,25 +28,6 @@ public interface HelmChartService {
     List<V1HelmChartVersion> listHelmChartVersions(Registry registry, String chartName);
 
     /**
-     *从本地获取chart包并解析文件
-     *
-     * @param chartName    chart名称
-     * @param chartVersion chart版本
-     * @return
-     */
-    HelmChartFile getHelmChartFromLocal(String chartName, String chartVersion);
-
-    /**
-     * 下载chart包并解析文件
-     *
-     * @param registry     制品服务信息
-     * @param chartName    chart名称
-     * @param chartVersion chart版本
-     * @return
-     */
-    HelmChartFile getHelmChartFromRegistry(Registry registry, String chartName, String chartVersion);
-
-    /**
      * 下载chart包并解析文件
      *
      * @param clusterId 集群
@@ -55,7 +36,7 @@ public interface HelmChartService {
      * @param name 名称
      * @return
      */
-    HelmChartFile getHelmChartFromRegistry(String clusterId, String namespace, String name, String type);
+    HelmChartFile getHelmChart(String clusterId, String namespace, String name, String type);
 
     /**
      * 下载helm chart包
@@ -183,15 +164,13 @@ public interface HelmChartService {
     /**
      * 更新/发布 chart
      *
-     * @param name         helm发布的实例名称
-     * @param namespace    命名空间
-     * @param setValues    设置的值
-     * @param chartName    chart名称
-     * @param chartVersion chart版本
-     * @param cluster      集群信息
+     * @param name      helm发布的实例名称
+     * @param namespace 命名空间
+     * @param setValues 设置的值
+     * @param chartUrl  远端chart文件地址
+     * @param cluster   集群信息
      */
-    void upgradeInstall(String name, String namespace, String setValues, String chartName, String chartVersion,
-                        MiddlewareClusterDTO cluster);
+    void upgradeInstall(String name, String namespace, String path, JSONObject values, JSONObject newValues, MiddlewareClusterDTO cluster);
 
     /**
      * 更新/发布 chart
@@ -213,6 +192,15 @@ public interface HelmChartService {
     void uninstall(Middleware middleware, MiddlewareClusterDTO cluster);
 
     /**
+     * 卸载已发布的helm chart
+     *
+     * @param cluster    集群信息
+     * @param operatorName 中间件信息
+     * @param namespace 分区
+     */
+    void uninstall(MiddlewareClusterDTO cluster, String namespace, String operatorName);
+
+    /**
      * 获取helm中的question.yaml
      *
      * @param helmChartFile helm包
@@ -227,6 +215,14 @@ public interface HelmChartService {
      * @param operatorChartPath chart包位置
      */
     void editOperatorChart(String clusterId, String operatorChartPath);
+
+    /**
+     * 从mysql中取出helm chart
+     *
+     * @param chartName chart名称
+     * @param chartVersion chart版本
+     */
+    HelmChartFile getHelmChartFromMysql(String chartName, String chartVersion);
 
     /**
      * 创建operator

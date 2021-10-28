@@ -1,10 +1,53 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.LINE;
-import static com.harmonycloud.caas.common.constants.NameConstant.CPU;
-import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
+import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.constants.NameConstant;
+import com.harmonycloud.caas.common.enums.DateType;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
+import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.exception.CaasRuntimeException;
+import com.harmonycloud.caas.common.model.*;
+import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.tool.date.DateUtils;
+import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.harmonycloud.zeus.bean.BeanAlertRecord;
+import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
+import com.harmonycloud.zeus.bean.BeanOperationAudit;
+import com.harmonycloud.zeus.bean.PlatformOverviewDTO;
+import com.harmonycloud.zeus.dao.BeanAlertRecordMapper;
+import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
+import com.harmonycloud.zeus.integration.cluster.ResourceQuotaWrapper;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareSpec;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareStatus;
+import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
+import com.harmonycloud.zeus.service.k8s.ClusterService;
+import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
+import com.harmonycloud.zeus.service.k8s.NamespaceService;
+import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareService;
+import com.harmonycloud.zeus.service.middleware.OverviewService;
+import com.harmonycloud.zeus.service.registry.HelmChartService;
+import com.harmonycloud.zeus.service.system.OperationAuditService;
+import com.harmonycloud.zeus.util.AlertDataUtil;
+import com.harmonycloud.zeus.util.DateUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -12,54 +55,11 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.alibaba.fastjson.JSONObject;
-import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.model.MiddlewareDTO;
-import com.harmonycloud.caas.common.model.middleware.*;
-import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
-import com.harmonycloud.zeus.integration.cluster.ResourceQuotaWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.*;
-import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
-import com.harmonycloud.zeus.service.middleware.MiddlewareService;
-import com.harmonycloud.zeus.service.registry.HelmChartService;
-import com.harmonycloud.zeus.service.middleware.OverviewService;
-import com.harmonycloud.zeus.util.DateUtil;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.ResourceQuota;
-import org.apache.commons.lang3.BooleanUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.units.qual.A;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.ObjectUtils;
-
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.constants.NameConstant;
-import com.harmonycloud.caas.common.enums.DateType;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.exception.CaasRuntimeException;
-import com.harmonycloud.caas.common.model.AlertDTO;
-import com.harmonycloud.caas.common.model.PrometheusResponse;
-import com.harmonycloud.caas.common.model.PrometheusResult;
-import com.harmonycloud.zeus.bean.BeanAlertRecord;
-import com.harmonycloud.zeus.dao.BeanAlertRecordMapper;
-import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
-import com.harmonycloud.zeus.service.k8s.ClusterService;
-import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
-import com.harmonycloud.zeus.service.k8s.NamespaceService;
-import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
-import com.harmonycloud.tool.date.DateUtils;
-import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
-
-import lombok.extern.slf4j.Slf4j;
+import static com.harmonycloud.caas.common.constants.CommonConstant.LINE;
+import static com.harmonycloud.caas.common.constants.NameConstant.CPU;
+import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
 /**
  * @author xutianhong
@@ -89,6 +89,11 @@ public class OverviewServiceImpl implements OverviewService {
     private ResourceQuotaWrapper resourceQuotaWrapper;
     @Autowired
     private MiddlewareService middlewareService;
+    @Autowired
+    private OperationAuditService operationAuditService;
+
+    @Value("${system.platform.version:v0.1.0}")
+    private String version;
     /**
      * 查询中间件状态
      *
@@ -109,7 +114,7 @@ public class OverviewServiceImpl implements OverviewService {
         Map<String, List<Middleware>> middlewareMap =
             middlewares.stream().collect(Collectors.groupingBy(Middleware::getType));
         //获取imagePath
-        List<BeanMiddlewareInfo> mwInfoList =  middlewareInfoService.list(null);
+        List<BeanMiddlewareInfo> mwInfoList =  middlewareInfoService.list(true);
 
         List<MiddlewareStatusDto> middlewareStatusDtoList = new ArrayList<>();
         middlewareMap.forEach((key, value) -> {
@@ -188,7 +193,7 @@ public class OverviewServiceImpl implements OverviewService {
             + "\",namespace=\"" + namespace + "\"}[1m]))";
         queryMap.put("query", cpuUsedQuery);
         PrometheusResponse prometheusCpuUsed =
-            prometheusWrapper.getMonitorInfo(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
+            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
         // 没有cpu使用量，不用继续查了，直接返回
         if (prometheusCpuUsed.getData().getResult().size() == 0) {
             return new ArrayList<>(0);
@@ -199,33 +204,33 @@ public class OverviewServiceImpl implements OverviewService {
             + "\",namespace=\"" + namespace + "\"}/100000)";
         queryMap.put("query", cpuRequestQuery);
         PrometheusResponse prometheusCpuRequest =
-            prometheusWrapper.getMonitorInfo(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
+            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
         // 获取memory使用情况
         String memoryUsedQuery = "sum by(container_name) (container_memory_working_set_bytes{namespace=\"" + namespace
             + "\", pod=~\"" + pods.toString() + "\"})";
         queryMap.put("query", memoryUsedQuery);
         PrometheusResponse prometheusMemoryUsed =
-            prometheusWrapper.getMonitorInfo(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
+            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
         // 获取memory申请配额
         String memoryRequestQuery = "sum by(container_name) (container_spec_memory_limit_bytes{namespace=\"" + namespace
             + "\", pod=~\"" + pods.toString() + "\"})";
         queryMap.put("query", memoryRequestQuery);
         PrometheusResponse prometheusMemoryRequest =
-            prometheusWrapper.getMonitorInfo(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
+            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
 
         // 获取卷使用量
         String storageUsedQuery = "sum(kubelet_volume_stats_used_bytes{namespace=\"" + namespace
             + "\",persistentvolumeclaim=~\"" + pvcs.toString() + "\"})";
         queryMap.put("query", storageUsedQuery);
         PrometheusResponse prometheusStorageUsed =
-            prometheusWrapper.getMonitorInfo(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
+            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
 
         // 获取卷申请量
         String storageRequestQuery = "sum(kubelet_volume_stats_capacity_bytes{namespace=\"" + namespace
             + "\",persistentvolumeclaim=~\"" + pvcs.toString() + "\"})";
         queryMap.put("query", storageRequestQuery);
         PrometheusResponse prometheusStorageRequest =
-            prometheusWrapper.getMonitorInfo(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
+            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
 
         List<PrometheusResult> cpuUsedResult = prometheusCpuUsed.getData().getResult();
         List<PrometheusResult> cpuRequestResult = prometheusCpuRequest.getData().getResult();
@@ -315,7 +320,7 @@ public class OverviewServiceImpl implements OverviewService {
         if (StringUtils.isNotEmpty(clusterId) && StringUtils.isNotEmpty(namespace)) {
             wrapper.eq("cluster_id", clusterId).eq("namespace", namespace);
         } else {
-            wrapper.isNotNull("cluster_id").isNotNull("namespace");
+            wrapper.isNotNull("cluster_id").isNotNull("namespace").ne("cluster_id", "");
         }
         if (StringUtils.isNotEmpty(level)) {
             wrapper.eq("level", level);
@@ -484,7 +489,7 @@ public class OverviewServiceImpl implements OverviewService {
                 chartVersionGroup.put(key, chartVersionMap);
             }
             //获取imagePath
-            List<BeanMiddlewareInfo> mwInfoList = middlewareInfoService.list(clusterDTO.getId());
+            List<BeanMiddlewareInfo> mwInfoList = middlewareInfoService.list(true);
             Map<String, String> imagePathMap = mwInfoList.stream().collect(Collectors.toMap(
                     mwInfo -> mwInfo.getChartName() + LINE + mwInfo.getChartVersion(), BeanMiddlewareInfo::getImagePath));
 
@@ -674,4 +679,64 @@ public class OverviewServiceImpl implements OverviewService {
         chartPlatformOverview.setMiddlewareDTOList(this.getListPlatformOverview());
         return BaseResult.ok(chartPlatformOverview);
     }
+
+    @Override
+    public BaseResult getClusterPlatformOverview(String clusterId) {
+        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(true, null);
+        if (StringUtils.isNotBlank(clusterId)) {
+            clusterList = clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
+        }
+        PlatformOverviewDTO platformOverviewDTO = new PlatformOverviewDTO();
+        platformOverviewDTO.setZeusVersion(version);
+
+        //获取集群已注册分区
+        List<Namespace> registeredNamespaceList = clusterService.getRegisteredNamespaceNum(clusterList);
+        //获取集群CPU和内存的配额信息
+        ClusterQuotaDTO clusterQuota = clusterService.getClusterQuota(clusterList);
+        clusterQuota.setClusterNum(clusterList.size());
+        clusterQuota.setNamespaceNum(registeredNamespaceList.size());
+        platformOverviewDTO.setClusterQuota(clusterQuota);
+
+        //获取控制器状态信息
+        MiddlewareOperatorDTO operatorInfo = middlewareInfoService.getOperatorInfo(clusterList);
+        platformOverviewDTO.setOperatorDTO(operatorInfo);
+
+        //获取异常告警信息
+        Date now = new Date();
+        Date ago = DateUtil.addHour(now, -24);
+        String beginTime = DateUtils.DateToString(ago, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
+        String endTime = DateUtils.DateToString(now, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
+        List<String> hourList = DateUtil.calcHour(now);
+        List<Map<String, Object>> criticalList = beanAlertRecordMapper.queryByTimeAndLevel(beginTime, endTime, "critical");
+        List<Map<String, Object>> infoList = beanAlertRecordMapper.queryByTimeAndLevel(beginTime, endTime, "info");
+        List<Map<String, Object>> warningList = beanAlertRecordMapper.queryByTimeAndLevel(beginTime, endTime, "warning");
+
+        AlertSummaryDTO alertSummaryDTO = new AlertSummaryDTO();
+        alertSummaryDTO.setCriticalList(AlertDataUtil.checkAndFillZero(criticalList, hourList));
+        alertSummaryDTO.setInfoList(AlertDataUtil.checkAndFillZero(infoList, hourList));
+        alertSummaryDTO.setWarningList(AlertDataUtil.checkAndFillZero(warningList, hourList));
+        alertSummaryDTO.setCriticalSum(AlertDataUtil.countAlertNum(criticalList));
+        alertSummaryDTO.setInfoSum(AlertDataUtil.countAlertNum(infoList));
+        alertSummaryDTO.setWarningSum(AlertDataUtil.countAlertNum(warningList));
+        platformOverviewDTO.setAlertSummary(alertSummaryDTO);
+
+        //获取审计信息
+        List<BeanOperationAudit> auditList = operationAuditService.listRecent(20);
+        platformOverviewDTO.setAuditList(auditList);
+        return BaseResult.ok(platformOverviewDTO);
+    }
+
+    @Override
+    public BaseResult getClusterMiddlewareInfo(String clusterId) {
+        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(true, null);
+        if (StringUtils.isNotBlank(clusterId)) {
+            clusterList = clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
+        }
+        PlatformOverviewDTO platformOverviewDTO = new PlatformOverviewDTO();
+        //获取各中间件服务数量信息
+        List<MiddlewareBriefInfoDTO> middlewareBriefInfoList = middlewareService.getMiddlewareBriefInfoList(clusterList);
+        platformOverviewDTO.setBriefInfoList(middlewareBriefInfoList);
+        return BaseResult.ok(platformOverviewDTO);
+    }
+
 }

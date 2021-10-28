@@ -3,10 +3,11 @@ package com.harmonycloud.zeus.bean;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.TableId;
-import java.time.LocalDateTime;
-import java.sql.Blob;
+
 import com.baomidou.mybatisplus.annotation.TableField;
 import java.io.Serializable;
+import java.util.Date;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -68,12 +69,6 @@ public class BeanMiddlewareInfo implements Serializable {
     private String imagePath;
 
     /**
-     * 是否可用：0-不可用 1-可用
-     */
-    @TableField("status")
-    private Boolean status;
-
-    /**
      * chart包名称
      */
     @TableField("chart_name")
@@ -84,6 +79,12 @@ public class BeanMiddlewareInfo implements Serializable {
      */
     @TableField("chart_version")
     private String chartVersion;
+
+    /**
+     * operator名称
+     */
+    @TableField("operator_name")
+    private String operatorName;
 
     /**
      * grafanna的id
@@ -101,7 +102,7 @@ public class BeanMiddlewareInfo implements Serializable {
      * 创建时间
      */
     @TableField("create_time")
-    private LocalDateTime createTime;
+    private Date createTime;
 
     /**
      * 修改人
@@ -113,18 +114,18 @@ public class BeanMiddlewareInfo implements Serializable {
      * 创建时间
      */
     @TableField("update_time")
-    private LocalDateTime updateTime;
-
-    /**
-     * 集群id
-     */
-    @TableField("cluster_id")
-    private String clusterId;
+    private Date updateTime;
 
     /**
      * 是否可用：0-非官方 1-官方
      */
     @TableField("official")
     private Boolean official;
+
+    /**
+     * 是否可用：0-非官方 1-官方
+     */
+    @TableField("chart")
+    private byte[] chart;
 
 }

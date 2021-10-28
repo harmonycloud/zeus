@@ -1,9 +1,7 @@
 package com.harmonycloud.zeus.service.middleware;
 
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MonitorDto;
-import com.harmonycloud.caas.common.model.middleware.MysqlSlowSqlDTO;
-import com.harmonycloud.caas.common.model.middleware.SlowLogQuery;
+import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
+import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.page.PageObject;
 
 import javax.servlet.http.HttpServletRequest;
@@ -86,4 +84,28 @@ public interface MiddlewareService {
     PageObject<MysqlSlowSqlDTO> slowsql(SlowLogQuery slowLogQuery) throws Exception;
 
     void slowsqlExcel(SlowLogQuery slowLogQuery, HttpServletResponse response, HttpServletRequest request) throws Exception;
+
+    /**
+     * 查询中间件管理控制台地址(仅kafka、es、rocket-mq支持)
+     *
+     * @param middleware
+     * @return
+     */
+    void setManagePlatformAddress(Middleware middleware, String clusterId);
+
+    /**
+     * 查询可用中间件列表及服务列表
+     * @param clusterId
+     * @param namespace
+     * @param keyword
+     * @return
+     */
+    List<MiddlewareBriefInfoDTO> listAllMiddleware(String clusterId, String namespace,String keyword);
+
+    /**
+     * 获取集群下中间件简要信息
+     * @param clusterDTOList
+     * @return
+     */
+    List<MiddlewareBriefInfoDTO> getMiddlewareBriefInfoList(List<MiddlewareClusterDTO> clusterDTOList);
 }

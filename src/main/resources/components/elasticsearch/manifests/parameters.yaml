@@ -1,0 +1,28 @@
+parameters:
+  - thread_pool_write_queue_size:
+      - name: default
+        value: 200
+      - name: isReboot
+        value: y
+      - name: range
+        value: [1-31536000]
+      - name: describe
+        value: "通过自定义queue大小，调整文档写入的队列大小"
+  - thread_pool_search_queue_size:
+      - name: default
+        value: 1000
+      - name: isReboot
+        value: y
+      - name: range
+        value: [1-31536000]
+      - name: describe
+        value: "通过自定义queue大小，调整搜索的队列大小"
+  - xpack_watcher_enabled:
+      - name: default
+        value: false
+      - name: isReboot
+        value: y
+      - name: range
+        value: [true|false]
+      - name: describe
+        value: "开启后，可使用X-Pack的Watcher功能"

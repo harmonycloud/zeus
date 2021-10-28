@@ -2,15 +2,13 @@ package com.harmonycloud.zeus.integration.cluster.bean;
 
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.model.ClusterCert;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterIngress;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterLogging;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitor;
-import com.harmonycloud.caas.common.model.middleware.Registry;
+import com.harmonycloud.caas.common.model.middleware.*;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -44,7 +42,8 @@ public class MiddlewareClusterInfo {
     private JSONObject attributes;
     @ApiModelProperty("日志信息")
     private MiddlewareClusterLogging logging;
-
+    @ApiModelProperty("资源对象")
+    private ClusterQuotaDTO clusterQuotaDTO;
 
     public String getMasterUrl() {
         return this.protocol + "://" + this.address + (this.port == null ? "" : ":" + this.port);

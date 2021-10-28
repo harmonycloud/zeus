@@ -23,7 +23,7 @@ import javax.servlet.http.HttpServletResponse;
  * @date 2021/6/17 5:48 下午
  */
 @Controller
-@Api(tags = {"工作台", "实例列表"}, value = "应用日志")
+@Api(tags = {"监控告警", "日志详情"}, value = "应用日志")
 @RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/middlewares/{middlewareName}/applogs")
 public class LogController {
 
@@ -52,7 +52,7 @@ public class LogController {
             logger.info(logQueryDto.isPodLog() ? "查询pod标准输出,logQuery:{}" : "查询文件日志内容,logQuery:{}",
                     JSONObject.toJSONString(logQueryDto));
             LogQuery logQuery = logService.transLogQuery(logQueryDto);
-            return BaseResult.ok(logQuery);
+            return logService.getLogContents(logQuery);
         } catch (Exception e) {
             logger.error("根据日志路径获取container日志失败：logQueryDto:{}",
                     logQueryDto.toString(), e);
@@ -99,7 +99,7 @@ public class LogController {
             logQueryDto.setMiddlewareName(middlewareName);
             logger.info("获取pod的日志文件列表,logQuery:{}", JSONObject.toJSONString(logQueryDto));
             LogQuery logQuery = logService.transLogQuery(logQueryDto);
-            return BaseResult.ok(logQuery);
+            return logService.listfileName(logQuery);
         } catch (Exception e) {
             logger.error("获取pod的日志文件列表失败：middlewareName:{}", middlewareName, e);
             return BaseResult.error();

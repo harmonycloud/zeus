@@ -156,7 +156,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             log.info("数据库中无此类中间件告警规则，开始数据同步");
             try {
                 HelmChartFile helmChart =
-                    helmChartService.getHelmChartFromRegistry(clusterId, namespace, middlewareName, type);
+                    helmChartService.getHelmChart(clusterId, namespace, middlewareName, type);
                 data = updateAlerts2Mysql(helmChart, false);
             } catch (Exception ee) {
                 throw new CaasRuntimeException(ErrorMessage.PROMETHEUS_RULES_NOT_EXIST);
@@ -292,8 +292,14 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                 .setTime(middlewareAlertsDTO.getTime()).setLabels(middlewareAlertsDTO.getLabels())
                 .setAnnotations(middlewareAlertsDTO.getAnnotations());
         // 替换{{``}}
-        prometheusRules.getAnnotations().put("summary", replaceValue(prometheusRules.getAnnotations().get("summary")));
-        prometheusRules.getAnnotations().put("message", replaceValue(prometheusRules.getAnnotations().get("message")));
+        if (prometheusRules.getAnnotations().containsKey("summary")) {
+            prometheusRules.getAnnotations().put("summary",
+                replaceValue(prometheusRules.getAnnotations().get("summary")));
+        }
+        if (prometheusRules.getAnnotations().containsKey("message")) {
+            prometheusRules.getAnnotations().put("message",
+                replaceValue(prometheusRules.getAnnotations().get("message")));
+        }
         if (prometheusRules.getLabels().containsKey("value")) {
             prometheusRules.getLabels().put("value", replaceValue(prometheusRules.getLabels().get("value")));
         }

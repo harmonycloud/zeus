@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.util;
 
 import com.harmonycloud.caas.common.constants.DateStyle;
 import com.harmonycloud.caas.common.enums.DateType;
+import com.harmonycloud.tool.date.DateUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,9 +10,11 @@ import org.slf4j.LoggerFactory;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_NINE;
 import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_TEN;
@@ -1149,6 +1152,42 @@ public class DateUtil {
     }
 
     /**
+     * UTC时间转本地时间格式
+     * @param date
+     * @param localTimePatten
+     * @return
+     */
+    public static String utc2Local(Date date, String localTimePatten) {
+        SimpleDateFormat localFormater = new SimpleDateFormat(localTimePatten);
+        localFormater.setTimeZone(TimeZone.getDefault());
+        String localTime = localFormater.format(date.getTime());
+        return localTime;
+    }
+
+    /**
+     * 函数功能描述:UTC时间转本地时间格式
+     * @param utcTime UTC时间
+     * @param utcTimePatten UTC时间格式
+     * @param localTimePatten   本地时间格式
+     * @return 本地时间格式的时间
+     * eg:utc2Local("2017-06-14 09:37:50.788+08:00", "yyyy-MM-dd HH:mm:ss.SSSSSS", "yyyy-MM-dd HH:mm:ss.SSS")
+     */
+    public static Date utc2LocalDate(String utcTime, String utcTimePatten, String localTimePatten) {
+        SimpleDateFormat utcFormater = new SimpleDateFormat(utcTimePatten);
+        //时区定义并进行时间获取
+        utcFormater.setTimeZone(TimeZone.getTimeZone("UTC"));
+        Date gpsUTCDate = new Date();
+        try {
+            gpsUTCDate = utcFormater.parse(utcTime);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return gpsUTCDate;
+        }
+        SimpleDateFormat localFormater = new SimpleDateFormat(localTimePatten);
+        localFormater.setTimeZone(TimeZone.getDefault());
+        return gpsUTCDate;
+    }
+    /**
      * 函数功能描述:UTC时间转本地时间格式
      * @param localTime UTC时间
      * @param utcTimePatten UTC时间格式
@@ -1198,6 +1237,21 @@ public class DateUtil {
     public static String localDateTimeToString(LocalDateTime time, String format) {
         DateTimeFormatter dtf2 = DateTimeFormatter.ofPattern(format);
         return dtf2.format(time);
+    }
+
+    /**
+     * 获取近24小时的所有小时
+     * @param current
+     * @return
+     */
+    public static List<String> calcHour(Date current) {
+        List<String> hours = new ArrayList<>();
+        for (int i = 0; i < 24; i++) {
+            Date ago = DateUtil.addHour(current, -(24-i));
+            String agoStr = DateUtils.DateToString(ago, "yyyy-MM-dd HH:00:00");
+            hours.add(agoStr);
+        }
+        return hours;
     }
 
 }

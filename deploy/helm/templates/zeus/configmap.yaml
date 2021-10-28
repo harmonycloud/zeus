@@ -13,6 +13,11 @@ data:
           max-request-size: 10GB
       resources:
         static-locations: file:/usr/local/zeus-pv,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/
+      jackson:
+          time-zone: GMT+8
+          date-format: yyyy-MM-dd HH:mm:ss
+          serialization:
+            write-dates-as-timestamps: false
     mybatis-plus:
       mapper-locations: classpath:mapping/*.xml
 
@@ -41,7 +46,7 @@ data:
 
     k8s:
       namespace:
-        protect: default,kube-system,kube-node-lease,kube-public,caas-system,harbor-system,logging,monitoring,velero,middleware-system
+        protect: default,kube-system,kube-node-lease,kube-public,caas-system,harbor-system,logging,monitoring,velero,middleware-system,zeus
         label: middleware=true
       kubeconfig:
         path: /usr/local/kubeconfig
@@ -52,6 +57,8 @@ data:
         path: /usr/local/zeus-pv/upload
       images:
         path: /usr/local/zeus-pv/images/middleware
+    platform:
+      version: v0.1.0
 
     overview:
       overall:

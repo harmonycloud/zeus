@@ -9,6 +9,8 @@ data:
     parameter:
     - key: GetPhase
       value: "kubectl get #{kind} #{name} -o=jsonpath='{.status.phase}'"
+    - key: GetMasterPodName
+      value: "masterLists=$(kubectl  get mysqlcluster  #{name}  -o jsonpath=\"{.status.conditions[?(@.type=='Master')].name}\")&& masterLists=($masterLists) && echo ${masterLists[0]}"
     - key: GetRevision
       value: "kubectl get #{kind} #{name} -o=jsonpath='{.metadata.resourceVersion}'"
     - key: DeleteAllSlave
@@ -54,11 +56,17 @@ data:
         variable:
           - key: resourceVersion
             valueFromCmd: #{GetRevision}
+          - key: masterPodName
+            valueFromCmd: #{GetMasterPodName}
         verificate:
           - cmd: #{GetRevision}
             operator: "noEqual"
             name: "versionChange"
             value: "@resourceVersion"
+          - cmd: #{GetMasterPodName}
+            operator: "noEqual"
+            name: "podNameChange"
+            value: "@masterPodName"
           - cmd: #{GetPhase}
             value: "Running"
             name: "phaseRunning"

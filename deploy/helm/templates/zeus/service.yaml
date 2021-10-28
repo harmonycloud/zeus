@@ -6,12 +6,12 @@ metadata:
 spec:
   ports:
   - name: http
-    nodePort: 30089
+    nodePort: 31089
     port: 8080
     protocol: TCP
     targetPort: 8080
   - name: https
-    nodePort: 30489
+    nodePort: 31489
     port: 8443
     protocol: TCP
     targetPort: 8443

@@ -38,7 +38,7 @@ pagehelper:
 
 k8s:
   namespace:
-    protect: default,kube-system,kube-node-lease,kube-public,caas-system,harbor-system,logging,monitoring,velero,middleware-system
+    protect: default,kube-system,kube-node-lease,kube-public,caas-system,harbor-system,logging,monitoring,velero,middleware-system,zeus
     label: middleware=true
   kubeconfig:
     path: /usr/local/kubeconfig
@@ -49,6 +49,8 @@ system:
     path: /usr/local/zeus-pv/upload
   images:
     path: /usr/local/zeus-pv/images/middleware
+  platform:
+    version: v0.1.0
 
 overview:
   overall:

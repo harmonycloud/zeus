@@ -22,6 +22,10 @@ spec:
   repository: {{ .Values.image.repository }}/mysql-cluster
   secretName: mysql-secret
   statefulset:
+    {{- with .Values.tolerations }}
+    tolerations:
+        {{- toYaml . | nindent 6 }}
+    {{- end}}
     affinity:
     {{- if eq .Values.podAntiAffinity "hard"}}
       podAntiAffinity:
@@ -82,10 +86,16 @@ spec:
     - name: SSH_ENABLE
       value: "true"
   {{- end }}
+  {{- if eq .Values.version "8.0" }}
+    initImage: {{ .Values.image.repository }}/mysql-init:{{ .Values.image.initImageTag_8}}
+    middlewareImage: {{ .Values.image.repository }}/mysql-cluster:{{ .Values.image.middlewareImageTag_8}}
+    backupRestoreImage: {{ .Values.image.repository }}/mysql-xtrabackup:{{ .Values.image.backupRestoreImageTag_8}}
+  {{- else }}
     initImage: {{ .Values.image.repository }}/mysql-init:{{ .Values.image.initImageTag}}
-    monitorImage: {{ .Values.image.repository }}/mysqld-exporter:{{ .Values.image.monitorImageTag}}
     middlewareImage: {{ .Values.image.repository }}/mysql-cluster:{{ .Values.image.middlewareImageTag}}
     backupRestoreImage: {{ .Values.image.repository }}/mysql-xtrabackup:{{ .Values.image.backupRestoreImageTag}}
+  {{- end }}
+    monitorImage: {{ .Values.image.repository }}/mysqld-exporter:{{ .Values.image.monitorImageTag}}
     imagePullPolicy: {{ .Values.image.pullPolicy }}
     serverPort: {{ .Values.args.server_port }}
     nodePort: {{ .Values.service.nodePort }}
@@ -103,7 +113,7 @@ spec:
       type: RollingUpdate
   type: {{ .Values.type}}
   syncMode: {{ .Values.syncMode}}
-  version: {{ .Values.version}}
+  version: "{{ .Values.version}}"
   volumeClaimTemplates:
     - metadata:
         name: mysql-data

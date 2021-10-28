@@ -1,0 +1,194 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  name: {{ include "elasticsearch.fullname" . }}
+spec:
+  groups:
+  - name: elasticsearch-cluster
+    rules:
+    - alert: Elastic_UP
+      expr: elasticsearch_up{job="elasticsearch",service='{{ include "elasticsearch.fullname" . }}'} != 1
+      for: 2m
+      labels:
+        severity: critical
+        value: '{{`{{$value}}`}}'
+      annotations:
+        message: This server's Elasticsearch instance status has a value of {{`{{ $value }}`}}.
+        summary: 'Instance {{`{{ $labels.instance }}`}}: Elasticsearch instance status is not 1'
+    - alert: Elasticsearch_health_up
+      expr: elasticsearch_cluster_health_up{service='{{ include "elasticsearch.fullname" . }}'} != 1
+      for: 1m
+      labels:
+        severity: critical
+        value: '{{`{{$value}}`}}'
+      annotations:
+        message: 'ElasticSearch node: {{`{{ $labels.instance }}`}} last scrape of the ElasticSearch cluster health failed'
+        summary: 'ElasticSearch node: {{`{{ $labels.instance }}`}} last scrape of the ElasticSearch cluster health failed'
+    - alert: Elasticsearch_Count_of_JVM_GC_Runs
+      expr: rate(elasticsearch_jvm_gc_collection_seconds_count{service='{{ include "elasticsearch.fullname" . }}'}[5m]) > 5
+      for: 1m
+      labels:
+        severity: warning
+        value: '{{`{{$value}}`}}'
+      annotations:
+        message: 'ElasticSearch node {{`{{ $labels.instance }}`}}: Count of JVM GC runs > 5 per sec and has a value of {{`{{ $value }}`}}'
+        summary: 'ElasticSearch node {{`{{ $labels.instance }}`}}: Count of JVM GC runs > 5 per sec and has a value of {{`{{ $value }}`}}'
+    - alert: Elasticsearch_GC_Run_Time
+      expr: rate(elasticsearch_jvm_gc_collection_seconds_sum{service='{{ include "elasticsearch.fullname" . }}'}[5m]) > 0.3
+      for: 1m
+      labels:
+        severity: warning
+        value: '{{`{{$value}}`}}'
+      annotations:
+        message: 'ElasticSearch node {{`{{ $labels.instance }}`}}: GC run time in seconds > 0.3 sec and has a value of {{`{{ $value }}`}}'
+        summary: 'ElasticSearch node {{`{{ $labels.instance }}`}}: GC run time in seconds > 0.3 sec and has a value of {{`{{ $value }}`}}'
+    - alert: Elasticsearch_json_parse_failures
+      expr: elasticsearch_cluster_health_json_parse_failures{service='{{ include "elasticsearch.fullname" . }}'} > 0
+      for: 1m
+      labels:
+        severity: warning
+        value: '{{`{{$value}}`}}'
+      annotations:
+        message: 'ElasticSearch node {{`{{ $labels.instance }}`}}: json parse failures > 0 and has a value of {{`{{ $value }}`}}'
+        summary: 'ElasticSearch node {{`{{ $labels.instance }}`}}: json parse failures > 0 and has a value of {{`{{ $value }}`}}'
+    - alert: Elasticsearch_breakers_tripped
+      expr: rate(elasticsearch_breakers_tripped{service='{{ include "elasticsearch.fullname" . }}'}[5m]) > 0
+      for: 1m
+      labels:
+        severity: warning
+        value: '{{`{{$value}}`}}'
+      annotations:
+        message: 'ElasticSearch node {{`{{ $labels.instance }}`}}: breakers tripped > 0 and has a value of {{`{{ $value }}`}}'
+        summary: 'ElasticSearch node {{`{{ $labels.instance }}`}}: breakers tripped > 0 and has a value of {{`{{ $value }}`}}'
+    - alert: Elasticsearch_health_timed_out
+      expr: elasticsearch_cluster_health_timed_out{service='{{ include "elasticsearch.fullname" . }}'} > 0
+      for: 1m
+      labels:
+        severity: warning
+        value: '{{`{{$value}}`}}'
+      annotations:
+        message: 'ElasticSearch node {{`{{ $labels.instance }}`}}: Number of cluster health checks timed out > 0 and has a value of {{`{{ $value }}`}}'
+        summary: 'ElasticSearch node {{`{{ $labels.instance }}`}}: Number of cluster health checks timed out > 0 and has a value of {{`{{ $value }}`}}'
+    - alert: ElasticsearchHeapUsageTooHigh
+      expr: (elasticsearch_jvm_memory_used_bytes{area="heap",service='{{ include "elasticsearch.fullname" . }}'} / elasticsearch_jvm_memory_max_bytes{area="heap",service='{{ include "elasticsearch.fullname" . }}'}) * 100 > 90
+      for: 0m
+      labels:
+        severity: critical
+      annotations:
+        summary: 'Elasticsearch Heap Usage Too High (instance {{`{{ $labels.instance }}`}})'
+        message: 'The heap usage is over 90%\n  VALUE = {{`{{ $value }}`}}\n  LABELS: {{`{{ $labels }}`}}'
+    - alert: ElasticsearchHeapUsageWarning
+      expr: (elasticsearch_jvm_memory_used_bytes{area="heap",service='{{ include "elasticsearch.fullname" . }}'} / elasticsearch_jvm_memory_max_bytes{area="heap",service='{{ include "elasticsearch.fullname" . }}'}) * 100 > 80
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: 'Elasticsearch Heap Usage warning (instance {{`{{ $labels.instance }}`}})'
+        message: 'The heap usage is over 80%\n  VALUE = {{`{{ $value }}`}}\n  LABELS: {{`{{ $labels }}`}}'
+    - alert: ElasticsearchDiskOutOfSpace
+      expr: elasticsearch_filesystem_data_available_bytes{service='{{ include "elasticsearch.fullname" . }}'} / elasticsearch_filesystem_data_size_bytes{service='{{ include "elasticsearch.fullname" . }}'} * 100 < 10
+      for: 0m
+      labels:
+        severity: critical
+      annotations:
+        summary: 'Elasticsearch disk out of space (instance {{`{{ $labels.instance }}`}})'
+        message: 'The disk usage is over 90%\n  VALUE = {{`{{ $value }}`}}\n  LABELS: {{`{{ $labels }}`}}'
+    - alert: ElasticsearchDiskSpaceLow
+      expr: elasticsearch_filesystem_data_available_bytes{service='{{ include "elasticsearch.fullname" . }}'} / elasticsearch_filesystem_data_size_bytes{service='{{ include "elasticsearch.fullname" . }}'} * 100 < 20
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: 'Elasticsearch disk space low (instance {{`{{ $labels.instance }}`}})'
+        message: 'The disk usage is over 80%\n  VALUE = {{`{{ $value }`}}}\n  LABELS: {{`{{ $labels }}`}}'
+    - alert: ElasticsearchClusterRed
+      expr: elasticsearch_cluster_health_status{color="red",service='{{ include "elasticsearch.fullname" . }}'} == 1
+      for: 0m
+      labels:
+        severity: critical
+      annotations:
+        summary: 'Elasticsearch Cluster Red (instance {{`{{ $labels.instance }}`}})'
+        message: 'Elastic Cluster Red status\n  VALUE = {{`{{ $value }}`}}\n  LABELS: {{`{{ $labels }}`}}'
+    - alert: ElasticsearchClusterYellow
+      expr: elasticsearch_cluster_health_status{color="yellow",service='{{ include "elasticsearch.fullname" . }}'} == 1
+      for: 0m
+      labels:
+        severity: warning
+      annotations:
+        summary: 'Elasticsearch Cluster Yellow (instance {{`{{ $labels.instance }}`}})'
+        message: 'Elastic Cluster Yellow status\n  VALUE = {{`{{ $value }}`}}\n  LABELS: {{`{{ $labels }}`}}'
+    - alert: ElasticsearchHealthyNodes
+      expr: elasticsearch_cluster_health_number_of_nodes{service='{{ include "elasticsearch.fullname" . }}'} < number_of_nodes
+      for: 0m
+      labels:
+        severity: critical
+      annotations:
+        summary: 'Elasticsearch Healthy Nodes (instance {{`{{ $labels.instance }}`}})'
+        message: 'Number Healthy Nodes less then number_of_nodes\n  VALUE = {{`{{ $value }}`}}\n  LABELS: {{`{{ $labels }}`}}'
+    - alert: ElasticsearchRelocatingShards
+      expr: elasticsearch_cluster_health_relocating_shards{service='{{ include "elasticsearch.fullname" . }}'} > 0
+      for: 0m
+      labels:
+        severity: info
+      annotations:
+        summary: 'Elasticsearch relocating shards (instance {{`{{ $labels.instance }}`}})'
+        message: 'Elasticsearch is relocating shards\n  VALUE = {{`{{ $value }}`}}\n  LABELS: {{`{{ $labels }}`}}'
+    - alert: ElasticsearchRelocatingShardsTooLong
+      expr: elasticsearch_cluster_health_relocating_shards{service='{{ include "elasticsearch.fullname" . }}'} > 0
+      for: 15m
+      labels:
+        severity: warning
+      annotations:
+        summary: 'Elasticsearch relocating shards too long (instance {{`{{ $labels.instance }}`}})'
+        message: 'Elasticsearch has been relocating shards for 15min\n  VALUE = {{`{{ $value }}`}}\n  LABELS: {{`{{ $labels }}`}}'
+    - alert: ElasticsearchInitializingShards
+      expr: elasticsearch_cluster_health_initializing_shards{service='{{ include "elasticsearch.fullname" . }}'} > 0
+      for: 0m
+      labels:
+        severity: info
+      annotations:
+        summary: 'Elasticsearch initializing shards (instance {{`{{ $labels.instance }}`}})'
+        message: 'Elasticsearch is initializing shards\n  VALUE = {{`{{ $value }}`}}\n  LABELS: {{`{{ $labels }}`}}'
+    - alert: ElasticsearchInitializingShardsTooLong
+      expr: elasticsearch_cluster_health_initializing_shards{service='{{ include "elasticsearch.fullname" . }}'} > 0
+      for: 15m
+      labels:
+        severity: warning
+      annotations:
+        summary: 'Elasticsearch initializing shards too long (instance {{`{{ $labels.instance }}`}})'
+        message: 'Elasticsearch has been initializing shards for 15 min\n  VALUE = {{`{{ $value }}`}}\n  LABELS: {{`{{ $labels }}`}}'
+    - alert: ElasticsearchUnassignedShards
+      expr: elasticsearch_cluster_health_unassigned_shards{service='{{ include "elasticsearch.fullname" . }}'} > 0
+      for: 0m
+      labels:
+        severity: critical
+      annotations:
+        summary: 'Elasticsearch unassigned shards (instance {{`{{ $labels.instance }}`}})'
+        message: 'Elasticsearch has unassigned shards\n  VALUE = {{`{{ $value }}`}}\n  LABELS: {{`{{ $labels }}`}}'
+    - alert: ElasticsearchPendingTasks
+      expr: elasticsearch_cluster_health_number_of_pending_tasks{service='{{ include "elasticsearch.fullname" . }}'} > 0
+      for: 15m
+      labels:
+        severity: warning
+      annotations:
+        summary: 'Elasticsearch pending tasks (instance {{`{{ $labels.instance }}`}})'
+        message: 'Elasticsearch has pending tasks. Cluster works slowly.\n  VALUE = {{`{{ $value }}`}}\n  LABELS: {{`{{ $labels }}`}}'
+    - alert: ElasticsearchNoNewDocuments
+      expr: increase(elasticsearch_indices_docs{es_data_node="true",service='{{ include "elasticsearch.fullname" . }}'}[10m]) < 1
+      for: 0m
+      labels:
+        severity: warning
+      annotations:
+        summary: 'Elasticsearch no new documents (instance {{`{{ $labels.instance }}`}})'
+        message: 'No new documents for 10 min!\n  VALUE = {{`{{ $value }}`}}\n  LABELS: {{`{{ $labels }}`}}'
+    - alert: ElasticsearchOpenFdsUsageTooHigh
+      expr: (process_open_fds{service='{{ include "elasticsearch.fullname" . }}'} / process_max_fds{service='{{ include "elasticsearch.fullname" . }}'}) * 100 > 75
+      for: 0m
+      labels:
+        severity: critical
+      annotations:
+        summary: 'Elasticsearch Open Fds Usage Too High (instance {{`{{ $labels.instance }}`}})'
+        message: 'The Open Fds usage is over 90%\n  VALUE = {{`{{ $value }}`}}\n  LABELS: {{`{{ $labels }}`}}'

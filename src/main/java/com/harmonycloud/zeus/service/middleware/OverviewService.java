@@ -69,4 +69,19 @@ public interface OverviewService {
      * @return 列表
      */
     List<MiddlewareDTO> getListPlatformOverview();
+
+    /**
+     * 获取指定集群的数据总览
+     *
+     * @param clusterId
+     * @return
+     */
+    BaseResult getClusterPlatformOverview(String clusterId);
+
+    /**
+     * 平台总览获取服务信息
+     * @param clusterId
+     * @return
+     */
+    BaseResult getClusterMiddlewareInfo(String clusterId);
 }

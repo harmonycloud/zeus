@@ -52,10 +52,20 @@ public class BeanUser implements Serializable {
     @TableField("phone")
     private String phone;
     /**
+     * 创建者
+     */
+    @TableField("creator")
+    private String creator;
+    /**
      * 创建时间
      */
     @TableField("create_time")
     private Date createTime;
+    /**
+     * 密码修改时间
+     */
+    @TableField("password_time")
+    private Date passwordTime;
 
 
 }

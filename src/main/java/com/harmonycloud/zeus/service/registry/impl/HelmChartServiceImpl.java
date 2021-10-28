@@ -2,8 +2,7 @@ package com.harmonycloud.zeus.service.registry.impl;
 
 import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.*;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -82,54 +81,59 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     }
 
     @Override
-    public HelmChartFile getHelmChartFromLocal(String chartName, String chartVersion) {
-        String tgzFilePath = getTgzFilePath(chartName, chartVersion);
-        File file = new File(tgzFilePath);
+    public HelmChartFile getHelmChart(String clusterId, String namespace, String name, String type) {
+        Middleware middleware = middlewareService.detail(clusterId, namespace, name, type);
+        if (StringUtils.isEmpty(middleware.getChartVersion())){
+            BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoService.list(true).stream()
+                .filter(info -> info.getChartName().equals(type)).collect(Collectors.toList()).get(0);
+            return getHelmChartFromMysql(type, beanMiddlewareInfo.getChartVersion());
+        }
+        return getHelmChartFromMysql(type, middleware.getChartVersion());
+    }
+
+    @Override
+    public HelmChartFile getHelmChartFromMysql(String chartName, String chartVersion) {
+        BeanMiddlewareInfo mwInfo = middlewareInfoService.get(chartName, chartVersion);
+        if (mwInfo.getChart() == null || mwInfo.getChart().length == 0) {
+            throw new BusinessException(ErrorMessage.NOT_FOUND);
+        }
+        //创建upload路径
+        File upload = new File(uploadPath);
+        if (!upload.exists() && !upload.mkdirs()) {
+            throw new BusinessException(ErrorMessage.CREATE_TEMPORARY_FILE_ERROR);
+        }
+        File file = new File(uploadPath + File.separator + chartName + "-" + chartVersion + ".tgz");
         if (!file.exists()) {
-            File f = new File(getLocalTgzPath(chartName, chartVersion));
+            InputStream in = new ByteArrayInputStream(mwInfo.getChart());
+            FileOutputStream fileOutputStream = null;
             try {
-                FileUtils.copyFile(f, file);
+                fileOutputStream = new FileOutputStream(file);
+                byte[] buf = new byte[mwInfo.getChart().length];
+                int len;
+                while ((len = in.read(buf)) != -1) {
+                    fileOutputStream.write(buf, 0, len);
+                }
+                fileOutputStream.flush();
             } catch (Exception e) {
-                throw new BusinessException(ErrorMessage.NOT_FOUND);
+                throw new BusinessException(ErrorMessage.HELM_CHART_WRITE_ERROR);
+            } finally {
+                try {
+                    in.close();
+                    if (fileOutputStream != null) {
+                        fileOutputStream.close();
+                    }
+                } catch (IOException io) {
+                }
             }
         }
         try {
-            return getHelmChartFromFile(chartName, chartVersion, file);
+            return this.getHelmChartFromFile(chartName, chartVersion, file);
         } finally {
             file.delete();
         }
     }
 
-    @Override
-    public HelmChartFile getHelmChartFromRegistry(Registry registry, String chartName, String chartVersion) {
-        String tgzFilePath = getTgzFilePath(chartName, chartVersion);
-        File file = new File(tgzFilePath);
-        boolean download = false;
-        if (!file.exists()) {
-            file = downloadHelmChart(registry, chartName, chartVersion);
-            download = true;
-        }
-        try {
-            return getHelmChartFromFile(chartName, chartVersion, file);
-        } finally {
-            // 把下载的临时文件删除
-            if (download) {
-                file.delete();
-            }
-        }
-    }
-
-    @Override
-    public HelmChartFile getHelmChartFromRegistry(String clusterId, String namespace, String name, String type) {
-        Middleware middleware = middlewareService.detail(clusterId, namespace, name, type);
-        if (StringUtils.isEmpty(middleware.getChartVersion())){
-            BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoService.list(clusterId).stream()
-                .filter(info -> info.getChartName().equals(type)).collect(Collectors.toList()).get(0);
-            return getHelmChartFromLocal(type, beanMiddlewareInfo.getChartVersion());
-        }
-        return getHelmChartFromLocal(type, middleware.getChartVersion());
-    }
-
+    @Deprecated
     @Override
     public File downloadHelmChart(Registry registry, String chartName, String chartVersion) {
         if (!RegistryType.isSelfType(registry.getType())) {
@@ -206,6 +210,10 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     public void coverYamlFile(HelmChartFile helmChart) {
         String unzipTarFilePath = getHelmChartFilePath(helmChart.getChartName(), helmChart.getChartVersion())
             + File.separator + helmChart.getTarFileName();
+        //特殊处理logstash
+        if("logstash".equals(helmChart.getChartName())){
+            helmChart.setValueYaml(helmChart.getValueYaml().replace("|-", ""));
+        }
         try {
             // 覆盖写入values.yaml
             FileUtil.writeToLocal(unzipTarFilePath, VALUES_YAML_NAME,
@@ -335,7 +343,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
                 JSONObject.class);
             return JSONObject.parseObject(JSONObject.toJSONString(question), QuestionYaml.class);
         } catch (Exception e) {
-            log.error("中间件{} 获取question.yml失败", helmChartFile.getChartName() + ":" + helmChartFile.getChartVersion());
+            log.error("中间件{} 获取question.yaml失败", helmChartFile.getChartName() + ":" + helmChartFile.getChartVersion());
             throw new CaasRuntimeException(ErrorMessage.CREATE_DYNAMIC_FORM_FAILED);
         }
     }
@@ -378,7 +386,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         String chartVersion = middleware.getChartVersion();
 
         // 先获取chart文件
-        HelmChartFile helmChart = getHelmChartFromLocal(chartName, chartVersion);
+        HelmChartFile helmChart = getHelmChartFromMysql(chartName, chartVersion);
 
         JSONObject values = getInstalledValues(middleware, cluster);
         Yaml yaml = new Yaml();
@@ -419,7 +427,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         String tempValuesYamlDir = getTempValuesYamlDir();
 
         // 先获取chart文件
-        HelmChartFile helmChart = getHelmChartFromLocal(chartName, chartVersion);
+        HelmChartFile helmChart = getHelmChartFromMysql(chartName, chartVersion);
 
         String tempValuesYamlName =
             chartName + "-" + chartVersion + "-" + "temp" + "-" + System.currentTimeMillis() + ".yaml";
@@ -441,7 +449,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         String tempValuesYamlPath = tempValuesYamlDir + File.separator + tempValuesYamlName;
         String targetValuesYamlPath = tempValuesYamlDir + File.separator + targetValuesYamlName;
 
-        String cmd = String.format("helm upgrade %s %s -f %s -f %s -n %s --kube-apiserver %s --kubeconfig %s ",
+        String cmd = String.format("helm upgrade --install %s %s -f %s -f %s -n %s --kube-apiserver %s --kubeconfig %s ",
             middleware.getName(), helmPath, tempValuesYamlPath, targetValuesYamlPath, middleware.getNamespace(),
             cluster.getAddress(), clusterCertService.getKubeConfigFilePath(cluster.getId()));
         try {
@@ -454,15 +462,34 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     }
 
     @Override
-    public void upgradeInstall(String name, String namespace, String setValues, String chartName, String chartVersion,
-                               MiddlewareClusterDTO cluster) {
-        // 先下到本地
-        File file = downloadHelmChart(cluster.getRegistry(), chartName, chartVersion);
+    public void upgradeInstall(String name, String namespace, String path, JSONObject values, JSONObject newValues,
+        MiddlewareClusterDTO cluster) {
+        Yaml yaml = new Yaml();
+        String tempValuesYaml = yaml.dumpAsMap(values);
+        String targetValuesYaml = yaml.dumpAsMap(newValues);
+
+        String tempValuesYamlName = "temp" + "-" + System.currentTimeMillis() + ".yaml";
+        String targetValuesYamlName = "target" + "-" + System.currentTimeMillis() + ".yaml";
         try {
-            upgradeInstall(name, namespace, setValues, file.getAbsolutePath(), cluster);
+            FileUtil.writeToLocal(uploadPath, tempValuesYamlName, tempValuesYaml);
+            FileUtil.writeToLocal(uploadPath, targetValuesYamlName, targetValuesYaml);
+        } catch (IOException e) {
+            log.error("写出values.yaml文件异常：chart包", e);
+            throw new BusinessException(ErrorMessage.HELM_CHART_WRITE_ERROR);
+        }
+
+        String tempValuesYamlPath = uploadPath + File.separator + tempValuesYamlName;
+        String targetValuesYamlPath = uploadPath + File.separator + targetValuesYamlName;
+
+        String cmd =
+            String.format("helm upgrade --install %s %s -f %s -f %s -n %s --kube-apiserver %s --kubeconfig %s ", name,
+                path, tempValuesYamlPath, targetValuesYamlPath, namespace, cluster.getAddress(),
+                clusterCertService.getKubeConfigFilePath(cluster.getId()));
+        try {
+            execCmd(cmd, null);
         } finally {
-            // 把下载的临时文件删除
-            file.delete();
+            // 删除文件
+            FileUtil.deleteFile(tempValuesYamlPath, targetValuesYamlPath);
         }
     }
 
@@ -486,6 +513,18 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         // delete helm
         String cmd = String.format("helm uninstall %s -n %s --kube-apiserver %s --kubeconfig %s", middleware.getName(),
             middleware.getNamespace(), cluster.getAddress(), clusterCertService.getKubeConfigFilePath(cluster.getId()));
+        execCmd(cmd, null);
+    }
+
+    @Override
+    public void uninstall(MiddlewareClusterDTO cluster, String namespace, String operatorName) {
+        List<HelmListInfo> helms = listHelm(namespace, operatorName, cluster);
+        if (CollectionUtils.isEmpty(helms)) {
+            return;
+        }
+        // delete helm
+        String cmd = String.format("helm uninstall %s -n %s --kube-apiserver %s --kubeconfig %s", operatorName,
+                namespace, cluster.getAddress(), clusterCertService.getKubeConfigFilePath(cluster.getId()));
         execCmd(cmd, null);
     }
 
@@ -516,7 +555,9 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
                 List<Namespace> namespaceList = namespaceService.list(clusterId, false, "middleware-operator");
                 // 检验分区是否存在
                 if (CollectionUtils.isEmpty(namespaceList)) {
-                    namespaceService.save(clusterId, "middleware-operator");
+                    Map<String, String> label = new HashMap<>();
+                    label.put("middleware", "middleware");
+                    namespaceService.save(clusterId, "middleware-operator", label);
                 }
             }
             // 检验operator是否已创建

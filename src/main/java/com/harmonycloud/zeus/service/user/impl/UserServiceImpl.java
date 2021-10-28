@@ -67,7 +67,9 @@ public class UserServiceImpl implements UserService {
         UserDto userDto = new UserDto();
         BeanUtils.copyProperties(beanUser, userDto);
         UserRole userRole = userRoleService.get(userName);
-        userDto.setRoleId(userRole.getRoleId()).setRoleName(userRole.getRoleName());
+        if (userRole != null) {
+            userDto.setRoleId(userRole.getRoleId()).setRoleName(userRole.getRoleName());
+        }
         if (!withPassword) {
             userDto.setPassword(null);
         }
@@ -77,10 +79,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserDto> list(String keyword) throws Exception {
         CurrentUser currentUser = CurrentUserRepository.getUser();
+        String roleId = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString("roleId");
         QueryWrapper<BeanUser> userWrapper = new QueryWrapper<>();
-        // 非admin自身，过滤admin
-        if (!currentUser.getUsername().equals(ADMIN)) {
-            userWrapper.ne("username", ADMIN);
+        // 非超级管理员角色用户 获取创建者为自身的用户
+        if(!"1".equals(roleId)){
+            userWrapper.eq("creator", currentUser.getUsername());
         }
         List<BeanUser> beanUserList = beanUserMapper.selectList(userWrapper);
         // 获取角色
@@ -118,20 +121,12 @@ public class UserServiceImpl implements UserService {
         }
         // 写入用户表
         insertUser(userDto);
-        // 记录用户角色关系
-        userRoleService.insert(userDto);
     }
 
     @Override
     public void update(UserDto userDto) throws Exception {
         // 校验参数
         checkParams(userDto);
-
-        UserDto targetUser = this.get(userDto.getUserName(), false);
-        String currentUser = CurrentUserRepository.getUser().getUsername();
-        if (targetUser.getRoleId() == 1 && !currentUser.equals(targetUser.getUserName())) {
-            throw new BusinessException(ErrorMessage.NO_AUTHORITY);
-        }
         // 修改用户基本信息
         QueryWrapper<BeanUser> wrapper = new QueryWrapper<BeanUser>().eq("username", userDto.getUserName());
         BeanUser beanUser = new BeanUser();
@@ -141,7 +136,7 @@ public class UserServiceImpl implements UserService {
         beanUser.setPhone(userDto.getPhone());
         beanUserMapper.update(beanUser, wrapper);
         // 修改角色
-        if (!userDto.getRoleId().equals(targetUser.getRoleId())) {
+        if (userDto.getRoleId() != null) {
             userRoleService.update(userDto);
         }
     }
@@ -167,7 +162,8 @@ public class UserServiceImpl implements UserService {
         if (ObjectUtils.isEmpty(beanUser)) {
             throw new BusinessException(ErrorMessage.USER_NOT_EXIT);
         }
-        beanUser.setPassword(PasswordUtils.md5("Ab123456!"));
+        beanUser.setPassword(PasswordUtils.md5("zeus123.com"));
+        beanUser.setPasswordTime(new Date());
         beanUserMapper.updateById(beanUser);
         return true;
     }
@@ -198,13 +194,14 @@ public class UserServiceImpl implements UserService {
         }
         // 更新密码
         beanUser.setPassword(PasswordUtils.md5(deNewPassword));
+        beanUser.setPasswordTime(new Date());
         beanUserMapper.updateById(beanUser);
     }
 
     @Override
-    public List<ResourceMenuDto> menu(HttpServletRequest request) throws Exception {
-
-        String roleId = JwtTokenComponent.checkToken(request.getHeader(USER_TOKEN)).getValue().getString("roleId");
+    public List<ResourceMenuDto> menu() {
+        CurrentUser currentUser = CurrentUserRepository.getUser();
+        String roleId = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString("roleId");
         List<ResourceMenuDto> resourceMenuDtoList = roleService.listMenuByRoleId(roleId);
 
         Map<Integer, List<ResourceMenuDto>> resourceMenuDtoMap =
@@ -212,6 +209,9 @@ public class UserServiceImpl implements UserService {
         List<ResourceMenuDto> firstMenuList = resourceMenuDtoMap.get(0);
         resourceMenuDtoMap.remove(0);
         firstMenuList.forEach(firstMenu -> {
+            if (!resourceMenuDtoMap.containsKey(firstMenu.getId())){
+                return;
+            }
             firstMenu.setSubMenu(resourceMenuDtoMap.get(firstMenu.getId()));
             Collections.sort(firstMenu.getSubMenu());
         });
@@ -226,9 +226,6 @@ public class UserServiceImpl implements UserService {
         // 校验参数是否完全
         if (StringUtils.isAnyBlank(userDto.getUserName(), userDto.getAliasName(), userDto.getPhone())) {
             throw new IllegalArgumentException("username/aliasName/phone should not be null");
-        }
-        if (userDto.getRoleId() == null){
-            throw new IllegalArgumentException("user shoule be assigned roles");
         }
     }
 
@@ -247,12 +244,15 @@ public class UserServiceImpl implements UserService {
      * 写入用户表
      */
     public void insertUser(UserDto userDto) {
+        CurrentUser currentUser = CurrentUserRepository.getUser();
         BeanUser beanUser = new BeanUser();
         BeanUtils.copyProperties(userDto, beanUser);
         if (StringUtils.isEmpty(beanUser.getPassword())) {
-            beanUser.setPassword(PasswordUtils.md5("Ab123456!"));
+            beanUser.setPassword(PasswordUtils.md5("zeus123.com"));
         }
+        beanUser.setCreator(currentUser.getUsername());
         beanUser.setCreateTime(new Date());
+        beanUser.setPasswordTime(new Date());
         beanUserMapper.insert(beanUser);
     }
 
