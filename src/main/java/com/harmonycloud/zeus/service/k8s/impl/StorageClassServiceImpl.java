@@ -73,4 +73,22 @@ public class StorageClassServiceImpl implements StorageClassService {
         return list;
     }
 
+    @Override
+    public boolean checkLVMStorage(String clusterId, String namespace, String storageClassName) {
+        if (StringUtils.isBlank(clusterId) || StringUtils.isBlank(namespace) || StringUtils.isBlank(storageClassName)) {
+            return false;
+        }
+        List<StorageClass> list = list(clusterId, namespace, true);
+        boolean isLvm = false;
+        for (StorageClass sc : list) {
+            if (!storageClassName.equals(sc.getName())) {
+                continue;
+            }
+            Map<String, String> parameters = sc.getParameters();
+            if (parameters != null && parameters.get("volumeType") != null && "LVM".equalsIgnoreCase(parameters.get("volumeType"))) {
+                isLvm = true;
+            }
+        }
+        return isLvm;
+    }
 }

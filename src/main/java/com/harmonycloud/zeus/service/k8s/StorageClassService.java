@@ -20,4 +20,12 @@ public interface StorageClassService {
      */
     List<StorageClass> list(String clusterId, String namespace, boolean onlyMiddleware);
 
+    /**
+     * 判断存储类型是否是LVM
+     * @param clusterId 集群id
+     * @param namespace 分区名称
+     * @param storageClassName 存储类型sc名称
+     * @return
+     */
+    boolean checkLVMStorage(String clusterId, String namespace, String storageClassName);
 }

@@ -158,6 +158,8 @@ public class ClusterServiceImpl implements ClusterService {
                 if (cluster.getMonitor() != null && cluster.getMonitor().getPrometheus() != null){
                     clusterResource(cluster);
                 }
+                //判断集群是否可删除
+                cluster.setRemovable(checkDelete(cluster.getId()));
             });
         }
         return clusters;
@@ -392,10 +394,7 @@ public class ClusterServiceImpl implements ClusterService {
 
     @Override
     public void removeCluster(String clusterId) {
-        List<MiddlewareCRD> middlewareCRDList = middlewareCRDService.listCR(clusterId, null, null);
-        if (!CollectionUtils.isEmpty(middlewareCRDList) && middlewareCRDList.stream().anyMatch(
-            middlewareCRD -> !"escluster-middleware-elasticsearch".equals(middlewareCRD.getMetadata().getName())
-                && !"mysqlcluster-zeus-mysql".equals(middlewareCRD.getMetadata().getName()))) {
+        if (!checkDelete(clusterId)){
             throw new BusinessException(ErrorMessage.CLUSTER_NOT_EMPTY);
         }
         MiddlewareClusterDTO cluster = get(clusterId);
@@ -447,6 +446,18 @@ public class ClusterServiceImpl implements ClusterService {
                 }
             }
         }
+    }
+    /**
+     * 判断集群是否可以被删除
+     */
+    public boolean checkDelete(String clusterId){
+        List<MiddlewareCRD> middlewareCRDList = middlewareCRDService.listCR(clusterId, null, null);
+        if (!CollectionUtils.isEmpty(middlewareCRDList) && middlewareCRDList.stream().anyMatch(
+                middlewareCRD -> !"escluster-middleware-elasticsearch".equals(middlewareCRD.getMetadata().getName())
+                        && !"mysqlcluster-zeus-mysql".equals(middlewareCRD.getMetadata().getName()))) {
+            return false;
+        }
+        return true;
     }
 
     private MiddlewareCluster convert(MiddlewareClusterDTO cluster) {
