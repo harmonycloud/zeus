@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.JSONArray;
 import com.harmonycloud.caas.common.constants.MysqlConstant;
 import com.harmonycloud.caas.common.enums.DateType;
 import com.harmonycloud.caas.common.model.middleware.*;
@@ -92,6 +94,13 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         replaceCommonResources(quota, values.getJSONObject(RESOURCES));
         replaceCommonStorages(quota, values);
 
+        //添加业务数据库
+        if (middleware.getBusinessDeploy() != null && !middleware.getBusinessDeploy().isEmpty()) {
+            JSONArray array = values.getJSONArray("businessDeploy");
+            middleware.getBusinessDeploy().forEach(mysqlBusinessDeploy -> array.add(JSONUtil.parse(mysqlBusinessDeploy)));
+
+        }
+
         // mysql参数
         JSONObject mysqlArgs = values.getJSONObject("args");
         if (StringUtils.isBlank(middleware.getPassword())) {
@@ -123,6 +132,10 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             if (StringUtils.isNotBlank(mysqlDTO.getType())) {
                 values.put(MysqlConstant.SPEC_TYPE, mysqlDTO.getType());
             }
+        }
+        //配置mysql环境变量
+        if (!CollectionUtils.isEmpty(middleware.getEnvironment())) {
+            middleware.getEnvironment().forEach(mysqlEnviroment -> mysqlArgs.put(mysqlEnviroment.getName(),mysqlEnviroment.getValue()));
         }
         // 备份恢复的创建
         if (StringUtils.isNotEmpty(middleware.getBackupFileName())) {
