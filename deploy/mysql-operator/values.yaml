@@ -1,5 +1,5 @@
 args:
-  root_password: "ZeuS@Middleware01"
+  root_password: "Hc@Cloud01"
   character_set_server: "utf8mb4"
   wait_timeout: 600
   interactive_timeout: 600
@@ -31,7 +31,7 @@ businessDeploy: []
   # user: user01
 
 init_at_setup:
-  enabled: true
+  enabled: false
   #init_sql: |-
   #  create database business_ability;
 
@@ -39,7 +39,7 @@ replicaCount: 2
 
 image:
   repository: harbor.middleware.com/middleware
-  middlewareImageTag: v5.7.23-hc.1
+  middlewareImageTag: v5.7.35-hc.1
   middlewareImageTag_8: v8.0.26-hc.1
   initImageTag: 1.0.4
   initImageTag_8: 1.0.4-8.0
