@@ -24,7 +24,7 @@ image:
 cluster:
   mode: simple
   masterReplacesCount: 3
-# coldReplacesCount: 3
+#  coldReplacesCount: 3
 
 #  mode: regular
 #  masterReplacesCount: 3
