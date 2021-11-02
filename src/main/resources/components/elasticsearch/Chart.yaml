@@ -11,4 +11,4 @@ dependencies:
 description: Elasticsearch by Harmonycloud
 name: elasticsearch
 type: application
-version: 1.5.14-1
+version: 1.5.14-2

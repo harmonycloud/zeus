@@ -5,7 +5,7 @@ global:
   replicaCount: 1
   zeus:
     image: zeus
-    tag: v0.1.0
+    tag: v0.1.1
     pullPolicy: Always
     resources:
       requests:
@@ -17,7 +17,7 @@ global:
     nodeSelector: {}
   zeus_ui:
     image: zeus-ui
-    tag: v0.1.0
+    tag: v0.1.1
     pullPolicy: Always
     nodePort: 31088
     resources:

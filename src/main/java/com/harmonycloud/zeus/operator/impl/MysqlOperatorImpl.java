@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.JSONArray;
 import com.harmonycloud.caas.common.constants.MysqlConstant;
 import com.harmonycloud.caas.common.enums.DateType;
 import com.harmonycloud.caas.common.model.middleware.*;
@@ -19,6 +21,7 @@ import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.operator.BaseOperator;
 import com.harmonycloud.zeus.service.k8s.MysqlReplicateCRDService;
 import com.harmonycloud.zeus.service.k8s.ServiceService;
+import com.harmonycloud.zeus.service.k8s.StorageClassService;
 import com.harmonycloud.zeus.service.middleware.BackupService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
@@ -74,11 +77,10 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     @Autowired
     private MiddlewareServiceImpl middlewareService;
     @Autowired
-    private ServiceService serviceService;
-    @Autowired
     private BaseOperatorImpl baseOperator;
     @Autowired
-    private MiddlewareBackupServiceImpl middlewareBackupService;
+    private StorageClassService storageClassService;
+
     @Override
     public boolean support(Middleware middleware) {
         return MiddlewareTypeEnum.MYSQL == MiddlewareTypeEnum.findByType(middleware.getType());
@@ -91,6 +93,13 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
         replaceCommonResources(quota, values.getJSONObject(RESOURCES));
         replaceCommonStorages(quota, values);
+
+        //添加业务数据库
+        if (middleware.getBusinessDeploy() != null && !middleware.getBusinessDeploy().isEmpty()) {
+            JSONArray array = values.getJSONArray("businessDeploy");
+            middleware.getBusinessDeploy().forEach(mysqlBusinessDeploy -> array.add(JSONUtil.parse(mysqlBusinessDeploy)));
+
+        }
 
         // mysql参数
         JSONObject mysqlArgs = values.getJSONObject("args");
@@ -124,6 +133,10 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 values.put(MysqlConstant.SPEC_TYPE, mysqlDTO.getType());
             }
         }
+        //配置mysql环境变量
+        if (!CollectionUtils.isEmpty(middleware.getEnvironment())) {
+            middleware.getEnvironment().forEach(mysqlEnviroment -> mysqlArgs.put(mysqlEnviroment.getName(),mysqlEnviroment.getValue()));
+        }
         // 备份恢复的创建
         if (StringUtils.isNotEmpty(middleware.getBackupFileName())) {
             BackupStorageProvider backupStorageProvider = backupService.getStorageProvider(middleware);
@@ -150,6 +163,9 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
 
             MysqlDTO mysqlDTO = new MysqlDTO();
             mysqlDTO.setReplicaCount(args.getIntValue(MysqlConstant.REPLICA_COUNT));
+            // 设置是否允许备份
+            MiddlewareQuota mysql = middleware.getQuota().get("mysql");
+            mysqlDTO.setIsLvmStorage(storageClassService.checkLVMStorage(cluster.getId(), middleware.getNamespace(), mysql.getStorageClassName()));
             middleware.setMysqlDTO(mysqlDTO);
             // 获取关联实例信息
             Boolean isSource = args.getBoolean(MysqlConstant.IS_SOURCE);
