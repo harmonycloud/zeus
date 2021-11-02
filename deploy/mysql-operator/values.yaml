@@ -1,5 +1,5 @@
 args:
-  root_password: "Hc@Cloud01"
+  root_password: "ZeuS@Middleware01"
   character_set_server: "utf8mb4"
   wait_timeout: 600
   interactive_timeout: 600
@@ -31,7 +31,7 @@ businessDeploy: []
   # user: user01
 
 init_at_setup:
-  enabled: false
+  enabled: true
   #init_sql: |-
   #  create database business_ability;
 
