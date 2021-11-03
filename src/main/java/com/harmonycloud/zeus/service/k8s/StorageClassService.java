@@ -1,8 +1,16 @@
 package com.harmonycloud.zeus.service.k8s;
 
+import com.harmonycloud.caas.common.model.StorageClassDTO;
 import com.harmonycloud.caas.common.model.middleware.StorageClass;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import org.springframework.util.CollectionUtils;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import static com.harmonycloud.caas.common.constants.NameConstant.STORAGE;
 
 /**
  * @author dengyulong
@@ -21,11 +29,29 @@ public interface StorageClassService {
     List<StorageClass> list(String clusterId, String namespace, boolean onlyMiddleware);
 
     /**
-     * 判断存储类型是否是LVM
+     * 根据存储类型名称判断判断存储类型是否是LVM
      * @param clusterId 集群id
      * @param namespace 分区名称
      * @param storageClassName 存储类型sc名称
      * @return
      */
     boolean checkLVMStorage(String clusterId, String namespace, String storageClassName);
+
+    /**
+     * 将从middleware中取出的pvc信息，转换为以pod的pvc名称为key,StorageClass sc为value的map,
+     * 其中sc.storage表示存储大小，sc.storageClassName表示存储类型名称
+     * @param pvcInfos middleware信息中的pvc数组
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @return
+     */
+    Map<String, StorageClassDTO> convertStorageClass(List<MiddlewareInfo> pvcInfos, String clusterId,String namespace);
+
+    /**
+     * 根据sc的部分名称查找该sc
+     * @param scMap 方法convertStorageClass的返回值
+     * @param keyword sc名称的关键词
+     * @return
+     */
+    StorageClassDTO fuzzySearchStorageClass(Map<String, StorageClassDTO> scMap, String keyword);
 }

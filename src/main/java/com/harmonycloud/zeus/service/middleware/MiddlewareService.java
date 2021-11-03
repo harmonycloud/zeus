@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.middleware;
 
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.tool.page.PageObject;
 
 import javax.servlet.http.HttpServletRequest;
@@ -94,18 +95,26 @@ public interface MiddlewareService {
     void setManagePlatformAddress(Middleware middleware, String clusterId);
 
     /**
-     * 查询可用中间件列表及服务列表
-     * @param clusterId
-     * @param namespace
-     * @param keyword
-     * @return
-     */
-    List<MiddlewareBriefInfoDTO> listAllMiddleware(String clusterId, String namespace,String keyword);
-
-    /**
      * 获取集群下中间件简要信息
      * @param clusterDTOList
      * @return
      */
     List<MiddlewareBriefInfoDTO> getMiddlewareBriefInfoList(List<MiddlewareClusterDTO> clusterDTOList);
+
+    /**
+     * 查询所有中间件并作为服务列表的子菜单
+     * @param clusterId
+     * @return
+     */
+    List<ResourceMenuDto> listAllMiddlewareAsMenu(String clusterId);
+
+    /**
+     * 查询指定类型的所有服务
+     * @param clusterId 集群
+     * @param namespace 分区
+     * @param type 服务类型，例如：mysql
+     * @param keyword 搜索关键词
+     * @return
+     */
+    List<MiddlewareBriefInfoDTO> listAllMiddleware(String clusterId, String namespace,String type, String keyword);
 }

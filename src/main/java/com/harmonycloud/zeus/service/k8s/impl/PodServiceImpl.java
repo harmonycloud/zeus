@@ -7,15 +7,20 @@ import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConsta
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.model.ContainerWithStatus;
+import com.harmonycloud.caas.common.model.StorageClassDTO;
 import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
+import com.harmonycloud.zeus.service.k8s.StorageClassService;
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.storage.StorageClass;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -44,7 +49,7 @@ public class PodServiceImpl implements PodService {
     @Autowired
     private MiddlewareCRDService middlewareCRDService;
     @Autowired
-    private PvcWrapper pvcWrapper;
+    private StorageClassService storageClassService;
 
     @Override
     public Middleware list(String clusterId, String namespace, String middlewareName, String type) {
@@ -62,26 +67,18 @@ public class PodServiceImpl implements PodService {
             middleware.setPods(new ArrayList<>(0));
             return middleware;
         }
-
-        String storage = null;
-        String storageName = null;
-        List<MiddlewareInfo> pvcs = mw.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
-        if (!CollectionUtils.isEmpty(pvcs)) {
-            PersistentVolumeClaim pvc = pvcWrapper.get(clusterId, namespace, pvcs.get(0).getName());
-            if (pvc != null) {
-                storage = pvc.getSpec().getResources().getRequests().get(STORAGE).toString();
-                storageName = pvc.getSpec().getStorageClassName();
-            }
-        }
-
-        String finalStorage = storage;
-        String finalStorageName = storageName;
+        List<MiddlewareInfo> pvcInfos = mw.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
+        Map<String, StorageClassDTO> scMap = storageClassService.convertStorageClass(pvcInfos, clusterId, namespace);
+        // 给pod设置存储
         List<PodInfo> podInfoList = pods.stream().map(po -> {
             Pod pod = podWrapper.get(clusterId, namespace, po.getName());
             PodInfo pi = convertPodInfo(pod)
                     .setRole(StringUtils.isBlank(po.getType()) ? null : po.getType().toLowerCase());
             // storage
-            pi.getResources().setStorageClassQuota(finalStorage).setStorageClassName(finalStorageName);
+            StorageClassDTO scDTO = storageClassService.fuzzySearchStorageClass(scMap, po.getName());
+            if (scDTO != null) {
+                pi.getResources().setStorageClassQuota(scDTO.getStorage()).setStorageClassName(scDTO.getStorageClassName());
+            }
             return pi;
         }).collect(Collectors.toList());
         return middleware.setPods(podInfoList);
