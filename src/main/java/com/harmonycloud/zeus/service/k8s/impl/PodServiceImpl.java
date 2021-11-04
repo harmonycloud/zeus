@@ -85,6 +85,7 @@ public class PodServiceImpl implements PodService {
         }).collect(Collectors.toList());
         middleware.setIsAllLvmStorage(isAllLvmStorage.get());
         middleware.setPodInfoGroup(convertListToGroup(podInfoList));
+        middleware.setPods(podInfoList);
         return middleware;
     }
 
@@ -107,20 +108,21 @@ public class PodServiceImpl implements PodService {
         Map<String, List<PodInfo>> podMap = new HashMap<>();
         podInfoList.forEach(podInfo -> {
             String role = podInfo.getRole();
+            List<PodInfo> infoList;
             if (role == null) {
-                List<PodInfo> infoList = podMap.get("default");
+                infoList = podMap.get("default");
                 if (CollectionUtils.isEmpty(infoList)) {
                     infoList = new ArrayList<>();
                 }
-                infoList.add(podInfo);
+                podMap.put("default", infoList);
             } else {
-                List<PodInfo> infoList = podMap.get(role);
+                infoList = podMap.get(role);
                 if (CollectionUtils.isEmpty(infoList)) {
                     infoList = new ArrayList<>();
-                    podMap.put(role, infoList);
                 }
-                infoList.add(podInfo);
+                podMap.put(role, infoList);
             }
+            infoList.add(podInfo);
         });
 
         if (podMap.keySet().size() > 1) {
