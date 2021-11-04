@@ -1,14 +1,14 @@
+annotations:
+  owner: harmonycloud
 apiVersion: v2
-name: mysql
-description: mysql instance chart
-type: application
-version: 1.2.0-alpha.1
-appVersion: 5.7.35
+appVersion: "5.7"
 dependencies:
 - alias: mysql-operator
   condition: mysql-operator.enabled
   name: mysql-operator
   repository: file://./charts/mysql-operator
-  version: 1.2.0-alpha.1
-annotations:
-  owner: harmonycloud
+  version: 1.2.3-1
+description: mysql instance chart
+name: mysql
+type: application
+version: 1.2.3-1

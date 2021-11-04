@@ -105,7 +105,10 @@ public class UserController {
 
     @ApiOperation(value = "获取菜单列表", notes = "获取菜单列表")
     @GetMapping("/menu")
-    public BaseResult<List<ResourceMenuDto>> menu() throws Exception {
-        return BaseResult.ok(userService.menu());
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群", paramType = "query", dataTypeClass = String.class),
+    })
+    public BaseResult<List<ResourceMenuDto>> menu(@RequestParam("clusterId") String clusterId) throws Exception {
+        return BaseResult.ok(userService.menu(clusterId));
     }
 }
