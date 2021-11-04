@@ -318,7 +318,11 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             }
             Collections.sort(middlewareInfoDTOList, new MiddlewareInfoDTOComparator());
             AtomicInteger weight = new AtomicInteger(1);
-            middlewareInfoDTOList.forEach(middlewareInfoDTO -> {
+            for (MiddlewareInfoDTO middlewareInfoDTO : middlewareInfoDTOList) {
+                if (middlewareInfoDTO.getStatus() == 2) {
+                    //未安装的中间件不作为菜单展示
+                    continue;
+                }
                 ResourceMenuDto resourceMenuDto = new ResourceMenuDto();
                 resourceMenuDto.setName(middlewareInfoDTO.getChartName());
                 resourceMenuDto.setAliasName(middlewareInfoDTO.getName());
@@ -326,7 +330,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 resourceMenuDto.setWeight(weight.get());
                 weight.getAndIncrement();
                 subMenuList.add(resourceMenuDto);
-            });
+            }
         } catch (Exception e) {
             log.error("查询服务列表错误", e);
         }
