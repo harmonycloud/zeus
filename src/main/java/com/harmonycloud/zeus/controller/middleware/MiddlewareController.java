@@ -42,7 +42,7 @@ public class MiddlewareController {
     @GetMapping
     public BaseResult list(@PathVariable("clusterId") String clusterId,
                                              @PathVariable("namespace") String namespace,
-                                             @RequestParam(value = "type") String type,
+                                             @RequestParam(value = "type", required = false) String type,
                                              @RequestParam(value = "keyword", required = false) String keyword) {
         return BaseResult.ok(middlewareService.listAllMiddleware(clusterId, namespace, type, keyword));
     }
