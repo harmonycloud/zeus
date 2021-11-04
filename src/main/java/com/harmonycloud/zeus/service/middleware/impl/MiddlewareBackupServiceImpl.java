@@ -1,14 +1,14 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
-import cn.hutool.db.ds.pooled.PooledDSFactory;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant;
 import com.harmonycloud.caas.common.enums.DateType;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.MiddlewareBackupScheduleConfig;
-import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.caas.common.model.middleware.Middleware;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareQuota;
 import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.operator.impl.BaseOperatorImpl;
@@ -16,12 +16,10 @@ import com.harmonycloud.zeus.schedule.MiddlewareManageTask;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
-import com.harmonycloud.zeus.service.middleware.MysqlService;
 import com.harmonycloud.zeus.util.CronUtils;
 import com.harmonycloud.zeus.util.DateUtil;
 import com.harmonycloud.zeus.util.SortUtils;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.OwnerReference;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +27,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
-import java.io.StringReader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 中间件备份
@@ -102,9 +102,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public BaseResult create(String clusterId, String namespace, String middlewareName, String type, String cron, Integer limitRecord) {
+    public BaseResult create(String clusterId, String namespace, String middlewareName, String type, String cron, Integer limitRecord, String pod) {
         if ("mysql".equals(type)) {
-            return mysqlAdapterService.create(clusterId, namespace, middlewareName, type, cron, limitRecord);
+            return mysqlAdapterService.create(clusterId, namespace, middlewareName, type, cron, limitRecord, null);
         }
         String middlewareRealName = getRealMiddlewareName(type, middlewareName);
         String middlewareCrdType = MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType();
@@ -112,9 +112,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         Map<String, String> middlewareLabel = getBackupLabel(middlewareName, type);
         backupLabel.putAll(middlewareLabel);
         if (StringUtils.isBlank(cron)) {
-            return createNormalBackup(clusterId, namespace, middlewareName, middlewareCrdType, middlewareRealName, backupLabel);
+            return createNormalBackup(clusterId, namespace, middlewareName, middlewareCrdType, middlewareRealName, backupLabel, pod);
         } else {
-            return createScheduleBackup(clusterId, namespace, middlewareName, middlewareCrdType, middlewareRealName, cron, limitRecord, backupLabel);
+            return createScheduleBackup(clusterId, namespace, middlewareName, middlewareCrdType, middlewareRealName, cron, limitRecord, backupLabel, pod);
         }
     }
 
@@ -182,7 +182,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
 
-    public BaseResult createScheduleBackup(String clusterId, String namespace, String middlewareName, String crdType, String middlewareRealName, String cron, Integer limitRecord, Map<String, String> labels) {
+    public BaseResult createScheduleBackup(String clusterId, String namespace, String middlewareName, String crdType,
+                                           String middlewareRealName, String cron, Integer limitRecord, Map<String, String> labels,String pod) {
         MiddlewareBackupScheduleCRD middlewareBackupScheduleCRD = new MiddlewareBackupScheduleCRD();
         middlewareBackupScheduleCRD.setKind("MiddlewareBackupSchedule");
         String backupName = middlewareRealName + "-backup";
@@ -202,7 +203,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
     }
 
-    public BaseResult createNormalBackup(String clusterId, String namespace, String middlewareName, String crdType, String middlewareRealName, Map<String, String> labels) {
+    public BaseResult createNormalBackup(String clusterId, String namespace, String middlewareName, String crdType,
+                                         String middlewareRealName, Map<String, String> labels,String pod) {
         MiddlewareBackupCRD middlewareBackupCRD = new MiddlewareBackupCRD();
         middlewareBackupCRD.setKind("MiddlewareBackup");
         String backupName = middlewareRealName + "-" + UUIDUtils.get8UUID();

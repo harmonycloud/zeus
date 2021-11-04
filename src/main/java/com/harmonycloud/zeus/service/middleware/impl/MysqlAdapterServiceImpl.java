@@ -64,7 +64,7 @@ public class MysqlAdapterServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public BaseResult create(String clusterId, String namespace, String middlewareName, String type, String cron, Integer limitRecord) {
+    public BaseResult create(String clusterId, String namespace, String middlewareName, String type, String cron, Integer limitRecord,String pod) {
         if (StringUtils.isBlank(cron)) {
             mysqlService.createBackup(clusterId, namespace, middlewareName);
         } else {
@@ -108,12 +108,14 @@ public class MysqlAdapterServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public BaseResult createScheduleBackup(String clusterId, String namespace, String middlewareName, String crdType, String middlewareRealName, String cron, Integer limitRecord, Map<String, String> labels) {
+    public BaseResult createScheduleBackup(String clusterId, String namespace, String middlewareName, String crdType,
+                                           String middlewareRealName, String cron, Integer limitRecord, Map<String, String> labels, String pod) {
         return null;
     }
 
     @Override
-    public BaseResult createNormalBackup(String clusterId, String namespace, String middlewareName, String crdType, String middlewareRealName, Map<String, String> labels) {
+    public BaseResult createNormalBackup(String clusterId, String namespace, String middlewareName, String crdType,
+                                         String middlewareRealName, Map<String, String> labels, String pod) {
         return null;
     }
 

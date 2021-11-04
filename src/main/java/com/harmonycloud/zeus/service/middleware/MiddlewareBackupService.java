@@ -33,7 +33,7 @@ public interface MiddlewareBackupService {
      * @param middlewareName 中间件名称
      * @return
      */
-    BaseResult create(String clusterId, String namespace, String middlewareName, String type, String cron, Integer limitRecord);
+    BaseResult create(String clusterId, String namespace, String middlewareName, String type, String cron, Integer limitRecord,String pod);
 
     /**
      * 更新备份配置
@@ -80,7 +80,7 @@ public interface MiddlewareBackupService {
      * @return
      */
     BaseResult createScheduleBackup(String clusterId, String namespace, String middlewareName, String crdType,
-                                    String middlewareRealName, String cron, Integer limitRecord, Map<String,String> labels);
+                                    String middlewareRealName, String cron, Integer limitRecord, Map<String, String> labels, String pod);
 
     /**
      * 立即备份
@@ -90,7 +90,8 @@ public interface MiddlewareBackupService {
      * @param middlewareRealName 中间件名称
      * @return
      */
-    BaseResult createNormalBackup(String clusterId, String namespace, String middlewareName, String crdType, String middlewareRealName, Map<String,String> labels);
+    BaseResult createNormalBackup(String clusterId, String namespace, String middlewareName, String crdType,
+                                  String middlewareRealName, Map<String, String> labels, String pod);
 
     /**
      * 创建恢复

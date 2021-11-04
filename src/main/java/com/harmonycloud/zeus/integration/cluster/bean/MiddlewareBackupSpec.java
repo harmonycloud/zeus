@@ -30,6 +30,11 @@ public class MiddlewareBackupSpec {
      */
     private String type;
 
+    /**
+     * pvc数组
+     */
+    private List<String> pvcs;
+
     public MiddlewareBackupSpec() {
     }
 
