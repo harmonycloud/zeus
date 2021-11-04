@@ -319,6 +319,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             Collections.sort(middlewareInfoDTOList, new MiddlewareInfoDTOComparator());
             AtomicInteger weight = new AtomicInteger(1);
             for (MiddlewareInfoDTO middlewareInfoDTO : middlewareInfoDTOList) {
+                log.info("中间件名称：{},中间件状态：{}", middlewareInfoDTO.getName(), middlewareInfoDTO.getStatus());
                 if (middlewareInfoDTO.getStatus() == 2) {
                     //未安装的中间件不作为菜单展示
                     continue;
