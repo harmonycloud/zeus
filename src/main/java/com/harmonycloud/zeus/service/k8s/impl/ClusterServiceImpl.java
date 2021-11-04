@@ -6,10 +6,15 @@ import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConsta
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
+import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -635,11 +640,13 @@ public class ClusterServiceImpl implements ClusterService {
 
     @Override
     public List<MiddlewareResourceInfo> getMwResource(String clusterId) throws Exception {
-        //获取集群下所有中间件信息
+        // 获取集群下所有中间件信息
         List<MiddlewareCRD> mwCrDList = middlewareCRDService.listCR(clusterId, null, null);
 
         Map<String, String> queryMap = new HashMap<>();
-        String time = DateUtils.formatDate(new Date().getTime(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z_SSS.getValue(),
+        Calendar calTime = Calendar.getInstance();
+        calTime.add(Calendar.MINUTE, -3);
+        String time = DateUtils.formatDate(calTime.getTimeInMillis(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z_SSS.getValue(),
             TimeZone.getTimeZone("GMT"));
         queryMap.put("step", "1s");
         queryMap.put("start", time);
@@ -648,68 +655,135 @@ public class ClusterServiceImpl implements ClusterService {
         final CountDownLatch clusterCountDownLatch = new CountDownLatch(mwCrDList.size());
         mwCrDList.forEach(mwCrd -> ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
-                Middleware middleware = middlewareService.detail(clusterId, mwCrd.getMetadata().getNamespace(), mwCrd.getSpec().getName(), mwCrd.getSpec().getType());
+                Middleware middleware = middlewareService.detail(clusterId, mwCrd.getMetadata().getNamespace(),
+                    mwCrd.getSpec().getName(), MiddlewareTypeEnum.findTypeByCrdType(mwCrd.getSpec().getType()));
                 MiddlewareResourceInfo middlewareResourceInfo = new MiddlewareResourceInfo();
                 BeanUtils.copyProperties(middleware, middlewareResourceInfo);
+                middlewareResourceInfo.setClusterId(clusterId);
                 Map<String, String> finalQueryMap = new HashMap<>(queryMap);
                 StringBuilder pods = getPodName(mwCrd);
-                
-                //查询cpu配额
-                String cpuRequestQuery = "sum(kube_pod_container_resource_requests_cpu_cores{pod=~\"" + pods.toString()
-                        + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"})";
-                finalQueryMap.put("query", cpuRequestQuery);
-                PrometheusResponse cpuRequest =
-                        prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, finalQueryMap);
-                if (!CollectionUtils.isEmpty(cpuRequest.getData().getResult())){
-                    middlewareResourceInfo.setRequestCpu(Double.parseDouble(cpuRequest.getData().getResult().get(0).getValues().get(0).get(1)));
+
+                // 查询cpu配额
+                try {
+                    String cpuRequestQuery = "sum(kube_pod_container_resource_requests_cpu_cores{pod=~\"" + pods.toString()
+                            + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"})";
+                    finalQueryMap.put("query", cpuRequestQuery);
+                    PrometheusResponse cpuRequest =
+                            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, finalQueryMap);
+                    if (!CollectionUtils.isEmpty(cpuRequest.getData().getResult())) {
+                        middlewareResourceInfo.setRequestCpu(ResourceCalculationUtil.roundNumber(
+                                BigDecimal.valueOf(
+                                        Double.parseDouble(cpuRequest.getData().getResult().get(0).getValues().get(0).get(1))),
+                                2, RoundingMode.CEILING));
+                    }
+                }catch (Exception e){
+                    log.error("中间件{} 查询cpu配额失败", middleware.getName());
                 }
-                //查询cpu每5分钟平均用量
-                String per5MinCpuUsedQuery = "sum by (container)(avg_over_time(container_cpu_usage_seconds_total{pod=~\"" + pods.toString()
-                        + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"}[5m]))";
-                finalQueryMap.put("query", per5MinCpuUsedQuery);
-                PrometheusResponse per5MinCpuUsed =
-                        prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, finalQueryMap);
-                if (!CollectionUtils.isEmpty(per5MinCpuUsed.getData().getResult())){
-                    middlewareResourceInfo.setPer5MinCpu(Double.parseDouble(per5MinCpuUsed.getData().getResult().get(0).getValues().get(0).get(1)));
+                // 查询cpu每5分钟平均用量
+                try {
+                    String per5MinCpuUsedQuery =
+                            "sum by (container)(avg_over_time(container_cpu_usage_seconds_total{pod=~\"" + pods.toString()
+                                    + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"}[5m]))";
+                    finalQueryMap.put("query", per5MinCpuUsedQuery);
+                    PrometheusResponse per5MinCpuUsed =
+                            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, finalQueryMap);
+                    if (!CollectionUtils.isEmpty(per5MinCpuUsed.getData().getResult())) {
+                        middlewareResourceInfo
+                                .setPer5MinCpu(ResourceCalculationUtil.roundNumber(
+                                        BigDecimal.valueOf(Double.parseDouble(
+                                                per5MinCpuUsed.getData().getResult().get(0).getValues().get(0).get(1)) / 1000),
+                                        2, RoundingMode.CEILING));
+                    }
+                }catch (Exception e){
+                    log.error("中间件{} 查询cpu5分钟平均用量失败", middleware.getName());
                 }
-                //查询memory配额
-                String memoryRequestQuery = "sum(kube_pod_container_resource_requests_memory_bytes{pod=~\"" + pods.toString()
-                        + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"})";
-                finalQueryMap.put("query", memoryRequestQuery);
-                PrometheusResponse memoryRequest =
-                        prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, finalQueryMap);
-                if (!CollectionUtils.isEmpty(memoryRequest.getData().getResult())){
-                    middlewareResourceInfo.setRequestMemory(Double.parseDouble(memoryRequest.getData().getResult().get(0).getValues().get(0).get(1)));
+                // 查询memory配额
+                try {
+                    String memoryRequestQuery = "sum(kube_pod_container_resource_requests_memory_bytes{pod=~\""
+                            + pods.toString() + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"})";
+                    finalQueryMap.put("query", memoryRequestQuery);
+                    PrometheusResponse memoryRequest =
+                            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, finalQueryMap);
+                    if (!CollectionUtils.isEmpty(memoryRequest.getData().getResult())) {
+                        middlewareResourceInfo.setRequestMemory(
+                                ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(ResourceCalculationUtil.getResourceValue(
+                                        memoryRequest.getData().getResult().get(0).getValues().get(0).get(1), MEMORY,
+                                        ResourceUnitEnum.GI.getUnit())), 2, RoundingMode.CEILING));
+                    }
+                }catch (Exception e){
+                    log.error("中间件{} 查询memory配额失败", middleware.getName());
                 }
-                //查询memory每5分钟平均用量
-                String per5MinMemoryUsedQuery = "sum by (container)(avg_over_time(container_memory_working_set_bytes{pod=~\"" + pods.toString()
-                        + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"}[5m]))";
-                finalQueryMap.put("query", per5MinMemoryUsedQuery);
-                PrometheusResponse per5MinMemoryUsed =
-                        prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, finalQueryMap);
-                if (!CollectionUtils.isEmpty(per5MinMemoryUsed.getData().getResult())){
-                    middlewareResourceInfo.setPer5MinMemory(Double.parseDouble(per5MinMemoryUsed.getData().getResult().get(0).getValues().get(0).get(1)));
+                // 查询memory每5分钟平均用量
+                try {
+                    String per5MinMemoryUsedQuery =
+                            "sum by (container)(avg_over_time(container_memory_working_set_bytes{pod=~\"" + pods.toString()
+                                    + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"}[5m]))";
+                    finalQueryMap.put("query", per5MinMemoryUsedQuery);
+                    PrometheusResponse per5MinMemoryUsed =
+                            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, finalQueryMap);
+                    if (!CollectionUtils.isEmpty(per5MinMemoryUsed.getData().getResult())) {
+                        middlewareResourceInfo.setPer5MinMemory(
+                                ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(ResourceCalculationUtil.getResourceValue(
+                                        per5MinMemoryUsed.getData().getResult().get(0).getValues().get(0).get(1), MEMORY,
+                                        ResourceUnitEnum.GI.getUnit())), 2, RoundingMode.CEILING));
+                    }
+                } catch (Exception e){
+                    log.error("中间件{} 查询memory5分钟平均用量失败", middleware.getName());
                 }
-                //获取storage配额
-                middlewareResourceInfo.setRequestStorage(middleware.getQuota().containsKey(middleware.getType()) ? middleware.getQuota().get(middleware.getType()).getStorageClassQuota() : null);
-                //查询storage每5分钟平均用量
-                //获取pvc
-                StringBuilder pvcs = getPvcs(mwCrd);
-                String per5MinStorageUsedQuery =
-                    "sum by (container)(avg_over_time(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\""
-                        + pvcs.toString() + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"}[5m]))";
-                finalQueryMap.put("query", per5MinStorageUsedQuery);
-                PrometheusResponse per5MinStorageUsed =
-                    prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, finalQueryMap);
-                if (!CollectionUtils.isEmpty(per5MinStorageUsed.getData().getResult())) {
-                    middlewareResourceInfo.setPer5MinStorage(
-                        Double.parseDouble(per5MinStorageUsed.getData().getResult().get(0).getValues().get(0).get(1)));
+                // 获取storage配额
+                try {
+                    if (middleware.getQuota() != null && middleware.getQuota().containsKey(middleware.getType())) {
+                        middlewareResourceInfo.setRequestStorage(ResourceCalculationUtil.getResourceValue(
+                                middleware.getQuota().get(middleware.getType()).getStorageClassQuota(), MEMORY,
+                                ResourceUnitEnum.GI.getUnit()));
+                    }
+                } catch (Exception e){
+                    log.error("中间件{} 获取storage配额失败", middleware.getName());
+                }
+                // 查询storage每5分钟平均用量
+                // 获取pvc
+                try {
+                    StringBuilder pvcs = getPvcs(mwCrd);
+                    String per5MinStorageUsedQuery =
+                            "sum by (container)(avg_over_time(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\""
+                                    + pvcs.toString() + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"}[5m]))";
+                    finalQueryMap.put("query", per5MinStorageUsedQuery);
+                    PrometheusResponse per5MinStorageUsed =
+                            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, finalQueryMap);
+                    if (!CollectionUtils.isEmpty(per5MinStorageUsed.getData().getResult())) {
+                        middlewareResourceInfo.setPer5MinStorage(
+                                Double.parseDouble(per5MinStorageUsed.getData().getResult().get(0).getValues().get(0).get(1)));
+                    }
+                } catch (Exception e){
+                    log.error("中间件{} 查询storage5分钟平均使用量失败", middleware.getName());
+                }
+                // 计算cpu使用率
+                if (middlewareResourceInfo.getRequestCpu() != null && middlewareResourceInfo.getPer5MinCpu() != null) {
+                    double cpuRate =
+                        middlewareResourceInfo.getPer5MinCpu() / middlewareResourceInfo.getRequestCpu() * 100;
+                    middlewareResourceInfo.setCpuRate(
+                        ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(cpuRate), 2, RoundingMode.CEILING));
+                }
+                // 计算memory使用率
+                if (middlewareResourceInfo.getRequestMemory() != null
+                    && middlewareResourceInfo.getPer5MinMemory() != null) {
+                    double memoryRate =
+                        middlewareResourceInfo.getPer5MinMemory() / middlewareResourceInfo.getRequestMemory() * 100;
+                    middlewareResourceInfo.setMemoryRate(
+                        ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(memoryRate), 2, RoundingMode.CEILING));
+                }
+                // 计算storage使用率
+                if (middlewareResourceInfo.getRequestStorage() != null
+                    && middlewareResourceInfo.getPer5MinStorage() != null) {
+                    double storageRate =
+                        middlewareResourceInfo.getPer5MinStorage() / middlewareResourceInfo.getRequestStorage() * 100;
+                    middlewareResourceInfo.setCpuRate(
+                        ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(storageRate), 2, RoundingMode.CEILING));
                 }
                 mwResourceInfoList.add(middlewareResourceInfo);
-            } catch (Exception e){
+            } catch (Exception e) {
                 log.error("查询失败： ", e);
-            }
-            finally {
+            } finally {
                 clusterCountDownLatch.countDown();
             }
         }));
