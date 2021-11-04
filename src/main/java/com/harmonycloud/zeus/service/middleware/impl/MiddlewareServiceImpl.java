@@ -338,6 +338,9 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         List<MiddlewareBriefInfoDTO> serviceList = null;
         try {
             List<MiddlewareInfoDTO> middlewareInfoDTOList = middlewareInfoService.list(clusterId);
+            if (type != null) {
+                middlewareInfoDTOList = middlewareInfoDTOList.stream().filter(middleware -> type.equals(middleware.getChartName())).collect(Collectors.toList());
+            }
             serviceList = new ArrayList<>();
             List<Middleware> middlewareServiceList = simpleList(clusterId, namespace, type, keyword);
             for (MiddlewareInfoDTO middlewareInfoDTO : middlewareInfoDTOList) {
@@ -367,8 +370,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 briefInfoDTO.setChartName(middlewareInfoDTO.getChartName());
                 briefInfoDTO.setChartVersion(middlewareInfoDTO.getChartVersion());
                 briefInfoDTO.setVersion(middlewareInfoDTO.getVersion());
+                Collections.sort(singleServiceList, new MiddlewareComparator());
                 briefInfoDTO.setServiceList(singleServiceList);
                 briefInfoDTO.setServiceNum(singleServiceList.size());
+                briefInfoDTO.setOfficial(middlewareInfoDTO.getOfficial());
                 serviceList.add(briefInfoDTO);
             }
             Collections.sort(serviceList, new MiddlewareBriefInfoDTOComparator());
@@ -488,6 +493,23 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 return 1;
             } else if (temp < 0) {
                 return -1;
+            } else {
+                return 0;
+            }
+        }
+    }
+
+    /**
+     * 服务排序类，按创建时间排序
+     */
+    public static class MiddlewareComparator implements Comparator<Middleware> {
+        @Override
+        public int compare(Middleware o1, Middleware o2) {
+            int res = o1.getCreateTime().compareTo(o2.getCreateTime());
+            if (res > 0) {
+                return -1;
+            } else if (res < 0) {
+                return 1;
             } else {
                 return 0;
             }

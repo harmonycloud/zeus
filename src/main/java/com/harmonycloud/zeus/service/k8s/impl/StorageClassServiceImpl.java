@@ -109,7 +109,8 @@ public class StorageClassServiceImpl implements StorageClassService {
                 if (pvc != null) {
                     String storage = pvc.getSpec().getResources().getRequests().get(STORAGE).toString();
                     String storageName = pvc.getSpec().getStorageClassName();
-                    scMap.put(pvcInfo.getName(), new StorageClassDTO(storage, storageName));
+                    boolean isLvmStorage = checkLVMStorage(clusterId, namespace, storageName);
+                    scMap.put(pvcInfo.getName(), new StorageClassDTO(storage, storageName, isLvmStorage));
                 }
             });
         }

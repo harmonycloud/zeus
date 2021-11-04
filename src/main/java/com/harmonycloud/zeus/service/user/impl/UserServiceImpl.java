@@ -272,7 +272,7 @@ public class UserServiceImpl implements UserService {
                 List<ResourceMenuDto> resourceMenuDtos = middlewareService.listAllMiddlewareAsMenu(clusterId);
                 resourceMenuDtos.forEach(resourceMenuDto -> {
                     resourceMenuDto.setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(resourceMenuDto.getAliasName()));
-                    resourceMenuDto.setUrl(parentMenu.getUrl() + "/" + resourceMenuDto.getName());
+                    resourceMenuDto.setUrl(parentMenu.getUrl() + "/" + resourceMenuDto.getName() +"/" + resourceMenuDto.getAliasName());
                 });
                 parentMenu.setSubMenu(resourceMenuDtos);
                 return;
