@@ -1,0 +1,110 @@
+package com.harmonycloud.zeus.service.components.impl;
+
+import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.caas.common.enums.ComponentsEnum;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitor;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitorInfo;
+import com.harmonycloud.tool.cmd.HelmChartUtil;
+import com.harmonycloud.zeus.annotation.Operator;
+import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
+import com.harmonycloud.zeus.service.components.api.GrafanaService;
+import org.springframework.stereotype.Service;
+import org.yaml.snakeyaml.Yaml;
+
+import java.io.File;
+
+/**
+ * @author xutianhong
+ * @Date 2021/10/29 4:11 下午
+ */
+@Service
+@Operator(paramTypes4One = String.class)
+public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implements GrafanaService {
+
+    @Override
+    public boolean support(String name) {
+        return ComponentsEnum.GRAFANA.getName().equals(name);
+    }
+
+    @Override
+    public void deploy(MiddlewareClusterDTO cluster) {
+        //获取仓库地址
+        String repository = getRepository(cluster);
+        //拼接参数
+        Yaml yaml = new Yaml();
+        String values = HelmChartUtil.getValueYaml(componentsPath + File.separator + "grafana");
+        JSONObject jsonValues = new JSONObject();
+        JSONObject image = new JSONObject();
+        image.put("repository", repository + "/grafana");
+
+        JSONObject sidecar = new JSONObject();
+        JSONObject sidecarImage = new JSONObject();
+        sidecarImage.put("repository", repository + "/k8s-sidecar");
+        sidecar.put("image", sidecarImage);
+
+        JSONObject persistence = new JSONObject();
+        persistence.put("storageClassName", "local-path");
+
+        jsonValues.put("image", image);
+        jsonValues.put("sidecar", sidecar);
+        jsonValues.put("persistence", persistence);
+        if ("https".equals(cluster.getMonitor().getGrafana().getProtocol())) {
+            JSONObject ini = new JSONObject();
+            JSONObject server = new JSONObject();
+            server.put("protocol", "https");
+            server.put("cert_file", "/etc/grafana/ssl/server.crt");
+            server.put("cert_key", "/etc/grafana/ssl/server.key");
+            ini.put("server", server);
+            JSONObject readinessProbe = new JSONObject();
+            JSONObject livenessProbe = new JSONObject();
+            JSONObject httpGet = new JSONObject();
+            httpGet.put("scheme", "HTTPS");
+            readinessProbe.put("httpGet", httpGet);
+            livenessProbe.put("httpGet", httpGet);
+            jsonValues.put("grafana.ini", ini);
+            jsonValues.put("readinessProbe", readinessProbe);
+            jsonValues.put("livenessProbe", livenessProbe);
+        }
+        //发布组件
+        helmChartService.upgradeInstall("grafana", "monitoring", componentsPath + File.separator + "grafana",
+                yaml.loadAs(values, JSONObject.class), jsonValues, cluster);
+        //更新middlewareCluster
+        updateCluster(cluster);
+    }
+
+    @Override
+    public void integrate(MiddlewareClusterDTO cluster) {
+        MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
+        if (existCluster.getMonitor() == null){
+            existCluster.setMonitor(new MiddlewareClusterMonitor());
+        }
+        existCluster.getMonitor().setGrafana(cluster.getMonitor().getGrafana());
+        clusterService.updateCluster(existCluster);
+    }
+
+    @Override
+    public void uninstall(MiddlewareClusterDTO cluster, String  type) {
+        helmChartService.uninstall(cluster, "monitoring",  type);
+    }
+
+    @Override
+    protected String getValues(String repository, MiddlewareClusterDTO cluster) {
+        return null;
+    }
+
+    @Override
+    protected void install(String setValues, MiddlewareClusterDTO cluster) {
+
+    }
+
+    @Override
+    protected void updateCluster(MiddlewareClusterDTO cluster) {
+        MiddlewareClusterMonitorInfo grafana = new MiddlewareClusterMonitorInfo();
+        grafana.setProtocol(cluster.getMonitor().getGrafana().getProtocol()).setPort("31900")
+                .setHost(cluster.getHost());
+        cluster.getMonitor().setGrafana(grafana);
+    }
+
+
+}

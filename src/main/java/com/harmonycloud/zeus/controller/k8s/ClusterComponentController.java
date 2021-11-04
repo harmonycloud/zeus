@@ -39,17 +39,8 @@ public class ClusterComponentController {
     })
     @PostMapping("/{componentName}")
     public BaseResult deploy(@PathVariable("clusterId") String clusterId,
-                             @PathVariable("componentName") String componentName,
-                             @RequestBody MiddlewareClusterDTO cluster) {
-        if (cluster == null) {
-            throw new IllegalArgumentException("cluster info is null");
-        }
-        cluster.setId(clusterId);
-        // 默认default命名空间
-        if (StringUtils.isBlank(cluster.getDcId())) {
-            cluster.setDcId(DEFAULT);
-        }
-        clusterComponentService.deploy(cluster, componentName);
+                             @PathVariable("componentName") String componentName) {
+        clusterComponentService.deploy(clusterId, componentName);
         return BaseResult.ok();
     }
 

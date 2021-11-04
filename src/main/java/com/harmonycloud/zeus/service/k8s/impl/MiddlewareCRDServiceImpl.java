@@ -188,7 +188,8 @@ public class MiddlewareCRDServiceImpl implements MiddlewareCRDService {
                 .setStatus(mw.getStatus() != null ? mw.getStatus().getPhase() : "")
                 .setReason(mw.getStatus() != null ? mw.getStatus().getReason() : "")
                 .setCreateTime(DateUtils.parseUTCDate(mw.getMetadata().getCreationTimestamp()))
-                .setPodNum(getPodNum(mw));
+                .setPodNum(getPodNum(mw))
+                .setPods(getPodName(mw));
     }
 
     /**
@@ -202,5 +203,21 @@ public class MiddlewareCRDServiceImpl implements MiddlewareCRDService {
         } else {
             return 0;
         }
+    }
+
+    /**
+     * 获取pod名称
+     * @param mw
+     * @return List<PodInfo>
+     */
+    private List<PodInfo> getPodName(MiddlewareCRD mw){
+        if (mw.getStatus().getInclude().containsKey("pods")){
+            return mw.getStatus().getInclude().get("pods").stream().map(pod -> {
+                PodInfo podInfo = new PodInfo();
+                podInfo.setPodName(pod.getName());
+                return podInfo;
+            }).collect(Collectors.toList());
+        }
+        return new ArrayList<>();
     }
 }

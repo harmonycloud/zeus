@@ -1,14 +1,18 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
 import static com.harmonycloud.caas.common.constants.NameConstant.*;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import com.harmonycloud.zeus.util.MathUtil;
+import com.harmonycloud.caas.common.constants.NameConstant;
+import com.harmonycloud.caas.common.enums.*;
+import com.harmonycloud.zeus.integration.cluster.bean.*;
+import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -16,11 +20,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.yaml.snakeyaml.Yaml;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.enums.DictEnum;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.Protocol;
 import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
@@ -32,10 +34,6 @@ import com.harmonycloud.tool.cmd.HelmChartUtil;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.integration.cluster.ClusterWrapper;
 import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCluster;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareClusterInfo;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareClusterSpec;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.EsService;
@@ -43,10 +41,10 @@ import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.service.registry.RegistryService;
 import com.harmonycloud.zeus.util.K8sClient;
+import com.harmonycloud.zeus.util.MathUtil;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
-import org.yaml.snakeyaml.Yaml;
 
 /**
  * @author dengyulong
@@ -87,6 +85,10 @@ public class ClusterServiceImpl implements ClusterService {
     private MiddlewareCRDService middlewareCRDService;
     @Autowired
     private IngressService ingressService;
+    @Autowired
+    private MiddlewareService middlewareService;
+    @Autowired
+    private ClusterComponentService clusterComponentService;
 
     @Value("${k8s.component.logging.es.user:elastic}")
     private String esUser;
@@ -247,7 +249,7 @@ public class ClusterServiceImpl implements ClusterService {
         try {
             List<HelmListInfo> helmInfos = helmChartService.listHelm("", "", cluster);
             if (helmInfos.stream().noneMatch(info -> "middleware-controller".equals(info.getName()))) {
-                middlewareController(cluster);
+                clusterComponentService.deploy(cluster.getId(), ComponentsEnum.MIDDLEWARE_CONTROLLER.getName());
             }
         } catch (Exception e) {
             throw new BusinessException(ErrorMessage.HELM_INSTALL_MIDDLEWARE_CONTROLLER_FAILED);
@@ -488,12 +490,11 @@ public class ClusterServiceImpl implements ClusterService {
     }
 
     public void createComponents(MiddlewareClusterDTO cluster) {
-        String repository = cluster.getRegistry().getRegistryAddress() + "/" + cluster.getRegistry().getChartRepo();
         List<HelmListInfo> helmListInfos = helmChartService.listHelm("", "", cluster);
         // 安装local-path
         try {
             if (helmListInfos.stream().noneMatch(helm -> "local-path".equals(helm.getName()))) {
-                localPath(repository, cluster);
+                clusterComponentService.deploy(cluster.getId(), ComponentsEnum.LOCAL_PATH.getName());
             }
         } catch (Exception e) {
             throw new BusinessException(ErrorMessage.HELM_INSTALL_LOCAL_PATH_FAILED);
@@ -506,53 +507,33 @@ public class ClusterServiceImpl implements ClusterService {
         try {
             if (cluster.getMonitor().getPrometheus() == null
                 && helmListInfos.stream().noneMatch(helm -> "prometheus".equals(helm.getName()))) {
-                prometheus(repository, cluster);
-                // 记录数据
-                MiddlewareClusterMonitorInfo prometheus = new MiddlewareClusterMonitorInfo();
-                prometheus.setProtocol("http").setPort("31901").setHost(cluster.getHost());
-                cluster.getMonitor().setPrometheus(prometheus);
+                clusterComponentService.deploy(cluster.getId(), ComponentsEnum.PROMETHEUS.getName());
             }
         } catch (Exception e) {
             log.error(ErrorMessage.HELM_INSTALL_PROMETHEUS_FAILED.getZhMsg());
         }
         // 安装ingress nginx
         try {
-            if (cluster.getIngress() == null || StringUtils.isEmpty(cluster.getIngress().getAddress())) {
+            if (cluster.getComponentsInstall().getIngress() && (cluster.getIngress() == null || StringUtils.isEmpty(cluster.getIngress().getAddress()))) {
                 if (helmListInfos.stream().noneMatch(helm -> "ingress".equals(helm.getName()))) {
-                    ingress(repository, cluster);
+                    clusterComponentService.deploy(cluster.getId(), ComponentsEnum.INGRESS.getName());
                 }
-                MiddlewareClusterIngress ingress = new MiddlewareClusterIngress().setAddress(cluster.getHost())
-                    .setIngressClassName("ingress-ingress-nginx-controller");
-                MiddlewareClusterIngress.IngressConfig config = new MiddlewareClusterIngress.IngressConfig();
-                config.setEnabled(true).setNamespace("middleware-operator")
-                    .setConfigMapName("ingress-ingress-nginx-system-expose-nginx-config-tcp");
-                ingress.setTcp(config);
-                cluster.setIngress(ingress);
             }
         } catch (Exception e) {
             log.error(ErrorMessage.HELM_INSTALL_NGINX_INGRESS_FAILED.getZhMsg());
         }
         // 安装grafana
         try {
-            if (cluster.getMonitor().getGrafana() == null || cluster.getMonitor().getGrafana().getHost() == null) {
-                grafana(repository, cluster);
-                // 记录数据
-                MiddlewareClusterMonitorInfo grafana = new MiddlewareClusterMonitorInfo();
-                grafana.setProtocol(cluster.getMonitor().getGrafana().getProtocol()).setPort("31900")
-                    .setHost(cluster.getHost());
-                cluster.getMonitor().setGrafana(grafana);
+            if (cluster.getComponentsInstall().getGrafana() && (cluster.getMonitor().getGrafana() == null || cluster.getMonitor().getGrafana().getHost() == null)) {
+                clusterComponentService.deploy(cluster.getId(), ComponentsEnum.GRAFANA.getName());
             }
         } catch (Exception e) {
             log.error(ErrorMessage.HELM_INSTALL_GRAFANA_FAILED.getZhMsg());
         }
         // 安装alertManager
         try {
-            if (cluster.getMonitor().getAlertManager() == null){
-                alertManager(repository, cluster);
-                // 记录数据
-                MiddlewareClusterMonitorInfo alertManager = new MiddlewareClusterMonitorInfo();
-                alertManager.setProtocol("http").setPort("31902").setHost(cluster.getHost());
-                cluster.getMonitor().setAlertManager(alertManager);
+            if (cluster.getComponentsInstall().getAlertManager() && cluster.getMonitor().getAlertManager() == null){
+                clusterComponentService.deploy(cluster.getId(), ComponentsEnum.ALERTMANAGER.getName());
             }
         } catch (Exception e) {
             log.error(ErrorMessage.HELM_INSTALL_ALERT_MANAGER_FAILED.getZhMsg());
@@ -560,180 +541,28 @@ public class ClusterServiceImpl implements ClusterService {
         // 安装minio
         try {
             //创建minio分区
-            namespaceService.save(cluster.getId(), "minio", null);
-            minio(repository, cluster);
-            // 记录数据
-            Map<String, String> storage = new HashMap<>();
-            storage.put("name", "minio");
-            storage.put("bucketName", "velero");
-            storage.put("accessKeyId", "minio");
-            storage.put("secretAccessKey", "minio123");
-            storage.put("endpoint", "http://" + cluster.getHost() + ":31909");
-            Map<String, Object> backup = new HashMap<>();
-            backup.put("type", "minio");
-            backup.put("storage", storage);
-            cluster.getStorage().put("backup", backup);
+            if (cluster.getStorage() == null || !cluster.getStorage().containsKey("backup")){
+                clusterComponentService.deploy(cluster.getId(), ComponentsEnum.MINIO.getName());
+            }
         } catch (Exception e) {
             log.error(ErrorMessage.HELM_INSTALL_MINIO_FAILED.getZhMsg());
         }
         //安装日志组件
         try {
-            namespaceService.save(cluster.getId(), "logging", null);
-            if (cluster.getLogging() == null || cluster.getLogging().getElasticSearch() == null
-                || cluster.getLogging().getElasticSearch().getHost() == null) {
-                MiddlewareClusterLoggingInfo es = new MiddlewareClusterLoggingInfo();
-                elasticsearch(repository, cluster);
-                logging(repository, cluster);
-                es.setHost(cluster.getHost());
-                es.setUser("elastic");
-                es.setPassword("Hc@Cloud01");
-                es.setProtocol("http");
-                es.setPort("30092");
-                MiddlewareClusterLogging logging = new MiddlewareClusterLogging();
-                logging.setElasticSearch(es);
-                cluster.setLogging(logging);
-
-                //为es创建nodePort
-                IngressDTO ingressDTO = new IngressDTO();
-                ingressDTO.setExposeType("NodePort");
-                ingressDTO.setMiddlewareType("elasticsearch");
-                ingressDTO.setProtocol("TCP");
-                List<ServiceDTO> serviceList = new ArrayList<>();
-                ServiceDTO serviceDTO = new ServiceDTO();
-                serviceDTO.setExposePort("30092");
-                serviceDTO.setServiceName("middleware-elasticsearch-master");
-                serviceDTO.setServicePort("9200");
-                serviceDTO.setTargetPort("9200");
-                serviceList.add(serviceDTO);
-                ingressDTO.setServiceList(serviceList);
-                ingressService.create(cluster.getId(), "logging", "middleware-elasticsearch", ingressDTO);
-            }
-            else if(cluster.getLogging().getElasticSearch().getLogCollect()){
-                logging(repository, cluster);
+            if (cluster.getComponentsInstall().getLogging()){
+                if (cluster.getLogging() == null || cluster.getLogging().getElasticSearch() == null
+                        || cluster.getLogging().getElasticSearch().getHost() == null) {
+                    clusterComponentService.deploy(cluster.getId(), ComponentsEnum.LOGGING.getName());
+                }
+                else if(cluster.getLogging().getElasticSearch().getLogCollect()){
+                    clusterComponentService.deploy(cluster.getId(), ComponentsEnum.LOGPILOT.getName());
+                }
             }
         } catch (Exception e) {
             log.error(ErrorMessage.HELM_INSTALL_LOG_FAILED.getZhMsg());
         }
         //更新
         this.update(cluster);
-    }
-
-    public void middlewareController(MiddlewareClusterDTO cluster){
-        String setValues = "global.repository=" + cluster.getRegistry().getRegistryAddress() + "/" + cluster.getRegistry().getChartRepo();
-        helmChartService.upgradeInstall("middleware-controller", "middleware-operator", setValues,
-                componentsPath + File.separator + "platform", cluster);
-    }
-
-    public void localPath(String repository, MiddlewareClusterDTO cluster){
-        String setValues = "image.repository=" + repository + "/local-path-provisioner" +
-                ",storage.storageClassName=" + "local-path" +
-                ",helperImage.repository=" + repository + "/busybox" +
-                ",localPath.path=" + "/opt/local-path-provisioner";
-        helmChartService.upgradeInstall("local-path", "middleware-operator", setValues,
-                componentsPath + File.separator + "local-path-provisioner", cluster);
-    }
-
-    public void prometheus(String repository, MiddlewareClusterDTO cluster){
-        String setValues = "image.prometheus.repository=" + repository + "/prometheus" +
-                ",image.configmapReload.repository=" + repository + "/configmap-reload" +
-                ",image.nodeExporter.repository=" + repository + "/node-exporter" +
-                ",image.kubeRbacProxy.repository=" + repository + "/kube-rbac-proxy" +
-                ",image.prometheusAdapter.repository=" + repository + "/k8s-prometheus-adapter-amd64" +
-                ",image.prometheusOperator.repository=" + repository + "/prometheus-operator" +
-                ",image.prometheusConfigReloader.repository=" + repository + "/prometheus-config-reloader" +
-                ",image.kubeStateMetrics.repository=" + repository + "/kube-state-metrics" +
-                ",image.nodeExporter.repository=" + repository + "/node-exporter" +
-                ",image.grafana.repository=" + repository + "/grafana" +
-                ",image.dashboard.repository=" + repository + "/k8s-sidecar" +
-                ",image.busybox.repository=" + repository + "/grafana" +
-                ",storage.storageClass=" + "local-path";
-        helmChartService.upgradeInstall("prometheus", "default", setValues,
-                componentsPath + File.separator + "prometheus", cluster);
-    }
-
-    public void ingress(String repository, MiddlewareClusterDTO cluster) {
-        String setValues = "image.ingressRepository=" + repository +
-                ",image.backendRepository=" + repository +
-                ",image.keepalivedRepository=" + repository;
-        helmChartService.upgradeInstall("ingress", "middleware-operator", setValues,
-            componentsPath + File.separator + "ingress-nginx/charts/ingress-nginx", cluster);
-    }
-
-    public void grafana(String repository, MiddlewareClusterDTO cluster) {
-        Yaml yaml = new Yaml();
-        String values = HelmChartUtil.getValueYaml(componentsPath + File.separator + "grafana");
-        JSONObject jsonValues = new JSONObject();
-        JSONObject image = new JSONObject();
-        image.put("repository", repository + "/grafana");
-
-        JSONObject sidecar = new JSONObject();
-        JSONObject sidecarImage = new JSONObject();
-        sidecarImage.put("repository", repository + "/k8s-sidecar");
-        sidecar.put("image", sidecarImage);
-
-        JSONObject persistence = new JSONObject();
-        persistence.put("storageClassName", "local-path");
-
-        jsonValues.put("image", image);
-        jsonValues.put("sidecar", sidecar);
-        jsonValues.put("persistence", persistence);
-        if ("https".equals(cluster.getMonitor().getGrafana().getProtocol())) {
-            JSONObject ini = new JSONObject();
-            JSONObject server = new JSONObject();
-            server.put("protocol", "https");
-            server.put("cert_file", "/etc/grafana/ssl/server.crt");
-            server.put("cert_key", "/etc/grafana/ssl/server.key");
-            ini.put("server", server);
-            JSONObject readinessProbe = new JSONObject();
-            JSONObject livenessProbe = new JSONObject();
-            JSONObject httpGet = new JSONObject();
-            httpGet.put("scheme", "HTTPS");
-            readinessProbe.put("httpGet", httpGet);
-            livenessProbe.put("httpGet", httpGet);
-            jsonValues.put("grafana.ini", ini);
-            jsonValues.put("readinessProbe", readinessProbe);
-            jsonValues.put("livenessProbe", livenessProbe);
-        }
-        helmChartService.upgradeInstall("grafana", "monitoring", componentsPath + File.separator + "grafana",
-            yaml.loadAs(values, JSONObject.class), jsonValues, cluster);
-    }
-
-    public void alertManager(String repository, MiddlewareClusterDTO cluster) {
-        String setValues = "image.alertmanager.repository=" + repository + "/alertmanager" +
-                ",clusterHost=" + cluster.getHost();
-        helmChartService.upgradeInstall("alertmanager", "monitoring", setValues,
-            componentsPath + File.separator + "alertmanager", cluster);
-    }
-
-    public void minio(String repository, MiddlewareClusterDTO cluster){
-        String setValues = "image.repository=" + repository +
-                ",persistence.storageClass=local-path" +
-                ",minioArgs.bucketName=velero" +
-                ",service.nodePort=31909";
-        helmChartService.upgradeInstall("minio", "minio", setValues,
-                componentsPath + File.separator + "minio/charts/minio", cluster);
-    }
-
-    public void elasticsearch(String repository, MiddlewareClusterDTO cluster){
-        String setValues = "image.repository=" + repository +
-                ",elasticsearch-operator.enabled=false" +
-                ",elasticPassword=Hc@Cloud01" +
-                ",storage.masterClass=local-path" +
-                ",logging.collection.filelog.enable=false" +
-                ",logging.collection.stdout.enable=false" +
-                ",resources.master.limits.cpu=0.5" +
-                ",resources.master.limits.memory=1Gi" +
-                ",resources.master.requests.cpu=0.5" +
-                ",resources.master.requests.memory=1Gi";
-        helmChartService.upgradeInstall("middleware-elasticsearch", "logging", setValues,
-                componentsPath + File.separator + "elasticsearch", cluster);
-    }
-
-    public void logging(String repository, MiddlewareClusterDTO cluster){
-        String setValues = "image.logpilotRepository=" + repository + "/log-pilot" +
-                ",image.logstashRepository=" + repository + "/logstash";
-        helmChartService.upgradeInstall("log", "logging", setValues,
-                componentsPath + File.separator + "logging", cluster);
     }
 
     public void clusterResource(MiddlewareClusterDTO cluster){
@@ -779,14 +608,7 @@ public class ClusterServiceImpl implements ClusterService {
         cluster.setClusterQuotaDTO(clusterQuotaDTO);
     }
 
-    public List<Namespace> getRegisteredNamespaceNum(MiddlewareClusterDTO clusterDTO) {
-        if (clusterDTO == null) {
-            return new ArrayList();
-        }
-        List<Namespace> namespaces = namespaceService.list(clusterDTO.getId(), false, false, false, null);
-        return namespaces.stream().filter(namespace -> namespace.isRegistered()).collect(Collectors.toList());
-    }
-
+    @Override
     public List<Namespace> getRegisteredNamespaceNum(List<MiddlewareClusterDTO> clusterDTOList) {
         List<Namespace> namespaces = new ArrayList<>();
         clusterDTOList.forEach(clusterDTO -> {
@@ -795,6 +617,7 @@ public class ClusterServiceImpl implements ClusterService {
         return namespaces;
     }
 
+    @Override
     public ClusterQuotaDTO getClusterQuota(List<MiddlewareClusterDTO> clusterDTOList) {
         ClusterQuotaDTO clusterQuotaSum = new ClusterQuotaDTO();
         clusterDTOList.forEach(clusterDTO -> {
@@ -811,7 +634,141 @@ public class ClusterServiceImpl implements ClusterService {
         return clusterQuotaSum;
     }
 
+    @Override
+    public List<MiddlewareResourceInfo> getMwResource(String clusterId) {
+        //获取集群下所有中间件信息
+        List<MiddlewareCRD> mwCrDList = middlewareCRDService.listCR(clusterId, null, null);
+
+        Map<String, String> queryMap = new HashMap<>();
+        String time = DateUtils.formatDate(new Date().getTime(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z_SSS.getValue(),
+            TimeZone.getTimeZone("GMT"));
+        queryMap.put("step", "1s");
+        queryMap.put("start", time);
+        queryMap.put("end", time);
+        List<MiddlewareResourceInfo> mwResourceInfoList = new ArrayList<>();
+        mwCrDList.forEach(mwCrd -> ThreadPoolExecutorFactory.executor.execute(() -> {
+            try {
+                Middleware middleware = middlewareService.detail(clusterId, mwCrd.getMetadata().getNamespace(), mwCrd.getSpec().getName(), mwCrd.getSpec().getType());
+                MiddlewareResourceInfo middlewareResourceInfo = new MiddlewareResourceInfo();
+                BeanUtils.copyProperties(middleware, middlewareResourceInfo);
+                Map<String, String> finalQueryMap = new HashMap<>(queryMap);
+                StringBuilder pods = getPodName(mwCrd);
+                
+                //查询cpu配额
+                String cpuRequestQuery = "sum(kube_pod_container_resource_requests_cpu_cores{pod=~\"" + pods.toString()
+                        + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"})";
+                finalQueryMap.put("query", cpuRequestQuery);
+                PrometheusResponse cpuRequest =
+                        prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, finalQueryMap);
+                if (!CollectionUtils.isEmpty(cpuRequest.getData().getResult())){
+                    middlewareResourceInfo.setPerMinCpu(Double.parseDouble(cpuRequest.getData().getResult().get(0).getValues().get(0).get(1)));
+                }
+                //查询cpu每5分钟平均用量
+                String per5MinCpuUsedQuery = "sum by (container)(avg_over_time(container_cpu_usage_seconds_total{pod=~\"" + pods.toString()
+                        + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"}[5m]))";
+                finalQueryMap.put("query", per5MinCpuUsedQuery);
+                PrometheusResponse per5MinCpuUsed =
+                        prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, finalQueryMap);
+                if (!CollectionUtils.isEmpty(per5MinCpuUsed.getData().getResult())){
+                    middlewareResourceInfo.setPer5MinCpu(Double.parseDouble(per5MinCpuUsed.getData().getResult().get(0).getValues().get(0).get(1)));
+                }
+                //查询memory配额
+                String memoryRequestQuery = "sum(kube_pod_container_resource_requests_memory_bytes{pod=~\"" + pods.toString()
+                        + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"})";
+                finalQueryMap.put("query", memoryRequestQuery);
+                PrometheusResponse memoryRequest =
+                        prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, finalQueryMap);
+                if (!CollectionUtils.isEmpty(memoryRequest.getData().getResult())){
+                    middlewareResourceInfo.setPerMinMemory(Double.parseDouble(memoryRequest.getData().getResult().get(0).getValues().get(0).get(1)));
+                }
+                //查询memory每5分钟平均用量
+                String per5MinMemoryUsedQuery = "sum by (container)(avg_over_time(container_memory_working_set_bytes{pod=~\"" + pods.toString()
+                        + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"}[5m]))";
+                finalQueryMap.put("query", per5MinMemoryUsedQuery);
+                PrometheusResponse per5MinMemoryUsed =
+                        prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, finalQueryMap);
+                if (!CollectionUtils.isEmpty(per5MinMemoryUsed.getData().getResult())){
+                    middlewareResourceInfo.setPer5MinMemory(Double.parseDouble(per5MinMemoryUsed.getData().getResult().get(0).getValues().get(0).get(1)));
+                }
+                //查询storage每5分钟平均用量
+                //获取pvc
+                StringBuilder pvcs = getPvcs(mwCrd);
+                String per5MinStorageUsedQuery =
+                    "sum by (container)(avg_over_time(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\""
+                        + pvcs.toString() + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"}[5m]))";
+                finalQueryMap.put("query", per5MinStorageUsedQuery);
+                PrometheusResponse per5MinStorageUsed =
+                    prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, finalQueryMap);
+                if (!CollectionUtils.isEmpty(per5MinStorageUsed.getData().getResult())) {
+                    middlewareResourceInfo.setPer5MinStorage(
+                        Double.parseDouble(per5MinStorageUsed.getData().getResult().get(0).getValues().get(0).get(1)));
+                }
+                mwResourceInfoList.add(middlewareResourceInfo);
+            } catch (Exception e){
+
+            }
+        }));
+        return mwResourceInfoList;
+    }
+    
+    public StringBuilder getPodName(MiddlewareCRD mwCrd) {
+        StringBuilder pods = new StringBuilder();
+        List<MiddlewareInfo> podInfo = mwCrd.getStatus().getInclude().get(PODS);
+        if (!CollectionUtils.isEmpty(podInfo)) {
+            for (MiddlewareInfo middlewareInfo : podInfo) {
+                pods.append(middlewareInfo.getName()).append("|");
+            }
+        }
+        return pods;
+    }
+
+    public StringBuilder getPvcs(MiddlewareCRD mwCrd){
+        StringBuilder pvcs = new StringBuilder();
+        List<MiddlewareInfo> pvcInfo = mwCrd.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
+        if (!CollectionUtils.isEmpty(pvcInfo)) {
+            for (MiddlewareInfo middlewareInfo : pvcInfo) {
+                pvcs.append(middlewareInfo.getName()).append("|");
+            }
+        }
+        return pvcs;
+    }
+
+    /**
+     * 获取集群注册的分区
+     *
+     * @param clusterDTO 集群dto
+     * @return
+     */
+    public List<Namespace> getRegisteredNamespaceNum(MiddlewareClusterDTO clusterDTO) {
+        if (clusterDTO == null) {
+            return new ArrayList();
+        }
+        List<Namespace> namespaces = namespaceService.list(clusterDTO.getId(), false, false, false, null);
+        return namespaces.stream().filter(namespace -> namespace.isRegistered()).collect(Collectors.toList());
+    }
+
+    /**
+     * 获取集群资源配额及使用量
+     *
+     * @param clusterDTO 集群dto
+     * @return
+     */
     public ClusterQuotaDTO getClusterQuota(MiddlewareClusterDTO clusterDTO) {
         return clusterDTO.getClusterQuotaDTO();
     }
+
+    public static void main(String[] args){
+        Map<String, Integer> map = new HashMap<>();
+        map.put("test", 0);
+        for (int i = 1; i<=5; ++i) {
+            int finalI = i;
+            ThreadPoolExecutorFactory.executor.execute(() -> {
+                Map<String, Integer> finalMap = new HashMap<>(map);
+                finalMap.put("test1", finalI);
+                log.info(JSONObject.toJSONString(finalMap));
+            });
+        }
+    }
+
+
 }

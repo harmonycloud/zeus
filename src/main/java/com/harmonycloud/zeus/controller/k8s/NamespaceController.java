@@ -4,13 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
@@ -68,6 +62,18 @@ public class NamespaceController {
                 + failNsList.toString();
         }
         return BaseResult.ok(msg);
+    }
+
+    @ApiOperation(value = "创建命名空间", notes = "创建命名空间")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "分区名称", paramType = "query", dataTypeClass = String.class),
+    })
+    @PostMapping
+    public BaseResult create(@RequestParam("clusterId") String clusterId,
+                             @RequestParam("name") String name){
+        namespaceService.save(clusterId, name, null);
+        return BaseResult.ok();
     }
     
 }
