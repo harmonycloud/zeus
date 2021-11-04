@@ -101,7 +101,7 @@ public class ClusterController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class)
     })
     @GetMapping("/{clusterId}/middleware/resource")
-    public BaseResult<List<Middleware>> getMwResource(@PathVariable(value = "clusterId") String clusterId) {
+    public BaseResult<List<Middleware>> getMwResource(@PathVariable(value = "clusterId") String clusterId) throws Exception {
         List<MiddlewareResourceInfo> mwResourceInfoList = clusterService.getMwResource(clusterId);
         return BaseResult.ok(mwResourceInfoList);
     }

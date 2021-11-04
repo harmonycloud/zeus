@@ -7,12 +7,9 @@ import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConsta
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
-import com.harmonycloud.caas.common.constants.NameConstant;
-import com.harmonycloud.caas.common.enums.*;
-import com.harmonycloud.zeus.integration.cluster.bean.*;
-import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -20,9 +17,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.yaml.snakeyaml.Yaml;
 
 import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.caas.common.constants.NameConstant;
+import com.harmonycloud.caas.common.enums.*;
 import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
@@ -30,14 +28,15 @@ import com.harmonycloud.caas.common.model.PrometheusResponse;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
-import com.harmonycloud.tool.cmd.HelmChartUtil;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.integration.cluster.ClusterWrapper;
 import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
+import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.EsService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.service.registry.RegistryService;
 import com.harmonycloud.zeus.util.K8sClient;
@@ -249,7 +248,7 @@ public class ClusterServiceImpl implements ClusterService {
         try {
             List<HelmListInfo> helmInfos = helmChartService.listHelm("", "", cluster);
             if (helmInfos.stream().noneMatch(info -> "middleware-controller".equals(info.getName()))) {
-                clusterComponentService.deploy(cluster.getId(), ComponentsEnum.MIDDLEWARE_CONTROLLER.getName());
+                clusterComponentService.deploy(cluster, ComponentsEnum.MIDDLEWARE_CONTROLLER.getName());
             }
         } catch (Exception e) {
             throw new BusinessException(ErrorMessage.HELM_INSTALL_MIDDLEWARE_CONTROLLER_FAILED);
@@ -494,7 +493,7 @@ public class ClusterServiceImpl implements ClusterService {
         // 安装local-path
         try {
             if (helmListInfos.stream().noneMatch(helm -> "local-path".equals(helm.getName()))) {
-                clusterComponentService.deploy(cluster.getId(), ComponentsEnum.LOCAL_PATH.getName());
+                clusterComponentService.deploy(cluster, ComponentsEnum.LOCAL_PATH.getName());
             }
         } catch (Exception e) {
             throw new BusinessException(ErrorMessage.HELM_INSTALL_LOCAL_PATH_FAILED);
@@ -507,7 +506,7 @@ public class ClusterServiceImpl implements ClusterService {
         try {
             if (cluster.getMonitor().getPrometheus() == null
                 && helmListInfos.stream().noneMatch(helm -> "prometheus".equals(helm.getName()))) {
-                clusterComponentService.deploy(cluster.getId(), ComponentsEnum.PROMETHEUS.getName());
+                clusterComponentService.deploy(cluster, ComponentsEnum.PROMETHEUS.getName());
             }
         } catch (Exception e) {
             log.error(ErrorMessage.HELM_INSTALL_PROMETHEUS_FAILED.getZhMsg());
@@ -516,7 +515,7 @@ public class ClusterServiceImpl implements ClusterService {
         try {
             if (cluster.getComponentsInstall().getIngress() && (cluster.getIngress() == null || StringUtils.isEmpty(cluster.getIngress().getAddress()))) {
                 if (helmListInfos.stream().noneMatch(helm -> "ingress".equals(helm.getName()))) {
-                    clusterComponentService.deploy(cluster.getId(), ComponentsEnum.INGRESS.getName());
+                    clusterComponentService.deploy(cluster, ComponentsEnum.INGRESS.getName());
                 }
             }
         } catch (Exception e) {
@@ -525,7 +524,7 @@ public class ClusterServiceImpl implements ClusterService {
         // 安装grafana
         try {
             if (cluster.getComponentsInstall().getGrafana() && (cluster.getMonitor().getGrafana() == null || cluster.getMonitor().getGrafana().getHost() == null)) {
-                clusterComponentService.deploy(cluster.getId(), ComponentsEnum.GRAFANA.getName());
+                clusterComponentService.deploy(cluster, ComponentsEnum.GRAFANA.getName());
             }
         } catch (Exception e) {
             log.error(ErrorMessage.HELM_INSTALL_GRAFANA_FAILED.getZhMsg());
@@ -533,7 +532,7 @@ public class ClusterServiceImpl implements ClusterService {
         // 安装alertManager
         try {
             if (cluster.getComponentsInstall().getAlertManager() && cluster.getMonitor().getAlertManager() == null){
-                clusterComponentService.deploy(cluster.getId(), ComponentsEnum.ALERTMANAGER.getName());
+                clusterComponentService.deploy(cluster, ComponentsEnum.ALERTMANAGER.getName());
             }
         } catch (Exception e) {
             log.error(ErrorMessage.HELM_INSTALL_ALERT_MANAGER_FAILED.getZhMsg());
@@ -542,7 +541,7 @@ public class ClusterServiceImpl implements ClusterService {
         try {
             //创建minio分区
             if (cluster.getStorage() == null || !cluster.getStorage().containsKey("backup")){
-                clusterComponentService.deploy(cluster.getId(), ComponentsEnum.MINIO.getName());
+                clusterComponentService.deploy(cluster, ComponentsEnum.MINIO.getName());
             }
         } catch (Exception e) {
             log.error(ErrorMessage.HELM_INSTALL_MINIO_FAILED.getZhMsg());
@@ -552,10 +551,10 @@ public class ClusterServiceImpl implements ClusterService {
             if (cluster.getComponentsInstall().getLogging()){
                 if (cluster.getLogging() == null || cluster.getLogging().getElasticSearch() == null
                         || cluster.getLogging().getElasticSearch().getHost() == null) {
-                    clusterComponentService.deploy(cluster.getId(), ComponentsEnum.LOGGING.getName());
+                    clusterComponentService.deploy(cluster, ComponentsEnum.LOGGING.getName());
                 }
                 else if(cluster.getLogging().getElasticSearch().getLogCollect()){
-                    clusterComponentService.deploy(cluster.getId(), ComponentsEnum.LOGPILOT.getName());
+                    clusterComponentService.deploy(cluster, ComponentsEnum.LOGPILOT.getName());
                 }
             }
         } catch (Exception e) {
@@ -635,7 +634,7 @@ public class ClusterServiceImpl implements ClusterService {
     }
 
     @Override
-    public List<MiddlewareResourceInfo> getMwResource(String clusterId) {
+    public List<MiddlewareResourceInfo> getMwResource(String clusterId) throws Exception {
         //获取集群下所有中间件信息
         List<MiddlewareCRD> mwCrDList = middlewareCRDService.listCR(clusterId, null, null);
 
@@ -646,6 +645,7 @@ public class ClusterServiceImpl implements ClusterService {
         queryMap.put("start", time);
         queryMap.put("end", time);
         List<MiddlewareResourceInfo> mwResourceInfoList = new ArrayList<>();
+        final CountDownLatch clusterCountDownLatch = new CountDownLatch(mwCrDList.size());
         mwCrDList.forEach(mwCrd -> ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
                 Middleware middleware = middlewareService.detail(clusterId, mwCrd.getMetadata().getNamespace(), mwCrd.getSpec().getName(), mwCrd.getSpec().getType());
@@ -661,7 +661,7 @@ public class ClusterServiceImpl implements ClusterService {
                 PrometheusResponse cpuRequest =
                         prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, finalQueryMap);
                 if (!CollectionUtils.isEmpty(cpuRequest.getData().getResult())){
-                    middlewareResourceInfo.setPerMinCpu(Double.parseDouble(cpuRequest.getData().getResult().get(0).getValues().get(0).get(1)));
+                    middlewareResourceInfo.setRequestCpu(Double.parseDouble(cpuRequest.getData().getResult().get(0).getValues().get(0).get(1)));
                 }
                 //查询cpu每5分钟平均用量
                 String per5MinCpuUsedQuery = "sum by (container)(avg_over_time(container_cpu_usage_seconds_total{pod=~\"" + pods.toString()
@@ -679,7 +679,7 @@ public class ClusterServiceImpl implements ClusterService {
                 PrometheusResponse memoryRequest =
                         prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, finalQueryMap);
                 if (!CollectionUtils.isEmpty(memoryRequest.getData().getResult())){
-                    middlewareResourceInfo.setPerMinMemory(Double.parseDouble(memoryRequest.getData().getResult().get(0).getValues().get(0).get(1)));
+                    middlewareResourceInfo.setRequestMemory(Double.parseDouble(memoryRequest.getData().getResult().get(0).getValues().get(0).get(1)));
                 }
                 //查询memory每5分钟平均用量
                 String per5MinMemoryUsedQuery = "sum by (container)(avg_over_time(container_memory_working_set_bytes{pod=~\"" + pods.toString()
@@ -690,6 +690,8 @@ public class ClusterServiceImpl implements ClusterService {
                 if (!CollectionUtils.isEmpty(per5MinMemoryUsed.getData().getResult())){
                     middlewareResourceInfo.setPer5MinMemory(Double.parseDouble(per5MinMemoryUsed.getData().getResult().get(0).getValues().get(0).get(1)));
                 }
+                //获取storage配额
+                middlewareResourceInfo.setRequestStorage(middleware.getQuota().containsKey(middleware.getType()) ? middleware.getQuota().get(middleware.getType()).getStorageClassQuota() : null);
                 //查询storage每5分钟平均用量
                 //获取pvc
                 StringBuilder pvcs = getPvcs(mwCrd);
@@ -705,9 +707,13 @@ public class ClusterServiceImpl implements ClusterService {
                 }
                 mwResourceInfoList.add(middlewareResourceInfo);
             } catch (Exception e){
-
+                log.error("查询失败： ", e);
+            }
+            finally {
+                clusterCountDownLatch.countDown();
             }
         }));
+        clusterCountDownLatch.await();
         return mwResourceInfoList;
     }
     

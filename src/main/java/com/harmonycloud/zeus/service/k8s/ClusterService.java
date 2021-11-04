@@ -105,7 +105,7 @@ public interface ClusterService {
      */
     ClusterQuotaDTO getClusterQuota(List<MiddlewareClusterDTO> clusterDTOList);
 
-    List<MiddlewareResourceInfo> getMwResource(String clusterId);
+    List<MiddlewareResourceInfo> getMwResource(String clusterId) throws Exception;
 
 
 }

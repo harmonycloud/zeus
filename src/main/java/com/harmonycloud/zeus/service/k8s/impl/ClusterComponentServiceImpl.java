@@ -27,9 +27,8 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
     private HelmChartService helmChartService;
 
     @Override
-    public void deploy(String clusterId, String componentName) {
+    public void deploy(MiddlewareClusterDTO cluster, String componentName) {
         BaseComponentsService service = getOperator(BaseComponentsService.class, BaseComponentsService.class, componentName);
-        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         service.deploy(cluster);
     }
 
