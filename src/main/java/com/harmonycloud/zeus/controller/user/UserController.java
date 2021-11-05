@@ -1,10 +1,10 @@
 package com.harmonycloud.zeus.controller.user;
 
+import java.io.IOException;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
+import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
 import com.harmonycloud.zeus.service.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +16,9 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author xutianhong
@@ -107,5 +110,29 @@ public class UserController {
     @GetMapping("/menu")
     public BaseResult<List<ResourceMenuDto>> menu() throws Exception {
         return BaseResult.ok(userService.menu());
+    }
+
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "personalizedConfiguration", value = "个性化配置信息", paramType = "query", dataTypeClass = PersonalizedConfiguration.class),
+            @ApiImplicitParam(name = "backgroundFile", value = "背景图", dataType = "_file"),
+            @ApiImplicitParam(name = "homeLogoFile", value = "主页logo", dataType = "_file"),
+            @ApiImplicitParam(name = "loginLogoFile", value = "登录页logo", dataType = "_file"),
+            @ApiImplicitParam(name = "status", value = "恢复初始化设置",paramType = "query", dataTypeClass = String.class)
+    })
+    @ApiOperation(value = "添加个性化配置", notes = "添加个性化配置")
+    @PostMapping("/personalized")
+    public BaseResult Personalized(@RequestPart PersonalizedConfiguration personalizedConfiguration,
+                                   @RequestPart("backgroundFile") MultipartFile backgroundFile,
+                                   @RequestPart("homeLogoFile") MultipartFile homeLogoFile,
+                                   @RequestPart("loginLogoFile") MultipartFile loginLogoFile,
+                                   @RequestParam String status) throws Exception {
+        userService.insertPersonalConfig(personalizedConfiguration,backgroundFile,homeLogoFile,loginLogoFile,status);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "获取个性化配置", notes = "获取个性化配置")
+    @GetMapping("/getPersonalConfig")
+    public BaseResult getPersonalConfig() throws IOException {
+        return BaseResult.ok(userService.getPersonalConfig());
     }
 }

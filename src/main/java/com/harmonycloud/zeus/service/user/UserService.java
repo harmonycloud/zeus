@@ -2,8 +2,11 @@ package com.harmonycloud.zeus.service.user;
 
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
+import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
+import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -88,4 +91,10 @@ public interface UserService {
      */
     List<ResourceMenuDto> menu() throws Exception;
 
+    /**
+     * 个性化配置
+     */
+    void insertPersonalConfig(PersonalizedConfiguration configuration, MultipartFile backgroundFile, MultipartFile homeLogoFile, MultipartFile loginLogoFile,String status) throws Exception;
+
+    PersonalizedConfiguration getPersonalConfig() throws IOException;
 }

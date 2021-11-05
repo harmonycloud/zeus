@@ -1,22 +1,19 @@
 package com.harmonycloud.zeus.service.user.impl;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.ADMIN;
-import static com.harmonycloud.caas.filters.base.GlobalKey.USER_TOKEN;
-
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.sql.Blob;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
-
+import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
+import com.harmonycloud.zeus.dao.user.PersonalMapper;
 import com.harmonycloud.zeus.service.user.RoleService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
 import com.harmonycloud.zeus.service.user.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
@@ -33,6 +30,9 @@ import com.harmonycloud.zeus.bean.user.BeanUser;
 import com.harmonycloud.zeus.dao.user.BeanUserMapper;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.tool.encrypt.RSAUtils;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author xutianhong
@@ -43,10 +43,15 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private BeanUserMapper beanUserMapper;
+
     @Autowired
     private UserRoleService userRoleService;
+
     @Autowired
     private RoleService roleService;
+
+    @Autowired
+    private PersonalMapper personalMapper;
 
     @Override
     public UserDto get(String userName) throws Exception {
