@@ -1,6 +1,8 @@
 package com.harmonycloud.zeus.service.middleware;
 
 import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
+import com.harmonycloud.caas.common.model.MiddlewareBackupDetail;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 
@@ -27,24 +29,18 @@ public interface MiddlewareBackupService {
     /**
      * 创建备份
      *
-     * @param clusterId      集群id
-     * @param namespace      命名空间
-     * @param type           中间件类型
-     * @param middlewareName 中间件名称
+     * @param middlewareBackupDTO 备份信息
      * @return
      */
-    BaseResult create(String clusterId, String namespace, String middlewareName, String type, String cron, Integer limitRecord,String pod);
+    BaseResult create(MiddlewareBackupDTO middlewareBackupDTO);
 
     /**
      * 更新备份配置
      *
-     * @param clusterId      集群id
-     * @param namespace      命名空间
-     * @param type           中间件类型
-     * @param middlewareName 中间件名称
+     * @param middlewareBackupDTO
      * @return
      */
-    BaseResult update(String clusterId, String namespace, String middlewareName, String type, String cron, Integer limitRecord, String pause);
+    BaseResult update(MiddlewareBackupDTO middlewareBackupDTO);
 
     /**
      * 删除备份记录
@@ -72,26 +68,18 @@ public interface MiddlewareBackupService {
     /**
      * 创建定时备份
      *
-     * @param clusterId          集群id
-     * @param namespace          命名空间
-     * @param middlewareRealName 中间件名称
-     * @param cron               cron表达式
-     * @param limitRecord        备份保留个数
+     * @param detail
      * @return
      */
-    BaseResult createScheduleBackup(String clusterId, String namespace, String middlewareName, String crdType,
-                                    String middlewareRealName, String cron, Integer limitRecord, Map<String, String> labels, String pod);
+    BaseResult createScheduleBackup(MiddlewareBackupDetail detail);
 
     /**
      * 立即备份
      *
-     * @param clusterId          集群id
-     * @param namespace          命名空间
-     * @param middlewareRealName 中间件名称
+     * @param detail
      * @return
      */
-    BaseResult createNormalBackup(String clusterId, String namespace, String middlewareName, String crdType,
-                                  String middlewareRealName, Map<String, String> labels, String pod);
+    BaseResult createNormalBackup(MiddlewareBackupDetail detail);
 
     /**
      * 创建恢复
