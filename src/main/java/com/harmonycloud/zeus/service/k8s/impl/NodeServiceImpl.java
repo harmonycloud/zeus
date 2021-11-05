@@ -6,6 +6,7 @@ import static com.harmonycloud.caas.common.constants.NameConstant.KUBELET_VERSIO
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.service.k8s.NodeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -55,6 +56,17 @@ public class NodeServiceImpl implements NodeService {
             cpu.setAllocated(no.getStatus().getAllocatable().get("cpu").getAmount());
             memory.setTotal(no.getStatus().getCapacity().get("memory").getAmount());
             memory.setAllocated(no.getStatus().getAllocatable().get("memory").getAmount());
+            node.setCpu(cpu);
+            node.setMemory(memory);
+            //status
+            no.getStatus().getConditions().forEach(nodeCondition -> {
+                if ("Ready".equals(nodeCondition.getType())){
+                    node.setStatus(nodeCondition.getStatus());
+                }
+            });
+            //createTime
+            node.setCreateTime(
+                DateUtils.parseDate(no.getMetadata().getCreationTimestamp(), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
             return node;
         }).collect(Collectors.toList());
     }

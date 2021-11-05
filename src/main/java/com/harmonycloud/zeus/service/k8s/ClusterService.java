@@ -1,5 +1,7 @@
 package com.harmonycloud.zeus.service.k8s;
 
+import com.harmonycloud.caas.common.model.ClusterNodeResourceDto;
+import com.harmonycloud.caas.common.model.Node;
 import com.harmonycloud.caas.common.model.middleware.*;
 
 import java.util.List;
@@ -105,7 +107,21 @@ public interface ClusterService {
      */
     ClusterQuotaDTO getClusterQuota(List<MiddlewareClusterDTO> clusterDTOList);
 
+    /**
+     * 获取集群下服务资源列表
+     *
+     * @param clusterId 集群id
+     * @return List<MiddlewareResourceInfo>
+     */
     List<MiddlewareResourceInfo> getMwResource(String clusterId) throws Exception;
+
+    /**
+     * 获取集群主机资源列表
+     *
+     * @param clusterId 集群id
+     * @return List<Node>
+     */
+    List<ClusterNodeResourceDto> getNodeResource(String clusterId) throws Exception;
 
 
 }

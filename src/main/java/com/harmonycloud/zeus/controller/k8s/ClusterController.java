@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.controller.k8s;
 
 import java.util.List;
 
+import com.harmonycloud.caas.common.model.Node;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
@@ -101,9 +102,18 @@ public class ClusterController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class)
     })
     @GetMapping("/{clusterId}/middleware/resource")
-    public BaseResult<List<Middleware>> getMwResource(@PathVariable(value = "clusterId") String clusterId) throws Exception {
+    public BaseResult<List<MiddlewareResourceInfo>> getMwResource(@PathVariable(value = "clusterId") String clusterId) throws Exception {
         List<MiddlewareResourceInfo> mwResourceInfoList = clusterService.getMwResource(clusterId);
         return BaseResult.ok(mwResourceInfoList);
+    }
+
+    @ApiOperation(value = "查询集群下node资源详情", notes = "查询集群下node资源详情")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class)
+    })
+    @GetMapping("/{clusterId}/node/resource")
+    public BaseResult<List<Node>> getNodeResource(@PathVariable(value = "clusterId") String clusterId) throws Exception {
+        return BaseResult.ok(clusterService.getNodeResource(clusterId));
     }
 
     /**
