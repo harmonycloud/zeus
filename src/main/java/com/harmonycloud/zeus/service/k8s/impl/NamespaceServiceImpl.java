@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
 import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
@@ -122,7 +124,7 @@ public class NamespaceServiceImpl implements NamespaceService {
         return list;
     }
 
-    @Override
+    /*@Override
     public List<String> registry(String clusterId, List<String> namespaceList) {
         // 查出所有命名空间
         List<io.fabric8.kubernetes.api.model.Namespace> allNsList = namespaceWrapper.list(clusterId);
@@ -173,7 +175,7 @@ public class NamespaceServiceImpl implements NamespaceService {
         });
 
         return failNsList;
-    }
+    }*/
 
     @Override
     public void save(String clusterId, String name, Map<String, String> label) {
@@ -187,5 +189,38 @@ public class NamespaceServiceImpl implements NamespaceService {
         meta.setLabels(label);
         ns.setMetadata(meta);
         namespaceWrapper.save(clusterId, ns);
+    }
+
+    @Override
+    public void delete(String clusterId, String name) {
+        io.fabric8.kubernetes.api.model.Namespace ns = new io.fabric8.kubernetes.api.model.Namespace();
+        ObjectMeta meta = new ObjectMeta();
+        meta.setName(name);
+        ns.setMetadata(meta);
+        namespaceWrapper.delete(clusterId, ns);
+    }
+
+    @Override
+    public void registry(String clusterId, String name, Boolean registered) {
+        List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId).stream()
+            .filter(ns -> ns.getMetadata().getName().equals(name)).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(nsList)) {
+            throw new BusinessException(ErrorMessage.NAMESPACE_NOT_FOUND);
+        }
+        io.fabric8.kubernetes.api.model.Namespace ns = nsList.get(0);
+        if (registered) {
+            if (ns.getMetadata().getLabels() == null) {
+                ns.getMetadata().setLabels(new HashMap<>());
+            }
+            ns.getMetadata().getLabels().put(labelKey, labelValue);
+        } else {
+            ns.getMetadata().getLabels().remove(labelKey);
+        }
+        try {
+            namespaceWrapper.save(clusterId, ns);
+        } catch (Exception e) {
+            log.error("分区{}  注册失败", name);
+            throw new BusinessException(ErrorMessage.NAMESPACE_REGISTRY_FAILED);
+        }
     }
 }

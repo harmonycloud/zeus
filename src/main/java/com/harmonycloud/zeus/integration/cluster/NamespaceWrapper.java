@@ -44,4 +44,8 @@ public class NamespaceWrapper {
         K8sClient.getClient(clusterId).namespaces().createOrReplace(ns);
     }
 
+    public void delete(String clusterId, Namespace ns) {
+        K8sClient.getClient(clusterId).namespaces().delete(ns);
+    }
+
 }

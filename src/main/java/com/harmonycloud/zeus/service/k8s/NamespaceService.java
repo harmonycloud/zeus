@@ -48,7 +48,7 @@ public interface NamespaceService {
      * @param namespaceList 命名空间列表
      * @return List<String> 操作失败的命名空间
      */
-    List<String> registry(String clusterId, List<String> namespaceList);
+    //List<String> registry(String clusterId, List<String> namespaceList);
 
     /**
      * 创建命名空间
@@ -57,5 +57,21 @@ public interface NamespaceService {
      * @param name          命名空间名称
      */
     void save(String clusterId, String name, Map<String, String> label);
+
+    /**
+     * 删除命名空间
+     *
+     * @param clusterId     集群id
+     * @param name          命名空间名称
+     */
+    void delete(String clusterId, String name);
+
+    /**
+     *
+     * @param clusterId 集群id
+     * @param name 分区名称
+     * @param registered 是否注册
+     */
+    void registry(String clusterId, String name, Boolean registered);
 
 }
