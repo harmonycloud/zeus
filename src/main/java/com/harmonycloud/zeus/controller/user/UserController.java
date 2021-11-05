@@ -6,6 +6,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.zeus.service.user.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +22,7 @@ import io.swagger.annotations.ApiOperation;
  * @author xutianhong
  * @Date 2021/7/22 11:52 上午
  */
+@Slf4j
 @Api(tags = {"系统管理","用户管理"}, value = "用户信息")
 @RestController
 @RequestMapping("/user")
@@ -109,6 +111,7 @@ public class UserController {
             @ApiImplicitParam(name = "clusterId", value = "集群", paramType = "query", dataTypeClass = String.class),
     })
     public BaseResult<List<ResourceMenuDto>> menu(@RequestParam("clusterId") String clusterId) throws Exception {
+        log.info("获取菜单列表：{}", clusterId);
         return BaseResult.ok(userService.menu(clusterId));
     }
 }

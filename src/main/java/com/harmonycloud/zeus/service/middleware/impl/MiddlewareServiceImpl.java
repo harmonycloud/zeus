@@ -11,6 +11,7 @@ import com.harmonycloud.caas.common.constants.NameConstant;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
+import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MysqlReplicateCRD;
@@ -19,6 +20,7 @@ import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.schedule.MiddlewareManageTask;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.log.EsComponentService;
+import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.tool.date.DateUtils;
@@ -71,6 +73,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private MiddlewareInfoService middlewareInfoService;
     @Autowired
     private IngressService ingressService;
+    @Autowired
+    private ClusterMiddlewareInfoService clusterMiddlewareInfoService;
 
     private final static Map<String, String> titleMap = new HashMap<String, String>(7) {
         {
@@ -312,20 +316,19 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     public List<ResourceMenuDto> listAllMiddlewareAsMenu(String clusterId) {
         List<ResourceMenuDto> subMenuList = new ArrayList<>();
         try {
-            List<MiddlewareInfoDTO> middlewareInfoDTOList = middlewareInfoService.list(clusterId);
-            if (CollectionUtils.isEmpty(middlewareInfoDTOList)) {
+            List<BeanClusterMiddlewareInfo> middlewareInfos = clusterMiddlewareInfoService.list(clusterId, true);
+            if (CollectionUtils.isEmpty(middlewareInfos)) {
                 return subMenuList;
             }
-            Collections.sort(middlewareInfoDTOList, new MiddlewareInfoDTOComparator());
             AtomicInteger weight = new AtomicInteger(1);
-            for (MiddlewareInfoDTO middlewareInfoDTO : middlewareInfoDTOList) {
+            for (BeanClusterMiddlewareInfo middlewareInfoDTO : middlewareInfos) {
                 if (middlewareInfoDTO.getStatus() == 2) {
                     //未安装的中间件不作为菜单展示
                     continue;
                 }
                 ResourceMenuDto resourceMenuDto = new ResourceMenuDto();
                 resourceMenuDto.setName(middlewareInfoDTO.getChartName());
-                resourceMenuDto.setAliasName(middlewareInfoDTO.getName());
+                resourceMenuDto.setAliasName(middlewareInfoDTO.getChartName());
                 resourceMenuDto.setAvailable(true);
                 resourceMenuDto.setWeight(weight.get());
                 weight.getAndIncrement();
