@@ -261,4 +261,85 @@ public class UserServiceImpl implements UserService {
         beanUserMapper.insert(beanUser);
     }
 
+    @Override
+    public void insertPersonalConfig(PersonalizedConfiguration configuration, MultipartFile backgroundFile, MultipartFile homeLogoFile, MultipartFile loginLoginFile,String status) throws Exception {
+        if ("init".equals(status)) {
+            QueryWrapper<PersonalizedConfiguration> query = new QueryWrapper<PersonalizedConfiguration>().eq("status","0");
+            personalMapper.delete(query);
+            return;
+        }
+        byte[] background = loadFile(backgroundFile);
+        byte[] homeLogo = loadFile(homeLogoFile);
+        byte[] loginLogo = loadFile(loginLoginFile);
+        Date now = new Date();
+        if (background != null) {
+            configuration.setBackgroundImage(background);
+            configuration.setBackgroundPath(backgroundFile.getOriginalFilename());
+        }
+        if (homeLogo != null) {
+            configuration.setHomeLogo(homeLogo);
+            configuration.setHomeLogoPath(homeLogoFile.getOriginalFilename());
+        }
+        if (loginLogo != null) {
+            configuration.setLoginLogo(loginLogo);
+            configuration.setLoginLogoPath(loginLoginFile.getOriginalFilename());
+        }
+        QueryWrapper<PersonalizedConfiguration> queryWrapper = new QueryWrapper<PersonalizedConfiguration>();
+        List<PersonalizedConfiguration> personals = personalMapper.selectList(queryWrapper);
+        if (personals.size() == 0) {
+            configuration.setCreateTime(now);
+            configuration.setStatus("1");
+            personalMapper.insert(configuration);
+        }else if (personals.size() == 1){
+            configuration.setCreateTime(now);
+            configuration.setStatus("0");
+            personalMapper.insert(configuration);
+        }else if (personals.size() == 2) {
+            configuration.setUpdateTime(now);
+            QueryWrapper<PersonalizedConfiguration> wrapper = new QueryWrapper<PersonalizedConfiguration>().eq("status","0");
+            personalMapper.update(configuration,wrapper);
+        }
+    }
+
+    @Override
+    public PersonalizedConfiguration getPersonalConfig() throws IOException {
+        QueryWrapper<PersonalizedConfiguration> queryWrapper = new QueryWrapper<PersonalizedConfiguration>();
+        List<PersonalizedConfiguration> personals = personalMapper.selectList(queryWrapper);
+        if (personals.size() > 1) {
+            queryWrapper.eq("status","0");
+        }
+        PersonalizedConfiguration personal = personalMapper.selectOne(queryWrapper);
+        personal.setBackgroundImage(null);
+        personal.setHomeLogo(null);
+        personal.setLoginLogo(null);
+        return personal;
+    }
+
+    private byte[] loadFile(MultipartFile file) throws IOException {
+        InputStream inPut = null;
+        byte[] bus = null;
+        byte[] by = null;
+        if (Objects.nonNull(file) && !file.isEmpty()) {
+            try {
+                inPut = file.getInputStream();
+                if (inPut != null) {
+                    by = new byte[inPut.available()];
+                    //在内存创建一个字节数组缓冲区
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    int n;
+                    //inPut.read(by)从(来源)输入流中(读取内容)读取的一定数量字节数,并将它们存储到(去处)缓冲区数组by中
+                    while ((n = inPut.read(by)) != -1) {
+                        bos.write(by, 0, n);  //参数：1、要输出的字节数组 2、从什么位置开始 3、多少个字节  写入此字节数组输出流
+                    }
+                    bus = bos.toByteArray();  //创建一个新分配的字节数组。数组的大小和当前输出流的大小，内容是当前输出流的拷贝。
+                }
+            }catch (IOException e){
+                e.printStackTrace();
+            }finally {
+                inPut.close();
+            }
+        }
+        return bus;
+    }
+
 }
