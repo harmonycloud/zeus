@@ -88,8 +88,11 @@ public interface UserService {
 
     /**
      * 获取菜单栏
+     * @param clusterId
+     * @return
+     * @throws Exception
      */
-    List<ResourceMenuDto> menu() throws Exception;
+    List<ResourceMenuDto> menu(String clusterId) throws Exception;
 
     /**
      * 个性化配置

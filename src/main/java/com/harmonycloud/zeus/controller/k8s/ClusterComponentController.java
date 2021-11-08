@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.controller.k8s;
 
 import static com.harmonycloud.caas.common.constants.NameConstant.DEFAULT;
 
+import com.harmonycloud.zeus.service.k8s.ClusterService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,6 +32,8 @@ public class ClusterComponentController {
 
     @Autowired
     private ClusterComponentService clusterComponentService;
+    @Autowired
+    private ClusterService clusterService;
 
     @ApiOperation(value = "部署集群组件", notes = "部署集群组件")
     @ApiImplicitParams({
@@ -39,17 +42,8 @@ public class ClusterComponentController {
     })
     @PostMapping("/{componentName}")
     public BaseResult deploy(@PathVariable("clusterId") String clusterId,
-                             @PathVariable("componentName") String componentName,
-                             @RequestBody MiddlewareClusterDTO cluster) {
-        if (cluster == null) {
-            throw new IllegalArgumentException("cluster info is null");
-        }
-        cluster.setId(clusterId);
-        // 默认default命名空间
-        if (StringUtils.isBlank(cluster.getDcId())) {
-            cluster.setDcId(DEFAULT);
-        }
-        clusterComponentService.deploy(cluster, componentName);
+                             @PathVariable("componentName") String componentName) {
+        clusterComponentService.deploy(clusterService.findById(clusterId), componentName);
         return BaseResult.ok();
     }
 

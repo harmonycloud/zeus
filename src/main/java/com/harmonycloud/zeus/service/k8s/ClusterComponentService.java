@@ -11,7 +11,7 @@ public interface ClusterComponentService {
     /**
      * 部署组件
      *
-     * @param cluster       集群
+     * @param clusterId       集群id
      * @param componentName 组件名称
      */
     void deploy(MiddlewareClusterDTO cluster, String componentName);
@@ -23,5 +23,12 @@ public interface ClusterComponentService {
      * @param componentName 组件名称
      */
     void integrate(MiddlewareClusterDTO cluster, String componentName);
+
+    /**
+     * list所有组件
+     *
+     * @param clusterId       集群id
+     */
+    void list(String clusterId, String componentName);
 
 }

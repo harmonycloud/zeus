@@ -1,20 +1,14 @@
 package com.harmonycloud.zeus.controller.middleware;
 
-import java.util.List;
-
-import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
-import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
-import io.swagger.models.auth.In;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
 import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareBackup;
-
+import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
+import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @author dengyulong
@@ -43,8 +37,9 @@ public class MiddlewareBackupController {
                              @PathVariable("middlewareName") String middlewareName,
                              @RequestParam("type") String type,
                              @RequestParam(value = "cron", required = false) String cron,
-                             @RequestParam(value = "limitRecord", required = false) Integer limitRecord) {
-        return middlewareBackupService.create(clusterId, namespace, middlewareName, type, cron, limitRecord);
+                             @RequestParam(value = "limitRecord", required = false) Integer limitRecord,
+                             @RequestParam(value = "pod", required = false) String pod) {
+        return middlewareBackupService.create(new MiddlewareBackupDTO(clusterId, namespace, middlewareName, type, cron, limitRecord, pod, null));
     }
 
     @ApiOperation(value = "更新中间件备份配置", notes = "更新中间件备份配置")
@@ -63,8 +58,9 @@ public class MiddlewareBackupController {
                              @RequestParam("type") String type,
                              @RequestParam(value = "cron", required = false) String cron,
                              @RequestParam(value = "limitRecord", required = false) Integer limitRecord,
+                             @RequestParam(value = "pod", required = false) String pod,
                              @RequestParam(value = "pause", required = false) String pause) {
-        return middlewareBackupService.update(clusterId, namespace, middlewareName, type, cron, limitRecord, pause);
+        return middlewareBackupService.update(new MiddlewareBackupDTO(clusterId, namespace, middlewareName, type, cron, limitRecord, pod, pause));
     }
 
     @ApiOperation(value = "删除中间件备份", notes = "删除中间件备份")

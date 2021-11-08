@@ -7,6 +7,10 @@ import java.util.stream.Collectors;
 
 import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
 import com.harmonycloud.zeus.dao.user.PersonalMapper;
+import javax.servlet.http.HttpServletRequest;
+
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
+import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.user.RoleService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
 import com.harmonycloud.zeus.service.user.UserService;
@@ -49,6 +53,8 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private RoleService roleService;
+    @Autowired
+    private MiddlewareService middlewareService;
 
     @Autowired
     private PersonalMapper personalMapper;
@@ -204,22 +210,23 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<ResourceMenuDto> menu() {
+    public List<ResourceMenuDto> menu(String clusterId) {
         CurrentUser currentUser = CurrentUserRepository.getUser();
         String roleId = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString("roleId");
         List<ResourceMenuDto> resourceMenuDtoList = roleService.listMenuByRoleId(roleId);
 
         Map<Integer, List<ResourceMenuDto>> resourceMenuDtoMap =
-            resourceMenuDtoList.stream().collect(Collectors.groupingBy(ResourceMenuDto::getParentId));
+                resourceMenuDtoList.stream().collect(Collectors.groupingBy(ResourceMenuDto::getParentId));
         List<ResourceMenuDto> firstMenuList = resourceMenuDtoMap.get(0);
         resourceMenuDtoMap.remove(0);
         firstMenuList.forEach(firstMenu -> {
-            if (!resourceMenuDtoMap.containsKey(firstMenu.getId())){
+            if (!resourceMenuDtoMap.containsKey(firstMenu.getId())) {
                 return;
             }
             firstMenu.setSubMenu(resourceMenuDtoMap.get(firstMenu.getId()));
             Collections.sort(firstMenu.getSubMenu());
         });
+        setServiceMenuSubMenu(firstMenuList, clusterId);
         Collections.sort(firstMenuList);
         return firstMenuList;
     }
@@ -341,5 +348,25 @@ public class UserServiceImpl implements UserService {
         }
         return bus;
     }
+
+    /**
+     * @description 将中间件设为服务列表菜单的子菜单
+     * @author  liyinlong
+     * @since 2021/11/2 4:09 下午
+     */
+    public void setServiceMenuSubMenu(List<ResourceMenuDto> menuDtos, String clusterId) {
+        menuDtos.forEach(parentMenu -> {
+            if ("serviceList".equals(parentMenu.getName())) {
+                List<ResourceMenuDto> resourceMenuDtos = middlewareService.listAllMiddlewareAsMenu(clusterId);
+                resourceMenuDtos.forEach(resourceMenuDto -> {
+                    resourceMenuDto.setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(resourceMenuDto.getAliasName()));
+                    resourceMenuDto.setUrl(parentMenu.getUrl() + "/" + resourceMenuDto.getName() +"/" + resourceMenuDto.getAliasName());
+                });
+                parentMenu.setSubMenu(resourceMenuDtos);
+                return;
+            }
+        });
+    }
+
 
 }

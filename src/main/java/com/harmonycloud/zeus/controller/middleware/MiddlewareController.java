@@ -44,7 +44,7 @@ public class MiddlewareController {
                                              @PathVariable("namespace") String namespace,
                                              @RequestParam(value = "type", required = false) String type,
                                              @RequestParam(value = "keyword", required = false) String keyword) {
-        return BaseResult.ok(middlewareService.listAllMiddleware(clusterId, namespace, keyword));
+        return BaseResult.ok(middlewareService.listAllMiddleware(clusterId, namespace, type, keyword));
     }
 
     @ApiOperation(value = "查询中间件详情", notes = "查询中间件详情")

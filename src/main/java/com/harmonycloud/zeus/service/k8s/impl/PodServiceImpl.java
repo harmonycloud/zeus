@@ -2,19 +2,23 @@ package com.harmonycloud.zeus.service.k8s.impl;
 
 import static com.harmonycloud.caas.common.constants.NameConstant.CPU;
 import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
-import static com.harmonycloud.caas.common.constants.NameConstant.STORAGE;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.model.ContainerWithStatus;
-import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
+import com.harmonycloud.caas.common.model.StorageClassDTO;
+import com.harmonycloud.caas.common.model.middleware.PodInfoGroup;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
+import com.harmonycloud.zeus.service.k8s.StorageClassService;
 import io.fabric8.kubernetes.api.model.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +48,7 @@ public class PodServiceImpl implements PodService {
     @Autowired
     private MiddlewareCRDService middlewareCRDService;
     @Autowired
-    private PvcWrapper pvcWrapper;
+    private StorageClassService storageClassService;
 
     @Override
     public Middleware list(String clusterId, String namespace, String middlewareName, String type) {
@@ -62,29 +66,27 @@ public class PodServiceImpl implements PodService {
             middleware.setPods(new ArrayList<>(0));
             return middleware;
         }
-
-        String storage = null;
-        String storageName = null;
-        List<MiddlewareInfo> pvcs = mw.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
-        if (!CollectionUtils.isEmpty(pvcs)) {
-            PersistentVolumeClaim pvc = pvcWrapper.get(clusterId, namespace, pvcs.get(0).getName());
-            if (pvc != null) {
-                storage = pvc.getSpec().getResources().getRequests().get(STORAGE).toString();
-                storageName = pvc.getSpec().getStorageClassName();
-            }
-        }
-
-        String finalStorage = storage;
-        String finalStorageName = storageName;
+        List<MiddlewareInfo> pvcInfos = mw.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
+        Map<String, StorageClassDTO> scMap = storageClassService.convertStorageClass(pvcInfos, clusterId, namespace);
+        AtomicReference<Boolean> isAllLvmStorage = new AtomicReference<>(true);
+        // 给pod设置存储
         List<PodInfo> podInfoList = pods.stream().map(po -> {
             Pod pod = podWrapper.get(clusterId, namespace, po.getName());
             PodInfo pi = convertPodInfo(pod)
                     .setRole(StringUtils.isBlank(po.getType()) ? null : po.getType().toLowerCase());
             // storage
-            pi.getResources().setStorageClassQuota(finalStorage).setStorageClassName(finalStorageName);
+            StorageClassDTO scDTO = storageClassService.fuzzySearchStorageClass(scMap, po.getName());
+            if (scDTO != null) {
+                pi.getResources().setStorageClassQuota(scDTO.getStorage()).setStorageClassName(scDTO.getStorageClassName())
+                        .setIsLvmStorage(scDTO.getIsLvmStorage());
+                isAllLvmStorage.set(isAllLvmStorage.get() & scDTO.getIsLvmStorage());
+            }
             return pi;
         }).collect(Collectors.toList());
-        return middleware.setPods(podInfoList);
+        middleware.setIsAllLvmStorage(isAllLvmStorage.get());
+        middleware.setPodInfoGroup(convertListToGroup(podInfoList));
+        middleware.setPods(podInfoList);
+        return middleware;
     }
 
     @Override
@@ -93,10 +95,56 @@ public class PodServiceImpl implements PodService {
         if (CollectionUtils.isEmpty(list)) {
             return new ArrayList<>(0);
         }
-        
         return list.stream().map(this::convertPodInfo).collect(Collectors.toList());
     }
 
+    /**
+     * 将podlist进行分组
+     * @param podInfoList
+     * @return
+     */
+    private PodInfoGroup convertListToGroup(List<PodInfo> podInfoList) {
+        PodInfoGroup podInfoGroup = new PodInfoGroup();
+        Map<String, List<PodInfo>> podMap = new HashMap<>();
+        podInfoList.forEach(podInfo -> {
+            String role = podInfo.getRole();
+            List<PodInfo> infoList;
+            if (role == null) {
+                infoList = podMap.get("default");
+                if (CollectionUtils.isEmpty(infoList)) {
+                    infoList = new ArrayList<>();
+                }
+                podMap.put("default", infoList);
+            } else {
+                infoList = podMap.get(role);
+                if (CollectionUtils.isEmpty(infoList)) {
+                    infoList = new ArrayList<>();
+                }
+                podMap.put(role, infoList);
+            }
+            infoList.add(podInfo);
+        });
+
+        if (podMap.keySet().size() > 1) {
+            List<PodInfoGroup> list = new ArrayList<>();
+            podMap.forEach((k, v) -> {
+                PodInfoGroup singlePodInfoGroup = new PodInfoGroup();
+                singlePodInfoGroup.setRole(k);
+                singlePodInfoGroup.setPods(v);
+                singlePodInfoGroup.setHasChildGroup(false);
+                list.add(singlePodInfoGroup);
+            });
+            podInfoGroup.setHasChildGroup(true);
+            podInfoGroup.setListChildGroup(list);
+        } else {
+            podMap.forEach((k, v) -> {
+                podInfoGroup.setRole(k);
+                podInfoGroup.setPods(v);
+                podInfoGroup.setHasChildGroup(false);
+            });
+        }
+        return podInfoGroup;
+    }
     /**
      * 获取pod真实状态
      * @param pod

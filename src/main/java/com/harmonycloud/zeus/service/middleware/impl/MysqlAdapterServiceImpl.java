@@ -2,6 +2,8 @@ package com.harmonycloud.zeus.service.middleware.impl;
 
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.enums.DateType;
+import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
+import com.harmonycloud.caas.common.model.MiddlewareBackupDetail;
 import com.harmonycloud.caas.common.model.MiddlewareBackupScheduleConfig;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
 import com.harmonycloud.caas.common.model.middleware.MysqlBackupDto;
@@ -64,7 +66,12 @@ public class MysqlAdapterServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public BaseResult create(String clusterId, String namespace, String middlewareName, String type, String cron, Integer limitRecord) {
+    public BaseResult create(MiddlewareBackupDTO middlewareBackupDTO) {
+        String cron = middlewareBackupDTO.getCron();
+        String clusterId = middlewareBackupDTO.getClusterId();
+        String namespace = middlewareBackupDTO.getNamespace();
+        String middlewareName = middlewareBackupDTO.getMiddlewareName();
+        Integer limitRecord = middlewareBackupDTO.getLimitRecord();
         if (StringUtils.isBlank(cron)) {
             mysqlService.createBackup(clusterId, namespace, middlewareName);
         } else {
@@ -74,7 +81,12 @@ public class MysqlAdapterServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public BaseResult update(String clusterId, String namespace, String middlewareName, String type, String cron, Integer limitRecord, String pause) {
+    public BaseResult update(MiddlewareBackupDTO middlewareBackupDTO) {
+        String cron = middlewareBackupDTO.getCron();
+        String clusterId = middlewareBackupDTO.getClusterId();
+        String namespace = middlewareBackupDTO.getNamespace();
+        String middlewareName = middlewareBackupDTO.getMiddlewareName();
+        Integer limitRecord = middlewareBackupDTO.getLimitRecord();
         mysqlService.createScheduleBackup(clusterId, namespace, middlewareName, limitRecord, cron);
         return BaseResult.ok();
     }
@@ -108,12 +120,12 @@ public class MysqlAdapterServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public BaseResult createScheduleBackup(String clusterId, String namespace, String middlewareName, String crdType, String middlewareRealName, String cron, Integer limitRecord, Map<String, String> labels) {
+    public BaseResult createScheduleBackup(MiddlewareBackupDetail backupDetail) {
         return null;
     }
 
     @Override
-    public BaseResult createNormalBackup(String clusterId, String namespace, String middlewareName, String crdType, String middlewareRealName, Map<String, String> labels) {
+    public BaseResult createNormalBackup(MiddlewareBackupDetail backupDetail) {
         return null;
     }
 

@@ -5,10 +5,13 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import com.baomidou.mybatisplus.extension.api.R;
 import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.constants.NameConstant;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
+import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MysqlReplicateCRD;
@@ -17,6 +20,7 @@ import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.schedule.MiddlewareManageTask;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.log.EsComponentService;
+import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.tool.date.DateUtils;
@@ -69,6 +73,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private MiddlewareInfoService middlewareInfoService;
     @Autowired
     private IngressService ingressService;
+    @Autowired
+    private ClusterMiddlewareInfoService clusterMiddlewareInfoService;
 
     private final static Map<String, String> titleMap = new HashMap<String, String>(7) {
         {
@@ -280,12 +286,70 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public List<MiddlewareBriefInfoDTO> listAllMiddleware(String clusterId, String namespace, String keyword) {
+    public List<MiddlewareBriefInfoDTO> getMiddlewareBriefInfoList(List<MiddlewareClusterDTO> clusterDTOList) {
+        List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.list(false);
+        List<MiddlewareBriefInfoDTO> middlewareBriefInfoDTOList = new ArrayList<>();
+        List<Middleware> middlewares = queryAllClusterService(clusterDTOList);
+        middlewareInfoList.forEach(middlewareInfo -> {
+            AtomicInteger serviceNum = new AtomicInteger();
+            AtomicInteger errServiceNum = new AtomicInteger();
+            MiddlewareBriefInfoDTO middlewareBriefInfoDTO = new MiddlewareBriefInfoDTO();
+            countServiceNum(middlewares, middlewareInfo.getChartName(), serviceNum, errServiceNum);
+            middlewareBriefInfoDTO.setName(middlewareInfo.getName());
+            middlewareBriefInfoDTO.setChartName(middlewareInfo.getChartName());
+            middlewareBriefInfoDTO.setVersion(middlewareInfo.getVersion());
+            middlewareBriefInfoDTO.setChartVersion(middlewareInfo.getChartVersion());
+            middlewareBriefInfoDTO.setImagePath(middlewareInfo.getImagePath());
+            middlewareBriefInfoDTO.setServiceNum(serviceNum.get());
+            middlewareBriefInfoDTO.setErrServiceNum(errServiceNum.get());
+            middlewareBriefInfoDTOList.add(middlewareBriefInfoDTO);
+        });
+        try {
+            Collections.sort(middlewareBriefInfoDTOList, new MiddlewareBriefInfoDTOComparator());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return middlewareBriefInfoDTOList;
+    }
+
+    @Override
+    public List<ResourceMenuDto> listAllMiddlewareAsMenu(String clusterId) {
+        List<ResourceMenuDto> subMenuList = new ArrayList<>();
+        try {
+            List<BeanClusterMiddlewareInfo> middlewareInfos = clusterMiddlewareInfoService.list(clusterId, true);
+            if (CollectionUtils.isEmpty(middlewareInfos)) {
+                return subMenuList;
+            }
+            AtomicInteger weight = new AtomicInteger(1);
+            for (BeanClusterMiddlewareInfo middlewareInfoDTO : middlewareInfos) {
+                if (middlewareInfoDTO.getStatus() == 2) {
+                    //未安装的中间件不作为菜单展示
+                    continue;
+                }
+                ResourceMenuDto resourceMenuDto = new ResourceMenuDto();
+                resourceMenuDto.setName(middlewareInfoDTO.getChartName());
+                resourceMenuDto.setAliasName(middlewareInfoDTO.getChartName());
+                resourceMenuDto.setAvailable(true);
+                resourceMenuDto.setWeight(weight.get());
+                weight.getAndIncrement();
+                subMenuList.add(resourceMenuDto);
+            }
+        } catch (Exception e) {
+            log.error("查询服务列表错误", e);
+        }
+        return subMenuList;
+    }
+
+    @Override
+    public List<MiddlewareBriefInfoDTO> listAllMiddleware(String clusterId, String namespace, String type, String keyword) {
         List<MiddlewareBriefInfoDTO> serviceList = null;
         try {
             List<MiddlewareInfoDTO> middlewareInfoDTOList = middlewareInfoService.list(clusterId);
+            if (type != null) {
+                middlewareInfoDTOList = middlewareInfoDTOList.stream().filter(middleware -> type.equals(middleware.getChartName())).collect(Collectors.toList());
+            }
             serviceList = new ArrayList<>();
-            List<Middleware> middlewareServiceList = simpleList(clusterId, namespace, null, keyword);
+            List<Middleware> middlewareServiceList = simpleList(clusterId, namespace, type, keyword);
             for (MiddlewareInfoDTO middlewareInfoDTO : middlewareInfoDTOList) {
                 AtomicInteger errServiceCount = new AtomicInteger(0);
                 List<Middleware> singleServiceList = new ArrayList<>();
@@ -313,6 +377,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 briefInfoDTO.setChartName(middlewareInfoDTO.getChartName());
                 briefInfoDTO.setChartVersion(middlewareInfoDTO.getChartVersion());
                 briefInfoDTO.setVersion(middlewareInfoDTO.getVersion());
+                Collections.sort(singleServiceList, new MiddlewareComparator());
                 briefInfoDTO.setServiceList(singleServiceList);
                 briefInfoDTO.setServiceNum(singleServiceList.size());
                 briefInfoDTO.setOfficial(middlewareInfoDTO.getOfficial());
@@ -325,30 +390,23 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         return serviceList;
     }
 
-    public List<MiddlewareBriefInfoDTO> getMiddlewareBriefInfoList(List<MiddlewareClusterDTO> clusterDTOList) {
-        List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.list(false);
-        List<MiddlewareBriefInfoDTO> middlewareBriefInfoDTOList = new ArrayList<>();
-        List<Middleware> middlewares = queryAllClusterService(clusterDTOList);
-        middlewareInfoList.forEach(middlewareInfo -> {
-            AtomicInteger serviceNum = new AtomicInteger();
-            AtomicInteger errServiceNum = new AtomicInteger();
-            MiddlewareBriefInfoDTO middlewareBriefInfoDTO = new MiddlewareBriefInfoDTO();
-            countServiceNum(middlewares, middlewareInfo.getChartName(), serviceNum, errServiceNum);
-            middlewareBriefInfoDTO.setName(middlewareInfo.getName());
-            middlewareBriefInfoDTO.setChartName(middlewareInfo.getChartName());
-            middlewareBriefInfoDTO.setVersion(middlewareInfo.getVersion());
-            middlewareBriefInfoDTO.setChartVersion(middlewareInfo.getChartVersion());
-            middlewareBriefInfoDTO.setImagePath(middlewareInfo.getImagePath());
-            middlewareBriefInfoDTO.setServiceNum(serviceNum.get());
-            middlewareBriefInfoDTO.setErrServiceNum(errServiceNum.get());
-            middlewareBriefInfoDTOList.add(middlewareBriefInfoDTO);
-        });
-        try {
-            Collections.sort(middlewareBriefInfoDTOList, new MiddlewareBriefInfoDTOComparator());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return middlewareBriefInfoDTOList;
+    /**
+     * 转换中间件简要信息
+     * @param middlewareInfoDTO
+     * @param singleServiceList
+     * @return
+     */
+    private MiddlewareBriefInfoDTO convertMiddlewareBriefInfo(MiddlewareInfoDTO middlewareInfoDTO, List<Middleware> singleServiceList) {
+        MiddlewareBriefInfoDTO briefInfoDTO = new MiddlewareBriefInfoDTO();
+        briefInfoDTO.setName(middlewareInfoDTO.getName());
+        briefInfoDTO.setImagePath(middlewareInfoDTO.getImagePath());
+        briefInfoDTO.setChartName(middlewareInfoDTO.getChartName());
+        briefInfoDTO.setChartVersion(middlewareInfoDTO.getChartVersion());
+        briefInfoDTO.setVersion(middlewareInfoDTO.getVersion());
+        briefInfoDTO.setOfficial(middlewareInfoDTO.getOfficial());
+        briefInfoDTO.setServiceList(singleServiceList);
+        briefInfoDTO.setServiceNum(singleServiceList.size());
+        return briefInfoDTO;
     }
 
     /**
@@ -427,6 +485,40 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 return 0;
             } else {
                 return 1;
+            }
+        }
+    }
+
+    /**
+     * 中间件类型排序类
+     */
+    public static class MiddlewareInfoDTOComparator implements Comparator<MiddlewareInfoDTO> {
+        @Override
+        public int compare(MiddlewareInfoDTO o1, MiddlewareInfoDTO o2) {
+            int temp = o1.getChartName().compareTo(o2.getChartName());
+            if (temp > 0) {
+                return 1;
+            } else if (temp < 0) {
+                return -1;
+            } else {
+                return 0;
+            }
+        }
+    }
+
+    /**
+     * 服务排序类，按创建时间排序
+     */
+    public static class MiddlewareComparator implements Comparator<Middleware> {
+        @Override
+        public int compare(Middleware o1, Middleware o2) {
+            int res = o1.getCreateTime().compareTo(o2.getCreateTime());
+            if (res > 0) {
+                return -1;
+            } else if (res < 0) {
+                return 1;
+            } else {
+                return 0;
             }
         }
     }

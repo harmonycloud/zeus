@@ -1,18 +1,24 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
 import static com.harmonycloud.caas.common.constants.NameConstant.DISK;
+import static com.harmonycloud.caas.common.constants.NameConstant.STORAGE;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
+import com.harmonycloud.caas.common.model.StorageClassDTO;
+import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
-import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.StorageClass;
 import com.harmonycloud.zeus.integration.cluster.StorageClassWrapper;
@@ -35,6 +41,8 @@ public class StorageClassServiceImpl implements StorageClassService {
     private StorageClassWrapper scWrapper;
     @Autowired
     private ResourceQuotaService resourceQuotaService;
+    @Autowired
+    private PvcWrapper pvcWrapper;
 
     @Override
     public List<StorageClass> list(String clusterId, String namespace, boolean onlyMiddleware) {
@@ -90,5 +98,33 @@ public class StorageClassServiceImpl implements StorageClassService {
             }
         }
         return isLvm;
+    }
+
+    @Override
+    public Map<String, StorageClassDTO> convertStorageClass(List<MiddlewareInfo> pvcInfos, String clusterId, String namespace) {
+        Map<String, StorageClassDTO> scMap = new HashMap<>();
+        if (!CollectionUtils.isEmpty(pvcInfos)) {
+            pvcInfos.forEach(pvcInfo -> {
+                PersistentVolumeClaim pvc = pvcWrapper.get(clusterId, namespace, pvcInfo.getName());
+                if (pvc != null) {
+                    String storage = pvc.getSpec().getResources().getRequests().get(STORAGE).toString();
+                    String storageName = pvc.getSpec().getStorageClassName();
+                    boolean isLvmStorage = checkLVMStorage(clusterId, namespace, storageName);
+                    scMap.put(pvcInfo.getName(), new StorageClassDTO(storage, storageName, isLvmStorage));
+                }
+            });
+        }
+        return scMap;
+    }
+
+    @Override
+    public StorageClassDTO fuzzySearchStorageClass(Map<String, StorageClassDTO> scMap, String keyword) {
+        AtomicReference<StorageClassDTO> sc = new AtomicReference<>();
+        scMap.forEach((k, v) -> {
+            if (k.contains(keyword)) {
+                sc.set(v);
+            }
+        });
+        return sc.get();
     }
 }
