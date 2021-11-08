@@ -3,7 +3,10 @@ package com.harmonycloud.zeus.service.k8s.impl;
 import static com.harmonycloud.caas.common.constants.NameConstant.CONTAINER_RUNTIME_VERSION;
 import static com.harmonycloud.caas.common.constants.NameConstant.KUBELET_VERSION;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.tool.date.DateUtils;
@@ -40,7 +43,7 @@ public class NodeServiceImpl implements NodeService {
         return nodes.stream().map(no -> {
             Node node = new Node().setName(no.getMetadata().getName()).setLabels(no.getMetadata().getLabels());
             // taint
-            if (CollectionUtils.isEmpty(no.getSpec().getTaints())) {
+            if (!CollectionUtils.isEmpty(no.getSpec().getTaints())) {
                 node.setTaints(JSONArray.parseArray(JSONArray.toJSONString(no.getSpec().getTaints()), Taint.class));
             }
             // ip
@@ -90,5 +93,31 @@ public class NodeServiceImpl implements NodeService {
             log.error("集群：{}，查询节点列表设置k8s版本异常", cluster.getId(), e);
         }
     }
+
+    @Override
+    public List<String> listTaints(String clusterId) {
+        List<Node> list = list(clusterId);
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>(0);
+        }
+        Set<String> taintsSet = new HashSet<>();
+        list.forEach(node -> {
+            if (!CollectionUtils.isEmpty(node.getTaints())) {
+                node.getTaints().forEach(taint -> {
+                    StringBuffer sbf = new StringBuffer();
+                    sbf.append(taint.getKey());
+                    sbf.append("=");
+                    if (taint.getValue() != null) {
+                        sbf.append(taint.getValue());
+                    }
+                    sbf.append(":" + taint.getEffect());
+                    log.info("node {} taints {}", node.getIp(), sbf);
+                    taintsSet.add(sbf.toString());
+                });
+            }
+        });
+        return new ArrayList<>(taintsSet);
+    }
+
 
 }
