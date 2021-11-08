@@ -1,13 +1,12 @@
 package com.harmonycloud.zeus.config;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
 
+import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
+import com.harmonycloud.zeus.dao.user.PersonalMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +31,9 @@ public class InitMiddlewareImage {
 
     @Autowired
     private BeanMiddlewareInfoMapper middlewareInfoMapper;
+
+    @Autowired
+    private PersonalMapper personalMapper;
 
     @PostConstruct
     public void init() throws Exception {
@@ -64,5 +66,47 @@ public class InitMiddlewareImage {
             }
         }
     }
+
+    @PostConstruct
+    public void initPersonalConfig() throws Exception {
+        QueryWrapper<PersonalizedConfiguration> wrapper = new QueryWrapper<>();
+        List<PersonalizedConfiguration> personalList = personalMapper.selectList(wrapper);
+        for (PersonalizedConfiguration personal : personalList) {
+            if (!StringUtils.isEmpty(personal.getBackgroundPath())){
+                handleImage(personal.getBackgroundImage(),personal.getBackgroundPath());
+            }
+            if (!StringUtils.isEmpty(personal.getHomeLogoPath())) {
+                handleImage(personal.getHomeLogo(),personal.getHomeLogoPath());
+            }
+            if (!StringUtils.isEmpty(personal.getLoginLogoPath())) {
+                handleImage(personal.getLoginLogo(),personal.getLoginLogoPath());
+            }
+        }
+    }
+
+    private void handleImage(byte[] bytes, String path) throws IOException {
+        File file = new File(imagePath + File.separator + path);
+        if (!file.exists()) {
+            InputStream in = new ByteArrayInputStream(bytes);
+            FileOutputStream fileOutputStream = null;
+            try {
+                fileOutputStream = new FileOutputStream(file);
+                byte[] buf = new byte[bytes.length];
+                int len;
+                while ((len = in.read(buf)) != -1) {
+                    fileOutputStream.write(buf, 0, len);
+                }
+                fileOutputStream.flush();
+            } catch (Exception e) {
+                log.error("图片初始化加载失败");
+            } finally {
+                in.close();
+                if (fileOutputStream != null) {
+                    fileOutputStream.close();
+                }
+            }
+        }
+    }
+
 
 }
