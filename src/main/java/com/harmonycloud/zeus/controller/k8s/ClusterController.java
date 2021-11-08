@@ -116,6 +116,15 @@ public class ClusterController {
         return BaseResult.ok(clusterService.getNodeResource(clusterId));
     }
 
+    @ApiOperation(value = "查询集群下namespace资源详情", notes = "查询集群下namespace资源详情")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class)
+    })
+    @GetMapping("/{clusterId}/namespace/resource")
+    public BaseResult<List<Node>> getNamespaceResource(@PathVariable(value = "clusterId") String clusterId) throws Exception {
+        return BaseResult.ok(clusterService.getNamespaceResource(clusterId));
+    }
+
     /**
      * 数据脱敏
      */

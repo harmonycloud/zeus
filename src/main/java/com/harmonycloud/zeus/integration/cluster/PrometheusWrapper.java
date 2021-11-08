@@ -2,6 +2,8 @@ package com.harmonycloud.zeus.integration.cluster;
 
 import java.util.Map;
 
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.zeus.integration.cluster.api.PrometheusApi;
 import com.harmonycloud.zeus.integration.cluster.client.PrometheusClient;
 import org.apache.commons.lang3.StringUtils;
@@ -25,9 +27,9 @@ public class PrometheusWrapper {
 
     @Autowired
     private ClusterService clusterService;
-    @Value("${k8s.monitoring.prometheus.port:30003}")
+    @Value("${k8s.monitoring.prometheus.port:31900}")
     private String prometheusPort;
-    @Value("${k8s.monitoring.alertManager.port:31252}")
+    @Value("${k8s.monitoring.alertManager.port:31902}")
     private String alertManagerPort;
 
     public PrometheusResponse get(String clusterId, String prometheusApiVersion, Map<String, String> queryMap)
@@ -65,8 +67,7 @@ public class PrometheusWrapper {
     private MiddlewareClusterMonitorInfo getPrometheusInfo(MiddlewareClusterDTO cluster) {
         MiddlewareClusterMonitorInfo prometheus;
         if (cluster.getMonitor() == null || cluster.getMonitor().getPrometheus() == null) {
-            prometheus = new MiddlewareClusterMonitorInfo().setProtocol(Protocol.HTTP.getValue().toLowerCase())
-                    .setHost(cluster.getIngress().getAddress()).setPort(prometheusPort);
+            throw new BusinessException(ErrorMessage.PROMETHEUS_NOT_INSTALLED);
         } else {
             prometheus = cluster.getMonitor().getPrometheus();
             if (StringUtils.isBlank(cluster.getMonitor().getPrometheus().getProtocol())) {
@@ -88,8 +89,7 @@ public class PrometheusWrapper {
     private MiddlewareClusterMonitorInfo getAlertManagerInfo(MiddlewareClusterDTO cluster) {
         MiddlewareClusterMonitorInfo alertManager;
         if (cluster.getMonitor() == null || cluster.getMonitor().getAlertManager() == null) {
-            alertManager = new MiddlewareClusterMonitorInfo().setProtocol(Protocol.HTTP.getValue().toLowerCase())
-                    .setHost(cluster.getIngress().getAddress()).setPort(alertManagerPort);
+            throw new BusinessException(ErrorMessage.ALERT_MANAGER_NOT_INSTALLED);
         } else {
             alertManager = cluster.getMonitor().getAlertManager();
             if (StringUtils.isBlank(cluster.getMonitor().getAlertManager().getProtocol())) {

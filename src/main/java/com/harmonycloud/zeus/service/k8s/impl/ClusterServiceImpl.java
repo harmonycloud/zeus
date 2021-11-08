@@ -14,8 +14,7 @@ import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
-import com.harmonycloud.caas.common.model.ClusterNodeResourceDto;
-import com.harmonycloud.caas.common.model.Node;
+import com.harmonycloud.caas.common.model.*;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -31,7 +30,6 @@ import com.harmonycloud.caas.common.enums.*;
 import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
-import com.harmonycloud.caas.common.model.PrometheusResponse;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
@@ -673,20 +671,18 @@ public class ClusterServiceImpl implements ClusterService {
                 }
                 // 查询cpu每5分钟平均用量
                 try {
-                    String per5MinCpuUsedQuery =
-                            "sum by (container)(avg_over_time(container_cpu_usage_seconds_total{pod=~\"" + pods.toString()
-                                    + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"}[5m]))";
+                    String per5MinCpuUsedQuery = "sum(rate(container_cpu_usage_seconds_total{pod=~\"" + pods.toString()
+                        + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"}[5m]))";
                     queryMap.put("query", per5MinCpuUsedQuery);
                     PrometheusResponse per5MinCpuUsed =
-                            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
+                        prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
                     if (!CollectionUtils.isEmpty(per5MinCpuUsed.getData().getResult())) {
-                        middlewareResourceInfo
-                                .setPer5MinCpu(ResourceCalculationUtil.roundNumber(
-                                        BigDecimal.valueOf(Double.parseDouble(
-                                                per5MinCpuUsed.getData().getResult().get(0).getValue().get(1)) / 1000),
-                                        2, RoundingMode.CEILING));
+                        middlewareResourceInfo.setPer5MinCpu(ResourceCalculationUtil.roundNumber(
+                            BigDecimal.valueOf(
+                                Double.parseDouble(per5MinCpuUsed.getData().getResult().get(0).getValue().get(1))),
+                            2, RoundingMode.CEILING));
                     }
-                }catch (Exception e){
+                } catch (Exception e) {
                     log.error("中间件{} 查询cpu5分钟平均用量失败", middleware.getName());
                 }
                 // 查询memory配额
@@ -707,47 +703,20 @@ public class ClusterServiceImpl implements ClusterService {
                 }
                 // 查询memory每5分钟平均用量
                 try {
-                    String per5MinMemoryUsedQuery =
-                            "sum by (container)(avg_over_time(container_memory_working_set_bytes{pod=~\"" + pods.toString()
-                                    + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"}[5m]))";
+                    String per5MinMemoryUsedQuery = "sum(avg_over_time(container_memory_working_set_bytes{pod=~\""
+                        + pods.toString() + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"}[5m]))";
                     queryMap.put("query", per5MinMemoryUsedQuery);
                     PrometheusResponse per5MinMemoryUsed =
-                            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
+                        prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
                     if (!CollectionUtils.isEmpty(per5MinMemoryUsed.getData().getResult())) {
                         middlewareResourceInfo.setPer5MinMemory(
-                                ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(ResourceCalculationUtil.getResourceValue(
-                                        per5MinMemoryUsed.getData().getResult().get(0).getValue().get(1), MEMORY,
-                                        ResourceUnitEnum.GI.getUnit())), 2, RoundingMode.CEILING));
+                            ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(ResourceCalculationUtil
+                                .getResourceValue(per5MinMemoryUsed.getData().getResult().get(0).getValue().get(1),
+                                    MEMORY, ResourceUnitEnum.GI.getUnit())),
+                                2, RoundingMode.CEILING));
                     }
-                } catch (Exception e){
+                } catch (Exception e) {
                     log.error("中间件{} 查询memory5分钟平均用量失败", middleware.getName());
-                }
-                // 获取storage配额
-                try {
-                    if (middleware.getQuota() != null && middleware.getQuota().containsKey(middleware.getType())) {
-                        middlewareResourceInfo.setRequestStorage(ResourceCalculationUtil.getResourceValue(
-                                middleware.getQuota().get(middleware.getType()).getStorageClassQuota(), MEMORY,
-                                ResourceUnitEnum.GI.getUnit()));
-                    }
-                } catch (Exception e){
-                    log.error("中间件{} 获取storage配额失败", middleware.getName());
-                }
-                // 查询storage每5分钟平均用量
-                // 获取pvc
-                try {
-                    StringBuilder pvcs = getPvcs(mwCrd);
-                    String per5MinStorageUsedQuery =
-                            "sum by (container)(avg_over_time(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\""
-                                    + pvcs.toString() + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"}[5m]))";
-                    queryMap.put("query", per5MinStorageUsedQuery);
-                    PrometheusResponse per5MinStorageUsed =
-                            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
-                    if (!CollectionUtils.isEmpty(per5MinStorageUsed.getData().getResult())) {
-                        middlewareResourceInfo.setPer5MinStorage(
-                                Double.parseDouble(per5MinStorageUsed.getData().getResult().get(0).getValue().get(1)));
-                    }
-                } catch (Exception e){
-                    log.error("中间件{} 查询storage5分钟平均使用量失败", middleware.getName());
                 }
                 // 计算cpu使用率
                 if (middlewareResourceInfo.getRequestCpu() != null && middlewareResourceInfo.getPer5MinCpu() != null) {
@@ -763,14 +732,6 @@ public class ClusterServiceImpl implements ClusterService {
                         middlewareResourceInfo.getPer5MinMemory() / middlewareResourceInfo.getRequestMemory() * 100;
                     middlewareResourceInfo.setMemoryRate(
                         ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(memoryRate), 2, RoundingMode.CEILING));
-                }
-                // 计算storage使用率
-                if (middlewareResourceInfo.getRequestStorage() != null
-                    && middlewareResourceInfo.getPer5MinStorage() != null) {
-                    double storageRate =
-                        middlewareResourceInfo.getPer5MinStorage() / middlewareResourceInfo.getRequestStorage() * 100;
-                    middlewareResourceInfo.setCpuRate(
-                        ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(storageRate), 2, RoundingMode.CEILING));
                 }
                 mwResourceInfoList.add(middlewareResourceInfo);
             } catch (Exception e) {
@@ -813,6 +774,80 @@ public class ClusterServiceImpl implements ClusterService {
         }).collect(Collectors.toList());
     }
 
+    @Override
+    public List<ClusterNamespaceResourceDto> getNamespaceResource(String clusterId) throws Exception {
+        List<Namespace> namespaceList = namespaceService.list(clusterId);
+        Map<String, String> queryMap = new HashMap<>();
+        // 查询cpu配额
+        String cpuRequestQuery = "sum(container_spec_cpu_quota) by (namespace)/100000";
+        queryMap.put("query", cpuRequestQuery);
+        PrometheusResponse cpuRequest = prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
+
+        // 查询cpu每5分钟平均用量
+        String per5MinCpuUsedQuery = "sum(rate(container_cpu_usage_seconds_total[3m])) by (namespace)";
+        queryMap.put("query", per5MinCpuUsedQuery);
+        PrometheusResponse per5MinCpuUsed =
+            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
+
+        // 查询memory配额
+        String memoryRequestQuery = "(sum(container_spec_memory_limit_bytes) by (namespace))/1024/1024/1024";
+        queryMap.put("query", memoryRequestQuery);
+        PrometheusResponse memoryRequest =
+            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
+
+        // 查询memory每5分钟平均用量
+        String per5MinMemoryUsedQuery =
+            "(sum(avg_over_time(container_memory_usage_bytes[5m])) by (namespace))/1024/1024/1024";
+        queryMap.put("query", per5MinMemoryUsedQuery);
+        PrometheusResponse per5MinMemoryUsed =
+            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
+
+        Map<Map<String, String>, List<String>> cpuRequestResult = getResultMap(cpuRequest);
+        Map<Map<String, String>, List<String>> cpuPer5MinResult = getResultMap(per5MinCpuUsed);
+        Map<Map<String, String>, List<String>> memoryRequestResult = getResultMap(memoryRequest);
+        Map<Map<String, String>, List<String>> memoryPer5MinResult = getResultMap(per5MinMemoryUsed);
+        return namespaceList.stream().map(ns -> {
+            ClusterNamespaceResourceDto nsResource = new ClusterNamespaceResourceDto();
+            Map<String, String> nsMap = new HashMap<>();
+            nsMap.put("namespace", ns.getName());
+            // 获取cpu配额
+            if (cpuRequestResult.containsKey(nsMap)) {
+                nsResource.setCpuRequest(getResourceResult(cpuRequestResult.get(nsMap).get(1)));
+            }
+            // 获取cpu5分钟平均使用量
+            if (cpuPer5MinResult.containsKey(nsMap)) {
+                nsResource.setPer5MinCpu(getResourceResult(cpuPer5MinResult.get(nsMap).get(1)));
+            }
+            // 获取memory配额
+            if (memoryRequestResult.containsKey(nsMap)) {
+                nsResource.setMemoryRequest(getResourceResult(memoryRequestResult.get(nsMap).get(1)));
+            }
+            // 获取memory5分钟平均使用量
+            if (memoryPer5MinResult.containsKey(nsMap)) {
+                nsResource.setPer5MinMemory(getResourceResult((memoryPer5MinResult.get(nsMap).get(1))));
+            }
+            // 计算cpu使用率
+            if (nsResource.getCpuRequest() != null && nsResource.getPer5MinCpu() != null) {
+                double cpuRate = nsResource.getPer5MinCpu() / nsResource.getCpuRequest() * 100;
+                nsResource.setCpuRate(ResourceCalculationUtil.roundNumber2TwoDecimalWithCeiling(cpuRate));
+            }
+            // 计算memory使用率
+            if (nsResource.getMemoryRequest() != null && nsResource.getPer5MinMemory() != null) {
+                double memoryRate = nsResource.getPer5MinMemory() / nsResource.getMemoryRequest() * 100;
+                nsResource.setMemoryRate(ResourceCalculationUtil.roundNumber2TwoDecimalWithCeiling(memoryRate));
+            }
+            return nsResource.setClusterId(clusterId).setName(ns.getName());
+        }).collect(Collectors.toList());
+    }
+
+    public Map<Map<String, String>, List<String>> getResultMap(PrometheusResponse response){
+        return response.getData().getResult().stream().collect(Collectors.toMap(PrometheusResult::getMetric, PrometheusResult::getValue));
+    }
+
+    public Double getResourceResult(String num){
+        return ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(Double.parseDouble(num)), 2, RoundingMode.CEILING);
+    }
+
     public StringBuilder getPodName(MiddlewareCRD mwCrd) {
         StringBuilder pods = new StringBuilder();
         List<MiddlewareInfo> podInfo = mwCrd.getStatus().getInclude().get(PODS);
@@ -838,7 +873,7 @@ public class ClusterServiceImpl implements ClusterService {
     public Map<String, Double> getNodeCpuUsed(String clusterId){
         Map<String, Double> nodeCpu = new HashMap<>();
         Map<String, String> queryMap = new HashMap<>();
-        // 查询cpu配额
+        // 查询cpu使用量
         try {
             String nodeCpuQuery = "sum(irate(node_cpu_seconds_total{mode!=\"idle\"}[5m])) by (kubernetes_pod_node_name)";
             queryMap.put("query", nodeCpuQuery);
