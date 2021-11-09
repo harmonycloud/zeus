@@ -97,7 +97,20 @@ public interface UserService {
     /**
      * 个性化配置
      */
-    void insertPersonalConfig(PersonalizedConfiguration configuration, MultipartFile backgroundFile, MultipartFile homeLogoFile, MultipartFile loginLogoFile,String status) throws Exception;
+    void insertPersonalConfig(PersonalizedConfiguration configuration,String status) throws Exception;
 
+    /**
+     * 获取个性化配置信息
+     * @return
+     * @throws IOException
+     */
     PersonalizedConfiguration getPersonalConfig() throws IOException;
+
+    /**
+     * 上传图片
+     * @param file
+     * @param type
+     * @throws IOException
+     */
+    void uploadFile(MultipartFile file, String type) throws IOException;
 }
