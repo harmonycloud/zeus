@@ -268,46 +268,59 @@ public class UserServiceImpl implements UserService {
         beanUserMapper.insert(beanUser);
     }
 
+    /**
+     * 添加个性化配置相关信息
+     * @param configuration
+     * @param status
+     * @throws Exception
+     */
     @Override
-    public void insertPersonalConfig(PersonalizedConfiguration configuration, MultipartFile backgroundFile, MultipartFile homeLogoFile, MultipartFile loginLoginFile,String status) throws Exception {
+    public void insertPersonalConfig(PersonalizedConfiguration configuration,String status) throws Exception {
+        //判断是否要初始化
         if ("init".equals(status)) {
             QueryWrapper<PersonalizedConfiguration> query = new QueryWrapper<PersonalizedConfiguration>().eq("status","0");
             personalMapper.delete(query);
             return;
         }
-        byte[] background = loadFile(backgroundFile);
-        byte[] homeLogo = loadFile(homeLogoFile);
-        byte[] loginLogo = loadFile(loginLoginFile);
-        Date now = new Date();
-        if (background != null) {
-            configuration.setBackgroundImage(background);
-            configuration.setBackgroundPath(backgroundFile.getOriginalFilename());
-        }
-        if (homeLogo != null) {
-            configuration.setHomeLogo(homeLogo);
-            configuration.setHomeLogoPath(homeLogoFile.getOriginalFilename());
-        }
-        if (loginLogo != null) {
-            configuration.setLoginLogo(loginLogo);
-            configuration.setLoginLogoPath(loginLoginFile.getOriginalFilename());
-        }
-        QueryWrapper<PersonalizedConfiguration> queryWrapper = new QueryWrapper<PersonalizedConfiguration>();
-        List<PersonalizedConfiguration> personals = personalMapper.selectList(queryWrapper);
-        if (personals.size() == 0) {
-            configuration.setCreateTime(now);
-            configuration.setStatus("1");
-            personalMapper.insert(configuration);
-        }else if (personals.size() == 1){
-            configuration.setCreateTime(now);
-            configuration.setStatus("0");
-            personalMapper.insert(configuration);
-        }else if (personals.size() == 2) {
-            configuration.setUpdateTime(now);
-            QueryWrapper<PersonalizedConfiguration> wrapper = new QueryWrapper<PersonalizedConfiguration>().eq("status","0");
-            personalMapper.update(configuration,wrapper);
-        }
+        checkout(configuration);
     }
 
+    /**
+     * 个性化配置相关图片上传
+     * @param file
+     * @param type
+     * @throws IOException
+     */
+    @Override
+    public void uploadFile(MultipartFile file, String type) throws IOException {
+        byte[] background = null;
+        byte[] homeLogo = null;
+        byte[] loginLogo = null;
+        PersonalizedConfiguration configuration = new PersonalizedConfiguration();
+        if ("background".equals(type)) {
+            background = loadFile(file);
+            configuration.setBackgroundImage(background);
+            configuration.setBackgroundPath(file.getOriginalFilename());
+        }
+        if ("login".equals(type)) {
+            loginLogo = loadFile(file);
+            configuration.setLoginLogo(loginLogo);
+            configuration.setLoginLogoPath(file.getOriginalFilename());
+        }
+        if ("home".equals(type)) {
+            homeLogo = loadFile(file);
+            configuration.setHomeLogo(homeLogo);
+            configuration.setHomeLogoPath(file.getOriginalFilename());
+        }
+        checkout(configuration);
+
+    }
+
+    /**
+     * 获取个性化配置信息
+     * @return
+     * @throws IOException
+     */
     @Override
     public PersonalizedConfiguration getPersonalConfig() throws IOException {
         QueryWrapper<PersonalizedConfiguration> queryWrapper = new QueryWrapper<PersonalizedConfiguration>();
@@ -322,6 +335,12 @@ public class UserServiceImpl implements UserService {
         return personal;
     }
 
+    /**
+     * 将文件转为二进制数组
+     * @param file
+     * @return
+     * @throws IOException
+     */
     private byte[] loadFile(MultipartFile file) throws IOException {
         InputStream inPut = null;
         byte[] bus = null;
@@ -331,14 +350,13 @@ public class UserServiceImpl implements UserService {
                 inPut = file.getInputStream();
                 if (inPut != null) {
                     by = new byte[inPut.available()];
-                    //在内存创建一个字节数组缓冲区
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
                     int n;
                     //inPut.read(by)从(来源)输入流中(读取内容)读取的一定数量字节数,并将它们存储到(去处)缓冲区数组by中
                     while ((n = inPut.read(by)) != -1) {
-                        bos.write(by, 0, n);  //参数：1、要输出的字节数组 2、从什么位置开始 3、多少个字节  写入此字节数组输出流
+                        bos.write(by, 0, n);
                     }
-                    bus = bos.toByteArray();  //创建一个新分配的字节数组。数组的大小和当前输出流的大小，内容是当前输出流的拷贝。
+                    bus = bos.toByteArray();
                 }
             }catch (IOException e){
                 e.printStackTrace();
@@ -347,6 +365,29 @@ public class UserServiceImpl implements UserService {
             }
         }
         return bus;
+    }
+
+    /**
+     * 校验数据库数据
+     * @param configuration
+     */
+    private void checkout(PersonalizedConfiguration configuration) {
+        QueryWrapper<PersonalizedConfiguration> queryWrapper = new QueryWrapper<PersonalizedConfiguration>();
+        List<PersonalizedConfiguration> personals = personalMapper.selectList(queryWrapper);
+        Date date = new Date();
+        if (personals.size() == 0) {
+            configuration.setCreateTime(date);
+            configuration.setStatus("1");
+            personalMapper.insert(configuration);
+        }else if (personals.size() == 1){
+            configuration.setCreateTime(date);
+            configuration.setStatus("0");
+            personalMapper.insert(configuration);
+        }else if (personals.size() == 2) {
+            configuration.setUpdateTime(date);
+            QueryWrapper<PersonalizedConfiguration> wrapper = new QueryWrapper<PersonalizedConfiguration>().eq("status","0");
+            personalMapper.update(configuration,wrapper);
+        }
     }
 
     /**

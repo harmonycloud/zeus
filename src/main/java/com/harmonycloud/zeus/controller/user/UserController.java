@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.controller.user;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -120,19 +121,13 @@ public class UserController {
 
     @ApiImplicitParams({
             @ApiImplicitParam(name = "personalizedConfiguration", value = "个性化配置信息", paramType = "query", dataTypeClass = PersonalizedConfiguration.class),
-            @ApiImplicitParam(name = "backgroundFile", value = "背景图", dataType = "_file"),
-            @ApiImplicitParam(name = "homeLogoFile", value = "主页logo", dataType = "_file"),
-            @ApiImplicitParam(name = "loginLogoFile", value = "登录页logo", dataType = "_file"),
-            @ApiImplicitParam(name = "status", value = "恢复初始化设置",paramType = "query", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "status", value = "恢复初始化设置",paramType = "path", dataTypeClass = String.class)
     })
     @ApiOperation(value = "添加个性化配置", notes = "添加个性化配置")
     @PostMapping("/personalized")
-    public BaseResult Personalized(@RequestPart PersonalizedConfiguration personalizedConfiguration,
-                                   @RequestPart("backgroundFile") MultipartFile backgroundFile,
-                                   @RequestPart("homeLogoFile") MultipartFile homeLogoFile,
-                                   @RequestPart("loginLogoFile") MultipartFile loginLogoFile,
+    public BaseResult Personalized(@RequestBody PersonalizedConfiguration personalizedConfiguration,
                                    @RequestParam String status) throws Exception {
-        userService.insertPersonalConfig(personalizedConfiguration,backgroundFile,homeLogoFile,loginLogoFile,status);
+        userService.insertPersonalConfig(personalizedConfiguration,status);
         return BaseResult.ok();
     }
 
@@ -140,5 +135,18 @@ public class UserController {
     @GetMapping("/getPersonalConfig")
     public BaseResult getPersonalConfig() throws IOException {
         return BaseResult.ok(userService.getPersonalConfig());
+    }
+
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "file", value = "图片",paramType = "form",dataTypeClass = File.class),
+            @ApiImplicitParam(name = "type", value = "图片类型",paramType = "path", dataTypeClass = String.class)
+    })
+    @ApiOperation(value = "上传图片", notes = "上传图片")
+    @ResponseBody
+    @PostMapping("/uploadFile")
+    public BaseResult UploadFile(@RequestPart("file") MultipartFile file,
+                                 @RequestParam String type) throws IOException {
+        userService.uploadFile(file,type);
+        return BaseResult.ok();
     }
 }
