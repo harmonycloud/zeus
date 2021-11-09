@@ -5,12 +5,7 @@ import static com.harmonycloud.caas.common.constants.NameConstant.DEFAULT;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
@@ -38,12 +33,14 @@ public class ClusterComponentController {
     @ApiOperation(value = "部署集群组件", notes = "部署集群组件")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "componentName", value = "集群组件名称", paramType = "path", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "componentName", value = "集群组件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "部署模式(高可用:单实例)", paramType = "query", dataTypeClass = String.class),
     })
     @PostMapping("/{componentName}")
     public BaseResult deploy(@PathVariable("clusterId") String clusterId,
-                             @PathVariable("componentName") String componentName) {
-        clusterComponentService.deploy(clusterService.findById(clusterId), componentName);
+                             @PathVariable("componentName") String componentName,
+                             @RequestParam("type") String type) {
+        clusterComponentService.deploy(clusterService.findById(clusterId), componentName, type);
         return BaseResult.ok();
     }
 

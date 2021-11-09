@@ -28,7 +28,7 @@ public class MiddlewareControllerServiceImpl extends AbstractBaseOperator implem
     }
     
     @Override
-    protected String getValues(String repository, MiddlewareClusterDTO cluster) {
+    protected String getValues(String repository, MiddlewareClusterDTO cluster, String type) {
         return "global.repository=" + cluster.getRegistry().getRegistryAddress() + "/"
             + cluster.getRegistry().getChartRepo();
     }

@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
 import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
@@ -87,6 +88,9 @@ public class NamespaceServiceImpl implements NamespaceService {
                 // 是否已注册
                 namespace.setRegistered(ns.getMetadata().getLabels() != null
                     && StringUtils.equals(ns.getMetadata().getLabels().get(labelKey), labelValue));
+                // 创建时间
+                namespace.setCreateTime(
+                    DateUtils.parseDate(ns.getMetadata().getCreationTimestamp(), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
                 return namespace;
             }).collect(Collectors.toList());
 

@@ -251,7 +251,7 @@ public class ClusterServiceImpl implements ClusterService {
         try {
             List<HelmListInfo> helmInfos = helmChartService.listHelm("", "", cluster);
             if (helmInfos.stream().noneMatch(info -> "middleware-controller".equals(info.getName()))) {
-                clusterComponentService.deploy(cluster, ComponentsEnum.MIDDLEWARE_CONTROLLER.getName());
+                clusterComponentService.deploy(cluster, ComponentsEnum.MIDDLEWARE_CONTROLLER.getName(), "");
             }
         } catch (Exception e) {
             throw new BusinessException(ErrorMessage.HELM_INSTALL_MIDDLEWARE_CONTROLLER_FAILED);
@@ -496,7 +496,7 @@ public class ClusterServiceImpl implements ClusterService {
         // 安装local-path
         try {
             if (helmListInfos.stream().noneMatch(helm -> "local-path".equals(helm.getName()))) {
-                clusterComponentService.deploy(cluster, ComponentsEnum.LOCAL_PATH.getName());
+                clusterComponentService.deploy(cluster, ComponentsEnum.LOCAL_PATH.getName(), "");
             }
         } catch (Exception e) {
             throw new BusinessException(ErrorMessage.HELM_INSTALL_LOCAL_PATH_FAILED);
@@ -509,7 +509,7 @@ public class ClusterServiceImpl implements ClusterService {
         try {
             if (cluster.getMonitor().getPrometheus() == null
                 && helmListInfos.stream().noneMatch(helm -> "prometheus".equals(helm.getName()))) {
-                clusterComponentService.deploy(cluster, ComponentsEnum.PROMETHEUS.getName());
+                clusterComponentService.deploy(cluster, ComponentsEnum.PROMETHEUS.getName(), "");
             }
         } catch (Exception e) {
             log.error(ErrorMessage.HELM_INSTALL_PROMETHEUS_FAILED.getZhMsg());
@@ -518,7 +518,7 @@ public class ClusterServiceImpl implements ClusterService {
         try {
             if (cluster.getComponentsInstall().getIngress() && (cluster.getIngress() == null || StringUtils.isEmpty(cluster.getIngress().getAddress()))) {
                 if (helmListInfos.stream().noneMatch(helm -> "ingress".equals(helm.getName()))) {
-                    clusterComponentService.deploy(cluster, ComponentsEnum.INGRESS.getName());
+                    clusterComponentService.deploy(cluster, ComponentsEnum.INGRESS.getName(), "");
                 }
             }
         } catch (Exception e) {
@@ -527,7 +527,7 @@ public class ClusterServiceImpl implements ClusterService {
         // 安装grafana
         try {
             if (cluster.getComponentsInstall().getGrafana() && (cluster.getMonitor().getGrafana() == null || cluster.getMonitor().getGrafana().getHost() == null)) {
-                clusterComponentService.deploy(cluster, ComponentsEnum.GRAFANA.getName());
+                clusterComponentService.deploy(cluster, ComponentsEnum.GRAFANA.getName(), "");
             }
         } catch (Exception e) {
             log.error(ErrorMessage.HELM_INSTALL_GRAFANA_FAILED.getZhMsg());
@@ -535,7 +535,7 @@ public class ClusterServiceImpl implements ClusterService {
         // 安装alertManager
         try {
             if (cluster.getComponentsInstall().getAlertManager() && cluster.getMonitor().getAlertManager() == null){
-                clusterComponentService.deploy(cluster, ComponentsEnum.ALERTMANAGER.getName());
+                clusterComponentService.deploy(cluster, ComponentsEnum.ALERTMANAGER.getName(), "");
             }
         } catch (Exception e) {
             log.error(ErrorMessage.HELM_INSTALL_ALERT_MANAGER_FAILED.getZhMsg());
@@ -544,7 +544,7 @@ public class ClusterServiceImpl implements ClusterService {
         try {
             //创建minio分区
             if (cluster.getStorage() == null || !cluster.getStorage().containsKey("backup")){
-                clusterComponentService.deploy(cluster, ComponentsEnum.MINIO.getName());
+                clusterComponentService.deploy(cluster, ComponentsEnum.MINIO.getName(), "");
             }
         } catch (Exception e) {
             log.error(ErrorMessage.HELM_INSTALL_MINIO_FAILED.getZhMsg());
@@ -554,10 +554,10 @@ public class ClusterServiceImpl implements ClusterService {
             if (cluster.getComponentsInstall().getLogging()){
                 if (cluster.getLogging() == null || cluster.getLogging().getElasticSearch() == null
                         || cluster.getLogging().getElasticSearch().getHost() == null) {
-                    clusterComponentService.deploy(cluster, ComponentsEnum.LOGGING.getName());
+                    clusterComponentService.deploy(cluster, ComponentsEnum.LOGGING.getName(), "");
                 }
                 else if(cluster.getLogging().getElasticSearch().getLogCollect()){
-                    clusterComponentService.deploy(cluster, ComponentsEnum.LOGPILOT.getName());
+                    clusterComponentService.deploy(cluster, ComponentsEnum.LOGPILOT.getName(), "");
                 }
             }
         } catch (Exception e) {

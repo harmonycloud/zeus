@@ -15,6 +15,7 @@ import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.PrometheusService;
+import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
 
 /**
  * @author xutianhong
@@ -40,8 +41,8 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
     }
 
     @Override
-    protected String getValues(String repository, MiddlewareClusterDTO cluster) {
-        return "image.prometheus.repository=" + repository + "/prometheus" +
+    protected String getValues(String repository, MiddlewareClusterDTO cluster, String type) {
+       String setValues = "image.prometheus.repository=" + repository + "/prometheus" +
                 ",image.configmapReload.repository=" + repository + "/configmap-reload" +
                 ",image.nodeExporter.repository=" + repository + "/node-exporter" +
                 ",image.kubeRbacProxy.repository=" + repository + "/kube-rbac-proxy" +
@@ -54,6 +55,12 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
                 ",image.dashboard.repository=" + repository + "/k8s-sidecar" +
                 ",image.busybox.repository=" + repository + "/grafana" +
                 ",storage.storageClass=" + "local-path";
+       if (SIMPLE.equals(type)) {
+           setValues = setValues + ",replicas.prometheus=1";
+       } else {
+           setValues = setValues + ",replicas.prometheus=3";
+       }
+       return setValues;
     }
 
     @Override

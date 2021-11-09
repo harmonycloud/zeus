@@ -24,11 +24,11 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
     }
 
     @Override
-    public void deploy(MiddlewareClusterDTO cluster) {
+    public void deploy(MiddlewareClusterDTO cluster, String type) {
         //创建分区
         namespaceService.save(cluster.getId(), "logging", null);
         //发布elasticsearch
-        super.deploy(cluster);
+        super.deploy(cluster, type);
         //为es创建nodePort
         createNodePort(cluster);
         //发布logPilot
@@ -43,7 +43,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
     }
 
     @Override
-    protected String getValues(String repository, MiddlewareClusterDTO cluster) {
+    protected String getValues(String repository, MiddlewareClusterDTO cluster, String type) {
         return "image.repository=" + repository +
                 ",elasticsearch-operator.enabled=false" +
                 ",elasticPassword=Hc@Cloud01" +

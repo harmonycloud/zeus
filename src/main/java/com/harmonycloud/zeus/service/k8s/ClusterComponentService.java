@@ -11,10 +11,11 @@ public interface ClusterComponentService {
     /**
      * 部署组件
      *
-     * @param clusterId       集群id
+     * @param cluster       集群对象
      * @param componentName 组件名称
+     * @param type 部署类型:高可用，单实例
      */
-    void deploy(MiddlewareClusterDTO cluster, String componentName);
+    void deploy(MiddlewareClusterDTO cluster, String componentName, String type);
 
     /**
      * 对接组件

@@ -24,11 +24,11 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
     }
 
     @Override
-    public void deploy(MiddlewareClusterDTO cluster){
+    public void deploy(MiddlewareClusterDTO cluster, String type){
         //创建minio分区
         namespaceService.save(cluster.getId(), "minio", null);
         //发布minio
-        super.deploy(cluster);
+        super.deploy(cluster, type);
     }
     
     @Override
@@ -39,7 +39,7 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
     }
 
     @Override
-    protected String getValues(String repository, MiddlewareClusterDTO cluster) {
+    protected String getValues(String repository, MiddlewareClusterDTO cluster, String type) {
         return "image.repository=" + repository +
                 ",persistence.storageClass=local-path" +
                 ",minioArgs.bucketName=velero" +

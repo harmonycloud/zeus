@@ -8,6 +8,7 @@ import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.AlertManagerService;
 import org.springframework.stereotype.Service;
+import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
 
 import java.io.File;
 
@@ -40,9 +41,16 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
     }
 
     @Override
-    public String getValues(String repository, MiddlewareClusterDTO cluster){
-        return "image.alertmanager.repository=" + repository + "/alertmanager" +
+    public String getValues(String repository, MiddlewareClusterDTO cluster, String type){
+        String setValues = "image.alertmanager.repository=" + repository + "/alertmanager" +
                 ",clusterHost=" + cluster.getHost();
+        if (SIMPLE.equals(type)) {
+            setValues = setValues + ",replicas=1";
+        }else {
+            setValues = setValues + ",replicas=3";
+        }
+        return setValues;
+
     }
 
     @Override
