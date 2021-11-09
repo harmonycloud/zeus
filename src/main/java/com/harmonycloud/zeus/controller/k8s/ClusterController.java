@@ -58,7 +58,7 @@ public class ClusterController {
     @GetMapping("/{clusterId}")
     public BaseResult<MiddlewareClusterDTO> get(@PathVariable(value = "clusterId") String clusterId,
                                                 @RequestParam(value = "visible", required = false) boolean visible) {
-        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+        MiddlewareClusterDTO cluster = clusterService.detail(clusterId);
         if (!visible) {
             desensitize(cluster);
         }

@@ -105,16 +105,6 @@ public class ClusterServiceImpl implements ClusterService {
     private String middlewarePath;
 
     @Override
-    public MiddlewareClusterDTO get(String clusterId) {
-        List<MiddlewareClusterDTO> clusterList = listClusters().stream()
-            .filter(clusterDTO -> clusterDTO.getId().equals(clusterId)).collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(clusterList)) {
-            throw new CaasRuntimeException(ErrorMessage.CLUSTER_NOT_FOUND);
-        }
-        return clusterList.get(0);
-    }
-
-    @Override
     public List<MiddlewareClusterDTO> listClusters() {
         return listClusters(false, null);
     }
@@ -188,16 +178,28 @@ public class ClusterServiceImpl implements ClusterService {
 
     @Override
     public MiddlewareClusterDTO findById(String clusterId) {
-        MiddlewareClusterDTO dto = get(clusterId);
-        if (dto == null) {
+        List<MiddlewareClusterDTO> clusterList = listClusters().stream()
+            .filter(clusterDTO -> clusterDTO.getId().equals(clusterId)).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(clusterList)) {
             throw new CaasRuntimeException(ErrorMessage.CLUSTER_NOT_FOUND);
         }
+        MiddlewareClusterDTO dto = clusterList.get(0);
         // 如果accessToken为空，尝试生成token
         if (StringUtils.isBlank(dto.getAccessToken())) {
             clusterCertService.generateTokenByCert(dto);
         }
         // 深拷贝对象返回，避免其他地方修改内容
         return SerializationUtils.clone(dto);
+    }
+
+    @Override
+    public MiddlewareClusterDTO detail(String clusterId) {
+        List<MiddlewareClusterDTO> clusterList = listClusters(true, null).stream()
+            .filter(clusterDTO -> clusterDTO.getId().equals(clusterId)).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(clusterList)) {
+            throw new CaasRuntimeException(ErrorMessage.CLUSTER_NOT_FOUND);
+        }
+        return clusterList.get(0);
     }
 
     @Override
@@ -401,7 +403,7 @@ public class ClusterServiceImpl implements ClusterService {
         if (!checkDelete(clusterId)){
             throw new BusinessException(ErrorMessage.CLUSTER_NOT_EMPTY);
         }
-        MiddlewareClusterDTO cluster = get(clusterId);
+        MiddlewareClusterDTO cluster = this.findById(clusterId);
         if (cluster == null) {
             return;
         }
