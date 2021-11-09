@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.service.k8s.NodeService;
+import com.harmonycloud.zeus.util.K8sConvert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -109,6 +110,8 @@ public class NodeServiceImpl implements NodeService {
                     sbf.append("=");
                     if (taint.getValue() != null) {
                         sbf.append(taint.getValue());
+                    }else{
+                        sbf.append(":Exists");
                     }
                     sbf.append(":" + taint.getEffect());
                     log.info("node {} taints {}", node.getIp(), sbf);

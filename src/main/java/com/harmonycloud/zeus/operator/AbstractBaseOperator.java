@@ -344,6 +344,11 @@ public abstract class AbstractBaseOperator {
                     middleware.setNodeAffinity(dto);
                 }
             }
+            // toleration
+            if (values.getString("tolerationAry") != null) {
+                String tolerationAry = values.getString("tolerationAry");
+                middleware.setTolerations(Arrays.asList(tolerationAry.split(",")));
+            }
         } else {
             middleware.setAliasName(middleware.getName());
         }
@@ -508,10 +513,9 @@ public abstract class AbstractBaseOperator {
         // node affinity
         if (!CollectionUtils.isEmpty(middleware.getNodeAffinity())) {
             // convert to k8s model
-            JSONObject nodeAffinity = K8sConvert.convertNodeAffinity2Json(
-                    middleware.getNodeAffinity().get(0).getLabel(), middleware.getNodeAffinity().get(0).isRequired());
-            if (nodeAffinity != null) {
-                values.put("nodeAffinity", nodeAffinity);
+            JSONArray jsonArray = K8sConvert.convertNodeAffinity2Json(middleware.getNodeAffinity());
+            if (jsonArray != null) {
+                values.put("nodeAffinity", jsonArray);
             }
         } else {
             values.put("nodeAffinity", new JSONObject());
@@ -531,6 +535,12 @@ public abstract class AbstractBaseOperator {
         logging.put("collection", collection);
         values.put("logging", logging);
 
+        //toleration
+        if (!CollectionUtils.isEmpty(middleware.getTolerations())) {
+            JSONArray jsonArray = K8sConvert.convertToleration2Json(middleware.getTolerations());
+            values.put("tolerations", jsonArray);
+            values.put("tolerationAry", Arrays.toString(middleware.getTolerations().toArray()));
+        }
     }
 
     /**
