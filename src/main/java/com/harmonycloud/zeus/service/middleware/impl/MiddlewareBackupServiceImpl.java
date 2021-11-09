@@ -104,39 +104,39 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public BaseResult create(MiddlewareBackupDTO middlewareBackupDTO) {
-        if ("mysql".equals(middlewareBackupDTO.getType())) {
-            return mysqlAdapterService.create(middlewareBackupDTO);
+    public BaseResult create(MiddlewareBackupDTO backupDTO) {
+        if ("mysql".equals(backupDTO.getType())) {
+            return mysqlAdapterService.create(backupDTO);
         }
-        MiddlewareBackupDetail backupDetail = convertMiddlewareBackup(middlewareBackupDTO);
-        if (StringUtils.isBlank(middlewareBackupDTO.getCron())) {
-            return createNormalBackup(backupDetail);
+        convertMiddlewareBackup(backupDTO);
+        if (StringUtils.isBlank(backupDTO.getCron())) {
+            return createNormalBackup(backupDTO);
         } else {
-            return createScheduleBackup(backupDetail);
+            return createScheduleBackup(backupDTO);
         }
     }
 
     @Override
-    public BaseResult update(MiddlewareBackupDTO middlewareBackupDTO) {
-        if ("mysql".equals(middlewareBackupDTO.getType())) {
-            return mysqlAdapterService.update(middlewareBackupDTO);
+    public BaseResult update(MiddlewareBackupDTO backupDTO) {
+        if ("mysql".equals(backupDTO.getType())) {
+            return mysqlAdapterService.update(backupDTO);
         }
-        MiddlewareBackupDetail detail = convertMiddlewareBackup(middlewareBackupDTO);
-        String backupName = getRealMiddlewareName(detail.getType(), detail.getMiddlewareName()) + "-backup";
-        MiddlewareBackupScheduleCRD middlewareBackupScheduleCRD = backupScheduleCRDService.get(detail.getClusterId(), detail.getNamespace(), backupName);
+        convertMiddlewareBackup(backupDTO);
+        String backupName = getRealMiddlewareName(backupDTO.getType(), backupDTO.getMiddlewareName()) + "-backup";
+        MiddlewareBackupScheduleCRD middlewareBackupScheduleCRD = backupScheduleCRDService.get(backupDTO.getClusterId(), backupDTO.getNamespace(), backupName);
         try {
             MiddlewareBackupScheduleSpec spec = middlewareBackupScheduleCRD.getSpec();
-            spec.getSchedule().setCron(CronUtils.parseUtcCron(detail.getCron()));
-            spec.getSchedule().setLimitRecord(detail.getLimitRecord());
-            if (StringUtils.isBlank(detail.getPause())) {
+            spec.getSchedule().setCron(CronUtils.parseUtcCron(backupDTO.getCron()));
+            spec.getSchedule().setLimitRecord(backupDTO.getLimitRecord());
+            if (StringUtils.isBlank(backupDTO.getPause())) {
                 spec.setPause("off");
             } else {
-                spec.setPause(detail.getPause());
+                spec.setPause(backupDTO.getPause());
             }
-            backupScheduleCRDService.update(detail.getClusterId(), middlewareBackupScheduleCRD);
+            backupScheduleCRDService.update(backupDTO.getClusterId(), middlewareBackupScheduleCRD);
             return BaseResult.ok();
         } catch (IOException e) {
-            log.error("中间件{}备份设置更新失败", detail.getMiddlewareName());
+            log.error("中间件{}备份设置更新失败", backupDTO.getMiddlewareName());
             return BaseResult.error();
         }
     }
@@ -181,18 +181,18 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
 
-    public BaseResult createScheduleBackup(MiddlewareBackupDetail detail) {
+    public BaseResult createScheduleBackup(MiddlewareBackupDTO backupDTO) {
         MiddlewareBackupScheduleCRD middlewareBackupScheduleCRD = new MiddlewareBackupScheduleCRD();
         middlewareBackupScheduleCRD.setKind("MiddlewareBackupSchedule");
-        String backupName = detail.getMiddlewareRealName() + "-backup";
-        ObjectMeta meta = getMiddlewareBackupLabels(detail.getNamespace(), backupName, detail.getMiddlewareRealName(), detail.getLabels());
+        String backupName = backupDTO.getMiddlewareRealName() + "-backup";
+        ObjectMeta meta = getMiddlewareBackupLabels(backupDTO.getNamespace(), backupName, backupDTO.getMiddlewareRealName(), backupDTO.getLabels());
         middlewareBackupScheduleCRD.setMetadata(meta);
-        MiddlewareBackupScheduleSpec middlewareBackupScheduleSpec = new MiddlewareBackupScheduleSpec(detail.getMiddlewareName(), detail.getCrdType(),
-                CronUtils.parseUtcCron(detail.getCron()), detail.getLimitRecord());
+        MiddlewareBackupScheduleSpec middlewareBackupScheduleSpec = new MiddlewareBackupScheduleSpec(backupDTO.getMiddlewareName(), backupDTO.getCrdType(),
+                CronUtils.parseUtcCron(backupDTO.getCron()), backupDTO.getLimitRecord());
         middlewareBackupScheduleSpec.setPause("off");
         middlewareBackupScheduleCRD.setSpec(middlewareBackupScheduleSpec);
         try {
-            backupScheduleCRDService.create(detail.getClusterId(), middlewareBackupScheduleCRD);
+            backupScheduleCRDService.create(backupDTO.getClusterId(), middlewareBackupScheduleCRD);
             return BaseResult.ok();
         } catch (IOException e) {
             log.error("备份创建失败", e);
@@ -200,18 +200,18 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
     }
 
-    public BaseResult createNormalBackup(MiddlewareBackupDetail detail) {
+    public BaseResult createNormalBackup(MiddlewareBackupDTO backupDTO) {
         MiddlewareBackupCRD middlewareBackupCRD = new MiddlewareBackupCRD();
         middlewareBackupCRD.setKind("MiddlewareBackup");
-        String backupName = detail.getMiddlewareRealName() + "-" + UUIDUtils.get8UUID();
-        ObjectMeta meta = getMiddlewareBackupLabels(detail.getNamespace(), backupName, detail.getMiddlewareRealName(), detail.getLabels());
+        String backupName = backupDTO.getMiddlewareRealName() + "-" + UUIDUtils.get8UUID();
+        ObjectMeta meta = getMiddlewareBackupLabels(backupDTO.getNamespace(), backupName, backupDTO.getMiddlewareRealName(), backupDTO.getLabels());
         middlewareBackupCRD.setMetadata(meta);
         MiddlewareBackupSpec spec = new MiddlewareBackupSpec();
-        spec.setName(detail.getMiddlewareName());
-        spec.setType(detail.getCrdType());
+        spec.setName(backupDTO.getMiddlewareName());
+        spec.setType(backupDTO.getCrdType());
         middlewareBackupCRD.setSpec(spec);
         try {
-            backupCRDService.create(detail.getClusterId(), middlewareBackupCRD);
+            backupCRDService.create(backupDTO.getClusterId(), middlewareBackupCRD);
             return BaseResult.ok();
         } catch (IOException e) {
             log.error("立即备份失败", e);
@@ -496,8 +496,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * @param backupDTO
      * @return
      */
-    private MiddlewareBackupDetail convertMiddlewareBackup(MiddlewareBackupDTO backupDTO) {
-        MiddlewareBackupDetail detail = (MiddlewareBackupDetail) backupDTO;
+    private MiddlewareBackupDTO convertMiddlewareBackup(MiddlewareBackupDTO backupDTO) {
         String type = backupDTO.getType();
         String middlewareName = backupDTO.getMiddlewareName();
 
@@ -507,9 +506,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         Map<String, String> middlewareLabel = getBackupLabel(middlewareName, type);
         backupLabel.putAll(middlewareLabel);
 
-        detail.setLabels(backupLabel);
-        detail.setMiddlewareRealName(middlewareRealName);
-        detail.setCrdType(middlewareCrdType);
-        return detail;
+        backupDTO.setLabels(backupLabel);
+        backupDTO.setMiddlewareRealName(middlewareRealName);
+        backupDTO.setCrdType(middlewareCrdType);
+        return backupDTO;
     }
 }

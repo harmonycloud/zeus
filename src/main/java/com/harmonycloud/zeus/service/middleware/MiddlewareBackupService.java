@@ -71,7 +71,7 @@ public interface MiddlewareBackupService {
      * @param detail
      * @return
      */
-    BaseResult createScheduleBackup(MiddlewareBackupDetail detail);
+    BaseResult createScheduleBackup(MiddlewareBackupDTO backupDTO);
 
     /**
      * 立即备份
@@ -79,7 +79,7 @@ public interface MiddlewareBackupService {
      * @param detail
      * @return
      */
-    BaseResult createNormalBackup(MiddlewareBackupDetail detail);
+    BaseResult createNormalBackup(MiddlewareBackupDTO backupDTO);
 
     /**
      * 创建恢复
