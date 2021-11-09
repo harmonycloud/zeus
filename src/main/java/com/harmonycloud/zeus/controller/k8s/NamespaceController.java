@@ -45,7 +45,7 @@ public class NamespaceController {
         return BaseResult.ok(namespaceService.list(clusterId, all, withQuota, withMiddleware, keyword));
     }
 
-    @ApiOperation(value = "注册命名空间", notes = "注册命名空间")
+    /*@ApiOperation(value = "注册命名空间", notes = "注册命名空间")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespaceList", value = "命名空间列表", paramType = "query", dataTypeClass = List.class)
@@ -62,17 +62,43 @@ public class NamespaceController {
                 + failNsList.toString();
         }
         return BaseResult.ok(msg);
-    }
+    }*/
 
     @ApiOperation(value = "创建命名空间", notes = "创建命名空间")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "name", value = "分区名称", paramType = "query", dataTypeClass = String.class),
     })
     @PostMapping
-    public BaseResult create(@RequestParam("clusterId") String clusterId,
+    public BaseResult create(@PathVariable("clusterId") String clusterId,
                              @RequestParam("name") String name){
         namespaceService.save(clusterId, name, null);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "删除命名空间", notes = "删除命名空间")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "分区名称", paramType = "query", dataTypeClass = String.class),
+    })
+    @DeleteMapping("/{name}")
+    public BaseResult delete(@PathVariable("clusterId") String clusterId,
+                             @PathVariable("name") String name){
+        namespaceService.delete(clusterId, name);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "注册命名空间", notes = "注册命名空间")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "分区名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "query", dataTypeClass = String.class),
+    })
+    @PutMapping("/{name}")
+    public BaseResult registry(@PathVariable("clusterId") String clusterId,
+                               @PathVariable("name") String name,
+                               @RequestParam Boolean registered){
+        namespaceService.registry(clusterId, name, registered);
         return BaseResult.ok();
     }
     

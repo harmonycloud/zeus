@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.k8s;
 
+import com.harmonycloud.caas.common.model.ClusterNamespaceResourceDto;
 import com.harmonycloud.caas.common.model.ClusterNodeResourceDto;
 import com.harmonycloud.caas.common.model.Node;
 import com.harmonycloud.caas.common.model.middleware.*;
@@ -122,6 +123,14 @@ public interface ClusterService {
      * @return List<Node>
      */
     List<ClusterNodeResourceDto> getNodeResource(String clusterId) throws Exception;
+
+    /**
+     * 获取集群主机资源列表
+     *
+     * @param clusterId 集群id
+     * @return List<Node>
+     */
+    List<ClusterNamespaceResourceDto> getNamespaceResource(String clusterId) throws Exception;
 
 
 }
