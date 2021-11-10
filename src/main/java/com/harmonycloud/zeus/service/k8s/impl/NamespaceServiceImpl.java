@@ -183,6 +183,10 @@ public class NamespaceServiceImpl implements NamespaceService {
 
     @Override
     public void save(String clusterId, String name, Map<String, String> label) {
+        // 校验是否存在
+        if (checkExist(clusterId, name)){
+            throw new BusinessException(ErrorMessage.NAMESPACE_EXIST);
+        }
         // 创建namespace
         io.fabric8.kubernetes.api.model.Namespace ns = new io.fabric8.kubernetes.api.model.Namespace();
         if (CollectionUtils.isEmpty(label)){
@@ -226,5 +230,10 @@ public class NamespaceServiceImpl implements NamespaceService {
             log.error("分区{}  注册失败", name);
             throw new BusinessException(ErrorMessage.NAMESPACE_REGISTRY_FAILED);
         }
+    }
+    
+    public boolean checkExist(String clusterId, String name) {
+        List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId);
+        return nsList.stream().anyMatch(ns -> ns.getMetadata().getName().equals(name));
     }
 }
