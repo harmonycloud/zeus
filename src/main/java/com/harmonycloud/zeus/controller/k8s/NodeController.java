@@ -38,5 +38,13 @@ public class NodeController {
         return BaseResult.ok(nodeService.list(clusterId));
     }
 
+    @ApiOperation(value = "查询节点污点", notes = "查询节点污点")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class)
+    })
+    @GetMapping("/taints")
+    public BaseResult taints(@PathVariable("clusterId") String clusterId) {
+        return BaseResult.ok(nodeService.listTaints(clusterId));
+    }
 
 }

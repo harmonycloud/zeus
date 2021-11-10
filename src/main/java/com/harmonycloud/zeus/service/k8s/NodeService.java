@@ -25,4 +25,11 @@ public interface NodeService {
      * @param cluster 集群信息
      */
     void setClusterVersion(MiddlewareClusterDTO cluster);
+
+    /**
+     * 查询污点列表
+     * @param clusterId
+     * @return
+     */
+    List<String> listTaints(String clusterId);
 }

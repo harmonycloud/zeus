@@ -5,6 +5,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import com.alibaba.fastjson.JSONArray;
+import com.harmonycloud.caas.common.model.AffinityDTO;
+import io.fabric8.kubernetes.api.model.*;
 import org.apache.commons.lang3.StringUtils;
 
 import com.alibaba.fastjson.JSON;
@@ -14,11 +17,6 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.fabric8.kubernetes.api.model.NodeAffinity;
-import io.fabric8.kubernetes.api.model.NodeSelector;
-import io.fabric8.kubernetes.api.model.NodeSelectorRequirement;
-import io.fabric8.kubernetes.api.model.NodeSelectorTerm;
-import io.fabric8.kubernetes.api.model.PreferredSchedulingTerm;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -72,6 +70,15 @@ public class K8sConvert {
         return nf;
     }
     
+    public static JSONArray convertNodeAffinity2Json(List<AffinityDTO> dtoList) {
+        JSONArray jsonArray = new JSONArray();
+        dtoList.forEach(affinityDTO -> {
+            JSONObject nodeAffinity = K8sConvert.convertNodeAffinity2Json(affinityDTO.getLabel(), affinityDTO.isRequired());
+            jsonArray.add(nodeAffinity);
+        });
+        return jsonArray;
+    }
+
     public static JSONObject convertNodeAffinity2Json(String label, boolean isRequired) {
         NodeAffinity nodeAffinity = convertNodeAffinity(label, isRequired);
         if (nodeAffinity == null) {
@@ -136,6 +143,52 @@ public class K8sConvert {
             }
         }
         return list;
+    }
+
+    public static Toleration convertToleration(String tolerationStr) {
+        Toleration toleration = new Toleration();
+        String[] tolerationAry = tolerationStr.split(":");
+        String[] pair = tolerationAry[0].split("=");
+        toleration.setKey(pair[0]);
+        if (tolerationStr.contains("Exists")) {
+            toleration.setOperator("Exists");
+            toleration.setEffect(tolerationAry[2]);
+        } else {
+            toleration.setOperator("Equal");
+            toleration.setValue(pair[1]);
+            toleration.setEffect(tolerationAry[1]);
+        }
+        return toleration;
+    }
+
+    public static JSONObject convertObject2Json(Object obj) {
+        if (obj == null) {
+            return null;
+        }
+        ObjectMapper objectMapper = new ObjectMapper();
+        String na;
+        try {
+            na = objectMapper.writeValueAsString(obj);
+        } catch (JsonProcessingException e) {
+            log.error("jackson转换错误，将使用fastjson转换", e);
+            SimplePropertyPreFilter filter = new SimplePropertyPreFilter();
+            filter.getExcludes().add("additionalProperties");
+            na = JSON.toJSONString(obj, filter);
+        }
+        if (StringUtils.isEmpty(na)) {
+            return null;
+        }
+        return JSON.parseObject(na);
+    }
+
+    public static JSONArray convertToleration2Json(List<String> tolerationList){
+        JSONArray jsonArray = new JSONArray();
+        tolerationList.forEach(tolerationStr ->{
+            Toleration toleration = convertToleration(tolerationStr);
+            JSONObject jsonObject = convertObject2Json(toleration);
+            jsonArray.add(jsonObject);
+        });
+        return jsonArray;
     }
 
 }
