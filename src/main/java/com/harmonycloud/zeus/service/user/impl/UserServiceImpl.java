@@ -385,6 +385,7 @@ public class UserServiceImpl implements UserService {
             personalMapper.insert(configuration);
         }else if (personals.size() == 2) {
             configuration.setUpdateTime(date);
+            configuration.setStatus("0");
             QueryWrapper<PersonalizedConfiguration> wrapper = new QueryWrapper<PersonalizedConfiguration>().eq("status","0");
             personalMapper.update(configuration,wrapper);
         }
