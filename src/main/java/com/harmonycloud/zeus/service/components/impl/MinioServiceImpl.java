@@ -6,6 +6,7 @@ import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.MinioService;
 import org.springframework.stereotype.Service;
+import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
 
 import java.io.File;
 import java.util.HashMap;
@@ -24,11 +25,11 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
     }
 
     @Override
-    public void deploy(MiddlewareClusterDTO cluster){
+    public void deploy(MiddlewareClusterDTO cluster, String type){
         //创建minio分区
         namespaceService.save(cluster.getId(), "minio", null);
         //发布minio
-        super.deploy(cluster);
+        super.deploy(cluster, type);
     }
     
     @Override
@@ -39,11 +40,17 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
     }
 
     @Override
-    protected String getValues(String repository, MiddlewareClusterDTO cluster) {
-        return "image.repository=" + repository +
+    protected String getValues(String repository, MiddlewareClusterDTO cluster, String type) {
+        String setValues = "image.repository=" + repository +
                 ",persistence.storageClass=local-path" +
                 ",minioArgs.bucketName=velero" +
                 ",service.nodePort=31909";
+        if (SIMPLE.equals(type)) {
+            setValues = setValues + ",replicas=1";
+        } else {
+            setValues = setValues + ",replicas=3";
+        }
+        return setValues;
     }
 
     @Override

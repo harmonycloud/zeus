@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.components;
 
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.zeus.dao.BeanClusterComponentsMapper;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.IngressService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
@@ -26,11 +27,11 @@ public abstract class AbstractBaseOperator {
     @Autowired
     protected IngressService ingressService;
 
-    public void deploy(MiddlewareClusterDTO cluster){
+    public void deploy(MiddlewareClusterDTO cluster, String type){
         //获取仓库地址
         String repository = getRepository(cluster);
         //拼接参数
-        String setValues = getValues(repository, cluster);
+        String setValues = getValues(repository, cluster, type);
         //发布组件
         install(setValues,cluster);
         //更新middlewareCluster
@@ -56,7 +57,7 @@ public abstract class AbstractBaseOperator {
      * @param cluster 集群对象
      * @return String
      */
-    protected abstract String getValues(String repository, MiddlewareClusterDTO cluster);
+    protected abstract String getValues(String repository, MiddlewareClusterDTO cluster, String type);
 
     /**
      * 发布组件

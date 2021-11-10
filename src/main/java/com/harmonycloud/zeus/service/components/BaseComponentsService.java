@@ -20,8 +20,9 @@ public interface BaseComponentsService {
      * 部署组件
      *
      * @param cluster 集群信息
+     * @param type 部署模式:高可用，单实例
      */
-    void deploy(MiddlewareClusterDTO cluster);
+    void deploy(MiddlewareClusterDTO cluster, String type);
 
     /**
      * 接入组件

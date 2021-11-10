@@ -23,11 +23,11 @@ public class LogPilotServiceImpl extends AbstractBaseOperator implements LogPilo
     }
 
     @Override
-    public void deploy(MiddlewareClusterDTO cluster) {
+    public void deploy(MiddlewareClusterDTO cluster, String type) {
         //创建分区
         namespaceService.save(cluster.getId(), "logging", null);
         //发布logPilot
-        super.deploy(cluster);
+        super.deploy(cluster, type);
     }
 
     @Override
@@ -36,7 +36,7 @@ public class LogPilotServiceImpl extends AbstractBaseOperator implements LogPilo
     }
 
     @Override
-    protected String getValues(String repository, MiddlewareClusterDTO cluster) {
+    protected String getValues(String repository, MiddlewareClusterDTO cluster, String type) {
         return "image.logpilotRepository=" + repository + "/log-pilot" +
                 ",image.logstashRepository=" + repository + "/logstash";
     }

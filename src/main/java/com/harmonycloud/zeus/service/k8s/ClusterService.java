@@ -14,12 +14,6 @@ import java.util.List;
 public interface ClusterService {
 
     /**
-     * 获取指定集群
-     * @return
-     */
-    MiddlewareClusterDTO get(String clusterId);
-
-    /**
      * 获取所有集群
      * @return
      */
@@ -54,6 +48,14 @@ public interface ClusterService {
      * @return
      */
     MiddlewareClusterDTO findById(String clusterId);
+
+    /**
+     * 根据集群id查询集群
+     *
+     * @param clusterId 集群id
+     * @return
+     */
+    MiddlewareClusterDTO detail(String clusterId);
 
     /**
      * 根据集群id查询并校验制品服务

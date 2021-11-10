@@ -4,10 +4,13 @@ import static com.harmonycloud.caas.common.constants.NameConstant.*;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
@@ -92,27 +95,13 @@ public class ClusterServiceImpl implements ClusterService {
     @Autowired
     private ClusterComponentService clusterComponentService;
 
-    @Value("${k8s.component.logging.es.user:elastic}")
-    private String esUser;
-    @Value("${k8s.component.logging.es.password:Hc@Cloud01}")
-    private String esPassword;
-    @Value("${k8s.component.logging.es.port:30092}")
-    private String esPort;
-
     @Value("${k8s.component.components:/usr/local/zeus-pv/components}")
     private String componentsPath;
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
+    @Value("${k8s.component.crd:/usr/local/zeus-pv/components/platform/crds/middlewarecluster-crd.yaml}")
+    private String middlewareCrdYamlPath;
 
-    @Override
-    public MiddlewareClusterDTO get(String clusterId) {
-        List<MiddlewareClusterDTO> clusterList = listClusters().stream()
-            .filter(clusterDTO -> clusterDTO.getId().equals(clusterId)).collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(clusterList)) {
-            throw new CaasRuntimeException(ErrorMessage.CLUSTER_NOT_FOUND);
-        }
-        return clusterList.get(0);
-    }
 
     @Override
     public List<MiddlewareClusterDTO> listClusters() {
@@ -188,16 +177,28 @@ public class ClusterServiceImpl implements ClusterService {
 
     @Override
     public MiddlewareClusterDTO findById(String clusterId) {
-        MiddlewareClusterDTO dto = get(clusterId);
-        if (dto == null) {
+        List<MiddlewareClusterDTO> clusterList = listClusters().stream()
+            .filter(clusterDTO -> clusterDTO.getId().equals(clusterId)).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(clusterList)) {
             throw new CaasRuntimeException(ErrorMessage.CLUSTER_NOT_FOUND);
         }
+        MiddlewareClusterDTO dto = clusterList.get(0);
         // 如果accessToken为空，尝试生成token
         if (StringUtils.isBlank(dto.getAccessToken())) {
             clusterCertService.generateTokenByCert(dto);
         }
         // 深拷贝对象返回，避免其他地方修改内容
         return SerializationUtils.clone(dto);
+    }
+
+    @Override
+    public MiddlewareClusterDTO detail(String clusterId) {
+        List<MiddlewareClusterDTO> clusterList = listClusters(true, null).stream()
+            .filter(clusterDTO -> clusterDTO.getId().equals(clusterId)).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(clusterList)) {
+            throw new CaasRuntimeException(ErrorMessage.CLUSTER_NOT_FOUND);
+        }
+        return clusterList.get(0);
     }
 
     @Override
@@ -212,7 +213,7 @@ public class ClusterServiceImpl implements ClusterService {
     @Override
     public void addCluster(MiddlewareClusterDTO cluster) {
         // 校验集群基本信息参数
-        if (cluster == null || StringUtils.isAnyEmpty(cluster.getName(), cluster.getProtocol(), cluster.getHost())) {
+        if (cluster == null) {
             throw new IllegalArgumentException("cluster base info is null");
         }
         // 校验集群基本信息
@@ -224,7 +225,7 @@ public class ClusterServiceImpl implements ClusterService {
         clusterCertService.setCertByAdminConf(cluster.getCert());
 
         // 校验registry
-        registryService.validate(cluster.getRegistry());
+        //registryService.validate(cluster.getRegistry());
 
         try {
             // 先添加fabric8客户端，否则无法用fabric8调用APIServer
@@ -248,14 +249,16 @@ public class ClusterServiceImpl implements ClusterService {
             log.error("集群{}，保存证书异常", cluster.getId(), e);
         }
         // 安装middleware-controller
-        try {
+        //todo 不安装middleware-controller  只发布middlewarecluster的crd
+        createMiddlewareCrd(cluster);
+        /*try {
             List<HelmListInfo> helmInfos = helmChartService.listHelm("", "", cluster);
             if (helmInfos.stream().noneMatch(info -> "middleware-controller".equals(info.getName()))) {
-                clusterComponentService.deploy(cluster, ComponentsEnum.MIDDLEWARE_CONTROLLER.getName());
+                clusterComponentService.deploy(cluster, ComponentsEnum.MIDDLEWARE_CONTROLLER.getName(), "");
             }
         } catch (Exception e) {
             throw new BusinessException(ErrorMessage.HELM_INSTALL_MIDDLEWARE_CONTROLLER_FAILED);
-        }
+        }*/
         // 保存集群
         MiddlewareCluster mw = convert(cluster);
         try {
@@ -268,7 +271,7 @@ public class ClusterServiceImpl implements ClusterService {
             throw new BusinessException(DictEnum.CLUSTER, cluster.getNickname(), ErrorMessage.ADD_FAIL);
         }
         // 创建mysql/es/redis/mq operator 并添加进数据库
-        createOperator(cluster.getId());
+        /*createOperator(cluster.getId());
         // 安装组件
         createComponents(cluster);
         //初始化集群索引模板
@@ -279,7 +282,7 @@ public class ClusterServiceImpl implements ClusterService {
             } catch (Exception e) {
                 log.error("集群:{}索引模板初始化失败", cluster.getName(), e);
             }
-        });
+        });*/
     }
 
     @Override
@@ -350,14 +353,6 @@ public class ClusterServiceImpl implements ClusterService {
         if (StringUtils.isBlank(cluster.getDcId())) {
             cluster.setDcId(DEFAULT);
         }
-        // 给端口设置默认值，https是443，http是80
-        if (cluster.getPort() == null) {
-            cluster.setPort(cluster.getProtocol().equalsIgnoreCase(Protocol.HTTPS.getValue()) ? 443 : 80);
-        }
-        if (cluster.getRegistry().getPort() == null) {
-            cluster.getRegistry()
-                .setPort(cluster.getRegistry().getProtocol().equalsIgnoreCase(Protocol.HTTPS.getValue()) ? 443 : 80);
-        }
         
         // 设置ingress
         if (cluster.getIngress() != null && cluster.getIngress().getTcp() == null) {
@@ -370,18 +365,6 @@ public class ClusterServiceImpl implements ClusterService {
         }
         if (cluster.getLogging().getElasticSearch() == null) {
             cluster.getLogging().setElasticSearch(new MiddlewareClusterLoggingInfo());
-        }
-        if (StringUtils.isNotEmpty(cluster.getLogging().getElasticSearch().getHost())) {
-            if (StringUtils.isEmpty(cluster.getLogging().getElasticSearch().getProtocol())) {
-                cluster.getLogging().getElasticSearch().setProtocol(Protocol.HTTP.getValue().toLowerCase());
-            }
-            if (StringUtils.isBlank(cluster.getLogging().getElasticSearch().getPort())) {
-                cluster.getLogging().getElasticSearch().setPort(esPort);
-            }
-            if (StringUtils.isAnyBlank(cluster.getLogging().getElasticSearch().getUser(),
-                cluster.getLogging().getElasticSearch().getPassword())) {
-                cluster.getLogging().getElasticSearch().setUser(esUser).setPassword(esPassword);
-            }
         }
         
         // 设置存储限额
@@ -401,7 +384,7 @@ public class ClusterServiceImpl implements ClusterService {
         if (!checkDelete(clusterId)){
             throw new BusinessException(ErrorMessage.CLUSTER_NOT_EMPTY);
         }
-        MiddlewareClusterDTO cluster = get(clusterId);
+        MiddlewareClusterDTO cluster = this.findById(clusterId);
         if (cluster == null) {
             return;
         }
@@ -451,14 +434,20 @@ public class ClusterServiceImpl implements ClusterService {
             }
         }
     }
+    
     /**
      * 判断集群是否可以被删除
      */
-    public boolean checkDelete(String clusterId){
-        List<MiddlewareCRD> middlewareCRDList = middlewareCRDService.listCR(clusterId, null, null);
+    public boolean checkDelete(String clusterId) {
+        List<MiddlewareCRD> middlewareCRDList;
+        try {
+            middlewareCRDList = middlewareCRDService.listCR(clusterId, null, null);
+        } catch (Exception e) {
+            return true;
+        }
         if (!CollectionUtils.isEmpty(middlewareCRDList) && middlewareCRDList.stream().anyMatch(
-                middlewareCRD -> !"escluster-middleware-elasticsearch".equals(middlewareCRD.getMetadata().getName())
-                        && !"mysqlcluster-zeus-mysql".equals(middlewareCRD.getMetadata().getName()))) {
+            middlewareCRD -> !"escluster-middleware-elasticsearch".equals(middlewareCRD.getMetadata().getName())
+                && !"mysqlcluster-zeus-mysql".equals(middlewareCRD.getMetadata().getName()))) {
             return false;
         }
         return true;
@@ -496,7 +485,7 @@ public class ClusterServiceImpl implements ClusterService {
         // 安装local-path
         try {
             if (helmListInfos.stream().noneMatch(helm -> "local-path".equals(helm.getName()))) {
-                clusterComponentService.deploy(cluster, ComponentsEnum.LOCAL_PATH.getName());
+                clusterComponentService.deploy(cluster, ComponentsEnum.LOCAL_PATH.getName(), "");
             }
         } catch (Exception e) {
             throw new BusinessException(ErrorMessage.HELM_INSTALL_LOCAL_PATH_FAILED);
@@ -509,7 +498,7 @@ public class ClusterServiceImpl implements ClusterService {
         try {
             if (cluster.getMonitor().getPrometheus() == null
                 && helmListInfos.stream().noneMatch(helm -> "prometheus".equals(helm.getName()))) {
-                clusterComponentService.deploy(cluster, ComponentsEnum.PROMETHEUS.getName());
+                clusterComponentService.deploy(cluster, ComponentsEnum.PROMETHEUS.getName(), "");
             }
         } catch (Exception e) {
             log.error(ErrorMessage.HELM_INSTALL_PROMETHEUS_FAILED.getZhMsg());
@@ -518,7 +507,7 @@ public class ClusterServiceImpl implements ClusterService {
         try {
             if (cluster.getComponentsInstall().getIngress() && (cluster.getIngress() == null || StringUtils.isEmpty(cluster.getIngress().getAddress()))) {
                 if (helmListInfos.stream().noneMatch(helm -> "ingress".equals(helm.getName()))) {
-                    clusterComponentService.deploy(cluster, ComponentsEnum.INGRESS.getName());
+                    clusterComponentService.deploy(cluster, ComponentsEnum.INGRESS.getName(), "");
                 }
             }
         } catch (Exception e) {
@@ -527,7 +516,7 @@ public class ClusterServiceImpl implements ClusterService {
         // 安装grafana
         try {
             if (cluster.getComponentsInstall().getGrafana() && (cluster.getMonitor().getGrafana() == null || cluster.getMonitor().getGrafana().getHost() == null)) {
-                clusterComponentService.deploy(cluster, ComponentsEnum.GRAFANA.getName());
+                clusterComponentService.deploy(cluster, ComponentsEnum.GRAFANA.getName(), "");
             }
         } catch (Exception e) {
             log.error(ErrorMessage.HELM_INSTALL_GRAFANA_FAILED.getZhMsg());
@@ -535,7 +524,7 @@ public class ClusterServiceImpl implements ClusterService {
         // 安装alertManager
         try {
             if (cluster.getComponentsInstall().getAlertManager() && cluster.getMonitor().getAlertManager() == null){
-                clusterComponentService.deploy(cluster, ComponentsEnum.ALERTMANAGER.getName());
+                clusterComponentService.deploy(cluster, ComponentsEnum.ALERTMANAGER.getName(), "");
             }
         } catch (Exception e) {
             log.error(ErrorMessage.HELM_INSTALL_ALERT_MANAGER_FAILED.getZhMsg());
@@ -544,7 +533,7 @@ public class ClusterServiceImpl implements ClusterService {
         try {
             //创建minio分区
             if (cluster.getStorage() == null || !cluster.getStorage().containsKey("backup")){
-                clusterComponentService.deploy(cluster, ComponentsEnum.MINIO.getName());
+                clusterComponentService.deploy(cluster, ComponentsEnum.MINIO.getName(), "");
             }
         } catch (Exception e) {
             log.error(ErrorMessage.HELM_INSTALL_MINIO_FAILED.getZhMsg());
@@ -554,10 +543,10 @@ public class ClusterServiceImpl implements ClusterService {
             if (cluster.getComponentsInstall().getLogging()){
                 if (cluster.getLogging() == null || cluster.getLogging().getElasticSearch() == null
                         || cluster.getLogging().getElasticSearch().getHost() == null) {
-                    clusterComponentService.deploy(cluster, ComponentsEnum.LOGGING.getName());
+                    clusterComponentService.deploy(cluster, ComponentsEnum.LOGGING.getName(), "");
                 }
                 else if(cluster.getLogging().getElasticSearch().getLogCollect()){
-                    clusterComponentService.deploy(cluster, ComponentsEnum.LOGPILOT.getName());
+                    clusterComponentService.deploy(cluster, ComponentsEnum.LOGPILOT.getName(), "");
                 }
             }
         } catch (Exception e) {
@@ -916,18 +905,46 @@ public class ClusterServiceImpl implements ClusterService {
         return clusterDTO.getClusterQuotaDTO();
     }
 
-    public static void main(String[] args){
-        Map<String, Integer> map = new HashMap<>();
-        map.put("test", 0);
-        for (int i = 1; i<=5; ++i) {
-            int finalI = i;
-            ThreadPoolExecutorFactory.executor.execute(() -> {
-                Map<String, Integer> finalMap = new HashMap<>(map);
-                finalMap.put("test1", finalI);
-                log.info(JSONObject.toJSONString(finalMap));
-            });
+    private void createMiddlewareCrd(MiddlewareClusterDTO middlewareClusterDTO){
+        //MiddlewareClusterDTO middlewareClusterDTO = clusterService.findById(clusterId);
+
+        boolean error = false;
+        Process process = null;
+        try {
+            String execCommand;
+            execCommand = MessageFormat.format(
+                    "kubectl create -f {0} --server={1} --token={2} --insecure-skip-tls-verify=true",
+                    middlewareCrdYamlPath, middlewareClusterDTO.getAddress(), middlewareClusterDTO.getAccessToken());
+            log.info("执行kubectl命令：{}", execCommand);
+            String[] commands = execCommand.split(" ");
+            process = Runtime.getRuntime().exec(commands);
+
+            BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+
+            String line;
+            while ((line = stdInput.readLine()) != null) {
+                log.info("执行指令执行成功:{}", line);
+            }
+
+            while ((line = stdError.readLine()) != null) {
+                log.error("执行指令错误:{}", line);
+                error = true;
+            }
+            if (error) {
+                throw new Exception();
+            }
+
+        } catch (Exception e) {
+            log.error("出现异常:", e);
+            throw new CaasRuntimeException(String.valueOf(ErrorCodeMessage.RUN_COMMAND_ERROR));
+        } finally {
+            if (null != process) {
+                process.destroy();
+            }
         }
     }
+
 
 
 }

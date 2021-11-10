@@ -11,6 +11,7 @@ import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.GrafanaService;
 import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
+import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
 
 import java.io.File;
 
@@ -28,7 +29,7 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
     }
 
     @Override
-    public void deploy(MiddlewareClusterDTO cluster) {
+    public void deploy(MiddlewareClusterDTO cluster, String type) {
         //获取仓库地址
         String repository = getRepository(cluster);
         //拼接参数
@@ -66,6 +67,12 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
             jsonValues.put("readinessProbe", readinessProbe);
             jsonValues.put("livenessProbe", livenessProbe);
         }
+        //高可用或单实例
+        if (SIMPLE.equals(type)) {
+            jsonValues.put("replicas", 1);
+        } else {
+            jsonValues.put("replicas", 3);
+        }
         //发布组件
         helmChartService.upgradeInstall("grafana", "monitoring", componentsPath + File.separator + "grafana",
                 yaml.loadAs(values, JSONObject.class), jsonValues, cluster);
@@ -89,7 +96,7 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
     }
 
     @Override
-    protected String getValues(String repository, MiddlewareClusterDTO cluster) {
+    protected String getValues(String repository, MiddlewareClusterDTO cluster, String type) {
         return null;
     }
 

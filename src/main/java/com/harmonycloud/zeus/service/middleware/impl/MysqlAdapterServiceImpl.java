@@ -66,12 +66,12 @@ public class MysqlAdapterServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public BaseResult create(MiddlewareBackupDTO middlewareBackupDTO) {
-        String cron = middlewareBackupDTO.getCron();
-        String clusterId = middlewareBackupDTO.getClusterId();
-        String namespace = middlewareBackupDTO.getNamespace();
-        String middlewareName = middlewareBackupDTO.getMiddlewareName();
-        Integer limitRecord = middlewareBackupDTO.getLimitRecord();
+    public BaseResult create(MiddlewareBackupDTO backupDTO) {
+        String cron = backupDTO.getCron();
+        String clusterId = backupDTO.getClusterId();
+        String namespace = backupDTO.getNamespace();
+        String middlewareName = backupDTO.getMiddlewareName();
+        Integer limitRecord = backupDTO.getLimitRecord();
         if (StringUtils.isBlank(cron)) {
             mysqlService.createBackup(clusterId, namespace, middlewareName);
         } else {
@@ -81,12 +81,12 @@ public class MysqlAdapterServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public BaseResult update(MiddlewareBackupDTO middlewareBackupDTO) {
-        String cron = middlewareBackupDTO.getCron();
-        String clusterId = middlewareBackupDTO.getClusterId();
-        String namespace = middlewareBackupDTO.getNamespace();
-        String middlewareName = middlewareBackupDTO.getMiddlewareName();
-        Integer limitRecord = middlewareBackupDTO.getLimitRecord();
+    public BaseResult update(MiddlewareBackupDTO backupDTO) {
+        String cron = backupDTO.getCron();
+        String clusterId = backupDTO.getClusterId();
+        String namespace = backupDTO.getNamespace();
+        String middlewareName = backupDTO.getMiddlewareName();
+        Integer limitRecord = backupDTO.getLimitRecord();
         mysqlService.createScheduleBackup(clusterId, namespace, middlewareName, limitRecord, cron);
         return BaseResult.ok();
     }
@@ -120,12 +120,12 @@ public class MysqlAdapterServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public BaseResult createScheduleBackup(MiddlewareBackupDetail backupDetail) {
+    public BaseResult createScheduleBackup(MiddlewareBackupDTO backupDTO) {
         return null;
     }
 
     @Override
-    public BaseResult createNormalBackup(MiddlewareBackupDetail backupDetail) {
+    public BaseResult createNormalBackup(MiddlewareBackupDTO backupDTO) {
         return null;
     }
 

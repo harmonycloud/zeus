@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
 import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
@@ -87,6 +88,9 @@ public class NamespaceServiceImpl implements NamespaceService {
                 // 是否已注册
                 namespace.setRegistered(ns.getMetadata().getLabels() != null
                     && StringUtils.equals(ns.getMetadata().getLabels().get(labelKey), labelValue));
+                // 创建时间
+                namespace.setCreateTime(
+                    DateUtils.parseDate(ns.getMetadata().getCreationTimestamp(), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
                 return namespace;
             }).collect(Collectors.toList());
 
@@ -179,6 +183,10 @@ public class NamespaceServiceImpl implements NamespaceService {
 
     @Override
     public void save(String clusterId, String name, Map<String, String> label) {
+        // 校验是否存在
+        if (checkExist(clusterId, name)){
+            throw new BusinessException(ErrorMessage.NAMESPACE_EXIST);
+        }
         // 创建namespace
         io.fabric8.kubernetes.api.model.Namespace ns = new io.fabric8.kubernetes.api.model.Namespace();
         if (CollectionUtils.isEmpty(label)){
@@ -222,5 +230,10 @@ public class NamespaceServiceImpl implements NamespaceService {
             log.error("分区{}  注册失败", name);
             throw new BusinessException(ErrorMessage.NAMESPACE_REGISTRY_FAILED);
         }
+    }
+    
+    public boolean checkExist(String clusterId, String name) {
+        List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId);
+        return nsList.stream().anyMatch(ns -> ns.getMetadata().getName().equals(name));
     }
 }

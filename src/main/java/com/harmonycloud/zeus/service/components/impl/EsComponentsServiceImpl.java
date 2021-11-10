@@ -25,7 +25,7 @@ public class EsComponentsServiceImpl extends AbstractBaseOperator implements EsC
     }
 
     @Override
-    protected String getValues(String repository, MiddlewareClusterDTO cluster) {
+    protected String getValues(String repository, MiddlewareClusterDTO cluster, String type) {
         return "image.repository=" + repository +
                 ",elasticsearch-operator.enabled=false" +
                 ",elasticPassword=Hc@Cloud01" +

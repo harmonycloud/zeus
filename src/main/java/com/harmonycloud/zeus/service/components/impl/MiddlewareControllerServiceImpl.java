@@ -6,6 +6,7 @@ import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.MiddlewareControllerService;
 import org.springframework.stereotype.Service;
+import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
 
 import java.io.File;
 
@@ -28,9 +29,15 @@ public class MiddlewareControllerServiceImpl extends AbstractBaseOperator implem
     }
     
     @Override
-    protected String getValues(String repository, MiddlewareClusterDTO cluster) {
-        return "global.repository=" + cluster.getRegistry().getRegistryAddress() + "/"
+    protected String getValues(String repository, MiddlewareClusterDTO cluster, String type) {
+        String setValues = "global.repository=" + cluster.getRegistry().getRegistryAddress() + "/"
             + cluster.getRegistry().getChartRepo();
+        if (SIMPLE.equals(type)) {
+            setValues = setValues + ",global.middleware_controller.replicas=1";
+        } else {
+            setValues = setValues + ",global.middleware_controller.replicas=3";
+        }
+        return setValues;
     }
 
     @Override

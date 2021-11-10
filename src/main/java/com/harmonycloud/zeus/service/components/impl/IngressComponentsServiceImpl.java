@@ -31,7 +31,7 @@ public class IngressComponentsServiceImpl extends AbstractBaseOperator implement
     }
 
     @Override
-    protected String getValues(String repository, MiddlewareClusterDTO cluster) {
+    protected String getValues(String repository, MiddlewareClusterDTO cluster, String type) {
         return "image.ingressRepository=" + repository +
                 ",image.backendRepository=" + repository +
                 ",image.keepalivedRepository=" + repository;
