@@ -6,6 +6,7 @@ import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.LoggingService;
 import org.springframework.stereotype.Service;
+import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -44,16 +45,27 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
 
     @Override
     protected String getValues(String repository, MiddlewareClusterDTO cluster, String type) {
-        return "image.repository=" + repository +
+        String setValues = "image.repository=" + repository +
+                ",aliasName=middleware-elasticsearch" +
+                ",nameOverride=middleware-elasticsearch" +
                 ",elasticsearch-operator.enabled=false" +
                 ",elasticPassword=Hc@Cloud01" +
                 ",storage.masterClass=local-path" +
+                ",storage.masterSize=5Gi" +
                 ",logging.collection.filelog.enable=false" +
                 ",logging.collection.stdout.enable=false" +
                 ",resources.master.limits.cpu=0.5" +
                 ",resources.master.limits.memory=1Gi" +
                 ",resources.master.requests.cpu=0.5" +
-                ",resources.master.requests.memory=1Gi";
+                ",resources.master.requests.memory=1Gi" +
+                ",esJavaOpts.xmx=1024m" +
+                ",esJavaOpts.xms=1024m";
+        if (SIMPLE.equals(type)) {
+            setValues = setValues + ",cluster.masterReplacesCount=1";
+        } else {
+            setValues = setValues + ",cluster.masterReplacesCount=3";
+        }
+        return setValues;
     }
 
     @Override

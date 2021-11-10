@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.controller.k8s;
 import java.util.List;
 
 import com.harmonycloud.caas.common.model.ClusterNamespaceResourceDto;
+import com.harmonycloud.caas.common.model.ClusterNodeResourceDto;
 import com.harmonycloud.caas.common.model.Node;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
@@ -113,7 +114,7 @@ public class ClusterController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class)
     })
     @GetMapping("/{clusterId}/node/resource")
-    public BaseResult<List<Node>> getNodeResource(@PathVariable(value = "clusterId") String clusterId) throws Exception {
+    public BaseResult<List<ClusterNodeResourceDto>> getNodeResource(@PathVariable(value = "clusterId") String clusterId) throws Exception {
         return BaseResult.ok(clusterService.getNodeResource(clusterId));
     }
 

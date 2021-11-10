@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.controller.k8s;
 
 import static com.harmonycloud.caas.common.constants.NameConstant.DEFAULT;
 
+import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,8 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 
+import java.util.List;
+
 /**
  * @author dengyulong
  * @date 2021/05/18
@@ -29,6 +32,16 @@ public class ClusterComponentController {
     private ClusterComponentService clusterComponentService;
     @Autowired
     private ClusterService clusterService;
+
+    @ApiOperation(value = "部署集群组件", notes = "部署集群组件")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+           })
+    @GetMapping
+    public BaseResult<List<ClusterComponentsDto>> list(@PathVariable("clusterId") String clusterId) {
+        clusterComponentService.list(clusterId);
+        return BaseResult.ok();
+    }
 
     @ApiOperation(value = "部署集群组件", notes = "部署集群组件")
     @ApiImplicitParams({
