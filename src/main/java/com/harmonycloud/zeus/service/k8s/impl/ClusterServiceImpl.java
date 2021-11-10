@@ -434,14 +434,20 @@ public class ClusterServiceImpl implements ClusterService {
             }
         }
     }
+    
     /**
      * 判断集群是否可以被删除
      */
-    public boolean checkDelete(String clusterId){
-        List<MiddlewareCRD> middlewareCRDList = middlewareCRDService.listCR(clusterId, null, null);
+    public boolean checkDelete(String clusterId) {
+        List<MiddlewareCRD> middlewareCRDList;
+        try {
+            middlewareCRDList = middlewareCRDService.listCR(clusterId, null, null);
+        } catch (Exception e) {
+            return true;
+        }
         if (!CollectionUtils.isEmpty(middlewareCRDList) && middlewareCRDList.stream().anyMatch(
-                middlewareCRD -> !"escluster-middleware-elasticsearch".equals(middlewareCRD.getMetadata().getName())
-                        && !"mysqlcluster-zeus-mysql".equals(middlewareCRD.getMetadata().getName()))) {
+            middlewareCRD -> !"escluster-middleware-elasticsearch".equals(middlewareCRD.getMetadata().getName())
+                && !"mysqlcluster-zeus-mysql".equals(middlewareCRD.getMetadata().getName()))) {
             return false;
         }
         return true;
