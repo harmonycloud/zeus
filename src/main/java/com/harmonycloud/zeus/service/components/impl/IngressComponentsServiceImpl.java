@@ -3,12 +3,16 @@ package com.harmonycloud.zeus.service.components.impl;
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterIngress;
+import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.IngressService;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.io.File;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author xutianhong
@@ -53,5 +57,18 @@ public class IngressComponentsServiceImpl extends AbstractBaseOperator implement
         ingress.setTcp(config);
         cluster.setIngress(ingress);
         clusterService.updateCluster(cluster);
+    }
+
+    @Override
+    protected Integer getStatus(MiddlewareClusterDTO cluster) {
+        List<PodInfo> podInfoList = podService.list(cluster.getId(), "monitoring").stream()
+                .filter(pod -> pod.getPodName().contains("grafana")).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(podInfoList)) {
+            return 0;
+        }
+        if (podInfoList.stream().anyMatch(pod -> !"Running".equals(pod.getStatus()))) {
+            return 4;
+        }
+        return 3;
     }
 }

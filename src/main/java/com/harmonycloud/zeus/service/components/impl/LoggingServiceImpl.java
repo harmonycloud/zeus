@@ -88,6 +88,11 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         clusterService.updateCluster(cluster);
     }
 
+    @Override
+    protected List<PodInfo> getPodInfoList(String clusterId) {
+        return podService.list(clusterId, "logging", "middleware-elasticsearch");
+    }
+
     public void createNodePort(MiddlewareClusterDTO cluster){
         IngressDTO ingressDTO = new IngressDTO();
         ingressDTO.setExposeType("NodePort");

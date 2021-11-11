@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitor;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitorInfo;
+import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import org.springframework.stereotype.Service;
 
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
@@ -75,6 +76,11 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
         prometheus.setProtocol("http").setPort("31901").setHost(cluster.getHost());
         cluster.getMonitor().setPrometheus(prometheus);
         clusterService.updateCluster(cluster);
+    }
+
+    @Override
+    protected List<PodInfo> getPodInfoList(String clusterId) {
+        return podService.list(clusterId, "monitoring", "prometheus");
     }
 
     public void checkExist(MiddlewareClusterDTO cluster) {

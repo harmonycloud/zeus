@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.components.impl;
 
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.MiddlewareControllerService;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * @author xutianhong
@@ -49,6 +51,11 @@ public class MiddlewareControllerServiceImpl extends AbstractBaseOperator implem
     @Override
     protected void updateCluster(MiddlewareClusterDTO cluster) {
 
+    }
+
+    @Override
+    protected List<PodInfo> getPodInfoList(String clusterId) {
+        return podService.list(clusterId, "middleware-operator", "middleware-controller");
     }
     
 }

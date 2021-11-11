@@ -93,8 +93,14 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         if (CollectionUtils.isEmpty(clusterComponentsList)) {
             clusterComponentsList = initClusterComponents(clusterId);
         }
-        //todo 更新所有组件状态
-
+        //另起线程更新所有组件状态
+        clusterComponentsList.forEach(cc -> ThreadPoolExecutorFactory.executor.execute(() -> {
+            if (cc.getStatus() == 1){
+                return;
+            }
+            BaseComponentsService service = getOperator(BaseComponentsService.class, BaseComponentsService.class, cc.getComponent());
+            service.updateStatus(clusterService.findById(clusterId), cc.getComponent());
+        }));
         return clusterComponentsList.stream().map(cm -> {
             ClusterComponentsDto dto = new ClusterComponentsDto();
             BeanUtils.copyProperties(cm, dto);

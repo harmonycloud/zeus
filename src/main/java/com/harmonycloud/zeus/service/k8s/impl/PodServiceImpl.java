@@ -98,6 +98,12 @@ public class PodServiceImpl implements PodService {
         return list.stream().map(this::convertPodInfo).collect(Collectors.toList());
     }
 
+    @Override
+    public List<PodInfo> list(String clusterId, String namespace, String key) {
+        return this.list(clusterId, namespace).stream().filter(po -> po.getPodName().contains(key))
+            .collect(Collectors.toList());
+    }
+
     /**
      * 将podlist进行分组
      * @param podInfoList

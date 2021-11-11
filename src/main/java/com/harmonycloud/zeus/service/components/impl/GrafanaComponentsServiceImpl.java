@@ -5,15 +5,19 @@ import com.harmonycloud.caas.common.enums.ComponentsEnum;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitor;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitorInfo;
+import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.tool.cmd.HelmChartUtil;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.GrafanaService;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.yaml.snakeyaml.Yaml;
 import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
 
 import java.io.File;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author xutianhong
@@ -111,6 +115,11 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
         grafana.setProtocol(cluster.getMonitor().getGrafana().getProtocol()).setPort("31900")
                 .setHost(cluster.getHost());
         cluster.getMonitor().setGrafana(grafana);
+    }
+
+    @Override
+    protected List<PodInfo> getPodInfoList(String clusterId) {
+        return podService.list(clusterId, "monitoring", "grafana");
     }
 
 

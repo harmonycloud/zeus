@@ -1,13 +1,20 @@
 package com.harmonycloud.zeus.service.components;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.caas.common.model.middleware.PodInfo;
+import com.harmonycloud.zeus.bean.BeanClusterComponents;
 import com.harmonycloud.zeus.dao.BeanClusterComponentsMapper;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.IngressService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
+import com.harmonycloud.zeus.service.k8s.PodService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.CollectionUtils;
+
+import java.util.List;
 
 /**
  * @author xutianhong
@@ -26,6 +33,10 @@ public abstract class AbstractBaseOperator {
     protected ClusterService clusterService;
     @Autowired
     protected IngressService ingressService;
+    @Autowired
+    protected PodService podService;
+    @Autowired
+    protected BeanClusterComponentsMapper beanClusterComponentsMapper;
 
     public void deploy(MiddlewareClusterDTO cluster, String type){
         //获取仓库地址
@@ -41,6 +52,27 @@ public abstract class AbstractBaseOperator {
     public void uninstall(MiddlewareClusterDTO cluster, String type) {
         //获取分区地址
         //helmChartService.uninstall(cluster, getNamespace(), type);
+    }
+
+    public void updateStatus(MiddlewareClusterDTO cluster, String name) {
+        List<PodInfo> podInfoList = getPodInfoList(cluster.getId());
+        // 默认正常
+        int status = 3;
+        if (CollectionUtils.isEmpty(podInfoList)) {
+            // 未安装
+            status = 0;
+        }
+        if (podInfoList.stream().anyMatch(pod -> !"Running".equals(pod.getStatus()))) {
+            // 异常
+            status = 4;
+        }
+        QueryWrapper<BeanClusterComponents> wrapper =
+            new QueryWrapper<BeanClusterComponents>().eq("cluster_id", cluster.getId()).eq("component", name);
+        BeanClusterComponents bcc = new BeanClusterComponents();
+        bcc.setClusterId(cluster.getId());
+        bcc.setComponent(name);
+        bcc.setStatus(status);
+        beanClusterComponentsMapper.update(bcc, wrapper);
     }
 
     /**
@@ -73,4 +105,11 @@ public abstract class AbstractBaseOperator {
      * @param cluster 集群对象
      */
     protected abstract void updateCluster(MiddlewareClusterDTO cluster);
+
+    /**
+     * 更新集群信息
+     *
+     * @param clusterId 集群id
+     */
+    protected abstract List<PodInfo> getPodInfoList(String clusterId);
 }

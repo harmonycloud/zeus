@@ -4,13 +4,18 @@ import com.harmonycloud.caas.common.enums.ComponentsEnum;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitor;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitorInfo;
+import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.AlertManagerService;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
 import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
 
 import java.io.File;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author xutianhong
@@ -65,6 +70,11 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
         alertManager.setProtocol("http").setPort("31902").setHost(cluster.getHost());
         cluster.getMonitor().setAlertManager(alertManager);
         clusterService.updateCluster(cluster);
+    }
+
+    @Override
+    protected List<PodInfo> getPodInfoList(String clusterId) {
+        return podService.list(clusterId, "monitoring", "alertmanager");
     }
 
 }

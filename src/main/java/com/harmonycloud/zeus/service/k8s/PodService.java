@@ -32,6 +32,16 @@ public interface PodService {
     List<PodInfo> list(String clusterId, String namespace);
 
     /**
+     * 查询pod列表
+     *
+     * @param clusterId      集群id
+     * @param namespace      命名空间
+     * @param key            关键词过滤
+     * @return
+     */
+    List<PodInfo> list(String clusterId, String namespace, String key);
+
+    /**
      * 重启pod
      *
      * @param clusterId      集群id

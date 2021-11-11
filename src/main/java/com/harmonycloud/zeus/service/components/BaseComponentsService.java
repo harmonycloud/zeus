@@ -38,4 +38,12 @@ public interface BaseComponentsService {
      */
     void uninstall(MiddlewareClusterDTO cluster, String type);
 
+    /**
+     * 更新组件状态
+     *
+     * @param cluster 集群信息
+     * @param name 组件名称
+     */
+    void updateStatus(MiddlewareClusterDTO cluster, String name);
+
 }

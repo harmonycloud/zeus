@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.components.impl;
 
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.MinioService;
@@ -10,6 +11,7 @@ import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -72,5 +74,10 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
         backup.put("storage", storage);
         cluster.getStorage().put("backup", backup);
         clusterService.updateCluster(cluster);
+    }
+
+    @Override
+    protected List<PodInfo> getPodInfoList(String clusterId) {
+        return podService.list(clusterId, "minio", "minio");
     }
 }
