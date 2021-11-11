@@ -60,15 +60,7 @@ public class IngressComponentsServiceImpl extends AbstractBaseOperator implement
     }
 
     @Override
-    protected Integer getStatus(MiddlewareClusterDTO cluster) {
-        List<PodInfo> podInfoList = podService.list(cluster.getId(), "monitoring").stream()
-                .filter(pod -> pod.getPodName().contains("grafana")).collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(podInfoList)) {
-            return 0;
-        }
-        if (podInfoList.stream().anyMatch(pod -> !"Running".equals(pod.getStatus()))) {
-            return 4;
-        }
-        return 3;
+    protected List<PodInfo> getPodInfoList(String clusterId) {
+        return podService.list(clusterId, "middleware-operator", "ingress-nginx-controller");
     }
 }
