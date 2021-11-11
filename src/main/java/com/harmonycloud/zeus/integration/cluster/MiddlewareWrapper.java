@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -30,6 +31,7 @@ import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
  * middleware cr
  */
 @Component
+@Slf4j
 public class MiddlewareWrapper {
 
     /**
@@ -50,12 +52,21 @@ public class MiddlewareWrapper {
             labels = null;
         }
         // 获取所有的集群资源
-        Map<String, Object> map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace, labels);
-        MiddlewareList middlewareList = JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareList.class);
-        if (middlewareList == null || CollectionUtils.isEmpty(middlewareList.getItems())) {
-            return new ArrayList<>(0);
+        try {
+            Map<String, Object> map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace, labels);
+            MiddlewareList middlewareList = JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareList.class);
+            if (middlewareList == null || CollectionUtils.isEmpty(middlewareList.getItems())) {
+                return new ArrayList<>(0);
+            }
+            return middlewareList.getItems();
+        } catch (Exception e) {
+            log.info(e.getMessage());
+            if (e.getMessage().contains("404")) {
+                throw new BusinessException(ErrorMessage.MIDDLEWARE_CONTROLLER_NOT_INSTALL);
+            } else {
+                throw e;
+            }
         }
-        return middlewareList.getItems();
     }
 
     public MiddlewareCRD get(String clusterId, String namespace, String name) {
