@@ -35,7 +35,7 @@ public class ClusterComponentController {
     @Autowired
     private ClusterService clusterService;
 
-    @ApiOperation(value = "部署集群组件", notes = "部署集群组件")
+    @ApiOperation(value = "获取组件列表", notes = "获取组件列表")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
            })
