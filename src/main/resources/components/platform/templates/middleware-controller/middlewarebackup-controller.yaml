@@ -6,20 +6,64 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  creationTimestamp: null
   name: middlewarebackup-controller
 rules:
-- apiGroups:
-  - '*'
-  resources:
-  - '*'
-  verbs:
-  - get
-  - list
-  - patch
-  - update
-  - watch
-  - create
+  - apiGroups:
+      - '*'
+    resources:
+      - '*'
+    verbs:
+      - get
+      - list
+      - patch
+      - update
+      - watch
+      - create
+  - apiGroups:
+      - batch
+    resources:
+      - jobs
+      - cronjobs
+    verbs:
+      - delete
+  - apiGroups:
+      - harmonycloud.cn
+    resources:
+      - middlewarebackups
+      - middlewarebackupschedules
+      - middlewarerestores
+    verbs:
+      - delete
+  - apiGroups:
+      - harmonycloud.cn
+    resources:
+      - middlewarebackups/status
+      - middlewarebackupschedules/status
+      - middlewarerestores/status
+    verbs:
+      - update
+  - apiGroups:
+      - ""
+    resources:
+      - persistentvolumeclaims
+      - persistentvolumes
+      - pods
+    verbs:
+      - delete
+  - apiGroups:
+      - "snapshot.storage.k8s.io"
+    resources:
+      - "volumesnapshotcontents"
+      - "volumesnapshots"
+    verbs:
+      - delete
+  - apiGroups:
+      - "snapshot.storage.k8s.io"
+    resources:
+      - "volumesnapshots/status"
+      - "volumesnapshotcontents/status"
+    verbs:
+      - update
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -30,11 +74,18 @@ roleRef:
   kind: ClusterRole
   name: middlewarebackup-controller
 subjects:
-- kind: ServiceAccount
-  name: middlewarebackup-controller
-  namespace: {{ .Release.Namespace | quote }}
+  - kind: ServiceAccount
+    name: middlewarebackup-controller
+    namespace: {{ .Release.Namespace | quote }}
 ---
-
+apiVersion: v1
+data:
+  lock-tables.sql: set global read_only=1;
+  unlock-tables.sql: set global read_only=0;
+kind: ConfigMap
+metadata:
+  name: backup-operation
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -58,39 +109,55 @@ spec:
         control-plane: backup-controller
     spec:
       containers:
-      - args:
-        - --leader-elect
-        command:
-        - /manager
-        image: "{{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.image }}:{{ .Values.global.middlewarebackup_controller.tag }}"
-        imagePullPolicy: Always
-        livenessProbe:
-          failureThreshold: 3
-          httpGet:
-            path: /healthz
-            port: 8087
-            scheme: HTTP
-          initialDelaySeconds: 15
-          periodSeconds: 20
-          successThreshold: 1
-          timeoutSeconds: 1
-        name: manager
-        readinessProbe:
-          failureThreshold: 3
-          httpGet:
-            path: /readyz
-            port: 8087
-            scheme: HTTP
-          initialDelaySeconds: 5
-          periodSeconds: 10
-          successThreshold: 1
-          timeoutSeconds: 1
-        resources:
-          {{- toYaml .Values.global.middlewarebackup_controller.resources | nindent 12 }}
-        securityContext:
-          allowPrivilegeEscalation: false
-        terminationMessagePath: /dev/termination-log
-        terminationMessagePolicy: File
+        - args:
+            - --leader-elect
+            - --job-namespace={{ .Values.global.middlewarebackup_controller.job_creator.jobNamespace }}
+            - --job-service-account={{ .Values.global.middlewarebackup_controller.job_creator.jobServiceAccount }}
+            - --job-creator-image={{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.job_creator.image }}:{{ .Values.global.middlewarebackup_controller.job_creator.tag }}
+          command:
+            - /manager
+          image: "{{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.image }}:{{ .Values.global.middlewarebackup_controller.tag }}"
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 8087
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: manager
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /readyz
+              port: 8087
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            {{- toYaml .Values.global.middlewarebackup_controller.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /operation
+              name: operation
+      volumes:
+        - configMap:
+            defaultMode: 420
+            items:
+              - key: lock-tables.sql
+                path: lock-tables.sql
+              - key: unlock-tables.sql
+                path: unlock-tables.sql
+            name: backup-operation
+          name: operation
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler

@@ -11,6 +11,8 @@ spec:
     listKind: MiddlewareBackupScheduleList
     plural: middlewarebackupschedules
     singular: middlewarebackupschedule
+    shortNames:
+      - baks
   scope: Namespaced
   versions:
     - name: v1
@@ -37,11 +39,16 @@ spec:
                   type: string
                 type:
                   type: string
-                pod:
-                  type: string
-                pvcs:
+                backupObjects:
                   items:
-                    type: string
+                    properties:
+                      pod:
+                        type: string
+                      pvcs:
+                        items:
+                          type: string
+                        type: array
+                    type: object
                   type: array
                 prefixHooks:
                   items:

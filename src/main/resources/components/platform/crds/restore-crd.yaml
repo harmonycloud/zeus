@@ -11,6 +11,8 @@ spec:
     listKind: MiddlewareRestoreList
     plural: middlewarerestores
     singular: middlewarerestore
+    shortNames:
+      - rst
   scope: Namespaced
   versions:
     - name: v1
@@ -37,16 +39,19 @@ spec:
                   type: string
                 type:
                   type: string
-                pods:
-                  items:
-                    type: string
-                  type: array
                 backupName:
                   type: string
-                restoreBind:
-                  additionalProperties:
-                    type: string
-                  type: object
+                restoreObjects:
+                  items:
+                    properties:
+                      pod:
+                        type: string
+                      pvc:
+                        type: string
+                      volumeSnapshot:
+                        type: string
+                    type: object
+                  type: array
               type: object
             status:
               description: MiddlewareBackupStatus defines the observed state of MiddlewareBackup

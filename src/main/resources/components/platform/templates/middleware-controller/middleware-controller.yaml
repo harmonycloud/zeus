@@ -8,27 +8,27 @@ kind: ClusterRole
 metadata:
   name: middleware-leader-election-role
 rules:
-- apiGroups:
-  - ""
-  - coordination.k8s.io
-  resources:
-  - configmaps
-  - leases
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - events
-  verbs:
-  - create
-  - patch
+  - apiGroups:
+      - ""
+      - coordination.k8s.io
+    resources:
+      - configmaps
+      - leases
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -36,17 +36,17 @@ metadata:
   creationTimestamp: null
   name: middleware-manager-role
 rules:
-- apiGroups:
-  - '*'
-  resources:
-  - '*'
-  verbs:
-  - get
-  - list
-  - patch
-  - update
-  - watch
-  - create
+  - apiGroups:
+      - '*'
+    resources:
+      - '*'
+    verbs:
+      - get
+      - list
+      - patch
+      - update
+      - watch
+      - create
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -57,9 +57,9 @@ roleRef:
   kind: ClusterRole
   name: middleware-leader-election-role
 subjects:
-- kind: ServiceAccount
-  name: middleware-controller-manager
-  namespace: {{ .Release.Namespace | quote }}
+  - kind: ServiceAccount
+    name: middleware-controller-manager
+    namespace: {{ .Release.Namespace | quote }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -70,9 +70,9 @@ roleRef:
   kind: ClusterRole
   name: middleware-manager-role
 subjects:
-- kind: ServiceAccount
-  name: middleware-controller-manager
-  namespace: {{ .Release.Namespace | quote }}
+  - kind: ServiceAccount
+    name: middleware-controller-manager
+    namespace: {{ .Release.Namespace | quote }}
 ---
 apiVersion: v1
 data:
@@ -109,29 +109,29 @@ spec:
         control-plane: controller-manager
     spec:
       containers:
-      - args:
-        - --leader-elect
-        command:
-        - /manager
-        image: "{{ .Values.global.repository }}/{{ .Values.global.middleware_controller.image }}:{{ .Values.global.middleware_controller.tag }}"
-        imagePullPolicy: Always
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 8081
-          initialDelaySeconds: 15
-          periodSeconds: 20
-        name: manager
-        readinessProbe:
-          httpGet:
-            path: /readyz
-            port: 8081
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        resources:
-          {{- toYaml .Values.global.middleware_controller.resources | nindent 12 }}
-        securityContext:
-          allowPrivilegeEscalation: false
+        - args:
+            - --leader-elect
+          command:
+            - /manager
+          image: "{{ .Values.global.repository }}/{{ .Values.global.middleware_controller.image }}:{{ .Values.global.middleware_controller.tag }}"
+          imagePullPolicy: Always
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          name: manager
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.global.middleware_controller.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
       securityContext:
         runAsNonRoot: true
       {{- with .Values.global.middleware_controller.nodeSelector }}

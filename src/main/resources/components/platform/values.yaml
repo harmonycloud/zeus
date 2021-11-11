@@ -13,7 +13,7 @@ global:
     nodeSelector: {}
   middlewarebackup_controller:
     image: middlewarebackup-controller
-    tag: v1.0.0-test
+    tag: v1.0.0
     resources:
       limits:
         cpu: 200m
@@ -22,3 +22,9 @@ global:
         cpu: 200m
         memory: 512Mi
     nodeSelector: {}
+    job_creator:
+      jobNamespace: middleware-job
+      jobServiceAccount: job-creator
+      image: backup-job-creator
+      tag: v1.0.0
+
