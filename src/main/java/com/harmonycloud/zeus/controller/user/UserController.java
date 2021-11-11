@@ -114,7 +114,7 @@ public class UserController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群", paramType = "query", dataTypeClass = String.class),
     })
-    public BaseResult<List<ResourceMenuDto>> menu(@RequestParam("clusterId") String clusterId) throws Exception {
+    public BaseResult<List<ResourceMenuDto>> menu(@RequestParam(value = "clusterId", required = false) String clusterId) throws Exception {
         log.info("获取菜单列表：{}", clusterId);
         return BaseResult.ok(userService.menu(clusterId));
     }

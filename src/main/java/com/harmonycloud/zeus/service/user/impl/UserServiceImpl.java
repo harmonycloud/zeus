@@ -19,6 +19,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -226,7 +227,9 @@ public class UserServiceImpl implements UserService {
             firstMenu.setSubMenu(resourceMenuDtoMap.get(firstMenu.getId()));
             Collections.sort(firstMenu.getSubMenu());
         });
-        setServiceMenuSubMenu(firstMenuList, clusterId);
+        if (StringUtils.isNotBlank(clusterId)) {
+            setServiceMenuSubMenu(firstMenuList, clusterId);
+        }
         Collections.sort(firstMenuList);
         return firstMenuList;
     }
