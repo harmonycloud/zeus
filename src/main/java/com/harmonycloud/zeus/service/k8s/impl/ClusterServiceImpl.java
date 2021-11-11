@@ -225,7 +225,7 @@ public class ClusterServiceImpl implements ClusterService {
         clusterCertService.setCertByAdminConf(cluster.getCert());
 
         // 校验registry
-        //registryService.validate(cluster.getRegistry());
+        registryService.validate(cluster.getRegistry());
 
         try {
             // 先添加fabric8客户端，否则无法用fabric8调用APIServer
@@ -248,17 +248,13 @@ public class ClusterServiceImpl implements ClusterService {
         } catch (Exception e) {
             log.error("集群{}，保存证书异常", cluster.getId(), e);
         }
-        // 安装middleware-controller
-        //todo 不安装middleware-controller  只发布middlewarecluster的crd
-        createMiddlewareCrd(cluster);
-        /*try {
-            List<HelmListInfo> helmInfos = helmChartService.listHelm("", "", cluster);
-            if (helmInfos.stream().noneMatch(info -> "middleware-controller".equals(info.getName()))) {
-                clusterComponentService.deploy(cluster, ComponentsEnum.MIDDLEWARE_CONTROLLER.getName(), "");
-            }
-        } catch (Exception e) {
-            throw new BusinessException(ErrorMessage.HELM_INSTALL_MIDDLEWARE_CONTROLLER_FAILED);
-        }*/
+        //发布middlewareCluster的crd
+        try {
+            createMiddlewareCrd(cluster);
+        } catch (Exception e){
+            k8SDefaultClusterService.delete(cluster.getId());
+            throw new BusinessException(ErrorMessage.MIDDLEWARE_CONTROLLER_INSTALL_FAILED);
+        }
         // 保存集群
         MiddlewareCluster mw = convert(cluster);
         try {
@@ -270,10 +266,10 @@ public class ClusterServiceImpl implements ClusterService {
             log.error("集群id：{}，添加集群异常", cluster.getId());
             throw new BusinessException(DictEnum.CLUSTER, cluster.getNickname(), ErrorMessage.ADD_FAIL);
         }
-        // 创建mysql/es/redis/mq operator 并添加进数据库
-        /*createOperator(cluster.getId());
+        // 将chart包存进数据库
+        insertMysqlChart(cluster.getId());
         // 安装组件
-        createComponents(cluster);
+        /*createComponents(cluster);
         //初始化集群索引模板
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
@@ -466,94 +462,17 @@ public class ClusterServiceImpl implements ClusterService {
         return new MiddlewareCluster().setMetadata(meta).setSpec(new MiddlewareClusterSpec().setInfo(clusterInfo));
     }
 
-    public void createOperator(String clusterId) {
+    public void insertMysqlChart(String clusterId) {
         File file = new File(middlewarePath);
         for (String name : file.list()) {
             ThreadPoolExecutorFactory.executor.execute(() -> {
                 File f = new File(middlewarePath + File.separator + name);
                 if (f.getAbsolutePath().contains(".tgz")) {
                     HelmChartFile chartFile = helmChartService.getHelmChartFromFile(null, null, f);
-                    helmChartService.createOperator(middlewarePath, clusterId, chartFile);
                     middlewareInfoService.insert(chartFile, f);
                 }
             });
         }
-    }
-
-    public void createComponents(MiddlewareClusterDTO cluster) {
-        List<HelmListInfo> helmListInfos = helmChartService.listHelm("", "", cluster);
-        // 安装local-path
-        try {
-            if (helmListInfos.stream().noneMatch(helm -> "local-path".equals(helm.getName()))) {
-                clusterComponentService.deploy(cluster, ComponentsEnum.LOCAL_PATH.getName(), "");
-            }
-        } catch (Exception e) {
-            throw new BusinessException(ErrorMessage.HELM_INSTALL_LOCAL_PATH_FAILED);
-        }
-        if (cluster.getMonitor() == null) {
-            MiddlewareClusterMonitor monitor = new MiddlewareClusterMonitor();
-            cluster.setMonitor(monitor);
-        }
-        // 安装prometheus
-        try {
-            if (cluster.getMonitor().getPrometheus() == null
-                && helmListInfos.stream().noneMatch(helm -> "prometheus".equals(helm.getName()))) {
-                clusterComponentService.deploy(cluster, ComponentsEnum.PROMETHEUS.getName(), "");
-            }
-        } catch (Exception e) {
-            log.error(ErrorMessage.HELM_INSTALL_PROMETHEUS_FAILED.getZhMsg());
-        }
-        // 安装ingress nginx
-        try {
-            if (cluster.getComponentsInstall().getIngress() && (cluster.getIngress() == null || StringUtils.isEmpty(cluster.getIngress().getAddress()))) {
-                if (helmListInfos.stream().noneMatch(helm -> "ingress".equals(helm.getName()))) {
-                    clusterComponentService.deploy(cluster, ComponentsEnum.INGRESS.getName(), "");
-                }
-            }
-        } catch (Exception e) {
-            log.error(ErrorMessage.HELM_INSTALL_NGINX_INGRESS_FAILED.getZhMsg());
-        }
-        // 安装grafana
-        try {
-            if (cluster.getComponentsInstall().getGrafana() && (cluster.getMonitor().getGrafana() == null || cluster.getMonitor().getGrafana().getHost() == null)) {
-                clusterComponentService.deploy(cluster, ComponentsEnum.GRAFANA.getName(), "");
-            }
-        } catch (Exception e) {
-            log.error(ErrorMessage.HELM_INSTALL_GRAFANA_FAILED.getZhMsg());
-        }
-        // 安装alertManager
-        try {
-            if (cluster.getComponentsInstall().getAlertManager() && cluster.getMonitor().getAlertManager() == null){
-                clusterComponentService.deploy(cluster, ComponentsEnum.ALERTMANAGER.getName(), "");
-            }
-        } catch (Exception e) {
-            log.error(ErrorMessage.HELM_INSTALL_ALERT_MANAGER_FAILED.getZhMsg());
-        }
-        // 安装minio
-        try {
-            //创建minio分区
-            if (cluster.getStorage() == null || !cluster.getStorage().containsKey("backup")){
-                clusterComponentService.deploy(cluster, ComponentsEnum.MINIO.getName(), "");
-            }
-        } catch (Exception e) {
-            log.error(ErrorMessage.HELM_INSTALL_MINIO_FAILED.getZhMsg());
-        }
-        //安装日志组件
-        try {
-            if (cluster.getComponentsInstall().getLogging()){
-                if (cluster.getLogging() == null || cluster.getLogging().getElasticSearch() == null
-                        || cluster.getLogging().getElasticSearch().getHost() == null) {
-                    clusterComponentService.deploy(cluster, ComponentsEnum.LOGGING.getName(), "");
-                }
-                else if(cluster.getLogging().getElasticSearch().getLogCollect()){
-                    clusterComponentService.deploy(cluster, ComponentsEnum.LOGPILOT.getName(), "");
-                }
-            }
-        } catch (Exception e) {
-            log.error(ErrorMessage.HELM_INSTALL_LOG_FAILED.getZhMsg());
-        }
-        //更新
-        this.update(cluster);
     }
 
     public void clusterResource(MiddlewareClusterDTO cluster){

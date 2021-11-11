@@ -3,6 +3,8 @@ package com.harmonycloud.zeus.controller.k8s;
 import static com.harmonycloud.caas.common.constants.NameConstant.DEFAULT;
 
 import com.harmonycloud.caas.common.model.ClusterComponentsDto;
+import com.harmonycloud.caas.common.model.middleware.Middleware;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareInfoDTO;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,8 +41,7 @@ public class ClusterComponentController {
            })
     @GetMapping
     public BaseResult<List<ClusterComponentsDto>> list(@PathVariable("clusterId") String clusterId) {
-        clusterComponentService.list(clusterId);
-        return BaseResult.ok();
+        return BaseResult.ok(clusterComponentService.list(clusterId));
     }
 
     @ApiOperation(value = "部署集群组件", notes = "部署集群组件")
@@ -54,6 +55,19 @@ public class ClusterComponentController {
                              @PathVariable("componentName") String componentName,
                              @RequestParam("type") String type) {
         clusterComponentService.deploy(clusterService.findById(clusterId), componentName, type);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "批量部署集群组件", notes = "批量部署集群组件")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "componentsDtoList", value = "组建对象list", paramType = "query", dataTypeClass = String.class),
+    })
+    @PostMapping("/multiple")
+    public BaseResult multipleDeploy(@PathVariable("clusterId") String clusterId,
+                                     @RequestBody List<ClusterComponentsDto> componentsDtoList,
+                                     @RequestBody List<MiddlewareInfoDTO> middlewareInfoDTOList) {
+        clusterComponentService.multipleDeploy(clusterService.findById(clusterId), componentsDtoList, middlewareInfoDTOList);
         return BaseResult.ok();
     }
 
