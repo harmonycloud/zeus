@@ -210,8 +210,8 @@ public class MiddlewareCRDServiceImpl implements MiddlewareCRDService {
      * @param mw
      * @return List<PodInfo>
      */
-    private List<PodInfo> getPodName(MiddlewareCRD mw){
-        if (mw.getStatus().getInclude().containsKey("pods")){
+    private List<PodInfo> getPodName(MiddlewareCRD mw) {
+        if (mw.getStatus() != null && mw.getStatus().getInclude() != null && mw.getStatus().getInclude().containsKey("pods")) {
             return mw.getStatus().getInclude().get("pods").stream().map(pod -> {
                 PodInfo podInfo = new PodInfo();
                 podInfo.setPodName(pod.getName());
