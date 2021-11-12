@@ -682,7 +682,9 @@ public class ClusterServiceImpl implements ClusterService {
             nodeRs.setStatus(node.getStatus());
             nodeRs.setCreateTime(node.getCreateTime());
             return nodeRs;
-        }).collect(Collectors.toList());
+        }).sorted((o1, o2) -> o1.getCreateTime() == null ? -1
+            : o2.getCreateTime() == null ? -1 : o2.getCreateTime().compareTo(o1.getCreateTime()))
+            .collect(Collectors.toList());
     }
 
     @Override
