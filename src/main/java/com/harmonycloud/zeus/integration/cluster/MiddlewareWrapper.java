@@ -60,8 +60,7 @@ public class MiddlewareWrapper {
             }
             return middlewareList.getItems();
         } catch (Exception e) {
-            log.info(e.getMessage());
-            if (e.getMessage().contains("404")) {
+            if (StringUtils.isNotEmpty(e.getMessage()) && e.getMessage().contains("404")) {
                 throw new BusinessException(ErrorMessage.MIDDLEWARE_CONTROLLER_NOT_INSTALL);
             } else {
                 throw e;

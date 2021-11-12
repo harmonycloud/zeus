@@ -548,7 +548,9 @@ public class ClusterServiceImpl implements ClusterService {
     public List<MiddlewareResourceInfo> getMwResource(String clusterId) throws Exception {
         // 获取集群下所有中间件信息
         List<MiddlewareCRD> mwCrDList = middlewareCRDService.listCR(clusterId, null, null);
-
+        // 获取中间件图片路径
+        List<MiddlewareInfoDTO> middlewareInfoDTOList = middlewareInfoService.list(clusterId);
+        Map<String, String> imagePathMap = middlewareInfoDTOList.stream().collect(Collectors.toMap(MiddlewareInfoDTO::getChartName, MiddlewareInfoDTO::getImagePath));
         List<MiddlewareResourceInfo> mwResourceInfoList = new ArrayList<>();
         final CountDownLatch clusterCountDownLatch = new CountDownLatch(mwCrDList.size());
         mwCrDList.forEach(mwCrd -> ThreadPoolExecutorFactory.executor.execute(() -> {
@@ -558,6 +560,7 @@ public class ClusterServiceImpl implements ClusterService {
                 MiddlewareResourceInfo middlewareResourceInfo = new MiddlewareResourceInfo();
                 BeanUtils.copyProperties(middleware, middlewareResourceInfo);
                 middlewareResourceInfo.setClusterId(clusterId);
+                middlewareResourceInfo.setImagePath(imagePathMap.getOrDefault(middleware.getType(), null));
                 Map<String, String> queryMap = new HashMap<>();
                 StringBuilder pods = getPodName(mwCrd);
 
