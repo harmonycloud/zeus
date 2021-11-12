@@ -215,10 +215,10 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         if (mysqlDTO != null) {
             if (mysqlDTO.getIsSource() != null && !mysqlDTO.getIsSource()) {
                 //当前实例为灾备实例，灾备实例只读，不可写入，为该实例创建只读对外服务
-                tryCreateOpenService(middleware, ServiceNameConvertUtil.convertMysql(middleware.getName(), true), true);
+                tryCreateOpenService(cluster.getId(), middleware, ServiceNameConvertUtil.convertMysql(middleware.getName(), true), true);
             } else {
                 //当前实例为源实例或普通实例，实例可读写，为该实例创建可读写对外服务
-                tryCreateOpenService(middleware, ServiceNameConvertUtil.convertMysql(middleware.getName(), false), true);
+                tryCreateOpenService(cluster.getId(), middleware, ServiceNameConvertUtil.convertMysql(middleware.getName(), false), true);
             }
         }
         // 创建灾备实例
@@ -675,7 +675,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                     oldDisasterRecovery.setNamespace(namespace);
                     oldDisasterRecovery.setType(MiddlewareTypeEnum.MYSQL.getType());
                 }
-                tryCreateOpenService(oldDisasterRecovery, ServiceNameConvertUtil.convertMysql(oldDisasterRecovery.getName(), false), true);
+                tryCreateOpenService(clusterId, oldDisasterRecovery, ServiceNameConvertUtil.convertMysql(oldDisasterRecovery.getName(), false), true);
             }
         }
     }
@@ -688,7 +688,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         MysqlDTO mysqlDTO = middleware.getMysqlDTO();
         if (mysqlDTO.getOpenDisasterRecoveryMode() != null && mysqlDTO.getOpenDisasterRecoveryMode() && mysqlDTO.getIsSource()) {
             //1.为实例创建只读对外服务(NodePort)
-            tryCreateOpenService(middleware, ServiceNameConvertUtil.convertMysql(middleware.getName(), true), true);
+            tryCreateOpenService(middleware.getClusterId(), middleware, ServiceNameConvertUtil.convertMysql(middleware.getName(), true), true);
             //2.设置灾备实例信息，创建灾备实例
             //2.1 设置灾备实例信息
             Middleware relationMiddleware = middleware.getRelationMiddleware();

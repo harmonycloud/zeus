@@ -308,6 +308,6 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
     @Override
     public void create(Middleware middleware, MiddlewareClusterDTO cluster) {
         super.create(middleware, cluster);
-        tryCreateOpenService(middleware, new MiddlewareServiceNameIndex("kibana-nodeport", "-kibana"), false);
+        tryCreateOpenService(cluster.getId(), middleware, new MiddlewareServiceNameIndex("kibana-nodeport", "-kibana"), false);
     }
 }

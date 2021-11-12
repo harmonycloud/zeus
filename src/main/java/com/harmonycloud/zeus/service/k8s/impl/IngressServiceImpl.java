@@ -281,7 +281,7 @@ public class IngressServiceImpl implements IngressService {
                 });
             }
             // tcp
-            if (cluster.getIngress().getTcp() != null && cluster.getIngress().getTcp().isEnabled()) {
+            if (cluster.getIngress() != null && cluster.getIngress().getTcp() != null && cluster.getIngress().getTcp().isEnabled()) {
                 Middleware detail = middlewareService.detail(clusterId, namespace, middlewareName, type);
                 ConfigMap configMap = configMapWrapper.get(clusterId, getIngressTcpNamespace(cluster),
                     cluster.getIngress().getTcp().getConfigMapName());

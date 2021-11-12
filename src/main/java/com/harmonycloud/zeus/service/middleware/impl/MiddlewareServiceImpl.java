@@ -265,6 +265,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
     @Override
     public void setManagePlatformAddress(Middleware middleware, String clusterId) {
+        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+        if (cluster.getIngress() == null) {
+            return;
+        }
         List<IngressDTO> ingressDTOS = ingressService.get(clusterId, middleware.getNamespace(), middleware.getType(), middleware.getName());
         MiddlewareServiceNameIndex serviceNameIndex = ServiceNameConvertUtil.convert(middleware);
         List<IngressDTO> serviceDTOList = ingressDTOS.stream().filter(ingressDTO -> (
