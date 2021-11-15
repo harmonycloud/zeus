@@ -66,8 +66,19 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
 
     @Override
     protected void install(String setValues, MiddlewareClusterDTO cluster) {
-        helmChartService.upgradeInstall("prometheus", "default", setValues,
+        helmChartService.upgradeInstall(ComponentsEnum.PROMETHEUS.getName(), "default", setValues,
                 componentsPath + File.separator + "prometheus", cluster);
+    }
+
+    @Override
+    public void delete(MiddlewareClusterDTO cluster, Integer status) {
+        if (status != 2){
+            helmChartService.uninstall(cluster, "monitoring", ComponentsEnum.PROMETHEUS.getName());
+        }
+        if (cluster.getMonitor().getPrometheus() != null){
+            cluster.getMonitor().setPrometheus(null);
+        }
+        clusterService.updateCluster(cluster);
     }
 
     @Override
@@ -80,7 +91,7 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
 
     @Override
     protected List<PodInfo> getPodInfoList(String clusterId) {
-        return podService.list(clusterId, "monitoring", "prometheus");
+        return podService.list(clusterId, "monitoring", ComponentsEnum.PROMETHEUS.getName());
     }
 
     public void checkExist(MiddlewareClusterDTO cluster) {

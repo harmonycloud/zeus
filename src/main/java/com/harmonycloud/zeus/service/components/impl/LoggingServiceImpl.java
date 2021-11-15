@@ -19,6 +19,9 @@ import java.util.List;
 @Service
 @Operator(paramTypes4One = String.class)
 public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingService {
+
+    private static final String ES_NAME = "middleware-elasticsearch";
+
     @Override
     public boolean support(String name) {
         return ComponentsEnum.LOGGING.getName().equals(name);
@@ -70,8 +73,20 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
 
     @Override
     protected void install(String setValues, MiddlewareClusterDTO cluster) {
-        helmChartService.upgradeInstall("middleware-elasticsearch", "logging", setValues,
+        helmChartService.upgradeInstall(ES_NAME, "logging", setValues,
                 componentsPath + File.separator + "elasticsearch", cluster);
+    }
+
+    @Override
+    public void delete(MiddlewareClusterDTO cluster, Integer status) {
+        if (status != 2){
+            helmChartService.uninstall(cluster, "logging", ES_NAME);
+            helmChartService.uninstall(cluster, "logging", "log");
+        }
+        if (cluster.getLogging().getElasticSearch() != null){
+            cluster.getLogging().setElasticSearch(null);
+        }
+        clusterService.updateCluster(cluster);
     }
 
     @Override
@@ -90,7 +105,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
 
     @Override
     protected List<PodInfo> getPodInfoList(String clusterId) {
-        return podService.list(clusterId, "logging", "middleware-elasticsearch");
+        return podService.list(clusterId, "logging", ES_NAME);
     }
 
     public void createNodePort(MiddlewareClusterDTO cluster){

@@ -44,8 +44,13 @@ public class MiddlewareControllerServiceImpl extends AbstractBaseOperator implem
 
     @Override
     protected void install(String setValues, MiddlewareClusterDTO cluster) {
-        helmChartService.upgradeInstall("middleware-controller", "middleware-operator", setValues,
+        helmChartService.upgradeInstall(ComponentsEnum.MIDDLEWARE_CONTROLLER.getName(), "middleware-operator", setValues,
             componentsPath + File.separator + "platform", cluster);
+    }
+
+    @Override
+    public void delete(MiddlewareClusterDTO cluster, Integer status) {
+        helmChartService.uninstall(cluster, "middleware-operator", ComponentsEnum.MIDDLEWARE_CONTROLLER.getName());
     }
 
     @Override
@@ -55,7 +60,7 @@ public class MiddlewareControllerServiceImpl extends AbstractBaseOperator implem
 
     @Override
     protected List<PodInfo> getPodInfoList(String clusterId) {
-        return podService.list(clusterId, "middleware-operator", "middleware-controller");
+        return podService.list(clusterId, "middleware-operator", ComponentsEnum.MIDDLEWARE_CONTROLLER.getName());
     }
     
 }

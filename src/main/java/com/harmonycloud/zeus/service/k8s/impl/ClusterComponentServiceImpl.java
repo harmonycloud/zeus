@@ -86,6 +86,23 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
     }
 
     @Override
+    public void delete(MiddlewareClusterDTO cluster, String componentName, Integer status) {
+        // 删除集群组件
+        BaseComponentsService service =
+            getOperator(BaseComponentsService.class, BaseComponentsService.class, componentName);
+        service.delete(cluster, status);
+        // 更新数据库
+        QueryWrapper<BeanClusterComponents> wrapper =
+            new QueryWrapper<BeanClusterComponents>().eq("cluster_id", cluster.getId()).eq("component", componentName);
+        BeanClusterComponents beanClusterComponents = new BeanClusterComponents();
+        beanClusterComponents.setClusterId(cluster.getId());
+        beanClusterComponents.setComponent(componentName);
+        beanClusterComponents.setStatus(status == 2 ? 0 : 5);
+        beanClusterComponentsMapper.update(beanClusterComponents, wrapper);
+
+    }
+
+    @Override
     public List<ClusterComponentsDto> list(String clusterId) {
         QueryWrapper<BeanClusterComponents> wrapper =
             new QueryWrapper<BeanClusterComponents>().eq("cluster_id", clusterId);

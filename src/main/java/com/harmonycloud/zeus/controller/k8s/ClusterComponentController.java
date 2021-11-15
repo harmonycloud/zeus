@@ -58,6 +58,20 @@ public class ClusterComponentController {
         return BaseResult.ok();
     }
 
+    @ApiOperation(value = "删除集群组件", notes = "删除集群组件")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "componentName", value = "集群组件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "status", value = "状态", paramType = "query", dataTypeClass = Integer.class),
+    })
+    @DeleteMapping("/{componentName}")
+    public BaseResult delete(@PathVariable("clusterId") String clusterId,
+                             @PathVariable("componentName") String componentName,
+                             @RequestParam("status") Integer status) {
+        clusterComponentService.delete(clusterService.findById(clusterId), componentName, status);
+        return BaseResult.ok();
+    }
+
     @ApiOperation(value = "批量部署集群组件", notes = "批量部署集群组件")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),

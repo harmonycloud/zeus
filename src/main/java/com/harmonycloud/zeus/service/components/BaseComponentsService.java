@@ -32,11 +32,12 @@ public interface BaseComponentsService {
     void integrate(MiddlewareClusterDTO cluster);
 
     /**
-     * 卸载组件
+     * 卸载/取消接入 组件
      *
      * @param cluster 集群信息
+     * @param status  状态
      */
-    void uninstall(MiddlewareClusterDTO cluster, String type);
+    void delete(MiddlewareClusterDTO cluster, Integer status);
 
     /**
      * 更新组件状态

@@ -29,6 +29,11 @@ public class LocalPathServiceImpl extends AbstractBaseOperator implements LocalP
     }
 
     @Override
+    public void delete(MiddlewareClusterDTO cluster, Integer status) {
+        helmChartService.uninstall(cluster, "middleware-operator", ComponentsEnum.LOCAL_PATH.getName());
+    }
+
+    @Override
     protected String getValues(String repository, MiddlewareClusterDTO cluster, String type) {
         return "image.repository=" + repository + "/local-path-provisioner" +
                 ",storage.storageClassName=" + "local-path" +
@@ -38,7 +43,7 @@ public class LocalPathServiceImpl extends AbstractBaseOperator implements LocalP
 
     @Override
     protected void install(String setValues, MiddlewareClusterDTO cluster) {
-        helmChartService.upgradeInstall("local-path", "middleware-operator", setValues,
+        helmChartService.upgradeInstall(ComponentsEnum.LOCAL_PATH.getName(), "middleware-operator", setValues,
             componentsPath + File.separator + "local-path-provisioner", cluster);
     }
 
@@ -49,6 +54,6 @@ public class LocalPathServiceImpl extends AbstractBaseOperator implements LocalP
 
     @Override
     protected List<PodInfo> getPodInfoList(String clusterId) {
-        return podService.list(clusterId, "middleware-operator", "local-path");
+        return podService.list(clusterId, "middleware-operator", ComponentsEnum.LOCAL_PATH.getName());
     }
 }

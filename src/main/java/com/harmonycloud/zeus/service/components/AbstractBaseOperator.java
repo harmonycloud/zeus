@@ -49,30 +49,26 @@ public abstract class AbstractBaseOperator {
         updateCluster(cluster);
     }
 
-    public void uninstall(MiddlewareClusterDTO cluster, String type) {
-        //获取分区地址
-        //helmChartService.uninstall(cluster, getNamespace(), type);
-    }
-
     public void updateStatus(MiddlewareClusterDTO cluster, String name) {
-        List<PodInfo> podInfoList = getPodInfoList(cluster.getId());
-        // 默认正常
-        int status = 3;
-        if (CollectionUtils.isEmpty(podInfoList)) {
-            // 未安装
-            status = 0;
-        }
-        if (podInfoList.stream().anyMatch(pod -> !"Running".equals(pod.getStatus()))) {
-            // 异常
-            status = 4;
-        }
         QueryWrapper<BeanClusterComponents> wrapper =
-            new QueryWrapper<BeanClusterComponents>().eq("cluster_id", cluster.getId()).eq("component", name);
-        BeanClusterComponents bcc = new BeanClusterComponents();
-        bcc.setClusterId(cluster.getId());
-        bcc.setComponent(name);
-        bcc.setStatus(status);
-        beanClusterComponentsMapper.update(bcc, wrapper);
+                new QueryWrapper<BeanClusterComponents>().eq("cluster_id", cluster.getId()).eq("component", name);
+        BeanClusterComponents exist = beanClusterComponentsMapper.selectOne(wrapper);
+        // 接入组件不更新状态
+        if (exist.getStatus() != 2){
+            List<PodInfo> podInfoList = getPodInfoList(cluster.getId());
+            // 默认正常
+            int status = 3;
+            if (CollectionUtils.isEmpty(podInfoList)) {
+                // 未安装
+                status = 0;
+            }
+            if (podInfoList.stream().anyMatch(pod -> !"Running".equals(pod.getStatus())) && exist.getStatus() != 5) {
+                // 异常且非卸载中
+                status = 4;
+            }
+            exist.setStatus(status);
+            beanClusterComponentsMapper.update(exist, wrapper);
+        }
     }
 
     /**
