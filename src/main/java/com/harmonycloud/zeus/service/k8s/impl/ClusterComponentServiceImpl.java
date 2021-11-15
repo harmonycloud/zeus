@@ -137,11 +137,12 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
      * 记入数据库
      */
     private void record(String clusterId, String name, Integer status){
+        QueryWrapper<BeanClusterComponents> wrapper = new QueryWrapper<BeanClusterComponents>().eq("cluster_id", clusterId).eq("component", name);
         BeanClusterComponents cm = new BeanClusterComponents();
         cm.setClusterId(clusterId);
         cm.setComponent(name);
         cm.setStatus(status);
-        beanClusterComponentsMapper.insert(cm);
+        beanClusterComponentsMapper.update(cm, wrapper);
     }
 
     /**
