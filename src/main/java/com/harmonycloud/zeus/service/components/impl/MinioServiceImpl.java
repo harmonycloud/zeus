@@ -42,6 +42,17 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
     }
 
     @Override
+    public void delete(MiddlewareClusterDTO cluster, Integer status) {
+        if (status != 2){
+            helmChartService.uninstall(cluster, "minio", ComponentsEnum.MINIO.getName());
+        }
+        if (cluster.getStorage().containsKey("minio")){
+            cluster.getStorage().remove("minio");
+        }
+        clusterService.updateCluster(cluster);
+    }
+
+    @Override
     protected String getValues(String repository, MiddlewareClusterDTO cluster, String type) {
         String setValues = "image.repository=" + repository +
                 ",persistence.storageClass=local-path" +
@@ -57,7 +68,7 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
 
     @Override
     protected void install(String setValues, MiddlewareClusterDTO cluster) {
-        helmChartService.upgradeInstall("minio", "minio", setValues,
+        helmChartService.upgradeInstall(ComponentsEnum.MINIO.getName(), "minio", setValues,
                 componentsPath + File.separator + "minio/charts/minio", cluster);
     }
 
@@ -78,6 +89,6 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
 
     @Override
     protected List<PodInfo> getPodInfoList(String clusterId) {
-        return podService.list(clusterId, "minio", "minio");
+        return podService.list(clusterId, "minio", ComponentsEnum.MINIO.getName());
     }
 }

@@ -41,8 +41,16 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
     }
 
     @Override
-    public void uninstall(MiddlewareClusterDTO cluster, String type) {
-        helmChartService.uninstall(cluster, "monitoring", type);
+    public void delete(MiddlewareClusterDTO cluster, Integer status) {
+        //uninstall
+        if (status != 2){
+            helmChartService.uninstall(cluster, "monitoring", ComponentsEnum.ALERTMANAGER.getName());
+        }
+        //更新集群
+        if (cluster.getMonitor().getAlertManager() != null){
+            cluster.getMonitor().setAlertManager(null);
+        }
+        clusterService.updateCluster(cluster);
     }
 
     @Override
@@ -60,7 +68,7 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
 
     @Override
     public void install(String setValues, MiddlewareClusterDTO cluster){
-        helmChartService.upgradeInstall("alertmanager", "monitoring", setValues,
+        helmChartService.upgradeInstall(ComponentsEnum.ALERTMANAGER.getName(), "monitoring", setValues,
                 componentsPath + File.separator + "alertmanager", cluster);
     }
 
@@ -74,7 +82,7 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
 
     @Override
     protected List<PodInfo> getPodInfoList(String clusterId) {
-        return podService.list(clusterId, "monitoring", "alertmanager");
+        return podService.list(clusterId, "monitoring", ComponentsEnum.ALERTMANAGER.getName());
     }
 
 }

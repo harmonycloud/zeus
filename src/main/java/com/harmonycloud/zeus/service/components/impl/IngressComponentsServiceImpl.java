@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 @Service
 @Operator(paramTypes4One = String.class)
 public class IngressComponentsServiceImpl extends AbstractBaseOperator implements IngressService {
+
     @Override
     public boolean support(String name) {
         return ComponentsEnum.INGRESS.getName().equals(name);
@@ -35,6 +36,17 @@ public class IngressComponentsServiceImpl extends AbstractBaseOperator implement
     }
 
     @Override
+    public void delete(MiddlewareClusterDTO cluster, Integer status) {
+        if (status != 2){
+            helmChartService.uninstall(cluster, "middleware-operator", ComponentsEnum.INGRESS.getName());
+        }
+        if (cluster.getIngress()!= null){
+            cluster.setIngress(null);
+        }
+        clusterService.updateCluster(cluster);
+    }
+
+    @Override
     protected String getValues(String repository, MiddlewareClusterDTO cluster, String type) {
         return "image.ingressRepository=" + repository +
                 ",image.backendRepository=" + repository +
@@ -43,7 +55,7 @@ public class IngressComponentsServiceImpl extends AbstractBaseOperator implement
 
     @Override
     protected void install(String setValues, MiddlewareClusterDTO cluster) {
-        helmChartService.upgradeInstall("ingress", "middleware-operator", setValues,
+        helmChartService.upgradeInstall(ComponentsEnum.INGRESS.getName(), "middleware-operator", setValues,
                 componentsPath + File.separator + "ingress-nginx/charts/ingress-nginx", cluster);
     }
 

@@ -27,6 +27,8 @@ import java.util.stream.Collectors;
 @Operator(paramTypes4One = String.class)
 public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implements GrafanaService {
 
+    public static final String GRAFANA = "grafana";
+
     @Override
     public boolean support(String name) {
         return ComponentsEnum.GRAFANA.getName().equals(name);
@@ -78,7 +80,7 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
             jsonValues.put("replicas", 3);
         }
         //发布组件
-        helmChartService.upgradeInstall("grafana", "monitoring", componentsPath + File.separator + "grafana",
+        helmChartService.upgradeInstall(ComponentsEnum.GRAFANA.getName(), "monitoring", componentsPath + File.separator + "grafana",
                 yaml.loadAs(values, JSONObject.class), jsonValues, cluster);
         //更新middlewareCluster
         updateCluster(cluster);
@@ -95,8 +97,14 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
     }
 
     @Override
-    public void uninstall(MiddlewareClusterDTO cluster, String  type) {
-        helmChartService.uninstall(cluster, "monitoring",  type);
+    public void delete(MiddlewareClusterDTO cluster, Integer status) {
+        if (status != 2){
+            helmChartService.uninstall(cluster, "monitoring",  ComponentsEnum.GRAFANA.getName());
+        }
+        if (cluster.getMonitor().getGrafana() != null){
+            cluster.getMonitor().setGrafana(null);
+        }
+        clusterService.updateCluster(cluster);
     }
 
     @Override
@@ -119,7 +127,7 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
 
     @Override
     protected List<PodInfo> getPodInfoList(String clusterId) {
-        return podService.list(clusterId, "monitoring", "grafana");
+        return podService.list(clusterId, "monitoring", ComponentsEnum.GRAFANA.getName());
     }
 
 

@@ -39,6 +39,15 @@ public interface ClusterComponentService {
     void integrate(MiddlewareClusterDTO cluster, String componentName);
 
     /**
+     * 卸载/取消接入 组件
+     *
+     * @param cluster       集群对象
+     * @param componentName 组件名称
+     * @param status 部署类型:高可用，单实例
+     */
+    void delete(MiddlewareClusterDTO cluster, String componentName, Integer status);
+
+    /**
      * list所有组件
      *
      * @param clusterId 集群id
