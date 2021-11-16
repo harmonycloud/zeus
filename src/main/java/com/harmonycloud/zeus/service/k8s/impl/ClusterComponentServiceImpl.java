@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.service.k8s.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
 import com.harmonycloud.caas.common.model.ClusterComponentsDto;
+import com.harmonycloud.caas.common.model.MultipleComponentsInstallDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareInfoDTO;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
@@ -53,8 +54,8 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
     }
 
     @Override
-    public void multipleDeploy(MiddlewareClusterDTO cluster, List<ClusterComponentsDto> componentsDtoList,
-        List<MiddlewareInfoDTO> middlewareInfoDTOList) {
+    public void multipleDeploy(MiddlewareClusterDTO cluster, MultipleComponentsInstallDto multipleComponentsInstallDto) {
+        List<ClusterComponentsDto> componentsDtoList = multipleComponentsInstallDto.getClusterComponentsDtoList();
         // 优先部署内容local-path
         if (componentsDtoList.stream().anyMatch(
             clusterComponentsDto -> clusterComponentsDto.getComponent().equals(ComponentsEnum.LOCAL_PATH.getName()))) {
@@ -67,14 +68,16 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         componentsDtoList.forEach(clusterComponentsDto -> this.deploy(cluster, clusterComponentsDto.getComponent(),
             clusterComponentsDto.getType()));
 
-        //部署operator
-        middlewareInfoDTOList.forEach(info -> ThreadPoolExecutorFactory.executor.execute(() -> {
-            try {
-                middlewareManagerService.install(cluster.getId(), info.getChartName(), info.getChartVersion());
-            } catch (Exception e) {
-                log.error("集群{}  operator{} 安装失败", cluster.getId(), info.getChartName());
-            }
-        }));
+        // 部署operator
+
+        multipleComponentsInstallDto.getMiddlewareInfoDTOList()
+            .forEach(info -> ThreadPoolExecutorFactory.executor.execute(() -> {
+                try {
+                    middlewareManagerService.install(cluster.getId(), info.getChartName(), info.getChartVersion());
+                } catch (Exception e) {
+                    log.error("集群{}  operator{} 安装失败", cluster.getId(), info.getChartName());
+                }
+            }));
     }
 
 

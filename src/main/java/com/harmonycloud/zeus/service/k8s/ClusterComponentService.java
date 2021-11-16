@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.k8s;
 
 import com.harmonycloud.caas.common.model.ClusterComponentsDto;
+import com.harmonycloud.caas.common.model.MultipleComponentsInstallDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareInfoDTO;
 
@@ -25,10 +26,9 @@ public interface ClusterComponentService {
      * 批量部署组件
      *
      * @param cluster       集群对象
-     * @param componentsDtoList 组建对象list
-     * @param middlewareInfoDTOList operator对象list
+     * @param multipleComponentsInstallDto 集群组件批量安装对象
      */
-    void multipleDeploy(MiddlewareClusterDTO cluster, List<ClusterComponentsDto> componentsDtoList, List<MiddlewareInfoDTO> middlewareInfoDTOList);
+    void multipleDeploy(MiddlewareClusterDTO cluster, MultipleComponentsInstallDto multipleComponentsInstallDto);
 
     /**
      * 对接组件

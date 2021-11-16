@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.controller.k8s;
 import static com.harmonycloud.caas.common.constants.NameConstant.DEFAULT;
 
 import com.harmonycloud.caas.common.model.ClusterComponentsDto;
+import com.harmonycloud.caas.common.model.MultipleComponentsInstallDto;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareInfoDTO;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
@@ -75,13 +76,12 @@ public class ClusterComponentController {
     @ApiOperation(value = "批量部署集群组件", notes = "批量部署集群组件")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "componentsDtoList", value = "组建对象list", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "multipleComponentsInstallDto", value = "组件对象list", paramType = "query", dataTypeClass = MultipleComponentsInstallDto.class)
     })
     @PostMapping("/multiple")
     public BaseResult multipleDeploy(@PathVariable("clusterId") String clusterId,
-                                     @RequestBody List<ClusterComponentsDto> componentsDtoList,
-                                     @RequestBody List<MiddlewareInfoDTO> middlewareInfoDTOList) {
-        clusterComponentService.multipleDeploy(clusterService.findById(clusterId), componentsDtoList, middlewareInfoDTOList);
+                                     @RequestBody MultipleComponentsInstallDto multipleComponentsInstallDto) {
+        clusterComponentService.multipleDeploy(clusterService.findById(clusterId), multipleComponentsInstallDto);
         return BaseResult.ok();
     }
 
