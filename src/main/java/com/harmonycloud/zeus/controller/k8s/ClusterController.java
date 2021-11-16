@@ -135,14 +135,13 @@ public class ClusterController {
 
     @ApiOperation(value = "获取集群纳管指令", notes = "获取集群纳管指令")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "name", value = "集群名称", paramType = "query", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "name", value = "集群名称", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "apiAddress", value = "接口访问前缀", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/clusterJoinCommand")
-    public BaseResult clusterJoinCommand(@RequestParam(value = "name") String name, HttpServletRequest request) {
-        String requestURL = request.getRequestURL().toString();
-        log.info("requestURL:{}", requestURL);
+    public BaseResult clusterJoinCommand(@RequestParam(value = "name") String name, @RequestParam(value = "apiAddress") String apiAddress, HttpServletRequest request) {
         String userToken = request.getHeader("userToken");
-        return BaseResult.ok(clusterService.getClusterJoinCommand(name, requestURL, userToken));
+        return BaseResult.ok(clusterService.getClusterJoinCommand(name, apiAddress, userToken));
     }
 
     @ApiImplicitParams({

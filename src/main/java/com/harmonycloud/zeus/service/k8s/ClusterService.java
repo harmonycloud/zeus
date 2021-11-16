@@ -140,11 +140,11 @@ public interface ClusterService {
     /**
      * 获取快捷添加集群curl指令
      * @param clusterName 集群名称
-     * @param requestUrl 请求url
+     * @param apiAddress 接口前缀
      * @param userToken
      * @return
      */
-    String getClusterJoinCommand(String clusterName, String requestUrl, String userToken);
+    String getClusterJoinCommand(String clusterName, String apiAddress, String userToken);
 
     /**
      * curl指令快捷添加集群
