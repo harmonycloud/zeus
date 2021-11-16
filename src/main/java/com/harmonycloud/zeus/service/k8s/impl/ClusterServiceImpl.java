@@ -776,22 +776,27 @@ public class ClusterServiceImpl implements ClusterService {
         } catch (IOException e) {
             log.error("文件读取失败", e);
         }
-        // 获取admin.conf全部内容
-        String certificate = YamlUtil.convertToString(filePath);
-        String serverAddress = YamlUtil.getServerAddress(filePath);
-        // 删除admin.conf文件
-        File file = new File(filePath);
-        file.deleteOnExit();
+        try {
+            // 获取admin.conf全部内容
+            String certificate = YamlUtil.convertToString(filePath);
+            String serverAddress = YamlUtil.getServerAddress(filePath);
+            // 删除admin.conf文件
+            File file = new File(filePath);
+            file.deleteOnExit();
 
-        MiddlewareClusterDTO cluster = new MiddlewareClusterDTO();
-        ClusterCert clusterCert = new ClusterCert();
-        clusterCert.setCertificate(certificate);
-        cluster.setCert(clusterCert);
-        cluster.setName(name);
-        cluster.setNickname(name);
-        setClusterAddressInfo(cluster, serverAddress);
-        addCluster(cluster);
-        return BaseResult.ok();
+            MiddlewareClusterDTO cluster = new MiddlewareClusterDTO();
+            ClusterCert clusterCert = new ClusterCert();
+            clusterCert.setCertificate(certificate);
+            cluster.setCert(clusterCert);
+            cluster.setName(name);
+            cluster.setNickname(name);
+            setClusterAddressInfo(cluster, serverAddress);
+            addCluster(cluster);
+        } catch (Exception e) {
+            log.error("集群添加失败", e);
+            throw new BusinessException(DictEnum.CLUSTER, name, ErrorMessage.ADD_FAIL);
+        }
+        return BaseResult.ok("集群添加成功");
     }
 
     public Map<Map<String, String>, List<String>> getResultMap(PrometheusResponse response){
