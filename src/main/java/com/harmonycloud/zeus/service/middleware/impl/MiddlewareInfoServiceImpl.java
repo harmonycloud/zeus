@@ -377,4 +377,23 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         operatorDTO.setRunningPercent(MathUtil.calcPercent(runningOperator.get(), operatorList.size()));
         return operatorDTO;
     }
+
+    @Override
+    public List<BeanMiddlewareInfo> list(List<MiddlewareClusterDTO> clusterList) {
+        List<String> clusterIds = new ArrayList<>();
+        clusterList.forEach(cluster -> {
+            clusterIds.add(cluster.getId());
+        });
+        List<BeanClusterMiddlewareInfo> briefMiddlewareInfos = clusterMiddlewareInfoService.list(clusterIds);
+        List<BeanMiddlewareInfo> infoList = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(briefMiddlewareInfos)) {
+            briefMiddlewareInfos.forEach(middlewareInfo -> {
+                QueryWrapper<BeanMiddlewareInfo> queryWrapper = new QueryWrapper<>();
+                queryWrapper.eq("chart_name", middlewareInfo.getChartName());
+                queryWrapper.eq("chart_version", middlewareInfo.getChartVersion());
+                infoList.addAll(middlewareInfoMapper.selectList(queryWrapper));
+            });
+        }
+        return infoList;
+    }
 }

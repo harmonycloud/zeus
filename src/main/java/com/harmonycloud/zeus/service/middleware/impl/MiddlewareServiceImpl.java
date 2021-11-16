@@ -291,7 +291,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
     @Override
     public List<MiddlewareBriefInfoDTO> getMiddlewareBriefInfoList(List<MiddlewareClusterDTO> clusterDTOList) {
-        List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.list(false);
+        List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.list(clusterDTOList);
         List<MiddlewareBriefInfoDTO> middlewareBriefInfoDTOList = new ArrayList<>();
         List<Middleware> middlewares = queryAllClusterService(clusterDTOList);
         middlewareInfoList.forEach(middlewareInfo -> {

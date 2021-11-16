@@ -7,6 +7,7 @@ import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
@@ -73,5 +74,16 @@ public class ClusterMiddlewareInfoServiceImpl implements ClusterMiddlewareInfoSe
         }
         wrapper.orderByAsc("chart_name");
         return beanClusterMiddlewareInfoMapper.selectList(wrapper);
+    }
+
+    @Override
+    public List<BeanClusterMiddlewareInfo> list(List<String> clusterIds) {
+        if (CollectionUtils.isEmpty(clusterIds)) {
+            return null;
+        }
+        QueryWrapper<BeanClusterMiddlewareInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("cluster_id", clusterIds);
+        queryWrapper.eq("status", 1);
+        return beanClusterMiddlewareInfoMapper.selectList(queryWrapper);
     }
 }
