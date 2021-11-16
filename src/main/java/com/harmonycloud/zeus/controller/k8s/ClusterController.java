@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.controller.k8s;
 
+import java.io.InputStream;
 import java.util.List;
 
 import com.harmonycloud.caas.common.model.ClusterNamespaceResourceDto;
@@ -8,6 +9,7 @@ import com.harmonycloud.caas.common.model.Node;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,11 +28,15 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author dengyulong
  * @date 2021/03/25
  */
+@Slf4j
 @Api(tags = {"系统管理","基础资源"}, value = "集群", description = "集群")
 @RestController
 @RequestMapping("/clusters")
@@ -127,8 +133,29 @@ public class ClusterController {
         return BaseResult.ok(clusterService.getNamespaceResource(clusterId));
     }
 
+    @ApiOperation(value = "获取集群纳管指令", notes = "获取集群纳管指令")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "name", value = "集群名称", paramType = "query", dataTypeClass = String.class)
+    })
+    @GetMapping("/clusterJoinCommand")
+    public BaseResult clusterJoinCommand(@RequestParam(value = "name") String name, HttpServletRequest request) {
+        String requestURL = request.getRequestURL().toString();
+        String userToken = request.getHeader("userToken");
+        return BaseResult.ok(clusterService.getClusterJoinCommand(name, requestURL, userToken));
+    }
+
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "adminConf", value = "集群名称", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "集群名称", paramType = "query", dataTypeClass = String.class)
+    })
+    @PostMapping("/quickAdd")
+    public BaseResult quickAdd(@RequestParam("adminConf") MultipartFile adminConf,@RequestParam("name") String name) {
+        log.info("name{}", name);
+        return clusterService.quickAdd(adminConf, name);
+    }
+
     /**
-     * 数据脱敏
+     ffx     * 数据脱敏
      */
     private void desensitize(MiddlewareClusterDTO cluster) {
         cluster.setAccessToken(null);
