@@ -140,6 +140,7 @@ public class ClusterController {
     @GetMapping("/clusterJoinCommand")
     public BaseResult clusterJoinCommand(@RequestParam(value = "name") String name, HttpServletRequest request) {
         String requestURL = request.getRequestURL().toString();
+        log.info("requestURL:{}", requestURL);
         String userToken = request.getHeader("userToken");
         return BaseResult.ok(clusterService.getClusterJoinCommand(name, requestURL, userToken));
     }
