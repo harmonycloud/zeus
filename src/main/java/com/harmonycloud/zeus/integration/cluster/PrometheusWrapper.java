@@ -15,6 +15,7 @@ import com.harmonycloud.caas.common.model.PrometheusResponse;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitorInfo;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
+import static com.harmonycloud.caas.common.constants.NameConstant.ADMIN;
 
 /**
  * @author xutianhong
@@ -40,26 +41,22 @@ public class PrometheusWrapper {
         PrometheusApi prometheusApi = createApi(clusterId, prometheusApiVersion);
         return prometheusApi.getRules();
     }
-
-    public void setSilence(String clusterId, String prometheusApiVersion, Map<String, Object> body) throws Exception {
-        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        MiddlewareClusterMonitorInfo alertManager = getAlertManagerInfo(cluster);
-        PrometheusApi prometheusApi = new PrometheusApi(new PrometheusClient(alertManager.getProtocol(),
-                alertManager.getHost(), Integer.parseInt(alertManager.getPort()),
-                alertManager.getAddress()
-                        .replace(alertManager.getProtocol() + "://" + alertManager.getHost() + ":" + alertManager.getPort(), "")
-                        + prometheusApiVersion));
-        prometheusApi.setSilence(body);
-    }
     
     public PrometheusApi createApi(String clusterId, String prometheusApiVersion) {
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         MiddlewareClusterMonitorInfo prometheus = getPrometheusInfo(cluster);
-        return new PrometheusApi(
+        PrometheusClient client =
             new PrometheusClient(prometheus.getProtocol(), prometheus.getHost(), Integer.parseInt(prometheus.getPort()),
                 prometheus.getAddress()
                     .replace(prometheus.getProtocol() + "://" + prometheus.getHost() + ":" + prometheus.getPort(), "")
-                    + prometheusApiVersion));
+                    + prometheusApiVersion);
+
+        if (StringUtils.isNotEmpty(cluster.getMonitor().getPrometheus().getUsername())
+            && StringUtils.isNotEmpty(cluster.getMonitor().getPrometheus().getPassword())) {
+            client.addHttpBasicAuth(ADMIN, cluster.getMonitor().getPrometheus().getUsername(),
+                cluster.getMonitor().getPrometheus().getPassword());
+        }
+        return new PrometheusApi(client);
     }
 
     private MiddlewareClusterMonitorInfo getPrometheusInfo(MiddlewareClusterDTO cluster) {
@@ -83,30 +80,6 @@ public class PrometheusWrapper {
             prometheus.setAddress(prometheus.getProtocol() + "://" + prometheus.getHost() + ":" + prometheus.getPort());
         }
         return prometheus;
-    }
-
-    private MiddlewareClusterMonitorInfo getAlertManagerInfo(MiddlewareClusterDTO cluster) {
-        MiddlewareClusterMonitorInfo alertManager;
-        if (cluster.getMonitor() == null || cluster.getMonitor().getAlertManager() == null) {
-            alertManager = new MiddlewareClusterMonitorInfo().setProtocol(Protocol.HTTP.getValue().toLowerCase())
-                    .setHost(cluster.getIngress().getAddress()).setPort(alertManagerPort);
-        } else {
-            alertManager = cluster.getMonitor().getAlertManager();
-            if (StringUtils.isBlank(cluster.getMonitor().getAlertManager().getProtocol())) {
-                alertManager.setProtocol(Protocol.HTTP.getValue().toLowerCase());
-            }
-            if (StringUtils.isBlank(cluster.getMonitor().getAlertManager().getHost())) {
-                alertManager.setHost(cluster.getIngress().getAddress());
-            }
-            if (StringUtils.isBlank(cluster.getMonitor().getAlertManager().getPort())) {
-                alertManager.setPort(alertManagerPort);
-            }
-        }
-        if (StringUtils.isEmpty(alertManager.getAddress())) {
-            alertManager
-                    .setAddress(alertManager.getProtocol() + "://" + alertManager.getHost() + ":" + alertManager.getPort());
-        }
-        return alertManager;
     }
 
 }

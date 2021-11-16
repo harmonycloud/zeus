@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
+import com.harmonycloud.zeus.service.aspect.AspectService;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
@@ -86,6 +87,8 @@ public abstract class AbstractBaseOperator {
     private ServiceService serviceService;
     @Autowired
     private MiddlewareBackupServiceImpl middlewareBackupService;
+    @Autowired
+    private AspectService aspectService;
     /**
      * 是否支持该中间件
      */
@@ -127,12 +130,13 @@ public abstract class AbstractBaseOperator {
         replaceValues(middleware, cluster, values);
         // deal with Charts.yaml file
         replaceChart(helmChart, values);
+        // deal with dynamic
+        aspectService.operation(cluster.getHost(), middleware, middleware.getDynamicValues(), values);
         // map to yaml
         String newValuesYaml = yaml.dumpAsMap(values);
         helmChart.setValueYaml(newValuesYaml);
         // write to local file
         helmChartService.coverYamlFile(helmChart);
-
         // 3. helm package & install
         String tgzFilePath = helmChartService.packageChart(helmChart.getTarFileName(), middleware.getChartName(),
             middleware.getChartVersion());
