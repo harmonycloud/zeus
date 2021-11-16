@@ -761,16 +761,8 @@ public class ClusterServiceImpl implements ClusterService {
 
     @Override
     public String getClusterJoinCommand(String clusterName, String requestUrl, String userToken) {
-        String clusterJoinUrl;
-        String apiName = "/clusters/quickAdd";
-        if (requestUrl.contains("api")) {
-            String[] apis = requestUrl.split("api");
-            clusterJoinUrl = apis[0] + "api" + apiName;
-        } else {
-            int lastSlashIndex = requestUrl.lastIndexOf("/");
-            String requestPrefix = requestUrl.substring(0, lastSlashIndex);
-            clusterJoinUrl = requestPrefix + apiName;
-        }
+        String[] apis = requestUrl.split("clusters");
+        String clusterJoinUrl = apis[0] + "api/clusters/quickAdd";
         String curlCommand = "curl -X POST --url %s?name=%s --header Content-Type:multipart/form-data --header userToken:%s -F adminConf=@/etc/kubernetes/admin.conf";
         String res = String.format(curlCommand, clusterJoinUrl, clusterName, userToken);
         return res;
