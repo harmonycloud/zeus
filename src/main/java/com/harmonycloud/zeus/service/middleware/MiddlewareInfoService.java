@@ -22,6 +22,8 @@ public interface MiddlewareInfoService {
      */
     List<BeanMiddlewareInfo> list(Boolean all);
 
+    List<BeanMiddlewareInfo> list(List<MiddlewareClusterDTO> clusterDTOList);
+
     /**
      * 查询中间件列表
      *
