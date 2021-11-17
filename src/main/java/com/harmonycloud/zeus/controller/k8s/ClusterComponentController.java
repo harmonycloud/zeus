@@ -54,8 +54,10 @@ public class ClusterComponentController {
     @PostMapping("/{componentName}")
     public BaseResult deploy(@PathVariable("clusterId") String clusterId,
                              @PathVariable("componentName") String componentName,
-                             @RequestParam("type") String type) {
-        clusterComponentService.deploy(clusterService.findById(clusterId), componentName, type);
+                             @RequestBody ClusterComponentsDto clusterComponentsDto) {
+        clusterComponentsDto.setClusterId(clusterId);
+        clusterComponentsDto.setComponent(componentName);
+        clusterComponentService.deploy(clusterService.findById(clusterId), clusterComponentsDto);
         return BaseResult.ok();
     }
 

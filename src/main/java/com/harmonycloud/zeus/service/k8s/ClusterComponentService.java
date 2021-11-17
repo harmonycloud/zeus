@@ -22,6 +22,13 @@ public interface ClusterComponentService {
      */
     void deploy(MiddlewareClusterDTO cluster, String componentName, String type);
 
+     /** 部署组件
+     *
+     * @param cluster       集群对象
+     * @param clusterComponentsDto 集群组件对象
+     */
+    void deploy(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto);
+
     /**
      * 批量部署组件
      *

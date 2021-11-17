@@ -4,18 +4,17 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
 import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.MultipleComponentsInstallDto;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareInfoDTO;
+import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.zeus.bean.BeanClusterComponents;
 import com.harmonycloud.zeus.dao.BeanClusterComponentsMapper;
 import com.harmonycloud.zeus.service.middleware.MiddlewareManagerService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.zeus.service.AbstractBaseService;
 import com.harmonycloud.zeus.service.components.BaseComponentsService;
 import com.harmonycloud.zeus.service.k8s.ClusterComponentService;
@@ -48,28 +47,33 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
 
     @Override
     public void deploy(MiddlewareClusterDTO cluster, String componentName, String type) {
-        BaseComponentsService service = getOperator(BaseComponentsService.class, BaseComponentsService.class, componentName);
+        BaseComponentsService service =
+                getOperator(BaseComponentsService.class, BaseComponentsService.class, componentName);
         service.deploy(cluster, type);
         record(cluster.getId(), componentName, 2);
     }
 
     @Override
-    public void multipleDeploy(MiddlewareClusterDTO cluster, MultipleComponentsInstallDto multipleComponentsInstallDto) {
+    public void deploy(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
+        grafana(cluster, clusterComponentsDto);
+        this.deploy(cluster, clusterComponentsDto.getComponent(), clusterComponentsDto.getType());
+    }
+
+    @Override
+    public void multipleDeploy(MiddlewareClusterDTO cluster,
+        MultipleComponentsInstallDto multipleComponentsInstallDto) {
         List<ClusterComponentsDto> componentsDtoList = multipleComponentsInstallDto.getClusterComponentsDtoList();
         // 优先部署内容local-path
         if (componentsDtoList.stream().anyMatch(
             clusterComponentsDto -> clusterComponentsDto.getComponent().equals(ComponentsEnum.LOCAL_PATH.getName()))) {
             deploy(cluster, ComponentsEnum.LOCAL_PATH.getName(), "");
-            componentsDtoList = componentsDtoList.stream().filter(
-                clusterComponentsDto -> clusterComponentsDto.getComponent().equals(ComponentsEnum.LOCAL_PATH.getName()))
-                .collect(Collectors.toList());
+            componentsDtoList = componentsDtoList.stream().filter(clusterComponentsDto -> !clusterComponentsDto
+                .getComponent().equals(ComponentsEnum.LOCAL_PATH.getName())).collect(Collectors.toList());
         }
         // 部署组件
-        componentsDtoList.forEach(clusterComponentsDto -> this.deploy(cluster, clusterComponentsDto.getComponent(),
-            clusterComponentsDto.getType()));
+        componentsDtoList.forEach(clusterComponentsDto -> this.deploy(cluster, clusterComponentsDto));
 
         // 部署operator
-
         multipleComponentsInstallDto.getMiddlewareInfoDTOList()
             .forEach(info -> ThreadPoolExecutorFactory.executor.execute(() -> {
                 try {
@@ -163,6 +167,22 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
             beanClusterComponentsMapper.insert(cc);
         }
         return list;
+    }
+
+    /**
+     * 特殊处理grafana，写入protocol
+     */
+    public void grafana(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
+        if (StringUtils.isNotEmpty(clusterComponentsDto.getProtocol())
+            && clusterComponentsDto.getComponent().equals(ComponentsEnum.GRAFANA.getName())) {
+            if (cluster.getMonitor() == null) {
+                cluster.setMonitor(new MiddlewareClusterMonitor());
+            }
+            if (cluster.getMonitor().getGrafana() == null) {
+                cluster.getMonitor().setGrafana(new MiddlewareClusterMonitorInfo());
+            }
+            cluster.getMonitor().getGrafana().setProtocol(clusterComponentsDto.getProtocol());
+        }
     }
 
 }
