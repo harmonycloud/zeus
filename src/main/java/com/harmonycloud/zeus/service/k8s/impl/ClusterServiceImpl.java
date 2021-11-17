@@ -15,10 +15,13 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
+import com.baomidou.mybatisplus.extension.api.R;
+import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
 import com.harmonycloud.caas.common.model.*;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.harmonycloud.zeus.util.YamlUtil;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -52,6 +55,7 @@ import com.harmonycloud.zeus.util.MathUtil;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author dengyulong
@@ -65,6 +69,8 @@ public class ClusterServiceImpl implements ClusterService {
      * 默认存储限额
      */
     private static final String DEFAULT_STORAGE_LIMIT = "100Gi";
+    @Value("${system.upload.path:/usr/local/zeus-pv/upload}")
+    private String uploadPath;
 
     @Autowired
     private ClusterWrapper clusterWrapper;
@@ -753,6 +759,46 @@ public class ClusterServiceImpl implements ClusterService {
         }).collect(Collectors.toList());
     }
 
+    @Override
+    public String getClusterJoinCommand(String clusterName, String apiAddress, String userToken) {
+        String clusterJoinUrl = apiAddress + "/api/clusters/quickAdd";
+        String curlCommand = "curl -X POST --url %s?name=%s --header Content-Type:multipart/form-data --header userToken:%s -F adminConf=@/etc/kubernetes/admin.conf";
+        String res = String.format(curlCommand, clusterJoinUrl, clusterName, userToken);
+        return res;
+    }
+
+    @Override
+    public BaseResult quickAdd(MultipartFile adminConf, String name) {
+        String filePath = uploadPath + "/" + adminConf.getName();
+        try {
+            File file = new File(filePath);
+            adminConf.transferTo(file);
+        } catch (IOException e) {
+            log.error("文件读取失败", e);
+        }
+        try {
+            // 获取admin.conf全部内容
+            String certificate = YamlUtil.convertToString(filePath);
+            String serverAddress = YamlUtil.getServerAddress(filePath);
+            // 删除admin.conf文件
+            File file = new File(filePath);
+            file.deleteOnExit();
+
+            MiddlewareClusterDTO cluster = new MiddlewareClusterDTO();
+            ClusterCert clusterCert = new ClusterCert();
+            clusterCert.setCertificate(certificate);
+            cluster.setCert(clusterCert);
+            cluster.setName(name);
+            cluster.setNickname(name);
+            setClusterAddressInfo(cluster, serverAddress);
+            addCluster(cluster);
+        } catch (Exception e) {
+            log.error("集群添加失败", e);
+            throw new BusinessException(DictEnum.CLUSTER, name, ErrorMessage.ADD_FAIL);
+        }
+        return BaseResult.ok("集群添加成功");
+    }
+
     public Map<Map<String, String>, List<String>> getResultMap(PrometheusResponse response){
         return response.getData().getResult().stream().collect(Collectors.toMap(PrometheusResult::getMetric, PrometheusResult::getValue));
     }
@@ -869,6 +915,17 @@ public class ClusterServiceImpl implements ClusterService {
         }
     }
 
-
+    /**
+     * 设置集群地址信息
+     * @param cluster 集群
+     * @param serverAddress 集群master server信息
+     */
+    private void setClusterAddressInfo(MiddlewareClusterDTO cluster,String serverAddress){
+        String[] serverInfos = serverAddress.split(":");
+        String host = serverInfos[1].replaceAll("//", "");
+        cluster.setProtocol(serverInfos[0]);
+        cluster.setHost(host);
+        cluster.setPort(Integer.parseInt(serverInfos[2]));
+    }
 
 }

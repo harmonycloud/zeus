@@ -1,9 +1,12 @@
 package com.harmonycloud.zeus.service.k8s;
 
+import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.ClusterNamespaceResourceDto;
 import com.harmonycloud.caas.common.model.ClusterNodeResourceDto;
 import com.harmonycloud.caas.common.model.Node;
 import com.harmonycloud.caas.common.model.middleware.*;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -134,5 +137,20 @@ public interface ClusterService {
      */
     List<ClusterNamespaceResourceDto> getNamespaceResource(String clusterId) throws Exception;
 
+    /**
+     * 获取快捷添加集群curl指令
+     * @param clusterName 集群名称
+     * @param apiAddress 接口前缀
+     * @param userToken
+     * @return
+     */
+    String getClusterJoinCommand(String clusterName, String apiAddress, String userToken);
 
+    /**
+     * curl指令快捷添加集群
+     * @param adminConf
+     * @param name 集群名称
+     * @return
+     */
+    BaseResult quickAdd(MultipartFile adminConf, String name);
 }
