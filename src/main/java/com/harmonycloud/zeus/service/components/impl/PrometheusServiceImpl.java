@@ -34,6 +34,16 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
     }
 
     @Override
+    public void deploy(MiddlewareClusterDTO cluster, String type) {
+        if (namespaceService.list(cluster.getId()).stream().noneMatch(ns -> "monitoring".equals(ns.getName()))){
+            //创建分区
+            namespaceService.save(cluster.getId(), "monitoring", null);
+        }
+        //发布prometheus
+        super.deploy(cluster, type);
+    }
+
+    @Override
     public void integrate(MiddlewareClusterDTO cluster) {
         MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
         if (existCluster.getMonitor() == null){

@@ -33,6 +33,16 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
     }
 
     @Override
+    public void deploy(MiddlewareClusterDTO cluster, String type) {
+        if (namespaceService.list(cluster.getId()).stream().noneMatch(ns -> "monitoring".equals(ns.getName()))){
+            //创建分区
+            namespaceService.save(cluster.getId(), "monitoring", null);
+        }
+        //发布alertManager
+        super.deploy(cluster, type);
+    }
+
+    @Override
     public void integrate(MiddlewareClusterDTO cluster) {
         MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
         if (existCluster.getMonitor() == null){

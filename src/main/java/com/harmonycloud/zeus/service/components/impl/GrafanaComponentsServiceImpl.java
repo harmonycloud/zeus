@@ -34,8 +34,13 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
         return ComponentsEnum.GRAFANA.getName().equals(name);
     }
 
+
     @Override
     public void deploy(MiddlewareClusterDTO cluster, String type) {
+        if (namespaceService.list(cluster.getId()).stream().noneMatch(ns -> "monitoring".equals(ns.getName()))){
+            //创建分区
+            namespaceService.save(cluster.getId(), "monitoring", null);
+        }
         //获取仓库地址
         String repository = getRepository(cluster);
         //拼接参数
