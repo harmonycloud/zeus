@@ -43,7 +43,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
     public void integrate(MiddlewareClusterDTO cluster) {
         MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
         existCluster.setLogging(cluster.getLogging());
-        clusterService.updateCluster(existCluster);
+        clusterService.update(existCluster);
     }
 
     @Override
@@ -86,7 +86,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         if (cluster.getLogging().getElasticSearch() != null){
             cluster.getLogging().setElasticSearch(null);
         }
-        clusterService.updateCluster(cluster);
+        clusterService.update(cluster);
     }
 
     @Override
@@ -100,7 +100,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         MiddlewareClusterLogging logging = new MiddlewareClusterLogging();
         logging.setElasticSearch(es);
         cluster.setLogging(logging);
-        clusterService.updateCluster(cluster);
+        clusterService.update(cluster);
     }
 
     @Override

@@ -39,7 +39,7 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
             existCluster.setMonitor(new MiddlewareClusterMonitor());
         }
         existCluster.getMonitor().setAlertManager(cluster.getMonitor().getAlertManager());
-        clusterService.updateCluster(existCluster);
+        clusterService.update(existCluster);
     }
 
     @Override
@@ -52,7 +52,7 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
         if (cluster.getMonitor().getAlertManager() != null){
             cluster.getMonitor().setAlertManager(null);
         }
-        clusterService.updateCluster(cluster);
+        clusterService.update(cluster);
     }
 
     @Override
@@ -82,7 +82,7 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
             cluster.setMonitor(new MiddlewareClusterMonitor());
         }
         cluster.getMonitor().setAlertManager(alertManager);
-        clusterService.updateCluster(cluster);
+        clusterService.update(cluster);
     }
 
     @Override

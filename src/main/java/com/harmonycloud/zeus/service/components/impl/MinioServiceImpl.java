@@ -38,7 +38,7 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
     public void integrate(MiddlewareClusterDTO cluster) {
         MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
         existCluster.getStorage().put("backup", cluster.getStorage().get("backup"));
-        clusterService.updateCluster(existCluster);
+        clusterService.update(existCluster);
     }
 
     @Override
@@ -49,7 +49,7 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
         if (cluster.getStorage().containsKey("minio")){
             cluster.getStorage().remove("minio");
         }
-        clusterService.updateCluster(cluster);
+        clusterService.update(cluster);
     }
 
     @Override
@@ -84,7 +84,7 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
         backup.put("type", "minio");
         backup.put("storage", storage);
         cluster.getStorage().put("backup", backup);
-        clusterService.updateCluster(cluster);
+        clusterService.update(cluster);
     }
 
     @Override

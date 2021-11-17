@@ -40,7 +40,7 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
             existCluster.setMonitor(new MiddlewareClusterMonitor());
         }
         existCluster.getMonitor().setPrometheus(cluster.getMonitor().getPrometheus());
-        clusterService.updateCluster(existCluster);
+        clusterService.update(existCluster);
     }
 
     @Override
@@ -80,7 +80,7 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
         if (cluster.getMonitor().getPrometheus() != null){
             cluster.getMonitor().setPrometheus(null);
         }
-        clusterService.updateCluster(cluster);
+        clusterService.update(cluster);
     }
 
     @Override
@@ -91,7 +91,7 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
         if (cluster.getMonitor() == null){
             cluster.setMonitor(new MiddlewareClusterMonitor());
         }
-        clusterService.updateCluster(cluster);
+        clusterService.update(cluster);
     }
 
     @Override

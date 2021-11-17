@@ -32,7 +32,7 @@ public class IngressComponentsServiceImpl extends AbstractBaseOperator implement
         MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
         existCluster.setIngress(cluster.getIngress());
         existCluster.getIngress().getTcp().setEnabled(true);
-        clusterService.updateCluster(existCluster);
+        clusterService.update(existCluster);
     }
 
     @Override
@@ -43,7 +43,7 @@ public class IngressComponentsServiceImpl extends AbstractBaseOperator implement
         if (cluster.getIngress()!= null){
             cluster.setIngress(null);
         }
-        clusterService.updateCluster(cluster);
+        clusterService.update(cluster);
     }
 
     @Override
@@ -68,7 +68,7 @@ public class IngressComponentsServiceImpl extends AbstractBaseOperator implement
                 .setConfigMapName("ingress-ingress-nginx-system-expose-nginx-config-tcp");
         ingress.setTcp(config);
         cluster.setIngress(ingress);
-        clusterService.updateCluster(cluster);
+        clusterService.update(cluster);
     }
 
     @Override

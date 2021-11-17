@@ -94,7 +94,7 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
             existCluster.setMonitor(new MiddlewareClusterMonitor());
         }
         existCluster.getMonitor().setGrafana(cluster.getMonitor().getGrafana());
-        clusterService.updateCluster(existCluster);
+        clusterService.update(existCluster);
     }
 
     @Override
@@ -105,7 +105,7 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
         if (cluster.getMonitor().getGrafana() != null){
             cluster.getMonitor().setGrafana(null);
         }
-        clusterService.updateCluster(cluster);
+        clusterService.update(cluster);
     }
 
     @Override
@@ -127,6 +127,7 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
             cluster.setMonitor(new MiddlewareClusterMonitor());
         }
         cluster.getMonitor().setGrafana(grafana);
+        clusterService.update(cluster);
     }
 
     @Override
