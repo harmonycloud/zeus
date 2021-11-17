@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.baomidou.mybatisplus.extension.api.R;
 import com.harmonycloud.caas.common.constants.CommonConstant;
@@ -348,20 +349,20 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     public List<MiddlewareBriefInfoDTO> listAllMiddleware(String clusterId, String namespace, String type, String keyword) {
         List<MiddlewareBriefInfoDTO> serviceList = null;
         try {
-            List<MiddlewareInfoDTO> middlewareInfoDTOList = middlewareInfoService.list(clusterId);
+            List<BeanMiddlewareInfo> middlewareInfoDTOList = middlewareInfoService.list(new ArrayList<>().add(clusterService.findById(clusterId)));
             if (type != null) {
                 middlewareInfoDTOList = middlewareInfoDTOList.stream().filter(middleware -> type.equals(middleware.getChartName())).collect(Collectors.toList());
             }
             serviceList = new ArrayList<>();
             List<Middleware> middlewareServiceList = simpleList(clusterId, namespace, type, keyword);
-            for (MiddlewareInfoDTO middlewareInfoDTO : middlewareInfoDTOList) {
+            for (BeanMiddlewareInfo middlewareInfo : middlewareInfoDTOList) {
                 AtomicInteger errServiceCount = new AtomicInteger(0);
                 List<Middleware> singleServiceList = new ArrayList<>();
                 for (Middleware middleware : middlewareServiceList) {
-                    if (!middlewareInfoDTO.getChartName().equals(middleware.getType())) {
+                    if (!middlewareInfo.getChartName().equals(middleware.getType())) {
                         continue;
                     }
-                    MiddlewareCRD middlewareCRD = middlewareCRDService.getCR(clusterId, namespace, middlewareInfoDTO.getType(), middleware.getName());
+                    MiddlewareCRD middlewareCRD = middlewareCRDService.getCR(clusterId, namespace, middlewareInfo.getType(), middleware.getName());
                     if (middlewareCRD != null && middlewareCRD.getStatus() != null && middlewareCRD.getStatus().getInclude() != null && middlewareCRD.getStatus().getInclude().get(PODS) != null) {
                         List<MiddlewareInfo> middlewareInfos = middlewareCRD.getStatus().getInclude().get(PODS);
                         middleware.setPodNum(middlewareInfos.size());
@@ -376,15 +377,15 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                     singleServiceList.add(middleware);
                 }
                 MiddlewareBriefInfoDTO briefInfoDTO = new MiddlewareBriefInfoDTO();
-                briefInfoDTO.setName(middlewareInfoDTO.getName());
-                briefInfoDTO.setImagePath(middlewareInfoDTO.getImagePath());
-                briefInfoDTO.setChartName(middlewareInfoDTO.getChartName());
-                briefInfoDTO.setChartVersion(middlewareInfoDTO.getChartVersion());
-                briefInfoDTO.setVersion(middlewareInfoDTO.getVersion());
+                briefInfoDTO.setName(middlewareInfo.getName());
+                briefInfoDTO.setImagePath(middlewareInfo.getImagePath());
+                briefInfoDTO.setChartName(middlewareInfo.getChartName());
+                briefInfoDTO.setChartVersion(middlewareInfo.getChartVersion());
+                briefInfoDTO.setVersion(middlewareInfo.getVersion());
                 Collections.sort(singleServiceList, new MiddlewareComparator());
                 briefInfoDTO.setServiceList(singleServiceList);
                 briefInfoDTO.setServiceNum(singleServiceList.size());
-                briefInfoDTO.setOfficial(middlewareInfoDTO.getOfficial());
+                briefInfoDTO.setOfficial(middlewareInfo.getOfficial());
                 serviceList.add(briefInfoDTO);
             }
             Collections.sort(serviceList, new MiddlewareBriefInfoDTOComparator());
