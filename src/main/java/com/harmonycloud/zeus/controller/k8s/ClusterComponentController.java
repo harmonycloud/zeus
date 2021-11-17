@@ -49,7 +49,7 @@ public class ClusterComponentController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "componentName", value = "集群组件名称", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "type", value = "部署模式(高可用:单实例)", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "clusterComponentsDto", value = "集群组件对象", paramType = "query", dataTypeClass = ClusterComponentsDto.class),
     })
     @PostMapping("/{componentName}")
     public BaseResult deploy(@PathVariable("clusterId") String clusterId,
