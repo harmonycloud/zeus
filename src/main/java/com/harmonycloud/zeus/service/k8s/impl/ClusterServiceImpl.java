@@ -837,7 +837,7 @@ public class ClusterServiceImpl implements ClusterService {
         try {
             String execCommand;
             execCommand = MessageFormat.format(
-                    "kubectl create -f {0} --server={1} --token={2} --insecure-skip-tls-verify=true",
+                    "kubectl apply -f {0} --server={1} --token={2} --insecure-skip-tls-verify=true",
                     middlewareCrdYamlPath, middlewareClusterDTO.getAddress(), middlewareClusterDTO.getAccessToken());
             log.info("执行kubectl命令：{}", execCommand);
             String[] commands = execCommand.split(" ");
