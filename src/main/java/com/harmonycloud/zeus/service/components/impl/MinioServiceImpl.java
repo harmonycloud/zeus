@@ -59,7 +59,7 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
                 ",minioArgs.bucketName=velero" +
                 ",service.nodePort=31909";
         if (SIMPLE.equals(type)) {
-            setValues = setValues + ",replicas=1";
+            setValues = setValues + ",replicas=1,drivesPerNode=4";
         } else {
             setValues = setValues + ",replicas=3";
         }
