@@ -128,65 +128,16 @@ public class NamespaceServiceImpl implements NamespaceService {
         return list;
     }
 
-    /*@Override
-    public List<String> registry(String clusterId, List<String> namespaceList) {
-        // 查出所有命名空间
-        List<io.fabric8.kubernetes.api.model.Namespace> allNsList = namespaceWrapper.list(clusterId);
-        List<String> existNsList = new ArrayList<>();
-        Map<String, io.fabric8.kubernetes.api.model.Namespace> existNsMap = new HashMap<>(allNsList.size());
-
-        Map<String, io.fabric8.kubernetes.api.model.Namespace> allNsMap = allNsList.stream().peek(ns -> {
-            if (!CollectionUtils.isEmpty(ns.getMetadata().getLabels())
-                && StringUtils.equals(ns.getMetadata().getLabels().get(labelKey), labelValue)) {
-                existNsList.add(ns.getMetadata().getName());
-                existNsMap.put(ns.getMetadata().getName(), ns);
-            }
-        }).collect(Collectors.toMap(ns -> ns.getMetadata().getName(), ns -> ns));
-
-        List<String> failNsList = new ArrayList<>();
-
-        // 注销命名空间
-        List<String> cancelNsList = new ArrayList<>(existNsList);
-        cancelNsList.removeAll(namespaceList);
-        cancelNsList.forEach(nsName -> {
-            io.fabric8.kubernetes.api.model.Namespace ns = existNsMap.get(nsName);
-            ns.getMetadata().getLabels().remove(labelKey);
-            try {
-                namespaceWrapper.save(clusterId, ns);
-            } catch (Exception e) {
-                log.error("集群：{}，命名空间：{}，注销失败", clusterId, ns.getMetadata().getName(), e);
-                failNsList.add(ns.getMetadata().getName());
-            }
-        });
-
-        // 注册命名空间，需要加上label
-        namespaceList.removeAll(existNsList);
-        namespaceList.forEach(nsName -> {
-            io.fabric8.kubernetes.api.model.Namespace ns = allNsMap.get(nsName);
-            if (ns == null || protectNamespaceList.contains(nsName)) {
-                return;
-            }
-            if (ns.getMetadata().getLabels() == null) {
-                ns.getMetadata().setLabels(new HashMap<>());
-            }
-            ns.getMetadata().getLabels().put(labelKey, labelValue);
-            try {
-                namespaceWrapper.save(clusterId, ns);
-            } catch (Exception e) {
-                log.error("集群：{}，命名空间：{}，注册失败", clusterId, ns.getMetadata().getName(), e);
-                failNsList.add(ns.getMetadata().getName());
-            }
-        });
-
-        return failNsList;
-    }*/
+    @Override
+    public void save(String clusterId, String name, Map<String, String> label, Boolean exist) {
+        if (exist && checkExist(clusterId, name)){
+            throw new BusinessException(ErrorMessage.NAMESPACE_EXIST);
+        }
+        save(clusterId, name, label);
+    }
 
     @Override
     public void save(String clusterId, String name, Map<String, String> label) {
-        // 校验是否存在
-        if (checkExist(clusterId, name)){
-            throw new BusinessException(ErrorMessage.NAMESPACE_EXIST);
-        }
         // 创建namespace
         io.fabric8.kubernetes.api.model.Namespace ns = new io.fabric8.kubernetes.api.model.Namespace();
         if (CollectionUtils.isEmpty(label)){

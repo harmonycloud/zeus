@@ -55,6 +55,16 @@ public interface NamespaceService {
      *
      * @param clusterId     集群id
      * @param name          命名空间名称
+     * @param label         标签
+     * @param exist    是否校验分区同名
+     */
+    void save(String clusterId, String name, Map<String, String> label, Boolean exist);
+
+    /**
+     * 创建命名空间
+     *
+     * @param clusterId     集群id
+     * @param name          命名空间名称
      */
     void save(String clusterId, String name, Map<String, String> label);
 

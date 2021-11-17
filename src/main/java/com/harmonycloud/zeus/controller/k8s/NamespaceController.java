@@ -72,7 +72,7 @@ public class NamespaceController {
     @PostMapping
     public BaseResult create(@PathVariable("clusterId") String clusterId,
                              @RequestParam("name") String name){
-        namespaceService.save(clusterId, name, null);
+        namespaceService.save(clusterId, name, null, true);
         return BaseResult.ok();
     }
 
