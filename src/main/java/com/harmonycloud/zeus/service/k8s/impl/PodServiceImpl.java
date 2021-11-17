@@ -172,7 +172,7 @@ public class PodServiceImpl implements PodService {
         }
 
         // 2. Complete
-        if ("Success".equals(pod.getStatus())) {
+        if ("Succeeded".equals(pod.getStatus().getPhase())) {
             return "Completed";
         }
 
