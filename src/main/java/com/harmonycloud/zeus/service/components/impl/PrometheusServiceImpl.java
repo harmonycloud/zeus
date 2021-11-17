@@ -86,6 +86,9 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
         MiddlewareClusterMonitorInfo prometheus = new MiddlewareClusterMonitorInfo();
         prometheus.setProtocol("http").setPort("31901").setHost(cluster.getHost());
         cluster.getMonitor().setPrometheus(prometheus);
+        if (cluster.getMonitor() == null){
+            cluster.setMonitor(new MiddlewareClusterMonitor());
+        }
         clusterService.updateCluster(cluster);
     }
 

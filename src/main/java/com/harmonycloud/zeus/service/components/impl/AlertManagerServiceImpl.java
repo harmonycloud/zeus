@@ -76,6 +76,9 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
     public void updateCluster(MiddlewareClusterDTO cluster){
         MiddlewareClusterMonitorInfo alertManager = new MiddlewareClusterMonitorInfo();
         alertManager.setProtocol("http").setPort("31902").setHost(cluster.getHost());
+        if (cluster.getMonitor() == null){
+            cluster.setMonitor(new MiddlewareClusterMonitor());
+        }
         cluster.getMonitor().setAlertManager(alertManager);
         clusterService.updateCluster(cluster);
     }

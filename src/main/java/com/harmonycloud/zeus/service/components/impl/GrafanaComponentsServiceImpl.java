@@ -122,6 +122,9 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
         MiddlewareClusterMonitorInfo grafana = new MiddlewareClusterMonitorInfo();
         grafana.setProtocol(cluster.getMonitor().getGrafana().getProtocol()).setPort("31900")
                 .setHost(cluster.getHost());
+        if (cluster.getMonitor() == null){
+            cluster.setMonitor(new MiddlewareClusterMonitor());
+        }
         cluster.getMonitor().setGrafana(grafana);
     }
 
