@@ -45,7 +45,7 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
     @Override
     public void delete(MiddlewareClusterDTO cluster, Integer status) {
         //uninstall
-        if (status != 2){
+        if (status != 1){
             helmChartService.uninstall(cluster, "monitoring", ComponentsEnum.ALERTMANAGER.getName());
         }
         //更新集群
