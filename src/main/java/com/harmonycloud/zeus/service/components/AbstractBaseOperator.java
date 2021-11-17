@@ -55,14 +55,15 @@ public abstract class AbstractBaseOperator {
         BeanClusterComponents exist = beanClusterComponentsMapper.selectOne(wrapper);
         List<PodInfo> podInfoList = getPodInfoList(cluster.getId());
         // 默认正常
-        int status = 3;
+        int status = exist.getStatus();
         if (CollectionUtils.isEmpty(podInfoList)) {
             // 未安装
             status = 0;
+        } else if (podInfoList.stream().allMatch(pod -> "Running".equals(pod.getStatus()))){
+            status = 3;
         }
-        if (podInfoList.stream().anyMatch(pod -> !"Running".equals(pod.getStatus())) && exist.getStatus() != 5
-            && exist.getStatus() != 2) {
-            // 异常且非卸载或安装中
+        if (exist.getStatus() != 5 && exist.getStatus() != 2) {
+            // 非卸载或安装中 则为异常
             status = 4;
         }
         exist.setStatus(status);
