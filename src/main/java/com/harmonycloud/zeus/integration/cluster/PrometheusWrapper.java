@@ -15,6 +15,8 @@ import com.harmonycloud.caas.common.model.PrometheusResponse;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitorInfo;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
+import org.springframework.util.CollectionUtils;
+
 import static com.harmonycloud.caas.common.constants.NameConstant.ADMIN;
 
 /**
@@ -33,30 +35,37 @@ public class PrometheusWrapper {
 
     public PrometheusResponse get(String clusterId, String prometheusApiVersion, Map<String, String> queryMap)
         throws Exception {
-        PrometheusApi prometheusApi = createApi(clusterId, prometheusApiVersion);
-        return prometheusApi.get("", queryMap);
+        String authName = null;
+        PrometheusClient client = createApi(clusterId, prometheusApiVersion);
+        if (!CollectionUtils.isEmpty(client.getAuthentications())){
+            authName = ADMIN;
+        }
+        return new PrometheusApi(client).get("", queryMap, authName);
     }
 
     public PrometheusRulesResponse getRules(String clusterId, String prometheusApiVersion) throws Exception {
-        PrometheusApi prometheusApi = createApi(clusterId, prometheusApiVersion);
-        return prometheusApi.getRules();
+        String authName = null;
+        PrometheusClient client = createApi(clusterId, prometheusApiVersion);
+        if (!CollectionUtils.isEmpty(client.getAuthentications())){
+            authName = ADMIN;
+        }
+        return new PrometheusApi(client).getRules(authName);
     }
-    
-    public PrometheusApi createApi(String clusterId, String prometheusApiVersion) {
+
+    public PrometheusClient createApi(String clusterId, String prometheusApiVersion) {
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         MiddlewareClusterMonitorInfo prometheus = getPrometheusInfo(cluster);
         PrometheusClient client =
-            new PrometheusClient(prometheus.getProtocol(), prometheus.getHost(), Integer.parseInt(prometheus.getPort()),
-                prometheus.getAddress()
-                    .replace(prometheus.getProtocol() + "://" + prometheus.getHost() + ":" + prometheus.getPort(), "")
-                    + prometheusApiVersion);
-
+                new PrometheusClient(prometheus.getProtocol(), prometheus.getHost(), Integer.parseInt(prometheus.getPort()),
+                        prometheus.getAddress()
+                                .replace(prometheus.getProtocol() + "://" + prometheus.getHost() + ":" + prometheus.getPort(), "")
+                                + prometheusApiVersion);
         if (StringUtils.isNotEmpty(cluster.getMonitor().getPrometheus().getUsername())
-            && StringUtils.isNotEmpty(cluster.getMonitor().getPrometheus().getPassword())) {
+                && StringUtils.isNotEmpty(cluster.getMonitor().getPrometheus().getPassword())) {
             client.addHttpBasicAuth(ADMIN, cluster.getMonitor().getPrometheus().getUsername(),
-                cluster.getMonitor().getPrometheus().getPassword());
+                    cluster.getMonitor().getPrometheus().getPassword());
         }
-        return new PrometheusApi(client);
+        return client;
     }
 
     private MiddlewareClusterMonitorInfo getPrometheusInfo(MiddlewareClusterDTO cluster) {
