@@ -61,8 +61,7 @@ public abstract class AbstractBaseOperator {
             status = 0;
         } else if (podInfoList.stream().allMatch(pod -> "Running".equals(pod.getStatus()))){
             status = 3;
-        }
-        if (exist.getStatus() != 5 && exist.getStatus() != 2) {
+        } else if (exist.getStatus() != 5 && exist.getStatus() != 2) {
             // 非卸载或安装中 则为异常
             status = 4;
         }
