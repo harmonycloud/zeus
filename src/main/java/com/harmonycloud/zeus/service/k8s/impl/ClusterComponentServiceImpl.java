@@ -104,7 +104,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         BeanClusterComponents beanClusterComponents = new BeanClusterComponents();
         beanClusterComponents.setClusterId(cluster.getId());
         beanClusterComponents.setComponent(componentName);
-        beanClusterComponents.setStatus(status == 2 ? 0 : 5);
+        beanClusterComponents.setStatus(status == 1 ? 0 : 5);
         beanClusterComponentsMapper.update(beanClusterComponents, wrapper);
 
     }
