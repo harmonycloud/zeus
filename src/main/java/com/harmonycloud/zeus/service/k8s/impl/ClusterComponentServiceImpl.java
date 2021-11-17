@@ -115,6 +115,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         }
         //另起线程更新所有组件状态
         clusterComponentsList.forEach(cc -> ThreadPoolExecutorFactory.executor.execute(() -> {
+            // 接入组件不更新状态
             if (cc.getStatus() == 1){
                 return;
             }

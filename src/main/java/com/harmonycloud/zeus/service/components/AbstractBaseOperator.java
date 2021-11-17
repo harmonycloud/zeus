@@ -53,22 +53,20 @@ public abstract class AbstractBaseOperator {
         QueryWrapper<BeanClusterComponents> wrapper =
                 new QueryWrapper<BeanClusterComponents>().eq("cluster_id", cluster.getId()).eq("component", name);
         BeanClusterComponents exist = beanClusterComponentsMapper.selectOne(wrapper);
-        // 接入组件不更新状态
-        if (exist.getStatus() != 2){
-            List<PodInfo> podInfoList = getPodInfoList(cluster.getId());
-            // 默认正常
-            int status = 3;
-            if (CollectionUtils.isEmpty(podInfoList)) {
-                // 未安装
-                status = 0;
-            }
-            if (podInfoList.stream().anyMatch(pod -> !"Running".equals(pod.getStatus())) && exist.getStatus() != 5) {
-                // 异常且非卸载中
-                status = 4;
-            }
-            exist.setStatus(status);
-            beanClusterComponentsMapper.update(exist, wrapper);
+        List<PodInfo> podInfoList = getPodInfoList(cluster.getId());
+        // 默认正常
+        int status = 3;
+        if (CollectionUtils.isEmpty(podInfoList)) {
+            // 未安装
+            status = 0;
         }
+        if (podInfoList.stream().anyMatch(pod -> !"Running".equals(pod.getStatus())) && exist.getStatus() != 5
+            && exist.getStatus() != 2) {
+            // 异常且非卸载或安装中
+            status = 4;
+        }
+        exist.setStatus(status);
+        beanClusterComponentsMapper.update(exist, wrapper);
     }
 
     /**
