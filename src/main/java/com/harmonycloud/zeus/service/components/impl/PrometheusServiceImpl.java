@@ -1,7 +1,9 @@
 package com.harmonycloud.zeus.service.components.impl;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitor;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitorInfo;
@@ -94,7 +96,9 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
 
     @Override
     protected List<PodInfo> getPodInfoList(String clusterId) {
-        return podService.list(clusterId, "monitoring", ComponentsEnum.PROMETHEUS.getName());
+        Map<String, String> labels = new HashMap<>();
+        labels.put("app", ComponentsEnum.PROMETHEUS.getName());
+        return podService.list(clusterId, "monitoring", labels);
     }
 
     public void checkExist(MiddlewareClusterDTO cluster) {

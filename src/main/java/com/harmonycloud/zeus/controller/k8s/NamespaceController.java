@@ -45,24 +45,6 @@ public class NamespaceController {
         return BaseResult.ok(namespaceService.list(clusterId, all, withQuota, withMiddleware, keyword));
     }
 
-    /*@ApiOperation(value = "注册命名空间", notes = "注册命名空间")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "namespaceList", value = "命名空间列表", paramType = "query", dataTypeClass = List.class)
-    })
-    @PutMapping
-    public BaseResult registry(@PathVariable("clusterId") String clusterId,
-                               @RequestBody List<String> namespaceList) {
-        String msg;
-        List<String> failNsList = namespaceService.registry(clusterId, namespaceList);
-        if (CollectionUtils.isEmpty(failNsList)) {
-            msg = LanguageEnum.isChinese() ? "全部命名空间保存成功" : "These namespaces save successfully";
-        } else {
-            msg = (LanguageEnum.isChinese() ? "操作失败的命名空间：" : "Here are some namespaces that failed to save: ")
-                + failNsList.toString();
-        }
-        return BaseResult.ok(msg);
-    }*/
 
     @ApiOperation(value = "创建命名空间", notes = "创建命名空间")
     @ApiImplicitParams({

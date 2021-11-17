@@ -14,7 +14,9 @@ import org.springframework.util.CollectionUtils;
 import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -85,7 +87,9 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
 
     @Override
     protected List<PodInfo> getPodInfoList(String clusterId) {
-        return podService.list(clusterId, "monitoring", ComponentsEnum.ALERTMANAGER.getName());
+        Map<String, String> labels = new HashMap<>();
+        labels.put("app", ComponentsEnum.ALERTMANAGER.getName());
+        return podService.list(clusterId, "monitoring", labels);
     }
 
 }

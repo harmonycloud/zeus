@@ -104,6 +104,15 @@ public class PodServiceImpl implements PodService {
             .collect(Collectors.toList());
     }
 
+    @Override
+    public List<PodInfo> list(String clusterId, String namespace, Map<String, String> labels) {
+        List<Pod> list = podWrapper.list(clusterId, namespace, labels);
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>(0);
+        }
+        return list.stream().map(this::convertPodInfo).collect(Collectors.toList());
+    }
+
     /**
      * 将podlist进行分组
      * @param podInfoList
@@ -216,18 +225,24 @@ public class PodServiceImpl implements PodService {
         MiddlewareQuota resource = new MiddlewareQuota();
         ResourceRequirements resources = containers.get(0).getResources();
         if (!CollectionUtils.isEmpty(resources.getRequests())) {
-            resource
-                .setCpu(String.valueOf(
-                    ResourceCalculationUtil.getResourceValue(resources.getRequests().get(CPU).toString(), CPU, "")))
-                .setMemory(String.valueOf(ResourceCalculationUtil.getResourceValue(
+            if (resources.getRequests().containsKey(CPU)) {
+                resource.setCpu(String.valueOf(
+                    ResourceCalculationUtil.getResourceValue(resources.getRequests().get(CPU).toString(), CPU, "")));
+            }
+            if (resources.getRequests().containsKey(MEMORY)) {
+                resource.setMemory(String.valueOf(ResourceCalculationUtil.getResourceValue(
                     resources.getRequests().get(MEMORY).toString(), MEMORY, ResourceUnitEnum.GI.getUnit())));
+            }
         }
         if (!CollectionUtils.isEmpty(resources.getLimits())) {
-            resource
-                .setLimitCpu(String.valueOf(
-                    ResourceCalculationUtil.getResourceValue(resources.getLimits().get(CPU).toString(), CPU, "")))
-                .setLimitMemory(String.valueOf(ResourceCalculationUtil.getResourceValue(
+            if (resources.getLimits().containsKey(CPU)) {
+                resource.setLimitCpu(String.valueOf(
+                    ResourceCalculationUtil.getResourceValue(resources.getLimits().get(CPU).toString(), CPU, "")));
+            }
+            if (resources.getLimits().containsKey(MEMORY)) {
+                resource.setLimitMemory(String.valueOf(ResourceCalculationUtil.getResourceValue(
                     resources.getLimits().get(MEMORY).toString(), MEMORY, ResourceUnitEnum.GI.getUnit())));
+            }
         }
         return pi.setResources(resource);
     }

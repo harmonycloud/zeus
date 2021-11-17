@@ -56,7 +56,8 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
         jsonValues.put("image", image);
         jsonValues.put("sidecar", sidecar);
         jsonValues.put("persistence", persistence);
-        if ("https".equals(cluster.getMonitor().getGrafana().getProtocol())) {
+        if (cluster.getMonitor() != null && cluster.getMonitor().getGrafana() != null
+            && "https".equals(cluster.getMonitor().getGrafana().getProtocol())) {
             JSONObject ini = new JSONObject();
             JSONObject server = new JSONObject();
             server.put("protocol", "https");

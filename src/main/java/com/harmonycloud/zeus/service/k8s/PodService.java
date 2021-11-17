@@ -4,6 +4,7 @@ import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author dengyulong
@@ -40,6 +41,16 @@ public interface PodService {
      * @return
      */
     List<PodInfo> list(String clusterId, String namespace, String key);
+
+    /**
+     * 查询pod列表
+     *
+     * @param clusterId      集群id
+     * @param namespace      命名空间
+     * @param labels         标签
+     * @return
+     */
+    List<PodInfo> list(String clusterId, String namespace, Map<String, String> labels);
 
     /**
      * 重启pod
