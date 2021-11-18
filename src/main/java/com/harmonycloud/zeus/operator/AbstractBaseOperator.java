@@ -334,13 +334,25 @@ public abstract class AbstractBaseOperator {
     protected void convertCommonByHelmChart(Middleware middleware, JSONObject values) {
         if (values != null) {
             middleware.setAliasName(values.getString("aliasName"))
-                    .setAnnotation(values.getString("middleware-desc"))
+                    .setDescription(values.getString("middleware-desc"))
                     .setLabels(values.getString("middleware-label"))
                     .setVersion(values.getString("version"))
                     .setMode(values.getString(MODE));
 
             if (StringUtils.isNotEmpty(values.getString("chart-version"))){
                 middleware.setChartVersion(values.getString("chart-version"));
+            }
+            // 获取annotations
+            if (values.containsKey("annotations")) {
+                JSONObject ann = values.getJSONObject("annotations");
+                StringBuilder builder = new StringBuilder();
+                for (String key : ann.keySet()) {
+                    builder.append(key).append("=").append(ann.getString(key)).append(",");
+                }
+                if (builder.length() != 0) {
+                    builder.deleteCharAt(builder.length() - 1);
+                    middleware.setAnnotations(builder.toString());
+                }
             }
 
             //动态参数
@@ -514,7 +526,7 @@ public abstract class AbstractBaseOperator {
         values.put("fullnameOverride", middleware.getName());
         values.put("aliasName",
                 StringUtils.isBlank(middleware.getAliasName()) ? middleware.getName() : middleware.getAliasName());
-        values.put("middleware-desc", middleware.getAnnotation());
+        values.put("middleware-desc", middleware.getDescription());
         values.put("middleware-label", middleware.getLabels());
         values.put("chart-version", middleware.getChartVersion());
 
@@ -543,6 +555,17 @@ public abstract class AbstractBaseOperator {
         collection.put("stdout", stdout);
         logging.put("collection", collection);
         values.put("logging", logging);
+
+        // annotations
+        if (StringUtils.isNotEmpty(middleware.getAnnotations())) {
+            JSONObject ann = new JSONObject();
+            String[] annotations = middleware.getAnnotations().split(",");
+            for (String annotation : annotations) {
+                String[] temp = annotation.split("=");
+                ann.put(temp[0], temp[1]);
+            }
+            values.put("annotations", ann);
+        }
 
     }
 
