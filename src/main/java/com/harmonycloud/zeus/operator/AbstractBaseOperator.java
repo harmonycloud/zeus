@@ -89,6 +89,8 @@ public abstract class AbstractBaseOperator {
     private MiddlewareBackupServiceImpl middlewareBackupService;
     @Autowired
     private AspectService aspectService;
+    @Autowired
+    private GrafanaService grafanaService;
     /**
      * 是否支持该中间件
      */
@@ -224,6 +226,11 @@ public abstract class AbstractBaseOperator {
         if (monitorInfo == null
             || StringUtils.isAnyEmpty(monitorInfo.getProtocol(), monitorInfo.getHost(), monitorInfo.getPort())) {
             throw new BusinessException(ErrorMessage.CLUSTER_MONITOR_INFO_NOT_FOUND);
+        }
+        // 生成token
+        if (StringUtils.isEmpty(monitorInfo.getToken()) && StringUtils.isNotEmpty(monitorInfo.getUsername())
+            && StringUtils.isNotEmpty(monitorInfo.getPassword())) {
+            grafanaService.setToken(monitorInfo);
         }
 
         MonitorDto monitorDto = new MonitorDto();

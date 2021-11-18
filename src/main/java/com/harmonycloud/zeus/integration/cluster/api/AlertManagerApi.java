@@ -7,6 +7,7 @@ import okhttp3.Call;
 
 import java.util.Map;
 
+import static com.harmonycloud.caas.common.constants.NameConstant.ADMIN;
 import static com.harmonycloud.tool.api.util.HttpMethod.POST;
 
 /**
@@ -19,8 +20,9 @@ public class AlertManagerApi extends AbstractApi {
         super(baseClient);
     }
 
-    public void setSilence(Map<String, Object> body) throws Exception{
-        Call call = this.localVarHarborClient.buildCall("", POST, body, new String[] {});
+    public void setSilence(Map<String, Object> body, String authName) throws Exception {
+        Call call =
+            this.localVarHarborClient.buildCall("", POST, body, new String[] {authName == null ? ADMIN : authName});
         this.localVarHarborClient.execute(call, JSONObject.class);
     }
 

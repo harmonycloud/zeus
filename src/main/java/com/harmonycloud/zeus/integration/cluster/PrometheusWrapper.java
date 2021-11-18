@@ -60,10 +60,11 @@ public class PrometheusWrapper {
                         prometheus.getAddress()
                                 .replace(prometheus.getProtocol() + "://" + prometheus.getHost() + ":" + prometheus.getPort(), "")
                                 + prometheusApiVersion);
-        if (StringUtils.isNotEmpty(cluster.getMonitor().getPrometheus().getUsername())
-                && StringUtils.isNotEmpty(cluster.getMonitor().getPrometheus().getPassword())) {
+        if (cluster.getMonitor() != null && cluster.getMonitor().getPrometheus() != null
+            && StringUtils.isNotEmpty(cluster.getMonitor().getPrometheus().getUsername())
+            && StringUtils.isNotEmpty(cluster.getMonitor().getPrometheus().getPassword())) {
             client.addHttpBasicAuth(ADMIN, cluster.getMonitor().getPrometheus().getUsername(),
-                    cluster.getMonitor().getPrometheus().getPassword());
+                cluster.getMonitor().getPrometheus().getPassword());
         }
         return client;
     }
