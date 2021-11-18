@@ -57,10 +57,10 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
                 ",storage.masterSize=5Gi" +
                 ",logging.collection.filelog.enable=false" +
                 ",logging.collection.stdout.enable=false" +
-                ",resources.master.limits.cpu=0.5" +
-                ",resources.master.limits.memory=1Gi" +
-                ",resources.master.requests.cpu=0.5" +
-                ",resources.master.requests.memory=1Gi" +
+                ",resources.master.limits.cpu=1" +
+                ",resources.master.limits.memory=4Gi" +
+                ",resources.master.requests.cpu=1" +
+                ",resources.master.requests.memory=4Gi" +
                 ",esJavaOpts.xmx=1024m" +
                 ",esJavaOpts.xms=1024m";
         if (SIMPLE.equals(type)) {
