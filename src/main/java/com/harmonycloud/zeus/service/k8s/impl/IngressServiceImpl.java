@@ -385,7 +385,7 @@ public class IngressServiceImpl implements IngressService {
             ObjectMeta objectMeta = new ObjectMeta();
             objectMeta.setName(getNodePortSvcName(serviceName));
             objectMeta.setNamespace(namespace);
-            Map<String, String> labels = new HashMap<>(2);
+            Map<String, String> labels = serviceOriginal.getMetadata().getLabels();
             labels.put(MIDDLEWARE_NAME, middlewareName);
             labels.put(MIDDLEWARE_TYPE, ingressDTO.getMiddlewareType());
             objectMeta.setLabels(labels);
