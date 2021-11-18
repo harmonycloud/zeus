@@ -49,7 +49,8 @@ public class AspectServiceImpl implements AspectService {
             dynamicValues.put("middlewareType", middleware.getType());
             service.getClass().getMethod("operation", String.class, Map.class, JSONObject.class).invoke(service, host, dynamicValues, values);
         } catch (Exception e){
-            throw new BusinessException(ErrorMessage.CALL_EXTERNAL_SERVICE_FAILED);
+            log.error("调用外部服务失败");
+            //throw new BusinessException(ErrorMessage.CALL_EXTERNAL_SERVICE_FAILED);
         }
     }
 }
