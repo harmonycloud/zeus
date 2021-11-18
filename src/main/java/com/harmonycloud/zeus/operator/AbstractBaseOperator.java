@@ -205,6 +205,7 @@ public abstract class AbstractBaseOperator {
 
 
     public MonitorDto monitor(Middleware middleware) {
+        MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
         List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.list(true);
         BeanMiddlewareInfo mwInfo = middlewareInfoList.stream()
             .collect(Collectors.toMap(
@@ -221,8 +222,7 @@ public abstract class AbstractBaseOperator {
             throw new BusinessException(ErrorMessage.GRAFANA_ID_NOT_FOUND);
         }
 
-        MiddlewareClusterMonitorInfo monitorInfo =
-            clusterService.findById(middleware.getClusterId()).getMonitor().getGrafana();
+        MiddlewareClusterMonitorInfo monitorInfo = cluster.getMonitor().getGrafana();
         if (monitorInfo == null
             || StringUtils.isAnyEmpty(monitorInfo.getProtocol(), monitorInfo.getHost(), monitorInfo.getPort())) {
             throw new BusinessException(ErrorMessage.CLUSTER_MONITOR_INFO_NOT_FOUND);
@@ -231,6 +231,8 @@ public abstract class AbstractBaseOperator {
         if (StringUtils.isEmpty(monitorInfo.getToken()) && StringUtils.isNotEmpty(monitorInfo.getUsername())
             && StringUtils.isNotEmpty(monitorInfo.getPassword())) {
             grafanaService.setToken(monitorInfo);
+            cluster.getMonitor().setGrafana(monitorInfo);
+            clusterService.update(cluster);
         }
 
         MonitorDto monitorDto = new MonitorDto();
