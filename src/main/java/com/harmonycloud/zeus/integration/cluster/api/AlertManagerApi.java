@@ -22,7 +22,7 @@ public class AlertManagerApi extends AbstractApi {
 
     public void setSilence(Map<String, Object> body, String authName) throws Exception {
         Call call =
-            this.localVarHarborClient.buildCall("", POST, body, new String[] {authName == null ? ADMIN : authName});
+            this.localVarHarborClient.buildCall("", POST, body, new String[] {authName});
         this.localVarHarborClient.execute(call, JSONObject.class);
     }
 

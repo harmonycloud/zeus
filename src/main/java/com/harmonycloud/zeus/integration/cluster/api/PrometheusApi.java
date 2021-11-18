@@ -33,14 +33,14 @@ public class PrometheusApi extends AbstractApi {
             queryMap.forEach((k, v) -> requestParams.getQuery().add(new Pair(k, v)));
         }
         Call call = this.localVarHarborClient.buildCall(url, GET, requestParams, null,
-            new String[] {authName == null ? ADMIN : authName});
+            new String[] {authName});
         return (PrometheusResponse)this.localVarHarborClient.execute(call, PrometheusResponse.class).getData();
     }
 
     public PrometheusRulesResponse getRules(String authName) throws Exception {
         RequestParams requestParams = new RequestParams();
         Call call = this.localVarHarborClient.buildCall("", GET, requestParams, null,
-            new String[] {authName == null ? ADMIN : authName});
+            new String[] {authName});
         return (PrometheusRulesResponse)this.localVarHarborClient.execute(call, PrometheusRulesResponse.class)
             .getData();
     }
