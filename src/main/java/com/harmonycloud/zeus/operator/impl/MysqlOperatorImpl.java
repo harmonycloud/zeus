@@ -412,23 +412,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     }
 
     /**
-     * 获取minio
-     */
-    public Minio getMinio(String clusterId) {
-        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        // 获取minio的数据
-        Object backupObj = cluster.getStorage().get(BACKUP);
-        if (backupObj == null) {
-            throw new BusinessException(ErrorMessage.MIDDLEWARE_BACKUP_STORAGE_NOT_EXIST);
-        }
-        JSONObject backup = JSONObject.parseObject(JSONObject.toJSONString(backupObj));
-        if (backup == null || !MINIO.equals(backup.getString(TYPE))) {
-            throw new BusinessException(ErrorMessage.MIDDLEWARE_BACKUP_STORAGE_NOT_EXIST);
-        }
-        return JSONObject.toJavaObject(backup.getJSONObject(STORAGE), Minio.class);
-    }
-
-    /**
      * 计算下次备份时间
      */
     public Date calculateNextDate(ScheduleBackup scheduleBackup) {
