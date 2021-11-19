@@ -19,6 +19,7 @@ import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
 import com.harmonycloud.zeus.service.k8s.StorageClassService;
+import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import io.fabric8.kubernetes.api.model.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +50,8 @@ public class PodServiceImpl implements PodService {
     private MiddlewareCRDService middlewareCRDService;
     @Autowired
     private StorageClassService storageClassService;
+    @Autowired
+    private MiddlewareBackupServiceImpl middlewareBackupService;
 
     @Override
     public Middleware list(String clusterId, String namespace, String middlewareName, String type) {
@@ -83,6 +86,8 @@ public class PodServiceImpl implements PodService {
             }
             // 给pod设置绑定的pvc
             setPodPvc(pi, pvcInfos);
+            // 设置pod备份状态
+            setPodBackupStatus(clusterId, namespace, type, middlewareName, pi);
             return pi;
         }).collect(Collectors.toList());
         middleware.setIsAllLvmStorage(isAllLvmStorage.get());
@@ -279,4 +284,18 @@ public class PodServiceImpl implements PodService {
         });
         podInfo.setPvcs(pvcs);
     }
+
+    /**
+     * 设置Pod备份状态
+     *
+     * @param clusterId      集群id
+     * @param namespace      分区
+     * @param type           类型
+     * @param middlewareName 中间件名称
+     * @param podInfo        pod信息
+     */
+    private void setPodBackupStatus(String clusterId, String namespace, String type, String middlewareName, PodInfo podInfo) {
+        podInfo.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(clusterId, namespace, type, middlewareName, podInfo.getPodName()));
+    }
+
 }

@@ -16,12 +16,12 @@ import com.harmonycloud.zeus.annotation.MiddlewareBackup;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.util.CronUtils;
 import com.harmonycloud.zeus.util.DateUtil;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.hssf.record.SaveRecalcRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -423,6 +423,33 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
     }
 
+    @Override
+    public boolean checkIfAlreadyBackup(String clusterId, String namespace, String type, String middlewareName) {
+        if ("mysql".equals(type)) {
+            return mysqlAdapterService.checkIfAlreadyBackup(clusterId, namespace, type, middlewareName);
+        }
+        Map<String, String> labels = getMiddlewareBackupLabels(middlewareName, null, null);
+        MiddlewareBackupScheduleList scheduleList = backupScheduleCRDService.list(clusterId, namespace, labels);
+        if (!CollectionUtils.isEmpty(scheduleList.getItems())) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean checkIfAlreadyBackup(String clusterId, String namespace, String type, String middlewareName, String podName) {
+        if ("mysql".equals(type)) {
+            return false;
+        }
+        List<String> pods = new ArrayList<>();
+        Map<String, String> labels = getMiddlewareBackupLabels(middlewareName, null, pods);
+        MiddlewareBackupScheduleList scheduleList = backupScheduleCRDService.list(clusterId, namespace, labels);
+        if (!CollectionUtils.isEmpty(scheduleList.getItems())) {
+            return true;
+        }
+        return false;
+    }
+
     /**
      * 创建中间件恢复
      *
@@ -631,6 +658,5 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         });
         return restoreObjects;
     }
-
 
 }

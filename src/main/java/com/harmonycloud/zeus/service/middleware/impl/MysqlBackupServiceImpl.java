@@ -237,6 +237,21 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         return BaseResult.ok();
     }
 
+    @Override
+    public boolean checkIfAlreadyBackup(String clusterId, String namespace, String type, String middlewareName) {
+        List<ScheduleBackup> scheduleBackupList = mysqlScheduleBackupService.listScheduleBackup(clusterId, namespace, middlewareName);
+        if (scheduleBackupList != null && scheduleBackupList.size() > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean checkIfAlreadyBackup(String clusterId, String namespace, String type, String middlewareName, String podName) {
+        return false;
+    }
+
     private void tryCreateMiddleware(String clusterId, String namespace, String type, String middlewareName, Middleware middleware) {
         for (int i = 0; i < 600; i++) {
             if (!middlewareCRDService.checkIfExist(clusterId, namespace, type, middlewareName)) {
@@ -335,4 +350,5 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
             });
         }
     }
+
 }

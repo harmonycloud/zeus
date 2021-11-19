@@ -107,6 +107,7 @@ public abstract class AbstractBaseOperator {
         if (mw == null) {
             throw new BusinessException(DictEnum.MIDDLEWARE, middleware.getName(), ErrorMessage.NOT_EXIST);
         }
+        mw.setClusterId(middleware.getClusterId());
         return convertByHelmChart(mw, cluster);
     }
 
@@ -348,6 +349,8 @@ public abstract class AbstractBaseOperator {
                 String tolerationAry = values.getString("tolerationAry");
                 middleware.setTolerations(Arrays.asList(tolerationAry.split(",")));
             }
+            // 设置服务备份状态
+            middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(middleware.getClusterId(),middleware.getNamespace(),middleware.getType(),middleware.getName()));
         } else {
             middleware.setAliasName(middleware.getName());
         }

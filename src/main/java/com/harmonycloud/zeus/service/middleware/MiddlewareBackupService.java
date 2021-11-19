@@ -127,4 +127,24 @@ public interface MiddlewareBackupService {
      */
     void deleteMiddlewareBackupInfo(String clusterId, String namespace, String type, String middlewareName);
 
+    /**
+     * 检查中间件是否已创建备份规则
+     * @param clusterId
+     * @param namespace
+     * @param middlewareName
+     * @return
+     */
+    boolean checkIfAlreadyBackup(String clusterId, String namespace, String type, String middlewareName);
+
+    /**
+     * 检查中间件pod是否已创建备份规则
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param middlewareName
+     * @param podName
+     * @return
+     */
+    boolean checkIfAlreadyBackup(String clusterId, String namespace, String type, String middlewareName,String podName);
+
 }
