@@ -91,4 +91,13 @@ public interface MiddlewareCRDService {
         return MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType() + "-" + middlewareName;
     }
 
+    /**
+     * 检查中间件是否存在
+     * @param clusterId
+     * @param namespace
+     * @param crName 中间件cr名称
+     * @return
+     */
+    boolean checkIfExist(String clusterId, String namespace, String type, String middlewareName);
+
 }

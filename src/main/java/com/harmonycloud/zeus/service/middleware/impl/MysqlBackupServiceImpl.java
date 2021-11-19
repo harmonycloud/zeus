@@ -17,6 +17,7 @@ import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
 import com.harmonycloud.zeus.service.middleware.BackupService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.middleware.MysqlScheduleBackupService;
 import com.harmonycloud.zeus.util.CronUtils;
 import com.harmonycloud.zeus.util.DateUtil;
@@ -59,6 +60,8 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     private MiddlewareCRDService middlewareCRDService;
     @Autowired
     private MysqlScheduleBackupService mysqlScheduleBackupService;
+    @Autowired
+    private MiddlewareService middlewareService;
 
     @Override
     public List<MiddlewareBackupRecord> listRecord(String clusterId, String namespace, String middlewareName, String type) {
@@ -171,7 +174,17 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public BaseResult createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String backupFileName, List<String> pods) {
-        return null;
+        Middleware middleware = middlewareService.detail(clusterId, namespace, middlewareName, type);
+        middleware.setChartName(type);
+        fixStorageUnit(middleware);
+        middleware.setClusterId(clusterId);
+        MiddlewareQuota mysql = middleware.getQuota().get("mysql");
+        String storageClassQuota = mysql.getStorageClassQuota();
+        mysql.setStorageClassQuota(String.valueOf(Integer.parseInt(storageClassQuota) + 3));
+        middleware.setBackupFileName(backupFileName);
+        middlewareService.delete(clusterId, namespace, middlewareName, type);
+        tryCreateMiddleware(clusterId, namespace, type, middlewareName, middleware);
+        return BaseResult.ok();
     }
 
     @Override
@@ -222,6 +235,20 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     public BaseResult deleteSchedule(String clusterId, String namespace, String type, String backupScheduleName) {
         mysqlScheduleBackupService.delete(clusterId, namespace, backupScheduleName);
         return BaseResult.ok();
+    }
+
+    private void tryCreateMiddleware(String clusterId, String namespace, String type, String middlewareName, Middleware middleware) {
+        for (int i = 0; i < 600; i++) {
+            if (!middlewareCRDService.checkIfExist(clusterId, namespace, type, middlewareName)) {
+                middlewareService.create(middleware);
+                return;
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                log.error("mysql恢复创建失败", e);
+            }
+        }
     }
 
     private String getBackupName(MiddlewareBackupDTO backupDTO) {
@@ -294,4 +321,18 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         return mysqlBackupDtoList;
     }
 
+    /**
+     * 修复存储单位
+     *
+     * @param middleware
+     */
+    public void fixStorageUnit(Middleware middleware) {
+        Map<String, MiddlewareQuota> quota = middleware.getQuota();
+        if (quota != null) {
+            quota.forEach((k, v) -> {
+                if (v.getStorageClassQuota() != null)
+                    v.setStorageClassQuota(v.getStorageClassQuota().replaceAll("Gi", ""));
+            });
+        }
+    }
 }

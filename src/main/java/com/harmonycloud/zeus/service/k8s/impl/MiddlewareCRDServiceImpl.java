@@ -192,6 +192,12 @@ public class MiddlewareCRDServiceImpl implements MiddlewareCRDService {
                 .setPods(getPodName(mw));
     }
 
+    @Override
+    public boolean checkIfExist(String clusterId, String namespace, String type, String middlewareName) {
+        String crdName = MiddlewareCRDService.getCrName(type, middlewareName);
+        return middlewareWrapper.checkIfExist(clusterId, namespace, crdName);
+    }
+
     /**
      * 获取服务pod数量
      * @param mw

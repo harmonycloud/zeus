@@ -280,87 +280,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         mysqlScheduleBackupService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
     }
 
-    /**
-     * 查询定时备份配置
-     */
-//    @Override
-//    public MiddlewareBackupScheduleConfig getScheduleBackupConfig(MiddlewareBackupDTO backupDTO) {
-//        List<ScheduleBackup> scheduleBackupList = scheduleBackupService.listScheduleBackup(backupDTO.getClusterId(),
-//                backupDTO.getNamespace(), backupDTO.getMiddlewareName());
-//        if (CollectionUtils.isEmpty(scheduleBackupList)) {
-//            return null;
-//        }
-//        ScheduleBackup scheduleBackup = scheduleBackupList.get(0);
-//        MiddlewareBackupScheduleConfig scheduleBackupConfig = new MiddlewareBackupScheduleConfig();
-//        scheduleBackupConfig.setBackupScheduleName(scheduleBackup.getName());
-//        scheduleBackupConfig.setCron(scheduleBackup.getSchedule());
-//        scheduleBackupConfig.setLimitRecord(scheduleBackup.getKeepBackups());
-//        String createTime = DateUtil.utc2Local(scheduleBackup.getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
-//        scheduleBackupConfig.setCreateTime(createTime);
-//        return scheduleBackupConfig;
-//    }
-
-    /**
-     * 创建定时备份
-     */
-//    @Override
-//    public void createScheduleBackup(MiddlewareBackupDTO backupDTO) {
-//        // 校验是否运行中
-//        Middleware middleware = new Middleware();
-//        middleware.setClusterId(backupDTO.getClusterId());
-//
-//        middlewareCRDService.getCRAndCheckRunning(middleware);
-//        Minio minio = getMinio(backupDTO.getClusterId());
-//        BackupTemplate backupTemplate = new BackupTemplate().setClusterName(backupDTO.getMiddlewareName())
-//                .setStorageProvider(new BackupStorageProvider().setMinio(minio));
-//
-//        ScheduleBackupSpec spec =
-//                new ScheduleBackupSpec().setSchedule(CronUtils.parseMysqlUtcCron(backupDTO.getCron())).setBackupTemplate(backupTemplate).setKeepBackups(backupDTO.getLimitRecord());
-//        ObjectMeta metaData = new ObjectMeta();
-//        metaData.setName(getBackupName(backupDTO));
-//        Map<String, String> labels = new HashMap<>();
-//        labels.put("controllername", "backup-schedule-controller");
-//        metaData.setLabels(labels);
-//        metaData.setNamespace(backupDTO.getNamespace());
-//        metaData.setClusterName(backupDTO.getMiddlewareName());
-//
-//        ScheduleBackupCRD scheduleBackupCRD =
-//                new ScheduleBackupCRD().setKind("MysqlBackupSchedule").setSpec(spec).setMetadata(metaData);
-//        scheduleBackupService.create(backupDTO.getClusterId(), scheduleBackupCRD);
-//    }
-
-    /**
-     * 创建备份
-     */
-//    @Override
-//    public void createBackup(MiddlewareBackupDTO backupDTO) {
-//        // 校验是否运行中
-//        middlewareCRDService.getCRAndCheckRunning(convertBackupToMiddleware(backupDTO));
-//        String backupName = getBackupName(backupDTO) + "-" + UUIDUtils.get8UUID();
-//        BackupSpec spec = new BackupSpec().setClusterName(backupDTO.getMiddlewareName())
-//                .setStorageProvider(new BackupStorageProvider().setMinio(getMinio(backupDTO.getClusterId())));
-//
-//        ObjectMeta metaData = new ObjectMeta();
-//        metaData.setName(backupName);
-//        Map<String, String> labels = new HashMap<>(1);
-//        labels.put("controllername", "backup-controller");
-//        metaData.setLabels(labels);
-//        metaData.setNamespace(backupDTO.getNamespace());
-//        metaData.setClusterName(backupDTO.getMiddlewareName());
-//
-//        BackupCRD backupCRD = new BackupCRD().setKind("MysqlBackup").setSpec(spec).setMetadata(metaData);
-//        backupService.create(backupDTO.getClusterId(), backupCRD);
-//    }
-
-    /**
-     * 删除备份文件
-     */
-//    @Override
-//    public void deleteBackup(String clusterId, String namespace, String backupFileName) throws Exception {
-//        backupService.delete(clusterId, namespace, backupFileName);
-//        minioWrapper.removeObject(getMinio(clusterId), backupFileName);
-//    }
-
     @Override
     public void switchMiddleware(Middleware middleware) {
         MysqlCluster mysqlCluster = mysqlClusterWrapper.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
@@ -616,27 +535,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             }
         }
     }
-
-//    @Override
-//    public void updateBackup(MiddlewareBackupDTO backupDTO) {
-//        Minio minio = getMinio(backupDTO.getClusterId());
-//        BackupTemplate backupTemplate = new BackupTemplate().setClusterName(backupDTO.getMiddlewareName())
-//                .setStorageProvider(new BackupStorageProvider().setMinio(minio));
-//
-//        ScheduleBackupSpec spec =
-//                new ScheduleBackupSpec().setSchedule(CronUtils.parseMysqlUtcCron(backupDTO.getCron())).setBackupTemplate(backupTemplate).setKeepBackups(backupDTO.getLimitRecord());
-//        ObjectMeta metaData = new ObjectMeta();
-//        metaData.setName(getBackupName(backupDTO));
-//        Map<String, String> labels = new HashMap<>();
-//        labels.put("controllername", "backup-schedule-controller");
-//        metaData.setLabels(labels);
-//        metaData.setNamespace(backupDTO.getNamespace());
-//        metaData.setClusterName(backupDTO.getMiddlewareName());
-//
-//        ScheduleBackupCRD scheduleBackupCRD =
-//                new ScheduleBackupCRD().setKind("MysqlBackupSchedule").setSpec(spec).setMetadata(metaData);
-//        scheduleBackupService.create(backupDTO.getClusterId(), scheduleBackupCRD);
-//    }
 
     /**
      * 创建灾备实例

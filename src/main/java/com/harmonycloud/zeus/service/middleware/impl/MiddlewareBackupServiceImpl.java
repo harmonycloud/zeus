@@ -10,7 +10,6 @@ import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
 import com.harmonycloud.caas.common.model.MiddlewareBackupScheduleConfig;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareQuota;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.annotation.MiddlewareBackup;
@@ -52,8 +51,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private MiddlewareBackupCRDService backupCRDService;
     @Autowired
     private MiddlewareRestoreCRDService restoreCRDService;
-    @Autowired
-    private MiddlewareService middlewareService;
     @Autowired
     private MiddlewareCRDService middlewareCRDService;
     @Autowired
@@ -311,19 +308,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public BaseResult createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String backupFileName, List<String> pods) {
-        //检查服务是否已存在
-        Middleware middleware = middlewareService.detail(clusterId, namespace, middlewareName, type);
-        fixStorageUnit(middleware);
-        middleware.setClusterId(clusterId);
         //设置中间件恢复信息
         try {
-            middleware.setChartName(type);
             if ("mysql".equals(type)) {
-                MiddlewareQuota mysql = middleware.getQuota().get("mysql");
-                String storageClassQuota = mysql.getStorageClassQuota();
-                mysql.setStorageClassQuota(String.valueOf(Integer.parseInt(storageClassQuota) + 3));
-                middleware.setBackupFileName(backupFileName);
-                middlewareService.create(middleware);
+                mysqlAdapterService.createRestore(clusterId, namespace, middlewareName, type, backupName, backupFileName, pods);
                 return BaseResult.ok();
             }
             MiddlewareCRD cr = middlewareCRDService.getCR(clusterId, namespace, type, middlewareName);
@@ -474,21 +462,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             restoreCRDService.create(clusterId, crd);
         } catch (IOException e) {
             log.error("创建恢复实例出错了", e);
-        }
-    }
-
-    /**
-     * 修复存储单位
-     *
-     * @param middleware
-     */
-    public void fixStorageUnit(Middleware middleware) {
-        Map<String, MiddlewareQuota> quota = middleware.getQuota();
-        if (quota != null) {
-            quota.forEach((k, v) -> {
-                if (v.getStorageClassQuota() != null)
-                    v.setStorageClassQuota(v.getStorageClassQuota().replaceAll("Gi", ""));
-            });
         }
     }
 

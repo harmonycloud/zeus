@@ -81,6 +81,8 @@ public class PodServiceImpl implements PodService {
                         .setIsLvmStorage(scDTO.getIsLvmStorage());
                 isAllLvmStorage.set(isAllLvmStorage.get() & scDTO.getIsLvmStorage());
             }
+            // 给pod设置绑定的pvc
+            setPodPvc(pi, pvcInfos);
             return pi;
         }).collect(Collectors.toList());
         middleware.setIsAllLvmStorage(isAllLvmStorage.get());
@@ -263,4 +265,18 @@ public class PodServiceImpl implements PodService {
         podWrapper.delete(clusterId, namespace, podName);
     }
 
+    /**
+     * 为pod设置绑定的pvc
+     * @param podInfo pod信息
+     * @param pvcInfos 服务所有pvc
+     */
+    private void setPodPvc(PodInfo podInfo, List<MiddlewareInfo> pvcInfos) {
+        List<String> pvcs = new ArrayList<>();
+        pvcInfos.forEach(pvc -> {
+            if (pvc.getName().contains(podInfo.getPodName())) {
+                pvcs.add(pvc.getName());
+            }
+        });
+        podInfo.setPvcs(pvcs);
+    }
 }

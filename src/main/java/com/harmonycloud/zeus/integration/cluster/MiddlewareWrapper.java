@@ -80,4 +80,14 @@ public class MiddlewareWrapper {
         }
     }
 
+    public boolean checkIfExist(String clusterId, String namespace, String name) {
+        boolean exist;
+        try {
+            Map<String, Object> map = K8sClient.getClient(clusterId).customResource(CONTEXT).get(namespace, name);
+            exist = true;
+        } catch (KubernetesClientException e) {
+            exist = false;
+        }
+        return exist;
+    }
 }
