@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.tool.api.AbstractApi;
 import com.harmonycloud.tool.api.client.BaseClient;
 import okhttp3.Call;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Map;
 
@@ -21,8 +22,8 @@ public class AlertManagerApi extends AbstractApi {
     }
 
     public void setSilence(Map<String, Object> body, String authName) throws Exception {
-        Call call =
-            this.localVarHarborClient.buildCall("", POST, body, new String[] {authName});
+        Call call = this.localVarHarborClient.buildCall("", POST, body,
+            StringUtils.isEmpty(authName) ? new String[] {} : new String[] {authName});
         this.localVarHarborClient.execute(call, JSONObject.class);
     }
 

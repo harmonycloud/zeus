@@ -9,6 +9,7 @@ import com.harmonycloud.tool.api.common.Pair;
 import com.harmonycloud.tool.api.common.RequestParams;
 import lombok.Data;
 import okhttp3.Call;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 
 import java.util.Map;
@@ -33,14 +34,14 @@ public class PrometheusApi extends AbstractApi {
             queryMap.forEach((k, v) -> requestParams.getQuery().add(new Pair(k, v)));
         }
         Call call = this.localVarHarborClient.buildCall(url, GET, requestParams, null,
-            new String[] {authName});
+            StringUtils.isEmpty(authName) ? new String[] {} : new String[] {authName});
         return (PrometheusResponse)this.localVarHarborClient.execute(call, PrometheusResponse.class).getData();
     }
 
     public PrometheusRulesResponse getRules(String authName) throws Exception {
         RequestParams requestParams = new RequestParams();
         Call call = this.localVarHarborClient.buildCall("", GET, requestParams, null,
-            new String[] {authName});
+            StringUtils.isEmpty(authName) ? new String[] {} : new String[] {authName});
         return (PrometheusRulesResponse)this.localVarHarborClient.execute(call, PrometheusRulesResponse.class)
             .getData();
     }
