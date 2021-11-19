@@ -9,7 +9,7 @@ import lombok.experimental.Accessors;
  */
 @Data
 @Accessors(chain = true)
-public class ScheduleBackupSpec {
+public class MysqlScheduleBackupSpec {
 
     private String schedule;
 

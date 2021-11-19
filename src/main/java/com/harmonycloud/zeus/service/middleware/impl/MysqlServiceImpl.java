@@ -1,21 +1,22 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.harmonycloud.caas.common.model.middleware.IngressDTO;
+import com.harmonycloud.caas.common.model.middleware.Middleware;
+import com.harmonycloud.caas.common.model.middleware.MysqlDTO;
+import com.harmonycloud.caas.common.model.middleware.ServiceDTO;
+import com.harmonycloud.zeus.operator.api.MysqlOperator;
 import com.harmonycloud.zeus.service.k8s.IngressService;
+import com.harmonycloud.zeus.service.middleware.MysqlService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.zeus.operator.api.MysqlOperator;
-import com.harmonycloud.zeus.service.middleware.AbstractMiddlewareService;
-import com.harmonycloud.zeus.service.middleware.MysqlService;
 import org.springframework.util.CollectionUtils;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_NODEPORT;
 
@@ -25,7 +26,7 @@ import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConsta
  */
 @Slf4j
 @Service
-public class MysqlServiceImpl extends AbstractMiddlewareService implements MysqlService {
+public class MysqlServiceImpl implements MysqlService {
 
     @Autowired
     private MysqlOperator mysqlOperator;
@@ -33,36 +34,6 @@ public class MysqlServiceImpl extends AbstractMiddlewareService implements Mysql
     private IngressService ingressService;
     @Autowired
     private MiddlewareServiceImpl middlewareService;
-
-    @Override
-    public List<MysqlBackupDto> listBackups(String clusterId, String namespace, String middlewareName) {
-        Middleware middleware = new Middleware(clusterId, namespace, middlewareName, MiddlewareTypeEnum.MYSQL.getType());
-        return mysqlOperator.listBackups(middleware);
-    }
-
-    @Override
-    public ScheduleBackupConfig getScheduleBackups(String clusterId, String namespace, String middlewareName) {
-        Middleware middleware = new Middleware(clusterId, namespace, middlewareName, MiddlewareTypeEnum.MYSQL.getType());
-        return mysqlOperator.getScheduleBackupConfig(middleware);
-    }
-
-    @Override
-    public void createScheduleBackup(String clusterId, String namespace, String middlewareName,Integer keepBackups, String cron) {
-        Middleware middleware = new Middleware(clusterId, namespace, middlewareName, MiddlewareTypeEnum.MYSQL.getType());
-        mysqlOperator.createScheduleBackup(middleware, keepBackups, cron);
-    }
-
-    @Override
-    public void createBackup(String clusterId, String namespace, String middlewareName) {
-        Middleware middleware = new Middleware(clusterId, namespace, middlewareName, MiddlewareTypeEnum.MYSQL.getType());
-        mysqlOperator.createBackup(middleware);
-    }
-
-    @Override
-    public void deleteBackup(String clusterId, String namespace, String middlewareName, String backupFileName, String backupName) throws Exception{
-        Middleware middleware = new Middleware(clusterId, namespace, middlewareName, MiddlewareTypeEnum.MYSQL.getType());
-        mysqlOperator.deleteBackup(middleware, backupFileName, backupName);
-    }
 
     @Override
     public BaseResult switchDisasterRecovery(String clusterId, String namespace, String middlewareName) {
@@ -111,7 +82,7 @@ public class MysqlServiceImpl extends AbstractMiddlewareService implements Mysql
         return BaseResult.ok(res);
     }
 
-    public JSONObject queryAllAccessInfo(String clusterId, String namespace, String middlewareName,Boolean isSource) {
+    public JSONObject queryAllAccessInfo(String clusterId, String namespace, String middlewareName, Boolean isSource) {
         String nodePortServiceName;
         if (isSource == null || isSource) {
             nodePortServiceName = middlewareName + "-nodeport";
@@ -141,6 +112,7 @@ public class MysqlServiceImpl extends AbstractMiddlewareService implements Mysql
 
     /**
      * 查询实例类型(是源实例还是灾备实例)
+     *
      * @param isSource
      * @return
      */

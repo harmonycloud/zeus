@@ -21,14 +21,9 @@ public class MiddlewareBackupScheduleSpec {
     private String type;
 
     /**
-     * pod名称（选填）
+     * 备份信息
      */
-    private String pod;
-
-    /**
-     * pod存储pvc(选填)
-     */
-    private List<String> pvcs;
+    private List<BackupObject> backupObjects;
 
     /**
      * 备份存储
@@ -48,9 +43,10 @@ public class MiddlewareBackupScheduleSpec {
     public MiddlewareBackupScheduleSpec() {
     }
 
-    public MiddlewareBackupScheduleSpec(String name, String type,String cron, Integer limitRecord) {
+    public MiddlewareBackupScheduleSpec(String name, String type,String cron, Integer limitRecord, List<BackupObject> backupObjects) {
         this.name = name;
         this.type = type;
+        this.backupObjects = backupObjects;
         if (StringUtils.isNotBlank(cron)) {
             this.schedule = new Schedule(cron, limitRecord);
         }
@@ -82,5 +78,6 @@ public class MiddlewareBackupScheduleSpec {
             this.limitRecord = limitRecord;
         }
     }
+
 }
 

@@ -3,9 +3,9 @@ package com.harmonycloud.zeus.service.middleware.impl;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
 import com.harmonycloud.caas.common.model.middleware.ScheduleBackup;
-import com.harmonycloud.zeus.integration.cluster.ScheduleBackupWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.ScheduleBackupCRD;
-import com.harmonycloud.zeus.service.middleware.ScheduleBackupService;
+import com.harmonycloud.zeus.integration.cluster.MysqlScheduleBackupWrapper;
+import com.harmonycloud.zeus.integration.cluster.bean.MysqlScheduleBackupCRD;
+import com.harmonycloud.zeus.service.middleware.MysqlScheduleBackupService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,10 +24,10 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-public class ScheduleBackupServiceImpl implements ScheduleBackupService {
+public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupService {
 
     @Autowired
-    private ScheduleBackupWrapper scheduleBackupWrapper;
+    private MysqlScheduleBackupWrapper mysqlScheduleBackupWrapper;
 
     /**
      * 查询备份列表
@@ -39,22 +39,23 @@ public class ScheduleBackupServiceImpl implements ScheduleBackupService {
      */
     @Override
     public List<ScheduleBackup> listScheduleBackup(String clusterId, String namespace, String name) {
-        List<ScheduleBackupCRD> scheduleBackupCRDList = scheduleBackupWrapper.list(clusterId, namespace);
-        if (CollectionUtils.isEmpty(scheduleBackupCRDList)) {
+        List<MysqlScheduleBackupCRD> mysqlScheduleBackupCRDList = mysqlScheduleBackupWrapper.list(clusterId, namespace);
+        if (CollectionUtils.isEmpty(mysqlScheduleBackupCRDList)) {
             return null;
         }
-        scheduleBackupCRDList = scheduleBackupCRDList.stream()
+        mysqlScheduleBackupCRDList = mysqlScheduleBackupCRDList.stream()
                 .filter(scheduleBackup -> scheduleBackup.getSpec().getBackupTemplate().getClusterName().equals(name))
                 .collect(Collectors.toList());
 
         List<ScheduleBackup> scheduleBackupList = new ArrayList<>();
-        scheduleBackupCRDList.forEach(scheduleBackupCRD -> {
+        mysqlScheduleBackupCRDList.forEach(scheduleBackupCRD -> {
             ScheduleBackup scheduleBackup = new ScheduleBackup().setName(scheduleBackupCRD.getMetadata().getName())
                 .setNamespace(scheduleBackupCRD.getMetadata().getNamespace())
                 .setControllerName(scheduleBackupCRD.getMetadata().getLabels().get("controllername"))
                 .setMiddlewareCluster(scheduleBackupCRD.getSpec().getBackupTemplate().getClusterName())
                 .setSchedule(scheduleBackupCRD.getSpec().getSchedule())
-                .setKeepBackups(scheduleBackupCRD.getSpec().getKeepBackups());
+                .setKeepBackups(scheduleBackupCRD.getSpec().getKeepBackups())
+                .setCreationTimestamp(scheduleBackupCRD.getMetadata().getCreationTimestamp());
             if (!ObjectUtils.isEmpty(scheduleBackupCRD.getStatus())) {
                 scheduleBackup.setLastBackupName(scheduleBackupCRD.getStatus().getLastBackupName())
                     .setLastBackupFileName(scheduleBackupCRD.getStatus().getLastBackupFileName())
@@ -70,22 +71,22 @@ public class ScheduleBackupServiceImpl implements ScheduleBackupService {
      * 创建定时备份
      *
      * @param clusterId
-     * @param scheduleBackupCRD
+     * @param mysqlScheduleBackupCRD
      * @return
      */
     @Override
-    public void create(String clusterId, ScheduleBackupCRD scheduleBackupCRD) {
+    public void create(String clusterId, MysqlScheduleBackupCRD mysqlScheduleBackupCRD) {
         try {
-            scheduleBackupWrapper.create(clusterId, scheduleBackupCRD);
+            mysqlScheduleBackupWrapper.create(clusterId, mysqlScheduleBackupCRD);
         } catch (IOException e) {
-            log.error("备份{}创建失败", scheduleBackupCRD.getMetadata().getName());
+            log.error("备份{}创建失败", mysqlScheduleBackupCRD.getMetadata().getName());
             throw new CaasRuntimeException(ErrorMessage.CREATE_BACKUP_FAILED);
         }
     }
 
     @Override
     public void delete(String clusterId, String namespace, String name) {
-        List<ScheduleBackupCRD> crdList = scheduleBackupWrapper.list(clusterId, namespace);
+        List<MysqlScheduleBackupCRD> crdList = mysqlScheduleBackupWrapper.list(clusterId, namespace);
         if (CollectionUtils.isEmpty(crdList)) {
             return;
         }
@@ -95,11 +96,26 @@ public class ScheduleBackupServiceImpl implements ScheduleBackupService {
                 return;
             }
             try {
-                scheduleBackupWrapper.delete(clusterId, namespace, crd.getMetadata().getName());
+                mysqlScheduleBackupWrapper.delete(clusterId, namespace, crd.getMetadata().getName());
             } catch (IOException e) {
                 log.error("集群：{}，命名空间：{}，中间件：{}，定时备份删除失败", clusterId, namespace, name, e);
             }
         });
+    }
+
+    @Override
+    public void update(String clusterId, MysqlScheduleBackupCRD mysqlScheduleBackupCRD) {
+        try {
+            mysqlScheduleBackupWrapper.update(clusterId, mysqlScheduleBackupCRD);
+        } catch (IOException e) {
+            log.error("备份{}创建失败", mysqlScheduleBackupCRD.getMetadata().getName());
+            throw new CaasRuntimeException(ErrorMessage.CREATE_BACKUP_FAILED);
+        }
+    }
+
+    @Override
+    public MysqlScheduleBackupCRD get(String clusterId, String namespace, String backupScheduleName) {
+        return mysqlScheduleBackupWrapper.get(clusterId, namespace, backupScheduleName);
     }
 
 }

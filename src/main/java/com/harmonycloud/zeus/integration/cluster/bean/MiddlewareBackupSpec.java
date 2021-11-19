@@ -21,19 +21,14 @@ public class MiddlewareBackupSpec {
     private String name;
 
     /**
-     * pod名称
-     */
-    private String pod;
-
-    /**
      * 中间件类型
      */
     private String type;
 
     /**
-     * pvc数组
+     * 备份信息
      */
-    private List<String> pvcs;
+    private List<BackupObject> backupObjects;
 
     public MiddlewareBackupSpec() {
     }

@@ -10,7 +10,6 @@ import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.integration.cluster.PvcWrapper;

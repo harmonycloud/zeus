@@ -15,7 +15,7 @@ public class MiddlewareBackupScheduleCRD {
 
     private String apiVersion = "harmonycloud.cn/v1";
 
-    private String kind;
+    private String kind = "MiddlewareBackupSchedule";
 
     private ObjectMeta metadata;
 

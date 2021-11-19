@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.service.middleware;
 
 import com.harmonycloud.caas.common.model.middleware.ScheduleBackup;
-import com.harmonycloud.zeus.integration.cluster.bean.ScheduleBackupCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MysqlScheduleBackupCRD;
 
 import java.util.List;
 
@@ -9,7 +9,7 @@ import java.util.List;
  * @author xutianhong
  * @Date 2021/4/7 2:03 下午
  */
-public interface ScheduleBackupService {
+public interface MysqlScheduleBackupService {
 
     /**
      * 查询备份列表
@@ -25,10 +25,10 @@ public interface ScheduleBackupService {
      * 创建定时备份
      *
      * @param clusterId         集群id
-     * @param scheduleBackupCRD 定时备份信息
+     * @param mysqlScheduleBackupCRD 定时备份信息
      * @return
      */
-    void create(String clusterId, ScheduleBackupCRD scheduleBackupCRD);
+    void create(String clusterId, MysqlScheduleBackupCRD mysqlScheduleBackupCRD);
 
     /**
      * 删除定时备份
@@ -39,4 +39,19 @@ public interface ScheduleBackupService {
      */
     void delete(String clusterId, String namespace, String name);
 
+    /**
+     * 更新备份规则
+     * @param clusterId
+     * @param mysqlScheduleBackupCRD
+     */
+    void update(String clusterId, MysqlScheduleBackupCRD mysqlScheduleBackupCRD);
+
+    /**
+     * 获取备份规则
+     * @param clusterId
+     * @param namespace
+     * @param backupScheduleName
+     * @return
+     */
+    MysqlScheduleBackupCRD get(String clusterId, String namespace, String backupScheduleName);
 }

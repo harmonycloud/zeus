@@ -9,7 +9,7 @@ import lombok.experimental.Accessors;
  */
 @Data
 @Accessors(chain = true)
-public class ScheduleBackupStatus {
+public class MysqlScheduleBackupStatus {
 
     private String lastBackupFileName;
 

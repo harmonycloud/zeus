@@ -1,22 +1,18 @@
 package com.harmonycloud.zeus.controller.middleware;
 
-import java.util.List;
-
+import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MonitorDto;
 import com.harmonycloud.caas.common.model.middleware.MysqlSlowSqlDTO;
 import com.harmonycloud.caas.common.model.middleware.SlowLogQuery;
 import com.harmonycloud.tool.page.PageObject;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
