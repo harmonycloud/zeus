@@ -201,8 +201,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
                 return;
             }
             try {
-                //todo
-                //delete(clusterId, backup.getBackupFileName(), backup.getName());
+                deleteRecord(clusterId, namespace, middlewareName, type, backup.getName(), backup.getBackupFileName());
             } catch (Exception e) {
                 log.error("集群：{}，命名空间：{}，mysql中间件：{}，删除mysql备份异常", e);
             }

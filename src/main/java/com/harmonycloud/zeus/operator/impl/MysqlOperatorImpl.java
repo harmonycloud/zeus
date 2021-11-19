@@ -25,6 +25,7 @@ import com.harmonycloud.zeus.service.k8s.StorageClassService;
 import com.harmonycloud.zeus.service.middleware.BackupService;
 import com.harmonycloud.zeus.service.middleware.MysqlScheduleBackupService;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareServiceImpl;
+import com.harmonycloud.zeus.service.middleware.impl.MysqlBackupServiceImpl;
 import com.harmonycloud.zeus.util.DateUtil;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -38,9 +39,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.harmonycloud.caas.common.constants.MinioConstant.BACKUP;
-import static com.harmonycloud.caas.common.constants.MinioConstant.MINIO;
-import static com.harmonycloud.caas.common.constants.NameConstant.*;
+import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_NODEPORT;
 
 /**
@@ -68,6 +67,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     private BaseOperatorImpl baseOperator;
     @Autowired
     private StorageClassService storageClassService;
+    @Autowired
+    private MysqlBackupServiceImpl mysqlBackupService;
 
     @Override
     public boolean support(Middleware middleware) {
@@ -274,8 +275,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     public void delete(Middleware middleware) {
         this.deleteDisasterRecoveryInfo(middleware);
         super.delete(middleware);
-        // todo 删除备份相关
-
+        // 删除备份相关
+        mysqlBackupService.deleteMiddlewareBackupInfo(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
         // 删除定时备份任务
         mysqlScheduleBackupService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
     }
