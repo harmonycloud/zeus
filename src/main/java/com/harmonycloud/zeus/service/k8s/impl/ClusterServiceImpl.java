@@ -128,7 +128,7 @@ public class ClusterServiceImpl implements ClusterService {
             BeanUtils.copyProperties(info, cluster);
             cluster.setId(K8sClient.getClusterId(c.getMetadata())).setHost(info.getAddress())
                 .setName(c.getMetadata().getName()).setDcId(c.getMetadata().getNamespace())
-                .setIngress(info.getIngress());
+                .setIngressList(info.getIngressList());
             if (!CollectionUtils.isEmpty(c.getMetadata().getAnnotations())) {
                 cluster.setNickname(c.getMetadata().getAnnotations().get(NAME));
             }
@@ -310,7 +310,7 @@ public class ClusterServiceImpl implements ClusterService {
         // 只修改昵称，证书，ingress，制品服务，es
         oldCluster.setNickname(cluster.getNickname());
         oldCluster.setCert(cluster.getCert());
-        oldCluster.setIngress(cluster.getIngress());
+        oldCluster.setIngressList(cluster.getIngressList());
         oldCluster.setRegistry(cluster.getRegistry());
         oldCluster.setLogging(cluster.getLogging());
 
@@ -356,9 +356,9 @@ public class ClusterServiceImpl implements ClusterService {
         }
         
         // 设置ingress
-        if (cluster.getIngress() != null && cluster.getIngress().getTcp() == null) {
+        /*if (!CollectionUtils.isEmpty(cluster.getIngressList()) && cluster.getIngress().getTcp() == null) {
             cluster.getIngress().setTcp(new MiddlewareClusterIngress.IngressConfig());
-        }
+        }*/
         
         // 设置es信息
         if (cluster.getLogging() == null) {
@@ -517,7 +517,7 @@ public class ClusterServiceImpl implements ClusterService {
         }
         // 安装ingress nginx
         try {
-            if (cluster.getIngress() == null || StringUtils.isEmpty(cluster.getIngress().getAddress())) {
+            if (CollectionUtils.isEmpty(cluster.getIngressList())) {
                 if (helmListInfos.stream().noneMatch(helm -> "ingress".equals(helm.getName()))) {
                     ingress(repository, cluster);
                 }
@@ -527,7 +527,8 @@ public class ClusterServiceImpl implements ClusterService {
                 config.setEnabled(true).setNamespace("middleware-operator")
                     .setConfigMapName("ingress-ingress-nginx-system-expose-nginx-config-tcp");
                 ingress.setTcp(config);
-                cluster.setIngress(ingress);
+                List<MiddlewareClusterIngress> ingressList = new ArrayList<>();
+                cluster.setIngressList(ingressList);
             }
         } catch (Exception e) {
             log.error(ErrorMessage.HELM_INSTALL_NGINX_INGRESS_FAILED.getZhMsg());

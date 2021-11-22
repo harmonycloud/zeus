@@ -2,6 +2,8 @@ package com.harmonycloud.zeus.integration.cluster;
 
 import java.util.Map;
 
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -57,15 +59,11 @@ public class AlertManagerWrapper {
     private MiddlewareClusterMonitorInfo getAlertManagerInfo(MiddlewareClusterDTO cluster) {
         MiddlewareClusterMonitorInfo alertManager;
         if (cluster.getMonitor() == null || cluster.getMonitor().getAlertManager() == null) {
-            alertManager = new MiddlewareClusterMonitorInfo().setProtocol(Protocol.HTTP.getValue().toLowerCase())
-                    .setHost(cluster.getIngress().getAddress()).setPort(alertManagerPort);
+            throw new BusinessException(ErrorMessage.NOT_EXIST);
         } else {
             alertManager = cluster.getMonitor().getAlertManager();
             if (StringUtils.isBlank(cluster.getMonitor().getAlertManager().getProtocol())) {
                 alertManager.setProtocol(Protocol.HTTP.getValue().toLowerCase());
-            }
-            if (StringUtils.isBlank(cluster.getMonitor().getAlertManager().getHost())) {
-                alertManager.setHost(cluster.getIngress().getAddress());
             }
             if (StringUtils.isBlank(cluster.getMonitor().getAlertManager().getPort())) {
                 alertManager.setPort(alertManagerPort);

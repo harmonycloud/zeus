@@ -2,6 +2,8 @@ package com.harmonycloud.zeus.integration.cluster;
 
 import java.util.Map;
 
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.zeus.integration.cluster.api.PrometheusApi;
 import com.harmonycloud.zeus.integration.cluster.client.PrometheusClient;
 import org.apache.commons.lang3.StringUtils;
@@ -72,15 +74,11 @@ public class PrometheusWrapper {
     private MiddlewareClusterMonitorInfo getPrometheusInfo(MiddlewareClusterDTO cluster) {
         MiddlewareClusterMonitorInfo prometheus;
         if (cluster.getMonitor() == null || cluster.getMonitor().getPrometheus() == null) {
-            prometheus = new MiddlewareClusterMonitorInfo().setProtocol(Protocol.HTTP.getValue().toLowerCase())
-                    .setHost(cluster.getIngress().getAddress()).setPort(prometheusPort);
+            throw new BusinessException(ErrorMessage.NOT_EXIST);
         } else {
             prometheus = cluster.getMonitor().getPrometheus();
             if (StringUtils.isBlank(cluster.getMonitor().getPrometheus().getProtocol())) {
                 prometheus.setProtocol(Protocol.HTTP.getValue().toLowerCase());
-            }
-            if (StringUtils.isBlank(cluster.getMonitor().getPrometheus().getHost())) {
-                prometheus.setHost(cluster.getIngress().getAddress());
             }
             if (StringUtils.isBlank(cluster.getMonitor().getPrometheus().getPort())) {
                 prometheus.setPort(prometheusPort);
