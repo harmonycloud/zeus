@@ -5,6 +5,8 @@ import com.harmonycloud.zeus.integration.cluster.bean.MysqlScheduleBackupCRD;
 import com.harmonycloud.zeus.integration.cluster.bean.ScheduleBackupList;
 import com.harmonycloud.zeus.util.K8sClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.type.Alias;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -18,6 +20,7 @@ import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConsta
  * @author xutianhong
  * @Date 2021/4/2 3:14 下午
  */
+@Slf4j
 @Component
 public class MysqlScheduleBackupWrapper {
 
@@ -32,7 +35,12 @@ public class MysqlScheduleBackupWrapper {
      * 获取定时备份列表
      */
     public List<MysqlScheduleBackupCRD> list(String clusterId, String namespace){
-        Map<String, Object> map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace);
+        Map<String, Object> map = null;
+        try {
+            map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace);
+        } catch (Exception e) {
+            return null;
+        }
         ScheduleBackupList scheduleBackupList = JSONObject.parseObject(JSONObject.toJSONString(map), ScheduleBackupList.class);
         if (scheduleBackupList == null || CollectionUtils.isEmpty(scheduleBackupList.getItems())){
             return null;

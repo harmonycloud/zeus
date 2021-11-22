@@ -436,7 +436,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
         Map<String, String> labels = getMiddlewareBackupLabels(middlewareName, null, null);
         MiddlewareBackupScheduleList scheduleList = backupScheduleCRDService.list(clusterId, namespace, labels);
-        if (!CollectionUtils.isEmpty(scheduleList.getItems())) {
+        if (scheduleList != null && !CollectionUtils.isEmpty(scheduleList.getItems())) {
             return true;
         }
         return false;
