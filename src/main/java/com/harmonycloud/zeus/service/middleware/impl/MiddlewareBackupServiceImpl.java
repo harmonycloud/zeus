@@ -16,12 +16,12 @@ import com.harmonycloud.zeus.annotation.MiddlewareBackup;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.util.CronUtils;
 import com.harmonycloud.zeus.util.DateUtil;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.hssf.record.SaveRecalcRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -57,6 +57,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private MysqlBackupServiceImpl mysqlAdapterService;
     @Autowired
     private PodService podService;
+    @Autowired
+    private MiddlewareService middlewareService;
 
     @Override
     public List<MiddlewareBackupRecord> listRecord(String clusterId, String namespace, String middlewareName, String type) {
@@ -65,11 +67,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
         List<MiddlewareBackupRecord> recordList = new ArrayList<>();
         List<MiddlewareBackupCRD> backupRecordList = getBackupRecordList(clusterId, namespace, middlewareName, type);
+        Middleware podInfo = podService.list(clusterId, namespace, middlewareName, type);
+        Middleware middleware = middlewareService.detail(clusterId, namespace, middlewareName, type);
         if (!CollectionUtils.isEmpty(backupRecordList)) {
             backupRecordList.forEach(item -> {
                 MiddlewareBackupStatus backupStatus = item.getStatus();
                 MiddlewareBackupRecord backupRecord = new MiddlewareBackupRecord();
-                setBackupPodName(clusterId, namespace, middlewareName, type, item.getSpec().getBackupObjects(), backupRecord);
+                setBackupPodName(middlewareName, item.getSpec().getBackupObjects(), backupRecord, podInfo);
                 String backupTime = DateUtil.utc2Local(item.getMetadata().getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
                 backupRecord.setBackupTime(backupTime);
                 backupRecord.setBackupName(item.getMetadata().getName());
@@ -88,6 +92,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                     }
                     backupRecord.setPhrase(item.getStatus().getPhase());
                 }
+                setMiddlewareAliasName(middleware.getAliasName(), backupRecord);
                 recordList.add(backupRecord);
             });
         }
@@ -405,6 +410,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                     String localCron = CronUtils.parseLocalCron(spec.getSchedule().getCron());
                     MiddlewareBackupScheduleConfig config = new MiddlewareBackupScheduleConfig(schedule.getMetadata().getName(), true, localCron,
                             spec.getSchedule().getLimitRecord(), spec.getPause(), getBackupSourceName(schedule, backupType), backupType, createTime, getPodRole(backupType, labels));
+                    setMiddlewareAliasName(clusterId, namespace, type, middlewareName, config);
                     configList.add(config);
                 }
             });
@@ -597,16 +603,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     /**
      * 设置备份源名称与备份类型
      *
-     * @param clusterId      集群id
-     * @param namespace      分区
      * @param middlewareName 中间件名称
-     * @param type           中间件类型
      * @param backupObjects  备份对象
      * @param backupRecord   备份记录
      * @return
      */
-    private void setBackupPodName(String clusterId, String namespace, String middlewareName, String type, List<BackupObject> backupObjects, MiddlewareBackupRecord backupRecord) {
-        Middleware middleware = podService.list(clusterId, namespace, middlewareName, type);
+    private void setBackupPodName(String middlewareName, List<BackupObject> backupObjects, MiddlewareBackupRecord backupRecord, Middleware middleware) {
         List<PodInfo> pods = middleware.getPods();
         List<String> podList = new ArrayList<>();
         pods.forEach(podInfo -> {
@@ -619,10 +621,16 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (podList.containsAll(backupPodList) && podList.size() == backupPodList.size()) {
             backupRecord.setSourceName(middlewareName);
             backupRecord.setBackupType(BackupType.CLUSTER.getType());
+            backupRecord.setAliasName(middleware.getAliasName());
         } else {
             StringBuffer sbf = new StringBuffer();
             backupPodList.forEach(pod -> {
                 sbf.append(pod).append(",");
+            });
+            pods.forEach(podInfo -> {
+                if (podInfo.getPodName().equals(backupRecord.getBackupName())) {
+                    backupRecord.setPodRole(podInfo.getRole());
+                }
             });
             backupRecord.setSourceName(sbf.substring(0, sbf.length() - 1));
             backupRecord.setBackupType(BackupType.POD.getType());
@@ -659,4 +667,29 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         return restoreObjects;
     }
 
+    /**
+     * 设置服务别名
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param middlewareName
+     * @param config
+     */
+    private void setMiddlewareAliasName(String clusterId, String namespace, String type, String middlewareName, MiddlewareBackupScheduleConfig config) {
+        if (BackupType.CLUSTER.getType().equals(config.getBackupType())) {
+            Middleware middleware = middlewareService.detail(clusterId, namespace, middlewareName, type);
+            config.setAliasName(middleware.getAliasName());
+        }
+    }
+
+    /**
+     * 设置服务别名
+     * @param aliasName
+     * @param record
+     */
+    private void setMiddlewareAliasName(String aliasName, MiddlewareBackupRecord record) {
+        if (BackupType.CLUSTER.getType().equals(record.getBackupType())) {
+            record.setAliasName(aliasName);
+        }
+    }
 }

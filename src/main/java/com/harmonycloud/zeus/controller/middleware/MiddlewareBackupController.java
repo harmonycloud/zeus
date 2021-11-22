@@ -57,9 +57,9 @@ public class MiddlewareBackupController {
     public BaseResult update(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
                              @RequestParam("type") String type,
-                             @RequestParam(value = "backupScheduleName") String backupScheduleName,
-                             @RequestParam(value = "cron") String cron,
-                             @RequestParam(value = "limitRecord") Integer limitRecord,
+                             @RequestParam("backupScheduleName") String backupScheduleName,
+                             @RequestParam("cron") String cron,
+                             @RequestParam("limitRecord") Integer limitRecord,
                              @RequestParam(value = "pause", required = false) String pause) {
         return middlewareBackupService.updateBackupSchedule(new MiddlewareBackupDTO(clusterId, namespace, type, cron, limitRecord, pause, backupScheduleName));
     }
@@ -106,7 +106,7 @@ public class MiddlewareBackupController {
                              @PathVariable("namespace") String namespace,
                              @RequestParam("type") String type,
                              @RequestParam("middlewareName") String middlewareName,
-                             @RequestParam(value = "backupName") String backupName,
+                             @RequestParam("backupName") String backupName,
                              @RequestParam(value = "backupFileName", required = false) String backupFileName) {
         return middlewareBackupService.deleteRecord(clusterId, namespace, middlewareName, type, backupName, backupFileName);
     }
@@ -136,7 +136,7 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "backupFileName", value = "备份文件名称", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "pods", value = "pod名称", paramType = "query", dataTypeClass = List.class)
     })
-    @PostMapping("restore")
+    @PostMapping("/restore")
     public BaseResult createRestore(@PathVariable("clusterId") String clusterId,
                                     @PathVariable("namespace") String namespace,
                                     @RequestParam("type") String type,
