@@ -5,7 +5,11 @@ import com.harmonycloud.caas.common.model.middleware.AlertInfoDto;
 import com.harmonycloud.zeus.bean.DingRobotInfo;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author yushuaikang
@@ -19,5 +23,9 @@ public interface DingRobotService {
 
     SendResult sendWithAtAll(String message);
 
-    void insert(DingRobotInfo dingRobotInfo);
+    void insert(List<DingRobotInfo> dingRobotInfos);
+
+    List<DingRobotInfo> getDings();
+
+    boolean dingConnect(DingRobotInfo dingRobotInfos) throws IOException, NoSuchAlgorithmException, InvalidKeyException;
 }

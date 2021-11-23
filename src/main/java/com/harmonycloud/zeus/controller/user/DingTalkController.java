@@ -11,12 +11,12 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.List;
 
 /**
  * @author yushuaikang
@@ -43,8 +43,26 @@ public class DingTalkController {
             @ApiImplicitParam(name = "dingRobotInfo", value = "钉钉机器人信息", paramType = "query", dataTypeClass = DingRobotInfo.class),
     })
     @PostMapping
-    public BaseResult creat(@RequestBody DingRobotInfo dingRobotInfo) {
-        dingRobotService.insert(dingRobotInfo);
+    public BaseResult creat(@RequestBody List<DingRobotInfo> dingRobotInfos) {
+        dingRobotService.insert(dingRobotInfos);
         return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "获取钉钉机器人", notes = "获取钉钉机器人")
+    @GetMapping
+    public BaseResult dings() {
+        return BaseResult.ok(dingRobotService.getDings());
+    }
+
+    @ApiOperation(value = "钉钉连接测试", notes = "钉钉连接测试")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "dingRobotInfo", value = "钉钉机器人信息", paramType = "query", dataTypeClass = DingRobotInfo.class),
+    })
+    @PostMapping("/connect")
+    public BaseResult connect(@RequestBody DingRobotInfo dingRobotInfo) throws NoSuchAlgorithmException, InvalidKeyException, IOException {
+        if (dingRobotService.dingConnect(dingRobotInfo)) {
+            return BaseResult.ok();
+        }
+        return BaseResult.error();
     }
 }

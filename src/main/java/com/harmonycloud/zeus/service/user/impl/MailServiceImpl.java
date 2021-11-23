@@ -8,6 +8,7 @@ import com.harmonycloud.zeus.bean.user.BeanUser;
 import com.harmonycloud.zeus.dao.MailMapper;
 import com.harmonycloud.zeus.dao.MailToUserMapper;
 import com.harmonycloud.zeus.service.user.MailService;
+import com.harmonycloud.zeus.util.RobotClientUtil;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,9 @@ public class MailServiceImpl implements MailService {
 
     @Autowired
     private MailToUserMapper mailToUserMapper;
+
+    private static RobotClientUtil robot = new RobotClientUtil();
+
 
     /**
      * 邮件发送器
@@ -87,7 +91,7 @@ public class MailServiceImpl implements MailService {
             MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
             String[] path = mailInfo.getMailPath().split("@");
             messageHelper.setFrom(mailInfo.getMailPath(), path[0]);
-            messageHelper.setSubject("【中间件平台】"+alertInfoDto.getAlertObject()+alertInfoDto.getAlert()+"告警");
+            messageHelper.setSubject("【中间件平台】"+alertInfoDto.getClusterId()+alertInfoDto.getDescription()+"告警");
             List<MailToUser> users = mailToUserMapper.selectList(new QueryWrapper<MailToUser>());
             for (MailToUser user : users) {
                 messageHelper.setText(buildContent(alertInfoDto,user.getAliasName()), true);
@@ -95,8 +99,7 @@ public class MailServiceImpl implements MailService {
                 mailSender.send(mimeMessage);
             }
         }catch (Exception e) {
-            logger.error(e.getMessage());
-            throw new RuntimeException("邮件发送失败!" + e.getMessage());
+            logger.error("邮件发送失败:"+e.getMessage());
         }
     }
 
@@ -127,6 +130,11 @@ public class MailServiceImpl implements MailService {
     }
 
     @Override
+    public boolean checkEmail(String email) {
+        return robot.checkEmailMethod(email);
+    }
+
+    @Override
     public MailInfo select() {
         return mailMapper.selectOne(new QueryWrapper<MailInfo>());
     }
@@ -152,15 +160,15 @@ public class MailServiceImpl implements MailService {
 
         String emailHeadColor = "";
         String emailTextColor = "";
-        if ("严重".equals(alertInfoDto.getLevel())) {
+        if ("emergency".equals(alertInfoDto.getLevel())) { //严重
             emailHeadColor = "red";
             emailTextColor = "<font color='red'>" + alertInfoDto.getLevel() +"</font>";
         }
-        if ("一般".equals(alertInfoDto.getLevel())) {
+        if ("critical".equals(alertInfoDto.getLevel())) { //重要
             emailHeadColor = "yellow";
             emailTextColor = "<font color='yellow'>" + alertInfoDto.getLevel() +"</font>";
         }
-        if ("重要".equals(alertInfoDto.getLevel())) {
+        if ("warning".equals(alertInfoDto.getLevel())) { //一般
             emailHeadColor = "blue";
             emailTextColor = "<font color='blue'>" + alertInfoDto.getLevel() +"</font>";
         }
@@ -169,9 +177,9 @@ public class MailServiceImpl implements MailService {
         //邮件表格header
         String header = "<td>告警id</td><td>告警等级</td><td>告警内容</td><td>告警对象</td><td>规则描述</td><td>实际监控</td><td>告警时间<td>";
         StringBuilder linesBuffer = new StringBuilder();
-        String date = DateFormatUtils.format(alertInfoDto.getCreateTime(), "yyyy-MM-dd HH:mm:ss");
-        linesBuffer.append("<tr><td>" + alertInfoDto.getRuleID() + "</td><td>" + emailTextColor + "</td><td>" + alertInfoDto.getAlert() + "</td>" +
-                "<td>" + alertInfoDto.getAlertObject() + "</td><td>" + alertInfoDto.getDescription() + "</td><td>" + alertInfoDto.getExpr() + "</td><td>" + date + "</td></tr>");
+//        String date = DateFormatUtils.format(alertInfoDto.getCreateTime(), "yyyy-MM-dd HH:mm:ss");
+        linesBuffer.append("<tr><td>" + alertInfoDto.getRuleID() + "</td><td>" + emailTextColor + "</td><td>" + alertInfoDto.getContent() + "</td>" +
+                "<td>" + alertInfoDto.getClusterId() + "</td><td>" + alertInfoDto.getDescription() + "</td><td>" + alertInfoDto.getMessage() + "</td><td>" + alertInfoDto.getAlertTime() + "</td></tr>");
 
         //填充html模板中的五个参数
         String htmlText = MessageFormat.format(buffer.toString(), emailHeadColor, alertInfoDto.getLevel(), contentText, "", header, linesBuffer.toString());

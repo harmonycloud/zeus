@@ -7,6 +7,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
+
 /**
  * @author yushuaikang
  * @date 2021/11/9 下午8:05
@@ -26,7 +28,7 @@ public class DingRobotInfo {
     private String secretKey;
 
     @TableField(value = "creat_time")
-    private String time;
+    private Date time;
 
 
 }

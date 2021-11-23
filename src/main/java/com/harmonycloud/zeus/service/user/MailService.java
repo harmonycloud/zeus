@@ -21,4 +21,6 @@ public interface MailService {
     MailInfo select();
 
     void insertUser(List<BeanUser> users);
+
+    boolean checkEmail(String email);
 }

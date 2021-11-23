@@ -63,4 +63,16 @@ public class MailController {
         mailService.insertUser(users);
         return BaseResult.ok();
     }
+
+    @ApiOperation(value = "邮箱连接测试", notes = "邮箱连接测试")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "email", value = "邮箱", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("/connect")
+    public BaseResult connect(@RequestParam String email) {
+        if (mailService.checkEmail(email)) {
+            return BaseResult.ok();
+        }
+        return BaseResult.error();
+    }
 }

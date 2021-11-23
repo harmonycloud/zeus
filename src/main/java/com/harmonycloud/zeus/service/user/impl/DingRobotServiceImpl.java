@@ -24,6 +24,7 @@ import java.net.URLEncoder;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -153,15 +154,42 @@ public class DingRobotServiceImpl implements DingRobotService {
     }
 
     @Override
-    public void insert(DingRobotInfo dingRobotInfo) {
+    public void insert(List<DingRobotInfo> dingRobotInfos) {
         QueryWrapper<DingRobotInfo> wrapper = new QueryWrapper<>();
         List<DingRobotInfo> list = dingRobotMapper.selectList(wrapper);
         if (list.size() == 0) {
-            dingRobotMapper.insert(dingRobotInfo);
+            dingRobotInfos.forEach(dingRobotInfo -> {
+                dingRobotInfo.setTime(new Date());
+                dingRobotMapper.insert(dingRobotInfo);
+            });
         }else {
             dingRobotMapper.delete(wrapper);
-            dingRobotMapper.insert(dingRobotInfo);
+            dingRobotInfos.forEach(dingRobotInfo -> {
+                dingRobotInfo.setTime(new Date());
+                dingRobotMapper.insert(dingRobotInfo);
+            });
         }
+    }
+
+    @Override
+    public List<DingRobotInfo> getDings() {
+        QueryWrapper<DingRobotInfo> wrapper = new QueryWrapper<>();
+        return dingRobotMapper.selectList(wrapper);
+    }
+
+    @Override
+    public boolean dingConnect(DingRobotInfo dingRobotInfos) throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+        SendResult sendResult = null;
+        TextMessage textMessage = new TextMessage("连接测试,请忽略!");
+        if (StringUtils.isEmpty(dingRobotInfos.getSecretKey())) {
+            sendResult = robot.send(dingRobotInfos.getWebhook(), textMessage);
+        }else {
+            sendResult = robot.send(secret(dingRobotInfos.getWebhook(),dingRobotInfos.getSecretKey()),textMessage);
+        }
+        if (sendResult.getErrorCode() == 0) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -170,15 +198,14 @@ public class DingRobotServiceImpl implements DingRobotService {
      * @return
      */
     private String buildContent(AlertInfoDto alertInfoDto) {
-        String date = DateFormatUtils.format(alertInfoDto.getCreateTime(), "yyyy-MM-dd HH:mm:ss");
         StringBuffer sb = new StringBuffer();
         sb.append("告警ID: " + alertInfoDto.getRuleID()).append(NEWLINE);
         sb.append("告警等级: " + alertInfoDto.getLevel()).append(NEWLINE);
-        sb.append("告警内容: " + alertInfoDto.getAlert()).append(NEWLINE);
-        sb.append("告警对象: " + alertInfoDto.getAlertObject()).append(NEWLINE);
-        sb.append("规则描述: " + alertInfoDto.getExpr()).append(NEWLINE);
-        sb.append("实际监测: " + alertInfoDto.getExpr()).append(NEWLINE);
-        sb.append("告警时间: " + date).append(NEWLINE);
+        sb.append("告警内容: " + alertInfoDto.getContent()).append(NEWLINE);
+        sb.append("告警对象: " + alertInfoDto.getClusterId()).append(NEWLINE);
+        sb.append("规则描述: " + alertInfoDto.getDescription()).append(NEWLINE);
+        sb.append("实际监测: " + alertInfoDto.getMessage()).append(NEWLINE);
+        sb.append("告警时间: " + alertInfoDto.getAlertTime());
 
         return sb.toString();
     }
