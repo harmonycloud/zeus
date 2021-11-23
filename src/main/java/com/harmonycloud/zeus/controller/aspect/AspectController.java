@@ -27,11 +27,8 @@ public class AspectController {
     private AspectService aspectService;
 
     @ApiOperation(value = "获取外接动态表单", notes = "获取外接动态表单")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class)
-    })
     @GetMapping
-    public BaseResult<QuestionYaml> get() throws Exception {
+    public BaseResult<QuestionYaml> get() {
         return BaseResult.ok(aspectService.dynamic());
     }
 
