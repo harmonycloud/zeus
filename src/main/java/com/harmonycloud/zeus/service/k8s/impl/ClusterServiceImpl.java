@@ -655,7 +655,8 @@ public class ClusterServiceImpl implements ClusterService {
     public void ingress(String repository, MiddlewareClusterDTO cluster) {
         String setValues = "image.ingressRepository=" + repository +
                 ",image.backendRepository=" + repository +
-                ",image.keepalivedRepository=" + repository;
+                ",image.keepalivedRepository=" + repository +
+                ",install=true";
         helmChartService.upgradeInstall("ingress", "middleware-operator", setValues,
             componentsPath + File.separator + "ingress-nginx/charts/ingress-nginx", cluster);
     }

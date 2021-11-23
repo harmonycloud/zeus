@@ -308,7 +308,8 @@ public class IngressServiceImpl implements IngressService {
                     svcNameList.forEach(svc -> {
                         IngressDTO tcpDto = getTcpRoutineDetail(clusterId, namespace, crd, svc, tcpRoutineMap);
                         if (tcpDto != null) {
-                            resList.add(tcpDto.setMiddlewareType(type).setMiddlewareNickName(detail.getAliasName()));
+                            resList.add(tcpDto.setMiddlewareType(type).setMiddlewareNickName(detail.getAliasName())
+                                .setIngressClassName(ingress.getIngressClassName()));
                         }
                     });
                 }
