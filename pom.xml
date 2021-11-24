@@ -75,8 +75,8 @@
         </dependency>
 
         <dependency>
-            <groupId>com.harmonycloud.aspect</groupId>
-            <artifactId>jar</artifactId>
+            <groupId>com.harmonycloud</groupId>
+            <artifactId>aspect</artifactId>
             <version>0.0.1</version>
         </dependency>
 
