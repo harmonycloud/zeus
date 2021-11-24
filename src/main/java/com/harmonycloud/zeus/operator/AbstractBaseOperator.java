@@ -163,6 +163,10 @@ public abstract class AbstractBaseOperator {
         helmChartService.uninstall(middleware, clusterService.findByIdAndCheckRegistry(middleware.getClusterId()));
     }
 
+    public void upgradeChart(Middleware middleware, JSONObject currentValues, JSONObject upgradeValues, String upgradeChartVersion, MiddlewareClusterDTO cluster) {
+        helmChartService.upgradeChart(middleware, currentValues, upgradeValues, upgradeChartVersion, cluster);
+    }
+
     /**
      * 更新自定义中间件
      */

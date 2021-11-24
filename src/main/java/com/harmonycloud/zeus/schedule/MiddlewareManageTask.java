@@ -1,10 +1,12 @@
 package com.harmonycloud.zeus.schedule;
 
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.zeus.operator.BaseOperator;
 import com.harmonycloud.zeus.operator.impl.MysqlOperatorImpl;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
+import com.harmonycloud.zeus.service.registry.HelmChartService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -81,5 +83,19 @@ public class MiddlewareManageTask {
         } catch (Exception e) {
             log.error("通用备份，创建恢复失败 clusterId={},namespace={},type={},middlewareName={},backupName={},restoreName={}", clusterId, namespace, middlewareName, backupName, restoreName, e);
         }
+    }
+
+    /**
+     * 中间件版本升级
+     * @param middleware 中间件信息
+     * @param currentValues 当前values
+     * @param upgradeValues 升级values
+     * @param upgradeChartVersion 升级chart版本
+     * @param cluster 集群信息
+     * @param helmChartService helmchart服务
+     */
+    @Async("taskExecutor")
+    public void asyncUpdateChart(Middleware middleware, JSONObject currentValues, JSONObject upgradeValues, String upgradeChartVersion, MiddlewareClusterDTO cluster,HelmChartService helmChartService) {
+        helmChartService.upgradeChart(middleware, currentValues, upgradeValues, upgradeChartVersion, cluster);
     }
 }

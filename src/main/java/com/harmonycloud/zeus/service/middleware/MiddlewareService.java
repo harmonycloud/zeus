@@ -117,4 +117,24 @@ public interface MiddlewareService {
      * @return
      */
     List<MiddlewareBriefInfoDTO> listAllMiddleware(String clusterId, String namespace,String type, String keyword);
+
+    /**
+     * 查询服务版本
+     * @param clusterId
+     * @param namespace
+     * @param name
+     * @param type
+     * @return
+     */
+    List<MiddlewareInfoDTO> version(String clusterId, String namespace, String name, String type);
+
+    /**
+     * 服务版本升级
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param name 中间件名称
+     * @param type 中间件类型
+     * @param upgradeChartVersion 升级目标chartVersion
+     */
+    void upgradeChart(String clusterId, String namespace, String name, String type, String chartName, String upgradeChartVersion);
 }

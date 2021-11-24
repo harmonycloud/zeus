@@ -89,4 +89,12 @@ public interface MiddlewareInfoService {
      * @return
      */
     MiddlewareOperatorDTO getOperatorInfo(List<MiddlewareClusterDTO> clusterList);
+
+    /**
+     * 查询所有版本并按版本号大小降序排列
+     * @param clusterId
+     * @param type
+     * @return
+     */
+    List<BeanMiddlewareInfo> listAllMiddlewareInfo(String clusterId, String type);
 }

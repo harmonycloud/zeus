@@ -1,22 +1,23 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
-import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import com.baomidou.mybatisplus.extension.api.R;
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.constants.NameConstant;
+import com.harmonycloud.caas.common.enums.DictEnum;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
-import com.harmonycloud.zeus.integration.cluster.bean.MysqlReplicateCRD;
-import com.harmonycloud.zeus.integration.cluster.bean.MysqlReplicateSpec;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.schedule.MiddlewareManageTask;
 import com.harmonycloud.zeus.service.k8s.*;
@@ -29,9 +30,10 @@ import com.harmonycloud.tool.excel.ExcelUtil;
 import com.harmonycloud.tool.page.PageObject;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
+import com.harmonycloud.zeus.util.YamlUtil;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.units.qual.A;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -42,6 +44,7 @@ import com.harmonycloud.zeus.service.AbstractBaseService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 
 import lombok.extern.slf4j.Slf4j;
+import org.yaml.snakeyaml.Yaml;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -349,9 +352,15 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     public List<MiddlewareBriefInfoDTO> listAllMiddleware(String clusterId, String namespace, String type, String keyword) {
         List<MiddlewareBriefInfoDTO> serviceList = null;
         try {
-            List<BeanMiddlewareInfo> middlewareInfoDTOList = middlewareInfoService.list(new ArrayList<>().add(clusterService.findById(clusterId)));
+            ArrayList<MiddlewareClusterDTO> list = new ArrayList<>();
+            list.add(clusterService.findById(clusterId));
+            List<BeanMiddlewareInfo> middlewareInfoDTOList = middlewareInfoService.list(list);
             if (type != null) {
                 middlewareInfoDTOList = middlewareInfoDTOList.stream().filter(middleware -> type.equals(middleware.getChartName())).collect(Collectors.toList());
+                middlewareInfoDTOList.sort(Comparator.comparing(BeanMiddlewareInfo::getChartVersion).reversed());
+                BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoDTOList.get(0);
+                middlewareInfoDTOList.clear();
+                middlewareInfoDTOList.add(beanMiddlewareInfo);
             }
             serviceList = new ArrayList<>();
             List<Middleware> middlewareServiceList = simpleList(clusterId, namespace, type, keyword);
@@ -393,6 +402,73 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             log.error("查询服务列表错误", e);
         }
         return serviceList;
+    }
+
+    @Override
+    public List<MiddlewareInfoDTO> version(String clusterId, String namespace, String name, String type) {
+        List<BeanMiddlewareInfo> middlewareInfos = middlewareInfoService.listAllMiddlewareInfo(clusterId, type);
+        // 将倒序转为正序
+        middlewareInfos.sort(Comparator.comparing(BeanMiddlewareInfo::getChartVersion));
+        Middleware middleware = detail(clusterId, namespace, name, type);
+        AtomicBoolean existNow = new AtomicBoolean(false);
+        List<MiddlewareInfoDTO> resList = middlewareInfos.stream().map(info -> {
+            MiddlewareInfoDTO dto = new MiddlewareInfoDTO();
+            BeanUtils.copyProperties(info, dto);
+            if (info.getChartVersion().compareTo(middleware.getChartVersion()) < 0) {
+                dto.setVersionStatus("history");
+            } else if (info.getChartVersion().compareTo(middleware.getChartVersion()) == 0) {
+                dto.setVersionStatus("now");
+                existNow.set(true);
+            } else {
+                if (existNow.get()) {
+                    BeanClusterMiddlewareInfo clusterMwInfo = clusterMiddlewareInfoService.get(clusterId, type);
+                    if (clusterMwInfo.getChartVersion().compareTo(info.getChartVersion()) > 0) {
+                        if (clusterMwInfo.getStatus() == 0) {
+                            // operator升级中
+                            dto.setVersionStatus("updating");
+                        } else {
+                            // operator版本大于当前chart版本，可以升级
+                            dto.setVersionStatus("canUpgrade");
+                        }
+                    } else {
+                        // operator版本比当前chart版本小，需要升级operator版本
+                        dto.setVersionStatus("needUpgradeOperator");
+                    }
+                    existNow.set(false);
+                } else {
+                    dto.setVersionStatus("future");
+                }
+            }
+            return dto;
+        }).collect(Collectors.toList());
+        resList.sort(Comparator.comparing(MiddlewareInfoDTO::getChartVersion).reversed());
+        return resList;
+    }
+
+    @Override
+    public void upgradeChart(String clusterId, String namespace, String name, String type, String chartName, String upgradeChartVersion) {
+        HelmChartFile helmChart = helmChartService.getHelmChartFromMysql(chartName, upgradeChartVersion);
+        JSONObject upgradeValues = YamlUtil.convertYamlAsNormalJsonObject(helmChart.getValueYaml());
+        JSONObject currentValues = helmChartService.getInstalledValuesAsNormalJson(name, namespace, clusterService.findById(clusterId));
+
+        String currentChartVersion = currentValues.getString("chart-version");
+        String compatibleVersions = upgradeValues.getString("compatibleVersions");
+        // 检查chart版本是否符合升级要求
+        checkUpgradeVersion(currentChartVersion, upgradeChartVersion, compatibleVersions);
+        // 检查operator是否符合升级要求
+        checkOperatorVersion(upgradeChartVersion, clusterMiddlewareInfoService.get(clusterId, type));
+
+        JSONObject upgradeImage = SerializationUtils.clone(upgradeValues.getJSONObject("image"));
+        JSONObject currentImage = SerializationUtils.clone(currentValues.getJSONObject("image"));
+        JSONObject resImage = YamlUtil.jsonMerge(upgradeImage, currentImage);
+
+        JSONObject resValues = YamlUtil.jsonMerge(currentValues, upgradeValues);
+        resValues.put("image", resImage);
+        resValues.put("chart-version", upgradeChartVersion);
+        // 执行升级
+        Middleware middleware = detail(clusterId, namespace, name, type);
+        middleware.setChartName(chartName);
+        middlewareManageTask.asyncUpdateChart(middleware, currentValues, upgradeValues, upgradeChartVersion, clusterService.findById(clusterId), helmChartService);
     }
 
     /**
@@ -527,4 +603,51 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             }
         }
     }
+
+    /**
+     * 检查中间件chart升级版本是否符合要求
+     * @param currentVersion 中间件当前版本
+     * @param upgradeVersion 中间件升级版本
+     * @param compatibleVersions 升级版本所需最低版本
+     * @return
+     */
+    private static void checkUpgradeVersion(String currentVersion, String upgradeVersion, String compatibleVersions) {
+        // 1.判断是否升级到了低版本
+        if (currentVersion.compareTo(upgradeVersion) > 0) {
+            log.error("不能升级到更低版本");
+            throw new BusinessException(ErrorMessage.UPGRADE_LOWER_VERSION_FAILED);
+        }
+        // 2.判断是否跨大版本升级,即判断大版本号是否相同，相同才可以升级
+        String current = currentVersion.split("\\.")[0];
+        String upgrade = upgradeVersion.split("\\.")[0];
+        if (!current.equals(upgrade)) {
+            throw new BusinessException(ErrorMessage.UPGRADE_OVER_VERSION_FAILED);
+        }
+        // 3.判断是否满足升级至当前chart所需最低版本
+        if (StringUtils.isBlank(compatibleVersions)) {
+            return;
+        }
+        if (currentVersion.compareTo(compatibleVersions) < 0) {
+            log.error("不满足升级所需最低版本");
+            throw new BusinessException(ErrorMessage.UPGRADE_NOT_SATISFY_LOWEST_VERSION);
+        }
+    }
+
+    /**
+     * 检查当前operator版本是否满足升级要求，operator版本需要比升级chart版本高，才可以进行升级，否则需要升级operator
+     * @param upgradeChartVersion
+     * @param clusterMwInfo
+     */
+    private static void checkOperatorVersion(String upgradeChartVersion,BeanClusterMiddlewareInfo clusterMwInfo){
+        if (clusterMwInfo.getChartVersion().compareTo(upgradeChartVersion) > 0) {
+            if (clusterMwInfo.getStatus() == 0) {
+                log.warn("operator升级中");
+                throw new BusinessException(ErrorMessage.UPGRADE_OPERATOR_UPDATING);
+            }
+        } else {
+            log.warn("operator版本比当前chart版本小，需要升级operator版本");
+            throw new BusinessException(ErrorMessage.UPGRADE_OPERATOR_TOO_LOWER);
+        }
+    }
+
 }

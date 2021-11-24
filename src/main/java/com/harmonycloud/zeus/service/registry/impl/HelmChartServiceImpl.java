@@ -17,6 +17,7 @@ import com.harmonycloud.zeus.integration.registry.bean.harbor.V1HelmChartVersion
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.registry.AbstractRegistryService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
+import com.harmonycloud.zeus.util.YamlUtil;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -195,6 +196,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             ? (List<Map<String, String>>)infoMap.get("dependencies") : new ArrayList<>();
         String chartName = infoMap.get("name") == null ? null : infoMap.get("name").toString();
         String chartVersion = infoMap.get("version") == null ? null : infoMap.get("version").toString();
+        String compatibleVersions = infoMap.get("compatibleVersions") == null ? null : infoMap.get("compatibleVersions").toString();
         Map<String, String> yamlFileMap = HelmChartUtil.getYamlFileMap(tarFilePath);
         yamlFileMap.putAll(HelmChartUtil.getParameters(tarFilePath));
         yamlFileMap.put(CHART_YAML_NAME, JSONObject.toJSONString(infoMap));
@@ -202,7 +204,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         return new HelmChartFile().setDescription(description).setIconPath(iconPath).setType(type)
             .setAppVersion(appVersion).setOfficial(official).setYamlFileMap(yamlFileMap)
             .setDependency(CollectionUtils.isEmpty(dependencies) ? new HashMap<>() : dependencies.get(0))
-            .setChartName(chartName).setChartVersion(chartVersion);
+            .setChartName(chartName).setChartVersion(chartVersion).setCompatibleVersions(compatibleVersions);
     }
     
 
@@ -276,19 +278,14 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
 
     @Override
     public JSONObject getInstalledValues(String name, String namespace, MiddlewareClusterDTO cluster) {
-        String cmd = String.format("helm get values %s -n %s -a --kube-apiserver %s --kubeconfig %s", name, namespace,
-            cluster.getAddress(), clusterCertService.getKubeConfigFilePath(cluster.getId()));
-        List<String> values = execCmd(cmd, notFoundMsg());
-        if (CollectionUtils.isEmpty(values)) {
-            return null;
-        }
-        StringBuilder sb = new StringBuilder();
-        // 第0行是COMPUTED VALUES:，直接跳过
-        for (int i = 1; i < values.size(); i++) {
-            sb.append(values.get(i)).append("\n");
-        }
+        String yamlStr = loadYamlAsStr(name, namespace, cluster);
         Yaml yaml = new Yaml();
-        return yaml.loadAs(sb.toString(), JSONObject.class);
+        return yaml.loadAs(yamlStr, JSONObject.class);
+    }
+
+    @Override
+    public JSONObject getInstalledValuesAsNormalJson(String name, String namespace, MiddlewareClusterDTO cluster) {
+        return YamlUtil.convertYamlAsNormalJsonObject(loadYamlAsStr(name, namespace, cluster));
     }
 
     @Override
@@ -462,6 +459,48 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     }
 
     @Override
+    public void upgradeChart(Middleware middleware, JSONObject currentValues,JSONObject upgradeValues, String upgradeChartVersion,MiddlewareClusterDTO cluster) {
+        String chartName = middleware.getChartName();
+        String currentChartVersion = middleware.getChartVersion();
+
+        String tempValuesYamlDir = getTempValuesYamlDir();
+        // 先获取chart文件
+        HelmChartFile helmChart = getHelmChartFromMysql(chartName, upgradeChartVersion);
+
+        String currentValuesYamlName =
+                chartName + "-" + currentChartVersion + "-" + "temp" + "-" + System.currentTimeMillis() + ".yaml";
+        String upgradeValuesYamlName =
+                chartName + "-" + upgradeChartVersion + "-" + "target" + "-" + System.currentTimeMillis() + ".yaml";
+
+        Yaml yaml = new Yaml();
+        String currentValuesYaml = yaml.dumpAsMap(currentValues);
+        String upgradeValuesYaml = yaml.dumpAsMap(upgradeValues);
+        try {
+            FileUtil.writeToLocal(tempValuesYamlDir, currentValuesYamlName, currentValuesYaml);
+            FileUtil.writeToLocal(tempValuesYamlDir, upgradeValuesYamlName, upgradeValuesYaml);
+        } catch (IOException e) {
+            log.error("写出values.yaml文件异常：chart包{}:{}", helmChart.getChartName(), helmChart.getChartVersion(), e);
+            throw new BusinessException(ErrorMessage.HELM_CHART_WRITE_ERROR);
+        }
+
+        String helmPath = getHelmChartFilePath(chartName, upgradeChartVersion) + File.separator + chartName;
+        String currentValuesYamlPath = tempValuesYamlDir + File.separator + currentValuesYamlName;
+        String upgradeValuesYamlPath = tempValuesYamlDir + File.separator + upgradeValuesYamlName;
+
+        String cmd = String.format("helm upgrade --install %s %s -f %s -f %s -n %s --kube-apiserver %s --kubeconfig %s ",
+                middleware.getName(), helmPath, currentValuesYamlPath, upgradeValuesYamlPath, middleware.getNamespace(),
+                cluster.getAddress(), clusterCertService.getKubeConfigFilePath(cluster.getId()));
+        try {
+            execCmd(cmd, null);
+        } finally {
+            // 删除文件
+            FileUtil.deleteFile(currentValuesYamlPath, upgradeValuesYamlPath,
+                    getHelmChartFilePath(chartName, currentChartVersion));
+        }
+
+    }
+
+    @Override
     public void upgradeInstall(String name, String namespace, String path, JSONObject values, JSONObject newValues,
         MiddlewareClusterDTO cluster) {
         Yaml yaml = new Yaml();
@@ -604,5 +643,27 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     private String getLocalTgzPath(String chartName, String chartVersion){
         return middlewarePath + File.separator + chartName + "-" + chartVersion + ".tgz";
     }
-    
+
+    /**
+     * 获取中间件values.yaml文件内容，并解析为字符串
+     * @param name 中间件名称
+     * @param namespace 分区
+     * @param cluster 集群
+     * @return
+     */
+    private String loadYamlAsStr(String name, String namespace, MiddlewareClusterDTO cluster) {
+        String cmd = String.format("helm get values %s -n %s -a --kube-apiserver %s --kubeconfig %s", name, namespace,
+                cluster.getAddress(), clusterCertService.getKubeConfigFilePath(cluster.getId()));
+        List<String> values = execCmd(cmd, notFoundMsg());
+        if (CollectionUtils.isEmpty(values)) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        // 第0行是COMPUTED VALUES:，直接跳过
+        for (int i = 1; i < values.size(); i++) {
+            sb.append(values.get(i)).append("\n");
+        }
+        return sb.toString();
+    }
+
 }

@@ -103,6 +103,16 @@ public interface HelmChartService {
     JSONObject getInstalledValues(String name, String namespace, MiddlewareClusterDTO cluster);
 
     /**
+     * 获取已发布helm chart的values,并转为标准json对象返回
+     *
+     * @param name      helm发布实例的名称
+     * @param namespace 命名空间
+     * @param cluster   集群信息
+     * @return
+     */
+    JSONObject getInstalledValuesAsNormalJson(String name, String namespace, MiddlewareClusterDTO cluster);
+
+    /**
      * 打包chart文件
      *
      * @param unzipFileName 解压的文件名
@@ -160,6 +170,18 @@ public interface HelmChartService {
      * @param cluster      集群信息
      */
     void upgrade(Middleware middleware, JSONObject values, JSONObject newValues, MiddlewareClusterDTO cluster);
+
+    /**
+     * 升级chart版本
+     * 冗余方法
+     * @param middleware     中间件信息
+     * @param currentValues  当前values
+     * @param upgradeValues  升级values
+     * @param upgradeVersion 升级chart版本
+     * @param cluster        集群信息
+     */
+    @Deprecated
+    void upgradeChart(Middleware middleware, JSONObject currentValues, JSONObject upgradeValues, String upgradeVersion, MiddlewareClusterDTO cluster);
 
     /**
      * 更新/发布 chart

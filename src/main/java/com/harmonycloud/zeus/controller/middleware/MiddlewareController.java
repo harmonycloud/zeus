@@ -21,7 +21,7 @@ import javax.servlet.http.HttpServletResponse;
  * @author dengyulong
  * @date 2021/03/23
  */
-@Api(tags = {"服务列表","服务管理"}, value = "分区下中间件", description = "分区下中间件")
+@Api(tags = {"服务列表", "服务管理"}, value = "分区下中间件", description = "分区下中间件")
 @RestController
 @RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/middlewares")
 public class MiddlewareController {
@@ -37,9 +37,9 @@ public class MiddlewareController {
     })
     @GetMapping
     public BaseResult list(@PathVariable("clusterId") String clusterId,
-                                             @PathVariable("namespace") String namespace,
-                                             @RequestParam(value = "type", required = false) String type,
-                                             @RequestParam(value = "keyword", required = false) String keyword) {
+                           @PathVariable("namespace") String namespace,
+                           @RequestParam(value = "type", required = false) String type,
+                           @RequestParam(value = "keyword", required = false) String keyword) {
         return BaseResult.ok(middlewareService.listAllMiddleware(clusterId, namespace, type, keyword));
     }
 
@@ -211,5 +211,41 @@ public class MiddlewareController {
         slowLogQuery.setSearchType(searchType);
         middlewareService.slowsqlExcel(slowLogQuery, response, request);
     }
+
+    @ApiOperation(value = "查询服务版本", notes = "查询服务版本")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("{middlewareName}/version")
+    public BaseResult version(@PathVariable("clusterId") String clusterId,
+                              @PathVariable("namespace") String namespace,
+                              @PathVariable("middlewareName") String middlewareName,
+                              @RequestParam("type") String type) {
+        return BaseResult.ok(middlewareService.version(clusterId, namespace, middlewareName, type));
+    }
+
+    @ApiOperation(value = "服务版本升级", notes = "服务版本升级")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "chartName", value = "中间件chartName", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "upgradeChartVersion", value = "升级chart版本", paramType = "query", dataTypeClass = String.class),
+    })
+    @PostMapping("{middlewareName}/upgradeChart")
+    public BaseResult upgradeChart(@PathVariable("clusterId") String clusterId,
+                                   @PathVariable("namespace") String namespace,
+                                   @PathVariable("middlewareName") String middlewareName,
+                                   @RequestParam("type") String type,
+                                   @RequestParam("chartName") String chartName,
+                                   @RequestParam("upgradeChartVersion") String upgradeChartVersion) {
+        middlewareService.upgradeChart(clusterId, namespace, middlewareName, type, chartName,upgradeChartVersion);
+        return BaseResult.ok();
+    }
+
 
 }

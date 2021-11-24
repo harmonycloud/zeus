@@ -128,4 +128,9 @@ public class BeanMiddlewareInfo implements Serializable {
     @TableField("chart")
     private byte[] chart;
 
+    /**
+     * 修改人
+     */
+    @TableField("compatible_versions")
+    private String compatibleVersions;
 }
