@@ -460,6 +460,9 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
         JSONObject upgradeImage = SerializationUtils.clone(upgradeValues.getJSONObject("image"));
         JSONObject currentImage = SerializationUtils.clone(currentValues.getJSONObject("image"));
+        if (currentImage.getString("repository") != null) {
+            upgradeImage.put("repository", currentImage.getString("repository"));
+        }
         JSONObject resImage = YamlUtil.jsonMerge(upgradeImage, currentImage);
 
         JSONObject resValues = YamlUtil.jsonMerge(currentValues, upgradeValues);
@@ -645,7 +648,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 throw new BusinessException(ErrorMessage.UPGRADE_OPERATOR_UPDATING);
             }
         } else {
-            log.warn("operator版本比当前chart版本小，需要升级operator版本");
+            log.warn("operator版本比升级chart版本小，需要升级operator版本");
             throw new BusinessException(ErrorMessage.UPGRADE_OPERATOR_TOO_LOWER);
         }
     }
