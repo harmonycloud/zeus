@@ -639,7 +639,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
      * @param clusterMwInfo
      */
     private static void checkOperatorVersion(String upgradeChartVersion,BeanClusterMiddlewareInfo clusterMwInfo){
-        if (clusterMwInfo.getChartVersion().compareTo(upgradeChartVersion) > 0) {
+        if (!(clusterMwInfo.getChartVersion().compareTo(upgradeChartVersion) < 0)) {
             if (clusterMwInfo.getStatus() == 0) {
                 log.warn("operator升级中");
                 throw new BusinessException(ErrorMessage.UPGRADE_OPERATOR_UPDATING);
