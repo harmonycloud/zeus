@@ -422,7 +422,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             } else {
                 if (existNow.get()) {
                     BeanClusterMiddlewareInfo clusterMwInfo = clusterMiddlewareInfoService.get(clusterId, type);
-                    if (clusterMwInfo.getChartVersion().compareTo(info.getChartVersion()) > 0) {
+                    if (!(clusterMwInfo.getChartVersion().compareTo(info.getChartVersion()) < 0)) {
                         if (clusterMwInfo.getStatus() == 0) {
                             // operator升级中
                             dto.setVersionStatus("updating");
