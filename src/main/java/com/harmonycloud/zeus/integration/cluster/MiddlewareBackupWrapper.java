@@ -1,6 +1,8 @@
 package com.harmonycloud.zeus.integration.cluster;
 
 import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupCRD;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupList;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupScheduleCRD;
@@ -53,8 +55,12 @@ public class MiddlewareBackupWrapper {
      * @param name
      * @throws IOException
      */
-    public void delete(String clusterId, String namespace, String name) throws IOException {
-        K8sClient.getClient(clusterId).customResource(CONTEXT).delete(namespace, name);
+    public void delete(String clusterId, String namespace, String name) {
+        try {
+            K8sClient.getClient(clusterId).customResource(CONTEXT).delete(namespace, name);
+        } catch (IOException e) {
+            throw new BusinessException(ErrorMessage.BACKUP_RECORD_MAY_NOT_EXIST);
+        }
     }
 
     /**
