@@ -25,7 +25,7 @@ import java.util.List;
 @Slf4j
 @Api(tags = {"邮件发送","邮件发送"}, value = "邮件发送")
 @RestController
-@RequestMapping("/mail")
+@RequestMapping(value = {"/mail/{ding}","/mail"})
 public class MailController {
 
     @Autowired
@@ -57,10 +57,11 @@ public class MailController {
     @ApiOperation(value = "选择被通知人", notes = "选择被通知人")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "users", value = "登录人信息", paramType = "query", dataTypeClass = BeanUser.class),
+            @ApiImplicitParam(name = "ding", value = "是否选择钉钉通知", paramType = "path", dataTypeClass = String.class)
     })
     @PostMapping("/insertUser")
-    public BaseResult mailToUser(@RequestBody List<BeanUser> users) {
-        mailService.insertUser(users);
+    public BaseResult mailToUser(@RequestBody List<BeanUser> users,@PathVariable String ding) {
+        mailService.insertUser(users, ding);
         return BaseResult.ok();
     }
 

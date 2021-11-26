@@ -62,6 +62,9 @@ public class DingRobotServiceImpl implements DingRobotService {
         TextMessage textMessage = new TextMessage(buildContent(alertInfoDto));
         try {
             for (DingRobotInfo ding : dings) {
+                if ("0".equals(ding.getEnable())) {
+                    continue;
+                }
                 if (StringUtils.isEmpty(ding.getSecretKey())) {
                     sendResult = robot.send(ding.getWebhook(), textMessage);
                 }else {
@@ -151,8 +154,7 @@ public class DingRobotServiceImpl implements DingRobotService {
 
     private List<DingRobotInfo> select() {
         QueryWrapper<DingRobotInfo> wrapper = new QueryWrapper<>();
-        List<DingRobotInfo> dings = dingRobotMapper.selectList(wrapper);
-        return dings;
+        return dingRobotMapper.selectList(wrapper);
     }
 
     @Override
@@ -162,12 +164,14 @@ public class DingRobotServiceImpl implements DingRobotService {
         if (list.size() == 0) {
             dingRobotInfos.forEach(dingRobotInfo -> {
                 dingRobotInfo.setTime(new Date());
+                dingRobotInfo.setEnable("0");
                 dingRobotMapper.insert(dingRobotInfo);
             });
         }else {
             dingRobotMapper.delete(wrapper);
             dingRobotInfos.forEach(dingRobotInfo -> {
                 dingRobotInfo.setTime(new Date());
+                dingRobotInfo.setEnable("0");
                 dingRobotMapper.insert(dingRobotInfo);
             });
         }
@@ -214,6 +218,16 @@ public class DingRobotServiceImpl implements DingRobotService {
     public void removeDing(List<DingRobotInfo> dingRobotInfos) {
         dingRobotInfos.stream().forEach(dingRobotInfo -> {
             dingRobotMapper.deleteById(dingRobotInfo.getId());
+        });
+    }
+
+    @Override
+    public void enableDing() {
+        QueryWrapper<DingRobotInfo> wrapper = new QueryWrapper<>();
+        List<DingRobotInfo> infos = dingRobotMapper.selectList(wrapper);
+        infos.stream().forEach(info -> {
+            info.setEnable("1");
+            dingRobotMapper.update(info,wrapper);
         });
     }
 

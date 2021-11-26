@@ -88,6 +88,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             Map<String, String> annotations = JSON.parseObject(alertInfo.getAnnotations(), HashMap.class);
             middlewareAlertsDTO.setLabels(labels);
             middlewareAlertsDTO.setAnnotations(annotations);
+            middlewareAlertsDTO.setAlertId(calculateID(alertInfo.getAlertId()));
             alerts.add(middlewareAlertsDTO);
         }
         return alerts;
@@ -219,7 +220,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     public void updateRules(String clusterId, String namespace, String middlewareName, MiddlewareAlertsDTO middlewareAlertsDTO) throws Exception {
         //修改数据库
         QueryWrapper<MiddlewareAlertInfo> wrapper =new QueryWrapper<>();
-        middlewareAlertsDTO.setAlertId(analysisID(String .valueOf(middlewareAlertsDTO.getAlertId())));
+        middlewareAlertsDTO.setAlertId(String.valueOf(analysisID(middlewareAlertsDTO.getAlertId())));
         MiddlewareAlertInfo middlewareAlertInfo = new MiddlewareAlertInfo();
         BeanUtils.copyProperties(middlewareAlertsDTO,middlewareAlertInfo);
         middlewareAlertInfoMapper.update(middlewareAlertInfo,wrapper);

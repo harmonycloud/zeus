@@ -31,4 +31,6 @@ public interface DingRobotService {
     List<DingRobotDTO> dingConnect(List<DingRobotInfo> dingRobotInfos) throws IOException, NoSuchAlgorithmException, InvalidKeyException;
 
     void removeDing(List<DingRobotInfo> dingRobotInfos);
+
+    void enableDing();
 }

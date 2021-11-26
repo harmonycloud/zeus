@@ -408,5 +408,7 @@ CREATE TABLE `alert_rule_id` (
   PRIMARY KEY (`alert_id`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 -- 告警记录表添加lay
-ALTER TABLE `alert_record` ADD COLUMN lay varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NUL COMMENT '告警层面';
-
+ALTER TABLE `alert_record` ADD COLUMN lay varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '告警层面';
+-- 2021.11.26
+-- 钉钉表添加enable_ding
+ALTER TABLE `ding_robot_info` ADD COLUMN enable_ding varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '是否启用该钉钉机器人 1 启用 0 否'

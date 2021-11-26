@@ -20,7 +20,7 @@ public interface MailService {
 
     MailInfo select();
 
-    void insertUser(List<BeanUser> users);
+    void insertUser(List<BeanUser> users, String ding);
 
     boolean checkEmail(String email);
 }
