@@ -90,24 +90,4 @@ public class PrometheusWrapper {
         return prometheus;
     }
 
-    private MiddlewareClusterMonitorInfo getAlertManagerInfo(MiddlewareClusterDTO cluster) {
-        MiddlewareClusterMonitorInfo alertManager;
-        if (cluster.getMonitor() == null || cluster.getMonitor().getAlertManager() == null) {
-            throw new BusinessException(ErrorMessage.ALERT_MANAGER_NOT_INSTALLED);
-        } else {
-            alertManager = cluster.getMonitor().getAlertManager();
-            if (StringUtils.isBlank(cluster.getMonitor().getAlertManager().getProtocol())) {
-                alertManager.setProtocol(Protocol.HTTP.getValue().toLowerCase());
-            }
-            if (StringUtils.isBlank(cluster.getMonitor().getAlertManager().getPort())) {
-                alertManager.setPort(alertManagerPort);
-            }
-        }
-        if (StringUtils.isEmpty(alertManager.getAddress())) {
-            alertManager
-                    .setAddress(alertManager.getProtocol() + "://" + alertManager.getHost() + ":" + alertManager.getPort());
-        }
-        return alertManager;
-    }
-
 }

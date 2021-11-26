@@ -899,6 +899,9 @@ public class IngressServiceImpl implements IngressService {
         if (StringUtils.isNotBlank(labels.get(MIDDLEWARE_NAME))) {
             ingressDTO.setMiddlewareName(labels.get(MIDDLEWARE_NAME));
         }
+        if (StringUtils.isNotEmpty(ingress.getMetadata().getAnnotations().get(INGRESS_CLASS_NAME))){
+            ingressDTO.setIngressClassName(ingress.getMetadata().getAnnotations().get(INGRESS_CLASS_NAME));
+        }
         return ingressDTO;
     }
 
