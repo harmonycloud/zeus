@@ -1,5 +1,5 @@
 global:
-  repository: middleware.harmonycloud.cn:38080/middleware
+  repository: middleware.harmonycloud.cn:58080/middleware
   namespace: zeus
   storageClass: default
   replicaCount: 1
