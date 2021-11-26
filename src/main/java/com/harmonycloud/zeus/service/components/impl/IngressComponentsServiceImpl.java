@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,19 +31,20 @@ public class IngressComponentsServiceImpl extends AbstractBaseOperator implement
     @Override
     public void integrate(MiddlewareClusterDTO cluster) {
         MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
-        existCluster.setIngress(cluster.getIngress());
-        existCluster.getIngress().getTcp().setEnabled(true);
+        existCluster.getIngressList().addAll(cluster.getIngressList());
         clusterService.update(existCluster);
     }
 
     @Override
     public void delete(MiddlewareClusterDTO cluster, Integer status) {
-        if (status != 1){
+        if (status != 1) {
             helmChartService.uninstall(cluster, "middleware-operator", ComponentsEnum.INGRESS.getName());
         }
-        if (cluster.getIngress()!= null){
-            cluster.setIngress(null);
-        }
+        // todo
+        MiddlewareClusterIngress exist = cluster.getIngressList().stream()
+            .filter(ingress -> ingress.getIngressClassName().equals(ComponentsEnum.INGRESS.getName()))
+            .collect(Collectors.toList()).get(0);
+        cluster.getIngressList().remove(exist);
         clusterService.update(cluster);
     }
 
@@ -67,7 +69,10 @@ public class IngressComponentsServiceImpl extends AbstractBaseOperator implement
         config.setEnabled(true).setNamespace("middleware-operator")
                 .setConfigMapName("ingress-ingress-nginx-system-expose-nginx-config-tcp");
         ingress.setTcp(config);
-        cluster.setIngress(ingress);
+        if (CollectionUtils.isEmpty(cluster.getIngressList())){
+            cluster.setIngressList(new ArrayList<>());
+        }
+        cluster.getIngressList().add(ingress);
         clusterService.update(cluster);
     }
 

@@ -73,9 +73,6 @@ public class PrometheusWrapper {
             if (StringUtils.isBlank(cluster.getMonitor().getPrometheus().getProtocol())) {
                 prometheus.setProtocol(Protocol.HTTP.getValue().toLowerCase());
             }
-            if (StringUtils.isBlank(cluster.getMonitor().getPrometheus().getHost())) {
-                prometheus.setHost(cluster.getIngress().getAddress());
-            }
             if (StringUtils.isBlank(cluster.getMonitor().getPrometheus().getPort())) {
                 prometheus.setPort(prometheusPort);
             }
@@ -94,9 +91,6 @@ public class PrometheusWrapper {
             alertManager = cluster.getMonitor().getAlertManager();
             if (StringUtils.isBlank(cluster.getMonitor().getAlertManager().getProtocol())) {
                 alertManager.setProtocol(Protocol.HTTP.getValue().toLowerCase());
-            }
-            if (StringUtils.isBlank(cluster.getMonitor().getAlertManager().getHost())) {
-                alertManager.setHost(cluster.getIngress().getAddress());
             }
             if (StringUtils.isBlank(cluster.getMonitor().getAlertManager().getPort())) {
                 alertManager.setPort(alertManagerPort);

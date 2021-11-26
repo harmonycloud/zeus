@@ -85,6 +85,7 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
 
     }
 
+    @Override
     protected void replaceValues(Middleware middleware, MiddlewareClusterDTO cluster, JSONObject values) {
         super.replaceValues(middleware, cluster, values);
         if (middleware.getQuota() != null) {
