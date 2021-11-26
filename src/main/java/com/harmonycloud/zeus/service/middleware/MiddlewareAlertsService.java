@@ -20,7 +20,7 @@ public interface MiddlewareAlertsService {
      * @param keyword 关键字
      * @return List<MiddlewareAlertsDTO>
      */
-    List<MiddlewareAlertsDTO> listUsedRules(String clusterId, String namespace, String middlewareName, String keyword) throws Exception;
+    List<MiddlewareAlertsDTO> listUsedRules(String clusterId, String namespace, String middlewareName,String lay, String keyword) throws Exception;
 
     /**
      * 获取可添加告警规则列表
@@ -50,10 +50,10 @@ public interface MiddlewareAlertsService {
      * @param clusterId      集群id
      * @param namespace      命名空间
      * @param middlewareName 中间件名称
-     * @param alert          告警名称
+     * @param alertId         告警名称
      * @return List<BeanPrometheusRules>
      */
-    void deleteRules(String clusterId, String namespace, String middlewareName, String alert);
+    void deleteRules(String clusterId, String namespace, String middlewareName, String alertId);
 
     /**
      * 同步告警规则进数据库
@@ -71,4 +71,16 @@ public interface MiddlewareAlertsService {
      * @return String
      */
     String updateAlerts2Mysql(HelmChartFile helmChart, Boolean update);
+
+    /**
+     * 修改告警规则
+     *
+     * @param clusterId      集群id
+     * @param namespace      命名空间
+     * @param middlewareName 中间件名称
+     * @param middlewareAlertsDTO 中间件告警规则
+     * @return List<BeanPrometheusRules>
+     */
+    void updateRules(String clusterId, String namespace, String middlewareName, MiddlewareAlertsDTO middlewareAlertsDTO) throws Exception;
+
 }

@@ -57,14 +57,14 @@ public class PlatformOverviewController {
             @ApiImplicitParam(name = "namespace", value = "分区", paramType = "query", required = false, dataTypeClass = String.class),
             @ApiImplicitParam(name = "current", value = "当前页", paramType = "query", required = false, dataTypeClass = String.class),
             @ApiImplicitParam(name = "size", value = "size", paramType = "query", required = false, dataTypeClass = String.class),
-            @ApiImplicitParam(name = "level", value = "等级", paramType = "query", required = false, dataTypeClass = String.class),
+            @ApiImplicitParam(name = "keyword", value = "关键词", paramType = "query", required = false, dataTypeClass = String.class),
     })
     @GetMapping("/alerts")
     public BaseResult<List<AlertDTO>> getAlertsRecord(@RequestParam(value = "clusterId", required = false) String clusterId,
                                                       @RequestParam(value = "namespace", required = false) String namespace,
                                                       @RequestParam(value = "current", required = false) Integer current,
                                                       @RequestParam(value = "size", required = false) Integer size,
-                                                      @RequestParam(value = "level", required = false) String level) {
-        return BaseResult.ok(overviewService.getAlertRecord(clusterId, namespace, current, size, level));
+                                                      @RequestParam(value = "keyword", required = false) String keyword) {
+        return BaseResult.ok(overviewService.getAlertRecord(clusterId, namespace, current, size, keyword));
     }
 }

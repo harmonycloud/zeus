@@ -28,6 +28,7 @@ public class PrometheusRuleWrapper {
      * 获取告警规则
      */
     public PrometheusRule get(String clusterId, String namespace, String name) {
+//        K8sClient.getClient(clusterId).customResource(CONTEXT).li
         Map<String, Object> map = K8sClient.getClient(clusterId).customResource(CONTEXT).get(namespace, name);
         return JSONObject.parseObject(JSONObject.toJSONString(map), PrometheusRule.class);
     }

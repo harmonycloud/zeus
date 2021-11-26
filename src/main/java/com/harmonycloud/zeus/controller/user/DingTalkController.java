@@ -59,10 +59,17 @@ public class DingTalkController {
             @ApiImplicitParam(name = "dingRobotInfo", value = "钉钉机器人信息", paramType = "query", dataTypeClass = DingRobotInfo.class),
     })
     @PostMapping("/connect")
-    public BaseResult connect(@RequestBody DingRobotInfo dingRobotInfo) throws NoSuchAlgorithmException, InvalidKeyException, IOException {
-        if (dingRobotService.dingConnect(dingRobotInfo)) {
-            return BaseResult.ok();
-        }
-        return BaseResult.error();
+    public BaseResult connect(@RequestBody List<DingRobotInfo> dingRobotInfos) throws NoSuchAlgorithmException, InvalidKeyException, IOException {
+        return BaseResult.ok(dingRobotService.dingConnect(dingRobotInfos));
+    }
+
+    @ApiOperation(value = "删除钉钉机器人", notes = "删除钉钉机器人")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "dingRobotInfo", value = "钉钉机器人信息", paramType = "query", dataTypeClass = DingRobotInfo.class),
+    })
+    @DeleteMapping
+    public BaseResult delete(@RequestBody List<DingRobotInfo> dingRobotInfos) {
+        dingRobotService.removeDing(dingRobotInfos);
+        return BaseResult.ok();
     }
 }

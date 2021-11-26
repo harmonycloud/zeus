@@ -116,11 +116,11 @@ public class MailServiceImpl implements MailService {
 
     @Override
     public void insertUser(List<BeanUser> users) {
-        mailToUserMapper.delete(new QueryWrapper<MailToUser>());
         List<MailToUser> mailToUsers = users.stream().map(user -> {
             MailToUser mailToUser = new MailToUser();
             BeanUtils.copyProperties(user,mailToUser);
             mailToUser.setTime(new Date());
+            mailToUser.setUserId(user.getId());
             return mailToUser;
         }).collect(Collectors.toList());
         mailToUsers.stream().forEach(user ->{

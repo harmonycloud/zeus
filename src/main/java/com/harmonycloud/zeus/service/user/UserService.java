@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.user;
 
+import com.harmonycloud.caas.common.model.MailUserDTO;
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
@@ -113,4 +114,6 @@ public interface UserService {
      * @throws IOException
      */
     void uploadFile(MultipartFile file, String type) throws IOException;
+
+    MailUserDTO getUserList();
 }

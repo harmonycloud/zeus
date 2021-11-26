@@ -47,6 +47,7 @@ CREATE TABLE `mail_info` (
 DROP TABLE IF EXISTS `mail_to_user`;
 CREATE TABLE `mail_to_user` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `user_id` int(11) DEFAULT NULL COMMENT '用户ID',
   `username` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '用户',
   `alias_name` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '账户',
   `email` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT '邮箱',
@@ -65,6 +66,34 @@ CREATE TABLE `ding_robot_info` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
--- middleware_info表新增字段compatible_versions
-ALTER TABLE `middleware_info`
-ADD COLUMN compatible_versions varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '升级所需最低版本';
+-- 新增告警规则表
+DROP TABLE IF EXISTS `alert_rule_id`;
+CREATE TABLE `alert_rule_id` (
+  `alert_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '规则ID',
+  `cluster_id` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT '集群ID',
+  `namespace` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT '命名空间',
+  `middleware_name` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT '中间件名称',
+  `alert` text COLLATE utf8_bin COMMENT '规则名称',
+  `name` varchar(16) COLLATE utf8_bin DEFAULT NULL,
+  `silence` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '沉默时间',
+  `symbol` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '符号',
+  `threshold` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '阈值',
+  `time` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '分钟周期',
+  `type` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '中间件类型',
+  `unit` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT '单位',
+  `expr` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT '执行规则',
+  `description` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT '监控项',
+  `annotations` text COLLATE utf8_bin COMMENT '备注',
+  `labels` text COLLATE utf8_bin COMMENT '标签',
+  `id` varchar(32) COLLATE utf8_bin DEFAULT NULL,
+  `alert_time` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '告警时间',
+  `alert_times` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '告警次数',
+  `create_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
+  `status` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '状态',
+  `enable` int(11) DEFAULT NULL COMMENT '是否启用',
+  `content` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT '告警内容',
+  `lay` varchar(12) COLLATE utf8_bin DEFAULT NULL COMMENT 'system 系统告警 service 服务告警',
+  PRIMARY KEY (`alert_id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+-- 告警记录表添加lay
+ALTER TABLE `alert_record` ADD COLUMN lay varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NUL COMMENT '告警层面';
