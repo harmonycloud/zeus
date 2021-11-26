@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
+import com.harmonycloud.zeus.service.aspect.AspectService;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
@@ -85,6 +86,10 @@ public abstract class AbstractBaseOperator {
     private ServiceService serviceService;
     @Autowired
     private MiddlewareBackupServiceImpl middlewareBackupService;
+    @Autowired
+    private AspectService aspectService;
+    @Autowired
+    private GrafanaService grafanaService;
     /**
      * 是否支持该中间件
      */
@@ -127,12 +132,13 @@ public abstract class AbstractBaseOperator {
         replaceValues(middleware, cluster, values);
         // deal with Charts.yaml file
         replaceChart(helmChart, values);
+        // deal with dynamic
+        aspectService.operation(cluster.getHost(), middleware, middleware.getDynamicValues(), values);
         // map to yaml
         String newValuesYaml = yaml.dumpAsMap(values);
         helmChart.setValueYaml(newValuesYaml);
         // write to local file
         helmChartService.coverYamlFile(helmChart);
-
         // 3. helm package & install
         String tgzFilePath = helmChartService.packageChart(helmChart.getTarFileName(), middleware.getChartName(),
             middleware.getChartVersion());
@@ -203,6 +209,7 @@ public abstract class AbstractBaseOperator {
 
 
     public MonitorDto monitor(Middleware middleware) {
+        MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
         List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.list(true);
         BeanMiddlewareInfo mwInfo = middlewareInfoList.stream()
             .collect(Collectors.toMap(
@@ -219,11 +226,17 @@ public abstract class AbstractBaseOperator {
             throw new BusinessException(ErrorMessage.GRAFANA_ID_NOT_FOUND);
         }
 
-        MiddlewareClusterMonitorInfo monitorInfo =
-            clusterService.findById(middleware.getClusterId()).getMonitor().getGrafana();
+        MiddlewareClusterMonitorInfo monitorInfo = cluster.getMonitor().getGrafana();
         if (monitorInfo == null
             || StringUtils.isAnyEmpty(monitorInfo.getProtocol(), monitorInfo.getHost(), monitorInfo.getPort())) {
             throw new BusinessException(ErrorMessage.CLUSTER_MONITOR_INFO_NOT_FOUND);
+        }
+        // 生成token
+        if (StringUtils.isEmpty(monitorInfo.getToken()) && StringUtils.isNotEmpty(monitorInfo.getUsername())
+            && StringUtils.isNotEmpty(monitorInfo.getPassword())) {
+            grafanaService.setToken(monitorInfo);
+            cluster.getMonitor().setGrafana(monitorInfo);
+            clusterService.update(cluster);
         }
 
         MonitorDto monitorDto = new MonitorDto();
@@ -332,6 +345,18 @@ public abstract class AbstractBaseOperator {
 
             if (StringUtils.isNotEmpty(values.getString("chart-version"))){
                 middleware.setChartVersion(values.getString("chart-version"));
+            }
+            // 获取annotations
+            if (values.containsKey("annotations")) {
+                JSONObject ann = values.getJSONObject("annotations");
+                StringBuilder builder = new StringBuilder();
+                for (String key : ann.keySet()) {
+                    builder.append(key).append("=").append(ann.getString(key)).append(",");
+                }
+                if (builder.length() != 0) {
+                    builder.deleteCharAt(builder.length() - 1);
+                    middleware.setAnnotations(builder.toString());
+                }
             }
 
             // 获取annotations

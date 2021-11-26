@@ -4,6 +4,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 import com.harmonycloud.zeus.dao.BeanAlertRecordMapper;
+import com.harmonycloud.zeus.integration.cluster.AlertManagerWrapper;
 import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +32,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
     @Autowired
     private BeanAlertRecordMapper beanAlertRecordMapper;
     @Autowired
-    private PrometheusWrapper prometheusWrapper;
+    private AlertManagerWrapper alertManagerWrapper;
 
     @Override
     public void alert(String json) throws Exception {
@@ -95,7 +96,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
         String silence = alert.getJSONObject("annotations").getString("silence");
         body.put("endsAt",
             DateUtils.dateToString(calculateEndTime(now, silence), DateStyle.YYYY_MM_DD_T_HH_MM_SS_Z_SSS));
-        prometheusWrapper.setSilence(clusterId, NameConstant.ALERT_MANAGER_API_VERSION_SILENCES, body);
+        alertManagerWrapper.setSilence(clusterId, NameConstant.ALERT_MANAGER_API_VERSION_SILENCES, body);
     }
 
     /**
