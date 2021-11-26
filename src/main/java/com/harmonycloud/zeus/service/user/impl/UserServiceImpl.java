@@ -301,6 +301,7 @@ public class UserServiceImpl implements UserService {
         byte[] homeLogo = null;
         byte[] loginLogo = null;
         PersonalizedConfiguration configuration = new PersonalizedConfiguration();
+        configuration.setStatus("0");
         if ("background".equals(type)) {
             background = loadFile(file);
             configuration.setBackgroundImage(background);
@@ -349,17 +350,9 @@ public class UserServiceImpl implements UserService {
      * @throws IOException
      */
     @Override
-    public PersonalizedConfiguration getPersonalConfig() throws IOException {
+    public PersonalizedConfiguration getPersonalConfig() {
         QueryWrapper<PersonalizedConfiguration> queryWrapper = new QueryWrapper<PersonalizedConfiguration>();
-        List<PersonalizedConfiguration> personals = personalMapper.selectList(queryWrapper);
-        if (personals.size() > 1) {
-            queryWrapper.eq("status","0");
-        }
-        PersonalizedConfiguration personal = personalMapper.selectOne(queryWrapper);
-        personal.setBackgroundImage(null);
-        personal.setHomeLogo(null);
-        personal.setLoginLogo(null);
-        return personal;
+        return personalMapper.selectOne(queryWrapper);
     }
 
     /**
@@ -401,20 +394,15 @@ public class UserServiceImpl implements UserService {
     private void checkout(PersonalizedConfiguration configuration) {
         QueryWrapper<PersonalizedConfiguration> queryWrapper = new QueryWrapper<PersonalizedConfiguration>();
         List<PersonalizedConfiguration> personals = personalMapper.selectList(queryWrapper);
+        configuration.setStatus("0");
         Date date = new Date();
         if (personals.size() == 0) {
             configuration.setCreateTime(date);
-            configuration.setStatus("1");
             personalMapper.insert(configuration);
-        }else if (personals.size() == 1){
-            configuration.setCreateTime(date);
-            configuration.setStatus("0");
-            personalMapper.insert(configuration);
-        }else if (personals.size() == 2) {
+        }else {
             configuration.setUpdateTime(date);
-            configuration.setStatus("0");
-            QueryWrapper<PersonalizedConfiguration> wrapper = new QueryWrapper<PersonalizedConfiguration>().eq("status","0");
-            personalMapper.update(configuration,wrapper);
+            queryWrapper.eq("status","0");
+            personalMapper.update(configuration,queryWrapper);
         }
     }
 
