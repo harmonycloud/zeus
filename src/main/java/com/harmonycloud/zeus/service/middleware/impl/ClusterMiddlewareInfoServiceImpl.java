@@ -86,4 +86,15 @@ public class ClusterMiddlewareInfoServiceImpl implements ClusterMiddlewareInfoSe
         queryWrapper.eq("status", 1);
         return beanClusterMiddlewareInfoMapper.selectList(queryWrapper);
     }
+
+    @Override
+    public List<BeanClusterMiddlewareInfo> listAll(List<String> clusterIds) {
+        if (CollectionUtils.isEmpty(clusterIds)) {
+            return null;
+        }
+        QueryWrapper<BeanClusterMiddlewareInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("cluster_id", clusterIds);
+        queryWrapper.ne("status", 2);
+        return beanClusterMiddlewareInfoMapper.selectList(queryWrapper);
+    }
 }
