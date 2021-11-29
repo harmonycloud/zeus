@@ -324,14 +324,13 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     public List<ResourceMenuDto> listAllMiddlewareAsMenu(String clusterId) {
         List<ResourceMenuDto> subMenuList = new ArrayList<>();
         try {
-            List<BeanClusterMiddlewareInfo> middlewareInfos = clusterMiddlewareInfoService.list(clusterId, true);
+            List<BeanClusterMiddlewareInfo> middlewareInfos = clusterMiddlewareInfoService.list(clusterId, false);
             if (CollectionUtils.isEmpty(middlewareInfos)) {
                 return subMenuList;
             }
             AtomicInteger weight = new AtomicInteger(1);
             for (BeanClusterMiddlewareInfo middlewareInfoDTO : middlewareInfos) {
                 if (middlewareInfoDTO.getStatus() == 2) {
-                    //未安装的中间件不作为菜单展示
                     continue;
                 }
                 ResourceMenuDto resourceMenuDto = new ResourceMenuDto();
