@@ -1,6 +1,8 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.IngressComponentDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterIngress;
@@ -36,6 +38,12 @@ public class IngressComponentServiceImpl implements IngressComponentService {
     @Override
     public void install(IngressComponentDto ingressComponentDto) {
         MiddlewareClusterDTO cluster = clusterService.findById(ingressComponentDto.getClusterId());
+        if (!CollectionUtils.isEmpty(cluster.getIngressList())) {
+            if (cluster.getIngressList().stream()
+                .anyMatch(ingress -> ingress.getIngressClassName().equals(ingressComponentDto.getIngressClassName()))) {
+                throw new BusinessException(ErrorMessage.EXIST);
+            }
+        }
         String repository = cluster.getRegistry().getRegistryAddress() + "/" + cluster.getRegistry().getChartRepo();
         //setValues
         String setValues = "image.ingressRepository=" + repository +
