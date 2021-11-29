@@ -90,7 +90,7 @@ public class IngressComponentServiceImpl implements IngressComponentService {
     public void delete(String clusterId, String ingressClassName) {
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         JSONObject values = helmChartService.getInstalledValues(ingressClassName, "middleware-operator", cluster);
-        if (values.containsKey("install") && "true".equals(values.getString("install"))) {
+        if (values != null && values.containsKey("install") && "true".equals(values.getString("install"))) {
             helmChartService.uninstall(cluster, "middleware-operator", ingressClassName);
         }
         MiddlewareClusterIngress exist = cluster.getIngressList().stream().filter(ingress -> ingress.getIngressClassName().equals(ingressClassName)).collect(Collectors.toList()).get(0);
