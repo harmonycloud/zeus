@@ -76,4 +76,11 @@ public interface ClusterMiddlewareInfoService {
      * @return
      */
     List<BeanClusterMiddlewareInfo> list(List<String> clusterIds);
+
+    /**
+     * 查询集群已安装和安装中的中间件
+     * @param clusterIds 集群id数组
+     * @return
+     */
+    List<BeanClusterMiddlewareInfo> listAll(List<String> clusterIds);
 }

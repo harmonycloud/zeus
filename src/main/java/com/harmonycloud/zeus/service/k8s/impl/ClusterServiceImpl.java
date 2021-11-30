@@ -766,6 +766,13 @@ public class ClusterServiceImpl implements ClusterService {
     public BaseResult quickAdd(MultipartFile adminConf, String name) {
         String filePath = uploadPath + "/" + adminConf.getName();
         try {
+            File dir = new File(uploadPath);
+            if (!dir.exists()) {
+                if (!dir.mkdir()) {
+                    log.error("文件夹创建失败");
+                    return BaseResult.error();
+                }
+            }
             File file = new File(filePath);
             adminConf.transferTo(file);
         } catch (IOException e) {

@@ -1,12 +1,14 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.math.BigDecimal;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.JSON;
+import com.harmonycloud.zeus.bean.MiddlewareAlertInfo;
+import com.harmonycloud.zeus.dao.MiddlewareAlertInfoMapper;
 import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.prometheus.PrometheusRule;
 import com.harmonycloud.zeus.integration.cluster.bean.prometheus.PrometheusRuleGroups;
@@ -57,106 +59,55 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     private BeanAlertRuleMapper beanAlertRuleMapper;
     @Autowired
     private MiddlewareService middlewareService;
+    @Autowired
+    private MiddlewareAlertInfoMapper middlewareAlertInfoMapper;
 
     @Override
     public List<MiddlewareAlertsDTO> listUsedRules(String clusterId, String namespace, String middlewareName,
-        String keyword) throws Exception {
-        // 获取prometheus中的rules(用于获取status
-        List<PrometheusGroups> prometheusGroupsList = this.getPrometheusRule(clusterId, namespace, middlewareName);
-        // 获取configmap中的rules(用于判断是否删除
-        PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, namespace, middlewareName);
-        List<PrometheusRules> rulesList = new ArrayList<>();
-        prometheusRule.getSpec().getGroups()
-            .forEach(prometheusRuleGroups -> rulesList.addAll(prometheusRuleGroups.getRules()));
-        Map<String, PrometheusRules> prometheusRulesMap =
-            rulesList.stream().collect(Collectors.toMap(PrometheusRules::getAlert, alert -> alert));
-        // 组装数据
-        List<MiddlewareAlertsDTO> middlewareAlertsDTOList = new ArrayList<>();
-        prometheusGroupsList.forEach(prometheusGroups -> prometheusGroups.getRules().forEach(rule -> {
-            if ("recording".equals(rule.getType()) || filterExpr(rule.getQuery())) {
-                return;
-            }
-            MiddlewareAlertsDTO middlewareAlertsDTO = new MiddlewareAlertsDTO().setAlert(rule.getName());
-            // 获取中文描述
-            middlewareAlertsDTO.setDescription(rule.getAnnotations().containsKey("description")
-                ? rule.getAnnotations().get("description") : rule.getName().split("-")[0]);
-            if (!StringUtils.isEmpty(keyword)
-                && !StringUtils.containsIgnoreCase(middlewareAlertsDTO.getDescription(), keyword)) {
-                return;
-            }
-            // 获取状态
-            middlewareAlertsDTO
-                .setStatus(prometheusRulesMap.containsKey(rule.getName()) ? rule.getHealth() : "deleting");
-            // 获取符号
-            middlewareAlertsDTO.setSymbol(getSymbol(rule.getQuery()));
-            // 获取阈值
-            middlewareAlertsDTO.setThreshold(getThreshold(rule.getQuery()));
-            //获取单位
-            middlewareAlertsDTO.setUnit(rule.getAnnotations().getOrDefault("unit", ""));
-            // 获取时间
-            middlewareAlertsDTO.setTime(calculateTime(rule.getDuration()));
-            // 获取创建时间
-            if (rule.getAnnotations().containsKey("createTime")) {
-                middlewareAlertsDTO.setCreateTime(
-                    DateUtils.parseDate(rule.getAnnotations().get("createTime"), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
-            }
-            // 获取沉默时间
-            middlewareAlertsDTO.setSilence(rule.getAnnotations().getOrDefault("silence", ""));
-            prometheusRulesMap.remove(rule.getName());
-            middlewareAlertsDTOList.add(middlewareAlertsDTO);
-        }));
-        // 获取创建中状态
-        for (String key : prometheusRulesMap.keySet()) {
-            PrometheusRules rule = prometheusRulesMap.get(key);
-            if (StringUtils.isNotEmpty(rule.getRecord()) || filterExpr(rule.getExpr())) {
-                continue;
-            }
-            MiddlewareAlertsDTO middlewareAlertsDTO = new MiddlewareAlertsDTO().setAlert(rule.getAlert());
-            // 获取中文描述
-            middlewareAlertsDTO.setDescription(rule.getAnnotations().containsKey("description")
-                ? rule.getAnnotations().get("description") : rule.getAlert().split("-")[0]);
-            if (!StringUtils.isEmpty(keyword)
-                && !StringUtils.containsIgnoreCase(middlewareAlertsDTO.getDescription(), keyword)) {
-                continue;
-            }
-            // 获取创建时间
-            if (rule.getAnnotations().containsKey("createTime")) {
-                middlewareAlertsDTO.setCreateTime(
-                        DateUtils.parseDate(rule.getAnnotations().get("createTime"), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
-            }
-            // 设置状态
-            middlewareAlertsDTO.setStatus("creating");
-            middlewareAlertsDTOList.add(middlewareAlertsDTO);
+                                                   String lay, String keyword) throws Exception {
+        QueryWrapper<MiddlewareAlertInfo> queryWrapper = new QueryWrapper<>();
+        if (StringUtils.isNotEmpty(namespace) && StringUtils.isNotEmpty(middlewareName)) {
+            queryWrapper.eq("cluster_id",clusterId).eq("namespace",namespace).eq("middleware_name",middlewareName);
+        }else {
+            queryWrapper.eq("cluster_id",clusterId).isNotNull("namespace").isNotNull("middleware_name");
         }
-        middlewareAlertsDTOList.sort((o1, o2) -> {
-            if (o1.getCreateTime() == null) {
-                if (o2.getCreateTime() == null) {
-                    return 0;
-                }
-                return 1;
-            }
-            if (o2.getCreateTime() == null) {
-                return -1;
-            }
-            return o2.getCreateTime().compareTo(o1.getCreateTime());
-        });
-        return middlewareAlertsDTOList;
+        if (!StringUtils.isEmpty(keyword)) {
+            queryWrapper.and(wrapper ->
+                    wrapper.eq("alert_id",analysisID(keyword)).or().eq("alert",keyword).or().eq("symbol",keyword)
+                            .or().eq("threshold",keyword).or().like("threshold",keyword)
+                            .or().eq("alert_time",keyword).or().eq("alert_times",keyword)
+                            .or().eq("content",keyword)
+            );
+        }
+        List<MiddlewareAlertInfo> alertInfos = middlewareAlertInfoMapper.selectList(queryWrapper);
+        List<MiddlewareAlertsDTO> alerts = new ArrayList<>();
+        for (MiddlewareAlertInfo alertInfo : alertInfos) {
+            MiddlewareAlertsDTO middlewareAlertsDTO = new MiddlewareAlertsDTO();
+            BeanUtils.copyProperties(alertInfo,middlewareAlertsDTO);
+            Map<String, String > labels = JSON.parseObject(alertInfo.getLabels(), HashMap.class);
+            Map<String, String> annotations = JSON.parseObject(alertInfo.getAnnotations(), HashMap.class);
+            middlewareAlertsDTO.setLabels(labels);
+            middlewareAlertsDTO.setAnnotations(annotations);
+            middlewareAlertsDTO.setAlertId(calculateID(alertInfo.getAlertId()));
+            alerts.add(middlewareAlertsDTO);
+        }
+        return alerts;
     }
 
     @Override
     public List<MiddlewareAlertsDTO> listRules(String clusterId, String namespace, String middlewareName, String type)
-        throws Exception {
+            throws Exception {
         String data;
         try {
             Middleware middleware = middlewareService.detail(clusterId, namespace, middlewareName, type);
             QueryWrapper<BeanAlertRule> wrapper = new QueryWrapper<BeanAlertRule>().eq("chart_name", type)
-                .eq("chart_version", middleware.getChartVersion());
+                    .eq("chart_version", middleware.getChartVersion());
             data = beanAlertRuleMapper.selectOne(wrapper).getAlert();
         } catch (Exception e) {
             log.info("数据库中无此类中间件告警规则，开始数据同步");
             try {
                 HelmChartFile helmChart =
-                    helmChartService.getHelmChart(clusterId, namespace, middlewareName, type);
+                        helmChartService.getHelmChart(clusterId, namespace, middlewareName, type);
                 data = updateAlerts2Mysql(helmChart, false);
             } catch (Exception ee) {
                 throw new CaasRuntimeException(ErrorMessage.PROMETHEUS_RULES_NOT_EXIST);
@@ -184,7 +135,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             MiddlewareAlertsDTO middlewareAlertsDTO = new MiddlewareAlertsDTO();
             BeanUtils.copyProperties(rule, middlewareAlertsDTO);
             middlewareAlertsDTO.setDescription(rule.getAnnotations().containsKey("description")
-                ? rule.getAnnotations().get("description") : rule.getAlert());
+                    ? rule.getAnnotations().get("description") : rule.getAlert());
             middlewareAlertsDTO.setUnit(rule.getAnnotations().getOrDefault("unit", ""));
             middlewareAlertsDTO.setType(type);
             middlewareAlertsDTOList.add(middlewareAlertsDTO);
@@ -194,17 +145,45 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
 
     @Override
     public void createRules(String clusterId, String namespace, String middlewareName,
-        List<MiddlewareAlertsDTO> middlewareAlertsDTOList) throws Exception {
+                            List<MiddlewareAlertsDTO> middlewareAlertsDTOList) throws Exception {
+//        if (StringUtils.isEmpty(namespace) && StringUtils.isEmpty(middlewareName)) {
+//            namespace = "default";
+//            middlewareName = "minio";
+//        }
         // 获取cr
         PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, namespace, middlewareName);
+        //入库生成规则ID
+        Date date = new Date();
+        middlewareAlertsDTOList = middlewareAlertsDTOList.stream().map(middlewareAlertsDTO -> {
+            MiddlewareAlertInfo middlewareAlertInfo = new MiddlewareAlertInfo();
+            BeanUtils.copyProperties(middlewareAlertsDTO,middlewareAlertInfo);
+            middlewareAlertInfo.setAnnotations(JSONUtil.toJsonStr(middlewareAlertsDTO.getAnnotations()));
+            middlewareAlertInfo.setLabels(JSONUtil.toJsonStr(middlewareAlertsDTO.getLabels()));
+            middlewareAlertInfo.setClusterId(clusterId);
+            if (StringUtils.isNotEmpty(namespace) && StringUtils.isNotEmpty(middlewareName)) {
+                middlewareAlertInfo.setNamespace(namespace);
+                middlewareAlertInfo.setMiddlewareName(middlewareName);
+            }
+            middlewareAlertInfo.setCreateTime(date);
+            middlewareAlertInfoMapper.insert(middlewareAlertInfo);
+            MiddlewareAlertsDTO alertsDTO = new MiddlewareAlertsDTO();
+            BeanUtils.copyProperties(middlewareAlertInfo,alertsDTO);
+            alertsDTO.setAnnotations((Map<String, String>) JSON.parse(middlewareAlertInfo.getAnnotations()));
+            alertsDTO.setLabels((Map<String, String>) JSON.parse(middlewareAlertInfo.getLabels()));
+            return alertsDTO;
+        }).collect(Collectors.toList());
+
         middlewareAlertsDTOList.forEach(middlewareAlertsDTO -> {
+            if ("0".equals(middlewareAlertsDTO.getEnable())) {
+                return;
+            }
             // 创建prometheusRules
             middlewareAlertsDTO.setName(middlewareName);
             PrometheusRules prometheusRules = convertPrometheusRules(middlewareAlertsDTO, clusterId);
 
             // 判断group组是否已存在
             if (prometheusRule.getSpec().getGroups().stream().anyMatch(prometheusRuleGroups -> prometheusRuleGroups
-                .getName().equals(prometheusRules.getAnnotations().get("group")))) {
+                    .getName().equals(prometheusRules.getAnnotations().get("group")))) {
                 prometheusRule.getSpec().getGroups().forEach(prometheusRuleGroups -> {
                     if (prometheusRuleGroups.getName().equals(prometheusRules.getAnnotations().get("group"))) {
                         prometheusRules.getAnnotations().remove("group");
@@ -213,7 +192,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                 });
             } else {
                 PrometheusRuleGroups prometheusRuleGroups =
-                    new PrometheusRuleGroups().setName(prometheusRules.getAnnotations().get("name"));
+                        new PrometheusRuleGroups().setName(prometheusRules.getAnnotations().get("name"));
                 List<PrometheusRules> prometheusRulesList = new ArrayList<>();
                 prometheusRulesList.add(prometheusRules);
                 prometheusRuleGroups.setRules(prometheusRulesList);
@@ -225,12 +204,57 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
 
     @Override
     public void deleteRules(String clusterId, String namespace, String middlewareName, String alert) {
+        QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
+        wrapper.eq("alert",analysisID(alert));
+        middlewareAlertInfoMapper.delete(wrapper);
         // 获取cr
         PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, namespace, middlewareName);
         prometheusRule.getSpec().getGroups().forEach(prometheusRuleGroups -> {
             prometheusRuleGroups.getRules().removeIf(prometheusRules -> !StringUtils.isEmpty(prometheusRules.getAlert())
-                && prometheusRules.getAlert().equals(alert));
+                    && prometheusRules.getAlert().equals(alert));
         });
+        prometheusRuleService.update(clusterId, prometheusRule);
+    }
+
+    @Override
+    public void updateRules(String clusterId, String namespace, String middlewareName, MiddlewareAlertsDTO middlewareAlertsDTO) throws Exception {
+        //修改数据库
+        QueryWrapper<MiddlewareAlertInfo> wrapper =new QueryWrapper<>();
+        middlewareAlertsDTO.setAlertId(String.valueOf(analysisID(middlewareAlertsDTO.getAlertId())));
+        MiddlewareAlertInfo middlewareAlertInfo = new MiddlewareAlertInfo();
+        BeanUtils.copyProperties(middlewareAlertsDTO,middlewareAlertInfo);
+        middlewareAlertInfoMapper.update(middlewareAlertInfo,wrapper);
+        if ("0".equals(middlewareAlertsDTO.getEnable())) {
+            return;
+        }
+        // 获取cr
+        PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, namespace, middlewareName);
+        prometheusRule.getSpec().getGroups().forEach(prometheusRuleGroups -> {
+            prometheusRuleGroups.getRules().removeIf(prometheusRules -> !StringUtils.isEmpty(prometheusRules.getAlert())
+                    && prometheusRules.getLabels().get("alertId").equals(middlewareAlertsDTO.getAlertId()));
+        });
+
+        // 创建prometheusRules
+        middlewareAlertsDTO.setName(middlewareName);
+        PrometheusRules prometheusRules = convertPrometheusRules(middlewareAlertsDTO, clusterId);
+
+        // 判断group组是否已存在
+        if (prometheusRule.getSpec().getGroups().stream().anyMatch(prometheusRuleGroups -> prometheusRuleGroups
+                .getName().equals(prometheusRules.getAnnotations().get("group")))) {
+            prometheusRule.getSpec().getGroups().forEach(prometheusRuleGroups -> {
+                if (prometheusRuleGroups.getName().equals(prometheusRules.getAnnotations().get("group"))) {
+                    prometheusRules.getAnnotations().remove("group");
+                    prometheusRuleGroups.getRules().add(prometheusRules);
+                }
+            });
+        } else {
+            PrometheusRuleGroups prometheusRuleGroups =
+                    new PrometheusRuleGroups().setName(prometheusRules.getAnnotations().get("name"));
+            List<PrometheusRules> prometheusRulesList = new ArrayList<>();
+            prometheusRulesList.add(prometheusRules);
+            prometheusRuleGroups.setRules(prometheusRulesList);
+            prometheusRule.getSpec().getGroups().add(prometheusRuleGroups);
+        }
         prometheusRuleService.update(clusterId, prometheusRule);
     }
 
@@ -240,7 +264,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     @Override
     public String updateAlerts2Mysql(HelmChartFile helmChart) {
         QueryWrapper<BeanAlertRule> wrapper = new QueryWrapper<BeanAlertRule>()
-            .eq("chart_name", helmChart.getChartName()).eq("chart_version", helmChart.getChartVersion());
+                .eq("chart_name", helmChart.getChartName()).eq("chart_version", helmChart.getChartVersion());
         BeanAlertRule alertRule = beanAlertRuleMapper.selectOne(wrapper);
         return updateAlerts2Mysql(helmChart, !ObjectUtil.isEmpty(alertRule));
     }
@@ -263,7 +287,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         beanAlertRule.setAlert(JSONObject.toJSONString(data));
         if (update) {
             QueryWrapper<BeanAlertRule> wrapper = new QueryWrapper<BeanAlertRule>()
-                .eq("chart_name", helmChart.getChartName()).eq("chart_version", helmChart.getChartVersion());
+                    .eq("chart_name", helmChart.getChartName()).eq("chart_version", helmChart.getChartVersion());
             beanAlertRuleMapper.update(beanAlertRule, wrapper);
         } else {
             beanAlertRuleMapper.insert(beanAlertRule);
@@ -275,30 +299,38 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
      * 从prometheus中获取规则
      */
     public List<PrometheusGroups> getPrometheusRule(String clusterId, String namespace, String middlewareName)
-        throws Exception {
+            throws Exception {
         PrometheusRulesResponse prometheusRulesResponse =
-            prometheusWrapper.getRules(clusterId, NameConstant.PROMETHEUS_API_VERSION_RULES);
+                prometheusWrapper.getRules(clusterId, NameConstant.PROMETHEUS_API_VERSION_RULES);
         return prometheusRulesResponse.getData().getGroups().stream()
-            .filter(prometheusGroups -> prometheusGroups.getFile().contains(namespace + "-" + middlewareName + ".yaml"))
-            .collect(Collectors.toList());
+                .filter(prometheusGroups -> prometheusGroups.getFile().contains(namespace + "-" + middlewareName + ".yaml"))
+                .collect(Collectors.toList());
     }
 
     /**
      * 组装PrometheusRules
      */
     public PrometheusRules convertPrometheusRules(MiddlewareAlertsDTO middlewareAlertsDTO, String clusterId) {
+        String time = middlewareAlertsDTO.getAlertTime().divide(middlewareAlertsDTO.getAlertTimes(),0, BigDecimal.ROUND_DOWN).toString();
+        String alert = middlewareAlertsDTO.getAlert() + "-" + UUIDUtils.get8UUID();
+        middlewareAlertsDTO.setAlert(alert);
+        QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
+        MiddlewareAlertInfo info = new MiddlewareAlertInfo();
+        BeanUtils.copyProperties(middlewareAlertsDTO,info);
+
+        middlewareAlertInfoMapper.update(info,wrapper);
         PrometheusRules prometheusRules =
-            new PrometheusRules().setAlert(middlewareAlertsDTO.getAlert() + "-" + UUIDUtils.get8UUID())
-                .setTime(middlewareAlertsDTO.getTime()).setLabels(middlewareAlertsDTO.getLabels())
-                .setAnnotations(middlewareAlertsDTO.getAnnotations());
+                new PrometheusRules().setAlert(alert)
+                        .setTime(time).setLabels(middlewareAlertsDTO.getLabels())
+                        .setAnnotations(middlewareAlertsDTO.getAnnotations());
         // 替换{{``}}
         if (prometheusRules.getAnnotations().containsKey("summary")) {
             prometheusRules.getAnnotations().put("summary",
-                replaceValue(prometheusRules.getAnnotations().get("summary")));
+                    replaceValue(prometheusRules.getAnnotations().get("summary")));
         }
         if (prometheusRules.getAnnotations().containsKey("message")) {
             prometheusRules.getAnnotations().put("message",
-                replaceValue(prometheusRules.getAnnotations().get("message")));
+                    replaceValue(prometheusRules.getAnnotations().get("message")));
         }
         if (prometheusRules.getLabels().containsKey("value")) {
             prometheusRules.getLabels().put("value", replaceValue(prometheusRules.getLabels().get("value")));
@@ -307,16 +339,16 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         prometheusRules.getAnnotations().put("silence", middlewareAlertsDTO.getSilence());
         // 写入创建时间
         prometheusRules.getAnnotations().put("createTime",
-            DateUtils.dateToString(new Date(), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
+                DateUtils.dateToString(new Date(), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
         // 写入集群
         prometheusRules.getLabels().put("clusterId", clusterId);
         // 构造expr
         String expr = middlewareAlertsDTO.getExpr().replace(
-            "{{ include \"" + middlewareAlertsDTO.getType() + ".fullname\" . }}", middlewareAlertsDTO.getName());
+                "{{ include \"" + middlewareAlertsDTO.getType() + ".fullname\" . }}", middlewareAlertsDTO.getName());
         String symbol = getSymbol(expr);
         String threshold = getThreshold(expr);
         expr = expr.replace(symbol, middlewareAlertsDTO.getSymbol()).replace(threshold,
-            middlewareAlertsDTO.getThreshold());
+                middlewareAlertsDTO.getThreshold());
         prometheusRules.setExpr(expr);
         return prometheusRules;
     }
@@ -369,6 +401,39 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         } else {
             return time + "分钟";
         }
+    }
+
+    /**
+     * 生成一个告警规则ID
+     * @param id
+     */
+    public String calculateID(int id) {
+        String alertId = "";
+        if (id < 10000) {
+            alertId = alertId + "GJ" + String.format("%05d", id);
+        } else {
+            alertId = alertId + "GJ" + id;
+        }
+        return alertId;
+    }
+
+    public String createId(int id) {
+        String alertId = "";
+        if (id < 100000) {
+            alertId = alertId + String.format("%06d", id);
+        } else {
+            alertId = alertId + id;
+        }
+        return alertId;
+    }
+
+    /**
+     * 解析告警ID
+     * @param id
+     */
+    public int analysisID(String id) {
+        String alertID = id.replaceAll("GJ","");
+        return Integer.parseInt(alertID);
     }
 
     public static void main(String[] args){

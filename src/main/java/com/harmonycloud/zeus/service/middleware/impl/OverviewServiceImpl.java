@@ -16,11 +16,9 @@ import com.harmonycloud.caas.common.model.*;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
-import com.harmonycloud.zeus.bean.BeanAlertRecord;
-import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
-import com.harmonycloud.zeus.bean.BeanOperationAudit;
-import com.harmonycloud.zeus.bean.PlatformOverviewDTO;
+import com.harmonycloud.zeus.bean.*;
 import com.harmonycloud.zeus.dao.BeanAlertRecordMapper;
+import com.harmonycloud.zeus.dao.MiddlewareAlertInfoMapper;
 import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
 import com.harmonycloud.zeus.integration.cluster.ResourceQuotaWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
@@ -91,6 +89,8 @@ public class OverviewServiceImpl implements OverviewService {
     private MiddlewareService middlewareService;
     @Autowired
     private OperationAuditService operationAuditService;
+    @Autowired
+    private MiddlewareAlertInfoMapper middlewareAlertInfoMapper;
 
     @Value("${system.platform.version:v0.1.0}")
     private String version;
@@ -350,6 +350,11 @@ public class OverviewServiceImpl implements OverviewService {
                     alertDTO.setChartVersion(null);
                 }
             }
+            //添加规则描述
+            QueryWrapper<MiddlewareAlertInfo> queryWrapper = new QueryWrapper<>();
+            wrapper.eq("alert",record.getAlert());
+            MiddlewareAlertInfo alertInfo = middlewareAlertInfoMapper.selectOne(queryWrapper);
+            alertDTO.setExpr(alertInfo.getDescription()+alertInfo.getSymbol()+alertInfo.getThreshold()+"%");
             return alertDTO;
         }).collect(Collectors.toList()));
         alertDTOPage.getList().sort(

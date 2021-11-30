@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.user;
 
+import com.harmonycloud.caas.common.model.DingRobotDTO;
 import com.harmonycloud.caas.common.model.SendResult;
 import com.harmonycloud.caas.common.model.middleware.AlertInfoDto;
 import com.harmonycloud.zeus.bean.DingRobotInfo;
@@ -27,5 +28,9 @@ public interface DingRobotService {
 
     List<DingRobotInfo> getDings();
 
-    boolean dingConnect(DingRobotInfo dingRobotInfos) throws IOException, NoSuchAlgorithmException, InvalidKeyException;
+    List<DingRobotDTO> dingConnect(List<DingRobotInfo> dingRobotInfos) throws IOException, NoSuchAlgorithmException, InvalidKeyException;
+
+    void removeDing(List<DingRobotInfo> dingRobotInfos);
+
+    void enableDing();
 }

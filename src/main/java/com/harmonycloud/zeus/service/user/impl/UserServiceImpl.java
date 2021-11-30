@@ -1,13 +1,14 @@
 package com.harmonycloud.zeus.service.user.impl;
 
 import java.io.*;
-import java.sql.Blob;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.model.MailUserDTO;
+import com.harmonycloud.zeus.bean.MailToUser;
 import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
+import com.harmonycloud.zeus.dao.MailToUserMapper;
 import com.harmonycloud.zeus.dao.user.PersonalMapper;
-import javax.servlet.http.HttpServletRequest;
 
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
@@ -17,9 +18,7 @@ import com.harmonycloud.zeus.service.user.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -37,7 +36,6 @@ import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.tool.encrypt.RSAUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author xutianhong
@@ -59,6 +57,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private PersonalMapper personalMapper;
+
+    @Autowired
+    private MailToUserMapper mailToUserMapper;
 
     @Override
     public UserDto get(String userName) throws Exception {
@@ -101,7 +102,7 @@ public class UserServiceImpl implements UserService {
         // 获取角色
         List<UserRole> userRoleList = userRoleService.list(beanUserList);
         Map<String, UserRole> userRoleMap =
-            userRoleList.stream().collect(Collectors.toMap(UserRole::getUserName, ur -> ur));
+                userRoleList.stream().collect(Collectors.toMap(UserRole::getUserName, ur -> ur));
         // 封装数据
         List<UserDto> userDtoList = beanUserList.stream().map(beanUser -> {
             UserDto userDto = new UserDto();
@@ -113,12 +114,12 @@ public class UserServiceImpl implements UserService {
         // 过滤
         if (StringUtils.isNotEmpty(keyword)) {
             userDtoList = userDtoList.stream()
-                .filter(userDto -> StringUtils.containsIgnoreCase(userDto.getUserName(), keyword)
-                    || StringUtils.containsIgnoreCase(userDto.getAliasName(), keyword)
-                    || StringUtils.containsIgnoreCase(userDto.getEmail(), keyword)
-                    || StringUtils.containsIgnoreCase(userDto.getPhone(), keyword)
-                    || StringUtils.containsIgnoreCase(userDto.getRoleName(), keyword))
-                .collect(Collectors.toList());
+                    .filter(userDto -> StringUtils.containsIgnoreCase(userDto.getUserName(), keyword)
+                            || StringUtils.containsIgnoreCase(userDto.getAliasName(), keyword)
+                            || StringUtils.containsIgnoreCase(userDto.getEmail(), keyword)
+                            || StringUtils.containsIgnoreCase(userDto.getPhone(), keyword)
+                            || StringUtils.containsIgnoreCase(userDto.getRoleName(), keyword))
+                    .collect(Collectors.toList());
         }
         return userDtoList;
     }
@@ -187,7 +188,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void changePassword(String userName, String password, String newPassword, String reNewPassword)
-        throws Exception {
+            throws Exception {
         String dePassword = RSAUtils.decryptByPrivateKey(password);
         String deNewPassword = RSAUtils.decryptByPrivateKey(newPassword);
         String deReNewPassword = RSAUtils.decryptByPrivateKey(reNewPassword);
@@ -246,7 +247,7 @@ public class UserServiceImpl implements UserService {
 
     /**
      * 校验用户是否已经存在
-     * 
+     *
      * @return true 已存在; false 不存在
      */
     public boolean checkExist(String userName) {
@@ -300,6 +301,7 @@ public class UserServiceImpl implements UserService {
         byte[] homeLogo = null;
         byte[] loginLogo = null;
         PersonalizedConfiguration configuration = new PersonalizedConfiguration();
+        configuration.setStatus("0");
         if ("background".equals(type)) {
             background = loadFile(file);
             configuration.setBackgroundImage(background);
@@ -319,23 +321,38 @@ public class UserServiceImpl implements UserService {
 
     }
 
+    @Override
+    public MailUserDTO getUserList() {
+        QueryWrapper<BeanUser> userQueryWrapper = new QueryWrapper<>();
+        List<BeanUser> users = beanUserMapper.selectList(userQueryWrapper);
+        List<UserDto> userDtos = null;
+        List<UserDto> userDtoList = null;
+        userDtos = users.stream().map(user -> {
+            UserDto userDto = new UserDto();
+            BeanUtils.copyProperties(user,userDto);
+            return userDto;
+        }).collect(Collectors.toList());
+        QueryWrapper<MailToUser> mailToUserQueryWrapper = new QueryWrapper<>();
+        List<MailToUser> mailToUsers = mailToUserMapper.selectList(mailToUserQueryWrapper);
+        userDtoList = mailToUsers.stream().map(mailToUser -> {
+            UserDto userDto = new UserDto();
+            BeanUtils.copyProperties(mailToUser,userDto);
+            return userDto;
+        }).collect(Collectors.toList());
+        MailUserDTO mailUserDTO = new MailUserDTO();
+
+        return mailUserDTO.setUsers(userDtos).setUserBy(userDtoList);
+    }
+
     /**
      * 获取个性化配置信息
      * @return
      * @throws IOException
      */
     @Override
-    public PersonalizedConfiguration getPersonalConfig() throws IOException {
+    public PersonalizedConfiguration getPersonalConfig() {
         QueryWrapper<PersonalizedConfiguration> queryWrapper = new QueryWrapper<PersonalizedConfiguration>();
-        List<PersonalizedConfiguration> personals = personalMapper.selectList(queryWrapper);
-        if (personals.size() > 1) {
-            queryWrapper.eq("status","0");
-        }
-        PersonalizedConfiguration personal = personalMapper.selectOne(queryWrapper);
-        personal.setBackgroundImage(null);
-        personal.setHomeLogo(null);
-        personal.setLoginLogo(null);
-        return personal;
+        return personalMapper.selectOne(queryWrapper);
     }
 
     /**
@@ -377,20 +394,15 @@ public class UserServiceImpl implements UserService {
     private void checkout(PersonalizedConfiguration configuration) {
         QueryWrapper<PersonalizedConfiguration> queryWrapper = new QueryWrapper<PersonalizedConfiguration>();
         List<PersonalizedConfiguration> personals = personalMapper.selectList(queryWrapper);
+        configuration.setStatus("0");
         Date date = new Date();
         if (personals.size() == 0) {
             configuration.setCreateTime(date);
-            configuration.setStatus("1");
             personalMapper.insert(configuration);
-        }else if (personals.size() == 1){
-            configuration.setCreateTime(date);
-            configuration.setStatus("0");
-            personalMapper.insert(configuration);
-        }else if (personals.size() == 2) {
+        }else {
             configuration.setUpdateTime(date);
-            configuration.setStatus("0");
-            QueryWrapper<PersonalizedConfiguration> wrapper = new QueryWrapper<PersonalizedConfiguration>().eq("status","0");
-            personalMapper.update(configuration,wrapper);
+            queryWrapper.eq("status","0");
+            personalMapper.update(configuration,queryWrapper);
         }
     }
 

@@ -30,5 +30,8 @@ public class DingRobotInfo {
     @TableField(value = "creat_time")
     private Date time;
 
+    @TableField("enable_ding")
+    private String enable;
+
 
 }

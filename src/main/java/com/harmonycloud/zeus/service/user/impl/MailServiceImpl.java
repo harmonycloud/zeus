@@ -7,8 +7,10 @@ import com.harmonycloud.zeus.bean.MailToUser;
 import com.harmonycloud.zeus.bean.user.BeanUser;
 import com.harmonycloud.zeus.dao.MailMapper;
 import com.harmonycloud.zeus.dao.MailToUserMapper;
+import com.harmonycloud.zeus.service.user.DingRobotService;
 import com.harmonycloud.zeus.service.user.MailService;
 import com.harmonycloud.zeus.util.RobotClientUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +43,9 @@ public class MailServiceImpl implements MailService {
 
     @Autowired
     private MailToUserMapper mailToUserMapper;
+
+    @Autowired
+    private DingRobotService dingRobotService;
 
     private static RobotClientUtil robot = new RobotClientUtil();
 
@@ -115,17 +120,20 @@ public class MailServiceImpl implements MailService {
     }
 
     @Override
-    public void insertUser(List<BeanUser> users) {
-        mailToUserMapper.delete(new QueryWrapper<MailToUser>());
+    public void insertUser(List<BeanUser> users, String ding) {
         List<MailToUser> mailToUsers = users.stream().map(user -> {
             MailToUser mailToUser = new MailToUser();
             BeanUtils.copyProperties(user,mailToUser);
             mailToUser.setTime(new Date());
+            mailToUser.setUserId(user.getId());
             return mailToUser;
         }).collect(Collectors.toList());
         mailToUsers.stream().forEach(user ->{
             mailToUserMapper.insert(user);
         });
+        if (StringUtils.isNotEmpty(ding)) {
+            dingRobotService.enableDing();
+        }
 
     }
 

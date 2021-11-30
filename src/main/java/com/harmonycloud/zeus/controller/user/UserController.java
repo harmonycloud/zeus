@@ -37,7 +37,7 @@ public class UserController {
 
     @ApiOperation(value = "获取用户信息", notes = "获取用户信息")
     @ApiImplicitParams({
-        @ApiImplicitParam(name = "userName", value = "账户", paramType = "query", dataTypeClass = String.class),})
+            @ApiImplicitParam(name = "userName", value = "账户", paramType = "query", dataTypeClass = String.class),})
     @GetMapping
     public BaseResult<UserDto> get(@RequestParam(value = "userName", required = false) String userName) throws Exception {
         return BaseResult.ok(userService.get(userName));
@@ -148,5 +148,11 @@ public class UserController {
                                  @RequestParam String type) throws IOException {
         userService.uploadFile(file,type);
         return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "获取登录用户列表及通知人列表", notes = "获取登录用户列表及通知人列表")
+    @GetMapping("/users")
+    public BaseResult getUsers() {
+        return BaseResult.ok(userService.getUserList());
     }
 }

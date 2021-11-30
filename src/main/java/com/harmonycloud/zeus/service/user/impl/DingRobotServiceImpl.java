@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.user.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.model.DingRobotDTO;
 import com.harmonycloud.caas.common.model.SendResult;
 import com.harmonycloud.caas.common.model.TextMessage;
 import com.harmonycloud.caas.common.model.middleware.AlertInfoDto;
@@ -12,6 +13,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -60,6 +62,9 @@ public class DingRobotServiceImpl implements DingRobotService {
         TextMessage textMessage = new TextMessage(buildContent(alertInfoDto));
         try {
             for (DingRobotInfo ding : dings) {
+                if ("0".equals(ding.getEnable())) {
+                    continue;
+                }
                 if (StringUtils.isEmpty(ding.getSecretKey())) {
                     sendResult = robot.send(ding.getWebhook(), textMessage);
                 }else {
@@ -135,7 +140,7 @@ public class DingRobotServiceImpl implements DingRobotService {
     /**
      * 签名计算
      */
-    private String secret(String webhook, String secret) throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeyException {
+    public String secret(String webhook, String secret) throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeyException {
         Long timestamp = System.currentTimeMillis();
 
         String stringToSign = timestamp + "\n" + secret;
@@ -149,8 +154,7 @@ public class DingRobotServiceImpl implements DingRobotService {
 
     private List<DingRobotInfo> select() {
         QueryWrapper<DingRobotInfo> wrapper = new QueryWrapper<>();
-        List<DingRobotInfo> dings = dingRobotMapper.selectList(wrapper);
-        return dings;
+        return dingRobotMapper.selectList(wrapper);
     }
 
     @Override
@@ -160,12 +164,14 @@ public class DingRobotServiceImpl implements DingRobotService {
         if (list.size() == 0) {
             dingRobotInfos.forEach(dingRobotInfo -> {
                 dingRobotInfo.setTime(new Date());
+                dingRobotInfo.setEnable("0");
                 dingRobotMapper.insert(dingRobotInfo);
             });
         }else {
             dingRobotMapper.delete(wrapper);
             dingRobotInfos.forEach(dingRobotInfo -> {
                 dingRobotInfo.setTime(new Date());
+                dingRobotInfo.setEnable("0");
                 dingRobotMapper.insert(dingRobotInfo);
             });
         }
@@ -178,18 +184,51 @@ public class DingRobotServiceImpl implements DingRobotService {
     }
 
     @Override
-    public boolean dingConnect(DingRobotInfo dingRobotInfos) throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-        SendResult sendResult = null;
-        TextMessage textMessage = new TextMessage("连接测试,请忽略!");
-        if (StringUtils.isEmpty(dingRobotInfos.getSecretKey())) {
-            sendResult = robot.send(dingRobotInfos.getWebhook(), textMessage);
-        }else {
-            sendResult = robot.send(secret(dingRobotInfos.getWebhook(),dingRobotInfos.getSecretKey()),textMessage);
-        }
-        if (sendResult.getErrorCode() == 0) {
-            return true;
-        }
-        return false;
+    public List<DingRobotDTO> dingConnect(List<DingRobotInfo> dingRobotInfos) {
+        TextMessage textMessage = new TextMessage("告警连接测试,请忽略!");
+        List<DingRobotDTO> dingRobotDTOS = new ArrayList<>();
+        dingRobotInfos.stream().forEach(dingRobotInfo -> {
+            SendResult sendResult = null;
+            DingRobotDTO dingRobotDTO = new DingRobotDTO();
+            if (StringUtils.isEmpty(dingRobotInfo.getSecretKey())) {
+                try {
+                    sendResult = robot.send(dingRobotInfo.getWebhook(), textMessage);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }else {
+                try {
+                    sendResult = robot.send(secret(dingRobotInfo.getWebhook(),dingRobotInfo.getSecretKey()),textMessage);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (NoSuchAlgorithmException e) {
+                    e.printStackTrace();
+                } catch (InvalidKeyException e) {
+                    e.printStackTrace();
+                }
+            }
+            BeanUtils.copyProperties(dingRobotInfo,dingRobotDTO);
+            dingRobotDTO.setSuccess(sendResult.isSuccess());
+            dingRobotDTOS.add(dingRobotDTO);
+        });
+        return dingRobotDTOS;
+    }
+
+    @Override
+    public void removeDing(List<DingRobotInfo> dingRobotInfos) {
+        dingRobotInfos.stream().forEach(dingRobotInfo -> {
+            dingRobotMapper.deleteById(dingRobotInfo.getId());
+        });
+    }
+
+    @Override
+    public void enableDing() {
+        QueryWrapper<DingRobotInfo> wrapper = new QueryWrapper<>();
+        List<DingRobotInfo> infos = dingRobotMapper.selectList(wrapper);
+        infos.stream().forEach(info -> {
+            info.setEnable("1");
+            dingRobotMapper.update(info,wrapper);
+        });
     }
 
     /**

@@ -557,9 +557,9 @@ public abstract class AbstractBaseOperator {
         // node affinity
         if (!CollectionUtils.isEmpty(middleware.getNodeAffinity())) {
             // convert to k8s model
-            JSONArray jsonArray = K8sConvert.convertNodeAffinity2Json(middleware.getNodeAffinity());
-            if (jsonArray != null) {
-                values.put("nodeAffinity", jsonArray);
+            JSONObject nodeAffinity = K8sConvert.convertNodeAffinity2Json(middleware.getNodeAffinity());
+            if (nodeAffinity != null) {
+                values.put("nodeAffinity", nodeAffinity);
             }
         } else {
             values.put("nodeAffinity", new JSONObject());

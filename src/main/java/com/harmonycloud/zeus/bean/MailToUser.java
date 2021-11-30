@@ -24,6 +24,11 @@ public class MailToUser {
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
     /**
+     * 用户ID
+     */
+    @TableField("user_id")
+    private Integer userId;
+    /**
      * 账户
      */
     @TableField("username")
