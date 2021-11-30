@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONArray;
 import com.harmonycloud.caas.common.model.AffinityDTO;
@@ -48,7 +49,6 @@ public class K8sConvert {
         nsr.setOperator("In");
         nsr.setValues(Collections.singletonList(labelArr[1]));
         nsrList.add(nsr);
-
         NodeSelectorTerm nst = new NodeSelectorTerm();
         nst.setMatchExpressions(nsrList);
 
@@ -69,18 +69,80 @@ public class K8sConvert {
         }
         return nf;
     }
-    
-    public static JSONArray convertNodeAffinity2Json(List<AffinityDTO> dtoList) {
-        JSONArray jsonArray = new JSONArray();
-        dtoList.forEach(affinityDTO -> {
-            JSONObject nodeAffinity = K8sConvert.convertNodeAffinity2Json(affinityDTO.getLabel(), affinityDTO.isRequired());
-            jsonArray.add(nodeAffinity);
-        });
-        return jsonArray;
+
+    /**
+     * 将labels转为NodeAffinity
+     * @param labels
+     * @return
+     */
+    public static NodeAffinity convertNodeAffinity(List<String> labels, Boolean required) {
+        NodeAffinity nf = new NodeAffinity();
+        List<PreferredSchedulingTerm> pstList = new ArrayList<>(1);
+        List<NodeSelectorTerm> nss = new ArrayList<>(1);
+
+        for (int i = 0; i < labels.size(); i++) {
+            String[] labelArr = labels.get(i).split("=");
+            if (labelArr.length != 2) {
+                return null;
+            }
+            NodeSelectorTerm nst = convertNodeSelectorTerm(labelArr[0], labelArr[1]);
+            if (required) {
+                nss.add(nst);
+            } else {
+                PreferredSchedulingTerm p = new PreferredSchedulingTerm();
+                p.setPreference(nst);
+                // 权重
+                p.setWeight(labels.size() - i);
+                pstList.add(p);
+            }
+        }
+        if (required) {
+            NodeSelector ns = new NodeSelector();
+            ns.setNodeSelectorTerms(nss);
+            nf.setRequiredDuringSchedulingIgnoredDuringExecution(ns);
+        } else {
+            nf.setPreferredDuringSchedulingIgnoredDuringExecution(pstList);
+        }
+        return nf;
     }
 
-    public static JSONObject convertNodeAffinity2Json(String label, boolean isRequired) {
-        NodeAffinity nodeAffinity = convertNodeAffinity(label, isRequired);
+    /**
+     * 将label转为NodeSelectorTerm
+     *
+     * @param key   label的key
+     * @param value label的value
+     * @return
+     */
+    public static NodeSelectorTerm convertNodeSelectorTerm(String key, String value) {
+        if (StringUtils.isBlank(key) || StringUtils.isBlank(value)) {
+            return null;
+        }
+        List<NodeSelectorRequirement> nsrList = new ArrayList<>(1);
+        NodeSelectorRequirement nsr = new NodeSelectorRequirement();
+        nsr.setKey(key);
+        nsr.setOperator("In");
+        nsr.setValues(Collections.singletonList(value));
+        nsrList.add(nsr);
+
+        NodeSelectorTerm nst = new NodeSelectorTerm();
+        nst.setMatchExpressions(nsrList);
+        return nst;
+    }
+
+    public static JSONObject convertNodeAffinity2Json(List<AffinityDTO> dtoLis) {
+        if (CollectionUtils.isEmpty(dtoLis)) {
+            return null;
+        }
+        NodeAffinity nodeAffinity;
+        if (dtoLis.get(0) != null && dtoLis.get(0).isRequired()) {
+            nodeAffinity = convertNodeAffinity(dtoLis.stream().map(AffinityDTO::getLabel).collect(Collectors.toList()), true);
+        } else {
+            nodeAffinity = convertNodeAffinity(dtoLis.stream().map(AffinityDTO::getLabel).collect(Collectors.toList()), false);
+        }
+        return convertNodeAffinity2Json(nodeAffinity);
+    }
+
+    public static JSONObject convertNodeAffinity2Json(NodeAffinity nodeAffinity) {
         if (nodeAffinity == null) {
             return null;
         }
