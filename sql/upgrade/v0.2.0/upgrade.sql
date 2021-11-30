@@ -68,3 +68,14 @@ CREATE TABLE `ding_robot_info` (
 -- middleware_info表新增字段compatible_versions
 ALTER TABLE `middleware_info`
 ADD COLUMN compatible_versions varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '升级所需最低版本';
+
+-- 2021.11.30 xutianhong
+-- 新增集群ingress组件表
+DROP TABLE IF EXISTS `cluster_ingress_components`;
+CREATE TABLE `middleware_platform`.`无标题`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `name` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT 'ingress class name',
+  `cluster_id` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '集群id',
+  `status` int(1) NULL COMMENT '状态',
+  PRIMARY KEY (`id`)
+) COMMENT = '集群ingress组件表';

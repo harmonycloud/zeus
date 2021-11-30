@@ -107,8 +107,12 @@ public class PodServiceImpl implements PodService {
 
     @Override
     public List<PodInfo> list(String clusterId, String namespace, String key) {
-        return this.list(clusterId, namespace).stream().filter(po -> po.getPodName().contains(key))
-            .collect(Collectors.toList());
+        List<Pod> list = podWrapper.list(clusterId, namespace).stream()
+            .filter(pod -> pod.getMetadata().getName().contains(key)).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>(0);
+        }
+        return list.stream().map(this::convertPodInfo).collect(Collectors.toList());
     }
 
     @Override
