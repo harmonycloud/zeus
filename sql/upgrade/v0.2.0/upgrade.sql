@@ -100,9 +100,6 @@ ALTER TABLE `alert_record` ADD COLUMN lay varchar(16) CHARACTER SET utf8mb4 COLL
 -- 2021.11.26
 -- 钉钉表添加enable_ding
 ALTER TABLE `ding_robot_info` ADD COLUMN enable_ding varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '是否启用该钉钉机器人 1 启用 0 否'
--- middleware_info表新增字段compatible_versions
-ALTER TABLE `middleware_info`
-ADD COLUMN compatible_versions varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '升级所需最低版本';
 
 -- 2021.11.30 xutianhong
 -- 新增集群ingress组件表
