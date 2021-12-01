@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.model.middleware.Middleware;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -58,12 +59,16 @@ public class IngressComponentServiceImpl implements IngressComponentService {
         }
         String repository = cluster.getRegistry().getRegistryAddress() + "/" + cluster.getRegistry().getChartRepo();
         // setValues
-        String setValues = "image.ingressRepository=" + repository + ",image.backendRepository=" + repository
-            + ",image.keepalivedRepository=" + repository + ",httpPort=" + ingressComponentDto.getHttpPort()
-            + ",httpsPort=" + ingressComponentDto.getHttpsPort() + ",healthzPort="
-            + ingressComponentDto.getHealthzPort() + ",defaultServerPort=" + ingressComponentDto.getDefaultServerPort()
-            + ",ingressClass=" + ingressComponentDto.getIngressClassName() + ",fullnameOverride="
-            + ingressComponentDto.getIngressClassName() + ",install=true";
+        String setValues = "image.ingressRepository=" + repository +
+                ",image.backendRepository=" + repository +
+                ",image.keepalivedRepository=" + repository +
+                ",httpPort=" + ingressComponentDto.getHttpPort() +
+                ",httpsPort=" + ingressComponentDto.getHttpsPort() +
+                ",healthzPort=" + ingressComponentDto.getHealthzPort() +
+                ",defaultServerPort=" + ingressComponentDto.getDefaultServerPort() +
+                ",ingressClass=" + ingressComponentDto.getIngressClassName() +
+                ",fullnameOverride=" + ingressComponentDto.getIngressClassName() +
+                ",install=true";
         // install
         helmChartService.upgradeInstall(ingressComponentDto.getIngressClassName(), "middleware-operator", setValues,
             componentsPath + File.separator + "ingress-nginx/charts/ingress-nginx", cluster);
@@ -89,10 +94,39 @@ public class IngressComponentServiceImpl implements IngressComponentService {
         if (CollectionUtils.isEmpty(existCluster.getIngressList())) {
             existCluster.setIngressList(new ArrayList<>());
         }
+        if (cluster.getIngressList().stream().anyMatch(
+            ingress -> ingress.getIngressClassName().equals(cluster.getIngressList().get(0).getIngressClassName()))) {
+            throw new BusinessException(ErrorMessage.INGRESS_CLASS_EXISTED);
+        }
         existCluster.getIngressList().addAll(cluster.getIngressList());
         clusterService.update(existCluster);
         // save to mysql
         insert(cluster.getId(), cluster.getIngressList().get(0).getIngressClassName(), 1);
+    }
+
+    @Override
+    public void update(IngressComponentDto ingressComponentDto) {
+        MiddlewareClusterDTO cluster = clusterService.findById(ingressComponentDto.getClusterId());
+        QueryWrapper<BeanIngressComponents> wrapper = new QueryWrapper<BeanIngressComponents>().eq("id", ingressComponentDto.getId());
+        BeanIngressComponents beanIngressComponents = beanIngressComponentsMapper.selectOne(wrapper);
+        // 校验是否存在
+        if (cluster.getIngressList().stream()
+            .noneMatch(ingress -> ingress.getIngressClassName().equals(beanIngressComponents.getName()))) {
+            throw new BusinessException(ErrorMessage.INGRESS_CLASS_NOT_EXISTED);
+        }
+        // 更新集群信息
+        cluster.getIngressList().forEach(ingress -> {
+            if (ingress.getIngressClassName().equals(beanIngressComponents.getName())) {
+                ingress.setAddress(ingressComponentDto.getAddress())
+                    .setIngressClassName(ingressComponentDto.getIngressClassName());
+                ingress.getTcp().setConfigMapName(ingressComponentDto.getConfigMapName())
+                    .setNamespace(ingressComponentDto.getNamespace());
+            }
+        });
+        clusterService.update(cluster);
+        //更新数据库
+        beanIngressComponents.setName(ingressComponentDto.getIngressClassName());
+        beanIngressComponentsMapper.updateById(beanIngressComponents);
     }
 
     @Override
@@ -101,20 +135,23 @@ public class IngressComponentServiceImpl implements IngressComponentService {
         QueryWrapper<BeanIngressComponents> wrapper =
             new QueryWrapper<BeanIngressComponents>().eq("cluster_id", clusterId);
         List<BeanIngressComponents> ingressComponentsList = beanIngressComponentsMapper.selectList(wrapper);
-        updateStatus(clusterId, ingressComponentsList);
-        Map<String, Integer> ingressStatusMap = ingressComponentsList.stream()
-            .collect(Collectors.toMap(BeanIngressComponents::getName, BeanIngressComponents::getStatus));
 
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         //数据同步
         if (cluster.getIngressList().size() > ingressComponentsList.size()){
             synchronization(cluster, ingressComponentsList);
         }
+        //更新状态
+        updateStatus(clusterId, ingressComponentsList);
+        Map<String, BeanIngressComponents> ingressComponentsMap = ingressComponentsList.stream()
+                .collect(Collectors.toMap(BeanIngressComponents::getName, beanIngressComponents -> beanIngressComponents));
+        //封装数据
         return cluster.getIngressList().stream()
             .map(ingress -> new IngressComponentDto().setAddress(ingress.getAddress())
                 .setIngressClassName(ingress.getIngressClassName()).setNamespace(ingress.getTcp().getNamespace())
                 .setConfigMapName(ingress.getTcp().getConfigMapName()).setClusterId(clusterId)
-                .setStatus(ingressStatusMap.get(ingress.getIngressClassName())))
+                .setStatus(ingressComponentsMap.get(ingress.getIngressClassName()).getStatus())
+                .setId(ingressComponentsMap.get(ingress.getIngressClassName()).getId()))
             .collect(Collectors.toList());
     }
 
@@ -155,7 +192,7 @@ public class IngressComponentServiceImpl implements IngressComponentService {
             }
             List<PodInfo> pods = podInfoList.stream().filter(podInfo -> {
                 String name = podInfo.getPodName();
-                return name.substring(0, name.lastIndexOf("-")).equals(ingress.getName());
+                return name.substring(0, name.lastIndexOf("-")).equals(ingress.getName() + "-controller");
             }).collect(Collectors.toList());
             // 默认正常
             int status = ingress.getStatus();

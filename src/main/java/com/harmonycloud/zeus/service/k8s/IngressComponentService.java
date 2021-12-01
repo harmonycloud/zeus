@@ -26,6 +26,13 @@ public interface IngressComponentService {
     void integrate(MiddlewareClusterDTO cluster);
 
     /**
+     * 更新集群ingress组件信息
+     *
+     * @param cluster cluster信息
+     */
+    void update(IngressComponentDto ingressComponentDto);
+
+    /**
      * 获取集群ingress组件列表
      *
      * @param clusterId 集群id

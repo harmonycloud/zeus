@@ -52,6 +52,20 @@ public class IngressComponentController {
         return BaseResult.ok();
     }
 
+    @ApiOperation(value = "更新集群ingress组件信息", notes = "更新集群ingress组件信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "cluster", value = "集群信息", paramType = "query", dataTypeClass = MiddlewareClusterDTO.class)
+    })
+    @PutMapping("/{ingressName}")
+    public BaseResult update(@PathVariable("clusterId") String clusterId,
+                             @RequestBody IngressComponentDto ingressComponentDto,
+                             @PathVariable("ingressName") String ingressName) {
+        ingressComponentDto.setIngressClassName(ingressName);
+        ingressComponentService.update(ingressComponentDto);
+        return BaseResult.ok();
+    }
+
     @ApiOperation(value = "获取ingress组件列表", notes = "获取ingress组件列表")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class)
