@@ -79,6 +79,10 @@ public class IngressComponentServiceImpl implements IngressComponentService {
         if (CollectionUtils.isEmpty(existCluster.getIngressList())){
             existCluster.setIngressList(new ArrayList<>());
         }
+        if (cluster.getIngressList().stream()
+                .anyMatch(ingress -> ingress.getIngressClassName().equals(cluster.getIngressList().get(0).getIngressClassName()))) {
+            throw new BusinessException(ErrorMessage.EXIST);
+        }
         existCluster.getIngressList().addAll(cluster.getIngressList());
         clusterService.update(existCluster);
     }
