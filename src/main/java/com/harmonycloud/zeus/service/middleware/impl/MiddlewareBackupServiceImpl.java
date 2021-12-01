@@ -116,7 +116,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public BaseResult updateBackupSchedule(MiddlewareBackupDTO backupDTO) {
-        middlewareCRDService.getCRAndCheckRunning(convertBackupToMiddleware(backupDTO));
         if ("mysql".equals(backupDTO.getType())) {
             return mysqlAdapterService.updateBackupSchedule(backupDTO);
         }
