@@ -89,19 +89,25 @@ public class IngressComponentServiceImpl implements IngressComponentService {
     }
 
     @Override
-    public void integrate(MiddlewareClusterDTO cluster) {
-        MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
+    public void integrate(IngressComponentDto ingressComponentDto) {
+        MiddlewareClusterDTO existCluster = clusterService.findById(ingressComponentDto.getClusterId());
         if (CollectionUtils.isEmpty(existCluster.getIngressList())) {
             existCluster.setIngressList(new ArrayList<>());
         }
-        if (cluster.getIngressList().stream().anyMatch(
-            ingress -> ingress.getIngressClassName().equals(cluster.getIngressList().get(0).getIngressClassName()))) {
+        if (existCluster.getIngressList().stream()
+            .anyMatch(ingress -> ingress.getIngressClassName().equals(ingressComponentDto.getIngressClassName()))) {
             throw new BusinessException(ErrorMessage.INGRESS_CLASS_EXISTED);
         }
-        existCluster.getIngressList().addAll(cluster.getIngressList());
+        MiddlewareClusterIngress ingress = new MiddlewareClusterIngress();
+        ingress.setIngressClassName(ingressComponentDto.getIngressClassName())
+            .setAddress(ingressComponentDto.getAddress()).setTcp(new MiddlewareClusterIngress.IngressConfig());
+        ingress.getTcp().setNamespace(ingressComponentDto.getNamespace())
+            .setConfigMapName(ingressComponentDto.getConfigMapName());
+
+        existCluster.getIngressList().add(ingress);
         clusterService.update(existCluster);
         // save to mysql
-        insert(cluster.getId(), cluster.getIngressList().get(0).getIngressClassName(), 1);
+        insert(ingressComponentDto.getClusterId(), ingressComponentDto.getIngressClassName(), 1);
     }
 
     @Override
