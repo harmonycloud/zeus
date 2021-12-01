@@ -104,7 +104,7 @@ ALTER TABLE `ding_robot_info` ADD COLUMN enable_ding varchar(16) CHARACTER SET u
 -- 2021.11.30 xutianhong
 -- 新增集群ingress组件表
 DROP TABLE IF EXISTS `cluster_ingress_components`;
-CREATE TABLE `middleware_platform`.`无标题`  (
+CREATE TABLE `cluster_ingress_components`  (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增id',
   `name` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT 'ingress class name',
   `cluster_id` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '集群id',
