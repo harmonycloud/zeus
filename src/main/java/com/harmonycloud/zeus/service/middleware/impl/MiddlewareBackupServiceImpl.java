@@ -451,7 +451,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             return false;
         }
         List<String> pods = new ArrayList<>();
-        Map<String, String> labels = getMiddlewareBackupLabels(middlewareName, null, pods);
+        if (StringUtils.isNotBlank(podName)) {
+            pods.add(podName);
+        }
+        Map<String, String> labels = getMiddlewareBackupLabels(getRealMiddlewareName(type, middlewareName), null, pods);
         MiddlewareBackupScheduleList scheduleList = backupScheduleCRDService.list(clusterId, namespace, labels);
         if (!CollectionUtils.isEmpty(scheduleList.getItems())) {
             return true;
