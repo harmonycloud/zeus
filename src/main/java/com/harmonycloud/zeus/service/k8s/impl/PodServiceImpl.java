@@ -73,8 +73,12 @@ public class PodServiceImpl implements PodService {
         Map<String, StorageClassDTO> scMap = storageClassService.convertStorageClass(pvcInfos, clusterId, namespace);
         AtomicReference<Boolean> isAllLvmStorage = new AtomicReference<>(true);
         // 给pod设置存储
-        List<PodInfo> podInfoList = pods.stream().map(po -> {
+        List<PodInfo> podInfoList = new ArrayList<>();
+        for (MiddlewareInfo po : pods) {
             Pod pod = podWrapper.get(clusterId, namespace, po.getName());
+            if (pod == null) {
+                continue;
+            }
             PodInfo pi = convertPodInfo(pod)
                     .setRole(StringUtils.isBlank(po.getType()) ? null : po.getType().toLowerCase());
             // storage
@@ -88,8 +92,8 @@ public class PodServiceImpl implements PodService {
             setPodPvc(pi, pvcInfos);
             // 设置pod备份状态
             setPodBackupStatus(clusterId, namespace, type, middlewareName, pi);
-            return pi;
-        }).collect(Collectors.toList());
+            podInfoList.add(pi);
+        }
         middleware.setIsAllLvmStorage(isAllLvmStorage.get());
         middleware.setPodInfoGroup(convertListToGroup(podInfoList));
         middleware.setPods(podInfoList);

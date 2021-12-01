@@ -101,6 +101,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public BaseResult createBackup(MiddlewareBackupDTO backupDTO) {
+        middlewareCRDService.getCRAndCheckRunning(convertBackupToMiddleware(backupDTO));
         if ("mysql".equals(backupDTO.getType())) {
             return mysqlAdapterService.createBackup(backupDTO);
         }
@@ -114,6 +115,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public BaseResult updateBackupSchedule(MiddlewareBackupDTO backupDTO) {
+        middlewareCRDService.getCRAndCheckRunning(convertBackupToMiddleware(backupDTO));
         if ("mysql".equals(backupDTO.getType())) {
             return mysqlAdapterService.updateBackupSchedule(backupDTO);
         }
@@ -691,5 +693,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (BackupType.CLUSTER.getType().equals(record.getBackupType())) {
             record.setAliasName(aliasName);
         }
+    }
+
+    private Middleware convertBackupToMiddleware(MiddlewareBackupDTO backupDTO) {
+        return new Middleware().setClusterId(backupDTO.getClusterId())
+                .setNamespace(backupDTO.getNamespace())
+                .setType(backupDTO.getType())
+                .setName(backupDTO.getMiddlewareName());
     }
 }
