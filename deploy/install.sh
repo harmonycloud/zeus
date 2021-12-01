@@ -53,7 +53,6 @@ function deploy_helm() {
 if [ $DEPLOY_TYPE == "docker-compose" ]; then
     echo "######  Deployed by docker-compose ######"
     deploy_docker
-    echo "######  Success ######"
 fi
 
 if [ $DEPLOY_TYPE == "kubernetes" ]; then
@@ -66,4 +65,4 @@ if [ $DEPLOY_TYPE == "helm" ]; then
     deploy_helm
 fi
 
-echo "######  Success!  ######"
+echo "######  Deploy done!  ######"

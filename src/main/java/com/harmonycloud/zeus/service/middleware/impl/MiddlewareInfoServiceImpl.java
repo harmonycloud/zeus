@@ -382,7 +382,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         clusterList.forEach(cluster -> {
             clusterIds.add(cluster.getId());
         });
-        List<BeanClusterMiddlewareInfo> briefMiddlewareInfos = clusterMiddlewareInfoService.list(clusterIds);
+        List<BeanClusterMiddlewareInfo> briefMiddlewareInfos = clusterMiddlewareInfoService.listAll(clusterIds);
         List<BeanMiddlewareInfo> infoList = new ArrayList<>();
         if (!CollectionUtils.isEmpty(briefMiddlewareInfos)) {
             briefMiddlewareInfos.forEach(middlewareInfo -> {

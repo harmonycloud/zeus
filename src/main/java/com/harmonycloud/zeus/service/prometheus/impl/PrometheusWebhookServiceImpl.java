@@ -4,29 +4,28 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 
-import com.alibaba.fastjson.JSON;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.model.middleware.AlertInfoDto;
-import com.harmonycloud.zeus.bean.MiddlewareAlertInfo;
-import com.harmonycloud.zeus.dao.BeanAlertRecordMapper;
-import com.harmonycloud.zeus.dao.MiddlewareAlertInfoMapper;
-import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
-import com.harmonycloud.zeus.service.middleware.MiddlewareAlertsService;
-import com.harmonycloud.zeus.service.middleware.impl.MiddlewareAlertsServiceImpl;
-import com.harmonycloud.zeus.service.user.DingRobotService;
-import com.harmonycloud.zeus.service.user.MailService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.constants.DateStyle;
 import com.harmonycloud.caas.common.constants.NameConstant;
 import com.harmonycloud.caas.common.enums.DateUnitEnum;
-import com.harmonycloud.zeus.bean.BeanAlertRecord;
-import com.harmonycloud.zeus.service.prometheus.PrometheusWebhookService;
+import com.harmonycloud.caas.common.model.middleware.AlertInfoDto;
 import com.harmonycloud.tool.date.DateUtils;
+import com.harmonycloud.zeus.bean.BeanAlertRecord;
+import com.harmonycloud.zeus.bean.MiddlewareAlertInfo;
+import com.harmonycloud.zeus.dao.BeanAlertRecordMapper;
+import com.harmonycloud.zeus.dao.MiddlewareAlertInfoMapper;
+import com.harmonycloud.zeus.integration.cluster.AlertManagerWrapper;
+import com.harmonycloud.zeus.service.middleware.impl.MiddlewareAlertsServiceImpl;
+import com.harmonycloud.zeus.service.prometheus.PrometheusWebhookService;
+import com.harmonycloud.zeus.service.user.DingRobotService;
+import com.harmonycloud.zeus.service.user.MailService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,8 +40,6 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
     @Autowired
     private BeanAlertRecordMapper beanAlertRecordMapper;
     @Autowired
-    private PrometheusWrapper prometheusWrapper;
-    @Autowired
     private DingRobotService dingRobotService;
     @Autowired
     private MailService mailService;
@@ -51,6 +48,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
     @Autowired
     private MiddlewareAlertsServiceImpl middlewareAlertsServiceImpl;
 
+    private AlertManagerWrapper alertManagerWrapper;
 
     @Override
     public void alert(String json) throws Exception {
@@ -140,8 +138,8 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
         body.put("startsAt", DateUtils.dateToString(now, DateStyle.YYYY_MM_DD_T_HH_MM_SS_Z_SSS));
         String silence = alert.getJSONObject("annotations").getString("silence");
         body.put("endsAt",
-                DateUtils.dateToString(calculateEndTime(now, silence), DateStyle.YYYY_MM_DD_T_HH_MM_SS_Z_SSS));
-        prometheusWrapper.setSilence(clusterId, NameConstant.ALERT_MANAGER_API_VERSION_SILENCES, body);
+            DateUtils.dateToString(calculateEndTime(now, silence), DateStyle.YYYY_MM_DD_T_HH_MM_SS_Z_SSS));
+        alertManagerWrapper.setSilence(clusterId, NameConstant.ALERT_MANAGER_API_VERSION_SILENCES, body);
     }
 
     /**

@@ -5,7 +5,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     prometheus: k8s
     role: alert-rules
-  name: ingress-nginx-rules
+  name: {{ include "ingress.fullname" . }}-ingress-nginx-rules
 spec:
   groups:
   - name: ingress-nginx-rules

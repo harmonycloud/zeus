@@ -270,7 +270,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Override
     public void setManagePlatformAddress(Middleware middleware, String clusterId) {
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        if (cluster.getIngress() == null) {
+        if (CollectionUtils.isEmpty(cluster.getIngressList())) {
             return;
         }
         List<IngressDTO> ingressDTOS = ingressService.get(clusterId, middleware.getNamespace(), middleware.getType(), middleware.getName());
@@ -324,14 +324,13 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     public List<ResourceMenuDto> listAllMiddlewareAsMenu(String clusterId) {
         List<ResourceMenuDto> subMenuList = new ArrayList<>();
         try {
-            List<BeanClusterMiddlewareInfo> middlewareInfos = clusterMiddlewareInfoService.list(clusterId, true);
+            List<BeanClusterMiddlewareInfo> middlewareInfos = clusterMiddlewareInfoService.list(clusterId, false);
             if (CollectionUtils.isEmpty(middlewareInfos)) {
                 return subMenuList;
             }
             AtomicInteger weight = new AtomicInteger(1);
             for (BeanClusterMiddlewareInfo middlewareInfoDTO : middlewareInfos) {
                 if (middlewareInfoDTO.getStatus() == 2) {
-                    //未安装的中间件不作为菜单展示
                     continue;
                 }
                 ResourceMenuDto resourceMenuDto = new ResourceMenuDto();
@@ -422,7 +421,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             } else {
                 if (existNow.get()) {
                     BeanClusterMiddlewareInfo clusterMwInfo = clusterMiddlewareInfoService.get(clusterId, type);
-                    if (clusterMwInfo.getChartVersion().compareTo(info.getChartVersion()) > 0) {
+                    if (!(clusterMwInfo.getChartVersion().compareTo(info.getChartVersion()) < 0)) {
                         if (clusterMwInfo.getStatus() == 0) {
                             // operator升级中
                             dto.setVersionStatus("updating");

@@ -24,7 +24,7 @@ public class GrafanaServiceImpl implements GrafanaService {
     @Autowired
     private GrafanaWrapper grafanaWrapper;
 
-    @Value("${system.monitor.grafana.key.name:caas-middleware}")
+    @Value("${system.monitor.grafana.key.name:zeus}")
     private String defaultKeyName;
 
     @Override

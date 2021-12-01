@@ -13,7 +13,7 @@ import springfox.documentation.oas.annotations.EnableOpenApi;
 @EnableScheduling
 @EnableFeignClients
 @MapperScan("com.harmonycloud.zeus.dao")
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "com.harmonycloud")
 public class ZeusApplication {
 
     public static void main(String[] args) {

@@ -100,5 +100,16 @@ ALTER TABLE `alert_record` ADD COLUMN lay varchar(16) CHARACTER SET utf8mb4 COLL
 -- 2021.11.26
 -- 钉钉表添加enable_ding
 ALTER TABLE `ding_robot_info` ADD COLUMN enable_ding varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '是否启用该钉钉机器人 1 启用 0 否'
+
+-- 2021.11.30 xutianhong
+-- 新增集群ingress组件表
+DROP TABLE IF EXISTS `cluster_ingress_components`;
+CREATE TABLE `cluster_ingress_components`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `name` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT 'ingress class name',
+  `cluster_id` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '集群id',
+  `status` int(1) NULL COMMENT '状态',
+  PRIMARY KEY (`id`)
+) COMMENT = '集群ingress组件表';
 -- 修改告警规则表expr字段大小
 alter TABLE `alert_rule_id` MODIFY column expr varchar(256)

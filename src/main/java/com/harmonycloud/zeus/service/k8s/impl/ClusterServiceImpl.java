@@ -127,7 +127,7 @@ public class ClusterServiceImpl implements ClusterService {
             BeanUtils.copyProperties(info, cluster);
             cluster.setId(K8sClient.getClusterId(c.getMetadata())).setHost(info.getAddress())
                 .setName(c.getMetadata().getName()).setDcId(c.getMetadata().getNamespace())
-                .setIngress(info.getIngress());
+                .setIngressList(info.getIngressList());
             if (!CollectionUtils.isEmpty(c.getMetadata().getAnnotations())) {
                 cluster.setNickname(c.getMetadata().getAnnotations().get(NAME));
             }
@@ -319,7 +319,7 @@ public class ClusterServiceImpl implements ClusterService {
         // 只修改昵称，证书，ingress，制品服务，es
         oldCluster.setNickname(cluster.getNickname());
         oldCluster.setCert(cluster.getCert());
-        oldCluster.setIngress(cluster.getIngress());
+        oldCluster.setIngressList(cluster.getIngressList());
         oldCluster.setRegistry(cluster.getRegistry());
         oldCluster.setLogging(cluster.getLogging());
 
@@ -357,9 +357,9 @@ public class ClusterServiceImpl implements ClusterService {
         }
         
         // 设置ingress
-        if (cluster.getIngress() != null && cluster.getIngress().getTcp() == null) {
+        /*if (cluster.getIngress() != null && cluster.getIngress().getTcp() == null) {
             cluster.getIngress().setTcp(new MiddlewareClusterIngress.IngressConfig());
-        }
+        }*/
         
         // 设置es信息
         if (cluster.getLogging() == null) {
@@ -436,17 +436,12 @@ public class ClusterServiceImpl implements ClusterService {
             }
         }
     }
-    
+
     /**
      * 判断集群是否可以被删除
      */
-    public boolean checkDelete(String clusterId) {
-        List<MiddlewareCRD> middlewareCRDList;
-        try {
-            middlewareCRDList = middlewareCRDService.listCR(clusterId, null, null);
-        } catch (Exception e) {
-            return true;
-        }
+    public boolean checkDelete(String clusterId){
+        List<MiddlewareCRD> middlewareCRDList = middlewareCRDService.listCR(clusterId, null, null);
         if (!CollectionUtils.isEmpty(middlewareCRDList) && middlewareCRDList.stream().anyMatch(
             middlewareCRD -> !"escluster-middleware-elasticsearch".equals(middlewareCRD.getMetadata().getName())
                 && !"mysqlcluster-zeus-mysql".equals(middlewareCRD.getMetadata().getName()))) {
@@ -783,6 +778,7 @@ public class ClusterServiceImpl implements ClusterService {
         } catch (IOException e) {
             log.error("文件读取失败", e);
         }
+        MiddlewareClusterDTO cluster = new MiddlewareClusterDTO();
         try {
             // 获取admin.conf全部内容
             String certificate = YamlUtil.convertToString(filePath);
@@ -791,18 +787,17 @@ public class ClusterServiceImpl implements ClusterService {
             File file = new File(filePath);
             file.deleteOnExit();
 
-            MiddlewareClusterDTO cluster = new MiddlewareClusterDTO();
             ClusterCert clusterCert = new ClusterCert();
             clusterCert.setCertificate(certificate);
             cluster.setCert(clusterCert);
             cluster.setName(name);
             cluster.setNickname(name);
             setClusterAddressInfo(cluster, serverAddress);
-            addCluster(cluster);
         } catch (Exception e) {
             log.error("集群添加失败", e);
             throw new BusinessException(DictEnum.CLUSTER, name, ErrorMessage.ADD_FAIL);
         }
+        addCluster(cluster);
         return BaseResult.ok("集群添加成功");
     }
 
