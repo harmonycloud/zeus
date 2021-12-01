@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -121,16 +122,18 @@ public class MailServiceImpl implements MailService {
 
     @Override
     public void insertUser(List<BeanUser> users, String ding) {
-        List<MailToUser> mailToUsers = users.stream().map(user -> {
-            MailToUser mailToUser = new MailToUser();
-            BeanUtils.copyProperties(user,mailToUser);
-            mailToUser.setTime(new Date());
-            mailToUser.setUserId(user.getId());
-            return mailToUser;
-        }).collect(Collectors.toList());
-        mailToUsers.stream().forEach(user ->{
-            mailToUserMapper.insert(user);
-        });
+        if (!CollectionUtils.isEmpty(users)) {
+            List<MailToUser> mailToUsers = users.stream().map(user -> {
+                MailToUser mailToUser = new MailToUser();
+                BeanUtils.copyProperties(user,mailToUser);
+                mailToUser.setTime(new Date());
+                mailToUser.setUserId(user.getId());
+                return mailToUser;
+            }).collect(Collectors.toList());
+            mailToUsers.stream().forEach(user ->{
+                mailToUserMapper.insert(user);
+            });
+        }
         if (StringUtils.isNotEmpty(ding)) {
             dingRobotService.enableDing();
         }
@@ -173,12 +176,12 @@ public class MailServiceImpl implements MailService {
             emailTextColor = "<font color='red'>" + alertInfoDto.getLevel() +"</font>";
         }
         if ("critical".equals(alertInfoDto.getLevel())) { //重要
-            emailHeadColor = "yellow";
-            emailTextColor = "<font color='yellow'>" + alertInfoDto.getLevel() +"</font>";
+            emailHeadColor = "#FFDB94 ";
+            emailTextColor = "<font color='#FFDB94 '>" + alertInfoDto.getLevel() +"</font>";
         }
         if ("warning".equals(alertInfoDto.getLevel())) { //一般
-            emailHeadColor = "blue";
-            emailTextColor = "<font color='blue'>" + alertInfoDto.getLevel() +"</font>";
+            emailHeadColor = "#94DBFF";
+            emailTextColor = "<font color='#94DBFF'>" + alertInfoDto.getLevel() +"</font>";
         }
 
         String contentText = username + ", 以下是告警信息请查收!";

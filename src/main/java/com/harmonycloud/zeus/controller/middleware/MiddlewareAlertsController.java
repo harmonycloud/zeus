@@ -40,7 +40,7 @@ public class MiddlewareAlertsController {
                                                                @PathVariable(value = "middlewareName", required = false) String middlewareName,
                                                                @RequestParam(value = "lay") String lay,
                                                                @RequestParam(value = "keyword", required = false) String keyword) throws Exception {
-        return BaseResult.ok(middlewareAlertsService.listUsedRules(clusterId, namespace, middlewareName,lay, keyword));
+        return BaseResult.ok(middlewareAlertsService.listUsedRules(clusterId, namespace, middlewareName, lay, keyword));
     }
 
     @ApiOperation(value = "查询告警规则", notes = "查询告警规则")
@@ -105,4 +105,42 @@ public class MiddlewareAlertsController {
         middlewareAlertsService.updateRules(clusterId, namespace, middlewareName, middlewareAlertsDTO);
         return BaseResult.ok();
     }
+
+
+    @ApiOperation(value = "创建系统告警规则", notes = "创建系统告警规则")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareAlertsDTO", value = "中间件告警规则", paramType = "query", dataTypeClass = MiddlewareAlertsDTO.class)
+    })
+    @PostMapping("/system")
+    public BaseResult createSystemRules(@PathVariable("clusterId") String clusterId,
+                                        @RequestBody List<MiddlewareAlertsDTO> middlewareAlertsDTOList) {
+        middlewareAlertsService.createSystemRule(clusterId, middlewareAlertsDTOList);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "修改系统告警规则", notes = "修改系统告警规则")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareAlertsDTO", value = "中间件告警规则", paramType = "query", dataTypeClass = MiddlewareAlertsDTO.class)
+    })
+    @PutMapping("/system")
+    public BaseResult updateSystemRules(@PathVariable("clusterId") String clusterId,
+                                        @RequestBody MiddlewareAlertsDTO middlewareAlertsDTO) {
+        middlewareAlertsService.updateSystemRules(clusterId, middlewareAlertsDTO);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "删除系统告警规则", notes = "删除系统告警规则")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "alert", value = "告警名称", paramType = "query", dataTypeClass = String.class)
+    })
+    @DeleteMapping("/system")
+    public BaseResult deleteSystemRules(@PathVariable("clusterId") String clusterId,
+                                        @RequestParam("alert") String alert) {
+        middlewareAlertsService.deleteSystemRules(clusterId, alert);
+        return BaseResult.ok();
+    }
 }
+

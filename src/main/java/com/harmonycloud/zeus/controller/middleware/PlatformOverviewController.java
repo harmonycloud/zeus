@@ -64,7 +64,10 @@ public class PlatformOverviewController {
                                                       @RequestParam(value = "namespace", required = false) String namespace,
                                                       @RequestParam(value = "current", required = false) Integer current,
                                                       @RequestParam(value = "size", required = false) Integer size,
+                                                      @RequestParam(value = "middlewareName", required = false) String middlewareName,
+                                                      @RequestParam(value = "level", required = false) String level,
+                                                      @RequestParam(value = "lay", required = false) String lay,
                                                       @RequestParam(value = "keyword", required = false) String keyword) {
-        return BaseResult.ok(overviewService.getAlertRecord(clusterId, namespace, current, size, keyword));
+        return BaseResult.ok(overviewService.getAlertRecord(clusterId, namespace, middlewareName, current, size,level, keyword, lay));
     }
 }

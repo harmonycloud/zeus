@@ -57,10 +57,10 @@ public class MailController {
     @ApiOperation(value = "选择被通知人", notes = "选择被通知人")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "users", value = "登录人信息", paramType = "query", dataTypeClass = BeanUser.class),
-            @ApiImplicitParam(name = "ding", value = "是否选择钉钉通知", paramType = "path", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "ding", value = "是否选择钉钉通知", paramType = "path",required = false, dataTypeClass = String.class)
     })
     @PostMapping("/insertUser")
-    public BaseResult mailToUser(@RequestBody List<BeanUser> users,@PathVariable String ding) {
+    public BaseResult mailToUser(@RequestBody List<BeanUser> users,@PathVariable(required = false) String ding) {
         mailService.insertUser(users, ding);
         return BaseResult.ok();
     }

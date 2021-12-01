@@ -60,7 +60,7 @@ public interface OverviewService {
      *
      * @return List<AlertDTO>
      */
-    PageInfo<AlertDTO> getAlertRecord(String clusterId, String namespace, Integer current, Integer size, String level);
+    PageInfo<AlertDTO> getAlertRecord(String clusterId, String namespace, String middlewareName, Integer current, Integer size, String level, String keyword, String lay);
 
     MiddlewareOverviewDTO getChartPlatformOverview();
 

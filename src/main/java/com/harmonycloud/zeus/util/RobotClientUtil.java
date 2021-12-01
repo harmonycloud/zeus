@@ -38,14 +38,19 @@ public class RobotClientUtil {
         StringEntity se = new StringEntity(message.toJsonString(), "utf-8");
         httppost.setEntity(se);
         SendResult sendResult = new SendResult();
-        HttpResponse response = httpclient.execute(httppost);
-        if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-            String result = EntityUtils.toString(response.getEntity());
-            JSONObject obj = JSONObject.parseObject(result);
-            Integer errcode = obj.getInteger("errcode");
-            sendResult.setErrorCode(errcode);
-            sendResult.setErrorMsg(obj.getString("errmsg"));
-            sendResult.setIsSuccess(errcode.equals(0));
+        try {
+            HttpResponse response = httpclient.execute(httppost);
+            if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                String result = EntityUtils.toString(response.getEntity());
+                JSONObject obj = JSONObject.parseObject(result);
+                Integer errcode = obj.getInteger("errcode");
+                sendResult.setErrorCode(errcode);
+                sendResult.setErrorMsg(obj.getString("errmsg"));
+                sendResult.setIsSuccess(errcode.equals(0));
+            }
+        } catch (Exception e) {
+            sendResult.setIsSuccess(false);
+            return sendResult;
         }
         return sendResult;
     }
