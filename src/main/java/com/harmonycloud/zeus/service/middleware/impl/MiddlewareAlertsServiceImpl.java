@@ -191,16 +191,17 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, namespace, middlewareName);
 
         //不启用该规则时，判断该规则是否已写入prometheusRule
-        if ("0".equals(middlewareAlertsDTO.getEnable())) {
-            if ("0".equals(info.getEnable())) {
-                return;
-            }else {
-                //从prometheusRule删除规则
-                prometheusRule.getSpec().getGroups().forEach(prometheusRuleGroups -> {
-                    prometheusRuleGroups.getRules().removeIf(prometheusRules -> !StringUtils.isEmpty(prometheusRules.getAlert())
-                            && prometheusRules.getAlert().equals(middlewareAlertsDTO.getAlert()));
-                });
-            }
+        if ("0".equals(middlewareAlertsDTO.getEnable()) && "0".equals(info.getEnable())) {
+            return;
+        }
+        if ("0".equals(middlewareAlertsDTO.getEnable()) && "1".equals(info.getEnable())) {
+            //从prometheusRule删除规则
+            prometheusRule.getSpec().getGroups().forEach(prometheusRuleGroups -> {
+                prometheusRuleGroups.getRules().removeIf(prometheusRules -> !StringUtils.isEmpty(prometheusRules.getAlert())
+                        && prometheusRules.getAlert().equals(middlewareAlertsDTO.getAlert()));
+                prometheusRuleService.update(clusterId, prometheusRule);
+            });
+            return;
         }
         //组装prometheusRule
         assemblePrometheusrule(clusterId,middlewareName,middlewareAlertsDTO,"", prometheusRule);
