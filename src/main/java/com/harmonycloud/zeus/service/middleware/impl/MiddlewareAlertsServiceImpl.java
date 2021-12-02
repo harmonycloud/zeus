@@ -412,6 +412,8 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         middlewareAlertInfo.setNamespace(namespace);
         middlewareAlertInfo.setMiddlewareName(middlewareName);
         middlewareAlertInfo.setCreateTime(date);
+        middlewareAlertInfo.setName(clusterId);
+        middlewareAlertInfo.setAlert(middlewareAlertsDTO.getAlert() + "-" + UUIDUtils.get8UUID() );
         middlewareAlertInfoMapper.insert(middlewareAlertInfo);
     }
 
