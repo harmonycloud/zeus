@@ -440,12 +440,16 @@ public class ClusterServiceImpl implements ClusterService {
     /**
      * 判断集群是否可以被删除
      */
-    public boolean checkDelete(String clusterId){
-        List<MiddlewareCRD> middlewareCRDList = middlewareCRDService.listCR(clusterId, null, null);
-        if (!CollectionUtils.isEmpty(middlewareCRDList) && middlewareCRDList.stream().anyMatch(
-            middlewareCRD -> !"escluster-middleware-elasticsearch".equals(middlewareCRD.getMetadata().getName())
-                && !"mysqlcluster-zeus-mysql".equals(middlewareCRD.getMetadata().getName()))) {
-            return false;
+    public boolean checkDelete(String clusterId) {
+        try {
+            List<MiddlewareCRD> middlewareCRDList = middlewareCRDService.listCR(clusterId, null, null);
+            if (!CollectionUtils.isEmpty(middlewareCRDList) && middlewareCRDList.stream().anyMatch(
+                middlewareCRD -> !"escluster-middleware-elasticsearch".equals(middlewareCRD.getMetadata().getName())
+                    && !"mysqlcluster-zeus-mysql".equals(middlewareCRD.getMetadata().getName()))) {
+                return false;
+            }
+        } catch (Exception e) {
+            log.error("查询middleware失败，默认可以删除");
         }
         return true;
     }
