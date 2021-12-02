@@ -633,16 +633,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             backupRecord.setBackupType(BackupType.CLUSTER.getType());
             backupRecord.setAliasName(middleware.getAliasName());
         } else {
-            StringBuffer sbf = new StringBuffer();
-            backupPodList.forEach(pod -> {
-                sbf.append(pod).append(",");
-            });
-            pods.forEach(podInfo -> {
-                if (podInfo.getPodName().equals(backupRecord.getBackupName())) {
-                    backupRecord.setPodRole(podInfo.getRole());
+            String podName = backupPodList.get(0);
+            pods.forEach(pod -> {
+                if (pod.getPodName().equals(podName)) {
+                    backupRecord.setPodRole(pod.getRole());
                 }
             });
-            backupRecord.setSourceName(sbf.substring(0, sbf.length() - 1));
+            backupRecord.setSourceName(podName);
             backupRecord.setBackupType(BackupType.POD.getType());
         }
     }
