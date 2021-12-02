@@ -231,7 +231,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             String time = middlewareAlertsDTO.getAlertTime().divide(middlewareAlertsDTO.getAlertTimes(),0, BigDecimal.ROUND_DOWN).toString();
             middlewareAlertsDTO.setTime(time);
             //告警规则入库
-            addAlerts2Sql(clusterId,NameConstant.DEFAULT,NameConstant.MINIO,middlewareAlertsDTO);
+            addAlerts2Sql(clusterId,NameConstant.MONITORING,NameConstant.PROMETHEUS_K8S_RULES,middlewareAlertsDTO);
         });
     }
 
@@ -241,7 +241,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         wrapper.eq("alert",alert);
         middlewareAlertInfoMapper.delete(wrapper);
         // 获取cr
-        PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, NameConstant.DEFAULT, NameConstant.MINIO);
+        PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, NameConstant.MONITORING, NameConstant.PROMETHEUS_K8S_RULES);
         prometheusRule.getSpec().getGroups().forEach(prometheusRuleGroups -> {
             prometheusRuleGroups.getRules().removeIf(prometheusRules -> !StringUtils.isEmpty(prometheusRules.getAlert())
                     && prometheusRules.getAlert().equals(alert));
@@ -257,8 +257,8 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         int alertId = analysisID(middlewareAlertsDTO.getAlertId());
         middlewareAlertInfo.setAlertId(alertId);
         middlewareAlertInfo.setClusterId(clusterId);
-        middlewareAlertInfo.setNamespace(NameConstant.DEFAULT);
-        middlewareAlertInfo.setMiddlewareName(NameConstant.MINIO);
+        middlewareAlertInfo.setNamespace(NameConstant.MONITORING);
+        middlewareAlertInfo.setMiddlewareName(NameConstant.PROMETHEUS_K8S_RULES);
         middlewareAlertInfo.setAnnotations(JSONUtil.toJsonStr(middlewareAlertsDTO.getAnnotations()));
         middlewareAlertInfo.setLabels(JSONUtil.toJsonStr(middlewareAlertsDTO.getLabels()));
         QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
@@ -266,7 +266,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         MiddlewareAlertInfo info = middlewareAlertInfoMapper.selectOne(wrapper);
         middlewareAlertInfoMapper.updateById(middlewareAlertInfo);
         //获取cr
-        PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, NameConstant.DEFAULT, NameConstant.MINIO);
+        PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, NameConstant.MONITORING, NameConstant.PROMETHEUS_K8S_RULES);
 
         //不启用该规则时，判断该规则是否已写入prometheusRule
         if ("0".equals(middlewareAlertsDTO.getEnable()) && "0".equals(info.getEnable())) {
@@ -283,7 +283,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         }
 
         //组装prometheusRule
-        assemblePrometheusrule(clusterId,NameConstant.MINIO,middlewareAlertsDTO,"",prometheusRule);
+        assemblePrometheusrule(clusterId,NameConstant.PROMETHEUS_K8S_RULES,middlewareAlertsDTO,"",prometheusRule);
 
         prometheusRuleService.update(clusterId, prometheusRule);
     }
