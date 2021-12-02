@@ -40,6 +40,7 @@ import com.harmonycloud.zeus.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -91,6 +92,8 @@ public class OverviewServiceImpl implements OverviewService {
     private OperationAuditService operationAuditService;
     @Autowired
     private MiddlewareAlertInfoMapper middlewareAlertInfoMapper;
+    @Autowired
+    private MiddlewareAlertsServiceImpl middlewareAlertsService;
 
     @Value("${system.platform.version:v0.1.0}")
     private String version;
@@ -312,20 +315,53 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
     @Override
-    public PageInfo<AlertDTO> getAlertRecord(String clusterId, String namespace, Integer current, Integer size, String level) {
+    public PageInfo<AlertDTO> getAlertRecord(String clusterId, String namespace,
+                                             String middlewareName, Integer current,
+                                             Integer size, String level,
+                                             String keyword, String lay) {
         if (current != null && size != null) {
             PageHelper.startPage(current, size);
         }
         QueryWrapper<BeanAlertRecord> wrapper = new QueryWrapper<>();
-        if (StringUtils.isNotEmpty(clusterId) && StringUtils.isNotEmpty(namespace)) {
-            wrapper.eq("cluster_id", clusterId).eq("namespace", namespace);
-        } else {
+        if (StringUtils.isNotEmpty(lay)) {
+            wrapper.eq("lay",lay);
+            if ("system".equals(lay)) { //系统告警记录
+                wrapper.eq("cluster_id", clusterId).eq("namespace", NameConstant.DEFAULT).eq("name", NameConstant.MINIO);
+            }else { //服务告警记录
+                if (StringUtils.isNotEmpty(clusterId) && StringUtils.isNotEmpty(namespace) && StringUtils.isNotEmpty(middlewareName)) {
+                    wrapper.eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", middlewareName);
+                } else {
+                    wrapper.isNotNull("cluster_id").isNotNull("namespace").ne("cluster_id", "");
+                }
+            }
+        }else {
             wrapper.isNotNull("cluster_id").isNotNull("namespace").ne("cluster_id", "");
         }
+
         if (StringUtils.isNotEmpty(level)) {
             wrapper.eq("level", level);
         }
-        wrapper.last("order by id desc");
+
+        //根据ID查询
+        if (StringUtils.isNotEmpty(keyword)) {
+            String[] array = keyword.split("-");
+            if (array != null && array.length != 0) {
+                wrapper.eq("id",array[1]);
+            }
+        }
+        //最近24小时
+        if (StringUtils.isEmpty(clusterId)) {
+            Date date = new Date();
+            String end = DateFormatUtils.format(date, "yyyy-MM-dd HH:mm:ss");
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(date);
+            calendar.add(Calendar.DAY_OF_MONTH, -1);
+            String begin = DateFormatUtils.format(calendar.getTime(), "yyyy-MM-dd HH:mm:ss");
+
+            wrapper.ge("time",begin);
+            wrapper.le("time",end);
+        }
+        wrapper.orderByDesc("id");
         List<BeanAlertRecord> recordList = beanAlertRecordMapper.selectList(wrapper);
         PageInfo<AlertDTO> alertDTOPage = new PageInfo<>();
         BeanUtils.copyProperties(new PageInfo<>(recordList), alertDTOPage);
@@ -350,11 +386,21 @@ public class OverviewServiceImpl implements OverviewService {
                     alertDTO.setChartVersion(null);
                 }
             }
+
             //添加规则描述
             QueryWrapper<MiddlewareAlertInfo> queryWrapper = new QueryWrapper<>();
-            wrapper.eq("alert",record.getAlert());
+            queryWrapper.eq("alert",record.getAlert());
             MiddlewareAlertInfo alertInfo = middlewareAlertInfoMapper.selectOne(queryWrapper);
-            alertDTO.setExpr(alertInfo.getDescription()+alertInfo.getSymbol()+alertInfo.getThreshold()+"%");
+            if (alertInfo != null) {
+                //告警记录执行规则
+                alertDTO.setExpr(alertInfo.getDescription()+alertInfo.getSymbol()+alertInfo.getThreshold()+"%");
+                //告警记录ID
+                alertDTO.setAlertId(middlewareAlertsService.calculateID(alertInfo.getAlertId())
+                        + "-" + middlewareAlertsService.createId(record.getId()));
+                //告警内容
+                alertDTO.setContent(alertInfo.getContent());
+            }
+
             return alertDTO;
         }).collect(Collectors.toList()));
         alertDTOPage.getList().sort(

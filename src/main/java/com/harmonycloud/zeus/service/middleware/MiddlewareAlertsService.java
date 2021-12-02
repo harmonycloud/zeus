@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.middleware;
 
 import java.util.List;
 
+import com.github.pagehelper.PageInfo;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareAlertsDTO;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 
@@ -20,7 +21,7 @@ public interface MiddlewareAlertsService {
      * @param keyword 关键字
      * @return List<MiddlewareAlertsDTO>
      */
-    List<MiddlewareAlertsDTO> listUsedRules(String clusterId, String namespace, String middlewareName,String lay, String keyword) throws Exception;
+    PageInfo<MiddlewareAlertsDTO> listUsedRules(String clusterId, String namespace, String middlewareName, String lay, String keyword) throws Exception;
 
     /**
      * 获取可添加告警规则列表
@@ -82,5 +83,29 @@ public interface MiddlewareAlertsService {
      * @return List<BeanPrometheusRules>
      */
     void updateRules(String clusterId, String namespace, String middlewareName, MiddlewareAlertsDTO middlewareAlertsDTO) throws Exception;
+
+    /**
+     * 创建系统告警规则
+     *
+     * @param clusterId 集群id
+     * @param middlewareAlertsDTOList 中间件告警规则
+     */
+    void createSystemRule(String clusterId, List<MiddlewareAlertsDTO> middlewareAlertsDTOList);
+
+    /**
+     * 删除系统告警规则
+     *
+     * @param clusterId 集群id
+     * @param alertId 规则ID
+     */
+    void deleteSystemRules(String clusterId, String alertId);
+
+    /**
+     * 修改系统告警规则
+     *
+     * @param clusterId 集群id
+     * @param middlewareAlertsDTO 中间件告警规则
+     */
+    void updateSystemRules(String clusterId, MiddlewareAlertsDTO middlewareAlertsDTO);
 
 }

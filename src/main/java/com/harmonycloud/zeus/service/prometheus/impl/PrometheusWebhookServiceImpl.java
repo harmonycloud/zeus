@@ -88,7 +88,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             //中间件告警信息
             AlertInfoDto alertInfoDto = new AlertInfoDto();
             //告警指标
-            alertInfoDto.setClusterId(labels.getString("clusterId"));
+            alertInfoDto.setClusterId(labels.getOrDefault("clusterId", "").toString());
             //告警时间
             alertInfoDto.setAlertTime(date);
             //告警等级

@@ -94,6 +94,7 @@ public class PodServiceImpl implements PodService {
             setPodBackupStatus(clusterId, namespace, type, middlewareName, pi);
             podInfoList.add(pi);
         }
+        middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(clusterId, middleware.getNamespace(), middleware.getType(), middleware.getName()));
         middleware.setIsAllLvmStorage(isAllLvmStorage.get());
         middleware.setPodInfoGroup(convertListToGroup(podInfoList));
         middleware.setPods(podInfoList);

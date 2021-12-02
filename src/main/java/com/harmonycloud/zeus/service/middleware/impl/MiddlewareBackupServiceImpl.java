@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.harmonycloud.caas.common.enums.ErrorMessage.BACKUP_ALREADY_EXISTS;
 
@@ -73,7 +74,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             backupRecordList.forEach(item -> {
                 MiddlewareBackupStatus backupStatus = item.getStatus();
                 MiddlewareBackupRecord backupRecord = new MiddlewareBackupRecord();
-                setBackupPodName(middlewareName, item.getSpec().getBackupObjects(), backupRecord, podInfo);
+                setBackupSourceInfo(middlewareName, item.getSpec().getBackupObjects(), backupRecord, podInfo);
                 String backupTime = DateUtil.utc2Local(item.getMetadata().getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
                 backupRecord.setBackupTime(backupTime);
                 backupRecord.setBackupName(item.getMetadata().getName());
@@ -115,7 +116,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public BaseResult updateBackupSchedule(MiddlewareBackupDTO backupDTO) {
-        middlewareCRDService.getCRAndCheckRunning(convertBackupToMiddleware(backupDTO));
         if ("mysql".equals(backupDTO.getType())) {
             return mysqlAdapterService.updateBackupSchedule(backupDTO);
         }
@@ -436,7 +436,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if ("mysql".equals(type)) {
             return mysqlAdapterService.checkIfAlreadyBackup(clusterId, namespace, type, middlewareName);
         }
-        Map<String, String> labels = getMiddlewareBackupLabels(middlewareName, null, null);
+        Map<String, String> labels = getMiddlewareBackupLabels(getRealMiddlewareName(type, middlewareName), null, null);
         MiddlewareBackupScheduleList scheduleList = backupScheduleCRDService.list(clusterId, namespace, labels);
         if (scheduleList != null && !CollectionUtils.isEmpty(scheduleList.getItems())) {
             return true;
@@ -450,7 +450,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             return false;
         }
         List<String> pods = new ArrayList<>();
-        Map<String, String> labels = getMiddlewareBackupLabels(middlewareName, null, pods);
+        if (StringUtils.isNotBlank(podName)) {
+            pods.add(podName);
+        }
+        Map<String, String> labels = getMiddlewareBackupLabels(getRealMiddlewareName(type, middlewareName), null, pods);
         MiddlewareBackupScheduleList scheduleList = backupScheduleCRDService.list(clusterId, namespace, labels);
         if (!CollectionUtils.isEmpty(scheduleList.getItems())) {
             return true;
@@ -610,8 +613,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * @param backupRecord   备份记录
      * @return
      */
-    private void setBackupPodName(String middlewareName, List<BackupObject> backupObjects, MiddlewareBackupRecord backupRecord, Middleware middleware) {
-        List<PodInfo> pods = middleware.getPods();
+    private void setBackupSourceInfo(String middlewareName, List<BackupObject> backupObjects, MiddlewareBackupRecord backupRecord, Middleware middleware) {
+        List<PodInfo> pods = middleware.getPods().stream().filter(podInfo -> {
+            if (podInfo.getResources() != null && podInfo.getResources().getIsLvmStorage() != null && podInfo.getResources().getIsLvmStorage()) {
+                return true;
+            }
+            return false;
+        }).collect(Collectors.toList());
         List<String> podList = new ArrayList<>();
         pods.forEach(podInfo -> {
             podList.add(podInfo.getPodName());

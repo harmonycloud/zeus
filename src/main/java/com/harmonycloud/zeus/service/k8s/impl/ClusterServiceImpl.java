@@ -782,6 +782,7 @@ public class ClusterServiceImpl implements ClusterService {
         } catch (IOException e) {
             log.error("文件读取失败", e);
         }
+        MiddlewareClusterDTO cluster = new MiddlewareClusterDTO();
         try {
             // 获取admin.conf全部内容
             String certificate = YamlUtil.convertToString(filePath);
@@ -790,18 +791,17 @@ public class ClusterServiceImpl implements ClusterService {
             File file = new File(filePath);
             file.deleteOnExit();
 
-            MiddlewareClusterDTO cluster = new MiddlewareClusterDTO();
             ClusterCert clusterCert = new ClusterCert();
             clusterCert.setCertificate(certificate);
             cluster.setCert(clusterCert);
             cluster.setName(name);
             cluster.setNickname(name);
             setClusterAddressInfo(cluster, serverAddress);
-            addCluster(cluster);
         } catch (Exception e) {
             log.error("集群添加失败", e);
             throw new BusinessException(DictEnum.CLUSTER, name, ErrorMessage.ADD_FAIL);
         }
+        addCluster(cluster);
         return BaseResult.ok("集群添加成功");
     }
 

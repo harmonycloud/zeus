@@ -111,3 +111,5 @@ CREATE TABLE `cluster_ingress_components`  (
   `status` int(1) NULL COMMENT '状态',
   PRIMARY KEY (`id`)
 ) COMMENT = '集群ingress组件表';
+-- 修改告警规则表expr字段大小
+alter TABLE `alert_rule_id` MODIFY column expr varchar(256)

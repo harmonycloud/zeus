@@ -59,8 +59,8 @@ public class DingRobotServiceImpl implements DingRobotService {
         if (CollectionUtils.isEmpty(dings) || alertInfoDto == null) {
             return sendResult;
         }
-        TextMessage textMessage = new TextMessage(buildContent(alertInfoDto));
         try {
+            TextMessage textMessage = new TextMessage(buildContent(alertInfoDto));
             for (DingRobotInfo ding : dings) {
                 if ("0".equals(ding.getEnable())) {
                     continue;
