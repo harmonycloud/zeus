@@ -436,7 +436,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if ("mysql".equals(type)) {
             return mysqlAdapterService.checkIfAlreadyBackup(clusterId, namespace, type, middlewareName);
         }
-        Map<String, String> labels = getMiddlewareBackupLabels(middlewareName, null, null);
+        Map<String, String> labels = getMiddlewareBackupLabels(getRealMiddlewareName(type, middlewareName), null, null);
         MiddlewareBackupScheduleList scheduleList = backupScheduleCRDService.list(clusterId, namespace, labels);
         if (scheduleList != null && !CollectionUtils.isEmpty(scheduleList.getItems())) {
             return true;
