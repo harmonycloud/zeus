@@ -113,3 +113,7 @@ CREATE TABLE `cluster_ingress_components`  (
 ) COMMENT = '集群ingress组件表';
 -- 修改告警规则表expr字段大小
 alter TABLE `alert_rule_id` MODIFY column expr varchar(256)
+
+-- 2021.12.3 xutianhong
+-- resource_menu更新
+UPDATE `resource_menu` SET alias_name = "资源池" WHERE `name` = "resourcePoolManagement";
