@@ -239,10 +239,20 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         middlewareAlertInfoMapper.delete(wrapper);
         // 获取cr
         PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, NameConstant.MONITORING, NameConstant.PROMETHEUS_K8S_RULES);
-        prometheusRule.getSpec().getGroups().forEach(prometheusRuleGroups -> {
+        boolean status = false;
+        for (PrometheusRuleGroups prometheusRuleGroups : prometheusRule.getSpec().getGroups()) {
             prometheusRuleGroups.getRules().removeIf(prometheusRules -> !StringUtils.isEmpty(prometheusRules.getAlert())
                     && prometheusRules.getAlert().equals(alert));
-        });
+            if ("memory-used".equals(prometheusRuleGroups.getName()) && prometheusRuleGroups.getRules().size() == 0) {
+                status = true;
+            }
+        }
+        if (status) {
+            prometheusRule.getSpec().getGroups().removeIf(prometheusRuleGroups ->
+                    "memory-used".equals(prometheusRuleGroups.getName())
+            );
+        }
+
         prometheusRuleService.update(clusterId, prometheusRule);
     }
 
@@ -271,11 +281,22 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         }
         if ("0".equals(middlewareAlertsDTO.getEnable()) && "1".equals(info.getEnable())) {
             //从prometheusRule删除规则
-            prometheusRule.getSpec().getGroups().forEach(prometheusRuleGroups -> {
+            boolean status = false;
+            for (PrometheusRuleGroups prometheusRuleGroups : prometheusRule.getSpec().getGroups()) {
                 prometheusRuleGroups.getRules().removeIf(prometheusRules -> !StringUtils.isEmpty(prometheusRules.getAlert())
                         && prometheusRules.getAlert().equals(middlewareAlertsDTO.getAlert()));
-                prometheusRuleService.update(clusterId, prometheusRule);
-            });
+                //如果rules为0则把group也删了
+                if ("memory-used".equals(prometheusRuleGroups.getName()) && prometheusRuleGroups.getRules().size() == 0) {
+                    status = true;
+                }
+            }
+            //删除group
+            if (status) {
+                prometheusRule.getSpec().getGroups().removeIf(prometheusRuleGroups ->
+                        "memory-used".equals(prometheusRuleGroups.getName())
+                );
+            }
+            prometheusRuleService.update(clusterId, prometheusRule);
             return;
         }
 
