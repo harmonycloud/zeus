@@ -214,9 +214,6 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         middlewareAlertsDTOList.stream().forEach(middlewareAlertsDTO -> {
             //构建执行规则
             String expr = buildExpr(middlewareAlertsDTO);
-            //生成规则名称
-            String alert = middlewareAlertsDTO.getAlert() + "-" + UUIDUtils.get8UUID();
-            middlewareAlertsDTO.setAlert(alert);
             middlewareAlertsDTO.setExpr(expr);
             // 写入通道沉默时间
             middlewareAlertsDTO.getAnnotations().put("silence", middlewareAlertsDTO.getSilence());
@@ -356,22 +353,13 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
      * 组装PrometheusRules
      */
     public PrometheusRules convertPrometheusRules(MiddlewareAlertsDTO middlewareAlertsDTO, String status, String clusterId) {
-        String time = middlewareAlertsDTO.getAlertTime().divide(middlewareAlertsDTO.getAlertTimes(),0, BigDecimal.ROUND_DOWN).toString();
-        String alert = "";
-        if ("create".equals(status)) {
-            alert = middlewareAlertsDTO.getAlert() + "-" + UUIDUtils.get8UUID();
-            middlewareAlertsDTO.setAlert(alert);
-            QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
-            MiddlewareAlertInfo info = new MiddlewareAlertInfo();
-            BeanUtils.copyProperties(middlewareAlertsDTO,info);
-            middlewareAlertInfoMapper.update(info,wrapper);
-        }else {
-            alert = middlewareAlertsDTO.getAlert();
-        }
+        String time = String.valueOf(middlewareAlertsDTO.getAlertTime().divide(middlewareAlertsDTO.getAlertTimes(),0, BigDecimal.ROUND_DOWN));
+        time.replace("\"","");
+        middlewareAlertsDTO.setTime(time + "m");
 
         PrometheusRules prometheusRules =
-                new PrometheusRules().setAlert(alert)
-                        .setTime(time).setLabels(middlewareAlertsDTO.getLabels())
+                new PrometheusRules().setAlert(middlewareAlertsDTO.getAlert())
+                        .setTime(middlewareAlertsDTO.getTime()).setLabels(middlewareAlertsDTO.getLabels())
                         .setAnnotations(middlewareAlertsDTO.getAnnotations());
         // 替换{{``}}
         if (prometheusRules.getAnnotations().containsKey("summary")) {
