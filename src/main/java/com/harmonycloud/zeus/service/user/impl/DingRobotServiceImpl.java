@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.user.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.model.DingRobotDTO;
 import com.harmonycloud.caas.common.model.SendResult;
 import com.harmonycloud.caas.common.model.TextMessage;
@@ -237,14 +238,27 @@ public class DingRobotServiceImpl implements DingRobotService {
      * @return
      */
     private String buildContent(AlertInfoDto alertInfoDto) {
+        String level = "";
+        switch (alertInfoDto.getLevel()) {
+            case CommonConstant.INFO:
+                level = "一般";
+                break;
+            case CommonConstant.WARNING:
+                level = "重要";
+                break;
+            case CommonConstant.CRITICAL:
+                level = "严重";
+                break;
+        }
+        String time = DateFormatUtils.format(alertInfoDto.getAlertTime(), "yyyy-MM-dd HH:mm:ss");
         StringBuffer sb = new StringBuffer();
         sb.append("告警ID: " + alertInfoDto.getRuleID()).append(NEWLINE);
-        sb.append("告警等级: " + alertInfoDto.getLevel()).append(NEWLINE);
+        sb.append("告警等级: " + level).append(NEWLINE);
         sb.append("告警内容: " + alertInfoDto.getContent()).append(NEWLINE);
         sb.append("告警对象: " + alertInfoDto.getClusterId()).append(NEWLINE);
         sb.append("规则描述: " + alertInfoDto.getDescription()).append(NEWLINE);
         sb.append("实际监测: " + alertInfoDto.getMessage()).append(NEWLINE);
-        sb.append("告警时间: " + alertInfoDto.getAlertTime());
+        sb.append("告警时间: " + time);
 
         return sb.toString();
     }

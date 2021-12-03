@@ -326,7 +326,7 @@ public class OverviewServiceImpl implements OverviewService {
         if (StringUtils.isNotEmpty(lay)) {
             wrapper.eq("lay",lay);
             if ("system".equals(lay)) { //系统告警记录
-                wrapper.eq("cluster_id", clusterId).eq("namespace", NameConstant.DEFAULT).eq("name", NameConstant.MINIO);
+                wrapper.eq("cluster_id", clusterId).eq("namespace", NameConstant.MONITORING).eq("name", NameConstant.PROMETHEUS_K8S_RULES);
             }else { //服务告警记录
                 if (StringUtils.isNotEmpty(clusterId) && StringUtils.isNotEmpty(namespace) && StringUtils.isNotEmpty(middlewareName)) {
                     wrapper.eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", middlewareName);
