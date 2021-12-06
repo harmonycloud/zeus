@@ -61,7 +61,7 @@ CREATE TABLE `alert_rule_id` (
   `time` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '分钟周期',
   `type` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '中间件类型',
   `unit` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '单位',
-  `expr` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '执行规则',
+  `expr` varchar(256) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '执行规则',
   `description` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '监控项',
   `annotations` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '备注',
   `labels` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '标签',
@@ -74,7 +74,7 @@ CREATE TABLE `alert_rule_id` (
   `content` varchar(32) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '告警内容',
   `lay` varchar(12) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT 'system 系统告警 service 服务告警',
   PRIMARY KEY (`alert_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- ----------------------------
 -- Table structure for cluster_components
@@ -169,9 +169,10 @@ CREATE TABLE `ding_robot_info` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '自增ID',
   `webhook` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `secret_key` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '加签密钥',
+  `enable_ding` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '是否启用该钉钉机器人 1 启用 0 否',
   `creat_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- ----------------------------
 -- Table structure for k8s_default_cluster
@@ -209,7 +210,7 @@ CREATE TABLE `mail_info` (
   `mail_path` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '邮箱地址',
   `creat_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- ----------------------------
 -- Table structure for mail_to_user
@@ -224,7 +225,7 @@ CREATE TABLE `mail_to_user` (
   `phone` varchar(32) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '电话',
   `create_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- ----------------------------
 -- Table structure for middleware_info
@@ -304,7 +305,7 @@ CREATE TABLE `personal_config` (
   `update_time` timestamp NULL DEFAULT NULL COMMENT '修改时间',
   `status` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '是否默认',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- ----------------------------
 -- Table structure for resource_menu
@@ -335,13 +336,14 @@ INSERT INTO `resource_menu` VALUES (6, 'disasterBackup', '容灾备份', 'disast
 INSERT INTO `resource_menu` VALUES (7, 'systemManagement', '系统管理', 'systemManagement', 7, 'icon-shezhi01', 0, NULL);
 INSERT INTO `resource_menu` VALUES (8, 'dataMonitor', '数据监控', 'monitorAlarm/dataMonitor', 51, NULL, 5, NULL);
 INSERT INTO `resource_menu` VALUES (9, 'logDetail', '日志详情', 'monitorAlarm/logDetail', 52, NULL, 5, NULL);
-INSERT INTO `resource_menu` VALUES (10, 'alarmCenter', '告警中心', 'monitorAlarm/alarmCenter', 53, NULL, 5, NULL);
+INSERT INTO `resource_menu` VALUES (10, 'alarmCenter', '服务告警', 'monitorAlarm/alarmCenter', 53, NULL, 5, NULL);
 INSERT INTO `resource_menu` VALUES (11, 'disasterCenter', '灾备中心', 'disasterBackup/disasterCenter', 61, NULL, 6, NULL);
 INSERT INTO `resource_menu` VALUES (12, 'dataSecurity', '数据安全', 'disasterBackup/dataSecurity', 62, NULL, 6, NULL);
 INSERT INTO `resource_menu` VALUES (13, 'userManagement', '用户管理', 'systemManagement/userManagement', 71, NULL, 7, NULL);
 INSERT INTO `resource_menu` VALUES (14, 'roleManagement', '角色管理', 'systemManagement/roleManagement', 72, NULL, 7, NULL);
 INSERT INTO `resource_menu` VALUES (15, 'operationAudit', '操作审计', 'systemManagement/operationAudit', 73, NULL, 7, NULL);
-INSERT INTO `resource_menu` VALUES (16, 'resourcePoolManagement', '资源池管理', 'systemManagement/resourcePoolManagement', 74, NULL, 7, NULL);
+INSERT INTO `resource_menu` VALUES (16, 'resourcePoolManagement', '资源池', 'systemManagement/resourcePoolManagement', 74, NULL, 7, NULL);
+INSERT INTO `resource_menu` VALUES (17, 'systemAlarm', '系统告警', 'systemManagement/systemAlarm', 74, NULL, 7, NULL);
 COMMIT;
 
 -- ----------------------------
@@ -376,6 +378,7 @@ INSERT INTO `resource_menu_role` VALUES (13, 1, 13, 1);
 INSERT INTO `resource_menu_role` VALUES (14, 1, 14, 1);
 INSERT INTO `resource_menu_role` VALUES (15, 1, 15, 1);
 INSERT INTO `resource_menu_role` VALUES (16, 1, 16, 1);
+INSERT INTO `resource_menu_role` VALUES (17, 1, 17, 1);
 COMMIT;
 
 -- ----------------------------

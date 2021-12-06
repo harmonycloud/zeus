@@ -62,6 +62,7 @@ CREATE TABLE `ding_robot_info` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增ID',
   `webhook` varchar(128) COLLATE utf8_bin NOT NULL,
   `secret_key` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT '加签密钥',
+  `enable_ding` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '是否启用该钉钉机器人 1 启用 0 否',
   `creat_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
@@ -81,7 +82,7 @@ CREATE TABLE `alert_rule_id` (
   `time` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '分钟周期',
   `type` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '中间件类型',
   `unit` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT '单位',
-  `expr` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT '执行规则',
+  `expr` varchar(256) COLLATE utf8_bin DEFAULT NULL COMMENT '执行规则',
   `description` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT '监控项',
   `annotations` text COLLATE utf8_bin COMMENT '备注',
   `labels` text COLLATE utf8_bin COMMENT '标签',
@@ -97,10 +98,6 @@ CREATE TABLE `alert_rule_id` (
 ) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 -- 告警记录表添加lay
 ALTER TABLE `alert_record` ADD COLUMN lay varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '告警层面';
--- 2021.11.26
--- 钉钉表添加enable_ding
-ALTER TABLE `ding_robot_info` ADD COLUMN enable_ding varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '是否启用该钉钉机器人 1 启用 0 否'
-
 -- 2021.11.30 xutianhong
 -- 新增集群ingress组件表
 DROP TABLE IF EXISTS `cluster_ingress_components`;
@@ -111,9 +108,13 @@ CREATE TABLE `cluster_ingress_components`  (
   `status` int(1) NULL COMMENT '状态',
   PRIMARY KEY (`id`)
 ) COMMENT = '集群ingress组件表';
--- 修改告警规则表expr字段大小
-alter TABLE `alert_rule_id` MODIFY column expr varchar(256)
 
 -- 2021.12.3 xutianhong
 -- resource_menu更新
 UPDATE `resource_menu` SET alias_name = "资源池" WHERE `name` = "resourcePoolManagement";
+-- 2021.12.6 yushuaikang
+INSERT INTO `resource_menu` VALUES (17, 'systemAlarm', '系统告警', 'systemManagement/systemAlarm', 74, NULL, 7, NULL);
+UPDATE `resource_menu` SET alias_name = "服务告警" WHERE `name` = "alarmCenter";
+INSERT INTO `resource_menu_role` VALUES (17, 1, 17, 1);
+
+
