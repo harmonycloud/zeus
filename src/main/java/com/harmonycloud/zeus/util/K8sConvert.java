@@ -1,9 +1,6 @@
 package com.harmonycloud.zeus.util;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONArray;
@@ -243,7 +240,7 @@ public class K8sConvert {
         return JSON.parseObject(na);
     }
 
-    public static JSONArray convertToleration2Json(List<String> tolerationList){
+    public static JSONArray convertToleration2Json(Set<String> tolerationList){
         JSONArray jsonArray = new JSONArray();
         tolerationList.forEach(tolerationStr ->{
             Toleration toleration = convertToleration(tolerationStr);
