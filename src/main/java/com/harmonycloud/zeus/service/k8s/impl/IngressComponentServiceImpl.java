@@ -143,6 +143,9 @@ public class IngressComponentServiceImpl implements IngressComponentService {
         List<BeanIngressComponents> ingressComponentsList = beanIngressComponentsMapper.selectList(wrapper);
 
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+        if (CollectionUtils.isEmpty(cluster.getIngressList())){
+            return new ArrayList<>();
+        }
         //数据同步
         if (cluster.getIngressList().size() > ingressComponentsList.size()){
             synchronization(cluster, ingressComponentsList);
