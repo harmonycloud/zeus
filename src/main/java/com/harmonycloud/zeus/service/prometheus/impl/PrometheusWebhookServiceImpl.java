@@ -47,7 +47,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
     private MiddlewareAlertInfoMapper middlewareAlertInfoMapper;
     @Autowired
     private MiddlewareAlertsServiceImpl middlewareAlertsServiceImpl;
-
+    @Autowired
     private AlertManagerWrapper alertManagerWrapper;
 
     @Override

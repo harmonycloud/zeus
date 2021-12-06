@@ -102,7 +102,7 @@ public class IngressComponentServiceImpl implements IngressComponentService {
         ingress.setIngressClassName(ingressComponentDto.getIngressClassName())
             .setAddress(ingressComponentDto.getAddress()).setTcp(new MiddlewareClusterIngress.IngressConfig());
         ingress.getTcp().setNamespace(ingressComponentDto.getNamespace())
-            .setConfigMapName(ingressComponentDto.getConfigMapName());
+            .setConfigMapName(ingressComponentDto.getConfigMapName()).setEnabled(true);
 
         existCluster.getIngressList().add(ingress);
         clusterService.update(existCluster);
