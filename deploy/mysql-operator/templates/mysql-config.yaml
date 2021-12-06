@@ -59,7 +59,7 @@ data:
     local_infile                    ={{ .Values.args.local_infile | default "OFF" }}
     event_scheduler                 ={{ .Values.args.event_scheduler | default "OFF" }}
     lc_messages                     ={{ .Values.args.lc_messages | default "en_US" }}
-    lc_messages_dir                 =/usr/local/mysql/share
+    #lc_messages_dir                 =/usr/local/mysql/share
     init_connect                    ="set names {{ .Values.args.character_set_server }}"
     #init_file                       =/data/mysql/DBNAME/conf/init_file.sql
     #init_slave
@@ -180,6 +180,8 @@ data:
     innodb_sort_buffer_size             ={{ .Values.args.innodb_sort_buffer_size | default "64M" }}
     innodb_print_all_deadlocks          ={{ .Values.args.innodb_print_all_deadlocks | default 1 }}
     innodb_rollback_on_timeout          ={{ .Values.args.innodb_rollback_on_timeout | default "ON" }}
+    innodb_adaptive_hash_index          ={{ .Values.args.innodb_adaptive_hash_index | default "ON" }}
+    performance_schema_max_table_instances ={{ .Values.args.performance_schema_max_table_instances | default -1 }}
 kind: ConfigMap
 metadata:
   name: {{ include "mysql.fullname" . }}-config
