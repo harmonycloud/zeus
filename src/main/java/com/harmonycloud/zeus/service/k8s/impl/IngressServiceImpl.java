@@ -290,8 +290,7 @@ public class IngressServiceImpl implements IngressService {
                         || !svc.getMetadata().getLabels().containsKey(MIDDLEWARE_NAME)) {
                         return;
                     }
-                    //todo 这个address该怎么获得
-                    IngressDTO dto = dealNodePortRoutine(clusterId, namespace, cluster.getIngressList().get(0).getAddress(), svc);
+                    IngressDTO dto = dealNodePortRoutine(clusterId, namespace, cluster.getHost(), svc);
                     if (dto != null) {
                         resList.add(dto);
                     }
@@ -309,7 +308,7 @@ public class IngressServiceImpl implements IngressService {
                         IngressDTO tcpDto = getTcpRoutineDetail(clusterId, namespace, crd, svc, tcpRoutineMap);
                         if (tcpDto != null) {
                             resList.add(tcpDto.setMiddlewareType(type).setMiddlewareNickName(detail.getAliasName())
-                                .setIngressClassName(ingress.getIngressClassName()));
+                                .setIngressClassName(ingress.getIngressClassName()).setExposeIP(ingress.getAddress()));
                         }
                     });
                 }
@@ -468,8 +467,8 @@ public class IngressServiceImpl implements IngressService {
         }
 
         MiddlewareClusterDTO middlewareCluster = clusterService.findById(clusterId);
-        //todo address怎么得打
-        String exposeIP = middlewareCluster.getIngressList().get(0).getAddress();
+        
+        String exposeIP = middlewareCluster.getHost();
         for (io.fabric8.kubernetes.api.model.Service service : serviceList) {
             IngressDTO ingressDTO = dealNodePortRoutine(clusterId, namespace, exposeIP, service);
             if (ingressDTO == null) {
@@ -566,8 +565,6 @@ public class IngressServiceImpl implements IngressService {
                 .setClusterNickname(middlewareClusterDTO.getNickname())
                 .setName(getIngressTcpName(svcDtoList.get(0).getServiceName(), namespace))
                 .setNamespace(namespace)
-                //todo address 怎么拿
-                .setExposeIP(middlewareClusterDTO.getIngressList().get(0).getAddress())
                 .setExposeType(MIDDLEWARE_EXPOSE_INGRESS)
                 .setProtocol(Protocol.TCP.getValue())
                 .setServiceList(svcDtoList);
@@ -724,8 +721,7 @@ public class IngressServiceImpl implements IngressService {
             ingressDTO.setServiceList(list);
             ingressDTO.setProtocol(Protocol.TCP.getValue());
             ingressDTO.setName(getIngressTcpName(serviceNames[1], serviceNames[0]));
-            //todo address怎么取
-            ingressDTO.setExposeIP(middlewareCluster.getIngressList().get(0).getAddress());
+            ingressDTO.setExposeIP(middlewareCluster.getHost());
             ingressDTO.setExposeType(MIDDLEWARE_EXPOSE_INGRESS);
             Map<String,String> stringStringMap = mapHashMap.get(serviceNames[1]);
             if (stringStringMap != null) {
@@ -838,9 +834,9 @@ public class IngressServiceImpl implements IngressService {
     private String getIngressTcpNamespace(MiddlewareClusterDTO cluster, String ingressClassName) {
         List<MiddlewareClusterIngress> ingressList = cluster.getIngressList().stream()
             .filter(ingress -> ingress.getIngressClassName().equals(ingressClassName)).collect(Collectors.toList());
-        return CollectionUtils.isEmpty(ingressList) || StringUtils.isNotEmpty(ingressClassName)
-            || ingressList.get(0).getTcp() == null || StringUtils.isBlank(ingressList.get(0).getTcp().getNamespace())
-                ? KUBE_SYSTEM : ingressList.get(0).getTcp().getNamespace();
+        return CollectionUtils.isEmpty(ingressList) || ingressList.get(0).getTcp() == null
+            || StringUtils.isBlank(ingressList.get(0).getTcp().getNamespace()) ? KUBE_SYSTEM
+                : ingressList.get(0).getTcp().getNamespace();
     }
 
     /**

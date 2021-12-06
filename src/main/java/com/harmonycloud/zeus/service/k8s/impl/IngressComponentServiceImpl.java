@@ -83,6 +83,7 @@ public class IngressComponentServiceImpl implements IngressComponentService {
                 .anyMatch(ingress -> ingress.getIngressClassName().equals(cluster.getIngressList().get(0).getIngressClassName()))) {
             throw new BusinessException(ErrorMessage.EXIST);
         }
+        cluster.getIngressList().get(0).getTcp().setEnabled(true);
         existCluster.getIngressList().addAll(cluster.getIngressList());
         clusterService.update(existCluster);
     }
