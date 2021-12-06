@@ -259,6 +259,11 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             sb.append(String.format("%s=%s,", MysqlConstant.SPEC_TYPE, mysqlDTO.getType()));
         }
 
+        // 备注
+        if (StringUtils.isNotBlank(middleware.getDescription())) {
+            sb.append("middleware-desc=").append(middleware.getDescription()).append(",");
+        }
+
         // 没有修改，直接返回
         if (sb.length() == 0) {
             return;
