@@ -130,9 +130,6 @@ public class IngressComponentServiceImpl implements IngressComponentService {
             }
         });
         clusterService.update(cluster);
-        //更新数据库
-        beanIngressComponents.setName(ingressComponentDto.getIngressClassName());
-        beanIngressComponentsMapper.updateById(beanIngressComponents);
     }
 
     @Override
