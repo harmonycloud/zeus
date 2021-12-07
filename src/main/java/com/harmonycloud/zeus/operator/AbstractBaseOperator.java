@@ -10,7 +10,15 @@ import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import cn.hutool.json.JSON;
+import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
+import com.harmonycloud.zeus.bean.BeanAlertRule;
+import com.harmonycloud.zeus.bean.MiddlewareAlertInfo;
+import com.harmonycloud.zeus.dao.BeanAlertRuleMapper;
+import com.harmonycloud.zeus.dao.MiddlewareAlertInfoMapper;
+import com.harmonycloud.zeus.integration.cluster.bean.prometheus.PrometheusRuleGroups;
 import com.harmonycloud.zeus.service.aspect.AspectService;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
@@ -90,6 +98,10 @@ public abstract class AbstractBaseOperator {
     private AspectService aspectService;
     @Autowired
     private GrafanaService grafanaService;
+    @Autowired
+    private BeanAlertRuleMapper beanAlertRuleMapper;
+    @Autowired
+    private MiddlewareAlertInfoMapper middlewareAlertInfoMapper;
     /**
      * 是否支持该中间件
      */
@@ -157,6 +169,7 @@ public abstract class AbstractBaseOperator {
         }
         //5. 修改prometheusRules添加集群
         updateAlerts(middleware);
+        add2sql(middleware);
     }
 
 
@@ -879,5 +892,36 @@ public abstract class AbstractBaseOperator {
             return true;
         }
         return false;
+    }
+
+    /**
+     *发布服务时,告警规则入库
+     */
+    private void add2sql(Middleware middleware){
+        QueryWrapper<BeanAlertRule> wrapper = new QueryWrapper<>();
+        wrapper.eq("chart_name",middleware.getType()).eq("chart_version",middleware.getChartVersion());
+        BeanAlertRule beanAlertRule = beanAlertRuleMapper.selectOne(wrapper);
+        JSONObject jsonObject = JSONObject.parseObject(beanAlertRule.getAlert());
+        PrometheusRule prometheusRule = JSONObject.toJavaObject(jsonObject,PrometheusRule.class);
+        for (PrometheusRuleGroups prometheusRuleGroups : prometheusRule.getSpec().getGroups()) {
+            if (prometheusRuleGroups.getRules().size() == 0 || prometheusRuleGroups.getRules() == null) {
+                return;
+            }
+            prometheusRuleGroups.getRules().stream().forEach(rule -> {
+                MiddlewareAlertInfo middlewareAlertInfo = new MiddlewareAlertInfo();
+                middlewareAlertInfo.setAlert(rule.getAlert());
+                middlewareAlertInfo.setExpr(rule.getExpr());
+                middlewareAlertInfo.setTime(rule.getTime());
+                middlewareAlertInfo.setLabels(JSONUtil.toJsonStr(rule.getLabels()));
+                middlewareAlertInfo.setAnnotations(JSONUtil.toJsonStr(rule.getAnnotations()));
+                middlewareAlertInfo.setEnable("1");
+                middlewareAlertInfo.setLay("service");
+                middlewareAlertInfo.setClusterId(middleware.getClusterId());
+                middlewareAlertInfo.setNamespace(middleware.getNamespace());
+                middlewareAlertInfo.setMiddlewareName(middleware.getName());
+                middlewareAlertInfo.setName(middleware.getClusterId());
+                middlewareAlertInfoMapper.insert(middlewareAlertInfo);
+            });
+        }
     }
 }
