@@ -79,7 +79,11 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
             wrapper.eq("alert",labels.getString("alertname"));
             MiddlewareAlertInfo alertInfo = middlewareAlertInfoMapper.selectOne(wrapper);
-            beanAlertRecord.setLay(alertInfo.getLay());
+            if (alertInfo == null) {
+                beanAlertRecord.setLay("service");
+            } else {
+                beanAlertRecord.setLay(alertInfo.getLay());
+            }
             beanAlertRecordMapper.insert(beanAlertRecord);
             // 设置通道沉默时间
             if (annotations.containsKey("silence") && StringUtils.isNotEmpty(clusterId)) {

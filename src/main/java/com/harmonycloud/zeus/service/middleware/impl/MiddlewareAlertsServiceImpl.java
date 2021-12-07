@@ -225,6 +225,8 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             middlewareAlertsDTO.getAnnotations().put("name", "memory-used");
             // 写入集群
             middlewareAlertsDTO.getLabels().put("clusterId", clusterId);
+            middlewareAlertsDTO.getLabels().put("namespace",NameConstant.MONITORING);
+            middlewareAlertsDTO.getLabels().put("service",NameConstant.PROMETHEUS_K8S_RULES);
             String time = middlewareAlertsDTO.getAlertTime().divide(middlewareAlertsDTO.getAlertTimes(),0, BigDecimal.ROUND_DOWN).toString();
             middlewareAlertsDTO.setTime(time);
             //告警规则入库
@@ -374,7 +376,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
      * 组装PrometheusRules
      */
     public PrometheusRules convertPrometheusRules(MiddlewareAlertsDTO middlewareAlertsDTO, String status, String clusterId) {
-        String time = String.valueOf(middlewareAlertsDTO.getAlertTime().divide(middlewareAlertsDTO.getAlertTimes(),0, BigDecimal.ROUND_DOWN));
+        String time = String.valueOf(middlewareAlertsDTO.getAlertTime().divide(middlewareAlertsDTO.getAlertTimes(),0, BigDecimal.ROUND_UP));
         time.replace("\"","");
         middlewareAlertsDTO.setTime(time + "m");
 

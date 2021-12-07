@@ -180,6 +180,7 @@ public abstract class AbstractBaseOperator {
         middlewareBackupService.deleteMiddlewareBackupInfo(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
         // helm卸载需要放到最后，要不然一些资源的查询会404
         helmChartService.uninstall(middleware, clusterService.findByIdAndCheckRegistry(middleware.getClusterId()));
+        removeSql(middleware);
     }
 
     public void upgradeChart(Middleware middleware, JSONObject currentValues, JSONObject upgradeValues, String upgradeChartVersion, MiddlewareClusterDTO cluster) {
@@ -920,8 +921,20 @@ public abstract class AbstractBaseOperator {
                 middlewareAlertInfo.setNamespace(middleware.getNamespace());
                 middlewareAlertInfo.setMiddlewareName(middleware.getName());
                 middlewareAlertInfo.setName(middleware.getClusterId());
+                middlewareAlertInfo.setCreateTime(new Date());
+                middlewareAlertInfo.setType(middleware.getType());
                 middlewareAlertInfoMapper.insert(middlewareAlertInfo);
             });
         }
+    }
+
+    /**
+     * 删除中间件时把对应的规则也删除掉
+     * @param middleware
+     */
+    public void removeSql(Middleware middleware) {
+        QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
+        wrapper.eq("cluster_id",middleware.getClusterId()).eq("namespace",middleware.getNamespace()).eq("middleware_name",middleware.getName());
+        middlewareAlertInfoMapper.delete(wrapper);
     }
 }
