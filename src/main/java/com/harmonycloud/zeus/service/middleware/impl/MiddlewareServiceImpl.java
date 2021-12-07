@@ -652,4 +652,19 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         }
     }
 
+    /**
+     * 检查是否跨大版本升级
+     * @param currentVersion 当前中间件chart版本
+     * @param upgradeVersion 升级chart版本
+     * @return
+     */
+    private static boolean isOverBigVersion(String currentVersion, String upgradeVersion) {
+        String current = currentVersion.split("\\.")[0];
+        String upgrade = upgradeVersion.split("\\.")[0];
+        if (!current.equals(upgrade)) {
+            return false;
+        }
+        return true;
+    }
+
 }
