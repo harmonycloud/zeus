@@ -117,8 +117,10 @@ INSERT INTO `resource_menu` VALUES (17, 'systemAlarm', '系统告警', 'systemMa
 UPDATE `resource_menu` SET alias_name = "服务告警" WHERE `name` = "alarmCenter";
 INSERT INTO `resource_menu_role` VALUES (17, 1, 17, 1);
 -- 2021.12.7 yushuaikang
-ALTER TABLE `personal_config` MODIFY title VARCHAR(64)
-ALTER TABLE `alert_rule_id` MODIFY name VARCHAR(64)
+ALTER TABLE `personal_config`
+MODIFY COLUMN `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin NULL DEFAULT NULL COMMENT '浏览器标题' AFTER `copyright_notice`;
+ALTER TABLE `alert_rule_id`
+MODIFY COLUMN `name` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin NULL DEFAULT NULL AFTER `alert`;
 
 
 
