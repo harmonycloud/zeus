@@ -122,6 +122,10 @@ MODIFY COLUMN `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin NULL DEFAU
 ALTER TABLE `alert_rule_id`
 MODIFY COLUMN `name` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin NULL DEFAULT NULL AFTER `alert`;
 
+-- 2021.12.7 xutianhong
+-- 增加middleware_info version字段长度
+ALTER TABLE `middleware_info`
+MODIFY COLUMN `version` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '版本' AFTER `type`;
 
 
 
