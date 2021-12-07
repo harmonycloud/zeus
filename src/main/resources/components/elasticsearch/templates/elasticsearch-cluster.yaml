@@ -6,12 +6,10 @@ metadata:
     developerPass: es
   name: {{ include "elasticsearch.fullname" . }}
 spec:
-  checkHealthConfigMap: {{ include "elasticsearch.fullname" . }}-checkhealth-config
   clusterMode: {{ .Values.cluster.mode }}
-  elasticBusyImage: {{ .Values.image.repository }}/busybox:{{ .Values.image.busyImageTag }}
+  checkHealthConfigMap: {{ include "elasticsearch.fullname" . }}-checkhealth-config
   elasticKibanaConfigMap: {{ include "elasticsearch.fullname" . }}-kibana-config
   elasticSearchConfigMap: {{ include "elasticsearch.fullname" . }}-es-config
-  elasticSearchNoBoxTypeConfigMap: {{ include "elasticsearch.fullname" . }}-es-no-boxtype-config
   esExporterPort: 19114
   esHttpPort: 9200
   esKibanaPort: 5200
@@ -24,7 +22,12 @@ spec:
   nodeSelector:
     {{- toYaml . | nindent 4 }}
   {{- end }}
+{{- if eq .Values.version "7.10" }}
+  kibanaImage: {{ .Values.image.repository }}/kibana:{{ .Values.image.kibanaImageTag_7 }}
+{{- else }}
   kibanaImage: {{ .Values.image.repository }}/kibana:{{ .Values.image.kibanaImageTag }}
+{{- end }}
+  elasticBusyImage: {{ .Values.image.repository }}/busybox:{{ .Values.image.busyImageTag }}
   masterReplaces: {{ .Values.cluster.masterReplacesCount }}
   dataReplaces: {{ .Values.cluster.dataReplacesCount }}
   clientReplaces: {{ .Values.cluster.clientReplacesCount }}
@@ -62,7 +65,11 @@ spec:
     jvm:
     {{- toYaml .| nindent 6 }}
     {{- end }}
+  {{- if eq .Values.version "7.10" }}
+    middlewareImage: {{ .Values.image.repository }}/elastic:{{ .Values.image.elasticImageTag_7 }}
+  {{- else }}
     middlewareImage: {{ .Values.image.repository }}/elastic:{{ .Values.image.elasticImageTag }}
+  {{- end }}
     monitorImage: {{ .Values.image.repository }}/es-exporter:{{ .Values.image.exporterImageTag }}
     hostNetwork: {{ default false .Values.hostNetwork }}
     resources:
@@ -72,7 +79,74 @@ spec:
   repository: {{ .Values.image.repository }}
   type: {{ .Values.cluster.mode }}
   updateStrategy: {}
+{{- if eq .Values.version "7.10" }}
+  version: 7.10.1
+{{- else }}
   version: 6.8.10
+{{- end }}
+  statefulset:
+    spec:
+      updateStrategy:
+        type: RollingUpdate
+      template:
+        metadata:
+          {{- with .Values.annotations }}
+          annotations:
+          {{- toYaml . | nindent 13 }}
+          {{- end }}
+          {{- with .Values.labels }}
+          labels:
+          {{- toYaml . | nindent 13 }}
+          {{- end }}
+        spec:
+        {{- with .Values.statefulSetConfiguration }}
+        {{- toYaml . | nindent 11 }}
+        {{- end }}
+        {{- with .Values.tolerations }}
+          tolerations:
+        {{- toYaml . | nindent 13 }}
+        {{- end }}
+  deploymentComponent:
+    kibana:
+      spec:
+        template:
+          metadata:
+            {{- with .Values.annotations }}
+            annotations:
+            {{- toYaml . | nindent 15 }}
+            {{- end }}
+            {{- with .Values.labels }}
+            labels:
+            {{- toYaml . | nindent 15 }}
+            {{- end }}
+          spec:
+          {{- with .Values.deploymentConfiguration }}
+          {{- toYaml . | nindent 13 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+            tolerations:
+          {{- toYaml . | nindent 15 }}
+          {{- end }}
+    exporter:
+      spec:
+        template:
+          metadata:
+            {{- with .Values.annotations }}
+            annotations:
+            {{- toYaml . | nindent 15 }}
+            {{- end }}
+            {{- with .Values.labels }}
+            labels:
+            {{- toYaml . | nindent 15 }}
+            {{- end }}
+          spec:
+          {{- with .Values.deploymentConfiguration }}
+          {{- toYaml . | nindent 13 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+            tolerations:
+          {{- toYaml . | nindent 15 }}
+          {{- end }}
   volumeClaimTemplates:
   - metadata:
       creationTimestamp: null
