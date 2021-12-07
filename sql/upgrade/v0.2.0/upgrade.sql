@@ -116,5 +116,10 @@ UPDATE `resource_menu` SET alias_name = "资源池" WHERE `name` = "resourcePool
 INSERT INTO `resource_menu` VALUES (17, 'systemAlarm', '系统告警', 'systemManagement/systemAlarm', 74, NULL, 7, NULL);
 UPDATE `resource_menu` SET alias_name = "服务告警" WHERE `name` = "alarmCenter";
 INSERT INTO `resource_menu_role` VALUES (17, 1, 17, 1);
+-- 2021.12.7 yushuaikang
+ALTER TABLE `personal_config` MODIFY title VARCHAR(64)
+ALTER TABLE `alert_rule_id` MODIFY name VARCHAR(64)
+
+
 
 
