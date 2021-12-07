@@ -407,7 +407,7 @@ public abstract class AbstractBaseOperator {
             // toleration
             if (values.getString("tolerationAry") != null) {
                 String tolerationAry = values.getString("tolerationAry");
-                middleware.setTolerations(Arrays.asList(tolerationAry.split(",")));
+                middleware.setTolerations(new HashSet<>(Arrays.asList(tolerationAry.split(","))));
             }
             // 设置服务备份状态
             middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(middleware.getClusterId(),middleware.getNamespace(),middleware.getType(),middleware.getName()));
