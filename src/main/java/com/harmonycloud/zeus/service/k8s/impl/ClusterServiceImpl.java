@@ -552,13 +552,19 @@ public class ClusterServiceImpl implements ClusterService {
     @Override
     public List<MiddlewareResourceInfo> getMwResource(String clusterId) throws Exception {
         // 获取集群下所有中间件信息
-        List<MiddlewareCRD> mwCrDList = middlewareCRDService.listCR(clusterId, null, null);
+        List<MiddlewareCRD> mwCrdList = middlewareCRDService.listCR(clusterId, null, null);
+        // 过滤未注册的分区
+        List<Namespace> namespaceList = namespaceService.list(clusterId);
+        mwCrdList = mwCrdList.stream()
+            .filter(
+                mwCrd -> namespaceList.stream().anyMatch(ns -> ns.getName().equals(mwCrd.getMetadata().getNamespace())))
+            .collect(Collectors.toList());
         // 获取中间件图片路径
         List<MiddlewareInfoDTO> middlewareInfoDTOList = middlewareInfoService.list(clusterId);
         Map<String, String> imagePathMap = middlewareInfoDTOList.stream().collect(Collectors.toMap(MiddlewareInfoDTO::getChartName, MiddlewareInfoDTO::getImagePath));
         List<MiddlewareResourceInfo> mwResourceInfoList = new ArrayList<>();
-        final CountDownLatch clusterCountDownLatch = new CountDownLatch(mwCrDList.size());
-        mwCrDList.forEach(mwCrd -> ThreadPoolExecutorFactory.executor.execute(() -> {
+        final CountDownLatch clusterCountDownLatch = new CountDownLatch(mwCrdList.size());
+        mwCrdList.forEach(mwCrd -> ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
                 Middleware middleware = middlewareService.detail(clusterId, mwCrd.getMetadata().getNamespace(),
                     mwCrd.getSpec().getName(), MiddlewareTypeEnum.findTypeByCrdType(mwCrd.getSpec().getType()));
