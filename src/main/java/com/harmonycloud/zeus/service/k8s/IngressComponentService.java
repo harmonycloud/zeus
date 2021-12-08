@@ -21,14 +21,14 @@ public interface IngressComponentService {
     /**
      * 接入集群ingress组件
      *
-     * @param cluster cluster信息
+     * @param ingressComponentDto ingress组件对象
      */
     void integrate(IngressComponentDto ingressComponentDto);
 
     /**
      * 更新集群ingress组件信息
      *
-     * @param cluster cluster信息
+     * @param ingressComponentDto ingress组件对象
      */
     void update(IngressComponentDto ingressComponentDto);
 
@@ -46,5 +46,12 @@ public interface IngressComponentService {
      * @param ingressClassName 名称
      */
     void delete(String clusterId, String ingressClassName);
+
+    /**
+     * 删除集群绑定关系
+     *
+     * @param clusterId 集群id
+     */
+    void delete(String clusterId);
 
 }

@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.components;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.bean.BeanClusterComponents;
@@ -38,11 +39,11 @@ public abstract class AbstractBaseOperator {
     @Autowired
     protected BeanClusterComponentsMapper beanClusterComponentsMapper;
 
-    public void deploy(MiddlewareClusterDTO cluster, String type){
+    public void deploy(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto){
         //获取仓库地址
         String repository = getRepository(cluster);
         //拼接参数
-        String setValues = getValues(repository, cluster, type);
+        String setValues = getValues(repository, cluster, clusterComponentsDto);
         //发布组件
         install(setValues,cluster);
         //更新middlewareCluster
@@ -84,7 +85,7 @@ public abstract class AbstractBaseOperator {
      * @param cluster 集群对象
      * @return String
      */
-    protected abstract String getValues(String repository, MiddlewareClusterDTO cluster, String type);
+    protected abstract String getValues(String repository, MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto);
 
     /**
      * 发布组件

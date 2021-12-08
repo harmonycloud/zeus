@@ -1,10 +1,7 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.model.middleware.Middleware;
@@ -171,7 +168,8 @@ public class IngressComponentServiceImpl implements IngressComponentService {
                 .setIngressClassName(ingress.getIngressClassName()).setNamespace(ingress.getTcp().getNamespace())
                 .setConfigMapName(ingress.getTcp().getConfigMapName()).setClusterId(clusterId)
                 .setStatus(ingressComponentsMap.get(ingress.getIngressClassName()).getStatus())
-                .setId(ingressComponentsMap.get(ingress.getIngressClassName()).getId()))
+                .setId(ingressComponentsMap.get(ingress.getIngressClassName()).getId())
+                .setCreateTime(ingressComponentsMap.get(ingress.getIngressClassName()).getCreateTime()))
             .collect(Collectors.toList());
     }
 
@@ -194,11 +192,18 @@ public class IngressComponentServiceImpl implements IngressComponentService {
         beanIngressComponentsMapper.deleteById(existIngress.getId());
     }
 
+    @Override
+    public void delete(String clusterId) {
+        QueryWrapper<BeanIngressComponents> wrapper = new QueryWrapper<BeanIngressComponents>().eq("cluster_id", clusterId);
+        beanIngressComponentsMapper.delete(wrapper);
+    }
+
     public void insert(String clusterId, String name, Integer status) {
         BeanIngressComponents beanIngressComponents = new BeanIngressComponents();
         beanIngressComponents.setClusterId(clusterId);
         beanIngressComponents.setName(name);
         beanIngressComponents.setStatus(status);
+        beanIngressComponents.setCreateTime(new Date());
         beanIngressComponentsMapper.insert(beanIngressComponents);
     }
 

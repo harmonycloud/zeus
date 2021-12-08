@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.components.impl;
 
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
+import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.annotation.Operator;
@@ -31,10 +32,10 @@ public class MiddlewareControllerServiceImpl extends AbstractBaseOperator implem
     }
     
     @Override
-    protected String getValues(String repository, MiddlewareClusterDTO cluster, String type) {
+    protected String getValues(String repository, MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
         String setValues = "global.repository=" + cluster.getRegistry().getRegistryAddress() + "/"
             + cluster.getRegistry().getChartRepo();
-        if (SIMPLE.equals(type)) {
+        if (SIMPLE.equals(clusterComponentsDto.getType())) {
             setValues = setValues + ",global.middleware_controller.replicas=1";
         } else {
             setValues = setValues + ",global.middleware_controller.replicas=3";
