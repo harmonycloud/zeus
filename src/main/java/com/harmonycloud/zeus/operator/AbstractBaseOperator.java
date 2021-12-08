@@ -272,7 +272,7 @@ public abstract class AbstractBaseOperator {
         if (!CollectionUtils.isEmpty(helm.getDependency())){
             alias = helm.getDependency().get("alias");
         }else {
-            alias = mwInfo.getChartName() + "-operator";
+            alias = middleware.getName();
         }
         List<HelmListInfo> helmInfos =
             helmChartService.listHelm("", alias, clusterService.findById(middleware.getClusterId()));
