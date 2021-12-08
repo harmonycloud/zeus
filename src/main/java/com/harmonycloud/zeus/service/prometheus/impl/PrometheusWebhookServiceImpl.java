@@ -89,10 +89,13 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             if (annotations.containsKey("silence") && StringUtils.isNotEmpty(clusterId)) {
                 setSilence(alert, clusterId);
             }
+            if (alertInfo == null) {
+                return;
+            }
             //中间件告警信息
             AlertInfoDto alertInfoDto = new AlertInfoDto();
             //告警指标
-            alertInfoDto.setClusterId(labels.getOrDefault("clusterId", "").toString());
+            alertInfoDto.setClusterId(clusterId);
             //告警时间
             alertInfoDto.setAlertTime(date);
             //告警等级
@@ -124,15 +127,16 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
         alertName.put("isRegex", false);
         alertName.put("isEqual", true);
 
-        JSONObject service = new JSONObject();
-        service.put("name", "service");
-        service.put("value", alert.getJSONObject("labels").getString("service"));
-        service.put("isRegex", false);
-        service.put("isEqual", true);
-
         JSONArray matchers = new JSONArray();
+        JSONObject service = new JSONObject();
+        if (alert.getJSONObject("labels").containsKey("service")) {
+            service.put("name", "service");
+            service.put("value", alert.getJSONObject("labels").getString("service"));
+            service.put("isRegex", false);
+            service.put("isEqual", true);
+            matchers.add(service);
+        }
         matchers.add(alertName);
-        matchers.add(service);
 
         Date now = DateUtils.addInteger(new Date(), Calendar.HOUR_OF_DAY, -8);
         JSONObject body = new JSONObject();

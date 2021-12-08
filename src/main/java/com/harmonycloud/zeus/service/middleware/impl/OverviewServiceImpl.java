@@ -323,24 +323,33 @@ public class OverviewServiceImpl implements OverviewService {
             PageHelper.startPage(current, size);
         }
         QueryWrapper<BeanAlertRecord> wrapper = new QueryWrapper<>();
-        if (StringUtils.isNotEmpty(lay)) {
-            wrapper.eq("lay",lay);
-            if ("system".equals(lay)) { //系统告警记录
+        wrapper.eq("lay",lay);
+        if ("system".equals(lay)) { //系统告警记录
+            if (StringUtils.isNotEmpty(clusterId)) {
                 wrapper.eq("cluster_id", clusterId).eq("namespace", NameConstant.MONITORING).eq("name", NameConstant.PROMETHEUS_K8S_RULES);
-            }else { //服务告警记录
-                if (StringUtils.isNotEmpty(clusterId) && StringUtils.isNotEmpty(namespace) && StringUtils.isNotEmpty(middlewareName)) {
-                    wrapper.eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", middlewareName);
-                } else {
-                    wrapper.isNotNull("cluster_id").isNotNull("namespace").ne("cluster_id", "");
-                }
+            } else {
+                wrapper.isNotNull("cluster_id").eq("namespace", NameConstant.MONITORING).eq("name", NameConstant.PROMETHEUS_K8S_RULES);
             }
-        }else {
-            wrapper.isNotNull("cluster_id").isNotNull("namespace").ne("cluster_id", "");
+        }else { //服务告警记录
+            if (StringUtils.isNotEmpty(clusterId) && StringUtils.isNotEmpty(namespace) && StringUtils.isNotEmpty(middlewareName)) {
+                wrapper.eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", middlewareName);
+            } else {
+                wrapper.isNotNull("cluster_id").isNotNull("namespace").ne("cluster_id", "");
+            }
         }
 
         if (StringUtils.isNotEmpty(level)) {
             wrapper.eq("level", level);
         }
+
+        if (StringUtils.isNotEmpty(keyword)) {
+            if (middlewareAlertsService.isNumeric(keyword)) {
+                wrapper.like("id",keyword);
+            } else {
+                wrapper.eq("id",keyword).or().like("alert",keyword);
+            }
+        }
+
 
         //根据ID查询
         if (StringUtils.isNotEmpty(keyword)) {
