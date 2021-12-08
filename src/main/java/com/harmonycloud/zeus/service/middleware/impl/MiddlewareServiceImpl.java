@@ -620,19 +620,19 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             throw new BusinessException(ErrorMessage.UPGRADE_LOWER_VERSION_FAILED);
         }
         // 2.判断是否跨大版本升级,即判断大版本号是否相同，相同才可以升级
-        String current = currentVersion.split("\\.")[0];
-        String upgrade = upgradeVersion.split("\\.")[0];
-        if (!current.equals(upgrade)) {
-            throw new BusinessException(ErrorMessage.UPGRADE_OVER_VERSION_FAILED);
-        }
+//        String current = currentVersion.split("\\.")[0];
+//        String upgrade = upgradeVersion.split("\\.")[0];
+//        if (!current.equals(upgrade)) {
+//            throw new BusinessException(ErrorMessage.UPGRADE_OVER_VERSION_FAILED);
+//        }
         // 3.判断是否满足升级至当前chart所需最低版本
-        if (StringUtils.isBlank(compatibleVersions)) {
-            return;
-        }
-        if (currentVersion.compareTo(compatibleVersions) < 0) {
-            log.error("不满足升级所需最低版本");
-            throw new BusinessException(ErrorMessage.UPGRADE_NOT_SATISFY_LOWEST_VERSION);
-        }
+//        if (StringUtils.isBlank(compatibleVersions)) {
+//            return;
+//        }
+//        if (currentVersion.compareTo(compatibleVersions) < 0) {
+//            log.error("不满足升级所需最低版本");
+//            throw new BusinessException(ErrorMessage.UPGRADE_NOT_SATISFY_LOWEST_VERSION);
+//        }
     }
 
     /**
