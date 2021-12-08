@@ -347,7 +347,10 @@ public class OverviewServiceImpl implements OverviewService {
             String[] array = keyword.split("-");
             if (array != null && array.length != 0) {
                 wrapper.eq("id",array[1]);
+            } else {
+                wrapper.eq("alert",keyword);
             }
+
         }
         //最近24小时
         if (StringUtils.isEmpty(clusterId)) {
