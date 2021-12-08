@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -159,6 +160,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         cm.setClusterId(clusterId);
         cm.setComponent(name);
         cm.setStatus(status);
+        cm.setCreateTime(new Date());
         beanClusterComponentsMapper.update(cm, wrapper);
     }
 

@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * @author xutianhong
@@ -43,5 +44,11 @@ public class BeanClusterComponents implements Serializable {
      */
     @TableField("status")
     private Integer status;
+
+    /**
+     * 创建时间
+     */
+    @TableField("createTime")
+    private Date createTime;
 
 }

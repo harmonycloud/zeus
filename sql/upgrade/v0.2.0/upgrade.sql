@@ -133,4 +133,11 @@ ALTER TABLE `cluster_ingress_components`
 MODIFY COLUMN `name` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'ingress name' AFTER `id`,
 ADD COLUMN `ingress_class_name` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT 'ingress class name' AFTER `name`;
 
+-- 组件添加创建时间
+ALTER TABLE `cluster_ingress_components`
+ADD COLUMN `create_time` timestamp(0) NULL COMMENT '创建时间' AFTER `status`;
+
+ALTER TABLE `cluster_components`
+ADD COLUMN `create_time` timestamp(0) NULL COMMENT '创建时间' AFTER `status`;
+
 

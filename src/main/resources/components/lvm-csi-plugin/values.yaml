@@ -1,0 +1,60 @@
+image:
+  repository: harbor.middleware.com/middleware
+  pullPolicy: IfNotPresent
+  registrarImageTag: v1.1.0
+  pluginImageTag: v1.2.0-test
+  provisionerImageTag: v1-5f99079e0-ack
+  resizerImageTag: v0.3.0
+  snapshotControllerImageTag: v4.2.0
+  csiSnapshotterImageTag: v4.2.0
+
+provisioner:
+  replicas: 1
+  provisioner:
+    resources:
+      limits:
+        memory: 512Mi
+        cpu: 200m
+      requests:
+        memory: 256Mi
+        cpu: 100m
+  resizer:
+    resources:
+      limits:
+        memory: 256Mi
+        cpu: 100m
+      requests:
+        memory: 256Mi
+        cpu: 100m
+
+plugin:
+  plugin:
+    resources:
+      requests:
+        memory: 128Mi
+        cpu: 50m
+  registrar:
+    resources:
+      requests:
+        memory: 128Mi
+        cpu: 50m
+
+nodeSelector:
+  beta.kubernetes.io/os: linux
+
+storage:
+  default: true
+  vgName: vg_middleware
+  storageClassName: middleware-lvm
+  size: 100
+
+volumeSnapshotClass:
+  type: minio
+  # minio
+  userId: bWluaW8=
+  # minio123
+  userKey: bWluaW8xMjM=
+  # 123456
+  backupPassword: MTIzNDU2Cg==
+  bucket: restic-bucket
+  url: http://10.1.30.70:31909
