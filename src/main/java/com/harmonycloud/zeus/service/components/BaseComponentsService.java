@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.components;
 
+import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 
 /**
@@ -22,7 +23,7 @@ public interface BaseComponentsService {
      * @param cluster 集群信息
      * @param type 部署模式:高可用，单实例
      */
-    void deploy(MiddlewareClusterDTO cluster, String type);
+    void deploy(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto);
 
     /**
      * 接入组件

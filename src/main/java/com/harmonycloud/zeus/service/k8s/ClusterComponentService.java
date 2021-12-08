@@ -13,15 +13,6 @@ import java.util.List;
  */
 public interface ClusterComponentService {
 
-    /**
-     * 部署组件
-     *
-     * @param cluster       集群对象
-     * @param componentName 组件名称
-     * @param type 部署类型:高可用，单实例
-     */
-    void deploy(MiddlewareClusterDTO cluster, String componentName, String type);
-
      /** 部署组件
      *
      * @param cluster       集群对象
@@ -53,6 +44,13 @@ public interface ClusterComponentService {
      * @param status 部署类型:高可用，单实例
      */
     void delete(MiddlewareClusterDTO cluster, String componentName, Integer status);
+
+    /**
+     * 删除集群绑定关系
+     *
+     * @param clusterId  集群id
+     */
+    void delete(String clusterId);
 
     /**
      * list所有组件

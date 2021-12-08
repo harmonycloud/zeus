@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.components.impl;
 
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
+import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.annotation.Operator;
@@ -27,11 +28,11 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
     }
 
     @Override
-    public void deploy(MiddlewareClusterDTO cluster, String type){
+    public void deploy(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto){
         //创建minio分区
         namespaceService.save(cluster.getId(), "minio", null);
         //发布minio
-        super.deploy(cluster, type);
+        super.deploy(cluster, clusterComponentsDto);
     }
     
     @Override
@@ -53,12 +54,12 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
     }
 
     @Override
-    protected String getValues(String repository, MiddlewareClusterDTO cluster, String type) {
+    protected String getValues(String repository, MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
         String setValues = "image.repository=" + repository +
                 ",persistence.storageClass=local-path" +
                 ",minioArgs.bucketName=velero" +
                 ",service.nodePort=31909";
-        if (SIMPLE.equals(type)) {
+        if (SIMPLE.equals(clusterComponentsDto.getType())) {
             setValues = setValues + ",replicas=1,drivesPerNode=4";
         } else {
             setValues = setValues + ",replicas=3";

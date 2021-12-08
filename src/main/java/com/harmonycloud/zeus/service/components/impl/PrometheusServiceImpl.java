@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitor;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitorInfo;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
@@ -34,13 +35,13 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
     }
 
     @Override
-    public void deploy(MiddlewareClusterDTO cluster, String type) {
+    public void deploy(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
         if (namespaceService.list(cluster.getId()).stream().noneMatch(ns -> "monitoring".equals(ns.getName()))){
             //创建分区
             namespaceService.save(cluster.getId(), "monitoring", null);
         }
         //发布prometheus
-        super.deploy(cluster, type);
+        super.deploy(cluster, clusterComponentsDto);
     }
 
     @Override
@@ -54,7 +55,7 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
     }
 
     @Override
-    protected String getValues(String repository, MiddlewareClusterDTO cluster, String type) {
+    protected String getValues(String repository, MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
        String setValues = "image.prometheus.repository=" + repository + "/prometheus" +
                 ",image.configmapReload.repository=" + repository + "/configmap-reload" +
                 ",image.nodeExporter.repository=" + repository + "/node-exporter" +
@@ -68,7 +69,7 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
                 ",image.dashboard.repository=" + repository + "/k8s-sidecar" +
                 ",image.busybox.repository=" + repository + "/grafana" +
                 ",storage.storageClass=" + "local-path";
-       if (SIMPLE.equals(type)) {
+       if (SIMPLE.equals(clusterComponentsDto.getType())) {
            setValues = setValues + ",replicas.prometheus=1";
        } else {
            setValues = setValues + ",replicas.prometheus=3";

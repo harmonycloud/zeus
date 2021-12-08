@@ -192,6 +192,12 @@ public class IngressComponentServiceImpl implements IngressComponentService {
         beanIngressComponentsMapper.deleteById(existIngress.getId());
     }
 
+    @Override
+    public void delete(String clusterId) {
+        QueryWrapper<BeanIngressComponents> wrapper = new QueryWrapper<BeanIngressComponents>().eq("cluster_id", clusterId);
+        beanIngressComponentsMapper.delete(wrapper);
+    }
+
     public void insert(String clusterId, String name, Integer status) {
         BeanIngressComponents beanIngressComponents = new BeanIngressComponents();
         beanIngressComponents.setClusterId(clusterId);

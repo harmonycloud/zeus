@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.components.impl;
 
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
+import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.annotation.Operator;
@@ -34,7 +35,7 @@ public class LocalPathServiceImpl extends AbstractBaseOperator implements LocalP
     }
 
     @Override
-    protected String getValues(String repository, MiddlewareClusterDTO cluster, String type) {
+    protected String getValues(String repository, MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
         return "image.repository=" + repository + "/local-path-provisioner" +
                 ",storage.storageClassName=" + "local-path" +
                 ",helperImage.repository=" + repository + "/busybox" +
