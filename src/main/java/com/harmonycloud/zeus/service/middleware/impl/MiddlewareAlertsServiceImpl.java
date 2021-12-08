@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.middleware.impl;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -74,12 +75,17 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             queryWrapper.eq("cluster_id",clusterId).isNotNull("namespace").isNotNull("middleware_name");
         }
         if (StringUtils.isNotEmpty(keyword)) {
-            queryWrapper.and(wrapper ->
-                    wrapper.eq("alert_id",analysisID(keyword)).or().eq("alert",keyword).or().eq("symbol",keyword)
-                            .or().eq("threshold",keyword).or().like("threshold",keyword)
-                            .or().eq("alert_time",keyword).or().eq("alert_times",keyword)
-                            .or().eq("content",keyword)
-            );
+            String alertID = keyword.replaceAll("GJ","");
+            if (isNumeric(alertID)) {
+                queryWrapper.eq("alert_id",Integer.parseInt(alertID));
+            } else {
+                queryWrapper.and(wrapper ->
+                        wrapper.or().eq("alert",keyword).or().eq("symbol",keyword)
+                                .or().eq("threshold",keyword).or().like("threshold",keyword)
+                                .or().eq("alert_time",keyword).or().eq("alert_times",keyword)
+                                .or().eq("content",keyword)
+                );
+            }
         }
         List<MiddlewareAlertInfo> alertInfos = middlewareAlertInfoMapper.selectList(queryWrapper);
         PageInfo<MiddlewareAlertsDTO> alertsDTOPageInfo = new PageInfo<>();
@@ -543,7 +549,24 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
      */
     public int analysisID(String id) {
         String alertID = id.replaceAll("GJ","");
+        if (isNumeric(alertID)) {
+            return Integer.parseInt(alertID);
+        }
         return Integer.parseInt(alertID);
+    }
+
+    /**
+     * 利用正则表达式判断字符串是否是数字
+     * @param str
+     * @return
+     */
+    public boolean isNumeric(String str){
+        Pattern pattern = Pattern.compile("[0-9]*");
+        Matcher isNum = pattern.matcher(str);
+        if( !isNum.matches() ){
+            return false;
+        }
+        return true;
     }
 
     public static void main(String[] args){

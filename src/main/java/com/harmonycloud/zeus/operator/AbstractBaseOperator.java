@@ -28,6 +28,7 @@ import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.schedule.MiddlewareManageTask;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
+import com.harmonycloud.zeus.service.middleware.impl.MiddlewareAlertsServiceImpl;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.K8sConvert;
@@ -102,6 +103,8 @@ public abstract class AbstractBaseOperator {
     private BeanAlertRuleMapper beanAlertRuleMapper;
     @Autowired
     private MiddlewareAlertInfoMapper middlewareAlertInfoMapper;
+    @Autowired
+    private MiddlewareAlertsServiceImpl middlewareAlertsService;
     /**
      * 是否支持该中间件
      */
@@ -912,6 +915,8 @@ public abstract class AbstractBaseOperator {
                 MiddlewareAlertInfo middlewareAlertInfo = new MiddlewareAlertInfo();
                 middlewareAlertInfo.setAlert(rule.getAlert());
                 middlewareAlertInfo.setExpr(rule.getExpr());
+                middlewareAlertInfo.setSymbol(middlewareAlertsService.getSymbol(rule.getExpr()));
+                middlewareAlertInfo.setThreshold(middlewareAlertsService.getThreshold(rule.getExpr()));
                 middlewareAlertInfo.setTime(rule.getTime());
                 middlewareAlertInfo.setLabels(JSONUtil.toJsonStr(rule.getLabels()));
                 middlewareAlertInfo.setAnnotations(JSONUtil.toJsonStr(rule.getAnnotations()));
