@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.model.middleware.Middleware;
+import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
+import com.harmonycloud.zeus.bean.BeanClusterComponents;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -86,6 +88,15 @@ public class IngressComponentServiceImpl implements IngressComponentService {
         clusterService.update(cluster);
         // save to mysql
         insert(cluster.getId(), ingressComponentDto.getIngressClassName(), 2);
+        // 检查是否安装成功
+        ThreadPoolExecutorFactory.executor.execute(() -> {
+            try {
+                Thread.sleep(115000);
+                installSuccessCheck(cluster, ingressComponentDto);
+            } catch (InterruptedException e) {
+                log.error("更新组件安装中状态失败");
+            }
+        });
     }
 
     @Override
@@ -130,6 +141,9 @@ public class IngressComponentServiceImpl implements IngressComponentService {
             }
         });
         clusterService.update(cluster);
+        // 更新数据库
+        beanIngressComponents.setIngressClassName(ingressComponentDto.getIngressClassName());
+        beanIngressComponentsMapper.updateById(beanIngressComponents);
     }
 
     @Override
@@ -165,10 +179,10 @@ public class IngressComponentServiceImpl implements IngressComponentService {
     public void delete(String clusterId, String ingressClassName) {
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         QueryWrapper<BeanIngressComponents> wrapper =
-            new QueryWrapper<BeanIngressComponents>().eq("cluster_id", clusterId).eq("name", ingressClassName);
+            new QueryWrapper<BeanIngressComponents>().eq("cluster_id", clusterId).eq("ingress_class_name", ingressClassName);
         BeanIngressComponents existIngress = beanIngressComponentsMapper.selectOne(wrapper);
         if (existIngress.getStatus() != 1) {
-            helmChartService.uninstall(cluster, "middleware-operator", ingressClassName);
+            helmChartService.uninstall(cluster, "middleware-operator", existIngress.getName());
         }
         // update cluster
         MiddlewareClusterIngress exist =
@@ -235,6 +249,16 @@ public class IngressComponentServiceImpl implements IngressComponentService {
                 beanIngressComponentsMapper.insert(bean);
                 ingressComponentsList.add(bean);
             });
+        }
+    }
+
+    public void installSuccessCheck(MiddlewareClusterDTO cluster, IngressComponentDto ingressComponentDto) {
+        QueryWrapper<BeanIngressComponents> wrapper = new QueryWrapper<BeanIngressComponents>()
+            .eq("cluster_id", cluster.getId()).eq("ingress_class_name", ingressComponentDto.getIngressClassName());
+        BeanIngressComponents ingressComponents = beanIngressComponentsMapper.selectOne(wrapper);
+        if (ingressComponents.getStatus() == 2) {
+            ingressComponents.setStatus(6);
+            beanIngressComponentsMapper.updateById(ingressComponents);
         }
     }
 

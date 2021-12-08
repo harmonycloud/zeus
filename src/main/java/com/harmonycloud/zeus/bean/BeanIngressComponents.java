@@ -26,17 +26,22 @@ public class BeanIngressComponents implements Serializable {
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
     /**
-     * ingress class
+     * ingress name
      */
     @TableField("name")
     private String name;
+    /**
+     * ingress class name
+     */
+    @TableField("ingress_class_name")
+    private String ingressClassName;
     /**
      * 集群Id
      */
     @TableField("cluster_id")
     private String clusterId;
     /**
-     * 状态 0-未安装接入 1-已接入 2-安装中 3-运行正常 4-运行异常 5-卸载中
+     * 状态 0-未安装接入 1-已接入 2-安装中 3-运行正常 4-运行异常 5-卸载中 6-安装异常
      */
     @TableField("status")
     private Integer status;
