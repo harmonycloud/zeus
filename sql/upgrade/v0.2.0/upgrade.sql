@@ -127,5 +127,10 @@ MODIFY COLUMN `name` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin NULL DEFAUL
 ALTER TABLE `middleware_info`
 MODIFY COLUMN `version` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '版本' AFTER `type`;
 
+-- 2021.12.8 xutianhong
+-- cluster ingress components 添加ingress_class_name列
+ALTER TABLE `cluster_ingress_components`
+MODIFY COLUMN `name` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'ingress name' AFTER `id`,
+ADD COLUMN `ingress_class_name` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT 'ingress class name' AFTER `name`;
 
 

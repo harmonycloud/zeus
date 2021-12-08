@@ -51,6 +51,15 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
                 getOperator(BaseComponentsService.class, BaseComponentsService.class, componentName);
         service.deploy(cluster, type);
         record(cluster.getId(), componentName, 2);
+        // 检查是否安装成功
+        ThreadPoolExecutorFactory.executor.execute(() -> {
+            try {
+                Thread.sleep(115000);
+                installSuccessCheck(cluster, componentName);
+            } catch (InterruptedException e) {
+                log.error("更新组件安装中状态失败");
+            }
+        });
     }
 
     @Override
@@ -182,6 +191,15 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
                 cluster.getMonitor().setGrafana(new MiddlewareClusterMonitorInfo());
             }
             cluster.getMonitor().getGrafana().setProtocol(clusterComponentsDto.getProtocol());
+        }
+    }
+
+    public void installSuccessCheck(MiddlewareClusterDTO cluster, String componentName){
+        QueryWrapper<BeanClusterComponents> wrapper = new QueryWrapper<BeanClusterComponents>().eq("cluster_id", cluster.getId()).eq("component", componentName);
+        BeanClusterComponents clusterComponents = beanClusterComponentsMapper.selectOne(wrapper);
+        if (clusterComponents.getStatus() == 2){
+            clusterComponents.setStatus(6);
+            beanClusterComponentsMapper.updateById(clusterComponents);
         }
     }
 

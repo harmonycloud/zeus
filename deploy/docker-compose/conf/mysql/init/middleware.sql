@@ -94,7 +94,8 @@ CREATE TABLE `cluster_components` (
 DROP TABLE IF EXISTS `cluster_ingress_components`;
 CREATE TABLE `cluster_ingress_components` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '自增id',
-  `name` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'ingress class name',
+  `name` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'ingress name',
+  `ingress_class_name` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'ingress class name',
   `cluster_id` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '集群id',
   `status` int DEFAULT NULL COMMENT '状态',
   PRIMARY KEY (`id`)
