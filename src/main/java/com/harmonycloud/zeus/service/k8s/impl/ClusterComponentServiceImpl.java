@@ -82,8 +82,10 @@ public class ClusterComponentServiceImpl implements ClusterComponentService {
 
         // todo 支持自动部署ingress
         // 必须要部署ingress
-        if (existCluster.getIngress() == null || StringUtils.isEmpty(existCluster.getIngress().getAddress())
-                || existCluster.getIngress().getTcp() == null || !existCluster.getIngress().getTcp().isEnabled()) {
+        if (CollectionUtils.isEmpty(existCluster.getIngressList())
+            || StringUtils.isEmpty(existCluster.getIngressList().get(0).getAddress())
+            || existCluster.getIngressList().get(0).getTcp() == null
+            || !existCluster.getIngressList().get(0).getTcp().isEnabled()) {
             throw new BusinessException(ErrorMessage.INGRESS_CONTROLLER_FIRST);
         }
 
@@ -160,7 +162,7 @@ public class ClusterComponentServiceImpl implements ClusterComponentService {
         storage.put(BUCKET_NAME, bucketName);
         storage.put(NAME, MINIO_SC);
         storage.put(ENDPOINT,
-            Protocol.HTTP.getValue().toLowerCase() + "://" + cluster.getIngress().getAddress() + ":" + port);
+            Protocol.HTTP.getValue().toLowerCase() + "://" + cluster.getIngressList().get(0).getAddress() + ":" + port);
 
         JSONObject backup = new JSONObject();
         backup.put(TYPE, MINIO);
@@ -223,10 +225,10 @@ public class ClusterComponentServiceImpl implements ClusterComponentService {
         // 回填数据
         MiddlewareClusterMonitorInfo prometheus =
             new MiddlewareClusterMonitorInfo().setProtocol(Protocol.HTTP.getValue().toLowerCase())
-                .setHost(cluster.getIngress().getAddress()).setPort(prometheusIngressPort);
+                .setHost(cluster.getIngressList().get(0).getAddress()).setPort(prometheusIngressPort);
         MiddlewareClusterMonitorInfo grafana =
             new MiddlewareClusterMonitorInfo().setProtocol(Protocol.HTTP.getValue().toLowerCase())
-                .setHost(cluster.getIngress().getAddress()).setPort(grafanaIngressPort);
+                .setHost(cluster.getIngressList().get(0).getAddress()).setPort(grafanaIngressPort);
         try {
             // 生成grafana的api token
             grafanaService.setToken(grafana);
@@ -270,10 +272,10 @@ public class ClusterComponentServiceImpl implements ClusterComponentService {
         MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
         switch (componentName) {
             case "ingress":
-                if (cluster.getIngress() == null) {
+                if (cluster.getIngressList().get(0) == null) {
                     throw new IllegalArgumentException("ingress info is null");
                 }
-                existCluster.setIngress(cluster.getIngress());
+                existCluster.setIngressList(cluster.getIngressList());
                 break;
             case "storageBackup":
                 if (cluster.getStorage() == null || cluster.getStorage().get("backup") == null) {

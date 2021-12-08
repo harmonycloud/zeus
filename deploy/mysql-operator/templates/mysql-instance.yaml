@@ -5,6 +5,13 @@ metadata:
   labels:
     operatorname: mysql-operator
 spec:
+  {{- with .Values.statefulSetConfiguration }}
+  _statefulset:
+    spec:
+      template:
+        spec:
+{{- toYaml . | nindent 10 }}
+  {{- end }}
 {{- if .Values.init_at_setup.enabled }}
   initScriptCMName: zeus-init-sql-file
 {{- end }}
@@ -104,9 +111,15 @@ spec:
     annotations:
       fixed-node-middleware-pod: "true"
       fixed.ipam.harmonycloud.cn: "true"
+      {{- if .Values.annotations }}
+      {{- toYaml .Values.annotations | nindent 6 }}
+      {{- end }}
     labels:
       app: {{ include "mysql.fullname" . }}
       operatorname: mysql-operator
+      {{- if .Values.labels }}
+      {{- toYaml .Values.labels | nindent 6 }}
+      {{- end }}
     resources:
       {{- toYaml .Values.resources | nindent 6 }}
     updateStrategy:

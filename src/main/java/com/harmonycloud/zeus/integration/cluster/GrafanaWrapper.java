@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.harmonycloud.zeus.integration.cluster.bean.prometheus.GrafanaApiKey;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import com.harmonycloud.caas.common.enums.ErrorMessage;
@@ -94,7 +95,12 @@ public class GrafanaWrapper {
     private void login(MiddlewareClusterMonitorInfo grafana) {
         GrafanaApi grafanaApi = new GrafanaApi(new GrafanaClient(grafana));
         try {
-            String session = grafanaApi.login(null, null);
+            String session;
+            if (StringUtils.isNotEmpty(grafana.getPassword()) && StringUtils.isNotEmpty(grafana.getPassword())) {
+                session = grafanaApi.login(grafana.getUsername(), grafana.getPassword());
+            } else {
+                session = grafanaApi.login(null, null);
+            }
             if (session == null) {
                 throw new BusinessException(ErrorMessage.GRAFANA_LOGIN_FAIL, grafana.getAddress());
             }

@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -31,7 +32,7 @@ public class MiddlewareClusterInfo {
     @ApiModelProperty("端口")
     private Integer port;
     @ApiModelProperty("对外服务")
-    private MiddlewareClusterIngress ingress;
+    private List<MiddlewareClusterIngress> ingressList;
     @ApiModelProperty("存储相关信息")
     private Map<String, Object> storage;
     @ApiModelProperty("制品服务相关信息")

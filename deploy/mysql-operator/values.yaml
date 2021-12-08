@@ -40,7 +40,7 @@ replicaCount: 2
 image:
   repository: harbor.middleware.com/middleware
   middlewareImageTag: v5.7.35-hc.2
-  middlewareImageTag_8: v8.0.26-hc.1
+  middlewareImageTag_8: v8.0.26-hc.2
   initImageTag: 1.0.4
   initImageTag_8: 1.0.4-8.0
   monitorImageTag: v0.12.1
@@ -72,7 +72,14 @@ storageProvider: {}
 
 nodeAffinity: {}
 
-tolerations: {} 
+# 支持扩展Spec
+statefulSetConfiguration: {}
+  # tolerations:
+  # - key: "example-key1"
+  #   operator: "Exists"
+  #   effect: "NoSchedule"
+
+tolerations: {}
 #- key: "example-key"
 #  operator: "Exists"
 #  effect: "NoSchedule"
@@ -84,3 +91,7 @@ podAntiAffinity: "soft"
 
 replication:
   enabled: false
+
+annotations: {}
+
+labels: {}
