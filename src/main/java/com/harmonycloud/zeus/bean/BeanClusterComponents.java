@@ -48,7 +48,7 @@ public class BeanClusterComponents implements Serializable {
     /**
      * 创建时间
      */
-    @TableField("createTime")
+    @TableField("create_time")
     private Date createTime;
 
 }
