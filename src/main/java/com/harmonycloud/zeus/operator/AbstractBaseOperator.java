@@ -105,6 +105,9 @@ public abstract class AbstractBaseOperator {
     private MiddlewareAlertInfoMapper middlewareAlertInfoMapper;
     @Autowired
     private MiddlewareAlertsServiceImpl middlewareAlertsService;
+    @Autowired
+    private PodService podService;
+
     /**
      * 是否支持该中间件
      */
