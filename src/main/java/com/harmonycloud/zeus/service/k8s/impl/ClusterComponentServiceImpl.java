@@ -61,7 +61,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         // 检查是否安装成功
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
-                Thread.sleep(115000);
+                Thread.sleep(55000);
                 installSuccessCheck(cluster, clusterComponentsDto.getComponent());
             } catch (InterruptedException e) {
                 log.error("更新组件安装中状态失败");

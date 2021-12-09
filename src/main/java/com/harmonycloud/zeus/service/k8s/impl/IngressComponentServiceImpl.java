@@ -88,7 +88,7 @@ public class IngressComponentServiceImpl implements IngressComponentService {
         // 检查是否安装成功
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
-                Thread.sleep(115000);
+                Thread.sleep(55000);
                 installSuccessCheck(cluster, ingressComponentDto);
             } catch (InterruptedException e) {
                 log.error("更新组件安装中状态失败");
@@ -201,6 +201,7 @@ public class IngressComponentServiceImpl implements IngressComponentService {
     public void insert(String clusterId, String name, Integer status) {
         BeanIngressComponents beanIngressComponents = new BeanIngressComponents();
         beanIngressComponents.setClusterId(clusterId);
+        beanIngressComponents.setIngressClassName(name);
         beanIngressComponents.setName(name);
         beanIngressComponents.setStatus(status);
         beanIngressComponents.setCreateTime(new Date());
