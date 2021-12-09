@@ -58,6 +58,6 @@ public interface ClusterComponentService {
      * @param clusterId 集群id
      * @return List<ClusterComponentsDto>
      */
-    List<ClusterComponentsDto> list(String clusterId);
+    List<ClusterComponentsDto> list(String clusterId) throws Exception;
 
 }

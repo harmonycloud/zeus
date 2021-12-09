@@ -57,25 +57,25 @@ public abstract class AbstractBaseOperator {
         updateCluster(cluster);
     }
 
-    public void updateStatus(MiddlewareClusterDTO cluster, String name) {
-        QueryWrapper<BeanClusterComponents> wrapper =
+    public void updateStatus(MiddlewareClusterDTO cluster, BeanClusterComponents beanClusterComponents) {
+        /*QueryWrapper<BeanClusterComponents> wrapper =
                 new QueryWrapper<BeanClusterComponents>().eq("cluster_id", cluster.getId()).eq("component", name);
-        BeanClusterComponents exist = beanClusterComponentsMapper.selectOne(wrapper);
+        BeanClusterComponents exist = beanClusterComponentsMapper.selectOne(wrapper);*/
         List<PodInfo> podInfoList = getPodInfoList(cluster.getId());
         // 默认正常
-        int status = exist.getStatus();
+        int status = beanClusterComponents.getStatus();
         if (CollectionUtils.isEmpty(podInfoList)) {
             // 未安装
             status = 0;
         } else if (podInfoList.stream()
             .allMatch(pod -> "Running".equals(pod.getStatus()) || "Completed".equals(pod.getStatus()))) {
             status = 3;
-        } else if (exist.getStatus() != 5 && exist.getStatus() != 2) {
+        } else if (status != 5 && status != 2) {
             // 非卸载或安装中 则为异常
             status = 4;
         }
-        exist.setStatus(status);
-        beanClusterComponentsMapper.update(exist, wrapper);
+        beanClusterComponents.setStatus(status);
+        beanClusterComponentsMapper.updateById(beanClusterComponents);
     }
 
     /**

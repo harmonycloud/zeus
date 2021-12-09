@@ -2,7 +2,7 @@ image:
   repository: harbor.middleware.com/middleware
   pullPolicy: IfNotPresent
   registrarImageTag: v1.1.0
-  pluginImageTag: v1.2.0-test
+  pluginImageTag: v1.2.0
   provisionerImageTag: v1-5f99079e0-ack
   resizerImageTag: v0.3.0
   snapshotControllerImageTag: v4.2.0

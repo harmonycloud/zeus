@@ -86,3 +86,9 @@ rules:
   - update
   - watch
   - create
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims/status
+  verbs:
+  - patch

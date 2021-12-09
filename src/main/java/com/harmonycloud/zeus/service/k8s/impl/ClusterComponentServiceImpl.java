@@ -27,6 +27,7 @@ import org.springframework.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 /**
@@ -119,7 +120,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
     }
 
     @Override
-    public List<ClusterComponentsDto> list(String clusterId) {
+    public List<ClusterComponentsDto> list(String clusterId) throws Exception {
         QueryWrapper<BeanClusterComponents> wrapper =
             new QueryWrapper<BeanClusterComponents>().eq("cluster_id", clusterId);
         List<BeanClusterComponents> clusterComponentsList = beanClusterComponentsMapper.selectList(wrapper);
@@ -127,14 +128,20 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
             clusterComponentsList = initClusterComponents(clusterId);
         }
         //另起线程更新所有组件状态
+        CountDownLatch count = new CountDownLatch(clusterComponentsList.size());
         clusterComponentsList.forEach(cc -> ThreadPoolExecutorFactory.executor.execute(() -> {
-            // 接入组件不更新状态
-            if (cc.getStatus() == 1){
-                return;
+            try {
+                // 接入组件不更新状态
+                if (cc.getStatus() == 1){
+                    return;
+                }
+                BaseComponentsService service = getOperator(BaseComponentsService.class, BaseComponentsService.class, cc.getComponent());
+                service.updateStatus(clusterService.findById(clusterId), cc);
+            } finally {
+                count.countDown();
             }
-            BaseComponentsService service = getOperator(BaseComponentsService.class, BaseComponentsService.class, cc.getComponent());
-            service.updateStatus(clusterService.findById(clusterId), cc.getComponent());
         }));
+        count.await();
         return clusterComponentsList.stream().map(cm -> {
             ClusterComponentsDto dto = new ClusterComponentsDto();
             BeanUtils.copyProperties(cm, dto);

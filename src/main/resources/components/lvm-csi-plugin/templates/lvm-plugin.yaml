@@ -15,6 +15,7 @@ spec:
       tolerations:
         - operator: Exists
       priorityClassName: system-node-critical
+      dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
       {{- with .Values.nodeSelector }}
       nodeSelector:
