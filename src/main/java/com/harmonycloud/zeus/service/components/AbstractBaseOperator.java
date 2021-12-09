@@ -18,6 +18,8 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
+import static com.harmonycloud.caas.common.constants.CommonConstant.*;
+
 /**
  * @author xutianhong
  * @Date 2021/10/29 2:49 下午
@@ -58,21 +60,18 @@ public abstract class AbstractBaseOperator {
     }
 
     public void updateStatus(MiddlewareClusterDTO cluster, BeanClusterComponents beanClusterComponents) {
-        /*QueryWrapper<BeanClusterComponents> wrapper =
-                new QueryWrapper<BeanClusterComponents>().eq("cluster_id", cluster.getId()).eq("component", name);
-        BeanClusterComponents exist = beanClusterComponentsMapper.selectOne(wrapper);*/
         List<PodInfo> podInfoList = getPodInfoList(cluster.getId());
         // 默认正常
         int status = beanClusterComponents.getStatus();
         if (CollectionUtils.isEmpty(podInfoList)) {
             // 未安装
-            status = 0;
+            status = NUM_ZERO;
         } else if (podInfoList.stream()
             .allMatch(pod -> "Running".equals(pod.getStatus()) || "Completed".equals(pod.getStatus()))) {
-            status = 3;
-        } else if (status != 5 && status != 2) {
+            status = NUM_THREE;
+        } else if (status != NUM_FIVE && status != NUM_TWO) {
             // 非卸载或安装中 则为异常
-            status = 4;
+            status = NUM_FOUR;
         }
         beanClusterComponents.setStatus(status);
         beanClusterComponentsMapper.updateById(beanClusterComponents);

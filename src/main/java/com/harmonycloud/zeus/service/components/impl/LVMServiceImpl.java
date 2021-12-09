@@ -3,7 +3,9 @@ package com.harmonycloud.zeus.service.components.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
 import com.harmonycloud.caas.common.enums.DictEnum;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
@@ -12,6 +14,7 @@ import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.LoggingService;
 import com.harmonycloud.zeus.util.AssertUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -19,6 +22,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static com.harmonycloud.caas.common.constants.CommonConstant.ALREADY_EXISTED;
 
 /**
  * @author xutianhong
@@ -50,8 +55,16 @@ public class LVMServiceImpl extends AbstractBaseOperator implements LoggingServi
 
     @Override
     protected void install(String setValues, MiddlewareClusterDTO cluster) {
-        helmChartService.upgradeInstall(ComponentsEnum.LVM.getName(), "middleware-operator", setValues,
-                componentsPath + File.separator + "lvm-csi-plugin", cluster);
+        try {
+            helmChartService.upgradeInstall(ComponentsEnum.LVM.getName(), "middleware-operator", setValues,
+                    componentsPath + File.separator + "lvm-csi-plugin", cluster);
+        } catch (Exception e){
+            if (StringUtils.isNotEmpty(e.getMessage()) && e.getMessage().contains(ALREADY_EXISTED)) {
+                throw new BusinessException(ErrorMessage.LVM_ALREADY_EXISTED);
+            } else {
+                throw e;
+            }
+        }
     }
 
     @Override
