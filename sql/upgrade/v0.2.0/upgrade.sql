@@ -140,8 +140,12 @@ ADD COLUMN `create_time` timestamp(0) NULL COMMENT '创建时间' AFTER `status`
 ALTER TABLE `cluster_components`
 ADD COLUMN `create_time` timestamp(0) NULL COMMENT '创建时间' AFTER `status`;
 -- 2021.12.9 yushuaikang
-ALTER TABLE `alert_rule_id` ADD COLUMN ding varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '是否选择钉钉通知';
-ALTER TABLE `alert_rule_id` ADD COLUMN mail varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '是否选择邮箱通知';
+ALTER TABLE `alert_rule_id` ADD COLUMN `ding`varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '是否选择钉钉通知';
+ALTER TABLE `alert_rule_id` ADD COLUMN `mail` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '是否选择邮箱通知';
+ALTER TABLE `alert_record` ADD COLUMN `expr` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '规则描述';
+ALTER TABLE `alert_record` ADD COLUMN `alert_id` int(16) DEFAULT NULL COMMENT '规则ID';
+ALTER TABLE `alert_record` ADD COLUMN `content` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '告警内容';
+
 
 
 

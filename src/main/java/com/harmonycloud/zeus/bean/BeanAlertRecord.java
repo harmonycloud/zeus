@@ -72,7 +72,28 @@ public class BeanAlertRecord implements Serializable {
     @TableField("time")
     private Date time;
 
+    /**
+     * 告警层面
+     */
     @TableField("lay")
     private String lay;
+
+    /**
+     * 规则ID
+     */
+    @TableField("alert_id")
+    private Integer alertId;
+
+    /**
+     * 规则描述
+     */
+    @TableField("expr")
+    private String expr;
+
+    /**
+     * 告警内容
+     */
+    @TableField("content")
+    private String content;
 
 }

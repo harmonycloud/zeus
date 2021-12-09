@@ -77,12 +77,17 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
                     DateStyle.YYYY_MM_DD_T_HH_MM_SS_Z_SSS);
             beanAlertRecord.setTime(date);
             QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
-            wrapper.eq("alert",labels.getString("alertname"));
+            wrapper.eq("alert",labels.getString("alertname"))
+                    .eq("namespace",labels.getString("namespace"))
+                    .eq("name",labels.getString("service"));
             MiddlewareAlertInfo alertInfo = middlewareAlertInfoMapper.selectOne(wrapper);
             if (alertInfo == null) {
                 beanAlertRecord.setLay("service");
             } else {
                 beanAlertRecord.setLay(alertInfo.getLay());
+                beanAlertRecord.setAlertId(alertInfo.getAlertId());
+                beanAlertRecord.setExpr(alertInfo.getDescription()+alertInfo.getSymbol()+alertInfo.getThreshold()+"%");
+                beanAlertRecord.setContent(alertInfo.getContent());
             }
             beanAlertRecordMapper.insert(beanAlertRecord);
             // 设置通道沉默时间
