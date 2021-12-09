@@ -111,9 +111,13 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             //告警ID
             alertInfoDto.setRuleID(ruleId);
             //钉钉发送
-            dingRobotService.send(alertInfoDto);
+            if ("ding".equals(alertInfo.getDing())) {
+                dingRobotService.send(alertInfoDto);
+            }
             //邮箱发送
-            mailService.sendHtmlMail(alertInfoDto);
+            if ("mail".equals(alertInfo.getMail())) {
+                mailService.sendHtmlMail(alertInfoDto);
+            }
         }
     }
 
