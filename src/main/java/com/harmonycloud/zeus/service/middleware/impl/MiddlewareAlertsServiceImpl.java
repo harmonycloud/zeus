@@ -83,7 +83,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                         wrapper.or().eq("alert",keyword).or().eq("symbol",keyword)
                                 .or().eq("threshold",keyword).or().like("threshold",keyword)
                                 .or().eq("alert_time",keyword).or().eq("alert_times",keyword)
-                                .or().eq("content",keyword)
+                                .or().eq("content",keyword).or().eq("description",keyword)
                 );
             }
         }
