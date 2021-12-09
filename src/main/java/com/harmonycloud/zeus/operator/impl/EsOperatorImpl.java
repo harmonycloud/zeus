@@ -242,6 +242,9 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
     }
 
     private void checkNum(Middleware middleware) {
+        if (middleware.getQuota() == null) {
+            return;
+        }
         // 主节点
         MiddlewareQuota master = middleware.getQuota().get(ElasticSearchRoleEnum.MASTER.getRole());
         if (master == null || StringUtils.isAnyBlank(master.getCpu(), master.getMemory())) {
