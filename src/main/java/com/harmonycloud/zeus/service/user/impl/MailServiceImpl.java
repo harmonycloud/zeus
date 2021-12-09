@@ -188,9 +188,9 @@ public class MailServiceImpl implements MailService {
         //邮件表格header
         String header = "<td>告警id</td><td>告警等级</td><td>告警内容</td><td>告警对象</td><td>规则描述</td><td>实际监控</td><td>告警时间<td>";
         StringBuilder linesBuffer = new StringBuilder();
-//        String date = DateFormatUtils.format(alertInfoDto.getCreateTime(), "yyyy-MM-dd HH:mm:ss");
+        String date = DateFormatUtils.format(alertInfoDto.getAlertTime(), "yyyy-MM-dd HH:mm:ss");
         linesBuffer.append("<tr><td>" + alertInfoDto.getRuleID() + "</td><td>" + emailTextColor + "</td><td>" + alertInfoDto.getContent() + "</td>" +
-                "<td>" + alertInfoDto.getClusterId() + "</td><td>" + alertInfoDto.getDescription() + "</td><td>" + alertInfoDto.getMessage() + "</td><td>" + alertInfoDto.getAlertTime() + "</td></tr>");
+                "<td>" + alertInfoDto.getClusterId() + "</td><td>" + alertInfoDto.getDescription() + "</td><td>" + alertInfoDto.getMessage() + "</td><td>" + date + "</td></tr>");
 
         //填充html模板中的五个参数
         String htmlText = MessageFormat.format(buffer.toString(), emailHeadColor, alertInfoDto.getLevel(), contentText, "", header, linesBuffer.toString());

@@ -323,35 +323,34 @@ public class OverviewServiceImpl implements OverviewService {
             PageHelper.startPage(current, size);
         }
         QueryWrapper<BeanAlertRecord> wrapper = new QueryWrapper<>();
-        if (StringUtils.isNotEmpty(lay)) {
-            wrapper.eq("lay",lay);
-            if ("system".equals(lay)) { //系统告警记录
+        wrapper.eq("lay",lay);
+        if ("system".equals(lay)) { //系统告警记录
+            if (StringUtils.isNotEmpty(clusterId)) {
                 wrapper.eq("cluster_id", clusterId).eq("namespace", NameConstant.MONITORING).eq("name", NameConstant.PROMETHEUS_K8S_RULES);
-            }else { //服务告警记录
-                if (StringUtils.isNotEmpty(clusterId) && StringUtils.isNotEmpty(namespace) && StringUtils.isNotEmpty(middlewareName)) {
-                    wrapper.eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", middlewareName);
-                } else {
-                    wrapper.isNotNull("cluster_id").isNotNull("namespace").ne("cluster_id", "");
-                }
+            } else {
+                wrapper.isNotNull("cluster_id").eq("namespace", NameConstant.MONITORING).eq("name", NameConstant.PROMETHEUS_K8S_RULES);
             }
-        }else {
-            wrapper.isNotNull("cluster_id").isNotNull("namespace").ne("cluster_id", "");
+        }else { //服务告警记录
+            if (StringUtils.isNotEmpty(clusterId) && StringUtils.isNotEmpty(namespace) && StringUtils.isNotEmpty(middlewareName)) {
+                wrapper.eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", middlewareName);
+            } else {
+                wrapper.isNotNull("cluster_id").isNotNull("namespace").ne("cluster_id", "");
+            }
         }
 
         if (StringUtils.isNotEmpty(level)) {
             wrapper.eq("level", level);
         }
 
-        //根据ID查询
         if (StringUtils.isNotEmpty(keyword)) {
-            String[] array = keyword.split("-");
-            if (array != null && array.length != 0) {
-                wrapper.eq("id",array[1]);
+            if (middlewareAlertsService.isNumeric(keyword)) {
+                wrapper.like("id",keyword);
             } else {
-                wrapper.eq("alert",keyword);
+                wrapper.eq("id",keyword).or().like("alert",keyword);
             }
-
         }
+
+
         //最近24小时
         if (StringUtils.isEmpty(clusterId)) {
             Date date = new Date();
@@ -373,22 +372,22 @@ public class OverviewServiceImpl implements OverviewService {
             AlertDTO alertDTO = new AlertDTO();
             BeanUtils.copyProperties(record, alertDTO);
             alertDTO.setTime(DateUtils.addInteger(alertDTO.getTime(), Calendar.HOUR_OF_DAY, 8));
-            Middleware middleware = new Middleware().setName(alertDTO.getName()).setNamespace(alertDTO.getNamespace())
-                .setClusterId(alertDTO.getClusterId());
-            if (middlewareMap.containsKey(middleware)) {
-                alertDTO.setChartVersion(middlewareMap.get(middleware));
-            } else {
-                JSONObject values =
-                    helmChartService.getInstalledValues(middleware, clusterService.findById(alertDTO.getClusterId()));
-                if (values != null && values.containsKey("chart-version")) {
-                    String version = values.getString("chart-version");
-                    middlewareMap.put(middleware, version);
-                    alertDTO.setChartVersion(version);
-                } else {
-                    middlewareMap.put(middleware, null);
-                    alertDTO.setChartVersion(null);
-                }
-            }
+//            Middleware middleware = new Middleware().setName(alertDTO.getName()).setNamespace(alertDTO.getNamespace())
+//                .setClusterId(alertDTO.getClusterId());
+//            if (middlewareMap.containsKey(middleware)) {
+//                alertDTO.setChartVersion(middlewareMap.get(middleware));
+//            } else {
+//                JSONObject values =
+//                    helmChartService.getInstalledValues(middleware, clusterService.findById(alertDTO.getClusterId()));
+//                if (values != null && values.containsKey("chart-version")) {
+//                    String version = values.getString("chart-version");
+//                    middlewareMap.put(middleware, version);
+//                    alertDTO.setChartVersion(version);
+//                } else {
+//                    middlewareMap.put(middleware, null);
+//                    alertDTO.setChartVersion(null);
+//                }
+//            }
 
             //添加规则描述
             QueryWrapper<MiddlewareAlertInfo> queryWrapper = new QueryWrapper<>();

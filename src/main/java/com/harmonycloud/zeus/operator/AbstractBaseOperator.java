@@ -105,6 +105,9 @@ public abstract class AbstractBaseOperator {
     private MiddlewareAlertInfoMapper middlewareAlertInfoMapper;
     @Autowired
     private MiddlewareAlertsServiceImpl middlewareAlertsService;
+    @Autowired
+    private PodService podService;
+
     /**
      * 是否支持该中间件
      */
@@ -928,6 +931,7 @@ public abstract class AbstractBaseOperator {
                 middlewareAlertInfo.setName(middleware.getClusterId());
                 middlewareAlertInfo.setCreateTime(new Date());
                 middlewareAlertInfo.setType(middleware.getType());
+                middlewareAlertInfo.setDescription(rule.getAlert());
                 middlewareAlertInfoMapper.insert(middlewareAlertInfo);
             });
         }

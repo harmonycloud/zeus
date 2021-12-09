@@ -280,10 +280,12 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     public void delete(Middleware middleware) {
         this.deleteDisasterRecoveryInfo(middleware);
         super.delete(middleware);
-        // 删除备份相关
-        mysqlBackupService.deleteMiddlewareBackupInfo(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
-        // 删除定时备份任务
-        mysqlScheduleBackupService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
+        if (middleware.getDeleteBackupInfo() == null || middleware.getDeleteBackupInfo()) {
+            // 删除备份相关
+            mysqlBackupService.deleteMiddlewareBackupInfo(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
+            // 删除定时备份任务
+            mysqlScheduleBackupService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
+        }
     }
 
     @Override

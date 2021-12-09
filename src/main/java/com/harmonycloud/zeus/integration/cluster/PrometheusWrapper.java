@@ -74,7 +74,7 @@ public class PrometheusWrapper {
     private MiddlewareClusterMonitorInfo getPrometheusInfo(MiddlewareClusterDTO cluster) {
         MiddlewareClusterMonitorInfo prometheus;
         if (cluster.getMonitor() == null || cluster.getMonitor().getPrometheus() == null) {
-            throw new BusinessException(ErrorMessage.NOT_EXIST);
+            throw new BusinessException(ErrorMessage.PROMETHEUS_NOT_INSTALLED);
         } else {
             prometheus = cluster.getMonitor().getPrometheus();
             if (StringUtils.isBlank(cluster.getMonitor().getPrometheus().getProtocol())) {

@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.components.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
+import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitor;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitorInfo;
@@ -36,7 +37,7 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
 
 
     @Override
-    public void deploy(MiddlewareClusterDTO cluster, String type) {
+    public void deploy(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
         if (namespaceService.list(cluster.getId()).stream().noneMatch(ns -> "monitoring".equals(ns.getName()))){
             //创建分区
             namespaceService.save(cluster.getId(), "monitoring", null);
@@ -80,7 +81,7 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
             jsonValues.put("livenessProbe", livenessProbe);
         }
         //高可用或单实例
-        if (SIMPLE.equals(type)) {
+        if (SIMPLE.equals(clusterComponentsDto.getType())) {
             jsonValues.put("replicas", 1);
         } else {
             jsonValues.put("replicas", 3);
@@ -114,7 +115,7 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
     }
 
     @Override
-    protected String getValues(String repository, MiddlewareClusterDTO cluster, String type) {
+    protected String getValues(String repository, MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
         return null;
     }
 

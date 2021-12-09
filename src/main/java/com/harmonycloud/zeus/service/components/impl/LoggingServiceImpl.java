@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.components.impl;
 
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
+import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
@@ -28,11 +29,11 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
     }
 
     @Override
-    public void deploy(MiddlewareClusterDTO cluster, String type) {
+    public void deploy(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
         //创建分区
         namespaceService.save(cluster.getId(), "logging", null);
         //发布elasticsearch
-        super.deploy(cluster, type);
+        super.deploy(cluster, clusterComponentsDto);
         //为es创建nodePort
         createNodePort(cluster);
         //发布logPilot
@@ -47,7 +48,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
     }
 
     @Override
-    protected String getValues(String repository, MiddlewareClusterDTO cluster, String type) {
+    protected String getValues(String repository, MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
         String setValues = "image.repository=" + repository +
                 ",aliasName=middleware-elasticsearch" +
                 ",nameOverride=middleware-elasticsearch" +
@@ -63,7 +64,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
                 ",resources.master.requests.memory=4Gi" +
                 ",esJavaOpts.xmx=1024m" +
                 ",esJavaOpts.xms=1024m";
-        if (SIMPLE.equals(type)) {
+        if (SIMPLE.equals(clusterComponentsDto.getType())) {
             setValues = setValues + ",cluster.masterReplacesCount=1";
         } else {
             setValues = setValues + ",cluster.masterReplacesCount=3";

@@ -100,6 +100,8 @@ public class ClusterServiceImpl implements ClusterService {
     private MiddlewareService middlewareService;
     @Autowired
     private ClusterComponentService clusterComponentService;
+    @Autowired
+    private IngressComponentService ingressComponentService;
 
     @Value("${k8s.component.components:/usr/local/zeus-pv/components}")
     private String componentsPath;
@@ -398,6 +400,15 @@ public class ClusterServiceImpl implements ClusterService {
         }
         // 从map中移除
         k8SDefaultClusterService.delete(clusterId);
+        // 关联数据库信息删除
+        bindResourceDelete(cluster);
+    }
+
+    public void bindResourceDelete(MiddlewareClusterDTO cluster){
+        // 删除集群组件信息
+        clusterComponentService.delete(cluster.getId());
+        // 删除ingress信息
+        ingressComponentService.delete(cluster.getId());
     }
 
     private void checkClusterExistent(MiddlewareClusterDTO cluster, boolean expectExisting) {

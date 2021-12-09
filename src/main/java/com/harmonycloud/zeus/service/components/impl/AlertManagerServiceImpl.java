@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.components.impl;
 
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
+import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitor;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitorInfo;
@@ -33,13 +34,13 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
     }
 
     @Override
-    public void deploy(MiddlewareClusterDTO cluster, String type) {
+    public void deploy(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
         if (namespaceService.list(cluster.getId()).stream().noneMatch(ns -> "monitoring".equals(ns.getName()))){
             //创建分区
             namespaceService.save(cluster.getId(), "monitoring", null);
         }
         //发布alertManager
-        super.deploy(cluster, type);
+        super.deploy(cluster, clusterComponentsDto);
     }
 
     @Override
@@ -66,10 +67,10 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
     }
 
     @Override
-    public String getValues(String repository, MiddlewareClusterDTO cluster, String type){
+    public String getValues(String repository, MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto){
         String setValues = "image.alertmanager.repository=" + repository + "/alertmanager" +
                 ",clusterHost=" + cluster.getHost();
-        if (SIMPLE.equals(type)) {
+        if (SIMPLE.equals(clusterComponentsDto.getType())) {
             setValues = setValues + ",replicas=1";
         }else {
             setValues = setValues + ",replicas=3";

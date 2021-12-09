@@ -10,7 +10,6 @@ parameters:
     volumeType: LVM
     vgName: {{ .Values.storage.vgName }}
     fsType: ext4
-    lvmType: "striping"
 reclaimPolicy: Delete
 volumeBindingMode: WaitForFirstConsumer
 allowVolumeExpansion: true

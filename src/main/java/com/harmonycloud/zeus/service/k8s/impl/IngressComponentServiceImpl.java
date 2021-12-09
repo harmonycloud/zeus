@@ -88,7 +88,7 @@ public class IngressComponentServiceImpl implements IngressComponentService {
         // 检查是否安装成功
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
-                Thread.sleep(115000);
+                Thread.sleep(55000);
                 installSuccessCheck(cluster, ingressComponentDto);
             } catch (InterruptedException e) {
                 log.error("更新组件安装中状态失败");
@@ -192,9 +192,16 @@ public class IngressComponentServiceImpl implements IngressComponentService {
         beanIngressComponentsMapper.deleteById(existIngress.getId());
     }
 
+    @Override
+    public void delete(String clusterId) {
+        QueryWrapper<BeanIngressComponents> wrapper = new QueryWrapper<BeanIngressComponents>().eq("cluster_id", clusterId);
+        beanIngressComponentsMapper.delete(wrapper);
+    }
+
     public void insert(String clusterId, String name, Integer status) {
         BeanIngressComponents beanIngressComponents = new BeanIngressComponents();
         beanIngressComponents.setClusterId(clusterId);
+        beanIngressComponents.setIngressClassName(name);
         beanIngressComponents.setName(name);
         beanIngressComponents.setStatus(status);
         beanIngressComponents.setCreateTime(new Date());
@@ -222,8 +229,8 @@ public class IngressComponentServiceImpl implements IngressComponentService {
             } else if (pods.stream()
                 .allMatch(pod -> "Running".equals(pod.getStatus()) || "Completed".equals(pod.getStatus()))) {
                 status = 3;
-            } else if (ingress.getStatus() != 5 && ingress.getStatus() != 2) {
-                // 非卸载或安装中 则为异常
+            } else if (ingress.getStatus() != 5 && ingress.getStatus() != 2 && ingress.getStatus() != 6) {
+                // 非卸载或安装中或安装异常 则为运行异常
                 status = 4;
             }
             ingress.setStatus(status);

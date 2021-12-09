@@ -83,7 +83,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                         wrapper.or().eq("alert",keyword).or().eq("symbol",keyword)
                                 .or().eq("threshold",keyword).or().like("threshold",keyword)
                                 .or().eq("alert_time",keyword).or().eq("alert_times",keyword)
-                                .or().eq("content",keyword)
+                                .or().eq("content",keyword).or().eq("description",keyword)
                 );
             }
         }
@@ -229,10 +229,13 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             middlewareAlertsDTO.getAnnotations().put("product", "harmonycloud");
             middlewareAlertsDTO.getAnnotations().put("group", "memory-used");
             middlewareAlertsDTO.getAnnotations().put("name", "memory-used");
+            middlewareAlertsDTO.getAnnotations().put("message",middlewareAlertsDTO.getContent());
+            middlewareAlertsDTO.getAnnotations().put("summary",middlewareAlertsDTO.getContent());
             // 写入集群
             middlewareAlertsDTO.getLabels().put("clusterId", clusterId);
             middlewareAlertsDTO.getLabels().put("namespace",NameConstant.MONITORING);
             middlewareAlertsDTO.getLabels().put("service",NameConstant.PROMETHEUS_K8S_RULES);
+
             String time = middlewareAlertsDTO.getAlertTime().divide(middlewareAlertsDTO.getAlertTimes(),0, BigDecimal.ROUND_DOWN).toString();
             middlewareAlertsDTO.setTime(time);
             //告警规则入库
@@ -423,6 +426,10 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     public void addAlerts2Sql(String clusterId, String namespace, String middlewareName, MiddlewareAlertsDTO middlewareAlertsDTO) {
         Date date = new Date();
         MiddlewareAlertInfo middlewareAlertInfo = new MiddlewareAlertInfo();
+        String alert = middlewareAlertsDTO.getAlert() + "-" + UUIDUtils.get8UUID();
+        if("system".equals(middlewareAlertsDTO.getLay())) {
+            middlewareAlertsDTO.getLabels().put("alertname",alert);
+        }
         BeanUtils.copyProperties(middlewareAlertsDTO,middlewareAlertInfo);
         middlewareAlertInfo.setAnnotations(JSONUtil.toJsonStr(middlewareAlertsDTO.getAnnotations()));
         middlewareAlertInfo.setLabels(JSONUtil.toJsonStr(middlewareAlertsDTO.getLabels()));
@@ -431,7 +438,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         middlewareAlertInfo.setMiddlewareName(middlewareName);
         middlewareAlertInfo.setCreateTime(date);
         middlewareAlertInfo.setName(clusterId);
-        middlewareAlertInfo.setAlert(middlewareAlertsDTO.getAlert() + "-" + UUIDUtils.get8UUID() );
+        middlewareAlertInfo.setAlert(alert);
         middlewareAlertInfoMapper.insert(middlewareAlertInfo);
     }
 
