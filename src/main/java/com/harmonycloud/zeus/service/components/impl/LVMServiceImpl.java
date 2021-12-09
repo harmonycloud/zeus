@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.service.components.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
 import com.harmonycloud.caas.common.enums.DictEnum;
+import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
@@ -14,8 +15,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author xutianhong
@@ -25,6 +28,8 @@ import java.util.Map;
 @Service
 @Operator(paramTypes4One = String.class)
 public class LVMServiceImpl extends AbstractBaseOperator implements LoggingService {
+
+    private static final Map<String, String> size = new ConcurrentHashMap<>();
 
     @Override
     public boolean support(String name) {
@@ -52,6 +57,7 @@ public class LVMServiceImpl extends AbstractBaseOperator implements LoggingServi
         String url = getMinioUrl(cluster);
         AssertUtil.notBlank(clusterComponentsDto.getVgName(), DictEnum.ACCESS_KEY_ID);
         AssertUtil.notBlank(clusterComponentsDto.getVgName(), DictEnum.SIZE);
+        size.put("size", clusterComponentsDto.getSize());
         return "image.repository=" + repository +
                 ",storage.vgName=" + clusterComponentsDto.getVgName() +
                 ",storage.size=" + clusterComponentsDto.getSize() +
@@ -61,7 +67,8 @@ public class LVMServiceImpl extends AbstractBaseOperator implements LoggingServi
 
     @Override
     protected void updateCluster(MiddlewareClusterDTO cluster) {
-
+        cluster.getStorage().put(StorageClassProvisionerEnum.CSI_LVM.getType(), size.get("lvm"));
+        clusterService.update(cluster);
     }
 
     @Override

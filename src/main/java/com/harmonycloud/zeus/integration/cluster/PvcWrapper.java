@@ -8,6 +8,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author dengyulong
@@ -35,6 +36,10 @@ public class PvcWrapper {
 
     public void delete(String clusterId, String namespace, String name) {
         K8sClient.getClient(clusterId).persistentVolumeClaims().inNamespace(namespace).withName(name).delete();
+    }
+
+    public void delete(String clusterId, String namespace, Map<String, String> map) {
+        K8sClient.getClient(clusterId).persistentVolumeClaims().inNamespace(namespace).withLabels(map).delete();
     }
 
 }

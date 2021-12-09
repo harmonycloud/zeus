@@ -6,6 +6,7 @@ import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.bean.BeanClusterComponents;
 import com.harmonycloud.zeus.dao.BeanClusterComponentsMapper;
+import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.IngressService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
@@ -25,6 +26,10 @@ public abstract class AbstractBaseOperator {
 
     @Value("${k8s.component.components:/usr/local/zeus-pv/components}")
     protected String componentsPath;
+    /**
+     * 默认存储限额
+     */
+    protected static final String DEFAULT_STORAGE_LIMIT = "100Gi";
 
     @Autowired
     protected HelmChartService helmChartService;
@@ -38,6 +43,8 @@ public abstract class AbstractBaseOperator {
     protected PodService podService;
     @Autowired
     protected BeanClusterComponentsMapper beanClusterComponentsMapper;
+    @Autowired
+    protected PvcWrapper pvcWrapper;
 
     public void deploy(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto){
         //获取仓库地址
