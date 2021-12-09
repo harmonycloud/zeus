@@ -41,7 +41,7 @@ public class ClusterComponentController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
            })
     @GetMapping
-    public BaseResult<List<ClusterComponentsDto>> list(@PathVariable("clusterId") String clusterId) {
+    public BaseResult<List<ClusterComponentsDto>> list(@PathVariable("clusterId") String clusterId) throws Exception {
         return BaseResult.ok(clusterComponentService.list(clusterId));
     }
 

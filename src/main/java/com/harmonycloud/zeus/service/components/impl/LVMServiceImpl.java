@@ -3,6 +3,9 @@ package com.harmonycloud.zeus.service.components.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
 import com.harmonycloud.caas.common.enums.DictEnum;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
@@ -11,11 +14,16 @@ import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.LoggingService;
 import com.harmonycloud.zeus.util.AssertUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static com.harmonycloud.caas.common.constants.CommonConstant.ALREADY_EXISTED;
 
 /**
  * @author xutianhong
@@ -25,6 +33,8 @@ import java.util.Map;
 @Service
 @Operator(paramTypes4One = String.class)
 public class LVMServiceImpl extends AbstractBaseOperator implements LoggingService {
+
+    private static final Map<String, String> size = new ConcurrentHashMap<>();
 
     @Override
     public boolean support(String name) {
@@ -39,12 +49,22 @@ public class LVMServiceImpl extends AbstractBaseOperator implements LoggingServi
     @Override
     public void delete(MiddlewareClusterDTO cluster, Integer status) {
         helmChartService.uninstall(cluster, "middleware-operator", ComponentsEnum.LVM.getName());
+        cluster.getStorage().remove(StorageClassProvisionerEnum.CSI_LVM.getType());
+        clusterService.update(cluster);
     }
 
     @Override
     protected void install(String setValues, MiddlewareClusterDTO cluster) {
-        helmChartService.upgradeInstall(ComponentsEnum.LVM.getName(), "middleware-operator", setValues,
-                componentsPath + File.separator + "lvm-csi-plugin", cluster);
+        try {
+            helmChartService.upgradeInstall(ComponentsEnum.LVM.getName(), "middleware-operator", setValues,
+                    componentsPath + File.separator + "lvm-csi-plugin", cluster);
+        } catch (Exception e){
+            if (StringUtils.isNotEmpty(e.getMessage()) && e.getMessage().contains(ALREADY_EXISTED)) {
+                throw new BusinessException(ErrorMessage.LVM_ALREADY_EXISTED);
+            } else {
+                throw e;
+            }
+        }
     }
 
     @Override
@@ -52,6 +72,7 @@ public class LVMServiceImpl extends AbstractBaseOperator implements LoggingServi
         String url = getMinioUrl(cluster);
         AssertUtil.notBlank(clusterComponentsDto.getVgName(), DictEnum.ACCESS_KEY_ID);
         AssertUtil.notBlank(clusterComponentsDto.getVgName(), DictEnum.SIZE);
+        size.put("size", clusterComponentsDto.getSize());
         return "image.repository=" + repository +
                 ",storage.vgName=" + clusterComponentsDto.getVgName() +
                 ",storage.size=" + clusterComponentsDto.getSize() +
@@ -61,7 +82,8 @@ public class LVMServiceImpl extends AbstractBaseOperator implements LoggingServi
 
     @Override
     protected void updateCluster(MiddlewareClusterDTO cluster) {
-
+        cluster.getStorage().put(StorageClassProvisionerEnum.CSI_LVM.getType(), size.get("lvm"));
+        clusterService.update(cluster);
     }
 
     @Override

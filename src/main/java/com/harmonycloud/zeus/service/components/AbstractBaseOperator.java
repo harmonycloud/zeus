@@ -6,6 +6,7 @@ import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.bean.BeanClusterComponents;
 import com.harmonycloud.zeus.dao.BeanClusterComponentsMapper;
+import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.IngressService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
@@ -17,6 +18,8 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
+import static com.harmonycloud.caas.common.constants.CommonConstant.*;
+
 /**
  * @author xutianhong
  * @Date 2021/10/29 2:49 下午
@@ -25,6 +28,10 @@ public abstract class AbstractBaseOperator {
 
     @Value("${k8s.component.components:/usr/local/zeus-pv/components}")
     protected String componentsPath;
+    /**
+     * 默认存储限额
+     */
+    protected static final String DEFAULT_STORAGE_LIMIT = "100Gi";
 
     @Autowired
     protected HelmChartService helmChartService;
@@ -38,6 +45,8 @@ public abstract class AbstractBaseOperator {
     protected PodService podService;
     @Autowired
     protected BeanClusterComponentsMapper beanClusterComponentsMapper;
+    @Autowired
+    protected PvcWrapper pvcWrapper;
 
     public void deploy(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto){
         //获取仓库地址
@@ -50,25 +59,22 @@ public abstract class AbstractBaseOperator {
         updateCluster(cluster);
     }
 
-    public void updateStatus(MiddlewareClusterDTO cluster, String name) {
-        QueryWrapper<BeanClusterComponents> wrapper =
-                new QueryWrapper<BeanClusterComponents>().eq("cluster_id", cluster.getId()).eq("component", name);
-        BeanClusterComponents exist = beanClusterComponentsMapper.selectOne(wrapper);
+    public void updateStatus(MiddlewareClusterDTO cluster, BeanClusterComponents beanClusterComponents) {
         List<PodInfo> podInfoList = getPodInfoList(cluster.getId());
         // 默认正常
-        int status = exist.getStatus();
+        int status = beanClusterComponents.getStatus();
         if (CollectionUtils.isEmpty(podInfoList)) {
             // 未安装
-            status = 0;
+            status = NUM_ZERO;
         } else if (podInfoList.stream()
             .allMatch(pod -> "Running".equals(pod.getStatus()) || "Completed".equals(pod.getStatus()))) {
-            status = 3;
-        } else if (exist.getStatus() != 5 && exist.getStatus() != 2) {
+            status = NUM_THREE;
+        } else if (status != NUM_FIVE && status != NUM_TWO) {
             // 非卸载或安装中 则为异常
-            status = 4;
+            status = NUM_FOUR;
         }
-        exist.setStatus(status);
-        beanClusterComponentsMapper.update(exist, wrapper);
+        beanClusterComponents.setStatus(status);
+        beanClusterComponentsMapper.updateById(beanClusterComponents);
     }
 
     /**

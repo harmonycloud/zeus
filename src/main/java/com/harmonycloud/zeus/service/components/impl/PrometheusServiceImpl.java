@@ -86,7 +86,13 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
     @Override
     public void delete(MiddlewareClusterDTO cluster, Integer status) {
         if (status != 1){
+            // uninstall
             helmChartService.uninstall(cluster, "default", ComponentsEnum.PROMETHEUS.getName());
+            // delete pvc
+            Map<String, String> labels = new HashMap<>(2);
+            labels.put("app", "prometheus");
+            labels.put("prometheus", "k8s");
+            pvcWrapper.delete(cluster.getId(), "monitoring", labels);
         }
         if (cluster.getMonitor().getPrometheus() != null){
             cluster.getMonitor().setPrometheus(null);

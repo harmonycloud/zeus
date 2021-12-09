@@ -45,11 +45,14 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
     @Override
     public void delete(MiddlewareClusterDTO cluster, Integer status) {
         if (status != 1){
+            // uninstall
             helmChartService.uninstall(cluster, "minio", ComponentsEnum.MINIO.getName());
+            // 删除pvc
+            Map<String, String> labels = new HashMap<>(1);
+            labels.put("app", "minio");
+            pvcWrapper.delete(cluster.getId(), "minio", labels);
         }
-        if (cluster.getStorage().containsKey("minio")){
-            cluster.getStorage().remove("minio");
-        }
+        cluster.getStorage().remove("backup");
         clusterService.update(cluster);
     }
 

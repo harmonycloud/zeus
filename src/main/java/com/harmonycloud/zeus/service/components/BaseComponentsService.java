@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.components;
 
 import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.zeus.bean.BeanClusterComponents;
 
 /**
  * @author xutianhong
@@ -46,6 +47,6 @@ public interface BaseComponentsService {
      * @param cluster 集群信息
      * @param name 组件名称
      */
-    void updateStatus(MiddlewareClusterDTO cluster, String name);
+    void updateStatus(MiddlewareClusterDTO cluster, BeanClusterComponents beanClusterComponents);
 
 }

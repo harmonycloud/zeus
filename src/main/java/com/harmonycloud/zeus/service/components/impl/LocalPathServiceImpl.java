@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.components.impl;
 
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
+import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
@@ -32,6 +33,8 @@ public class LocalPathServiceImpl extends AbstractBaseOperator implements LocalP
     @Override
     public void delete(MiddlewareClusterDTO cluster, Integer status) {
         helmChartService.uninstall(cluster, "middleware-operator", ComponentsEnum.LOCAL_PATH.getName());
+        cluster.getStorage().remove(StorageClassProvisionerEnum.LOCAL_PATH.getType());
+        clusterService.update(cluster);
     }
 
     @Override
@@ -50,7 +53,8 @@ public class LocalPathServiceImpl extends AbstractBaseOperator implements LocalP
 
     @Override
     protected void updateCluster(MiddlewareClusterDTO cluster) {
-
+        cluster.getStorage().put(StorageClassProvisionerEnum.LOCAL_PATH.getType(), DEFAULT_STORAGE_LIMIT);
+        clusterService.update(cluster);
     }
 
     @Override
