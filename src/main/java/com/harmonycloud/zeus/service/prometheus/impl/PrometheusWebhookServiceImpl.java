@@ -79,7 +79,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
             wrapper.eq("alert",labels.getString("alertname"))
                     .eq("namespace",labels.getString("namespace"))
-                    .eq("name",labels.getString("service"));
+                    .eq("middleware_name",labels.getString("service"));
             MiddlewareAlertInfo alertInfo = middlewareAlertInfoMapper.selectOne(wrapper);
             if (alertInfo == null) {
                 beanAlertRecord.setLay("service");
