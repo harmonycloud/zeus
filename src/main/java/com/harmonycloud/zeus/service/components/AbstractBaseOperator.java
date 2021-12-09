@@ -69,8 +69,8 @@ public abstract class AbstractBaseOperator {
         } else if (podInfoList.stream()
             .allMatch(pod -> "Running".equals(pod.getStatus()) || "Completed".equals(pod.getStatus()))) {
             status = NUM_THREE;
-        } else if (status != NUM_FIVE && status != NUM_TWO) {
-            // 非卸载或安装中 则为异常
+        } else if (status != NUM_FIVE && status != NUM_TWO && status != NUM_SIX) {
+            // 非卸载或安装中或安装异常 则为运行异常
             status = NUM_FOUR;
         }
         beanClusterComponents.setStatus(status);

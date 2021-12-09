@@ -229,8 +229,8 @@ public class IngressComponentServiceImpl implements IngressComponentService {
             } else if (pods.stream()
                 .allMatch(pod -> "Running".equals(pod.getStatus()) || "Completed".equals(pod.getStatus()))) {
                 status = 3;
-            } else if (ingress.getStatus() != 5 && ingress.getStatus() != 2) {
-                // 非卸载或安装中 则为异常
+            } else if (ingress.getStatus() != 5 && ingress.getStatus() != 2 && ingress.getStatus() != 6) {
+                // 非卸载或安装中或安装异常 则为运行异常
                 status = 4;
             }
             ingress.setStatus(status);
