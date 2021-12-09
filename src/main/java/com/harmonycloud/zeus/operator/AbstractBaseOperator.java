@@ -133,7 +133,7 @@ public abstract class AbstractBaseOperator {
         // deal with Charts.yaml file
         replaceChart(helmChart, values);
         // deal with dynamic
-        aspectService.operation(cluster.getHost(), middleware, middleware.getDynamicValues(), values);
+        aspectService.operation(cluster, middleware, middleware.getDynamicValues(), values);
         // map to yaml
         String newValuesYaml = yaml.dumpAsMap(values);
         helmChart.setValueYaml(newValuesYaml);
