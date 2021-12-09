@@ -59,7 +59,7 @@ public class AlertManagerWrapper {
     private MiddlewareClusterMonitorInfo getAlertManagerInfo(MiddlewareClusterDTO cluster) {
         MiddlewareClusterMonitorInfo alertManager;
         if (cluster.getMonitor() == null || cluster.getMonitor().getAlertManager() == null) {
-            throw new BusinessException(ErrorMessage.NOT_EXIST);
+            throw new BusinessException(ErrorMessage.ALERT_MANAGER_NOT_INSTALLED);
         } else {
             alertManager = cluster.getMonitor().getAlertManager();
             if (StringUtils.isBlank(cluster.getMonitor().getAlertManager().getProtocol())) {
