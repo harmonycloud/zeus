@@ -56,48 +56,8 @@ public class PodServiceImpl implements PodService {
     @Override
     public Middleware list(String clusterId, String namespace, String middlewareName, String type) {
         MiddlewareCRD mw = middlewareCRDService.getCR(clusterId, namespace, type, middlewareName);
-        if (mw == null) {
-            throw new BusinessException(DictEnum.MIDDLEWARE, middlewareName, ErrorMessage.NOT_EXIST);
-        }
-        Middleware middleware = middlewareCRDService.simpleConvert(mw);
-        if (CollectionUtils.isEmpty(mw.getStatus().getInclude())) {
-            middleware.setPods(new ArrayList<>(0));
-            return middleware;
-        }
-        List<MiddlewareInfo> pods = mw.getStatus().getInclude().get(PODS);
-        if (CollectionUtils.isEmpty(pods)) {
-            middleware.setPods(new ArrayList<>(0));
-            return middleware;
-        }
-        List<MiddlewareInfo> pvcInfos = mw.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
-        Map<String, StorageClassDTO> scMap = storageClassService.convertStorageClass(pvcInfos, clusterId, namespace);
-        AtomicReference<Boolean> isAllLvmStorage = new AtomicReference<>(true);
-        // 给pod设置存储
-        List<PodInfo> podInfoList = new ArrayList<>();
-        for (MiddlewareInfo po : pods) {
-            Pod pod = podWrapper.get(clusterId, namespace, po.getName());
-            if (pod == null) {
-                continue;
-            }
-            PodInfo pi = convertPodInfo(pod)
-                    .setRole(StringUtils.isBlank(po.getType()) ? null : po.getType().toLowerCase());
-            // storage
-            StorageClassDTO scDTO = storageClassService.fuzzySearchStorageClass(scMap, po.getName());
-            if (scDTO != null) {
-                pi.getResources().setStorageClassQuota(scDTO.getStorage()).setStorageClassName(scDTO.getStorageClassName())
-                        .setIsLvmStorage(scDTO.getIsLvmStorage());
-                isAllLvmStorage.set(isAllLvmStorage.get() & scDTO.getIsLvmStorage());
-            }
-            // 给pod设置绑定的pvc
-            setPodPvc(pi, pvcInfos);
-            // 设置pod备份状态
-            setPodBackupStatus(clusterId, namespace, type, middlewareName, pi);
-            podInfoList.add(pi);
-        }
+        Middleware middleware = listPods(mw, clusterId, namespace, middlewareName, type);
         middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(clusterId, middleware.getNamespace(), middleware.getType(), middleware.getName()));
-        middleware.setIsAllLvmStorage(isAllLvmStorage.get());
-        middleware.setPodInfoGroup(convertListToGroup(podInfoList));
-        middleware.setPods(podInfoList);
         return middleware;
     }
 
@@ -305,6 +265,51 @@ public class PodServiceImpl implements PodService {
      */
     private void setPodBackupStatus(String clusterId, String namespace, String type, String middlewareName, PodInfo podInfo) {
         podInfo.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(clusterId, namespace, type, middlewareName, podInfo.getPodName()));
+    }
+
+    public Middleware listPods(MiddlewareCRD mw,String clusterId,String namespace,String middlewareName,String type){
+        if (mw == null) {
+            throw new BusinessException(DictEnum.MIDDLEWARE, middlewareName, ErrorMessage.NOT_EXIST);
+        }
+        Middleware middleware = middlewareCRDService.simpleConvert(mw);
+        if (CollectionUtils.isEmpty(mw.getStatus().getInclude())) {
+            middleware.setPods(new ArrayList<>(0));
+            return middleware;
+        }
+        List<MiddlewareInfo> pods = mw.getStatus().getInclude().get(PODS);
+        if (CollectionUtils.isEmpty(pods)) {
+            middleware.setPods(new ArrayList<>(0));
+            return middleware;
+        }
+        List<MiddlewareInfo> pvcInfos = mw.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
+        Map<String, StorageClassDTO> scMap = storageClassService.convertStorageClass(pvcInfos, clusterId, namespace);
+        AtomicReference<Boolean> isAllLvmStorage = new AtomicReference<>(true);
+        // 给pod设置存储
+        List<PodInfo> podInfoList = new ArrayList<>();
+        for (MiddlewareInfo po : pods) {
+            Pod pod = podWrapper.get(clusterId, namespace, po.getName());
+            if (pod == null) {
+                continue;
+            }
+            PodInfo pi = convertPodInfo(pod)
+                    .setRole(StringUtils.isBlank(po.getType()) ? null : po.getType().toLowerCase());
+            // storage
+            StorageClassDTO scDTO = storageClassService.fuzzySearchStorageClass(scMap, po.getName());
+            if (scDTO != null) {
+                pi.getResources().setStorageClassQuota(scDTO.getStorage()).setStorageClassName(scDTO.getStorageClassName())
+                        .setIsLvmStorage(scDTO.getIsLvmStorage());
+                isAllLvmStorage.set(isAllLvmStorage.get() & scDTO.getIsLvmStorage());
+            }
+            // 给pod设置绑定的pvc
+            setPodPvc(pi, pvcInfos);
+            // 设置pod备份状态
+            setPodBackupStatus(clusterId, namespace, type, middlewareName, pi);
+            podInfoList.add(pi);
+        }
+        middleware.setIsAllLvmStorage(isAllLvmStorage.get());
+        middleware.setPodInfoGroup(convertListToGroup(podInfoList));
+        middleware.setPods(podInfoList);
+        return middleware;
     }
 
 }
