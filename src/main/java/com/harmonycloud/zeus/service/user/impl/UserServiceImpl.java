@@ -330,6 +330,7 @@ public class UserServiceImpl implements UserService {
         userDtos = users.stream().map(user -> {
             UserDto userDto = new UserDto();
             BeanUtils.copyProperties(user,userDto);
+            userDto.setUserId(user.getId());
             return userDto;
         }).collect(Collectors.toList());
         QueryWrapper<MailToUser> mailToUserQueryWrapper = new QueryWrapper<>();

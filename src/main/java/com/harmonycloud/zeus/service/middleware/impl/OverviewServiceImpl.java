@@ -351,16 +351,6 @@ public class OverviewServiceImpl implements OverviewService {
         }
 
 
-        //根据ID查询
-        if (StringUtils.isNotEmpty(keyword)) {
-            String[] array = keyword.split("-");
-            if (array != null && array.length != 0) {
-                wrapper.eq("id",array[1]);
-            } else {
-                wrapper.eq("alert",keyword);
-            }
-
-        }
         //最近24小时
         if (StringUtils.isEmpty(clusterId)) {
             Date date = new Date();
@@ -382,22 +372,22 @@ public class OverviewServiceImpl implements OverviewService {
             AlertDTO alertDTO = new AlertDTO();
             BeanUtils.copyProperties(record, alertDTO);
             alertDTO.setTime(DateUtils.addInteger(alertDTO.getTime(), Calendar.HOUR_OF_DAY, 8));
-            Middleware middleware = new Middleware().setName(alertDTO.getName()).setNamespace(alertDTO.getNamespace())
-                .setClusterId(alertDTO.getClusterId());
-            if (middlewareMap.containsKey(middleware)) {
-                alertDTO.setChartVersion(middlewareMap.get(middleware));
-            } else {
-                JSONObject values =
-                    helmChartService.getInstalledValues(middleware, clusterService.findById(alertDTO.getClusterId()));
-                if (values != null && values.containsKey("chart-version")) {
-                    String version = values.getString("chart-version");
-                    middlewareMap.put(middleware, version);
-                    alertDTO.setChartVersion(version);
-                } else {
-                    middlewareMap.put(middleware, null);
-                    alertDTO.setChartVersion(null);
-                }
-            }
+//            Middleware middleware = new Middleware().setName(alertDTO.getName()).setNamespace(alertDTO.getNamespace())
+//                .setClusterId(alertDTO.getClusterId());
+//            if (middlewareMap.containsKey(middleware)) {
+//                alertDTO.setChartVersion(middlewareMap.get(middleware));
+//            } else {
+//                JSONObject values =
+//                    helmChartService.getInstalledValues(middleware, clusterService.findById(alertDTO.getClusterId()));
+//                if (values != null && values.containsKey("chart-version")) {
+//                    String version = values.getString("chart-version");
+//                    middlewareMap.put(middleware, version);
+//                    alertDTO.setChartVersion(version);
+//                } else {
+//                    middlewareMap.put(middleware, null);
+//                    alertDTO.setChartVersion(null);
+//                }
+//            }
 
             //添加规则描述
             QueryWrapper<MiddlewareAlertInfo> queryWrapper = new QueryWrapper<>();

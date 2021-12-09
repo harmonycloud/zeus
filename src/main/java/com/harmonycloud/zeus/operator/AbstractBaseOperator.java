@@ -928,6 +928,7 @@ public abstract class AbstractBaseOperator {
                 middlewareAlertInfo.setName(middleware.getClusterId());
                 middlewareAlertInfo.setCreateTime(new Date());
                 middlewareAlertInfo.setType(middleware.getType());
+                middlewareAlertInfo.setDescription(rule.getAlert());
                 middlewareAlertInfoMapper.insert(middlewareAlertInfo);
             });
         }
