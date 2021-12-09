@@ -44,6 +44,8 @@ public class LVMServiceImpl extends AbstractBaseOperator implements LoggingServi
     @Override
     public void delete(MiddlewareClusterDTO cluster, Integer status) {
         helmChartService.uninstall(cluster, "middleware-operator", ComponentsEnum.LVM.getName());
+        cluster.getStorage().remove(StorageClassProvisionerEnum.CSI_LVM.getType());
+        clusterService.update(cluster);
     }
 
     @Override
