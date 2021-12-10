@@ -918,24 +918,26 @@ public abstract class AbstractBaseOperator {
                 return;
             }
             prometheusRuleGroups.getRules().stream().forEach(rule -> {
-                MiddlewareAlertInfo middlewareAlertInfo = new MiddlewareAlertInfo();
-                middlewareAlertInfo.setAlert(rule.getAlert());
-                middlewareAlertInfo.setExpr(rule.getExpr());
-                middlewareAlertInfo.setSymbol(middlewareAlertsService.getSymbol(rule.getExpr()));
-                middlewareAlertInfo.setThreshold(middlewareAlertsService.getThreshold(rule.getExpr()));
-                middlewareAlertInfo.setTime(rule.getTime());
-                middlewareAlertInfo.setLabels(JSONUtil.toJsonStr(rule.getLabels()));
-                middlewareAlertInfo.setAnnotations(JSONUtil.toJsonStr(rule.getAnnotations()));
-                middlewareAlertInfo.setEnable("1");
-                middlewareAlertInfo.setLay("service");
-                middlewareAlertInfo.setClusterId(middleware.getClusterId());
-                middlewareAlertInfo.setNamespace(middleware.getNamespace());
-                middlewareAlertInfo.setMiddlewareName(middleware.getName());
-                middlewareAlertInfo.setName(middleware.getClusterId());
-                middlewareAlertInfo.setCreateTime(new Date());
-                middlewareAlertInfo.setType(middleware.getType());
-                middlewareAlertInfo.setDescription(rule.getAlert());
-                middlewareAlertInfoMapper.insert(middlewareAlertInfo);
+                if (StringUtils.isNotEmpty(rule.getAlert())) {
+                    MiddlewareAlertInfo middlewareAlertInfo = new MiddlewareAlertInfo();
+                    middlewareAlertInfo.setAlert(rule.getAlert());
+                    middlewareAlertInfo.setExpr(rule.getExpr());
+                    middlewareAlertInfo.setSymbol(middlewareAlertsService.getSymbol(rule.getExpr()));
+                    middlewareAlertInfo.setThreshold(middlewareAlertsService.getThreshold(rule.getExpr()));
+                    middlewareAlertInfo.setTime(rule.getTime());
+                    middlewareAlertInfo.setLabels(JSONUtil.toJsonStr(rule.getLabels()));
+                    middlewareAlertInfo.setAnnotations(JSONUtil.toJsonStr(rule.getAnnotations()));
+                    middlewareAlertInfo.setEnable("1");
+                    middlewareAlertInfo.setLay("service");
+                    middlewareAlertInfo.setClusterId(middleware.getClusterId());
+                    middlewareAlertInfo.setNamespace(middleware.getNamespace());
+                    middlewareAlertInfo.setMiddlewareName(middleware.getName());
+                    middlewareAlertInfo.setName(middleware.getClusterId());
+                    middlewareAlertInfo.setCreateTime(new Date());
+                    middlewareAlertInfo.setType(middleware.getType());
+                    middlewareAlertInfo.setDescription(rule.getAlert());
+                    middlewareAlertInfoMapper.insert(middlewareAlertInfo);
+                }
             });
         }
     }

@@ -347,10 +347,14 @@ public class OverviewServiceImpl implements OverviewService {
 
         if (StringUtils.isNotEmpty(keyword)) {
             if (middlewareAlertsService.isNumeric(keyword)) {
-                wrapper.like("id",keyword).or().like("alert_id",keyword);
+                wrapper.and(queryWrapper -> {
+                    queryWrapper.like("id",keyword).or().like("alert_id",keyword);
+                });
             } else {
-                wrapper.eq("id",keyword).or().like("alert",keyword)
-                        .or().like("content",keyword).or().like("expr",keyword);
+                wrapper.and(queryWrapper -> {
+                    wrapper.eq("id",keyword).or().like("alert",keyword)
+                            .or().like("content",keyword).or().like("expr",keyword);
+                });
             }
         }
 
