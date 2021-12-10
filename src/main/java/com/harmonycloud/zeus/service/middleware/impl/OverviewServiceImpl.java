@@ -352,7 +352,7 @@ public class OverviewServiceImpl implements OverviewService {
                 });
             } else {
                 wrapper.and(queryWrapper -> {
-                    wrapper.eq("id",keyword).or().like("alert",keyword)
+                    queryWrapper.eq("id",keyword).or().like("alert",keyword)
                             .or().like("content",keyword).or().like("expr",keyword);
                 });
             }
