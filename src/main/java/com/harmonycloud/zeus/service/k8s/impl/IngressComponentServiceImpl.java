@@ -161,7 +161,7 @@ public class IngressComponentServiceImpl implements IngressComponentService {
         //更新状态
         updateStatus(clusterId, ingressComponentsList);
         Map<String, BeanIngressComponents> ingressComponentsMap = ingressComponentsList.stream()
-                .collect(Collectors.toMap(BeanIngressComponents::getName, beanIngressComponents -> beanIngressComponents));
+                .collect(Collectors.toMap(BeanIngressComponents::getIngressClassName, beanIngressComponents -> beanIngressComponents));
         //封装数据
         return cluster.getIngressList().stream()
             .map(ingress -> new IngressComponentDto().setAddress(ingress.getAddress())
