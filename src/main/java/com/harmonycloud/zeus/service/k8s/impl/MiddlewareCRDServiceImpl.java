@@ -10,6 +10,7 @@ import com.harmonycloud.zeus.integration.cluster.MiddlewareWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
+import com.harmonycloud.zeus.service.k8s.PodService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,7 +40,8 @@ public class MiddlewareCRDServiceImpl implements MiddlewareCRDService {
 
     @Autowired
     private MiddlewareWrapper middlewareWrapper;
-
+    @Autowired
+    private PodService podService;
     /**
      * 查询中间件列表
      *
@@ -97,7 +99,10 @@ public class MiddlewareCRDServiceImpl implements MiddlewareCRDService {
     @Override
     public Middleware simpleDetail(String clusterId, String namespace, String type, String name) {
         MiddlewareCRD cr = getCR(clusterId, namespace, type, name);
-        return simpleConvert(cr);
+        Middleware pods = podService.listPods(cr, clusterId, namespace, name, type);
+        Middleware middleware = simpleConvert(cr);
+        middleware.setIsAllLvmStorage(pods.getIsAllLvmStorage());
+        return middleware;
     }
 
     @Override

@@ -323,14 +323,17 @@ public class OverviewServiceImpl implements OverviewService {
             PageHelper.startPage(current, size);
         }
         QueryWrapper<BeanAlertRecord> wrapper = new QueryWrapper<>();
-        wrapper.eq("lay",lay);
+        if (StringUtils.isNotEmpty(lay)) {
+            wrapper.eq("lay",lay);
+        }
         if ("system".equals(lay)) { //系统告警记录
             if (StringUtils.isNotEmpty(clusterId)) {
                 wrapper.eq("cluster_id", clusterId).eq("namespace", NameConstant.MONITORING).eq("name", NameConstant.PROMETHEUS_K8S_RULES);
             } else {
                 wrapper.isNotNull("cluster_id").eq("namespace", NameConstant.MONITORING).eq("name", NameConstant.PROMETHEUS_K8S_RULES);
             }
-        }else { //服务告警记录
+        }
+        if ("service".equals(lay)){ //服务告警记录
             if (StringUtils.isNotEmpty(clusterId) && StringUtils.isNotEmpty(namespace) && StringUtils.isNotEmpty(middlewareName)) {
                 wrapper.eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", middlewareName);
             } else {
@@ -344,12 +347,12 @@ public class OverviewServiceImpl implements OverviewService {
 
         if (StringUtils.isNotEmpty(keyword)) {
             if (middlewareAlertsService.isNumeric(keyword)) {
-                wrapper.like("id",keyword);
+                wrapper.like("id",keyword).or().like("alert_id",keyword);
             } else {
-                wrapper.eq("id",keyword).or().like("alert",keyword);
+                wrapper.eq("id",keyword).or().like("alert",keyword)
+                        .or().like("content",keyword).or().like("expr",keyword);
             }
         }
-
 
         //最近24小时
         if (StringUtils.isEmpty(clusterId)) {
@@ -367,7 +370,9 @@ public class OverviewServiceImpl implements OverviewService {
         List<BeanAlertRecord> recordList = beanAlertRecordMapper.selectList(wrapper);
         PageInfo<AlertDTO> alertDTOPage = new PageInfo<>();
         BeanUtils.copyProperties(new PageInfo<>(recordList), alertDTOPage);
-        Map<Middleware, String> middlewareMap = new HashMap<>();
+        if (recordList == null || recordList.isEmpty()) {
+            return alertDTOPage;
+        }
         alertDTOPage.setList(recordList.stream().map(record -> {
             AlertDTO alertDTO = new AlertDTO();
             BeanUtils.copyProperties(record, alertDTO);
@@ -388,19 +393,10 @@ public class OverviewServiceImpl implements OverviewService {
 //                    alertDTO.setChartVersion(null);
 //                }
 //            }
-
-            //添加规则描述
-            QueryWrapper<MiddlewareAlertInfo> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("alert",record.getAlert());
-            MiddlewareAlertInfo alertInfo = middlewareAlertInfoMapper.selectOne(queryWrapper);
-            if (alertInfo != null) {
-                //告警记录执行规则
-                alertDTO.setExpr(alertInfo.getDescription()+alertInfo.getSymbol()+alertInfo.getThreshold()+"%");
+            if (StringUtils.isNotEmpty(String.valueOf(record.getAlertId()))) {
                 //告警记录ID
-                alertDTO.setAlertId(middlewareAlertsService.calculateID(alertInfo.getAlertId())
+                alertDTO.setAlertId(middlewareAlertsService.calculateID(record.getAlertId())
                         + "-" + middlewareAlertsService.createId(record.getId()));
-                //告警内容
-                alertDTO.setContent(alertInfo.getContent());
             }
 
             return alertDTO;

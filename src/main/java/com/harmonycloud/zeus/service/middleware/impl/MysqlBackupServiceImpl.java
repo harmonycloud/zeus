@@ -13,6 +13,8 @@ import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.integration.minio.MinioWrapper;
+import com.harmonycloud.zeus.operator.BaseOperator;
+import com.harmonycloud.zeus.schedule.MiddlewareManageTask;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
 import com.harmonycloud.zeus.service.middleware.BackupService;
@@ -61,7 +63,9 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     @Autowired
     private MysqlScheduleBackupService mysqlScheduleBackupService;
     @Autowired
-    private MiddlewareService middlewareService;
+    private MiddlewareServiceImpl middlewareService;
+    @Autowired
+    private MiddlewareManageTask middlewareManageTask;
 
     @Override
     public List<MiddlewareBackupRecord> listRecord(String clusterId, String namespace, String middlewareName, String type) {
@@ -182,7 +186,8 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         String storageClassQuota = mysql.getStorageClassQuota();
         mysql.setStorageClassQuota(String.valueOf(Integer.parseInt(storageClassQuota) + 3));
         middleware.setBackupFileName(backupFileName);
-        middlewareService.delete(clusterId, namespace, middlewareName, type);
+        middleware.setDeleteBackupInfo(false);
+        middlewareManageTask.asyncDelete(middleware, middlewareService.getOperator(BaseOperator.class, BaseOperator.class, middleware));
         tryCreateMiddleware(clusterId, namespace, type, middlewareName, middleware);
         return BaseResult.ok();
     }

@@ -12,14 +12,9 @@ if [ $LINE_TYPE == "offline" ]; then
   echo "######  Load images done !  ######"
   echo
   echo "######  Push images  ######"
-  IMAGES=$(cat ./build/image.conf)
-  for IMG in $IMAGES
-  do
-  {
-    docker tag $IMG $IMAGE_REPO"/"$IMG
-    docker push $IMAGE_REPO"/"$IMG
-  }
-  done
+
+  sh load-image.sh ./image
+
   echo "######  Push images done !  ######"
 fi
 

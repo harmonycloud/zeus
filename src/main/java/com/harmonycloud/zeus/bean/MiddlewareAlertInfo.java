@@ -91,5 +91,11 @@ public class MiddlewareAlertInfo {
     @TableField("create_time")
     private Date createTime;
 
+    @TableField("ding")
+    private String ding;
+
+    @TableField("mail")
+    private String mail;
+
 
 }

@@ -105,6 +105,9 @@ public abstract class AbstractBaseOperator {
     private MiddlewareAlertInfoMapper middlewareAlertInfoMapper;
     @Autowired
     private MiddlewareAlertsServiceImpl middlewareAlertsService;
+    @Autowired
+    private PodService podService;
+
     /**
      * 是否支持该中间件
      */
@@ -905,6 +908,9 @@ public abstract class AbstractBaseOperator {
         QueryWrapper<BeanAlertRule> wrapper = new QueryWrapper<>();
         wrapper.eq("chart_name",middleware.getType()).eq("chart_version",middleware.getChartVersion());
         BeanAlertRule beanAlertRule = beanAlertRuleMapper.selectOne(wrapper);
+        if (beanAlertRule == null) {
+            return;
+        }
         JSONObject jsonObject = JSONObject.parseObject(beanAlertRule.getAlert());
         PrometheusRule prometheusRule = JSONObject.toJavaObject(jsonObject,PrometheusRule.class);
         for (PrometheusRuleGroups prometheusRuleGroups : prometheusRule.getSpec().getGroups()) {
