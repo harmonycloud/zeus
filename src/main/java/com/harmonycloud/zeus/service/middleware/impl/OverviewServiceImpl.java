@@ -393,7 +393,7 @@ public class OverviewServiceImpl implements OverviewService {
 //                    alertDTO.setChartVersion(null);
 //                }
 //            }
-            if (StringUtils.isNotEmpty(String.valueOf(record.getAlertId()))) {
+            if (record.getAlertId() != null) {
                 //告警记录ID
                 alertDTO.setAlertId(middlewareAlertsService.calculateID(record.getAlertId())
                         + "-" + middlewareAlertsService.createId(record.getId()));
