@@ -129,7 +129,7 @@ public class ClusterServiceImpl implements ClusterService {
             BeanUtils.copyProperties(info, cluster);
             cluster.setId(K8sClient.getClusterId(c.getMetadata())).setHost(info.getAddress())
                 .setName(c.getMetadata().getName()).setDcId(c.getMetadata().getNamespace())
-                .setIngressList(info.getIngressList());
+                .setIngressList(info.getIngressList()).setAnnotations(c.getMetadata().getAnnotations());
             if (!CollectionUtils.isEmpty(c.getMetadata().getAnnotations())) {
                 cluster.setNickname(c.getMetadata().getAnnotations().get(NAME));
             }
