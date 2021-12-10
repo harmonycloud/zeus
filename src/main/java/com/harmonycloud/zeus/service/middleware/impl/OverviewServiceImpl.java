@@ -370,7 +370,9 @@ public class OverviewServiceImpl implements OverviewService {
         List<BeanAlertRecord> recordList = beanAlertRecordMapper.selectList(wrapper);
         PageInfo<AlertDTO> alertDTOPage = new PageInfo<>();
         BeanUtils.copyProperties(new PageInfo<>(recordList), alertDTOPage);
-        Map<Middleware, String> middlewareMap = new HashMap<>();
+        if (recordList == null || recordList.isEmpty()) {
+            return alertDTOPage;
+        }
         alertDTOPage.setList(recordList.stream().map(record -> {
             AlertDTO alertDTO = new AlertDTO();
             BeanUtils.copyProperties(record, alertDTO);
@@ -391,9 +393,11 @@ public class OverviewServiceImpl implements OverviewService {
 //                    alertDTO.setChartVersion(null);
 //                }
 //            }
-             //告警记录ID
-            alertDTO.setAlertId(middlewareAlertsService.calculateID(record.getAlertId())
+            if (StringUtils.isNotEmpty(String.valueOf(record.getAlertId()))) {
+                //告警记录ID
+                alertDTO.setAlertId(middlewareAlertsService.calculateID(record.getAlertId())
                         + "-" + middlewareAlertsService.createId(record.getId()));
+            }
 
             return alertDTO;
         }).collect(Collectors.toList()));
