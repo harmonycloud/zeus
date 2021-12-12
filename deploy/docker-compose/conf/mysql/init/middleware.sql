@@ -349,9 +349,9 @@ INSERT INTO `resource_menu` VALUES (11, 'disasterCenter', '灾备中心', 'disas
 INSERT INTO `resource_menu` VALUES (12, 'dataSecurity', '数据安全', 'disasterBackup/dataSecurity', 62, NULL, 6, NULL);
 INSERT INTO `resource_menu` VALUES (13, 'userManagement', '用户管理', 'systemManagement/userManagement', 71, NULL, 7, NULL);
 INSERT INTO `resource_menu` VALUES (14, 'roleManagement', '角色管理', 'systemManagement/roleManagement', 72, NULL, 7, NULL);
-INSERT INTO `resource_menu` VALUES (15, 'operationAudit', '操作审计', 'systemManagement/operationAudit', 73, NULL, 7, NULL);
-INSERT INTO `resource_menu` VALUES (16, 'resourcePoolManagement', '资源池', 'systemManagement/resourcePoolManagement', 74, NULL, 7, NULL);
-INSERT INTO `resource_menu` VALUES (17, 'systemAlarm', '系统告警', 'systemManagement/systemAlarm', 74, NULL, 7, NULL);
+INSERT INTO `resource_menu` VALUES (15, 'systemAlarm', '系统告警', 'systemManagement/systemAlarm', 73, NULL, 7, NULL);
+INSERT INTO `resource_menu` VALUES (16, 'operationAudit', '操作审计', 'systemManagement/operationAudit', 74, NULL, 7, NULL);
+INSERT INTO `resource_menu` VALUES (17, 'resourcePoolManagement', '资源池', 'systemManagement/resourcePoolManagement', 75, NULL, 7, NULL);
 COMMIT;
 
 -- ----------------------------
