@@ -396,9 +396,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public List<MiddlewareBackupScheduleConfig> listBackupSchedule(String clusterId, String namespace, String type, String middlewareName) {
+    public List<MiddlewareBackupScheduleConfig> listBackupSchedule(String clusterId, String namespace, String type, String middlewareName, String keyword) {
         if (type.equals("mysql")) {
-            return mysqlAdapterService.listBackupSchedule(clusterId, namespace, type, middlewareName);
+            return mysqlAdapterService.listBackupSchedule(clusterId, namespace, type, middlewareName, keyword);
         }
         MiddlewareBackupScheduleList scheduleList = backupScheduleCRDService.list(clusterId, namespace, getBackupLabel(middlewareName, type));
         List<MiddlewareBackupScheduleConfig> configList = new ArrayList<>();
@@ -416,6 +416,15 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                     configList.add(config);
                 }
             });
+        }
+        if (StringUtils.isNotBlank(keyword)) {
+            return configList.stream().filter(record -> {
+                if (record.getSourceName().contains(keyword)) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }).collect(Collectors.toList());
         }
         return configList;
     }

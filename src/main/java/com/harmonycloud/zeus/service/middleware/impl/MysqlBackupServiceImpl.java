@@ -214,7 +214,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public List<MiddlewareBackupScheduleConfig> listBackupSchedule(String clusterId, String namespace, String type, String middlewareName) {
+    public List<MiddlewareBackupScheduleConfig> listBackupSchedule(String clusterId, String namespace, String type, String middlewareName, String keyword) {
         List<ScheduleBackup> scheduleBackupList = mysqlScheduleBackupService.listScheduleBackup(clusterId, namespace, middlewareName);
         List<MiddlewareBackupScheduleConfig> scheduleConfigList = new ArrayList<>();
         if (CollectionUtils.isEmpty(scheduleBackupList)) {
@@ -232,6 +232,15 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         config.setSourceName(middlewareName);
         config.setBackupType(BackupType.CLUSTER.getType());
         scheduleConfigList.add(config);
+        if (StringUtils.isNotBlank(keyword)) {
+            return scheduleConfigList.stream().filter(record -> {
+                if (record.getSourceName().contains(keyword)) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }).collect(Collectors.toList());
+        }
         return scheduleConfigList;
     }
 

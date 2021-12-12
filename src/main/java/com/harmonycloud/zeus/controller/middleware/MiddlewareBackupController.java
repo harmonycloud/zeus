@@ -70,13 +70,15 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "keyword", value = "备份源名称关键词", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping()
     public BaseResult listSchedule(@PathVariable("clusterId") String clusterId,
                                    @PathVariable("namespace") String namespace,
                                    @RequestParam("type") String type,
-                                   @RequestParam("middlewareName") String middlewareName) {
-        return BaseResult.ok(middlewareBackupService.listBackupSchedule(clusterId, namespace, type, middlewareName));
+                                   @RequestParam("middlewareName") String middlewareName,
+                                   @RequestParam(value = "keyword", required = false) String keyword) {
+        return BaseResult.ok(middlewareBackupService.listBackupSchedule(clusterId, namespace, type, middlewareName, keyword));
     }
 
     @ApiOperation(value = "删除备份规则", notes = "删除备份规则")
