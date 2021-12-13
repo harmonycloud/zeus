@@ -29,7 +29,7 @@ CREATE TABLE `alert_record` (
   `time` timestamp NULL DEFAULT NULL COMMENT '告警时间',
   `type` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '中间件类型',
   `lay` varchar(16) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '告警层面',
-  `expr` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '规则描述',
+  `expr` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '规则描述',
   `alert_id` int(16) DEFAULT NULL COMMENT '规则ID',
   `content` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '告警内容',
   PRIMARY KEY (`id`)
@@ -64,7 +64,7 @@ CREATE TABLE `alert_rule_id` (
   `time` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '分钟周期',
   `type` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '中间件类型',
   `unit` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '单位',
-  `expr` varchar(256) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '执行规则',
+  `expr` varchar(512) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '执行规则',
   `description` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '监控项',
   `annotations` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '备注',
   `labels` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '标签',

@@ -82,7 +82,7 @@ CREATE TABLE `alert_rule_id` (
   `time` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '分钟周期',
   `type` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '中间件类型',
   `unit` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT '单位',
-  `expr` varchar(256) COLLATE utf8_bin DEFAULT NULL COMMENT '执行规则',
+  `expr` varchar(512) COLLATE utf8_bin DEFAULT NULL COMMENT '执行规则',
   `description` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT '监控项',
   `annotations` text COLLATE utf8_bin COMMENT '备注',
   `labels` text COLLATE utf8_bin COMMENT '标签',
@@ -142,7 +142,7 @@ ADD COLUMN `create_time` timestamp(0) NULL COMMENT '创建时间' AFTER `status`
 -- 2021.12.9 yushuaikang
 ALTER TABLE `alert_rule_id` ADD COLUMN `ding`varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '是否选择钉钉通知';
 ALTER TABLE `alert_rule_id` ADD COLUMN `mail` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '是否选择邮箱通知';
-ALTER TABLE `alert_record` ADD COLUMN `expr` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '规则描述';
+ALTER TABLE `alert_record` ADD COLUMN `expr` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '规则描述';
 ALTER TABLE `alert_record` ADD COLUMN `alert_id` int(16) DEFAULT NULL COMMENT '规则ID';
 ALTER TABLE `alert_record` ADD COLUMN `content` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '告警内容';
 
