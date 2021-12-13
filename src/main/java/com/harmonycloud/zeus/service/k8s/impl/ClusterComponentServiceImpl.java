@@ -7,6 +7,7 @@ import com.harmonycloud.caas.common.model.MultipleComponentsInstallDto;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
+import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.bean.BeanClusterComponents;
 import com.harmonycloud.zeus.dao.BeanClusterComponentsMapper;
 import com.harmonycloud.zeus.service.middleware.MiddlewareManagerService;
@@ -29,6 +30,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
+
+import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_FIVE;
+import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_TWO;
 
 /**
  * @author dengyulong
@@ -145,6 +149,9 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         return clusterComponentsList.stream().map(cm -> {
             ClusterComponentsDto dto = new ClusterComponentsDto();
             BeanUtils.copyProperties(cm, dto);
+            if (cm.getStatus() == NUM_TWO){
+                dto.setSeconds(DateUtils.getIntervalDays(new Date(), dto.getCreateTime()));
+            }
             return dto;
         }).collect(Collectors.toList());
     }
