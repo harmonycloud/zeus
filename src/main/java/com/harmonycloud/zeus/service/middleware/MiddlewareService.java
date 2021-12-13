@@ -43,6 +43,13 @@ public interface MiddlewareService {
     void create(Middleware middleware);
 
     /**
+     * 恢复中间件
+     *
+     * @param middleware 中间件信息
+     */
+    void recovery(Middleware middleware);
+
+    /**
      * 修改中间件
      *
      * @param middleware 中间件信息
@@ -54,9 +61,18 @@ public interface MiddlewareService {
      *  @param clusterId 集群id
      * @param namespace 命名空间
      * @param name      中间件名称
-     * @param type
+     * @param type      中间件类型
      */
     void delete(String clusterId, String namespace, String name, String type);
+
+    /**
+     * 删除中间件相关存储
+     *  @param clusterId 集群id
+     * @param namespace 命名空间
+     * @param name      中间件名称
+     * @param type      中间件类型
+     */
+    void deleteStorage(String clusterId, String namespace, String name, String type);
 
     /**
      * 中间件手动切换

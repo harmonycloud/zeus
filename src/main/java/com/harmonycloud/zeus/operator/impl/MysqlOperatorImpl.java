@@ -279,7 +279,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         this.createDisasterRecoveryMiddleware(middleware);
     }
 
-    @Override
+    /*@Override
     public void delete(Middleware middleware) {
         this.deleteDisasterRecoveryInfo(middleware);
         super.delete(middleware);
@@ -295,6 +295,28 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             } catch (Exception e) {
                 log.error("集群：{}，命名空间：{}，mysql中间件：{}，删除mysql备份异常", middleware.getClusterId(), middleware.getNamespace(),
                     middleware.getName(), e);
+            }
+        });
+        // 删除定时备份任务
+        scheduleBackupService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
+    }*/
+
+    @Override
+    public void deleteStorage(Middleware middleware) {
+        this.deleteDisasterRecoveryInfo(middleware);
+        super.deleteStorage(middleware);
+        // 删除备份
+        String backupName = getBackupName(middleware);
+        List<Backup> backupList = backupService.listBackup(middleware.getClusterId(), middleware.getNamespace());
+        backupList.forEach(backup -> {
+            if (!backup.getName().contains(backupName)) {
+                return;
+            }
+            try {
+                deleteBackup(middleware, backup.getBackupFileName(), backup.getName());
+            } catch (Exception e) {
+                log.error("集群：{}，命名空间：{}，mysql中间件：{}，删除mysql备份异常", middleware.getClusterId(), middleware.getNamespace(),
+                        middleware.getName(), e);
             }
         });
         // 删除定时备份任务

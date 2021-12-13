@@ -50,6 +50,14 @@ public interface BaseOperator {
     void create(Middleware middleware, MiddlewareClusterDTO cluster);
 
     /**
+     * 恢复中间件
+     *
+     * @param middleware 中间件信息
+     * @param cluster    集群
+     */
+    void recovery(Middleware middleware, MiddlewareClusterDTO cluster);
+
+    /**
      * 创建校验
      *
      * @param middleware 中间件信息
@@ -79,6 +87,13 @@ public interface BaseOperator {
      * @param middleware 中间件信息
      */
     void delete(Middleware middleware);
+
+    /**
+     * 删除中间件相关存储
+     *
+     * @param middleware 中间件信息
+     */
+    void deleteStorage(Middleware middleware);
 
     /**
      * 手动切换中间件
