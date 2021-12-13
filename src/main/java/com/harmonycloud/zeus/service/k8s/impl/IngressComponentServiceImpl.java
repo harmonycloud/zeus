@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
+import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.bean.BeanClusterComponents;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +28,8 @@ import com.harmonycloud.zeus.service.k8s.PodService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_TWO;
 
 /**
  * @author xutianhong
@@ -155,22 +158,26 @@ public class IngressComponentServiceImpl implements IngressComponentService {
             return new ArrayList<>();
         }
         //数据同步
-        if (cluster.getIngressList().size() > ingressComponentsList.size()){
+        if (cluster.getIngressList().size() > ingressComponentsList.size()) {
             synchronization(cluster, ingressComponentsList);
         }
-        //更新状态
+        // 更新状态
         updateStatus(clusterId, ingressComponentsList);
-        Map<String, BeanIngressComponents> ingressComponentsMap = ingressComponentsList.stream()
-                .collect(Collectors.toMap(BeanIngressComponents::getIngressClassName, beanIngressComponents -> beanIngressComponents));
-        //封装数据
-        return cluster.getIngressList().stream()
-            .map(ingress -> new IngressComponentDto().setAddress(ingress.getAddress())
+        Map<String, BeanIngressComponents> ingressComponentsMap = ingressComponentsList.stream().collect(Collectors
+            .toMap(BeanIngressComponents::getIngressClassName, beanIngressComponents -> beanIngressComponents));
+        // 封装数据
+        return cluster.getIngressList().stream().map(ingress -> {
+            IngressComponentDto ic = new IngressComponentDto().setAddress(ingress.getAddress())
                 .setIngressClassName(ingress.getIngressClassName()).setNamespace(ingress.getTcp().getNamespace())
                 .setConfigMapName(ingress.getTcp().getConfigMapName()).setClusterId(clusterId)
                 .setStatus(ingressComponentsMap.get(ingress.getIngressClassName()).getStatus())
                 .setId(ingressComponentsMap.get(ingress.getIngressClassName()).getId())
-                .setCreateTime(ingressComponentsMap.get(ingress.getIngressClassName()).getCreateTime()))
-            .collect(Collectors.toList());
+                .setCreateTime(ingressComponentsMap.get(ingress.getIngressClassName()).getCreateTime());
+            if (ic.getStatus() == NUM_TWO) {
+                ic.setSeconds(DateUtils.getIntervalDays(new Date(), ic.getCreateTime()));
+            }
+            return ic;
+        }).collect(Collectors.toList());
     }
 
     @Override
