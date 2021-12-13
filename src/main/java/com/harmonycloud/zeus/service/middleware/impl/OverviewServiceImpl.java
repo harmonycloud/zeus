@@ -347,10 +347,14 @@ public class OverviewServiceImpl implements OverviewService {
 
         if (StringUtils.isNotEmpty(keyword)) {
             if (middlewareAlertsService.isNumeric(keyword)) {
-                wrapper.like("id",keyword).or().like("alert_id",keyword);
+                wrapper.and(queryWrapper -> {
+                    queryWrapper.like("id",keyword).or().like("alert_id",keyword);
+                });
             } else {
-                wrapper.eq("id",keyword).or().like("alert",keyword)
-                        .or().like("content",keyword).or().like("expr",keyword);
+                wrapper.and(queryWrapper -> {
+                    queryWrapper.eq("id",keyword).or().like("alert",keyword)
+                            .or().like("content",keyword).or().like("expr",keyword);
+                });
             }
         }
 
@@ -393,7 +397,7 @@ public class OverviewServiceImpl implements OverviewService {
 //                    alertDTO.setChartVersion(null);
 //                }
 //            }
-            if (StringUtils.isNotEmpty(String.valueOf(record.getAlertId()))) {
+            if (record.getAlertId() != null) {
                 //告警记录ID
                 alertDTO.setAlertId(middlewareAlertsService.calculateID(record.getAlertId())
                         + "-" + middlewareAlertsService.createId(record.getId()));

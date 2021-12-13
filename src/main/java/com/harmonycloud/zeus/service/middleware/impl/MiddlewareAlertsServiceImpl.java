@@ -236,7 +236,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             middlewareAlertsDTO.getLabels().put("namespace",NameConstant.MONITORING);
             middlewareAlertsDTO.getLabels().put("service",NameConstant.PROMETHEUS_K8S_RULES);
 
-            String time = middlewareAlertsDTO.getAlertTime().divide(middlewareAlertsDTO.getAlertTimes(),0, BigDecimal.ROUND_DOWN).toString();
+            String time = middlewareAlertsDTO.getAlertTime().divide(middlewareAlertsDTO.getAlertTimes(),0, BigDecimal.ROUND_UP).toString();
             middlewareAlertsDTO.setTime(time);
             //告警规则入库
             addAlerts2Sql(clusterId,NameConstant.MONITORING,NameConstant.PROMETHEUS_K8S_RULES,middlewareAlertsDTO);
