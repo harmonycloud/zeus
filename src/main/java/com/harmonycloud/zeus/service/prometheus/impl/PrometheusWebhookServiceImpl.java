@@ -74,7 +74,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             beanAlertRecord.setMessage(annotations.getString("message"));
             Date date = DateUtils.parseDate(
                     alert.getString("startsAt").replace(StringUtils.substring(alert.getString("startsAt"), -7, -1), ""),
-                    DateStyle.YYYY_MM_DD_HH_MM_SS);
+                    DateStyle.YYYY_MM_DD_T_HH_MM_SS_Z_SSS);
             beanAlertRecord.setTime(date);
             QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
             wrapper.eq("alert",labels.getString("alertname"))
@@ -102,7 +102,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             //告警指标
             alertInfoDto.setClusterId(clusterId);
             //告警时间
-            alertInfoDto.setAlertTime(date);
+            alertInfoDto.setAlertTime(beanAlertRecord.getTime());
             //告警等级
             alertInfoDto.setLevel((String) JSON.parseObject(alertInfo.getLabels(), HashMap.class).get("severity"));
             //规则描述
