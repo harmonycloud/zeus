@@ -133,4 +133,10 @@ public class BeanMiddlewareInfo implements Serializable {
      */
     @TableField("compatible_versions")
     private String compatibleVersions;
+
+    /**
+     * 集群id（辅助使用，数据库中不存在此字段）
+     */
+    @TableField(exist = false)
+    private String clusterId;
 }

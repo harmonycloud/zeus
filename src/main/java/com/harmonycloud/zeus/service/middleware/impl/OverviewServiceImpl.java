@@ -810,6 +810,21 @@ public class OverviewServiceImpl implements OverviewService {
         }
         //获取各中间件服务数量信息
         List<MiddlewareBriefInfoDTO> middlewareBriefInfoList = middlewareService.getMiddlewareBriefInfoList(clusterList);
+        if (StringUtils.isBlank(clusterId) && clusterList.size() > 1) {
+            Map<String, MiddlewareBriefInfoDTO> resMap = new HashMap<>();
+            middlewareBriefInfoList.forEach(mwInfo -> {
+                MiddlewareBriefInfoDTO briefInfoDTO = resMap.get(mwInfo.getName());
+                if (briefInfoDTO != null) {
+                    briefInfoDTO.setServiceNum(briefInfoDTO.getServiceNum() + mwInfo.getServiceNum());
+                    briefInfoDTO.setErrServiceNum(briefInfoDTO.getErrServiceNum() + mwInfo.getErrServiceNum());
+                } else {
+                    resMap.put(mwInfo.getName(), mwInfo);
+                }
+            });
+            middlewareBriefInfoList.clear();
+            middlewareBriefInfoList.addAll(resMap.values());
+        }
+
         platformOverviewDTO.setBriefInfoList(middlewareBriefInfoList);
         return BaseResult.ok(platformOverviewDTO);
     }
