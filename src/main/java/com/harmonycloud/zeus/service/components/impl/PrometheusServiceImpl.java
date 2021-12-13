@@ -99,10 +99,10 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
     protected void updateCluster(MiddlewareClusterDTO cluster) {
         MiddlewareClusterMonitorInfo prometheus = new MiddlewareClusterMonitorInfo();
         prometheus.setProtocol("http").setPort("31901").setHost(cluster.getHost());
-        cluster.getMonitor().setPrometheus(prometheus);
         if (cluster.getMonitor() == null){
             cluster.setMonitor(new MiddlewareClusterMonitor());
         }
+        cluster.getMonitor().setPrometheus(prometheus);
         clusterService.update(cluster);
     }
 
