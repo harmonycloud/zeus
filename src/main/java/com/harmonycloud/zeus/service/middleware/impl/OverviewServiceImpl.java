@@ -346,10 +346,23 @@ public class OverviewServiceImpl implements OverviewService {
         }
 
         if (StringUtils.isNotEmpty(keyword)) {
-            if (middlewareAlertsService.isNumeric(keyword)) {
+            String alertID = keyword.replaceAll("GJ","");
+            if (middlewareAlertsService.isNumeric(alertID)) {
                 wrapper.and(queryWrapper -> {
-                    queryWrapper.like("id",keyword).or().like("alert_id",keyword);
+                    queryWrapper.like("id",Integer.parseInt(alertID)).or().like("alert_id",Integer.parseInt(alertID));
                 });
+            } else if (alertID.contains("-")) {
+                String[] alert = alertID.split("-");
+                if (alert.length == 1) {
+                    wrapper.and(queryWrapper -> {
+                        queryWrapper.like("id",Integer.parseInt(alert[0])).or().like("alert_id",Integer.parseInt(alert[0]));
+                    });
+                }
+                if (alert.length == 2) {
+                    wrapper.and(queryWrapper -> {
+                        queryWrapper.like("id",Integer.parseInt(alert[1])).like("alert_id",Integer.parseInt(alert[0]));
+                    });
+                }
             } else {
                 wrapper.and(queryWrapper -> {
                     queryWrapper.eq("id",keyword).or().like("alert",keyword)
