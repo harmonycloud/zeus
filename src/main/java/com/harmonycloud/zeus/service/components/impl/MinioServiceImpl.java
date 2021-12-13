@@ -47,10 +47,6 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
         if (status != 1){
             // uninstall
             helmChartService.uninstall(cluster, "minio", ComponentsEnum.MINIO.getName());
-            // 删除pvc
-            Map<String, String> labels = new HashMap<>(1);
-            labels.put("app", "minio");
-            pvcWrapper.delete(cluster.getId(), "minio", labels);
         }
         cluster.getStorage().remove("backup");
         clusterService.update(cluster);

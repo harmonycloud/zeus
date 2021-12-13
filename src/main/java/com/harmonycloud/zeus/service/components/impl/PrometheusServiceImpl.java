@@ -88,11 +88,6 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
         if (status != 1){
             // uninstall
             helmChartService.uninstall(cluster, "default", ComponentsEnum.PROMETHEUS.getName());
-            // delete pvc
-            Map<String, String> labels = new HashMap<>(2);
-            labels.put("app", "prometheus");
-            labels.put("prometheus", "k8s");
-            pvcWrapper.delete(cluster.getId(), "monitoring", labels);
         }
         if (cluster.getMonitor().getPrometheus() != null){
             cluster.getMonitor().setPrometheus(null);
@@ -104,10 +99,10 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
     protected void updateCluster(MiddlewareClusterDTO cluster) {
         MiddlewareClusterMonitorInfo prometheus = new MiddlewareClusterMonitorInfo();
         prometheus.setProtocol("http").setPort("31901").setHost(cluster.getHost());
-        cluster.getMonitor().setPrometheus(prometheus);
         if (cluster.getMonitor() == null){
             cluster.setMonitor(new MiddlewareClusterMonitor());
         }
+        cluster.getMonitor().setPrometheus(prometheus);
         clusterService.update(cluster);
     }
 
