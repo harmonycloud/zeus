@@ -137,6 +137,7 @@ public class RoleServiceImpl implements RoleService {
                         resourceMenuDto.setOwn(false);
                     }
                 }).collect(Collectors.toList()));
+            roleDto.setClusterList(clusterRoleService.get(roleDto.getId()));
             return roleDto;
         }).filter(roleDto -> {
             if (StringUtils.isNotEmpty(key)) {
