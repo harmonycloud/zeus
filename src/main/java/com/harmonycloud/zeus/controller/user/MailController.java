@@ -31,13 +31,6 @@ public class MailController {
     @Autowired
     private MailService mailService;
 
-    @ApiOperation(value = "发送邮件", notes = "发送邮件")
-    @PostMapping("/sendMail")
-    public BaseResult sendMail(@RequestBody AlertInfoDto alertInfoDto) throws UnsupportedEncodingException, MessagingException {
-        mailService.sendHtmlMail(alertInfoDto);
-        return BaseResult.ok();
-    }
-
     @ApiOperation(value = "设置邮箱", notes = "设置邮箱")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "mailInfo", value = "邮箱信息", paramType = "query", dataTypeClass = MailInfo.class),

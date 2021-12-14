@@ -65,7 +65,7 @@ public class MailServiceImpl implements MailService {
         sender.setDefaultEncoding("Utf-8");
         sender.setProtocol("smtp");
         Properties p = new Properties();
-//        p.setProperty("mail.smtp.timeout", "100");
+        p.setProperty("mail.smtp.timeout", "25000");
         p.setProperty("mail.smtp.auth", "true");
         p.setProperty("mail.smtp.starttls.enable","true");
         p.setProperty("mail.smtp.starttls.required","true");
@@ -84,7 +84,7 @@ public class MailServiceImpl implements MailService {
      * @throws UnsupportedEncodingException 异常
      */
     @Override
-    public void sendHtmlMail(AlertInfoDto alertInfoDto) {
+    public void sendHtmlMail(AlertInfoDto alertInfoDto,MailToUser mailToUser) {
         QueryWrapper<MailInfo> wrapper = new QueryWrapper<>();
         MailInfo mailInfo = mailMapper.selectOne(wrapper);
         if (mailInfo == null || alertInfoDto == null) {
@@ -99,11 +99,9 @@ public class MailServiceImpl implements MailService {
             messageHelper.setFrom(mailInfo.getMailPath(), path[0]);
             messageHelper.setSubject("【中间件平台】"+alertInfoDto.getClusterId()+alertInfoDto.getDescription()+"告警");
             List<MailToUser> users = mailToUserMapper.selectList(new QueryWrapper<MailToUser>());
-            for (MailToUser user : users) {
-                messageHelper.setText(buildContent(alertInfoDto,user.getAliasName()), true);
-                messageHelper.setTo(user.getEmail());
-                mailSender.send(mimeMessage);
-            }
+            messageHelper.setText(buildContent(alertInfoDto,mailToUser.getAliasName()), true);
+            messageHelper.setTo(mailToUser.getEmail());
+            mailSender.send(mimeMessage);
         }catch (Exception e) {
             logger.error("邮件发送失败:"+e.getMessage());
         }
@@ -122,16 +120,28 @@ public class MailServiceImpl implements MailService {
 
     @Override
     public void insertUser(List<BeanUser> users, String ding) {
+        QueryWrapper<MailToUser> mailToUserQueryWrapper = new QueryWrapper<>();
+        List<MailToUser> mailUsers = mailToUserMapper.selectList(mailToUserQueryWrapper);
+        List<Integer> list = mailUsers.stream().map(mail -> {
+            Integer id = mail.getUserId();
+            return id;
+        }).collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(users)) {
             List<MailToUser> mailToUsers = users.stream().map(user -> {
                 MailToUser mailToUser = new MailToUser();
-                BeanUtils.copyProperties(user,mailToUser);
-                mailToUser.setTime(new Date());
-                mailToUser.setUserId(user.getId());
-                return mailToUser;
+                if (list.contains(user.getId())) {
+                    return mailToUser;
+                }else {
+                    BeanUtils.copyProperties(user,mailToUser);
+                    mailToUser.setTime(new Date());
+                    mailToUser.setUserId(user.getId());
+                    return mailToUser;
+                }
             }).collect(Collectors.toList());
             mailToUsers.stream().forEach(user ->{
-                mailToUserMapper.insert(user);
+                if (user.getUserId() != null) {
+                    mailToUserMapper.insert(user);
+                }
             });
         }
         if (StringUtils.isNotEmpty(ding)) {

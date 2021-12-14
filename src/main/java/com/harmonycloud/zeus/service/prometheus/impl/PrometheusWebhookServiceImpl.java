@@ -1,9 +1,13 @@
 package com.harmonycloud.zeus.service.prometheus.impl;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
+import com.harmonycloud.zeus.bean.MailToUser;
+import com.harmonycloud.zeus.dao.MailToUserMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,6 +33,8 @@ import com.harmonycloud.zeus.service.user.MailService;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.mail.MessagingException;
+
 /**
  * @author xutianhong
  * @Date 2021/5/7 5:46 下午
@@ -49,6 +55,8 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
     private MiddlewareAlertsServiceImpl middlewareAlertsServiceImpl;
     @Autowired
     private AlertManagerWrapper alertManagerWrapper;
+    @Autowired
+    private MailToUserMapper mailToUserMapper;
 
     @Override
     public void alert(String json) throws Exception {
@@ -123,8 +131,17 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
                 dingRobotService.send(alertInfoDto);
             }
             //邮箱发送
+            List<MailToUser> users = mailToUserMapper.selectList(new QueryWrapper<MailToUser>());
             if ("mail".equals(alertInfo.getMail())) {
-                mailService.sendHtmlMail(alertInfoDto);
+                users.stream().forEach(mailToUser -> {
+                    try {
+                        mailService.sendHtmlMail(alertInfoDto,mailToUser);
+                    } catch (MessagingException e) {
+                        e.printStackTrace();
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
+                });
             }
         }
     }
