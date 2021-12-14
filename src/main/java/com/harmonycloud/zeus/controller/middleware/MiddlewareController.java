@@ -81,13 +81,15 @@ public class MiddlewareController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middleware", value = "middleware信息", paramType = "query", dataTypeClass = Middleware.class)
     })
-    @PostMapping("/recovery")
+    @PostMapping("/{middlewareName}/recovery")
     public BaseResult recovery(@PathVariable("clusterId") String clusterId,
-                             @PathVariable("namespace") String namespace,
-                             @RequestBody Middleware middleware) {
-        middleware.setClusterId(clusterId).setNamespace(namespace);
+                               @PathVariable("namespace") String namespace,
+                               @PathVariable("middlewareName") String name,
+                               @RequestBody Middleware middleware) {
+        middleware.setClusterId(clusterId).setNamespace(namespace).setName(name);
         middlewareService.recovery(middleware);
         return BaseResult.ok();
     }

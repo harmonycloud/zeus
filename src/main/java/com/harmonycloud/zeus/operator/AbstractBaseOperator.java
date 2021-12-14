@@ -181,6 +181,8 @@ public abstract class AbstractBaseOperator {
         String tgzFilePath = helmChartService.packageChart(helmChart.getTarFileName(), middleware.getChartName(),
                 middleware.getChartVersion());
         helmChartService.install(middleware, tgzFilePath, cluster);
+        // 删除数据库缓存
+        cacheMiddlewareService.delete(middleware);
     }
 
 
