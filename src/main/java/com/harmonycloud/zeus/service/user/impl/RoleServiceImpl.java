@@ -99,7 +99,7 @@ public class RoleServiceImpl implements RoleService {
         //删除角色菜单绑定
         resourceMenuRoleService.delete(roleId);
         //todo 删除角色集群绑定
-
+        clusterRoleService.delete(roleId);
     }
 
     @Override
@@ -169,12 +169,7 @@ public class RoleServiceImpl implements RoleService {
         }
         //todo 更新角色集群分区权限
         if (!CollectionUtils.isEmpty(roleDto.getClusterList())){
-            CurrentUser currentUser = CurrentUserRepository.getUser();
-            String roleId = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString("roleId");
-            if (roleId.equals(String.valueOf(roleDto.getId()))) {
-                throw new BusinessException(ErrorMessage.NO_AUTHORITY);
-            }
-            clusterRoleService.update(Integer.parseInt(roleId), roleDto.getClusterList());
+            clusterRoleService.update(roleDto.getId(), roleDto.getClusterList());
         }
     }
 
