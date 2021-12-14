@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.zeus.bean.user.BeanClusterRole;
+import com.harmonycloud.zeus.dao.user.BeanClusterRoleMapper;
+import com.harmonycloud.zeus.service.user.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,10 +28,6 @@ import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.zeus.bean.user.BeanResourceMenuRole;
 import com.harmonycloud.zeus.bean.user.BeanRole;
 import com.harmonycloud.zeus.dao.user.BeanRoleMapper;
-import com.harmonycloud.zeus.service.user.ResourceMenuRoleService;
-import com.harmonycloud.zeus.service.user.ResourceMenuService;
-import com.harmonycloud.zeus.service.user.RoleService;
-import com.harmonycloud.zeus.service.user.UserRoleService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,6 +47,8 @@ public class RoleServiceImpl implements RoleService {
     private ResourceMenuService resourceMenuService;
     @Autowired
     private UserRoleService userRoleService;
+    @Autowired
+    private ClusterRoleService clusterRoleService;
 
     @Override
     public void add(RoleDto roleDto) {
@@ -66,8 +67,14 @@ public class RoleServiceImpl implements RoleService {
         String currentRoleId = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString("roleId");
         beanRole.setParent(Integer.parseInt(currentRoleId));
         beanRoleMapper.insert(beanRole);
+        // 获取id
+        QueryWrapper<BeanRole> wrapper = new QueryWrapper<BeanRole>().eq("name", roleDto.getName()).eq("status", true);
+        BeanRole exit = beanRoleMapper.selectOne(wrapper);
+        roleDto.setId(exit.getId());
         // 绑定角色菜单权限
-        bind(roleDto);
+        bindResourceMenu(roleDto);
+        // 绑定角色集群权限
+        bindCluster(roleDto);
     }
 
     @Override
@@ -91,6 +98,8 @@ public class RoleServiceImpl implements RoleService {
         beanRoleMapper.deleteById(roleId);
         //删除角色菜单绑定
         resourceMenuRoleService.delete(roleId);
+        //todo 删除角色集群绑定
+
     }
 
     @Override
@@ -148,7 +157,7 @@ public class RoleServiceImpl implements RoleService {
         beanRole.setName(roleDto.getName());
         beanRole.setDescription(roleDto.getDescription());
         beanRoleMapper.updateById(beanRole);
-        // 更新角色权限
+        // 更新角色菜单权限
         if (!CollectionUtils.isEmpty(roleDto.getMenu())) {
             CurrentUser currentUser = CurrentUserRepository.getUser();
             String roleId = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString("roleId");
@@ -157,6 +166,15 @@ public class RoleServiceImpl implements RoleService {
             }
             roleDto.getMenu()
                 .forEach(menu -> resourceMenuRoleService.update(roleDto.getId(), menu.getId(), menu.getOwn()));
+        }
+        //todo 更新角色集群分区权限
+        if (!CollectionUtils.isEmpty(roleDto.getClusterList())){
+            CurrentUser currentUser = CurrentUserRepository.getUser();
+            String roleId = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString("roleId");
+            if (roleId.equals(String.valueOf(roleDto.getId()))) {
+                throw new BusinessException(ErrorMessage.NO_AUTHORITY);
+            }
+            clusterRoleService.update(Integer.parseInt(roleId), roleDto.getClusterList());
         }
     }
 
@@ -215,10 +233,15 @@ public class RoleServiceImpl implements RoleService {
     /**
      * 绑定角色菜单权限
      */
-    private void bind(RoleDto roleDto) {
-        QueryWrapper<BeanRole> wrapper = new QueryWrapper<BeanRole>().eq("name", roleDto.getName()).eq("status", true);
-        BeanRole beanRole = beanRoleMapper.selectOne(wrapper);
-        roleDto.getMenu().forEach(menu -> resourceMenuRoleService.add(beanRole.getId(), menu.getId(), menu.getOwn()));
+    private void bindResourceMenu(RoleDto roleDto) {
+        roleDto.getMenu().forEach(menu -> resourceMenuRoleService.add(roleDto.getId(), menu.getId(), menu.getOwn()));
+    }
+
+    /**
+     * 绑定角色集群分区权限
+     */
+    public void bindCluster(RoleDto roleDto) {
+        clusterRoleService.add(roleDto.getId(), roleDto.getClusterList());
     }
 
     /**

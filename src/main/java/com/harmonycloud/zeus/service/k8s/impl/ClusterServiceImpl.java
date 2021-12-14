@@ -150,6 +150,7 @@ public class ClusterServiceImpl implements ClusterService {
                 try {
                     List<Namespace> list = namespaceService.list(cluster.getId());
                     cluster.getAttributes().put(NS_COUNT, list.size());
+                    cluster.setNamespaceList(list);
                 } catch (Exception e) {
                     cluster.getAttributes().put(NS_COUNT, 0);
                     log.error("集群：{}，查询命名空间列表异常", cluster.getId(), e);
@@ -162,6 +163,8 @@ public class ClusterServiceImpl implements ClusterService {
                 cluster.setRemovable(checkDelete(cluster.getId()));
             });
         }
+        // 根据用户角色权限过滤
+
         return clusters;
     }
 
