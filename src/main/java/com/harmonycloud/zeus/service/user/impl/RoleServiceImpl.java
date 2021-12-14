@@ -98,7 +98,7 @@ public class RoleServiceImpl implements RoleService {
         beanRoleMapper.deleteById(roleId);
         //删除角色菜单绑定
         resourceMenuRoleService.delete(roleId);
-        //todo 删除角色集群绑定
+        //删除角色集群绑定
         clusterRoleService.delete(roleId);
     }
 
