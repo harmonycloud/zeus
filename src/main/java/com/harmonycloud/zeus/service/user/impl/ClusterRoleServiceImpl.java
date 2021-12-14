@@ -83,6 +83,7 @@ public class ClusterRoleServiceImpl implements ClusterRoleService {
         for (String clusterId : clusterRoleListMap.keySet()){
             MiddlewareClusterDTO cluster = new MiddlewareClusterDTO();
             cluster.setId(clusterId);
+            cluster.setName(clusterId.split("--")[1]);
             List<Namespace> namespaceList = clusterRoleListMap.get(clusterId).stream()
                     .map(beanClusterRole -> new Namespace().setName(beanClusterRole.getNamespace()))
                     .collect(Collectors.toList());
