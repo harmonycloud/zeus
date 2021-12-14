@@ -173,7 +173,7 @@ public abstract class AbstractBaseOperator {
         HelmChartFile helmChart =
                 helmChartService.getHelmChartFromMysql(middleware.getChartName(), middleware.getChartVersion());
         // 2. deal with values.yaml andChart.yaml
-        JSONObject values = JSONObject.parseObject(beanCacheMiddleware.getValues());
+        JSONObject values = JSONObject.parseObject(beanCacheMiddleware.getValuesYaml());
         Yaml yaml = new Yaml();
         helmChart.setValueYaml(yaml.dumpAsMap(values));
         helmChartService.coverYamlFile(helmChart);
@@ -202,7 +202,7 @@ public abstract class AbstractBaseOperator {
                 clusterMiddlewareInfoService.get(cluster.getId(), middleware.getType());
             beanCacheMiddleware.setChartVersion(beanClusterMiddlewareInfo.getChartVersion());
         }
-        beanCacheMiddleware.setValues(JSONObject.toJSONString(values));
+        beanCacheMiddleware.setValuesYaml(JSONObject.toJSONString(values));
         cacheMiddlewareService.insert(beanCacheMiddleware);
         // helm卸载需要放到最后，要不然一些资源的查询会404
         helmChartService.uninstall(middleware, cluster);

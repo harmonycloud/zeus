@@ -59,8 +59,8 @@ public class BeanCacheMiddleware implements Serializable {
     /**
      * values.yaml
      */
-    @TableField("values")
-    private String values;
+    @TableField("values_yaml")
+    private String valuesYaml;
 
 
 
