@@ -332,9 +332,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 }
                 // 整理未完全删除的中间件的信息
                 for (BeanCacheMiddleware beanCacheMiddleware : beanCacheMiddlewareList){
+                    if (!middlewareInfoDTO.getChartName().equals(beanCacheMiddleware.getType())) {
+                        continue;
+                    }
                     Middleware middleware = new Middleware();
                     BeanUtils.copyProperties(beanCacheMiddleware, middleware);
-                    middleware.setStatus("deleted");
+                    middleware.setStatus("Deleted");
                     singleServiceList.add(middleware);
                 }
                 MiddlewareBriefInfoDTO briefInfoDTO = new MiddlewareBriefInfoDTO();
