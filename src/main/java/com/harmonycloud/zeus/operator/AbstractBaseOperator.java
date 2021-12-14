@@ -202,6 +202,7 @@ public abstract class AbstractBaseOperator {
                 clusterMiddlewareInfoService.get(cluster.getId(), middleware.getType());
             beanCacheMiddleware.setChartVersion(beanClusterMiddlewareInfo.getChartVersion());
         }
+        beanCacheMiddleware.setPvc(getPvc(middleware));
         beanCacheMiddleware.setValuesYaml(JSONObject.toJSONString(values));
         cacheMiddlewareService.insert(beanCacheMiddleware);
         // helm卸载需要放到最后，要不然一些资源的查询会404
@@ -209,6 +210,8 @@ public abstract class AbstractBaseOperator {
     }
 
     public void deleteStorage(Middleware middleware){
+        BeanCacheMiddleware beanCacheMiddleware = cacheMiddlewareService.get(middleware);
+        deletePvc(beanCacheMiddleware);
         deleteIngress(middleware);
         deleteCustomConfigHistory(middleware);
         middlewareBackupService.deleteMiddlewareBackupInfo(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
@@ -315,16 +318,30 @@ public abstract class AbstractBaseOperator {
         }
     }
 
-    protected void deletePvc(Middleware middleware) {
+    protected String getPvc(Middleware middleware) {
         // query middleware cr
         MiddlewareCRD mw = middlewareCRDService.getCR(middleware.getClusterId(), middleware.getNamespace(),
             middleware.getType(), middleware.getName());
         if (mw == null || mw.getStatus() == null || mw.getStatus().getInclude() == null) {
-            return;
+            return null;
         }
         List<MiddlewareInfo> pvcs = mw.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
-        if (!CollectionUtils.isEmpty(pvcs)) {
-            pvcs.forEach(pvc -> pvcWrapper.delete(middleware.getClusterId(), middleware.getNamespace(), pvc.getName()));
+        StringBuilder sb = new StringBuilder();
+        for (MiddlewareInfo pvc : pvcs) {
+            sb.append(pvc.getName()).append(",");
+        }
+        if (sb.length() == 0) {
+            return null;
+        }
+        sb.deleteCharAt(sb.length() - 1);
+        return sb.toString();
+    }
+
+    protected void deletePvc(BeanCacheMiddleware beanCacheMiddleware) {
+        List<String> pvcList = Arrays.asList(beanCacheMiddleware.getPvc().split(","));
+        if (!CollectionUtils.isEmpty(pvcList)) {
+            pvcList.forEach(
+                pvc -> pvcWrapper.delete(beanCacheMiddleware.getClusterId(), beanCacheMiddleware.getNamespace(), pvc));
         }
     }
 

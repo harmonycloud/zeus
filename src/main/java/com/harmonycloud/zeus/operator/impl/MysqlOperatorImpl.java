@@ -16,6 +16,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.harmonycloud.caas.common.constants.MysqlConstant;
 import com.harmonycloud.caas.common.enums.DateType;
 import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
 import com.harmonycloud.zeus.integration.cluster.MysqlClusterWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.operator.BaseOperator;
@@ -790,29 +791,31 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
      * @param middleware
      */
     public void deleteDisasterRecoveryInfo(Middleware middleware) {
-        Middleware detail = middlewareService.detail(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
-        if (detail != null && detail.getMysqlDTO() != null) {
-            MysqlDTO mysqlDTO = detail.getMysqlDTO();
-            if (mysqlDTO.getIsSource() != null) {
-                //将关联实例中存储的当前实例的信息置空
-                String relationClusterId = mysqlDTO.getRelationClusterId();
-                String relationNamespace = mysqlDTO.getRelationNamespace();
-                String relationName = mysqlDTO.getRelationName();
-                Middleware relation = null;
-                try {
-                    relation = middlewareService.detail(relationClusterId, relationNamespace, relationName, middleware.getType());
-                    relation.setChartName(detail.getChartName());
-                    MiddlewareClusterDTO cluster = clusterService.findById(relationClusterId);
-                    StringBuilder str = new StringBuilder();
-                    str.append(String.format("%s.%s=%s,", MysqlConstant.ARGS, MysqlConstant.IS_SOURCE, null));
-                    str.append(String.format("%s.%s=%s,", MysqlConstant.ARGS, MysqlConstant.RELATION_CLUSTER_ID, null));
-                    str.append(String.format("%s.%s=%s,", MysqlConstant.ARGS, MysqlConstant.RELATION_NAMESPACE, null));
-                    str.append(String.format("%s.%s=%s,", MysqlConstant.ARGS, MysqlConstant.RELATION_NAME, null));
-                    str.append(String.format("%s.%s=%s", MysqlConstant.ARGS, MysqlConstant.RELATION_ALIAS_NAME, null));
-                    helmChartService.upgrade(relation, str.toString(), cluster);
-                } catch (Exception e) {
-                    log.error("更新关联实例信息出错了", e);
-                }
+        // 获取values.yaml
+        BeanCacheMiddleware beanCacheMiddleware = cacheMiddlewareService.get(middleware);
+        JSONObject values = JSONObject.parseObject(beanCacheMiddleware.getValuesYaml());
+
+        //Middleware detail = middlewareService.detail(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
+        if (values.getJSONObject("args").containsKey(MysqlConstant.IS_SOURCE)) {
+            JSONObject args = values.getJSONObject("args");
+            //将关联实例中存储的当前实例的信息置空
+            String relationClusterId = args.getString(MysqlConstant.RELATION_CLUSTER_ID);
+            String relationNamespace = args.getString(MysqlConstant.RELATION_NAMESPACE);
+            String relationName = args.getString(MysqlConstant.RELATION_NAME);
+            Middleware relation = null;
+            try {
+                relation = middlewareService.detail(relationClusterId, relationNamespace, relationName, middleware.getType());
+                relation.setChartName(middleware.getChartName());
+                MiddlewareClusterDTO cluster = clusterService.findById(relationClusterId);
+                StringBuilder str = new StringBuilder();
+                str.append(String.format("%s.%s=%s,", MysqlConstant.ARGS, MysqlConstant.IS_SOURCE, null));
+                str.append(String.format("%s.%s=%s,", MysqlConstant.ARGS, MysqlConstant.RELATION_CLUSTER_ID, null));
+                str.append(String.format("%s.%s=%s,", MysqlConstant.ARGS, MysqlConstant.RELATION_NAMESPACE, null));
+                str.append(String.format("%s.%s=%s,", MysqlConstant.ARGS, MysqlConstant.RELATION_NAME, null));
+                str.append(String.format("%s.%s=%s", MysqlConstant.ARGS, MysqlConstant.RELATION_ALIAS_NAME, null));
+                helmChartService.upgrade(relation, str.toString(), cluster);
+            } catch (Exception e) {
+                log.error("更新关联实例信息出错了", e);
             }
             // 删除灾备关联关系
             try {

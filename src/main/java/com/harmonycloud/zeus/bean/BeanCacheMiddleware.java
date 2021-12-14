@@ -57,6 +57,12 @@ public class BeanCacheMiddleware implements Serializable {
     private String chartVersion;
 
     /**
+     * pvc
+     */
+    @TableField("pvc")
+    private String pvc;
+
+    /**
      * values.yaml
      */
     @TableField("values_yaml")
