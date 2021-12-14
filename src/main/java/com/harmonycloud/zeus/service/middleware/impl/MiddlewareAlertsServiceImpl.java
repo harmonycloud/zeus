@@ -192,6 +192,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                         && prometheusRules.getAlert().equals(middlewareAlertsDTO.getAlert()));
                 prometheusRuleService.update(clusterId, prometheusRule);
             });
+            updateAlerts2Mysql(clusterId,namespace,middlewareName,middlewareAlertsDTO);
             return;
         }
         //组装prometheusRule
@@ -297,6 +298,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         middlewareAlertInfo.setMiddlewareName(middlewareName);
         middlewareAlertInfo.setAnnotations(JSONUtil.toJsonStr(middlewareAlertsDTO.getAnnotations()));
         middlewareAlertInfo.setLabels(JSONUtil.toJsonStr(middlewareAlertsDTO.getLabels()));
+        middlewareAlertInfo.setName(clusterId);
         middlewareAlertInfoMapper.updateById(middlewareAlertInfo);
     }
     /**

@@ -110,9 +110,12 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             //告警内容
             alertInfoDto.setContent(alertInfo.getContent());
             //实际监测
+            String ruleId = "";
             alertInfoDto.setMessage(annotations.getString("summary"));
-            String ruleId = middlewareAlertsServiceImpl.calculateID(alertInfo.getAlertId()) + "-"
-                    + middlewareAlertsServiceImpl.createId(beanAlertRecord.getId());
+            if (alertInfo.getAlertId() != null && beanAlertRecord.getId() != null) {
+                ruleId = middlewareAlertsServiceImpl.calculateID(alertInfo.getAlertId()) + "-"
+                        + middlewareAlertsServiceImpl.createId(beanAlertRecord.getId());
+            }
             //告警ID
             alertInfoDto.setRuleID(ruleId);
             //钉钉发送

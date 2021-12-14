@@ -366,7 +366,8 @@ public class OverviewServiceImpl implements OverviewService {
             } else {
                 wrapper.and(queryWrapper -> {
                     queryWrapper.eq("id",keyword).or().like("alert",keyword)
-                            .or().like("content",keyword).or().like("expr",keyword);
+                            .or().like("content",keyword).or().like("expr",keyword)
+                            .or().like("summary",keyword).or().like("message",keyword);
                 });
             }
         }

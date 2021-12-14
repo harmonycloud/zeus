@@ -70,7 +70,7 @@ public class MailServiceImpl implements MailService {
         p.setProperty("mail.smtp.starttls.enable","true");
         p.setProperty("mail.smtp.starttls.required","true");
         p.setProperty("mail.smtp.ssl.enable","true");
-        p.setProperty("mail.smtp.socketFactory.port","465");
+        p.setProperty("mail.smtp.socketFactory.port",String.valueOf(mailInfo.getPort()));
         p.setProperty("mail.smtp.socketFactory.class","javax.net.ssl.SSLSocketFactory");
         sender.setJavaMailProperties(p);
         return sender;
@@ -171,17 +171,21 @@ public class MailServiceImpl implements MailService {
 
         String emailHeadColor = "";
         String emailTextColor = "";
-        if ("emergency".equals(alertInfoDto.getLevel())) { //严重
+        String level = "";
+        if ("critical".equals(alertInfoDto.getLevel())) { //严重
             emailHeadColor = "red";
-            emailTextColor = "<font color='red'>" + alertInfoDto.getLevel() +"</font>";
+            emailTextColor = "<font color='red'>" + "严重" +"</font>";
+            level = "严重";
         }
-        if ("critical".equals(alertInfoDto.getLevel())) { //重要
+        if ("warning".equals(alertInfoDto.getLevel())) { //重要
             emailHeadColor = "#FFDB94 ";
-            emailTextColor = "<font color='#FFDB94 '>" + alertInfoDto.getLevel() +"</font>";
+            emailTextColor = "<font color='#FFDB94 '>" + "重要" +"</font>";
+            level = "重要";
         }
-        if ("warning".equals(alertInfoDto.getLevel())) { //一般
+        if ("info".equals(alertInfoDto.getLevel())) { //一般
             emailHeadColor = "#94DBFF";
-            emailTextColor = "<font color='#94DBFF'>" + alertInfoDto.getLevel() +"</font>";
+            emailTextColor = "<font color='#94DBFF'>" + "一般" +"</font>";
+            level = "一般";
         }
 
         String contentText = username + ", 以下是告警信息请查收!";
@@ -193,7 +197,7 @@ public class MailServiceImpl implements MailService {
                 "<td>" + alertInfoDto.getClusterId() + "</td><td>" + alertInfoDto.getDescription() + "</td><td>" + alertInfoDto.getMessage() + "</td><td>" + date + "</td></tr>");
 
         //填充html模板中的五个参数
-        String htmlText = MessageFormat.format(buffer.toString(), emailHeadColor, alertInfoDto.getLevel(), contentText, "", header, linesBuffer.toString());
+        String htmlText = MessageFormat.format(buffer.toString(), emailHeadColor, level, contentText, "", header, linesBuffer.toString());
 
         //改变表格样式
         htmlText = htmlText.replaceAll("<td>", "<td style=\"padding:6px 10px; line-height: 150%;\">");
