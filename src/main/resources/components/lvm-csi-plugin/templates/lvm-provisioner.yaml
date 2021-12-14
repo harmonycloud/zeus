@@ -53,7 +53,7 @@ spec:
           image: {{ .Values.image.repository }}/snapshot-controller:{{ .Values.image.snapshotControllerImageTag }}
           args:
             - "--v=5"
-            - "--leader-election=true"
+            - "--leader-election=false"
           imagePullPolicy: IfNotPresent
         - name: csi-snapshotter
           image: {{ .Values.image.repository }}/csi-snapshotter:{{ .Values.image.csiSnapshotterImageTag }}
@@ -61,7 +61,7 @@ spec:
             - "--csi-address=$(ADDRESS)"
             - "--v=5"
             - "--timeout=600s"
-            - "--leader-election=true"
+            - "--leader-election=false"
             - "--extra-create-metadata=true"
           env:
             - name: ADDRESS
