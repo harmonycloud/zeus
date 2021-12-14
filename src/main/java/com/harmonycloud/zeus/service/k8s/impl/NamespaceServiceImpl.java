@@ -9,11 +9,19 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.caas.common.model.user.RoleDto;
+import com.harmonycloud.caas.filters.token.JwtTokenComponent;
+import com.harmonycloud.caas.filters.user.CurrentUser;
+import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
 import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
+import com.harmonycloud.zeus.service.user.ClusterRoleService;
+import com.harmonycloud.zeus.service.user.RoleService;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +33,7 @@ import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.common.model.middleware.ResourceQuotaDTO;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.ObjectUtils;
 
 /**
  * @author dengyulong
@@ -44,6 +53,8 @@ public class NamespaceServiceImpl implements NamespaceService {
     private ResourceQuotaService resourceQuotaService;
     @Autowired
     private MiddlewareCRDService middlewareCRDService;
+    @Autowired
+    private ClusterRoleService clusterRoleService;
     
     @Value("${k8s.namespace.protect:default,kube-system,kube-public,cluster-top,cicd,caas-system,kube-federation-system,harbor-system,logging,monitoring,velero,middleware-system}")
     private void setProtectNamespaceList(String protectNamespaces) {
@@ -87,6 +98,19 @@ public class NamespaceServiceImpl implements NamespaceService {
                     && StringUtils.equals(ns.getMetadata().getLabels().get(labelKey), labelValue));
                 return namespace;
             }).collect(Collectors.toList());
+
+        // 根据用户角色集群分区权限进行过滤
+        CurrentUser currentUser = CurrentUserRepository.getUserExistNull();
+        if (!ObjectUtils.isEmpty(currentUser)) {
+            JSONObject role = JwtTokenComponent.checkToken(currentUser.getToken()).getValue();
+            if (!"超级管理员".equals(role.getString("roleName"))) {
+                MiddlewareClusterDTO cluster = clusterRoleService.get(role.getInteger("roleId"), clusterId);
+                list = list.stream()
+                    .filter(
+                        ns -> cluster.getNamespaceList().stream().anyMatch(cns -> cns.getName().equals(ns.getName())))
+                    .collect(Collectors.toList());
+            }
+        }
 
         // 返回其他信息
         if (withQuota || withMiddleware) {

@@ -40,4 +40,12 @@ public interface ClusterRoleService {
      */
     List<MiddlewareClusterDTO> get(Integer roleId);
 
+    /**
+     * 获取角色集群权限
+     * @param roleId 角色id
+     * @param clusterId 集群id
+     *
+     */
+    MiddlewareClusterDTO get(Integer roleId, String clusterId);
+
 }

@@ -3,9 +3,11 @@ package com.harmonycloud.zeus.service.user.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
+import com.harmonycloud.caas.common.model.user.RoleDto;
 import com.harmonycloud.zeus.bean.user.BeanClusterRole;
 import com.harmonycloud.zeus.dao.user.BeanClusterRoleMapper;
 import com.harmonycloud.zeus.service.user.ClusterRoleService;
+import com.harmonycloud.zeus.service.user.RoleService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,8 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author xutianhong
@@ -69,7 +73,32 @@ public class ClusterRoleServiceImpl implements ClusterRoleService {
 
     @Override
     public List<MiddlewareClusterDTO> get(Integer roleId) {
-        return null;
+        QueryWrapper<BeanClusterRole> wrapper = new QueryWrapper<BeanClusterRole>().eq("role_id", roleId);
+        List<BeanClusterRole> beanClusterRoleList = beanClusterRoleMapper.selectList(wrapper);
+        if (CollectionUtils.isEmpty(beanClusterRoleList)){
+            return new ArrayList<>();
+        }
+        Map<String, List<BeanClusterRole>> clusterRoleListMap = beanClusterRoleList.stream().collect(Collectors.groupingBy(BeanClusterRole::getClusterId));
+        List<MiddlewareClusterDTO> clusterList = new ArrayList<>();
+        for (String clusterId : clusterRoleListMap.keySet()){
+            MiddlewareClusterDTO cluster = new MiddlewareClusterDTO();
+            cluster.setId(clusterId);
+            List<Namespace> namespaceList = clusterRoleListMap.get(clusterId).stream()
+                    .map(beanClusterRole -> new Namespace().setName(beanClusterRole.getNamespace()))
+                    .collect(Collectors.toList());
+            cluster.setNamespaceList(namespaceList);
+            clusterList.add(cluster);
+        }
+        return clusterList;
     }
 
+    @Override
+    public MiddlewareClusterDTO get(Integer roleId, String clusterId) {
+        List<MiddlewareClusterDTO> clusterList =
+            this.get(roleId).stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(clusterList)) {
+            return null;
+        }
+        return clusterList.get(0);
+    }
 }

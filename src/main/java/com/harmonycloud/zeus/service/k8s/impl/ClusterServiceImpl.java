@@ -8,6 +8,12 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.model.user.RoleDto;
+import com.harmonycloud.caas.filters.token.JwtTokenComponent;
+import com.harmonycloud.caas.filters.user.CurrentUser;
+import com.harmonycloud.caas.filters.user.CurrentUserRepository;
+import com.harmonycloud.zeus.service.user.ClusterRoleService;
+import com.harmonycloud.zeus.service.user.RoleService;
 import com.harmonycloud.zeus.util.MathUtil;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -46,6 +52,7 @@ import com.harmonycloud.zeus.util.K8sClient;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.ObjectUtils;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -87,7 +94,9 @@ public class ClusterServiceImpl implements ClusterService {
     private MiddlewareCRDService middlewareCRDService;
     @Autowired
     private IngressService ingressService;
-
+    @Autowired
+    private ClusterRoleService clusterRoleService;
+    
     @Value("${k8s.component.logging.es.user:elastic}")
     private String esUser;
     @Value("${k8s.component.logging.es.password:Hc@Cloud01}")
@@ -122,6 +131,20 @@ public class ClusterServiceImpl implements ClusterService {
         if (clusterList.size() <= 0) {
             return new ArrayList<>(0);
         }
+        // 根据角色集群权限过滤
+        CurrentUser currentUser = CurrentUserRepository.getUserExistNull();
+        if (!ObjectUtils.isEmpty(currentUser)) {
+            JSONObject role = JwtTokenComponent.checkToken(currentUser.getToken()).getValue();
+            if (!"超级管理员".equals(role.getString("roleName"))) {
+                List<MiddlewareClusterDTO> limitCluster = clusterRoleService.get(role.getInteger("roleId"));
+                clusterList = clusterList.stream()
+                    .filter(cluster -> limitCluster.stream()
+                        .anyMatch(lc -> lc.getId().equals(K8sClient.getClusterId(cluster.getMetadata()))))
+                    .collect(Collectors.toList());
+            }
+        }
+
+        // 封装数据
         clusters = clusterList.stream().map(c -> {
             MiddlewareClusterInfo info = c.getSpec().getInfo();
             MiddlewareClusterDTO cluster = new MiddlewareClusterDTO();

@@ -167,7 +167,6 @@ public class RoleServiceImpl implements RoleService {
             roleDto.getMenu()
                 .forEach(menu -> resourceMenuRoleService.update(roleDto.getId(), menu.getId(), menu.getOwn()));
         }
-        //todo 更新角色集群分区权限
         if (!CollectionUtils.isEmpty(roleDto.getClusterList())){
             clusterRoleService.update(roleDto.getId(), roleDto.getClusterList());
         }
