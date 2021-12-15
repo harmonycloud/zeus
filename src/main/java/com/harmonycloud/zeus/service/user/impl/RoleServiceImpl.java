@@ -73,8 +73,6 @@ public class RoleServiceImpl implements RoleService {
         roleDto.setId(exit.getId());
         // 绑定角色菜单权限
         bindResourceMenu(roleDto);
-        // 绑定角色集群权限
-        bindCluster(roleDto);
     }
 
     @Override
