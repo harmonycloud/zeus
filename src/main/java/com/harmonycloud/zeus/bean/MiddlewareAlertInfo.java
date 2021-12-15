@@ -97,5 +97,7 @@ public class MiddlewareAlertInfo {
     @TableField("mail")
     private String mail;
 
+    @TableField("alert_expr")
+    private String alertExpr;
 
 }

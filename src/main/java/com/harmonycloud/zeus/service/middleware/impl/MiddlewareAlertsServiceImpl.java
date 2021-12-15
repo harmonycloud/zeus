@@ -77,13 +77,14 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         if (StringUtils.isNotEmpty(keyword)) {
             String alertID = keyword.replaceAll("GJ","");
             if (isNumeric(alertID)) {
-                queryWrapper.eq("alert_id",Integer.parseInt(alertID));
+                queryWrapper.eq("alert_id",Integer.parseInt(alertID)).or().like("alert_expr",keyword);
             } else {
                 queryWrapper.and(wrapper ->
                         wrapper.or().eq("alert",keyword).or().eq("symbol",keyword)
-                                .or().eq("threshold",keyword).or().like("threshold",keyword)
+                                .or().like("threshold",keyword)
                                 .or().eq("alert_time",keyword).or().eq("alert_times",keyword)
                                 .or().eq("content",keyword).or().eq("description",keyword)
+                                .or().like("alert_expr",keyword)
                 );
             }
         }
@@ -299,6 +300,10 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         middlewareAlertInfo.setAnnotations(JSONUtil.toJsonStr(middlewareAlertsDTO.getAnnotations()));
         middlewareAlertInfo.setLabels(JSONUtil.toJsonStr(middlewareAlertsDTO.getLabels()));
         middlewareAlertInfo.setName(clusterId);
+        String expr = middlewareAlertsDTO.getDescription() +middlewareAlertsDTO.getSymbol()
+               + middlewareAlertsDTO.getThreshold() + "%"  + "且" + middlewareAlertsDTO.getAlertTime()
+                + "分钟内触发" + middlewareAlertsDTO.getAlertTimes() + "次";
+        middlewareAlertInfo.setAlertExpr(expr);
         middlewareAlertInfoMapper.updateById(middlewareAlertInfo);
     }
     /**
@@ -430,6 +435,10 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         middlewareAlertInfo.setCreateTime(date);
         middlewareAlertInfo.setName(clusterId);
         middlewareAlertInfo.setAlert(alert);
+        String expr = middlewareAlertsDTO.getDescription() +middlewareAlertsDTO.getSymbol()
+                + middlewareAlertsDTO.getThreshold() + "%" + "且" + middlewareAlertsDTO.getAlertTime()
+                + "分钟内触发" + middlewareAlertsDTO.getAlertTimes() + "次";
+        middlewareAlertInfo.setAlertExpr(expr);
         middlewareAlertInfoMapper.insert(middlewareAlertInfo);
     }
 

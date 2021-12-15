@@ -936,6 +936,10 @@ public abstract class AbstractBaseOperator {
                     middlewareAlertInfo.setCreateTime(new Date());
                     middlewareAlertInfo.setType(middleware.getType());
                     middlewareAlertInfo.setDescription(rule.getAlert());
+                    String expr = rule.getAlert() + middlewareAlertsService.getSymbol(rule.getExpr())
+                            + middlewareAlertsService.getThreshold(rule.getExpr()) + "%"  + "且" + middlewareAlertInfo.getAlertTime()
+                            + "分钟内触发" + middlewareAlertInfo.getAlertTimes() + "次";
+                    middlewareAlertInfo.setAlertExpr(expr);
                     middlewareAlertInfoMapper.insert(middlewareAlertInfo);
                 }
             });

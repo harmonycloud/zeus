@@ -23,5 +23,5 @@ public interface MailService {
 
     void insertUser(List<BeanUser> users, String ding);
 
-    boolean checkEmail(String email);
+    boolean checkEmail(String email, String password);
 }

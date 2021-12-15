@@ -145,7 +145,8 @@ ALTER TABLE `alert_rule_id` ADD COLUMN `mail` varchar(16) CHARACTER SET utf8mb4 
 ALTER TABLE `alert_record` ADD COLUMN `expr` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '规则描述';
 ALTER TABLE `alert_record` ADD COLUMN `alert_id` int(16) DEFAULT NULL COMMENT '规则ID';
 ALTER TABLE `alert_record` ADD COLUMN `content` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '告警内容';
-
+-- 2021.12.15 yushuaikang
+ALTER TABLE `alert_rule_id` ADD COLUMN `alert_expr`varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '告警规则';
 
 
 

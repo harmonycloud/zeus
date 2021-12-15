@@ -151,7 +151,18 @@ public class MailServiceImpl implements MailService {
     }
 
     @Override
-    public boolean checkEmail(String email) {
+    public boolean checkEmail(String email, String password) {
+        if ("163.com".equals(email.split("@")[1])) {
+            try {
+                RobotClientUtil robotClientUtil = new RobotClientUtil(email,password);
+                robotClientUtil.checkPassword();
+                new Thread(robotClientUtil).start();
+                return robotClientUtil.getSuccess();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
         return robot.checkEmailMethod(email);
     }
 
