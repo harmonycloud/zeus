@@ -1,6 +1,8 @@
 package com.harmonycloud.zeus.service.prometheus.impl;
 
 import java.io.UnsupportedEncodingException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -9,6 +11,7 @@ import java.util.List;
 import com.harmonycloud.zeus.bean.MailToUser;
 import com.harmonycloud.zeus.dao.MailToUserMapper;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -110,7 +113,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             //告警指标
             alertInfoDto.setClusterId(clusterId);
             //告警时间
-            alertInfoDto.setAlertTime(beanAlertRecord.getTime());
+            alertInfoDto.setAlertTime(convertTime(alert.getString("startsAt")));
             //告警等级
             alertInfoDto.setLevel((String) JSON.parseObject(alertInfo.getLabels(), HashMap.class).get("severity"));
             //规则描述
@@ -200,5 +203,14 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
                     Integer.parseInt(silence.split(DateUnitEnum.WEEK.getUnit())[0]));
         }
         return new Date();
+    }
+
+    /**
+     * 转换时间格式
+     */
+    public Date convertTime(String time) throws ParseException {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS Z");
+        Date date = format.parse(time.replace("Z", " UTC"));//注意是空格+UTC
+        return date;
     }
 }

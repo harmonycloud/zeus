@@ -183,6 +183,8 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
         wrapper.eq("alert_id", analysisID(middlewareAlertsDTO.getAlertId()));
         MiddlewareAlertInfo info = middlewareAlertInfoMapper.selectOne(wrapper);
+        String group = middlewareAlertsDTO.getAnnotations().get("group");
+
         //获取cr
         PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, namespace, middlewareName);
         //不启用该规则时，判断该规则是否已写入prometheusRule
@@ -193,6 +195,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                         && prometheusRules.getAlert().equals(middlewareAlertsDTO.getAlert()));
                 prometheusRuleService.update(clusterId, prometheusRule);
             });
+            middlewareAlertsDTO.getAnnotations().put("group",group);
             updateAlerts2Mysql(clusterId,namespace,middlewareName,middlewareAlertsDTO);
             return;
         }
@@ -456,6 +459,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                     && prometheusRules.getAlert().equals(middlewareAlertsDTO.getAlert()));
         });
 
+        String group = middlewareAlertsDTO.getAnnotations().get("group");
         // 创建prometheusRules
         middlewareAlertsDTO.setName(middlewareName);
         PrometheusRules prometheusRules = convertPrometheusRules(middlewareAlertsDTO, status, clusterId);
@@ -477,6 +481,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             prometheusRuleGroups.setRules(prometheusRulesList);
             prometheusRule.getSpec().getGroups().add(prometheusRuleGroups);
         }
+        middlewareAlertsDTO.getAnnotations().put("group",group);
     }
 
     /**
