@@ -60,9 +60,8 @@ public class ClusterRoleServiceImpl implements ClusterRoleService {
             if (!CollectionUtils.isEmpty(beanClusterRoleList)) {
                 beanClusterRoleList.forEach(beanClusterRole -> beanClusterRoleMapper.deleteById(beanClusterRole));
             }
-            // 添加新的权限
-            this.add(roleId, clusterList);
         }
+        this.add(roleId, clusterList);
     }
 
     @Override
