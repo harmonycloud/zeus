@@ -1,11 +1,13 @@
 package com.harmonycloud.zeus.service.components.impl;
 
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.LoggingService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
 
@@ -18,6 +20,7 @@ import java.util.List;
  * @Date 2021/10/29 4:16 下午
  */
 @Service
+@Slf4j
 @Operator(paramTypes4One = String.class)
 public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingService {
 
@@ -35,7 +38,11 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         //发布elasticsearch
         super.deploy(cluster, clusterComponentsDto);
         //为es创建nodePort
-        createNodePort(cluster);
+        try {
+            createNodePort(cluster);
+        } catch (Exception e){
+            log.error("es组建创建nodePort失败");
+        }
         //发布logPilot
         logPilot(cluster);
     }
