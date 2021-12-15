@@ -69,10 +69,12 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                                                        String lay, String keyword) {
         QueryWrapper<MiddlewareAlertInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("lay",lay);
-        if (StringUtils.isNotEmpty(namespace) && StringUtils.isNotEmpty(middlewareName)) {
-            queryWrapper.eq("cluster_id",clusterId).eq("namespace",namespace).eq("middleware_name",middlewareName);
-        }else {
-            queryWrapper.eq("cluster_id",clusterId).isNotNull("namespace").isNotNull("middleware_name");
+        if(!"system".equals(lay)) {
+            if (StringUtils.isNotEmpty(namespace) && StringUtils.isNotEmpty(middlewareName)) {
+                queryWrapper.eq("cluster_id",clusterId).eq("namespace",namespace).eq("middleware_name",middlewareName);
+            }else {
+                queryWrapper.eq("cluster_id",clusterId).isNotNull("namespace").isNotNull("middleware_name");
+            }
         }
         if (StringUtils.isNotEmpty(keyword)) {
             String alertID = keyword.replaceAll("GJ","");
