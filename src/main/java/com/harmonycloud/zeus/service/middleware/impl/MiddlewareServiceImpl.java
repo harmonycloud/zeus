@@ -302,7 +302,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             AtomicInteger serviceNum = new AtomicInteger();
             AtomicInteger errServiceNum = new AtomicInteger();
             MiddlewareBriefInfoDTO middlewareBriefInfoDTO = new MiddlewareBriefInfoDTO();
-            countServiceNum(middlewares, middlewareInfo.getChartName(), serviceNum, errServiceNum);
+            countServiceNum(middlewareInfo.getClusterId(), middlewares, middlewareInfo.getChartName(), serviceNum, errServiceNum);
             middlewareBriefInfoDTO.setName(middlewareInfo.getName());
             middlewareBriefInfoDTO.setChartName(middlewareInfo.getChartName());
             middlewareBriefInfoDTO.setVersion(middlewareInfo.getVersion());
@@ -499,10 +499,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
      * @param serviceNum 服务数量
      * @param errServiceNum 异常服务数量
      */
-    private void countServiceNum(List<Middleware> middlewares, String chartName, AtomicInteger serviceNum, AtomicInteger errServiceNum) {
+    private void countServiceNum(String clusterId, List<Middleware> middlewares, String chartName, AtomicInteger serviceNum, AtomicInteger errServiceNum) {
         for (Middleware middleware : middlewares) {
             try {
-                if (!chartName.equals(middleware.getType())) {
+                if (clusterId.equals(middleware.getClusterId()) || !chartName.equals(middleware.getType())) {
                     continue;
                 }
                 serviceNum.getAndAdd(1);
@@ -536,6 +536,9 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         namespaceList.forEach(namespace -> {
             List<Middleware> middlewares = simpleList(namespace.getClusterId(), namespace.getName(), null, "");
             middlewareServiceList.addAll(middlewares);
+            middlewareServiceList.forEach(middleware -> {
+                middleware.setClusterId(namespace.getClusterId());
+            });
         });
         return middlewareServiceList;
     }

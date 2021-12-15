@@ -389,7 +389,11 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
                 QueryWrapper<BeanMiddlewareInfo> queryWrapper = new QueryWrapper<>();
                 queryWrapper.eq("chart_name", middlewareInfo.getChartName());
                 queryWrapper.eq("chart_version", middlewareInfo.getChartVersion());
-                infoList.addAll(middlewareInfoMapper.selectList(queryWrapper));
+                List<BeanMiddlewareInfo> list = middlewareInfoMapper.selectList(queryWrapper);
+                list.forEach(item -> {
+                    item.setClusterId(middlewareInfo.getClusterId());
+                });
+                infoList.addAll(list);
             });
         }
         return infoList;
