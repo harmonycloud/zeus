@@ -77,7 +77,7 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
                 case COLD:
                     clusterInfo.put("coldReplacesCount", quota.getNum());
                     // 存储
-                    storage.put("clientClass", quota.getStorageClassName());
+                    storage.put("coldClass", quota.getStorageClassName());
                     storage.put("clientSize", quota.getStorageClassQuota() + "Gi");
                     break;
                 default:
