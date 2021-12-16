@@ -15,7 +15,7 @@ import java.util.List;
  */
 public interface MailService {
 
-    void sendHtmlMail(AlertInfoDto alertInfoDto, MailToUser mailToUser) throws MessagingException, UnsupportedEncodingException;
+    void sendHtmlMail(AlertInfoDto alertInfoDto, MailToUser mailToUser);
 
     void insertMail(MailInfo mailInfo);
 

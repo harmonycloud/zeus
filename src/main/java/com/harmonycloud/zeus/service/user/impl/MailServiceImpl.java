@@ -20,6 +20,7 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -87,7 +88,7 @@ public class MailServiceImpl implements MailService {
     public void sendHtmlMail(AlertInfoDto alertInfoDto,MailToUser mailToUser) {
         QueryWrapper<MailInfo> wrapper = new QueryWrapper<>();
         MailInfo mailInfo = mailMapper.selectOne(wrapper);
-        if (mailInfo == null || alertInfoDto == null) {
+        if (ObjectUtils.isEmpty(mailInfo) || ObjectUtils.isEmpty(alertInfoDto)) {
             return;
         }
         try {

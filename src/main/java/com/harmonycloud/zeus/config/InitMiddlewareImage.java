@@ -66,47 +66,4 @@ public class InitMiddlewareImage {
             }
         }
     }
-
-    @PostConstruct
-    public void initPersonalConfig() throws Exception {
-        QueryWrapper<PersonalizedConfiguration> wrapper = new QueryWrapper<>();
-        List<PersonalizedConfiguration> personalList = personalMapper.selectList(wrapper);
-        for (PersonalizedConfiguration personal : personalList) {
-            if (!StringUtils.isEmpty(personal.getBackgroundPath())){
-                handleImage(personal.getBackgroundImage(),personal.getBackgroundPath());
-            }
-            if (!StringUtils.isEmpty(personal.getHomeLogoPath())) {
-                handleImage(personal.getHomeLogo(),personal.getHomeLogoPath());
-            }
-            if (!StringUtils.isEmpty(personal.getLoginLogoPath())) {
-                handleImage(personal.getLoginLogo(),personal.getLoginLogoPath());
-            }
-        }
-    }
-
-    private void handleImage(byte[] bytes, String path) throws IOException {
-        File file = new File(imagePath + File.separator + path);
-        if (!file.exists()) {
-            InputStream in = new ByteArrayInputStream(bytes);
-            FileOutputStream fileOutputStream = null;
-            try {
-                fileOutputStream = new FileOutputStream(file);
-                byte[] buf = new byte[bytes.length];
-                int len;
-                while ((len = in.read(buf)) != -1) {
-                    fileOutputStream.write(buf, 0, len);
-                }
-                fileOutputStream.flush();
-            } catch (Exception e) {
-                log.error("图片初始化加载失败");
-            } finally {
-                in.close();
-                if (fileOutputStream != null) {
-                    fileOutputStream.close();
-                }
-            }
-        }
-    }
-
-
 }

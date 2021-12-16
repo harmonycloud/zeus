@@ -8,7 +8,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import com.harmonycloud.zeus.bean.DingRobotInfo;
 import com.harmonycloud.zeus.bean.MailToUser;
+import com.harmonycloud.zeus.dao.DingRobotMapper;
 import com.harmonycloud.zeus.dao.MailToUserMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -35,6 +37,7 @@ import com.harmonycloud.zeus.service.user.DingRobotService;
 import com.harmonycloud.zeus.service.user.MailService;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.ObjectUtils;
 
 import javax.mail.MessagingException;
 
@@ -60,6 +63,8 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
     private AlertManagerWrapper alertManagerWrapper;
     @Autowired
     private MailToUserMapper mailToUserMapper;
+    @Autowired
+    private DingRobotMapper dingRobotMapper;
 
     @Override
     public void alert(String json) throws Exception {
@@ -92,7 +97,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
                     .eq("namespace",labels.getString("namespace"))
                     .eq("middleware_name",labels.getString("service"));
             MiddlewareAlertInfo alertInfo = middlewareAlertInfoMapper.selectOne(wrapper);
-            if (alertInfo == null) {
+            if (ObjectUtils.isEmpty(alertInfo)) {
                 beanAlertRecord.setLay("service");
             } else {
                 beanAlertRecord.setLay(alertInfo.getLay());
@@ -105,7 +110,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             if (annotations.containsKey("silence") && StringUtils.isNotEmpty(clusterId)) {
                 setSilence(alert, clusterId);
             }
-            if (alertInfo == null) {
+            if (ObjectUtils.isEmpty(alertInfo)) {
                 return;
             }
             //中间件告警信息
@@ -130,20 +135,17 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             //告警ID
             alertInfoDto.setRuleID(ruleId);
             //钉钉发送
+            List<DingRobotInfo> dings = dingRobotMapper.selectList(new QueryWrapper<DingRobotInfo>());
             if ("ding".equals(alertInfo.getDing())) {
-                dingRobotService.send(alertInfoDto);
+                dings.stream().forEach(dingRobotInfo -> {
+                    dingRobotService.send(alertInfoDto,dingRobotInfo);
+                });
             }
             //邮箱发送
             List<MailToUser> users = mailToUserMapper.selectList(new QueryWrapper<MailToUser>());
             if ("mail".equals(alertInfo.getMail())) {
                 users.stream().forEach(mailToUser -> {
-                    try {
-                        mailService.sendHtmlMail(alertInfoDto,mailToUser);
-                    } catch (MessagingException e) {
-                        e.printStackTrace();
-                    } catch (UnsupportedEncodingException e) {
-                        e.printStackTrace();
-                    }
+                    mailService.sendHtmlMail(alertInfoDto,mailToUser);
                 });
             }
         }

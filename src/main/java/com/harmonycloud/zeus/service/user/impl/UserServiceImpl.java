@@ -15,9 +15,12 @@ import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.user.RoleService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
 import com.harmonycloud.zeus.service.user.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
@@ -42,6 +45,8 @@ import org.springframework.web.multipart.MultipartFile;
  * @Date 2021/7/22 1:52 下午
  */
 @Service
+@Component
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     @Autowired
@@ -60,6 +65,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private MailToUserMapper mailToUserMapper;
+
+    @Value("${system.images.path:/usr/local/zeus-pv/images/middleware}")
+    private String imagePath;
 
     @Override
     public UserDto get(String userName) throws Exception {
@@ -306,16 +314,19 @@ public class UserServiceImpl implements UserService {
             background = loadFile(file);
             configuration.setBackgroundImage(background);
             configuration.setBackgroundPath(file.getOriginalFilename());
+            handleImage(background,file.getOriginalFilename());
         }
         if ("login".equals(type)) {
             loginLogo = loadFile(file);
             configuration.setLoginLogo(loginLogo);
             configuration.setLoginLogoPath(file.getOriginalFilename());
+            handleImage(loginLogo,file.getOriginalFilename());
         }
         if ("home".equals(type)) {
             homeLogo = loadFile(file);
             configuration.setHomeLogo(homeLogo);
             configuration.setHomeLogoPath(file.getOriginalFilename());
+            handleImage(homeLogo,file.getOriginalFilename());
         }
         checkout(configuration);
 
@@ -426,5 +437,29 @@ public class UserServiceImpl implements UserService {
         });
     }
 
+
+    private void handleImage(byte[] bytes, String path) throws IOException {
+        File file = new File(imagePath + File.separator + path);
+        if (!file.exists()) {
+            InputStream in = new ByteArrayInputStream(bytes);
+            FileOutputStream fileOutputStream = null;
+            try {
+                fileOutputStream = new FileOutputStream(file);
+                byte[] buf = new byte[bytes.length];
+                int len;
+                while ((len = in.read(buf)) != -1) {
+                    fileOutputStream.write(buf, 0, len);
+                }
+                fileOutputStream.flush();
+            } catch (Exception e) {
+                log.error("图片初始化加载失败");
+            } finally {
+                in.close();
+                if (fileOutputStream != null) {
+                    fileOutputStream.close();
+                }
+            }
+        }
+    }
 
 }

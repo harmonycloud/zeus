@@ -18,6 +18,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import javax.crypto.Mac;
@@ -54,23 +55,20 @@ public class DingRobotServiceImpl implements DingRobotService {
      * @return
      */
     @Override
-    public SendResult send(AlertInfoDto alertInfoDto) throws IOException {
+    public SendResult send(AlertInfoDto alertInfoDto,DingRobotInfo dingRobotInfo) {
         SendResult sendResult = null;
-        List<DingRobotInfo> dings = select();
-        if (CollectionUtils.isEmpty(dings) || alertInfoDto == null) {
+        if (ObjectUtils.isEmpty(dingRobotInfo) || ObjectUtils.isEmpty(alertInfoDto) ) {
             return sendResult;
         }
         try {
             TextMessage textMessage = new TextMessage(buildContent(alertInfoDto));
-            for (DingRobotInfo ding : dings) {
-                if ("0".equals(ding.getEnable())) {
-                    continue;
-                }
-                if (StringUtils.isEmpty(ding.getSecretKey())) {
-                    sendResult = robot.send(ding.getWebhook(), textMessage);
-                }else {
-                    sendResult = robot.send(secret(ding.getWebhook(),ding.getSecretKey()),textMessage);
-                }
+            if ("0".equals(dingRobotInfo.getEnable())) {
+                return sendResult;
+            }
+            if (StringUtils.isEmpty(dingRobotInfo.getSecretKey())) {
+                sendResult = robot.send(dingRobotInfo.getWebhook(), textMessage);
+            }else {
+                sendResult = robot.send(secret(dingRobotInfo.getWebhook(),dingRobotInfo.getSecretKey()),textMessage);
             }
         }catch (Exception e) {
             logger.error("钉钉发送失败:",sendResult);
