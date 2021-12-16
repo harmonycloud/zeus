@@ -183,7 +183,7 @@ public class RoleServiceImpl implements RoleService {
      * 校验角色菜单权限
      */
     public boolean checkMenu(RoleDto roleDto) {
-        if (!CollectionUtils.isEmpty(roleDto.getMenu())) {
+        if (CollectionUtils.isEmpty(roleDto.getMenu())) {
             return true;
         }
         // 获取当前用户的角色id
