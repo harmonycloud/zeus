@@ -224,10 +224,15 @@ public class DingRobotServiceImpl implements DingRobotService {
     public void enableDing() {
         QueryWrapper<DingRobotInfo> wrapper = new QueryWrapper<>();
         List<DingRobotInfo> infos = dingRobotMapper.selectList(wrapper);
-        infos.stream().forEach(info -> {
-            info.setEnable("1");
-            dingRobotMapper.update(info,wrapper);
-        });
+        for (DingRobotInfo info : infos) {
+            DingRobotInfo dingRobotInfo = new DingRobotInfo();
+            dingRobotInfo.setId(info.getId());
+            dingRobotInfo.setWebhook(info.getWebhook());
+            dingRobotInfo.setSecretKey(info.getSecretKey());
+            dingRobotInfo.setTime(info.getTime());
+            dingRobotInfo.setEnable("1");
+            dingRobotMapper.updateById(dingRobotInfo);
+        }
     }
 
     /**
