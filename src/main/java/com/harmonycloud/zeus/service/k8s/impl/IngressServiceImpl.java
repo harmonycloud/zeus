@@ -297,20 +297,22 @@ public class IngressServiceImpl implements IngressService {
                 });
             }
             // tcp
-            for (MiddlewareClusterIngress ingress : cluster.getIngressList()) {
-                if (ingress.getTcp() != null && ingress.getTcp().isEnabled()) {
-                    Middleware detail = middlewareService.detail(clusterId, namespace, middlewareName, type);
-                    ConfigMap configMap =
-                        configMapWrapper.get(clusterId, getIngressTcpNamespace(cluster, ingress.getIngressClassName()),
-                            ingress.getTcp().getConfigMapName());
-                    Map<String, List<ServiceDTO>> tcpRoutineMap = getTcpRoutineMap(configMap);
-                    svcNameList.forEach(svc -> {
-                        IngressDTO tcpDto = getTcpRoutineDetail(clusterId, namespace, crd, svc, tcpRoutineMap);
-                        if (tcpDto != null) {
-                            resList.add(tcpDto.setMiddlewareType(type).setMiddlewareNickName(detail.getAliasName())
-                                .setExposeIP(ingress.getAddress()));
-                        }
-                    });
+            if (!CollectionUtils.isEmpty(cluster.getIngressList())) {
+                for (MiddlewareClusterIngress ingress : cluster.getIngressList()) {
+                    if (ingress.getTcp() != null && ingress.getTcp().isEnabled()) {
+                        Middleware detail = middlewareService.detail(clusterId, namespace, middlewareName, type);
+                        ConfigMap configMap =
+                                configMapWrapper.get(clusterId, getIngressTcpNamespace(cluster, ingress.getIngressClassName()),
+                                        ingress.getTcp().getConfigMapName());
+                        Map<String, List<ServiceDTO>> tcpRoutineMap = getTcpRoutineMap(configMap);
+                        svcNameList.forEach(svc -> {
+                            IngressDTO tcpDto = getTcpRoutineDetail(clusterId, namespace, crd, svc, tcpRoutineMap);
+                            if (tcpDto != null) {
+                                resList.add(tcpDto.setMiddlewareType(type).setMiddlewareNickName(detail.getAliasName())
+                                        .setExposeIP(ingress.getAddress()));
+                            }
+                        });
+                    }
                 }
             }
         }
