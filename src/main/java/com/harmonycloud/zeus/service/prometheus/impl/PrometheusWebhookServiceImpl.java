@@ -117,8 +117,9 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             AlertInfoDto alertInfoDto = new AlertInfoDto();
             //告警指标
             alertInfoDto.setClusterId(clusterId);
+
             //告警时间
-            alertInfoDto.setAlertTime(convertTime(alert.getString("startsAt")));
+            alertInfoDto.setAlertTime(convertTime(alert.getString("startsAt").replace(StringUtils.substring(alert.getString("startsAt"), -7, -1), "")));
             //告警等级
             alertInfoDto.setLevel((String) JSON.parseObject(alertInfo.getLabels(), HashMap.class).get("severity"));
             //规则描述
@@ -211,8 +212,11 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
      * 转换时间格式
      */
     public Date convertTime(String time) throws ParseException {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS Z");
-        Date date = format.parse(time.replace("Z", " UTC"));//注意是空格+UTC
-        return date;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        Date date = sdf.parse(time);
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.set(Calendar.HOUR,calendar.get(Calendar.HOUR)+8);
+        return calendar.getTime();
     }
 }
