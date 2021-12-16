@@ -166,9 +166,7 @@ public class RoleServiceImpl implements RoleService {
             roleDto.getMenu()
                 .forEach(menu -> resourceMenuRoleService.update(roleDto.getId(), menu.getId(), menu.getOwn()));
         }
-        if (!CollectionUtils.isEmpty(roleDto.getClusterList())){
-            clusterRoleService.update(roleDto.getId(), roleDto.getClusterList());
-        }
+        clusterRoleService.update(roleDto.getId(), roleDto.getClusterList());
     }
 
     @Override
