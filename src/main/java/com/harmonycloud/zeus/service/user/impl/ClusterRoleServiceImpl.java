@@ -1,6 +1,8 @@
 package com.harmonycloud.zeus.service.user.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.common.model.user.RoleDto;
@@ -47,6 +49,9 @@ public class ClusterRoleServiceImpl implements ClusterRoleService {
         // 过滤不需要做修改的
         if (!CollectionUtils.isEmpty(beanClusterRoleList)) {
             clusterList.forEach(cluster -> {
+                if (CollectionUtils.isEmpty(cluster.getNamespaceList())){
+                    throw new BusinessException(ErrorMessage.ROLE_NAMESPACE_PERMISSION_EMPTY);
+                }
                 List<Namespace> tempNamespaceList = new ArrayList<>(cluster.getNamespaceList());
                 tempNamespaceList.forEach(namespace -> {
                     if (beanClusterRoleList
