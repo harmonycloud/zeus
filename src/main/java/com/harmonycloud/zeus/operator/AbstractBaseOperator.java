@@ -803,7 +803,7 @@ public abstract class AbstractBaseOperator {
             return;
         }
         boolean success = false;
-        for (int i = 0; i < 600 && !success; i++) {
+        for (int i = 0; i < (60 * 10 * 60) && !success; i++) {
             Middleware detail = middlewareService.detail(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
             log.info("为实例：{}创建对外服务：状态：{},已用时：{}s", detail.getName(), detail.getStatus(), i);
             if (detail != null) {

@@ -105,8 +105,8 @@ public class MysqlServiceImpl implements MysqlService {
                 String exposePort = serviceDTO.getExposePort();
                 mysqlInfo.put("address", exposeIP + ":" + exposePort);
             }
-            mysqlInfo.put("username", "root");
         }
+        mysqlInfo.put("username", "root");
         return mysqlInfo;
     }
 
