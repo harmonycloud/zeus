@@ -414,7 +414,7 @@ public abstract class AbstractBaseOperator {
             // toleration
             if (values.getString("tolerationAry") != null) {
                 String tolerationAry = values.getString("tolerationAry");
-                middleware.setTolerations(new HashSet<>(Arrays.asList(tolerationAry.split(","))));
+                middleware.setTolerations(new ArrayList<>(Arrays.asList(tolerationAry.split(","))));
             }
             // 设置服务备份状态
             middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(middleware.getClusterId(),middleware.getNamespace(),middleware.getType(),middleware.getName()));
@@ -479,7 +479,7 @@ public abstract class AbstractBaseOperator {
     public void convertDynamicValues(Middleware middleware, JSONObject values) {
         HelmChartFile helm = helmChartService.getHelmChartFromMysql(middleware.getType(), middleware.getChartVersion());
         QuestionYaml questionYaml = helmChartService.getQuestionYaml(helm);
-        Map<String, String> dynamicValues = new HashMap<>();
+        Map<String, Object> dynamicValues = new HashMap<>();
         //解析question.yaml
         convertQuestions(questionYaml.getQuestions(), dynamicValues, values);
         middleware.setDynamicValues(dynamicValues);
@@ -520,9 +520,9 @@ public abstract class AbstractBaseOperator {
     /**
      * 获取包含需要在详情页展示的字段
      */
-    public void convertQuestions(List<Question> questions, Map<String, String> dynamicValues, JSONObject values) {
+    public void convertQuestions(List<Question> questions, Map<String, Object> dynamicValues, JSONObject values) {
         questions.forEach(question -> {
-            if (question.getDetail() != null && question.getDetail() && !"nodeAffinity".equals(question.getType())) {
+            if (question.getDetail() != null && question.getDetail() && !"nodeAffinity".equals(question.getType()) && !"tolerations".equals(question.getType())) {
                 String value = getValuesByVariable(question.getVariable(), values);
                 dynamicValues.put(question.getLabel(), value);
                 if (StringUtils.isNotEmpty(question.getShowSubQuestionIf())
@@ -640,7 +640,7 @@ public abstract class AbstractBaseOperator {
      * 处理动态表单
      */
     protected void replaceDynamicValues(Middleware middleware, JSONObject values) {
-        Map<String, String> dynamicValues = middleware.getDynamicValues();
+        Map<String, Object> dynamicValues = middleware.getDynamicValues();
         for (String key : dynamicValues.keySet()) {
             // 是否存在多级
             if (key.contains(".")) {
@@ -662,16 +662,16 @@ public abstract class AbstractBaseOperator {
 
     private void replaceDynamicValuesContent(Middleware middleware, MiddlewareClusterDTO cluster) {
         for (String key : middleware.getDynamicValues().keySet()) {
-            if (middleware.getDynamicValues().get(key).contains("${address}")) {
+            if (middleware.getDynamicValues().get(key).toString().contains("${address}")) {
                 middleware.getDynamicValues().put(key,
-                    middleware.getDynamicValues().get(key).replace("${address}", cluster.getRegistry().getAddress()));
+                    middleware.getDynamicValues().get(key).toString().replace("${address}", cluster.getRegistry().getAddress()));
             }
-            if (middleware.getDynamicValues().get(key).contains("${port}")) {
-                middleware.getDynamicValues().put(key, middleware.getDynamicValues().get(key).replace("${port}",
+            if (middleware.getDynamicValues().get(key).toString().contains("${port}")) {
+                middleware.getDynamicValues().put(key, middleware.getDynamicValues().get(key).toString().replace("${port}",
                     String.valueOf(cluster.getRegistry().getPort())));
             }
-            if (middleware.getDynamicValues().get(key).contains("${repository}")) {
-                middleware.getDynamicValues().put(key, middleware.getDynamicValues().get(key).replace("${repository}",
+            if (middleware.getDynamicValues().get(key).toString().contains("${repository}")) {
+                middleware.getDynamicValues().put(key, middleware.getDynamicValues().get(key).toString().replace("${repository}",
                     cluster.getRegistry().getImageRepo()));
             }
         }
