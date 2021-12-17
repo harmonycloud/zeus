@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.prometheus.impl;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -146,7 +147,15 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             List<MailToUser> users = mailToUserMapper.selectList(new QueryWrapper<MailToUser>());
             if ("mail".equals(alertInfo.getMail())) {
                 users.stream().forEach(mailToUser -> {
-                    mailService.sendHtmlMail(alertInfoDto,mailToUser);
+                    try {
+                        mailService.sendHtmlMail(alertInfoDto,mailToUser);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        log.error("邮件发送失败");
+                    } catch (MessagingException e) {
+                        e.printStackTrace();
+                        log.error("邮件发送失败");
+                    }
                 });
             }
         }

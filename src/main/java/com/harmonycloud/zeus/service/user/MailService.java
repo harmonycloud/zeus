@@ -6,6 +6,7 @@ import com.harmonycloud.zeus.bean.MailToUser;
 import com.harmonycloud.zeus.bean.user.BeanUser;
 
 import javax.mail.MessagingException;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 
@@ -15,7 +16,7 @@ import java.util.List;
  */
 public interface MailService {
 
-    void sendHtmlMail(AlertInfoDto alertInfoDto, MailToUser mailToUser);
+    void sendHtmlMail(AlertInfoDto alertInfoDto, MailToUser mailToUser) throws IOException, MessagingException;
 
     void insertMail(MailInfo mailInfo);
 
