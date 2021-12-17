@@ -202,6 +202,9 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
 
     @Override
     public void create(Middleware middleware, MiddlewareClusterDTO cluster) {
+        String jsonStr = JSONObject.toJSONString(middleware);
+        Middleware relationMiddleware = JSONObject.parseObject(jsonStr, Middleware.class);
+        middleware.setRelationMiddleware(relationMiddleware);
         super.create(middleware, cluster);
         // 将服务通过NodePort对外暴露
         MysqlDTO mysqlDTO = middleware.getMysqlDTO();
