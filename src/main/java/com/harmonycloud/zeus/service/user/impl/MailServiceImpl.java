@@ -171,7 +171,7 @@ public class MailServiceImpl implements MailService {
     private static String buildContent(AlertInfoDto alertInfoDto, String username) throws IOException {
         //加载邮件html模板
         String fileName = "mail/mail-alarm.html";
-        InputStream inputStream = ClassLoader.getSystemResourceAsStream(fileName);
+        InputStream inputStream = MailServiceImpl.class.getClassLoader().getResourceAsStream(fileName);
         BufferedReader fileReader = new BufferedReader(new InputStreamReader(inputStream));
         StringBuffer buffer = new StringBuffer();
         String line = "";
