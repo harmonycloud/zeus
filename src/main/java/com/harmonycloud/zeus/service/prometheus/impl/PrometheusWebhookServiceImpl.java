@@ -151,10 +151,8 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
                         mailService.sendHtmlMail(alertInfoDto,mailToUser);
                     } catch (IOException e) {
                         e.printStackTrace();
-                        log.error("邮件发送失败");
                     } catch (MessagingException e) {
                         e.printStackTrace();
-                        log.error("邮件发送失败");
                     }
                 });
             }
