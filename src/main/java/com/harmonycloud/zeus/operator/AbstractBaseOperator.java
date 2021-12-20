@@ -372,10 +372,12 @@ public abstract class AbstractBaseOperator {
     }
 
     protected void deletePvc(BeanCacheMiddleware beanCacheMiddleware) {
-        List<String> pvcList = Arrays.asList(beanCacheMiddleware.getPvc().split(","));
-        if (!CollectionUtils.isEmpty(pvcList)) {
-            pvcList.forEach(
-                pvc -> pvcWrapper.delete(beanCacheMiddleware.getClusterId(), beanCacheMiddleware.getNamespace(), pvc));
+        if (StringUtils.isNotEmpty(beanCacheMiddleware.getPvc())) {
+            List<String> pvcList = Arrays.asList(beanCacheMiddleware.getPvc().split(","));
+            if (!CollectionUtils.isEmpty(pvcList)) {
+                pvcList.forEach(pvc -> pvcWrapper.delete(beanCacheMiddleware.getClusterId(),
+                        beanCacheMiddleware.getNamespace(), pvc));
+            }
         }
     }
 
@@ -534,6 +536,10 @@ public abstract class AbstractBaseOperator {
         List<HelmListInfo> helms = helmChartService.listHelm(middleware.getNamespace(), null, cluster);
         if (helms.stream().anyMatch(h -> middleware.getName().equals(h.getName()))) {
             throw new BusinessException(DictEnum.MIDDLEWARE, middleware.getName(), ErrorMessage.EXIST);
+        }
+        // 数据仍未清清除
+        if (!ObjectUtils.isEmpty(cacheMiddlewareService.get(middleware))){
+            throw new BusinessException(ErrorMessage.SAME_NAME_MIDDLEWARE_STORAGE_EXIST);
         }
     }
 
