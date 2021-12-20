@@ -403,16 +403,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                     }
                     singleServiceList.add(middleware);
                 }
-                // 整理未完全删除的中间件的信息
-                for (BeanCacheMiddleware beanCacheMiddleware : beanCacheMiddlewareList){
-                    if (!middlewareInfo.getChartName().equals(beanCacheMiddleware.getType())) {
-                        continue;
-                    }
-                    Middleware middleware = new Middleware();
-                    BeanUtils.copyProperties(beanCacheMiddleware, middleware);
-                    middleware.setStatus("Deleted");
-                    singleServiceList.add(middleware);
-                }
                 MiddlewareBriefInfoDTO briefInfoDTO = new MiddlewareBriefInfoDTO();
                 briefInfoDTO.setName(middlewareInfo.getName());
                 briefInfoDTO.setImagePath(middlewareInfo.getImagePath());
@@ -424,6 +414,16 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 briefInfoDTO.setServiceNum(singleServiceList.size());
                 briefInfoDTO.setOfficial(middlewareInfo.getOfficial());
                 serviceList.add(briefInfoDTO);
+                // 整理未完全删除的中间件的信息
+                for (BeanCacheMiddleware beanCacheMiddleware : beanCacheMiddlewareList){
+                    if (!middlewareInfo.getChartName().equals(beanCacheMiddleware.getType())) {
+                        continue;
+                    }
+                    Middleware middleware = new Middleware();
+                    BeanUtils.copyProperties(beanCacheMiddleware, middleware);
+                    middleware.setStatus("Deleted");
+                    singleServiceList.add(middleware);
+                }
             }
             Collections.sort(serviceList, new MiddlewareBriefInfoDTOComparator());
         } catch (Exception e) {
