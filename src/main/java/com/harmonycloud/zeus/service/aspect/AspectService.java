@@ -15,6 +15,6 @@ public interface AspectService {
 
     QuestionYaml dynamic();
 
-    void operation(MiddlewareClusterDTO cluster, Middleware middleware, Map<String, Object> dynamicValues, JSONObject values);
+    void operation(MiddlewareClusterDTO cluster, Middleware middleware, Map<String, String> dynamicValues, JSONObject values);
 
 }

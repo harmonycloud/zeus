@@ -548,7 +548,7 @@ public abstract class AbstractBaseOperator {
     public void convertDynamicValues(Middleware middleware, JSONObject values) {
         HelmChartFile helm = helmChartService.getHelmChartFromMysql(middleware.getType(), middleware.getChartVersion());
         QuestionYaml questionYaml = helmChartService.getQuestionYaml(helm);
-        Map<String, Object> dynamicValues = new HashMap<>();
+        Map<String, String> dynamicValues = new HashMap<>();
         //解析question.yaml
         convertQuestions(questionYaml.getQuestions(), dynamicValues, values);
         middleware.setDynamicValues(dynamicValues);
@@ -589,7 +589,7 @@ public abstract class AbstractBaseOperator {
     /**
      * 获取包含需要在详情页展示的字段
      */
-    public void convertQuestions(List<Question> questions, Map<String, Object> dynamicValues, JSONObject values) {
+    public void convertQuestions(List<Question> questions, Map<String, String> dynamicValues, JSONObject values) {
         questions.forEach(question -> {
             if (question.getDetail() != null && question.getDetail() && !"nodeAffinity".equals(question.getType()) && !"tolerations".equals(question.getType())) {
                 String value = getValuesByVariable(question.getVariable(), values);
@@ -709,7 +709,7 @@ public abstract class AbstractBaseOperator {
      * 处理动态表单
      */
     protected void replaceDynamicValues(Middleware middleware, JSONObject values) {
-        Map<String, Object> dynamicValues = middleware.getDynamicValues();
+        Map<String, String> dynamicValues = middleware.getDynamicValues();
         for (String key : dynamicValues.keySet()) {
             // 是否存在多级
             if (key.contains(".")) {
