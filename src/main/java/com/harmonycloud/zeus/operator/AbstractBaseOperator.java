@@ -220,7 +220,7 @@ public abstract class AbstractBaseOperator {
 
         // 备注
         if (StringUtils.isNotBlank(middleware.getDescription())) {
-            sb.append("middleware-desc=").append(middleware.getDescription());
+            sb.append("middleware-desc=").append(middleware.getDescription()).append(",");
         }
         // 没有修改，直接返回
         if (sb.length() == 0) {
