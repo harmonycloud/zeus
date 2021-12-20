@@ -275,7 +275,7 @@ public abstract class AbstractBaseOperator {
 
         // 备注
         if (StringUtils.isNotBlank(middleware.getDescription())) {
-            sb.append("middleware-desc=").append(middleware.getDescription());
+            sb.append("middleware-desc=").append(middleware.getDescription()).append(",");
         }
         // 没有修改，直接返回
         if (sb.length() == 0) {
@@ -867,10 +867,6 @@ public abstract class AbstractBaseOperator {
      * @param middlewareServiceNameIndex 服务名称
      */
     public void tryCreateOpenService(String clusterId, Middleware middleware, MiddlewareServiceNameIndex middlewareServiceNameIndex, Boolean needRunningMiddleware) {
-        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        if (CollectionUtils.isEmpty(cluster.getIngressList())) {
-            return;
-        }
         boolean success = false;
         for (int i = 0; i < (60 * 10 * 60) && !success; i++) {
             Middleware detail = middlewareService.detail(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
