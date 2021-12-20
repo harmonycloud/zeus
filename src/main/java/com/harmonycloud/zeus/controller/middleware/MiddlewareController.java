@@ -73,6 +73,23 @@ public class MiddlewareController {
         return BaseResult.ok();
     }
 
+    @ApiOperation(value = "恢复中间件", notes = "恢复中间件")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middleware", value = "middleware信息", paramType = "query", dataTypeClass = Middleware.class)
+    })
+    @PostMapping("/{middlewareName}/recovery")
+    public BaseResult recovery(@PathVariable("clusterId") String clusterId,
+                               @PathVariable("namespace") String namespace,
+                               @PathVariable("middlewareName") String name,
+                               @RequestBody Middleware middleware) {
+        middleware.setClusterId(clusterId).setNamespace(namespace).setName(name);
+        middlewareService.recovery(middleware);
+        return BaseResult.ok();
+    }
+
     @ApiOperation(value = "修改中间件", notes = "修改中间件")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
@@ -103,6 +120,21 @@ public class MiddlewareController {
                              @PathVariable("middlewareName") String name,
                              @RequestParam("type") String type) {
         middlewareService.delete(clusterId, namespace, name, type);
+        return BaseResult.ok();
+    }
+    @ApiOperation(value = "删除中间件相关存储", notes = "删除中间件相关存储")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+    })
+    @DeleteMapping("/{middlewareName}/storage")
+    public BaseResult deleteStorage(@PathVariable("clusterId") String clusterId,
+                                    @PathVariable("namespace") String namespace,
+                                    @PathVariable("middlewareName") String name,
+                                    @RequestParam("type") String type) {
+        middlewareService.deleteStorage(clusterId, namespace, name, type);
         return BaseResult.ok();
     }
 

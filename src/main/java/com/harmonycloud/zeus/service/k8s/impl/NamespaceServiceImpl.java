@@ -1,32 +1,33 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.tool.date.DateUtils;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
-import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
-import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
-import com.harmonycloud.zeus.service.k8s.NamespaceService;
-import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 
+import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.common.model.middleware.ResourceQuotaDTO;
+import com.harmonycloud.caas.filters.token.JwtTokenComponent;
+import com.harmonycloud.caas.filters.user.CurrentUser;
+import com.harmonycloud.caas.filters.user.CurrentUserRepository;
+import com.harmonycloud.tool.date.DateUtils;
+import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
+import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
+import com.harmonycloud.zeus.service.k8s.NamespaceService;
+import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
+import com.harmonycloud.zeus.service.user.ClusterRoleService;
 
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -47,7 +48,9 @@ public class NamespaceServiceImpl implements NamespaceService {
     private ResourceQuotaService resourceQuotaService;
     @Autowired
     private MiddlewareCRDService middlewareCRDService;
-    
+    @Autowired
+    private ClusterRoleService clusterRoleService;
+
     @Value("${k8s.namespace.protect:default,kube-system,kube-public,cluster-top,cicd,caas-system,kube-federation-system,harbor-system,logging,monitoring,velero,middleware-system}")
     private void setProtectNamespaceList(String protectNamespaces) {
         protectNamespaceList.addAll(Arrays.asList(protectNamespaces.split(",")));
@@ -93,6 +96,19 @@ public class NamespaceServiceImpl implements NamespaceService {
                     DateUtils.parseDate(ns.getMetadata().getCreationTimestamp(), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
                 return namespace;
             }).collect(Collectors.toList());
+
+        // 根据用户角色集群分区权限进行过滤
+        CurrentUser currentUser = CurrentUserRepository.getUserExistNull();
+        if (!ObjectUtils.isEmpty(currentUser)) {
+            JSONObject role = JwtTokenComponent.checkToken(currentUser.getToken()).getValue();
+            if (!"超级管理员".equals(role.getString("roleName"))) {
+                MiddlewareClusterDTO cluster = clusterRoleService.get(role.getInteger("roleId"), clusterId);
+                list = list.stream()
+                    .filter(
+                        ns -> cluster.getNamespaceList().stream().anyMatch(cns -> cns.getName().equals(ns.getName())))
+                    .collect(Collectors.toList());
+            }
+        }
 
         // 返回其他信息
         if (withQuota || withMiddleware) {
@@ -182,7 +198,7 @@ public class NamespaceServiceImpl implements NamespaceService {
             throw new BusinessException(ErrorMessage.NAMESPACE_REGISTRY_FAILED);
         }
     }
-    
+
     public boolean checkExist(String clusterId, String name) {
         List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId);
         return nsList.stream().anyMatch(ns -> ns.getMetadata().getName().equals(name));
