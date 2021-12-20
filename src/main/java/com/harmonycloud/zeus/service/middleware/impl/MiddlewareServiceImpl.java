@@ -422,6 +422,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                     Middleware middleware = new Middleware();
                     BeanUtils.copyProperties(beanCacheMiddleware, middleware);
                     middleware.setStatus("Deleted");
+                    // 先移除可能因为异步导致残留的原中间件信息
+                    singleServiceList = singleServiceList.stream().filter(m -> !m.getName().equals(middleware.getName())).collect(Collectors.toList());
                     singleServiceList.add(middleware);
                 }
             }
