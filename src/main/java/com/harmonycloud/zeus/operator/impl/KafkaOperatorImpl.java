@@ -100,6 +100,8 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
             values.put("custom", true);
             //设置dynamicTabs
             values.put("dynamicTabs", middleware.getCapabilities());
+        } else {
+            zookeeper.put("port", zookeeper.getString("port") + "/kafka" + UUIDUtils.get8UUID());
         }
         // 设置主机容忍信息
         if (!CollectionUtils.isEmpty(middleware.getTolerations())) {
