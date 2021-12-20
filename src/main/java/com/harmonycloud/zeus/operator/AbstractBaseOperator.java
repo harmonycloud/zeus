@@ -537,6 +537,10 @@ public abstract class AbstractBaseOperator {
         if (helms.stream().anyMatch(h -> middleware.getName().equals(h.getName()))) {
             throw new BusinessException(DictEnum.MIDDLEWARE, middleware.getName(), ErrorMessage.EXIST);
         }
+        // 数据仍未清清除
+        if (!ObjectUtils.isEmpty(cacheMiddlewareService.get(middleware))){
+            throw new BusinessException(ErrorMessage.SAME_NAME_MIDDLEWARE_STORAGE_EXIST);
+        }
     }
 
     public void updatePreCheck(Middleware middleware, MiddlewareClusterDTO cluster) {
