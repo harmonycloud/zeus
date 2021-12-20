@@ -631,14 +631,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     public static class MiddlewareComparator implements Comparator<Middleware> {
         @Override
         public int compare(Middleware o1, Middleware o2) {
-            int res = o1.getCreateTime().compareTo(o2.getCreateTime());
-            if (res > 0) {
-                return -1;
-            } else if (res < 0) {
-                return 1;
-            } else {
-                return 0;
-            }
+            return o1.getCreateTime() == null ? 1
+                : o2.getCreateTime() == null ? 1 : o2.getCreateTime().compareTo(o1.getCreateTime());
         }
     }
 
