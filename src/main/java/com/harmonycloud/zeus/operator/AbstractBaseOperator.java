@@ -372,10 +372,12 @@ public abstract class AbstractBaseOperator {
     }
 
     protected void deletePvc(BeanCacheMiddleware beanCacheMiddleware) {
-        List<String> pvcList = Arrays.asList(beanCacheMiddleware.getPvc().split(","));
-        if (!CollectionUtils.isEmpty(pvcList)) {
-            pvcList.forEach(
-                pvc -> pvcWrapper.delete(beanCacheMiddleware.getClusterId(), beanCacheMiddleware.getNamespace(), pvc));
+        if (StringUtils.isNotEmpty(beanCacheMiddleware.getPvc())) {
+            List<String> pvcList = Arrays.asList(beanCacheMiddleware.getPvc().split(","));
+            if (!CollectionUtils.isEmpty(pvcList)) {
+                pvcList.forEach(pvc -> pvcWrapper.delete(beanCacheMiddleware.getClusterId(),
+                        beanCacheMiddleware.getNamespace(), pvc));
+            }
         }
     }
 
