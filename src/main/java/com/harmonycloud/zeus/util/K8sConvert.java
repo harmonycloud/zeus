@@ -240,7 +240,7 @@ public class K8sConvert {
         return JSON.parseObject(na);
     }
 
-    public static JSONArray convertToleration2Json(Set<String> tolerationList){
+    public static JSONArray convertToleration2Json(List<String> tolerationList){
         JSONArray jsonArray = new JSONArray();
         tolerationList.forEach(tolerationStr ->{
             Toleration toleration = convertToleration(tolerationStr);

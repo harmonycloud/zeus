@@ -13,12 +13,17 @@ import java.util.stream.Collectors;
 import cn.hutool.json.JSON;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.zeus.bean.BeanAlertRule;
 import com.harmonycloud.zeus.bean.MiddlewareAlertInfo;
 import com.harmonycloud.zeus.dao.BeanAlertRuleMapper;
 import com.harmonycloud.zeus.dao.MiddlewareAlertInfoMapper;
 import com.harmonycloud.zeus.integration.cluster.bean.prometheus.PrometheusRuleGroups;
+import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
+import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
+import com.harmonycloud.zeus.dao.BeanCacheMiddlewareMapper;
 import com.harmonycloud.zeus.service.aspect.AspectService;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
@@ -26,6 +31,7 @@ import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.schedule.MiddlewareManageTask;
+import com.harmonycloud.zeus.service.middleware.*;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareAlertsServiceImpl;
@@ -35,6 +41,7 @@ import com.harmonycloud.zeus.util.K8sConvert;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -51,7 +58,6 @@ import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.prometheus.PrometheusRule;
-import com.harmonycloud.zeus.service.middleware.MiddlewareCustomConfigService;
 import com.harmonycloud.tool.collection.JsonUtils;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 
@@ -99,6 +105,11 @@ public abstract class AbstractBaseOperator {
     private AspectService aspectService;
     @Autowired
     private GrafanaService grafanaService;
+    @Autowired
+    protected CacheMiddlewareService cacheMiddlewareService;
+    @Autowired
+    protected ClusterMiddlewareInfoService clusterMiddlewareInfoService;
+
     @Autowired
     private BeanAlertRuleMapper beanAlertRuleMapper;
     @Autowired
@@ -178,15 +189,59 @@ public abstract class AbstractBaseOperator {
         add2sql(middleware);
     }
 
+    public void recovery(Middleware middleware, MiddlewareClusterDTO cluster){
+        BeanCacheMiddleware beanCacheMiddleware = cacheMiddlewareService.get(middleware);
+        // 1. download and read helm chart from registry
+        HelmChartFile helmChart =
+                helmChartService.getHelmChartFromMysql(middleware.getChartName(), middleware.getChartVersion());
+        // 2. deal with values.yaml andChart.yaml
+        JSONObject values = JSONObject.parseObject(beanCacheMiddleware.getValuesYaml());
+        Yaml yaml = new Yaml();
+        helmChart.setValueYaml(yaml.dumpAsMap(values));
+        helmChartService.coverYamlFile(helmChart);
+        // 3. helm package & install
+        String tgzFilePath = helmChartService.packageChart(helmChart.getTarFileName(), middleware.getChartName(),
+                middleware.getChartVersion());
+        helmChartService.install(middleware, tgzFilePath, cluster);
+        // 删除数据库缓存
+        cacheMiddlewareService.delete(middleware);
+    }
+
 
     public void delete(Middleware middleware) {
-        deletePvc(middleware);
+        /*deletePvc(middleware);
+        deleteIngress(middleware);
+        deleteCustomConfigHistory(middleware);
+        middlewareBackupService.deleteMiddlewareBackupInfo(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());*/
+        // 获取集群
+        MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(middleware.getClusterId());
+        // 获取values.yaml 并写入数据库
+        JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
+        BeanCacheMiddleware beanCacheMiddleware = new BeanCacheMiddleware();
+        BeanUtils.copyProperties(middleware, beanCacheMiddleware);
+        if (values.containsKey("chart-version")) {
+            beanCacheMiddleware.setChartVersion(values.getString("chart-version"));
+        } else {
+            BeanClusterMiddlewareInfo beanClusterMiddlewareInfo =
+                clusterMiddlewareInfoService.get(cluster.getId(), middleware.getType());
+            beanCacheMiddleware.setChartVersion(beanClusterMiddlewareInfo.getChartVersion());
+        }
+        beanCacheMiddleware.setPvc(getPvc(middleware));
+        beanCacheMiddleware.setValuesYaml(JSONObject.toJSONString(values));
+        cacheMiddlewareService.insert(beanCacheMiddleware);
+        // helm卸载需要放到最后，要不然一些资源的查询会404
+        helmChartService.uninstall(middleware, cluster);
+    }
+
+    public void deleteStorage(Middleware middleware){
+        BeanCacheMiddleware beanCacheMiddleware = cacheMiddlewareService.get(middleware);
+        deletePvc(beanCacheMiddleware);
         deleteIngress(middleware);
         deleteCustomConfigHistory(middleware);
         middlewareBackupService.deleteMiddlewareBackupInfo(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
-        // helm卸载需要放到最后，要不然一些资源的查询会404
-        helmChartService.uninstall(middleware, clusterService.findByIdAndCheckRegistry(middleware.getClusterId()));
         removeSql(middleware);
+        //删除数据库记录
+        cacheMiddlewareService.delete(middleware);
     }
 
     public void upgradeChart(Middleware middleware, JSONObject currentValues, JSONObject upgradeValues, String upgradeChartVersion, MiddlewareClusterDTO cluster) {
@@ -297,16 +352,30 @@ public abstract class AbstractBaseOperator {
         }
     }
 
-    protected void deletePvc(Middleware middleware) {
+    protected String getPvc(Middleware middleware) {
         // query middleware cr
         MiddlewareCRD mw = middlewareCRDService.getCR(middleware.getClusterId(), middleware.getNamespace(),
             middleware.getType(), middleware.getName());
         if (mw == null || mw.getStatus() == null || mw.getStatus().getInclude() == null) {
-            return;
+            return null;
         }
         List<MiddlewareInfo> pvcs = mw.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
-        if (!CollectionUtils.isEmpty(pvcs)) {
-            pvcs.forEach(pvc -> pvcWrapper.delete(middleware.getClusterId(), middleware.getNamespace(), pvc.getName()));
+        StringBuilder sb = new StringBuilder();
+        for (MiddlewareInfo pvc : pvcs) {
+            sb.append(pvc.getName()).append(",");
+        }
+        if (sb.length() == 0) {
+            return null;
+        }
+        sb.deleteCharAt(sb.length() - 1);
+        return sb.toString();
+    }
+
+    protected void deletePvc(BeanCacheMiddleware beanCacheMiddleware) {
+        List<String> pvcList = Arrays.asList(beanCacheMiddleware.getPvc().split(","));
+        if (!CollectionUtils.isEmpty(pvcList)) {
+            pvcList.forEach(
+                pvc -> pvcWrapper.delete(beanCacheMiddleware.getClusterId(), beanCacheMiddleware.getNamespace(), pvc));
         }
     }
 
@@ -414,7 +483,7 @@ public abstract class AbstractBaseOperator {
             // toleration
             if (values.getString("tolerationAry") != null) {
                 String tolerationAry = values.getString("tolerationAry");
-                middleware.setTolerations(new HashSet<>(Arrays.asList(tolerationAry.split(","))));
+                middleware.setTolerations(new ArrayList<>(Arrays.asList(tolerationAry.split(","))));
             }
             // 设置服务备份状态
             middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(middleware.getClusterId(),middleware.getNamespace(),middleware.getType(),middleware.getName()));
@@ -522,7 +591,7 @@ public abstract class AbstractBaseOperator {
      */
     public void convertQuestions(List<Question> questions, Map<String, String> dynamicValues, JSONObject values) {
         questions.forEach(question -> {
-            if (question.getDetail() != null && question.getDetail() && !"nodeAffinity".equals(question.getType())) {
+            if (question.getDetail() != null && question.getDetail() && !"nodeAffinity".equals(question.getType()) && !"tolerations".equals(question.getType())) {
                 String value = getValuesByVariable(question.getVariable(), values);
                 dynamicValues.put(question.getLabel(), value);
                 if (StringUtils.isNotEmpty(question.getShowSubQuestionIf())
@@ -662,16 +731,16 @@ public abstract class AbstractBaseOperator {
 
     private void replaceDynamicValuesContent(Middleware middleware, MiddlewareClusterDTO cluster) {
         for (String key : middleware.getDynamicValues().keySet()) {
-            if (middleware.getDynamicValues().get(key).contains("${address}")) {
+            if (middleware.getDynamicValues().get(key).toString().contains("${address}")) {
                 middleware.getDynamicValues().put(key,
-                    middleware.getDynamicValues().get(key).replace("${address}", cluster.getRegistry().getAddress()));
+                    middleware.getDynamicValues().get(key).toString().replace("${address}", cluster.getRegistry().getAddress()));
             }
-            if (middleware.getDynamicValues().get(key).contains("${port}")) {
-                middleware.getDynamicValues().put(key, middleware.getDynamicValues().get(key).replace("${port}",
+            if (middleware.getDynamicValues().get(key).toString().contains("${port}")) {
+                middleware.getDynamicValues().put(key, middleware.getDynamicValues().get(key).toString().replace("${port}",
                     String.valueOf(cluster.getRegistry().getPort())));
             }
-            if (middleware.getDynamicValues().get(key).contains("${repository}")) {
-                middleware.getDynamicValues().put(key, middleware.getDynamicValues().get(key).replace("${repository}",
+            if (middleware.getDynamicValues().get(key).toString().contains("${repository}")) {
+                middleware.getDynamicValues().put(key, middleware.getDynamicValues().get(key).toString().replace("${repository}",
                     cluster.getRegistry().getImageRepo()));
             }
         }
@@ -798,10 +867,6 @@ public abstract class AbstractBaseOperator {
      * @param middlewareServiceNameIndex 服务名称
      */
     public void tryCreateOpenService(String clusterId, Middleware middleware, MiddlewareServiceNameIndex middlewareServiceNameIndex, Boolean needRunningMiddleware) {
-        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        if (CollectionUtils.isEmpty(cluster.getIngressList())) {
-            return;
-        }
         boolean success = false;
         for (int i = 0; i < (60 * 10 * 60) && !success; i++) {
             Middleware detail = middlewareService.detail(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());

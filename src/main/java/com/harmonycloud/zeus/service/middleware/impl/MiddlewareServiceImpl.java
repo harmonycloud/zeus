@@ -13,6 +13,7 @@ import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
@@ -23,6 +24,7 @@ import com.harmonycloud.zeus.schedule.MiddlewareManageTask;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.log.EsComponentService;
 import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
+import com.harmonycloud.zeus.service.middleware.CacheMiddlewareService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.tool.date.DateUtils;
@@ -33,6 +35,8 @@ import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import com.harmonycloud.zeus.util.YamlUtil;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.units.qual.A;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -79,6 +83,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private IngressService ingressService;
     @Autowired
     private ClusterMiddlewareInfoService clusterMiddlewareInfoService;
+    @Autowired
+    private CacheMiddlewareService cacheMiddlewareService;
 
     private final static Map<String, String> titleMap = new HashMap<String, String>(7) {
         {
@@ -156,6 +162,14 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
+    public void recovery(Middleware middleware) {
+        BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
+        MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(middleware.getClusterId());
+        // pre check
+        operator.recovery(middleware, cluster);
+    }
+
+    @Override
     public void update(Middleware middleware) {
         checkBaseParam(middleware);
         BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
@@ -171,6 +185,13 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         checkBaseParam(clusterId, namespace, name, type);
         Middleware middleware = new Middleware(clusterId, namespace, name, type);
         middlewareManageTask.asyncDelete(middleware, getOperator(BaseOperator.class, BaseOperator.class, middleware));
+    }
+
+    @Override
+    public void deleteStorage(String clusterId, String namespace, String name, String type) {
+        checkBaseParam(clusterId, namespace, name, type);
+        Middleware middleware = new Middleware(clusterId, namespace, name, type);
+        getOperator(BaseOperator.class, BaseOperator.class, middleware).deleteStorage(middleware);
     }
 
     @Override
@@ -269,10 +290,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
     @Override
     public void setManagePlatformAddress(Middleware middleware, String clusterId) {
-        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        if (CollectionUtils.isEmpty(cluster.getIngressList())) {
-            return;
-        }
         List<IngressDTO> ingressDTOS = ingressService.get(clusterId, middleware.getNamespace(), middleware.getType(), middleware.getName());
         MiddlewareServiceNameIndex serviceNameIndex = ServiceNameConvertUtil.convert(middleware);
         List<IngressDTO> serviceDTOList = ingressDTOS.stream().filter(ingressDTO -> (
@@ -363,6 +380,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             }
             serviceList = new ArrayList<>();
             List<Middleware> middlewareServiceList = simpleList(clusterId, namespace, type, keyword);
+            // 获取删除了但没有完全删除的中间件
+            List<BeanCacheMiddleware> beanCacheMiddlewareList = cacheMiddlewareService.list(clusterId, namespace);
             for (BeanMiddlewareInfo middlewareInfo : middlewareInfoDTOList) {
                 AtomicInteger errServiceCount = new AtomicInteger(0);
                 List<Middleware> singleServiceList = new ArrayList<>();
@@ -395,6 +414,16 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 briefInfoDTO.setServiceNum(singleServiceList.size());
                 briefInfoDTO.setOfficial(middlewareInfo.getOfficial());
                 serviceList.add(briefInfoDTO);
+                // 整理未完全删除的中间件的信息
+                for (BeanCacheMiddleware beanCacheMiddleware : beanCacheMiddlewareList){
+                    if (!middlewareInfo.getChartName().equals(beanCacheMiddleware.getType())) {
+                        continue;
+                    }
+                    Middleware middleware = new Middleware();
+                    BeanUtils.copyProperties(beanCacheMiddleware, middleware);
+                    middleware.setStatus("Deleted");
+                    singleServiceList.add(middleware);
+                }
             }
             Collections.sort(serviceList, new MiddlewareBriefInfoDTOComparator());
         } catch (Exception e) {

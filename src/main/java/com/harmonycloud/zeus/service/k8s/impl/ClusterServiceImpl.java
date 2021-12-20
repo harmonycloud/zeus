@@ -11,17 +11,14 @@ import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.extension.api.R;
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
-import com.harmonycloud.caas.common.model.*;
-import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
-import com.harmonycloud.zeus.util.YamlUtil;
+import com.harmonycloud.zeus.service.k8s.IngressService;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -29,33 +26,45 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.constants.NameConstant;
-import com.harmonycloud.caas.common.enums.*;
+import com.harmonycloud.caas.common.enums.DictEnum;
+import com.harmonycloud.caas.common.enums.ErrorCodeMessage;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
 import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
+import com.harmonycloud.caas.common.model.*;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
+import com.harmonycloud.caas.filters.token.JwtTokenComponent;
+import com.harmonycloud.caas.filters.user.CurrentUser;
+import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.date.DateUtils;
+import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.integration.cluster.ClusterWrapper;
 import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
-import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.EsService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.service.registry.RegistryService;
+import com.harmonycloud.zeus.service.user.ClusterRoleService;
 import com.harmonycloud.zeus.util.K8sClient;
 import com.harmonycloud.zeus.util.MathUtil;
+import com.harmonycloud.zeus.util.YamlUtil;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author dengyulong
@@ -97,6 +106,16 @@ public class ClusterServiceImpl implements ClusterService {
     @Autowired
     private MiddlewareCRDService middlewareCRDService;
     @Autowired
+    private IngressService ingressService;
+    @Autowired
+    private ClusterRoleService clusterRoleService;
+
+    @Value("${k8s.component.logging.es.user:elastic}")
+    private String esUser;
+    @Value("${k8s.component.logging.es.password:Hc@Cloud01}")
+    private String esPassword;
+    @Value("${k8s.component.logging.es.port:30092}")
+    private String esPort;
     private MiddlewareService middlewareService;
     @Autowired
     private ClusterComponentService clusterComponentService;
@@ -123,6 +142,20 @@ public class ClusterServiceImpl implements ClusterService {
         if (clusterList.size() <= 0) {
             return new ArrayList<>(0);
         }
+        // 根据角色集群权限过滤
+        CurrentUser currentUser = CurrentUserRepository.getUserExistNull();
+        if (!ObjectUtils.isEmpty(currentUser)) {
+            JSONObject role = JwtTokenComponent.checkToken(currentUser.getToken()).getValue();
+            if (!"超级管理员".equals(role.getString("roleName"))) {
+                List<MiddlewareClusterDTO> limitCluster = clusterRoleService.get(role.getInteger("roleId"));
+                clusterList = clusterList.stream()
+                    .filter(cluster -> limitCluster.stream()
+                        .anyMatch(lc -> lc.getId().equals(K8sClient.getClusterId(cluster.getMetadata()))))
+                    .collect(Collectors.toList());
+            }
+        }
+
+        // 封装数据
         clusters = clusterList.stream().map(c -> {
             MiddlewareClusterInfo info = c.getSpec().getInfo();
             MiddlewareClusterDTO cluster = new MiddlewareClusterDTO();
@@ -151,6 +184,7 @@ public class ClusterServiceImpl implements ClusterService {
                 try {
                     List<Namespace> list = namespaceService.list(cluster.getId());
                     cluster.getAttributes().put(NS_COUNT, list.size());
+                    cluster.setNamespaceList(list);
                 } catch (Exception e) {
                     cluster.getAttributes().put(NS_COUNT, 0);
                     log.error("集群：{}，查询命名空间列表异常", cluster.getId(), e);

@@ -13,14 +13,12 @@ import com.harmonycloud.zeus.integration.cluster.bean.MysqlReplicateStatus;
 import com.harmonycloud.zeus.operator.api.KafkaOperator;
 import com.harmonycloud.zeus.operator.miiddleware.AbstractKafkaOperator;
 import com.harmonycloud.zeus.util.DateUtil;
+import com.harmonycloud.zeus.util.K8sConvert;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
 import static com.harmonycloud.caas.common.constants.NameConstant.ZOOKEEPER;
@@ -93,7 +91,7 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
             replaceCommonResources(quota, values.getJSONObject(RESOURCES));
             replaceCommonStorages(quota, values);
         }
-        //设置zookeeper信息
+        // 设置zookeeper信息
         JSONObject zookeeper = values.getJSONObject("zookeeper");
         KafkaDTO kafkaDTO = middleware.getKafkaDTO();
         if (zookeeper != null && kafkaDTO != null) {
@@ -102,6 +100,12 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
             values.put("custom", true);
             //设置dynamicTabs
             values.put("dynamicTabs", middleware.getCapabilities());
+        }
+        // 设置主机容忍信息
+        if (!CollectionUtils.isEmpty(middleware.getTolerations())) {
+            JSONArray jsonArray = K8sConvert.convertToleration2Json(middleware.getTolerations());
+            values.put("tolerations", jsonArray);
+            values.put("tolerationAry", Arrays.toString(middleware.getTolerations().toArray()));
         }
     }
 

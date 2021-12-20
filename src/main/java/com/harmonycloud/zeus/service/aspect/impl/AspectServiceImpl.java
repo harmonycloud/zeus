@@ -51,7 +51,7 @@ public class AspectServiceImpl implements AspectService {
             service.getClass().getMethod("operation", JSONObject.class, Map.class, JSONObject.class).invoke(service, JSONObject.parseObject(JSONObject.toJSONString(cluster)), dynamicValues, values);
         } catch (Exception e){
             log.error("调用外部服务失败");
-            //throw new BusinessException(ErrorMessage.CALL_EXTERNAL_SERVICE_FAILED);
+            // throw new BusinessException(ErrorMessage.CALL_EXTERNAL_SERVICE_FAILED);
         }
     }
 }

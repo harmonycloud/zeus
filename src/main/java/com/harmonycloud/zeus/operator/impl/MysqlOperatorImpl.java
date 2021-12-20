@@ -1,6 +1,17 @@
 package com.harmonycloud.zeus.operator.impl;
 
-import cn.hutool.json.JSONUtil;
+import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_NODEPORT;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.constants.MysqlConstant;
@@ -28,19 +39,11 @@ import com.harmonycloud.zeus.service.middleware.impl.MiddlewareServiceImpl;
 import com.harmonycloud.zeus.service.middleware.impl.MysqlBackupServiceImpl;
 import com.harmonycloud.zeus.util.DateUtil;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
+
+import cn.hutool.json.JSONUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
-
-import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_NODEPORT;
 
 /**
  * @author dengyulong
@@ -283,10 +286,22 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         this.createDisasterRecoveryMiddleware(middleware);
     }
 
-    @Override
+    /*@Override
     public void delete(Middleware middleware) {
         this.deleteDisasterRecoveryInfo(middleware);
         super.delete(middleware);
+        if (middleware.getDeleteBackupInfo() == null || middleware.getDeleteBackupInfo()) {
+            // 删除备份相关
+            mysqlBackupService.deleteMiddlewareBackupInfo(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
+            // 删除定时备份任务
+            mysqlScheduleBackupService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
+        }
+    }*/
+
+    @Override
+    public void deleteStorage(Middleware middleware) {
+        this.deleteDisasterRecoveryInfo(middleware);
+        super.deleteStorage(middleware);
         if (middleware.getDeleteBackupInfo() == null || middleware.getDeleteBackupInfo()) {
             // 删除备份相关
             mysqlBackupService.deleteMiddlewareBackupInfo(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
@@ -628,29 +643,31 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
      * @param middleware
      */
     public void deleteDisasterRecoveryInfo(Middleware middleware) {
-        Middleware detail = middlewareService.detail(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
-        if (detail != null && detail.getMysqlDTO() != null) {
-            MysqlDTO mysqlDTO = detail.getMysqlDTO();
-            if (mysqlDTO.getIsSource() != null) {
-                //将关联实例中存储的当前实例的信息置空
-                String relationClusterId = mysqlDTO.getRelationClusterId();
-                String relationNamespace = mysqlDTO.getRelationNamespace();
-                String relationName = mysqlDTO.getRelationName();
-                Middleware relation = null;
-                try {
-                    relation = middlewareService.detail(relationClusterId, relationNamespace, relationName, middleware.getType());
-                    relation.setChartName(detail.getChartName());
-                    MiddlewareClusterDTO cluster = clusterService.findById(relationClusterId);
-                    StringBuilder str = new StringBuilder();
-                    str.append(String.format("%s.%s=%s,", MysqlConstant.ARGS, MysqlConstant.IS_SOURCE, null));
-                    str.append(String.format("%s.%s=%s,", MysqlConstant.ARGS, MysqlConstant.RELATION_CLUSTER_ID, null));
-                    str.append(String.format("%s.%s=%s,", MysqlConstant.ARGS, MysqlConstant.RELATION_NAMESPACE, null));
-                    str.append(String.format("%s.%s=%s,", MysqlConstant.ARGS, MysqlConstant.RELATION_NAME, null));
-                    str.append(String.format("%s.%s=%s", MysqlConstant.ARGS, MysqlConstant.RELATION_ALIAS_NAME, null));
-                    helmChartService.upgrade(relation, str.toString(), cluster);
-                } catch (Exception e) {
-                    log.error("更新关联实例信息出错了", e);
-                }
+        // 获取values.yaml
+        BeanCacheMiddleware beanCacheMiddleware = cacheMiddlewareService.get(middleware);
+        JSONObject values = JSONObject.parseObject(beanCacheMiddleware.getValuesYaml());
+
+        //Middleware detail = middlewareService.detail(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
+        if (values.getJSONObject("args").containsKey(MysqlConstant.IS_SOURCE)) {
+            JSONObject args = values.getJSONObject("args");
+            //将关联实例中存储的当前实例的信息置空
+            String relationClusterId = args.getString(MysqlConstant.RELATION_CLUSTER_ID);
+            String relationNamespace = args.getString(MysqlConstant.RELATION_NAMESPACE);
+            String relationName = args.getString(MysqlConstant.RELATION_NAME);
+            Middleware relation = null;
+            try {
+                relation = middlewareService.detail(relationClusterId, relationNamespace, relationName, middleware.getType());
+                relation.setChartName(middleware.getChartName());
+                MiddlewareClusterDTO cluster = clusterService.findById(relationClusterId);
+                StringBuilder str = new StringBuilder();
+                str.append(String.format("%s.%s=%s,", MysqlConstant.ARGS, MysqlConstant.IS_SOURCE, null));
+                str.append(String.format("%s.%s=%s,", MysqlConstant.ARGS, MysqlConstant.RELATION_CLUSTER_ID, null));
+                str.append(String.format("%s.%s=%s,", MysqlConstant.ARGS, MysqlConstant.RELATION_NAMESPACE, null));
+                str.append(String.format("%s.%s=%s,", MysqlConstant.ARGS, MysqlConstant.RELATION_NAME, null));
+                str.append(String.format("%s.%s=%s", MysqlConstant.ARGS, MysqlConstant.RELATION_ALIAS_NAME, null));
+                helmChartService.upgrade(relation, str.toString(), cluster);
+            } catch (Exception e) {
+                log.error("更新关联实例信息出错了", e);
             }
             // 删除灾备关联关系
             try {
