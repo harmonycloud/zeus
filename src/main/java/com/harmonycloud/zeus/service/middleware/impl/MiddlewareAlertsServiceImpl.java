@@ -444,6 +444,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                 + middlewareAlertsDTO.getThreshold() + "%" + "且" + middlewareAlertsDTO.getAlertTime()
                 + "分钟内触发" + middlewareAlertsDTO.getAlertTimes() + "次";
         middlewareAlertInfo.setAlertExpr(expr);
+        if ("zookeeper".equals(middlewareAlertsDTO.getType())) {
+            middlewareAlertInfo.setDescription(middlewareAlertsDTO.getAlert());
+        }
         middlewareAlertInfoMapper.insert(middlewareAlertInfo);
     }
 
