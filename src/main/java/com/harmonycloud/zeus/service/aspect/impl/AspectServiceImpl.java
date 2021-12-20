@@ -42,7 +42,7 @@ public class AspectServiceImpl implements AspectService {
     }
 
     @Override
-    public void operation(MiddlewareClusterDTO cluster, Middleware middleware, Map<String, String> dynamicValues, JSONObject values){
+    public void operation(MiddlewareClusterDTO cluster, Middleware middleware, Map<String, Object> dynamicValues, JSONObject values){
         try {
             Object service = SpringContextUtils.getBean(name);
             dynamicValues.put("namespace", middleware.getNamespace());

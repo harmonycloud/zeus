@@ -18,7 +18,7 @@ import java.util.List;
  */
 public interface DingRobotService {
 
-    SendResult send(AlertInfoDto alertInfoDto) throws IOException;
+    SendResult send(AlertInfoDto alertInfoDto,DingRobotInfo dingRobotInfo);
 
     SendResult sendWithAt(String message, ArrayList<String> atMobiles);
 

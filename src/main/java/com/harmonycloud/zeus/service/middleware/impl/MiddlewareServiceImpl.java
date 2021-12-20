@@ -535,7 +535,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private void countServiceNum(String clusterId, List<Middleware> middlewares, String chartName, AtomicInteger serviceNum, AtomicInteger errServiceNum) {
         for (Middleware middleware : middlewares) {
             try {
-                if (clusterId.equals(middleware.getClusterId()) || !chartName.equals(middleware.getType())) {
+                if (!clusterId.equals(middleware.getClusterId()) || !chartName.equals(middleware.getType())) {
                     continue;
                 }
                 serviceNum.getAndAdd(1);

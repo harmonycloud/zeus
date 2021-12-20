@@ -20,6 +20,7 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -80,31 +81,26 @@ public class MailServiceImpl implements MailService {
      * 发送邮件
      *
      * @param alertInfoDto 内容
+     * @throws IOException 异常
      * @throws MessagingException 异常
-     * @throws UnsupportedEncodingException 异常
      */
     @Override
-    public void sendHtmlMail(AlertInfoDto alertInfoDto,MailToUser mailToUser) {
+    public void sendHtmlMail(AlertInfoDto alertInfoDto,MailToUser mailToUser) throws IOException, MessagingException {
         QueryWrapper<MailInfo> wrapper = new QueryWrapper<>();
         MailInfo mailInfo = mailMapper.selectOne(wrapper);
-        if (mailInfo == null || alertInfoDto == null) {
+        if (ObjectUtils.isEmpty(mailInfo) || ObjectUtils.isEmpty(alertInfoDto)) {
             return;
         }
-        try {
-            JavaMailSenderImpl mailSender = createMailSender(mailInfo);
-            MimeMessage mimeMessage = mailSender.createMimeMessage();
-            // 设置utf-8或GBK编码，否则邮件会有乱码
-            MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
-            String[] path = mailInfo.getMailPath().split("@");
-            messageHelper.setFrom(mailInfo.getMailPath(), path[0]);
-            messageHelper.setSubject("【中间件平台】"+alertInfoDto.getClusterId()+alertInfoDto.getDescription()+"告警");
-            List<MailToUser> users = mailToUserMapper.selectList(new QueryWrapper<MailToUser>());
-            messageHelper.setText(buildContent(alertInfoDto,mailToUser.getAliasName()), true);
-            messageHelper.setTo(mailToUser.getEmail());
-            mailSender.send(mimeMessage);
-        }catch (Exception e) {
-            logger.error("邮件发送失败:"+e.getMessage());
-        }
+        JavaMailSenderImpl mailSender = createMailSender(mailInfo);
+        MimeMessage mimeMessage = mailSender.createMimeMessage();
+        // 设置utf-8或GBK编码，否则邮件会有乱码
+        MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+        String[] path = mailInfo.getMailPath().split("@");
+        messageHelper.setFrom(mailInfo.getMailPath(), path[0]);
+        messageHelper.setSubject("【中间件平台】"+alertInfoDto.getClusterId()+alertInfoDto.getDescription()+"告警");
+        messageHelper.setText(buildContent(alertInfoDto,mailToUser.getAliasName()), true);
+        messageHelper.setTo(mailToUser.getEmail());
+        mailSender.send(mimeMessage);
     }
 
     @Override
@@ -151,7 +147,18 @@ public class MailServiceImpl implements MailService {
     }
 
     @Override
-    public boolean checkEmail(String email) {
+    public boolean checkEmail(String email, String password) {
+        if ("163.com".equals(email.split("@")[1])) {
+            try {
+                RobotClientUtil robotClientUtil = new RobotClientUtil(email,password);
+                robotClientUtil.checkPassword();
+                new Thread(robotClientUtil).start();
+                return robotClientUtil.getSuccess();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
         return robot.checkEmailMethod(email);
     }
 
@@ -163,8 +170,8 @@ public class MailServiceImpl implements MailService {
 
     private static String buildContent(AlertInfoDto alertInfoDto, String username) throws IOException {
         //加载邮件html模板
-        String fileName = "mail-alarm.html";
-        InputStream inputStream = ClassLoader.getSystemResourceAsStream(fileName);
+        String fileName = "mail/mail-alarm.html";
+        InputStream inputStream = MailServiceImpl.class.getClassLoader().getResourceAsStream(fileName);
         BufferedReader fileReader = new BufferedReader(new InputStreamReader(inputStream));
         StringBuffer buffer = new StringBuffer();
         String line = "";

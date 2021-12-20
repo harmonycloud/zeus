@@ -82,6 +82,11 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         // 替换通用的值
         replaceCommonValues(middleware, cluster, values);
         MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
+        // 如果是克隆，则增加3Gi存储空间，否则集群起不来
+        if (StringUtils.isNotBlank(middleware.getBackupFileName())) {
+            int storageSize = Integer.parseInt(quota.getStorageClassQuota()) + 3;
+            quota.setStorageClassQuota(String.valueOf(storageSize));
+        }
         replaceCommonResources(quota, values.getJSONObject(RESOURCES));
         replaceCommonStorages(quota, values);
 
@@ -89,7 +94,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         if (middleware.getBusinessDeploy() != null && !middleware.getBusinessDeploy().isEmpty()) {
             JSONArray array = values.getJSONArray("businessDeploy");
             middleware.getBusinessDeploy().forEach(mysqlBusinessDeploy -> array.add(JSONUtil.parse(mysqlBusinessDeploy)));
-
         }
 
         // mysql参数
@@ -200,6 +204,9 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
 
     @Override
     public void create(Middleware middleware, MiddlewareClusterDTO cluster) {
+        String jsonStr = JSONObject.toJSONString(middleware);
+        Middleware relationMiddleware = JSONObject.parseObject(jsonStr, Middleware.class);
+        middleware.setRelationMiddleware(relationMiddleware);
         super.create(middleware, cluster);
         // 将服务通过NodePort对外暴露
         MysqlDTO mysqlDTO = middleware.getMysqlDTO();

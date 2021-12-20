@@ -69,21 +69,24 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                                                        String lay, String keyword) {
         QueryWrapper<MiddlewareAlertInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("lay",lay);
-        if (StringUtils.isNotEmpty(namespace) && StringUtils.isNotEmpty(middlewareName)) {
-            queryWrapper.eq("cluster_id",clusterId).eq("namespace",namespace).eq("middleware_name",middlewareName);
-        }else {
-            queryWrapper.eq("cluster_id",clusterId).isNotNull("namespace").isNotNull("middleware_name");
+        if(!"system".equals(lay)) {
+            if (StringUtils.isNotEmpty(namespace) && StringUtils.isNotEmpty(middlewareName)) {
+                queryWrapper.eq("cluster_id",clusterId).eq("namespace",namespace).eq("middleware_name",middlewareName);
+            }else {
+                queryWrapper.eq("cluster_id",clusterId).isNotNull("namespace").isNotNull("middleware_name");
+            }
         }
         if (StringUtils.isNotEmpty(keyword)) {
             String alertID = keyword.replaceAll("GJ","");
             if (isNumeric(alertID)) {
-                queryWrapper.eq("alert_id",Integer.parseInt(alertID));
+                queryWrapper.eq("alert_id",Integer.parseInt(alertID)).or().like("alert_expr",keyword);
             } else {
                 queryWrapper.and(wrapper ->
                         wrapper.or().eq("alert",keyword).or().eq("symbol",keyword)
-                                .or().eq("threshold",keyword).or().like("threshold",keyword)
+                                .or().like("threshold",keyword)
                                 .or().eq("alert_time",keyword).or().eq("alert_times",keyword)
                                 .or().eq("content",keyword).or().eq("description",keyword)
+                                .or().like("alert_expr",keyword)
                 );
             }
         }
@@ -182,6 +185,8 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
         wrapper.eq("alert_id", analysisID(middlewareAlertsDTO.getAlertId()));
         MiddlewareAlertInfo info = middlewareAlertInfoMapper.selectOne(wrapper);
+        String group = middlewareAlertsDTO.getAnnotations().get("group");
+
         //获取cr
         PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, namespace, middlewareName);
         //不启用该规则时，判断该规则是否已写入prometheusRule
@@ -192,6 +197,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                         && prometheusRules.getAlert().equals(middlewareAlertsDTO.getAlert()));
                 prometheusRuleService.update(clusterId, prometheusRule);
             });
+            middlewareAlertsDTO.getAnnotations().put("group",group);
             updateAlerts2Mysql(clusterId,namespace,middlewareName,middlewareAlertsDTO);
             return;
         }
@@ -299,6 +305,10 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         middlewareAlertInfo.setAnnotations(JSONUtil.toJsonStr(middlewareAlertsDTO.getAnnotations()));
         middlewareAlertInfo.setLabels(JSONUtil.toJsonStr(middlewareAlertsDTO.getLabels()));
         middlewareAlertInfo.setName(clusterId);
+        String expr = middlewareAlertsDTO.getDescription() +middlewareAlertsDTO.getSymbol()
+               + middlewareAlertsDTO.getThreshold() + "%"  + "且" + middlewareAlertsDTO.getAlertTime()
+                + "分钟内触发" + middlewareAlertsDTO.getAlertTimes() + "次";
+        middlewareAlertInfo.setAlertExpr(expr);
         middlewareAlertInfoMapper.updateById(middlewareAlertInfo);
     }
     /**
@@ -430,6 +440,10 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         middlewareAlertInfo.setCreateTime(date);
         middlewareAlertInfo.setName(clusterId);
         middlewareAlertInfo.setAlert(alert);
+        String expr = middlewareAlertsDTO.getDescription() +middlewareAlertsDTO.getSymbol()
+                + middlewareAlertsDTO.getThreshold() + "%" + "且" + middlewareAlertsDTO.getAlertTime()
+                + "分钟内触发" + middlewareAlertsDTO.getAlertTimes() + "次";
+        middlewareAlertInfo.setAlertExpr(expr);
         middlewareAlertInfoMapper.insert(middlewareAlertInfo);
     }
 
@@ -447,6 +461,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                     && prometheusRules.getAlert().equals(middlewareAlertsDTO.getAlert()));
         });
 
+        String group = middlewareAlertsDTO.getAnnotations().get("group");
         // 创建prometheusRules
         middlewareAlertsDTO.setName(middlewareName);
         PrometheusRules prometheusRules = convertPrometheusRules(middlewareAlertsDTO, status, clusterId);
@@ -468,6 +483,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             prometheusRuleGroups.setRules(prometheusRulesList);
             prometheusRule.getSpec().getGroups().add(prometheusRuleGroups);
         }
+        middlewareAlertsDTO.getAnnotations().put("group",group);
     }
 
     /**

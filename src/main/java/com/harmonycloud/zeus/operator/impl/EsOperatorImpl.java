@@ -77,8 +77,8 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
                 case COLD:
                     clusterInfo.put("coldReplacesCount", quota.getNum());
                     // 存储
-                    storage.put("clientClass", quota.getStorageClassName());
-                    storage.put("clientSize", quota.getStorageClassQuota() + "Gi");
+                    storage.put("coldClass", quota.getStorageClassName());
+                    storage.put("coldSize", quota.getStorageClassQuota() + "Gi");
                     break;
                 default:
                     // kibana无需额外处理，实例数不用修改且不需要使用存储

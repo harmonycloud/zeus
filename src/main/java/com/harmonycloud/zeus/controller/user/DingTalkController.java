@@ -31,13 +31,6 @@ public class DingTalkController {
     @Autowired
     private DingRobotService dingRobotService;
 
-    @ApiOperation(value = "钉钉告警", notes = "钉钉告警")
-    @PostMapping("/send")
-    public BaseResult send(@RequestBody AlertInfoDto alertInfoDto) throws IOException {
-        SendResult result = dingRobotService.send(alertInfoDto);
-        return BaseResult.ok();
-    }
-
     @ApiOperation(value = "设置钉钉机器人", notes = "设置钉钉机器人")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "dingRobotInfo", value = "钉钉机器人信息", paramType = "query", dataTypeClass = DingRobotInfo.class),
