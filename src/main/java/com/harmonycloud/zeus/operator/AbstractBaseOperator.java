@@ -734,7 +734,11 @@ public abstract class AbstractBaseOperator {
                 }
                 object.put(nested[length - 1], dynamicValues.get(key));
             } else {
-                values.put(key, dynamicValues.get(key));
+                if ("description".equals(key)) {
+                    values.put("middleware-desc", dynamicValues.get(key));
+                } else {
+                    values.put(key, dynamicValues.get(key));
+                }
             }
         }
     }
