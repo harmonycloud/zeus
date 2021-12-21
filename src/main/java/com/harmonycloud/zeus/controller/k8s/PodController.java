@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.controller.k8s;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.zeus.service.k8s.PodService;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -69,13 +70,12 @@ public class PodController {
             @ApiImplicitParam(name = "podName", value = "pod名称", paramType = "path", dataTypeClass = String.class),
     })
     @GetMapping("/{podName}/yaml")
-    public BaseResult yaml(@PathVariable("clusterId") String clusterId,
-                           @PathVariable("namespace") String namespace,
-                           @PathVariable("middlewareName") String middlewareName,
-                           @RequestParam("type") String type,
-                           @PathVariable("podName") String podName) {
-        podService.restart(clusterId, namespace, middlewareName, type, podName);
-        return BaseResult.ok();
+    public BaseResult<Pod> yaml(@PathVariable("clusterId") String clusterId,
+                                @PathVariable("namespace") String namespace,
+                                @PathVariable("middlewareName") String middlewareName,
+                                @RequestParam("type") String type,
+                                @PathVariable("podName") String podName) {
+        return BaseResult.ok(podService.yaml(clusterId, namespace, middlewareName, type, podName));
     }
 
 
