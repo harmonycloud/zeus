@@ -403,17 +403,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                     }
                     singleServiceList.add(middleware);
                 }
-                MiddlewareBriefInfoDTO briefInfoDTO = new MiddlewareBriefInfoDTO();
-                briefInfoDTO.setName(middlewareInfo.getName());
-                briefInfoDTO.setImagePath(middlewareInfo.getImagePath());
-                briefInfoDTO.setChartName(middlewareInfo.getChartName());
-                briefInfoDTO.setChartVersion(middlewareInfo.getChartVersion());
-                briefInfoDTO.setVersion(middlewareInfo.getVersion());
-                Collections.sort(singleServiceList, new MiddlewareComparator());
-                briefInfoDTO.setServiceList(singleServiceList);
-                briefInfoDTO.setServiceNum(singleServiceList.size());
-                briefInfoDTO.setOfficial(middlewareInfo.getOfficial());
-                serviceList.add(briefInfoDTO);
                 // 整理未完全删除的中间件的信息
                 for (BeanCacheMiddleware beanCacheMiddleware : beanCacheMiddlewareList){
                     if (!middlewareInfo.getChartName().equals(beanCacheMiddleware.getType())) {
@@ -426,6 +415,18 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                     singleServiceList = singleServiceList.stream().filter(m -> !m.getName().equals(middleware.getName())).collect(Collectors.toList());
                     singleServiceList.add(middleware);
                 }
+
+                MiddlewareBriefInfoDTO briefInfoDTO = new MiddlewareBriefInfoDTO();
+                briefInfoDTO.setName(middlewareInfo.getName());
+                briefInfoDTO.setImagePath(middlewareInfo.getImagePath());
+                briefInfoDTO.setChartName(middlewareInfo.getChartName());
+                briefInfoDTO.setChartVersion(middlewareInfo.getChartVersion());
+                briefInfoDTO.setVersion(middlewareInfo.getVersion());
+                Collections.sort(singleServiceList, new MiddlewareComparator());
+                briefInfoDTO.setServiceList(singleServiceList);
+                briefInfoDTO.setServiceNum(singleServiceList.size());
+                briefInfoDTO.setOfficial(middlewareInfo.getOfficial());
+                serviceList.add(briefInfoDTO);
             }
             Collections.sort(serviceList, new MiddlewareBriefInfoDTOComparator());
         } catch (Exception e) {
