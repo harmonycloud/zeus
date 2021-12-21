@@ -1,8 +1,10 @@
 package com.harmonycloud.zeus.service.k8s;
 
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import io.fabric8.kubernetes.api.model.Pod;
+import netscape.javascript.JSObject;
 
 import java.util.List;
 
@@ -52,6 +54,6 @@ public interface PodService {
      * @param type           中间件类型
      * @param podName        pod名称
      */
-    Pod yaml(String clusterId, String namespace, String middlewareName, String type, String podName);
+    JSONObject yaml(String clusterId, String namespace, String middlewareName, String type, String podName);
 
 }

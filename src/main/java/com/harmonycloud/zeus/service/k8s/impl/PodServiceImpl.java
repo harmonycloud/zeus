@@ -10,12 +10,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.model.ContainerWithStatus;
 import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
 import io.fabric8.kubernetes.api.model.*;
+import netscape.javascript.JSObject;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -185,9 +187,9 @@ public class PodServiceImpl implements PodService {
     }
 
     @Override
-    public Pod yaml(String clusterId, String namespace, String middlewareName, String type, String podName) {
+    public JSONObject yaml(String clusterId, String namespace, String middlewareName, String type, String podName) {
         checkExist(clusterId, namespace, middlewareName, type, podName);
-        return podWrapper.get(clusterId, namespace, podName);
+        return JSONObject.parseObject(JSONObject.toJSONString(podWrapper.get(clusterId, namespace, podName)));
     }
 
     public void checkExist(String clusterId, String namespace, String middlewareName, String type, String podName){

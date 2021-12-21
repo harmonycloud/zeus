@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.controller.k8s;
 
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.zeus.service.k8s.PodService;
@@ -8,6 +9,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import netscape.javascript.JSObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -70,11 +72,11 @@ public class PodController {
             @ApiImplicitParam(name = "podName", value = "pod名称", paramType = "path", dataTypeClass = String.class),
     })
     @GetMapping("/{podName}/yaml")
-    public BaseResult<Pod> yaml(@PathVariable("clusterId") String clusterId,
-                                @PathVariable("namespace") String namespace,
-                                @PathVariable("middlewareName") String middlewareName,
-                                @RequestParam("type") String type,
-                                @PathVariable("podName") String podName) {
+    public BaseResult<JSONObject> yaml(@PathVariable("clusterId") String clusterId,
+                                       @PathVariable("namespace") String namespace,
+                                       @PathVariable("middlewareName") String middlewareName,
+                                       @RequestParam("type") String type,
+                                       @PathVariable("podName") String podName) {
         return BaseResult.ok(podService.yaml(clusterId, namespace, middlewareName, type, podName));
     }
 
