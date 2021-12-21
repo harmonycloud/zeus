@@ -488,8 +488,8 @@ public abstract class AbstractBaseOperator {
                 middleware.setTolerations(new ArrayList<>(Arrays.asList(tolerationAry.split(","))));
             }
             // description
-            if (values.getString("description") != null) {
-                middleware.setDescription(values.getString("description"));
+            if (values.getString("middleware-desc") != null) {
+                middleware.setDescription(values.getString("middleware-desc"));
             }
             // 设置服务备份状态
             middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(middleware.getClusterId(),middleware.getNamespace(),middleware.getType(),middleware.getName()));
