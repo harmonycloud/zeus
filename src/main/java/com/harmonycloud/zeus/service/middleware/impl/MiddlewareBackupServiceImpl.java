@@ -432,6 +432,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public BaseResult deleteSchedule(String clusterId, String namespace, String type, String backupScheduleName) {
         try {
+            if ("mysql".equals(type)) {
+                return mysqlAdapterService.deleteSchedule(clusterId, namespace, type, backupScheduleName);
+            }
             backupScheduleCRDService.delete(clusterId, namespace, backupScheduleName);
             return BaseResult.ok();
         } catch (IOException e) {
