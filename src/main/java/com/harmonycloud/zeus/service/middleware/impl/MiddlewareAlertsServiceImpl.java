@@ -430,6 +430,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         String alert = middlewareAlertsDTO.getAlert() + "-" + UUIDUtils.get8UUID();
         if("system".equals(middlewareAlertsDTO.getLay())) {
             middlewareAlertsDTO.getLabels().put("alertname",alert);
+        } else {
+            middlewareAlertsDTO.getLabels().put("namespace",namespace);
+            middlewareAlertsDTO.getLabels().put("service",middlewareName);
         }
         BeanUtils.copyProperties(middlewareAlertsDTO,middlewareAlertInfo);
         middlewareAlertInfo.setAnnotations(JSONUtil.toJsonStr(middlewareAlertsDTO.getAnnotations()));
