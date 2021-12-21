@@ -180,18 +180,27 @@ public class PodServiceImpl implements PodService {
 
     @Override
     public void restart(String clusterId, String namespace, String middlewareName, String type, String podName) {
+        checkExist(clusterId, namespace, middlewareName, type, podName);
+        podWrapper.delete(clusterId, namespace, podName);
+    }
+
+    @Override
+    public Pod yaml(String clusterId, String namespace, String middlewareName, String type, String podName) {
+        checkExist(clusterId, namespace, middlewareName, type, podName);
+        return podWrapper.get(clusterId, namespace, podName);
+    }
+
+    public void checkExist(String clusterId, String namespace, String middlewareName, String type, String podName){
         MiddlewareCRD mw = middlewareCRDService.getCR(clusterId, namespace, type, middlewareName);
         if (mw == null) {
             throw new BusinessException(DictEnum.MIDDLEWARE, middlewareName, ErrorMessage.NOT_EXIST);
         }
         if (CollectionUtils.isEmpty(mw.getStatus().getInclude())) {
-            throw new BusinessException(ErrorMessage.RESTART_POD_FAIL);
+            throw new BusinessException(ErrorMessage.FIND_POD_IN_MIDDLEWARE_FAIL);
         }
         List<MiddlewareInfo> pods = mw.getStatus().getInclude().get(PODS);
         if (CollectionUtils.isEmpty(pods) || pods.stream().noneMatch(po -> podName.equals(po.getName()))) {
-            throw new BusinessException(ErrorMessage.RESTART_POD_FAIL);
+            throw new BusinessException(ErrorMessage.FIND_POD_IN_MIDDLEWARE_FAIL);
         }
-        podWrapper.delete(clusterId, namespace, podName);
     }
-
 }

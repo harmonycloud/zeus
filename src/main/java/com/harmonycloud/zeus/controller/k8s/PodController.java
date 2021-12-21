@@ -60,5 +60,23 @@ public class PodController {
         return BaseResult.ok();
     }
 
+    @ApiOperation(value = "查看pod yaml", notes = "查看pod yaml")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "podName", value = "pod名称", paramType = "path", dataTypeClass = String.class),
+    })
+    @GetMapping("/{podName}/yaml")
+    public BaseResult yaml(@PathVariable("clusterId") String clusterId,
+                           @PathVariable("namespace") String namespace,
+                           @PathVariable("middlewareName") String middlewareName,
+                           @RequestParam("type") String type,
+                           @PathVariable("podName") String podName) {
+        podService.restart(clusterId, namespace, middlewareName, type, podName);
+        return BaseResult.ok();
+    }
+
 
 }
