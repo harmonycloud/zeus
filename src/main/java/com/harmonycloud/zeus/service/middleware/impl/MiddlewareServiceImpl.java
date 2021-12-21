@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.constants.NameConstant;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
@@ -74,6 +76,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private IngressService ingressService;
     @Autowired
     private CacheMiddlewareService cacheMiddlewareService;
+    @Autowired
+    private PodService podService;
 
     private final static Map<String, String> titleMap = new HashMap<String, String>(7) {
         {
@@ -194,6 +198,19 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         Middleware middleware = new Middleware(clusterId, namespace, name, type);
         middleware.setChartVersion(chartVersion);
         return getOperator(BaseOperator.class, BaseOperator.class, middleware).monitor(middleware);
+    }
+
+    @Override
+    public void reboot(String clusterId, String namespace, String type, String name) {
+        try {
+            MiddlewareCRD mw = middlewareCRDService.getCR(clusterId, namespace, type, name);
+            List<MiddlewareInfo> pods = mw.getStatus().getInclude().get(PODS);
+            if(!CollectionUtils.isEmpty(pods)){
+                pods.forEach(pod -> podService.restart(clusterId, namespace, name, type, pod.getName()));
+            }
+        } catch (Exception e){
+            throw new BusinessException(ErrorMessage.MIDDLEWARE_REBOOT_FAILED);
+        }
     }
 
     private void checkBaseParam(Middleware mw) {
