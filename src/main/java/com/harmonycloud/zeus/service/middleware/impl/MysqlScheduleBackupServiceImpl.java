@@ -92,7 +92,7 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
         }
         crdList.forEach(crd -> {
             if (crd.getSpec().getBackupTemplate() == null
-                || !StringUtils.equals(crd.getSpec().getBackupTemplate().getClusterName(), name)) {
+                || !StringUtils.equals(crd.getMetadata().getName(), name)) {
                 return;
             }
             try {

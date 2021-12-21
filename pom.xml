@@ -11,7 +11,7 @@
 
     <groupId>com.harmonycloud.zeus</groupId>
     <artifactId>zeus</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.2.0</version>
     <name>zeus</name>
     <description>zeus middleware platform</description>
 
@@ -29,6 +29,7 @@
         <swagger.version>3.0.0</swagger.version>
         <minio.version>8.0.3</minio.version>
         <pty4j.version>0.9.6</pty4j.version>
+        <log4j.version>3.0.0</log4j.version>
 
         <!-- unit test -->
         <mockito.version>1.10.19</mockito.version>
@@ -60,12 +61,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.logging.log4j</groupId>
-                    <artifactId>log4j-api</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
@@ -186,6 +181,11 @@
         </dependency>
 
         <!-- log4j -->
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
