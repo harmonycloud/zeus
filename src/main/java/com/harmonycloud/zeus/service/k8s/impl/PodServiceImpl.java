@@ -187,9 +187,9 @@ public class PodServiceImpl implements PodService {
     }
 
     @Override
-    public JSONObject yaml(String clusterId, String namespace, String middlewareName, String type, String podName) {
+    public String yaml(String clusterId, String namespace, String middlewareName, String type, String podName) {
         checkExist(clusterId, namespace, middlewareName, type, podName);
-        return JSONObject.parseObject(JSONObject.toJSONString(podWrapper.get(clusterId, namespace, podName)));
+        return JSONObject.toJSONString(podWrapper.get(clusterId, namespace, podName));
     }
 
     public void checkExist(String clusterId, String namespace, String middlewareName, String type, String podName){

@@ -72,13 +72,11 @@ public class PodController {
             @ApiImplicitParam(name = "podName", value = "pod名称", paramType = "path", dataTypeClass = String.class),
     })
     @GetMapping("/{podName}/yaml")
-    public BaseResult<JSONObject> yaml(@PathVariable("clusterId") String clusterId,
+    public BaseResult<String> yaml(@PathVariable("clusterId") String clusterId,
                                        @PathVariable("namespace") String namespace,
                                        @PathVariable("middlewareName") String middlewareName,
                                        @RequestParam("type") String type,
                                        @PathVariable("podName") String podName) {
         return BaseResult.ok(podService.yaml(clusterId, namespace, middlewareName, type, podName));
     }
-
-
 }

@@ -54,6 +54,6 @@ public interface PodService {
      * @param type           中间件类型
      * @param podName        pod名称
      */
-    JSONObject yaml(String clusterId, String namespace, String middlewareName, String type, String podName);
+    String yaml(String clusterId, String namespace, String middlewareName, String type, String podName);
 
 }
