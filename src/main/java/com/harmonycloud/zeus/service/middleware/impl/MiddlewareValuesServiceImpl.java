@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.yaml.snakeyaml.Yaml;
 
 /**
  * @author xutianhong
@@ -30,7 +31,8 @@ public class MiddlewareValuesServiceImpl implements MiddlewareValuesService {
     @Override
     public String get(String clusterId, String namespace, String name) {
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        return JSONObject.toJSONString(helmChartService.getInstalledValues(name, namespace, cluster));
+        Yaml yaml = new Yaml();
+        return yaml.dumpAsMap(helmChartService.getInstalledValues(name, namespace, cluster));
     }
 
     @Override
@@ -42,9 +44,10 @@ public class MiddlewareValuesServiceImpl implements MiddlewareValuesService {
         MiddlewareClusterDTO cluster = clusterService.findById(middlewareValues.getClusterId());
         JSONObject oldValues =
             helmChartService.getInstalledValues(middlewareValues.getName(), middlewareValues.getNamespace(), cluster);
+        Yaml yaml = new Yaml();
         JSONObject values;
         try {
-            values = JSONObject.parseObject(middlewareValues.getValues());
+            values = yaml.loadAs(middlewareValues.getValues(), JSONObject.class);
         } catch (Exception e) {
             throw new BusinessException(ErrorMessage.PARSE_VALUES_FAILED);
         }

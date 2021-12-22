@@ -33,6 +33,7 @@ import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.integration.cluster.PodWrapper;
 import com.harmonycloud.zeus.service.k8s.PodService;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import org.yaml.snakeyaml.Yaml;
 
 /**
  * @author dengyulong
@@ -189,7 +190,8 @@ public class PodServiceImpl implements PodService {
     @Override
     public String yaml(String clusterId, String namespace, String middlewareName, String type, String podName) {
         checkExist(clusterId, namespace, middlewareName, type, podName);
-        return JSONObject.toJSONString(podWrapper.get(clusterId, namespace, podName));
+        Yaml yaml = new Yaml();
+        return yaml.dumpAsMap(podWrapper.get(clusterId, namespace, podName));
     }
 
     public void checkExist(String clusterId, String namespace, String middlewareName, String type, String podName){
