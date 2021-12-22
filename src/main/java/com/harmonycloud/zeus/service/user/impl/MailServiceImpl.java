@@ -93,20 +93,20 @@ public class MailServiceImpl implements MailService {
         if (ObjectUtils.isEmpty(mailInfo) || ObjectUtils.isEmpty(alertInfoDto)) {
             return;
         }
-        if ("sina.com".equals(mailInfo.getMailPath())) {
-            sendSinaMail(mailInfo,alertInfoDto,mailToUser);
+        if ("qq.com".equals(mailInfo.getMailPath().split("@")[1]) || "163.com".equals(mailInfo.getMailPath().split("@")[1])) {
+            JavaMailSenderImpl mailSender = createMailSender(mailInfo);
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            // 设置utf-8或GBK编码，否则邮件会有乱码
+            MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            String[] path = mailInfo.getMailPath().split("@");
+            messageHelper.setFrom(mailInfo.getMailPath(), path[0]);
+            messageHelper.setSubject("【中间件平台】"+alertInfoDto.getClusterId()+alertInfoDto.getDescription()+"告警");
+            messageHelper.setText(buildContent(alertInfoDto,mailToUser.getAliasName()), true);
+            messageHelper.setTo(mailToUser.getEmail());
+            mailSender.send(mimeMessage);
             return;
         }
-        JavaMailSenderImpl mailSender = createMailSender(mailInfo);
-        MimeMessage mimeMessage = mailSender.createMimeMessage();
-        // 设置utf-8或GBK编码，否则邮件会有乱码
-        MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
-        String[] path = mailInfo.getMailPath().split("@");
-        messageHelper.setFrom(mailInfo.getMailPath(), path[0]);
-        messageHelper.setSubject("【中间件平台】"+alertInfoDto.getClusterId()+alertInfoDto.getDescription()+"告警");
-        messageHelper.setText(buildContent(alertInfoDto,mailToUser.getAliasName()), true);
-        messageHelper.setTo(mailToUser.getEmail());
-        mailSender.send(mimeMessage);
+        sendSinaMail(mailInfo,alertInfoDto,mailToUser);
     }
 
     @Override
@@ -171,7 +171,7 @@ public class MailServiceImpl implements MailService {
     @Override
     public void sendSinaMail(MailInfo mailInfo,  AlertInfoDto alertInfoDto, MailToUser mailToUser) throws MessagingException, IOException {
         Properties props = new Properties();
-        props.setProperty("mail.host", "smtp.sina.com");
+        props.setProperty("mail.host", mailInfo.getMailServer());
         props.setProperty("mail.smtp.auth", "true");
         Authenticator authenticator = new Authenticator() {
             @Override
