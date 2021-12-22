@@ -116,6 +116,7 @@ public class ClusterServiceImpl implements ClusterService {
     private String esPassword;
     @Value("${k8s.component.logging.es.port:30092}")
     private String esPort;
+    @Autowired
     private MiddlewareService middlewareService;
     @Autowired
     private ClusterComponentService clusterComponentService;
@@ -702,11 +703,14 @@ public class ClusterServiceImpl implements ClusterService {
                 }
                 mwResourceInfoList.add(middlewareResourceInfo);
             } catch (Exception e) {
+                log.error("查询资源使用额度出错了", e);
             } finally {
+                log.info("{}查询完成", mwCrd.getMetadata().getName());
                 clusterCountDownLatch.countDown();
             }
         }));
         clusterCountDownLatch.await();
+        log.info("查询完成，返回数据");
         return mwResourceInfoList;
     }
 
