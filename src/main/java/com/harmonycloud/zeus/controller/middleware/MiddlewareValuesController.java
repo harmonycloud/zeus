@@ -31,7 +31,7 @@ public class MiddlewareValuesController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping
-    public BaseResult<JSONObject> get(@PathVariable("clusterId") String clusterId,
+    public BaseResult<String> get(@PathVariable("clusterId") String clusterId,
                                       @PathVariable("namespace") String namespace,
                                       @PathVariable("middlewareName") String name) {
         return BaseResult.ok(middlewareValuesService.get(clusterId, namespace, name));

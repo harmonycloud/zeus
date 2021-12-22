@@ -1,6 +1,8 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareValues;
@@ -26,9 +28,9 @@ public class MiddlewareValuesServiceImpl implements MiddlewareValuesService {
     private HelmChartService helmChartService;
 
     @Override
-    public JSONObject get(String clusterId, String namespace, String name) {
+    public String get(String clusterId, String namespace, String name) {
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        return helmChartService.getInstalledValues(name, namespace, cluster);
+        return JSONObject.toJSONString(helmChartService.getInstalledValues(name, namespace, cluster));
     }
 
     @Override
@@ -36,9 +38,17 @@ public class MiddlewareValuesServiceImpl implements MiddlewareValuesService {
         Middleware middleware = new Middleware();
         BeanUtils.copyProperties(middlewareValues, middleware);
         middleware.setChartName(middlewareValues.getType());
+        // 获取原values.yaml
+        MiddlewareClusterDTO cluster = clusterService.findById(middlewareValues.getClusterId());
         JSONObject oldValues =
-            this.get(middlewareValues.getClusterId(), middlewareValues.getNamespace(), middlewareValues.getName());
-        helmChartService.upgrade(middleware, oldValues, middlewareValues.getValues(),
-            clusterService.findById(middlewareValues.getClusterId()));
+            helmChartService.getInstalledValues(middlewareValues.getName(), middlewareValues.getNamespace(), cluster);
+        JSONObject values;
+        try {
+            values = JSONObject.parseObject(middlewareValues.getValues());
+        } catch (Exception e) {
+            throw new BusinessException(ErrorMessage.PARSE_VALUES_FAILED);
+        }
+        // update
+        helmChartService.upgrade(middleware, oldValues, values, cluster);
     }
 }

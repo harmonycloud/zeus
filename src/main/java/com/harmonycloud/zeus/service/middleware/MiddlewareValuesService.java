@@ -16,7 +16,7 @@ public interface MiddlewareValuesService {
      * @param name      中间件名称
      * @return JSONObject
      */
-    JSONObject get(String clusterId, String namespace, String name);
+    String get(String clusterId, String namespace, String name);
 
     /**
      * 更新values.yaml
