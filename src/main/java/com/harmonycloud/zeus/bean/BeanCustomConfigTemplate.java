@@ -26,16 +26,16 @@ public class BeanCustomConfigTemplate implements Serializable {
     private Integer id;
 
     /**
+     * 模板uid
+     */
+    @TableField("uid")
+    private String uid;
+
+    /**
      * 模板名称
      */
     @TableField("name")
     private String name;
-
-    /**
-     * 模板中文名称
-     */
-    @TableField("alias_name")
-    private String aliasName;
 
     /**
      * 中间件类型
