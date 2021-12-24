@@ -55,7 +55,6 @@ public class AuthFilter implements Filter {
     }
 
     public Boolean acceptPath(String path) {
-        log.info(path);
         if (path.contains("/images")) {
             new InitMiddlewareImage().initIfNotExists(path);
             return true;
