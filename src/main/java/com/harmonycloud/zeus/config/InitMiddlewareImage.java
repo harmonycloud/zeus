@@ -51,6 +51,7 @@ public class InitMiddlewareImage {
     public void initIfNotExists(String path) {
         try {
             String imageName = path.substring(path.lastIndexOf("/") + 1);
+            log.info("imageName:{}", imageName);
             images.forEach(item -> {
                 log.info("中间件图片：" + item);
             });
