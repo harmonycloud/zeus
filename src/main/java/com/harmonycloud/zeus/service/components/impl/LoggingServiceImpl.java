@@ -44,7 +44,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
             log.error("es组建创建nodePort失败");
         }
         //发布logPilot
-        logPilot(cluster);
+        logPilot(cluster, clusterComponentsDto);
     }
 
     @Override
@@ -132,10 +132,15 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         ingressService.create(cluster.getId(), "logging", "middleware-elasticsearch", ingressDTO);
     }
 
-    public void logPilot(MiddlewareClusterDTO cluster){
+    public void logPilot(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
         String repository = getRepository(cluster);
         String setValues = "image.logpilotRepository=" + repository + "/log-pilot" +
                 ",image.logstashRepository=" + repository + "/logstash";
+        if (SIMPLE.equals(clusterComponentsDto.getType())) {
+            setValues = setValues + ",logstashReplacesCount=1";
+        } else {
+            setValues = setValues + ",logstashReplacesCount=2";
+        }
         helmChartService.upgradeInstall("log", "logging", setValues,
                 componentsPath + File.separator + "logging", cluster);
     }
