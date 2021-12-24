@@ -32,8 +32,8 @@ public class MiddlewareValuesController {
     })
     @GetMapping
     public BaseResult<String> get(@PathVariable("clusterId") String clusterId,
-                                      @PathVariable("namespace") String namespace,
-                                      @PathVariable("middlewareName") String name) {
+                                  @PathVariable("namespace") String namespace,
+                                  @PathVariable("middlewareName") String name) {
         return BaseResult.ok(middlewareValuesService.get(clusterId, namespace, name));
     }
 
@@ -42,12 +42,13 @@ public class MiddlewareValuesController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareValues", value = "中间件values", paramType = "query", dataTypeClass = MiddlewareValues.class),
     })
     @PutMapping
     public BaseResult update(@PathVariable("clusterId") String clusterId,
-                                         @PathVariable("namespace") String namespace,
-                                         @PathVariable("middlewareName") String name,
-                                         @RequestBody MiddlewareValues middlewareValues) {
+                             @PathVariable("namespace") String namespace,
+                             @PathVariable("middlewareName") String name,
+                             @RequestBody MiddlewareValues middlewareValues) {
         middlewareValues.setClusterId(clusterId).setNamespace(namespace).setName(name);
         middlewareValuesService.update(middlewareValues);
         return BaseResult.ok();

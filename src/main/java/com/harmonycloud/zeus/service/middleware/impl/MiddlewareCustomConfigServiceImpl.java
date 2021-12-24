@@ -9,6 +9,7 @@ import com.harmonycloud.zeus.bean.BeanCustomConfig;
 import com.harmonycloud.zeus.bean.BeanCustomConfigHistory;
 import com.harmonycloud.zeus.dao.BeanCustomConfigHistoryMapper;
 import com.harmonycloud.zeus.dao.BeanCustomConfigMapper;
+import com.harmonycloud.zeus.integration.cluster.ConfigMapWrapper;
 import com.harmonycloud.zeus.service.AbstractBaseService;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.ConfigMapService;
@@ -126,6 +127,8 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             data.put(customConfig.getName(), customConfig.getValue());
         }
         updateValues(middleware, data, cluster, values);
+        // todo 进入容器内执行命令
+
         // 添加修改历史
         this.addCustomConfigHistory(config.getName(), oldDate, config);
         if (restart) {
