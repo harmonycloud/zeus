@@ -148,6 +148,9 @@ ALTER TABLE `alert_record` ADD COLUMN `content` varchar(256) CHARACTER SET utf8m
 -- 2021.12.15 yushuaikang
 ALTER TABLE `alert_rule_id` ADD COLUMN `alert_expr`varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '告警规则';
 
+-- 2021.12.24 xutianhong
+-- 增加已删除中间件pvc字段长度
+ALTER TABLE `cache_middleware` MODIFY COLUMN `pvc` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT 'pvc' AFTER `chart_version`;
 
 
 
