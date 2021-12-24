@@ -346,7 +346,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         for (String key : helmChart.getYamlFileMap().keySet()) {
             if (helmChart.getYamlFileMap().get(key).contains("PrometheusRule")) {
                 Yaml yaml = new Yaml();
-                data = yaml.loadAs(helmChart.getYamlFileMap().get(key), JSONObject.class);
+                data = yaml.loadAs(changeYaml(helmChart.getYamlFileMap().get(key)), JSONObject.class);
             }
         }
         BeanAlertRule beanAlertRule = new BeanAlertRule();
@@ -430,6 +430,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         String alert = middlewareAlertsDTO.getAlert() + "-" + UUIDUtils.get8UUID();
         if("system".equals(middlewareAlertsDTO.getLay())) {
             middlewareAlertsDTO.getLabels().put("alertname",alert);
+        } else {
+            middlewareAlertsDTO.getLabels().put("namespace",namespace);
+            middlewareAlertsDTO.getLabels().put("service",middlewareName);
         }
         BeanUtils.copyProperties(middlewareAlertsDTO,middlewareAlertInfo);
         middlewareAlertInfo.setAnnotations(JSONUtil.toJsonStr(middlewareAlertsDTO.getAnnotations()));
@@ -589,6 +592,12 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         return true;
     }
 
+    private String changeYaml(String yaml) {
+        if (yaml.indexOf("{{- end }}") == -1) {
+            return yaml;
+        }
+        return yaml.substring(yaml.indexOf("apiVersion"),yaml.indexOf("{{- end }}"));
+    }
     public static void main(String[] args){
         String a = "1";
         String b = "2";

@@ -16,13 +16,49 @@ import java.util.List;
  */
 public interface MailService {
 
+    /**
+     * 使用QQ或者163邮箱发邮件
+     * @param alertInfoDto
+     * @param mailToUser
+     * @throws IOException
+     * @throws MessagingException
+     */
     void sendHtmlMail(AlertInfoDto alertInfoDto, MailToUser mailToUser) throws IOException, MessagingException;
 
+    /**
+     * 添加邮箱
+     * @param mailInfo
+     */
     void insertMail(MailInfo mailInfo);
 
+    /**
+     * 邮箱信息回显
+     * @return
+     */
     MailInfo select();
 
+    /**
+     * 选择被通知人
+     * @param users
+     * @param ding
+     */
     void insertUser(List<BeanUser> users, String ding);
 
+    /**
+     * 邮箱连接测试
+     * @param email
+     * @param password
+     * @return
+     */
     boolean checkEmail(String email, String password);
+
+    /**
+     * 使用新浪邮箱发送邮件
+     * @param mailInfo
+     * @param alertInfoDto
+     * @param mailToUser
+     * @throws MessagingException
+     * @throws IOException
+     */
+    void sendSinaMail(MailInfo mailInfo, AlertInfoDto alertInfoDto, MailToUser mailToUser) throws MessagingException, IOException;
 }

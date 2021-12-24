@@ -22,7 +22,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
-import javax.mail.MessagingException;
+import javax.mail.*;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import java.io.*;
 import java.text.MessageFormat;
@@ -91,16 +93,20 @@ public class MailServiceImpl implements MailService {
         if (ObjectUtils.isEmpty(mailInfo) || ObjectUtils.isEmpty(alertInfoDto)) {
             return;
         }
-        JavaMailSenderImpl mailSender = createMailSender(mailInfo);
-        MimeMessage mimeMessage = mailSender.createMimeMessage();
-        // 设置utf-8或GBK编码，否则邮件会有乱码
-        MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
-        String[] path = mailInfo.getMailPath().split("@");
-        messageHelper.setFrom(mailInfo.getMailPath(), path[0]);
-        messageHelper.setSubject("【中间件平台】"+alertInfoDto.getClusterId()+alertInfoDto.getDescription()+"告警");
-        messageHelper.setText(buildContent(alertInfoDto,mailToUser.getAliasName()), true);
-        messageHelper.setTo(mailToUser.getEmail());
-        mailSender.send(mimeMessage);
+        if ("qq.com".equals(mailInfo.getMailPath().split("@")[1]) || "163.com".equals(mailInfo.getMailPath().split("@")[1])) {
+            JavaMailSenderImpl mailSender = createMailSender(mailInfo);
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            // 设置utf-8或GBK编码，否则邮件会有乱码
+            MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            String[] path = mailInfo.getMailPath().split("@");
+            messageHelper.setFrom(mailInfo.getMailPath(), path[0]);
+            messageHelper.setSubject("【中间件平台】"+alertInfoDto.getClusterId()+alertInfoDto.getDescription()+"告警");
+            messageHelper.setText(buildContent(alertInfoDto,mailToUser.getAliasName()), true);
+            messageHelper.setTo(mailToUser.getEmail());
+            mailSender.send(mimeMessage);
+            return;
+        }
+        sendSinaMail(mailInfo,alertInfoDto,mailToUser);
     }
 
     @Override
@@ -163,6 +169,34 @@ public class MailServiceImpl implements MailService {
     }
 
     @Override
+    public void sendSinaMail(MailInfo mailInfo,  AlertInfoDto alertInfoDto, MailToUser mailToUser) throws MessagingException, IOException {
+        Properties props = new Properties();
+        props.setProperty("mail.host", mailInfo.getMailServer());
+        props.setProperty("mail.smtp.auth", "true");
+        Authenticator authenticator = new Authenticator() {
+            @Override
+            public PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(mailInfo.getMailPath(), mailInfo.getPassword());
+            }
+        };
+        //1 获得连接
+        Session session = Session.getDefaultInstance(props, authenticator);
+        //2 创建消息
+        Message message = new MimeMessage(session);
+        // 2.1 发件人
+        message.setFrom(new InternetAddress(mailInfo.getMailPath()));
+        // 2.2 收件人
+        message.setRecipient(Message.RecipientType.TO, new InternetAddress(mailToUser.getEmail()));
+        // 2.3 主题（标题）
+        message.setSubject("【中间件平台】"+alertInfoDto.getClusterId()+alertInfoDto.getDescription()+"告警");
+        // 2.4 正文
+        //设置编码，防止发送的内容中文乱码。
+        message.setContent(buildContent(alertInfoDto,mailToUser.getAliasName()), "text/html;charset=UTF-8");
+        //3发送消息
+        Transport.send(message);
+    }
+
+    @Override
     public MailInfo select() {
         return mailMapper.selectOne(new QueryWrapper<MailInfo>());
     }
@@ -221,25 +255,4 @@ public class MailServiceImpl implements MailService {
         htmlText = htmlText.replaceAll("<tr>", "<tr style=\"border-bottom: 1px solid #eee; color:#666;\">");
         return htmlText;
     }
-
-    /**
-     * 发送邮件
-     *
-     * @param mailMap 收件人与邮件内容集合
-     * @throws MessagingException 异常
-     */
-    /*public static void sendHtmlMail(Map<String, String> mailMap) throws MessagingException{
-        MimeMessage mimeMessage = mailSender.createMimeMessage();
-        // 设置utf-8编码
-        MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
-        messageHelper.setFrom(EMAILFORM);
-        Iterator<String> iterator = mailMap.keySet().iterator();
-        while (iterator.hasNext()) {
-            messageHelper.setTo(iterator.next());
-            //messageHelper.setSubject(subject);
-            messageHelper.setText(mailMap.get(iterator.next()), true);
-            mailSender.send(mimeMessage);
-        }
-    }*/
-
 }
