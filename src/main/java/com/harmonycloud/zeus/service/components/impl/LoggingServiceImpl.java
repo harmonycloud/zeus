@@ -67,14 +67,12 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
                 ",logging.collection.stdout.enable=false" +
                 ",resources.master.limits.cpu=1" +
                 ",resources.master.limits.memory=4Gi" +
-                ",resources.master.requests.cpu=1" +
-                ",resources.master.requests.memory=4Gi" +
                 ",esJavaOpts.xmx=1024m" +
                 ",esJavaOpts.xms=1024m";
         if (SIMPLE.equals(clusterComponentsDto.getType())) {
-            setValues = setValues + ",cluster.masterReplacesCount=1";
+            setValues = setValues + ",cluster.masterReplacesCount=1,resources.master.requests.cpu=700m,resources.master.requests.memory=1Gi";
         } else {
-            setValues = setValues + ",cluster.masterReplacesCount=3";
+            setValues = setValues + ",cluster.masterReplacesCount=3,resources.master.requests.cpu=1,,resources.master.requests.memory=4Gi";
         }
         return setValues;
     }
