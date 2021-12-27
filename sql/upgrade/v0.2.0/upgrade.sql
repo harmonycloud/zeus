@@ -152,6 +152,13 @@ ALTER TABLE `alert_rule_id` ADD COLUMN `alert_expr`varchar(128) CHARACTER SET ut
 -- 增加已删除中间件pvc字段长度
 ALTER TABLE `cache_middleware` MODIFY COLUMN `pvc` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT 'pvc' AFTER `chart_version`;
 
+-- 2021.12.27 xutianhong
+-- 自定义配置表相关字段长度优化
+ALTER TABLE `custom_config`
+MODIFY COLUMN `name` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '字段名称' AFTER `id`,
+MODIFY COLUMN `default_value` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '默认值' AFTER `chart_name`,
+MODIFY COLUMN `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '描述' AFTER `ranges`;
+
 
 
 
