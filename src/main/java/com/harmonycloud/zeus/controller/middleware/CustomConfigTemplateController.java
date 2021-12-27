@@ -64,7 +64,7 @@ public class CustomConfigTemplateController {
     @ApiOperation(value = "获取初始化模板", notes = "获取初始化模板")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "templateName", value = "模板名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "chartVersion", value = "中间件版本", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/init")
     public BaseResult<List<CustomConfig>> get(@PathVariable("type") String type,
@@ -90,12 +90,12 @@ public class CustomConfigTemplateController {
     @ApiOperation(value = "删除自定义配置模板", notes = "删除自定义配置模板")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "uid", value = "模板id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "uids", value = "模板id", paramType = "query", dataTypeClass = String.class),
     })
-    @DeleteMapping("/{uid}")
+    @DeleteMapping
     public BaseResult delete(@PathVariable("type") String type,
-                             @PathVariable("uid") String uid) {
-        configTemplateService.delete(type, uid);
+                             @RequestParam("uids") String uids) {
+        configTemplateService.delete(type, uids);
         return BaseResult.ok();
     }
 

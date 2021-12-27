@@ -105,9 +105,12 @@ public class ConfigTemplateServiceImpl implements ConfigTemplateService {
     }
 
     @Override
-    public void delete(String type, String uid) {
-        QueryWrapper<BeanCustomConfigTemplate> wrapper = new QueryWrapper<BeanCustomConfigTemplate>().eq("type", type).eq("uid", uid);
-        beanCustomConfigTemplateMapper.delete(wrapper);
+    public void delete(String type, String uids) {
+        String[] uid = uids.split(",");
+        for (int i = 0; i < uid.length; ++i){
+            QueryWrapper<BeanCustomConfigTemplate> wrapper = new QueryWrapper<BeanCustomConfigTemplate>().eq("type", type).eq("uid", uid[i]);
+            beanCustomConfigTemplateMapper.delete(wrapper);
+        }
     }
     
     public BeanCustomConfigTemplate convert(CustomConfigTemplateDTO customConfigTemplateDTO){

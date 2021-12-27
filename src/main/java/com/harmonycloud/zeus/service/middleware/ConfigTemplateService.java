@@ -56,6 +56,6 @@ public interface ConfigTemplateService {
      *
      * @param uid 模板id
      */
-    void delete(String type, String uid);
+    void delete(String type, String uids);
 
 }
