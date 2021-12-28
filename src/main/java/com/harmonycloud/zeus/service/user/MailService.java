@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.user;
 
 import com.harmonycloud.caas.common.model.middleware.AlertInfoDto;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareAlertsDTO;
 import com.harmonycloud.zeus.bean.MailInfo;
 import com.harmonycloud.zeus.bean.MailToUser;
 import com.harmonycloud.zeus.bean.user.BeanUser;
@@ -19,11 +20,11 @@ public interface MailService {
     /**
      * 使用QQ或者163邮箱发邮件
      * @param alertInfoDto
-     * @param mailToUser
+     * @param beanUser
      * @throws IOException
      * @throws MessagingException
      */
-    void sendHtmlMail(AlertInfoDto alertInfoDto, MailToUser mailToUser) throws IOException, MessagingException;
+    void sendHtmlMail(AlertInfoDto alertInfoDto, BeanUser beanUser) throws IOException, MessagingException;
 
     /**
      * 添加邮箱
@@ -38,13 +39,6 @@ public interface MailService {
     MailInfo select();
 
     /**
-     * 选择被通知人
-     * @param users
-     * @param ding
-     */
-    void insertUser(List<BeanUser> users, String ding);
-
-    /**
      * 邮箱连接测试
      * @param email
      * @param password
@@ -56,9 +50,9 @@ public interface MailService {
      * 使用新浪邮箱发送邮件
      * @param mailInfo
      * @param alertInfoDto
-     * @param mailToUser
+     * @param beanUser
      * @throws MessagingException
      * @throws IOException
      */
-    void sendSinaMail(MailInfo mailInfo, AlertInfoDto alertInfoDto, MailToUser mailToUser) throws MessagingException, IOException;
+    void sendSinaMail(MailInfo mailInfo, AlertInfoDto alertInfoDto, BeanUser beanUser) throws MessagingException, IOException;
 }

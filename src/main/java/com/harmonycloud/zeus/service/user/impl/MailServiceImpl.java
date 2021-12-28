@@ -3,35 +3,28 @@ package com.harmonycloud.zeus.service.user.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.model.middleware.AlertInfoDto;
 import com.harmonycloud.zeus.bean.MailInfo;
-import com.harmonycloud.zeus.bean.MailToUser;
 import com.harmonycloud.zeus.bean.user.BeanUser;
 import com.harmonycloud.zeus.dao.MailMapper;
 import com.harmonycloud.zeus.dao.MailToUserMapper;
 import com.harmonycloud.zeus.service.user.DingRobotService;
 import com.harmonycloud.zeus.service.user.MailService;
 import com.harmonycloud.zeus.util.RobotClientUtil;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 import javax.mail.*;
-import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import java.io.*;
 import java.text.MessageFormat;
-import java.util.Date;
 import java.util.List;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 /**
  * @author yushuaikang
@@ -45,14 +38,7 @@ public class MailServiceImpl implements MailService {
     @Autowired
     private MailMapper mailMapper;
 
-    @Autowired
-    private MailToUserMapper mailToUserMapper;
-
-    @Autowired
-    private DingRobotService dingRobotService;
-
     private static RobotClientUtil robot = new RobotClientUtil();
-
 
     /**
      * 邮件发送器
@@ -87,7 +73,7 @@ public class MailServiceImpl implements MailService {
      * @throws MessagingException 异常
      */
     @Override
-    public void sendHtmlMail(AlertInfoDto alertInfoDto,MailToUser mailToUser) throws IOException, MessagingException {
+    public void sendHtmlMail(AlertInfoDto alertInfoDto,BeanUser beanUser) throws IOException, MessagingException {
         QueryWrapper<MailInfo> wrapper = new QueryWrapper<>();
         MailInfo mailInfo = mailMapper.selectOne(wrapper);
         if (ObjectUtils.isEmpty(mailInfo) || ObjectUtils.isEmpty(alertInfoDto)) {
@@ -101,12 +87,12 @@ public class MailServiceImpl implements MailService {
             String[] path = mailInfo.getMailPath().split("@");
             messageHelper.setFrom(mailInfo.getMailPath(), path[0]);
             messageHelper.setSubject("【中间件平台】"+alertInfoDto.getClusterId()+alertInfoDto.getDescription()+"告警");
-            messageHelper.setText(buildContent(alertInfoDto,mailToUser.getAliasName()), true);
-            messageHelper.setTo(mailToUser.getEmail());
+            messageHelper.setText(buildContent(alertInfoDto,beanUser.getAliasName()), true);
+            messageHelper.setTo(beanUser.getEmail());
             mailSender.send(mimeMessage);
             return;
         }
-        sendSinaMail(mailInfo,alertInfoDto,mailToUser);
+        sendSinaMail(mailInfo,alertInfoDto,beanUser);
     }
 
     @Override
@@ -118,38 +104,6 @@ public class MailServiceImpl implements MailService {
         }else {
             mailMapper.update(mailInfo,wrapper);
         }
-    }
-
-    @Override
-    public void insertUser(List<BeanUser> users, String ding) {
-        QueryWrapper<MailToUser> mailToUserQueryWrapper = new QueryWrapper<>();
-        List<MailToUser> mailUsers = mailToUserMapper.selectList(mailToUserQueryWrapper);
-        List<Integer> list = mailUsers.stream().map(mail -> {
-            Integer id = mail.getUserId();
-            return id;
-        }).collect(Collectors.toList());
-        if (!CollectionUtils.isEmpty(users)) {
-            List<MailToUser> mailToUsers = users.stream().map(user -> {
-                MailToUser mailToUser = new MailToUser();
-                if (list.contains(user.getId())) {
-                    return mailToUser;
-                }else {
-                    BeanUtils.copyProperties(user,mailToUser);
-                    mailToUser.setTime(new Date());
-                    mailToUser.setUserId(user.getId());
-                    return mailToUser;
-                }
-            }).collect(Collectors.toList());
-            mailToUsers.stream().forEach(user ->{
-                if (user.getUserId() != null) {
-                    mailToUserMapper.insert(user);
-                }
-            });
-        }
-        if (StringUtils.isNotEmpty(ding)) {
-            dingRobotService.enableDing();
-        }
-
     }
 
     @Override
@@ -169,10 +123,11 @@ public class MailServiceImpl implements MailService {
     }
 
     @Override
-    public void sendSinaMail(MailInfo mailInfo,  AlertInfoDto alertInfoDto, MailToUser mailToUser) throws MessagingException, IOException {
+    public void sendSinaMail(MailInfo mailInfo,  AlertInfoDto alertInfoDto, BeanUser beanUser) throws MessagingException, IOException {
         Properties props = new Properties();
         props.setProperty("mail.host", mailInfo.getMailServer());
         props.setProperty("mail.smtp.auth", "true");
+        props.setProperty("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
         Authenticator authenticator = new Authenticator() {
             @Override
             public PasswordAuthentication getPasswordAuthentication() {
@@ -186,12 +141,12 @@ public class MailServiceImpl implements MailService {
         // 2.1 发件人
         message.setFrom(new InternetAddress(mailInfo.getMailPath()));
         // 2.2 收件人
-        message.setRecipient(Message.RecipientType.TO, new InternetAddress(mailToUser.getEmail()));
+        message.setRecipient(Message.RecipientType.TO, new InternetAddress(beanUser.getEmail()));
         // 2.3 主题（标题）
         message.setSubject("【中间件平台】"+alertInfoDto.getClusterId()+alertInfoDto.getDescription()+"告警");
         // 2.4 正文
         //设置编码，防止发送的内容中文乱码。
-        message.setContent(buildContent(alertInfoDto,mailToUser.getAliasName()), "text/html;charset=UTF-8");
+        message.setContent(buildContent(alertInfoDto,beanUser.getAliasName()), "text/html;charset=UTF-8");
         //3发送消息
         Transport.send(message);
     }

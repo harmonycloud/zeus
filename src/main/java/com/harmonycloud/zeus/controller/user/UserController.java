@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import com.harmonycloud.caas.common.model.middleware.MiddlewareAlertsDTO;
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
 import com.harmonycloud.zeus.service.user.UserService;
@@ -19,8 +20,6 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.multipart.MultipartFile;
-
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author xutianhong
@@ -150,9 +149,12 @@ public class UserController {
         return BaseResult.ok();
     }
 
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "alertRuleId", value = "规则ID", paramType = "query", dataTypeClass = String.class),
+    })
     @ApiOperation(value = "获取登录用户列表及通知人列表", notes = "获取登录用户列表及通知人列表")
     @GetMapping("/users")
-    public BaseResult getUsers() {
-        return BaseResult.ok(userService.getUserList());
+    public BaseResult getUsers(@RequestParam(value = "alertRuleId", required = false) String alertRuleId) {
+        return BaseResult.ok(userService.getUserList(alertRuleId));
     }
 }

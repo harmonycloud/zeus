@@ -1,12 +1,12 @@
 package com.harmonycloud.zeus.service.user;
 
 import com.harmonycloud.caas.common.model.MailUserDTO;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareAlertsDTO;
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 
@@ -115,5 +115,5 @@ public interface UserService {
      */
     void uploadFile(MultipartFile file, String type) throws IOException;
 
-    MailUserDTO getUserList();
+    MailUserDTO getUserList(String alertruleId);
 }

@@ -1,7 +1,6 @@
 package com.harmonycloud.zeus.service.prometheus.impl;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -11,10 +10,11 @@ import java.util.List;
 
 import com.harmonycloud.zeus.bean.DingRobotInfo;
 import com.harmonycloud.zeus.bean.MailToUser;
+import com.harmonycloud.zeus.bean.user.BeanUser;
 import com.harmonycloud.zeus.dao.DingRobotMapper;
 import com.harmonycloud.zeus.dao.MailToUserMapper;
+import com.harmonycloud.zeus.dao.user.BeanUserMapper;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -66,6 +66,8 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
     private MailToUserMapper mailToUserMapper;
     @Autowired
     private DingRobotMapper dingRobotMapper;
+    @Autowired
+    private BeanUserMapper beanUserMapper;
 
     @Override
     public void alert(String json) throws Exception {
@@ -144,11 +146,16 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
                 });
             }
             //邮箱发送
-            List<MailToUser> users = mailToUserMapper.selectList(new QueryWrapper<MailToUser>());
+            QueryWrapper<MailToUser> mailToUserQueryWrapper = new QueryWrapper<>();
+            mailToUserQueryWrapper.eq("alert_rule_id",alertInfo.getAlertId());
+            List<MailToUser> users = mailToUserMapper.selectList(mailToUserQueryWrapper);
             if ("mail".equals(alertInfo.getMail())) {
                 users.stream().forEach(mailToUser -> {
+                    QueryWrapper<BeanUser> userQueryWrapper = new QueryWrapper<>();
+                    userQueryWrapper.eq("id",mailToUser.getUserId());
+                    BeanUser beanUser = beanUserMapper.selectOne(userQueryWrapper);
                     try {
-                        mailService.sendHtmlMail(alertInfoDto,mailToUser);
+                        mailService.sendHtmlMail(alertInfoDto,beanUser);
                     } catch (IOException e) {
                         e.printStackTrace();
                     } catch (MessagingException e) {
