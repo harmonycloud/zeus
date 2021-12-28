@@ -131,6 +131,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         if (CollectionUtils.isEmpty(clusterComponentsList)) {
             clusterComponentsList = initClusterComponents(clusterId);
         }
+        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         //另起线程更新所有组件状态
         CountDownLatch count = new CountDownLatch(clusterComponentsList.size());
         clusterComponentsList.forEach(cc -> ThreadPoolExecutorFactory.executor.execute(() -> {
@@ -140,7 +141,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
                     return;
                 }
                 BaseComponentsService service = getOperator(BaseComponentsService.class, BaseComponentsService.class, cc.getComponent());
-                service.updateStatus(clusterService.findById(clusterId), cc);
+                service.updateStatus(cluster, cc);
             } finally {
                 count.countDown();
             }
