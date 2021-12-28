@@ -805,7 +805,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             Middleware relation = null;
             try {
                 relation = middlewareService.detail(relationClusterId, relationNamespace, relationName, middleware.getType());
-                relation.setChartName(middleware.getChartName());
+                relation.setChartName(middleware.getType());
                 MiddlewareClusterDTO cluster = clusterService.findById(relationClusterId);
                 StringBuilder str = new StringBuilder();
                 str.append(String.format("%s.%s=%s,", MysqlConstant.ARGS, MysqlConstant.IS_SOURCE, null));
