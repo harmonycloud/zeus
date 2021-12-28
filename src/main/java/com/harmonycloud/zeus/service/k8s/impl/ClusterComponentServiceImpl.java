@@ -133,7 +133,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         }
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         //另起线程更新所有组件状态
-        CountDownLatch count = new CountDownLatch(clusterComponentsList.size());
+        final CountDownLatch count = new CountDownLatch(clusterComponentsList.size());
         clusterComponentsList.forEach(cc -> ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
                 // 接入组件不更新状态
