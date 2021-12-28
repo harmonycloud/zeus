@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.filters.base.BaseResult;
 import com.harmonycloud.caas.filters.exception.AuthRuntimeException;
 import com.harmonycloud.caas.filters.token.JwtTokenComponent;
+import com.harmonycloud.zeus.config.InitMiddlewareImage;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
@@ -54,6 +55,10 @@ public class AuthFilter implements Filter {
     }
 
     public Boolean acceptPath(String path) {
+        if (path.contains("/images")) {
+            new InitMiddlewareImage().initIfNotExists(path);
+            return true;
+        }
         return path.contains(auth) || path.contains("/swagger") || path.contains("/v3")
                 || path.contains("/swagger-ui") || path.contains("/images") || path.contains("/webhook")
                 || path.contains("/export") || path.contains("/slowsql/file") || path.contains("/getPersonalConfig");

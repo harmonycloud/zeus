@@ -7,13 +7,22 @@ import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.LoggingService;
+import com.harmonycloud.zeus.service.k8s.ClusterComponentService;
+import com.harmonycloud.zeus.service.k8s.ClusterService;
+import com.harmonycloud.zeus.service.middleware.EsService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
 import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.stream.Collectors;
 
 /**
  * @author xutianhong
@@ -25,6 +34,12 @@ import java.util.List;
 public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingService {
 
     private static final String ES_NAME = "middleware-elasticsearch";
+    @Autowired
+    private EsService esService;
+    @Autowired
+    private ClusterService clusterService;
+    @Autowired
+    private ClusterComponentService componentService;
 
     @Override
     public boolean support(String name) {
@@ -43,8 +58,10 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         } catch (Exception e){
             log.error("es组建创建nodePort失败");
         }
-        //发布logPilot
-        logPilot(cluster);
+        //初始化es索引模板,安装log-pilot
+        Executors.newSingleThreadExecutor().execute(() -> {
+            tryCreateEsTemplate(cluster, clusterComponentsDto);
+        });
     }
 
     @Override
@@ -67,14 +84,12 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
                 ",logging.collection.stdout.enable=false" +
                 ",resources.master.limits.cpu=1" +
                 ",resources.master.limits.memory=4Gi" +
-                ",resources.master.requests.cpu=1" +
-                ",resources.master.requests.memory=4Gi" +
                 ",esJavaOpts.xmx=1024m" +
                 ",esJavaOpts.xms=1024m";
         if (SIMPLE.equals(clusterComponentsDto.getType())) {
-            setValues = setValues + ",cluster.masterReplacesCount=1";
+            setValues = setValues + ",cluster.masterReplacesCount=1,resources.master.requests.cpu=700m,resources.master.requests.memory=1Gi";
         } else {
-            setValues = setValues + ",cluster.masterReplacesCount=3";
+            setValues = setValues + ",cluster.masterReplacesCount=3,resources.master.requests.cpu=1,,resources.master.requests.memory=4Gi";
         }
         return setValues;
     }
@@ -132,11 +147,49 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         ingressService.create(cluster.getId(), "logging", "middleware-elasticsearch", ingressDTO);
     }
 
-    public void logPilot(MiddlewareClusterDTO cluster){
+    public void logPilot(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
         String repository = getRepository(cluster);
         String setValues = "image.logpilotRepository=" + repository + "/log-pilot" +
                 ",image.logstashRepository=" + repository + "/logstash";
+        if (SIMPLE.equals(clusterComponentsDto.getType())) {
+            setValues = setValues + ",logstashReplacesCount=1";
+        } else {
+            setValues = setValues + ",logstashReplacesCount=2";
+        }
         helmChartService.upgradeInstall("log", "logging", setValues,
                 componentsPath + File.separator + "logging", cluster);
+    }
+
+    public void tryCreateEsTemplate(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
+        List<ClusterComponentsDto> componentsDtoList;
+        List<ClusterComponentsDto> loggingComponent;
+        for (int i = 0; i < 600; i++) {
+            try {
+                componentsDtoList = componentService.list(cluster.getId());
+                loggingComponent = componentsDtoList.stream().filter(component -> "logging".equals(component.getComponent())).collect(Collectors.toList());
+                if (!CollectionUtils.isEmpty(loggingComponent)) {
+                    ClusterComponentsDto logging = loggingComponent.get(0);
+                    if (logging.getStatus() == 3) {
+                        boolean res = createEsTemplate(cluster);
+                        if (res) {
+                            //发布logPilot
+                            logPilot(cluster, clusterComponentsDto);
+                            return;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.error("查询集群组件失败", e);
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                log.error("尝试初始化es索引模板失败", e);
+            }
+        }
+    }
+
+    public boolean createEsTemplate(MiddlewareClusterDTO cluster) {
+        return esService.initEsIndexTemplate(cluster.getId());
     }
 }

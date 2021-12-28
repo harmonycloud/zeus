@@ -76,5 +76,13 @@ public interface EsService {
 
     List<String> getIndexes(MiddlewareClusterDTO cluster) throws Exception;
 
-    void initEsIndexTemplate() throws Exception;
+    void initEsIndexTemplate();
+
+    /**
+     * 初始化es索引模板
+     * @param clusterId 集群id（可选）
+     * @return
+     * @throws Exception
+     */
+    boolean initEsIndexTemplate(String clusterId);
 }

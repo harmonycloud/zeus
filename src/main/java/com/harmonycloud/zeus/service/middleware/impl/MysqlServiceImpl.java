@@ -64,7 +64,13 @@ public class MysqlServiceImpl implements MysqlService {
                 String relationClusterId = mysqlDTO.getRelationClusterId();
                 String relationNamespace = mysqlDTO.getRelationNamespace();
                 String relationName = mysqlDTO.getRelationName();
-                Middleware relationMiddleware = middlewareService.detail(relationClusterId, relationNamespace, relationName, MiddlewareTypeEnum.MYSQL.getType());
+                Middleware relationMiddleware = null;
+                try {
+                    relationMiddleware = middlewareService.detail(relationClusterId, relationNamespace, relationName, MiddlewareTypeEnum.MYSQL.getType());
+                } catch (Exception e) {
+                    log.error("关联实例不存在", e);
+                    return BaseResult.ok(res);
+                }
                 MysqlDTO relationMiddlewareMysqlDTO = relationMiddleware.getMysqlDTO();
                 JSONObject relation;
                 if (relationMiddlewareMysqlDTO != null) {
@@ -105,8 +111,8 @@ public class MysqlServiceImpl implements MysqlService {
                 String exposePort = serviceDTO.getExposePort();
                 mysqlInfo.put("address", exposeIP + ":" + exposePort);
             }
+            mysqlInfo.put("username", "root");
         }
-        mysqlInfo.put("username", "root");
         return mysqlInfo;
     }
 

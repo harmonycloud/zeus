@@ -6,7 +6,7 @@ spec:
   selector:
     matchLabels:
       k8s-app: logstash
-  replicas: 2
+  replicas: {{ .Values.logstashReplacesCount }}
   template:
     metadata:
       labels:

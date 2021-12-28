@@ -404,15 +404,22 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
      * 创建es的模板索引
      */
     @Override
-    public void initEsIndexTemplate() throws Exception {
+    public void initEsIndexTemplate() {
+        initEsIndexTemplate(null);
+    }
+
+    @Override
+    public boolean initEsIndexTemplate(String clusterId) {
         List<MiddlewareClusterDTO> clusters = clusterService.listClusters();
+        if (StringUtils.isNotBlank(clusterId)) {
+            clusters = clusters.stream().filter(middlewareClusterDTO -> clusterId.equals(middlewareClusterDTO.getId())).collect(Collectors.toList());
+        }
         for (MiddlewareClusterDTO cluster : clusters) {
             MiddlewareClusterLogging logging = cluster.getLogging();
-            if(logging == null | logging.getElasticSearch() == null){
+            if (logging == null | logging.getElasticSearch() == null) {
                 log.info("集群未配置日志组件");
-                return;
+                return false;
             }
-
             try {
                 RestHighLevelClient esClient = getEsClient(cluster);
                 //初始化mysql慢日志模板
@@ -422,10 +429,13 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
                 //初始化文件日志索引模板
                 initLogstashIndexTemplate(esClient);
                 log.info("集群:{}索引模板初始化完成", cluster.getName());
+                return true;
             } catch (Exception e) {
                 log.error("集群:{}索引模板初始化失败", cluster.getName(), e);
+                return false;
             }
         }
+        return false;
     }
 
     /**
