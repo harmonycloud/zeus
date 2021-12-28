@@ -2,6 +2,9 @@ package com.harmonycloud.zeus.controller.middleware;
 
 import java.util.List;
 
+import com.harmonycloud.caas.common.model.AlertUserDTO;
+import com.harmonycloud.caas.common.model.AlertsUserDTO;
+import com.harmonycloud.zeus.bean.user.BeanUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -58,51 +61,59 @@ public class MiddlewareAlertsController {
         return BaseResult.ok(middlewareAlertsService.listRules(clusterId, namespace, middlewareName, type));
     }
 
-    @ApiOperation(value = "创建告警规则", notes = "创建告警规则")
+    @ApiOperation(value = "创建服务告警规则", notes = "创建服务告警规则")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "middlewareAlertsDTO", value = "中间件告警规则", paramType = "query", dataTypeClass = MiddlewareAlertsDTO.class)
-    })
+            @ApiImplicitParam(name = "ding", value = "是否选择钉钉通知", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "alertsUserDTO", value = "中间件告警规则和用户", paramType = "query", dataTypeClass = AlertsUserDTO.class)
+            })
     @PostMapping
     public BaseResult createRules(@PathVariable("clusterId") String clusterId,
                                   @PathVariable(value = "namespace", required = false) String namespace,
                                   @PathVariable(value = "middlewareName", required = false) String middlewareName,
-                                  @RequestBody List<MiddlewareAlertsDTO> middlewareAlertsDTOList) throws Exception {
-        middlewareAlertsService.createRules(clusterId, namespace, middlewareName, middlewareAlertsDTOList);
+                                  @RequestParam("ding") String ding,
+                                  @RequestBody AlertsUserDTO alertsUserDTO) throws Exception {
+        middlewareAlertsService.createRules(clusterId, namespace, middlewareName,ding, alertsUserDTO);
         return BaseResult.ok();
     }
 
-    @ApiOperation(value = "删除告警规则", notes = "删除告警规则")
+    @ApiOperation(value = "删除服务告警规则", notes = "删除服务告警规则")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "alert", value = "告警名称", paramType = "query", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "alert", value = "告警名称", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "alertRuleId", value = "规则ID", paramType = "query", dataTypeClass = String.class)
     })
     @DeleteMapping
     public BaseResult deleteRules(@PathVariable("clusterId") String clusterId,
                                   @PathVariable(value = "namespace", required = false) String namespace,
                                   @PathVariable(value = "middlewareName", required = false) String middlewareName,
-                                  @RequestParam("alert") String alert) {
-        middlewareAlertsService.deleteRules(clusterId, namespace, middlewareName, alert);
+                                  @RequestParam("alert") String alert,
+                                  @RequestParam("alertRuleId") String alertRuleId) {
+        middlewareAlertsService.deleteRules(clusterId, namespace, middlewareName, alert,alertRuleId);
         return BaseResult.ok();
     }
 
-    @ApiOperation(value = "修改告警规则", notes = "修改告警规则")
+    @ApiOperation(value = "修改服务告警规则", notes = "修改服务告警规则")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "middlewareAlertsDTO", value = "中间件告警规则", paramType = "query", dataTypeClass = MiddlewareAlertsDTO.class)
+            @ApiImplicitParam(name = "ding", value = "是否选择钉钉通知", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "alertRuleId", value = "规则ID", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "alertUserDTO", value = "中间件告警规则和用户", paramType = "query", dataTypeClass = AlertUserDTO.class)
     })
     @PostMapping("/update")
     public BaseResult updateRules(@PathVariable("clusterId") String clusterId,
                                   @PathVariable(value = "namespace", required = false) String namespace,
                                   @PathVariable(value = "middlewareName", required = false) String middlewareName,
-                                  @RequestBody MiddlewareAlertsDTO middlewareAlertsDTO) throws Exception {
-        middlewareAlertsService.updateRules(clusterId, namespace, middlewareName, middlewareAlertsDTO);
+                                  @RequestParam("ding") String ding,
+                                  @RequestParam("alertRuleId") String alertRuleId,
+                                  @RequestBody AlertUserDTO alertUserDTO) throws Exception {
+        middlewareAlertsService.updateRules(clusterId, namespace, middlewareName, ding, alertRuleId,alertUserDTO);
         return BaseResult.ok();
     }
 
@@ -110,36 +121,44 @@ public class MiddlewareAlertsController {
     @ApiOperation(value = "创建系统告警规则", notes = "创建系统告警规则")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "middlewareAlertsDTO", value = "中间件告警规则", paramType = "query", dataTypeClass = MiddlewareAlertsDTO.class)
+            @ApiImplicitParam(name = "ding", value = "是否选择钉钉通知", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "alertsUserDTO", value = "中间件告警规则和用户", paramType = "query", dataTypeClass = AlertsUserDTO.class)
     })
     @PostMapping("/system")
     public BaseResult createSystemRules(@PathVariable("clusterId") String clusterId,
-                                        @RequestBody List<MiddlewareAlertsDTO> middlewareAlertsDTOList) {
-        middlewareAlertsService.createSystemRule(clusterId, middlewareAlertsDTOList);
+                                        @RequestParam("ding") String ding,
+                                        @RequestBody AlertsUserDTO alertsUserDTO) {
+        middlewareAlertsService.createSystemRule(clusterId, ding, alertsUserDTO);
         return BaseResult.ok();
     }
 
     @ApiOperation(value = "修改系统告警规则", notes = "修改系统告警规则")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "middlewareAlertsDTO", value = "中间件告警规则", paramType = "query", dataTypeClass = MiddlewareAlertsDTO.class)
+            @ApiImplicitParam(name = "ding", value = "是否选择钉钉通知", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "alertRuleId", value = "规则ID", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "alertUserDTO", value = "中间件告警规则和用户", paramType = "query", dataTypeClass = AlertUserDTO.class)
     })
     @PutMapping("/system")
     public BaseResult updateSystemRules(@PathVariable("clusterId") String clusterId,
-                                        @RequestBody MiddlewareAlertsDTO middlewareAlertsDTO) {
-        middlewareAlertsService.updateSystemRules(clusterId, middlewareAlertsDTO);
+                                        @RequestParam("ding") String ding,
+                                        @RequestParam("alertRuleId") String alertRuleId,
+                                        @RequestBody AlertUserDTO alertUserDTO) {
+        middlewareAlertsService.updateSystemRules(clusterId, ding, alertRuleId, alertUserDTO);
         return BaseResult.ok();
     }
 
     @ApiOperation(value = "删除系统告警规则", notes = "删除系统告警规则")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "alert", value = "告警名称", paramType = "query", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "alert", value = "告警名称", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "alertRuleId", value = "规则ID", paramType = "query", dataTypeClass = String.class)
     })
     @DeleteMapping("/system")
     public BaseResult deleteSystemRules(@PathVariable("clusterId") String clusterId,
-                                        @RequestParam("alert") String alert) {
-        middlewareAlertsService.deleteSystemRules(clusterId, alert);
+                                        @RequestParam("alert") String alert,
+                                        @RequestParam("alertRuleId") String alertRuleId) {
+        middlewareAlertsService.deleteSystemRules(clusterId, alert, alertRuleId);
         return BaseResult.ok();
     }
 }
