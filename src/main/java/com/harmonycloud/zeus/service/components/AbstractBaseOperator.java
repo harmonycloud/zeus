@@ -66,12 +66,17 @@ public abstract class AbstractBaseOperator {
         if (CollectionUtils.isEmpty(podInfoList) && status != NUM_TWO) {
             // 未安装
             status = NUM_ZERO;
-        } else if (!CollectionUtils.isEmpty(podInfoList) && podInfoList.stream()
-            .allMatch(pod -> "Running".equals(pod.getStatus()) || "Completed".equals(pod.getStatus()))) {
-            status = NUM_THREE;
-        } else if (status != NUM_FIVE && status != NUM_TWO && status != NUM_SIX) {
-            // 非卸载或安装中或安装异常 则为运行异常
-            status = NUM_FOUR;
+        }
+        // 删除中状态的后续变化只能是未安装
+        else if (!CollectionUtils.isEmpty(podInfoList) && status != NUM_FIVE) {
+            if (podInfoList.stream()
+                .allMatch(pod -> "Running".equals(pod.getStatus()) || "Completed".equals(pod.getStatus()))) {
+                // 正常
+                status = NUM_THREE;
+            } else if (status != NUM_TWO && status != NUM_SIX) {
+                // 异常
+                status = NUM_FOUR;
+            }
         }
         beanClusterComponents.setStatus(status);
         beanClusterComponentsMapper.updateById(beanClusterComponents);
