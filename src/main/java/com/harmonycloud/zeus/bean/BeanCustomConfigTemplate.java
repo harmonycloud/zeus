@@ -38,6 +38,12 @@ public class BeanCustomConfigTemplate implements Serializable {
     private String name;
 
     /**
+     * 模板名称
+     */
+    @TableField("description")
+    private String description;
+
+    /**
      * 中间件类型
      */
     @TableField("type")

@@ -10,3 +10,7 @@ ALTER TABLE `custom_config`
 MODIFY COLUMN `name` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '字段名称' AFTER `id`,
 MODIFY COLUMN `default_value` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '默认值' AFTER `chart_name`,
 MODIFY COLUMN `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '描述' AFTER `ranges`;
+
+-- 配置目标表添加字段
+ALTER TABLE `custom_config_template`
+ADD COLUMN `description` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '模板描述' AFTER `type`;
