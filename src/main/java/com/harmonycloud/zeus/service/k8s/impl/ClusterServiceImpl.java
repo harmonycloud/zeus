@@ -532,7 +532,7 @@ public class ClusterServiceImpl implements ClusterService {
         ClusterQuotaDTO clusterQuotaDTO = new ClusterQuotaDTO();
         //获取cpu总量
         try {
-            query.put("query", "sum(harmonycloud_node_cpu_total)");
+            query.put("query", "sum(count(node_cpu_seconds_total{ mode='system'}) by (kubernetes_pod_node_name))");
             PrometheusResponse cpuTotal = prometheusWrapper.get(cluster.getId(), PROMETHEUS_API_VERSION, query);
             clusterQuotaDTO.setTotalCpu(Double.parseDouble(cpuTotal.getData().getResult().get(0).getValue().get(1)));
         } catch (Exception e){
@@ -541,7 +541,7 @@ public class ClusterServiceImpl implements ClusterService {
         }
         //获取cpu使用量
         try {
-            query.put("query", "sum(harmonycloud_node_cpu_using)");
+            query.put("query", "sum(sum(irate(node_cpu_seconds_total{mode!=\"idle\"}[5m])) by (kubernetes_pod_node_name))");
             PrometheusResponse cpuUsing = prometheusWrapper.get(cluster.getId(), PROMETHEUS_API_VERSION, query);
             clusterQuotaDTO.setUsedCpu(Double.parseDouble(cpuUsing.getData().getResult().get(0).getValue().get(1)));
         } catch (Exception e){
@@ -550,7 +550,7 @@ public class ClusterServiceImpl implements ClusterService {
         }
         //获取memory总量
         try {
-            query.put("query", "sum(harmonycloud_node_memory_total)");
+            query.put("query", "sum(node_memory_MemTotal_bytes/1024/1024/1024)");
             PrometheusResponse memoryTotal = prometheusWrapper.get(cluster.getId(), PROMETHEUS_API_VERSION, query);
             clusterQuotaDTO.setTotalMemory(Double.parseDouble(memoryTotal.getData().getResult().get(0).getValue().get(1)));
         } catch (Exception e){
@@ -559,7 +559,7 @@ public class ClusterServiceImpl implements ClusterService {
         }
         //获取memory使用量
         try {
-            query.put("query", "sum(harmonycloud_node_memory_using)");
+            query.put("query", "sum(((node_memory_MemTotal_bytes - node_memory_MemFree_bytes - node_memory_Cached_bytes - node_memory_Buffers_bytes - node_memory_Slab_bytes)/1024/1024/1024))");
             PrometheusResponse memoryUsing = prometheusWrapper.get(cluster.getId(), PROMETHEUS_API_VERSION, query);
             clusterQuotaDTO.setUsedMemory(Double.parseDouble(memoryUsing.getData().getResult().get(0).getValue().get(1)));
         } catch (Exception e){
