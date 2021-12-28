@@ -264,7 +264,7 @@ data:
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 
-  -- ----------------------------
+    -- ----------------------------
     -- Table structure for middleware_info
     -- ----------------------------
     DROP TABLE IF EXISTS `middleware_info`;
