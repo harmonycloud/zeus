@@ -56,7 +56,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         try {
             createNodePort(cluster);
         } catch (Exception e){
-            log.error("es组建创建nodePort失败");
+            log.error("es组建创建nodePort失败", e);
         }
         //初始化es索引模板,安装log-pilot
         Executors.newSingleThreadExecutor().execute(() -> {
@@ -89,7 +89,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         if (SIMPLE.equals(clusterComponentsDto.getType())) {
             setValues = setValues + ",cluster.masterReplacesCount=1,resources.master.requests.cpu=700m,resources.master.requests.memory=1Gi";
         } else {
-            setValues = setValues + ",cluster.masterReplacesCount=3,resources.master.requests.cpu=1,,resources.master.requests.memory=4Gi";
+            setValues = setValues + ",cluster.masterReplacesCount=3,resources.master.requests.cpu=1,resources.master.requests.memory=4Gi";
         }
         return setValues;
     }
@@ -173,6 +173,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
                         boolean res = createEsTemplate(cluster);
                         if (res) {
                             //发布logPilot
+                            log.info("es发布成功,开始安装logPilot");
                             logPilot(cluster, clusterComponentsDto);
                             return;
                         }
