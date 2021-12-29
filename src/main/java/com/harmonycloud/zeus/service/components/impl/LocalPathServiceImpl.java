@@ -1,13 +1,16 @@
 package com.harmonycloud.zeus.service.components.impl;
 
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.LocalPathService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -23,6 +26,19 @@ public class LocalPathServiceImpl extends AbstractBaseOperator implements LocalP
     @Override
     public boolean support(String name) {
         return ComponentsEnum.LOCAL_PATH.getName().equals(name);
+    }
+
+    @Override
+    public void deploy(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
+        try {
+            super.deploy(cluster, clusterComponentsDto);
+        } catch (Exception e){
+            if (StringUtils.isNotEmpty(e.getMessage()) && e.getMessage().contains("already exists")) {
+                throw new BusinessException(ErrorMessage.LOCAL_PATH_ALREADY_EXIST);
+            } else {
+                throw e;
+            }
+        }
     }
 
     @Override
