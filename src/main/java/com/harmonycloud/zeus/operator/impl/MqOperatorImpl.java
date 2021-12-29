@@ -251,46 +251,47 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
             acl.put("enable", rocketMQACL.getEnable());
             acl.put("globalWhiteRemoteAddresses", StringUtils.isNotEmpty(rocketMQACL.getGlobalWhiteRemoteAddresses())
                 ? Arrays.asList(rocketMQACL.getGlobalWhiteRemoteAddresses().split(";")) : "");
-            
-            JSONArray accounts = new JSONArray();
-            for (RocketMQAccount mqAccount : rocketMQACL.getRocketMQAccountList()) {
-                JSONObject account = new JSONObject();
-                account.put("accessKey", mqAccount.getAccessKey());
-                account.put("secretKey", mqAccount.getSecretKey());
-                account.put("whiteRemoteAddress",
-                    StringUtils.isNotEmpty(mqAccount.getWhiteRemoteAddress()) ? mqAccount.getWhiteRemoteAddress() : "");
-                account.put("admin", mqAccount.getAdmin());
-                account.put("defaultTopicPerm", mqAccount.getTopicPerms().get("defaultTopicPerm"));
-                account.put("defaultGroupPerm", mqAccount.getGroupPerms().get("defaultGroupPerm"));
+            if (!rocketMQACL.getRocketMQAccountList().isEmpty()) {
+                JSONArray accounts = new JSONArray();
+                for (RocketMQAccount mqAccount : rocketMQACL.getRocketMQAccountList()) {
+                    JSONObject account = new JSONObject();
+                    account.put("accessKey", mqAccount.getAccessKey());
+                    account.put("secretKey", mqAccount.getSecretKey());
+                    account.put("whiteRemoteAddress",
+                            StringUtils.isNotEmpty(mqAccount.getWhiteRemoteAddress()) ? mqAccount.getWhiteRemoteAddress() : "");
+                    account.put("admin", mqAccount.getAdmin());
+                    account.put("defaultTopicPerm", mqAccount.getTopicPerms().get("defaultTopicPerm"));
+                    account.put("defaultGroupPerm", mqAccount.getGroupPerms().get("defaultGroupPerm"));
 
-                if (mqAccount.getTopicPerms().size() > 1) {
-                    JSONArray topicPerms = new JSONArray();
-                    for (String key : mqAccount.getTopicPerms().keySet()) {
-                        if ("defaultTopicPerm".equals(key)) {
-                            continue;
+                    if (mqAccount.getTopicPerms().size() > 1) {
+                        JSONArray topicPerms = new JSONArray();
+                        for (String key : mqAccount.getTopicPerms().keySet()) {
+                            if ("defaultTopicPerm".equals(key)) {
+                                continue;
+                            }
+                            topicPerms.add(key + "=" + mqAccount.getTopicPerms().get(key));
                         }
-                        topicPerms.add(key + "=" + mqAccount.getTopicPerms().get(key));
+                        account.put("topicPerms", topicPerms);
+                    } else {
+                        account.put("topicPerms", "");
                     }
-                    account.put("topicPerms", topicPerms);
-                } else {
-                    account.put("topicPerms", "");
-                }
 
-                if (mqAccount.getGroupPerms().size() > 1) {
-                    JSONArray groupPerms = new JSONArray();
-                    for (String key : mqAccount.getGroupPerms().keySet()) {
-                        if ("defaultGroupPerm".equals(key)) {
-                            continue;
+                    if (mqAccount.getGroupPerms().size() > 1) {
+                        JSONArray groupPerms = new JSONArray();
+                        for (String key : mqAccount.getGroupPerms().keySet()) {
+                            if ("defaultGroupPerm".equals(key)) {
+                                continue;
+                            }
+                            groupPerms.add(key + "=" + mqAccount.getGroupPerms().get(key));
                         }
-                        groupPerms.add(key + "=" + mqAccount.getGroupPerms().get(key));
+                        account.put("groupPerms", groupPerms);
+                    } else {
+                        account.put("groupPerms", "");
                     }
-                    account.put("groupPerms", groupPerms);
-                } else {
-                    account.put("groupPerms", "");
+                    accounts.add(account);
                 }
-                accounts.add(account);
+                acl.put("accounts", accounts);
             }
-            acl.put("accounts", accounts);
         } else {
             acl.put("enable", false);
         }
