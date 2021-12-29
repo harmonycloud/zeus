@@ -47,6 +47,7 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
             JSONObject args = values.getJSONObject("zookeeper");
             KafkaDTO kafkaDTO = new KafkaDTO();
             kafkaDTO.setZkAddress(args.getString("address"));
+            kafkaDTO.setPath(args.getString("path"));
             String[] ports = args.getString("port").split("/");
             kafkaDTO.setZkPort(ports[0]);
             middleware.setKafkaDTO(kafkaDTO);
@@ -96,12 +97,13 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
         KafkaDTO kafkaDTO = middleware.getKafkaDTO();
         if (zookeeper != null && kafkaDTO != null) {
             zookeeper.put("address", kafkaDTO.getZkAddress());
-            zookeeper.put("port", kafkaDTO.getZkPort() + "/kafka" + UUIDUtils.get8UUID());
+            zookeeper.put("port", kafkaDTO.getZkPort());
+            zookeeper.put("path", kafkaDTO.getPath() + UUIDUtils.get8UUID());
             values.put("custom", true);
             //设置dynamicTabs
             values.put("dynamicTabs", middleware.getCapabilities());
         } else {
-            zookeeper.put("port", zookeeper.getString("port") + "/kafka" + UUIDUtils.get8UUID());
+            zookeeper.put("path", zookeeper.getString("path") + UUIDUtils.get8UUID());
         }
         // 设置主机容忍信息
         if (!CollectionUtils.isEmpty(middleware.getTolerations())) {

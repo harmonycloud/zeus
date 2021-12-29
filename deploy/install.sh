@@ -38,7 +38,7 @@ function deploy_helm() {
   if [ $HA == "true" ]; then
     MYSQL_REPLICATE="replicaCount=2"
   fi
-  helm install -n zeus zeus-mysql deploy/mysql-operator --set replicaCount=$MYSQL_REPLICATE,mysql-operator.enabled=false,image.repository=$IMAGE_REPO"/middleware",args.root_password="ZeuS@Middleware01",storageClassName=$STORAGE_CLASS
+  helm install -n zeus zeus-mysql deploy/mysql-operator --set mysql-operator.enabled=false,image.repository=$IMAGE_REPO"/middleware",args.root_password="ZeuS@Middleware01",storageClassName=$STORAGE_CLASS,$MYSQL_REPLICATE
   # install zeus platform
   HELM_ARGS="global.replicaCount=1"
   if [ $HA == "true" ]; then
