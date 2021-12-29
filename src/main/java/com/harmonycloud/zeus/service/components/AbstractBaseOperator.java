@@ -63,7 +63,7 @@ public abstract class AbstractBaseOperator {
         List<PodInfo> podInfoList = getPodInfoList(cluster.getId());
         // 默认正常
         int status = beanClusterComponents.getStatus();
-        if (CollectionUtils.isEmpty(podInfoList) && status != NUM_TWO) {
+        if (CollectionUtils.isEmpty(podInfoList) && status != NUM_TWO && status != NUM_SIX) {
             // 未安装
             status = NUM_ZERO;
         }
