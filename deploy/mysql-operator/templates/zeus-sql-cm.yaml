@@ -98,7 +98,7 @@ data:
       `ding` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '是否选择钉钉通知',
       `mail` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '是否选择邮箱通知',
       `alert_expr` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '告警规则',
-  PRIMARY KEY (`alert_id`) USING BTREE
+      PRIMARY KEY (`alert_id`) USING BTREE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
     -- ----------------------------
@@ -264,7 +264,7 @@ data:
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 
-  -- ----------------------------
+    -- ----------------------------
     -- Table structure for middleware_info
     -- ----------------------------
     DROP TABLE IF EXISTS `middleware_info`;
@@ -381,7 +381,7 @@ data:
     INSERT INTO `resource_menu` VALUES (15, 'systemAlarm', '系统告警', 'systemManagement/systemAlarm', 73, NULL, 7, NULL);
     INSERT INTO `resource_menu` VALUES (16, 'operationAudit', '操作审计', 'systemManagement/operationAudit', 74, NULL, 7, NULL);
     INSERT INTO `resource_menu` VALUES (17, 'resourcePoolManagement', '资源池', 'systemManagement/resourcePoolManagement', 75, NULL, 7, NULL);
-  COMMIT;
+    COMMIT;
 
     -- ----------------------------
     -- Table structure for resource_menu_role

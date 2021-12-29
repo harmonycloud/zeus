@@ -1,10 +1,12 @@
 package com.harmonycloud.zeus.service.components.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.annotation.Operator;
+import com.harmonycloud.zeus.bean.BeanClusterComponents;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.LoggingService;
 import com.harmonycloud.zeus.service.k8s.ClusterComponentService;
@@ -56,7 +58,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         try {
             createNodePort(cluster);
         } catch (Exception e){
-            log.error("es组建创建nodePort失败");
+            log.error("es组建创建nodePort失败", e);
         }
         //初始化es索引模板,安装log-pilot
         Executors.newSingleThreadExecutor().execute(() -> {
@@ -89,7 +91,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         if (SIMPLE.equals(clusterComponentsDto.getType())) {
             setValues = setValues + ",cluster.masterReplacesCount=1,resources.master.requests.cpu=700m,resources.master.requests.memory=1Gi";
         } else {
-            setValues = setValues + ",cluster.masterReplacesCount=3,resources.master.requests.cpu=1,,resources.master.requests.memory=4Gi";
+            setValues = setValues + ",cluster.masterReplacesCount=3,resources.master.requests.cpu=1,resources.master.requests.memory=4Gi";
         }
         return setValues;
     }
@@ -161,21 +163,18 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
     }
 
     public void tryCreateEsTemplate(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
-        List<ClusterComponentsDto> componentsDtoList;
-        List<ClusterComponentsDto> loggingComponent;
+        QueryWrapper<BeanClusterComponents> wrapper =
+            new QueryWrapper<BeanClusterComponents>().eq("cluster_id", cluster.getId()).eq("component", "logging");
         for (int i = 0; i < 600; i++) {
             try {
-                componentsDtoList = componentService.list(cluster.getId());
-                loggingComponent = componentsDtoList.stream().filter(component -> "logging".equals(component.getComponent())).collect(Collectors.toList());
-                if (!CollectionUtils.isEmpty(loggingComponent)) {
-                    ClusterComponentsDto logging = loggingComponent.get(0);
-                    if (logging.getStatus() == 3) {
-                        boolean res = createEsTemplate(cluster);
-                        if (res) {
-                            //发布logPilot
-                            logPilot(cluster, clusterComponentsDto);
-                            return;
-                        }
+                BeanClusterComponents logging = beanClusterComponentsMapper.selectOne(wrapper);
+                if (logging.getStatus() == 3) {
+                    boolean res = createEsTemplate(cluster);
+                    if (res) {
+                        // 发布logPilot
+                        log.info("es发布成功,开始安装logPilot");
+                        logPilot(cluster, clusterComponentsDto);
+                        return;
                     }
                 }
             } catch (Exception e) {

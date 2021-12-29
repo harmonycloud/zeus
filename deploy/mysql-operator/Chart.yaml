@@ -6,3 +6,9 @@ version: 1.2.6-1
 appVersion: "5.7"
 annotations:
   owner: harmonycloud
+dependencies:
+  - alias: mysql-operator
+    condition: mysql-operator.enabled
+    name: mysql-operator
+    repository: file://./charts/mysql-operator
+    version: 1.2.6-1
