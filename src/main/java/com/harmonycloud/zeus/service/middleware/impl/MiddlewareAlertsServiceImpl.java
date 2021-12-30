@@ -442,7 +442,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         prometheusRules.getLabels().put("clusterId", clusterId);
         // 构造expr
         String expr = middlewareAlertsDTO.getExpr().replace(
-                "{{ include \"" + middlewareAlertsDTO.getType() + ".fullname\" . }}", middlewareAlertsDTO.getName());
+                "{{ include \"" + middlewareAlertsDTO.getType() + "-hc" + ".fullname\" . }}", middlewareAlertsDTO.getName());
         String symbol = getSymbol(expr);
         String threshold = getThreshold(expr);
         expr = expr.replace(symbol, middlewareAlertsDTO.getSymbol()).replace(threshold,
