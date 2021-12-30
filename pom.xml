@@ -29,6 +29,7 @@
         <swagger.version>3.0.0</swagger.version>
         <minio.version>8.0.3</minio.version>
         <pty4j.version>0.9.6</pty4j.version>
+        <log4j.version>3.0.0</log4j.version>
 
         <!-- unit test -->
         <mockito.version>1.10.19</mockito.version>
@@ -180,6 +181,11 @@
         </dependency>
 
         <!-- log4j -->
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
