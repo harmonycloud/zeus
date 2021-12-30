@@ -7,9 +7,11 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -145,7 +147,11 @@ public class MiddlewareBackupController {
                                     @RequestParam("middlewareName") String middlewareName,
                                     @RequestParam("backupName") String backupName,
                                     @RequestParam(value = "backupFileName", required = false) String backupFileName,
-                                    @RequestParam(value = "pods", required = false) List<String> pods) {
+                                    @RequestParam(value = "pod", required = false) String pod) {
+        List<String> pods = new ArrayList<>();
+        if (StringUtils.isBlank(pod)) {
+            pods.add(pod);
+        }
         return middlewareBackupService.createRestore(clusterId, namespace, middlewareName, type, backupName, backupFileName, pods);
     }
 
