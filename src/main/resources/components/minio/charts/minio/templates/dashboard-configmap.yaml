@@ -2,7 +2,8 @@ kind: ConfigMap
 metadata:
   name: {{ include "minio.fullname" . }}-dashboard
   labels:
-    grafana_dashboard: "1" 
+    grafana_dashboard: "1"
+    {{- include "minio.labels" . | nindent 4 }}
 apiVersion: v1
 data:
   Minio.json: |-

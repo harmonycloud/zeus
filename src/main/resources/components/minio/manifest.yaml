@@ -1,14 +1,41 @@
 name: minio
-version: 1.4.0-4
+version: 1.5.3-4
 provider: harmonycloud.cn
-description: "Harmonycloud minio"
+description: "Harmonycloud minio是一个基于Apache License v2.0开源协议的对象存储服务。它兼容亚马逊S3云存储服务接口，非常适合于存储大容量非结构化的数据。"
 serviceInstances:
 - minio
 changes: |
-  ## [1.4.0-4] - 2021-03-18
-  ### Added
-  - 添加dashboard,servicemonitor,alertrule
+  ## [1.5.3-4] - 2021-12-20
   ### Changed
-  - 添加bucketName,regionName参数
+  - chart包解耦prometheus
+docs:
+  quickStartGuide: https://www.yuque.com/nq4era/wziict/wp6wif
+  productConfigHowto: https://www.yuque.com/nq4era/wziict/wp6wif
+  troubleShootingHowto: https://www.yuque.com/nq4era/chqywm
+  faqs: https://www.yuque.com/books/share/7a31838b-45c3-4337-8b69-fce43242c17e?#
+  performanceWhitepaper: https://www.yuque.com/nq4era/chqywm/ieevah
+images:
+- registry: harbor.middleware.com
+  repository: middleware/minio
+  tag: RELEASE.2021-02-14T04-01-33Z
+  file: images/minio_RELEASE.2021-02-14T04-01-33Z.tar
+- registry: harbor.middleware.com
+  repository: middleware/minio-mc
+  tag: RELEASE.2020-06-16T19-24-41Z
+  file: images/minio-mc_RELEASE.2020-06-16T19-24-41Z.tar
+categories:
+- Storage
+observabilities:
+- Metrics
+- Alert
+- Grafana Dashboard
+features:
+- Master Replica
+capabilities: Basic Install
+maintainers:
+- name: 张盼
+  email: zhangpan@harmonycloud.cn
+- name: 沈宏杰
+  email: hongjieshen@harmonycloud.cn
 
 

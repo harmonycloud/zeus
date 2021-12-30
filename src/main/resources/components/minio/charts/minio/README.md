@@ -22,7 +22,7 @@ helm delete minio --namespace <YOUR-NAMESPACE>
 | imageTag | MinIO镜像tag | RELEASE.2020-12-03T05-49-24Z |
 | imagePullPolicy | Image pull policy | IfNotPresent |
 | accessKey | 默认access key | minio |
-| secretKey | 默认secret key | minio123 |
+| secretKey | 默认secret key | Hc@Cloud01 |
 | configPath | 默认配置文件路径 | ~/.minio |
 | mountPath | 默认挂载路径 | /export |
 | persistence.size | 持久卷大小 | 5Gi |
