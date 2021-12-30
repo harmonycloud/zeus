@@ -34,8 +34,10 @@ public interface MiddlewareConfigYamlService {
      * @param clusterId 集群
      * @param namespace 分区
      * @param configMapName 配置文件名称
+     * @param middlewareName 中间件名称
+     * @param type 类型
      * @param config 配置文件
      */
-    void update(String clusterId, String namespace, String configMapName, String config);
+    void update(String clusterId, String namespace, String configMapName, String middlewareName, String type, String config);
 
 }

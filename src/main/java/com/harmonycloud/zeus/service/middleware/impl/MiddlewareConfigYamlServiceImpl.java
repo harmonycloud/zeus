@@ -1,9 +1,13 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.zeus.integration.cluster.ConfigMapWrapper;
 import com.harmonycloud.zeus.service.k8s.YamlService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareConfigYamlService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -28,6 +32,8 @@ public class MiddlewareConfigYamlServiceImpl implements MiddlewareConfigYamlServ
     private ConfigMapWrapper configMapWrapper;
     @Autowired
     private YamlService yamlService;
+    @Autowired
+    private MiddlewareService middlewareService;
 
     @Override
     public List<String> nameList(String clusterId, String namespace, String name, String type, String chartVersion) {
@@ -57,13 +63,20 @@ public class MiddlewareConfigYamlServiceImpl implements MiddlewareConfigYamlServ
     }
 
     @Override
-    public void update(String clusterId, String namespace, String configMapName, String config) {
+    public void update(String clusterId, String namespace, String configMapName, String middlewareName, String type, String config) {
         if (config.contains("\\n")){
             config = config.replace("\\n", "\n");
         }
         yamlService.check(config);
         Yaml yaml = new Yaml();
         ConfigMap configMap = yaml.loadAs(config, ConfigMap.class);
-        configMapWrapper.update(clusterId, namespace, configMap);
+        try {
+            configMapWrapper.update(clusterId, namespace, configMap);
+        } catch (Exception e){
+            log.error(ErrorMessage.UPDATE_CONFIGMAP_FAILED.getZhMsg(), e);
+            throw new BusinessException(ErrorMessage.UPDATE_CONFIGMAP_FAILED);
+        }
+        // 重启服务
+        middlewareService.reboot(clusterId, namespace, middlewareName, type);
     }
 }
