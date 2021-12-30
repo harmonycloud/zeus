@@ -1,11 +1,11 @@
 image:
-  repository: harmonyware.harbor.cn/library/local-path-provisioner
+  repository: harbor.middleware.com/middleware/local-path-provisioner
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: "v0.0.19"
 
 helperImage:
-  repository:  harmonyware.harbor.cn/library/busybox
+  repository: harbor.middleware.com/middleware/busybox
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: "1.0"

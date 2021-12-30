@@ -5,7 +5,7 @@
   
   echo "Visit http://$NODE_IP:$NODE_PORT to use your application"
   default accessKey:minio
-  default secretKey:minio123
+  default secretKey:Hc@Cloud01
   
   shell visit minio:
     mc config host add minio http://$NODE_IP:$NODE_PORT {{ .Values.accessKey }} {{ .Values.secretKey }}

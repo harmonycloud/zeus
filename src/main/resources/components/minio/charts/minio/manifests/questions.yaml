@@ -1,0 +1,84 @@
+capabilities:
+  - basic
+  - high
+  - ingress
+  - log
+  - alert
+questions:
+  - variable: image.repository
+    default: "middleware.harmonycloud.com.cn:58080/middleware"
+    label: 镜像仓库地址
+    detail: true
+    type: string
+    required: true
+    group: "Minio配置"
+  - variable: accessKey
+    default: "minio"
+    label: accessKey
+    detail: true
+    type: string
+    required: true
+    group: "Minio配置"
+  - variable: secretKey
+    default: "Hc@Cloud01"
+    label: secretKey
+    detail: true
+    type: string
+    required: true
+    group: "Minio配置"
+  - variable: minioArgs.bucketName
+    default: "minio-test"
+    label: bucket名称
+    detail: true
+    type: string
+    required: true
+    group: "Minio配置"
+  - variable: persistence.storageClass
+    default: "middleware-lvm"
+    label: 存储服务名称
+    type: string
+    required: true
+    group: "存储配置"
+  - variable: persistence.size
+    default: "5Gi"
+    label: 存储大小
+    type: string
+    required: true
+    group: "存储配置"
+  - variable: replicas
+    default: 4
+    label: 副本数
+    pattern: ^[4-9]$
+    message: "请输入大于4小于9的数字"
+    type: int
+    group: "规格配置"
+  - variable: resources.requests.cpu
+    default: "1000m"
+    pattern: ^[1-9]m$|^[1-9][0-9]m$|^[1-9][0-9][0-9]m$|^1000m$
+    message: "请输入单位为m的1-1000之间的字符串"
+    label: CPU Requests
+    group: "规格配置"
+    type: string
+    required: true
+  - variable: resources.requests.memory
+    default: "2048M"
+    label: 内存 Requests
+    pattern: ^[1-9][0-9][0-9]M$|^[1-9][0-9][0-9][0-9]M$|^10000M$
+    message: "请输入单位为M的100-10000之间的字符串"
+    type: string
+    group: "规格配置"
+    required: true
+  - variable: resources.limits.cpu
+    default: "1000m"
+    pattern: ^[1-9]m$|^[1-9][0-9]m$|^[1-9][0-9][0-9]m$|^1000m$
+    label: CPU Limits
+    group: "规格配置"
+    type: string
+    required: true
+  - variable: resources.limits.memory
+    default: "2048M"
+    label: 内存 Limits
+    pattern: ^[1-9][0-9][0-9]M$|^[1-9][0-9][0-9][0-9]M$|^10000M$
+    type: string
+    group: "规格配置"
+    required: true

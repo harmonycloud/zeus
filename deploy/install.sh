@@ -7,10 +7,6 @@ STORAGE_CLASS=$4
 HA=$5
 
 if [ $LINE_TYPE == "offline" ]; then
-  echo "######  Load images ######"
-  docker load -i ./deploy/zeus-offline.tar
-  echo "######  Load images done !  ######"
-  echo
   echo "######  Push images  ######"
 
   sh load-image.sh ./image

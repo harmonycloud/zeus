@@ -2,11 +2,11 @@ replicas: 4
 
 resources:
    limits:
-     cpu: 200m
-     memory: 512Mi
+     cpu: 500m
+     memory: 1024Mi
    requests:
-     cpu: 200m
-     memory: 512Mi
+     cpu: 500m
+     memory: 1024Mi
 
 persistence:
   size: 50Gi

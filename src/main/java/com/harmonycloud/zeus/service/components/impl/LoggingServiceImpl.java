@@ -165,7 +165,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
     public void tryCreateEsTemplate(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
         QueryWrapper<BeanClusterComponents> wrapper =
             new QueryWrapper<BeanClusterComponents>().eq("cluster_id", cluster.getId()).eq("component", "logging");
-        for (int i = 0; i < 600; i++) {
+        for (int i = 0; i < 60 * 60; i++) {
             try {
                 BeanClusterComponents logging = beanClusterComponentsMapper.selectOne(wrapper);
                 if (logging.getStatus() == 3) {

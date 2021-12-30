@@ -1,10 +1,5 @@
 package com.harmonycloud.zeus.operator.impl;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.CLUSTER;
-import static com.harmonycloud.caas.common.constants.NameConstant.MODE;
-import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
-import static com.harmonycloud.caas.common.constants.NameConstant.STORAGE;
-
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.operator.miiddleware.AbstractEsOperator;
@@ -18,6 +13,8 @@ import com.harmonycloud.zeus.operator.api.EsOperator;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
 
 import java.util.*;
+
+import static com.harmonycloud.caas.common.constants.NameConstant.*;
 
 /**
  * @author dengyulong
@@ -33,7 +30,8 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
         replaceCommonValues(middleware, cluster, values);
 
         JSONObject clusterInfo = values.getJSONObject(CLUSTER);
-        clusterInfo.put(MODE, middleware.getMode());
+        clusterInfo.put(MODE, convertMode(middleware.getMode()));
+        clusterInfo.put(MODE_DESC, middleware.getMode());
         if (!values.containsKey(STORAGE)) {
             values.put(STORAGE, new JSONObject());
         }
@@ -101,7 +99,7 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
         if (values != null) {
             // 模式
             JSONObject clusterInfo = values.getJSONObject(CLUSTER);
-            middleware.setMode(clusterInfo.getString(MODE));
+            middleware.setMode(clusterInfo.getString(MODE_DESC));
             // 资源配额
             JSONObject resources = values.getJSONObject(RESOURCES);
             JSONObject storage = values.getJSONObject(STORAGE);
@@ -317,5 +315,18 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
     public void create(Middleware middleware, MiddlewareClusterDTO cluster) {
         super.create(middleware, cluster);
         tryCreateOpenService(cluster.getId(), middleware, new MiddlewareServiceNameIndex("kibana-nodeport", "-kibana"), false);
+    }
+
+    /**
+     * 转换es模式
+     * @param mode
+     * @return
+     */
+    public static String convertMode(String mode) {
+        if ("simple".equals(mode)) {
+            return "simple";
+        } else {
+            return "complex";
+        }
     }
 }
