@@ -5,9 +5,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.model.MailUserDTO;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareAlertsDTO;
 import com.harmonycloud.zeus.bean.MailToUser;
 import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
+import com.harmonycloud.zeus.bean.user.BeanRole;
+import com.harmonycloud.zeus.bean.user.BeanUserRole;
 import com.harmonycloud.zeus.dao.MailToUserMapper;
+import com.harmonycloud.zeus.dao.user.BeanRoleMapper;
 import com.harmonycloud.zeus.dao.user.PersonalMapper;
 
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
@@ -65,6 +69,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private MailToUserMapper mailToUserMapper;
+
+    @Autowired
+    private BeanRoleMapper beanRoleMapper;
 
     @Value("${system.images.path:/usr/local/zeus-pv/images/middleware}")
     private String imagePath;
@@ -333,26 +340,38 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public MailUserDTO getUserList() {
-        QueryWrapper<BeanUser> userQueryWrapper = new QueryWrapper<>();
-        List<BeanUser> users = beanUserMapper.selectList(userQueryWrapper);
+    public MailUserDTO getUserList(String alertRuleId) {
         List<UserDto> userDtos = null;
-        List<UserDto> userDtoList = null;
-        userDtos = users.stream().map(user -> {
-            UserDto userDto = new UserDto();
-            BeanUtils.copyProperties(user,userDto);
-            userDto.setUserId(user.getId());
-            return userDto;
-        }).collect(Collectors.toList());
-        QueryWrapper<MailToUser> mailToUserQueryWrapper = new QueryWrapper<>();
-        List<MailToUser> mailToUsers = mailToUserMapper.selectList(mailToUserQueryWrapper);
-        userDtoList = mailToUsers.stream().map(mailToUser -> {
-            UserDto userDto = new UserDto();
-            BeanUtils.copyProperties(mailToUser,userDto);
-            return userDto;
-        }).collect(Collectors.toList());
+        try {
+            userDtos = list(null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        List<UserDto> userDtoList = new ArrayList<>();
+        if (StringUtils.isNotBlank(alertRuleId)) {
+            QueryWrapper<MailToUser> mailToUserQueryWrapper = new QueryWrapper<>();
+            Integer alertId = Integer.parseInt(alertRuleId.replace("GJ",""));
+            mailToUserQueryWrapper.eq("alert_rule_id",alertId);
+            List<MailToUser> mailToUsers = mailToUserMapper.selectList(mailToUserQueryWrapper);
+            userDtoList = mailToUsers.stream().map(mailToUser -> {
+                BeanUser beanUser = beanUserMapper.selectOne(new QueryWrapper<BeanUser>().eq("id",mailToUser.getUserId()));
+                UserRole userRole = new UserRole();
+                try {
+                    userRole = userRoleService.get(beanUser.getUserName());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                UserDto userDto = new UserDto();
+                BeanUtils.copyProperties(beanUser,userDto);
+                if (!ObjectUtils.isEmpty(userRole)) {
+                    BeanRole beanRole = beanRoleMapper.selectOne(new QueryWrapper<BeanRole>().eq("id",userRole.getRoleId()));
+                    userDto.setRoleId(beanRole.getId());
+                    userDto.setUserName(userRole.getUserName());
+                }
+                return userDto;
+            }).collect(Collectors.toList());
+        }
         MailUserDTO mailUserDTO = new MailUserDTO();
-
         return mailUserDTO.setUsers(userDtos).setUserBy(userDtoList);
     }
 

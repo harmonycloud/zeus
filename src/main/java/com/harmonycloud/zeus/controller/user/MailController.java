@@ -1,10 +1,7 @@
 package com.harmonycloud.zeus.controller.user;
 
 import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.middleware.AlertInfoDto;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareAlertsDTO;
 import com.harmonycloud.zeus.bean.MailInfo;
-import com.harmonycloud.zeus.bean.user.BeanUser;
 import com.harmonycloud.zeus.service.user.MailService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -13,10 +10,6 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import javax.mail.MessagingException;
-import java.io.UnsupportedEncodingException;
-import java.util.List;
 
 /**
  * @author yushuaikang
@@ -45,17 +38,6 @@ public class MailController {
     @GetMapping("/getMailInfo")
     public BaseResult get() {
         return BaseResult.ok(mailService.select());
-    }
-
-    @ApiOperation(value = "选择被通知人", notes = "选择被通知人")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "users", value = "登录人信息", paramType = "query", dataTypeClass = BeanUser.class),
-            @ApiImplicitParam(name = "ding", value = "是否选择钉钉通知", paramType = "path",required = false, dataTypeClass = String.class)
-    })
-    @PostMapping("/insertUser")
-    public BaseResult mailToUser(@RequestBody List<BeanUser> users,@PathVariable(required = false) String ding) {
-        mailService.insertUser(users, ding);
-        return BaseResult.ok();
     }
 
     @ApiOperation(value = "邮箱连接测试", notes = "邮箱连接测试")

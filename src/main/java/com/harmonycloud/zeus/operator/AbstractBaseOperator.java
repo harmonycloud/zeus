@@ -356,7 +356,8 @@ public abstract class AbstractBaseOperator {
         // query middleware cr
         MiddlewareCRD mw = middlewareCRDService.getCR(middleware.getClusterId(), middleware.getNamespace(),
             middleware.getType(), middleware.getName());
-        if (mw == null || mw.getStatus() == null || mw.getStatus().getInclude() == null) {
+        if (mw == null || mw.getStatus() == null || mw.getStatus().getInclude() == null
+            || !mw.getStatus().getInclude().containsKey(PERSISTENT_VOLUME_CLAIMS)) {
             return null;
         }
         List<MiddlewareInfo> pvcs = mw.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);

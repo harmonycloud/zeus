@@ -29,29 +29,9 @@ public class MailToUser {
     @TableField("user_id")
     private Integer userId;
     /**
-     * 账户
+     * 规则ID
      */
-    @TableField("username")
-    private String userName;
-    /**
-     * 用户名
-     */
-    @TableField("alias_name")
-    private String aliasName;
-    /**
-     * 邮箱
-     */
-    @TableField("email")
-    private String email;
-    /**
-     * 电话
-     */
-    @TableField("phone")
-    private String phone;
-    /**
-     * 创建时间
-     */
-    @TableField("create_time")
-    private Date time;
+    @TableField("alert_rule_id")
+    private Integer alertRuleId;
 
 }
