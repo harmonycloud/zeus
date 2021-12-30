@@ -1,4 +1,4 @@
 spring:
   profiles:
     # 指定读取配置文件:dev(开发环境),prod(生产环境),qa(测试环境)
-    active: 70
+    active: dev
