@@ -24,7 +24,7 @@ public class K8sExecServiceImpl implements K8sExecService {
         Process process = null;
         try {
             log.info("执行kubectl命令：{}", execCommand);
-            String[] commands = execCommand.split(" ");
+            String[] commands = {"/bin/sh", "-c", execCommand};
             process = Runtime.getRuntime().exec(commands);
 
             BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -37,7 +37,10 @@ public class K8sExecServiceImpl implements K8sExecService {
 
             while ((line = stdError.readLine()) != null) {
                 log.error("执行指令错误:{}", line);
-                error = true;
+                // 过滤一些并非异常的提醒信息
+                if (!filter(line)){
+                    error = true;
+                }
             }
             if (error) {
                 throw new Exception();
@@ -51,6 +54,13 @@ public class K8sExecServiceImpl implements K8sExecService {
                 process.destroy();
             }
         }
+    }
+
+    /**
+     * 过滤一些并非异常的提醒信息
+     **/
+    public boolean filter(String line){
+        return line.contains("Using a password on the command line interface can be insecure");
     }
 
 }

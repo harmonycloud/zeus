@@ -376,7 +376,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         // 主从节点执行命令
         middleware.getPods().forEach(podInfo -> {
             String execCommand = MessageFormat.format(
-                "kubectl exec {0} -n {1} --server={2} --token={3} --insecure-skip-tls-verify=true -- mysql -uroot -p{4} -S /data/mysql/db_{5}/conf/mysql.sock -e \"{6}\"",
+                "kubectl exec {0} -n {1} -c mysql --server={2} --token={3} --insecure-skip-tls-verify=true -- mysql -uroot -p{4} -S /data/mysql/db_{5}/conf/mysql.sock -e \"{6}\"",
                 podInfo.getPodName(), config.getNamespace(), cluster.getAddress(), cluster.getAccessToken(), password,
                 config.getName(), sb.toString());
             k8sExecService.exec(execCommand);
