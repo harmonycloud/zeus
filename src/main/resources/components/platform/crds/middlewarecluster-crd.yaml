@@ -11,11 +11,11 @@ spec:
     listKind: MiddlewareClusterList
     plural: middlewareclusters
     shortNames:
-      - mwc
+    - mwc
     singular: middlewarecluster
   preserveUnknownFields: true
   scope: Namespaced
   versions:
-    - name: v1
-      served: true
-      storage: true
+  - name: v1
+    served: true
+    storage: true

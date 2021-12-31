@@ -5,11 +5,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.model.MailUserDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareAlertsDTO;
 import com.harmonycloud.zeus.bean.MailToUser;
 import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
 import com.harmonycloud.zeus.bean.user.BeanRole;
-import com.harmonycloud.zeus.bean.user.BeanUserRole;
 import com.harmonycloud.zeus.dao.MailToUserMapper;
 import com.harmonycloud.zeus.dao.user.BeanRoleMapper;
 import com.harmonycloud.zeus.dao.user.PersonalMapper;
@@ -53,6 +51,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 public class UserServiceImpl implements UserService {
 
+    private static final Map<String, Object> IMAGE_MAP = new HashMap<>();
     @Autowired
     private BeanUserMapper beanUserMapper;
 
@@ -72,6 +71,7 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private BeanRoleMapper beanRoleMapper;
+
 
     @Value("${system.images.path:/usr/local/zeus-pv/images/middleware}")
     private String imagePath;
@@ -301,6 +301,22 @@ public class UserServiceImpl implements UserService {
             personalMapper.delete(query);
             return;
         }
+        if (IMAGE_MAP.containsKey("backgroundImag")) {
+            configuration.setBackgroundImage((byte[]) IMAGE_MAP.get("backgroundImag"));
+            configuration.setBackgroundPath(String.valueOf(IMAGE_MAP.get("backgroundPath")));
+            handleImage((byte[]) IMAGE_MAP.get("backgroundImag"),String.valueOf(IMAGE_MAP.get("backgroundPath")));
+        }
+        if (IMAGE_MAP.containsKey("loginLogo")) {
+            configuration.setLoginLogo((byte[]) IMAGE_MAP.get("loginLogo"));
+            configuration.setLoginLogoPath(String.valueOf(IMAGE_MAP.get("loginLogoPath")));
+            handleImage((byte[]) IMAGE_MAP.get("loginLogo"),String.valueOf(IMAGE_MAP.get("loginLogoPath")));
+        }
+        if (IMAGE_MAP.containsKey("homeLogo")) {
+            configuration.setHomeLogo((byte[]) IMAGE_MAP.get("homeLogo"));
+            configuration.setHomeLogoPath(String.valueOf(IMAGE_MAP.get("homeLogoPath")));
+            handleImage((byte[]) IMAGE_MAP.get("homeLogo"),String.valueOf(IMAGE_MAP.get("homeLogoPath")));
+        }
+        IMAGE_MAP.clear();
         checkout(configuration);
     }
 
@@ -315,28 +331,21 @@ public class UserServiceImpl implements UserService {
         byte[] background = null;
         byte[] homeLogo = null;
         byte[] loginLogo = null;
-        PersonalizedConfiguration configuration = new PersonalizedConfiguration();
-        configuration.setStatus("0");
         if ("background".equals(type)) {
             background = loadFile(file);
-            configuration.setBackgroundImage(background);
-            configuration.setBackgroundPath(file.getOriginalFilename());
-            handleImage(background,file.getOriginalFilename());
+            IMAGE_MAP.put("backgroundImag",background);
+            IMAGE_MAP.put("backgroundPath",file.getOriginalFilename());
         }
         if ("login".equals(type)) {
             loginLogo = loadFile(file);
-            configuration.setLoginLogo(loginLogo);
-            configuration.setLoginLogoPath(file.getOriginalFilename());
-            handleImage(loginLogo,file.getOriginalFilename());
+            IMAGE_MAP.put("loginLogo",loginLogo);
+            IMAGE_MAP.put("loginLogoPath",file.getOriginalFilename());
         }
         if ("home".equals(type)) {
             homeLogo = loadFile(file);
-            configuration.setHomeLogo(homeLogo);
-            configuration.setHomeLogoPath(file.getOriginalFilename());
-            handleImage(homeLogo,file.getOriginalFilename());
+            IMAGE_MAP.put("homeLogo",homeLogo);
+            IMAGE_MAP.put("homeLogoPath",file.getOriginalFilename());
         }
-        checkout(configuration);
-
     }
 
     @Override
