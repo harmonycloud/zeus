@@ -1,10 +1,13 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.zeus.bean.BeanCustomConfig;
 import com.harmonycloud.zeus.bean.BeanCustomConfigHistory;
 import com.harmonycloud.zeus.dao.BeanCustomConfigHistoryMapper;
@@ -13,8 +16,10 @@ import com.harmonycloud.zeus.integration.cluster.ConfigMapWrapper;
 import com.harmonycloud.zeus.service.AbstractBaseService;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.ConfigMapService;
+import com.harmonycloud.zeus.service.k8s.K8sExecService;
 import com.harmonycloud.zeus.service.k8s.PodService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareCustomConfigService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -54,6 +59,10 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
     private HelmChartService helmChartService;
     @Autowired
     private ClusterService clusterService;
+    @Autowired
+    private MiddlewareService middlewareService;
+    @Autowired
+    private K8sExecService k8sExecService;
 
     @Override
     public List<CustomConfig> listCustomConfig(String clusterId, String namespace, String middlewareName, String type)
@@ -61,19 +70,18 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
 
         Middleware middleware = new Middleware(clusterId, namespace, middlewareName, type);
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        //获取values
+        // 获取values
         JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
-        //获取configs
+        // 获取configs
         Map<String, String> data = getConfigFromValues(middleware, values);
-        //取出chartVersion
+        // 取出chartVersion
         middleware.setChartVersion(values.getString("chart-version"));
         // 获取数据库数据
         QueryWrapper<BeanCustomConfig> wrapper = new QueryWrapper<BeanCustomConfig>()
             .eq("chart_name", middleware.getType()).eq("chart_version", middleware.getChartVersion());
         List<BeanCustomConfig> beanCustomConfigList = beanCustomConfigMapper.selectList(wrapper);
         if (CollectionUtils.isEmpty(beanCustomConfigList)) {
-            HelmChartFile helmChart =
-                helmChartService.getHelmChart(clusterId, namespace, middlewareName, type);
+            HelmChartFile helmChart = helmChartService.getHelmChart(clusterId, namespace, middlewareName, type);
             beanCustomConfigList.addAll(updateConfig2MySQL(helmChart, false));
         }
         // 封装customConfigList
@@ -83,7 +91,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             BeanUtils.copyProperties(beanCustomConfig, customConfig);
             customConfig.setValue(data.getOrDefault(customConfig.getName(), ""));
             customConfig.setParamType(customConfig.getRanges().contains("|") ? "select" : "input");
-            if ("sql_mode".equals(beanCustomConfig.getName())){
+            if ("sql_mode".equals(beanCustomConfig.getName())) {
                 customConfig.setParamType("multiSelect");
             }
             customConfigList.add(customConfig);
@@ -96,21 +104,21 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         MiddlewareClusterDTO cluster = clusterService.findById(config.getClusterId());
         Middleware middleware =
             new Middleware(config.getClusterId(), config.getNamespace(), config.getName(), config.getType());
-        //获取values
+        // 获取values
         JSONObject values = helmChartService.getInstalledValues(config.getName(), config.getNamespace(), cluster);
-        //获取configs
+        // 获取configs
         Map<String, String> data = getConfigFromValues(middleware, values);
         if (CollectionUtils.isEmpty(data)) {
             // 从parameter.yaml文件创建一份
             QueryWrapper<BeanCustomConfig> wrapper = new QueryWrapper<BeanCustomConfig>()
-                    .eq("chart_name", middleware.getType()).eq("chart_version", values.getString("chart-version"));
+                .eq("chart_name", middleware.getType()).eq("chart_version", values.getString("chart-version"));
             List<BeanCustomConfig> beanCustomConfigList = beanCustomConfigMapper.selectList(wrapper);
             beanCustomConfigList.forEach(c -> data.put(c.getName(), c.getDefaultValue()));
         }
-        //取出chartVersion
+        // 取出chartVersion
         middleware.setChartVersion(values.getString("chart-version"));
         middleware.setChartName(config.getType());
-        //记录当前数据
+        // 记录当前数据
         Map<String, String> oldDate = new HashMap<>(data);
         // 更新配置，并记录是否重启
         boolean restart = false;
@@ -118,7 +126,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             if (customConfig.getRestart()) {
                 restart = true;
             }
-            //确认正则匹配
+            // 确认正则匹配
             if (!checkPattern(customConfig)) {
                 log.error("集群{} 分区{} 中间件{} 参数{} 正则校验失败", config.getClusterId(), config.getNamespace(), config.getName(),
                     customConfig.getName());
@@ -126,9 +134,16 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             }
             data.put(customConfig.getName(), customConfig.getValue());
         }
+        // mysql在不需要重启时，手动执行set global
+        if (config.getType().equals(MiddlewareTypeEnum.MYSQL.getType()) && !restart) {
+            try {
+                doSetGlobal(config, cluster);
+            }catch (Exception e){
+                log.error(ErrorMessage.MYSQL_CONFIG_UPDATE_FAILED.getZhMsg(), e);
+                throw new BusinessException(ErrorMessage.MYSQL_CONFIG_UPDATE_FAILED);
+            }
+        }
         updateValues(middleware, data, cluster, values);
-        // todo 进入容器内执行命令
-
         // 添加修改历史
         this.addCustomConfigHistory(config.getName(), oldDate, config);
         if (restart) {
@@ -180,9 +195,9 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
     }
 
     @Override
-    public List<BeanCustomConfig> updateConfig2MySQL(HelmChartFile helmChartFile) throws Exception{
+    public List<BeanCustomConfig> updateConfig2MySQL(HelmChartFile helmChartFile) throws Exception {
         QueryWrapper<BeanCustomConfig> wrapper = new QueryWrapper<BeanCustomConfig>()
-                .eq("chart_name", helmChartFile.getChartName()).eq("chart_version", helmChartFile.getChartVersion());
+            .eq("chart_name", helmChartFile.getChartName()).eq("chart_version", helmChartFile.getChartVersion());
         List<BeanCustomConfig> beanCustomConfigList = beanCustomConfigMapper.selectList(wrapper);
         return updateConfig2MySQL(helmChartFile, !CollectionUtils.isEmpty(beanCustomConfigList));
     }
@@ -238,9 +253,8 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
 
     @Override
     public void deleteHistory(String clusterId, String namespace, String name) {
-        QueryWrapper<BeanCustomConfigHistory> wrapper =
-            new QueryWrapper<BeanCustomConfigHistory>().eq("cluster_id", clusterId)
-                .eq("namespace", namespace).eq("name", name);
+        QueryWrapper<BeanCustomConfigHistory> wrapper = new QueryWrapper<BeanCustomConfigHistory>()
+            .eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", name);
         beanCustomConfigHistoryMapper.delete(wrapper);
     }
 
@@ -304,18 +318,18 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
     /**
      * 正则匹配
      */
-    public boolean checkPattern(CustomConfig customConfig){
-        if (StringUtils.isNotEmpty(customConfig.getPattern())){
+    public boolean checkPattern(CustomConfig customConfig) {
+        if (StringUtils.isNotEmpty(customConfig.getPattern())) {
             return Pattern.matches(customConfig.getPattern(), customConfig.getValue());
         }
         return true;
     }
 
-    public Map<String, String> getConfigFromValues(Middleware middleware, JSONObject values){
+    public Map<String, String> getConfigFromValues(Middleware middleware, JSONObject values) {
         Map<String, String> data = new HashMap<>();
-        if (values.containsKey("args")){
+        if (values.containsKey("args")) {
             JSONObject args = values.getJSONObject("args");
-            for (String key : args.keySet()){
+            for (String key : args.keySet()) {
                 data.put(key, args.getString(key));
             }
         }
@@ -348,5 +362,24 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         helmChartService.upgrade(middleware, values, newValues, cluster);
     }
 
+    public void doSetGlobal(MiddlewareCustomConfig config, MiddlewareClusterDTO cluster){
+        // 获取数据库密码
+        JSONObject values = helmChartService.getInstalledValues(config.getName(), config.getNamespace(), cluster);
+        String password = values.getJSONObject("args").getString("root_password");
+        // 获取pod列表
+        Middleware middleware = podService.list(config.getClusterId(), config.getNamespace(), config.getName(), config.getType());
+        // 拼接数据库语句
+        StringBuilder sb = new StringBuilder();
+        config.getCustomConfigList().forEach(customConfig -> sb.append("set global ").append(customConfig.getName())
+            .append("=").append(customConfig.getValue()).append(";"));
+        // 主从节点执行命令
+        middleware.getPods().forEach(podInfo -> {
+            String execCommand = MessageFormat.format(
+                "kubectl exec {0} -n {1} -- mysql -uroot -p{2} -S /data/mysql/db_{3}/conf/mysql.sock -e \"{4}\"",
+                podInfo.getPodName(), config.getNamespace(), password, config.getName(),
+                sb.toString());
+            k8sExecService.exec(execCommand);
+        });
+    }
 
 }
