@@ -362,12 +362,13 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         helmChartService.upgrade(middleware, values, newValues, cluster);
     }
 
-    public void doSetGlobal(MiddlewareCustomConfig config, MiddlewareClusterDTO cluster){
+    public void doSetGlobal(MiddlewareCustomConfig config, MiddlewareClusterDTO cluster) {
         // 获取数据库密码
         JSONObject values = helmChartService.getInstalledValues(config.getName(), config.getNamespace(), cluster);
         String password = values.getJSONObject("args").getString("root_password");
         // 获取pod列表
-        Middleware middleware = podService.list(config.getClusterId(), config.getNamespace(), config.getName(), config.getType());
+        Middleware middleware =
+            podService.list(config.getClusterId(), config.getNamespace(), config.getName(), config.getType());
         // 拼接数据库语句
         StringBuilder sb = new StringBuilder();
         config.getCustomConfigList().forEach(customConfig -> sb.append("set global ").append(customConfig.getName())
@@ -375,9 +376,9 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         // 主从节点执行命令
         middleware.getPods().forEach(podInfo -> {
             String execCommand = MessageFormat.format(
-                "kubectl exec {0} -n {1} -- mysql -uroot -p{2} -S /data/mysql/db_{3}/conf/mysql.sock -e \"{4}\"",
-                podInfo.getPodName(), config.getNamespace(), password, config.getName(),
-                sb.toString());
+                "kubectl exec {0} -n {1} --server={2} --token={3} --insecure-skip-tls-verify=true -- mysql -uroot -p{4} -S /data/mysql/db_{5}/conf/mysql.sock -e \"{6}\"",
+                podInfo.getPodName(), config.getNamespace(), cluster.getAddress(), cluster.getAccessToken(), password,
+                config.getName(), sb.toString());
             k8sExecService.exec(execCommand);
         });
     }
