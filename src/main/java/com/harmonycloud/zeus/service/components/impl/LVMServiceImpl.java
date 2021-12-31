@@ -11,6 +11,7 @@ import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
+import com.harmonycloud.zeus.service.components.api.LVMService;
 import com.harmonycloud.zeus.service.components.api.LoggingService;
 import com.harmonycloud.zeus.util.AssertUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +33,7 @@ import static com.harmonycloud.caas.common.constants.CommonConstant.ALREADY_EXIS
 @Slf4j
 @Service
 @Operator(paramTypes4One = String.class)
-public class LVMServiceImpl extends AbstractBaseOperator implements LoggingService {
+public class LVMServiceImpl extends AbstractBaseOperator implements LVMService {
 
     private static final Map<String, String> size = new ConcurrentHashMap<>();
 
