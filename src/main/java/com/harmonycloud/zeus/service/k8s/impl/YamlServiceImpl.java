@@ -40,6 +40,8 @@ public class YamlServiceImpl implements YamlService {
         }
         // yaml为k8s资源
         if (object != null && yamlContent.contains(API_VERSION)) {
+            // 校验基本结构
+            msg.addAll(baseCheck(object));
             // yaml为configmap
             if (object.containsKey(KIND) && object.getString(KIND).equals(CONFIGMAP)){
                 try {
@@ -52,6 +54,30 @@ public class YamlServiceImpl implements YamlService {
             // else
         }
         return new YamlCheck().setFlag(CollectionUtils.isEmpty(msg)).setMsgList(msg);
+    }
+
+    public List<String> baseCheck(JSONObject object){
+        List<String> msg = new ArrayList<>();
+        if (!object.containsKey(KIND)){
+            log.error(ErrorMessage.RESOURCE_KIND_NOT_FOUND.getZhMsg());
+            msg.add(ErrorMessage.RESOURCE_KIND_NOT_FOUND.getZhMsg());
+            return msg;
+        }
+        if (!object.containsKey(METADATA)){
+            log.error(ErrorMessage.RESOURCE_METADATA_NOT_FOUND.getZhMsg());
+            msg.add(ErrorMessage.RESOURCE_METADATA_NOT_FOUND.getZhMsg());
+            return msg;
+        }
+        JSONObject metadata = object.getJSONObject(METADATA);
+        if (!metadata.containsKey(NAME)){
+            log.error(ErrorMessage.RESOURCE_NAME_NOT_FOUND.getZhMsg());
+            msg.add(ErrorMessage.RESOURCE_NAME_NOT_FOUND.getZhMsg());
+        }
+        if (!metadata.containsKey(NAMESPACE)){
+            log.error(ErrorMessage.RESOURCE_NAMESPACE_NOT_FOUND.getZhMsg());
+            msg.add(ErrorMessage.RESOURCE_NAMESPACE_NOT_FOUND.getZhMsg());
+        }
+        return msg;
     }
 
 }
