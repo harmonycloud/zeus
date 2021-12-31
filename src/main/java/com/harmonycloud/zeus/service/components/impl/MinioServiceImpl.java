@@ -78,7 +78,7 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
         storage.put("name", "minio");
         storage.put("bucketName", "velero");
         storage.put("accessKeyId", "minio");
-        storage.put("secretAccessKey", "minio123");
+        storage.put("secretAccessKey", "Hc@Cloud01");
         storage.put("endpoint", "http://" + cluster.getHost() + ":31909");
         Map<String, Object> backup = new HashMap<>();
         backup.put("type", "minio");

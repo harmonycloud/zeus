@@ -299,9 +299,9 @@ public class PodServiceImpl implements PodService {
                 pi.getResources().setStorageClassQuota(scDTO.getStorage()).setStorageClassName(scDTO.getStorageClassName())
                         .setIsLvmStorage(scDTO.getIsLvmStorage());
                 isAllLvmStorage.set(isAllLvmStorage.get() & scDTO.getIsLvmStorage());
+                // 给pod设置绑定的pvc
+                setPodPvc(pi, pvcInfos);
             }
-            // 给pod设置绑定的pvc
-            setPodPvc(pi, pvcInfos);
             // 设置pod备份状态
             setPodBackupStatus(clusterId, namespace, type, middlewareName, pi);
             podInfoList.add(pi);

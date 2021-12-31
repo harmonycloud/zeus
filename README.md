@@ -54,14 +54,14 @@ http://<your ip>:31088
 
 |中间件|支持版本|支持模式|
 |---|---|---|
-|Mysql| 5.7.21|主从|
-|Redis|5.0.8|哨兵、集群(三主三从、五主五从)|
-|Elasticsearch|6.8.10-1|主从、主从协调|
-|RocketMQ|4.8.0|双主、双主双从、三主三从|
-|Kafka|2.6.0| |
-|Zookeeper|3.6.2| |
+|Mysql| 5.7|主从|
+|Redis|5.0|哨兵、集群(三主三从、五主五从)|
+|Elasticsearch|6.8|主从、主从协调|
+|RocketMQ|4.8|双主、双主双从、三主三从|
+|Kafka|2.6| |
+|Zookeeper|3.6| |
 |Minio|RELEASE.2021-02-14T04-01-33Z| |
-|Nacos|1.4.1| |
+|Nacos|1.4| |
 
 ## 平台组件
 
