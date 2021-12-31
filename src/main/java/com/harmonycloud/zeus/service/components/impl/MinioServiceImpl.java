@@ -61,7 +61,7 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
         if (SIMPLE.equals(clusterComponentsDto.getType())) {
             setValues = setValues + ",replicas=1,drivesPerNode=4";
         } else {
-            setValues = setValues + ",replicas=3";
+            setValues = setValues + ",replicas=3,drivesPerNode=2";
         }
         return setValues;
     }
