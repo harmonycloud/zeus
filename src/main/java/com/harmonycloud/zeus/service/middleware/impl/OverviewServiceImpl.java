@@ -391,27 +391,28 @@ public class OverviewServiceImpl implements OverviewService {
         if (recordList == null || recordList.isEmpty()) {
             return alertDTOPage;
         }
+        Map<Middleware, String> middlewareMap = new HashMap<>();
         alertDTOPage.setList(recordList.stream().map(record -> {
             AlertDTO alertDTO = new AlertDTO();
             BeanUtils.copyProperties(record, alertDTO);
             alertDTO.setTime(DateUtils.addInteger(alertDTO.getTime(), Calendar.HOUR_OF_DAY, 8));
-//            Middleware middleware = new Middleware().setName(alertDTO.getName()).setNamespace(alertDTO.getNamespace())
-//                .setClusterId(alertDTO.getClusterId());
-//            if (middlewareMap.containsKey(middleware)) {
-//                alertDTO.setChartVersion(middlewareMap.get(middleware));
-//            } else {
-//                JSONObject values =
-//                    helmChartService.getInstalledValues(middleware, clusterService.findById(alertDTO.getClusterId()));
-//                if (values != null && values.containsKey("chart-version")) {
-//                    String version = values.getString("chart-version");
-//                    middlewareMap.put(middleware, version);
-//                    alertDTO.setChartVersion(version);
-//                } else {
-//                    middlewareMap.put(middleware, null);
-//                    alertDTO.setChartVersion(null);
-//                }
-//            }
-            if (record.getAlertId() != null) {
+            Middleware middleware = new Middleware().setName(alertDTO.getName()).setNamespace(alertDTO.getNamespace())
+                .setClusterId(alertDTO.getClusterId());
+            if (middlewareMap.containsKey(middleware)) {
+                alertDTO.setChartVersion(middlewareMap.get(middleware));
+            } else {
+                JSONObject values =
+                    helmChartService.getInstalledValues(middleware, clusterService.findById(alertDTO.getClusterId()));
+                if (values != null && values.containsKey("chart-version")) {
+                    String version = values.getString("chart-version");
+                    middlewareMap.put(middleware, version);
+                    alertDTO.setChartVersion(version);
+                } else {
+                    middlewareMap.put(middleware, null);
+                    alertDTO.setChartVersion(null);
+                }
+            }
+           if (record.getAlertId() != null) {
                 //告警记录ID
                 alertDTO.setAlertId(middlewareAlertsService.calculateID(record.getAlertId())
                         + "-" + middlewareAlertsService.createId(record.getId()));
