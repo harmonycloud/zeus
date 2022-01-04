@@ -61,7 +61,7 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
         if (SIMPLE.equals(clusterComponentsDto.getType())) {
             setValues = setValues + ",replicas=1,drivesPerNode=4";
         } else {
-            setValues = setValues + ",replicas=3";
+            setValues = setValues + ",replicas=3,drivesPerNode=2";
         }
         return setValues;
     }
@@ -78,7 +78,7 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
         storage.put("name", "minio");
         storage.put("bucketName", "velero");
         storage.put("accessKeyId", "minio");
-        storage.put("secretAccessKey", "Hc@Cloud01");
+        storage.put("secretAccessKey", "minio123");
         storage.put("endpoint", "http://" + cluster.getHost() + ":31909");
         Map<String, Object> backup = new HashMap<>();
         backup.put("type", "minio");

@@ -64,7 +64,7 @@ service:
   nodePort: 32000
 
 accessKey: "minio"
-secretKey: "Hc@Cloud01"
+secretKey: "minio123"
 mountPath: "/export"
 bucketRoot: ""
 persistence:
