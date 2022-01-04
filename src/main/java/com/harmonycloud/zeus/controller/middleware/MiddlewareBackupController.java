@@ -149,7 +149,7 @@ public class MiddlewareBackupController {
                                     @RequestParam(value = "backupFileName", required = false) String backupFileName,
                                     @RequestParam(value = "pod", required = false) String pod) {
         List<String> pods = new ArrayList<>();
-        if (StringUtils.isBlank(pod)) {
+        if (!StringUtils.isBlank(pod)) {
             pods.add(pod);
         }
         return middlewareBackupService.createRestore(clusterId, namespace, middlewareName, type, backupName, backupFileName, pods);
