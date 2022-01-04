@@ -401,14 +401,17 @@ public class OverviewServiceImpl implements OverviewService {
             if (middlewareMap.containsKey(middleware)) {
                 alertDTO.setChartVersion(middlewareMap.get(middleware));
             } else {
-                JSONObject values =
-                    helmChartService.getInstalledValues(middleware, clusterService.findById(alertDTO.getClusterId()));
-                if (values != null && values.containsKey("chart-version")) {
-                    String version = values.getString("chart-version");
-                    middlewareMap.put(middleware, version);
-                    alertDTO.setChartVersion(version);
-                } else {
-                    middlewareMap.put(middleware, null);
+                try {
+                    JSONObject values = helmChartService.getInstalledValues(middleware, clusterService.findById(alertDTO.getClusterId()));
+                    if (values != null && values.containsKey("chart-version")) {
+                        String version = values.getString("chart-version");
+                        middlewareMap.put(middleware, version);
+                        alertDTO.setChartVersion(version);
+                    } else {
+                        middlewareMap.put(middleware, null);
+                        alertDTO.setChartVersion(null);
+                    }
+                } catch (Exception e) {
                     alertDTO.setChartVersion(null);
                 }
             }
