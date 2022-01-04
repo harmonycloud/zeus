@@ -63,7 +63,7 @@ public class MiddlewareConfigYamlServiceImpl implements MiddlewareConfigYamlServ
     }
 
     @Override
-    public void update(String clusterId, String namespace, String configMapName, String config) {
+    public void update(String clusterId, String namespace, String configMapName, String middlewareName, String type, String config, Boolean restart) {
         if (config.contains("\\n")){
             config = config.replace("\\n", "\n");
         }
@@ -75,6 +75,10 @@ public class MiddlewareConfigYamlServiceImpl implements MiddlewareConfigYamlServ
         } catch (Exception e){
             log.error(ErrorMessage.UPDATE_CONFIGMAP_FAILED.getZhMsg(), e);
             throw new BusinessException(ErrorMessage.UPDATE_CONFIGMAP_FAILED);
+        }
+        // 重启服务
+        if (restart){
+            middlewareService.reboot(clusterId, namespace, middlewareName, type);
         }
     }
 }
