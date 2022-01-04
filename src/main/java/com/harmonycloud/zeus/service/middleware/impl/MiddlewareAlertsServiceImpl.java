@@ -441,9 +441,15 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         // 写入集群
         prometheusRules.getLabels().put("clusterId", clusterId);
         // 构造expr
-        String expr = middlewareAlertsDTO.getExpr().replace(
-                "{{ include \"" + middlewareAlertsDTO.getType() + "-hc" + ".fullname\" . }}", middlewareAlertsDTO.getName());
-        String symbol = getSymbol(expr);
+        String expr = "";
+        if ("kafka".equals(middlewareAlertsDTO.getType())) {
+            expr = middlewareAlertsDTO.getExpr().replace(
+                    "{{ include \"" + middlewareAlertsDTO.getType() + "-hc" + ".fullname\" . }}", middlewareAlertsDTO.getName());
+        } else {
+            expr = middlewareAlertsDTO.getExpr().replace(
+                    "{{ include \"" + middlewareAlertsDTO.getType() + ".fullname\" . }}", middlewareAlertsDTO.getName());
+        }
+                String symbol = getSymbol(expr);
         String threshold = getThreshold(expr);
         expr = expr.replace(symbol, middlewareAlertsDTO.getSymbol()).replace(threshold,
                 middlewareAlertsDTO.getThreshold());
