@@ -117,7 +117,8 @@ public class ConfigTemplateServiceImpl implements ConfigTemplateService {
         StringBuilder sb = new StringBuilder();
         // 连接自定义配置
         customConfigTemplateDTO.getCustomConfigList().forEach(customConfig -> {
-            sb.append(customConfig.getName()).append("###").append(customConfig.getValue()).append("###").append(customConfig.getDescription());
+            sb.append(customConfig.getName()).append("###").append(customConfig.getValue()).append("###")
+                .append(StringUtils.isNotEmpty(customConfig.getDescription()) ? customConfig.getDescription() : " ");
             sb.append("@@@");
         });
         // 去除末尾的连接符
