@@ -872,6 +872,7 @@ public abstract class AbstractBaseOperator {
                 prometheusRuleGroups.getRules().stream().forEach(prometheusRules -> {
                     prometheusRules.getLabels().put("namespace",middleware.getNamespace());
                     prometheusRules.getLabels().put("service",middleware.getName());
+                    prometheusRules.getLabels().put("middleware",middleware.getType());
                 });
             });
             prometheusRuleService.update(middleware.getClusterId(), prometheusRule);
@@ -1011,6 +1012,7 @@ public abstract class AbstractBaseOperator {
                     middlewareAlertInfo.setSymbol(middlewareAlertsService.getSymbol(rule.getExpr()));
                     middlewareAlertInfo.setThreshold(middlewareAlertsService.getThreshold(rule.getExpr()));
                     middlewareAlertInfo.setTime(rule.getTime());
+                    rule.getLabels().put("middleware",middleware.getType());
                     middlewareAlertInfo.setLabels(JSONUtil.toJsonStr(rule.getLabels()));
                     middlewareAlertInfo.setAnnotations(JSONUtil.toJsonStr(rule.getAnnotations()));
                     middlewareAlertInfo.setEnable("1");
@@ -1026,7 +1028,6 @@ public abstract class AbstractBaseOperator {
                             + middlewareAlertsService.getThreshold(rule.getExpr()) + "%"  + "且" + middlewareAlertInfo.getAlertTime()
                             + "分钟内触发" + middlewareAlertInfo.getAlertTimes() + "次";
                     middlewareAlertInfo.setAlertExpr(expr);
-                    JSON.parseObject(middlewareAlertInfo.getLabels(), HashMap.class).put("middleware",middleware.getType());
                     middlewareAlertInfoMapper.insert(middlewareAlertInfo);
                 }
             });
