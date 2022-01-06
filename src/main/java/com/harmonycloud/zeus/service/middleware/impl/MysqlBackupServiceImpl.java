@@ -234,7 +234,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         config.setLimitRecord(scheduleBackup.getKeepBackups());
         if(null != scheduleBackup.getLastBackupTime()){
             String lastBackupTime = DateUtil.utc2Local(scheduleBackup.getLastBackupTime(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
-            config.setLastBackupTime(lastBackupTime);
+            config.setCreateTime(lastBackupTime);
         }
         config.setCanPause(false);
         config.setPause("off");
