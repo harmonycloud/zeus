@@ -101,9 +101,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
 
     @Override
     public void updateCustomConfig(MiddlewareCustomConfig config) {
-        if (CollectionUtils.isEmpty(config.getCustomConfigList())){
-            throw new BusinessException(ErrorMessage.CUSTOM_CONFIG_IS_EMPTY);
-        }
+        check(config);
         MiddlewareClusterDTO cluster = clusterService.findById(config.getClusterId());
         Middleware middleware =
             new Middleware(config.getClusterId(), config.getNamespace(), config.getName(), config.getType());
@@ -383,6 +381,21 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
                 podInfo.getPodName(), config.getNamespace(), cluster.getAddress(), cluster.getAccessToken(), password,
                 config.getName(), sb.toString());
             k8sExecService.exec(execCommand);
+        });
+    }
+
+    /**
+     * 自定义参数校验
+     */
+    public void check(MiddlewareCustomConfig config) {
+        if (CollectionUtils.isEmpty(config.getCustomConfigList())) {
+            throw new BusinessException(ErrorMessage.CUSTOM_CONFIG_IS_EMPTY);
+        }
+        config.getCustomConfigList().forEach(customConfig -> {
+            if (StringUtils.isEmpty(customConfig.getValue())) {
+                log.error(ErrorMessage.CUSTOM_CONFIG_VALUE_IS_EMPTY.getZhMsg() + " :" + customConfig.getName());
+                throw new BusinessException(ErrorMessage.CUSTOM_CONFIG_VALUE_IS_EMPTY, customConfig.getName());
+            }
         });
     }
 
