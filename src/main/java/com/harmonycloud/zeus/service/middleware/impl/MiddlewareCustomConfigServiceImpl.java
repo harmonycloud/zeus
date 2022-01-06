@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
+import java.math.BigInteger;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -351,13 +352,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             if (StringUtils.isEmpty(dataMap.get(key))) {
                 continue;
             }
-            Pattern pattern = Pattern.compile("[0-9]*");
-            Matcher isNum = pattern.matcher(dataMap.get(key));
-            if (isNum.matches()) {
-                args.put(key, Long.parseLong(dataMap.get(key)));
-            } else {
-                args.put(key, dataMap.get(key));
-            }
+            args.put(key, dataMap.get(key));
         }
         newValues.put("args", args);
         helmChartService.upgrade(middleware, values, newValues, cluster);
