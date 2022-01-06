@@ -214,7 +214,7 @@ public class OperationAuditInterceptor {
     public void setRealIp(HttpServletRequest request, BeanOperationAudit operationAudit) {
         String remoteRealIp = request.getHeader("Remote-Real-IP");
         Enumeration<String> headerNames = request.getHeaderNames();
-        if(headerNames.hasMoreElements()){
+        while (headerNames.hasMoreElements()){
             String name = headerNames.nextElement();
             log.info(name + "----->" + request.getHeader(name));
         }
