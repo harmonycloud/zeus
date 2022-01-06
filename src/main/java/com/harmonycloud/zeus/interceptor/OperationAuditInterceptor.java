@@ -10,6 +10,7 @@ import com.harmonycloud.zeus.service.system.OperationAuditService;
 import com.harmonycloud.tool.api.util.HttpMethod;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -210,9 +211,9 @@ public class OperationAuditInterceptor {
      * @param operationAudit
      */
     public void setRealIp(HttpServletRequest request, BeanOperationAudit operationAudit) {
-        String realIp = request.getHeader("X-Real-IP");
+        String realIp = request.getHeader("Remote-Real-IP");
         log.info("X-REAL-IP:{}", realIp);
-        if (realIp != null) {
+        if (realIp != null && !StringUtils.isBlank(realIp)) {
             operationAudit.setRemoteIp(realIp);
         } else {
             operationAudit.setRemoteIp(request.getRemoteHost());
