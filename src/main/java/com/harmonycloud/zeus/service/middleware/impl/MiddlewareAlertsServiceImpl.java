@@ -470,6 +470,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         } else {
             middlewareAlertsDTO.getLabels().put("namespace",namespace);
             middlewareAlertsDTO.getLabels().put("service",middlewareName);
+            middlewareAlertsDTO.getLabels().put("middleware",middlewareAlertsDTO.getType());
         }
         BeanUtils.copyProperties(middlewareAlertsDTO,middlewareAlertInfo);
         middlewareAlertInfo.setAnnotations(JSONUtil.toJsonStr(middlewareAlertsDTO.getAnnotations()));

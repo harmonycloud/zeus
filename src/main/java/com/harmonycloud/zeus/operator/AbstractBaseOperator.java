@@ -10,8 +10,8 @@ import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import cn.hutool.json.JSON;
 import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
@@ -1026,6 +1026,7 @@ public abstract class AbstractBaseOperator {
                             + middlewareAlertsService.getThreshold(rule.getExpr()) + "%"  + "且" + middlewareAlertInfo.getAlertTime()
                             + "分钟内触发" + middlewareAlertInfo.getAlertTimes() + "次";
                     middlewareAlertInfo.setAlertExpr(expr);
+                    JSON.parseObject(middlewareAlertInfo.getLabels(), HashMap.class).put("middleware",middleware.getType());
                     middlewareAlertInfoMapper.insert(middlewareAlertInfo);
                 }
             });

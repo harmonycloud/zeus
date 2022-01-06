@@ -304,17 +304,14 @@ public class UserServiceImpl implements UserService {
         if (IMAGE_MAP.containsKey("backgroundImag")) {
             configuration.setBackgroundImage((byte[]) IMAGE_MAP.get("backgroundImag"));
             configuration.setBackgroundPath(String.valueOf(IMAGE_MAP.get("backgroundPath")));
-            handleImage((byte[]) IMAGE_MAP.get("backgroundImag"),String.valueOf(IMAGE_MAP.get("backgroundPath")));
         }
         if (IMAGE_MAP.containsKey("loginLogo")) {
             configuration.setLoginLogo((byte[]) IMAGE_MAP.get("loginLogo"));
             configuration.setLoginLogoPath(String.valueOf(IMAGE_MAP.get("loginLogoPath")));
-            handleImage((byte[]) IMAGE_MAP.get("loginLogo"),String.valueOf(IMAGE_MAP.get("loginLogoPath")));
         }
         if (IMAGE_MAP.containsKey("homeLogo")) {
             configuration.setHomeLogo((byte[]) IMAGE_MAP.get("homeLogo"));
             configuration.setHomeLogoPath(String.valueOf(IMAGE_MAP.get("homeLogoPath")));
-            handleImage((byte[]) IMAGE_MAP.get("homeLogo"),String.valueOf(IMAGE_MAP.get("homeLogoPath")));
         }
         IMAGE_MAP.clear();
         checkout(configuration);
@@ -333,16 +330,19 @@ public class UserServiceImpl implements UserService {
         byte[] loginLogo = null;
         if ("background".equals(type)) {
             background = loadFile(file);
+            handleImage(background,file.getOriginalFilename());
             IMAGE_MAP.put("backgroundImag",background);
             IMAGE_MAP.put("backgroundPath",file.getOriginalFilename());
         }
         if ("login".equals(type)) {
             loginLogo = loadFile(file);
+            handleImage(loginLogo,file.getOriginalFilename());
             IMAGE_MAP.put("loginLogo",loginLogo);
             IMAGE_MAP.put("loginLogoPath",file.getOriginalFilename());
         }
         if ("home".equals(type)) {
             homeLogo = loadFile(file);
+            handleImage(homeLogo,file.getOriginalFilename());
             IMAGE_MAP.put("homeLogo",homeLogo);
             IMAGE_MAP.put("homeLogoPath",file.getOriginalFilename());
         }
