@@ -129,8 +129,8 @@ public interface MiddlewareService {
      * 重启服务
      * @param clusterId 集群id
      * @param namespace 命名空间
-     * @param type      中间件类型
      * @param name      中间件名称
+     * @param type      中间件类型
      */
-    void reboot(String clusterId, String namespace, String type, String name);
+    void reboot(String clusterId, String namespace, String name, String type);
 }

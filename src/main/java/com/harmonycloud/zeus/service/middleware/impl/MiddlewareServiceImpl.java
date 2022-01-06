@@ -201,7 +201,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public void reboot(String clusterId, String namespace, String type, String name) {
+    public void reboot(String clusterId, String namespace, String name, String type) {
         try {
             MiddlewareCRD mw = middlewareCRDService.getCR(clusterId, namespace, type, name);
             List<MiddlewareInfo> pods = mw.getStatus().getInclude().get(PODS);
