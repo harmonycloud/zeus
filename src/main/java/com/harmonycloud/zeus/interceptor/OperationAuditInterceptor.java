@@ -117,7 +117,7 @@ public class OperationAuditInterceptor {
         Class<?> aClass = joinPoint.getTarget().getClass();
 
         operationAudit.setUrl(request.getRequestURI());
-        operationAudit.setRemoteIp(request.getRemoteHost());
+        setRealIp(request, operationAudit);
         operationAudit.setRequestMethod(request.getMethod());
 
         if (result != null) {
@@ -204,5 +204,19 @@ public class OperationAuditInterceptor {
         operationAuditService.insert(operationAudit);
     }
 
+    /**
+     * 设置真实请求ip
+     * @param request
+     * @param operationAudit
+     */
+    public void setRealIp(HttpServletRequest request, BeanOperationAudit operationAudit) {
+        String realIp = request.getHeader("X-Real-IP");
+        log.info("X-REAL-IP:{}", realIp);
+        if (realIp != null) {
+            operationAudit.setRemoteIp(realIp);
+        } else {
+            operationAudit.setRemoteIp(request.getRemoteHost());
+        }
+    }
 
 }
