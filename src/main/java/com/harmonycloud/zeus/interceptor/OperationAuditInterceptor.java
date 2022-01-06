@@ -32,6 +32,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -212,6 +213,11 @@ public class OperationAuditInterceptor {
      */
     public void setRealIp(HttpServletRequest request, BeanOperationAudit operationAudit) {
         String remoteRealIp = request.getHeader("Remote-Real-IP");
+        Enumeration<String> headerNames = request.getHeaderNames();
+        if(headerNames.hasMoreElements()){
+            String name = headerNames.nextElement();
+            log.info(name + "----->" + request.getHeader(name));
+        }
         log.info("remoteRealIp:{}", remoteRealIp);
         log.info("remoteHost:{}", request.getRemoteHost());
         if (remoteRealIp != null && !StringUtils.isBlank(remoteRealIp)) {
