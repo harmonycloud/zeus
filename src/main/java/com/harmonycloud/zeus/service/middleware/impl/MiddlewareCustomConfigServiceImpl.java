@@ -101,6 +101,9 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
 
     @Override
     public void updateCustomConfig(MiddlewareCustomConfig config) {
+        if (CollectionUtils.isEmpty(config.getCustomConfigList())){
+            throw new BusinessException(ErrorMessage.CUSTOM_CONFIG_IS_EMPTY);
+        }
         MiddlewareClusterDTO cluster = clusterService.findById(config.getClusterId());
         Middleware middleware =
             new Middleware(config.getClusterId(), config.getNamespace(), config.getName(), config.getType());
@@ -353,7 +356,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             Pattern pattern = Pattern.compile("[0-9]*");
             Matcher isNum = pattern.matcher(dataMap.get(key));
             if (isNum.matches()) {
-                args.put(key, Integer.parseInt(dataMap.get(key)));
+                args.put(key, Long.parseLong(dataMap.get(key)));
             } else {
                 args.put(key, dataMap.get(key));
             }

@@ -15,7 +15,13 @@ MODIFY COLUMN `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_c
 ALTER TABLE `custom_config_template`
 ADD COLUMN `description` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '模板描述' AFTER `type`;
 
+--2021.1.5 xutianhong
 -- 修改配置修改历史表字段长度
 ALTER TABLE `custom_config_history`
 MODIFY COLUMN `name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '中间件名称' AFTER `namespace`,
 MODIFY COLUMN `item` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '配置名称' AFTER `name`;
+
+-- 修改自定义配置模板表字段长度
+ALTER TABLE `custom_config_template`
+MODIFY COLUMN `name` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '模板名称' AFTER `uid`,
+MODIFY COLUMN `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '模板描述' AFTER `type`;
