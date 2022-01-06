@@ -42,8 +42,6 @@ public class MiddlewareValuesServiceImpl implements MiddlewareValuesService {
         middleware.setChartName(middlewareValues.getType());
         // 获取原values.yaml
         MiddlewareClusterDTO cluster = clusterService.findById(middlewareValues.getClusterId());
-        JSONObject oldValues =
-            helmChartService.getInstalledValues(middlewareValues.getName(), middlewareValues.getNamespace(), cluster);
         Yaml yaml = new Yaml();
         JSONObject values;
         try {
@@ -52,6 +50,6 @@ public class MiddlewareValuesServiceImpl implements MiddlewareValuesService {
             throw new BusinessException(ErrorMessage.PARSE_VALUES_FAILED);
         }
         // update
-        helmChartService.upgrade(middleware, oldValues, values, cluster);
+        helmChartService.upgrade(middleware, values, values, cluster);
     }
 }
