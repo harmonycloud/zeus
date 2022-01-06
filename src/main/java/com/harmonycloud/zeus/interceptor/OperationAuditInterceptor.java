@@ -212,13 +212,10 @@ public class OperationAuditInterceptor {
      */
     public void setRealIp(HttpServletRequest request, BeanOperationAudit operationAudit) {
         String remoteRealIp = request.getHeader("Remote-Real-IP");
-        String xRealIp = request.getHeader("X-Real-IP");
         log.info("remoteRealIp:{}", remoteRealIp);
-        log.info("xRealIp:{}", xRealIp);
+        log.info("remoteHost:{}", request.getRemoteHost());
         if (remoteRealIp != null && !StringUtils.isBlank(remoteRealIp)) {
             operationAudit.setRemoteIp(remoteRealIp);
-        } else if (xRealIp != null && !StringUtils.isBlank(xRealIp)) {
-            operationAudit.setRemoteIp(xRealIp);
         } else {
             operationAudit.setRemoteIp(request.getRemoteHost());
         }
