@@ -72,7 +72,7 @@ public class CustomConfigTemplateController {
         return BaseResult.ok(configTemplateService.get(type, chartVersion));
     }
 
-    @ApiOperation(value = "删除自定义配置模板", notes = "删除自定义配置模板")
+    @ApiOperation(value = "更新自定义配置模板", notes = "更新自定义配置模板")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "uid", value = "模板id", paramType = "path", dataTypeClass = String.class),
