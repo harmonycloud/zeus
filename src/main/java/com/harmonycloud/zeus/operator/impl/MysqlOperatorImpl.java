@@ -209,15 +209,11 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         Middleware relationMiddleware = JSONObject.parseObject(jsonStr, Middleware.class);
         middleware.setRelationMiddleware(relationMiddleware);
         super.create(middleware, cluster);
-        // 将服务通过NodePort对外暴露
         MysqlDTO mysqlDTO = middleware.getMysqlDTO();
         if (mysqlDTO != null) {
             if (mysqlDTO.getIsSource() != null && !mysqlDTO.getIsSource()) {
                 //当前实例为灾备实例，灾备实例只读，不可写入，为该实例创建只读对外服务
                 tryCreateOpenService(cluster.getId(), middleware, ServiceNameConvertUtil.convertMysql(middleware.getName(), true), true);
-            } else {
-                //当前实例为源实例或普通实例，实例可读写，为该实例创建可读写对外服务
-                tryCreateOpenService(cluster.getId(), middleware, ServiceNameConvertUtil.convertMysql(middleware.getName(), false), true);
             }
         }
         // 创建灾备实例

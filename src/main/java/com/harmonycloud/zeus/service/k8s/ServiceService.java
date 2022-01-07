@@ -18,4 +18,6 @@ public interface ServiceService {
      * @return
      */
     List<ServicePortDTO> list(String clusterId, String namespace, String name, String type);
+
+    ServicePortDTO get(String clusterId, String namespace, String name);
 }
