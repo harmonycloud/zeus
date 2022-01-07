@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.service.middleware.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.YamlCheck;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.zeus.integration.cluster.ConfigMapWrapper;
 import com.harmonycloud.zeus.service.k8s.YamlService;
@@ -67,7 +68,10 @@ public class MiddlewareConfigYamlServiceImpl implements MiddlewareConfigYamlServ
         if (config.contains("\\n")){
             config = config.replace("\\n", "\n");
         }
-        yamlService.check(config);
+        YamlCheck yamlCheck = yamlService.check(config);
+        if (!yamlCheck.getFlag()){
+            throw new BusinessException(ErrorMessage.YAML_FORMAT_WRONG);
+        }
         Yaml yaml = new Yaml();
         ConfigMap configMap = yaml.loadAs(config, ConfigMap.class);
         try {
