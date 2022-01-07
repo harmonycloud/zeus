@@ -46,7 +46,7 @@ data:
 
     k8s:
       namespace:
-        protect: default,kube-system,kube-node-lease,kube-public,caas-system,harbor-system,logging,monitoring,velero,middleware-system,zeus
+        protect: default,kube-system,kube-node-lease,kube-public,caas-system,harbor-system,logging,monitoring,velero,middleware-system,zeus,minio
         label: middleware=true
       kubeconfig:
         path: /usr/local/kubeconfig
