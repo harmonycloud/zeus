@@ -236,7 +236,7 @@ public interface HelmChartService {
      * @param clusterId 集群id
      * @param operatorChartPath chart包位置
      */
-    void editOperatorChart(String clusterId, String operatorChartPath);
+    void editOperatorChart(String clusterId, String operatorChartPath, String type);
 
     /**
      * 从mysql中取出helm chart
@@ -253,6 +253,6 @@ public interface HelmChartService {
      * @param clusterId 集群id
      * @param helmChartFile chart包对象
      */
-    void createOperator(String chartPath, String clusterId, HelmChartFile helmChartFile);
+    void createOperator(String chartPath, String clusterId, HelmChartFile helmChartFile, String type);
 
 }

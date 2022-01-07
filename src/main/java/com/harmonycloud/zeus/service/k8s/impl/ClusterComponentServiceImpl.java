@@ -91,7 +91,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         multipleComponentsInstallDto.getMiddlewareInfoDTOList()
             .forEach(info -> ThreadPoolExecutorFactory.executor.execute(() -> {
                 try {
-                    middlewareManagerService.install(cluster.getId(), info.getChartName(), info.getChartVersion());
+                    middlewareManagerService.install(cluster.getId(), info.getChartName(), info.getChartVersion(), info.getType());
                 } catch (Exception e) {
                     log.error("集群{}  operator{} 安装失败", cluster.getId(), info.getChartName());
                 }

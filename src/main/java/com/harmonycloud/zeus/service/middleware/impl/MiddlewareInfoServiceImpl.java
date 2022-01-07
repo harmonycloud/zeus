@@ -18,6 +18,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.model.middleware.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -30,10 +31,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareInfoDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareOperatorDTO;
-import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
@@ -143,8 +140,16 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
                                 .anyMatch(clusterMwInfo -> clusterMwInfo.getChartName().equals(mwInfo.getChartName())
                                         && clusterMwInfo.getChartVersion().equals(mwInfo.getChartVersion())))
                         .collect(Collectors.toList());
+        List<BeanClusterMiddlewareInfoDTO> clusterMwInfoDtoList = clusterMwInfoList.stream().map(clusterMwInfo -> {
+            BeanClusterMiddlewareInfoDTO beanClusterMiddlewareInfoDTO = new BeanClusterMiddlewareInfoDTO();
+            BeanUtils.copyProperties(clusterMwInfo,beanClusterMiddlewareInfoDTO);
+            return beanClusterMiddlewareInfoDTO;
+        }).collect(Collectors.toList());
+        Map<String, BeanClusterMiddlewareInfoDTO> clusterMwInfoDtoMap = clusterMwInfoDtoList.stream()
+                .collect(Collectors.toMap(info -> info.getChartName() + "-" + info.getChartVersion(), info -> info));
         Map<String, BeanClusterMiddlewareInfo> clusterMwInfoMap = clusterMwInfoList.stream()
                 .collect(Collectors.toMap(info -> info.getChartName() + "-" + info.getChartVersion(), info -> info));
+
         //0-创建中 1-创建成功  2-待安装  3-运行异常
         List<PodInfo> podList = podService.list(clusterId, "middleware-operator");
         podList = podList.stream().filter(pod -> pod.getPodName().contains("operator")).collect(Collectors.toList());
@@ -160,13 +165,19 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
                 //过滤被驱逐的pod
                 List<PodInfo> podInfoList = podMap.get(mwInfo.getOperatorName()).stream()
                     .filter(podInfo -> !"Evicted".equals(podInfo.getStatus())).collect(Collectors.toList());
+                if (!CollectionUtils.isEmpty(podInfoList)) {
+                    clusterMwInfoDtoMap.get(key).setReplicas(podInfoList.size());
+                }
                 if (podInfoList.stream().allMatch(podInfo -> "Running".equals(podInfo.getStatus()))) {
                     clusterMwInfoMap.get(key).setStatus(1);
+                    clusterMwInfoDtoMap.get(key).setStatus(1);
                 } else if (clusterMwInfoMap.get(key).getStatus() != 0) {
                     clusterMwInfoMap.get(key).setStatus(3);
+                    clusterMwInfoDtoMap.get(key).setStatus(3);
                 }
             } else {
                 clusterMwInfoMap.get(key).setStatus(2);
+                clusterMwInfoDtoMap.get(key).setStatus(2);
             }
         });
         //保存状态
@@ -174,7 +185,8 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         return mwInfoList.stream().map(info -> {
             MiddlewareInfoDTO dto = new MiddlewareInfoDTO();
             BeanUtils.copyProperties(info, dto);
-            dto.setStatus(clusterMwInfoMap.get(info.getChartName() + "-" + info.getChartVersion()).getStatus());
+            dto.setStatus(clusterMwInfoDtoMap.get(info.getChartName() + "-" + info.getChartVersion()).getStatus());
+            dto.setReplicas(clusterMwInfoDtoMap.get(info.getChartName() + "-" + info.getChartVersion()).getReplicas());
             return dto;
         }).collect(Collectors.toList());
     }
