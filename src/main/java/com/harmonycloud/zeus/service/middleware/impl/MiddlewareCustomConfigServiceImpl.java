@@ -1,6 +1,8 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -9,6 +11,7 @@ import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.bean.BeanCustomConfig;
 import com.harmonycloud.zeus.bean.BeanCustomConfigHistory;
 import com.harmonycloud.zeus.dao.BeanCustomConfigHistoryMapper;
@@ -92,8 +95,20 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             BeanUtils.copyProperties(beanCustomConfig, customConfig);
             customConfig.setValue(data.getOrDefault(customConfig.getName(), ""));
             customConfig.setParamType(customConfig.getRanges().contains("|") ? "select" : "input");
+            // 特殊处理mysql相关内容
             if ("sql_mode".equals(beanCustomConfig.getName())) {
                 customConfig.setParamType("multiSelect");
+            }
+            if ("innodb_buffer_pool_size".equals(beanCustomConfig.getName())) {
+                // 设置默认值为空
+                String defaultValue = BigDecimal
+                    .valueOf(ResourceCalculationUtil.getResourceValue(
+                        values.getJSONObject("resources").getJSONObject("limits").getString("memory"), "memory", "K"))
+                    .multiply(new BigDecimal("512")).setScale(0, RoundingMode.UP).toString();
+                customConfig.setDefaultValue(defaultValue);
+                if (StringUtils.isEmpty(customConfig.getValue())) {
+                    customConfig.setValue(defaultValue);
+                }
             }
             customConfigList.add(customConfig);
         });
