@@ -90,18 +90,14 @@ public class MysqlServiceImpl implements MysqlService {
     }
 
     public JSONObject queryAllAccessInfo(String clusterId, String namespace, String middlewareName, Boolean isSource) {
-        String nodePortServiceName;
         List<IngressDTO> ingressDTOS = ingressService.get(clusterId, namespace, MiddlewareTypeEnum.MYSQL.name(), middlewareName);
-        if (isSource != null && !isSource) {
-            nodePortServiceName = middlewareName + "-readonly-nodeport";
-            ingressDTOS = ingressDTOS.stream().filter(ingressDTO -> (
-                    ingressDTO.getName().equals(nodePortServiceName) && ingressDTO.getExposeType().equals(MIDDLEWARE_EXPOSE_NODEPORT))
-            ).collect(Collectors.toList());
-        }
+        ingressDTOS = ingressDTOS.stream().filter(ingressDTO -> (
+                !ingressDTO.getName().contains("readonly") && ingressDTO.getExposeType().equals(MIDDLEWARE_EXPOSE_NODEPORT))
+        ).collect(Collectors.toList());
 
         JSONObject mysqlInfo = new JSONObject();
         if (!CollectionUtils.isEmpty(ingressDTOS)) {
-            // 优先使用ingress或nodeport暴露的服务
+            // 优先使用ingress或NodePort暴露的服务
             IngressDTO ingressDTO = ingressDTOS.get(0);
             String exposeIP = ingressDTO.getExposeIP();
             List<ServiceDTO> serviceList = ingressDTO.getServiceList();
