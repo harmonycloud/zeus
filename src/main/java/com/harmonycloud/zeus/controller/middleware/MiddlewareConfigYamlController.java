@@ -58,20 +58,14 @@ public class MiddlewareConfigYamlController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "configMapName", value = "配置文件名称", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "type", value = "类型", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "config", value = "配置文件", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "restart", value = "是否重启", paramType = "query", dataTypeClass = Boolean.class),
     })
     @PutMapping("/{configMapName}")
     public BaseResult update(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
                              @PathVariable("configMapName") String configMapName,
-                             @RequestParam("middlewareName") String middlewareName,
-                             @RequestParam("type") String type,
-                             @RequestParam("config") String config,
-                             @RequestParam("restart") Boolean restart) {
-        middlewareConfigYamlService.update(clusterId, namespace, configMapName, middlewareName, type, config, restart);
+                             @RequestParam("config") String config) {
+        middlewareConfigYamlService.update(clusterId, namespace, configMapName, config);
         return BaseResult.ok();
     }
 
