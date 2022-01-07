@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.registry.impl;
 
+import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
 import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.*;
 
 import java.io.*;
@@ -568,14 +569,19 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     }
 
     @Override
-    public void editOperatorChart(String clusterId, String operatorChartPath) {
+    public void editOperatorChart(String clusterId, String operatorChartPath, String type) {
         Yaml yaml = new Yaml();
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         Registry registry = cluster.getRegistry();
-
         JSONObject values = yaml.loadAs(HelmChartUtil.getValueYaml(operatorChartPath), JSONObject.class);
         values.getJSONObject("image").put("repository", registry.getRegistryAddress() + "/"
-            + (StringUtils.isBlank(registry.getImageRepo()) ? registry.getChartRepo() : registry.getImageRepo()));
+                + (StringUtils.isBlank(registry.getImageRepo()) ? registry.getChartRepo() : registry.getImageRepo()));
+        //高可用或单实例
+        if (SIMPLE.equals(type)) {
+            values.put("replicaCount",1);
+        } else {
+            values.put("replicaCount",3);
+        }
         try {
             // 覆盖写入values.yaml
             FileUtil.writeToLocal(operatorChartPath, VALUES_YAML_NAME,
@@ -586,7 +592,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     }
 
     @Override
-    public void createOperator(String tempDirPath, String clusterId, HelmChartFile helmChartFile) {
+    public void createOperator(String tempDirPath, String clusterId, HelmChartFile helmChartFile, String type) {
         try {
             MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
             // 检查operator是否已创建
@@ -611,7 +617,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             File operatorDir = new File(path);
             if (operatorDir.exists()) {
                 // 创建operator
-                this.editOperatorChart(clusterId, path);
+                this.editOperatorChart(clusterId, path, type);
                 this.install(helmChartFile.getDependency().get("alias"), "middleware-operator",
                     helmChartFile.getChartName(), helmChartFile.getChartVersion(), path, cluster);
             } else {

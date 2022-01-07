@@ -23,7 +23,7 @@ public interface MiddlewareManagerService {
      * @param chartName chart名称
      * @param chartVersion chart版本
      */
-    void install(String clusterId, String chartName, String chartVersion) throws Exception;
+    void install(String clusterId, String chartName, String chartVersion, String type) throws Exception;
 
     /**
      * 中间件下架

@@ -44,13 +44,15 @@ public class MiddlewareManagerController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "chartName", value = "chart名称", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "chartVersion", value = "chart版本", paramType = "query", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "chartVersion", value = "chart版本", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "类型", paramType = "query", dataTypeClass = String.class)
     })
     @PostMapping("/install")
     public BaseResult install(@PathVariable("clusterId") String clusterId,
                               @RequestParam("chartName") String chartName,
-                              @RequestParam("chartVersion") String chartVersion) throws Exception {
-        middlewareManagerService.install(clusterId, chartName, chartVersion);
+                              @RequestParam("chartVersion") String chartVersion,
+                              @RequestParam("type") String type) throws Exception {
+        middlewareManagerService.install(clusterId, chartName, chartVersion, type);
         return BaseResult.ok();
     }
 

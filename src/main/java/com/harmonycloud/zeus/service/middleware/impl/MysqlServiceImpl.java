@@ -3,18 +3,17 @@ package com.harmonycloud.zeus.service.middleware.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.model.middleware.IngressDTO;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MysqlDTO;
-import com.harmonycloud.caas.common.model.middleware.ServiceDTO;
+import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.operator.api.MysqlOperator;
 import com.harmonycloud.zeus.service.k8s.IngressService;
+import com.harmonycloud.zeus.service.k8s.impl.ServiceServiceImpl;
 import com.harmonycloud.zeus.service.middleware.MysqlService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,6 +33,8 @@ public class MysqlServiceImpl implements MysqlService {
     private IngressService ingressService;
     @Autowired
     private MiddlewareServiceImpl middlewareService;
+    @Autowired
+    private ServiceServiceImpl serviceService;
 
     @Override
     public BaseResult switchDisasterRecovery(String clusterId, String namespace, String middlewareName) {
@@ -89,30 +90,32 @@ public class MysqlServiceImpl implements MysqlService {
     }
 
     public JSONObject queryAllAccessInfo(String clusterId, String namespace, String middlewareName, Boolean isSource) {
-        String nodePortServiceName;
-        if (isSource == null || isSource) {
-            nodePortServiceName = middlewareName + "-nodeport";
-        } else {
-            nodePortServiceName = middlewareName + "-readonly-nodeport";
-        }
-
         List<IngressDTO> ingressDTOS = ingressService.get(clusterId, namespace, MiddlewareTypeEnum.MYSQL.name(), middlewareName);
-        List<IngressDTO> serviceDTOList = ingressDTOS.stream().filter(ingressDTO -> (
-                ingressDTO.getName().equals(nodePortServiceName) && ingressDTO.getExposeType().equals(MIDDLEWARE_EXPOSE_NODEPORT))
+        ingressDTOS = ingressDTOS.stream().filter(ingressDTO -> (
+                !ingressDTO.getName().contains("readonly") && ingressDTO.getExposeType().equals(MIDDLEWARE_EXPOSE_NODEPORT))
         ).collect(Collectors.toList());
 
         JSONObject mysqlInfo = new JSONObject();
-        if (!CollectionUtils.isEmpty(serviceDTOList)) {
-            IngressDTO ingressDTO = serviceDTOList.get(0);
+        if (!CollectionUtils.isEmpty(ingressDTOS)) {
+            // 优先使用ingress或NodePort暴露的服务
+            IngressDTO ingressDTO = ingressDTOS.get(0);
             String exposeIP = ingressDTO.getExposeIP();
             List<ServiceDTO> serviceList = ingressDTO.getServiceList();
             if (!CollectionUtils.isEmpty(serviceList)) {
                 ServiceDTO serviceDTO = serviceList.get(0);
                 String exposePort = serviceDTO.getExposePort();
-                mysqlInfo.put("address", exposeIP + ":" + exposePort);
+                mysqlInfo.put("address", exposeIP + ":" + exposePort + " (集群外部)");
             }
-            mysqlInfo.put("username", "root");
+        }else{
+            // 没有暴露对外服务，则使用集群内服务
+            ServicePortDTO servicePortDTO = serviceService.get(clusterId, namespace, middlewareName);
+            if (servicePortDTO != null && !CollectionUtils.isEmpty(servicePortDTO.getPortDetailDtoList())) {
+                mysqlInfo.put("address", servicePortDTO.getClusterIP() + ":" + servicePortDTO.getPortDetailDtoList().get(0).getTargetPort() + "(集群内部)");
+            } else {
+                mysqlInfo.put("address", "无");
+            }
         }
+        mysqlInfo.put("username", "root");
         return mysqlInfo;
     }
 
