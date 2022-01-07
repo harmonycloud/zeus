@@ -9,6 +9,7 @@ import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareStatus;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
 import com.harmonycloud.zeus.service.k8s.ServiceService;
 import io.fabric8.kubernetes.api.model.ServicePort;
+import io.fabric8.kubernetes.api.model.ServiceSpec;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -75,5 +76,27 @@ public class ServiceServiceImpl implements ServiceService {
             servicePortDTOList.add(servicePortDTO);
         }
         return servicePortDTOList;
+    }
+
+    @Override
+    public ServicePortDTO get(String clusterId, String namespace, String name) {
+        io.fabric8.kubernetes.api.model.Service service = serviceWrapper.get(clusterId, namespace, name);
+        if (service == null || service.getSpec() == null || CollectionUtils.isEmpty(service.getSpec().getPorts())) {
+            return null;
+        }
+        ServiceSpec spec = service.getSpec();
+        ServicePort servicePort = spec.getPorts().get(0);
+        ServicePortDTO servicePortDTO = new ServicePortDTO();
+        List<PortDetailDTO> portDetailDtoList = new ArrayList<>();
+        PortDetailDTO portDetailDTO = new PortDetailDTO();
+        portDetailDTO.setPort(String.valueOf(servicePort.getPort().intValue()));
+        portDetailDTO.setTargetPort(String.valueOf(servicePort.getTargetPort().getIntVal()));
+        portDetailDTO.setProtocol(servicePort.getProtocol());
+        portDetailDtoList.add(portDetailDTO);
+
+        servicePortDTO.setServiceName(name);
+        servicePortDTO.setClusterIP(spec.getClusterIP());
+        servicePortDTO.setPortDetailDtoList(portDetailDtoList);
+        return servicePortDTO;
     }
 }
