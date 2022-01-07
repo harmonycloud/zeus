@@ -95,8 +95,6 @@ public class ConfigTemplateServiceImpl implements ConfigTemplateService {
             String[] temp = s.split("###");
             if (customConfigMap.containsKey(temp[0])) {
                 customConfigMap.get(temp[0]).setValue(temp[1]);
-                customConfigMap.get(temp[0]).setRestart(Boolean.valueOf(temp[2]));
-                customConfigMap.get(temp[0]).setDescription(temp[3]);
             }
         }
         customConfigTemplateDTO.setCustomConfigList(new ArrayList<>(customConfigMap.values()));
@@ -126,9 +124,7 @@ public class ConfigTemplateServiceImpl implements ConfigTemplateService {
         StringBuilder sb = new StringBuilder();
         // 连接自定义配置
         customConfigTemplateDTO.getCustomConfigList().forEach(customConfig -> {
-            sb.append(customConfig.getName()).append("###").append(customConfig.getValue()).append("###")
-                .append(customConfig.getRestart()).append("###")
-                .append(StringUtils.isNotEmpty(customConfig.getDescription()) ? customConfig.getDescription() : " ");
+            sb.append(customConfig.getName()).append("###").append(customConfig.getValue());
             sb.append("@@@");
         });
         // 去除末尾的连接符
