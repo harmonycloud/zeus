@@ -14,6 +14,7 @@ import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.zeus.bean.BeanAlertRule;
@@ -659,6 +660,17 @@ public abstract class AbstractBaseOperator {
         values.put("middleware-label", middleware.getLabels());
         values.put("chart-version", middleware.getChartVersion());
 
+        // label
+        if (StringUtils.isNotBlank(middleware.getLabels())) {
+            String[] labelAry = middleware.getLabels().split(CommonConstant.COMMA);
+            JSONObject labelJson = new JSONObject();
+            for (String label : labelAry) {
+                String[] pair = label.split(CommonConstant.EQUAL);
+                labelJson.put(pair[0], pair[1]);
+            }
+            values.put("labels", labelJson);
+        }
+
         // node affinity
         if (!CollectionUtils.isEmpty(middleware.getNodeAffinity())) {
             // convert to k8s model
@@ -722,6 +734,9 @@ public abstract class AbstractBaseOperator {
     protected void replaceDynamicValues(Middleware middleware, JSONObject values) {
         Map<String, String> dynamicValues = middleware.getDynamicValues();
         for (String key : dynamicValues.keySet()) {
+            if ("labels".equals(key)) {
+                continue;
+            }
             // 是否存在多级
             if (key.contains(".")) {
                 String[] nested = key.split("\\.");
