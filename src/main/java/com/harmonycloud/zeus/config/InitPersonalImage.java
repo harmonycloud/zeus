@@ -30,7 +30,7 @@ import java.util.*;
 @Component
 public class InitPersonalImage {
 
-    @Value("${system.images.path:/usr/local/zeus-pv/images/middleware}")
+    @Value("${system.images.path:/usr/local/zeus-pv/}")
     private String tempImagePath;
 
     @Autowired
@@ -53,6 +53,13 @@ public class InitPersonalImage {
     }
 
     public void initPersonal() throws Exception {
+        //判断是否存在初始化数据
+        QueryWrapper<PersonalizedConfiguration> wrapper = new QueryWrapper<>();
+        List<PersonalizedConfiguration> personals = personalMapper.selectList(wrapper);
+        if (personals.stream().anyMatch(per -> "0".equals(per.getStatus()))) {
+            return;
+        }
+        //
         InputStream backIs = InitPersonalImage.class.getClassLoader().getResourceAsStream("images/background.svg");
         InputStream homeIs = InitPersonalImage.class.getClassLoader().getResourceAsStream("images/homelogo.svg");
         InputStream loginIs = InitPersonalImage.class.getClassLoader().getResourceAsStream("images/loginlogo.svg");
@@ -64,11 +71,6 @@ public class InitPersonalImage {
         personal.setLoginLogoPath("loginlogo.svg");
         personal.setLoginLogo(loadFile(loginIs,"loginlogo.svg"));
         personal.setStatus("0");
-        QueryWrapper<PersonalizedConfiguration> wrapper = new QueryWrapper<>();
-        List<PersonalizedConfiguration> personals = personalMapper.selectList(wrapper);
-        if (personals.stream().anyMatch(per -> "0".equals(per.getStatus()))) {
-            return;
-        }
         personalMapper.insert(personal);
     }
 
