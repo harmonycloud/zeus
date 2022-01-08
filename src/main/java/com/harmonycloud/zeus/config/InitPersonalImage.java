@@ -1,0 +1,104 @@
+package com.harmonycloud.zeus.config;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
+import com.harmonycloud.zeus.dao.user.PersonalMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.fileupload.disk.DiskFileItem;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.entity.ContentType;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
+
+import javax.annotation.PostConstruct;
+import java.io.*;
+import java.net.URL;
+import java.util.*;
+
+/**
+ * @author yushuaikang
+ * @date 2022/1/8 上午11:29
+ */
+@Slf4j
+@Component
+public class InitPersonalImage {
+
+    @Value("${system.images.path:/usr/local/zeus-pv/images/middleware}")
+    private String tempImagePath;
+
+    @Autowired
+    private PersonalMapper temPersonalMapper;
+
+    private static PersonalMapper personalMapper;
+    private static String imagePath;
+    /**
+     * 中间件图片名称缓存
+     */
+    private static Set<String> images = new HashSet<>();
+
+    @PostConstruct
+    public void init() throws Exception {
+        if (personalMapper == null) {
+            personalMapper = temPersonalMapper;
+            imagePath = tempImagePath;
+        }
+        initPersonal();
+    }
+
+    public void initPersonal() throws Exception {
+        InputStream backIs = InitPersonalImage.class.getClassLoader().getResourceAsStream("images/background.svg");
+        InputStream homeIs = InitPersonalImage.class.getClassLoader().getResourceAsStream("images/homelogo.svg");
+        InputStream loginIs = InitPersonalImage.class.getClassLoader().getResourceAsStream("images/loginlogo.svg");
+        PersonalizedConfiguration personal = new PersonalizedConfiguration();
+        personal.setBackgroundPath("background.svg");
+        personal.setBackgroundImage(loadFile(backIs,"background.svg"));
+        personal.setHomeLogoPath("homelogo.svg");
+        personal.setHomeLogo(loadFile(homeIs,"homelogo.svg"));
+        personal.setLoginLogoPath("loginlogo.svg");
+        personal.setLoginLogo(loadFile(loginIs,"loginlogo.svg"));
+        personal.setStatus("0");
+        QueryWrapper<PersonalizedConfiguration> wrapper = new QueryWrapper<>();
+        List<PersonalizedConfiguration> personals = personalMapper.selectList(wrapper);
+        if (personals.stream().anyMatch(per -> "0".equals(per.getStatus()))) {
+            return;
+        }
+        personalMapper.insert(personal);
+    }
+
+    /**
+     * 将文件转为二进制数组
+     * @param is
+     * @return
+     * @throws IOException
+     */
+    private String  loadFile(InputStream is,String name) throws IOException {
+
+        byte[] bus = null;
+        byte[] by = null;
+        try {
+            if (is != null) {
+                by = new byte[is.available()];
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                int n;
+                //inPut.read(by)从(来源)输入流中(读取内容)读取的一定数量字节数,并将它们存储到(去处)缓冲区数组by中
+                while ((n = is.read(by)) != -1) {
+                    bos.write(by, 0, n);
+                }
+                bus = bos.toByteArray();
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }finally {
+            is.close();
+        }
+        String voiceBase64= Base64.getEncoder().encodeToString(bus);
+        return voiceBase64;
+    }
+}
