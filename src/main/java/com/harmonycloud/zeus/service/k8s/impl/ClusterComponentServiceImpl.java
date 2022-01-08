@@ -62,6 +62,15 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         service.deploy(cluster, clusterComponentsDto);
         //记录数据库
         record(cluster.getId(), clusterComponentsDto.getComponent(), 2);
+        // 检查是否安装成功
+        ThreadPoolExecutorFactory.executor.execute(() -> {
+            try {
+                Thread.sleep(55000);
+                installSuccessCheck(cluster, clusterComponentsDto.getComponent());
+            } catch (InterruptedException e) {
+                log.error("更新组件安装中状态失败");
+            }
+        });
     }
 
     @Override
@@ -76,6 +85,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
                 .getComponent().equals(ComponentsEnum.LOCAL_PATH.getName())).collect(Collectors.toList());
         }
         // 部署operator
+        final CountDownLatch count = new CountDownLatch(componentsDtoList.size());
         multipleComponentsInstallDto.getMiddlewareInfoDTOList()
             .forEach(info -> ThreadPoolExecutorFactory.executor.execute(() -> {
                 try {
@@ -83,22 +93,19 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
                         info.getType());
                 } catch (Exception e) {
                     log.error("集群{}  operator{} 安装失败", cluster.getId(), info.getChartName());
+                } finally {
+                    count.countDown();
                 }
             }));
-        // 部署组件
-        final CountDownLatch count = new CountDownLatch(componentsDtoList.size());
-        componentsDtoList.forEach(clusterComponentsDto -> ThreadPoolExecutorFactory.executor.execute(() -> {
-            this.deploy(cluster, clusterComponentsDto);
-            try {
-                Thread.sleep(55000);
-                installSuccessCheck(cluster, clusterComponentsDto.getComponent());
-            } catch (InterruptedException e) {
-                log.error("更新组件安装中状态失败");
-            } finally {
-                count.countDown();
-            }
-        }));
         count.await();
+        // 部署组件
+        componentsDtoList.forEach(clusterComponentsDto -> {
+            try {
+                this.deploy(cluster, clusterComponentsDto);
+            } catch (Exception e) {
+                log.error("集群{}  组件{}  安装失败", cluster.getId(), clusterComponentsDto.getComponent(), e);
+            }
+        });
     }
 
 
