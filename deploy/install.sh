@@ -39,8 +39,6 @@ function deploy_helm() {
   HELM_ARGS="global.replicaCount=1"
   if [ $HA == "true" ]; then
     HELM_ARGS="global.replicaCount=3"
-    echo -n "请输入Zeus平台使用的共享存储服务名称:"
-    read STORAGE_CLASS
   fi
   helm install -n zeus zeus deploy/helm --set global.repository=$IMAGE_REPO"/middleware",global.storageClass=$STORAGE_CLASS,$HELM_ARGS
 }

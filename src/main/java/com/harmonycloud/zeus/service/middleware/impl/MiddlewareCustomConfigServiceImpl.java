@@ -333,13 +333,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             if (StringUtils.isEmpty(dataMap.get(key))) {
                 continue;
             }
-            Pattern pattern = Pattern.compile("[0-9]*");
-            Matcher isNum = pattern.matcher(dataMap.get(key));
-            if (isNum.matches()) {
-                args.put(key, Integer.parseInt(dataMap.get(key)));
-            } else {
-                args.put(key, dataMap.get(key));
-            }
+            args.put(key, dataMap.get(key));
         }
         newValues.put("args", args);
         helmChartService.upgrade(middleware, values, newValues, cluster);

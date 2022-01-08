@@ -73,12 +73,8 @@ spec:
         - mountPath: /cfg/application.yml
           name: zeus-config
           subPath: application.yml
-        - mountPath: /usr/local/zeus-pv/upload
-          name: zeus-upload
         - mountPath: /var/run
           name: docker
-        - mountPath: /usr/local/zeus-pv/helm
-          name: zeus
       dnsPolicy: ClusterFirst
       {{- with .Values.global.zeus.nodeSelector }}
       nodeSelector:
@@ -97,12 +93,7 @@ spec:
             path: application.yml
           name: zeus-config
         name: zeus-config
-      - emptyDir: {}
-        name: zeus-upload
       - hostPath:
           path: /var/run
           type: ""
         name: docker
-      - name: zeus
-        persistentVolumeClaim:
-          claimName: zeus
