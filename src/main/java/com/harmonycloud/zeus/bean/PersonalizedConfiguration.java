@@ -28,7 +28,7 @@ public class PersonalizedConfiguration {
      * 背景图
      */
     @TableField (value = "background_image")
-    private byte[] backgroundImage;
+    private String backgroundImage;
 
     /**
      * 背景图地址
@@ -40,7 +40,7 @@ public class PersonalizedConfiguration {
      * 登录页logo
      */
     @TableField (value = "login_logo")
-    private byte[] loginLogo;
+    private String loginLogo;
 
     /**
      * 登录页logo地址
@@ -52,7 +52,7 @@ public class PersonalizedConfiguration {
      * 主页logo
      */
     @TableField (value = "home_logo")
-    private byte[] homeLogo;
+    private String homeLogo;
 
     /**
      * 主页logo地址

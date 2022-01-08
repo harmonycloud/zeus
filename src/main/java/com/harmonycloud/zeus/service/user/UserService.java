@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.user;
 
 import com.harmonycloud.caas.common.model.MailUserDTO;
+import com.harmonycloud.caas.common.model.UploadImageFileDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareAlertsDTO;
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
@@ -113,7 +114,7 @@ public interface UserService {
      * @param type
      * @throws IOException
      */
-    void uploadFile(MultipartFile file, String type) throws IOException;
+    UploadImageFileDto uploadFile(MultipartFile file, String type) throws IOException;
 
     MailUserDTO getUserList(String alertruleId);
 }

@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.model.MailUserDTO;
+import com.harmonycloud.caas.common.model.UploadImageFileDto;
 import com.harmonycloud.zeus.bean.MailToUser;
 import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
 import com.harmonycloud.zeus.bean.user.BeanRole;
@@ -19,6 +20,7 @@ import com.harmonycloud.zeus.service.user.UserRoleService;
 import com.harmonycloud.zeus.service.user.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ibatis.annotations.Results;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -297,23 +299,11 @@ public class UserServiceImpl implements UserService {
     public void insertPersonalConfig(PersonalizedConfiguration configuration,String status) throws Exception {
         //判断是否要初始化
         if ("init".equals(status)) {
-            QueryWrapper<PersonalizedConfiguration> query = new QueryWrapper<PersonalizedConfiguration>().eq("status","0");
+            QueryWrapper<PersonalizedConfiguration> query = new QueryWrapper<PersonalizedConfiguration>().eq("status","1");
             personalMapper.delete(query);
             return;
         }
-        if (IMAGE_MAP.containsKey("backgroundImag")) {
-            configuration.setBackgroundImage((byte[]) IMAGE_MAP.get("backgroundImag"));
-            configuration.setBackgroundPath(String.valueOf(IMAGE_MAP.get("backgroundPath")));
-        }
-        if (IMAGE_MAP.containsKey("loginLogo")) {
-            configuration.setLoginLogo((byte[]) IMAGE_MAP.get("loginLogo"));
-            configuration.setLoginLogoPath(String.valueOf(IMAGE_MAP.get("loginLogoPath")));
-        }
-        if (IMAGE_MAP.containsKey("homeLogo")) {
-            configuration.setHomeLogo((byte[]) IMAGE_MAP.get("homeLogo"));
-            configuration.setHomeLogoPath(String.valueOf(IMAGE_MAP.get("homeLogoPath")));
-        }
-        IMAGE_MAP.clear();
+        configuration.setStatus("1");
         checkout(configuration);
     }
 
@@ -324,28 +314,25 @@ public class UserServiceImpl implements UserService {
      * @throws IOException
      */
     @Override
-    public void uploadFile(MultipartFile file, String type) throws IOException {
-        byte[] background = null;
-        byte[] homeLogo = null;
-        byte[] loginLogo = null;
+    public UploadImageFileDto uploadFile(MultipartFile file, String type) throws IOException {
+        byte[] bytes = null;
+        UploadImageFileDto uploadImageFileDto = new UploadImageFileDto();
         if ("background".equals(type)) {
-            background = loadFile(file);
-            handleImage(background,file.getOriginalFilename());
-            IMAGE_MAP.put("backgroundImag",background);
-            IMAGE_MAP.put("backgroundPath",file.getOriginalFilename());
+            bytes = loadFile(file);
+            uploadImageFileDto.setBytes(bytes);
+            uploadImageFileDto.setType(file.getOriginalFilename().split("\\.")[1]);
         }
         if ("login".equals(type)) {
-            loginLogo = loadFile(file);
-            handleImage(loginLogo,file.getOriginalFilename());
-            IMAGE_MAP.put("loginLogo",loginLogo);
-            IMAGE_MAP.put("loginLogoPath",file.getOriginalFilename());
+            bytes = loadFile(file);
+            uploadImageFileDto.setBytes(bytes);
+            uploadImageFileDto.setType(file.getOriginalFilename().split("\\.")[1]);
         }
         if ("home".equals(type)) {
-            homeLogo = loadFile(file);
-            handleImage(homeLogo,file.getOriginalFilename());
-            IMAGE_MAP.put("homeLogo",homeLogo);
-            IMAGE_MAP.put("homeLogoPath",file.getOriginalFilename());
+            bytes = loadFile(file);
+            uploadImageFileDto.setBytes(bytes);
+            uploadImageFileDto.setType(file.getOriginalFilename().split("\\.")[1]);
         }
+        return uploadImageFileDto;
     }
 
     @Override
@@ -392,7 +379,18 @@ public class UserServiceImpl implements UserService {
     @Override
     public PersonalizedConfiguration getPersonalConfig() {
         QueryWrapper<PersonalizedConfiguration> queryWrapper = new QueryWrapper<PersonalizedConfiguration>();
-        return personalMapper.selectOne(queryWrapper);
+        List<PersonalizedConfiguration> personals = personalMapper.selectList(queryWrapper);
+        if (personals.size() > 1) {
+            queryWrapper.eq("status","1");
+            List<PersonalizedConfiguration> personalList = personalMapper.selectList(queryWrapper);
+            for (PersonalizedConfiguration personalizedConfiguration : personalList) {
+                return personalizedConfiguration;
+            }
+        }
+        for (PersonalizedConfiguration personalizedConfiguration : personals) {
+            return personalizedConfiguration;
+        }
+        return new PersonalizedConfiguration();
     }
 
     /**
@@ -424,7 +422,10 @@ public class UserServiceImpl implements UserService {
                 inPut.close();
             }
         }
-        return bus;
+        String voiceBase64= Base64.getEncoder().encodeToString(bus);
+        return voiceBase64.getBytes();
+
+
     }
 
     /**
@@ -433,15 +434,15 @@ public class UserServiceImpl implements UserService {
      */
     private void checkout(PersonalizedConfiguration configuration) {
         QueryWrapper<PersonalizedConfiguration> queryWrapper = new QueryWrapper<PersonalizedConfiguration>();
+        queryWrapper.eq("status","1");
         List<PersonalizedConfiguration> personals = personalMapper.selectList(queryWrapper);
-        configuration.setStatus("0");
         Date date = new Date();
         if (personals.size() == 0) {
             configuration.setCreateTime(date);
             personalMapper.insert(configuration);
         }else {
             configuration.setUpdateTime(date);
-            queryWrapper.eq("status","0");
+            queryWrapper.eq("status","1");
             personalMapper.update(configuration,queryWrapper);
         }
     }
@@ -464,30 +465,4 @@ public class UserServiceImpl implements UserService {
             }
         });
     }
-
-
-    private void handleImage(byte[] bytes, String path) throws IOException {
-        File file = new File(imagePath + File.separator + path);
-        if (!file.exists()) {
-            InputStream in = new ByteArrayInputStream(bytes);
-            FileOutputStream fileOutputStream = null;
-            try {
-                fileOutputStream = new FileOutputStream(file);
-                byte[] buf = new byte[bytes.length];
-                int len;
-                while ((len = in.read(buf)) != -1) {
-                    fileOutputStream.write(buf, 0, len);
-                }
-                fileOutputStream.flush();
-            } catch (Exception e) {
-                log.error("图片初始化加载失败");
-            } finally {
-                in.close();
-                if (fileOutputStream != null) {
-                    fileOutputStream.close();
-                }
-            }
-        }
-    }
-
 }
