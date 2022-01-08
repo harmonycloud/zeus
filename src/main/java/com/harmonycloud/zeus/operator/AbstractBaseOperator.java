@@ -210,8 +210,8 @@ public abstract class AbstractBaseOperator {
 
 
     public void delete(Middleware middleware) {
-        /*deletePvc(middleware);
         deleteIngress(middleware);
+        /*deletePvc(middleware);
         deleteCustomConfigHistory(middleware);
         middlewareBackupService.deleteMiddlewareBackupInfo(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());*/
         // 获取集群
@@ -237,7 +237,6 @@ public abstract class AbstractBaseOperator {
     public void deleteStorage(Middleware middleware){
         BeanCacheMiddleware beanCacheMiddleware = cacheMiddlewareService.get(middleware);
         deletePvc(beanCacheMiddleware);
-        deleteIngress(middleware);
         deleteCustomConfigHistory(middleware);
         middlewareBackupService.deleteMiddlewareBackupInfo(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
         removeSql(middleware);
