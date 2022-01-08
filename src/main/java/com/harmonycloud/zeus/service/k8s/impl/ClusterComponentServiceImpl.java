@@ -85,7 +85,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
                 .getComponent().equals(ComponentsEnum.LOCAL_PATH.getName())).collect(Collectors.toList());
         }
         // 部署operator
-        final CountDownLatch count = new CountDownLatch(componentsDtoList.size());
+        final CountDownLatch count = new CountDownLatch(multipleComponentsInstallDto.getMiddlewareInfoDTOList().size());
         multipleComponentsInstallDto.getMiddlewareInfoDTOList()
             .forEach(info -> ThreadPoolExecutorFactory.executor.execute(() -> {
                 try {
