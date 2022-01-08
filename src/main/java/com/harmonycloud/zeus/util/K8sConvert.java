@@ -79,10 +79,15 @@ public class K8sConvert {
 
         for (int i = 0; i < labels.size(); i++) {
             String[] labelArr = labels.get(i).split("=");
-            if (labelArr.length != 2) {
-                return null;
+            NodeSelectorTerm nst;
+            if (labelArr.length == 2) {
+                nst = convertNodeSelectorTerm(labelArr[0], labelArr[1]);
+            } else if (labelArr.length == 1) {
+                nst = convertNodeSelectorTerm(labelArr[0]);
+            } else {
+                continue;
             }
-            NodeSelectorTerm nst = convertNodeSelectorTerm(labelArr[0], labelArr[1]);
+
             if (required) {
                 nss.add(nst);
             } else {
@@ -119,6 +124,18 @@ public class K8sConvert {
         nsr.setKey(key);
         nsr.setOperator("In");
         nsr.setValues(Collections.singletonList(value));
+        nsrList.add(nsr);
+
+        NodeSelectorTerm nst = new NodeSelectorTerm();
+        nst.setMatchExpressions(nsrList);
+        return nst;
+    }
+
+    public static NodeSelectorTerm convertNodeSelectorTerm(String key) {
+        List<NodeSelectorRequirement> nsrList = new ArrayList<>(1);
+        NodeSelectorRequirement nsr = new NodeSelectorRequirement();
+        nsr.setKey(key);
+        nsr.setOperator("Exists");
         nsrList.add(nsr);
 
         NodeSelectorTerm nst = new NodeSelectorTerm();
@@ -178,7 +195,7 @@ public class K8sConvert {
                 if (nsqList != null && nsqList.size() > 0) {
                     for (NodeSelectorRequirement nsq : nsqList) {
                         json.put("required", false);
-                        json.put("label", nsq.getKey() + "=" + nsq.getValues().get(0));
+                        json.put("label", nsq.getKey() + "=" + (CollectionUtils.isEmpty(nsq.getValues()) ? "" : nsq.getValues().get(0)));
                         list.add(JSONObject.toJavaObject(json, tClass));
                     }
                 }
