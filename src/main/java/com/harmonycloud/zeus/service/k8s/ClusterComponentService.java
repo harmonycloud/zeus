@@ -26,7 +26,7 @@ public interface ClusterComponentService {
      * @param cluster       集群对象
      * @param multipleComponentsInstallDto 集群组件批量安装对象
      */
-    void multipleDeploy(MiddlewareClusterDTO cluster, MultipleComponentsInstallDto multipleComponentsInstallDto);
+    void multipleDeploy(MiddlewareClusterDTO cluster, MultipleComponentsInstallDto multipleComponentsInstallDto) throws Exception;
 
     /**
      * 对接组件
