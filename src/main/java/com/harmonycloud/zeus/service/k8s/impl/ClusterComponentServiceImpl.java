@@ -85,7 +85,8 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
                 .getComponent().equals(ComponentsEnum.LOCAL_PATH.getName())).collect(Collectors.toList());
         }
         // 部署operator
-        final CountDownLatch count = new CountDownLatch(multipleComponentsInstallDto.getMiddlewareInfoDTOList().size());
+        final CountDownLatch operatorCount =
+            new CountDownLatch(multipleComponentsInstallDto.getMiddlewareInfoDTOList().size());
         multipleComponentsInstallDto.getMiddlewareInfoDTOList()
             .forEach(info -> ThreadPoolExecutorFactory.executor.execute(() -> {
                 try {
@@ -94,18 +95,22 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
                 } catch (Exception e) {
                     log.error("集群{}  operator{} 安装失败", cluster.getId(), info.getChartName());
                 } finally {
-                    count.countDown();
+                    operatorCount.countDown();
                 }
             }));
-        count.await();
+        operatorCount.await();
         // 部署组件
+        final CountDownLatch componentsCount = new CountDownLatch(componentsDtoList.size());
         componentsDtoList.forEach(clusterComponentsDto -> ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
                 this.deploy(cluster, clusterComponentsDto);
             } catch (Exception e) {
                 log.error("集群{}  组件{}  安装失败", cluster.getId(), clusterComponentsDto.getComponent(), e);
+            } finally {
+                componentsCount.countDown();
             }
         }));
+        componentsCount.await();
     }
 
 
