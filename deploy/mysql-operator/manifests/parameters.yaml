@@ -1,27 +1,9 @@
 parameters:
-  - wait_timeout:
-      - name: default
-        value: 600
-      - name: isReboot
-        value: y
-      - name: range
-        value: [1-31536000]
-      - name: describe
-        value: The number of seconds the server waits for activity on a connection before closing it.
-  - interactive_timeout:
-      - name: default
-        value: 600
-      - name: isReboot
-        value: y
-      - name: range
-        value: [10-86400]
-      - name: describe
-        value: The number of seconds the server waits for activity on an interactive connection before closing it.
   - innodb_buffer_pool_size:
       - name: default
-        value: 1G
+        value: {DBInstanceMemory*1/2}
       - name: isReboot
-        value: y
+        value: n
       - name: range
         value: [134217728-18446744073709551615]
       - name: describe
@@ -30,7 +12,7 @@ parameters:
       - name: default
         value: 2
       - name: isReboot
-        value: y
+        value: n
       - name: range
         value: [0|1|2]
       - name: describe
@@ -39,17 +21,737 @@ parameters:
       - name: default
         value: NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,ERROR_FOR_DIVISION_BY_ZERO
       - name: isReboot
-        value: y
+        value: n
       - name: range
-        value: (\支持空格及|REAL_AS_FLOAT|PIPES_AS_CONCAT|ANSI_QUOTES|IGNORE_SPACE|ONLY_FULL_GROUP_BY|NO_UNSIGNED_SUBTRACTION|NO_DIR_IN_CREATE|POSTGRESQL|ORACLE|MSSQL|DB2|MAXDB|NO_KEY_OPTIONS|NO_TABLE_OPTIONS|NO_FIELD_OPTIONS|MYSQL323|MYSQL40|ANSI|NO_AUTO_VALUE_ON_ZERO|NO_BACKSLASH_ESCAPES|STRICT_TRANS_TABLES|STRICT_ALL_TABLES|NO_ZERO_IN_DATE|NO_ZERO_DATE|ALLOW_INVALID_DATES|ERROR_FOR_DIVISION_BY_ZERO|TRADITIONAL|HIGH_NOT_PRECEDENCE|NO_ENGINE_SUBSTITUTION|PAD_CHAR_TO_FULL_LENGTH|NO_AUTO_CREATE_USER)(,NO_AUTO_CREATE_USER|,REAL_AS_FLOAT|,PIPES_AS_CONCAT|,ANSI_QUOTES|,IGNORE_SPACE|,ONLY_FULL_GROUP_BY|,NO_UNSIGNED_SUBTRACTION|,NO_DIR_IN_CREATE|,POSTGRESQL|,ORACLE|,MSSQL|,DB2|,MAXDB|,NO_KEY_OPTIONS|,NO_TABLE_OPTIONS|,NO_FIELD_OPTIONS|,MYSQL323|,MYSQL40|,ANSI|,NO_AUTO_VALUE_ON_ZERO|,NO_BACKSLASH_ESCAPES|,STRICT_TRANS_TABLES|,STRICT_ALL_TABLES|,NO_ZERO_IN_DATE|,NO_ZERO_DATE|,ALLOW_INVALID_DATES|,ERROR_FOR_DIVISION_BY_ZERO|,TRADITIONAL|,HIGH_NOT_PRECEDENCE|,NO_ENGINE_SUBSTITUTION|,PAD_CHAR_TO_FULL_LENGTH)*
+        value: (ALLOW_INVALID_DATES|ANSI_QUOTES|ERROR_FOR_DIVISION_BY_ZERO|HIGH_NOT_PRECEDENCE|IGNORE_SPACE|NO_AUTO_CREATE_USER|NO_AUTO_VALUE_ON_ZERO|NO_BACKSLASH_ESCAPES|NO_DIR_IN_CREATE|NO_ENGINE_SUBSTITUTION|NO_ZERO_DATE|NO_ZERO_IN_DATE|ONLY_FULL_GROUP_BY|PAD_CHAR_TO_FULL_LENGTH|PIPES_AS_CONCAT|REAL_AS_FLOAT|STRICT_ALL_TABLES|STRICT_TRANS_TABLES)
       - name: describe
         value: "Syntax: sql-mode=mode[,mode[,mode...]]. See the manual for the complete list of valid sql modes"
   - sync_binlog:
       - name: default
         value: 1
       - name: isReboot
-        value: y
+        value: n
       - name: range
-        value: [1-1000]
+        value: [1-4294967295]
       - name: describe
         value: "Controls how often the MySQL server synchronizes the binary log to disk."
+  - max_connect_errors:
+      - name: default
+        value: 100000
+      - name: isReboot
+        value: n
+      - name: range
+        value: [0-4294967295]
+      - name: describe
+        value: "If there is more than this number of interrupted connections from a host this host will be blocked from further connections"
+  - max_user_connections:
+      - name: default
+        value: 1200
+      - name: isReboot
+        value: n
+      - name: range
+        value: [0-4294967295]
+      - name: describe
+        value: "The maximum number of simultaneous connections permitted to any given MySQL user account. A value of 0 (the default) means “no limit.”"
+  - max_execution_time:
+      - name: default
+        value: 10000
+      - name: isReboot
+        value: n
+      - name: range
+        value: [0-4294967295]
+      - name: describe
+        value: "statement be interrupted if the executing time exceeds this value"
+  - group_concat_max_len:
+      - name: default
+        value: 1048576
+      - name: isReboot
+        value: n
+      - name: range
+        value: [4-1844674407370954752]
+      - name: describe
+        value: "The maximum length of the result of function GROUP_CONCAT()"
+  - lock_wait_timeout:
+      - name: default
+        value: 60
+      - name: isReboot
+        value: n
+      - name: range
+        value: [1-1073741824]
+      - name: describe
+        value: "This variable specifies the timeout in seconds for attempts to acquire metadata locks. The permissible values range from 1 to 31536000 (1 year). The default is 60."
+  - lower_case_table_names:
+      - name: default
+        value: 1
+      - name: isReboot
+        value: y
+      - name: range
+        value: [0|1|2]
+      - name: describe
+        value: "If set to 0, table names are stored as specified and comparisons are case-sensitive. If set to 1, table names are stored in lowercase on disk and comparisons are not case-sensitive. If set to 2, table names are stored as given but compared in lowercase. This option also applies to database names and table aliases."
+  - thread_cache_size:
+      - name: default
+        value: 64
+      - name: isReboot
+        value: n
+      - name: range
+        value: [0-16384]
+      - name: describe
+        value: "How many threads the server should cache for reuse. When a client disconnects, the client's threads are put in the cache if there are fewer than thread_cache_size threads there. Requests for threads are satisfied by reusing threads taken from the cache if possible, and only when the cache is empty is a new thread created. This variable can be increased to improve performance if you have a lot of new connections. Normally, this does not provide a notable performance improvement if you have a good thread implementation. However, if your server sees hundreds of connections per second you should normally set thread_cache_size high enough so that most new connections use cached threads. By examining the difference between the Connections and Threads_created status variables, you can see how efficient the thread cache is."
+  - character_set_server:
+      - name: default
+        value: utf8mb4
+      - name: isReboot
+        value: y
+      - name: range
+        value: [utf8|latin1|gbk|gb18030|utf8mb4]
+      - name: describe
+        value: "The default character set"
+  - transaction-isolation:
+      - name: default
+        value: READ-COMMITTED
+      - name: isReboot
+        value: n
+      - name: range
+        value: [READ-UNCOMMITTED|READ-COMMITTED|REPEATABLE-READ|SERIALIZABLE]
+      - name: describe
+        value: "The transaction isolation level."
+  - skip_name_resolve:
+      - name: default
+        value: ON
+      - name: isReboot
+        value: y
+      - name: range
+        value: [ON|OFF]
+      - name: describe
+        value: "Whether to resolve host names when checking client connections. If this variable is OFF, mysqld resolves host names when checking client connections. If it is ON, mysqld uses only IP numbers; in this case, all Host column values in the grant tables must be IP addresses. "
+  - explicit_defaults_for_timestamp:
+      - name: default
+        value: ON
+      - name: isReboot
+        value: n
+      - name: range
+        value: [ON|OFF]
+      - name: describe
+        value: "This system variable determines whether the server enables certain nonstandard behaviors for default values and NULL-value handling in TIMESTAMP columns."
+  - log_timestamps:
+      - name: default
+        value: SYSTEM
+      - name: isReboot
+        value: n
+      - name: range
+        value: [UTC|SYSTEM]
+      - name: describe
+        value: "This variable controls the time zone of timestamps in messages written to the error log, and in general query log and slow query log messages written to files."
+  - local_infile:
+      - name: default
+        value: OFF
+      - name: isReboot
+        value: n
+      - name: range
+        value: [ON|OFF]
+      - name: describe
+        value: "This variable controls server-side LOCAL capability for LOAD DATA statements."
+  - event_scheduler:
+      - name: default
+        value: OFF
+      - name: isReboot
+        value: n
+      - name: range
+        value: [ON|OFF]
+      - name: describe
+        value: "Enable the event scheduler. Possible values are ON, OFF, and DISABLED (keep the event scheduler completely deactivated, it cannot be activated run-time)"
+  - init_connect:
+      - name: default
+        value: "set names utf8mb4"
+      - name: isReboot
+        value: n
+      - name: range
+        value: [one or more SQL statements, separated by semicolon characters]
+      - name: describe
+        value: "A string to be executed by the server for each client that connects. The string consists of one or more SQL statements, separated by semicolon characters."
+  - slow_query_log:
+      - name: default
+        value: ON
+      - name: isReboot
+        value: n
+      - name: range
+        value: [ON|OFF]
+      - name: describe
+        value: "Specify the initial slow query log state. With no argument or an argument of 1, the --slow-query-log option enables the log. If omitted or given with an argument of 0, the option disables the log."
+  - long_query_time:
+      - name: default
+        value: 1
+      - name: isReboot
+        value: n
+      - name: range
+        value: [0.1-31536000]
+      - name: describe
+        value: "Log all queries that have taken more than long_query_time seconds to execute to file. The argument will be treated as a decimal value with microsecond precision"
+  - log_queries_not_using_indexes:
+      - name: default
+        value: 1
+      - name: isReboot
+        value: n
+      - name: range
+        value: [ON|OFF]
+      - name: describe
+        value: "Log queries that are executed without benefit of any index to the slow log if it is open"
+  - log_throttle_queries_not_using_indexes:
+      - name: default
+        value: 10
+      - name: isReboot
+        value: n
+      - name: range
+        value: [0-4294967295]
+      - name: describe
+        value: "If log_queries_not_using_indexes is enabled, the log_throttle_queries_not_using_indexes variable limits the number of such queries per minute that can be written to the slow query log."
+  - general_log:
+      - name: default
+        value: OFF
+      - name: isReboot
+        value: y
+      - name: range
+        value: [ON|OFF]
+      - name: describe
+        value: "Whether the general query log is enabled. The destination for log output is controlled by the log_output system variable."
+  - expire_logs_days:
+      - name: default
+        value: 7
+      - name: isReboot
+        value: n
+      - name: range
+        value: [0-99]
+      - name: describe
+        value: "The number of days for automatic binary log file removal."
+  - max_binlog_size:
+      - name: default
+        value: 500M
+      - name: isReboot
+        value: n
+      - name: range
+        value: [4096-1073741824]
+      - name: describe
+        value: "If a write to the binary log causes the current log file size to exceed the value of this variable, the server rotates the binary logs (closes the current file and opens the next one). "
+  - binlog_rows_query_log_events:
+      - name: default
+        value: ON
+      - name: isReboot
+        value: n
+      - name: range
+        value: [ON|OFF]
+      - name: describe
+        value: "The binlog_rows_query_log_events system variable affects row-based logging only. When enabled, it causes the MySQL Server to write informational log events such as row query log events into its binary log. This information can be used for debugging and related purposes.such as obtaining the original query issued on the master when it cannot be reconstructed from the row updates."
+  - binlog_cache_size:
+      - name: default
+        value: 128k
+      - name: isReboot
+        value: n
+      - name: range
+        value: [4096-16777216]
+      - name: describe
+        value: "The size of the transactional cache for updates to transactional engines for the binary log. If you often use transactions containing many statements, you can increase this to get more performance"
+  - binlog_stmt_cache_size:
+      - name: default
+        value: 128k
+      - name: isReboot
+        value: n
+      - name: range
+        value: [4096-16777216]
+      - name: describe
+        value: "The size of the statement cache for updates to non-transactional engines for the binary log. If you often use statements updating a great number of rows, you can increase this to get more performance"
+  - max_binlog_cache_size:
+      - name: default
+        value: 2G
+      - name: isReboot
+        value: n
+      - name: range
+        value: [4096-18446744073709547520]
+      - name: describe
+        value: "max_binlog_cache_size sets the size for the transaction cache only.The visibility to sessions of max_binlog_cache_size matches that of the binlog_cache_size system variable."
+  - max_binlog_stmt_cache_size:
+      - name: default
+        value: 2G
+      - name: isReboot
+        value: n
+      - name: range
+        value: [4096-18446744073709547520]
+      - name: describe
+        value: "If nontransactional statements within a transaction require more than this many bytes of memory, the server generates an error. The minimum value is 4096. The maximum and default values are 4GB on 32-bit platforms and 16EB (exabytes) on 64-bit platforms."
+  - max_relay_log_size:
+      - name: default
+        value: 500M
+      - name: isReboot
+        value: n
+      - name: range
+        value: [0-1073741824]
+      - name: describe
+        value: "If a write by a replica to its relay log causes the current log file size to exceed the value of this variable, the replica rotates the relay logs (closes the current file and opens the next one). If max_relay_log_size is 0, the server uses max_binlog_size for both the binary log and the relay log. If max_relay_log_size is greater than 0, it constrains the size of the relay log, which enables you to have different sizes for the two logs. You must set max_relay_log_size to between 4096 bytes and 1GB (inclusive), or to 0."
+  - relay_log_purge:
+      - name: default
+        value: ON
+      - name: isReboot
+        value: n
+      - name: range
+        value: [ON|OFF]
+      - name: describe
+        value: "Disables or enables automatic purging of relay log files as soon as they are not needed any more."
+  - relay_log_recovery:
+      - name: default
+        value: ON
+      - name: isReboot
+        value: y
+      - name: range
+        value: [ON|OFF]
+      - name: describe
+        value: "If enabled, this variable enables automatic relay log recovery immediately following server startup. The recovery process creates a new relay log file, initializes the SQL thread position to this new relay log, and initializes the I/O thread to the SQL thread position. Reading of the relay log from the source then continues."
+  - binlog_group_commit_sync_delay:
+      - name: default
+        value: 1
+      - name: isReboot
+        value: n
+      - name: range
+        value: [0-1000000]
+      - name: describe
+        value: "Controls how many microseconds the binary log commit waits before synchronizing the binary log file to disk."
+  - binlog_group_commit_sync_no_delay_count:
+      - name: default
+        value: 1000
+      - name: isReboot
+        value: n
+      - name: range
+        value: [0-100000]
+      - name: describe
+        value: "The maximum number of transactions to wait for before aborting the current delay as specified by binlog_group_commit_sync_delay. If binlog_group_commit_sync_delay is set to 0, then this option has no effect."
+  - master_verify_checksum:
+      - name: default
+        value: ON
+      - name: isReboot
+        value: n
+      - name: range
+        value: [ON|OFF]
+      - name: describe
+        value: "Enabling this variable causes the master to examine checksums when reading from the binary log. master_verify_checksum is disabled by default.in this case, the master uses the event length from the binary log to verify events, so that only complete events are read from the binary log."
+  - sync_master_info:
+      - name: default
+        value: 1
+      - name: isReboot
+        value: n
+      - name: range
+        value: [0-18446744073709551615]
+      - name: describe
+        value: "The effects of this variable on a replication slave depend on whether the slaves master_info_repository is set to FILE or TABLE, as explained in the following paragraphs."
+  - slave_parallel_workers:
+      - name: default
+        value: 8
+      - name: isReboot
+        value: n
+      - name: range
+        value: [0-1024]
+      - name: describe
+        value: "Sets the number of applier threads for executing replication transactions in parallel. "
+  - read_buffer_size:
+      - name: default
+        value: 1M
+      - name: isReboot
+        value: n
+      - name: range
+        value: [8200-2147479552]
+      - name: describe
+        value: "Each thread that does a sequential scan for a MyISAM table allocates a buffer of this size (in bytes) for each table it scans. The value of this variable should be a multiple of 4KB."
+  - read_rnd_buffer_size:
+      - name: default
+        value: 2M
+      - name: isReboot
+        value: n
+      - name: range
+        value: [1-2147483647]
+      - name: describe
+        value: "This variable is used for reads from MyISAM tables, and, for any storage engine, for Multi-Range Read optimization."
+  - sort_buffer_size:
+      - name: default
+        value: 1M
+      - name: isReboot
+        value: n
+      - name: range
+        value: [32768-4294967295]
+      - name: describe
+        value: "Each session that must perform a sort allocates a buffer of this size."
+  - join_buffer_size:
+      - name: default
+        value: 1M
+      - name: isReboot
+        value: n
+      - name: range
+        value: [128-4294967295]
+      - name: describe
+        value: "The minimum size of the buffer that is used for plain index scans, range index scans, and joins that do not use indexes and thus perform full table scans."
+  - tmp_table_size:
+      - name: default
+        value: 64M
+      - name: isReboot
+        value: n
+      - name: range
+        value: [262144-134217728]
+      - name: describe
+        value: "If an internal in-memory temporary table exceeds this size, MySQL will automatically convert it to an on-disk MyISAM table"
+  - max_allowed_packet:
+      - name: default
+        value: 64M
+      - name: isReboot
+        value: n
+      - name: range
+        value: [16384-1073741824]
+      - name: describe
+        value: "The packet message buffer is initialized to net_buffer_length bytes, but can grow up to max_allowed_packet bytes when needed. This value by default is small, to catch large (possibly incorrect) packets."
+  - max_heap_table_size:
+      - name: default
+        value: 64M
+      - name: isReboot
+        value: n
+      - name: range
+        value: [16384-1844674407370954752]
+      - name: describe
+        value: "This variable sets the maximum size to which user-created MEMORY tables are permitted to grow. The value of the variable is used to calculate MEMORY table MAX_ROWS values. Setting this variable has no effect on any existing MEMORY table, unless the table is re-created with a statement such as CREATE TABLE or altered with ALTER TABLE or TRUNCATE TABLE. A server restart also sets the maximum size of existing MEMORY tables to the global max_heap_table_size value."
+  - connect_timeout:
+      - name: default
+        value: 10
+      - name: isReboot
+        value: n
+      - name: range
+        value: [0-512]
+      - name: describe
+        value: "The reserved connection for maintain user."
+  - wait_timeout:
+      - name: default
+        value: 600
+      - name: isReboot
+        value: n
+      - name: range
+        value: [1-31536000]
+      - name: describe
+        value: "The number of seconds the server waits for activity on a connection before closing it"
+  - interactive_timeout:
+      - name: default
+        value: 600
+      - name: isReboot
+        value: n
+      - name: range
+        value: [10-86400]
+      - name: describe
+        value: "The number of seconds the server waits for activity on an interactive connection before closing it"
+  - net_read_timeout:
+      - name: default
+        value: 30
+      - name: isReboot
+        value: n
+      - name: range
+        value: [1-18446744073709551615]
+      - name: describe
+        value: "Number of seconds to wait for more data from a connection before aborting the read"
+  - net_write_timeout:
+      - name: default
+        value: 30
+      - name: isReboot
+        value: n
+      - name: range
+        value: [1-18446744073709551615]
+      - name: describe
+        value: "Number of seconds to wait for a block to be written to a connection before aborting the write"
+  - skip_external_locking:
+      - name: default
+        value: ON
+      - name: isReboot
+        value: y
+      - name: range
+        value: [ON|OFF]
+      - name: describe
+        value: "This is OFF if mysqld uses external locking (system locking), ON if external locking is disabled. This affects only MyISAM table access."
+  - key_buffer_size:
+      - name: default
+        value: 16M
+      - name: isReboot
+        value: n
+      - name: range
+        value: [8-4294967295]
+      - name: describe
+        value: "Index blocks for MyISAM tables are buffered and are shared by all threads. key_buffer_size is the size of the buffer used for index blocks. The key buffer is also known as the key cache."
+  - bulk_insert_buffer_size:
+      - name: default
+        value: 16M
+      - name: isReboot
+        value: n
+      - name: range
+        value: [0-4294967295]
+      - name: describe
+        value: "MyISAM uses a special tree-like cache to make bulk inserts faster for INSERT ... SELECT, INSERT ... VALUES (...), (...), ..., and LOAD DATA INFILE when adding data to nonempty tables. This variable limits the size of the cache tree in bytes per thread. Setting it to 0 disables this optimization. The default value is 8MB."
+  - concurrent_insert:
+      - name: default
+        value: ALWAYS
+      - name: isReboot
+        value: n
+      - name: range
+        value: [NEVER|AUTO|ALWAYS]
+      - name: describe
+        value: "Use concurrent insert with MyISAM. Possible values are NEVER, AUTO, ALWAYS"
+  - open_files_limit:
+      - name: default
+        value: 65000
+      - name: isReboot
+        value: y
+      - name: range
+        value: [1-2147483647]
+      - name: describe
+        value: "If this is not 0, then mysqld will use this value to reserve file descriptors to use with setrlimit()"
+  - table_open_cache:
+      - name: default
+        value: 16000
+      - name: isReboot
+        value: n
+      - name: range
+        value: [1-524288]
+      - name: describe
+        value: "The number of cached open tables (total for all table cache instances)"
+  - table_definition_cache:
+      - name: default
+        value: 16000
+      - name: isReboot
+        value: n
+      - name: range
+        value: [400-524288]
+      - name: describe
+        value: "The number of cached table definitions"
+  - innodb_log_file_size:
+      - name: default
+        value: 1024M
+      - name: isReboot
+        value: y
+      - name: range
+        value: [1048576-512GB/innodb_log_files_in_group]
+      - name: describe
+        value: "The size in bytes of each log file in a log group."
+  - innodb_log_files_in_group:
+      - name: default
+        value: 3
+      - name: isReboot
+        value: y
+      - name: range
+        value: [2-100]
+      - name: describe
+        value: "The number of log files in the log group. "
+  - innodb_undo_log_truncate:
+      - name: default
+        value: ON
+      - name: isReboot
+        value: n
+      - name: range
+        value: [ON|OFF]
+      - name: describe
+        value: "When enabled, undo tablespaces that exceed the threshold value defined by innodb_max_undo_log_size are marked for truncation."
+  - innodb_max_undo_log_size:
+      - name: default
+        value: 1024M
+      - name: isReboot
+        value: n
+      - name: range
+        value: [10485760-18446744073709551615]
+      - name: describe
+        value: "Defines a threshold size for undo tablespaces. If an undo tablespace exceeds the threshold, it can be marked for truncation when innodb_undo_log_truncate is enabled. The default value is 1073741824 bytes (1024 MiB)."
+  - innodb_undo_tablespaces:
+      - name: default
+        value: 3
+      - name: isReboot
+        value: y
+      - name: range
+        value: [0-95]
+      - name: describe
+        value: "The number of undo tablespaces used by InnoDB. "
+  - innodb_fast_shutdown:
+      - name: default
+        value: 1
+      - name: isReboot
+        value: n
+      - name: range
+        value: [0|1|2]
+      - name: describe
+        value: "The InnoDB shutdown mode."
+  - innodb_flush_method:
+      - name: default
+        value: O_DIRECT
+      - name: isReboot
+        value: y
+      - name: range
+        value: [fsync|O_DSYNC|littlesync|nosync|O_DIRECT|O_DIRECT_NO_FSYNC]
+      - name: describe
+        value: "Defines the method used to flush data to InnoDB data files and log files, which can affect I/O throughput."
+  - innodb_io_capacity:
+      - name: default
+        value: 1000
+      - name: isReboot
+        value: n
+      - name: range
+        value: [0-18446744073709551615]
+      - name: describe
+        value: "The innodb_io_capacity parameter sets an upper limit on the number of I/O operations performed per second by InnoDB background tasks, such as flushing pages from the buffer pool and merging data from the change buffer."
+  - innodb_io_capacity_max:
+      - name: default
+        value: 4000
+      - name: isReboot
+        value: n
+      - name: range
+        value: [0-18446744073709551615]
+      - name: describe
+        value: "If flushing activity falls behind, InnoDB can flush more aggressively than the limit imposed by innodb_io_capacity. innodb_io_capacity_max defines an upper limit the number of I/O operations performed per second by InnoDB background tasks in such situations."
+  - innodb_log_buffer_size:
+      - name: default
+        value: 32M
+      - name: isReboot
+        value: y
+      - name: range
+        value: [1048576-4294967295]
+      - name: describe
+        value: ""
+  - innodb_autoinc_lock_mode:
+      - name: default
+        value: 1
+      - name: isReboot
+        value: y
+      - name: range
+        value: [0|1|2]
+      - name: describe
+        value: "The size in bytes of the buffer that InnoDB uses to write to the log files on disk."
+  - innodb_buffer_pool_load_at_startup:
+      - name: default
+        value: ON
+      - name: isReboot
+        value: y
+      - name: range
+        value: [ON|OFF]
+      - name: describe
+        value: "Specifies that, on MySQL server startup, the InnoDB buffer pool is automatically warmed up by loading the same pages it held at an earlier time. Typically used in combination with innodb_buffer_pool_dump_at_shutdown."
+  - innodb_buffer_pool_dump_at_shutdown:
+      - name: default
+        value: ON
+      - name: isReboot
+        value: n
+      - name: range
+        value: [ON|OFF]
+      - name: describe
+        value: "Specifies whether to record the pages cached in the InnoDB buffer pool when the MySQL server is shut down, to shorten the warmup process at the next restart. Typically used in combination with innodb_buffer_pool_load_at_startup. The innodb_buffer_pool_dump_pct option defines the percentage of most recently used buffer pool pages to dump."
+  - innodb_buffer_pool_dump_pct:
+      - name: default
+        value: 15
+      - name: isReboot
+        value: n
+      - name: range
+        value: [1-100]
+      - name: describe
+        value: "Specifies the percentage of the most recently used pages for each buffer pool to read out and dump. The range is 1 to 100. The default value is 25. For example, if there are 4 buffer pools with 100 pages each, and innodb_buffer_pool_dump_pct is set to 25, the 25 most recently used pages from each buffer pool are dumped."
+  - innodb_max_dirty_pages_pct:
+      - name: default
+        value: 85
+      - name: isReboot
+        value: n
+      - name: range
+        value: [0-99]
+      - name: describe
+        value: "Percentage of dirty pages allowed in bufferpool."
+  - innodb_lock_wait_timeout:
+      - name: default
+        value: 10
+      - name: isReboot
+        value: n
+      - name: range
+        value: [1-1073741824]
+      - name: describe
+        value: "Timeout in seconds an InnoDB transaction may wait for a lock before being rolled back. Values above 100000000 disable the timeout."
+  - innodb_old_blocks_time:
+      - name: default
+        value: 1000
+      - name: isReboot
+        value: n
+      - name: range
+        value: [0-1024]
+      - name: describe
+        value: "Move blocks to the 'new' end of the buffer pool if the first access was at least this many milliseconds ago. The timeout is disabled if 0."
+  - innodb_open_files:
+      - name: default
+        value: 63000
+      - name: isReboot
+        value: y
+      - name: range
+        value: [1-81920]
+      - name: describe
+        value: "How many files at the maximum InnoDB keeps open at the same time."
+  - innodb_page_cleaners:
+      - name: default
+        value: 4
+      - name: isReboot
+        value: y
+      - name: range
+        value: [1-64]
+      - name: describe
+        value: "The number of page cleaner threads that flush dirty pages from buffer pool instances. Page cleaner threads perform flush list and LRU flushing. A single page cleaner thread was introduced in MySQL 5.6 to offload buffer pool flushing work from the InnoDB master thread. In MySQL 5.7, InnoDB provides support for multiple page cleaner threads. A value of 1 maintains the pre-MySQL 5.7 configuration in which there is a single page cleaner thread. When there are multiple page cleaner threads, buffer pool flushing tasks for each buffer pool instance are dispatched to idle page cleaner threads. The innodb_page_cleaners default value was changed from 1 to 4 in MySQL 5.7. If the number of page cleaner threads exceeds the number of buffer pool instances."
+  - innodb_strict_mode:
+      - name: default
+        value: ON
+      - name: isReboot
+        value: n
+      - name: range
+        value: [ON|OFF]
+      - name: describe
+        value: "Use strict mode when evaluating create options."
+  - innodb_thread_concurrency:
+      - name: default
+        value: 0
+      - name: isReboot
+        value: n
+      - name: range
+        value: [0-1000]
+      - name: describe
+        value: "Helps in performance tuning in heavily concurrent environments. Sets the maximum number of threads allowed inside InnoDB. Value 0 will disable the thread throttling."
+  - innodb_sort_buffer_size:
+      - name: default
+        value: 64M
+      - name: isReboot
+        value: y
+      - name: range
+        value: [65536-67108864]
+      - name: describe
+        value: "Specifies the size of sort buffers used to sort data during creation of an InnoDB index. The specified size defines the amount of data that is read into memory for internal sorting and then written out to disk. This process is referred to as a “run”. During the merge phase, pairs of buffers of the specified size are read in and merged. The larger the setting, the fewer runs and merges there are."
+  - innodb_print_all_deadlocks:
+      - name: default
+        value: 1
+      - name: isReboot
+        value: y
+      - name: range
+        value: [ON|OFF]
+      - name: describe
+        value: "Print all deadlocks to MySQL error log (off by default)"
+  - innodb_rollback_on_timeout:
+      - name: default
+        value: ON
+      - name: isReboot
+        value: y
+      - name: range
+        value: [ON|OFF]
+      - name: describe
+        value: "Roll back the complete transaction on lock wait timeout, for 4.x compatibility (disabled by default)"
+  - innodb_adaptive_hash_index:
+      - name: default
+        value: ON
+      - name: isReboot
+        value: n
+      - name: range
+        value: [ON|OFF]
+      - name: describe
+        value: "Enable InnoDB adaptive hash index (enabled by default). Disable with --skip-innodb-adaptive-hash-index."
+  - performance_schema_max_table_instances:
+      - name: default
+        value: ON
+      - name: isReboot
+        value: y
+      - name: range
+        value: [-1-1048576]
+      - name: describe
+        value: "Maximum number of instrumented tables."
