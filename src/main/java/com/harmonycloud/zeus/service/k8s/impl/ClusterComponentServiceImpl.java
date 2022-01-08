@@ -99,13 +99,13 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
             }));
         count.await();
         // 部署组件
-        componentsDtoList.forEach(clusterComponentsDto -> {
+        componentsDtoList.forEach(clusterComponentsDto -> ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
                 this.deploy(cluster, clusterComponentsDto);
             } catch (Exception e) {
                 log.error("集群{}  组件{}  安装失败", cluster.getId(), clusterComponentsDto.getComponent(), e);
             }
-        });
+        }));
     }
 
 
