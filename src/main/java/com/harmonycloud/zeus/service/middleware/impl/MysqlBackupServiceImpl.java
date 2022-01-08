@@ -98,6 +98,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
                 }
             } else {
                 record.setPhrase("Unknown");
+                record.setBackupTime("/");
             }
             List<String> addressList = new ArrayList<>();
             addressList.add(backup.getPosition());
