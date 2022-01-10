@@ -65,11 +65,11 @@ public class InitPersonalImage {
         InputStream loginIs = InitPersonalImage.class.getClassLoader().getResourceAsStream("images/loginlogo.svg");
         PersonalizedConfiguration personal = new PersonalizedConfiguration();
         personal.setBackgroundPath("background.svg");
-        personal.setBackgroundImage(loadFile(backIs));
+        personal.setBackgroundImage(loadFile(backIs,"background.svg"));
         personal.setHomeLogoPath("homelogo.svg");
-        personal.setHomeLogo(loadFile(homeIs));
+        personal.setHomeLogo(loadFile(homeIs,"homelogo.svg"));
         personal.setLoginLogoPath("loginlogo.svg");
-        personal.setLoginLogo(loadFile(loginIs));
+        personal.setLoginLogo(loadFile(loginIs,"loginlogo.svg"));
         personal.setTitle("Zeus");
         personal.setSlogan("让IT更美好");
         personal.setCopyrightNotice("Copyeight © 2021 杭州谐云科技有限公司 All rights reserved.Copyeight.");
@@ -85,7 +85,7 @@ public class InitPersonalImage {
      * @return
      * @throws IOException
      */
-    private String  loadFile(InputStream is) throws IOException {
+    private String  loadFile(InputStream is,String name) throws IOException {
 
         byte[] bus = null;
         byte[] by = null;
@@ -106,6 +106,15 @@ public class InitPersonalImage {
             is.close();
         }
         String voiceBase64= Base64.getEncoder().encodeToString(bus);
+        if (name.contains("svg")) {
+            voiceBase64 = "data:image/svg+xml;base64," + voiceBase64;
+        }
+        if (name.contains("jpg") || name.contains("jpeg")) {
+            voiceBase64 = "data:image/jpeg;base64," + voiceBase64;
+        }
+        if (name.contains("png")) {
+            voiceBase64 = "data:image/png;base64," + voiceBase64;
+        }
         return voiceBase64;
     }
 }
