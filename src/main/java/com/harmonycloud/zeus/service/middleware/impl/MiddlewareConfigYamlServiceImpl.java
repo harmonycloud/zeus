@@ -73,7 +73,8 @@ public class MiddlewareConfigYamlServiceImpl implements MiddlewareConfigYamlServ
             throw new BusinessException(ErrorMessage.YAML_FORMAT_WRONG);
         }
         Yaml yaml = new Yaml();
-        ConfigMap configMap = yaml.loadAs(config, ConfigMap.class);
+        ConfigMap configMap =
+            JSONObject.parseObject(JSONObject.toJSONString(yaml.loadAs(config, JSONObject.class)), ConfigMap.class);
         try {
             configMapWrapper.update(clusterId, namespace, configMap);
         } catch (Exception e){

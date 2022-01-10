@@ -9,9 +9,11 @@ import io.fabric8.kubernetes.api.model.ConfigMap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 import org.yaml.snakeyaml.Yaml;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
@@ -43,13 +45,8 @@ public class YamlServiceImpl implements YamlService {
             // 校验基本结构
             msg.addAll(baseCheck(object));
             // yaml为configmap
-            if (object.containsKey(KIND) && object.getString(KIND).equals(CONFIGMAP)){
-                try {
-                    JSONObject.parseObject(JSONObject.toJSONString(object), ConfigMap.class);
-                } catch (Exception e){
-                    log.error(ErrorMessage.PARSE_OBJECT_TO_CONFIGMAP_FAILED.getZhMsg(), e);
-                    msg.add(ErrorMessage.PARSE_OBJECT_TO_CONFIGMAP_FAILED.getZhMsg());
-                }
+            if (object.containsKey(KIND) && object.getString(KIND).equals(CONFIGMAP)) {
+                configmap(object, msg);
             }
             // else
         }
@@ -78,6 +75,25 @@ public class YamlServiceImpl implements YamlService {
             msg.add(ErrorMessage.RESOURCE_NAMESPACE_NOT_FOUND.getZhMsg());
         }
         return msg;
+    }
+
+    /**
+     * 校验configmap
+     **/
+    public void configmap(JSONObject object, List<String> msg){
+        List<String> configmapKeyList =
+                Arrays.asList("apiVersion", "kind", "metadata", "binaryData", "data", "immutable");
+        for (String key : object.keySet()) {
+            if (configmapKeyList.stream().noneMatch(configmapKey -> configmapKey.equals(key))) {
+                msg.add("存在非法字段");
+            }
+        }
+        try {
+            JSONObject.parseObject(JSONObject.toJSONString(object), ConfigMap.class);
+        } catch (Exception e) {
+            log.error(ErrorMessage.PARSE_OBJECT_TO_CONFIGMAP_FAILED.getZhMsg(), e);
+            msg.add(ErrorMessage.PARSE_OBJECT_TO_CONFIGMAP_FAILED.getZhMsg());
+        }
     }
 
 }
