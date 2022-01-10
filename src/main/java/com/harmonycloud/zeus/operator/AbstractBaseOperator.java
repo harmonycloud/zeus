@@ -880,15 +880,11 @@ public abstract class AbstractBaseOperator {
             prometheusRule.getSpec().getGroups().forEach(group -> group.getRules().forEach(rule -> {
                 if (!CollectionUtils.isEmpty(rule.getLabels())){
                     rule.getLabels().put("clusterId", middleware.getClusterId());
+                    rule.getLabels().put("namespace",middleware.getNamespace());
+                    rule.getLabels().put("service",middleware.getName());
+                    rule.getLabels().put("middleware",middleware.getType());
                 }
             }));
-            prometheusRule.getSpec().getGroups().stream().forEach(prometheusRuleGroups -> {
-                prometheusRuleGroups.getRules().stream().forEach(prometheusRules -> {
-                    prometheusRules.getLabels().put("namespace",middleware.getNamespace());
-                    prometheusRules.getLabels().put("service",middleware.getName());
-                    prometheusRules.getLabels().put("middleware",middleware.getType());
-                });
-            });
             prometheusRuleService.update(middleware.getClusterId(), prometheusRule);
         } catch (Exception e){
             log.error("集群{} 分区{} 中间件{}， 告警规则标签添加集群失败", middleware.getClusterId(), middleware.getNamespace(),
