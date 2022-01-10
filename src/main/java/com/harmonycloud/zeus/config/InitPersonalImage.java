@@ -65,11 +65,16 @@ public class InitPersonalImage {
         InputStream loginIs = InitPersonalImage.class.getClassLoader().getResourceAsStream("images/loginlogo.svg");
         PersonalizedConfiguration personal = new PersonalizedConfiguration();
         personal.setBackgroundPath("background.svg");
-        personal.setBackgroundImage(loadFile(backIs,"background.svg"));
+        personal.setBackgroundImage(loadFile(backIs));
         personal.setHomeLogoPath("homelogo.svg");
-        personal.setHomeLogo(loadFile(homeIs,"homelogo.svg"));
+        personal.setHomeLogo(loadFile(homeIs));
         personal.setLoginLogoPath("loginlogo.svg");
-        personal.setLoginLogo(loadFile(loginIs,"loginlogo.svg"));
+        personal.setLoginLogo(loadFile(loginIs));
+        personal.setTitle("Zeus");
+        personal.setSlogan("让IT更美好");
+        personal.setCopyrightNotice("Copyeight © 2021 杭州谐云科技有限公司 All rights reserved.Copyeight.");
+        personal.setPlatformName("Zeus | 中间件管理一体化平台");
+        personal.setCreateTime(new Date());
         personal.setStatus("0");
         personalMapper.insert(personal);
     }
@@ -80,7 +85,7 @@ public class InitPersonalImage {
      * @return
      * @throws IOException
      */
-    private String  loadFile(InputStream is,String name) throws IOException {
+    private String  loadFile(InputStream is) throws IOException {
 
         byte[] bus = null;
         byte[] by = null;
