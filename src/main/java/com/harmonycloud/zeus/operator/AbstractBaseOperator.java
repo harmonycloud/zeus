@@ -456,19 +456,6 @@ public abstract class AbstractBaseOperator {
                 }
             }
 
-            // 获取annotations
-            if (values.containsKey("annotations")) {
-                JSONObject ann = values.getJSONObject("annotations");
-                StringBuilder builder = new StringBuilder();
-                for (String key : ann.keySet()) {
-                    builder.append(key).append("=").append(ann.getString(key)).append(",");
-                }
-                if (builder.length() != 0) {
-                    builder.deleteCharAt(builder.length() - 1);
-                    middleware.setAnnotations(builder.toString());
-                }
-            }
-
             //动态参数
             if (values.containsKey("custom")){
                 convertDynamicValues(middleware, values);
@@ -699,7 +686,11 @@ public abstract class AbstractBaseOperator {
         if (!CollectionUtils.isEmpty(middleware.getTolerations())) {
             JSONArray jsonArray = K8sConvert.convertToleration2Json(middleware.getTolerations());
             values.put("tolerations", jsonArray);
-            values.put("tolerationAry", Arrays.toString(middleware.getTolerations().toArray()));
+            StringBuffer sbf = new StringBuffer();
+            for (String toleration : middleware.getTolerations()) {
+                sbf.append(toleration).append(",");
+            }
+            values.put("tolerationAry", sbf.substring(0, sbf.length()));
         }
 
         // annotations
