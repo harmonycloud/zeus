@@ -71,7 +71,7 @@ public class ConfigTemplateServiceImpl implements ConfigTemplateService {
             // 特殊处理mysql相关内容
             if ("innodb_buffer_pool_size".equals(beanCustomConfig.getName())) {
                 // 设置默认值为空
-                customConfig.setDefaultValue(" ");
+                customConfig.setDefaultValue("");
             }
             return customConfig;
         }).collect(Collectors.toList());
