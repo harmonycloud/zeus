@@ -383,8 +383,14 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             podService.list(config.getClusterId(), config.getNamespace(), config.getName(), config.getType());
         // 拼接数据库语句
         StringBuilder sb = new StringBuilder();
-        config.getCustomConfigList().forEach(customConfig -> sb.append("set global ").append(customConfig.getName())
-            .append("=").append(customConfig.getValue()).append(";"));
+        config.getCustomConfigList().forEach(customConfig -> {
+            sb.append("set global ").append(customConfig.getName()).append("=");
+            if ("init_connect".equals(customConfig.getName())) {
+                sb.append("'").append(customConfig.getValue()).append("'").append(";");
+            } else {
+                sb.append(customConfig.getValue()).append(";");
+            }
+        });
         // 主从节点执行命令
         middleware.getPods().forEach(podInfo -> {
             String execCommand = MessageFormat.format(
