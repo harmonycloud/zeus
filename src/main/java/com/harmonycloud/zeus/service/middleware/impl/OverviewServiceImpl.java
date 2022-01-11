@@ -384,7 +384,7 @@ public class OverviewServiceImpl implements OverviewService {
         List<BeanAlertRecord> recordList = beanAlertRecordMapper.selectList(wrapper);
         PageInfo<AlertDTO> alertDTOPage = new PageInfo<>();
         BeanUtils.copyProperties(new PageInfo<>(recordList), alertDTOPage);
-        if (recordList == null || recordList.isEmpty()) {
+        if (CollectionUtils.isEmpty(recordList)) {
             return alertDTOPage;
         }
         Map<Middleware, String> middlewareMap = new HashMap<>();
@@ -416,8 +416,9 @@ public class OverviewServiceImpl implements OverviewService {
                 alertDTO.setAlertId(middlewareAlertsService.calculateID(record.getAlertId())
                         + "-" + middlewareAlertsService.createId(record.getId()));
             }
-
-            return alertDTO;
+          //返回大写类型
+           changeType(record,alertDTO);
+           return alertDTO;
         }).collect(Collectors.toList()));
         alertDTOPage.getList().sort(
             (o1, o2) -> o1.getTime() == null ? -1 : o2.getTime() == null ? -1 : o2.getTime().compareTo(o1.getTime()));
@@ -659,6 +660,30 @@ public class OverviewServiceImpl implements OverviewService {
         BigDecimal b1 = new BigDecimal(Double.toString(null == a ? 0.0d : a));
         BigDecimal b2 = new BigDecimal(Double.toString(null == b ? 0.0d : b));
         return b1.add(b2).doubleValue();
+    }
+
+    private void changeType(BeanAlertRecord record,AlertDTO alertDTO) {
+        if (StringUtils.isNotEmpty(record.getType())) {
+            if ("mysql".equals(record.getType())) {
+                alertDTO.setCapitalType("MySQL");
+            }
+            if ("elasticsearch".equals(record.getType())) {
+                alertDTO.setCapitalType("Elasticsearch");
+            }
+            if ("kafka".equals(record.getType())) {
+                alertDTO.setCapitalType("Kafka");
+            }
+            if ("redis".equals(record.getType())) {
+                alertDTO.setCapitalType("Redis");
+            }
+            if ("rocketmq".equals(record.getType())) {
+                alertDTO.setCapitalType("RocketMQ");
+            }
+            if ("zookeeper".equals(record.getType())) {
+                alertDTO.setCapitalType("ZooKeeper");
+            }
+        }
+
     }
 
     @Override
