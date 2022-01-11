@@ -107,7 +107,7 @@ parameters:
         value: [utf8|latin1|gbk|gb18030|utf8mb4]
       - name: describe
         value: "The default character set"
-  - transaction-isolation:
+  - transaction_isolation:
       - name: default
         value: READ-COMMITTED
       - name: isReboot
