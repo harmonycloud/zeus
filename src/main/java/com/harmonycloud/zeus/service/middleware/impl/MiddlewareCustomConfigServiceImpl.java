@@ -385,10 +385,10 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         StringBuilder sb = new StringBuilder();
         config.getCustomConfigList().forEach(customConfig -> {
             sb.append("set global ").append(customConfig.getName()).append("=");
-            if ("init_connect".equals(customConfig.getName()) || "sql_mode".equals(customConfig.getName())) {
-                sb.append("'").append(customConfig.getValue()).append("'").append(";");
-            } else {
+            if (isNum(customConfig.getValue())) {
                 sb.append(customConfig.getValue()).append(";");
+            } else {
+                sb.append("'").append(customConfig.getValue()).append("'").append(";");
             }
         });
         // 主从节点执行命令
@@ -414,6 +414,15 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
                 throw new BusinessException(ErrorMessage.CUSTOM_CONFIG_VALUE_IS_EMPTY, customConfig.getName());
             }
         });
+    }
+
+    /**
+     * 校验字符串是否为纯数字
+     */
+    public Boolean isNum(String str){
+        Pattern pattern = Pattern.compile("[0-9]*");
+        Matcher isNum = pattern.matcher(str);
+        return isNum.matches();
     }
 
 }
