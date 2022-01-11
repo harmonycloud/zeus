@@ -385,7 +385,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         StringBuilder sb = new StringBuilder();
         config.getCustomConfigList().forEach(customConfig -> {
             sb.append("set global ").append(customConfig.getName()).append("=");
-            if ("init_connect".equals(customConfig.getName())) {
+            if ("init_connect".equals(customConfig.getName()) || "sql_mode".equals(customConfig.getName())) {
                 sb.append("'").append(customConfig.getValue()).append("'").append(";");
             } else {
                 sb.append(customConfig.getValue()).append(";");
