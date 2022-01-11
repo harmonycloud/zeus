@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.bean.BeanCustomConfig;
 import com.harmonycloud.zeus.bean.BeanCustomConfigTemplate;
@@ -22,6 +24,7 @@ import com.harmonycloud.caas.common.model.middleware.CustomConfigTemplateDTO;
 import com.harmonycloud.zeus.service.middleware.ConfigTemplateService;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author xutianhong
@@ -40,6 +43,7 @@ public class ConfigTemplateServiceImpl implements ConfigTemplateService {
 
     @Override
     public void create(CustomConfigTemplateDTO customConfigTemplateDTO) {
+        checkExist(customConfigTemplateDTO);
         // 封装数据
         BeanCustomConfigTemplate beanCustomConfigTemplate = convert(customConfigTemplateDTO);
         // 写入数据库
@@ -135,6 +139,18 @@ public class ConfigTemplateServiceImpl implements ConfigTemplateService {
         beanCustomConfigTemplate.setUid(UUIDUtils.get16UUID());
         beanCustomConfigTemplate.setConfig(sb.toString());
         return beanCustomConfigTemplate;
+    }
+
+    public void checkExist(CustomConfigTemplateDTO customConfigTemplateDTO){
+        QueryWrapper<BeanCustomConfigTemplate> wrapper =
+            new QueryWrapper<BeanCustomConfigTemplate>().eq("name", customConfigTemplateDTO.getName());
+        if (StringUtils.isNotEmpty(customConfigTemplateDTO.getUid())){
+            wrapper.ne("uid", customConfigTemplateDTO.getUid());
+        }
+        List<BeanCustomConfigTemplate> list = beanCustomConfigTemplateMapper.selectList(wrapper);
+        if (!CollectionUtils.isEmpty(list)){
+            throw new BusinessException(ErrorMessage.CUSTOM_CONFIG_TEMPLATE_EXIST);
+        }
     }
     
 }
