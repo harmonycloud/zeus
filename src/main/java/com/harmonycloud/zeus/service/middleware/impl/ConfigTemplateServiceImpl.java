@@ -107,6 +107,7 @@ public class ConfigTemplateServiceImpl implements ConfigTemplateService {
 
     @Override
     public void update(CustomConfigTemplateDTO customConfigTemplateDTO) {
+        checkExist(customConfigTemplateDTO);
         // 封装数据
         BeanCustomConfigTemplate beanCustomConfigTemplate = convert(customConfigTemplateDTO);
         // update
