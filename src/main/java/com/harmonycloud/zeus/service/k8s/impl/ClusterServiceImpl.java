@@ -804,12 +804,12 @@ public class ClusterServiceImpl implements ClusterService {
                 nsResource.setPer5MinMemory(getResourceResult((memoryPer5MinResult.get(nsMap).get(1))));
             }
             // 计算cpu使用率
-            if (nsResource.getCpuRequest() != null && nsResource.getPer5MinCpu() != null) {
+            if (nsResource.getCpuRequest() != null && nsResource.getPer5MinCpu() != null && nsResource.getCpuRequest() != 0) {
                 double cpuRate = nsResource.getPer5MinCpu() / nsResource.getCpuRequest() * 100;
                 nsResource.setCpuRate(ResourceCalculationUtil.roundNumber2TwoDecimalWithCeiling(cpuRate));
             }
             // 计算memory使用率
-            if (nsResource.getMemoryRequest() != null && nsResource.getPer5MinMemory() != null) {
+            if (nsResource.getMemoryRequest() != null && nsResource.getPer5MinMemory() != null && nsResource.getMemoryRequest() != 0) {
                 double memoryRate = nsResource.getPer5MinMemory() / nsResource.getMemoryRequest() * 100;
                 nsResource.setMemoryRate(ResourceCalculationUtil.roundNumber2TwoDecimalWithCeiling(memoryRate));
             }
