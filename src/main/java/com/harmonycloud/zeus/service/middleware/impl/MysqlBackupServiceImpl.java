@@ -80,6 +80,8 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
             if (backup.getDate() != null) {
                 String backupTime = DateUtil.utc2Local(backup.getDate(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
                 record.setBackupTime(backupTime);
+            }else{
+                record.setBackupTime("/");
             }
             if (backup.getStatus() != null) {
                 switch (backup.getStatus()) {
@@ -98,7 +100,6 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
                 }
             } else {
                 record.setPhrase("Unknown");
-                record.setBackupTime("/");
             }
             List<String> addressList = new ArrayList<>();
             addressList.add(backup.getPosition());
