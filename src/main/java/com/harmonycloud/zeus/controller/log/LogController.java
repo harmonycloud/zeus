@@ -102,7 +102,7 @@ public class LogController {
             return logService.listfileName(logQuery);
         } catch (Exception e) {
             logger.error("获取pod的日志文件列表失败：middlewareName:{}", middlewareName, e);
-            return BaseResult.error();
+            return BaseResult.error(ErrorMessage.ELASTICSEARCH_CONNECT_FAILED);
         }
     }
 

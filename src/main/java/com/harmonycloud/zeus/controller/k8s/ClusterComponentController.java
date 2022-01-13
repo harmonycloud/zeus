@@ -82,7 +82,7 @@ public class ClusterComponentController {
     })
     @PostMapping("/multiple")
     public BaseResult multipleDeploy(@PathVariable("clusterId") String clusterId,
-                                     @RequestBody MultipleComponentsInstallDto multipleComponentsInstallDto) {
+                                     @RequestBody MultipleComponentsInstallDto multipleComponentsInstallDto) throws Exception {
         clusterComponentService.multipleDeploy(clusterService.findById(clusterId), multipleComponentsInstallDto);
         return BaseResult.ok();
     }

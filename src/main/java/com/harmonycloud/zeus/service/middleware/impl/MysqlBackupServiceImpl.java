@@ -77,24 +77,29 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
             record.setBackupType(BackupType.CLUSTER.getType());
             record.setBackupName(backup.getBackupName());
             record.setBackupFileName(backup.getBackupFileName());
-            if (backup.getDate() == null) {
-                continue;
+            if (backup.getDate() != null) {
+                String backupTime = DateUtil.utc2Local(backup.getDate(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
+                record.setBackupTime(backupTime);
+            }else{
+                record.setBackupTime("/");
             }
-            String backupTime = DateUtil.utc2Local(backup.getDate(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
-            record.setBackupTime(backupTime);
-            switch (backup.getStatus()) {
-                case "Creating":
-                case "Running":
-                    record.setPhrase("Running");
-                    break;
-                case "Complete":
-                    record.setPhrase("Success");
-                    break;
-                case "Failed":
-                    record.setPhrase("Failed");
-                    break;
-                default:
-                    record.setPhrase("Unknown");
+            if (backup.getStatus() != null) {
+                switch (backup.getStatus()) {
+                    case "Creating":
+                    case "Running":
+                        record.setPhrase("Running");
+                        break;
+                    case "Complete":
+                        record.setPhrase("Success");
+                        break;
+                    case "Failed":
+                        record.setPhrase("Failed");
+                        break;
+                    default:
+                        record.setPhrase("Unknown");
+                }
+            } else {
+                record.setPhrase("Unknown");
             }
             List<String> addressList = new ArrayList<>();
             addressList.add(backup.getPosition());

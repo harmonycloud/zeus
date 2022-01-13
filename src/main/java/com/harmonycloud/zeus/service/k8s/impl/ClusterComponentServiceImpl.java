@@ -74,8 +74,8 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
     }
 
     @Override
-    public void multipleDeploy(MiddlewareClusterDTO cluster,
-        MultipleComponentsInstallDto multipleComponentsInstallDto) {
+    public void multipleDeploy(MiddlewareClusterDTO cluster, MultipleComponentsInstallDto multipleComponentsInstallDto)
+        throws Exception {
         List<ClusterComponentsDto> componentsDtoList = multipleComponentsInstallDto.getClusterComponentsDtoList();
         // 优先部署内容local-path
         if (componentsDtoList.stream().anyMatch(
@@ -84,18 +84,33 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
             componentsDtoList = componentsDtoList.stream().filter(clusterComponentsDto -> !clusterComponentsDto
                 .getComponent().equals(ComponentsEnum.LOCAL_PATH.getName())).collect(Collectors.toList());
         }
-        // 部署组件
-        componentsDtoList.forEach(clusterComponentsDto -> this.deploy(cluster, clusterComponentsDto));
-
         // 部署operator
+        final CountDownLatch operatorCount =
+            new CountDownLatch(multipleComponentsInstallDto.getMiddlewareInfoDTOList().size());
         multipleComponentsInstallDto.getMiddlewareInfoDTOList()
             .forEach(info -> ThreadPoolExecutorFactory.executor.execute(() -> {
                 try {
-                    middlewareManagerService.install(cluster.getId(), info.getChartName(), info.getChartVersion(), info.getType());
+                    middlewareManagerService.install(cluster.getId(), info.getChartName(), info.getChartVersion(),
+                        info.getType());
                 } catch (Exception e) {
                     log.error("集群{}  operator{} 安装失败", cluster.getId(), info.getChartName());
+                } finally {
+                    operatorCount.countDown();
                 }
             }));
+        operatorCount.await();
+        // 部署组件
+        final CountDownLatch componentsCount = new CountDownLatch(componentsDtoList.size());
+        componentsDtoList.forEach(clusterComponentsDto -> ThreadPoolExecutorFactory.executor.execute(() -> {
+            try {
+                this.deploy(cluster, clusterComponentsDto);
+            } catch (Exception e) {
+                log.error("集群{}  组件{}  安装失败", cluster.getId(), clusterComponentsDto.getComponent(), e);
+            } finally {
+                componentsCount.countDown();
+            }
+        }));
+        componentsCount.await();
     }
 
 

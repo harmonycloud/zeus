@@ -159,6 +159,11 @@ MODIFY COLUMN `name` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_
 MODIFY COLUMN `default_value` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '默认值' AFTER `chart_name`,
 MODIFY COLUMN `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '描述' AFTER `ranges`;
 
+-- 修改配置修改历史表字段长度
+ALTER TABLE `custom_config_history`
+MODIFY COLUMN `name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '中间件名称' AFTER `namespace`,
+MODIFY COLUMN `item` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '配置名称' AFTER `name`;
+
 
 
 

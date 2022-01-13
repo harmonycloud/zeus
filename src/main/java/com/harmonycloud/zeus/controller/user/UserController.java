@@ -120,7 +120,7 @@ public class UserController {
 
     @ApiImplicitParams({
             @ApiImplicitParam(name = "personalizedConfiguration", value = "个性化配置信息", paramType = "query", dataTypeClass = PersonalizedConfiguration.class),
-            @ApiImplicitParam(name = "status", value = "恢复初始化设置",paramType = "path", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "status", value = "恢复初始化设置",paramType = "path", dataTypeClass = String.class),
     })
     @ApiOperation(value = "添加个性化配置", notes = "添加个性化配置")
     @PostMapping("/personalized")
@@ -145,8 +145,7 @@ public class UserController {
     @PostMapping("/uploadFile")
     public BaseResult UploadFile(@RequestPart("file") MultipartFile file,
                                  @RequestParam String type) throws IOException {
-        userService.uploadFile(file,type);
-        return BaseResult.ok();
+        return BaseResult.ok(userService.uploadFile(file,type));
     }
 
     @ApiImplicitParams({
