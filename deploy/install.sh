@@ -9,12 +9,12 @@ HA=$5
 if [ $LINE_TYPE == "offline" ]; then
   echo "######  Push images  ######"
 
-  sh load-image.sh ./image
+  sh load-image.sh ./deploy
 
   echo "######  Push images done !  ######"
 fi
 
-function deploy_docker() {
+function deploy_dockesr() {
   cd deploy/docker-compose/
   zeus_repository=$IMAGE_REPO"/middleware/" docker-compose -f zeus.yaml up -d
 }
