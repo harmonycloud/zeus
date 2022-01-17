@@ -112,10 +112,6 @@ CREATE TABLE `cluster_ingress_components`  (
 -- 2021.12.3 xutianhong
 -- resource_menu更新
 UPDATE `resource_menu` SET alias_name = "资源池" WHERE `name` = "resourcePoolManagement";
--- 2021.12.6 yushuaikang
-INSERT INTO `resource_menu` VALUES (17, 'systemAlarm', '系统告警', 'systemManagement/systemAlarm', 74, NULL, 7, NULL);
-UPDATE `resource_menu` SET alias_name = "服务告警" WHERE `name` = "alarmCenter";
-INSERT INTO `resource_menu_role` VALUES (17, 1, 17, 1);
 -- 2021.12.7 yushuaikang
 ALTER TABLE `personal_config`
 MODIFY COLUMN `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin NULL DEFAULT NULL COMMENT '浏览器标题' AFTER `copyright_notice`;
