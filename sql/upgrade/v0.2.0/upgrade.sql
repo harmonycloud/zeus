@@ -65,7 +65,7 @@ CREATE TABLE `ding_robot_info` (
 
 -- 新增告警规则表
 DROP TABLE IF EXISTS `alert_rule_id`;
-CREATE TABLE `alert_rule_id` (alert_rule_id
+CREATE TABLE `alert_rule_id` (
   `alert_id` int NOT NULL AUTO_INCREMENT COMMENT '规则ID',
   `cluster_id` varchar(32) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '集群ID',
   `namespace` varchar(32) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '命名空间',
