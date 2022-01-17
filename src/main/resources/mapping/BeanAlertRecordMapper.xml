@@ -4,7 +4,7 @@
 
     <select id="queryByTimeAndLevel" resultType="map">
         SELECT count(`time`) num,date_format(`time`,'%Y-%m-%d %H:00:00') alerttime FROM middleware_platform.alert_record
-        WHERE `time` &gt;= #{beginTime} AND `time` &lt;= #{endTime} AND `level` = #{level}
+        WHERE `time` &gt;= #{beginTime} AND `time` &lt;= #{endTime} AND `level` = #{level} AND `cluster_id` != ""
         GROUP BY alerttime ORDER BY `time` DESC;
     </select>
 
