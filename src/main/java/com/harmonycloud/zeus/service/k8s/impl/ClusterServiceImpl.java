@@ -717,30 +717,34 @@ public class ClusterServiceImpl implements ClusterService {
     @Override
     public List<ClusterNodeResourceDto> getNodeResource(String clusterId) throws Exception {
         List<Node> nodeList = nodeService.list(clusterId);
-
-        Map<String, Double> nodeCpuUsed = getNodeCpuUsed(clusterId);
+        // 查询cpu使用量
+        String nodeCpuQuery = "sum(irate(node_cpu_seconds_total{mode!=\"idle\"}[5m])) by (kubernetes_pod_node_name)";
+        Map<String, Double> nodeCpuUsed = nodeQuery(clusterId, nodeCpuQuery);
+        // 查询memory使用量
+        String nodeMemoryQuery = "((node_memory_MemTotal_bytes - node_memory_MemFree_bytes - node_memory_Cached_bytes - node_memory_Buffers_bytes - node_memory_Slab_bytes)/1024/1024/1024)";
+        Map<String, Double> nodeMemoryUsed = nodeQuery(clusterId, nodeMemoryQuery);
         return nodeList.stream().map(node -> {
             ClusterNodeResourceDto nodeRs = new ClusterNodeResourceDto();
             nodeRs.setClusterId(clusterId);
             nodeRs.setIp(node.getIp());
+            nodeRs.setStatus(node.getStatus());
+            nodeRs.setCreateTime(node.getCreateTime());
+            // 设置cpu
             nodeRs.setCpuUsed(nodeCpuUsed.getOrDefault(node.getName(), null));
             nodeRs.setCpuTotal(Double.parseDouble(node.getCpu().getTotal()));
             if (nodeRs.getCpuUsed() != null) {
                 nodeRs.setCpuRate(ResourceCalculationUtil.roundNumber(
                     BigDecimal.valueOf(nodeRs.getCpuUsed() / nodeRs.getCpuTotal() * 100), 2, RoundingMode.CEILING));
             }
-            nodeRs
-                .setMemoryUsed(ResourceCalculationUtil.roundNumber(
-                    BigDecimal.valueOf((Double.parseDouble(node.getMemory().getTotal())
-                        - Double.parseDouble(node.getMemory().getAllocated())) / 1024 / 1024),
-                    2, RoundingMode.CEILING));
+            // 设置memory
+            nodeRs.setMemoryUsed(nodeMemoryUsed.getOrDefault(node.getName(), null));
             nodeRs.setMemoryTotal(ResourceCalculationUtil.roundNumber(
-                BigDecimal.valueOf(Double.parseDouble(node.getMemory().getTotal()) / 1024 / 1024), 2,
-                RoundingMode.CEILING));
-            nodeRs.setMemoryRate(ResourceCalculationUtil.roundNumber(
-                BigDecimal.valueOf(nodeRs.getMemoryUsed() / nodeRs.getMemoryTotal() * 100), 2, RoundingMode.CEILING));
-            nodeRs.setStatus(node.getStatus());
-            nodeRs.setCreateTime(node.getCreateTime());
+                    BigDecimal.valueOf(Double.parseDouble(node.getMemory().getTotal()) / 1024 / 1024), 2,
+                    RoundingMode.CEILING));
+            if (nodeRs.getMemoryUsed() != null){
+                nodeRs.setMemoryRate(ResourceCalculationUtil.roundNumber(
+                        BigDecimal.valueOf(nodeRs.getMemoryUsed() / nodeRs.getMemoryTotal() * 100), 2, RoundingMode.CEILING));
+            }
             return nodeRs;
         }).sorted((o1, o2) -> o1.getCreateTime() == null ? -1
             : o2.getCreateTime() == null ? -1 : o2.getCreateTime().compareTo(o1.getCreateTime()))
@@ -800,12 +804,12 @@ public class ClusterServiceImpl implements ClusterService {
                 nsResource.setPer5MinMemory(getResourceResult((memoryPer5MinResult.get(nsMap).get(1))));
             }
             // 计算cpu使用率
-            if (nsResource.getCpuRequest() != null && nsResource.getPer5MinCpu() != null) {
+            if (nsResource.getCpuRequest() != null && nsResource.getPer5MinCpu() != null && nsResource.getCpuRequest() != 0) {
                 double cpuRate = nsResource.getPer5MinCpu() / nsResource.getCpuRequest() * 100;
                 nsResource.setCpuRate(ResourceCalculationUtil.roundNumber2TwoDecimalWithCeiling(cpuRate));
             }
             // 计算memory使用率
-            if (nsResource.getMemoryRequest() != null && nsResource.getPer5MinMemory() != null) {
+            if (nsResource.getMemoryRequest() != null && nsResource.getPer5MinMemory() != null && nsResource.getMemoryRequest() != 0) {
                 double memoryRate = nsResource.getPer5MinMemory() / nsResource.getMemoryRequest() * 100;
                 nsResource.setMemoryRate(ResourceCalculationUtil.roundNumber2TwoDecimalWithCeiling(memoryRate));
             }
@@ -890,25 +894,24 @@ public class ClusterServiceImpl implements ClusterService {
         return pvcs;
     }
 
-    public Map<String, Double> getNodeCpuUsed(String clusterId){
-        Map<String, Double> nodeCpu = new HashMap<>();
+    public Map<String, Double> nodeQuery(String clusterId, String query){
+        Map<String, Double> resultMap = new HashMap<>();
         Map<String, String> queryMap = new HashMap<>();
         // 查询cpu使用量
         try {
-            String nodeCpuQuery = "sum(irate(node_cpu_seconds_total{mode!=\"idle\"}[5m])) by (kubernetes_pod_node_name)";
-            queryMap.put("query", nodeCpuQuery);
-            PrometheusResponse nodeCpuRequest =
+            queryMap.put("query", query);
+            PrometheusResponse nodeMemoryRequest =
                     prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
-            if (!CollectionUtils.isEmpty(nodeCpuRequest.getData().getResult())) {
-                nodeCpuRequest.getData().getResult().forEach(result -> {
-                    nodeCpu.put(result.getMetric().get("kubernetes_pod_node_name"), ResourceCalculationUtil.roundNumber(
-                        BigDecimal.valueOf(Double.parseDouble(result.getValue().get(1))), 2, RoundingMode.CEILING));
+            if (!CollectionUtils.isEmpty(nodeMemoryRequest.getData().getResult())) {
+                nodeMemoryRequest.getData().getResult().forEach(result -> {
+                    resultMap.put(result.getMetric().get("kubernetes_pod_node_name"), ResourceCalculationUtil.roundNumber(
+                            BigDecimal.valueOf(Double.parseDouble(result.getValue().get(1))), 2, RoundingMode.CEILING));
                 });
             }
         }catch (Exception e){
             log.error("node列表，查询cpu失败");
         }
-        return nodeCpu;
+        return resultMap;
     }
 
 
