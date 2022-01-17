@@ -159,6 +159,9 @@ UPDATE `resource_menu` SET alias_name = "服务告警" WHERE `name` = "alarmCent
 INSERT INTO `resource_menu` VALUES (17, 'systemAlarm', '系统告警', 'systemManagement/systemAlarm', 73, NULL, 7, NULL);
 INSERT INTO `resource_menu_role` VALUES (null, 1, 17, 1);
 
-
+-- 2022.1.17 liyinlong
+-- 增加服务升级所需最低operator版本字段
+ALTER TABLE `middleware_info`
+    ADD COLUMN `compatible_versions` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '升级所需最低版本';
 
 
