@@ -13,91 +13,96 @@ CREATE TABLE `cluster_components` (
 -- 新增个性化配置表
 DROP TABLE IF EXISTS `personal_config`;
 CREATE TABLE `personal_config` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '自增ID',
   `background_image` mediumblob COMMENT '背景图',
-  `background_image_path` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT '背景图地址',
+  `background_image_path` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '背景图地址',
   `login_logo` mediumblob COMMENT '登录页logo',
-  `login_logo_path` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT '登录页logo地址',
+  `login_logo_path` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '登录页logo地址',
   `home_logo` mediumblob COMMENT '主页logo',
-  `home_logo_path` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT '主页logo地址',
-  `platform_name` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT '平台名称',
-  `slogan` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT '标语',
-  `copyright_notice` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT '版权声明',
-  `title` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '浏览器标题',
+  `home_logo_path` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '主页logo地址',
+  `platform_name` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '平台名称',
+  `slogan` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '标语',
+  `copyright_notice` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '版权声明',
+  `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '浏览器标题',
   `create_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
   `update_time` timestamp NULL DEFAULT NULL COMMENT '修改时间',
-  `status` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '是否默认',
+  `status` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '是否默认',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- 新增邮箱信息表
 DROP TABLE IF EXISTS `mail_info`;
 CREATE TABLE `mail_info` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增ID',
-  `mail_server` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT '邮箱服务器',
-  `port` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '端口',
-  `username` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT '用户',
-  `password` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT '密码',
-  `mail_path` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT '邮箱地址',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `mail_server` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '邮箱服务器',
+  `port` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '端口',
+  `username` varchar(32) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '用户',
+  `password` varchar(32) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '密码',
+  `mail_path` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '邮箱地址',
   `creat_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- 新增被通知人表
 DROP TABLE IF EXISTS `mail_to_user`;
 CREATE TABLE `mail_to_user` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增ID',
-  `user_id` int(11) DEFAULT NULL COMMENT '用户ID',
-  `username` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '用户',
-  `alias_name` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '账户',
-  `email` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT '邮箱',
-  `phone` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT '电话',
-  `create_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `user_id` int DEFAULT NULL COMMENT '用户ID',
+  `alert_rule_id` int DEFAULT NULL COMMENT '规则ID',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- 新增钉钉机器人表
 DROP TABLE IF EXISTS `ding_robot_info`;
 CREATE TABLE `ding_robot_info` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增ID',
-  `webhook` varchar(128) COLLATE utf8_bin NOT NULL,
-  `secret_key` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT '加签密钥',
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `webhook` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `secret_key` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '加签密钥',
   `enable_ding` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '是否启用该钉钉机器人 1 启用 0 否',
   `creat_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- 新增告警规则表
 DROP TABLE IF EXISTS `alert_rule_id`;
-CREATE TABLE `alert_rule_id` (
-  `alert_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '规则ID',
-  `cluster_id` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT '集群ID',
-  `namespace` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT '命名空间',
-  `middleware_name` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT '中间件名称',
-  `alert` text COLLATE utf8_bin COMMENT '规则名称',
-  `name` varchar(16) COLLATE utf8_bin DEFAULT NULL,
-  `silence` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '沉默时间',
-  `symbol` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '符号',
-  `threshold` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '阈值',
-  `time` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '分钟周期',
-  `type` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '中间件类型',
-  `unit` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT '单位',
-  `expr` varchar(512) COLLATE utf8_bin DEFAULT NULL COMMENT '执行规则',
-  `description` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT '监控项',
-  `annotations` text COLLATE utf8_bin COMMENT '备注',
-  `labels` text COLLATE utf8_bin COMMENT '标签',
-  `id` varchar(32) COLLATE utf8_bin DEFAULT NULL,
-  `alert_time` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '告警时间',
-  `alert_times` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '告警次数',
+CREATE TABLE `alert_rule_id` (alert_rule_id
+  `alert_id` int NOT NULL AUTO_INCREMENT COMMENT '规则ID',
+  `cluster_id` varchar(32) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '集群ID',
+  `namespace` varchar(32) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '命名空间',
+  `middleware_name` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '中间件名称',
+  `alert` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '规则名称',
+  `name` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL,
+  `silence` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '沉默时间',
+  `symbol` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '符号',
+  `threshold` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '阈值',
+  `time` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '分钟周期',
+  `type` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '中间件类型',
+  `unit` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '单位',
+  `expr` varchar(512) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '执行规则',
+  `description` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '监控项',
+  `annotations` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '备注',
+  `labels` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '标签',
+  `id` varchar(32) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL,
+  `alert_time` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '告警时间',
+  `alert_times` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '告警次数',
   `create_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
-  `status` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '状态',
-  `enable` int(11) DEFAULT NULL COMMENT '是否启用',
-  `content` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT '告警内容',
-  `lay` varchar(12) COLLATE utf8_bin DEFAULT NULL COMMENT 'system 系统告警 service 服务告警',
+  `status` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '状态',
+  `enable` int DEFAULT NULL COMMENT '是否启用',
+  `content` varchar(512) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '告警内容',
+  `lay` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT 'system 系统告警 service 服务告警',
+  `ding` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '是否选择钉钉通知',
+  `mail` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '是否选择邮箱通知',
+  `alert_expr` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '告警规则',
   PRIMARY KEY (`alert_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
--- 告警记录表添加lay
-ALTER TABLE `alert_record` ADD COLUMN lay varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '告警层面';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+-- 告警记录表添加字段
+ALTER TABLE `alert_record`
+ADD COLUMN `lay` varchar(16) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '告警层面',
+ADD COLUMN `expr` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '规则描述',
+ADD COLUMN `alert_id` int(16) DEFAULT NULL COMMENT '规则ID',
+ADD COLUMN `content` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '告警内容';
+
 -- 2021.11.30 xutianhong
 -- 新增集群ingress组件表
 DROP TABLE IF EXISTS `cluster_ingress_components`;
@@ -112,11 +117,6 @@ CREATE TABLE `cluster_ingress_components`  (
 -- 2021.12.3 xutianhong
 -- resource_menu更新
 UPDATE `resource_menu` SET alias_name = "资源池" WHERE `name` = "resourcePoolManagement";
--- 2021.12.7 yushuaikang
-ALTER TABLE `personal_config`
-MODIFY COLUMN `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin NULL DEFAULT NULL COMMENT '浏览器标题' AFTER `copyright_notice`;
-ALTER TABLE `alert_rule_id`
-MODIFY COLUMN `name` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin NULL DEFAULT NULL AFTER `alert`;
 
 -- 2021.12.7 xutianhong
 -- 增加middleware_info version字段长度
@@ -135,14 +135,6 @@ ADD COLUMN `create_time` timestamp(0) NULL COMMENT '创建时间' AFTER `status`
 
 ALTER TABLE `cluster_components`
 ADD COLUMN `create_time` timestamp(0) NULL COMMENT '创建时间' AFTER `status`;
--- 2021.12.9 yushuaikang
-ALTER TABLE `alert_rule_id` ADD COLUMN `ding`varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '是否选择钉钉通知';
-ALTER TABLE `alert_rule_id` ADD COLUMN `mail` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '是否选择邮箱通知';
-ALTER TABLE `alert_record` ADD COLUMN `expr` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '规则描述';
-ALTER TABLE `alert_record` ADD COLUMN `alert_id` int(16) DEFAULT NULL COMMENT '规则ID';
-ALTER TABLE `alert_record` ADD COLUMN `content` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '告警内容';
--- 2021.12.15 yushuaikang
-ALTER TABLE `alert_rule_id` ADD COLUMN `alert_expr`varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '告警规则';
 
 -- 2021.12.24 xutianhong
 -- 增加已删除中间件pvc字段长度
@@ -159,6 +151,13 @@ MODIFY COLUMN `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_c
 ALTER TABLE `custom_config_history`
 MODIFY COLUMN `name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '中间件名称' AFTER `namespace`,
 MODIFY COLUMN `item` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '配置名称' AFTER `name`;
+
+-- 2022.1.17 yushuaikang
+UPDATE `resource_menu` SET weight = 74 WHERE `name` = "operationAudit";
+UPDATE `resource_menu` SET weight = 75 WHERE `name` = "resourcePoolManagement";
+UPDATE `resource_menu` SET alias_name = "服务告警" WHERE `name` = "alarmCenter";
+INSERT INTO `resource_menu` VALUES (17, 'systemAlarm', '系统告警', 'systemManagement/systemAlarm', 73, NULL, 7, NULL);
+INSERT INTO `resource_menu_role` VALUES (null, 1, 17, 1);
 
 
 
