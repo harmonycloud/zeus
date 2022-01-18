@@ -96,8 +96,6 @@ public interface MiddlewareService {
      */
     MonitorDto monitor(String clusterId, String namespace, String name, String type, String chartVersion);
 
-    List<Middleware> simpleListAll(String type);
-
     PageObject<MysqlSlowSqlDTO> slowsql(SlowLogQuery slowLogQuery) throws Exception;
 
     void slowsqlExcel(SlowLogQuery slowLogQuery, HttpServletResponse response, HttpServletRequest request) throws Exception;

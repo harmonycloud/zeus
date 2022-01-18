@@ -221,23 +221,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public List<Middleware> simpleListAll(String type) {
-
-        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
-        List<Middleware> list = new ArrayList<>();
-        clusterList.forEach(cluster -> {
-            List<Namespace> namespaceList = namespaceService.list(cluster.getId(), true, null);
-            namespaceList = namespaceList.stream().filter(Namespace::isRegistered).collect(Collectors.toList());
-            namespaceList.forEach(namespace -> {
-                List<Middleware> mwList = middlewareCRDService.list(cluster.getId(), namespace.getName(), type);
-                list.addAll(mwList);
-            });
-        });
-        return list;
-
-    }
-
-    @Override
     public PageObject<MysqlSlowSqlDTO> slowsql(SlowLogQuery slowLogQuery) throws Exception {
         MiddlewareClusterDTO cluster = clusterService.findById(slowLogQuery.getClusterId());
         PageObject<MysqlSlowSqlDTO> slowSqlDTOS = esComponentService.getSlowSql(cluster, slowLogQuery);
