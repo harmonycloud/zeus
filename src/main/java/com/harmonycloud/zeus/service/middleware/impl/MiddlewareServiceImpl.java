@@ -105,13 +105,15 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         Map<String, String> label = null;
         List<String> nameList = new ArrayList<>();
         boolean nameFilter = false;
-        if (StringUtils.isNotBlank(type) && MiddlewareTypeEnum.isType(type)) {
-            label = new HashMap<>(1);
-            label.put("type", MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType());
-        }
-        else {
-            nameList = getNameList(clusterId, namespace, type);
-            nameFilter = true;
+        if (StringUtils.isNotEmpty(type)){
+            if (MiddlewareTypeEnum.isType(type)){
+                label = new HashMap<>(1);
+                label.put("type", MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType());
+            }
+            else {
+                nameList = getNameList(clusterId, namespace, type);
+                nameFilter = true;
+            }
         }
         List<MiddlewareCRD> mwList = middlewareCRDService.listCR(clusterId, namespace, label);
         if (CollectionUtils.isEmpty(mwList)) {
