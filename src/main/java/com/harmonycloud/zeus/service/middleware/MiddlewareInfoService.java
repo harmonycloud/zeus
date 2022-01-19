@@ -22,8 +22,19 @@ public interface MiddlewareInfoService {
      */
     List<BeanMiddlewareInfo> list(Boolean all);
 
-    List<BeanMiddlewareInfo> list(List<MiddlewareClusterDTO> clusterDTOList);
+    /**
+     * 查询集群已安装所有中间件
+     * @param clusterDTOList 集群集合
+     * @return
+     */
+    List<BeanMiddlewareInfo> listInstalledByClusters(List<MiddlewareClusterDTO> clusterDTOList);
 
+    /**
+     * 查询集群已安装所有中间件
+     * @param clusterDTOList 集群
+     * @return
+     */
+    List<BeanMiddlewareInfo> listInstalledByCluster(MiddlewareClusterDTO clusterDTOList);
     /**
      * 查询中间件列表
      *
