@@ -205,12 +205,14 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
 
     @Override
     public void create(Middleware middleware, MiddlewareClusterDTO cluster) {
-        String jsonStr = JSONObject.toJSONString(middleware);
-        Middleware relationMiddleware = JSONObject.parseObject(jsonStr, Middleware.class);
-        middleware.setRelationMiddleware(relationMiddleware);
         super.create(middleware, cluster);
-        // 创建灾备实例
-        middlewareManageTask.asyncCreateDisasterRecoveryMiddleware(this, middleware);
+        MysqlDTO mysqlDTO = middleware.getMysqlDTO();
+        if (mysqlDTO.getOpenDisasterRecoveryMode() != null && mysqlDTO.getOpenDisasterRecoveryMode() && mysqlDTO.getIsSource()) {
+            String jsonStr = JSONObject.toJSONString(middleware);
+            Middleware relationMiddleware = JSONObject.parseObject(jsonStr, Middleware.class);
+            middleware.setRelationMiddleware(relationMiddleware);
+            middlewareManageTask.asyncCreateDisasterRecoveryMiddleware(this, middleware);
+        }
     }
 
     @Override
@@ -271,8 +273,9 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         sb.deleteCharAt(sb.length() - 1);
         // 更新helm
         helmChartService.upgrade(middleware, sb.toString(), cluster);
-        // 创建灾备实例
-        this.createDisasterRecoveryMiddleware(middleware);
+        if (mysqlDTO != null && mysqlDTO.getOpenDisasterRecoveryMode() != null && mysqlDTO.getOpenDisasterRecoveryMode() && mysqlDTO.getIsSource()) {
+            this.createDisasterRecoveryMiddleware(middleware);
+        }
     }
 
     /*@Override
@@ -545,36 +548,35 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
      */
     public void createDisasterRecoveryMiddleware(Middleware middleware) {
         MysqlDTO mysqlDTO = middleware.getMysqlDTO();
-        if (mysqlDTO.getOpenDisasterRecoveryMode() != null && mysqlDTO.getOpenDisasterRecoveryMode() && mysqlDTO.getIsSource()) {
-            //1.为实例创建只读对外服务(NodePort)
-            tryCreateOpenService(middleware.getClusterId(), middleware, ServiceNameConvertUtil.convertMysql(middleware.getName(), true), true);
-            //2.设置灾备实例信息，创建灾备实例
-            //2.1 设置灾备实例信息
-            Middleware relationMiddleware = middleware.getRelationMiddleware();
-            relationMiddleware.setClusterId(mysqlDTO.getRelationClusterId());
-            relationMiddleware.setNamespace(mysqlDTO.getRelationNamespace());
-            relationMiddleware.setName(mysqlDTO.getRelationName());
-            relationMiddleware.setAliasName(mysqlDTO.getRelationAliasName());
+        //1.为实例创建只读对外服务(NodePort)
+        tryCreateOpenService(middleware.getClusterId(), middleware, ServiceNameConvertUtil.convertMysql(middleware.getName(), true), false);
+        //2.设置灾备实例信息，创建灾备实例
+        //2.1 设置灾备实例信息
+        Middleware relationMiddleware = middleware.getRelationMiddleware();
+        relationMiddleware.setClusterId(mysqlDTO.getRelationClusterId());
+        relationMiddleware.setNamespace(mysqlDTO.getRelationNamespace());
+        relationMiddleware.setName(mysqlDTO.getRelationName());
+        relationMiddleware.setAliasName(mysqlDTO.getRelationAliasName());
 
-            //2.2 给灾备实例设置源实例信息
-            MysqlDTO sourceDto = new MysqlDTO();
-            sourceDto.setRelationClusterId(middleware.getClusterId());
-            sourceDto.setRelationNamespace(middleware.getNamespace());
-            sourceDto.setRelationName(middleware.getName());
-            sourceDto.setRelationAliasName(middleware.getAliasName());
-            sourceDto.setReplicaCount(middleware.getMysqlDTO().getReplicaCount());
-            sourceDto.setOpenDisasterRecoveryMode(true);
-            sourceDto.setIsSource(false);
-            sourceDto.setType("slave-slave");
-            relationMiddleware.setMysqlDTO(sourceDto);
+        //2.2 给灾备实例设置源实例信息
+        MysqlDTO sourceDto = new MysqlDTO();
+        sourceDto.setRelationClusterId(middleware.getClusterId());
+        sourceDto.setRelationNamespace(middleware.getNamespace());
+        sourceDto.setRelationName(middleware.getName());
+        sourceDto.setRelationAliasName(middleware.getAliasName());
+        sourceDto.setReplicaCount(middleware.getMysqlDTO().getReplicaCount());
+        sourceDto.setOpenDisasterRecoveryMode(true);
+        sourceDto.setIsSource(false);
+        sourceDto.setType("slave-slave");
+        relationMiddleware.setMysqlDTO(sourceDto);
 
-            BaseOperator operator = middlewareService.getOperator(BaseOperator.class, BaseOperator.class, relationMiddleware);
-            MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(relationMiddleware.getClusterId());
-            operator.createPreCheck(relationMiddleware, cluster);
-            this.create(relationMiddleware, cluster);
-            //3.异步创建关联关系
-            this.createMysqlReplicate(middleware, relationMiddleware);
-        }
+        BaseOperator operator = middlewareService.getOperator(BaseOperator.class, BaseOperator.class, relationMiddleware);
+        MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(relationMiddleware.getClusterId());
+        operator.createPreCheck(relationMiddleware, cluster);
+        this.create(relationMiddleware, cluster);
+        //3.异步创建关联关系
+        this.createMysqlReplicate(middleware, relationMiddleware);
+
     }
 
     /**
