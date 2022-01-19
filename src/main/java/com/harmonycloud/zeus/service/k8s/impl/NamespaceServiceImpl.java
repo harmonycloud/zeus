@@ -30,6 +30,8 @@ import com.harmonycloud.zeus.service.user.ClusterRoleService;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
+
 /**
  * @author dengyulong
  * @date 2021/03/25
@@ -168,6 +170,9 @@ public class NamespaceServiceImpl implements NamespaceService {
 
     @Override
     public void delete(String clusterId, String name) {
+        if (MIDDLEWARE_OPERATOR.equals(name)){
+            throw new BusinessException(ErrorMessage.CAN_NOT_DELETE_NS_MIDDLEWARE_OPERATOR);
+        }
         io.fabric8.kubernetes.api.model.Namespace ns = new io.fabric8.kubernetes.api.model.Namespace();
         ObjectMeta meta = new ObjectMeta();
         meta.setName(name);
