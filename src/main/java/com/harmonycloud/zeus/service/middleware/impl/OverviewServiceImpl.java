@@ -334,7 +334,7 @@ public class OverviewServiceImpl implements OverviewService {
                     wrapper.eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", middlewareName);
             }
         } else {
-            wrapper.isNotNull("cluster_id").isNotNull("namespace").ne("cluster_id", "");
+            wrapper.isNotNull("cluster_id").isNotNull("namespace").ne("cluster_id", "").eq("lay","service");
         }
 
         if (StringUtils.isNotEmpty(level)) {
