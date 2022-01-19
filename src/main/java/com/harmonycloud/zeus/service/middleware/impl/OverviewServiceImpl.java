@@ -766,14 +766,7 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
     @Override
-    public BaseResult getPlatformOverview() {
-        MiddlewareOverviewDTO chartPlatformOverview = this.getChartPlatformOverview();
-        chartPlatformOverview.setMiddlewareDTOList(this.getListPlatformOverview());
-        return BaseResult.ok(chartPlatformOverview);
-    }
-
-    @Override
-    public BaseResult getClusterPlatformOverview(String clusterId) {
+    public PlatformOverviewDTO getClusterPlatformOverview(String clusterId) {
         List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(true, null);
         if (StringUtils.isNotBlank(clusterId)) {
             clusterList = clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
@@ -815,11 +808,11 @@ public class OverviewServiceImpl implements OverviewService {
         //获取审计信息
         List<BeanOperationAudit> auditList = operationAuditService.listRecent(20);
         platformOverviewDTO.setAuditList(auditList);
-        return BaseResult.ok(platformOverviewDTO);
+        return platformOverviewDTO;
     }
 
     @Override
-    public BaseResult getClusterMiddlewareInfo(String clusterId) {
+    public PlatformOverviewDTO getClusterMiddlewareInfo(String clusterId) {
         PlatformOverviewDTO platformOverviewDTO = new PlatformOverviewDTO();
         List<MiddlewareClusterDTO> clusterList = null;
         try {
@@ -829,7 +822,7 @@ public class OverviewServiceImpl implements OverviewService {
         }
         if (CollectionUtils.isEmpty(clusterList)) {
             platformOverviewDTO.setBriefInfoList(new ArrayList<>());
-            return BaseResult.ok(platformOverviewDTO);
+            return platformOverviewDTO;
         }
         if (StringUtils.isNotBlank(clusterId)) {
             clusterList = clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
@@ -852,7 +845,7 @@ public class OverviewServiceImpl implements OverviewService {
         }
 
         platformOverviewDTO.setBriefInfoList(middlewareBriefInfoList);
-        return BaseResult.ok(platformOverviewDTO);
+        return platformOverviewDTO;
     }
 
 }

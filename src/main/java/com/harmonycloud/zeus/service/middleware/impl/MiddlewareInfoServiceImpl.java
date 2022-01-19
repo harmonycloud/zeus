@@ -389,26 +389,15 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     }
 
     @Override
-    public List<BeanMiddlewareInfo> list(List<MiddlewareClusterDTO> clusterList) {
-        List<String> clusterIds = new ArrayList<>();
-        clusterList.forEach(cluster -> {
-            clusterIds.add(cluster.getId());
-        });
-        List<BeanClusterMiddlewareInfo> briefMiddlewareInfos = clusterMiddlewareInfoService.listAll(clusterIds);
-        List<BeanMiddlewareInfo> infoList = new ArrayList<>();
-        if (!CollectionUtils.isEmpty(briefMiddlewareInfos)) {
-            briefMiddlewareInfos.forEach(middlewareInfo -> {
-                QueryWrapper<BeanMiddlewareInfo> queryWrapper = new QueryWrapper<>();
-                queryWrapper.eq("chart_name", middlewareInfo.getChartName());
-                queryWrapper.eq("chart_version", middlewareInfo.getChartVersion());
-                List<BeanMiddlewareInfo> list = middlewareInfoMapper.selectList(queryWrapper);
-                list.forEach(item -> {
-                    item.setClusterId(middlewareInfo.getClusterId());
-                });
-                infoList.addAll(list);
-            });
-        }
-        return infoList;
+    public List<BeanMiddlewareInfo> listInstalledByClusters(List<MiddlewareClusterDTO> clusterList) {
+        return middlewareInfoMapper.listInstalledWithMiddlewareDetail(clusterList);
+    }
+
+    @Override
+    public List<BeanMiddlewareInfo> listInstalledByCluster(MiddlewareClusterDTO clusterDTO) {
+        List<MiddlewareClusterDTO> clusterDTOS = new ArrayList<>();
+        clusterDTOS.add(clusterDTO);
+        return middlewareInfoMapper.listInstalledWithMiddlewareDetail(clusterDTOS);
     }
 
     @Override

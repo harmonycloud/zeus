@@ -115,10 +115,12 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
 
 
     @Override
-    public void integrate(MiddlewareClusterDTO cluster, String componentName) {
+    public void integrate(MiddlewareClusterDTO cluster, String componentName, Boolean update) {
         BaseComponentsService service = getOperator(BaseComponentsService.class, BaseComponentsService.class, componentName);
         service.integrate(cluster);
-        record(cluster.getId(), componentName, 1);
+        if (!update){
+            record(cluster.getId(), componentName, 1);
+        }
     }
 
     @Override

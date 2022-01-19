@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.controller.middleware;
 
 import java.util.List;
 
+import com.harmonycloud.zeus.bean.PlatformOverviewDTO;
 import com.harmonycloud.zeus.service.middleware.OverviewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,8 +39,8 @@ public class PlatformOverviewController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", required = false, dataTypeClass = String.class)
     })
     @GetMapping
-    public BaseResult getPlatformOverview(@RequestParam(value = "clusterId", required = false) String clusterId) {
-        return overviewService.getClusterPlatformOverview(clusterId);
+    public BaseResult<PlatformOverviewDTO> getPlatformOverview(@RequestParam(value = "clusterId", required = false) String clusterId) {
+        return BaseResult.ok(overviewService.getClusterPlatformOverview(clusterId));
     }
 
     @ApiOperation(value = "平台总览-获取服务信息", notes = "服务信息")
@@ -47,8 +48,8 @@ public class PlatformOverviewController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", required = false, dataTypeClass = String.class)
     })
     @GetMapping("/middlewareInfo")
-    public BaseResult getMiddlewareInfo(@RequestParam(value = "clusterId", required = false) String clusterId) {
-        return overviewService.getClusterMiddlewareInfo(clusterId);
+    public BaseResult<PlatformOverviewDTO> getMiddlewareInfo(@RequestParam(value = "clusterId", required = false) String clusterId) {
+        return BaseResult.ok(overviewService.getClusterMiddlewareInfo(clusterId));
     }
 
     @ApiOperation(value = "查询告警记录", notes = "查询告警记录")
