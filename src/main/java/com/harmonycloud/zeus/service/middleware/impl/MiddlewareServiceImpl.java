@@ -297,7 +297,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
     @Override
     public List<MiddlewareBriefInfoDTO> getMiddlewareBriefInfoList(List<MiddlewareClusterDTO> clusterDTOList) {
-        List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.list(clusterDTOList);
+        List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.listInstalledByClusters(clusterDTOList);
         List<MiddlewareBriefInfoDTO> middlewareBriefInfoDTOList = new ArrayList<>();
         List<Middleware> middlewares = queryAllClusterService(clusterDTOList);
         middlewareInfoList.forEach(middlewareInfo -> {
@@ -351,19 +351,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
     @Override
     public List<MiddlewareBriefInfoDTO> listAllMiddleware(String clusterId, String namespace, String type, String keyword) {
-        List<MiddlewareBriefInfoDTO> serviceList = null;
+        List<MiddlewareBriefInfoDTO> serviceList = new ArrayList<>();
         try {
-            ArrayList<MiddlewareClusterDTO> list = new ArrayList<>();
-            list.add(clusterService.findById(clusterId));
-            List<BeanMiddlewareInfo> middlewareInfoDTOList = middlewareInfoService.list(list);
+            List<BeanMiddlewareInfo> middlewareInfoDTOList = middlewareInfoService.listInstalledByCluster(clusterService.findById(clusterId));
             if (type != null) {
                 middlewareInfoDTOList = middlewareInfoDTOList.stream().filter(middleware -> type.equals(middleware.getChartName())).collect(Collectors.toList());
-                middlewareInfoDTOList.sort(Comparator.comparing(BeanMiddlewareInfo::getChartVersion).reversed());
-                BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoDTOList.get(0);
-                middlewareInfoDTOList.clear();
-                middlewareInfoDTOList.add(beanMiddlewareInfo);
             }
-            serviceList = new ArrayList<>();
             List<Middleware> middlewareServiceList = simpleList(clusterId, namespace, type, keyword);
             // 获取删除了但没有完全删除的中间件
             List<BeanCacheMiddleware> beanCacheMiddlewareList = cacheMiddlewareService.list(clusterId, namespace);
@@ -374,17 +367,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                     if (!middlewareInfo.getChartName().equals(middleware.getType())) {
                         continue;
                     }
-                    MiddlewareCRD middlewareCRD = middlewareCRDService.getCR(clusterId, namespace, middlewareInfo.getType(), middleware.getName());
-                    if (middlewareCRD != null && middlewareCRD.getStatus() != null && middlewareCRD.getStatus().getInclude() != null && middlewareCRD.getStatus().getInclude().get(PODS) != null) {
-                        List<MiddlewareInfo> middlewareInfos = middlewareCRD.getStatus().getInclude().get(PODS);
-                        middleware.setPodNum(middlewareInfos.size());
-                        if (!NameConstant.RUNNING.equalsIgnoreCase(middleware.getStatus())) {
-                            //中间件服务状态异常
-                            errServiceCount.getAndAdd(1);
-                        }
-                        if (middleware.getManagePlatform() != null && middleware.getManagePlatform()) {
-                            setManagePlatformAddress(middleware, clusterId);
-                        }
+                    if (!NameConstant.RUNNING.equalsIgnoreCase(middleware.getStatus())) {
+                        //中间件服务状态异常
+                        errServiceCount.getAndAdd(1);
+                    }
+                    if (middleware.getManagePlatform() != null && middleware.getManagePlatform()) {
+                        setManagePlatformAddress(middleware, clusterId);
                     }
                     singleServiceList.add(middleware);
                 }
