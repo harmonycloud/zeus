@@ -29,12 +29,13 @@ public interface ClusterComponentService {
     void multipleDeploy(MiddlewareClusterDTO cluster, MultipleComponentsInstallDto multipleComponentsInstallDto) throws Exception;
 
     /**
-     * 对接组件
+     * 接入/更新组件
      *
      * @param cluster       集群
      * @param componentName 组件名称
+     * @param update 是否为更新
      */
-    void integrate(MiddlewareClusterDTO cluster, String componentName);
+    void integrate(MiddlewareClusterDTO cluster, String componentName, Boolean update);
 
     /**
      * 卸载/取消接入 组件
