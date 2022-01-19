@@ -333,6 +333,8 @@ public class OverviewServiceImpl implements OverviewService {
             if ("service".equals(lay)){ //服务告警记录
                     wrapper.eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", middlewareName);
             }
+        } else if (StringUtils.isNotEmpty(clusterId) && StringUtils.isEmpty(namespace)) {
+            wrapper.eq("cluster_id", clusterId).eq("namespace", NameConstant.MONITORING).eq("name", NameConstant.PROMETHEUS_K8S_RULES);
         } else {
             wrapper.isNotNull("cluster_id").isNotNull("namespace").ne("cluster_id", "").eq("lay","service");
         }
