@@ -25,6 +25,7 @@ import java.io.*;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 /**
  * @author yushuaikang
@@ -108,6 +109,10 @@ public class MailServiceImpl implements MailService {
 
     @Override
     public boolean checkEmail(String email, String password) {
+        boolean result = isValidEmail(email);
+        if (!result) {
+            return result;
+        }
         if ("163.com".equals(email.split("@")[1])) {
             try {
                 RobotClientUtil robotClientUtil = new RobotClientUtil(email,password);
@@ -120,6 +125,13 @@ public class MailServiceImpl implements MailService {
             }
         }
         return robot.checkEmailMethod(email);
+    }
+
+    public static boolean isValidEmail(String email) {
+        if ((email != null) && (!email.isEmpty())) {
+            return Pattern.matches("^(\\w+([-.][A-Za-z0-9]+)*){3,18}@\\w+([-.][A-Za-z0-9]+)*\\.\\w+([-.][A-Za-z0-9]+)*$", email);
+        }
+        return false;
     }
 
     @Override
