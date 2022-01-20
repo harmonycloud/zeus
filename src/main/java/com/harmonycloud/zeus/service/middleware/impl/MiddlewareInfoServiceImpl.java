@@ -1,7 +1,6 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.DOT;
-import static com.harmonycloud.caas.common.constants.CommonConstant.LINE;
+import static com.harmonycloud.caas.common.constants.CommonConstant.*;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.HARMONY_CLOUD;
 import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.ICON_SVG;
 import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.SVG;
@@ -205,11 +204,13 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         return mwInfoList.stream().map(info -> {
             MiddlewareInfoDTO dto = new MiddlewareInfoDTO();
             BeanUtils.copyProperties(info, dto);
-            if (info.getChartVersion().compareTo(clusterMwInfo.getChartVersion()) < 0) {
+            if (info.getChartVersion().compareTo(clusterMwInfo.getChartVersion()) < NUM_ZERO) {
                 dto.setVersionStatus("history");
-            } else if (info.getChartVersion().compareTo(clusterMwInfo.getChartVersion()) == 0) {
-                if (clusterMwInfo.getStatus() == 0) {
+            } else if (info.getChartVersion().compareTo(clusterMwInfo.getChartVersion()) == NUM_ZERO) {
+                if (clusterMwInfo.getStatus() == NUM_ZERO) {
                     dto.setVersionStatus("updating");
+                } else if (clusterMwInfo.getStatus() == NUM_TWO) {
+                    dto.setVersionStatus("future");
                 } else {
                     dto.setVersionStatus("now");
                 }
