@@ -1,8 +1,11 @@
 package com.harmonycloud.zeus.service.k8s;
 
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
+import io.fabric8.kubernetes.api.model.Pod;
+import netscape.javascript.JSObject;
 
 import java.util.List;
 import java.util.Map;
@@ -75,4 +78,15 @@ public interface PodService {
      * @return
      */
     Middleware listPods(MiddlewareCRD mw, String clusterId, String namespace, String middlewareName, String type);
+    /**
+     * 查询pod yaml
+     *
+     * @param clusterId      集群id
+     * @param namespace      命名空间
+     * @param middlewareName 中间件名称
+     * @param type           中间件类型
+     * @param podName        pod名称
+     */
+    String yaml(String clusterId, String namespace, String middlewareName, String type, String podName);
+
 }

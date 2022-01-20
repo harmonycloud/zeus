@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.model.ContainerWithStatus;
 import com.harmonycloud.caas.common.model.StorageClassDTO;
 import com.harmonycloud.caas.common.model.middleware.PodInfoGroup;
@@ -21,6 +22,7 @@ import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
 import com.harmonycloud.zeus.service.k8s.StorageClassService;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import io.fabric8.kubernetes.api.model.*;
+import netscape.javascript.JSObject;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,6 +38,7 @@ import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.integration.cluster.PodWrapper;
 import com.harmonycloud.zeus.service.k8s.PodService;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import org.yaml.snakeyaml.Yaml;
 
 /**
  * @author dengyulong
@@ -225,18 +228,29 @@ public class PodServiceImpl implements PodService {
 
     @Override
     public void restart(String clusterId, String namespace, String middlewareName, String type, String podName) {
+        checkExist(clusterId, namespace, middlewareName, type, podName);
+        podWrapper.delete(clusterId, namespace, podName);
+    }
+
+    @Override
+    public String yaml(String clusterId, String namespace, String middlewareName, String type, String podName) {
+        checkExist(clusterId, namespace, middlewareName, type, podName);
+        Yaml yaml = new Yaml();
+        return yaml.dumpAsMap(podWrapper.get(clusterId, namespace, podName));
+    }
+
+    public void checkExist(String clusterId, String namespace, String middlewareName, String type, String podName){
         MiddlewareCRD mw = middlewareCRDService.getCR(clusterId, namespace, type, middlewareName);
         if (mw == null) {
             throw new BusinessException(DictEnum.MIDDLEWARE, middlewareName, ErrorMessage.NOT_EXIST);
         }
         if (CollectionUtils.isEmpty(mw.getStatus().getInclude())) {
-            throw new BusinessException(ErrorMessage.RESTART_POD_FAIL);
+            throw new BusinessException(ErrorMessage.FIND_POD_IN_MIDDLEWARE_FAIL);
         }
         List<MiddlewareInfo> pods = mw.getStatus().getInclude().get(PODS);
         if (CollectionUtils.isEmpty(pods) || pods.stream().noneMatch(po -> podName.equals(po.getName()))) {
-            throw new BusinessException(ErrorMessage.RESTART_POD_FAIL);
+            throw new BusinessException(ErrorMessage.FIND_POD_IN_MIDDLEWARE_FAIL);
         }
-        podWrapper.delete(clusterId, namespace, podName);
     }
 
     /**
