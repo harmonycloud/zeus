@@ -39,7 +39,8 @@ public class MiddlewareConfigYamlServiceImpl implements MiddlewareConfigYamlServ
     @Override
     public List<String> nameList(String clusterId, String namespace, String name, String type, String chartVersion) {
         List<ConfigMap> configMapList = configMapWrapper.list(clusterId, namespace).stream()
-            .filter(configMap -> configMap.getMetadata().getAnnotations().containsKey("meta.helm.sh/release-name")
+            .filter(configMap -> !CollectionUtils.isEmpty(configMap.getMetadata().getAnnotations())
+                && configMap.getMetadata().getAnnotations().containsKey("meta.helm.sh/release-name")
                 && configMap.getMetadata().getAnnotations().get("meta.helm.sh/release-name").equals(name))
             .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(configMapList)) {
