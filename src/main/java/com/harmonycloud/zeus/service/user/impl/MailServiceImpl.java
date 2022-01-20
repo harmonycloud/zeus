@@ -17,13 +17,22 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.yaml.snakeyaml.Yaml;
 
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.servlet.http.HttpServletRequest;
 import java.io.*;
+import java.net.InetAddress;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.text.MessageFormat;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
@@ -170,6 +179,7 @@ public class MailServiceImpl implements MailService {
 
 
     private static String buildContent(AlertInfoDto alertInfoDto, String username) throws IOException {
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         //加载邮件html模板
         String fileName = "mail/mail-alarm.html";
         InputStream inputStream = MailServiceImpl.class.getClassLoader().getResourceAsStream(fileName);
@@ -215,11 +225,61 @@ public class MailServiceImpl implements MailService {
                 "<td>" + alertInfoDto.getClusterId() + "</td><td>" + alertInfoDto.getDescription() + "</td><td>" + alertInfoDto.getMessage() + "</td><td>" + date + "</td></tr>");
 
         //填充html模板中的五个参数
-        String htmlText = MessageFormat.format(buffer.toString(), emailHeadColor, level, contentText, "", header, linesBuffer.toString());
+        String htmlText = MessageFormat.format(buffer.toString(), emailHeadColor, level, contentText, "", header, linesBuffer.toString(),getUrl(request,true),getUrl(request,false));
 
         //改变表格样式
         htmlText = htmlText.replaceAll("<td>", "<td style=\"padding:6px 10px; line-height: 150%;\">");
         htmlText = htmlText.replaceAll("<tr>", "<tr style=\"border-bottom: 1px solid #eee; color:#666;\">");
         return htmlText;
+    }
+
+    public static String getUrl(HttpServletRequest request,boolean flag) {
+        String ip = null;
+        //获取IP
+        ip = request.getHeader("x-forwarded-for");
+        if ((ip == null) || (ip.length() == 0) || ("unknown".equalsIgnoreCase(ip))) {
+            ip = request.getHeader("Proxy-Client-IP");
+        }
+        if ((ip == null) || (ip.length() == 0) || ("unknown".equalsIgnoreCase(ip))) {
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if ((ip == null) || (ip.length() == 0) || ("unknown".equalsIgnoreCase(ip))) {
+            ip = request.getRemoteAddr();
+            if (ip.equals("127.0.0.1")) {
+                InetAddress inet = null;
+                try {
+                    inet = InetAddress.getLocalHost();
+                } catch (UnknownHostException e) {
+                    e.printStackTrace();
+                }
+                ip = inet.getHostAddress();
+            }
+        }
+        if ((ip != null) && (ip.length() > 15)) {
+            if (ip.indexOf(",") > 0) {
+                ip = ip.substring(0, ip.indexOf(","));
+            }
+        }
+        //获取端口号
+        Yaml yaml = new Yaml();
+        Map<String, Object> map ;
+        String port = null;
+        try {
+            InputStream is = new BufferedInputStream(new FileInputStream("./deploy/helm/Values.yaml"));
+            map = yaml.loadAs(is, Map.class);
+            Map<String,Object> globals = (Map) map.get("global");
+            for (String key : globals.keySet()) {
+                if ("zeus_ui".equals(key)) {
+                    Map<String,Object> keys = (Map<String, Object>) globals.get(key);
+                    port = String.valueOf(keys.get("nodePort"));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (flag) {
+            return "<a href=\"" + "http://" + ip + ":" + port + "\">";
+        }
+        return "http://" + ip + ":" + port;
     }
 }
