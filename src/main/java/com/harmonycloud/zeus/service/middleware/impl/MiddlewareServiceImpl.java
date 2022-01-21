@@ -10,6 +10,7 @@ import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.constants.NameConstant;
 import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
@@ -408,6 +409,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
                 MiddlewareBriefInfoDTO briefInfoDTO = new MiddlewareBriefInfoDTO();
                 briefInfoDTO.setName(middlewareInfo.getName());
+                briefInfoDTO.setAlisaName(MiddlewareOfficialNameEnum.findByMiddlewareName(middlewareInfo.getName()));
                 briefInfoDTO.setImagePath(middlewareInfo.getImagePath());
                 briefInfoDTO.setChartName(middlewareInfo.getChartName());
                 briefInfoDTO.setChartVersion(middlewareInfo.getChartVersion());
