@@ -160,4 +160,10 @@ public interface MiddlewareService {
      * @param type      中间件类型
      */
     void reboot(String clusterId, String namespace, String name, String type);
+
+    /**
+     * pvc扩缩容
+     * @param middleware 中间件对象
+     */
+    void updateStorage(Middleware middleware);
 }

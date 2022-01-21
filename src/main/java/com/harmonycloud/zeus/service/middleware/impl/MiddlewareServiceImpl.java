@@ -21,6 +21,7 @@ import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
+import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.schedule.MiddlewareManageTask;
@@ -36,6 +37,8 @@ import com.harmonycloud.tool.page.PageObject;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import com.harmonycloud.zeus.util.YamlUtil;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.Quantity;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.units.qual.A;
@@ -56,6 +59,7 @@ import org.yaml.snakeyaml.Yaml;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import static com.harmonycloud.caas.common.constants.NameConstant.STORAGE;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_NODEPORT;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
@@ -90,6 +94,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private CacheMiddlewareService cacheMiddlewareService;
     @Autowired
     private PodService podService;
+    @Autowired
+    private PvcWrapper pvcWrapper;
 
     private final static Map<String, String> titleMap = new HashMap<String, String>(7) {
         {
@@ -225,6 +231,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         } catch (Exception e){
             throw new BusinessException(ErrorMessage.MIDDLEWARE_REBOOT_FAILED);
         }
+    }
+
+    @Override
+    public void updateStorage(Middleware middleware) {
+        BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
+        operator.updateStorage(middleware);
     }
 
     private void checkBaseParam(Middleware mw) {
@@ -409,7 +421,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
                 MiddlewareBriefInfoDTO briefInfoDTO = new MiddlewareBriefInfoDTO();
                 briefInfoDTO.setName(middlewareInfo.getName());
-                briefInfoDTO.setAlisaName(MiddlewareOfficialNameEnum.findByMiddlewareName(middlewareInfo.getName()));
+                briefInfoDTO.setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(middlewareInfo.getName()));
                 briefInfoDTO.setImagePath(middlewareInfo.getImagePath());
                 briefInfoDTO.setChartName(middlewareInfo.getChartName());
                 briefInfoDTO.setChartVersion(middlewareInfo.getChartVersion());

@@ -296,4 +296,23 @@ public class MiddlewareController {
         return BaseResult.ok();
     }
 
+    @ApiOperation(value = "更新存储", notes = "更新存储")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middleware", value = "中间件内容", paramType = "query", dataTypeClass = Middleware.class)
+    })
+    @PutMapping("/{middlewareName}/storage")
+    public BaseResult updateStorage(@PathVariable("clusterId") String clusterId,
+                                    @PathVariable("namespace") String namespace,
+                                    @PathVariable("middlewareName") String name,
+                                    @RequestBody Middleware middleware) {
+        middleware.setClusterId(clusterId);
+        middleware.setNamespace(namespace);
+        middleware.setName(name);
+        middlewareService.updateStorage(middleware);
+        return BaseResult.ok();
+    }
+
 }

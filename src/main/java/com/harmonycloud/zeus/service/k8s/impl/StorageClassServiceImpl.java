@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.harmonycloud.caas.common.model.StorageClassDTO;
 import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
@@ -92,8 +93,8 @@ public class StorageClassServiceImpl implements StorageClassService {
             if (!storageClassName.equals(sc.getName())) {
                 continue;
             }
-            Map<String, String> parameters = sc.getParameters();
-            if (parameters != null && parameters.get("volumeType") != null && "LVM".equalsIgnoreCase(parameters.get("volumeType"))) {
+            if (StringUtils.isNotEmpty(sc.getProvisioner())
+                && StorageClassProvisionerEnum.CSI_LVM.getProvisioner().equals(sc.getProvisioner())) {
                 isLvm = true;
             }
         }

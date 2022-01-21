@@ -1,8 +1,11 @@
 package com.harmonycloud.zeus.integration.cluster;
 
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.zeus.util.K8sClient;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaimList;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -40,6 +43,19 @@ public class PvcWrapper {
 
     public void delete(String clusterId, String namespace, Map<String, String> map) {
         K8sClient.getClient(clusterId).persistentVolumeClaims().inNamespace(namespace).withLabels(map).delete();
+    }
+
+    public void update(String clusterId, String namespace, PersistentVolumeClaim pvc) {
+        try {
+            K8sClient.getClient(clusterId).persistentVolumeClaims().inNamespace(namespace).createOrReplace(pvc);
+        } catch (Exception e) {
+            if (StringUtils.isNotEmpty(e.getMessage())
+                && e.getMessage().contains("field can not be less than previous value")) {
+                throw new BusinessException(ErrorMessage.PVC_CAN_LESS_THAN_PREVIOUS);
+            } else {
+                throw e;
+            }
+        }
     }
 
 }

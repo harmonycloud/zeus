@@ -8,6 +8,7 @@ import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 import cn.hutool.json.JSONUtil;
@@ -16,7 +17,9 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
+import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.zeus.bean.BeanAlertRule;
 import com.harmonycloud.zeus.bean.MiddlewareAlertInfo;
 import com.harmonycloud.zeus.dao.BeanAlertRuleMapper;
@@ -40,6 +43,8 @@ import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.K8sConvert;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.Quantity;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.BeanUtils;
@@ -81,7 +86,7 @@ public abstract class AbstractBaseOperator {
     @Autowired
     protected HelmChartService helmChartService;
     @Autowired
-    private PvcWrapper pvcWrapper;
+    protected PvcWrapper pvcWrapper;
     @Autowired
     protected MiddlewareCRDService middlewareCRDService;
     @Autowired
@@ -110,7 +115,8 @@ public abstract class AbstractBaseOperator {
     protected CacheMiddlewareService cacheMiddlewareService;
     @Autowired
     protected ClusterMiddlewareInfoService clusterMiddlewareInfoService;
-
+    @Autowired
+    protected StorageClassService storageClassService;
     @Autowired
     private BeanAlertRuleMapper beanAlertRuleMapper;
     @Autowired
@@ -382,6 +388,52 @@ public abstract class AbstractBaseOperator {
         }
     }
 
+    /**
+     * 更新pvc存储
+     */
+    protected void updatePvc(Middleware middleware, List<PersistentVolumeClaim> pvcList) {
+        for (PersistentVolumeClaim pvc : pvcList) {
+            if (CollectionUtils.isEmpty(pvc.getMetadata().getAnnotations())
+                || !pvc.getMetadata().getAnnotations().containsKey("volume.beta.kubernetes.io/storage-provisioner")
+                || !StorageClassProvisionerEnum.CSI_LVM.getProvisioner()
+                    .equals(pvc.getMetadata().getAnnotations().get("volume.beta.kubernetes.io/storage-provisioner"))) {
+                throw new BusinessException(ErrorMessage.NOT_LVM);
+            }
+        }
+        String storage = middleware.getQuota().get(middleware.getType()).getStorageClassQuota();
+        for (PersistentVolumeClaim pvc : pvcList) {
+            pvc.getSpec().getResources().getRequests().put(STORAGE, new Quantity(storage));
+            pvcWrapper.update(middleware.getClusterId(), middleware.getNamespace(), pvc);
+        }
+    }
+
+    public void updateStorage(Middleware middleware) {
+        // 获取pvc
+        String pvcNames = this.getPvc(middleware);
+        if (StringUtils.isEmpty(pvcNames)){
+            throw new BusinessException(ErrorMessage.FIND_PVC_FAILED);
+        }
+        // 更新pvc内容
+        String[] pvcNameList = pvcNames.split(",");
+        List<PersistentVolumeClaim> pvcList = new ArrayList<>();
+        for (String pvcName : pvcNameList) {
+            pvcList.add(pvcWrapper.get(middleware.getClusterId(), middleware.getNamespace(), pvcName));
+        }
+        updatePvc(middleware, pvcList);
+
+        // 更新values.yaml
+        StringBuilder sb = new StringBuilder();
+        if (middleware.getType().equals(MiddlewareTypeEnum.ELASTIC_SEARCH.getType())){
+            for (String key : middleware.getQuota().keySet()){
+                sb.append("storage.").append(key).append("Size").append("=").append(middleware.getQuota().get(key).getStorageClassQuota()).append(",");
+            }
+        }else {
+            sb.append("storageSize=").append(middleware.getQuota().get(middleware.getType()).getStorageClassQuota()).append(",");
+        }
+        sb.deleteCharAt(sb.length() - 1);
+        helmChartService.upgrade(middleware, sb.toString(), clusterService.findById(middleware.getClusterId()));
+    }
+
     protected void deleteIngress(Middleware mw) {
         List<IngressDTO> ingressList;
         try {
@@ -505,6 +557,7 @@ public abstract class AbstractBaseOperator {
         MiddlewareQuota quota = checkMiddlewareQuota(middleware, quotaKey);
         quota.setStorageClassName(values.getString("storageClassName"))
             .setStorageClassQuota(values.getString("storageSize"));
+        quota.setIsLvmStorage(storageClassService.checkLVMStorage(middleware.getClusterId(), middleware.getNamespace(), values.getString("storageClassName")));
     }
 
 
