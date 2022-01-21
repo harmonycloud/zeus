@@ -79,7 +79,7 @@ system:
     expire: 8
   platform:
     #平台版本
-    version: v0.1.0
+    version: v0.2.1
 #ssl
 server:
   ssl:

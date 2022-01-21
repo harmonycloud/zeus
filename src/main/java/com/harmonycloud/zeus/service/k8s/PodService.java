@@ -1,11 +1,8 @@
 package com.harmonycloud.zeus.service.k8s;
 
-import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
-import io.fabric8.kubernetes.api.model.Pod;
-import netscape.javascript.JSObject;
 
 import java.util.List;
 import java.util.Map;
