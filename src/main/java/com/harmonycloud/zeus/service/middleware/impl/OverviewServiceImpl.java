@@ -789,7 +789,7 @@ public class OverviewServiceImpl implements OverviewService {
         platformOverviewDTO.setOperatorDTO(operatorInfo);
 
         //获取异常告警信息
-        Date now = DateUtil.addHour(new Date(), -22);
+        Date now = new Date();
         Date ago = DateUtil.addHour(now, -24);
         String beginTime = DateUtils.DateToString(ago, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
         String endTime = DateUtils.DateToString(now, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
