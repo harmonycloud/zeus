@@ -44,7 +44,7 @@ image:
   initImageTag: 1.0.4
   initImageTag_8: 1.0.4-8.0
   monitorImageTag: v0.12.1
-  backupRestoreImageTag: v1.2.0-hc.3
+  backupRestoreImageTag: v1.2.0-hc.4
   backupRestoreImageTag_8: v8.0-1
   helmtestImageTag: v1.0.0
   pullPolicy: IfNotPresent

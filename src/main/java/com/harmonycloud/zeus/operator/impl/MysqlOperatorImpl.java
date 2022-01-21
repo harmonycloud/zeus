@@ -491,10 +491,9 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                     mysqlReplicate = mysqlReplicateCRDService.getMysqlReplicate(clusterId, namespace, middlewareName);
                 }
                 if (mysqlReplicate != null) {
-                    log.info("开始关闭灾备复制,clusterId={}, namespace={}, middlewareName={}", clusterId, namespace, middlewareName);
-                    mysqlReplicate.getSpec().setEnable(false);
-                    mysqlReplicateCRDService.replaceMysqlReplicate(clusterId, mysqlReplicate);
-                    log.info("成功关闭灾备复制");
+                    log.info("开始删除灾备复制,clusterId={}, namespace={}, middlewareName={}", clusterId, namespace, middlewareName);
+                    mysqlReplicateCRDService.deleteMysqlReplicate(clusterId, namespace, mysqlReplicate.getMetadata().getName());
+                    log.info("成功删除灾备复制");
                 } else {
                     log.info("该实例不存在灾备实例");
                 }
@@ -522,21 +521,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 } catch (Exception e) {
                     log.error("实例信息更新失败", e);
                 }
-
-                //灾备切换完成，为灾备实例创建对外可读写服务
-                Middleware oldDisasterRecovery;
-                if (isSource) {
-                    oldDisasterRecovery = middlewareService.detail(relationClusterId, relationNamespace, relationName, MiddlewareTypeEnum.MYSQL.getType());
-                    oldDisasterRecovery.setClusterId(relationClusterId);
-                    oldDisasterRecovery.setNamespace(relationNamespace);
-                    oldDisasterRecovery.setType(MiddlewareTypeEnum.MYSQL.getType());
-                } else {
-                    oldDisasterRecovery = middlewareService.detail(clusterId, namespace, middlewareName, MiddlewareTypeEnum.MYSQL.getType());
-                    oldDisasterRecovery.setClusterId(clusterId);
-                    oldDisasterRecovery.setNamespace(namespace);
-                    oldDisasterRecovery.setType(MiddlewareTypeEnum.MYSQL.getType());
-                }
-                tryCreateOpenService(clusterId, oldDisasterRecovery, ServiceNameConvertUtil.convertMysql(oldDisasterRecovery.getName(), false), true);
             }
         }
     }

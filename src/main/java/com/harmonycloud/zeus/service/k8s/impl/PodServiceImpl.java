@@ -1,9 +1,32 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.CPU;
-import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
+import com.harmonycloud.caas.common.enums.DictEnum;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
+import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.ContainerWithStatus;
+import com.harmonycloud.caas.common.model.StorageClassDTO;
+import com.harmonycloud.caas.common.model.middleware.Middleware;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareQuota;
+import com.harmonycloud.caas.common.model.middleware.PodInfo;
+import com.harmonycloud.caas.common.model.middleware.PodInfoGroup;
+import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.harmonycloud.zeus.integration.cluster.PodWrapper;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
+import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
+import com.harmonycloud.zeus.service.k8s.PodService;
+import com.harmonycloud.zeus.service.k8s.StorageClassService;
+import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerStatus;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.ResourceRequirements;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import org.yaml.snakeyaml.Yaml;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,30 +35,10 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import com.harmonycloud.caas.common.model.ContainerWithStatus;
-import com.harmonycloud.caas.common.model.StorageClassDTO;
-import com.harmonycloud.caas.common.model.middleware.PodInfoGroup;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
-import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
-import com.harmonycloud.zeus.service.k8s.StorageClassService;
-import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
-import io.fabric8.kubernetes.api.model.*;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-
-import com.harmonycloud.caas.common.enums.DictEnum;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareQuota;
-import com.harmonycloud.caas.common.model.middleware.PodInfo;
-import com.harmonycloud.zeus.integration.cluster.PodWrapper;
-import com.harmonycloud.zeus.service.k8s.PodService;
-import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import static com.harmonycloud.caas.common.constants.NameConstant.CPU;
+import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
 /**
  * @author dengyulong
@@ -225,18 +228,29 @@ public class PodServiceImpl implements PodService {
 
     @Override
     public void restart(String clusterId, String namespace, String middlewareName, String type, String podName) {
+        checkExist(clusterId, namespace, middlewareName, type, podName);
+        podWrapper.delete(clusterId, namespace, podName);
+    }
+
+    @Override
+    public String yaml(String clusterId, String namespace, String middlewareName, String type, String podName) {
+        checkExist(clusterId, namespace, middlewareName, type, podName);
+        Yaml yaml = new Yaml();
+        return yaml.dumpAsMap(podWrapper.get(clusterId, namespace, podName));
+    }
+
+    public void checkExist(String clusterId, String namespace, String middlewareName, String type, String podName){
         MiddlewareCRD mw = middlewareCRDService.getCR(clusterId, namespace, type, middlewareName);
         if (mw == null) {
             throw new BusinessException(DictEnum.MIDDLEWARE, middlewareName, ErrorMessage.NOT_EXIST);
         }
         if (CollectionUtils.isEmpty(mw.getStatus().getInclude())) {
-            throw new BusinessException(ErrorMessage.RESTART_POD_FAIL);
+            throw new BusinessException(ErrorMessage.FIND_POD_IN_MIDDLEWARE_FAIL);
         }
         List<MiddlewareInfo> pods = mw.getStatus().getInclude().get(PODS);
         if (CollectionUtils.isEmpty(pods) || pods.stream().noneMatch(po -> podName.equals(po.getName()))) {
-            throw new BusinessException(ErrorMessage.RESTART_POD_FAIL);
+            throw new BusinessException(ErrorMessage.FIND_POD_IN_MIDDLEWARE_FAIL);
         }
-        podWrapper.delete(clusterId, namespace, podName);
     }
 
     /**

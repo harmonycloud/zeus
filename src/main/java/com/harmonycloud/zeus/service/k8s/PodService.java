@@ -75,4 +75,15 @@ public interface PodService {
      * @return
      */
     Middleware listPods(MiddlewareCRD mw, String clusterId, String namespace, String middlewareName, String type);
+    /**
+     * 查询pod yaml
+     *
+     * @param clusterId      集群id
+     * @param namespace      命名空间
+     * @param middlewareName 中间件名称
+     * @param type           中间件类型
+     * @param podName        pod名称
+     */
+    String yaml(String clusterId, String namespace, String middlewareName, String type, String podName);
+
 }
