@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.user.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.model.AlertDTO;
 import com.harmonycloud.caas.common.model.middleware.AlertInfoDto;
 import com.harmonycloud.zeus.bean.MailInfo;
 import com.harmonycloud.zeus.bean.user.BeanUser;
@@ -9,6 +10,7 @@ import com.harmonycloud.zeus.dao.MailToUserMapper;
 import com.harmonycloud.zeus.service.user.DingRobotService;
 import com.harmonycloud.zeus.service.user.MailService;
 import com.harmonycloud.zeus.util.RobotClientUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -224,62 +226,18 @@ public class MailServiceImpl implements MailService {
         linesBuffer.append("<tr><td>" + alertInfoDto.getRuleID() + "</td><td>" + emailTextColor + "</td><td>" + alertInfoDto.getContent() + "</td>" +
                 "<td>" + alertInfoDto.getClusterId() + "</td><td>" + alertInfoDto.getDescription() + "</td><td>" + alertInfoDto.getMessage() + "</td><td>" + date + "</td></tr>");
 
+        String href = "";
+        String ip = "";
+        if (StringUtils.isNotEmpty(alertInfoDto.getIp())) {
+            href =  "<a href=\"" + "http://" + alertInfoDto.getIp() + "\">";
+            ip = alertInfoDto.getIp() + "</a>";
+        }
         //填充html模板中的五个参数
-        String htmlText = MessageFormat.format(buffer.toString(), emailHeadColor, level, contentText, "", header, linesBuffer.toString(),getUrl(request,true),getUrl(request,false));
+        String htmlText = MessageFormat.format(buffer.toString(), emailHeadColor, level, contentText, "", header, linesBuffer.toString(),href,ip);
 
         //改变表格样式
         htmlText = htmlText.replaceAll("<td>", "<td style=\"padding:6px 10px; line-height: 150%;\">");
         htmlText = htmlText.replaceAll("<tr>", "<tr style=\"border-bottom: 1px solid #eee; color:#666;\">");
         return htmlText;
-    }
-
-    public static String getUrl(HttpServletRequest request,boolean flag) {
-        String ip = null;
-        //获取IP
-        ip = request.getHeader("x-forwarded-for");
-        if ((ip == null) || (ip.length() == 0) || ("unknown".equalsIgnoreCase(ip))) {
-            ip = request.getHeader("Proxy-Client-IP");
-        }
-        if ((ip == null) || (ip.length() == 0) || ("unknown".equalsIgnoreCase(ip))) {
-            ip = request.getHeader("WL-Proxy-Client-IP");
-        }
-        if ((ip == null) || (ip.length() == 0) || ("unknown".equalsIgnoreCase(ip))) {
-            ip = request.getRemoteAddr();
-            if (ip.equals("127.0.0.1")) {
-                InetAddress inet = null;
-                try {
-                    inet = InetAddress.getLocalHost();
-                } catch (UnknownHostException e) {
-                    e.printStackTrace();
-                }
-                ip = inet.getHostAddress();
-            }
-        }
-        if ((ip != null) && (ip.length() > 15)) {
-            if (ip.indexOf(",") > 0) {
-                ip = ip.substring(0, ip.indexOf(","));
-            }
-        }
-        //获取端口号
-        Yaml yaml = new Yaml();
-        Map<String, Object> map ;
-        String port = null;
-        try {
-            InputStream is = new BufferedInputStream(new FileInputStream("./deploy/helm/Values.yaml"));
-            map = yaml.loadAs(is, Map.class);
-            Map<String,Object> globals = (Map) map.get("global");
-            for (String key : globals.keySet()) {
-                if ("zeus_ui".equals(key)) {
-                    Map<String,Object> keys = (Map<String, Object>) globals.get(key);
-                    port = String.valueOf(keys.get("nodePort"));
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        if (flag) {
-            return "<a href=\"" + "http://" + ip + ":" + port + "\">";
-        }
-        return "http://" + ip + ":" + port;
     }
 }

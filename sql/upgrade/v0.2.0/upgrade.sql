@@ -163,5 +163,8 @@ INSERT INTO `resource_menu_role` VALUES (null, 1, 17, 1);
 -- 增加服务升级所需最低operator版本字段
 ALTER TABLE `middleware_info`
     ADD COLUMN `compatible_versions` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '升级所需最低版本';
+-- 2022.1.21 yushuaikang
+ALTER TABLE `alert_record`
+    ADD COLUMN `ip` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'ip地址';
 
 

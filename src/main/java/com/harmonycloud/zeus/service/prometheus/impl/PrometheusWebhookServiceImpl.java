@@ -38,6 +38,7 @@ import com.harmonycloud.zeus.service.user.DingRobotService;
 import com.harmonycloud.zeus.service.user.MailService;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 import javax.mail.MessagingException;
@@ -98,8 +99,13 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
             wrapper.eq("alert",labels.getString("alertname"))
                     .eq("namespace",labels.getString("namespace"))
-                    .eq("middleware_name",labels.getString("service"));
-            MiddlewareAlertInfo alertInfo = middlewareAlertInfoMapper.selectOne(wrapper);
+                    .eq("middleware_name",labels.getString("service"))
+                    .eq("cluster_id",clusterId);
+            MiddlewareAlertInfo alertInfo = new MiddlewareAlertInfo();
+            List<MiddlewareAlertInfo> alertInfos = middlewareAlertInfoMapper.selectList(wrapper);
+            if (!CollectionUtils.isEmpty(alertInfos)) {
+                alertInfo = alertInfos.get(0);
+            }
             if (ObjectUtils.isEmpty(alertInfo)) {
                 beanAlertRecord.setLay("service");
             } else {
@@ -138,6 +144,8 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             }
             //告警ID
             alertInfoDto.setRuleID(ruleId);
+            //ip
+            alertInfoDto.setIp(alertInfo.getIp());
             //钉钉发送
             List<DingRobotInfo> dings = dingRobotMapper.selectList(new QueryWrapper<DingRobotInfo>());
             if ("ding".equals(alertInfo.getDing())) {

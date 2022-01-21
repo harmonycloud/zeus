@@ -491,10 +491,9 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                     mysqlReplicate = mysqlReplicateCRDService.getMysqlReplicate(clusterId, namespace, middlewareName);
                 }
                 if (mysqlReplicate != null) {
-                    log.info("开始关闭灾备复制,clusterId={}, namespace={}, middlewareName={}", clusterId, namespace, middlewareName);
-                    mysqlReplicate.getSpec().setEnable(false);
-                    mysqlReplicateCRDService.replaceMysqlReplicate(clusterId, mysqlReplicate);
-                    log.info("成功关闭灾备复制");
+                    log.info("开始删除灾备复制,clusterId={}, namespace={}, middlewareName={}", clusterId, namespace, middlewareName);
+                    mysqlReplicateCRDService.deleteMysqlReplicate(clusterId, namespace, mysqlReplicate.getMetadata().getName());
+                    log.info("成功删除灾备复制");
                 } else {
                     log.info("该实例不存在灾备实例");
                 }
