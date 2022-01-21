@@ -296,12 +296,12 @@ public class MiddlewareController {
         return BaseResult.ok();
     }
 
-    @ApiOperation(value = "重启服务", notes = "重启服务")
+    @ApiOperation(value = "更新存储", notes = "更新存储")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "middleware", value = "中间件内容", paramType = "query", dataTypeClass = Middleware.class)
     })
     @PutMapping("/{middlewareName}/storage")
     public BaseResult updateStorage(@PathVariable("clusterId") String clusterId,
