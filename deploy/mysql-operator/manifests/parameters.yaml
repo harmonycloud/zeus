@@ -1,11 +1,11 @@
 parameters:
   - innodb_buffer_pool_size:
       - name: default
-        value: {DBInstanceMemory*1/2}
+        value: DBInstanceMemory*1/2
       - name: isReboot
         value: n
       - name: range
-        value: [134217728-18446744073709551615]
+        value: [134217728-DBInstanceMemory]
       - name: describe
         value: The size in bytes of the buffer pool, the memory area where InnoDB caches table and index data.
   - innodb_flush_log_at_trx_commit:
@@ -23,7 +23,7 @@ parameters:
       - name: isReboot
         value: n
       - name: range
-        value: (ALLOW_INVALID_DATES|ANSI_QUOTES|ERROR_FOR_DIVISION_BY_ZERO|HIGH_NOT_PRECEDENCE|IGNORE_SPACE|NO_AUTO_CREATE_USER|NO_AUTO_VALUE_ON_ZERO|NO_BACKSLASH_ESCAPES|NO_DIR_IN_CREATE|NO_ENGINE_SUBSTITUTION|NO_ZERO_DATE|NO_ZERO_IN_DATE|ONLY_FULL_GROUP_BY|PAD_CHAR_TO_FULL_LENGTH|PIPES_AS_CONCAT|REAL_AS_FLOAT|STRICT_ALL_TABLES|STRICT_TRANS_TABLES)
+        value: [ALLOW_INVALID_DATES|ANSI_QUOTES|ERROR_FOR_DIVISION_BY_ZERO|HIGH_NOT_PRECEDENCE|IGNORE_SPACE|NO_AUTO_CREATE_USER|NO_AUTO_VALUE_ON_ZERO|NO_BACKSLASH_ESCAPES|NO_DIR_IN_CREATE|NO_ENGINE_SUBSTITUTION|NO_ZERO_DATE|NO_ZERO_IN_DATE|ONLY_FULL_GROUP_BY|PAD_CHAR_TO_FULL_LENGTH|PIPES_AS_CONCAT|REAL_AS_FLOAT|STRICT_ALL_TABLES|STRICT_TRANS_TABLES]
       - name: describe
         value: "Syntax: sql-mode=mode[,mode[,mode...]]. See the manual for the complete list of valid sql modes"
   - sync_binlog:
@@ -107,7 +107,7 @@ parameters:
         value: [utf8|latin1|gbk|gb18030|utf8mb4]
       - name: describe
         value: "The default character set"
-  - transaction-isolation:
+  - transaction_isolation:
       - name: default
         value: READ-COMMITTED
       - name: isReboot
@@ -226,7 +226,7 @@ parameters:
         value: "The number of days for automatic binary log file removal."
   - max_binlog_size:
       - name: default
-        value: 500M
+        value: 524288000
       - name: isReboot
         value: n
       - name: range
@@ -244,7 +244,7 @@ parameters:
         value: "The binlog_rows_query_log_events system variable affects row-based logging only. When enabled, it causes the MySQL Server to write informational log events such as row query log events into its binary log. This information can be used for debugging and related purposes.such as obtaining the original query issued on the master when it cannot be reconstructed from the row updates."
   - binlog_cache_size:
       - name: default
-        value: 128k
+        value: 131072
       - name: isReboot
         value: n
       - name: range
@@ -253,7 +253,7 @@ parameters:
         value: "The size of the transactional cache for updates to transactional engines for the binary log. If you often use transactions containing many statements, you can increase this to get more performance"
   - binlog_stmt_cache_size:
       - name: default
-        value: 128k
+        value: 131072
       - name: isReboot
         value: n
       - name: range
@@ -262,7 +262,7 @@ parameters:
         value: "The size of the statement cache for updates to non-transactional engines for the binary log. If you often use statements updating a great number of rows, you can increase this to get more performance"
   - max_binlog_cache_size:
       - name: default
-        value: 2G
+        value: 2147483648
       - name: isReboot
         value: n
       - name: range
@@ -271,7 +271,7 @@ parameters:
         value: "max_binlog_cache_size sets the size for the transaction cache only.The visibility to sessions of max_binlog_cache_size matches that of the binlog_cache_size system variable."
   - max_binlog_stmt_cache_size:
       - name: default
-        value: 2G
+        value: 2147483648
       - name: isReboot
         value: n
       - name: range
@@ -280,7 +280,7 @@ parameters:
         value: "If nontransactional statements within a transaction require more than this many bytes of memory, the server generates an error. The minimum value is 4096. The maximum and default values are 4GB on 32-bit platforms and 16EB (exabytes) on 64-bit platforms."
   - max_relay_log_size:
       - name: default
-        value: 500M
+        value: 524288000
       - name: isReboot
         value: n
       - name: range
@@ -352,7 +352,7 @@ parameters:
         value: "Sets the number of applier threads for executing replication transactions in parallel. "
   - read_buffer_size:
       - name: default
-        value: 1M
+        value: 1048576
       - name: isReboot
         value: n
       - name: range
@@ -361,7 +361,7 @@ parameters:
         value: "Each thread that does a sequential scan for a MyISAM table allocates a buffer of this size (in bytes) for each table it scans. The value of this variable should be a multiple of 4KB."
   - read_rnd_buffer_size:
       - name: default
-        value: 2M
+        value: 2097152
       - name: isReboot
         value: n
       - name: range
@@ -370,7 +370,7 @@ parameters:
         value: "This variable is used for reads from MyISAM tables, and, for any storage engine, for Multi-Range Read optimization."
   - sort_buffer_size:
       - name: default
-        value: 1M
+        value: 1048576
       - name: isReboot
         value: n
       - name: range
@@ -379,7 +379,7 @@ parameters:
         value: "Each session that must perform a sort allocates a buffer of this size."
   - join_buffer_size:
       - name: default
-        value: 1M
+        value: 1048576
       - name: isReboot
         value: n
       - name: range
@@ -388,7 +388,7 @@ parameters:
         value: "The minimum size of the buffer that is used for plain index scans, range index scans, and joins that do not use indexes and thus perform full table scans."
   - tmp_table_size:
       - name: default
-        value: 64M
+        value: 67108864
       - name: isReboot
         value: n
       - name: range
@@ -397,7 +397,7 @@ parameters:
         value: "If an internal in-memory temporary table exceeds this size, MySQL will automatically convert it to an on-disk MyISAM table"
   - max_allowed_packet:
       - name: default
-        value: 64M
+        value: 67108864
       - name: isReboot
         value: n
       - name: range
@@ -406,7 +406,7 @@ parameters:
         value: "The packet message buffer is initialized to net_buffer_length bytes, but can grow up to max_allowed_packet bytes when needed. This value by default is small, to catch large (possibly incorrect) packets."
   - max_heap_table_size:
       - name: default
-        value: 64M
+        value: 67108864
       - name: isReboot
         value: n
       - name: range
@@ -469,7 +469,7 @@ parameters:
         value: "This is OFF if mysqld uses external locking (system locking), ON if external locking is disabled. This affects only MyISAM table access."
   - key_buffer_size:
       - name: default
-        value: 16M
+        value: 16777216
       - name: isReboot
         value: n
       - name: range
@@ -478,7 +478,7 @@ parameters:
         value: "Index blocks for MyISAM tables are buffered and are shared by all threads. key_buffer_size is the size of the buffer used for index blocks. The key buffer is also known as the key cache."
   - bulk_insert_buffer_size:
       - name: default
-        value: 16M
+        value: 16777216
       - name: isReboot
         value: n
       - name: range
@@ -523,7 +523,7 @@ parameters:
         value: "The number of cached table definitions"
   - innodb_log_file_size:
       - name: default
-        value: 1024M
+        value: 1073741824
       - name: isReboot
         value: y
       - name: range
@@ -550,7 +550,7 @@ parameters:
         value: "When enabled, undo tablespaces that exceed the threshold value defined by innodb_max_undo_log_size are marked for truncation."
   - innodb_max_undo_log_size:
       - name: default
-        value: 1024M
+        value: 1073741824
       - name: isReboot
         value: n
       - name: range
@@ -604,7 +604,7 @@ parameters:
         value: "If flushing activity falls behind, InnoDB can flush more aggressively than the limit imposed by innodb_io_capacity. innodb_io_capacity_max defines an upper limit the number of I/O operations performed per second by InnoDB background tasks in such situations."
   - innodb_log_buffer_size:
       - name: default
-        value: 32M
+        value: 33554432
       - name: isReboot
         value: y
       - name: range
@@ -712,7 +712,7 @@ parameters:
         value: "Helps in performance tuning in heavily concurrent environments. Sets the maximum number of threads allowed inside InnoDB. Value 0 will disable the thread throttling."
   - innodb_sort_buffer_size:
       - name: default
-        value: 64M
+        value: 67108864
       - name: isReboot
         value: y
       - name: range
