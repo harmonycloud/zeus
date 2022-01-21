@@ -100,4 +100,7 @@ public class MiddlewareAlertInfo {
     @TableField("alert_expr")
     private String alertExpr;
 
+    @TableField("ip")
+    private String ip;
+
 }
