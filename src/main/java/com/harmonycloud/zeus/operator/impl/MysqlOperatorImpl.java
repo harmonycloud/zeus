@@ -522,21 +522,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 } catch (Exception e) {
                     log.error("实例信息更新失败", e);
                 }
-
-                //灾备切换完成，为灾备实例创建对外可读写服务
-                Middleware oldDisasterRecovery;
-                if (isSource) {
-                    oldDisasterRecovery = middlewareService.detail(relationClusterId, relationNamespace, relationName, MiddlewareTypeEnum.MYSQL.getType());
-                    oldDisasterRecovery.setClusterId(relationClusterId);
-                    oldDisasterRecovery.setNamespace(relationNamespace);
-                    oldDisasterRecovery.setType(MiddlewareTypeEnum.MYSQL.getType());
-                } else {
-                    oldDisasterRecovery = middlewareService.detail(clusterId, namespace, middlewareName, MiddlewareTypeEnum.MYSQL.getType());
-                    oldDisasterRecovery.setClusterId(clusterId);
-                    oldDisasterRecovery.setNamespace(namespace);
-                    oldDisasterRecovery.setType(MiddlewareTypeEnum.MYSQL.getType());
-                }
-                tryCreateOpenService(clusterId, oldDisasterRecovery, ServiceNameConvertUtil.convertMysql(oldDisasterRecovery.getName(), false), true);
             }
         }
     }
