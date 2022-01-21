@@ -111,6 +111,14 @@ public interface BaseOperator {
     MonitorDto monitor(Middleware middleware);
 
     /**
+     * pvc扩缩容
+     *
+     * @param middleware 中间件信息
+     * @return
+     */
+    void updateStorage(Middleware middleware);
+
+    /**
      * 获取自定义配置列表
      *
      * @param configMap 配置文件
