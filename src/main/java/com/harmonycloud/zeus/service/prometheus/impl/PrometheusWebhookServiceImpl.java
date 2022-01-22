@@ -14,6 +14,7 @@ import com.harmonycloud.zeus.bean.user.BeanUser;
 import com.harmonycloud.zeus.dao.DingRobotMapper;
 import com.harmonycloud.zeus.dao.MailToUserMapper;
 import com.harmonycloud.zeus.dao.user.BeanUserMapper;
+import com.harmonycloud.zeus.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -92,10 +93,8 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             beanAlertRecord.setLevel(labels.getString("severity"));
             beanAlertRecord.setSummary(annotations.getString("summary"));
             beanAlertRecord.setMessage(annotations.getString("message"));
-            Date date = DateUtils.parseDate(
-                    alert.getString("startsAt").replace(StringUtils.substring(alert.getString("startsAt"), -7, -1), ""),
-                    DateStyle.YYYY_MM_DD_T_HH_MM_SS_Z_SSS);
-            beanAlertRecord.setTime(date);
+            Date startDateTime = convertToLocalDate(alert.getString("startsAt"));
+            beanAlertRecord.setTime(startDateTime);
             QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
             wrapper.eq("alert",labels.getString("alertname"))
                     .eq("namespace",labels.getString("namespace"))
@@ -128,7 +127,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             alertInfoDto.setClusterId(clusterId);
 
             //告警时间
-            alertInfoDto.setAlertTime(convertTime(alert.getString("startsAt").replace(StringUtils.substring(alert.getString("startsAt"), -7, -1), "")));
+            alertInfoDto.setAlertTime(startDateTime);
             //告警等级
             alertInfoDto.setLevel((String) JSON.parseObject(alertInfo.getLabels(), HashMap.class).get("severity"));
             //规则描述
@@ -241,4 +240,17 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
         calendar.set(Calendar.HOUR,calendar.get(Calendar.HOUR)+8);
         return calendar.getTime();
     }
+
+    /**
+     * 将utc时间转为北京时间
+     * @param time
+     * @return
+     */
+    public static Date convertToLocalDate(String time) {
+        String[] dateTimes = time.split("\\.");
+        Date utcDate = DateUtils.parseDate(dateTimes[0], "yyyy-MM-dd'T'HH:mm:ss");
+        Date localDate = DateUtil.addHour(utcDate, 8);
+        return localDate;
+    }
+
 }
