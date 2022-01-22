@@ -93,7 +93,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             beanAlertRecord.setLevel(labels.getString("severity"));
             beanAlertRecord.setSummary(annotations.getString("summary"));
             beanAlertRecord.setMessage(annotations.getString("message"));
-            Date startDateTime = convertToLocalDate(alert.getString("startsAt"));
+            Date startDateTime = convertToUtcDate(alert.getString("startsAt"));
             beanAlertRecord.setTime(startDateTime);
             QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
             wrapper.eq("alert",labels.getString("alertname"))
@@ -242,15 +242,13 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
     }
 
     /**
-     * 将utc时间转为北京时间
+     * 将时间转为utc时间
      * @param time
      * @return
      */
-    public static Date convertToLocalDate(String time) {
+    public static Date convertToUtcDate(String time) {
         String[] dateTimes = time.split("\\.");
-        Date utcDate = DateUtils.parseDate(dateTimes[0], "yyyy-MM-dd'T'HH:mm:ss");
-        Date localDate = DateUtil.addHour(utcDate, 8);
-        return localDate;
+        return DateUtils.parseDate(dateTimes[0], "yyyy-MM-dd'T'HH:mm:ss");
     }
 
 }
