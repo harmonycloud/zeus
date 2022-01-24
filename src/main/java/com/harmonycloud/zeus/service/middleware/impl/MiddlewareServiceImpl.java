@@ -54,6 +54,7 @@ import com.harmonycloud.zeus.service.AbstractBaseService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.ObjectUtils;
 import org.yaml.snakeyaml.Yaml;
 
 import javax.servlet.http.HttpServletRequest;
@@ -151,8 +152,15 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 middleware.setType(middlewareType);
                 operatorMap.put(middlewareType, getOperator(BaseOperator.class, BaseOperator.class, middleware));
             }
-            return operatorMap.get(middlewareType).convertByHelmChart(middlewareCRDService.simpleConvert(mw), cluster);
-        }).collect(Collectors.toList());
+            try {
+                return operatorMap.get(middlewareType).convertByHelmChart(middlewareCRDService.simpleConvert(mw),
+                    cluster);
+            } catch (Exception e) {
+                log.error("cluster:{} namespace:{} middleware:{} 获取详情失败", clusterId, namespace,
+                    mw.getMetadata().getName(), e);
+                return null;
+            }
+        }).filter(mw -> !ObjectUtils.isEmpty(mw)).collect(Collectors.toList());
     }
 
     @Override
