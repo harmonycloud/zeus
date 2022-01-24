@@ -1262,7 +1262,7 @@ public class DateUtil {
      */
     public static String addHourAndGetNormal(String date, int count) {
         Date original = DateUtils.parseDate(date, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
-        Date real = DateUtil.addHour(original, 22);
+        Date real = DateUtil.addHour(original, count);
         String realDate = DateUtils.DateToString(real, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
         return realDate;
     }
