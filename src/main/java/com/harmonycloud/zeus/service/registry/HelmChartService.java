@@ -25,6 +25,7 @@ public interface HelmChartService {
      * @param chartName chart名称
      * @return
      */
+    @Deprecated
     List<V1HelmChartVersion> listHelmChartVersions(Registry registry, String chartName);
 
     /**
@@ -36,6 +37,7 @@ public interface HelmChartService {
      * @param name 名称
      * @return
      */
+    @Deprecated
     HelmChartFile getHelmChart(String clusterId, String namespace, String name, String type);
 
     /**
@@ -46,6 +48,7 @@ public interface HelmChartService {
      * @param chartVersion chart版本
      * @return
      */
+    @Deprecated
     File downloadHelmChart(Registry registry, String chartName, String chartVersion);
 
     /**
@@ -64,14 +67,6 @@ public interface HelmChartService {
      * @param helmChart helm chart信息
      */
     void coverYamlFile(HelmChartFile helmChart);
-
-    /**
-     * 把新的yaml内容覆盖掉本地文件(template内文件)
-     *
-     * @param helmChart helm chart信息
-     * @param fileName 文件名
-     */
-    void coverTemplateFile(HelmChartFile helmChart, String fileName);
 
     /**
      * 查询helm chart列表
@@ -143,16 +138,6 @@ public interface HelmChartService {
     void install(String name, String namespace, String chartName, String chartVersion, String tgzFilePath, MiddlewareClusterDTO cluster);
 
     /**
-     * 发布helm chart包
-     *
-     * @param name          helm发布的实例名称
-     * @param namespace     命名空间
-     * @param tgzFilePath   tgz文件的绝对路径（包含文件名）
-     * @param cluster       集群信息
-     */
-    void install(String name, String namespace, String tgzFilePath, MiddlewareClusterDTO cluster);
-
-    /**
      * 更新已发布的helm chart
      *
      * @param middleware   中间件信息
@@ -172,24 +157,13 @@ public interface HelmChartService {
     void upgrade(Middleware middleware, JSONObject values, JSONObject newValues, MiddlewareClusterDTO cluster);
 
     /**
-     * 升级chart版本
-     * 冗余方法
-     * @param middleware     中间件信息
-     * @param currentValues  当前values
-     * @param upgradeValues  升级values
-     * @param upgradeVersion 升级chart版本
-     * @param cluster        集群信息
-     */
-    @Deprecated
-    void upgradeChart(Middleware middleware, JSONObject currentValues, JSONObject upgradeValues, String upgradeVersion, MiddlewareClusterDTO cluster);
-
-    /**
      * 更新/发布 chart
      *
      * @param name      helm发布的实例名称
      * @param namespace 命名空间
-     * @param setValues 设置的值
-     * @param chartUrl  远端chart文件地址
+     * @param path      包路径
+     * @param values    原values.yaml
+     * @param newValues 新values
      * @param cluster   集群信息
      */
     void upgradeInstall(String name, String namespace, String path, JSONObject values, JSONObject newValues, MiddlewareClusterDTO cluster);
@@ -217,7 +191,7 @@ public interface HelmChartService {
      * 卸载已发布的helm chart
      *
      * @param cluster    集群信息
-     * @param operatorName 中间件信息
+     * @param operatorName 组件名称
      * @param namespace 分区
      */
     void uninstall(MiddlewareClusterDTO cluster, String namespace, String operatorName);

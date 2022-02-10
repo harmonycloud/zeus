@@ -77,11 +77,13 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
 
+    @Deprecated
     @Override
     public List<V1HelmChartVersion> listHelmChartVersions(Registry registry, String chartName) {
         return helmChartWrapper.listHelmChartVersions(registry, chartName);
     }
 
+    @Deprecated
     @Override
     public HelmChartFile getHelmChart(String clusterId, String namespace, String name, String type) {
         Middleware middleware = middlewareService.detail(clusterId, namespace, name, type);
@@ -228,20 +230,6 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     }
 
     @Override
-    public void coverTemplateFile(HelmChartFile helmChart, String fileName) {
-        String unzipTarFilePath = getHelmChartFilePath(helmChart.getChartName(), helmChart.getChartVersion())
-            + File.separator + helmChart.getTarFileName();
-        try {
-            // 覆盖写入values.yaml
-            FileUtil.writeToLocal(unzipTarFilePath, TEMPLATES + File.separator + fileName,
-                helmChart.getYamlFileMap().get(fileName));
-        } catch (IOException e) {
-            log.error("写出{}文件异常：chart包{}:{}", fileName, helmChart.getChartName(), helmChart.getChartVersion(), e);
-            throw new BusinessException(ErrorMessage.HELM_CHART_WRITE_ERROR);
-        }
-    }
-
-    @Override
     public List<HelmListInfo> listHelm(String namespace, String name, MiddlewareClusterDTO cluster) {
         String cmd = "helm list --kube-apiserver " + cluster.getAddress() + " --kubeconfig "
             + clusterCertService.getKubeConfigFilePath(cluster.getId())
@@ -319,16 +307,6 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         execCmd(cmd, null);
         // 把当前目录删除
         FileUtil.deleteFile(tarFileDir);
-    }
-
-    @Override
-    public void install(String name, String namespace, String tgzFilePath, MiddlewareClusterDTO cluster) {
-        String cmd = String.format("helm install %s %s --kube-apiserver %s --kubeconfig %s -n %s", name, tgzFilePath,
-                cluster.getAddress(), clusterCertService.getKubeConfigFilePath(cluster.getId()), namespace);
-        // 先dry-run发布下，避免包不正确
-        //execCmd(cmd + " --dry-run", null);
-        // 正式发布
-        execCmd(cmd, null);
     }
 
     @Override
@@ -457,48 +435,6 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             FileUtil.deleteFile(tempValuesYamlPath, targetValuesYamlPath,
                 getHelmChartFilePath(chartName, chartVersion));
         }
-    }
-
-    @Override
-    public void upgradeChart(Middleware middleware, JSONObject currentValues,JSONObject upgradeValues, String upgradeChartVersion,MiddlewareClusterDTO cluster) {
-        String chartName = middleware.getChartName();
-        String currentChartVersion = middleware.getChartVersion();
-
-        String tempValuesYamlDir = getTempValuesYamlDir();
-        // 先获取chart文件
-        HelmChartFile helmChart = getHelmChartFromMysql(chartName, upgradeChartVersion);
-
-        String currentValuesYamlName =
-                chartName + "-" + currentChartVersion + "-" + "temp" + "-" + System.currentTimeMillis() + ".yaml";
-        String upgradeValuesYamlName =
-                chartName + "-" + upgradeChartVersion + "-" + "target" + "-" + System.currentTimeMillis() + ".yaml";
-
-        Yaml yaml = new Yaml();
-        String currentValuesYaml = yaml.dumpAsMap(currentValues);
-        String upgradeValuesYaml = yaml.dumpAsMap(upgradeValues);
-        try {
-            FileUtil.writeToLocal(tempValuesYamlDir, currentValuesYamlName, currentValuesYaml);
-            FileUtil.writeToLocal(tempValuesYamlDir, upgradeValuesYamlName, upgradeValuesYaml);
-        } catch (IOException e) {
-            log.error("写出values.yaml文件异常：chart包{}:{}", helmChart.getChartName(), helmChart.getChartVersion(), e);
-            throw new BusinessException(ErrorMessage.HELM_CHART_WRITE_ERROR);
-        }
-
-        String helmPath = getHelmChartFilePath(chartName, upgradeChartVersion) + File.separator + chartName;
-        String currentValuesYamlPath = tempValuesYamlDir + File.separator + currentValuesYamlName;
-        String upgradeValuesYamlPath = tempValuesYamlDir + File.separator + upgradeValuesYamlName;
-
-        String cmd = String.format("helm upgrade --install %s %s -f %s -f %s -n %s --kube-apiserver %s --kubeconfig %s ",
-                middleware.getName(), helmPath, currentValuesYamlPath, upgradeValuesYamlPath, middleware.getNamespace(),
-                cluster.getAddress(), clusterCertService.getKubeConfigFilePath(cluster.getId()));
-        try {
-            execCmd(cmd, null);
-        } finally {
-            // 删除文件
-            FileUtil.deleteFile(currentValuesYamlPath, upgradeValuesYamlPath,
-                    getHelmChartFilePath(chartName, currentChartVersion));
-        }
-
     }
 
     @Override

@@ -85,7 +85,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             .eq("chart_name", middleware.getType()).eq("chart_version", middleware.getChartVersion());
         List<BeanCustomConfig> beanCustomConfigList = beanCustomConfigMapper.selectList(wrapper);
         if (CollectionUtils.isEmpty(beanCustomConfigList)) {
-            HelmChartFile helmChart = helmChartService.getHelmChart(clusterId, namespace, middlewareName, type);
+            HelmChartFile helmChart = helmChartService.getHelmChartFromMysql(type, middleware.getChartVersion());
             beanCustomConfigList.addAll(updateConfig2MySQL(helmChart, false));
         }
         // 封装customConfigList

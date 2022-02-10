@@ -201,7 +201,7 @@ public abstract class AbstractBaseOperator {
         // 1. download and read helm chart from registry
         HelmChartFile helmChart =
                 helmChartService.getHelmChartFromMysql(middleware.getChartName(), middleware.getChartVersion());
-        // 2. deal with values.yaml andChart.yaml
+        // 2. deal with values.yaml and Chart.yaml
         JSONObject values = JSONObject.parseObject(beanCacheMiddleware.getValuesYaml());
         Yaml yaml = new Yaml();
         helmChart.setValueYaml(yaml.dumpAsMap(values));
@@ -248,10 +248,6 @@ public abstract class AbstractBaseOperator {
         removeSql(middleware);
         //删除数据库记录
         cacheMiddlewareService.delete(middleware);
-    }
-
-    public void upgradeChart(Middleware middleware, JSONObject currentValues, JSONObject upgradeValues, String upgradeChartVersion, MiddlewareClusterDTO cluster) {
-        helmChartService.upgradeChart(middleware, currentValues, upgradeValues, upgradeChartVersion, cluster);
     }
 
     /**
@@ -333,12 +329,11 @@ public abstract class AbstractBaseOperator {
     }
 
     public void updateGrafanaId(BeanMiddlewareInfo mwInfo, Middleware middleware) {
-        HelmChartFile helm = helmChartService.getHelmChart(middleware.getClusterId(),
-            middleware.getNamespace(), middleware.getName(), middleware.getType());
+        HelmChartFile helm = helmChartService.getHelmChartFromMysql(middleware.getType(), middleware.getChartVersion());
         String alias;
-        if (!CollectionUtils.isEmpty(helm.getDependency())){
+        if (!CollectionUtils.isEmpty(helm.getDependency())) {
             alias = helm.getDependency().get("alias");
-        }else {
+        } else {
             alias = middleware.getName();
         }
         List<HelmListInfo> helmInfos =
@@ -491,9 +486,14 @@ public abstract class AbstractBaseOperator {
                     .setLabels(values.getString("middleware-label"))
                     .setVersion(values.getString("version"))
                     .setMode(values.getString(MODE));
-
-            if (StringUtils.isNotEmpty(values.getString("chart-version"))){
+            // 获取chart-version
+            if (StringUtils.isNotEmpty(values.getString("chart-version"))) {
                 middleware.setChartVersion(values.getString("chart-version"));
+            } else {
+                BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoService.list(true).stream()
+                    .filter(info -> info.getChartName().equals(middleware.getType())).collect(Collectors.toList())
+                    .get(0);
+                middleware.setChartVersion(beanMiddlewareInfo.getChartVersion());
             }
             // 获取annotations
             if (values.containsKey("annotations")) {

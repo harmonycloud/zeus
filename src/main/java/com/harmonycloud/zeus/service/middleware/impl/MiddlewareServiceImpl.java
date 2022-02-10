@@ -514,7 +514,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // 执行升级
         Middleware middleware = detail(clusterId, namespace, name, type);
         middleware.setChartName(chartName);
-        middlewareManageTask.asyncUpdateChart(middleware, currentValues, upgradeValues, upgradeChartVersion, clusterService.findById(clusterId), helmChartService);
+        helmChartService.upgrade(middleware, currentValues, upgradeValues, clusterService.findById(clusterId));
     }
 
     /**

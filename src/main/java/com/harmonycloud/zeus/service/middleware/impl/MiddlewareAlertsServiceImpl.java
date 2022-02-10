@@ -123,16 +123,15 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     @Override
     public List<MiddlewareAlertsDTO> listRules(String clusterId, String namespace, String middlewareName, String type) {
         String data;
+        Middleware middleware = middlewareService.detail(clusterId, namespace, middlewareName, type);
         try {
-            Middleware middleware = middlewareService.detail(clusterId, namespace, middlewareName, type);
             QueryWrapper<BeanAlertRule> wrapper = new QueryWrapper<BeanAlertRule>().eq("chart_name", type)
                     .eq("chart_version", middleware.getChartVersion());
             data = beanAlertRuleMapper.selectOne(wrapper).getAlert();
         } catch (Exception e) {
             log.info("数据库中无此类中间件告警规则，开始数据同步");
             try {
-                HelmChartFile helmChart =
-                        helmChartService.getHelmChart(clusterId, namespace, middlewareName, type);
+                HelmChartFile helmChart = helmChartService.getHelmChartFromMysql(type, middleware.getChartVersion());
                 data = updateAlerts2Mysql(helmChart, false);
             } catch (Exception ee) {
                 throw new CaasRuntimeException(ErrorMessage.PROMETHEUS_RULES_NOT_EXIST);
