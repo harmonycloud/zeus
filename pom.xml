@@ -23,7 +23,7 @@
         <springcloud.version>Greenwich.RELEASE</springcloud.version>
         <mybatis-plus.version>3.4.1</mybatis-plus.version>
         <freemarker.version>2.3.30</freemarker.version>
-        <alibaba.fastjson.version>1.2.58</alibaba.fastjson.version>
+        <alibaba.fastjson.version>1.2.69</alibaba.fastjson.version>
         <commons-lang3.version>3.4</commons-lang3.version>
         <fabric8.version>4.10.2</fabric8.version>
         <swagger.version>3.0.0</swagger.version>
