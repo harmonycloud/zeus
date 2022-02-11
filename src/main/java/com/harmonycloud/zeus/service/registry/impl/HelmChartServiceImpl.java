@@ -438,8 +438,8 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     }
 
     @Override
-    public void upgradeInstall(String name, String namespace, String path, JSONObject values, JSONObject newValues,
-        MiddlewareClusterDTO cluster) {
+    public void installComponents(String name, String namespace, String path, JSONObject values, JSONObject newValues,
+                                  MiddlewareClusterDTO cluster) {
         Yaml yaml = new Yaml();
         String tempValuesYaml = yaml.dumpAsMap(values);
         String targetValuesYaml = yaml.dumpAsMap(newValues);
@@ -470,8 +470,8 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     }
 
     @Override
-    public void upgradeInstall(String name, String namespace, String setValues, String chartUrl,
-                               MiddlewareClusterDTO cluster) {
+    public void installComponents(String name, String namespace, String setValues, String chartUrl,
+                                  MiddlewareClusterDTO cluster) {
         String cmd = String.format("helm upgrade --install %s %s --set %s -n %s --kube-apiserver %s --kubeconfig %s ",
             name, chartUrl, setValues, namespace, cluster.getAddress(),
             clusterCertService.getKubeConfigFilePath(cluster.getId()));

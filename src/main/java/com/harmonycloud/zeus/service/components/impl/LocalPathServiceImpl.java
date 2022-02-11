@@ -63,7 +63,7 @@ public class LocalPathServiceImpl extends AbstractBaseOperator implements LocalP
 
     @Override
     protected void install(String setValues, MiddlewareClusterDTO cluster) {
-        helmChartService.upgradeInstall(ComponentsEnum.LOCAL_PATH.getName(), "middleware-operator", setValues,
+        helmChartService.installComponents(ComponentsEnum.LOCAL_PATH.getName(), "middleware-operator", setValues,
             componentsPath + File.separator + "local-path-provisioner", cluster);
     }
 

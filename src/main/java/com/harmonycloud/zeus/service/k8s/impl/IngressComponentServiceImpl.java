@@ -4,10 +4,8 @@ import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.tool.date.DateUtils;
-import com.harmonycloud.zeus.bean.BeanClusterComponents;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -72,7 +70,7 @@ public class IngressComponentServiceImpl implements IngressComponentService {
                 ",fullnameOverride=" + ingressComponentDto.getIngressClassName() +
                 ",install=true";
         // install
-        helmChartService.upgradeInstall(ingressComponentDto.getIngressClassName(), "middleware-operator", setValues,
+        helmChartService.installComponents(ingressComponentDto.getIngressClassName(), "middleware-operator", setValues,
             componentsPath + File.separator + "ingress-nginx/charts/ingress-nginx", cluster);
         // update cluster
         MiddlewareClusterIngress ingress = new MiddlewareClusterIngress().setAddress(cluster.getHost())

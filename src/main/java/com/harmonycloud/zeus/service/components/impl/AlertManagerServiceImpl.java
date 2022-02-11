@@ -10,7 +10,6 @@ import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.AlertManagerService;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
 
@@ -18,7 +17,6 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author xutianhong
@@ -81,7 +79,7 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
 
     @Override
     public void install(String setValues, MiddlewareClusterDTO cluster){
-        helmChartService.upgradeInstall(ComponentsEnum.ALERTMANAGER.getName(), "monitoring", setValues,
+        helmChartService.installComponents(ComponentsEnum.ALERTMANAGER.getName(), "monitoring", setValues,
                 componentsPath + File.separator + "alertmanager", cluster);
     }
 

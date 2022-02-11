@@ -12,13 +12,11 @@ import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.GrafanaService;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.yaml.snakeyaml.Yaml;
 import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
 
 import java.io.File;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author xutianhong
@@ -87,7 +85,7 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
             jsonValues.put("replicas", 3);
         }
         //发布组件
-        helmChartService.upgradeInstall(ComponentsEnum.GRAFANA.getName(), "monitoring", componentsPath + File.separator + "grafana",
+        helmChartService.installComponents(ComponentsEnum.GRAFANA.getName(), "monitoring", componentsPath + File.separator + "grafana",
                 yaml.loadAs(values, JSONObject.class), jsonValues, cluster);
         //更新middlewareCluster
         updateCluster(cluster);

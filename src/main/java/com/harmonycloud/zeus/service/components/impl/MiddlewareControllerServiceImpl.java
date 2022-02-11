@@ -45,7 +45,7 @@ public class MiddlewareControllerServiceImpl extends AbstractBaseOperator implem
 
     @Override
     protected void install(String setValues, MiddlewareClusterDTO cluster) {
-        helmChartService.upgradeInstall(ComponentsEnum.MIDDLEWARE_CONTROLLER.getName(), "middleware-operator", setValues,
+        helmChartService.installComponents(ComponentsEnum.MIDDLEWARE_CONTROLLER.getName(), "middleware-operator", setValues,
             componentsPath + File.separator + "platform", cluster);
     }
 

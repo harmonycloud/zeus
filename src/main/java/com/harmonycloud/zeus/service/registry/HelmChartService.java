@@ -166,7 +166,7 @@ public interface HelmChartService {
      * @param newValues 新values
      * @param cluster   集群信息
      */
-    void upgradeInstall(String name, String namespace, String path, JSONObject values, JSONObject newValues, MiddlewareClusterDTO cluster);
+    void installComponents(String name, String namespace, String path, JSONObject values, JSONObject newValues, MiddlewareClusterDTO cluster);
 
     /**
      * 更新/发布 chart
@@ -177,7 +177,7 @@ public interface HelmChartService {
      * @param chartUrl  远端chart文件地址
      * @param cluster   集群信息
      */
-    void upgradeInstall(String name, String namespace, String setValues, String chartUrl, MiddlewareClusterDTO cluster);
+    void installComponents(String name, String namespace, String setValues, String chartUrl, MiddlewareClusterDTO cluster);
 
     /**
      * 卸载已发布的helm chart

@@ -12,14 +12,12 @@ import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.LVMService;
-import com.harmonycloud.zeus.service.components.api.LoggingService;
 import com.harmonycloud.zeus.util.AssertUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -57,7 +55,7 @@ public class LVMServiceImpl extends AbstractBaseOperator implements LVMService {
     @Override
     protected void install(String setValues, MiddlewareClusterDTO cluster) {
         try {
-            helmChartService.upgradeInstall(ComponentsEnum.LVM.getName(), "middleware-operator", setValues,
+            helmChartService.installComponents(ComponentsEnum.LVM.getName(), "middleware-operator", setValues,
                     componentsPath + File.separator + "lvm-csi-plugin", cluster);
         } catch (Exception e){
             if (StringUtils.isNotEmpty(e.getMessage()) && e.getMessage().contains(ALREADY_EXISTED)) {

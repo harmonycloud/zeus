@@ -79,7 +79,7 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
 
     @Override
     protected void install(String setValues, MiddlewareClusterDTO cluster) {
-        helmChartService.upgradeInstall(ComponentsEnum.PROMETHEUS.getName(), "default", setValues,
+        helmChartService.installComponents(ComponentsEnum.PROMETHEUS.getName(), "default", setValues,
                 componentsPath + File.separator + "prometheus", cluster);
     }
 

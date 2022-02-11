@@ -2,7 +2,6 @@ package com.harmonycloud.zeus.service.components.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
-import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.annotation.Operator;
@@ -15,7 +14,6 @@ import com.harmonycloud.zeus.service.middleware.EsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
 
@@ -23,8 +21,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.stream.Collectors;
 
 /**
  * @author xutianhong
@@ -98,7 +94,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
 
     @Override
     protected void install(String setValues, MiddlewareClusterDTO cluster) {
-        helmChartService.upgradeInstall(ES_NAME, "logging", setValues,
+        helmChartService.installComponents(ES_NAME, "logging", setValues,
                 componentsPath + File.separator + "elasticsearch", cluster);
     }
 
@@ -158,7 +154,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         } else {
             setValues = setValues + ",logstashReplacesCount=2";
         }
-        helmChartService.upgradeInstall("log", "logging", setValues,
+        helmChartService.installComponents("log", "logging", setValues,
                 componentsPath + File.separator + "logging", cluster);
     }
 
