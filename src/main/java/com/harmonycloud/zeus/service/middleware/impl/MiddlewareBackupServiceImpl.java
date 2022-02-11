@@ -53,7 +53,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Autowired
     private MiddlewareRestoreCRDService restoreCRDService;
     @Autowired
-    private MiddlewareCRDService middlewareCRDService;
+    private MiddlewareCRService middlewareCRService;
     @Autowired
     private MysqlBackupServiceImpl mysqlAdapterService;
     @Autowired
@@ -102,7 +102,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public BaseResult createBackup(MiddlewareBackupDTO backupDTO) {
-        middlewareCRDService.getCRAndCheckRunning(convertBackupToMiddleware(backupDTO));
+        middlewareCRService.getCRAndCheckRunning(convertBackupToMiddleware(backupDTO));
         if ("mysql".equals(backupDTO.getType())) {
             return mysqlAdapterService.createBackup(backupDTO);
         }
@@ -321,7 +321,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 mysqlAdapterService.createRestore(clusterId, namespace, middlewareName, type, backupName, backupFileName, pods);
                 return BaseResult.ok();
             }
-            MiddlewareCRD cr = middlewareCRDService.getCR(clusterId, namespace, type, middlewareName);
+            MiddlewareCRD cr = middlewareCRService.getCR(clusterId, namespace, type, middlewareName);
             createMiddlewareRestore(clusterId, namespace, type, middlewareName, backupName, cr.getStatus(), pods);
             return BaseResult.ok();
         } catch (Exception e) {
@@ -336,7 +336,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             log.info("第 {} 次为实例：{}创建恢复实例:{}", i, middlewareName, restoreName);
             MiddlewareCRD cr = null;
             try {
-                cr = middlewareCRDService.getCR(clusterId, namespace, type, restoreName);
+                cr = middlewareCRService.getCR(clusterId, namespace, type, restoreName);
             } catch (Exception e1) {
                 try {
                     Thread.sleep(1000);

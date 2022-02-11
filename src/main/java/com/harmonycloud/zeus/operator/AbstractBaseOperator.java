@@ -8,18 +8,14 @@ import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 import cn.hutool.json.JSONUtil;
-import com.alibaba.fastjson.JSON;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
-import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.zeus.bean.BeanAlertRule;
 import com.harmonycloud.zeus.bean.MiddlewareAlertInfo;
 import com.harmonycloud.zeus.dao.BeanAlertRuleMapper;
@@ -27,7 +23,6 @@ import com.harmonycloud.zeus.dao.MiddlewareAlertInfoMapper;
 import com.harmonycloud.zeus.integration.cluster.bean.prometheus.PrometheusRuleGroups;
 import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
 import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
-import com.harmonycloud.zeus.dao.BeanCacheMiddlewareMapper;
 import com.harmonycloud.zeus.service.aspect.AspectService;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
@@ -43,7 +38,6 @@ import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.K8sConvert;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
-import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Quantity;
 import org.apache.commons.lang3.StringUtils;
@@ -89,7 +83,7 @@ public abstract class AbstractBaseOperator {
     @Autowired
     protected PvcWrapper pvcWrapper;
     @Autowired
-    protected MiddlewareCRDService middlewareCRDService;
+    protected MiddlewareCRService middlewareCRService;
     @Autowired
     protected MiddlewareInfoService middlewareInfoService;
     @Autowired
@@ -140,7 +134,7 @@ public abstract class AbstractBaseOperator {
      */
     public Middleware detail(Middleware middleware) {
         MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
-        Middleware mw = middlewareCRDService.simpleDetail(middleware.getClusterId(), middleware.getNamespace(),
+        Middleware mw = middlewareCRService.simpleDetail(middleware.getClusterId(), middleware.getNamespace(),
                 middleware.getType(), middleware.getName());
         if (mw == null) {
             throw new BusinessException(DictEnum.MIDDLEWARE, middleware.getName(), ErrorMessage.NOT_EXIST);
@@ -288,7 +282,7 @@ public abstract class AbstractBaseOperator {
 
     protected String getPvc(Middleware middleware) {
         // query middleware cr
-        MiddlewareCRD mw = middlewareCRDService.getCR(middleware.getClusterId(), middleware.getNamespace(),
+        MiddlewareCRD mw = middlewareCRService.getCR(middleware.getClusterId(), middleware.getNamespace(),
             middleware.getType(), middleware.getName());
         if (mw == null || mw.getStatus() == null || mw.getStatus().getInclude() == null
             || !mw.getStatus().getInclude().containsKey(PERSISTENT_VOLUME_CLAIMS)) {

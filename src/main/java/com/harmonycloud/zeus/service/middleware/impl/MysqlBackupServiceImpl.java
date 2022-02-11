@@ -16,10 +16,9 @@ import com.harmonycloud.zeus.integration.minio.MinioWrapper;
 import com.harmonycloud.zeus.operator.BaseOperator;
 import com.harmonycloud.zeus.schedule.MiddlewareManageTask;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
-import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
+import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.middleware.BackupService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.middleware.MysqlScheduleBackupService;
 import com.harmonycloud.zeus.util.CronUtils;
 import com.harmonycloud.zeus.util.DateUtil;
@@ -59,7 +58,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     @Autowired
     private ClusterService clusterService;
     @Autowired
-    private MiddlewareCRDService middlewareCRDService;
+    private MiddlewareCRService middlewareCRService;
     @Autowired
     private MysqlScheduleBackupService mysqlScheduleBackupService;
     @Autowired
@@ -144,7 +143,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     public BaseResult createBackupSchedule(MiddlewareBackupDTO backupDTO) {
         // 校验是否运行中
         Middleware middleware = convertBackupToMiddleware(backupDTO);
-        middlewareCRDService.getCRAndCheckRunning(middleware);
+        middlewareCRService.getCRAndCheckRunning(middleware);
 
         Minio minio = getMinio(backupDTO.getClusterId());
         BackupTemplate backupTemplate = new BackupTemplate().setClusterName(backupDTO.getMiddlewareName())
@@ -168,7 +167,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public BaseResult createNormalBackup(MiddlewareBackupDTO backupDTO) {
-        middlewareCRDService.getCRAndCheckRunning(convertBackupToMiddleware(backupDTO));
+        middlewareCRService.getCRAndCheckRunning(convertBackupToMiddleware(backupDTO));
         String backupName = getBackupName(backupDTO) + "-" + UUIDUtils.get8UUID();
         BackupSpec spec = new BackupSpec().setClusterName(backupDTO.getMiddlewareName())
                 .setStorageProvider(new BackupStorageProvider().setMinio(getMinio(backupDTO.getClusterId())));
@@ -281,7 +280,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
 
     private void tryCreateMiddleware(String clusterId, String namespace, String type, String middlewareName, Middleware middleware) {
         for (int i = 0; i < 600; i++) {
-            if (!middlewareCRDService.checkIfExist(clusterId, namespace, type, middlewareName)) {
+            if (!middlewareCRService.checkIfExist(clusterId, namespace, type, middlewareName)) {
                 middlewareService.create(middleware);
                 return;
             }

@@ -1,7 +1,6 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.enums.DateType;
 import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
@@ -17,11 +16,10 @@ import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareStatus;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.IngressService;
-import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
+import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
-import com.harmonycloud.zeus.service.middleware.impl.MiddlewareInfoServiceImpl;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareServiceImpl;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.DateUtil;
@@ -71,7 +69,7 @@ public class IngressServiceImpl implements IngressService {
     private ClusterService clusterService;
 
     @Autowired
-    private MiddlewareCRDService middlewareCRDService;
+    private MiddlewareCRService middlewareCRService;
 
     @Autowired
     private ServiceWrapper serviceWrapper;
@@ -248,7 +246,7 @@ public class IngressServiceImpl implements IngressService {
 
     @Override
     public List<IngressDTO> get(String clusterId, String namespace, String type, String middlewareName) {
-        MiddlewareCRD crd = middlewareCRDService.getCR(clusterId, namespace, type, middlewareName);
+        MiddlewareCRD crd = middlewareCRService.getCR(clusterId, namespace, type, middlewareName);
         if (crd == null) {
             throw new BusinessException(DictEnum.MIDDLEWARE, middlewareName, ErrorMessage.NOT_EXIST);
         }
@@ -668,7 +666,7 @@ public class IngressServiceImpl implements IngressService {
         }
         Map<String, String> data = configMap.getData();
 
-        List<MiddlewareCRD> middlewareList = middlewareCRDService.listCR(clusterId, namespace, null);
+        List<MiddlewareCRD> middlewareList = middlewareCRService.listCR(clusterId, namespace, null);
         if (CollectionUtils.isEmpty(middlewareList)) {
             return;
         }

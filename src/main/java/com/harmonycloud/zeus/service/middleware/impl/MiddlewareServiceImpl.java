@@ -1,6 +1,5 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_NODEPORT;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
 import java.util.*;
@@ -23,10 +22,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.constants.NameConstant;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
@@ -49,7 +46,6 @@ import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
-import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import com.harmonycloud.zeus.util.YamlUtil;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -65,7 +61,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MiddlewareServiceImpl extends AbstractBaseService implements MiddlewareService {
 
     @Autowired
-    private MiddlewareCRDService middlewareCRDService;
+    private MiddlewareCRService middlewareCRService;
     @Autowired
     private ClusterService clusterService;
     @Autowired
@@ -120,7 +116,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 nameFilter = true;
             }
         }
-        List<MiddlewareCRD> mwList = middlewareCRDService.listCR(clusterId, namespace, label);
+        List<MiddlewareCRD> mwList = middlewareCRService.listCR(clusterId, namespace, label);
         if (CollectionUtils.isEmpty(mwList)) {
             return new ArrayList<>(0);
         }
@@ -147,7 +143,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             }
             try {
                 return operatorMap.get(middlewareType)
-                    .convertByHelmChart(middlewareCRDService.simpleConvert(mw).setClusterId(clusterId), cluster);
+                    .convertByHelmChart(middlewareCRService.simpleConvert(mw).setClusterId(clusterId), cluster);
             } catch (Exception e) {
                 log.error("cluster:{} namespace:{} middleware:{} 获取详情失败", clusterId, namespace,
                     mw.getMetadata().getName(), e);
@@ -257,7 +253,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Override
     public void reboot(String clusterId, String namespace, String name, String type) {
         try {
-            MiddlewareCRD mw = middlewareCRDService.getCR(clusterId, namespace, type, name);
+            MiddlewareCRD mw = middlewareCRService.getCR(clusterId, namespace, type, name);
             List<MiddlewareInfo> pods = mw.getStatus().getInclude().get(PODS);
             if(!CollectionUtils.isEmpty(pods)){
                 pods.forEach(pod -> podService.restart(clusterId, namespace, name, type, pod.getName()));

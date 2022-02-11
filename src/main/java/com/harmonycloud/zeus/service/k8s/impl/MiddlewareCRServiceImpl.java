@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import com.harmonycloud.zeus.integration.cluster.MiddlewareWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
-import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
+import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.PodService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +36,7 @@ import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConsta
  */
 @Service
 @Slf4j
-public class MiddlewareCRDServiceImpl implements MiddlewareCRDService {
+public class MiddlewareCRServiceImpl implements MiddlewareCRService {
 
     @Autowired
     private MiddlewareWrapper middlewareWrapper;
@@ -53,7 +53,13 @@ public class MiddlewareCRDServiceImpl implements MiddlewareCRDService {
      */
     @Override
     public List<Middleware> list(String clusterId, String namespace, String type) {
-        List<MiddlewareCRD> middlewareCRDList = this.listCRD(clusterId, namespace, type);
+        Map<String, String> label = null;
+        if (StringUtils.isNotEmpty(type)) {
+            label = new HashMap<>(1);
+            label.put("type", MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType());
+        }
+
+        List<MiddlewareCRD> middlewareCRDList = this.listCR(clusterId, namespace, label);
         if (CollectionUtils.isEmpty(middlewareCRDList)) {
             return new ArrayList<>(0);
         }
@@ -62,24 +68,6 @@ public class MiddlewareCRDServiceImpl implements MiddlewareCRDService {
         // 封装数据
         middlewareCRDList.forEach(k8sMiddleware -> middlewares.add(convertMiddleware(k8sMiddleware)));
         return middlewares;
-    }
-
-    /**
-     * 查询中间件列表
-     *
-     * @param clusterId 集群id
-     * @param namespace 命名空间
-     * @return List<MiddlewareCRD>
-     */
-    @Override
-    public List<MiddlewareCRD> listCRD(String clusterId, String namespace, String type) {
-        Map<String, String> label = null;
-        if (StringUtils.isNotEmpty(type)) {
-            label = new HashMap<>(1);
-            label.put("type", MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType());
-        }
-        List<MiddlewareCRD> middlewareCRDList = middlewareWrapper.list(clusterId, namespace, label);
-        return middlewareCRDList;
     }
 
     @Override
@@ -108,7 +96,7 @@ public class MiddlewareCRDServiceImpl implements MiddlewareCRDService {
     @Override
     public MiddlewareCRD getCR(String clusterId, String namespace, String type, String name) {
         if (MiddlewareTypeEnum.isType(type)) {
-            String crdName = MiddlewareCRDService.getCrName(type, name);
+            String crdName = MiddlewareCRService.getCrName(type, name);
             return middlewareWrapper.get(clusterId, namespace, crdName);
         } else {
             List<MiddlewareCRD> middlewareCRDList = middlewareWrapper.list(clusterId, namespace, null);
@@ -198,7 +186,7 @@ public class MiddlewareCRDServiceImpl implements MiddlewareCRDService {
 
     @Override
     public boolean checkIfExist(String clusterId, String namespace, String type, String middlewareName) {
-        String crdName = MiddlewareCRDService.getCrName(type, middlewareName);
+        String crdName = MiddlewareCRService.getCrName(type, middlewareName);
         return middlewareWrapper.checkIfExist(clusterId, namespace, crdName);
     }
 

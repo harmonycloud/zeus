@@ -14,7 +14,7 @@ import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.integration.cluster.PodWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
-import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
+import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.PodService;
 import com.harmonycloud.zeus.service.k8s.StorageClassService;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
@@ -50,7 +50,7 @@ public class PodServiceImpl implements PodService {
     @Autowired
     private PodWrapper podWrapper;
     @Autowired
-    private MiddlewareCRDService middlewareCRDService;
+    private MiddlewareCRService middlewareCRService;
     @Autowired
     private StorageClassService storageClassService;
     @Autowired
@@ -58,7 +58,7 @@ public class PodServiceImpl implements PodService {
 
     @Override
     public Middleware list(String clusterId, String namespace, String middlewareName, String type) {
-        MiddlewareCRD mw = middlewareCRDService.getCR(clusterId, namespace, type, middlewareName);
+        MiddlewareCRD mw = middlewareCRService.getCR(clusterId, namespace, type, middlewareName);
         Middleware middleware = listPods(mw, clusterId, namespace, middlewareName, type);
         middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(clusterId, middleware.getNamespace(), middleware.getType(), middleware.getName()));
         return middleware;
@@ -240,7 +240,7 @@ public class PodServiceImpl implements PodService {
     }
 
     public void checkExist(String clusterId, String namespace, String middlewareName, String type, String podName){
-        MiddlewareCRD mw = middlewareCRDService.getCR(clusterId, namespace, type, middlewareName);
+        MiddlewareCRD mw = middlewareCRService.getCR(clusterId, namespace, type, middlewareName);
         if (mw == null) {
             throw new BusinessException(DictEnum.MIDDLEWARE, middlewareName, ErrorMessage.NOT_EXIST);
         }
@@ -285,7 +285,7 @@ public class PodServiceImpl implements PodService {
         if (mw == null) {
             throw new BusinessException(DictEnum.MIDDLEWARE, middlewareName, ErrorMessage.NOT_EXIST);
         }
-        Middleware middleware = middlewareCRDService.simpleConvert(mw);
+        Middleware middleware = middlewareCRService.simpleConvert(mw);
         if (CollectionUtils.isEmpty(mw.getStatus().getInclude())) {
             middleware.setPods(new ArrayList<>(0));
             return middleware;

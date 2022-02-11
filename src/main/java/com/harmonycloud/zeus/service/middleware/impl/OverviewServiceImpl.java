@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.constants.NameConstant;
 import com.harmonycloud.caas.common.enums.DateType;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
@@ -27,7 +26,7 @@ import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareSpec;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareStatus;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
-import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
+import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
@@ -71,7 +70,7 @@ public class OverviewServiceImpl implements OverviewService {
     @Autowired
     private PrometheusWrapper prometheusWrapper;
     @Autowired
-    private MiddlewareCRDService middlewareCRDService;
+    private MiddlewareCRService middlewareCRService;
     @Autowired
     protected HelmChartService helmChartService;
     @Autowired
@@ -110,7 +109,7 @@ public class OverviewServiceImpl implements OverviewService {
     public List<MiddlewareStatusDto> getMiddlewareStatus(String clusterId, String namespace) {
 
         // 封装middleware
-        List<Middleware> middlewares = middlewareCRDService.list(clusterId, namespace, null);
+        List<Middleware> middlewares = middlewareCRService.list(clusterId, namespace, null);
         if (CollectionUtils.isEmpty(middlewares)) {
             return null;
         }
@@ -161,7 +160,7 @@ public class OverviewServiceImpl implements OverviewService {
         String startTime, String endTime) throws Exception {
 
         // 获取中间件crd对象
-        MiddlewareCRD middlewareCRD = middlewareCRDService.getCR(clusterId, namespace, type, name);
+        MiddlewareCRD middlewareCRD = middlewareCRService.getCR(clusterId, namespace, type, name);
 
         // 获取pod列表
         if (ObjectUtils.isEmpty(middlewareCRD.getStatus().getInclude())) {
@@ -545,7 +544,7 @@ public class OverviewServiceImpl implements OverviewService {
                 return overviewNSInfo;
             }).collect(Collectors.toMap(OverviewNamespaceInfo::getName, Function.identity()));
 
-            List<Middleware> middlewareInfoDTOList = middlewareCRDService.list(clusterDTO.getId(), null, null);
+            List<Middleware> middlewareInfoDTOList = middlewareCRService.list(clusterDTO.getId(), null, null);
             //获取chartName对应的chartVersion
             List<HelmListInfo> helmListInfoList = helmChartService.listHelm("", "", clusterDTO);
             Map<String, List<HelmListInfo>> helmListMap =
@@ -704,7 +703,7 @@ public class OverviewServiceImpl implements OverviewService {
             List<Namespace> registeredNamespace = namespaces.stream().filter(namespace -> namespace.isRegistered()).collect(Collectors.toList());
             registeredNamespace.stream().forEach(namespace -> {
                 //获取分区下所有实例
-                List<MiddlewareCRD> middlewareCRDS = middlewareCRDService.listCR(clusterDTO.getId(), namespace.getName(), null);
+                List<MiddlewareCRD> middlewareCRDS = middlewareCRService.listCR(clusterDTO.getId(), namespace.getName(), null);
                 Map<String, List<String>> quotas = namespace.getQuotas();
 
                 String namespaceCpu = null;

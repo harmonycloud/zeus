@@ -104,7 +104,7 @@ public class ClusterServiceImpl implements ClusterService {
     @Autowired
     private PrometheusWrapper prometheusWrapper;
     @Autowired
-    private MiddlewareCRDService middlewareCRDService;
+    private MiddlewareCRService middlewareCRService;
     @Autowired
     private IngressService ingressService;
     @Autowired
@@ -488,7 +488,7 @@ public class ClusterServiceImpl implements ClusterService {
      */
     public boolean checkDelete(String clusterId) {
         try {
-            List<MiddlewareCRD> middlewareCRDList = middlewareCRDService.listCR(clusterId, null, null);
+            List<MiddlewareCRD> middlewareCRDList = middlewareCRService.listCR(clusterId, null, null);
             if (!CollectionUtils.isEmpty(middlewareCRDList) && middlewareCRDList.stream().anyMatch(
                 middlewareCRD -> !"escluster-middleware-elasticsearch".equals(middlewareCRD.getMetadata().getName())
                     && !"mysqlcluster-zeus-mysql".equals(middlewareCRD.getMetadata().getName()))) {
@@ -598,7 +598,7 @@ public class ClusterServiceImpl implements ClusterService {
     @Override
     public List<MiddlewareResourceInfo> getMwResource(String clusterId) throws Exception {
         // 获取集群下所有中间件信息
-        List<MiddlewareCRD> mwCrdList = middlewareCRDService.listCR(clusterId, null, null);
+        List<MiddlewareCRD> mwCrdList = middlewareCRService.listCR(clusterId, null, null);
         // 过滤未注册的分区
         List<Namespace> namespaceList = namespaceService.list(clusterId);
         mwCrdList = mwCrdList.stream()

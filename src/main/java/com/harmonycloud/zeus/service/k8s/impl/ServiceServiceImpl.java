@@ -6,7 +6,7 @@ import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareStatus;
-import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
+import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.ServiceService;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServiceSpec;
@@ -27,14 +27,14 @@ import java.util.Map;
 public class ServiceServiceImpl implements ServiceService {
 
     @Autowired
-    private MiddlewareCRDService middlewareCRDService;
+    private MiddlewareCRService middlewareCRService;
 
     @Autowired
     private ServiceWrapper serviceWrapper;
 
     @Override
     public List<ServicePortDTO> list(String clusterId, String namespace, String name, String type) {
-        MiddlewareCRD middleware = middlewareCRDService.getCR(clusterId, namespace, type, name);
+        MiddlewareCRD middleware = middlewareCRService.getCR(clusterId, namespace, type, name);
         if (middleware == null || middleware.getStatus() == null) {
             return null;
         }

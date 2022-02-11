@@ -22,7 +22,7 @@ import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
-import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
+import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
 import com.harmonycloud.zeus.service.user.ClusterRoleService;
@@ -49,7 +49,7 @@ public class NamespaceServiceImpl implements NamespaceService {
     @Autowired
     private ResourceQuotaService resourceQuotaService;
     @Autowired
-    private MiddlewareCRDService middlewareCRDService;
+    private MiddlewareCRService middlewareCRService;
     @Autowired
     private ClusterRoleService clusterRoleService;
 
@@ -125,7 +125,7 @@ public class NamespaceServiceImpl implements NamespaceService {
             // 中间件实例信息
             Map<String, List<MiddlewareCRD>> mwMap = null;
             if (withMiddleware) {
-                List<MiddlewareCRD> middlewares = middlewareCRDService.listCR(clusterId, null, null);
+                List<MiddlewareCRD> middlewares = middlewareCRService.listCR(clusterId, null, null);
                 if (!CollectionUtils.isEmpty(middlewares)) {
                     mwMap = middlewares.stream().collect(Collectors.groupingBy(mw -> mw.getMetadata().getNamespace()));
                 }

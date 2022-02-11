@@ -11,7 +11,7 @@ import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
  * @author xutianhong
  * @Date 2021/4/1 5:06 下午
  */
-public interface MiddlewareCRDService {
+public interface MiddlewareCRService {
 
     /**
      * 查询中间件列表
@@ -21,15 +21,6 @@ public interface MiddlewareCRDService {
      * @return List<Middleware>
      */
     List<Middleware> list(String clusterId, String namespace, String type);
-
-    /**
-     * 查询中间件列表
-     *
-     * @param clusterId 集群id
-     * @param namespace 命名空间
-     * @return List<MiddlewareCRD>
-     */
-    List<MiddlewareCRD> listCRD(String clusterId, String namespace, String type);
 
     /**
      * 查询中间件列表
@@ -93,10 +84,11 @@ public interface MiddlewareCRDService {
 
     /**
      * 检查中间件是否存在
-     * @param clusterId
-     * @param namespace
-     * @param crName 中间件cr名称
-     * @return
+     * @param clusterId  集群ID
+     * @param namespace  命名空间
+     * @param type       类型
+     * @param middlewareName 中间件名称
+     * @return boolean
      */
     boolean checkIfExist(String clusterId, String namespace, String type, String middlewareName);
 
