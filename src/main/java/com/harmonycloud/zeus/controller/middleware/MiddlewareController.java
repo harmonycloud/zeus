@@ -1,16 +1,14 @@
 package com.harmonycloud.zeus.controller.middleware;
 
 import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MonitorDto;
-import com.harmonycloud.caas.common.model.middleware.MysqlSlowSqlDTO;
-import com.harmonycloud.caas.common.model.middleware.SlowLogQuery;
+import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.page.PageObject;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,11 +34,11 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping
-    public BaseResult list(@PathVariable("clusterId") String clusterId,
-                           @PathVariable("namespace") String namespace,
-                           @RequestParam(value = "type", required = false) String type,
-                           @RequestParam(value = "keyword", required = false) String keyword) {
-        return BaseResult.ok(middlewareService.listAllMiddleware(clusterId, namespace, type, keyword));
+    public BaseResult<MiddlewareBriefInfoDTO> list(@PathVariable("clusterId") String clusterId,
+                                                   @PathVariable("namespace") String namespace,
+                                                   @RequestParam(value = "type", required = false) String type,
+                                                   @RequestParam(value = "keyword", required = false) String keyword) {
+        return BaseResult.ok(middlewareService.list(clusterId, namespace, type, keyword));
     }
 
     @ApiOperation(value = "查询中间件详情", notes = "查询中间件详情")

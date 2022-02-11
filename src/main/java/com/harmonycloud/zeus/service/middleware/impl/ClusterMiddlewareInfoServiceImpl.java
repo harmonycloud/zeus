@@ -66,11 +66,9 @@ public class ClusterMiddlewareInfoServiceImpl implements ClusterMiddlewareInfoSe
     @Override
     public List<BeanClusterMiddlewareInfo> list(String clusterId, Boolean installed) {
         QueryWrapper<BeanClusterMiddlewareInfo> wrapper =
-                new QueryWrapper<BeanClusterMiddlewareInfo>().eq("cluster_id", clusterId);
+            new QueryWrapper<BeanClusterMiddlewareInfo>().eq("cluster_id", clusterId);
         if (installed) {
-            wrapper.and(beanClusterMiddlewareInfoQueryWrapper -> {
-                beanClusterMiddlewareInfoQueryWrapper.eq("status", 1);
-            });
+            wrapper.eq("status", 1);
         }
         wrapper.orderByAsc("chart_name");
         return beanClusterMiddlewareInfoMapper.selectList(wrapper);

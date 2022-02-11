@@ -103,14 +103,6 @@ public interface BaseOperator {
     void switchMiddleware(Middleware middleware);
 
     /**
-     * 性能监控
-     *
-     * @param middleware 中间件信息
-     * @return string
-     */
-    MonitorDto monitor(Middleware middleware);
-
-    /**
      * pvc扩缩容
      *
      * @param middleware 中间件信息

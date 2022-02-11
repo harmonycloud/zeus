@@ -16,6 +16,16 @@ import java.util.List;
 public interface MiddlewareService {
 
     /**
+     * 查询指定类型的所有服务
+     * @param clusterId 集群
+     * @param namespace 分区
+     * @param type 服务类型，例如：mysql
+     * @param keyword 搜索关键词
+     * @return
+     */
+    List<MiddlewareBriefInfoDTO> list(String clusterId, String namespace,String type, String keyword);
+
+    /**
      * 查询中间件列表
      *
      * @param clusterId 集群id
@@ -96,48 +106,43 @@ public interface MiddlewareService {
      */
     MonitorDto monitor(String clusterId, String namespace, String name, String type, String chartVersion);
 
+    /**
+     * mysql慢日志查询
+     * @param slowLogQuery 慢日志查询对象
+     *
+     * @return PageObject<MysqlSlowSqlDTO>
+     */
     PageObject<MysqlSlowSqlDTO> slowsql(SlowLogQuery slowLogQuery) throws Exception;
 
+    /**
+     * 慢日志导出
+     * @param slowLogQuery 慢日志查询对象
+     * @param response     返回体
+     * @param request      请求体
+     *
+     */
     void slowsqlExcel(SlowLogQuery slowLogQuery, HttpServletResponse response, HttpServletRequest request) throws Exception;
 
     /**
-     * 查询中间件管理控制台地址(仅kafka、es、rocket-mq支持)
-     *
-     * @param middleware
-     * @return
-     */
-    void setManagePlatformAddress(Middleware middleware, String clusterId);
-
-    /**
      * 获取集群下中间件简要信息
-     * @param clusterDTOList
-     * @return
+     * @param clusterDTOList 集群列表
+     * @return List<MiddlewareBriefInfoDTO>
      */
     List<MiddlewareBriefInfoDTO> getMiddlewareBriefInfoList(List<MiddlewareClusterDTO> clusterDTOList);
 
     /**
      * 查询所有中间件并作为服务列表的子菜单
-     * @param clusterId
-     * @return
+     * @param clusterId 集群id
+     * @return List<ResourceMenuDto>
      */
     List<ResourceMenuDto> listAllMiddlewareAsMenu(String clusterId);
 
     /**
-     * 查询指定类型的所有服务
-     * @param clusterId 集群
-     * @param namespace 分区
-     * @param type 服务类型，例如：mysql
-     * @param keyword 搜索关键词
-     * @return
-     */
-    List<MiddlewareBriefInfoDTO> listAllMiddleware(String clusterId, String namespace,String type, String keyword);
-
-    /**
      * 查询服务版本
-     * @param clusterId
-     * @param namespace
-     * @param name
-     * @param type
+     * @param clusterId 集群ID
+     * @param namespace 分区
+     * @param name      名称
+     * @param type      类型
      * @return
      */
     List<MiddlewareInfoDTO> version(String clusterId, String namespace, String name, String type);

@@ -42,6 +42,7 @@ import com.harmonycloud.zeus.service.middleware.impl.MiddlewareAlertsServiceImpl
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.K8sConvert;
+import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -100,8 +101,6 @@ public abstract class AbstractBaseOperator {
     @Autowired
     private MiddlewareCustomConfigService middlewareCustomConfigService;
     @Autowired
-    private ConfigMapService configMapService;
-    @Autowired
     private MiddlewareService middlewareService;
     @Autowired
     private ServiceService serviceService;
@@ -109,8 +108,6 @@ public abstract class AbstractBaseOperator {
     private MiddlewareBackupServiceImpl middlewareBackupService;
     @Autowired
     private AspectService aspectService;
-    @Autowired
-    private GrafanaService grafanaService;
     @Autowired
     protected CacheMiddlewareService cacheMiddlewareService;
     @Autowired
@@ -287,70 +284,6 @@ public abstract class AbstractBaseOperator {
         sb.deleteCharAt(sb.length() - 1);
         // 更新helm
         helmChartService.upgrade(middleware, sb.toString(), cluster);
-    }
-
-
-    public MonitorDto monitor(Middleware middleware) {
-        MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
-        List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.list(true);
-        BeanMiddlewareInfo mwInfo = middlewareInfoList.stream()
-            .collect(Collectors.toMap(
-                beanMiddlewareInfo -> beanMiddlewareInfo.getChartName() + ":" + beanMiddlewareInfo.getChartVersion(),
-                middlewareInfo -> middlewareInfo))
-            .get(middleware.getType() + ":" + middleware.getChartVersion());
-        if (mwInfo == null) {
-            throw new BusinessException(ErrorMessage.MIDDLEWARE_NOT_EXIST);
-        }
-        if (StringUtils.isEmpty(mwInfo.getGrafanaId())){
-            updateGrafanaId(mwInfo, middleware);
-        }
-        if (StringUtils.isEmpty(mwInfo.getGrafanaId())){
-            throw new BusinessException(ErrorMessage.GRAFANA_ID_NOT_FOUND);
-        }
-
-        MiddlewareClusterMonitorInfo monitorInfo = cluster.getMonitor().getGrafana();
-        if (monitorInfo == null
-            || StringUtils.isAnyEmpty(monitorInfo.getProtocol(), monitorInfo.getHost(), monitorInfo.getPort())) {
-            throw new BusinessException(ErrorMessage.CLUSTER_MONITOR_INFO_NOT_FOUND);
-        }
-        // 生成token
-        if (StringUtils.isEmpty(monitorInfo.getToken()) && StringUtils.isNotEmpty(monitorInfo.getUsername())
-            && StringUtils.isNotEmpty(monitorInfo.getPassword())) {
-            grafanaService.setToken(monitorInfo);
-            cluster.getMonitor().setGrafana(monitorInfo);
-            clusterService.update(cluster);
-        }
-
-        MonitorDto monitorDto = new MonitorDto();
-        monitorDto.setUrl(monitorInfo.getAddress() + "/d/" + mwInfo.getGrafanaId() + "/" + middleware.getType()
-            + "?var-namespace=" + middleware.getNamespace() + "&var-service=" + middleware.getName());
-        monitorDto.setAuthorization("Bearer " + monitorInfo.getToken());
-        return monitorDto;
-    }
-
-    public void updateGrafanaId(BeanMiddlewareInfo mwInfo, Middleware middleware) {
-        HelmChartFile helm = helmChartService.getHelmChartFromMysql(middleware.getType(), middleware.getChartVersion());
-        String alias;
-        if (!CollectionUtils.isEmpty(helm.getDependency())) {
-            alias = helm.getDependency().get("alias");
-        } else {
-            alias = middleware.getName();
-        }
-        List<HelmListInfo> helmInfos =
-            helmChartService.listHelm("", alias, clusterService.findById(middleware.getClusterId()));
-        if (!CollectionUtils.isEmpty(helmInfos)) {
-            // 获取configmap
-            HelmListInfo helmInfo = helmInfos.get(0);
-            ConfigMap configMap =
-                configMapService.get(middleware.getClusterId(), helmInfo.getNamespace(), alias + "-dashboard");
-            if (!ObjectUtils.isEmpty(configMap)) {
-                for (String key : configMap.getData().keySet()) {
-                    JSONObject object = JSONObject.parseObject(configMap.getData().get(key));
-                    mwInfo.setGrafanaId(object.get("uid").toString());
-                    middlewareInfoService.update(mwInfo);
-                }
-            }
-        }
     }
 
     protected String getPvc(Middleware middleware) {
@@ -533,6 +466,8 @@ public abstract class AbstractBaseOperator {
             }
             // 设置服务备份状态
             middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(middleware.getClusterId(),middleware.getNamespace(),middleware.getType(),middleware.getName()));
+            // 设置管理平台地址
+            setManagePlatformAddress(middleware);
         } else {
             middleware.setAliasName(middleware.getName());
         }
@@ -1096,5 +1031,39 @@ public abstract class AbstractBaseOperator {
         QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
         wrapper.eq("cluster_id",middleware.getClusterId()).eq("namespace",middleware.getNamespace()).eq("middleware_name",middleware.getName());
         middlewareAlertInfoMapper.delete(wrapper);
+    }
+
+    /**
+     * 设置管理平台地址 
+     */
+    public void setManagePlatformAddress(Middleware middleware) {
+        if (middlewareManagePlatformFilter(middleware)){
+            List<IngressDTO> ingressDTOS = ingressService.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
+            MiddlewareServiceNameIndex serviceNameIndex = ServiceNameConvertUtil.convert(middleware);
+            List<IngressDTO> serviceDTOList = ingressDTOS.stream().filter(ingressDTO -> (
+                    ingressDTO.getName().equals(serviceNameIndex.getNodePortServiceName()) && ingressDTO.getExposeType().equals(MIDDLEWARE_EXPOSE_NODEPORT))
+            ).collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(serviceDTOList)) {
+                IngressDTO ingressDTO = serviceDTOList.get(0);
+                String exposeIP = ingressDTO.getExposeIP();
+                List<ServiceDTO> serviceList = ingressDTO.getServiceList();
+                if (!CollectionUtils.isEmpty(serviceList)) {
+                    ServiceDTO serviceDTO = serviceList.get(0);
+                    String exposePort = serviceDTO.getExposePort();
+                    middleware.setManagePlatformAddress(exposeIP + ":" + exposePort);
+                }
+            } else {
+                middleware.setManagePlatform(false);
+            }
+        }
+    }
+    
+    /**
+     * 中间件管理平台过滤 
+     */
+    public boolean middlewareManagePlatformFilter(Middleware middleware){
+        return middleware.getType().equals(MiddlewareTypeEnum.ELASTIC_SEARCH.getType())
+            || middleware.getType().equals(MiddlewareTypeEnum.KAFKA.getType())
+            || middleware.getType().equals(MiddlewareTypeEnum.ROCKET_MQ.getType());
     }
 }

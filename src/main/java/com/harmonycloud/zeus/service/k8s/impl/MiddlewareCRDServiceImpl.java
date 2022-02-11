@@ -188,7 +188,6 @@ public class MiddlewareCRDServiceImpl implements MiddlewareCRDService {
         return mw == null ? null : new Middleware()
                 .setName(mw.getSpec().getName())
                 .setNamespace(mw.getMetadata().getNamespace())
-                .setClusterId(mw.getMetadata().getClusterName())
                 .setType(MiddlewareTypeEnum.findTypeByCrdType(mw.getSpec().getType()))
                 .setStatus(mw.getStatus() != null ? mw.getStatus().getPhase() : "")
                 .setReason(mw.getStatus() != null ? mw.getStatus().getReason() : "")

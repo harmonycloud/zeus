@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.enums.DateType;
 import com.harmonycloud.caas.common.enums.DictEnum;
@@ -22,6 +23,7 @@ import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareInfoServiceImpl;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareServiceImpl;
+import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.DateUtil;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.*;
@@ -79,6 +81,8 @@ public class IngressServiceImpl implements IngressService {
 
     @Autowired
     private MiddlewareInfoService middlewareInfoService;
+    @Autowired
+    private HelmChartService helmChartService;
 
     @Value("${k8s.ingress.default.name:nginx-ingress-controller}")
     private String defaultIngressName;
@@ -300,17 +304,18 @@ public class IngressServiceImpl implements IngressService {
             if (!CollectionUtils.isEmpty(cluster.getIngressList())) {
                 for (MiddlewareClusterIngress ingress : cluster.getIngressList()) {
                     if (ingress.getTcp() != null && ingress.getTcp().isEnabled()) {
-                        Middleware detail = middlewareService.detail(clusterId, namespace, middlewareName, type);
-                        ConfigMap configMap =
-                                configMapWrapper.get(clusterId, getIngressTcpNamespace(cluster, ingress.getIngressClassName()),
-                                        ingress.getTcp().getConfigMapName());
+                        JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
+                        ConfigMap configMap = configMapWrapper.get(clusterId,
+                            getIngressTcpNamespace(cluster, ingress.getIngressClassName()),
+                            ingress.getTcp().getConfigMapName());
                         Map<String, List<ServiceDTO>> tcpRoutineMap = getTcpRoutineMap(configMap);
                         svcNameList.forEach(svc -> {
                             IngressDTO tcpDto = getTcpRoutineDetail(clusterId, namespace, crd, svc, tcpRoutineMap);
                             if (tcpDto != null) {
                                 tcpDto.setIngressClassName(ingress.getIngressClassName());
-                                resList.add(tcpDto.setMiddlewareType(type).setMiddlewareNickName(detail.getAliasName())
-                                        .setExposeIP(ingress.getAddress()));
+                                resList.add(tcpDto.setMiddlewareType(type)
+                                    .setMiddlewareNickName(values.getOrDefault("aliasName", "").toString())
+                                    .setExposeIP(ingress.getAddress()));
                             }
                         });
                     }

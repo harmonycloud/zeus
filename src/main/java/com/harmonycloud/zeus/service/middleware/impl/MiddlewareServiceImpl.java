@@ -1,68 +1,59 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_NODEPORT;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
+
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.constants.CommonConstant;
-import com.harmonycloud.caas.common.constants.NameConstant;
-import com.harmonycloud.caas.common.enums.DictEnum;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
-import com.harmonycloud.caas.common.model.middleware.*;
-import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
-import com.harmonycloud.caas.common.model.registry.HelmChartFile;
-import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
-import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
-import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
-import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
-import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
-import com.harmonycloud.zeus.schedule.MiddlewareManageTask;
-import com.harmonycloud.zeus.service.k8s.*;
-import com.harmonycloud.zeus.service.log.EsComponentService;
-import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
-import com.harmonycloud.zeus.service.middleware.CacheMiddlewareService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
-import com.harmonycloud.zeus.service.registry.HelmChartService;
-import com.harmonycloud.tool.date.DateUtils;
-import com.harmonycloud.tool.excel.ExcelUtil;
-import com.harmonycloud.tool.page.PageObject;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
-import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
-import com.harmonycloud.zeus.util.YamlUtil;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
-import io.fabric8.kubernetes.api.model.Quantity;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.units.qual.A;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.zeus.operator.BaseOperator;
-import com.harmonycloud.zeus.service.AbstractBaseService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareService;
-
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.ObjectUtils;
-import org.yaml.snakeyaml.Yaml;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.caas.common.constants.CommonConstant;
+import com.harmonycloud.caas.common.constants.NameConstant;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
+import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.caas.common.model.registry.HelmChartFile;
+import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
+import com.harmonycloud.tool.date.DateUtils;
+import com.harmonycloud.tool.excel.ExcelUtil;
+import com.harmonycloud.tool.page.PageObject;
+import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
+import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
+import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
+import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
+import com.harmonycloud.zeus.operator.BaseOperator;
+import com.harmonycloud.zeus.schedule.MiddlewareManageTask;
+import com.harmonycloud.zeus.service.AbstractBaseService;
+import com.harmonycloud.zeus.service.k8s.*;
+import com.harmonycloud.zeus.service.log.EsComponentService;
+import com.harmonycloud.zeus.service.middleware.CacheMiddlewareService;
+import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareService;
+import com.harmonycloud.zeus.service.registry.HelmChartService;
+import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
+import com.harmonycloud.zeus.util.YamlUtil;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.STORAGE;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_NODEPORT;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author dengyulong
@@ -96,7 +87,9 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Autowired
     private PodService podService;
     @Autowired
-    private PvcWrapper pvcWrapper;
+    private GrafanaService grafanaService;
+    @Autowired
+    private ConfigMapService configMapService;
 
     private final static Map<String, String> titleMap = new HashMap<String, String>(7) {
         {
@@ -153,8 +146,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 operatorMap.put(middlewareType, getOperator(BaseOperator.class, BaseOperator.class, middleware));
             }
             try {
-                return operatorMap.get(middlewareType).convertByHelmChart(middlewareCRDService.simpleConvert(mw),
-                    cluster);
+                return operatorMap.get(middlewareType)
+                    .convertByHelmChart(middlewareCRDService.simpleConvert(mw).setClusterId(clusterId), cluster);
             } catch (Exception e) {
                 log.error("cluster:{} namespace:{} middleware:{} 获取详情失败", clusterId, namespace,
                     mw.getMetadata().getName(), e);
@@ -224,8 +217,41 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Override
     public MonitorDto monitor(String clusterId, String namespace, String name, String type, String chartVersion) {
         Middleware middleware = new Middleware(clusterId, namespace, name, type);
-        middleware.setChartVersion(chartVersion);
-        return getOperator(BaseOperator.class, BaseOperator.class, middleware).monitor(middleware);
+        MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
+        List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.list(true);
+        BeanMiddlewareInfo mwInfo = middlewareInfoList.stream()
+                .collect(Collectors.toMap(
+                        beanMiddlewareInfo -> beanMiddlewareInfo.getChartName() + ":" + beanMiddlewareInfo.getChartVersion(),
+                        middlewareInfo -> middlewareInfo))
+                .get(middleware.getType() + ":" + middleware.getChartVersion());
+        if (mwInfo == null) {
+            throw new BusinessException(ErrorMessage.MIDDLEWARE_NOT_EXIST);
+        }
+        if (StringUtils.isEmpty(mwInfo.getGrafanaId())){
+            updateGrafanaId(mwInfo, middleware);
+        }
+        if (StringUtils.isEmpty(mwInfo.getGrafanaId())){
+            throw new BusinessException(ErrorMessage.GRAFANA_ID_NOT_FOUND);
+        }
+
+        MiddlewareClusterMonitorInfo monitorInfo = cluster.getMonitor().getGrafana();
+        if (monitorInfo == null
+                || StringUtils.isAnyEmpty(monitorInfo.getProtocol(), monitorInfo.getHost(), monitorInfo.getPort())) {
+            throw new BusinessException(ErrorMessage.CLUSTER_MONITOR_INFO_NOT_FOUND);
+        }
+        // 生成token
+        if (StringUtils.isEmpty(monitorInfo.getToken()) && StringUtils.isNotEmpty(monitorInfo.getUsername())
+                && StringUtils.isNotEmpty(monitorInfo.getPassword())) {
+            grafanaService.setToken(monitorInfo);
+            cluster.getMonitor().setGrafana(monitorInfo);
+            clusterService.update(cluster);
+        }
+
+        MonitorDto monitorDto = new MonitorDto();
+        monitorDto.setUrl(monitorInfo.getAddress() + "/d/" + mwInfo.getGrafanaId() + "/" + middleware.getType()
+                + "?var-namespace=" + middleware.getNamespace() + "&var-service=" + middleware.getName());
+        monitorDto.setAuthorization("Bearer " + monitorInfo.getToken());
+        return monitorDto;
     }
 
     @Override
@@ -312,28 +338,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public void setManagePlatformAddress(Middleware middleware, String clusterId) {
-        List<IngressDTO> ingressDTOS = ingressService.get(clusterId, middleware.getNamespace(), middleware.getType(), middleware.getName());
-        MiddlewareServiceNameIndex serviceNameIndex = ServiceNameConvertUtil.convert(middleware);
-        List<IngressDTO> serviceDTOList = ingressDTOS.stream().filter(ingressDTO -> (
-                ingressDTO.getName().equals(serviceNameIndex.getNodePortServiceName()) && ingressDTO.getExposeType().equals(MIDDLEWARE_EXPOSE_NODEPORT))
-        ).collect(Collectors.toList());
-
-        if (!CollectionUtils.isEmpty(serviceDTOList)) {
-            IngressDTO ingressDTO = serviceDTOList.get(0);
-            String exposeIP = ingressDTO.getExposeIP();
-            List<ServiceDTO> serviceList = ingressDTO.getServiceList();
-            if (!CollectionUtils.isEmpty(serviceList)) {
-                ServiceDTO serviceDTO = serviceList.get(0);
-                String exposePort = serviceDTO.getExposePort();
-                middleware.setManagePlatformAddress(exposeIP + ":" + exposePort);
-            }
-        } else {
-            middleware.setManagePlatform(false);
-        }
-    }
-
-    @Override
     public List<MiddlewareBriefInfoDTO> getMiddlewareBriefInfoList(List<MiddlewareClusterDTO> clusterDTOList) {
         List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.listInstalledByClusters(clusterDTOList);
         List<MiddlewareBriefInfoDTO> middlewareBriefInfoDTOList = new ArrayList<>();
@@ -388,63 +392,36 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public List<MiddlewareBriefInfoDTO> listAllMiddleware(String clusterId, String namespace, String type, String keyword) {
-        List<MiddlewareBriefInfoDTO> serviceList = new ArrayList<>();
-        try {
-            List<BeanMiddlewareInfo> middlewareInfoDTOList = middlewareInfoService.listInstalledByCluster(clusterService.findById(clusterId));
-            if (type != null) {
-                middlewareInfoDTOList = middlewareInfoDTOList.stream().filter(middleware -> type.equals(middleware.getChartName())).collect(Collectors.toList());
-            }
-            List<Middleware> middlewareServiceList = simpleList(clusterId, namespace, type, keyword);
-            // 获取删除了但没有完全删除的中间件
-            List<BeanCacheMiddleware> beanCacheMiddlewareList = cacheMiddlewareService.list(clusterId, namespace);
-            for (BeanMiddlewareInfo middlewareInfo : middlewareInfoDTOList) {
-                AtomicInteger errServiceCount = new AtomicInteger(0);
-                List<Middleware> singleServiceList = new ArrayList<>();
-                for (Middleware middleware : middlewareServiceList) {
-                    if (!middlewareInfo.getChartName().equals(middleware.getType())) {
-                        continue;
-                    }
-                    if (!NameConstant.RUNNING.equalsIgnoreCase(middleware.getStatus())) {
-                        //中间件服务状态异常
-                        errServiceCount.getAndAdd(1);
-                    }
-                    if (middleware.getManagePlatform() != null && middleware.getManagePlatform()) {
-                        setManagePlatformAddress(middleware, clusterId);
-                    }
-                    singleServiceList.add(middleware);
-                }
-                // 整理未完全删除的中间件的信息
-                for (BeanCacheMiddleware beanCacheMiddleware : beanCacheMiddlewareList){
-                    if (!middlewareInfo.getChartName().equals(beanCacheMiddleware.getType())) {
-                        continue;
-                    }
-                    Middleware middleware = new Middleware();
-                    BeanUtils.copyProperties(beanCacheMiddleware, middleware);
-                    middleware.setStatus("Deleted");
-                    // 先移除可能因为异步导致残留的原中间件信息
-                    singleServiceList = singleServiceList.stream().filter(m -> !m.getName().equals(middleware.getName())).collect(Collectors.toList());
-                    singleServiceList.add(middleware);
-                }
-
-                MiddlewareBriefInfoDTO briefInfoDTO = new MiddlewareBriefInfoDTO();
-                briefInfoDTO.setName(middlewareInfo.getName());
-                briefInfoDTO.setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(middlewareInfo.getName()));
-                briefInfoDTO.setImagePath(middlewareInfo.getImagePath());
-                briefInfoDTO.setChartName(middlewareInfo.getChartName());
-                briefInfoDTO.setChartVersion(middlewareInfo.getChartVersion());
-                briefInfoDTO.setVersion(middlewareInfo.getVersion());
-                Collections.sort(singleServiceList, new MiddlewareComparator());
-                briefInfoDTO.setServiceList(singleServiceList);
-                briefInfoDTO.setServiceNum(singleServiceList.size());
-                briefInfoDTO.setOfficial(middlewareInfo.getOfficial());
-                serviceList.add(briefInfoDTO);
-            }
-            Collections.sort(serviceList, new MiddlewareBriefInfoDTOComparator());
-        } catch (Exception e) {
-            log.error("查询服务列表错误", e);
+    public List<MiddlewareBriefInfoDTO> list(String clusterId, String namespace, String type, String keyword) {
+        // 获取中间件列表
+        List<Middleware> middlewareList = simpleList(clusterId, namespace, type, keyword);
+        // 获取仅1次删除的中间件
+        List<BeanCacheMiddleware> beanCacheMiddlewareList = cacheMiddlewareService.list(clusterId, namespace);
+        for (BeanCacheMiddleware beanCacheMiddleware : beanCacheMiddlewareList){
+            Middleware middleware = new Middleware();
+            BeanUtils.copyProperties(beanCacheMiddleware, middleware);
+            middleware.setStatus("Deleted");
+            // 先移除可能因为异步导致残留的原中间件信息
+            middlewareList = middlewareList.stream().filter(m -> !m.getName().equals(middleware.getName())).collect(Collectors.toList());
+            middlewareList.add(middleware);
         }
-        return serviceList;
+        // 根据创建时间排序
+        middlewareList.sort(new MiddlewareComparator());
+
+        List<MiddlewareBriefInfoDTO> list = new ArrayList<>();
+        Map<String, List<Middleware>> middlewareListMap = middlewareList.stream().collect(Collectors.groupingBy(Middleware::getType));
+        for (String key : middlewareListMap.keySet()){
+            // 根据创建时间排序
+            List<Middleware> tempMiddlewareList =  middlewareListMap.get(key);
+            tempMiddlewareList.sort(new MiddlewareComparator());
+            // 封装数据
+            MiddlewareBriefInfoDTO briefInfoDTO = new MiddlewareBriefInfoDTO();
+            briefInfoDTO.setChartName(key);
+            briefInfoDTO.setServiceList(tempMiddlewareList);
+            briefInfoDTO.setServiceNum(tempMiddlewareList.size());
+            list.add(briefInfoDTO);
+        }
+        return list;
     }
 
     @Override
@@ -518,22 +495,31 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     /**
-     * 转换中间件简要信息
-     * @param middlewareInfoDTO
-     * @param singleServiceList
-     * @return
+     * 更新grafanaid
      */
-    private MiddlewareBriefInfoDTO convertMiddlewareBriefInfo(MiddlewareInfoDTO middlewareInfoDTO, List<Middleware> singleServiceList) {
-        MiddlewareBriefInfoDTO briefInfoDTO = new MiddlewareBriefInfoDTO();
-        briefInfoDTO.setName(middlewareInfoDTO.getName());
-        briefInfoDTO.setImagePath(middlewareInfoDTO.getImagePath());
-        briefInfoDTO.setChartName(middlewareInfoDTO.getChartName());
-        briefInfoDTO.setChartVersion(middlewareInfoDTO.getChartVersion());
-        briefInfoDTO.setVersion(middlewareInfoDTO.getVersion());
-        briefInfoDTO.setOfficial(middlewareInfoDTO.getOfficial());
-        briefInfoDTO.setServiceList(singleServiceList);
-        briefInfoDTO.setServiceNum(singleServiceList.size());
-        return briefInfoDTO;
+    public void updateGrafanaId(BeanMiddlewareInfo mwInfo, Middleware middleware) {
+        HelmChartFile helm = helmChartService.getHelmChartFromMysql(middleware.getType(), middleware.getChartVersion());
+        String alias;
+        if (!CollectionUtils.isEmpty(helm.getDependency())) {
+            alias = helm.getDependency().get("alias");
+        } else {
+            alias = middleware.getName();
+        }
+        List<HelmListInfo> helmInfos =
+                helmChartService.listHelm("", alias, clusterService.findById(middleware.getClusterId()));
+        if (!CollectionUtils.isEmpty(helmInfos)) {
+            // 获取configmap
+            HelmListInfo helmInfo = helmInfos.get(0);
+            ConfigMap configMap =
+                    configMapService.get(middleware.getClusterId(), helmInfo.getNamespace(), alias + "-dashboard");
+            if (!ObjectUtils.isEmpty(configMap)) {
+                for (String key : configMap.getData().keySet()) {
+                    JSONObject object = JSONObject.parseObject(configMap.getData().get(key));
+                    mwInfo.setGrafanaId(object.get("uid").toString());
+                    middlewareInfoService.update(mwInfo);
+                }
+            }
+        }
     }
 
     /**
