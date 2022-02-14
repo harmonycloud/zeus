@@ -87,18 +87,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Autowired
     private ConfigMapService configMapService;
 
-    private final static Map<String, String> titleMap = new HashMap<String, String>(7) {
-        {
-            put("0", "慢日志采集时间");
-            put("1", "sql语句");
-            put("2", "客户端IP");
-            put("3", "执行时长(s)");
-            put("4", "锁定时长(s)");
-            put("5", "解析行数");
-            put("6", "返回行数");
-        }
-    };
-
     @Override
     public List<Middleware> simpleList(String clusterId, String namespace, String type, String keyword) {
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
@@ -282,37 +270,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         }
     }
 
-    @Override
-    public PageObject<MysqlSlowSqlDTO> slowsql(SlowLogQuery slowLogQuery) throws Exception {
-        MiddlewareClusterDTO cluster = clusterService.findById(slowLogQuery.getClusterId());
-        PageObject<MysqlSlowSqlDTO> slowSqlDTOS = esComponentService.getSlowSql(cluster, slowLogQuery);
-        return slowSqlDTOS;
-    }
-
-    @Override
-    public void slowsqlExcel(SlowLogQuery slowLogQuery, HttpServletResponse response, HttpServletRequest request) throws Exception {
-        slowLogQuery.setCurrent(1);
-        slowLogQuery.setSize(CommonConstant.NUM_ONE_THOUSAND);
-        PageObject<MysqlSlowSqlDTO> slowsql = slowsql(slowLogQuery);
-        List<Map<String, Object>> demoValues = new ArrayList<>();
-        slowsql.getData().stream().forEach(mysqlSlowSqlDTO -> {
-            Map<String, Object> demoValue = new HashMap<String, Object>() {
-                {
-                    Date queryDate = DateUtils.parseUTCSDate(mysqlSlowSqlDTO.getTimestampMysql());
-                    put("0", queryDate);
-                    put("1", mysqlSlowSqlDTO.getQuery());
-                    put("2", mysqlSlowSqlDTO.getClientip());
-                    put("3", mysqlSlowSqlDTO.getQueryTime());
-                    put("4", mysqlSlowSqlDTO.getLockTime());
-                    put("5", mysqlSlowSqlDTO.getRowsExamined());
-                    put("6", mysqlSlowSqlDTO.getRowsSent());
-                }
-            };
-            demoValues.add(demoValue);
-        });
-        ExcelUtil.writeExcel(ExcelUtil.OFFICE_EXCEL_XLSX, "mysqlslowsql", null, titleMap, demoValues, response, request);
-    }
-    
     public List<String> getNameList(String clusterId, String namespace, String type) {
         // 获取中间件chartName + chartVersion
         List<BeanMiddlewareInfo> mwInfoList = middlewareInfoService.list(true);
@@ -335,8 +292,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
     @Override
     public List<MiddlewareBriefInfoDTO> getMiddlewareBriefInfoList(List<MiddlewareClusterDTO> clusterDTOList) {
+        // 从数据库查询集群已安装的所有中间件版本、图片路径等基础信息
         List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.listInstalledByClusters(clusterDTOList);
         List<MiddlewareBriefInfoDTO> middlewareBriefInfoDTOList = new ArrayList<>();
+        // 查询集群内创建的所有中间件CR信息
         List<Middleware> middlewares = queryAllClusterService(clusterDTOList);
         middlewareInfoList.forEach(middlewareInfo -> {
             AtomicInteger serviceNum = new AtomicInteger();
@@ -345,8 +304,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             countServiceNum(middlewareInfo.getClusterId(), middlewares, middlewareInfo.getChartName(), serviceNum, errServiceNum);
             middlewareBriefInfoDTO.setName(middlewareInfo.getName());
             middlewareBriefInfoDTO.setChartName(middlewareInfo.getChartName());
-            middlewareBriefInfoDTO.setVersion(middlewareInfo.getVersion());
-            middlewareBriefInfoDTO.setChartVersion(middlewareInfo.getChartVersion());
             middlewareBriefInfoDTO.setImagePath(middlewareInfo.getImagePath());
             middlewareBriefInfoDTO.setServiceNum(serviceNum.get());
             middlewareBriefInfoDTO.setErrServiceNum(errServiceNum.get());
@@ -355,7 +312,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         try {
             Collections.sort(middlewareBriefInfoDTOList, new MiddlewareBriefInfoDTOComparator());
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("对服务排序出错了", e);
         }
         return middlewareBriefInfoDTOList;
     }
@@ -479,7 +436,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
     @Override
     public List<MiddlewareInfoDTO> version(String clusterId, String namespace, String name, String type) {
-        List<BeanMiddlewareInfo> middlewareInfos = middlewareInfoService.listAllMiddlewareInfo(clusterId, type);
+        List<BeanMiddlewareInfo> middlewareInfos = middlewareInfoService.listByType(type);
         // 将倒序转为正序
         middlewareInfos.sort(Comparator.comparing(BeanMiddlewareInfo::getChartVersion));
         Middleware middleware = detail(clusterId, namespace, name, type);
@@ -598,30 +555,24 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                     errServiceNum.getAndAdd(1);
                 }
             } catch (Exception e) {
-                log.error("查询中间件CR出错了,chartName={},type={}", chartName, e);
+                log.error("统计服务数量出错了,chartName={},type={}", chartName, e);
             }
         }
     }
 
     /**
-     * 查询集群所有服务
+     * 查询集群所有已发布的中间件
      * @param clusterDTOList 集群列表
      * @return
      */
     private List<Middleware> queryAllClusterService(List<MiddlewareClusterDTO> clusterDTOList) {
         List<Namespace> namespaceList = new ArrayList<>();
         clusterDTOList.forEach(cluster -> {
-            List<Namespace> namespaces = namespaceService.list(cluster.getId(), true, null);
-            namespaces = namespaces.stream().filter(Namespace::isRegistered).collect(Collectors.toList());
-            namespaceList.addAll(namespaces);
+            namespaceList.addAll(namespaceService.list(cluster.getId(), false, null));
         });
         List<Middleware> middlewareServiceList = new ArrayList<>();
         namespaceList.forEach(namespace -> {
-            List<Middleware> middlewares = simpleList(namespace.getClusterId(), namespace.getName(), null, "");
-            middlewareServiceList.addAll(middlewares);
-            middlewareServiceList.forEach(middleware -> {
-                middleware.setClusterId(namespace.getClusterId());
-            });
+            middlewareServiceList.addAll(simpleList(namespace.getClusterId(), namespace.getName(), null, ""));
         });
         return middlewareServiceList;
     }

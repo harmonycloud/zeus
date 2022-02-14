@@ -392,7 +392,6 @@ public class OverviewServiceImpl implements OverviewService {
         alertDTOPage.setList(recordList.stream().map(record -> {
             AlertDTO alertDTO = new AlertDTO();
             BeanUtils.copyProperties(record, alertDTO);
-            alertDTO.setTime(DateUtils.addInteger(alertDTO.getTime(), Calendar.HOUR_OF_DAY, 8));
             Middleware middleware = new Middleware().setName(alertDTO.getName()).setNamespace(alertDTO.getNamespace())
                 .setClusterId(alertDTO.getClusterId());
             if (middlewareMap.containsKey(middleware)) {
@@ -828,8 +827,8 @@ public class OverviewServiceImpl implements OverviewService {
         if (StringUtils.isNotBlank(clusterId)) {
             clusterList = clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
         }
-        //获取各中间件服务数量信息
         List<MiddlewareBriefInfoDTO> middlewareBriefInfoList = middlewareService.getMiddlewareBriefInfoList(clusterList);
+        // 多集群时，合并相同中间件数量信息
         if (StringUtils.isBlank(clusterId) && clusterList.size() > 1) {
             Map<String, MiddlewareBriefInfoDTO> resMap = new HashMap<>();
             middlewareBriefInfoList.forEach(mwInfo -> {
@@ -844,7 +843,6 @@ public class OverviewServiceImpl implements OverviewService {
             middlewareBriefInfoList.clear();
             middlewareBriefInfoList.addAll(resMap.values());
         }
-
         platformOverviewDTO.setBriefInfoList(middlewareBriefInfoList);
         return platformOverviewDTO;
     }

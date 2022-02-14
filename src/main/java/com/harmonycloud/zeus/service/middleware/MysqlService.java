@@ -1,6 +1,12 @@
 package com.harmonycloud.zeus.service.middleware;
 
 import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.model.middleware.MysqlSlowSqlDTO;
+import com.harmonycloud.caas.common.model.middleware.SlowLogQuery;
+import com.harmonycloud.tool.page.PageObject;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author dengyulong
@@ -26,4 +32,20 @@ public interface MysqlService {
      */
     BaseResult queryAccessInfo(String clusterId, String namespace, String middlewareName);
 
+    /**
+     * mysql慢日志查询
+     * @param slowLogQuery 慢日志查询对象
+     *
+     * @return PageObject<MysqlSlowSqlDTO>
+     */
+    PageObject<MysqlSlowSqlDTO> slowsql(SlowLogQuery slowLogQuery) throws Exception;
+
+    /**
+     * 慢日志导出
+     * @param slowLogQuery 慢日志查询对象
+     * @param response     返回体
+     * @param request      请求体
+     *
+     */
+    void slowsqlExcel(SlowLogQuery slowLogQuery, HttpServletResponse response, HttpServletRequest request) throws Exception;
 }
