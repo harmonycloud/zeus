@@ -392,7 +392,6 @@ public class OverviewServiceImpl implements OverviewService {
         alertDTOPage.setList(recordList.stream().map(record -> {
             AlertDTO alertDTO = new AlertDTO();
             BeanUtils.copyProperties(record, alertDTO);
-            alertDTO.setTime(DateUtils.addInteger(alertDTO.getTime(), Calendar.HOUR_OF_DAY, 8));
             Middleware middleware = new Middleware().setName(alertDTO.getName()).setNamespace(alertDTO.getNamespace())
                 .setClusterId(alertDTO.getClusterId());
             if (middlewareMap.containsKey(middleware)) {
