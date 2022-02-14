@@ -139,7 +139,6 @@ public abstract class AbstractBaseOperator {
         if (mw == null) {
             throw new BusinessException(DictEnum.MIDDLEWARE, middleware.getName(), ErrorMessage.NOT_EXIST);
         }
-        mw.setClusterId(middleware.getClusterId());
         return convertByHelmChart(mw, cluster);
     }
 

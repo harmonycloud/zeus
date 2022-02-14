@@ -18,9 +18,11 @@ public interface MiddlewareCRService {
      *
      * @param clusterId 集群id
      * @param namespace 命名空间
+     * @param type      中间件类型
+     * @param detail    是否返回详细信息
      * @return List<Middleware>
      */
-    List<Middleware> list(String clusterId, String namespace, String type);
+    List<Middleware> list(String clusterId, String namespace, String type, Boolean detail);
 
     /**
      * 查询中间件列表

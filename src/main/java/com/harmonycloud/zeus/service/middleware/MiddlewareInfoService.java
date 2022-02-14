@@ -61,6 +61,15 @@ public interface MiddlewareInfoService {
     List<MiddlewareInfoDTO> list(String clusterId);
 
     /**
+     * 查询制定类型中间件的最新chartVersion
+     *
+     * @param clusterId 集群id
+     * @param type      类型
+     * @return
+     */
+    MiddlewareInfoDTO getByType(String clusterId, String type);
+
+    /**
      * 查询中间件版本信息
      *
      * @param clusterId 集群id

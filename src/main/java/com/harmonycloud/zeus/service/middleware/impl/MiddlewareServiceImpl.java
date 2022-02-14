@@ -389,10 +389,67 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
     @Override
     public List<MiddlewareBriefInfoDTO> list(String clusterId, String namespace, String type, String keyword) {
-        // 获取中间件列表
-        List<Middleware> middlewareList = simpleList(clusterId, namespace, type, keyword);
-        // 获取仅1次删除的中间件
+        // 获取中间件chart包信息
+        List<BeanMiddlewareInfo> beanMiddlewareInfoList = middlewareInfoService.list(true);
+        // get cluster
+        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+        // helm list 并过滤获取属于中间件的发布
+        List<HelmListInfo> helmListInfoList =
+            helmChartService.listHelm(namespace, null, cluster).stream()
+                .filter(info -> beanMiddlewareInfoList.stream()
+                    .anyMatch(mwInfo -> info.getChart().equals(mwInfo.getChartName() + "-" + mwInfo.getChartVersion())))
+                .collect(Collectors.toList());
+        // 过滤获取指定类型
+        if (StringUtils.isNotEmpty(type)) {
+            helmListInfoList =
+                helmListInfoList.stream().filter(info -> info.getChart().contains(type)).collect(Collectors.toList());
+        }
+        // list middleware cr
+        List<Middleware> middlewareList = middlewareCRService.list(clusterId, namespace, type, false);
+
+
+        List<HelmListInfo> finalHelmListInfoList = helmListInfoList;
+        // 过滤掉helm中没有的middleware
+        middlewareList = middlewareList.stream().filter(mw -> finalHelmListInfoList.stream().anyMatch(info -> info.getName().equals(mw.getName()))).collect(Collectors.toList());
+        // 获取还未创建出middleware的release
+        List<Middleware> finalMiddlewareList = middlewareList;
+        helmListInfoList = helmListInfoList.stream().filter(info -> finalMiddlewareList.stream().noneMatch(mw -> mw.getName().equals(info.getName()))).collect(Collectors.toList());
+        helmListInfoList.forEach(info -> {
+            Middleware middleware = new Middleware(clusterId, namespace, info.getName(), info.getChart().split("-")[0]);
+            middleware.setStatus("Creating");
+            finalMiddlewareList.add(middleware);
+        });
+        // 获取values.yaml的详情
+        finalMiddlewareList.forEach(mw -> mw = getOperator(BaseOperator.class, BaseOperator.class, mw).convertByHelmChart(mw, cluster));
+
         List<BeanCacheMiddleware> beanCacheMiddlewareList = cacheMiddlewareService.list(clusterId, namespace);
+        for (BeanCacheMiddleware beanCacheMiddleware : beanCacheMiddlewareList){
+            Middleware middleware = new Middleware();
+            BeanUtils.copyProperties(beanCacheMiddleware, middleware);
+            middleware.setStatus("Deleted");
+            // 先移除可能因为异步导致残留的原中间件信息
+            finalMiddlewareList.add(middleware);
+        }
+        finalMiddlewareList.sort(new MiddlewareComparator());
+
+        List<MiddlewareBriefInfoDTO> list = new ArrayList<>();
+        Map<String, List<Middleware>> middlewareListMap = finalMiddlewareList.stream().collect(Collectors.groupingBy(Middleware::getType));
+        for (String key : middlewareListMap.keySet()){
+            // 根据创建时间排序
+            List<Middleware> tempMiddlewareList =  middlewareListMap.get(key);
+            tempMiddlewareList.sort(new MiddlewareComparator());
+            // 封装数据
+            MiddlewareBriefInfoDTO briefInfoDTO = new MiddlewareBriefInfoDTO();
+            briefInfoDTO.setChartName(key);
+            briefInfoDTO.setServiceList(tempMiddlewareList);
+            briefInfoDTO.setServiceNum(tempMiddlewareList.size());
+            list.add(briefInfoDTO);
+        }
+
+        // 获取中间件列表
+        //List<Middleware> middlewareList = simpleList(clusterId, namespace, type, keyword);
+        // 获取仅1次删除的中间件
+        /*List<BeanCacheMiddleware> beanCacheMiddlewareList = cacheMiddlewareService.list(clusterId, namespace);
         for (BeanCacheMiddleware beanCacheMiddleware : beanCacheMiddlewareList){
             Middleware middleware = new Middleware();
             BeanUtils.copyProperties(beanCacheMiddleware, middleware);
@@ -416,7 +473,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             briefInfoDTO.setServiceList(tempMiddlewareList);
             briefInfoDTO.setServiceNum(tempMiddlewareList.size());
             list.add(briefInfoDTO);
-        }
+        }*/
         return list;
     }
 

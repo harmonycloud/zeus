@@ -109,7 +109,7 @@ public class OverviewServiceImpl implements OverviewService {
     public List<MiddlewareStatusDto> getMiddlewareStatus(String clusterId, String namespace) {
 
         // 封装middleware
-        List<Middleware> middlewares = middlewareCRService.list(clusterId, namespace, null);
+        List<Middleware> middlewares = middlewareCRService.list(clusterId, namespace, null, true);
         if (CollectionUtils.isEmpty(middlewares)) {
             return null;
         }
@@ -544,7 +544,7 @@ public class OverviewServiceImpl implements OverviewService {
                 return overviewNSInfo;
             }).collect(Collectors.toMap(OverviewNamespaceInfo::getName, Function.identity()));
 
-            List<Middleware> middlewareInfoDTOList = middlewareCRService.list(clusterDTO.getId(), null, null);
+            List<Middleware> middlewareInfoDTOList = middlewareCRService.list(clusterDTO.getId(), null, null, true);
             //获取chartName对应的chartVersion
             List<HelmListInfo> helmListInfoList = helmChartService.listHelm("", "", clusterDTO);
             Map<String, List<HelmListInfo>> helmListMap =

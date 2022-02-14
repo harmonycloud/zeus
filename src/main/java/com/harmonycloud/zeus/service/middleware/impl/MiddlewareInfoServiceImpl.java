@@ -185,6 +185,18 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     }
 
     @Override
+    public MiddlewareInfoDTO getByType(String clusterId, String type) {
+        List<BeanMiddlewareInfo> beanMiddlewareInfoList = listByType(type);
+        if (CollectionUtils.isEmpty(beanMiddlewareInfoList)){
+            return null;
+        }
+        compareChartVersion(beanMiddlewareInfoList);
+        MiddlewareInfoDTO middlewareInfoDTO = new MiddlewareInfoDTO();
+        BeanUtils.copyProperties(beanMiddlewareInfoList.get(0), middlewareInfoDTO);
+        return middlewareInfoDTO;
+    }
+
+    @Override
     public List<MiddlewareInfoDTO> version(String clusterId, String type) {
         List<BeanMiddlewareInfo> mwInfoList = listAllMiddlewareInfo(clusterId, type);
         BeanClusterMiddlewareInfo clusterMwInfo = clusterMiddlewareInfoService.get(clusterId, type);

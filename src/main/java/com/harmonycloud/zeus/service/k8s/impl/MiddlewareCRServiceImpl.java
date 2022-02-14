@@ -52,7 +52,7 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
      * @return List<Middleware>
      */
     @Override
-    public List<Middleware> list(String clusterId, String namespace, String type) {
+    public List<Middleware> list(String clusterId, String namespace, String type, Boolean detail) {
         Map<String, String> label = null;
         if (StringUtils.isNotEmpty(type)) {
             label = new HashMap<>(1);
@@ -66,7 +66,16 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
 
         List<Middleware> middlewares = new ArrayList<>();
         // 封装数据
-        middlewareCRDList.forEach(k8sMiddleware -> middlewares.add(convertMiddleware(k8sMiddleware)));
+        middlewareCRDList.forEach(k8sMiddleware -> {
+            Middleware middleware;
+            if (detail) {
+                middleware = convertMiddleware(k8sMiddleware);
+            } else {
+                middleware = simpleConvert(k8sMiddleware);
+            }
+            middleware.setClusterId(clusterId);
+            middlewares.add(middleware);
+        });
         return middlewares;
     }
 
@@ -89,7 +98,7 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
         MiddlewareCRD cr = getCR(clusterId, namespace, type, name);
         Middleware pods = podService.listPods(cr, clusterId, namespace, name, type);
         Middleware middleware = simpleConvert(cr);
-        middleware.setIsAllLvmStorage(pods.getIsAllLvmStorage());
+        middleware.setIsAllLvmStorage(pods.getIsAllLvmStorage()).setClusterId(clusterId);
         return middleware;
     }
 
