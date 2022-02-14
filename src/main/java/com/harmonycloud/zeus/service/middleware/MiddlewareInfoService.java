@@ -61,7 +61,7 @@ public interface MiddlewareInfoService {
     List<MiddlewareInfoDTO> list(String clusterId);
 
     /**
-     * 查询制定类型中间件的最新chartVersion
+     * 查询当前集群绑定的中间件信息
      *
      * @param clusterId 集群id
      * @param type      类型

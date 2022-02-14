@@ -34,7 +34,7 @@ public class MiddlewareInfoController {
         return BaseResult.ok(middlewareInfoService.list(clusterId));
     }
 
-    @ApiOperation(value = "查询可用的中间件列表", notes = "查询可用的中间件列表")
+    @ApiOperation(value = "查询可发布的中间件信息", notes = "查询可发布的中间件信息")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "type", value = "类型", paramType = "path", dataTypeClass = String.class)
