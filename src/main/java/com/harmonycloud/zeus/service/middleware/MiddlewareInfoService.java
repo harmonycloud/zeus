@@ -31,10 +31,10 @@ public interface MiddlewareInfoService {
 
     /**
      * 查询集群已安装所有中间件
-     * @param clusterDTOList 集群
+     * @param clusterDTO 集群
      * @return
      */
-    List<BeanMiddlewareInfo> listInstalledByCluster(MiddlewareClusterDTO clusterDTOList);
+    List<BeanMiddlewareInfo> listInstalledByCluster(MiddlewareClusterDTO clusterDTO);
     /**
      * 查询中间件列表
      *
@@ -51,9 +51,6 @@ public interface MiddlewareInfoService {
      * @return BeanMiddlewareInfo
      */
     BeanMiddlewareInfo get(String chartName, String chartVersion);
-
-
-    BeanMiddlewareInfo getMiddlewareInfo(String chartName, String chartVersion);
 
     /**
      * 查询中间件列表
@@ -83,6 +80,7 @@ public interface MiddlewareInfoService {
      * 添加中间件信息
      *
      * @param helmChartFile 中间件内容
+     * @param file 文件
      */
     void insert(HelmChartFile helmChartFile, File file);
 

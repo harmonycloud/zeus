@@ -87,16 +87,10 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
 
     @Override
     public BeanMiddlewareInfo get(String chartName, String chartVersion) {
-        QueryWrapper<BeanMiddlewareInfo> wrapper = new QueryWrapper<BeanMiddlewareInfo>().eq("chart_name", chartName).eq("chart_version", chartVersion);
-        return middlewareInfoMapper.selectOne(wrapper);
-    }
-
-    @Override
-    public BeanMiddlewareInfo getMiddlewareInfo(String chartName, String chartVersion) {
-        QueryWrapper<BeanMiddlewareInfo> wrapper = new QueryWrapper<BeanMiddlewareInfo>().eq("status", true)
-                .eq("chart_name", chartName).eq("chart_version", chartVersion);
+        QueryWrapper<BeanMiddlewareInfo> wrapper =
+            new QueryWrapper<BeanMiddlewareInfo>().eq("chart_name", chartName).eq("chart_version", chartVersion);
         List<BeanMiddlewareInfo> mwInfoList = middlewareInfoMapper.selectList(wrapper);
-        if (CollectionUtils.isEmpty(mwInfoList)){
+        if (CollectionUtils.isEmpty(mwInfoList)) {
             return null;
         }
         return mwInfoList.get(0);
@@ -354,6 +348,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         }
     }
 
+    @Override
     public MiddlewareOperatorDTO getOperatorInfo(List<MiddlewareClusterDTO> clusterList){
         MiddlewareOperatorDTO operatorDTO = new MiddlewareOperatorDTO();
         List<MiddlewareOperatorDTO.MiddlewareOperator> operatorList = new ArrayList<>();
