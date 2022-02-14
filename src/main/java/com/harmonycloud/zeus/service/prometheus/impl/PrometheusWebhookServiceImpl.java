@@ -248,7 +248,9 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
      */
     public static Date convertToUtcDate(String time) {
         String[] dateTimes = time.split("\\.");
-        return DateUtils.parseDate(dateTimes[0], "yyyy-MM-dd'T'HH:mm:ss");
+        Date date = DateUtils.parseDate(dateTimes[0], "yyyy-MM-dd'T'HH:mm:ss");
+        log.info("告警记录日期转换, time={}, date={}", time, date);
+        return date;
     }
 
 }
