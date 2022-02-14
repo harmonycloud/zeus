@@ -335,8 +335,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
     @Override
     public List<MiddlewareBriefInfoDTO> getMiddlewareBriefInfoList(List<MiddlewareClusterDTO> clusterDTOList) {
+        // 从数据库查询集群已安装的所有中间件版本、图片路径等基础信息
         List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.listInstalledByClusters(clusterDTOList);
         List<MiddlewareBriefInfoDTO> middlewareBriefInfoDTOList = new ArrayList<>();
+        // 查询集群内创建的所有中间件CR信息
         List<Middleware> middlewares = queryAllClusterService(clusterDTOList);
         middlewareInfoList.forEach(middlewareInfo -> {
             AtomicInteger serviceNum = new AtomicInteger();
@@ -345,8 +347,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             countServiceNum(middlewareInfo.getClusterId(), middlewares, middlewareInfo.getChartName(), serviceNum, errServiceNum);
             middlewareBriefInfoDTO.setName(middlewareInfo.getName());
             middlewareBriefInfoDTO.setChartName(middlewareInfo.getChartName());
-            middlewareBriefInfoDTO.setVersion(middlewareInfo.getVersion());
-            middlewareBriefInfoDTO.setChartVersion(middlewareInfo.getChartVersion());
             middlewareBriefInfoDTO.setImagePath(middlewareInfo.getImagePath());
             middlewareBriefInfoDTO.setServiceNum(serviceNum.get());
             middlewareBriefInfoDTO.setErrServiceNum(errServiceNum.get());
@@ -355,7 +355,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         try {
             Collections.sort(middlewareBriefInfoDTOList, new MiddlewareBriefInfoDTOComparator());
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("对服务排序出错了", e);
         }
         return middlewareBriefInfoDTOList;
     }
@@ -422,7 +422,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
     @Override
     public List<MiddlewareInfoDTO> version(String clusterId, String namespace, String name, String type) {
-        List<BeanMiddlewareInfo> middlewareInfos = middlewareInfoService.listAllMiddlewareInfo(clusterId, type);
+        List<BeanMiddlewareInfo> middlewareInfos = middlewareInfoService.listByType(type);
         // 将倒序转为正序
         middlewareInfos.sort(Comparator.comparing(BeanMiddlewareInfo::getChartVersion));
         Middleware middleware = detail(clusterId, namespace, name, type);
@@ -541,30 +541,24 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                     errServiceNum.getAndAdd(1);
                 }
             } catch (Exception e) {
-                log.error("查询中间件CR出错了,chartName={},type={}", chartName, e);
+                log.error("统计服务数量出错了,chartName={},type={}", chartName, e);
             }
         }
     }
 
     /**
-     * 查询集群所有服务
+     * 查询集群所有已发布的中间件
      * @param clusterDTOList 集群列表
      * @return
      */
     private List<Middleware> queryAllClusterService(List<MiddlewareClusterDTO> clusterDTOList) {
         List<Namespace> namespaceList = new ArrayList<>();
         clusterDTOList.forEach(cluster -> {
-            List<Namespace> namespaces = namespaceService.list(cluster.getId(), true, null);
-            namespaces = namespaces.stream().filter(Namespace::isRegistered).collect(Collectors.toList());
-            namespaceList.addAll(namespaces);
+            namespaceList.addAll(namespaceService.list(cluster.getId(), false, null));
         });
         List<Middleware> middlewareServiceList = new ArrayList<>();
         namespaceList.forEach(namespace -> {
-            List<Middleware> middlewares = simpleList(namespace.getClusterId(), namespace.getName(), null, "");
-            middlewareServiceList.addAll(middlewares);
-            middlewareServiceList.forEach(middleware -> {
-                middleware.setClusterId(namespace.getClusterId());
-            });
+            middlewareServiceList.addAll(simpleList(namespace.getClusterId(), namespace.getName(), null, ""));
         });
         return middlewareServiceList;
     }

@@ -82,7 +82,9 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     @Override
     public List<BeanMiddlewareInfo> listByType(String type) {
         QueryWrapper<BeanMiddlewareInfo> wrapper = new QueryWrapper<BeanMiddlewareInfo>().eq("chart_name", type);
-        return middlewareInfoMapper.selectList(wrapper);
+        List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoMapper.selectList(wrapper);
+        compareChartVersion(middlewareInfoList);
+        return middlewareInfoList;
     }
 
     @Override
@@ -186,7 +188,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
 
     @Override
     public List<MiddlewareInfoDTO> version(String clusterId, String type) {
-        List<BeanMiddlewareInfo> mwInfoList = listAllMiddlewareInfo(clusterId, type);
+        List<BeanMiddlewareInfo> mwInfoList = listByType(type);
         BeanClusterMiddlewareInfo clusterMwInfo = clusterMiddlewareInfoService.get(clusterId, type);
         if (mwInfoList.size() == 1 && clusterMwInfo.getStatus() == 2) {
             return mwInfoList.stream().map(info -> {
@@ -201,12 +203,16 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
             if (info.getChartVersion().compareTo(clusterMwInfo.getChartVersion()) < NUM_ZERO) {
                 dto.setVersionStatus("history");
             } else if (info.getChartVersion().compareTo(clusterMwInfo.getChartVersion()) == NUM_ZERO) {
-                if (clusterMwInfo.getStatus() == NUM_ZERO) {
-                    dto.setVersionStatus("updating");
-                } else if (clusterMwInfo.getStatus() == NUM_TWO) {
-                    dto.setVersionStatus("future");
-                } else {
-                    dto.setVersionStatus("now");
+                int status = clusterMwInfo.getStatus();
+                switch (status) {
+                    case NUM_ZERO:
+                        dto.setVersionStatus("updating");
+                        break;
+                    case NUM_TWO:
+                        dto.setVersionStatus("future");
+                        break;
+                    default:
+                        dto.setVersionStatus("now");
                 }
             } else {
                 dto.setVersionStatus("future");
@@ -394,15 +400,6 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         List<MiddlewareClusterDTO> clusterDTOS = new ArrayList<>();
         clusterDTOS.add(clusterDTO);
         return middlewareInfoMapper.listInstalledWithMiddlewareDetail(clusterDTOS);
-    }
-
-    @Override
-    public List<BeanMiddlewareInfo> listAllMiddlewareInfo(String clusterId, String type) {
-        QueryWrapper<BeanMiddlewareInfo> wrapper = new QueryWrapper<BeanMiddlewareInfo>().eq("chart_name", type);
-        List<BeanMiddlewareInfo> mwInfoList = middlewareInfoMapper.selectList(wrapper);
-        // 根据版本倒序排列
-        compareChartVersion(mwInfoList);
-        return mwInfoList;
     }
 
     public void compareChartVersion(List<BeanMiddlewareInfo> mwInfoList){

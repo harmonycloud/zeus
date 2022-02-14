@@ -828,8 +828,8 @@ public class OverviewServiceImpl implements OverviewService {
         if (StringUtils.isNotBlank(clusterId)) {
             clusterList = clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
         }
-        //获取各中间件服务数量信息
         List<MiddlewareBriefInfoDTO> middlewareBriefInfoList = middlewareService.getMiddlewareBriefInfoList(clusterList);
+        // 多集群时，合并相同中间件数量信息
         if (StringUtils.isBlank(clusterId) && clusterList.size() > 1) {
             Map<String, MiddlewareBriefInfoDTO> resMap = new HashMap<>();
             middlewareBriefInfoList.forEach(mwInfo -> {
@@ -844,7 +844,6 @@ public class OverviewServiceImpl implements OverviewService {
             middlewareBriefInfoList.clear();
             middlewareBriefInfoList.addAll(resMap.values());
         }
-
         platformOverviewDTO.setBriefInfoList(middlewareBriefInfoList);
         return platformOverviewDTO;
     }
