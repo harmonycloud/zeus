@@ -87,18 +87,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Autowired
     private ConfigMapService configMapService;
 
-    private final static Map<String, String> titleMap = new HashMap<String, String>(7) {
-        {
-            put("0", "慢日志采集时间");
-            put("1", "sql语句");
-            put("2", "客户端IP");
-            put("3", "执行时长(s)");
-            put("4", "锁定时长(s)");
-            put("5", "解析行数");
-            put("6", "返回行数");
-        }
-    };
-
     @Override
     public List<Middleware> simpleList(String clusterId, String namespace, String type, String keyword) {
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
@@ -282,37 +270,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         }
     }
 
-    @Override
-    public PageObject<MysqlSlowSqlDTO> slowsql(SlowLogQuery slowLogQuery) throws Exception {
-        MiddlewareClusterDTO cluster = clusterService.findById(slowLogQuery.getClusterId());
-        PageObject<MysqlSlowSqlDTO> slowSqlDTOS = esComponentService.getSlowSql(cluster, slowLogQuery);
-        return slowSqlDTOS;
-    }
-
-    @Override
-    public void slowsqlExcel(SlowLogQuery slowLogQuery, HttpServletResponse response, HttpServletRequest request) throws Exception {
-        slowLogQuery.setCurrent(1);
-        slowLogQuery.setSize(CommonConstant.NUM_ONE_THOUSAND);
-        PageObject<MysqlSlowSqlDTO> slowsql = slowsql(slowLogQuery);
-        List<Map<String, Object>> demoValues = new ArrayList<>();
-        slowsql.getData().stream().forEach(mysqlSlowSqlDTO -> {
-            Map<String, Object> demoValue = new HashMap<String, Object>() {
-                {
-                    Date queryDate = DateUtils.parseUTCSDate(mysqlSlowSqlDTO.getTimestampMysql());
-                    put("0", queryDate);
-                    put("1", mysqlSlowSqlDTO.getQuery());
-                    put("2", mysqlSlowSqlDTO.getClientip());
-                    put("3", mysqlSlowSqlDTO.getQueryTime());
-                    put("4", mysqlSlowSqlDTO.getLockTime());
-                    put("5", mysqlSlowSqlDTO.getRowsExamined());
-                    put("6", mysqlSlowSqlDTO.getRowsSent());
-                }
-            };
-            demoValues.add(demoValue);
-        });
-        ExcelUtil.writeExcel(ExcelUtil.OFFICE_EXCEL_XLSX, "mysqlslowsql", null, titleMap, demoValues, response, request);
-    }
-    
     public List<String> getNameList(String clusterId, String namespace, String type) {
         // 获取中间件chartName + chartVersion
         List<BeanMiddlewareInfo> mwInfoList = middlewareInfoService.list(true);

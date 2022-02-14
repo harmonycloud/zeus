@@ -107,23 +107,6 @@ public interface MiddlewareService {
     MonitorDto monitor(String clusterId, String namespace, String name, String type, String chartVersion);
 
     /**
-     * mysql慢日志查询
-     * @param slowLogQuery 慢日志查询对象
-     *
-     * @return PageObject<MysqlSlowSqlDTO>
-     */
-    PageObject<MysqlSlowSqlDTO> slowsql(SlowLogQuery slowLogQuery) throws Exception;
-
-    /**
-     * 慢日志导出
-     * @param slowLogQuery 慢日志查询对象
-     * @param response     返回体
-     * @param request      请求体
-     *
-     */
-    void slowsqlExcel(SlowLogQuery slowLogQuery, HttpServletResponse response, HttpServletRequest request) throws Exception;
-
-    /**
      * 获取集群下中间件简要信息
      * @param clusterDTOList 集群列表
      * @return List<MiddlewareBriefInfoDTO>
