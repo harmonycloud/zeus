@@ -128,8 +128,12 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
 
             //告警时间
             alertInfoDto.setAlertTime(startDateTime);
+            HashMap alertLabels = JSON.parseObject(alertInfo.getLabels(), HashMap.class);
+            if (alertLabels == null) {
+                continue;
+            }
             //告警等级
-            alertInfoDto.setLevel((String) JSON.parseObject(alertInfo.getLabels(), HashMap.class).get("severity"));
+            alertInfoDto.setLevel((String) alertLabels.get("severity"));
             //规则描述
             alertInfoDto.setDescription(alertInfo.getDescription()+alertInfo.getSymbol()+alertInfo.getThreshold()+"%");
             //告警内容
@@ -249,7 +253,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
     public static Date convertToUtcDate(String time) {
         String[] dateTimes = time.split("\\.");
         Date date = DateUtils.parseDate(dateTimes[0], "yyyy-MM-dd'T'HH:mm:ss");
-        date = DateUtils.addInteger(date, Calendar.HOUR_OF_DAY, 6);
+        date = DateUtils.addInteger(date, Calendar.HOUR_OF_DAY, 8);
         return date;
     }
 
