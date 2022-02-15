@@ -122,7 +122,7 @@ public class TokenFilter implements Filter {
             }
             long currentTime = System.currentTimeMillis();
             httpResponse.setHeader(USER_TOKEN, JwtTokenComponent.generateToken("userInfo", userMap,
-                new Date(currentTime + (long)(expireTime * 3600000L)), new Date(currentTime - 300000L)));
+                new Date(currentTime + (long)(0.5 * 3600000L)), new Date(currentTime - 300000L)));
             CurrentUser currentUser = (new CurrentUser()).setUsername(userMap.getString("username"))
                 .setNickname(userMap.getString("realName")).setToken(token);
             CurrentUserRepository.setUser(currentUser);
