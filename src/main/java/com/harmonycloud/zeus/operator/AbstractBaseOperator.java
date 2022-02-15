@@ -987,23 +987,22 @@ public abstract class AbstractBaseOperator {
      * 设置管理平台地址 
      */
     public void setManagePlatformAddress(Middleware middleware) {
-        if (middlewareManagePlatformFilter(middleware)){
+        label:
+        if (middlewareManagePlatformFilter(middleware)) {
+            middleware.setManagePlatform(true);
             List<IngressDTO> ingressDTOS = ingressService.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
-            MiddlewareServiceNameIndex serviceNameIndex = ServiceNameConvertUtil.convert(middleware);
-            List<IngressDTO> serviceDTOList = ingressDTOS.stream().filter(ingressDTO -> (
-                    ingressDTO.getName().equals(serviceNameIndex.getNodePortServiceName()) && ingressDTO.getExposeType().equals(MIDDLEWARE_EXPOSE_NODEPORT))
-            ).collect(Collectors.toList());
-            if (!CollectionUtils.isEmpty(serviceDTOList)) {
-                IngressDTO ingressDTO = serviceDTOList.get(0);
-                String exposeIP = ingressDTO.getExposeIP();
+            String servicePort = ServiceNameConvertUtil.getManagePlatformServicePort(middleware);
+            for (IngressDTO ingressDTO : ingressDTOS) {
                 List<ServiceDTO> serviceList = ingressDTO.getServiceList();
                 if (!CollectionUtils.isEmpty(serviceList)) {
-                    ServiceDTO serviceDTO = serviceList.get(0);
-                    String exposePort = serviceDTO.getExposePort();
-                    middleware.setManagePlatformAddress(exposeIP + ":" + exposePort);
+                    for (ServiceDTO serviceDTO : serviceList) {
+                        if (servicePort.equals(serviceDTO.getServicePort())) {
+                            String address = ingressDTO.getExposeIP() + ":" + serviceDTO.getExposePort();
+                            middleware.setManagePlatformAddress(address);
+                            break label;
+                        }
+                    }
                 }
-            } else {
-                middleware.setManagePlatform(false);
             }
         }
     }
