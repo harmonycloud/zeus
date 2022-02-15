@@ -58,7 +58,9 @@ data:
       images:
         path: /usr/local/zeus-pv/images/middleware
       platform:
-        version: v0.2.1
+        version: v0.2.2
+      user:
+        expire: 0.5
 
     overview:
       overall:

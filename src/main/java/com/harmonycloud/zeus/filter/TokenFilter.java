@@ -7,6 +7,7 @@ import com.harmonycloud.caas.filters.token.JwtTokenComponent;
 import com.harmonycloud.caas.filters.user.CurrentUser;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
 
@@ -25,6 +26,9 @@ import static com.harmonycloud.caas.filters.base.GlobalKey.USER_TOKEN;
  */
 @Slf4j
 public class TokenFilter implements Filter {
+
+    @Value("${system.user.expire:0.5}")
+    private Double expireTime;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {}
@@ -118,7 +122,7 @@ public class TokenFilter implements Filter {
             }
             long currentTime = System.currentTimeMillis();
             httpResponse.setHeader(USER_TOKEN, JwtTokenComponent.generateToken("userInfo", userMap,
-                new Date(currentTime + 1800000L), new Date(currentTime - 300000L)));
+                new Date(currentTime + (long)(expireTime * 3600000L)), new Date(currentTime - 300000L)));
             CurrentUser currentUser = (new CurrentUser()).setUsername(userMap.getString("username"))
                 .setNickname(userMap.getString("realName")).setToken(token);
             CurrentUserRepository.setUser(currentUser);
