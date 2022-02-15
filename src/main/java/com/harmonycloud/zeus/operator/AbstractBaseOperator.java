@@ -990,6 +990,7 @@ public abstract class AbstractBaseOperator {
         label:
         if (middlewareManagePlatformFilter(middleware)) {
             middleware.setManagePlatform(true);
+            middleware.setManagePlatformAddress("");
             List<IngressDTO> ingressDTOS = ingressService.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
             String servicePort = ServiceNameConvertUtil.getManagePlatformServicePort(middleware);
             for (IngressDTO ingressDTO : ingressDTOS) {
