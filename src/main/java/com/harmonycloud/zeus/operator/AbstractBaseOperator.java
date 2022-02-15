@@ -202,17 +202,21 @@ public abstract class AbstractBaseOperator {
             beanCacheMiddleware.setChartVersion(beanClusterMiddlewareInfo.getChartVersion());
         }
         // 获取pvc
-        List<String> pvcNameList = middlewareCRService.getPvc(middleware.getClusterId(), middleware.getNamespace(),
-            middleware.getType(), middleware.getName());
-        StringBuilder sb = new StringBuilder();
-        for (String name : pvcNameList) {
-            sb.append(name).append(",");
-        }
-        if (sb.length() == 0) {
-            beanCacheMiddleware.setPvc(null);
-        } else {
-            sb.deleteCharAt(sb.length() - 1);
-            beanCacheMiddleware.setPvc(sb.toString());
+        try {
+            List<String> pvcNameList = middlewareCRService.getPvc(middleware.getClusterId(), middleware.getNamespace(),
+                    middleware.getType(), middleware.getName());
+            StringBuilder sb = new StringBuilder();
+            for (String name : pvcNameList) {
+                sb.append(name).append(",");
+            }
+            if (sb.length() == 0) {
+                beanCacheMiddleware.setPvc(null);
+            } else {
+                sb.deleteCharAt(sb.length() - 1);
+                beanCacheMiddleware.setPvc(sb.toString());
+            }
+        } catch (Exception e){
+            log.error("获取中间件pvc失败", e);
         }
         
         beanCacheMiddleware.setValuesYaml(JSONObject.toJSONString(values));
@@ -409,7 +413,11 @@ public abstract class AbstractBaseOperator {
             // 设置服务备份状态
             middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(middleware.getClusterId(),middleware.getNamespace(),middleware.getType(),middleware.getName()));
             // 设置管理平台地址
-            setManagePlatformAddress(middleware);
+            try {
+                setManagePlatformAddress(middleware);
+            } catch (Exception e){
+                log.error("获取管理控制台地址失败", e);
+            }
         } else {
             middleware.setAliasName(middleware.getName());
         }
