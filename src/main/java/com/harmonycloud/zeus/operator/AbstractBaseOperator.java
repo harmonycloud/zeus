@@ -184,10 +184,30 @@ public abstract class AbstractBaseOperator {
         add2sql(middleware);
     }
 
+    public void recovery(Middleware middleware, MiddlewareClusterDTO cluster){
+        BeanCacheMiddleware beanCacheMiddleware = cacheMiddlewareService.get(middleware);
+        // 1. download and read helm chart from registry
+        HelmChartFile helmChart =
+                helmChartService.getHelmChartFromMysql(middleware.getChartName(), middleware.getChartVersion());
+        // 2. deal with values.yaml and Chart.yaml
+        JSONObject values = JSONObject.parseObject(beanCacheMiddleware.getValuesYaml());
+        Yaml yaml = new Yaml();
+        helmChart.setValueYaml(yaml.dumpAsMap(values));
+        helmChartService.coverYamlFile(helmChart);
+        // 3. helm package & install
+        String tgzFilePath = helmChartService.packageChart(helmChart.getTarFileName(), middleware.getChartName(),
+                middleware.getChartVersion());
+        helmChartService.install(middleware, tgzFilePath, cluster);
+        // 删除数据库缓存
+        cacheMiddlewareService.delete(middleware);
+    }
+
 
     public void delete(Middleware middleware) {
-        ingressService.delete(middleware.getClusterId(), middleware.getNamespace(),
-                middleware.getType(), middleware.getName());
+        deleteIngress(middleware);
+        /*deletePvc(middleware);
+        deleteCustomConfigHistory(middleware);
+        middlewareBackupService.deleteMiddlewareBackupInfo(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());*/
         // 获取集群
         MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(middleware.getClusterId());
         // 获取values.yaml 并写入数据库
@@ -201,20 +221,7 @@ public abstract class AbstractBaseOperator {
                 clusterMiddlewareInfoService.get(cluster.getId(), middleware.getType());
             beanCacheMiddleware.setChartVersion(beanClusterMiddlewareInfo.getChartVersion());
         }
-        // 获取pvc
-        List<String> pvcNameList = middlewareCRService.getPvc(middleware.getClusterId(), middleware.getNamespace(),
-            middleware.getType(), middleware.getName());
-        StringBuilder sb = new StringBuilder();
-        for (String name : pvcNameList) {
-            sb.append(name).append(",");
-        }
-        if (sb.length() == 0) {
-            beanCacheMiddleware.setPvc(null);
-        } else {
-            sb.deleteCharAt(sb.length() - 1);
-            beanCacheMiddleware.setPvc(sb.toString());
-        }
-        
+        beanCacheMiddleware.setPvc(getPvc(middleware));
         beanCacheMiddleware.setValuesYaml(JSONObject.toJSONString(values));
         cacheMiddlewareService.insert(beanCacheMiddleware);
         // helm卸载需要放到最后，要不然一些资源的查询会404
@@ -270,6 +277,26 @@ public abstract class AbstractBaseOperator {
         helmChartService.upgrade(middleware, sb.toString(), cluster);
     }
 
+    protected String getPvc(Middleware middleware) {
+        // query middleware cr
+        MiddlewareCRD mw = middlewareCRService.getCR(middleware.getClusterId(), middleware.getNamespace(),
+            middleware.getType(), middleware.getName());
+        if (mw == null || mw.getStatus() == null || mw.getStatus().getInclude() == null
+            || !mw.getStatus().getInclude().containsKey(PERSISTENT_VOLUME_CLAIMS)) {
+            return null;
+        }
+        List<MiddlewareInfo> pvcs = mw.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
+        StringBuilder sb = new StringBuilder();
+        for (MiddlewareInfo pvc : pvcs) {
+            sb.append(pvc.getName()).append(",");
+        }
+        if (sb.length() == 0) {
+            return null;
+        }
+        sb.deleteCharAt(sb.length() - 1);
+        return sb.toString();
+    }
+
     protected void deletePvc(BeanCacheMiddleware beanCacheMiddleware) {
         if (StringUtils.isNotEmpty(beanCacheMiddleware.getPvc())) {
             List<String> pvcList = Arrays.asList(beanCacheMiddleware.getPvc().split(","));
@@ -301,9 +328,12 @@ public abstract class AbstractBaseOperator {
 
     public void updateStorage(Middleware middleware) {
         // 获取pvc
-        List<String> pvcNameList = middlewareCRService.getPvc(middleware.getClusterId(), middleware.getNamespace(),
-                middleware.getType(), middleware.getName());
+        String pvcNames = this.getPvc(middleware);
+        if (StringUtils.isEmpty(pvcNames)){
+            throw new BusinessException(ErrorMessage.FIND_PVC_FAILED);
+        }
         // 更新pvc内容
+        String[] pvcNameList = pvcNames.split(",");
         List<PersistentVolumeClaim> pvcList = new ArrayList<>();
         for (String pvcName : pvcNameList) {
             pvcList.add(pvcWrapper.get(middleware.getClusterId(), middleware.getNamespace(), pvcName));
@@ -321,6 +351,25 @@ public abstract class AbstractBaseOperator {
         }
         sb.deleteCharAt(sb.length() - 1);
         helmChartService.upgrade(middleware, sb.toString(), clusterService.findById(middleware.getClusterId()));
+    }
+
+    protected void deleteIngress(Middleware mw) {
+        List<IngressDTO> ingressList;
+        try {
+            ingressList = ingressService.get(mw.getClusterId(), mw.getNamespace(), mw.getType(), mw.getName());
+        } catch (Exception e) {
+            log.error("集群：{}，命名空间：{}，中间件：{}/{}，删除对外访问时查询列表异常", mw.getClusterId(), mw.getNamespace(), mw.getType(),
+                mw.getName(), e);
+            return;
+        }
+        ingressList.forEach(ing -> {
+            try {
+                ingressService.delete(mw.getClusterId(), mw.getNamespace(), mw.getName(), ing.getName(), ing);
+            } catch (Exception e) {
+                log.error("集群：{}，命名空间：{}，中间件：{}/{}，对外服务{}/{}，删除对外访问异常", mw.getClusterId(), mw.getNamespace(),
+                    mw.getType(), mw.getName(), ing.getExposeType(), ing.getName(), e);
+            }
+        });
     }
 
     public void deleteCustomConfigHistory(Middleware mw) {
