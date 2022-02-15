@@ -364,7 +364,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // list middleware cr
         List<Middleware> middlewareList = middlewareCRService.list(clusterId, namespace, type, false);
 
-
         List<HelmListInfo> finalHelmListInfoList = helmListInfoList;
         // 过滤掉helm中没有的middleware
         middlewareList = middlewareList.stream().filter(mw -> finalHelmListInfoList.stream().anyMatch(info -> info.getName().equals(mw.getName()))).collect(Collectors.toList());
@@ -378,7 +377,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         });
         // 获取values.yaml的详情
         finalMiddlewareList.forEach(mw -> mw = getOperator(BaseOperator.class, BaseOperator.class, mw).convertByHelmChart(mw, cluster));
-
+        // 获取未完全删除的中间件
         List<BeanCacheMiddleware> beanCacheMiddlewareList = cacheMiddlewareService.list(clusterId, namespace);
         for (BeanCacheMiddleware beanCacheMiddleware : beanCacheMiddlewareList){
             Middleware middleware = new Middleware();
@@ -388,7 +387,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             finalMiddlewareList.add(middleware);
         }
         finalMiddlewareList.sort(new MiddlewareComparator());
-
+        // 封装数据
         List<MiddlewareBriefInfoDTO> list = new ArrayList<>();
         Map<String, List<Middleware>> middlewareListMap = finalMiddlewareList.stream().collect(Collectors.groupingBy(Middleware::getType));
         for (String key : middlewareListMap.keySet()){
@@ -402,35 +401,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             briefInfoDTO.setServiceNum(tempMiddlewareList.size());
             list.add(briefInfoDTO);
         }
-
-        // 获取中间件列表
-        //List<Middleware> middlewareList = simpleList(clusterId, namespace, type, keyword);
-        // 获取仅1次删除的中间件
-        /*List<BeanCacheMiddleware> beanCacheMiddlewareList = cacheMiddlewareService.list(clusterId, namespace);
-        for (BeanCacheMiddleware beanCacheMiddleware : beanCacheMiddlewareList){
-            Middleware middleware = new Middleware();
-            BeanUtils.copyProperties(beanCacheMiddleware, middleware);
-            middleware.setStatus("Deleted");
-            // 先移除可能因为异步导致残留的原中间件信息
-            middlewareList = middlewareList.stream().filter(m -> !m.getName().equals(middleware.getName())).collect(Collectors.toList());
-            middlewareList.add(middleware);
-        }
-        // 根据创建时间排序
-        middlewareList.sort(new MiddlewareComparator());
-
-        List<MiddlewareBriefInfoDTO> list = new ArrayList<>();
-        Map<String, List<Middleware>> middlewareListMap = middlewareList.stream().collect(Collectors.groupingBy(Middleware::getType));
-        for (String key : middlewareListMap.keySet()){
-            // 根据创建时间排序
-            List<Middleware> tempMiddlewareList =  middlewareListMap.get(key);
-            tempMiddlewareList.sort(new MiddlewareComparator());
-            // 封装数据
-            MiddlewareBriefInfoDTO briefInfoDTO = new MiddlewareBriefInfoDTO();
-            briefInfoDTO.setChartName(key);
-            briefInfoDTO.setServiceList(tempMiddlewareList);
-            briefInfoDTO.setServiceNum(tempMiddlewareList.size());
-            list.add(briefInfoDTO);
-        }*/
         return list;
     }
 
