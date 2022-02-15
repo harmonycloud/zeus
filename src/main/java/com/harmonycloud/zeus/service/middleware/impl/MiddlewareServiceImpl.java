@@ -7,9 +7,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -19,7 +16,6 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.constants.NameConstant;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
@@ -27,9 +23,6 @@ import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
-import com.harmonycloud.tool.date.DateUtils;
-import com.harmonycloud.tool.excel.ExcelUtil;
-import com.harmonycloud.tool.page.PageObject;
 import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
 import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
@@ -40,7 +33,6 @@ import com.harmonycloud.zeus.operator.BaseOperator;
 import com.harmonycloud.zeus.schedule.MiddlewareManageTask;
 import com.harmonycloud.zeus.service.AbstractBaseService;
 import com.harmonycloud.zeus.service.k8s.*;
-import com.harmonycloud.zeus.service.log.EsComponentService;
 import com.harmonycloud.zeus.service.middleware.CacheMiddlewareService;
 import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
@@ -69,13 +61,9 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Autowired
     private NamespaceService namespaceService;
     @Autowired
-    private EsComponentService esComponentService;
-    @Autowired
     private HelmChartService helmChartService;
     @Autowired
     private MiddlewareInfoService middlewareInfoService;
-    @Autowired
-    private IngressService ingressService;
     @Autowired
     private ClusterMiddlewareInfoService clusterMiddlewareInfoService;
     @Autowired
@@ -156,7 +144,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // pre check
         operator.createPreCheck(middleware, cluster);
         // create
-        middlewareManageTask.asyncCreate(middleware, cluster, operator);
+        operator.create(middleware, cluster);
     }
 
     @Override
@@ -175,14 +163,15 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // pre check
         operator.updatePreCheck(middleware, cluster);
         // update
-        middlewareManageTask.asyncUpdate(middleware, cluster, operator);
+        operator.update(middleware, cluster);
     }
 
     @Override
     public void delete(String clusterId, String namespace, String name, String type) {
         checkBaseParam(clusterId, namespace, name, type);
         Middleware middleware = new Middleware(clusterId, namespace, name, type);
-        middlewareManageTask.asyncDelete(middleware, getOperator(BaseOperator.class, BaseOperator.class, middleware));
+        BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
+        operator.delete(middleware);
     }
 
     @Override
@@ -195,7 +184,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Override
     public void switchMiddleware(String clusterId, String namespace, String name, String type, Boolean isAuto) {
         Middleware middleware = new Middleware(clusterId, namespace, name, type).setAutoSwitch(isAuto);
-        middlewareManageTask.asyncSwitch(middleware, getOperator(BaseOperator.class, BaseOperator.class, middleware));
+        getOperator(BaseOperator.class, BaseOperator.class, middleware).switchMiddleware(middleware);
     }
 
     @Override
