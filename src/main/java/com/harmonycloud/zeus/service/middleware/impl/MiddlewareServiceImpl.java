@@ -42,6 +42,7 @@ import com.harmonycloud.zeus.util.YamlUtil;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import lombok.extern.slf4j.Slf4j;
+import org.yaml.snakeyaml.Yaml;
 
 /**
  * @author dengyulong
@@ -149,10 +150,23 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
     @Override
     public void recovery(Middleware middleware) {
-        BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
         MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(middleware.getClusterId());
         // pre check
-        operator.recovery(middleware, cluster);
+        BeanCacheMiddleware beanCacheMiddleware = cacheMiddlewareService.get(middleware);
+        // 1. download and read helm chart from registry
+        HelmChartFile helmChart =
+                helmChartService.getHelmChartFromMysql(middleware.getChartName(), middleware.getChartVersion());
+        // 2. deal with values.yaml and Chart.yaml
+        JSONObject values = JSONObject.parseObject(beanCacheMiddleware.getValuesYaml());
+        Yaml yaml = new Yaml();
+        helmChart.setValueYaml(yaml.dumpAsMap(values));
+        helmChartService.coverYamlFile(helmChart);
+        // 3. helm package & install
+        String tgzFilePath = helmChartService.packageChart(helmChart.getTarFileName(), middleware.getChartName(),
+                middleware.getChartVersion());
+        helmChartService.install(middleware, tgzFilePath, cluster);
+        // 删除数据库缓存
+        cacheMiddlewareService.delete(middleware);
     }
 
     @Override

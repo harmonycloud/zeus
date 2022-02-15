@@ -241,7 +241,25 @@ public class IngressServiceImpl implements IngressService {
         } else if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_NODEPORT)) {
             serviceWrapper.delete(clusterId, namespace, name);
         }
+    }
 
+    @Override
+    public void delete(String clusterId, String namespace, String type, String middlewareName) {
+        List<IngressDTO> ingressList;
+        try {
+            ingressList = this.get(clusterId, namespace, type, middlewareName);
+        } catch (Exception e) {
+            log.error("集群：{}，命名空间：{}，中间件：{}/{}，删除对外访问时查询列表异常", clusterId, namespace, type, middlewareName, e);
+            return;
+        }
+        ingressList.forEach(ing -> {
+            try {
+                this.delete(clusterId, namespace, middlewareName, ing.getName(), ing);
+            } catch (Exception e) {
+                log.error("集群：{}，命名空间：{}，中间件：{}/{}，对外服务{}/{}，删除对外访问异常", clusterId, namespace, type, middlewareName,
+                    ing.getExposeType(), ing.getName(), e);
+            }
+        });
     }
 
     @Override

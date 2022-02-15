@@ -28,6 +28,7 @@ import com.harmonycloud.tool.date.DateUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
 /**
@@ -197,6 +198,22 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
     public boolean checkIfExist(String clusterId, String namespace, String type, String middlewareName) {
         String crdName = MiddlewareCRService.getCrName(type, middlewareName);
         return middlewareWrapper.checkIfExist(clusterId, namespace, crdName);
+    }
+
+    @Override
+    public List<String> getPvc(String clusterId, String namespace, String type, String name) {
+        // query middleware cr
+        MiddlewareCRD mw = this.getCR(clusterId, namespace, type, name);
+        if (mw == null || mw.getStatus() == null || mw.getStatus().getInclude() == null
+                || !mw.getStatus().getInclude().containsKey(PERSISTENT_VOLUME_CLAIMS)) {
+            return new ArrayList<>();
+        }
+        List<MiddlewareInfo> pvcs = mw.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
+        List<String> pvcNameList = new ArrayList<>();
+        for (MiddlewareInfo pvc : pvcs) {
+            pvcNameList.add(pvc.getName());
+        }
+        return pvcNameList;
     }
 
     /**

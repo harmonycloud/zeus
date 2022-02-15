@@ -50,14 +50,6 @@ public interface BaseOperator {
     void create(Middleware middleware, MiddlewareClusterDTO cluster);
 
     /**
-     * 恢复中间件
-     *
-     * @param middleware 中间件信息
-     * @param cluster    集群
-     */
-    void recovery(Middleware middleware, MiddlewareClusterDTO cluster);
-
-    /**
      * 创建校验
      *
      * @param middleware 中间件信息
@@ -124,6 +116,7 @@ public interface BaseOperator {
      * @param configMap 配置文件
      * @return List<CustomConfig>
      */
+    @Deprecated
     Map<String, String> configMap2Data(ConfigMap configMap);
 
     /**
@@ -132,6 +125,7 @@ public interface BaseOperator {
      * @param customConfig 自定义参数
      * @param data
      */
+    @Deprecated
     void editConfigMapData(CustomConfig customConfig, List<String> data);
 
     /**
@@ -141,6 +135,7 @@ public interface BaseOperator {
      * @param data      配置内容
      * @return void
      */
+    @Deprecated
     void updateConfigData(ConfigMap configMap, List<String> data);
 
 

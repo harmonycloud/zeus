@@ -57,6 +57,17 @@ public interface MiddlewareCRService {
     MiddlewareCRD getCR(String clusterId, String namespace, String type, String name);
 
     /**
+     * 获取中间件pvc名称
+     *
+     * @param clusterId 集群id
+     * @param namespace 命名空间
+     * @param type      中间件类型
+     * @param name      中间件名称
+     * @return
+     */
+    List<String> getPvc(String clusterId, String namespace, String type, String name);
+
+    /**
      * 查询中间件cr并且检验是否在运行中
      *
      * @param middleware 中间件参数，clusterId/namespace/type/name
