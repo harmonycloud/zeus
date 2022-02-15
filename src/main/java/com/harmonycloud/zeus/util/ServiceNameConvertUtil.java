@@ -75,4 +75,22 @@ public class ServiceNameConvertUtil {
             return null;
         }
     }
+
+    /**
+     * 获取web管理控制台服务端口
+     * @param middleware
+     * @return
+     */
+    public static String getManagePlatformServicePort(Middleware middleware) {
+        String middlewareType = middleware.getType();
+        if (middlewareType.equals(MiddlewareTypeEnum.ELASTIC_SEARCH.getType())) {
+            return "5200";
+        } else if (middlewareType.equals(MiddlewareTypeEnum.KAFKA.getType())) {
+            return "9000";
+        } else if (middlewareType.equals(MiddlewareTypeEnum.ROCKET_MQ.getType())) {
+            return "8080";
+        } else {
+            return null;
+        }
+    }
 }
