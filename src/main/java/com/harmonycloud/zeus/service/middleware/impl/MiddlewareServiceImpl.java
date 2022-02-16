@@ -381,7 +381,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // 获取values.yaml的详情
         finalMiddlewareList.forEach(mw -> mw = getOperator(BaseOperator.class, BaseOperator.class, mw).convertByHelmChart(mw, cluster));
         // 获取未完全删除的中间件
-        List<BeanCacheMiddleware> beanCacheMiddlewareList = cacheMiddlewareService.list(clusterId, namespace);
+        List<BeanCacheMiddleware> beanCacheMiddlewareList = cacheMiddlewareService.list(clusterId, namespace, type);
         for (BeanCacheMiddleware beanCacheMiddleware : beanCacheMiddlewareList){
             Middleware middleware = new Middleware();
             BeanUtils.copyProperties(beanCacheMiddleware, middleware);
