@@ -201,7 +201,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
     @Override
     public MonitorDto monitor(String clusterId, String namespace, String name, String type, String chartVersion) {
-        Middleware middleware = new Middleware(clusterId, namespace, name, type);
+        Middleware middleware = new Middleware(clusterId, namespace, name, type).setChartVersion(chartVersion);
         MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
         List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.list(true);
         BeanMiddlewareInfo mwInfo = middlewareInfoList.stream()
