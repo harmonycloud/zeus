@@ -58,8 +58,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Autowired
     private ClusterService clusterService;
     @Autowired
-    private MiddlewareManageTask middlewareManageTask;
-    @Autowired
     private NamespaceService namespaceService;
     @Autowired
     private HelmChartService helmChartService;
@@ -283,7 +281,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // 获取helm list信息
         List<HelmListInfo> helmInfoList = helmChartService.listHelm(namespace, "", clusterService.findById(clusterId));
         helmInfoList = helmInfoList.stream()
-            .filter(helmInfo -> chartList.stream().allMatch(chart -> chart.equals(helmInfo.getChart())))
+            .filter(helmInfo -> chartList.stream().anyMatch(chart -> chart.equals(helmInfo.getChart())))
             .collect(Collectors.toList());
         return helmInfoList.stream().map(HelmListInfo::getName).collect(Collectors.toList());
     }
@@ -402,6 +400,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             briefInfoDTO.setChartName(key);
             briefInfoDTO.setServiceList(tempMiddlewareList);
             briefInfoDTO.setServiceNum(tempMiddlewareList.size());
+            briefInfoDTO.setName(key);
             list.add(briefInfoDTO);
         }
         return list;
