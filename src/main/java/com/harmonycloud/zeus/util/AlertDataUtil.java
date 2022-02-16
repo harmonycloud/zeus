@@ -29,7 +29,7 @@ public class AlertDataUtil {
             list.forEach(item -> {
                 String alerttime = item.get("alerttime").toString();
                 String num = item.get("num").toString();
-                map.put(alerttime, num);
+                map.put(DateUtil.addHourAndGetNormal(alerttime, 8), num);
             });
         }
 
