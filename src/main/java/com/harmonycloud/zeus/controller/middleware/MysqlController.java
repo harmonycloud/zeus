@@ -56,7 +56,7 @@ public class MysqlController {
     @ApiOperation(value = "慢日志查询", notes = "慢日志查询")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataTypeClass = String.class),
@@ -69,7 +69,7 @@ public class MysqlController {
     })
     @GetMapping("{middlewareName}/slowsql")
     public BaseResult slowsql(@PathVariable("clusterId") String clusterId,
-                              @PathVariable("namespace") String namespace,
+                              @RequestParam("namespace") String namespace,
                               @PathVariable("middlewareName") String middlewareName,
                               @RequestParam("startTime") String startTime,
                               @RequestParam("endTime") String endTime,
@@ -98,7 +98,7 @@ public class MysqlController {
     @ApiOperation(value = "慢日志导出", notes = "慢日志导出")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataTypeClass = String.class),
@@ -107,7 +107,7 @@ public class MysqlController {
     })
     @GetMapping("{middlewareName}/slowsql/file")
     public void slowsqlExcel(@PathVariable("clusterId") String clusterId,
-                             @PathVariable("namespace") String namespace,
+                             @RequestParam("namespace") String namespace,
                              @PathVariable("middlewareName") String middlewareName,
                              @RequestParam("startTime") String startTime,
                              @RequestParam("endTime") String endTime,
