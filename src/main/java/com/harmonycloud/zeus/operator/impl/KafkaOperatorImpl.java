@@ -34,7 +34,6 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
     @Override
     public void create(Middleware middleware, MiddlewareClusterDTO cluster) {
         super.create(middleware, cluster);
-        tryCreateOpenService(cluster.getId(), middleware, ServiceNameConvertUtil.convertKafka(middleware.getName()), false);
     }
 
     @Override
