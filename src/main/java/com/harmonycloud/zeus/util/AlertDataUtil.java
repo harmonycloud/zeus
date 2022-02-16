@@ -36,13 +36,13 @@ public class AlertDataUtil {
         hourList.forEach(item -> {
             Map<String, Object> single = new HashMap();
             if (map.containsKey(item)) {
-                single.put(DateUtil.addHourAndGetNormal(item, 8), map.get(item));
+                single.put(DateUtil.addHourAndGetNormal(item, 6), map.get(item));
                 single.put("num", map.get(item));
-                single.put("alerttime", DateUtil.addHourAndGetNormal(item, 8));
+                single.put("alerttime", DateUtil.addHourAndGetNormal(item, 6));
             } else {
-                single.put(DateUtil.addHourAndGetNormal(item, 8), "0");
+                single.put(DateUtil.addHourAndGetNormal(item, 6), "0");
                 single.put("num", 0);
-                single.put("alerttime", DateUtil.addHourAndGetNormal(item, 8));
+                single.put("alerttime", DateUtil.addHourAndGetNormal(item, 6));
             }
             resList.add(single);
         });
