@@ -788,7 +788,7 @@ public class OverviewServiceImpl implements OverviewService {
 
         //获取异常告警信息
         Date now = DateUtil.addHour(new Date(), -6);
-        Date ago = DateUtil.addHour(now, -6);
+        Date ago = DateUtil.addHour(now, -24);
         String beginTime = DateUtils.DateToString(ago, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
         String endTime = DateUtils.DateToString(now, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
         List<String> hourList = DateUtil.calcHour(now);
