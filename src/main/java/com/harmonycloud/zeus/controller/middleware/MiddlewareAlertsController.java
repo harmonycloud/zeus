@@ -23,7 +23,7 @@ import io.swagger.annotations.ApiOperation;
  */
 @Api(tags = {"监控告警","告警中心"}, value = "中间件告警", description = "中间件告警")
 @RestController
-@RequestMapping(value = {"/clusters/{clusterId}/namespaces/{namespace}/middlewares/{middlewareName}/rules","/clusters/{clusterId}/rules"})
+@RequestMapping(value = {"/clusters/{clusterId}/namespaces/{namespace}/middlewares/{middlewareName}/rules","/clusters/{clusterId}/rules","/rules"})
 public class MiddlewareAlertsController {
 
     @Autowired
@@ -160,6 +160,15 @@ public class MiddlewareAlertsController {
                                         @RequestParam("alertRuleId") String alertRuleId) {
         middlewareAlertsService.deleteSystemRules(clusterId, alert, alertRuleId);
         return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "查询告警规则详情", notes = "查询告警规则详情")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "alertRuleId", value = "规则ID", paramType = "query", dataTypeClass = String.class)
+    })
+    @GetMapping("/detail")
+    public BaseResult<MiddlewareAlertsDTO> alertRuleDetail(@RequestParam("alertRuleId") String alertRuleId) {
+        return BaseResult.ok(middlewareAlertsService.alertRuleDetail(alertRuleId));
     }
 }
 

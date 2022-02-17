@@ -323,6 +323,22 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         }
     }
 
+    @Override
+    public MiddlewareAlertsDTO alertRuleDetail(String alertRuleId) {
+        QueryWrapper<MiddlewareAlertInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("alert_id",analysisID(alertRuleId));
+        MiddlewareAlertInfo middlewareAlertInfo = middlewareAlertInfoMapper.selectById(analysisID(alertRuleId));
+        MiddlewareAlertsDTO middlewareAlertsDTO = new MiddlewareAlertsDTO();
+        BeanUtils.copyProperties(middlewareAlertInfo,middlewareAlertsDTO);
+        Map<String, String > labels = JSON.parseObject(middlewareAlertInfo.getLabels(), HashMap.class);
+        Map<String, String> annotations = JSON.parseObject(middlewareAlertInfo.getAnnotations(), HashMap.class);
+        middlewareAlertsDTO.setLabels(labels);
+        middlewareAlertsDTO.setAnnotations(annotations);
+        middlewareAlertsDTO.setAlertId(calculateID(middlewareAlertInfo.getAlertId()));
+
+        return middlewareAlertsDTO;
+    }
+
     public void updateAlerts2Mysql(String clusterId, String namespace, String middlewareName, MiddlewareAlertsDTO middlewareAlertsDTO) {
         MiddlewareAlertInfo middlewareAlertInfo = new MiddlewareAlertInfo();
         BeanUtils.copyProperties(middlewareAlertsDTO,middlewareAlertInfo);
