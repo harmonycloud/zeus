@@ -28,6 +28,7 @@ import com.harmonycloud.tool.date.DateUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
 /**
@@ -52,7 +53,7 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
      * @return List<Middleware>
      */
     @Override
-    public List<Middleware> list(String clusterId, String namespace, String type) {
+    public List<Middleware> list(String clusterId, String namespace, String type, Boolean detail) {
         Map<String, String> label = null;
         if (StringUtils.isNotEmpty(type)) {
             label = new HashMap<>(1);
@@ -66,7 +67,16 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
 
         List<Middleware> middlewares = new ArrayList<>();
         // 封装数据
-        middlewareCRDList.forEach(k8sMiddleware -> middlewares.add(convertMiddleware(k8sMiddleware)));
+        middlewareCRDList.forEach(k8sMiddleware -> {
+            Middleware middleware;
+            if (detail) {
+                middleware = convertMiddleware(k8sMiddleware);
+            } else {
+                middleware = simpleConvert(k8sMiddleware);
+            }
+            middleware.setClusterId(clusterId);
+            middlewares.add(middleware);
+        });
         return middlewares;
     }
 
@@ -89,7 +99,7 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
         MiddlewareCRD cr = getCR(clusterId, namespace, type, name);
         Middleware pods = podService.listPods(cr, clusterId, namespace, name, type);
         Middleware middleware = simpleConvert(cr);
-        middleware.setIsAllLvmStorage(pods.getIsAllLvmStorage());
+        middleware.setIsAllLvmStorage(pods.getIsAllLvmStorage()).setClusterId(clusterId);
         return middleware;
     }
 
@@ -188,6 +198,22 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
     public boolean checkIfExist(String clusterId, String namespace, String type, String middlewareName) {
         String crdName = MiddlewareCRService.getCrName(type, middlewareName);
         return middlewareWrapper.checkIfExist(clusterId, namespace, crdName);
+    }
+
+    @Override
+    public List<String> getPvc(String clusterId, String namespace, String type, String name) {
+        // query middleware cr
+        MiddlewareCRD mw = this.getCR(clusterId, namespace, type, name);
+        if (mw == null || mw.getStatus() == null || mw.getStatus().getInclude() == null
+                || !mw.getStatus().getInclude().containsKey(PERSISTENT_VOLUME_CLAIMS)) {
+            return new ArrayList<>();
+        }
+        List<MiddlewareInfo> pvcs = mw.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
+        List<String> pvcNameList = new ArrayList<>();
+        for (MiddlewareInfo pvc : pvcs) {
+            pvcNameList.add(pvc.getName());
+        }
+        return pvcNameList;
     }
 
     /**

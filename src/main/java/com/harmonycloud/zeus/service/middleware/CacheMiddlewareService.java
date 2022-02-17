@@ -16,8 +16,9 @@ public interface CacheMiddlewareService {
      *
      * @param clusterId 集群id
      * @param namespace 分区
+     * @param type      类型
      */
-    List<BeanCacheMiddleware> list(String clusterId, String namespace);
+    List<BeanCacheMiddleware> list(String clusterId, String namespace, String type);
 
     /**
      * 获取已删除中间件缓存信息

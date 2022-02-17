@@ -39,6 +39,8 @@ public class AuthServiceImpl implements AuthService {
     private UserService userService;
     @Autowired
     private RoleService roleService;
+    @Value("${system.user.expire:0.5}")
+    private Double expireTime;
 
     @Override
     public JSONObject login(String userName, String password, HttpServletResponse response) throws Exception {
@@ -61,7 +63,7 @@ public class AuthServiceImpl implements AuthService {
         JSONObject admin = convertUserInfo(userDto);
         long currentTime = System.currentTimeMillis();
         String token = JwtTokenComponent.generateToken("userInfo", admin,
-            new Date(currentTime + 1800000L), new Date(currentTime - 300000L));
+            new Date(currentTime + (long)(expireTime * 3600000L)), new Date(currentTime - 300000L));
         response.setHeader(SET_TOKEN, token);
         JSONObject res = new JSONObject();
         res.put("userName", userName);

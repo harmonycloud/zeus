@@ -114,8 +114,6 @@ public abstract class AbstractBaseOperator {
     private MiddlewareAlertInfoMapper middlewareAlertInfoMapper;
     @Autowired
     private MiddlewareAlertsServiceImpl middlewareAlertsService;
-    @Autowired
-    private PodService podService;
 
     /**
      * 是否支持该中间件
@@ -139,7 +137,6 @@ public abstract class AbstractBaseOperator {
         if (mw == null) {
             throw new BusinessException(DictEnum.MIDDLEWARE, middleware.getName(), ErrorMessage.NOT_EXIST);
         }
-        mw.setClusterId(middleware.getClusterId());
         return convertByHelmChart(mw, cluster);
     }
 
@@ -187,30 +184,10 @@ public abstract class AbstractBaseOperator {
         add2sql(middleware);
     }
 
-    public void recovery(Middleware middleware, MiddlewareClusterDTO cluster){
-        BeanCacheMiddleware beanCacheMiddleware = cacheMiddlewareService.get(middleware);
-        // 1. download and read helm chart from registry
-        HelmChartFile helmChart =
-                helmChartService.getHelmChartFromMysql(middleware.getChartName(), middleware.getChartVersion());
-        // 2. deal with values.yaml and Chart.yaml
-        JSONObject values = JSONObject.parseObject(beanCacheMiddleware.getValuesYaml());
-        Yaml yaml = new Yaml();
-        helmChart.setValueYaml(yaml.dumpAsMap(values));
-        helmChartService.coverYamlFile(helmChart);
-        // 3. helm package & install
-        String tgzFilePath = helmChartService.packageChart(helmChart.getTarFileName(), middleware.getChartName(),
-                middleware.getChartVersion());
-        helmChartService.install(middleware, tgzFilePath, cluster);
-        // 删除数据库缓存
-        cacheMiddlewareService.delete(middleware);
-    }
-
 
     public void delete(Middleware middleware) {
-        deleteIngress(middleware);
-        /*deletePvc(middleware);
-        deleteCustomConfigHistory(middleware);
-        middlewareBackupService.deleteMiddlewareBackupInfo(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());*/
+        ingressService.delete(middleware.getClusterId(), middleware.getNamespace(),
+                middleware.getType(), middleware.getName());
         // 获取集群
         MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(middleware.getClusterId());
         // 获取values.yaml 并写入数据库
@@ -224,7 +201,24 @@ public abstract class AbstractBaseOperator {
                 clusterMiddlewareInfoService.get(cluster.getId(), middleware.getType());
             beanCacheMiddleware.setChartVersion(beanClusterMiddlewareInfo.getChartVersion());
         }
-        beanCacheMiddleware.setPvc(getPvc(middleware));
+        // 获取pvc
+        try {
+            List<String> pvcNameList = middlewareCRService.getPvc(middleware.getClusterId(), middleware.getNamespace(),
+                    middleware.getType(), middleware.getName());
+            StringBuilder sb = new StringBuilder();
+            for (String name : pvcNameList) {
+                sb.append(name).append(",");
+            }
+            if (sb.length() == 0) {
+                beanCacheMiddleware.setPvc(null);
+            } else {
+                sb.deleteCharAt(sb.length() - 1);
+                beanCacheMiddleware.setPvc(sb.toString());
+            }
+        } catch (Exception e){
+            log.error("获取中间件pvc失败", e);
+        }
+        
         beanCacheMiddleware.setValuesYaml(JSONObject.toJSONString(values));
         cacheMiddlewareService.insert(beanCacheMiddleware);
         // helm卸载需要放到最后，要不然一些资源的查询会404
@@ -280,26 +274,6 @@ public abstract class AbstractBaseOperator {
         helmChartService.upgrade(middleware, sb.toString(), cluster);
     }
 
-    protected String getPvc(Middleware middleware) {
-        // query middleware cr
-        MiddlewareCRD mw = middlewareCRService.getCR(middleware.getClusterId(), middleware.getNamespace(),
-            middleware.getType(), middleware.getName());
-        if (mw == null || mw.getStatus() == null || mw.getStatus().getInclude() == null
-            || !mw.getStatus().getInclude().containsKey(PERSISTENT_VOLUME_CLAIMS)) {
-            return null;
-        }
-        List<MiddlewareInfo> pvcs = mw.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
-        StringBuilder sb = new StringBuilder();
-        for (MiddlewareInfo pvc : pvcs) {
-            sb.append(pvc.getName()).append(",");
-        }
-        if (sb.length() == 0) {
-            return null;
-        }
-        sb.deleteCharAt(sb.length() - 1);
-        return sb.toString();
-    }
-
     protected void deletePvc(BeanCacheMiddleware beanCacheMiddleware) {
         if (StringUtils.isNotEmpty(beanCacheMiddleware.getPvc())) {
             List<String> pvcList = Arrays.asList(beanCacheMiddleware.getPvc().split(","));
@@ -331,12 +305,9 @@ public abstract class AbstractBaseOperator {
 
     public void updateStorage(Middleware middleware) {
         // 获取pvc
-        String pvcNames = this.getPvc(middleware);
-        if (StringUtils.isEmpty(pvcNames)){
-            throw new BusinessException(ErrorMessage.FIND_PVC_FAILED);
-        }
+        List<String> pvcNameList = middlewareCRService.getPvc(middleware.getClusterId(), middleware.getNamespace(),
+                middleware.getType(), middleware.getName());
         // 更新pvc内容
-        String[] pvcNameList = pvcNames.split(",");
         List<PersistentVolumeClaim> pvcList = new ArrayList<>();
         for (String pvcName : pvcNameList) {
             pvcList.add(pvcWrapper.get(middleware.getClusterId(), middleware.getNamespace(), pvcName));
@@ -354,25 +325,6 @@ public abstract class AbstractBaseOperator {
         }
         sb.deleteCharAt(sb.length() - 1);
         helmChartService.upgrade(middleware, sb.toString(), clusterService.findById(middleware.getClusterId()));
-    }
-
-    protected void deleteIngress(Middleware mw) {
-        List<IngressDTO> ingressList;
-        try {
-            ingressList = ingressService.get(mw.getClusterId(), mw.getNamespace(), mw.getType(), mw.getName());
-        } catch (Exception e) {
-            log.error("集群：{}，命名空间：{}，中间件：{}/{}，删除对外访问时查询列表异常", mw.getClusterId(), mw.getNamespace(), mw.getType(),
-                mw.getName(), e);
-            return;
-        }
-        ingressList.forEach(ing -> {
-            try {
-                ingressService.delete(mw.getClusterId(), mw.getNamespace(), mw.getName(), ing.getName(), ing);
-            } catch (Exception e) {
-                log.error("集群：{}，命名空间：{}，中间件：{}/{}，对外服务{}/{}，删除对外访问异常", mw.getClusterId(), mw.getNamespace(),
-                    mw.getType(), mw.getName(), ing.getExposeType(), ing.getName(), e);
-            }
-        });
     }
 
     public void deleteCustomConfigHistory(Middleware mw) {
@@ -461,7 +413,11 @@ public abstract class AbstractBaseOperator {
             // 设置服务备份状态
             middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(middleware.getClusterId(),middleware.getNamespace(),middleware.getType(),middleware.getName()));
             // 设置管理平台地址
-            setManagePlatformAddress(middleware);
+            try {
+                setManagePlatformAddress(middleware);
+            } catch (Exception e){
+                log.error("获取管理控制台地址失败", e);
+            }
         } else {
             middleware.setAliasName(middleware.getName());
         }
@@ -871,7 +827,7 @@ public abstract class AbstractBaseOperator {
      * @param middleware 中间件信息
      * @param middlewareServiceNameIndex 服务名称
      */
-    public void tryCreateOpenService(String clusterId, Middleware middleware, MiddlewareServiceNameIndex middlewareServiceNameIndex, Boolean needRunningMiddleware) {
+    public void tryCreateOpenService(Middleware middleware, MiddlewareServiceNameIndex middlewareServiceNameIndex, Boolean needRunningMiddleware) {
         boolean success = false;
         for (int i = 0; i < (60 * 10 * 60) && !success; i++) {
             Middleware detail = middlewareService.detail(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
@@ -1031,23 +987,23 @@ public abstract class AbstractBaseOperator {
      * 设置管理平台地址 
      */
     public void setManagePlatformAddress(Middleware middleware) {
-        if (middlewareManagePlatformFilter(middleware)){
+        label:
+        if (middlewareManagePlatformFilter(middleware)) {
+            middleware.setManagePlatform(true);
+            middleware.setManagePlatformAddress("");
             List<IngressDTO> ingressDTOS = ingressService.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
-            MiddlewareServiceNameIndex serviceNameIndex = ServiceNameConvertUtil.convert(middleware);
-            List<IngressDTO> serviceDTOList = ingressDTOS.stream().filter(ingressDTO -> (
-                    ingressDTO.getName().equals(serviceNameIndex.getNodePortServiceName()) && ingressDTO.getExposeType().equals(MIDDLEWARE_EXPOSE_NODEPORT))
-            ).collect(Collectors.toList());
-            if (!CollectionUtils.isEmpty(serviceDTOList)) {
-                IngressDTO ingressDTO = serviceDTOList.get(0);
-                String exposeIP = ingressDTO.getExposeIP();
+            String servicePort = ServiceNameConvertUtil.getManagePlatformServicePort(middleware);
+            for (IngressDTO ingressDTO : ingressDTOS) {
                 List<ServiceDTO> serviceList = ingressDTO.getServiceList();
                 if (!CollectionUtils.isEmpty(serviceList)) {
-                    ServiceDTO serviceDTO = serviceList.get(0);
-                    String exposePort = serviceDTO.getExposePort();
-                    middleware.setManagePlatformAddress(exposeIP + ":" + exposePort);
+                    for (ServiceDTO serviceDTO : serviceList) {
+                        if (servicePort.equals(serviceDTO.getServicePort())) {
+                            String address = ingressDTO.getExposeIP() + ":" + serviceDTO.getExposePort();
+                            middleware.setManagePlatformAddress(address);
+                            break label;
+                        }
+                    }
                 }
-            } else {
-                middleware.setManagePlatform(false);
             }
         }
     }

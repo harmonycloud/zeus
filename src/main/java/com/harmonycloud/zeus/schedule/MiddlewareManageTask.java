@@ -66,22 +66,4 @@ public class MiddlewareManageTask {
         mysqlOperator.createDisasterRecoveryMiddleware(middleware);
     }
 
-    /**
-     * 创建恢复
-     * @param clusterId 集群id
-     * @param namespace 分区
-     * @param type 中间件类型
-     * @param middlewareName 中间件名称
-     * @param backupName 备份名称
-     * @param restoreName 恢复记录名称
-     * @param backupService  备份服务
-     */
-    @Async("singleThreadExecutor")
-    public void asyncCreateBackupRestore(String clusterId, String namespace, String type, String middlewareName, String backupName, String restoreName, MiddlewareBackupServiceImpl backupService) {
-        try {
-            backupService.tryCreateMiddlewareRestore(clusterId, namespace, type, middlewareName, backupName, restoreName);
-        } catch (Exception e) {
-            log.error("通用备份，创建恢复失败 clusterId={},namespace={},type={},middlewareName={},backupName={},restoreName={}", clusterId, namespace, middlewareName, backupName, restoreName, e);
-        }
-    }
 }

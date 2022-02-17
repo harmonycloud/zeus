@@ -8,6 +8,7 @@ import com.harmonycloud.caas.common.enums.Protocol;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
 import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.ConfigMapWrapper;
 import com.harmonycloud.zeus.integration.cluster.IngressWrapper;
 import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
@@ -97,13 +98,15 @@ public class IngressServiceImpl implements IngressService {
         }
 
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        for (MiddlewareClusterIngress ingress : cluster.getIngressList()) {
-            if (ingress.getTcp() != null && ingress.getTcp().isEnabled()) {
-                // tcp routing list
-                ConfigMap configMap =
+        if (!CollectionUtils.isEmpty(cluster.getIngressList())) {
+            for (MiddlewareClusterIngress ingress : cluster.getIngressList()) {
+                if (ingress.getTcp() != null && ingress.getTcp().isEnabled()) {
+                    // tcp routing list
+                    ConfigMap configMap =
                         configMapWrapper.get(clusterId, getIngressTcpNamespace(cluster, ingress.getIngressClassName()),
-                                ingress.getTcp().getConfigMapName());
-                dealTcpRoutine(clusterId, namespace, configMap, ingressDtoList);
+                            ingress.getTcp().getConfigMapName());
+                    dealTcpRoutine(clusterId, namespace, configMap, ingressDtoList);
+                }
             }
         }
 
@@ -117,17 +120,14 @@ public class IngressServiceImpl implements IngressService {
         }
 
         // package assembly
-        Map<String, Middleware> middlewareMap = getMiddlewareMap(clusterId,namespace);
-        if (middlewareMap != null && !middlewareMap.isEmpty()) {
-            for (IngressDTO ingressDTO : ingressDtoList) {
-                if (middlewareMap.get(ingressDTO.getMiddlewareName()) == null) {
-                    continue;
-                }
-                Middleware middleware = middlewareMap.get(ingressDTO.getMiddlewareName());
-                ingressDTO.setMiddlewareName(middleware.getName());
-                ingressDTO.setMiddlewareType(middleware.getType());
-                ingressDTO.setMiddlewareNickName(middleware.getAliasName());
+        for (IngressDTO ingressDTO : ingressDtoList) {
+            JSONObject values =  helmChartService.getInstalledValues(ingressDTO.getMiddlewareName(), namespace, cluster);
+            if (values == null){
+                continue;
             }
+            ingressDTO.setMiddlewareName(ingressDTO.getMiddlewareName());
+            ingressDTO.setMiddlewareType(ingressDTO.getMiddlewareType());
+            ingressDTO.setMiddlewareNickName(values.getOrDefault("aliasName", "").toString());
         }
 
         boolean filter = StringUtils.isNotBlank(keyword);
@@ -241,7 +241,25 @@ public class IngressServiceImpl implements IngressService {
         } else if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_NODEPORT)) {
             serviceWrapper.delete(clusterId, namespace, name);
         }
+    }
 
+    @Override
+    public void delete(String clusterId, String namespace, String type, String middlewareName) {
+        List<IngressDTO> ingressList;
+        try {
+            ingressList = this.get(clusterId, namespace, type, middlewareName);
+        } catch (Exception e) {
+            log.error("集群：{}，命名空间：{}，中间件：{}/{}，删除对外访问时查询列表异常", clusterId, namespace, type, middlewareName, e);
+            return;
+        }
+        ingressList.forEach(ing -> {
+            try {
+                this.delete(clusterId, namespace, middlewareName, ing.getName(), ing);
+            } catch (Exception e) {
+                log.error("集群：{}，命名空间：{}，中间件：{}/{}，对外服务{}/{}，删除对外访问异常", clusterId, namespace, type, middlewareName,
+                    ing.getExposeType(), ing.getName(), e);
+            }
+        });
     }
 
     @Override
@@ -908,95 +926,66 @@ public class IngressServiceImpl implements IngressService {
         return ingressDTO;
     }
 
-    private Map<String, Middleware> getMiddlewareMap(String clusterId, String namespace) {
-        List<Middleware> middlewareList = middlewareService.simpleList(clusterId, namespace, null,null);
-        if (CollectionUtils.isEmpty(middlewareList)) {
-            return null;
-        }
-        Map<String, Middleware> map = new HashMap<>(middlewareList.size());
-        for (Middleware middleware : middlewareList) {
-            if (middleware == null) {
-                continue;
-            }
-            if (StringUtils.isBlank(middleware.getName())) {
-                continue;
-            }
-            map.put(middleware.getName(), middleware);
-        }
-
-        return map;
-    }
-
     @Override
     public List listAllIngress(String clusterId, String namespace, String keyword) {
-        List<MiddlewareInfoDTO> middlewareInfoDTOList = middlewareInfoService.list(clusterId);
         List<Map<String, Object>> ingressList = new ArrayList<>();
         boolean filter = StringUtils.isNotBlank(keyword);
-        List<Middleware> middlewareServiceList = middlewareService.simpleList(clusterId, namespace, null, null);
-        middlewareInfoDTOList.forEach(middlewareInfoDTO -> {
+        List<IngressDTO> allIngress = list(clusterId, namespace, null);
+        List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.list(false);
+        middlewareInfoList.forEach(mwInfo -> {
             List<IngressDTO> ingressDTOList = new ArrayList<>();
-            for (Middleware middleware : middlewareServiceList) {
-                if (!middlewareInfoDTO.getChartName().equals(middleware.getType())) {
-                    continue;
+            for (IngressDTO ingressDTO : allIngress) {
+                if (mwInfo.getName().equals(ingressDTO.getMiddlewareType())) {
+                    ingressDTOList.add(ingressDTO);
                 }
-                List<IngressDTO> singleIngressDTOList = get(clusterId, namespace, middlewareInfoDTO.getChartName(), middleware.getName());
-                singleIngressDTOList.forEach(ingressDTO -> {
-                    List<ServiceDTO> serviceList = ingressDTO.getServiceList();
-                    if (!CollectionUtils.isEmpty(serviceList)) {
-                        ServiceDTO serviceDTO = serviceList.get(0);
-                        ingressDTO.setExposePort(serviceDTO.getExposePort());
-                        ingressDTO.setServicePort(serviceDTO.getServicePort());
-                    }
-                });
-                List<IngressDTO> ingressDTOS = singleIngressDTOList.stream().filter(ingress -> {
-                    if (!filter) {
-                        return true;
-                    }
-                    if (StringUtils.contains(ingress.getName(), keyword) || StringUtils.contains(ingress.getMiddlewareName(), keyword) ||
-                            StringUtils.contains(ingress.getMiddlewareNickName(), keyword) || StringUtils.contains(ingress.getExposeIP(), keyword) ||
-                            StringUtils.contains(ingress.getExposeIP() + ":" + ingress.getExposePort(), keyword)) {
-                        return true;
-                    }
-                    if (!CollectionUtils.isEmpty(ingress.getRules())) {
-                        List<String> urls = new ArrayList<>();
-                        for (IngressRuleDTO rule : ingress.getRules()) {
-                            if (!CollectionUtils.isEmpty(rule.getIngressHttpPaths())) {
-                                for (IngressHttpPath ingressHttpPath : rule.getIngressHttpPaths()) {
-                                    String url = "";
-                                    if (StringUtils.isNotBlank(ingress.getHttpExposePort())) {
-                                        url = rule.getDomain() + ":" + ingress.getHttpExposePort() + ingressHttpPath.getPath();
-                                    } else {
-                                        url = rule.getDomain() + ingressHttpPath.getPath();
-                                    }
-                                    urls.add(url);
-                                }
-                            }
-                        }
-                        for (String url : urls) {
-                            if (StringUtils.contains(url, keyword)) {
-                                return true;
-                            }
-                        }
-                    }
-                    return false;
-                }).collect(Collectors.toList());
-                ingressDTOList.addAll(ingressDTOS);
             }
-
+            if (filter) {
+                ingressDTOList = filterByKeyword(ingressDTOList, keyword);
+            }
             Map<String, Object> middlewareMap = new HashMap<>();
-            middlewareMap.put("name", middlewareInfoDTO.getChartName());
-            middlewareMap.put("image", middlewareInfoDTO.getImage());
-            middlewareMap.put("imagePath", middlewareInfoDTO.getImagePath());
-            middlewareMap.put("chartName", middlewareInfoDTO.getChartName());
-            middlewareMap.put("chartVersion", middlewareInfoDTO.getChartVersion());
-            middlewareMap.put("version", middlewareInfoDTO.getVersion());
+            middlewareMap.put("name", mwInfo.getChartName());
+            middlewareMap.put("imagePath", mwInfo.getImagePath());
+            middlewareMap.put("chartName", mwInfo.getChartName());
+            middlewareMap.put("chartVersion", mwInfo.getChartVersion());
+            middlewareMap.put("version", mwInfo.getVersion());
             middlewareMap.put("ingressList", ingressDTOList);
             middlewareMap.put("serviceNum", ingressDTOList.size());
             ingressList.add(middlewareMap);
         });
-
         Collections.sort(ingressList, new MiddlewareServiceImpl.ServiceMapComparator());
         return ingressList;
+    }
+
+    private List<IngressDTO> filterByKeyword(List<IngressDTO> ingressDTOList, String keyword) {
+        List<IngressDTO> filteredIngressList = new ArrayList<>();
+        for (IngressDTO ingressDTO : ingressDTOList) {
+            // NodePort服务地址过滤
+            if (StringUtils.isNotBlank(ingressDTO.getExposeIP()) && !CollectionUtils.isEmpty(ingressDTO.getServiceList())) {
+                for (ServiceDTO serviceDTO : ingressDTO.getServiceList()) {
+                    String address = ingressDTO.getExposeIP() + ":" + serviceDTO.getExposePort();
+                    if (address.contains(keyword)) {
+                        filteredIngressList.add(ingressDTO);
+                    }
+                }
+            }
+            // Ingress服务地址过滤
+            if (!CollectionUtils.isEmpty(ingressDTO.getRules())) {
+                List<IngressRuleDTO> rules = ingressDTO.getRules();
+                for (IngressRuleDTO rule : rules) {
+                    for (IngressHttpPath ingressHttpPath : rule.getIngressHttpPaths()) {
+                        String address = rule.getDomain() + ":" + ingressHttpPath.getServicePort() + ingressHttpPath.getPath();
+                        if (address.contains(keyword)) {
+                            filteredIngressList.add(ingressDTO);
+                        }
+                    }
+                }
+            }
+            //根据服务暴露名称、服务名称、服务中文名称过滤
+            if (ingressDTO.getName().contains(keyword) || ingressDTO.getMiddlewareName().contains(keyword) || ingressDTO.getMiddlewareNickName().contains(keyword)) {
+                filteredIngressList.add(ingressDTO);
+            }
+        }
+        return filteredIngressList;
     }
 
 }

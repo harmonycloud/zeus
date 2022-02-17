@@ -7,6 +7,7 @@ import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
 import com.harmonycloud.zeus.dao.BeanCacheMiddlewareMapper;
 import com.harmonycloud.zeus.service.middleware.CacheMiddlewareService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -26,9 +27,12 @@ public class CacheMiddlewareServiceImpl implements CacheMiddlewareService {
     private BeanCacheMiddlewareMapper beanCacheMiddlewareMapper;
     
     @Override
-    public List<BeanCacheMiddleware> list(String clusterId, String namespace) {
+    public List<BeanCacheMiddleware> list(String clusterId, String namespace, String type) {
         QueryWrapper<BeanCacheMiddleware> wrapper =
             new QueryWrapper<BeanCacheMiddleware>().eq("cluster_id", clusterId).eq("namespace", namespace);
+        if (StringUtils.isNotEmpty(type)){
+            wrapper.eq("type", type);
+        }
         List<BeanCacheMiddleware> beanCacheMiddlewareList = beanCacheMiddlewareMapper.selectList(wrapper);
         if (CollectionUtils.isEmpty(beanCacheMiddlewareList)) {
             return new ArrayList<>();
