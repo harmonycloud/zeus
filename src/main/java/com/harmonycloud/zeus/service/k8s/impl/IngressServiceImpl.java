@@ -8,6 +8,7 @@ import com.harmonycloud.caas.common.enums.Protocol;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
 import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.ConfigMapWrapper;
 import com.harmonycloud.zeus.integration.cluster.IngressWrapper;
 import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
@@ -950,11 +951,11 @@ public class IngressServiceImpl implements IngressService {
         List<Map<String, Object>> ingressList = new ArrayList<>();
         boolean filter = StringUtils.isNotBlank(keyword);
         List<IngressDTO> allIngress = list(clusterId, namespace, null);
-        List<MiddlewareBriefInfoDTO> middlewareBriefInfoDTOList = middlewareService.list(clusterId, namespace, null, null);
-        middlewareBriefInfoDTOList.forEach(middlewareBriefInfo -> {
+        List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.list(false);
+        middlewareInfoList.forEach(mwInfo -> {
             List<IngressDTO> ingressDTOList = new ArrayList<>();
             for (IngressDTO ingressDTO : allIngress) {
-                if (middlewareBriefInfo.getName().equals(ingressDTO.getMiddlewareType())) {
+                if (mwInfo.getName().equals(ingressDTO.getMiddlewareType())) {
                     ingressDTOList.add(ingressDTO);
                 }
             }
@@ -962,11 +963,11 @@ public class IngressServiceImpl implements IngressService {
                 ingressDTOList = filterByKeyword(ingressDTOList, keyword);
             }
             Map<String, Object> middlewareMap = new HashMap<>();
-            middlewareMap.put("name", middlewareBriefInfo.getChartName());
-            middlewareMap.put("imagePath", middlewareBriefInfo.getImagePath());
-            middlewareMap.put("chartName", middlewareBriefInfo.getChartName());
-            middlewareMap.put("chartVersion", middlewareBriefInfo.getChartVersion());
-            middlewareMap.put("version", middlewareBriefInfo.getVersion());
+            middlewareMap.put("name", mwInfo.getChartName());
+            middlewareMap.put("imagePath", mwInfo.getImagePath());
+            middlewareMap.put("chartName", mwInfo.getChartName());
+            middlewareMap.put("chartVersion", mwInfo.getChartVersion());
+            middlewareMap.put("version", mwInfo.getVersion());
             middlewareMap.put("ingressList", ingressDTOList);
             middlewareMap.put("serviceNum", ingressDTOList.size());
             ingressList.add(middlewareMap);
