@@ -23,6 +23,13 @@ public interface MiddlewareInfoService {
     List<BeanMiddlewareInfo> list(Boolean all);
 
     /**
+     * 查询中间件列表
+     *
+     * @return List<BeanMiddlewareInfo>
+     */
+    List<BeanMiddlewareInfo> filter(List<BeanMiddlewareInfo> beanMiddlewareInfoList);
+
+    /**
      * 查询集群已安装所有中间件
      * @param clusterDTOList 集群集合
      * @return

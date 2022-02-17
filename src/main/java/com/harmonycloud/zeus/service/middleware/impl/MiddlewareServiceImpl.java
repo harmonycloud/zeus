@@ -372,7 +372,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         helmListInfoList = helmListInfoList.stream().filter(info -> finalMiddlewareList.stream().noneMatch(mw -> mw.getName().equals(info.getName()))).collect(Collectors.toList());
         helmListInfoList.forEach(info -> {
             Middleware middleware = new Middleware(clusterId, namespace, info.getName(), info.getChart().split("-")[0]);
-            middleware.setStatus("Creating");
+            middleware.setStatus("Preparing");
             finalMiddlewareList.add(middleware);
         });
         // 获取values.yaml的详情
@@ -389,10 +389,13 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         finalMiddlewareList.sort(new MiddlewareComparator());
         // 封装数据
         List<MiddlewareBriefInfoDTO> list = new ArrayList<>();
-        Map<String, List<Middleware>> middlewareListMap = finalMiddlewareList.stream().collect(Collectors.groupingBy(Middleware::getType));
-        for (String key : middlewareListMap.keySet()){
+        Map<String, String> middlewareImagePathMap = middlewareInfoService.filter(beanMiddlewareInfoList).stream()
+            .collect(Collectors.toMap(BeanMiddlewareInfo::getChartName, BeanMiddlewareInfo::getImagePath));
+        Map<String, List<Middleware>> middlewareListMap =
+            finalMiddlewareList.stream().collect(Collectors.groupingBy(Middleware::getType));
+        for (String key : middlewareListMap.keySet()) {
             // 根据创建时间排序
-            List<Middleware> tempMiddlewareList =  middlewareListMap.get(key);
+            List<Middleware> tempMiddlewareList = middlewareListMap.get(key);
             tempMiddlewareList.sort(new MiddlewareComparator());
             // 封装数据
             MiddlewareBriefInfoDTO briefInfoDTO = new MiddlewareBriefInfoDTO();
@@ -400,6 +403,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             briefInfoDTO.setServiceList(tempMiddlewareList);
             briefInfoDTO.setServiceNum(tempMiddlewareList.size());
             briefInfoDTO.setName(key);
+            briefInfoDTO.setImagePath(middlewareImagePathMap.getOrDefault(key, null));
             list.add(briefInfoDTO);
         }
         return list;

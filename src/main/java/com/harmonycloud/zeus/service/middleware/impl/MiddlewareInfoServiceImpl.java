@@ -67,14 +67,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
             return new ArrayList<>();
         }
         if (!all) {
-            Map<String, List<BeanMiddlewareInfo>> map =
-                list.stream().collect(Collectors.groupingBy(BeanMiddlewareInfo::getChartName));
-            List<BeanMiddlewareInfo> mwInfoList = new ArrayList<>();
-            for (String key : map.keySet()) {
-                compareChartVersion(map.get(key));
-                mwInfoList.add(map.get(key).get(0));
-            }
-            return mwInfoList;
+            return filter(list);
         }
         return list;
     }
@@ -307,6 +300,18 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         // 删除集群绑定信息
         clusterMwInfoList.forEach(clusterMwInfo -> clusterMiddlewareInfoService.delete(clusterMwInfo.getClusterId(),
             clusterMwInfo.getChartName(), clusterMwInfo.getChartVersion()));
+    }
+
+    @Override
+    public List<BeanMiddlewareInfo> filter(List<BeanMiddlewareInfo> beanMiddlewareInfoList) {
+        Map<String, List<BeanMiddlewareInfo>> map =
+                beanMiddlewareInfoList.stream().collect(Collectors.groupingBy(BeanMiddlewareInfo::getChartName));
+        List<BeanMiddlewareInfo> mwInfoList = new ArrayList<>();
+        for (String key : map.keySet()) {
+            compareChartVersion(map.get(key));
+            mwInfoList.add(map.get(key).get(0));
+        }
+        return mwInfoList;
     }
 
     /**
