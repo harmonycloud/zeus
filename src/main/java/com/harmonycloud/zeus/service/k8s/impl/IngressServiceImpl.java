@@ -98,13 +98,15 @@ public class IngressServiceImpl implements IngressService {
         }
 
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        for (MiddlewareClusterIngress ingress : cluster.getIngressList()) {
-            if (ingress.getTcp() != null && ingress.getTcp().isEnabled()) {
-                // tcp routing list
-                ConfigMap configMap =
+        if (!CollectionUtils.isEmpty(cluster.getIngressList())) {
+            for (MiddlewareClusterIngress ingress : cluster.getIngressList()) {
+                if (ingress.getTcp() != null && ingress.getTcp().isEnabled()) {
+                    // tcp routing list
+                    ConfigMap configMap =
                         configMapWrapper.get(clusterId, getIngressTcpNamespace(cluster, ingress.getIngressClassName()),
-                                ingress.getTcp().getConfigMapName());
-                dealTcpRoutine(clusterId, namespace, configMap, ingressDtoList);
+                            ingress.getTcp().getConfigMapName());
+                    dealTcpRoutine(clusterId, namespace, configMap, ingressDtoList);
+                }
             }
         }
 
