@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.bean;
 
+import com.github.pagehelper.PageInfo;
 import com.harmonycloud.caas.common.model.AlertSummaryDTO;
 import com.harmonycloud.caas.common.model.middleware.ClusterQuotaDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBriefInfoDTO;
@@ -46,4 +47,10 @@ public class PlatformOverviewDTO {
      * 审计列表
      */
     private List<BeanOperationAudit> auditList;
+
+    /**
+     * 告警信息
+     */
+    private PageInfo alertPageInfo;
+
 }

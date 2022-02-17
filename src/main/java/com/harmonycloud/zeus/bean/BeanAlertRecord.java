@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.beans.Transient;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -96,4 +97,15 @@ public class BeanAlertRecord implements Serializable {
     @TableField("content")
     private String content;
 
+    /**
+     * chart版本
+     */
+    @TableField(exist = false)
+    private String chartVersion;
+
+    /**
+     * middleware类型
+     */
+    @TableField(exist = false)
+    private String capitalType;
 }

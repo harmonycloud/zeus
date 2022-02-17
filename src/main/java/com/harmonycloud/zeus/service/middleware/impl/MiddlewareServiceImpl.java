@@ -540,7 +540,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
      * @param clusterDTOList 集群列表
      * @return
      */
-    private List<Middleware> queryAllClusterService(List<MiddlewareClusterDTO> clusterDTOList) {
+    public List<Middleware> queryAllClusterService(List<MiddlewareClusterDTO> clusterDTOList) {
         List<Namespace> namespaceList = new ArrayList<>();
         clusterDTOList.forEach(cluster -> {
             namespaceList.addAll(namespaceService.list(cluster.getId(), false, null));
