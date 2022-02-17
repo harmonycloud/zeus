@@ -9,6 +9,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.models.auth.In;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,6 +37,19 @@ public class PlatformOverviewController {
     @GetMapping
     public BaseResult<PlatformOverviewDTO> getPlatformOverview(@RequestParam(value = "clusterId", required = false) String clusterId) {
         return BaseResult.ok(overviewService.getClusterPlatformOverview(clusterId));
+    }
+
+    @ApiOperation(value = "平台总览-获取告警信息", notes = "平台总览-获取告警信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "current", value = "当前页", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "size", value = "每页数量", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("/alertInfo")
+    public BaseResult<PlatformOverviewDTO> getAlertInfo(@RequestParam(value = "clusterId", required = false) String clusterId,
+                                                        @RequestParam(value = "current", defaultValue = "1", required = false) Integer current,
+                                                        @RequestParam(value = "size", defaultValue = "10", required = false) Integer size) {
+        return BaseResult.ok(overviewService.getAlertInfo(clusterId, current, size));
     }
 
     @ApiOperation(value = "平台总览-获取服务信息", notes = "服务信息")

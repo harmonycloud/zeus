@@ -154,4 +154,11 @@ public interface MiddlewareService {
      * @param middleware 中间件对象
      */
     void updateStorage(Middleware middleware);
+
+    /**
+     * 查询集群所有服务
+     * @param clusterDTOList
+     * @return
+     */
+    List<Middleware> queryAllClusterService(List<MiddlewareClusterDTO> clusterDTOList);
 }
