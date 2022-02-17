@@ -118,17 +118,14 @@ public class IngressServiceImpl implements IngressService {
         }
 
         // package assembly
-        Map<String, Middleware> middlewareMap = getMiddlewareMap(clusterId,namespace);
-        if (middlewareMap != null && !middlewareMap.isEmpty()) {
-            for (IngressDTO ingressDTO : ingressDtoList) {
-                if (middlewareMap.get(ingressDTO.getMiddlewareName()) == null) {
-                    continue;
-                }
-                Middleware middleware = middlewareMap.get(ingressDTO.getMiddlewareName());
-                ingressDTO.setMiddlewareName(middleware.getName());
-                ingressDTO.setMiddlewareType(middleware.getType());
-                ingressDTO.setMiddlewareNickName(middleware.getAliasName());
+        for (IngressDTO ingressDTO : ingressDtoList) {
+            JSONObject values =  helmChartService.getInstalledValues(ingressDTO.getMiddlewareName(), namespace, cluster);
+            if (values == null){
+                continue;
             }
+            ingressDTO.setMiddlewareName(ingressDTO.getMiddlewareName());
+            ingressDTO.setMiddlewareType(ingressDTO.getMiddlewareType());
+            ingressDTO.setMiddlewareNickName(values.getOrDefault("aliasName", "").toString());
         }
 
         boolean filter = StringUtils.isNotBlank(keyword);
@@ -925,25 +922,6 @@ public class IngressServiceImpl implements IngressService {
             ingressDTO.setIngressClassName(ingress.getMetadata().getAnnotations().get(INGRESS_CLASS_NAME));
         }
         return ingressDTO;
-    }
-
-    private Map<String, Middleware> getMiddlewareMap(String clusterId, String namespace) {
-        List<Middleware> middlewareList = middlewareService.simpleList(clusterId, namespace, null,null);
-        if (CollectionUtils.isEmpty(middlewareList)) {
-            return null;
-        }
-        Map<String, Middleware> map = new HashMap<>(middlewareList.size());
-        for (Middleware middleware : middlewareList) {
-            if (middleware == null) {
-                continue;
-            }
-            if (StringUtils.isBlank(middleware.getName())) {
-                continue;
-            }
-            map.put(middleware.getName(), middleware);
-        }
-
-        return map;
     }
 
     @Override
