@@ -117,4 +117,10 @@ public interface MiddlewareAlertsService {
     void updateSystemRules(String clusterId, String ding,
                            String alertRuleId,AlertUserDTO alertUserDTO);
 
+    /**
+     * 获取告警规则详情
+     * @param alertRuleId
+     */
+    MiddlewareAlertsDTO alertRuleDetail(String alertRuleId);
+
 }
