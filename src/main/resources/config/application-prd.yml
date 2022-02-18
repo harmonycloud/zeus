@@ -2,7 +2,7 @@ spring:
   datasource:
     username: root # change this
     password: root # change this
-    url: jdbc:mysql://zeus-mysql:20001/middleware?useUnicode=true&characterEncoding=utf-8 # change this
+    url: jdbc:mysql://zeus-mysql:20001/middleware?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC # change this
     driver-class-name: com.mysql.cj.jdbc.Driver
   servlet:
     multipart:
