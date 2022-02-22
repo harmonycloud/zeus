@@ -8,6 +8,8 @@ import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.MinioService;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
 import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
 
 import java.io.File;
@@ -38,7 +40,11 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
     @Override
     public void integrate(MiddlewareClusterDTO cluster) {
         MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
+        if (CollectionUtils.isEmpty(existCluster.getStorage())){
+            existCluster.setStorage(new HashMap<>());
+        }
         existCluster.getStorage().put("backup", cluster.getStorage().get("backup"));
+        existCluster.getStorage().put("type", "minio");
         clusterService.update(existCluster);
     }
 
