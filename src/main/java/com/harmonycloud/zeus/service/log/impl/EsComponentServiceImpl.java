@@ -48,6 +48,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.ConnectException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -320,7 +321,13 @@ public class EsComponentServiceImpl implements EsComponentService {
             request.setOptions(build);
         }
         RestClient restClient = client.getLowLevelClient();
-        Response response = restClient.performRequest(request);
+        Response response = null;
+        try {
+            response = restClient.performRequest(request);
+        } catch (ConnectException e) {
+            log.error("日志组件连接失败", e);
+            throw new BusinessException(ErrorMessage.ELASTICSEARCH_CONNECT_FAILED);
+        }
         if (response == null || Objects.isNull(response.getEntity())) {
             return null;
         }
