@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -307,6 +308,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             middlewareBriefInfoDTO.setImagePath(middlewareInfo.getImagePath());
             middlewareBriefInfoDTO.setServiceNum(serviceNum.get());
             middlewareBriefInfoDTO.setErrServiceNum(errServiceNum.get());
+            middlewareBriefInfoDTO.setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(middlewareInfo.getChartName()));
             middlewareBriefInfoDTOList.add(middlewareBriefInfoDTO);
         });
         try {
