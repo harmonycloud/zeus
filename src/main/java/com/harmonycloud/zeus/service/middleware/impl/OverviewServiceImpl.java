@@ -795,7 +795,7 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
     @Override
-    public PlatformOverviewDTO getAlertInfo(String clusterId, Integer current, Integer size) {
+    public AlertMessageDTO getAlertInfo(String clusterId, Integer current, Integer size) {
         List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(true, null);
         if (StringUtils.isNotBlank(clusterId)) {
             clusterList = clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
@@ -839,10 +839,10 @@ public class OverviewServiceImpl implements OverviewService {
         alertSummaryDTO.setInfoSum(AlertDataUtil.countAlertNum(infoList));
         alertSummaryDTO.setWarningSum(AlertDataUtil.countAlertNum(warningList));
 
-        PlatformOverviewDTO platformOverviewDTO = new PlatformOverviewDTO();
-        platformOverviewDTO.setAlertSummary(alertSummaryDTO);
-        platformOverviewDTO.setAlertPageInfo(pageInfo);
-        return platformOverviewDTO;
+        AlertMessageDTO alertMessageDTO = new AlertMessageDTO();
+        alertMessageDTO.setAlertSummary(alertSummaryDTO);
+        alertMessageDTO.setAlertPageInfo(pageInfo);
+        return alertMessageDTO;
     }
 
     @Override

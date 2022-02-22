@@ -9,6 +9,7 @@ import com.harmonycloud.caas.common.model.MiddlewareDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareMonitorDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareOverviewDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareStatusDto;
+import com.harmonycloud.zeus.bean.AlertMessageDTO;
 import com.harmonycloud.zeus.bean.PlatformOverviewDTO;
 
 /**
@@ -87,5 +88,5 @@ public interface OverviewService {
      * @param size
      * @return
      */
-    PlatformOverviewDTO getAlertInfo(String clusterId, Integer current, Integer size);
+    AlertMessageDTO getAlertInfo(String clusterId, Integer current, Integer size);
 }
