@@ -419,6 +419,16 @@ public abstract class AbstractBaseOperator {
             if (values.getString("middleware-desc") != null) {
                 middleware.setDescription(values.getString("middleware-desc"));
             }
+            // log
+            if (JsonUtils.isJsonObject(values.getString("logging"))) {
+                JSONObject logging = values.getJSONObject("logging");
+                JSONObject collection = logging.getJSONObject("collection");
+                Boolean filelogEnabled = collection.getJSONObject("filelog").getBoolean("enabled");
+                Boolean stdoutEnabled = collection.getJSONObject("stdout").getBoolean("enabled");
+                middleware.setFilelogEnabled(filelogEnabled);
+                middleware.setStdoutEnabled(stdoutEnabled);
+            }
+
             // 设置服务备份状态
             middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(middleware.getClusterId(),middleware.getNamespace(),middleware.getType(),middleware.getName()));
             // 设置管理平台地址
