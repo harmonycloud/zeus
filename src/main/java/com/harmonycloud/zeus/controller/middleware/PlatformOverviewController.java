@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.controller.middleware;
 
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.AlertDTO;
+import com.harmonycloud.zeus.bean.AlertMessageDTO;
 import com.harmonycloud.zeus.bean.PlatformOverviewDTO;
 import com.harmonycloud.zeus.service.k8s.ConfigMapService;
 import com.harmonycloud.zeus.service.middleware.OverviewService;
@@ -46,9 +47,9 @@ public class PlatformOverviewController {
             @ApiImplicitParam(name = "size", value = "每页数量", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/alertInfo")
-    public BaseResult<PlatformOverviewDTO> getAlertInfo(@RequestParam(value = "clusterId", required = false) String clusterId,
-                                                        @RequestParam(value = "current", defaultValue = "1", required = false) Integer current,
-                                                        @RequestParam(value = "size", defaultValue = "10", required = false) Integer size) {
+    public BaseResult<AlertMessageDTO> getAlertInfo(@RequestParam(value = "clusterId", required = false) String clusterId,
+                                                    @RequestParam(value = "current", defaultValue = "1", required = false) Integer current,
+                                                    @RequestParam(value = "size", defaultValue = "10", required = false) Integer size) {
         return BaseResult.ok(overviewService.getAlertInfo(clusterId, current, size));
     }
 
