@@ -62,9 +62,9 @@ public class TerminalSocketHandler extends TextWebSocketHandler {
                     log.info("终端已准备");
                     if (terminalType != null) {
                         log.info("terminal type:{}", terminalType.toString());
-                        String pod = (String)session.getAttributes().get("pod");
-                        String namespace = (String)session.getAttributes().get("namespace");
-                        String container = (String)session.getAttributes().get("container");
+                        String pod = (String) session.getAttributes().get("pod");
+                        String namespace = (String) session.getAttributes().get("namespace");
+                        String container = (String) session.getAttributes().get("container");
                         LogQueryDto logQueryDto = new LogQueryDto();
                         logQueryDto.setPod(pod);
                         logQueryDto.setNamespace(namespace);
@@ -76,9 +76,9 @@ public class TerminalSocketHandler extends TextWebSocketHandler {
                             terminalService.onLogTerminalReady(logQueryDto);
                         } else if (terminalType.toString().equals("filelog")) {
                             log.info("处理文件日志");
-                            String logDir = (String)session.getAttributes().get("logDir");
+                            String logDir = (String) session.getAttributes().get("logDir");
                             logDir = logDir.substring(0, logDir.lastIndexOf("/"));
-                            String logFile = (String)session.getAttributes().get("logFile");
+                            String logFile = (String) session.getAttributes().get("logFile");
                             logQueryDto.setLogDir(logDir);
                             logQueryDto.setLogFile(logFile);
                             logQueryDto.setLogSource(LogService.LOG_TYPE_LOGFILE);
@@ -90,8 +90,12 @@ public class TerminalSocketHandler extends TextWebSocketHandler {
                                 scriptType = "sh";
                             }
                             log.info(String.format("进入控制台，容器名称:%s,pod名称:%s,namespace名称:%s,shell类型:%s", container, pod,
-                                namespace, scriptType));
+                                    namespace, scriptType));
                             terminalService.onTerminalReady(container, pod, namespace, clusterId, scriptType);
+                        }else if(terminalType.toString().equals("previousLog")){
+                            log.info("处理上一次日志");
+                            logQueryDto.setLogSource(LogService.LOG_TYPE_PREVIOUS_LOG);
+                            terminalService.onLogTerminalReady(logQueryDto);
                         }
                     } else {
                         log.info("terminal type is null, enter pod terminal");
@@ -100,7 +104,7 @@ public class TerminalSocketHandler extends TextWebSocketHandler {
                         String pod = session.getAttributes().get("pod").toString();
                         String namespace = session.getAttributes().get("namespace").toString();
                         log.info(String.format("进入控制台，容器名称:%s,pod名称:%s,namespace名称:%s,shell类型:%s", container, pod,
-                            namespace, scriptType));
+                                namespace, scriptType));
                         terminalService.onTerminalReady(container, pod, namespace, clusterId, scriptType);
                         if (session.getAttributes().containsKey("middlewareName")
                             && session.getAttributes().containsKey("middlewareType")) {
