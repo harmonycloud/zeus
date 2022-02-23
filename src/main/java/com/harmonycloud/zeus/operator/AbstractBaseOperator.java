@@ -264,6 +264,15 @@ public abstract class AbstractBaseOperator {
         if (StringUtils.isNotBlank(middleware.getDescription())) {
             sb.append("middleware-desc=").append(middleware.getDescription()).append(",");
         }
+
+        // 日志开关
+        if (null != middleware.getFilelogEnabled()) {
+            sb.append("logging.collection.filelog.enabled=").append(middleware.getFilelogEnabled()).append(",");
+        }
+        if (null != middleware.getStdoutEnabled()) {
+            sb.append("logging.collection.stdout.enabled=").append(middleware.getStdoutEnabled()).append(",");
+        }
+
         // 没有修改，直接返回
         if (sb.length() == 0) {
             return;
