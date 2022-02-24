@@ -52,6 +52,8 @@ public class TerminalService {
     private ClusterService clusterService;
     @Autowired
     private com.harmonycloud.zeus.service.log.TerminalService terminalService;
+    @Autowired
+    private MiddlewareCommandService middlewareCommandService;
 
     private boolean isReady;
     private String[] termCommand;
@@ -297,5 +299,23 @@ public class TerminalService {
      */
     public void deleteConsoleProcess(WebSocketSession session) {
         terminalService.deleteConsoleProcess(session);
+    }
+
+    /**
+     * 执行进入指定数据库数据
+     */
+    public void execDatabase(String clusterId, String namespace, String name, String type) throws Exception{
+        String command = "";
+        switch (type){
+            case "redis":
+                command = middlewareCommandService.getRedisCommand(clusterId, namespace, name);
+                break;
+            case "mysql":
+                command = middlewareCommandService.getMysqlCommand(clusterId, namespace, name);
+                break;
+            default:
+                LOGGER.error("该类型中间件不支持进入库表");
+        }
+        this.onCommand(command);
     }
 }
