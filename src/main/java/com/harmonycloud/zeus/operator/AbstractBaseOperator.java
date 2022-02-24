@@ -259,7 +259,25 @@ public abstract class AbstractBaseOperator {
                     .append(variable.getLimitMemory()).append("=").append(quota.getMemory()).append(",");
             }
         }
+        // 更新通用字段
+        updateCommonValues(sb, middleware);
 
+        // 没有修改，直接返回
+        if (sb.length() == 0) {
+            return;
+        }
+        // 去掉末尾的逗号
+        sb.deleteCharAt(sb.length() - 1);
+        // 更新helm
+        helmChartService.upgrade(middleware, sb.toString(), cluster);
+    }
+
+    /**
+     * 更新通用字段
+     * @param sb
+     * @param middleware
+     */
+    protected void updateCommonValues(StringBuilder sb, Middleware middleware){
         // 备注
         if (StringUtils.isNotBlank(middleware.getDescription())) {
             sb.append("middleware-desc=").append(middleware.getDescription()).append(",");
@@ -272,15 +290,6 @@ public abstract class AbstractBaseOperator {
         if (null != middleware.getStdoutEnabled()) {
             sb.append("logging.collection.stdout.enabled=").append(middleware.getStdoutEnabled()).append(",");
         }
-
-        // 没有修改，直接返回
-        if (sb.length() == 0) {
-            return;
-        }
-        // 去掉末尾的逗号
-        sb.deleteCharAt(sb.length() - 1);
-        // 更新helm
-        helmChartService.upgrade(middleware, sb.toString(), cluster);
     }
 
     protected void deletePvc(BeanCacheMiddleware beanCacheMiddleware) {
