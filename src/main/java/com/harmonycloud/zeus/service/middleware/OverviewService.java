@@ -79,7 +79,7 @@ public interface OverviewService {
      * @param clusterId
      * @return PlatformOverviewDTO
      */
-    PlatformOverviewDTO getClusterMiddlewareInfo(String clusterId);
+    List getClusterMiddlewareInfo(String clusterId);
 
     /**
      * 获取告警信息

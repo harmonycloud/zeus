@@ -31,13 +31,13 @@ public class MysqlController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "mysqlName", value = "中间件名称", paramType = "path", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class)
     })
-    @PostMapping("/{mysqlName}/disasterRecovery")
+    @PostMapping("/{middlewareName}/disasterRecovery")
     public BaseResult switchDisasterRecovery(@PathVariable("clusterId") String clusterId,
                                              @RequestParam("namespace") String namespace,
-                                             @PathVariable("mysqlName") String mysqlName){
-        return mysqlService.switchDisasterRecovery(clusterId, namespace, mysqlName);
+                                             @PathVariable("middlewareName") String middlewareName){
+        return mysqlService.switchDisasterRecovery(clusterId, namespace, middlewareName);
     }
 
     @ApiOperation(value = "查询mysql访问信息", notes = "查询mysql访问信息")
@@ -46,11 +46,11 @@ public class MysqlController {
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "mysqlName", value = "中间件名称", paramType = "path", dataTypeClass = String.class)
     })
-    @GetMapping("/{mysqlName}/queryAccessInfo")
+    @GetMapping("/{middlewareName}/queryAccessInfo")
     public BaseResult queryAccessInfo(@PathVariable("clusterId") String clusterId,
                                       @RequestParam("namespace") String namespace,
-                                      @PathVariable("mysqlName") String mysqlName) {
-        return mysqlService.queryAccessInfo(clusterId, namespace, mysqlName);
+                                      @PathVariable("middlewareName") String middlewareName) {
+        return mysqlService.queryAccessInfo(clusterId, namespace, middlewareName);
     }
 
     @ApiOperation(value = "慢日志查询", notes = "慢日志查询")

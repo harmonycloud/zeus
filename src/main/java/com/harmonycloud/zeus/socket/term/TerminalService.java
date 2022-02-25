@@ -162,6 +162,12 @@ public class TerminalService {
                     logQueryDto.getPod(), logQueryDto.getContainer(), logQueryDto.getNamespace(), cluster.getAddress(),
                     cluster.getAccessToken(), DEFAULT_LOG_LINES, logQueryDto.getLogDir(), logQueryDto.getLogFile());
             }
+        } else if (LogService.LOG_TYPE_PREVIOUS_LOG.equalsIgnoreCase(logQueryDto.getLogSource())) {
+            AssertUtil.notBlank(logQueryDto.getContainer(), DictEnum.CONTAINER);
+            command = MessageFormat.format(
+                    "kubectl logs {0} -c {1} -n {2} -p --server={3} --token={4} --insecure-skip-tls-verify=true",
+                    logQueryDto.getPod(), logQueryDto.getContainer(), logQueryDto.getNamespace(),
+                    cluster.getAddress(), cluster.getAccessToken());
         }
         LOGGER.info("执行kubectl命令：{}", command);
         this.termCommand = command.split("\\s+");
@@ -197,7 +203,7 @@ public class TerminalService {
         map.put("text", text);
 
         String message = new ObjectMapper().writeValueAsString(map);
-
+        System.out.println(message);
         webSocketSession.sendMessage(new TextMessage(message));
 
     }

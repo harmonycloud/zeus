@@ -17,6 +17,7 @@ import com.harmonycloud.caas.common.model.PrometheusResponse;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
+import com.harmonycloud.zeus.util.ChartVersionUtil;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -426,21 +427,22 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     public List<MiddlewareInfoDTO> version(String clusterId, String namespace, String name, String type) {
         List<BeanMiddlewareInfo> middlewareInfos = middlewareInfoService.listByType(type);
         // 将倒序转为正序
-        middlewareInfos.sort(Comparator.comparing(BeanMiddlewareInfo::getChartVersion));
+        Collections.reverse(middlewareInfos);
         Middleware middleware = detail(clusterId, namespace, name, type);
+        // 升级服务时，只能升级到当前服务的上一个版本，不能跨版本升级,设置标志变量existNow来判断是否是上一个版本
         AtomicBoolean existNow = new AtomicBoolean(false);
         List<MiddlewareInfoDTO> resList = middlewareInfos.stream().map(info -> {
             MiddlewareInfoDTO dto = new MiddlewareInfoDTO();
             BeanUtils.copyProperties(info, dto);
-            if (info.getChartVersion().compareTo(middleware.getChartVersion()) < 0) {
+            if (ChartVersionUtil.compare(middleware.getChartVersion(), info.getChartVersion()) < 0) {
                 dto.setVersionStatus("history");
-            } else if (info.getChartVersion().compareTo(middleware.getChartVersion()) == 0) {
+            } else if (ChartVersionUtil.compare(middleware.getChartVersion(), info.getChartVersion()) == 0) {
                 dto.setVersionStatus("now");
                 existNow.set(true);
             } else {
                 if (existNow.get()) {
                     BeanClusterMiddlewareInfo clusterMwInfo = clusterMiddlewareInfoService.get(clusterId, type);
-                    if (!(clusterMwInfo.getChartVersion().compareTo(info.getChartVersion()) < 0)) {
+                    if (!(ChartVersionUtil.compare(clusterMwInfo.getChartVersion(), info.getChartVersion()) > 0)) {
                         if (clusterMwInfo.getStatus() == 0) {
                             // operator升级中
                             dto.setVersionStatus("updating");
@@ -459,7 +461,9 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             }
             return dto;
         }).collect(Collectors.toList());
-        resList.sort(Comparator.comparing(MiddlewareInfoDTO::getChartVersion).reversed());
+        resList.sort(((o1, o2) -> {
+            return ChartVersionUtil.compare(o1.getChartVersion(), o2.getChartVersion());
+        }));
         return resList;
     }
 
@@ -737,7 +741,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 usedMemory = usedMemory + podInfo.getMonitorResourceQuota().getMemory().getUsed();
                 totalMemory = totalMemory + podInfo.getMonitorResourceQuota().getMemory().getTotal();
             }
-            
+
             // 计算storage使用率
             if (podInfo.getMonitorResourceQuota().getStorage().getUsed() != null
                 && podInfo.getMonitorResourceQuota().getStorage().getTotal() != null) {

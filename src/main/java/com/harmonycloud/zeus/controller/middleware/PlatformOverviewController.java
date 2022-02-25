@@ -4,13 +4,11 @@ import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.AlertDTO;
 import com.harmonycloud.zeus.bean.AlertMessageDTO;
 import com.harmonycloud.zeus.bean.PlatformOverviewDTO;
-import com.harmonycloud.zeus.service.k8s.ConfigMapService;
 import com.harmonycloud.zeus.service.middleware.OverviewService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.models.auth.In;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -58,7 +56,7 @@ public class PlatformOverviewController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/middlewareInfo")
-    public BaseResult<PlatformOverviewDTO> getMiddlewareInfo(@RequestParam(value = "clusterId", required = false) String clusterId) {
+    public BaseResult getMiddlewareInfo(@RequestParam(value = "clusterId", required = false) String clusterId) {
         return BaseResult.ok(overviewService.getClusterMiddlewareInfo(clusterId));
     }
 

@@ -259,11 +259,9 @@ public abstract class AbstractBaseOperator {
                     .append(variable.getLimitMemory()).append("=").append(quota.getMemory()).append(",");
             }
         }
+        // 更新通用字段
+        updateCommonValues(sb, middleware);
 
-        // 备注
-        if (StringUtils.isNotBlank(middleware.getDescription())) {
-            sb.append("middleware-desc=").append(middleware.getDescription()).append(",");
-        }
         // 没有修改，直接返回
         if (sb.length() == 0) {
             return;
@@ -272,6 +270,26 @@ public abstract class AbstractBaseOperator {
         sb.deleteCharAt(sb.length() - 1);
         // 更新helm
         helmChartService.upgrade(middleware, sb.toString(), cluster);
+    }
+
+    /**
+     * 更新通用字段
+     * @param sb
+     * @param middleware
+     */
+    protected void updateCommonValues(StringBuilder sb, Middleware middleware){
+        // 备注
+        if (StringUtils.isNotBlank(middleware.getDescription())) {
+            sb.append("middleware-desc=").append(middleware.getDescription()).append(",");
+        }
+
+        // 日志开关
+        if (null != middleware.getFilelogEnabled()) {
+            sb.append("logging.collection.filelog.enabled=").append(middleware.getFilelogEnabled()).append(",");
+        }
+        if (null != middleware.getStdoutEnabled()) {
+            sb.append("logging.collection.stdout.enabled=").append(middleware.getStdoutEnabled()).append(",");
+        }
     }
 
     protected void deletePvc(BeanCacheMiddleware beanCacheMiddleware) {
@@ -410,6 +428,16 @@ public abstract class AbstractBaseOperator {
             if (values.getString("middleware-desc") != null) {
                 middleware.setDescription(values.getString("middleware-desc"));
             }
+            // log
+            if (JsonUtils.isJsonObject(values.getString("logging"))) {
+                JSONObject logging = values.getJSONObject("logging");
+                JSONObject collection = logging.getJSONObject("collection");
+                Boolean filelogEnabled = collection.getJSONObject("filelog").getBoolean("enabled");
+                Boolean stdoutEnabled = collection.getJSONObject("stdout").getBoolean("enabled");
+                middleware.setFilelogEnabled(filelogEnabled);
+                middleware.setStdoutEnabled(stdoutEnabled);
+            }
+
             // 设置服务备份状态
             middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(middleware.getClusterId(),middleware.getNamespace(),middleware.getType(),middleware.getName()));
             // 设置管理平台地址
