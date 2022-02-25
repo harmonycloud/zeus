@@ -88,5 +88,5 @@ public interface OverviewService {
      * @param size
      * @return
      */
-    AlertMessageDTO getAlertInfo(String clusterId, Integer current, Integer size);
+    AlertMessageDTO getAlertInfo(String clusterId, Integer current, Integer size, String level);
 }
