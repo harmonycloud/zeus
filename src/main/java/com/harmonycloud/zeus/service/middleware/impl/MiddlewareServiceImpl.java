@@ -2,12 +2,21 @@ package com.harmonycloud.zeus.service.middleware.impl;
 
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
+import com.harmonycloud.caas.common.model.MonitorResourceQuota;
+import com.harmonycloud.caas.common.model.MonitorResourceQuotaBase;
+import com.harmonycloud.caas.common.model.PrometheusResponse;
+import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
+import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -73,6 +82,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private GrafanaService grafanaService;
     @Autowired
     private ConfigMapService configMapService;
+    @Autowired
+    private PrometheusResourceMonitorService prometheusResourceMonitorService;
 
     @Override
     public List<Middleware> simpleList(String clusterId, String namespace, String type, String keyword) {
@@ -555,6 +566,210 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         return middlewareServiceList;
     }
 
+    @Override
+    public MiddlewareTopologyDTO topology(String clusterId, String namespace, String name, String type) throws Exception {
+        Middleware middleware = podService.list(clusterId, namespace, name, type);
+        MiddlewareTopologyDTO middlewareTopologyDTO =
+            new MiddlewareTopologyDTO().setClusterId(clusterId).setNamespace(namespace).setName(name).setType(type)
+                .setStatus(middleware.getStatus()).setPods(middleware.getPods())
+                .setPodInfoGroup(middleware.getPodInfoGroup()).setMonitorResourceQuota(new MonitorResourceQuota());
+        // 获取alias name
+        JSONObject values = helmChartService.getInstalledValues(name, namespace, clusterService.findById(clusterId));
+        middlewareTopologyDTO.setAliasName(values.getOrDefault("aliasName", "").toString());
+
+        StringBuilder pods = new StringBuilder();
+        middleware.getPods().forEach(podInfo -> {
+            pods.append(podInfo.getPodName()).append("|");
+            podInfo.setMonitorResourceQuota(new MonitorResourceQuota());
+        });
+        final CountDownLatch cd = new CountDownLatch(6);
+        // 查询total cpu
+        ThreadPoolExecutorFactory.executor.execute(() -> {
+            try {
+                String totalCpuQuery = "sum(kube_pod_container_resource_requests_cpu_cores{pod=~\"" + pods.toString()
+                    + "\",namespace=\"" + namespace + "\"}) by (pod)";
+                PrometheusResponse totalCpu = prometheusResourceMonitorService.query(clusterId, totalCpuQuery);
+                Map<String, Double> result = convertResponse(totalCpu);
+                middlewareTopologyDTO.getPods().forEach(podInfo -> {
+                    String num = podInfo.getPodName().substring(podInfo.getPodName().length() - 1);
+                    if (result.containsKey(num)) {
+                        podInfo.getMonitorResourceQuota().getCpu().setTotal(result.get(num));
+                    }
+                });
+            } catch (Exception e) {
+                log.error("中间件{} 查询total cpu失败", name);
+            }
+            finally {
+                cd.countDown();
+            }
+        });
+        // 查询used cpu
+        ThreadPoolExecutorFactory.executor.execute(() -> {
+            try {
+                String usedCpuQuery = "sum(rate(container_cpu_usage_seconds_total{pod=~\"" + pods.toString()
+                    + "\",namespace=\"" + namespace + "\"}[5m])) by (pod)";
+                PrometheusResponse usedCpu = prometheusResourceMonitorService.query(clusterId, usedCpuQuery);
+                Map<String, Double> result = convertResponse(usedCpu);
+                middlewareTopologyDTO.getPods().forEach(podInfo -> {
+                    String num = podInfo.getPodName().substring(podInfo.getPodName().length() - 1);
+                    if (result.containsKey(num)){
+                        podInfo.getMonitorResourceQuota().getCpu().setUsed(result.get(num));
+                    }
+                });
+            } catch (Exception e) {
+                log.error("中间件{} 查询used cpu失败", name);
+            } finally {
+                cd.countDown();
+            }
+        });
+        // 查询total memory
+        ThreadPoolExecutorFactory.executor.execute(() -> {
+            try {
+                String totalMemoryQuery = "sum(kube_pod_container_resource_requests_memory_bytes{pod=~\""
+                    + pods.toString() + "\",namespace=\"" + namespace + "\"}) by (pod) /1024/1024/1024";
+                PrometheusResponse totalMemory = prometheusResourceMonitorService.query(clusterId, totalMemoryQuery);
+                Map<String, Double> result = convertResponse(totalMemory);
+                middlewareTopologyDTO.getPods().forEach(podInfo -> {
+                    String num = podInfo.getPodName().substring(podInfo.getPodName().length() - 1);
+                    if (result.containsKey(num)){
+                        podInfo.getMonitorResourceQuota().getMemory().setTotal(result.get(num));
+                    }
+                });
+            } catch (Exception e) {
+                log.error("中间件{} 查询total memory失败", name);
+            } finally {
+                cd.countDown();
+            }
+        });
+        // 查询used memory
+        ThreadPoolExecutorFactory.executor.execute(() -> {
+            try {
+                String usedMemoryQuery = "sum(container_memory_working_set_bytes{pod=~\"" + pods.toString()
+                    + "\",namespace=\"" + namespace + "\"}) by (pod) /1024/1024/1024";
+                PrometheusResponse usedMemory = prometheusResourceMonitorService.query(clusterId, usedMemoryQuery);
+                Map<String, Double> result = convertResponse(usedMemory);
+                middlewareTopologyDTO.getPods().forEach(podInfo -> {
+                    String num = podInfo.getPodName().substring(podInfo.getPodName().length() - 1);
+                    if (result.containsKey(num)){
+                        podInfo.getMonitorResourceQuota().getMemory().setUsed(result.get(num));
+                    }
+                });
+            } catch (Exception e) {
+                log.error("中间件{} 查询used memory配额失败", name);
+            } finally {
+                cd.countDown();
+            }
+        });
+
+        // 获取pvc list
+        List<String> pvcList = middlewareCRService.getPvc(clusterId, namespace, type, name);
+        StringBuilder pvcs = new StringBuilder();
+        pvcList.forEach(pvc -> pvcs.append(pvc).append("|"));
+        // 查询total storage
+        ThreadPoolExecutorFactory.executor.execute(() -> {
+            try {
+                String usedStorageQuery =
+                    "sum(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\"" + pvcs.toString()
+                        + "\",namespace=\"" + namespace + "\"}) by (persistentvolumeclaim) /1024/1024/1024";
+                PrometheusResponse totalStorage = prometheusResourceMonitorService.query(clusterId, usedStorageQuery);
+                Map<String, Double> result = convertResponse(totalStorage);
+                middlewareTopologyDTO.getPods().forEach(podInfo -> {
+                    String num = podInfo.getPodName().substring(podInfo.getPodName().length() - 1);
+                    if (result.containsKey(num)){
+                        MonitorResourceQuotaBase cpu = new MonitorResourceQuotaBase();
+                        cpu.setTotal(result.get(num));
+                        podInfo.getMonitorResourceQuota().getStorage().setTotal(result.get(num));
+                    }
+                });
+            } catch (Exception e) {
+                log.error("中间件{} 查询total storage配额失败", name);
+            } finally {
+                cd.countDown();
+            }
+        });
+        // 查询used storage
+        ThreadPoolExecutorFactory.executor.execute(() -> {
+            try {
+                String usedStorageQuery =
+                    "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{persistentvolumeclaim=~\""
+                        + pvcs.toString() + "\",namespace=\"" + namespace
+                        + "\"}) by (persistentvolumeclaim) /1024/1024/1024";
+                PrometheusResponse usedStorage = prometheusResourceMonitorService.query(clusterId, usedStorageQuery);
+                Map<String, Double> result = convertResponse(usedStorage);
+                middlewareTopologyDTO.getPods().forEach(podInfo -> {
+                    String num = podInfo.getPodName().substring(podInfo.getPodName().length() - 1);
+                    if (result.containsKey(num)){
+                        podInfo.getMonitorResourceQuota().getStorage().setUsed(result.get(num));
+                    }
+                });
+            } catch (Exception e) {
+                log.error("中间件{} 查询used storage配额失败", name);
+            } finally {
+                cd.countDown();
+            }
+        });
+        cd.await();
+        double totalCpu = 0.0;
+        double usedCpu = 0.0;
+        double totalMemory = 0.0;
+        double usedMemory = 0.0;
+        double totalStorage = 0.0;
+        double usedStorage = 0.0;
+        // 计算使用率和中间件自身的资源使用情况
+        for (PodInfo podInfo : middlewareTopologyDTO.getPods()){
+            // 计算cpu使用率
+            if (podInfo.getMonitorResourceQuota().getCpu().getUsed() != null
+                && podInfo.getMonitorResourceQuota().getCpu().getTotal() != null) {
+                double cpuUsage = podInfo.getMonitorResourceQuota().getCpu().getUsed()
+                    / podInfo.getMonitorResourceQuota().getCpu().getTotal() * 100;
+                podInfo.getMonitorResourceQuota().getCpu().setUsage(
+                    ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(cpuUsage), 2, RoundingMode.CEILING));
+                usedCpu = usedCpu + podInfo.getMonitorResourceQuota().getCpu().getUsed();
+                totalCpu = totalCpu + podInfo.getMonitorResourceQuota().getCpu().getTotal();
+            }
+
+            // 计算memory使用率
+            if (podInfo.getMonitorResourceQuota().getMemory().getUsed() != null && podInfo.getMonitorResourceQuota().getMemory().getTotal() != null){
+                double memoryUsage = podInfo.getMonitorResourceQuota().getMemory().getUsed()
+                        / podInfo.getMonitorResourceQuota().getMemory().getTotal() * 100;
+                podInfo.getMonitorResourceQuota().getMemory().setUsage(
+                        ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(memoryUsage), 2, RoundingMode.CEILING));
+                usedMemory = usedMemory + podInfo.getMonitorResourceQuota().getMemory().getUsed();
+                totalMemory = totalMemory + podInfo.getMonitorResourceQuota().getMemory().getTotal();
+            }
+            
+            // 计算storage使用率
+            if (podInfo.getMonitorResourceQuota().getStorage().getUsed() != null
+                && podInfo.getMonitorResourceQuota().getStorage().getTotal() != null) {
+                double storageUsage = podInfo.getMonitorResourceQuota().getStorage().getUsed()
+                    / podInfo.getMonitorResourceQuota().getStorage().getTotal() * 100;
+                podInfo.getMonitorResourceQuota().getStorage().setUsage(
+                    ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(storageUsage), 2, RoundingMode.CEILING));
+                usedStorage = usedStorage + podInfo.getMonitorResourceQuota().getStorage().getUsed();
+                totalStorage = totalStorage + podInfo.getMonitorResourceQuota().getStorage().getTotal();
+            }
+        }
+        // middleware cpu
+        middlewareTopologyDTO.getMonitorResourceQuota().getCpu().setUsed(usedCpu);
+        middlewareTopologyDTO.getMonitorResourceQuota().getCpu().setTotal(totalCpu);
+        middlewareTopologyDTO.getMonitorResourceQuota().getCpu().setUsage(
+            ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(usedCpu / totalCpu * 100), 2, RoundingMode.CEILING));
+
+        // middleware memory
+        middlewareTopologyDTO.getMonitorResourceQuota().getMemory().setUsed(usedMemory);
+        middlewareTopologyDTO.getMonitorResourceQuota().getMemory().setTotal(totalMemory);
+        middlewareTopologyDTO.getMonitorResourceQuota().getMemory().setUsage(
+                ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(usedMemory / totalMemory * 100), 2, RoundingMode.CEILING));
+
+        // middleware storage
+        middlewareTopologyDTO.getMonitorResourceQuota().getStorage().setUsed(usedStorage);
+        middlewareTopologyDTO.getMonitorResourceQuota().getStorage().setTotal(totalStorage);
+        middlewareTopologyDTO.getMonitorResourceQuota().getStorage().setUsage(
+                ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(usedStorage / totalStorage * 100), 2, RoundingMode.CEILING));
+
+        return middlewareTopologyDTO;
+    }
+
     /**
      * 服务排序类，按服务数量进行排序
      */
@@ -674,6 +889,17 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             return false;
         }
         return true;
+    }
+
+    public Map<String, Double> convertResponse(PrometheusResponse response) {
+        Map<String, Double> map = new HashMap<>();
+        response.getData().getResult().forEach(res -> {
+            res.getMetric().forEach((k, v) -> {
+                map.put(v.substring(v.length() - 1), ResourceCalculationUtil.roundNumber(
+                    BigDecimal.valueOf(Double.parseDouble(res.getValue().get(1))), 2, RoundingMode.CEILING));
+            });
+        });
+        return map;
     }
 
 }
