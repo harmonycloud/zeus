@@ -846,8 +846,7 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
     @Override
-    public PlatformOverviewDTO getClusterMiddlewareInfo(String clusterId) {
-        PlatformOverviewDTO platformOverviewDTO = new PlatformOverviewDTO();
+    public List getClusterMiddlewareInfo(String clusterId) {
         List<MiddlewareClusterDTO> clusterList = null;
         try {
             clusterList = clusterService.listClusters(true, null);
@@ -855,8 +854,7 @@ public class OverviewServiceImpl implements OverviewService {
             log.error("集群列表查询失败", e);
         }
         if (CollectionUtils.isEmpty(clusterList)) {
-            platformOverviewDTO.setBriefInfoList(new ArrayList<>());
-            return platformOverviewDTO;
+            return new ArrayList<>();
         }
         if (StringUtils.isNotBlank(clusterId)) {
             clusterList = clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
@@ -877,8 +875,7 @@ public class OverviewServiceImpl implements OverviewService {
             middlewareBriefInfoList.clear();
             middlewareBriefInfoList.addAll(resMap.values());
         }
-        platformOverviewDTO.setBriefInfoList(middlewareBriefInfoList);
-        return platformOverviewDTO;
+        return middlewareBriefInfoList;
     }
 
 }

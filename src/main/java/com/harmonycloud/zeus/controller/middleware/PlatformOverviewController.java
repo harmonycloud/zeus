@@ -56,7 +56,7 @@ public class PlatformOverviewController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/middlewareInfo")
-    public BaseResult<PlatformOverviewDTO> getMiddlewareInfo(@RequestParam(value = "clusterId", required = false) String clusterId) {
+    public BaseResult getMiddlewareInfo(@RequestParam(value = "clusterId", required = false) String clusterId) {
         return BaseResult.ok(overviewService.getClusterMiddlewareInfo(clusterId));
     }
 
