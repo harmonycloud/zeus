@@ -43,12 +43,14 @@ public class PlatformOverviewController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "current", value = "当前页", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "size", value = "每页数量", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "level", value = "告警级别", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/alertInfo")
     public BaseResult<AlertMessageDTO> getAlertInfo(@RequestParam(value = "clusterId", required = false) String clusterId,
                                                     @RequestParam(value = "current", defaultValue = "1", required = false) Integer current,
-                                                    @RequestParam(value = "size", defaultValue = "10", required = false) Integer size) {
-        return BaseResult.ok(overviewService.getAlertInfo(clusterId, current, size));
+                                                    @RequestParam(value = "size", defaultValue = "10", required = false) Integer size,
+                                                    @RequestParam(value = "level", required = false) String level) {
+        return BaseResult.ok(overviewService.getAlertInfo(clusterId, current, size, level));
     }
 
     @ApiOperation(value = "平台总览-获取服务信息", notes = "服务信息")

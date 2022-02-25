@@ -795,7 +795,7 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
     @Override
-    public AlertMessageDTO getAlertInfo(String clusterId, Integer current, Integer size) {
+    public AlertMessageDTO getAlertInfo(String clusterId, Integer current, Integer size, String level) {
         List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(true, null);
         if (StringUtils.isNotBlank(clusterId)) {
             clusterList = clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
@@ -806,6 +806,9 @@ public class OverviewServiceImpl implements OverviewService {
         String beginTime = DateUtils.DateToString(ago, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
         String endTime = DateUtils.DateToString(now, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
         QueryWrapper<BeanAlertRecord> recordQueryWrapper = new QueryWrapper<>();
+        if (StringUtils.isNotBlank(level)) {
+            recordQueryWrapper.eq("level", level);
+        }
         recordQueryWrapper.ne("cluster_id", "");
         recordQueryWrapper.ne("namespace", "");
         recordQueryWrapper.ne("name", "");
