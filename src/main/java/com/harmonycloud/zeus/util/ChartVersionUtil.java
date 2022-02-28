@@ -1,5 +1,7 @@
 package com.harmonycloud.zeus.util;
 
+import java.util.regex.Pattern;
+
 /**
  * @author liyinlong
  * @since 2022/2/25 3:01 下午
@@ -10,10 +12,10 @@ public class ChartVersionUtil {
         if (chartVersion1.equals(chartVersion2)) {
             return 0;
         }
-        //根据 "-" 进行分隔
+        // 根据 "-" 进行分隔
         String[] tempO1 = chartVersion1.split("-");
         String[] tempO2 = chartVersion2.split("-");
-        //根据 "." 进行分隔
+        // 根据 "." 进行分隔
         String[] numO1 = tempO1[0].split("\\.");
         String[] numO2 = tempO2[0].split("\\.");
         // 先判断"-"前 如：2.3.4 和 1.5.6
@@ -35,6 +37,13 @@ public class ChartVersionUtil {
             return Integer.compare(tempO2.length, tempO1.length);
         }
         // 判断1.5.6-2和1.5.6-3
-        return tempO2[1].compareTo(tempO1[1]);
+        String regex = "\\d+$";
+        if (Pattern.matches(regex, tempO2[1]) && Pattern.matches(regex, tempO1[1])) {
+            int int01 = Integer.parseInt(tempO1[1]);
+            int int02 = Integer.parseInt(tempO2[1]);
+            return Integer.compare(int02, int01);
+        } else {
+            return tempO2[1].compareTo(tempO1[1]);
+        }
     }
 }
