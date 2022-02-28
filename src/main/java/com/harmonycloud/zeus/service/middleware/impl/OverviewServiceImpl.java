@@ -98,6 +98,11 @@ public class OverviewServiceImpl implements OverviewService {
 
     @Value("${system.platform.version:v0.1.0}")
     private String version;
+
+    /**
+     * 服务chartVersion缓存
+     */
+    private static Map<String, String> middlewareChartVersion = new HashMap<>();
     /**
      * 查询中间件状态
      *
@@ -819,14 +824,15 @@ public class OverviewServiceImpl implements OverviewService {
         PageHelper.startPage(1, 10);
         List<BeanAlertRecord> alertRecordList = beanAlertRecordMapper.selectList(recordQueryWrapper);
         PageInfo<BeanAlertRecord> pageInfo = new PageInfo<>(alertRecordList);
-        List<Middleware> middlewares = middlewareService.queryAllClusterService(clusterList);
         pageInfo.getList().forEach(record -> {
-            middlewares.forEach(middleware -> {
-                if (record.getName().equals(middleware.getName())) {
-                    record.setChartVersion(middleware.getChartVersion());
-                    record.setCapitalType(MiddlewareOfficialNameEnum.findByMiddlewareName(middleware.getType()));
-                }
-            });
+            String chartVersion = middlewareChartVersion.get(record.getName());
+            if (chartVersion == null) {
+                JSONObject installedValues = helmChartService.getInstalledValues(record.getName(), record.getNamespace(), clusterService.findById(record.getClusterId()));
+                chartVersion = installedValues.getString("chart-version");
+                middlewareChartVersion.put(record.getName(), chartVersion);
+            }
+            record.setChartVersion(chartVersion);
+            record.setCapitalType(MiddlewareOfficialNameEnum.findByMiddlewareName(record.getType()));
         });
 
         List<String> hourList = DateUtil.calcHour(now);
