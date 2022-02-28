@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.controller.middleware;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBriefInfoDTO;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareTopologyDTO;
 import com.harmonycloud.caas.common.model.middleware.MonitorDto;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import io.swagger.annotations.Api;
@@ -246,9 +247,9 @@ public class MiddlewareController {
     })
     @GetMapping("/{middlewareName}/topology")
     public BaseResult<MiddlewareTopologyDTO> topology(@PathVariable("clusterId") String clusterId,
-                                         @PathVariable("namespace") String namespace,
-                                         @PathVariable("middlewareName") String name,
-                                         @RequestParam("type") String type) throws Exception {
+                                                      @PathVariable("namespace") String namespace,
+                                                      @PathVariable("middlewareName") String name,
+                                                      @RequestParam("type") String type) throws Exception {
         return BaseResult.ok(middlewareService.topology(clusterId, namespace, name, type));
     }
 

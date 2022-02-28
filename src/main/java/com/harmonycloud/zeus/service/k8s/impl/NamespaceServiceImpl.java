@@ -96,6 +96,8 @@ public class NamespaceServiceImpl implements NamespaceService {
                 // 创建时间
                 namespace.setCreateTime(
                     DateUtils.parseDate(ns.getMetadata().getCreationTimestamp(), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
+                // 状态
+                namespace.setPhase(ns.getStatus().getPhase());
                 return namespace;
             }).collect(Collectors.toList());
 
