@@ -50,6 +50,8 @@ import com.harmonycloud.tool.uuid.UUIDUtils;
 import cn.hutool.core.util.ObjectUtil;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.harmonycloud.caas.common.constants.AlertConstant.*;
+
 /**
  * @author xutianhong
  * @Date 2021/4/26 10:23 上午
@@ -361,14 +363,18 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
      */
     public String buildExpr(MiddlewareAlertsDTO middlewareAlertsDTO) {
         String expr = "";
-        if ("CPUUsingRate".equals(middlewareAlertsDTO.getAlert())) {
-            expr = "sum(sum(irate(node_cpu_seconds_total{mode!=\"idle\"}[5m])) by (kubernetes_pod_node_name))/sum(count(node_cpu_seconds_total{ mode='system'}) by (kubernetes_pod_node_name)) "
-                    + middlewareAlertsDTO.getSymbol() + " " +  middlewareAlertsDTO.getThreshold();
-        }else if ("memoryUsingRate".equals(middlewareAlertsDTO.getAlert())) {
-            expr = "sum(((node_memory_MemTotal_bytes - node_memory_MemFree_bytes - node_memory_Cached_bytes - node_memory_Buffers_bytes - node_memory_Slab_bytes)/1024/1024/1024))" +
-                    "/sum(node_memory_MemTotal_bytes/1024/1024/1024)"
-                    + middlewareAlertsDTO.getSymbol() + " " +  middlewareAlertsDTO.getThreshold();
+        if (CPU_USING_RATE.equals(middlewareAlertsDTO.getAlert())) {
+            expr =
+                "sum(sum(irate(node_cpu_seconds_total{mode!=\"idle\"}[5m])) by (kubernetes_pod_node_name))/sum(count(node_cpu_seconds_total{ mode='system'}) by (kubernetes_pod_node_name)) * 100 ";
+        } else if (MEMORY_USING_RATE.equals(middlewareAlertsDTO.getAlert())) {
+            expr =
+                "sum(((node_memory_MemTotal_bytes - node_memory_MemFree_bytes - node_memory_Cached_bytes - node_memory_Buffers_bytes - node_memory_Slab_bytes)/1024/1024/1024))"
+                    + "/sum(node_memory_MemTotal_bytes/1024/1024/1024) * 100 ";
+        } else if (PVC_USING_RATE.equals(middlewareAlertsDTO.getAlert())) {
+            expr =
+                "sum(kubelet_volume_stats_used_bytes) / sum(kube_persistentvolumeclaim_resource_requests_storage_bytes) * 100 ";
         }
+        expr = expr + middlewareAlertsDTO.getSymbol() + " " + middlewareAlertsDTO.getThreshold();
         return expr;
     }
     /**
