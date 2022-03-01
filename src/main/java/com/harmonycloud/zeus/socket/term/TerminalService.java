@@ -105,9 +105,6 @@ public class TerminalService {
             String command = "kubectl exec " + pod + " --container=" + container + " -it " + scriptType + " -n "
                 + namespace + " --server=" + cluster.getAddress() + " --token=" + cluster.getAccessToken()
                 + " --insecure-skip-tls-verify=true";
-            if (StringUtils.isNotEmpty(middlewareName) && StringUtils.isNotEmpty(middlewareType)){
-                command = command + " -- " + getDatabaseCommand(cluster, namespace, middlewareName, middlewareType);
-            }
             LOGGER.info("linux shell command:{}", command);
             this.termCommand = command.split("\\s+");
         }
@@ -131,7 +128,9 @@ public class TerminalService {
         ThreadHelper.start(() -> {
             printReader(errorReader);
         });
-
+        if(StringUtils.isNotEmpty(middlewareName) && StringUtils.isNotEmpty(middlewareType)){
+            onCommand(getDatabaseCommand(cluster, namespace, middlewareName, middlewareType));
+        }
         process.waitFor();
 
     }
@@ -326,6 +325,7 @@ public class TerminalService {
                 LOGGER.error("该类型中间件不支持进入库表");
                 command = "ls";
         }
+        command = command + "\r";
         return command;
     }
 }
