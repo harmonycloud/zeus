@@ -198,8 +198,7 @@ public class MiddlewareController {
                                    @RequestParam("type") String type,
                                    @RequestParam("chartName") String chartName,
                                    @RequestParam("upgradeChartVersion") String upgradeChartVersion) {
-        middlewareService.upgradeChart(clusterId, namespace, middlewareName, type, chartName,upgradeChartVersion);
-        return BaseResult.ok();
+        return middlewareService.upgradeChart(clusterId, namespace, middlewareName, type, chartName, upgradeChartVersion);
     }
 
 
