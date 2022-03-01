@@ -22,15 +22,13 @@ public class MiddlewareCommandService {
     @Autowired
     private ClusterService clusterService;
 
-    public String getRedisCommand(String clusterId, String namespace, String name) {
-        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+    public String getRedisCommand(MiddlewareClusterDTO cluster, String namespace, String name) {
         JSONObject values = helmChartService.getInstalledValues(name, namespace, cluster);
         String password = values.getString("redisPassword");
-        return "redis-cli -h " + name + "-p 6379 -a " + password;
+        return "redis-cli -h " + name + " -p 6379 -a " + password;
     }
 
-    public String getMysqlCommand(String clusterId, String namespace, String name) {
-        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+    public String getMysqlCommand(MiddlewareClusterDTO cluster, String namespace, String name) {
         JSONObject values = helmChartService.getInstalledValues(name, namespace, cluster);
         JSONObject args;
         if (values.containsKey(MYSQL_ARGS)) {
@@ -39,7 +37,7 @@ public class MiddlewareCommandService {
             args = values.getJSONObject(ARGS);
         }
         String password = args.getString("root_password");
-        return "mysql -uroot -p" + password + "-S /data/db_" + name + "/conf/mysql.sock";
+        return "mysql -uroot -p" + password + " -S /data/mysql/db_" + name + "/conf/mysql.sock";
     }
 
 }

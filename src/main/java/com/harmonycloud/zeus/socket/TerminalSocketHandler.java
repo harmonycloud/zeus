@@ -91,7 +91,14 @@ public class TerminalSocketHandler extends TextWebSocketHandler {
                             }
                             log.info(String.format("进入控制台，容器名称:%s,pod名称:%s,namespace名称:%s,shell类型:%s", container, pod,
                                     namespace, scriptType));
-                            terminalService.onTerminalReady(container, pod, namespace, clusterId, scriptType);
+                            String middlewareName = null;
+                            String middlewareType = null;
+                            if (session.getAttributes().containsKey("middlewareName") && session.getAttributes().containsKey("middlewareType")){
+                                middlewareName = session.getAttributes().get("middlewareName").toString();
+                                middlewareType = session.getAttributes().get("middlewareType").toString();
+
+                            }
+                            terminalService.onTerminalReady(container, pod, namespace, clusterId, scriptType, middlewareName, middlewareType);
                         }else if(terminalType.toString().equals("previousLog")){
                             log.info("处理上一次日志");
                             logQueryDto.setLogSource(LogService.LOG_TYPE_PREVIOUS_LOG);
@@ -105,13 +112,7 @@ public class TerminalSocketHandler extends TextWebSocketHandler {
                         String namespace = session.getAttributes().get("namespace").toString();
                         log.info(String.format("进入控制台，容器名称:%s,pod名称:%s,namespace名称:%s,shell类型:%s", container, pod,
                                 namespace, scriptType));
-                        terminalService.onTerminalReady(container, pod, namespace, clusterId, scriptType);
-                        if (session.getAttributes().containsKey("middlewareName")
-                            && session.getAttributes().containsKey("middlewareType")) {
-                            String middlewareName = session.getAttributes().get("middlewareName").toString();
-                            String middlewareType =  session.getAttributes().get("middlewareType").toString();
-                            terminalService.execDatabase(clusterId, namespace, middlewareType, middlewareName);
-                        }
+                        terminalService.onTerminalReady(container, pod, namespace, clusterId, scriptType, null, null);
                     }
                     break;
                 case "TERMINAL_COMMAND":

@@ -69,12 +69,12 @@ public class TerminalService {
 
     public void onTerminalInit() {}
 
-    public void onTerminalReady(String container, String pod, String namespace, String clusterId, String scriptType) {
+    public void onTerminalReady(String container, String pod, String namespace, String clusterId, String scriptType, String middlewareName, String middlewareType) {
 
         ThreadHelper.start(() -> {
             isReady = true;
             try {
-                initializeProcess(container, pod, namespace, clusterId, scriptType);
+                initializeProcess(container, pod, namespace, clusterId, scriptType, middlewareName, middlewareType);
             } catch (Exception e) {
                 LOGGER.error("服务web控制台初始化失败,namespace:{},pod:{}", namespace, pod, e);
             }
@@ -94,7 +94,7 @@ public class TerminalService {
 
     }
 
-    private void initializeProcess(String container, String pod, String namespace, String clusterId, String scriptType)
+    private void initializeProcess(String container, String pod, String namespace, String clusterId, String scriptType, String middlewareName, String middlewareType)
         throws Exception {
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         String userHome = System.getProperty("user.home");
@@ -105,6 +105,9 @@ public class TerminalService {
             String command = "kubectl exec " + pod + " --container=" + container + " -it " + scriptType + " -n "
                 + namespace + " --server=" + cluster.getAddress() + " --token=" + cluster.getAccessToken()
                 + " --insecure-skip-tls-verify=true";
+            if (StringUtils.isNotEmpty(middlewareName) && StringUtils.isNotEmpty(middlewareType)){
+                command = command + " -- " + getDatabaseCommand(cluster, namespace, middlewareName, middlewareType);
+            }
             LOGGER.info("linux shell command:{}", command);
             this.termCommand = command.split("\\s+");
         }
@@ -310,18 +313,19 @@ public class TerminalService {
     /**
      * 执行进入指定数据库数据
      */
-    public void execDatabase(String clusterId, String namespace, String name, String type) throws Exception{
-        String command = "";
+    public String getDatabaseCommand(MiddlewareClusterDTO cluster, String namespace, String name, String type){
+        String command;
         switch (type){
             case "redis":
-                command = middlewareCommandService.getRedisCommand(clusterId, namespace, name);
+                command = middlewareCommandService.getRedisCommand(cluster, namespace, name);
                 break;
             case "mysql":
-                command = middlewareCommandService.getMysqlCommand(clusterId, namespace, name);
+                command = middlewareCommandService.getMysqlCommand(cluster, namespace, name);
                 break;
             default:
                 LOGGER.error("该类型中间件不支持进入库表");
+                command = "ls";
         }
-        this.onCommand(command);
+        return command;
     }
 }
