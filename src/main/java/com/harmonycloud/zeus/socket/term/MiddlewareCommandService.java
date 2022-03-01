@@ -19,8 +19,6 @@ public class MiddlewareCommandService {
 
     @Autowired
     private HelmChartService helmChartService;
-    @Autowired
-    private ClusterService clusterService;
 
     public String getRedisCommand(MiddlewareClusterDTO cluster, String namespace, String name) {
         JSONObject values = helmChartService.getInstalledValues(name, namespace, cluster);
