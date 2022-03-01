@@ -586,6 +586,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // 获取alias name
         JSONObject values = helmChartService.getInstalledValues(name, namespace, clusterService.findById(clusterId));
         middlewareTopologyDTO.setAliasName(values.getOrDefault("aliasName", "").toString());
+        middlewareTopologyDTO.setStorageClassName(values.getOrDefault("storageClassName", "").toString());
 
         StringBuilder pods = new StringBuilder();
         middleware.getPods().forEach(podInfo -> {
@@ -678,14 +679,15 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // 查询total storage
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
-                String usedStorageQuery =
-                    "sum(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\"" + pvcs.toString()
-                        + "\",namespace=\"" + namespace + "\"}) by (persistentvolumeclaim) /1024/1024/1024";
-                PrometheusResponse totalStorage = prometheusResourceMonitorService.query(clusterId, usedStorageQuery);
+                String totalStorageQuery =
+                    "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{persistentvolumeclaim=~\""
+                        + pvcs.toString() + "\",namespace=\"" + namespace
+                        + "\"}) by (persistentvolumeclaim) /1024/1024/1024";
+                PrometheusResponse totalStorage = prometheusResourceMonitorService.query(clusterId, totalStorageQuery);
                 Map<String, Double> result = convertResponse(totalStorage);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
                     String num = podInfo.getPodName().substring(podInfo.getPodName().length() - 1);
-                    if (result.containsKey(num)){
+                    if (result.containsKey(num)) {
                         MonitorResourceQuotaBase cpu = new MonitorResourceQuotaBase();
                         cpu.setTotal(result.get(num));
                         podInfo.getMonitorResourceQuota().getStorage().setTotal(result.get(num));
@@ -701,7 +703,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
                 String usedStorageQuery =
-                    "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{persistentvolumeclaim=~\""
+                    "sum(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\""
                         + pvcs.toString() + "\",namespace=\"" + namespace
                         + "\"}) by (persistentvolumeclaim) /1024/1024/1024";
                 PrometheusResponse usedStorage = prometheusResourceMonitorService.query(clusterId, usedStorageQuery);
