@@ -188,6 +188,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         operator.updatePreCheck(middleware, cluster);
         // update
         operator.update(middleware, cluster);
+        // reboot
+        if (rebootCheck(middleware)) {
+            reboot(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
+        }
     }
 
     @Override
@@ -906,6 +910,18 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             });
         });
         return map;
+    }
+
+    /**
+     * 检查是否需要重启服务
+     * @param middleware
+     * @return
+     */
+    public boolean rebootCheck(Middleware middleware) {
+        if (middleware.getStdoutEnabled() != null || middleware.getFilelogEnabled() != null) {
+            return true;
+        }
+        return false;
     }
 
 }
