@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.harmonycloud.caas.common.model.MonitorResourceQuota;
 import com.harmonycloud.caas.common.model.MonitorResourceQuotaBase;
@@ -203,6 +204,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         operator.updatePreCheck(middleware, cluster);
         // update
         operator.update(middleware, cluster);
+        // reboot
+        if (rebootCheck(middleware)) {
+            reboot(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
+        }
     }
 
     @Override
@@ -448,6 +453,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         Middleware middleware = detail(clusterId, namespace, name, type);
         // 升级服务时，只能升级到当前服务的上一个版本，不能跨版本升级,设置标志变量existNow来判断是否是上一个版本
         AtomicBoolean existNow = new AtomicBoolean(false);
+        BeanClusterMiddlewareInfo clusterMwInfo = clusterMiddlewareInfoService.get(clusterId, type);
         List<MiddlewareInfoDTO> resList = middlewareInfos.stream().map(info -> {
             MiddlewareInfoDTO dto = new MiddlewareInfoDTO();
             BeanUtils.copyProperties(info, dto);
@@ -455,26 +461,11 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 dto.setVersionStatus("history");
             } else if (ChartVersionUtil.compare(middleware.getChartVersion(), info.getChartVersion()) == 0) {
                 dto.setVersionStatus("now");
-                existNow.set(true);
             } else {
-                if (existNow.get()) {
-                    BeanClusterMiddlewareInfo clusterMwInfo = clusterMiddlewareInfoService.get(clusterId, type);
-                    if (!(ChartVersionUtil.compare(clusterMwInfo.getChartVersion(), info.getChartVersion()) > 0)) {
-                        if (clusterMwInfo.getStatus() == 0) {
-                            // operator升级中
-                            dto.setVersionStatus("updating");
-                        } else {
-                            // operator版本大于当前chart版本，可以升级
-                            dto.setVersionStatus("canUpgrade");
-                        }
-                    } else {
-                        // operator版本比当前chart版本小，需要升级operator版本
-                        dto.setVersionStatus("needUpgradeOperator");
-                    }
-                    existNow.set(false);
-                } else {
-                    dto.setVersionStatus("future");
-                }
+                dto.setVersionStatus("future");
+            }
+            if (ChartVersionUtil.compare(clusterMwInfo.getChartVersion(), info.getChartVersion()) == 0) {
+                dto.setVersionStatus("updating");
             }
             return dto;
         }).collect(Collectors.toList());
@@ -485,7 +476,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public void upgradeChart(String clusterId, String namespace, String name, String type, String chartName, String upgradeChartVersion) {
+    public BaseResult upgradeChart(String clusterId, String namespace, String name, String type, String chartName, String upgradeChartVersion) {
         HelmChartFile helmChart = helmChartService.getHelmChartFromMysql(chartName, upgradeChartVersion);
         JSONObject upgradeValues = YamlUtil.convertYamlAsNormalJsonObject(helmChart.getValueYaml());
         JSONObject currentValues = helmChartService.getInstalledValuesAsNormalJson(name, namespace, clusterService.findById(clusterId));
@@ -493,9 +484,15 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         String currentChartVersion = currentValues.getString("chart-version");
         String compatibleVersions = upgradeValues.getString("compatibleVersions");
         // 检查chart版本是否符合升级要求
-        checkUpgradeVersion(currentChartVersion, upgradeChartVersion, compatibleVersions);
+        BaseResult upgradeCheckRes = checkUpgradeVersion(currentChartVersion, upgradeChartVersion, compatibleVersions);
+        if (!upgradeCheckRes.getSuccess()) {
+            return upgradeCheckRes;
+        }
         // 检查operator是否符合升级要求
-        checkOperatorVersion(upgradeChartVersion, clusterMiddlewareInfoService.get(clusterId, type));
+        BaseResult operatorCheckRes = checkOperatorVersion(upgradeChartVersion, clusterMiddlewareInfoService.get(clusterId, type));
+        if (!operatorCheckRes.getSuccess()) {
+            return operatorCheckRes;
+        }
 
         JSONObject upgradeImage = SerializationUtils.clone(upgradeValues.getJSONObject("image"));
         JSONObject currentImage = SerializationUtils.clone(currentValues.getJSONObject("image"));
@@ -511,6 +508,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         Middleware middleware = detail(clusterId, namespace, name, type);
         middleware.setChartName(chartName);
         helmChartService.upgrade(middleware, currentValues, upgradeValues, clusterService.findById(clusterId));
+        return BaseResult.ok();
     }
 
     /**
@@ -597,6 +595,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // 获取alias name
         JSONObject values = helmChartService.getInstalledValues(name, namespace, clusterService.findById(clusterId));
         middlewareTopologyDTO.setAliasName(values.getOrDefault("aliasName", "").toString());
+        middlewareTopologyDTO.setStorageClassName(values.getOrDefault("storageClassName", "").toString());
 
         StringBuilder pods = new StringBuilder();
         middleware.getPods().forEach(podInfo -> {
@@ -689,14 +688,15 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // 查询total storage
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
-                String usedStorageQuery =
-                    "sum(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\"" + pvcs.toString()
-                        + "\",namespace=\"" + namespace + "\"}) by (persistentvolumeclaim) /1024/1024/1024";
-                PrometheusResponse totalStorage = prometheusResourceMonitorService.query(clusterId, usedStorageQuery);
+                String totalStorageQuery =
+                    "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{persistentvolumeclaim=~\""
+                        + pvcs.toString() + "\",namespace=\"" + namespace
+                        + "\"}) by (persistentvolumeclaim) /1024/1024/1024";
+                PrometheusResponse totalStorage = prometheusResourceMonitorService.query(clusterId, totalStorageQuery);
                 Map<String, Double> result = convertResponse(totalStorage);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
                     String num = podInfo.getPodName().substring(podInfo.getPodName().length() - 1);
-                    if (result.containsKey(num)){
+                    if (result.containsKey(num)) {
                         MonitorResourceQuotaBase cpu = new MonitorResourceQuotaBase();
                         cpu.setTotal(result.get(num));
                         podInfo.getMonitorResourceQuota().getStorage().setTotal(result.get(num));
@@ -712,7 +712,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
                 String usedStorageQuery =
-                    "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{persistentvolumeclaim=~\""
+                    "sum(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\""
                         + pvcs.toString() + "\",namespace=\"" + namespace
                         + "\"}) by (persistentvolumeclaim) /1024/1024/1024";
                 PrometheusResponse usedStorage = prometheusResourceMonitorService.query(clusterId, usedStorageQuery);
@@ -858,26 +858,27 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
      * @param compatibleVersions 升级版本所需最低版本
      * @return
      */
-    private static void checkUpgradeVersion(String currentVersion, String upgradeVersion, String compatibleVersions) {
+    private static BaseResult checkUpgradeVersion(String currentVersion, String upgradeVersion, String compatibleVersions) {
         // 1.判断是否升级到了低版本
-        if (currentVersion.compareTo(upgradeVersion) > 0) {
+        if (ChartVersionUtil.compare(currentVersion, upgradeVersion) < 0) {
             log.error("不能升级到更低版本");
-            throw new BusinessException(ErrorMessage.UPGRADE_LOWER_VERSION_FAILED);
+            return BaseResult.error("不能升级到更低版本", ErrorMessage.UPGRADE_LOWER_VERSION_FAILED);
         }
-        // 2.判断是否跨大版本升级,即判断大版本号是否相同，相同才可以升级
-//        String current = currentVersion.split("\\.")[0];
-//        String upgrade = upgradeVersion.split("\\.")[0];
-//        if (!current.equals(upgrade)) {
-//            throw new BusinessException(ErrorMessage.UPGRADE_OVER_VERSION_FAILED);
-//        }
-        // 3.判断是否满足升级至当前chart所需最低版本
-//        if (StringUtils.isBlank(compatibleVersions)) {
-//            return;
-//        }
-//        if (currentVersion.compareTo(compatibleVersions) < 0) {
-//            log.error("不满足升级所需最低版本");
-//            throw new BusinessException(ErrorMessage.UPGRADE_NOT_SATISFY_LOWEST_VERSION);
-//        }
+        if (StringUtils.isNotBlank(compatibleVersions)) {
+            // 2.判断是否满足升级至当前chart所需最低版本
+            if (ChartVersionUtil.compare(currentVersion, compatibleVersions) < 0) {
+                log.error("不满足升级所需最低版本");
+                return BaseResult.error("因版本兼容性问题，请先升级到 " + compatibleVersions, ErrorMessage.UPGRADE_NOT_SATISFY_LOWEST_VERSION);
+            }
+        } else {
+            // 3.判断是否跨大版本升级,即判断大版本号是否相同，相同才可以升级
+            String current = currentVersion.split("\\.")[0];
+            String upgrade = upgradeVersion.split("\\.")[0];
+            if (!current.equals(upgrade)) {
+                return BaseResult.error("不能跨大版本升级", ErrorMessage.UPGRADE_OVER_VERSION_FAILED);
+            }
+        }
+        return BaseResult.ok();
     }
 
     /**
@@ -885,16 +886,17 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
      * @param upgradeChartVersion
      * @param clusterMwInfo
      */
-    private static void checkOperatorVersion(String upgradeChartVersion,BeanClusterMiddlewareInfo clusterMwInfo){
-        if (!(clusterMwInfo.getChartVersion().compareTo(upgradeChartVersion) < 0)) {
-            if (clusterMwInfo.getStatus() == 0) {
-                log.warn("operator升级中");
-                throw new BusinessException(ErrorMessage.UPGRADE_OPERATOR_UPDATING);
-            }
+    private static BaseResult checkOperatorVersion(String upgradeChartVersion, BeanClusterMiddlewareInfo clusterMwInfo) {
+        if (ChartVersionUtil.compare(upgradeChartVersion, clusterMwInfo.getChartVersion()) < 0) {
+            log.error("operator版本比升级chart版本小，需要升级operator版本");
+            return BaseResult.error("请先升级中间件版本到 " + upgradeChartVersion, ErrorMessage.UPGRADE_OPERATOR_TOO_LOWER);
         } else {
-            log.warn("operator版本比升级chart版本小，需要升级operator版本");
-            throw new BusinessException(ErrorMessage.UPGRADE_OPERATOR_TOO_LOWER);
+            if (clusterMwInfo.getStatus() == 0) {
+                log.error("operator升级中");
+                return BaseResult.error("中间件升级中,请稍后升级", ErrorMessage.UPGRADE_OPERATOR_UPDATING);
+            }
         }
+        return BaseResult.ok();
     }
 
     /**
@@ -921,6 +923,18 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             });
         });
         return map;
+    }
+
+    /**
+     * 检查是否需要重启服务
+     * @param middleware
+     * @return
+     */
+    public boolean rebootCheck(Middleware middleware) {
+        if (middleware.getStdoutEnabled() != null || middleware.getFilelogEnabled() != null) {
+            return true;
+        }
+        return false;
     }
 
 }

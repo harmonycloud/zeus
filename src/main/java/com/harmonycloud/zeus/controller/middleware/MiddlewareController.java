@@ -197,8 +197,7 @@ public class MiddlewareController {
                                    @RequestParam("type") String type,
                                    @RequestParam("chartName") String chartName,
                                    @RequestParam("upgradeChartVersion") String upgradeChartVersion) {
-        middlewareService.upgradeChart(clusterId, namespace, middlewareName, type, chartName,upgradeChartVersion);
-        return BaseResult.ok();
+        return middlewareService.upgradeChart(clusterId, namespace, middlewareName, type, chartName, upgradeChartVersion);
     }
 
 
@@ -237,7 +236,7 @@ public class MiddlewareController {
         return BaseResult.ok();
     }
 
-    @ApiOperation(value = "查询中间件详情", notes = "查询中间件详情")
+    @ApiOperation(value = "查询拓扑图相关信息", notes = "查询拓扑图相关信息")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),

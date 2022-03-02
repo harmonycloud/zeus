@@ -59,6 +59,14 @@ public interface MiddlewareCRService {
     /**
      * 获取中间件pvc名称
      *
+     * @param mw
+     * @return
+     */
+    List<String> getPvc(MiddlewareCRD mw);
+
+    /**
+     * 获取中间件pvc名称
+     *
      * @param clusterId 集群id
      * @param namespace 命名空间
      * @param type      中间件类型

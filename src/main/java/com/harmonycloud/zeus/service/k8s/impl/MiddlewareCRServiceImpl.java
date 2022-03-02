@@ -204,6 +204,11 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
     public List<String> getPvc(String clusterId, String namespace, String type, String name) {
         // query middleware cr
         MiddlewareCRD mw = this.getCR(clusterId, namespace, type, name);
+        return getPvc(mw);
+    }
+
+    @Override
+    public List<String> getPvc(MiddlewareCRD mw) {
         if (mw == null || mw.getStatus() == null || mw.getStatus().getInclude() == null
                 || !mw.getStatus().getInclude().containsKey(PERSISTENT_VOLUME_CLAIMS)) {
             return new ArrayList<>();

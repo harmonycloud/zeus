@@ -70,6 +70,12 @@ public class WebSocketInterceptor implements HandshakeInterceptor {
             if (StringUtils.isNotBlank(httpServletRequest.getParameter("logFile"))) {
                 map.put("logFile", httpServletRequest.getParameter("logFile"));
             }
+            if (StringUtils.isNotBlank(httpServletRequest.getParameter("middlewareName"))) {
+                map.put("middlewareName", httpServletRequest.getParameter("middlewareName"));
+            }
+            if (StringUtils.isNotBlank(httpServletRequest.getParameter("middlewareType"))) {
+                map.put("middlewareType", httpServletRequest.getParameter("middlewareType"));
+            }
 
         }
         return true;
