@@ -142,6 +142,18 @@ public interface MiddlewareService {
     BaseResult upgradeChart(String clusterId, String namespace, String name, String type, String chartName, String upgradeChartVersion);
 
     /**
+     * 服务版本升级校验
+     * @param clusterId
+     * @param namespace
+     * @param name
+     * @param type
+     * @param chartName
+     * @param upgradeChartVersion
+     * @return
+     */
+    BaseResult upgradeCheck(String clusterId, String namespace, String name, String type, String chartName, String upgradeChartVersion);
+
+    /**
      * 重启服务
      * @param clusterId 集群id
      * @param namespace 命名空间

@@ -200,6 +200,24 @@ public class MiddlewareController {
         return middlewareService.upgradeChart(clusterId, namespace, middlewareName, type, chartName, upgradeChartVersion);
     }
 
+    @ApiOperation(value = "服务版本升级校验", notes = "服务版本升级校验")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "chartName", value = "中间件chartName", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "upgradeChartVersion", value = "升级chart版本", paramType = "query", dataTypeClass = String.class),
+    })
+    @PostMapping("{middlewareName}/upgradeCheck")
+    public BaseResult upgradeCheck(@PathVariable("clusterId") String clusterId,
+                                   @PathVariable("namespace") String namespace,
+                                   @PathVariable("middlewareName") String middlewareName,
+                                   @RequestParam("type") String type,
+                                   @RequestParam("chartName") String chartName,
+                                   @RequestParam("upgradeChartVersion") String upgradeChartVersion) {
+        return middlewareService.upgradeCheck(clusterId, namespace, middlewareName, type, chartName, upgradeChartVersion);
+    }
 
     @ApiOperation(value = "重启服务", notes = "重启服务")
     @ApiImplicitParams({

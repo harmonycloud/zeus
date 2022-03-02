@@ -516,6 +516,27 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         return BaseResult.ok();
     }
 
+    @Override
+    public BaseResult upgradeCheck(String clusterId, String namespace, String name, String type, String chartName, String upgradeChartVersion) {
+        HelmChartFile helmChart = helmChartService.getHelmChartFromMysql(chartName, upgradeChartVersion);
+        JSONObject upgradeValues = YamlUtil.convertYamlAsNormalJsonObject(helmChart.getValueYaml());
+        JSONObject currentValues = helmChartService.getInstalledValuesAsNormalJson(name, namespace, clusterService.findById(clusterId));
+
+        String currentChartVersion = currentValues.getString("chart-version");
+        String compatibleVersions = upgradeValues.getString("compatibleVersions");
+        // 检查chart版本是否符合升级要求
+        BaseResult upgradeCheckRes = checkUpgradeVersion(currentChartVersion, upgradeChartVersion, compatibleVersions);
+        if (!upgradeCheckRes.getSuccess()) {
+            return upgradeCheckRes;
+        }
+        // 检查operator是否符合升级要求
+        BaseResult operatorCheckRes = checkOperatorVersion(upgradeChartVersion, clusterMiddlewareInfoService.get(clusterId, type));
+        if (!operatorCheckRes.getSuccess()) {
+            return operatorCheckRes;
+        }
+        return BaseResult.ok();
+    }
+
     /**
      * 更新grafanaid
      */
