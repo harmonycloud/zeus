@@ -209,7 +209,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         return mwInfoList.stream().map(info -> {
             MiddlewareInfoDTO dto = new MiddlewareInfoDTO();
             BeanUtils.copyProperties(info, dto);
-            if (info.getChartVersion().compareTo(clusterMwInfo.getChartVersion()) < NUM_ZERO) {
+            if (ChartVersionUtil.compare(clusterMwInfo.getChartVersion(), info.getChartVersion()) < NUM_ZERO) {
                 dto.setVersionStatus("history");
             } else if (info.getChartVersion().compareTo(clusterMwInfo.getChartVersion()) == NUM_ZERO) {
                 int status = clusterMwInfo.getStatus();
