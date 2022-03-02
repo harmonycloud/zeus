@@ -159,7 +159,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         operator.create(middleware, cluster);
         // 查看middleware有没有创建出来
         boolean result = false;
-        for (int i = 0; i < (6 * 10 ) && !result; i++) {
+        for (int i = 0; i < (60 * 10 ) && !result; i++) {
             Middleware mw = middlewareCRService.simpleDetail(middleware.getClusterId(), middleware.getNamespace(),
                     middleware.getType(), middleware.getName());
             if (mw != null) {
