@@ -149,7 +149,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public boolean create(Middleware middleware) {
+    public String create(Middleware middleware) {
         checkBaseParam(middleware);
         BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
         MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(middleware.getClusterId());
@@ -166,12 +166,15 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 result = true;
             }
             try {
-                Thread.sleep(10000);
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        return result;
+        if (result) {
+            return middleware.getName();
+        }
+        return null;
     }
 
     @Override

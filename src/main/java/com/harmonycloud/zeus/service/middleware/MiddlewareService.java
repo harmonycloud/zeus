@@ -52,7 +52,7 @@ public interface MiddlewareService {
      *
      * @param middleware 中间件信息
      */
-    boolean create(Middleware middleware);
+    String create(Middleware middleware);
 
     /**
      * 恢复中间件
