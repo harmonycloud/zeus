@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
-import com.harmonycloud.zeus.service.k8s.IngressService;
+import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -53,7 +53,6 @@ import com.harmonycloud.zeus.integration.cluster.ClusterWrapper;
 import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.service.k8s.*;
-import com.harmonycloud.zeus.service.middleware.EsService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
@@ -96,8 +95,6 @@ public class ClusterServiceImpl implements ClusterService {
     @Autowired
     private K8sDefaultClusterService k8SDefaultClusterService;
     @Autowired
-    private EsService esService;
-    @Autowired
     private HelmChartService helmChartService;
     @Autowired
     private MiddlewareInfoService middlewareInfoService;
@@ -106,16 +103,9 @@ public class ClusterServiceImpl implements ClusterService {
     @Autowired
     private MiddlewareCRService middlewareCRService;
     @Autowired
-    private IngressService ingressService;
-    @Autowired
     private ClusterRoleService clusterRoleService;
-
-    @Value("${k8s.component.logging.es.user:elastic}")
-    private String esUser;
-    @Value("${k8s.component.logging.es.password:Hc@Cloud01}")
-    private String esPassword;
-    @Value("${k8s.component.logging.es.port:30092}")
-    private String esPort;
+    @Autowired
+    private PrometheusResourceMonitorService prometheusResourceMonitorService;
     @Autowired
     private MiddlewareService middlewareService;
     @Autowired
@@ -123,8 +113,6 @@ public class ClusterServiceImpl implements ClusterService {
     @Autowired
     private IngressComponentService ingressComponentService;
 
-    @Value("${k8s.component.components:/usr/local/zeus-pv/components}")
-    private String componentsPath;
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
     @Value("${k8s.component.crd:/usr/local/zeus-pv/components/platform/crds/middlewarecluster-crd.yaml}")
@@ -672,20 +660,44 @@ public class ClusterServiceImpl implements ClusterService {
                 // 查询memory每5分钟平均用量
                 try {
                     String per5MinMemoryUsedQuery = "sum(avg_over_time(container_memory_working_set_bytes{pod=~\""
-                        + pods.toString() + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"}[5m]))";
+                        + pods.toString() + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"}[5m])) /1024/1024/1024";
                     queryMap.put("query", per5MinMemoryUsedQuery);
                     PrometheusResponse per5MinMemoryUsed =
                         prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
                     if (!CollectionUtils.isEmpty(per5MinMemoryUsed.getData().getResult())) {
-                        middlewareResourceInfo.setPer5MinMemory(
-                            ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(ResourceCalculationUtil
-                                .getResourceValue(per5MinMemoryUsed.getData().getResult().get(0).getValue().get(1),
-                                    MEMORY, ResourceUnitEnum.GI.getUnit())),
-                                2, RoundingMode.CEILING));
+                        middlewareResourceInfo.setPer5MinMemory(ResourceCalculationUtil.roundNumber(
+                            BigDecimal.valueOf(
+                                Double.parseDouble(per5MinMemoryUsed.getData().getResult().get(0).getValue().get(1))),
+                            2, RoundingMode.CEILING));
                     }
                 } catch (Exception e) {
                     log.error("中间件{} 查询memory5分钟平均用量失败", middleware.getName());
                 }
+                // 查询pvc总量
+                List<String> pvcList = middlewareCRService.getPvc(mwCrd);
+                StringBuilder pvcs = new StringBuilder();
+                pvcList.forEach(pvc -> pvcs.append(pvc).append("|"));
+                try {
+                    String pvcTotalQuery =
+                        "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{persistentvolumeclaim=~\""
+                            + pvcs.toString() + "\",namespace=\"" + mwCrd.getMetadata().getNamespace()
+                            + "\"}) by (persistentvolumeclaim) /1024/1024/1024";
+                    Double pvcTotal = prometheusResourceMonitorService.queryAndConvert(clusterId, pvcTotalQuery);
+                    middlewareResourceInfo.setRequestStorage(pvcTotal);
+                } catch (Exception e) {
+                    log.error("中间件{} 查询storage总量失败", middleware.getName());
+                }
+                // 查询pvc使用量
+                try {
+                    String pvcUsedQuery = "sum(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\""
+                        + pvcs.toString() + "\",namespace=\"" + mwCrd.getMetadata().getNamespace()
+                        + "\"}) by (persistentvolumeclaim) /1024/1024/1024";
+                    Double pvcUsed = prometheusResourceMonitorService.queryAndConvert(clusterId, pvcUsedQuery);
+                    middlewareResourceInfo.setPer5MinStorage(pvcUsed);
+                } catch (Exception e) {
+                    log.error("中间件{} 查询storage5分钟平均用量失败", middleware.getName());
+                }
+
                 // 计算cpu使用率
                 if (middlewareResourceInfo.getRequestCpu() != null && middlewareResourceInfo.getPer5MinCpu() != null) {
                     double cpuRate =
@@ -700,6 +712,14 @@ public class ClusterServiceImpl implements ClusterService {
                         middlewareResourceInfo.getPer5MinMemory() / middlewareResourceInfo.getRequestMemory() * 100;
                     middlewareResourceInfo.setMemoryRate(
                         ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(memoryRate), 2, RoundingMode.CEILING));
+                }
+                // 计算pvc使用率
+                if (middlewareResourceInfo.getRequestStorage() != null
+                        && middlewareResourceInfo.getPer5MinStorage() != null) {
+                    double storageRate =
+                            middlewareResourceInfo.getPer5MinStorage() / middlewareResourceInfo.getRequestStorage() * 100;
+                    middlewareResourceInfo.setStorageRate(
+                            ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(storageRate), 2, RoundingMode.CEILING));
                 }
                 mwResourceInfoList.add(middlewareResourceInfo);
             } catch (Exception e) {
