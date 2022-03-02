@@ -827,9 +827,14 @@ public class OverviewServiceImpl implements OverviewService {
         pageInfo.getList().forEach(record -> {
             String chartVersion = middlewareChartVersion.get(record.getName());
             if (chartVersion == null) {
-                JSONObject installedValues = helmChartService.getInstalledValues(record.getName(), record.getNamespace(), clusterService.findById(record.getClusterId()));
-                chartVersion = installedValues.getString("chart-version");
-                middlewareChartVersion.put(record.getName(), chartVersion);
+                JSONObject installedValues;
+                try {
+                    installedValues = helmChartService.getInstalledValues(record.getName(), record.getNamespace(), clusterService.findById(record.getClusterId()));
+                    chartVersion = installedValues.getString("chart-version");
+                    middlewareChartVersion.put(record.getName(), chartVersion);
+                } catch (Exception e) {
+                    log.error("查询服务values信息出错了", e);
+                }
             }
             record.setChartVersion(chartVersion);
             record.setCapitalType(MiddlewareOfficialNameEnum.findByMiddlewareName(record.getType()));
