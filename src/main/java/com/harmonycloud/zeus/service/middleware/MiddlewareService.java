@@ -51,7 +51,7 @@ public interface MiddlewareService {
      *
      * @param middleware 中间件信息
      */
-    void create(Middleware middleware);
+    boolean create(Middleware middleware);
 
     /**
      * 恢复中间件

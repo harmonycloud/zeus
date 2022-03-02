@@ -148,7 +148,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public void create(Middleware middleware) {
+    public boolean create(Middleware middleware) {
         checkBaseParam(middleware);
         BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
         MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(middleware.getClusterId());
@@ -156,6 +156,21 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         operator.createPreCheck(middleware, cluster);
         // create
         operator.create(middleware, cluster);
+        // 查看middleware有没有创建出来
+        boolean result = false;
+        for (int i = 0; i < (6 * 10 ) && !result; i++) {
+            Middleware mw = middlewareCRService.simpleDetail(middleware.getClusterId(), middleware.getNamespace(),
+                    middleware.getType(), middleware.getName());
+            if (mw != null) {
+                result = true;
+            }
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
     }
 
     @Override
