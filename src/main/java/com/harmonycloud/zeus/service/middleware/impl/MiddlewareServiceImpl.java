@@ -450,7 +450,9 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 dto.setVersionStatus("future");
             }
             if (ChartVersionUtil.compare(clusterMwInfo.getChartVersion(), info.getChartVersion()) == 0) {
-                dto.setVersionStatus("updating");
+                if (clusterMwInfo.getStatus() == 0) {
+                    dto.setVersionStatus("updating");
+                }
             }
             return dto;
         }).collect(Collectors.toList());
