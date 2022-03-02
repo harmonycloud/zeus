@@ -820,7 +820,7 @@ public class OverviewServiceImpl implements OverviewService {
         recordQueryWrapper.eq("lay", "service");
         recordQueryWrapper.ge("time", beginTime);
         recordQueryWrapper.le("time", endTime);
-        recordQueryWrapper.orderByAsc("time");
+        recordQueryWrapper.orderByDesc("time");
         PageHelper.startPage(1, 10);
         List<BeanAlertRecord> alertRecordList = beanAlertRecordMapper.selectList(recordQueryWrapper);
         PageInfo<BeanAlertRecord> pageInfo = new PageInfo<>(alertRecordList);
