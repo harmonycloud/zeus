@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.middleware;
 
+import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
@@ -138,7 +139,7 @@ public interface MiddlewareService {
      * @param type 中间件类型
      * @param upgradeChartVersion 升级目标chartVersion
      */
-    void upgradeChart(String clusterId, String namespace, String name, String type, String chartName, String upgradeChartVersion);
+    BaseResult upgradeChart(String clusterId, String namespace, String name, String type, String chartName, String upgradeChartVersion);
 
     /**
      * 重启服务
