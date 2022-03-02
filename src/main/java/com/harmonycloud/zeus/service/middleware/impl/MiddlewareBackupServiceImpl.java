@@ -154,7 +154,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     public BaseResult createBackupSchedule(MiddlewareBackupDTO backupDTO) {
-        Map<String, String> labels = getMiddlewareBackupLabels(backupDTO.getMiddlewareRealName(), null, backupDTO.getPods());
+        Map<String, String> labels = getMiddlewareBackupLabels(backupDTO.getMiddlewareName(), null, backupDTO.getPods());
         MiddlewareBackupScheduleList scheduleList = backupScheduleCRDService.list(backupDTO.getClusterId(), backupDTO.getNamespace(), labels);
         if (!CollectionUtils.isEmpty(scheduleList.getItems())) {
             if (CollectionUtils.isEmpty(backupDTO.getPods())) {
@@ -167,7 +167,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         MiddlewareBackupScheduleCRD crd = new MiddlewareBackupScheduleCRD();
         List<BackupObject> backupObjects = convertMiddlewareBackupObject(backupDTO);
         addPodRoleLabel(backupDTO.getLabels(), backupObjects);
-        ObjectMeta meta = getMiddlewareBackupMeta(backupDTO.getNamespace(), backupDTO.getMiddlewareRealName(), backupDTO.getLabels(), backupDTO.getPods());
+        ObjectMeta meta = getMiddlewareBackupMeta(backupDTO.getNamespace(), backupDTO.getMiddlewareName(), backupDTO.getLabels(), backupDTO.getPods());
         crd.setMetadata(meta);
         MiddlewareBackupScheduleSpec spec = new MiddlewareBackupScheduleSpec(backupDTO.getMiddlewareName(), backupDTO.getCrdType(),
                 CronUtils.parseUtcCron(backupDTO.getCron()), backupDTO.getLimitRecord(), backupObjects);
@@ -185,7 +185,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     public BaseResult createNormalBackup(MiddlewareBackupDTO backupDTO) {
         MiddlewareBackupCRD middlewareBackupCRD = new MiddlewareBackupCRD();
         List<BackupObject> backupObjects = convertMiddlewareBackupObject(backupDTO);
-        ObjectMeta meta = getMiddlewareBackupMeta(backupDTO.getNamespace(), backupDTO.getMiddlewareRealName(), backupDTO.getLabels(), backupDTO.getPods());
+        ObjectMeta meta = getMiddlewareBackupMeta(backupDTO.getNamespace(), backupDTO.getMiddlewareName(), backupDTO.getLabels(), backupDTO.getPods());
         middlewareBackupCRD.setMetadata(meta);
         MiddlewareBackupSpec spec = new MiddlewareBackupSpec();
         spec.setName(backupDTO.getMiddlewareName());
@@ -204,28 +204,28 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     /**
      * 获取中间件备份Meta
      *
+     * @param middlewareName 服务名称
      * @param namespace          命名空间
-     * @param middlewareRealName 中间件名称
      * @return
      */
-    public ObjectMeta getMiddlewareBackupMeta(String namespace, String middlewareRealName, Map<String, String> labels, List<String> pods) {
+    public ObjectMeta getMiddlewareBackupMeta(String namespace, String middlewareName, Map<String, String> labels, List<String> pods) {
         ObjectMeta metaData = new ObjectMeta();
         metaData.setNamespace(namespace);
-        metaData.setName(middlewareRealName + "-backup-" + UUIDUtils.get8UUID());
-        metaData.setLabels(getMiddlewareBackupLabels(middlewareRealName, labels, pods));
+        metaData.setName(middlewareName + "-" + UUIDUtils.get8UUID());
+        metaData.setLabels(getMiddlewareBackupLabels(middlewareName, labels, pods));
         return metaData;
     }
 
     /**
      * 获取中间件备份label
      *
-     * @param middlewareRealName
+     * @param middlewareName
      * @param labels
      * @param pods
      * @return
      */
-    public Map<String, String> getMiddlewareBackupLabels(String middlewareRealName, Map<String, String> labels, List<String> pods) {
-        Map<String, String> backupLabel = getBackupLabel(middlewareRealName);
+    public Map<String, String> getMiddlewareBackupLabels(String middlewareName, Map<String, String> labels, List<String> pods) {
+        Map<String, String> backupLabel = getBackupLabel(middlewareName);
         if (labels != null) {
             backupLabel.putAll(labels);
         }
@@ -285,9 +285,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         return labels;
     }
 
-    public Map<String, String> getBackupLabel(String middlewareRealName) {
+    public Map<String, String> getBackupLabel(String middlewareName) {
         Map<String, String> labels = new HashMap<>();
-        labels.put("owner", middlewareRealName + "-backup");
+        labels.put("owner", middlewareName + "-backup");
         return labels;
     }
 
