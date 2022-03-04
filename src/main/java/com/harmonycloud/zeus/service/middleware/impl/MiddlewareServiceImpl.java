@@ -794,20 +794,26 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // middleware cpu
         middlewareTopologyDTO.getMonitorResourceQuota().getCpu().setUsed(usedCpu);
         middlewareTopologyDTO.getMonitorResourceQuota().getCpu().setTotal(totalCpu);
-        middlewareTopologyDTO.getMonitorResourceQuota().getCpu().setUsage(
-            ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(usedCpu / totalCpu * 100), 2, RoundingMode.CEILING));
+        if (totalCpu != 0) {
+            middlewareTopologyDTO.getMonitorResourceQuota().getCpu().setUsage(ResourceCalculationUtil
+                .roundNumber(BigDecimal.valueOf(usedCpu / totalCpu * 100), 2, RoundingMode.CEILING));
+        }
 
         // middleware memory
         middlewareTopologyDTO.getMonitorResourceQuota().getMemory().setUsed(usedMemory);
         middlewareTopologyDTO.getMonitorResourceQuota().getMemory().setTotal(totalMemory);
-        middlewareTopologyDTO.getMonitorResourceQuota().getMemory().setUsage(
-                ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(usedMemory / totalMemory * 100), 2, RoundingMode.CEILING));
+        if (totalMemory != 0) {
+            middlewareTopologyDTO.getMonitorResourceQuota().getMemory().setUsage(ResourceCalculationUtil
+                .roundNumber(BigDecimal.valueOf(usedMemory / totalMemory * 100), 2, RoundingMode.CEILING));
+        }
 
         // middleware storage
         middlewareTopologyDTO.getMonitorResourceQuota().getStorage().setUsed(usedStorage);
         middlewareTopologyDTO.getMonitorResourceQuota().getStorage().setTotal(totalStorage);
-        middlewareTopologyDTO.getMonitorResourceQuota().getStorage().setUsage(
-                ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(usedStorage / totalStorage * 100), 2, RoundingMode.CEILING));
+        if (totalStorage != 0) {
+            middlewareTopologyDTO.getMonitorResourceQuota().getStorage().setUsage(ResourceCalculationUtil
+                .roundNumber(BigDecimal.valueOf(usedStorage / totalStorage * 100), 2, RoundingMode.CEILING));
+        }
 
         return middlewareTopologyDTO;
     }
