@@ -616,7 +616,25 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // 获取alias name
         JSONObject values = helmChartService.getInstalledValues(name, namespace, clusterService.findById(clusterId));
         middlewareTopologyDTO.setAliasName(values.getOrDefault("aliasName", "").toString());
-        middlewareTopologyDTO.setStorageClassName(values.getOrDefault("storageClassName", "").toString());
+        // 特殊处理es存储类型
+        if (MiddlewareTypeEnum.ELASTIC_SEARCH.getType().equals(type)) {
+            Set<String> scSet = new HashSet<>();
+            middleware.getPods().forEach(pod -> {
+                if (StringUtils.isNotEmpty(pod.getResources().getStorageClassName())) {
+                    scSet.add(pod.getResources().getStorageClassName());
+                }
+            });
+            StringBuilder sb = new StringBuilder();
+            for (String sc : scSet) {
+                sb.append(sc).append("/");
+            }
+            if (sb.length() != 0) {
+                sb.deleteCharAt(sb.length() - 1);
+            }
+            middlewareTopologyDTO.setStorageClassName(sb.toString());
+        } else {
+            middlewareTopologyDTO.setStorageClassName(values.getOrDefault("storageClassName", "").toString());
+        }
 
         StringBuilder pods = new StringBuilder();
         middleware.getPods().forEach(podInfo -> {
