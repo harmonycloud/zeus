@@ -743,6 +743,9 @@ public class ClusterServiceImpl implements ClusterService {
         // 查询memory使用量
         String nodeMemoryQuery = "((node_memory_MemTotal_bytes - node_memory_MemFree_bytes - node_memory_Cached_bytes - node_memory_Buffers_bytes - node_memory_Slab_bytes)/1024/1024/1024)";
         Map<String, Double> nodeMemoryUsed = nodeQuery(clusterId, nodeMemoryQuery);
+        // 查询memory总量
+        String nodeMemoryTotalQuery = "(node_memory_MemTotal_bytes/1024/1024/1024)";
+        Map<String, Double> nodeMemoryTotal = nodeQuery(clusterId, nodeMemoryTotalQuery);
         return nodeList.stream().map(node -> {
             ClusterNodeResourceDto nodeRs = new ClusterNodeResourceDto();
             nodeRs.setClusterId(clusterId);
@@ -758,9 +761,7 @@ public class ClusterServiceImpl implements ClusterService {
             }
             // 设置memory
             nodeRs.setMemoryUsed(nodeMemoryUsed.getOrDefault(node.getName(), null));
-            nodeRs.setMemoryTotal(ResourceCalculationUtil.roundNumber(
-                    BigDecimal.valueOf(Double.parseDouble(node.getMemory().getTotal()) / 1024 / 1024), 2,
-                    RoundingMode.CEILING));
+            nodeRs.setMemoryTotal(nodeMemoryTotal.getOrDefault(node.getName(), null));
             if (nodeRs.getMemoryUsed() != null){
                 nodeRs.setMemoryRate(ResourceCalculationUtil.roundNumber(
                         BigDecimal.valueOf(nodeRs.getMemoryUsed() / nodeRs.getMemoryTotal() * 100), 2, RoundingMode.CEILING));
