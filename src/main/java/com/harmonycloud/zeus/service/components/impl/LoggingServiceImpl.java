@@ -63,7 +63,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         beanClusterMiddlewareInfoList =
             beanClusterMiddlewareInfoList.stream().filter(beanClusterMiddlewareInfo -> beanClusterMiddlewareInfo
                 .getChartName().equals(MiddlewareTypeEnum.ELASTIC_SEARCH.getType())).collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(beanClusterMiddlewareInfoList)) {
+        if (CollectionUtils.isEmpty(beanClusterMiddlewareInfoList) || beanClusterMiddlewareInfoList.get(0).getStatus() == 2) {
             middlewareManagerService.install(cluster.getId(), MiddlewareTypeEnum.ELASTIC_SEARCH.getType(), null,
                 "simple");
         }
