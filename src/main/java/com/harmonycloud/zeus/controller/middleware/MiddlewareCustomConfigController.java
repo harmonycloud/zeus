@@ -85,4 +85,20 @@ public class MiddlewareCustomConfigController {
                 middlewareName, type, item, startTime, endTime));
     }
 
+    @ApiOperation(value = "获取自定义配置", notes = "获取自定义配置")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+    })
+    @PutMapping("/{configName}/top")
+    public BaseResult topping(@PathVariable("clusterId") String clusterId,
+                              @PathVariable("namespace") String namespace,
+                              @PathVariable("middlewareName") String middlewareName,
+                              @PathVariable("configName") String configName,
+                              @RequestParam("type") String type) throws Exception {
+        return BaseResult.ok(middlewareCustomConfigService.listCustomConfig(clusterId, namespace, middlewareName, type));
+    }
+
 }

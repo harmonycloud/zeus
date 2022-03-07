@@ -38,8 +38,6 @@ public class ConfigTemplateServiceImpl implements ConfigTemplateService {
     private BeanCustomConfigTemplateMapper beanCustomConfigTemplateMapper;
     @Autowired
     private BeanCustomConfigMapper beanCustomConfigMapper;
-    @Autowired
-    private HelmChartService helmChartService;
 
     @Override
     public void create(CustomConfigTemplateDTO customConfigTemplateDTO) {

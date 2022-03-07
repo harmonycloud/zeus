@@ -22,6 +22,7 @@ import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.ConfigMapService;
 import com.harmonycloud.zeus.service.k8s.K8sExecService;
 import com.harmonycloud.zeus.service.k8s.PodService;
+import com.harmonycloud.zeus.service.middleware.CustomConfigHistoryService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareCustomConfigService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
@@ -50,9 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService implements MiddlewareCustomConfigService {
-
-    @Autowired
-    private BeanCustomConfigHistoryMapper beanCustomConfigHistoryMapper;
+    
     @Autowired
     private PodService podService;
     @Autowired
@@ -64,9 +63,9 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
     @Autowired
     private ClusterService clusterService;
     @Autowired
-    private MiddlewareService middlewareService;
-    @Autowired
     private K8sExecService k8sExecService;
+    @Autowired
+    private CustomConfigHistoryService customConfigHistoryService;
 
     @Override
     public List<CustomConfig> listCustomConfig(String clusterId, String namespace, String middlewareName, String type)
@@ -88,6 +87,11 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             HelmChartFile helmChart = helmChartService.getHelmChartFromMysql(type, middleware.getChartVersion());
             beanCustomConfigList.addAll(updateConfig2MySQL(helmChart, false));
         }
+        // 查询修改历史
+        Map<String, List<BeanCustomConfigHistory>> beanCustomConfigHistoryListMap =
+            customConfigHistoryService.get(clusterId, namespace, middlewareName).stream()
+                .collect(Collectors.groupingBy(BeanCustomConfigHistory::getItem));
+        orderByUpdateTime(beanCustomConfigHistoryListMap);
         // 封装customConfigList
         List<CustomConfig> customConfigList = new ArrayList<>();
         beanCustomConfigList.forEach(beanCustomConfig -> {
@@ -95,6 +99,10 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             BeanUtils.copyProperties(beanCustomConfig, customConfig);
             customConfig.setValue(data.getOrDefault(customConfig.getName(), ""));
             customConfig.setParamType(customConfig.getRanges().contains("|") ? "select" : "input");
+            // 设置最近一次修改时间
+            if (beanCustomConfigHistoryListMap.containsKey(customConfig.getName())) {
+                customConfig.setUpdateTime(beanCustomConfigHistoryListMap.get(customConfig.getName()).get(0).getDate());
+            }
             // 特殊处理mysql相关内容
             if ("sql_mode".equals(beanCustomConfig.getName())) {
                 customConfig.setParamType("multiSelect");
@@ -162,7 +170,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         }
         updateValues(middleware, data, cluster, values);
         // 添加修改历史
-        this.addCustomConfigHistory(config.getName(), oldDate, config);
+        customConfigHistoryService.insert(cluster.getName(), oldDate, config);
         if (restart) {
             // 重启pod
             Middleware ware =
@@ -175,9 +183,9 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
     @Override
     public List<CustomConfigHistoryDTO> getCustomConfigHistory(String clusterId, String namespace,
         String middlewareName, String type, String item, String startTime, String endTime) {
-        QueryWrapper<BeanCustomConfigHistory> wrapper = new QueryWrapper<BeanCustomConfigHistory>()
-            .eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", middlewareName);
-        List<BeanCustomConfigHistory> beanCustomConfigHistoryList = beanCustomConfigHistoryMapper.selectList(wrapper);
+        // 查询数据库历史
+        List<BeanCustomConfigHistory> beanCustomConfigHistoryList =
+            customConfigHistoryService.get(clusterId, namespace, middlewareName);
 
         // 筛选名称
         if (StringUtils.isNotEmpty(item)) {
@@ -271,9 +279,12 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
 
     @Override
     public void deleteHistory(String clusterId, String namespace, String name) {
-        QueryWrapper<BeanCustomConfigHistory> wrapper = new QueryWrapper<BeanCustomConfigHistory>()
-            .eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", name);
-        beanCustomConfigHistoryMapper.delete(wrapper);
+        customConfigHistoryService.delete(clusterId, namespace, name);
+    }
+
+    @Override
+    public void topping(String clusterId, String namespace, String name, String configName, String type) {
+
     }
 
     /**
@@ -304,33 +315,10 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
                     BeanCustomConfigHistory beanCustomConfigHistory = new BeanCustomConfigHistory();
                     BeanUtils.copyProperties(customConfigHistoryDTO, beanCustomConfigHistory);
                     beanCustomConfigHistory.setStatus(true);
-                    QueryWrapper<BeanCustomConfigHistory> wrapper =
-                        new QueryWrapper<BeanCustomConfigHistory>().eq("id", beanCustomConfigHistory.getId());
-                    beanCustomConfigHistoryMapper.update(beanCustomConfigHistory, wrapper);
+                    customConfigHistoryService.update(beanCustomConfigHistory);
                 }
             }
         });
-    }
-
-    /**
-     * 写入修改历史
-     */
-    public void addCustomConfigHistory(String middlewareName, Map<String, String> oldData,
-        MiddlewareCustomConfig middlewareCustomConfig) {
-        Date now = new Date();
-        for (CustomConfig customConfig : middlewareCustomConfig.getCustomConfigList()) {
-            BeanCustomConfigHistory beanCustomConfigHistory = new BeanCustomConfigHistory();
-            beanCustomConfigHistory.setItem(customConfig.getName());
-            beanCustomConfigHistory.setClusterId(middlewareCustomConfig.getClusterId());
-            beanCustomConfigHistory.setNamespace(middlewareCustomConfig.getNamespace());
-            beanCustomConfigHistory.setName(middlewareName);
-            beanCustomConfigHistory.setLast(oldData.get(customConfig.getName()));
-            beanCustomConfigHistory.setAfter(customConfig.getValue());
-            beanCustomConfigHistory.setDate(now);
-            beanCustomConfigHistory.setRestart(customConfig.getRestart());
-            beanCustomConfigHistory.setStatus(false);
-            beanCustomConfigHistoryMapper.insert(beanCustomConfigHistory);
-        }
     }
 
     /**
@@ -423,6 +411,16 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         Pattern pattern = Pattern.compile("[0-9]*");
         Matcher isNum = pattern.matcher(str);
         return isNum.matches();
+    }
+
+    /**
+     * 更具修改时间进行排序
+     */
+    public void orderByUpdateTime(Map<String, List<BeanCustomConfigHistory>> beanCustomConfigHistoryListMap) {
+        for (String key : beanCustomConfigHistoryListMap.keySet()) {
+            beanCustomConfigHistoryListMap.get(key).sort((o1, o2) -> o1.getDate() == null ? -1
+                : o2.getDate() == null ? -1 : o2.getDate().compareTo(o1.getDate()));
+        }
     }
 
 }
