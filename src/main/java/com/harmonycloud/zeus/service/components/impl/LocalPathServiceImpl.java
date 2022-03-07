@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.components.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
@@ -14,7 +15,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.util.List;
+import java.util.*;
+
+import static com.harmonycloud.caas.common.constants.NameConstant.SUPPORT;
 
 /**
  * @author xutianhong
@@ -43,7 +46,15 @@ public class LocalPathServiceImpl extends AbstractBaseOperator implements LocalP
 
     @Override
     public void integrate(MiddlewareClusterDTO cluster) {
-
+        MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
+        if (!existCluster.getStorage().containsKey(SUPPORT)){
+            existCluster.getStorage().put(SUPPORT, new ArrayList<JSONObject>());
+        }
+        List<JSONObject> existSupport = (List<JSONObject>)existCluster.getStorage().get(SUPPORT);
+        List<JSONObject> support = (List<JSONObject>)cluster.getStorage().get(SUPPORT);
+        existSupport.addAll(support);
+        existCluster.getStorage().put(SUPPORT, existSupport);
+        clusterService.update(existCluster);
     }
 
     @Override
@@ -69,7 +80,16 @@ public class LocalPathServiceImpl extends AbstractBaseOperator implements LocalP
 
     @Override
     protected void updateCluster(MiddlewareClusterDTO cluster) {
-        cluster.getStorage().put(StorageClassProvisionerEnum.LOCAL_PATH.getType(), DEFAULT_STORAGE_LIMIT);
+        if (!cluster.getStorage().containsKey(SUPPORT)){
+            cluster.getStorage().put(SUPPORT, new ArrayList<JSONObject>());
+        }
+        JSONObject object = new JSONObject();
+        object.put("name", "local-path");
+        object.put("type", "local-path");
+        object.put("namespace", "middleware-operator");
+        List<JSONObject> support = (List<JSONObject>)cluster.getStorage().get(SUPPORT);
+        support.add(object);
+        cluster.getStorage().put(SUPPORT, support);
         clusterService.update(cluster);
     }
 

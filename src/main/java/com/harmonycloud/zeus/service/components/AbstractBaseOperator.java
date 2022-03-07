@@ -28,10 +28,6 @@ public abstract class AbstractBaseOperator {
 
     @Value("${k8s.component.components:/usr/local/zeus-pv/components}")
     protected String componentsPath;
-    /**
-     * 默认存储限额
-     */
-    protected static final String DEFAULT_STORAGE_LIMIT = "100Gi";
 
     @Autowired
     protected HelmChartService helmChartService;

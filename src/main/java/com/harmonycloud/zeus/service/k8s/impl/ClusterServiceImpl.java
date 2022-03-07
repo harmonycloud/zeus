@@ -299,17 +299,6 @@ public class ClusterServiceImpl implements ClusterService {
         }
         // 将chart包存进数据库
         insertMysqlChart(cluster.getId());
-        // 安装组件
-        /*createComponents(cluster);
-        //初始化集群索引模板
-        ThreadPoolExecutorFactory.executor.execute(() -> {
-            try {
-                esService.initEsIndexTemplate();
-                log.info("集群:{}索引模板初始化完成", cluster.getName());
-            } catch (Exception e) {
-                log.error("集群:{}索引模板初始化失败", cluster.getName(), e);
-            }
-        });*/
     }
 
     @Override
@@ -381,11 +370,6 @@ public class ClusterServiceImpl implements ClusterService {
             cluster.setDcId(DEFAULT);
         }
         
-        // 设置ingress
-        /*if (cluster.getIngress() != null && cluster.getIngress().getTcp() == null) {
-            cluster.getIngress().setTcp(new MiddlewareClusterIngress.IngressConfig());
-        }*/
-        
         // 设置es信息
         if (cluster.getLogging() == null) {
             cluster.setLogging(new MiddlewareClusterLogging());
@@ -398,12 +382,7 @@ public class ClusterServiceImpl implements ClusterService {
         if (cluster.getStorage() == null) {
             cluster.setStorage(new HashMap<>());
         }
-        if (cluster.getStorage().get(SUPPORT) == null) {
-            List<String> defaultSupportList = StorageClassProvisionerEnum.getDefaultSupportType();
-            Map<String, String> support =
-                defaultSupportList.stream().collect(Collectors.toMap(s -> s, s -> DEFAULT_STORAGE_LIMIT));
-            cluster.getStorage().put(SUPPORT, support);
-        }
+        cluster.getStorage().computeIfAbsent(SUPPORT, k -> new HashMap<String, Object>());
     }
 
     @Override
