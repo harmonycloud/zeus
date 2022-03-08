@@ -328,6 +328,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             String alert = middlewareAlertsDTO.getAlert() + "-" + UUIDUtils.get8UUID();
             middlewareAlertsDTO.setAlert(alert);
             middlewareAlertsDTO.setExpr(expr);
+            middlewareAlertsDTO.getLabels().put("namespace",NameConstant.MONITORING);
+            middlewareAlertsDTO.getLabels().put("service",NameConstant.PROMETHEUS_K8S_RULES);
+            middlewareAlertsDTO.getLabels().put("alertname",alert);
         }
         assemblePrometheusrule(clusterId,NameConstant.PROMETHEUS_K8S_RULES,middlewareAlertsDTO,prometheusRule);
         prometheusRuleService.update(clusterId, prometheusRule);
