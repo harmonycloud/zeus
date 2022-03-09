@@ -70,11 +70,6 @@ public class ConfigTemplateServiceImpl implements ConfigTemplateService {
         return beanCustomConfigList.stream().map(beanCustomConfig -> {
             CustomConfig customConfig = new CustomConfig();
             BeanUtils.copyProperties(beanCustomConfig, customConfig);
-            // 特殊处理mysql相关内容
-            if ("innodb_buffer_pool_size".equals(beanCustomConfig.getName())) {
-                // 设置默认值为空
-                customConfig.setDefaultValue("");
-            }
             return customConfig;
         }).collect(Collectors.toList());
     }

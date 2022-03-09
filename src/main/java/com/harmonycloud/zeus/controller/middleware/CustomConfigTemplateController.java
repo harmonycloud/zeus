@@ -56,8 +56,8 @@ public class CustomConfigTemplateController {
     })
     @GetMapping("/{uid}")
     public BaseResult<CustomConfigTemplateDTO> get(@PathVariable("type") String type,
-                                                         @PathVariable("uid") String uid,
-                                                         @RequestParam("chartVersion") String chartVersion) {
+                                                   @PathVariable("uid") String uid,
+                                                   @RequestParam("chartVersion") String chartVersion) {
         return BaseResult.ok(configTemplateService.get(type, uid, chartVersion));
     }
 
