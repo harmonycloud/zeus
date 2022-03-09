@@ -1,7 +1,6 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.text.MessageFormat;
 import java.util.*;
@@ -9,23 +8,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
-import com.harmonycloud.zeus.bean.BeanCustomConfig;
-import com.harmonycloud.zeus.bean.BeanCustomConfigHistory;
-import com.harmonycloud.zeus.dao.BeanCustomConfigHistoryMapper;
-import com.harmonycloud.zeus.dao.BeanCustomConfigMapper;
-import com.harmonycloud.zeus.integration.cluster.ConfigMapWrapper;
-import com.harmonycloud.zeus.service.AbstractBaseService;
-import com.harmonycloud.zeus.service.k8s.ClusterService;
-import com.harmonycloud.zeus.service.k8s.ConfigMapService;
-import com.harmonycloud.zeus.service.k8s.K8sExecService;
-import com.harmonycloud.zeus.service.k8s.PodService;
-import com.harmonycloud.zeus.service.middleware.CustomConfigHistoryService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareCustomConfigService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareService;
-import com.harmonycloud.zeus.service.registry.HelmChartService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,11 +18,27 @@ import org.yaml.snakeyaml.Yaml;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.tool.date.DateUtils;
+import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.harmonycloud.zeus.bean.BeanCustomConfig;
+import com.harmonycloud.zeus.bean.BeanCustomConfigHistory;
+import com.harmonycloud.zeus.bean.BeanMiddlewareParamTop;
+import com.harmonycloud.zeus.dao.BeanCustomConfigMapper;
+import com.harmonycloud.zeus.dao.BeanMiddlewareParamTopMapper;
+import com.harmonycloud.zeus.service.AbstractBaseService;
+import com.harmonycloud.zeus.service.k8s.ClusterService;
+import com.harmonycloud.zeus.service.k8s.ConfigMapService;
+import com.harmonycloud.zeus.service.k8s.K8sExecService;
+import com.harmonycloud.zeus.service.k8s.PodService;
+import com.harmonycloud.zeus.service.middleware.CustomConfigHistoryService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareCustomConfigService;
+import com.harmonycloud.zeus.service.registry.HelmChartService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -66,11 +64,12 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
     private K8sExecService k8sExecService;
     @Autowired
     private CustomConfigHistoryService customConfigHistoryService;
+    @Autowired
+    private BeanMiddlewareParamTopMapper beanMiddlewareParamTopMapper;
 
     @Override
     public List<CustomConfig> listCustomConfig(String clusterId, String namespace, String middlewareName, String type)
         throws Exception {
-
         Middleware middleware = new Middleware(clusterId, namespace, middlewareName, type);
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         // 获取values
@@ -92,6 +91,10 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             customConfigHistoryService.get(clusterId, namespace, middlewareName).stream()
                 .collect(Collectors.groupingBy(BeanCustomConfigHistory::getItem));
         orderByUpdateTime(beanCustomConfigHistoryListMap);
+        //查询置顶参数
+        QueryWrapper<BeanMiddlewareParamTop> wrapper1 = new QueryWrapper<BeanMiddlewareParamTop>()
+            .eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", middlewareName);
+        List<BeanMiddlewareParamTop> beanMiddlewareParamTopList = beanMiddlewareParamTopMapper.selectList(wrapper1);
         // 封装customConfigList
         List<CustomConfig> customConfigList = new ArrayList<>();
         beanCustomConfigList.forEach(beanCustomConfig -> {
@@ -117,6 +120,10 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
                 if (StringUtils.isEmpty(customConfig.getValue())) {
                     customConfig.setValue(defaultValue);
                 }
+            }
+            if (beanMiddlewareParamTopList.stream()
+                .anyMatch(beanMiddlewareParamTop -> beanMiddlewareParamTop.getParam().equals(customConfig.getName()))) {
+                customConfig.setTopping(true);
             }
             customConfigList.add(customConfig);
         });
@@ -284,7 +291,19 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
 
     @Override
     public void topping(String clusterId, String namespace, String name, String configName, String type) {
-
+        QueryWrapper<BeanMiddlewareParamTop> wrapper = new QueryWrapper<BeanMiddlewareParamTop>()
+            .eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", name).eq("param", configName);
+        List<BeanMiddlewareParamTop> exist = beanMiddlewareParamTopMapper.selectList(wrapper);
+        if (CollectionUtils.isEmpty(exist)) {
+            BeanMiddlewareParamTop beanMiddlewareParamTop = new BeanMiddlewareParamTop();
+            beanMiddlewareParamTop.setClusterId(clusterId);
+            beanMiddlewareParamTop.setNamespace(namespace);
+            beanMiddlewareParamTop.setName(name);
+            beanMiddlewareParamTop.setParam(configName);
+            beanMiddlewareParamTopMapper.insert(beanMiddlewareParamTop);
+        } else {
+            beanMiddlewareParamTopMapper.delete(wrapper);
+        }
     }
 
     /**

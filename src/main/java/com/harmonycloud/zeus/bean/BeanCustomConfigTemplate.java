@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * @author xutianhong
@@ -55,5 +56,11 @@ public class BeanCustomConfigTemplate implements Serializable {
      */
     @TableField("config")
     private String config;
+
+    /**
+     * 创建时间
+     */
+    @TableField("create_time")
+    private Date createTime;
 
 }
