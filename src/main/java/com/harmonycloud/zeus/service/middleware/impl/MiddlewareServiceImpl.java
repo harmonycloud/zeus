@@ -412,6 +412,13 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             middleware.setStatus("Preparing");
             finalMiddlewareList.add(middleware);
         });
+        finalMiddlewareList.stream().forEach(middleware -> {
+            if ("Preparing".equals(middleware.getStatus())) {
+                if (compareTime(middleware.getCreateTime())) {
+                    middleware.setStatus("failed");
+                }
+            }
+        });
         // 获取values.yaml的详情
         finalMiddlewareList.forEach(mw -> mw = getOperator(BaseOperator.class, BaseOperator.class, mw).convertByHelmChart(mw, cluster));
         // 获取未完全删除的中间件
@@ -977,6 +984,17 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
      */
     public boolean rebootCheck(Middleware middleware) {
         if (middleware.getStdoutEnabled() != null || middleware.getFilelogEnabled() != null) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean compareTime(Date date) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MINUTE,-10);
+        Date now = calendar.getTime();
+        int compareTo = now.compareTo(date);
+        if (compareTo == 1) {
             return true;
         }
         return false;
