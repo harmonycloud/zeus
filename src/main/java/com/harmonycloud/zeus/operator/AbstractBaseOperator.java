@@ -676,7 +676,9 @@ public abstract class AbstractBaseOperator {
      */
     protected void replaceCommonValues(Middleware middleware, MiddlewareClusterDTO cluster, JSONObject values) {
         replaceSimplyCommonValues(middleware, cluster, values);
-        values.put(MODE, middleware.getMode());
+        if (StringUtils.isNotEmpty(middleware.getMode())){
+            values.put(MODE, middleware.getMode());
+        }
         // image
         JSONObject image = values.getJSONObject("image");
         Registry registry = cluster.getRegistry();

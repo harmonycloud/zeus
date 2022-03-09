@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.constants.MysqlConstant;
 import com.harmonycloud.caas.common.enums.DateType;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.uuid.UUIDUtils;
@@ -17,6 +19,7 @@ import com.harmonycloud.zeus.util.K8sConvert;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 
 import java.util.*;
 
@@ -34,6 +37,28 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
     @Override
     public void create(Middleware middleware, MiddlewareClusterDTO cluster) {
         super.create(middleware, cluster);
+    }
+
+    @Override
+    protected void replaceValues(Middleware middleware, MiddlewareClusterDTO cluster, JSONObject values) {
+        // 替换通用的值
+        replaceCommonValues(middleware, cluster, values);
+
+        // 资源配额
+        MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
+        replaceCommonResources(quota, values.getJSONObject(RESOURCES));
+        replaceCommonStorages(quota, values);
+        values.put("replicas", quota.getNum());
+        // 设置zookeeper信息
+        JSONObject zookeeper = new JSONObject();
+        KafkaDTO kafkaDTO = middleware.getKafkaDTO();
+        if (ObjectUtils.isEmpty(kafkaDTO)){
+            throw new BusinessException(ErrorMessage.PARAMETER_VALUE_NOT_PROVIDE);
+        }
+        zookeeper.put("address", kafkaDTO.getZkAddress());
+        zookeeper.put("port", kafkaDTO.getZkPort());
+        zookeeper.put("path", kafkaDTO.getPath() + UUIDUtils.get8UUID());
+        values.put("zookeeper", zookeeper);
     }
 
     @Override
@@ -82,34 +107,4 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
     public void updateConfigData(ConfigMap configMap, List<String> data) {
 
     }
-
-    @Override
-    protected void replaceValues(Middleware middleware, MiddlewareClusterDTO cluster, JSONObject values) {
-        super.replaceValues(middleware, cluster, values);
-        if (middleware.getQuota() != null) {
-            MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
-            replaceCommonResources(quota, values.getJSONObject(RESOURCES));
-            replaceCommonStorages(quota, values);
-        }
-        // 设置zookeeper信息
-        JSONObject zookeeper = values.getJSONObject("zookeeper");
-        KafkaDTO kafkaDTO = middleware.getKafkaDTO();
-        if (zookeeper != null && kafkaDTO != null) {
-            zookeeper.put("address", kafkaDTO.getZkAddress());
-            zookeeper.put("port", kafkaDTO.getZkPort());
-            zookeeper.put("path", kafkaDTO.getPath() + UUIDUtils.get8UUID());
-            values.put("custom", true);
-            //设置dynamicTabs
-            values.put("dynamicTabs", middleware.getCapabilities());
-        } else {
-            zookeeper.put("path", zookeeper.getString("path") + UUIDUtils.get8UUID());
-        }
-        // 设置主机容忍信息
-        if (!CollectionUtils.isEmpty(middleware.getTolerations())) {
-            JSONArray jsonArray = K8sConvert.convertToleration2Json(middleware.getTolerations());
-            values.put("tolerations", jsonArray);
-            values.put("tolerationAry", Arrays.toString(middleware.getTolerations().toArray()));
-        }
-    }
-
 }
