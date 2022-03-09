@@ -18,6 +18,7 @@ import com.harmonycloud.zeus.util.DateUtil;
 import com.harmonycloud.zeus.util.K8sConvert;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
@@ -75,17 +76,47 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
             String[] ports = args.getString("port").split("/");
             kafkaDTO.setZkPort(ports[0]);
             middleware.setKafkaDTO(kafkaDTO);
-            JSONArray dynamicTabs = values.getJSONArray("dynamicTabs");
-            List<String> capabilities = new ArrayList<>();
-            if (dynamicTabs != null) {
-                for (Object dynamicTab : dynamicTabs) {
-                    capabilities.add(dynamicTab.toString());
-                }
-                middleware.setCapabilities(capabilities);
-            }
         }
         middleware.setManagePlatform(true);
         return middleware;
+    }
+
+    @Override
+    public void update(Middleware middleware, MiddlewareClusterDTO cluster) {
+        StringBuilder sb = new StringBuilder();
+
+        // 实例扩容
+        if (middleware.getQuota() != null && middleware.getQuota().get(middleware.getType()) != null) {
+            MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
+            // 设置limit的resources
+            setLimitResources(quota);
+            // 实例规格扩容
+            // cpu
+            if (StringUtils.isNotBlank(quota.getCpu())) {
+                sb.append("resources.requests.cpu=").append(quota.getCpu()).append(",resources.limits.cpu=")
+                    .append(quota.getLimitCpu()).append(",");
+            }
+            // memory
+            if (StringUtils.isNotBlank(quota.getMemory())) {
+                sb.append("resources.requests.memory=").append(quota.getMemory()).append("resources.limits.memory=")
+                    .append(quota.getLimitMemory()).append(",");
+            }
+            // 实例模式扩容
+            if (quota.getNum() != null) {
+                sb.append("replicas=").append(quota.getNum()).append(",");
+            }
+        }
+
+        // 更新通用字段
+        super.updateCommonValues(sb, middleware);
+        // 没有修改，直接返回
+        if (sb.length() == 0) {
+            return;
+        }
+        // 去掉末尾的逗号
+        sb.deleteCharAt(sb.length() - 1);
+        // 更新helm
+        helmChartService.upgrade(middleware, sb.toString(), cluster);
     }
 
     @Override
