@@ -779,10 +779,24 @@ public class ClusterServiceImpl implements ClusterService {
         PrometheusResponse per5MinMemoryUsed =
             prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
 
+        // 查询pvc总量
+        String pvcTotalQuery = "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes) by (namespace) /1024/1024/1024";
+        queryMap.put("query", pvcTotalQuery);
+        PrometheusResponse pvcTotal =
+                prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
+
+        // 查询pvc使用量
+        String pvcUsingQuery = "sum(kubelet_volume_stats_used_bytes) by (namespace) /1024/1024/1024";
+        queryMap.put("query", pvcUsingQuery);
+        PrometheusResponse pvcUsing =
+                prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
+
         Map<Map<String, String>, List<String>> cpuRequestResult = getResultMap(cpuRequest);
         Map<Map<String, String>, List<String>> cpuPer5MinResult = getResultMap(per5MinCpuUsed);
         Map<Map<String, String>, List<String>> memoryRequestResult = getResultMap(memoryRequest);
         Map<Map<String, String>, List<String>> memoryPer5MinResult = getResultMap(per5MinMemoryUsed);
+        Map<Map<String, String>, List<String>> pvcRequestResult = getResultMap(pvcTotal);
+        Map<Map<String, String>, List<String>> pvcPer5MinResult = getResultMap(pvcUsing);
         return namespaceList.stream().map(ns -> {
             ClusterNamespaceResourceDto nsResource = new ClusterNamespaceResourceDto();
             Map<String, String> nsMap = new HashMap<>();
@@ -803,6 +817,14 @@ public class ClusterServiceImpl implements ClusterService {
             if (memoryPer5MinResult.containsKey(nsMap)) {
                 nsResource.setPer5MinMemory(getResourceResult((memoryPer5MinResult.get(nsMap).get(1))));
             }
+            // 获取pvc总额
+            if (pvcRequestResult.containsKey(nsMap)) {
+                nsResource.setPvcRequest(getResourceResult(pvcRequestResult.get(nsMap).get(1)));
+            }
+            // 获取pvc使用量
+            if (pvcPer5MinResult.containsKey(nsMap)) {
+                nsResource.setPer5MinPvc(getResourceResult((pvcPer5MinResult.get(nsMap).get(1))));
+            }
             // 计算cpu使用率
             if (nsResource.getCpuRequest() != null && nsResource.getPer5MinCpu() != null && nsResource.getCpuRequest() != 0) {
                 double cpuRate = nsResource.getPer5MinCpu() / nsResource.getCpuRequest() * 100;
@@ -812,6 +834,11 @@ public class ClusterServiceImpl implements ClusterService {
             if (nsResource.getMemoryRequest() != null && nsResource.getPer5MinMemory() != null && nsResource.getMemoryRequest() != 0) {
                 double memoryRate = nsResource.getPer5MinMemory() / nsResource.getMemoryRequest() * 100;
                 nsResource.setMemoryRate(ResourceCalculationUtil.roundNumber2TwoDecimalWithCeiling(memoryRate));
+            }
+            // 计算pvc使用率
+            if (nsResource.getPvcRequest() != null && nsResource.getPer5MinPvc() != null && nsResource.getPvcRequest() != 0) {
+                double pvcRate = nsResource.getPer5MinPvc() / nsResource.getPvcRequest() * 100;
+                nsResource.setPvcRate(ResourceCalculationUtil.roundNumber2TwoDecimalWithCeiling(pvcRate));
             }
             return nsResource.setClusterId(clusterId).setName(ns.getName());
         }).collect(Collectors.toList());
