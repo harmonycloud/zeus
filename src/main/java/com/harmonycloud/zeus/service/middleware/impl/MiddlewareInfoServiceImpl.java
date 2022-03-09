@@ -254,6 +254,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         middlewareInfo.setType(helmChartFile.getType());
         middlewareInfo.setName(helmChartFile.getChartName());
         middlewareInfo.setDescription(helmChartFile.getDescription());
+        middlewareInfo.setCompatibleVersions(helmChartFile.getCompatibleVersions());
         if(!CollectionUtils.isEmpty(helmChartFile.getDependency())){
             middlewareInfo.setOperatorName(helmChartFile.getDependency().get("alias"));
         }

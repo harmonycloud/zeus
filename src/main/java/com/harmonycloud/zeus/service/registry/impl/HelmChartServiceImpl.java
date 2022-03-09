@@ -191,15 +191,17 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         String appVersion = infoMap.get("appVersion") == null ? null : infoMap.get("appVersion").toString();
         String official = "";
         Object object = infoMap.getOrDefault("annotations", "");
+        String compatibleVersions = null;
         if (!ObjectUtils.isEmpty(object)) {
             JSONObject annotations = JSONObject.parseObject(JSONObject.toJSONString(object));
             official = annotations.getOrDefault("owner", "").toString();
+            compatibleVersions = annotations.get("compatibleVersions") == null ? null : annotations.get("compatibleVersions").toString();
         }
         List<Map<String, String>> dependencies = infoMap.containsKey("dependencies")
             ? (List<Map<String, String>>)infoMap.get("dependencies") : new ArrayList<>();
         String chartName = infoMap.get("name") == null ? null : infoMap.get("name").toString();
         String chartVersion = infoMap.get("version") == null ? null : infoMap.get("version").toString();
-        String compatibleVersions = infoMap.get("compatibleVersions") == null ? null : infoMap.get("compatibleVersions").toString();
+
         Map<String, String> yamlFileMap = HelmChartUtil.getYamlFileMap(tarFilePath);
         yamlFileMap.putAll(HelmChartUtil.getParameters(tarFilePath));
         yamlFileMap.put(CHART_YAML_NAME, JSONObject.toJSONString(infoMap));
