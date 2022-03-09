@@ -518,7 +518,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         JSONObject currentValues = helmChartService.getInstalledValuesAsNormalJson(name, namespace, clusterService.findById(clusterId));
 
         String currentChartVersion = currentValues.getString("chart-version");
-        String compatibleVersions = upgradeValues.getString("compatibleVersions");
+        String compatibleVersions = helmChart.getCompatibleVersions();
         // 检查chart版本是否符合升级要求
         BaseResult upgradeCheckRes = checkUpgradeVersion(currentChartVersion, upgradeChartVersion, compatibleVersions);
         if (!upgradeCheckRes.getSuccess()) {
@@ -911,7 +911,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         }
         if (StringUtils.isNotBlank(compatibleVersions)) {
             // 2.判断是否满足升级至当前chart所需最低版本
-            if (ChartVersionUtil.compare(currentVersion, compatibleVersions) < 0) {
+            if (ChartVersionUtil.compare(currentVersion, compatibleVersions) > 0) {
                 log.error("不满足升级所需最低版本");
                 return BaseResult.error("因版本兼容性问题，请先升级到 " + compatibleVersions, ErrorMessage.UPGRADE_NOT_SATISFY_LOWEST_VERSION);
             }
