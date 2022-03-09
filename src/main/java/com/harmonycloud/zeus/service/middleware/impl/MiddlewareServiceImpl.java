@@ -16,6 +16,7 @@ import com.harmonycloud.caas.common.model.MonitorResourceQuota;
 import com.harmonycloud.caas.common.model.MonitorResourceQuotaBase;
 import com.harmonycloud.caas.common.model.PrometheusResponse;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
+import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
 import com.harmonycloud.zeus.util.ChartVersionUtil;
@@ -414,9 +415,13 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         });
         finalMiddlewareList.stream().forEach(middleware -> {
             if ("Preparing".equals(middleware.getStatus())) {
-                if (compareTime(middleware.getCreateTime())) {
-                    middleware.setStatus("failed");
-                }
+                finalHelmListInfoList.stream().forEach(helmListInfo -> {
+                    if (middleware.getName().equals(helmListInfo.getName())) {
+                        if (compareTime(helmListInfo.getUpdateTime())) {
+                            middleware.setStatus("failed");
+                        }
+                    }
+                });
             }
         });
         // 获取values.yaml的详情
@@ -989,7 +994,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         return false;
     }
 
-    public boolean compareTime(Date date) {
+    public boolean compareTime(String time) {
+        String[] dateTimes = time.split("\\.");
+        Date date = DateUtils.parseDate(dateTimes[0], "yyyy-MM-ddHH:mm:ss");
+        date = DateUtils.addInteger(date, Calendar.HOUR_OF_DAY, 8);
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.MINUTE,-10);
         Date now = calendar.getTime();
@@ -999,5 +1007,4 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         }
         return false;
     }
-
 }
