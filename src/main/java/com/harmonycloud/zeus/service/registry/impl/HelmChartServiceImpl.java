@@ -270,6 +270,9 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     @Override
     public JSONObject getInstalledValues(String name, String namespace, MiddlewareClusterDTO cluster) {
         String yamlStr = loadYamlAsStr(name, namespace, cluster);
+        if (StringUtils.isEmpty(yamlStr)){
+            return null;
+        }
         Yaml yaml = new Yaml();
         return yaml.loadAs(yamlStr, JSONObject.class);
     }
