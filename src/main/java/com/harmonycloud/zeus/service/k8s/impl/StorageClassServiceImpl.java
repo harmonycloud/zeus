@@ -52,7 +52,6 @@ public class StorageClassServiceImpl implements StorageClassService {
         if (CollectionUtils.isEmpty(cluster.getStorage())) {
             return new ArrayList<>(0);
         }
-        Map<String, Object> support = (Map<String, Object>)cluster.getStorage().get("support");
         List<StorageClass> list = new ArrayList<>();
 
         // 取出存储配额
@@ -68,9 +67,6 @@ public class StorageClassServiceImpl implements StorageClassService {
                 .setLabels(sc.getMetadata().getLabels()).setParameters(sc.getParameters())
                 .setProvisioner(sc.getProvisioner()).setReclaimPolicy(sc.getReclaimPolicy())
                 .setVolumeBindingMode(sc.getVolumeBindingMode());
-            // 设置配额
-            s.setStorageLimit(support.get(s.getType()) == null ? null : String.valueOf(ResourceCalculationUtil
-                .getResourceValue(support.get(s.getType()).toString(), DISK, ResourceUnitEnum.GI.getUnit())));
 
             List<String> quotas = rqMap.get(s.getName());
             if (!CollectionUtils.isEmpty(quotas)) {
