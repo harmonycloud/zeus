@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
@@ -73,10 +74,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class ClusterServiceImpl implements ClusterService {
 
-    /**
-     * 默认存储限额
-     */
-    private static final String DEFAULT_STORAGE_LIMIT = "100Gi";
+    private static final Map<String, MiddlewareClusterDTO> CLUSTER_MAP = new ConcurrentHashMap<>();
+    private static boolean run = true;
     @Value("${system.upload.path:/usr/local/zeus-pv/upload}")
     private String uploadPath;
 
@@ -208,18 +207,21 @@ public class ClusterServiceImpl implements ClusterService {
 
     @Override
     public MiddlewareClusterDTO findById(String clusterId) {
-        List<MiddlewareClusterDTO> clusterList = listClusters().stream()
-            .filter(clusterDTO -> clusterDTO.getId().equals(clusterId)).collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(clusterList)) {
-            throw new CaasRuntimeException(ErrorMessage.CLUSTER_NOT_FOUND);
+        if (!CLUSTER_MAP.containsKey(clusterId)) {
+            List<MiddlewareClusterDTO> clusterList = listClusters().stream()
+                    .filter(clusterDTO -> clusterDTO.getId().equals(clusterId)).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(clusterList)) {
+                throw new CaasRuntimeException(ErrorMessage.CLUSTER_NOT_FOUND);
+            }
+            MiddlewareClusterDTO dto = clusterList.get(0);
+            // 如果accessToken为空，尝试生成token
+            if (StringUtils.isBlank(dto.getAccessToken())) {
+                clusterCertService.generateTokenByCert(dto);
+            }
+            CLUSTER_MAP.put(clusterId, SerializationUtils.clone(dto));
         }
-        MiddlewareClusterDTO dto = clusterList.get(0);
-        // 如果accessToken为空，尝试生成token
-        if (StringUtils.isBlank(dto.getAccessToken())) {
-            clusterCertService.generateTokenByCert(dto);
-        }
-        // 深拷贝对象返回，避免其他地方修改内容
-        return SerializationUtils.clone(dto);
+        refresh(clusterId);
+        return CLUSTER_MAP.get(clusterId);
     }
 
     @Override
@@ -1017,6 +1019,29 @@ public class ClusterServiceImpl implements ClusterService {
         cluster.setProtocol(serverInfos[0]);
         cluster.setHost(host);
         cluster.setPort(Integer.parseInt(serverInfos[2]));
+    }
+
+    public void refresh(String clusterId){
+        ThreadPoolExecutorFactory.executor.execute(() -> {
+            if (run){
+                List<MiddlewareClusterDTO> clusterList = listClusters().stream()
+                        .filter(clusterDTO -> clusterDTO.getId().equals(clusterId)).collect(Collectors.toList());
+                if (CollectionUtils.isEmpty(clusterList)) {
+                    log.error("刷新集群信息失败，未找到集群:{}", clusterId);
+                }
+                MiddlewareClusterDTO dto = clusterList.get(0);
+                CLUSTER_MAP.put(clusterId, SerializationUtils.clone(dto));
+                run = false;
+                try {
+                    log.info("刷新集群信息成功，将静默10s");
+                    Thread.sleep(10000);
+                    log.info("静默完成，可再次刷新");
+                    run = true;
+                } catch (InterruptedException e){
+                    log.error("线程休眠异常", e);
+                }
+            }
+        });
     }
 
 }
