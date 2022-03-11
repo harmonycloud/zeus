@@ -9,11 +9,10 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.harmonycloud.caas.common.model.LdapConfigDto;
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.tool.date.DateUtils;
-import com.harmonycloud.zeus.service.user.AuthService;
-import com.harmonycloud.zeus.service.user.RoleService;
-import com.harmonycloud.zeus.service.user.UserService;
+import com.harmonycloud.zeus.service.user.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,7 +24,6 @@ import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.caas.filters.token.JwtTokenComponent;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
-import com.harmonycloud.tool.encrypt.RSAUtils;
 import org.springframework.util.CollectionUtils;
 
 /**
@@ -42,18 +40,35 @@ public class AuthServiceImpl implements AuthService {
     @Value("${system.user.expire:0.5}")
     private Double expireTime;
 
+    @Autowired
+    private AuthManager4Ldap authManager4Ldap;
+    @Autowired
+    private LdapService ldapService;
+
     @Override
     public JSONObject login(String userName, String password, HttpServletResponse response) throws Exception {
         //解密密码
         String decryptPassword;
         try {
-            decryptPassword = RSAUtils.decryptByPrivateKey(password);
+//            decryptPassword = RSAUtils.decryptByPrivateKey(password);
+            decryptPassword = password;
         } catch (Exception e) {
             throw new BusinessException(ErrorMessage.RSA_DECRYPT_FAILED);
         }
         //md5加密
         String md5Password = PasswordUtils.md5(decryptPassword);
-        UserDto userDto = userService.get(userName, true);
+        // 获取ldap配置信息
+        LdapConfigDto ldapConfigDto = ldapService.queryLdapDetail();
+
+        UserDto userDto;
+        if (userName.equals("admin")) {
+            userDto = userService.getUserDto(userName, true);
+        } else if (isLdapOn(ldapConfigDto)) {
+            userDto = authManager4Ldap.auth(userName, password, ldapConfigDto);
+        } else {
+            userDto = userService.getUserDto(userName, true);
+        }
+
         //校验用户权限
         checkAuth(userDto);
         //校验密码
@@ -114,4 +129,10 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    private boolean isLdapOn(LdapConfigDto ldapConfigDto) {
+        if (ldapConfigDto != null && ldapConfigDto.getIsOn() != null && ldapConfigDto.getIsOn() == 1) {
+            return true;
+        }
+        return false;
+    }
 }

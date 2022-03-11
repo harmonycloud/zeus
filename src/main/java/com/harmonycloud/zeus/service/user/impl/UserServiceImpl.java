@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.constants.LdapConfigConstant;
 import com.harmonycloud.caas.common.model.MailUserDTO;
 import com.harmonycloud.caas.common.model.UploadImageFileDto;
 import com.harmonycloud.zeus.bean.MailToUser;
@@ -20,7 +21,6 @@ import com.harmonycloud.zeus.service.user.UserRoleService;
 import com.harmonycloud.zeus.service.user.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.ibatis.annotations.Results;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -79,16 +79,28 @@ public class UserServiceImpl implements UserService {
     private String imagePath;
 
     @Override
-    public UserDto get(String userName) throws Exception {
+    public UserDto getUserDto(String userName) throws Exception {
         if (StringUtils.isEmpty(userName)) {
             CurrentUser currentUser = CurrentUserRepository.getUser();
             userName = currentUser.getUsername();
         }
-        return get(userName, false);
+        return getUserDto(userName, false);
     }
 
     @Override
-    public UserDto get(String userName, Boolean withPassword) throws Exception {
+    public BeanUser get(String userName) {
+        QueryWrapper<BeanUser> wrapper = new QueryWrapper<BeanUser>().eq("username", userName);
+        BeanUser beanUser = beanUserMapper.selectOne(wrapper);
+        return beanUser;
+    }
+
+    @Override
+    public void create(BeanUser beanUser) {
+        beanUserMapper.insert(beanUser);
+    }
+
+    @Override
+    public UserDto getUserDto(String userName, Boolean withPassword) throws Exception {
         QueryWrapper<BeanUser> wrapper = new QueryWrapper<BeanUser>().eq("username", userName);
         BeanUser beanUser = beanUserMapper.selectOne(wrapper);
         if (ObjectUtils.isEmpty(beanUser)) {
@@ -169,6 +181,11 @@ public class UserServiceImpl implements UserService {
         if (userDto.getRoleId() != null) {
             userRoleService.update(userDto);
         }
+    }
+
+    @Override
+    public void update(BeanUser beanUser) {
+        beanUserMapper.updateById(beanUser);
     }
 
     @Override
