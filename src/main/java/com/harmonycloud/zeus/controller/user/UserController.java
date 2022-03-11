@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import com.harmonycloud.caas.common.model.middleware.MiddlewareAlertsDTO;
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
 import com.harmonycloud.zeus.service.user.UserService;
@@ -39,7 +38,7 @@ public class UserController {
             @ApiImplicitParam(name = "userName", value = "账户", paramType = "query", dataTypeClass = String.class),})
     @GetMapping
     public BaseResult<UserDto> get(@RequestParam(value = "userName", required = false) String userName) throws Exception {
-        return BaseResult.ok(userService.get(userName));
+        return BaseResult.ok(userService.getUserDto(userName));
     }
 
     @ApiOperation(value = "获取用户列表", notes = "获取用户列表")

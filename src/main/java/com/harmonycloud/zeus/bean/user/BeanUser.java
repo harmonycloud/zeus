@@ -66,6 +66,4 @@ public class BeanUser implements Serializable {
      */
     @TableField("password_time")
     private Date passwordTime;
-
-
 }

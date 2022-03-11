@@ -6,6 +6,7 @@ import com.harmonycloud.caas.common.model.middleware.MiddlewareAlertsDTO;
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
+import com.harmonycloud.zeus.bean.user.BeanUser;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -23,7 +24,14 @@ public interface UserService {
      *
      * @return UserDto
      */
-    UserDto get(String userName) throws Exception;
+    UserDto getUserDto(String userName) throws Exception;
+
+    /**
+     * 查询用户原始信息
+     * @param userName
+     * @return
+     */
+    BeanUser get(String userName);
 
     /**
      * 获取用户信息
@@ -32,7 +40,7 @@ public interface UserService {
      *
      * @return UserDto
      */
-    UserDto get(String userName, Boolean withPassword) throws Exception;
+    UserDto getUserDto(String userName, Boolean withPassword) throws Exception;
 
     /**
      * 获取用户列表
@@ -50,10 +58,22 @@ public interface UserService {
     void create(UserDto userDto) throws Exception;
 
     /**
+     * 创建用户
+     * @param beanUser
+     */
+    void create(BeanUser beanUser);
+
+    /**
      * 更新用户信息
      * @param userDto 用户对象
      */
     void update(UserDto userDto) throws Exception;
+
+    /**
+     * 更新用户信息
+     * @param beanUser
+     */
+    void update(BeanUser beanUser) ;
 
     /**
      * 删除用户
