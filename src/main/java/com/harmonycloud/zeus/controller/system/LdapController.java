@@ -20,9 +20,9 @@ public class LdapController {
     @Autowired
     private LdapService ldapService;
 
-    @ApiOperation(value = "保存", notes = "保存")
-    @PostMapping()
-    public BaseResult save(@RequestBody LdapConfigDto ldapConfigDto) {
+    @ApiOperation(value = "启用ldap", notes = "启用ldap")
+    @PostMapping("/enable")
+    public BaseResult enable(@RequestBody LdapConfigDto ldapConfigDto) {
         ldapService.save(ldapConfigDto);
         return BaseResult.ok();
     }
@@ -37,6 +37,13 @@ public class LdapController {
     @GetMapping("/detail")
     public BaseResult detail() {
         return BaseResult.ok(ldapService.queryLdapDetail());
+    }
+
+    @ApiOperation(value = "禁用ldap", notes = "禁用ldap")
+    @PutMapping("/disable")
+    public BaseResult disable(){
+        ldapService.disable();
+        return BaseResult.ok();
     }
 
 
