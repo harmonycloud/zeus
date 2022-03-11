@@ -51,7 +51,7 @@ public interface MiddlewareAlertsService {
                      AlertsUserDTO alertsUserDTO) throws Exception;
 
     /**
-     * 创建告警规则
+     * 删除告警规则
      *
      * @param clusterId      集群id
      * @param namespace      命名空间
