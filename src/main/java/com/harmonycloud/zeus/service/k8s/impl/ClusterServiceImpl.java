@@ -404,6 +404,7 @@ public class ClusterServiceImpl implements ClusterService {
         }
         // 从map中移除
         k8SDefaultClusterService.delete(clusterId);
+        CLUSTER_MAP.remove(clusterId);
         // 关联数据库信息删除
         bindResourceDelete(cluster);
     }
