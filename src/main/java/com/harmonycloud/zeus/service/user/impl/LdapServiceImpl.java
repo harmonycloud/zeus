@@ -70,6 +70,13 @@ public class LdapServiceImpl implements LdapService {
     }
 
     @Override
+    public void disable() {
+        BeanLdapConfig isOnConfig = findByConfigName(LdapConfigConstant.IS_ON);
+        isOnConfig.setConfigValue(LdapConfigConstant.LDAP_DISABLE);
+        update(isOnConfig);
+    }
+
+    @Override
     public LdapConfigDto queryLdapDetail() {
         QueryWrapper<BeanLdapConfig> wrapper = new QueryWrapper<>();
         List<BeanLdapConfig> ldapConfigs = ldapConfigMapper.selectList(wrapper);
