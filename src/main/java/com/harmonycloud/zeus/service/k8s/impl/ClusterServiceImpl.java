@@ -1021,11 +1021,11 @@ public class ClusterServiceImpl implements ClusterService {
         cluster.setPort(Integer.parseInt(serverInfos[2]));
     }
 
-    public void refresh(String clusterId){
-        ThreadPoolExecutorFactory.executor.execute(() -> {
-            if (run){
+    public void refresh(String clusterId) {
+        if (run) {
+            ThreadPoolExecutorFactory.executor.execute(() -> {
                 List<MiddlewareClusterDTO> clusterList = listClusters().stream()
-                        .filter(clusterDTO -> clusterDTO.getId().equals(clusterId)).collect(Collectors.toList());
+                    .filter(clusterDTO -> clusterDTO.getId().equals(clusterId)).collect(Collectors.toList());
                 if (CollectionUtils.isEmpty(clusterList)) {
                     log.error("刷新集群信息失败，未找到集群:{}", clusterId);
                 }
@@ -1037,11 +1037,11 @@ public class ClusterServiceImpl implements ClusterService {
                     Thread.sleep(10000);
                     log.info("静默完成，可再次刷新");
                     run = true;
-                } catch (InterruptedException e){
+                } catch (InterruptedException e) {
                     log.error("线程休眠异常", e);
                 }
-            }
-        });
+            });
+        }
     }
 
 }
