@@ -52,7 +52,6 @@ public class AuthServiceImpl implements AuthService {
         String decryptPassword;
         try {
             decryptPassword = RSAUtils.decryptByPrivateKey(password);
-            decryptPassword = password;
         } catch (Exception e) {
             throw new BusinessException(ErrorMessage.RSA_DECRYPT_FAILED);
         }
