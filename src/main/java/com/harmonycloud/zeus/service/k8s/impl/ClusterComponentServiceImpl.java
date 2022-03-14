@@ -84,6 +84,13 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
             componentsDtoList = componentsDtoList.stream().filter(clusterComponentsDto -> !clusterComponentsDto
                 .getComponent().equals(ComponentsEnum.LOCAL_PATH.getName())).collect(Collectors.toList());
         }
+        // 优先部署prometheus
+        if (componentsDtoList.stream().anyMatch(
+                clusterComponentsDto -> clusterComponentsDto.getComponent().equals(ComponentsEnum.PROMETHEUS.getName()))) {
+            deploy(cluster, new ClusterComponentsDto().setComponent(ComponentsEnum.PROMETHEUS.getName()).setType(""));
+            componentsDtoList = componentsDtoList.stream().filter(clusterComponentsDto -> !clusterComponentsDto
+                    .getComponent().equals(ComponentsEnum.PROMETHEUS.getName())).collect(Collectors.toList());
+        }
         // 部署operator
         final CountDownLatch operatorCount =
             new CountDownLatch(multipleComponentsInstallDto.getMiddlewareInfoDTOList().size());

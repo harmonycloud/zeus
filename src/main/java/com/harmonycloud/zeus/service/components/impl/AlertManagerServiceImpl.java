@@ -1,6 +1,8 @@
 package com.harmonycloud.zeus.service.components.impl;
 
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitor;
@@ -9,6 +11,8 @@ import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.AlertManagerService;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
@@ -24,6 +28,7 @@ import java.util.Map;
  */
 @Service
 @Operator(paramTypes4One = String.class)
+@Slf4j
 public class AlertManagerServiceImpl extends AbstractBaseOperator implements AlertManagerService {
 
     @Override
@@ -38,7 +43,16 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
             namespaceService.save(cluster.getId(), "monitoring", null);
         }
         //发布alertManager
-        super.deploy(cluster, clusterComponentsDto);
+        try {
+            super.deploy(cluster, clusterComponentsDto);
+        } catch (Exception e){
+            if (StringUtils.isNotEmpty(e.getMessage()) && e.getMessage().contains("no matches for kind")) {
+                log.error("识别部分资源类型失败", e);
+                throw new BusinessException(ErrorMessage.CRD_NOT_EXISTED);
+            } else {
+                throw e;
+            }
+        }
     }
 
     @Override
