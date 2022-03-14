@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.registry.impl;
 
+import static com.harmonycloud.caas.common.constants.CommonConstant.RESOURCE_ALREADY_EXISTED;
 import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
 import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.*;
 
@@ -332,10 +333,19 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
 
     private List<String> execCmd(String cmd, Function<String, String> dealWithErrMsg) {
         List<String> res = new ArrayList<>();
-        CmdExecUtil.execCmd(cmd, inputMsg -> {
-            res.add(inputMsg);
-            return inputMsg;
-        }, dealWithErrMsg == null ? warningMsg() : dealWithErrMsg);
+        try {
+            CmdExecUtil.execCmd(cmd, inputMsg -> {
+                res.add(inputMsg);
+                return inputMsg;
+            }, dealWithErrMsg == null ? warningMsg() : dealWithErrMsg);
+        } catch (Exception e) {
+            if (StringUtils.isNotEmpty(e.getMessage()) && e.getMessage().contains(RESOURCE_ALREADY_EXISTED)) {
+                log.error(e.getMessage());
+                throw new BusinessException(ErrorMessage.RESOURCE_ALREADY_EXISTED);
+            } else {
+                throw e;
+            }
+        }
         return res;
     }
     
