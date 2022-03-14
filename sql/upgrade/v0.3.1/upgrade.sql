@@ -17,3 +17,18 @@ CREATE TABLE `mirror_image` (
   `update_time` timestamp NULL DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='镜像仓库表';
+
+-- 2022.3.14 xutianhong
+-- 自定义参数
+DROP TABLE IF EXISTS `middleware_param_top`;
+CREATE TABLE `middleware_param_top`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `cluster_id` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '集群id',
+  `namespace` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '分区',
+  `name` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '名称',
+  `param` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '参数名',
+  PRIMARY KEY (`id`)
+);
+
+ALTER TABLE `custom_config_template`
+ADD COLUMN `create_time` timestamp(0) NULL COMMENT '创建时间' AFTER `config`;
