@@ -71,7 +71,7 @@ public class AuthManager4LdapImpl implements AuthManager4Ldap {
         LdapTemplate template = LdapServiceImpl.getTemplate(ldapConfigDto);
         Map<String, String> userAttribute = getUserAttribute(userName, template, ldapConfigDto);
         boolean authenticated = template.authenticate(userAttribute.get("dn"),
-                new EqualsFilter("objectClass", ldapConfigDto.getObjectClass()).encode(), password);
+                new EqualsFilter("objectClass", ldapConfigDto.getObjectClass()).encode(), PasswordUtils.md5(password));
         if (authenticated) {
             return userAttribute;
         } else {
