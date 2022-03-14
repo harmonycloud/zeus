@@ -32,3 +32,16 @@ CREATE TABLE `middleware_param_top`  (
 
 ALTER TABLE `custom_config_template`
 ADD COLUMN `create_time` timestamp(0) NULL COMMENT '创建时间' AFTER `config`;
+
+-- 2022.3.14 liyinlong
+-- 新增ldap配置表
+CREATE TABLE `ldap_config` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `config_name` varchar(64) NOT NULL COMMENT '配置名',
+  `config_value` varchar(2048) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `create_user` varchar(64) DEFAULT NULL COMMENT '创建人',
+  `update_user` varchar(64) DEFAULT NULL COMMENT '修改人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `config_name` (`config_name`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT COMMENT='ldap配置表';
