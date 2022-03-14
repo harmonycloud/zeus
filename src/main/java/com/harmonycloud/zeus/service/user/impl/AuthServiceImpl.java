@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.harmonycloud.caas.common.model.LdapConfigDto;
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.tool.date.DateUtils;
+import com.harmonycloud.tool.encrypt.RSAUtils;
 import com.harmonycloud.zeus.service.user.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +51,7 @@ public class AuthServiceImpl implements AuthService {
         //解密密码
         String decryptPassword;
         try {
-//            decryptPassword = RSAUtils.decryptByPrivateKey(password);
+            decryptPassword = RSAUtils.decryptByPrivateKey(password);
             decryptPassword = password;
         } catch (Exception e) {
             throw new BusinessException(ErrorMessage.RSA_DECRYPT_FAILED);
