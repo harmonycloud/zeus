@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -132,6 +133,7 @@ public class ConfigTemplateServiceImpl implements ConfigTemplateService {
         BeanUtils.copyProperties(customConfigTemplateDTO, beanCustomConfigTemplate);
         beanCustomConfigTemplate.setUid(UUIDUtils.get16UUID());
         beanCustomConfigTemplate.setConfig(sb.toString());
+        beanCustomConfigTemplate.setCreateTime(new Date());
         return beanCustomConfigTemplate;
     }
 
