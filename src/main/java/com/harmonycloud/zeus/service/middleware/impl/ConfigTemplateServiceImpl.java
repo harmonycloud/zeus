@@ -71,6 +71,10 @@ public class ConfigTemplateServiceImpl implements ConfigTemplateService {
         return beanCustomConfigList.stream().map(beanCustomConfig -> {
             CustomConfig customConfig = new CustomConfig();
             BeanUtils.copyProperties(beanCustomConfig, customConfig);
+            customConfig.setParamType(customConfig.getRanges().contains("|") ? "select" : "input");
+            if ("sql_mode".equals(beanCustomConfig.getName())) {
+                customConfig.setParamType("multiSelect");
+            }
             return customConfig;
         }).collect(Collectors.toList());
     }

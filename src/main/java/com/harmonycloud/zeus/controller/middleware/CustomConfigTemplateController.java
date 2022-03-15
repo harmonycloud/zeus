@@ -52,7 +52,8 @@ public class CustomConfigTemplateController {
     @ApiOperation(value = "获取自定义配置模板内容", notes = "获取自定义配置模板内容")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "templateName", value = "模板名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "uid", value = "模板id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "chartVersion", value = "中间件版本", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/{uid}")
     public BaseResult<CustomConfigTemplateDTO> get(@PathVariable("type") String type,
