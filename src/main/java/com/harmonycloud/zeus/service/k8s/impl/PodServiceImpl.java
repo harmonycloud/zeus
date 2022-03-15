@@ -28,6 +28,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.yaml.snakeyaml.Yaml;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -240,10 +242,14 @@ public class PodServiceImpl implements PodService {
                 }
             }
         }
-        resource.setCpu(String.valueOf(cpu));
-        resource.setMemory(String.valueOf(memory));
-        resource.setLimitCpu(String.valueOf(limitCpu));
-        resource.setLimitMemory(String.valueOf(limitMemory));
+        resource.setCpu(
+            String.valueOf(ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(cpu), 2, RoundingMode.CEILING)));
+        resource.setMemory(
+            String.valueOf(ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(memory), 2, RoundingMode.CEILING)));
+        resource.setLimitCpu(
+            String.valueOf(ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(limitCpu), 2, RoundingMode.CEILING)));
+        resource.setLimitMemory(String
+            .valueOf(ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(limitMemory), 2, RoundingMode.CEILING)));
         return pi.setResources(resource);
     }
 
