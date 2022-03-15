@@ -127,6 +127,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             }
             customConfigList.add(customConfig);
         });
+        customConfigList.sort((o1, o2) -> o1.getTopping() == null ? 1 : o2.getTopping() == null ? -1 : 0);
         return customConfigList;
     }
 
