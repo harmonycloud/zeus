@@ -44,4 +44,11 @@ public interface MirrorImageService {
      */
     void delete(String clusterId, String namespace, String id);
 
+    /**
+     * 通过集群ID查看详情
+     * @param clusterId
+     * @param namespace
+     * @return
+     */
+    MirrorImageDTO detailByClusterId(String clusterId, String namespace);
 }

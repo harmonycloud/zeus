@@ -28,11 +28,13 @@ public class MirrorImageServiceImpl implements MirrorImageService {
 
     @Override
     public void insert(String clusterId, String namespace, MirrorImageDTO mirrorImageDTO) {
-        BeanMirrorImage beanMirrorImage = new BeanMirrorImage();
+         BeanMirrorImage beanMirrorImage = new BeanMirrorImage();
         BeanUtils.copyProperties(mirrorImageDTO,beanMirrorImage);
-        String address = mirrorImageDTO.getProtocol() + "://" + mirrorImageDTO.getHostAddress() + ":" + mirrorImageDTO.getPort();
+        String address = mirrorImageDTO.getHostAddress() + ":" + mirrorImageDTO.getPort() + "/" + mirrorImageDTO.getProject();
         beanMirrorImage.setClusterId(clusterId);
-        beanMirrorImage.setNamespace(namespace);
+        if (StringUtils.isNotEmpty(namespace)) {
+            beanMirrorImage.setNamespace(namespace);
+        }
         beanMirrorImage.setAddress(address);
         beanMirrorImage.setCreateTime(new Date());
         beanMirrorImageMapper.insert(beanMirrorImage);
@@ -41,18 +43,16 @@ public class MirrorImageServiceImpl implements MirrorImageService {
     @Override
     public PageInfo<MirrorImageDTO> listMirrorImages(String clusterId, String namespace, String keyword) {
         QueryWrapper<BeanMirrorImage> wrapper = new QueryWrapper<>();
-        wrapper.eq("cluster_id",clusterId).eq("namespace",namespace);
+        wrapper.eq("cluster_id",clusterId).eq("namespace",namespace).or().eq("namespace","");
         if (StringUtils.isNotEmpty(keyword)) {
             wrapper.and(queryWrapper -> {
                 queryWrapper.like("address",keyword).or().like("project",keyword).or().like("description",keyword);
             });
         }
+        wrapper.orderByDesc("create_time");
         List<BeanMirrorImage> beanMirrorImages = beanMirrorImageMapper.selectList(wrapper);
         PageInfo<MirrorImageDTO> mirrorImageDTOPageInfo = new PageInfo<>();
         BeanUtils.copyProperties(new PageInfo<>(beanMirrorImages),mirrorImageDTOPageInfo);
-        mirrorImageDTOPageInfo.getList().sort(
-                (o1, o2) -> o1.getCreateTime() == null ? -1 : o2.getCreateTime() == null ? -1 : o2.getCreateTime().compareTo(o1.getCreateTime()));
-
         return mirrorImageDTOPageInfo;
     }
 
@@ -60,7 +60,7 @@ public class MirrorImageServiceImpl implements MirrorImageService {
     public void update(String clusterId, String namespace, MirrorImageDTO mirrorImageDTO) {
         BeanMirrorImage beanMirrorImage = new BeanMirrorImage();
         BeanUtils.copyProperties(mirrorImageDTO,beanMirrorImage);
-        String address = mirrorImageDTO.getProtocol() + "://" + mirrorImageDTO.getHostAddress() + ":" + mirrorImageDTO.getPort();
+        String address = mirrorImageDTO.getHostAddress() + ":" + mirrorImageDTO.getPort() + "/" + mirrorImageDTO.getProject();
         beanMirrorImage.setClusterId(clusterId);
         beanMirrorImage.setNamespace(namespace);
         beanMirrorImage.setAddress(address);
@@ -73,5 +73,17 @@ public class MirrorImageServiceImpl implements MirrorImageService {
         QueryWrapper<BeanMirrorImage> wrapper = new QueryWrapper<>();
         wrapper.eq("cluster_id",clusterId).eq("namespace",namespace).eq("id",id);
         beanMirrorImageMapper.delete(wrapper);
+    }
+
+    @Override
+    public MirrorImageDTO detailByClusterId(String clusterId, String namespace) {
+        QueryWrapper<BeanMirrorImage> wrapper = new QueryWrapper<>();
+        wrapper.eq("cluster_id",clusterId).eq("namespace",namespace);
+        List<BeanMirrorImage> beanMirrorImages = beanMirrorImageMapper.selectList(wrapper);
+        MirrorImageDTO mirrorImageDTO = new MirrorImageDTO();
+        if (!beanMirrorImages.isEmpty()) {
+            BeanUtils.copyProperties(beanMirrorImages.get(0),mirrorImageDTO);
+        }
+        return mirrorImageDTO;
     }
 }
