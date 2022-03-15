@@ -202,27 +202,48 @@ public class PodServiceImpl implements PodService {
 
         // resource
         MiddlewareQuota resource = new MiddlewareQuota();
-        ResourceRequirements resources = containers.get(0).getResources();
-        if (!CollectionUtils.isEmpty(resources.getRequests())) {
-            if (resources.getRequests().containsKey(CPU)) {
-                resource.setCpu(String.valueOf(
-                    ResourceCalculationUtil.getResourceValue(resources.getRequests().get(CPU).toString(), CPU, "")));
+        double cpu = 0.0;
+        double memory = 0.0;
+        double limitCpu = 0.0;
+        double limitMemory = 0.0;
+        for (Container container : containers) {
+            if (container.getName().contains("init")) {
+                continue;
             }
-            if (resources.getRequests().containsKey(MEMORY)) {
-                resource.setMemory(String.valueOf(ResourceCalculationUtil.getResourceValue(
-                    resources.getRequests().get(MEMORY).toString(), MEMORY, ResourceUnitEnum.GI.getUnit())));
+            ResourceRequirements resources = container.getResources();
+            if (!CollectionUtils.isEmpty(resources.getRequests())) {
+                if (resources.getRequests().containsKey(CPU)) {
+                    cpu = cpu + ResourceCalculationUtil.getResourceValue(resources.getRequests().get(CPU).toString(),
+                        CPU, "");
+                    resource.setCpu(String.valueOf(ResourceCalculationUtil
+                        .getResourceValue(resources.getRequests().get(CPU).toString(), CPU, "")));
+                }
+                if (resources.getRequests().containsKey(MEMORY)) {
+                    memory = memory + ResourceCalculationUtil.getResourceValue(
+                        resources.getRequests().get(MEMORY).toString(), MEMORY, ResourceUnitEnum.GI.getUnit());
+                    resource.setMemory(String.valueOf(ResourceCalculationUtil.getResourceValue(
+                        resources.getRequests().get(MEMORY).toString(), MEMORY, ResourceUnitEnum.GI.getUnit())));
+                }
+            }
+            if (!CollectionUtils.isEmpty(resources.getLimits())) {
+                if (resources.getLimits().containsKey(CPU)) {
+                    limitCpu = limitCpu
+                        + ResourceCalculationUtil.getResourceValue(resources.getLimits().get(CPU).toString(), CPU, "");
+                    resource.setLimitCpu(String.valueOf(
+                        ResourceCalculationUtil.getResourceValue(resources.getLimits().get(CPU).toString(), CPU, "")));
+                }
+                if (resources.getLimits().containsKey(MEMORY)) {
+                    limitMemory = limitMemory + ResourceCalculationUtil.getResourceValue(
+                        resources.getLimits().get(MEMORY).toString(), MEMORY, ResourceUnitEnum.GI.getUnit());
+                    resource.setLimitMemory(String.valueOf(ResourceCalculationUtil.getResourceValue(
+                        resources.getLimits().get(MEMORY).toString(), MEMORY, ResourceUnitEnum.GI.getUnit())));
+                }
             }
         }
-        if (!CollectionUtils.isEmpty(resources.getLimits())) {
-            if (resources.getLimits().containsKey(CPU)) {
-                resource.setLimitCpu(String.valueOf(
-                    ResourceCalculationUtil.getResourceValue(resources.getLimits().get(CPU).toString(), CPU, "")));
-            }
-            if (resources.getLimits().containsKey(MEMORY)) {
-                resource.setLimitMemory(String.valueOf(ResourceCalculationUtil.getResourceValue(
-                    resources.getLimits().get(MEMORY).toString(), MEMORY, ResourceUnitEnum.GI.getUnit())));
-            }
-        }
+        resource.setCpu(String.valueOf(cpu));
+        resource.setMemory(String.valueOf(memory));
+        resource.setLimitCpu(String.valueOf(limitCpu));
+        resource.setLimitMemory(String.valueOf(limitMemory));
         return pi.setResources(resource);
     }
 
