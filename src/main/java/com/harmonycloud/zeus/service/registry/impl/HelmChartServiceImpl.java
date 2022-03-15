@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.service.registry.impl;
 import static com.harmonycloud.caas.common.constants.CommonConstant.RESOURCE_ALREADY_EXISTED;
 import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
 import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.*;
+import static com.harmonycloud.caas.common.constants.MirrorImageConstant.*;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -323,11 +324,21 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
                 .getQuestionYaml(getHelmChartFilePath(helmChartFile.getChartName(), helmChartFile.getChartVersion())
                     + File.separator + helmChartFile.getTarFileName() + File.separator + MANIFESTS),
                 JSONObject.class);
-            return JSONObject.parseObject(JSONObject.toJSONString(question), QuestionYaml.class);
+            return convertType(JSONObject.parseObject(JSONObject.toJSONString(question), QuestionYaml.class));
         } catch (Exception e) {
             log.error("中间件{} 获取question.yaml失败", helmChartFile.getChartName() + ":" + helmChartFile.getChartVersion());
             throw new CaasRuntimeException(ErrorMessage.CREATE_DYNAMIC_FORM_FAILED);
         }
+    }
+
+    public QuestionYaml convertType(QuestionYaml questionYaml) {
+        List<Question> questions = questionYaml.getQuestions();
+        questions.stream().forEach(question -> {
+            if (MIRROR_IMAGE.equals(question.getLabel())) {
+                question.setType("mirrorImage");
+            }
+        });
+        return questionYaml;
     }
 
 
