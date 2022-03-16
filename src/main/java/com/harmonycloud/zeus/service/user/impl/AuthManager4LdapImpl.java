@@ -64,7 +64,7 @@ public class AuthManager4LdapImpl implements AuthManager4Ldap {
             throw new BusinessException(ErrorMessage.USERNAME_SHOULD_NOT_BE_NULL);
         }
         // 对ldap认证通过的用户,判断是否已经记录,如果没有，则记录用户,并返回该用户
-        return saveUserInfo(userName, password, userAttributes);
+        return saveUserInfo(userName, password, ldapConfigDto, userAttributes);
     }
 
     private Map<String, String> getUserFromLdap(String userName, String password, LdapConfigDto ldapConfigDto) {
@@ -87,7 +87,7 @@ public class AuthManager4LdapImpl implements AuthManager4Ldap {
      * @param userAttributes
      * @throws Exception
      */
-    private UserDto saveUserInfo(String userName, String password, Map<String, String> userAttributes) throws Exception {
+    private UserDto saveUserInfo(String userName, String password, LdapConfigDto ldapConfigDto, Map<String, String> userAttributes) throws Exception {
         BeanUser user = userService.get(userName);
         if (user == null) {
             user = new BeanUser();
@@ -96,7 +96,7 @@ public class AuthManager4LdapImpl implements AuthManager4Ldap {
             user.setEmail(userAttributes.get(LDAP_MAIL));
             user.setPhone(userAttributes.get(LDAP_MOBILE));
             user.setCreateTime(new Date());
-            user.setAliasName(userAttributes.get(LDAP_REAL_NAME) == null ? userName : userAttributes.get(LDAP_REAL_NAME));
+            user.setAliasName(userAttributes.get(ldapConfigDto.getDisplayNameAttribute()) == null ? userName : userAttributes.get(ldapConfigDto.getDisplayNameAttribute()));
             userService.create(user);
             return userService.getUserDto(userName, true);
         }
@@ -126,7 +126,7 @@ public class AuthManager4LdapImpl implements AuthManager4Ldap {
     private Map<String, String> getUserAttribute(String cn, LdapTemplate template, LdapConfigDto ldapConfigDto) {
         AndFilter andFilter = new AndFilter();
         andFilter.and(new EqualsFilter("objectClass", ldapConfigDto.getObjectClass()));
-        andFilter.and(new EqualsFilter("cn", cn));
+        andFilter.and(new EqualsFilter(ldapConfigDto.getSearchAttribute(), cn));
 
         List<Map<String, String>> results = template.search("", andFilter.encode(), new DnMapper());
 

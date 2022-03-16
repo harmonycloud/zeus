@@ -274,8 +274,8 @@ public class UserServiceImpl implements UserService {
      */
     public void checkParams(UserDto userDto) throws Exception {
         // 校验参数是否完全
-        if (StringUtils.isAnyBlank(userDto.getUserName(), userDto.getAliasName(), userDto.getPhone())) {
-            throw new IllegalArgumentException("username/aliasName/phone should not be null");
+        if (StringUtils.isAnyBlank(userDto.getUserName(), userDto.getAliasName())) {
+            throw new IllegalArgumentException("username/aliasName should not be null");
         }
     }
 
