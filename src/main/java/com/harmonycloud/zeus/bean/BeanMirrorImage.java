@@ -31,12 +31,6 @@ public class BeanMirrorImage {
     private String clusterId;
 
     /**
-     * 命名空间
-     */
-    @TableField(value = "namespace")
-    private String namespace;
-
-    /**
      * 协议
      */
     @TableField(value = "protocol")
@@ -83,6 +77,12 @@ public class BeanMirrorImage {
      */
     @TableField(value = "description")
     private String description;
+
+    /**
+     * 是否默认
+     */
+    @TableField(value = "is_default")
+    private Integer isDefault;
 
     /**
      * 创建时间
