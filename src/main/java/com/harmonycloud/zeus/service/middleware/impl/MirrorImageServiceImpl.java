@@ -2,7 +2,6 @@ package com.harmonycloud.zeus.service.middleware.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.pagehelper.PageInfo;
-import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.model.middleware.MirrorImageDTO;
 import com.harmonycloud.zeus.bean.BeanMirrorImage;
 import com.harmonycloud.zeus.dao.BeanMirrorImageMapper;
@@ -28,20 +27,23 @@ public class MirrorImageServiceImpl implements MirrorImageService {
     private BeanMirrorImageMapper beanMirrorImageMapper;
 
     @Override
-    public void insert(String clusterId, MirrorImageDTO mirrorImageDTO) {
-        BeanMirrorImage beanMirrorImage = new BeanMirrorImage();
+    public void insert(String clusterId, String namespace, MirrorImageDTO mirrorImageDTO) {
+         BeanMirrorImage beanMirrorImage = new BeanMirrorImage();
         BeanUtils.copyProperties(mirrorImageDTO,beanMirrorImage);
         String address = mirrorImageDTO.getHostAddress() + ":" + mirrorImageDTO.getPort() + "/" + mirrorImageDTO.getProject();
         beanMirrorImage.setClusterId(clusterId);
+        if (StringUtils.isNotEmpty(namespace)) {
+            beanMirrorImage.setNamespace(namespace);
+        }
         beanMirrorImage.setAddress(address);
         beanMirrorImage.setCreateTime(new Date());
         beanMirrorImageMapper.insert(beanMirrorImage);
     }
 
     @Override
-    public PageInfo<MirrorImageDTO> listMirrorImages(String clusterId, String keyword) {
+    public PageInfo<MirrorImageDTO> listMirrorImages(String clusterId, String namespace, String keyword) {
         QueryWrapper<BeanMirrorImage> wrapper = new QueryWrapper<>();
-        wrapper.eq("cluster_id",clusterId);
+        wrapper.eq("cluster_id",clusterId).eq("namespace",namespace).or().eq("namespace","");
         if (StringUtils.isNotEmpty(keyword)) {
             wrapper.and(queryWrapper -> {
                 queryWrapper.like("address",keyword).or().like("project",keyword).or().like("description",keyword);
@@ -55,47 +57,33 @@ public class MirrorImageServiceImpl implements MirrorImageService {
     }
 
     @Override
-    public void update(String clusterId, MirrorImageDTO mirrorImageDTO) {
+    public void update(String clusterId, String namespace, MirrorImageDTO mirrorImageDTO) {
         BeanMirrorImage beanMirrorImage = new BeanMirrorImage();
         BeanUtils.copyProperties(mirrorImageDTO,beanMirrorImage);
         String address = mirrorImageDTO.getHostAddress() + ":" + mirrorImageDTO.getPort() + "/" + mirrorImageDTO.getProject();
         beanMirrorImage.setClusterId(clusterId);
+        beanMirrorImage.setNamespace(namespace);
         beanMirrorImage.setAddress(address);
         beanMirrorImage.setUpdateTime(new Date());
         beanMirrorImageMapper.updateById(beanMirrorImage);
     }
 
     @Override
-    public void delete(String clusterId, String id) {
+    public void delete(String clusterId, String namespace, String id) {
         QueryWrapper<BeanMirrorImage> wrapper = new QueryWrapper<>();
-        wrapper.eq("cluster_id",clusterId).eq("id",id);
+        wrapper.eq("cluster_id",clusterId).eq("namespace",namespace).eq("id",id);
         beanMirrorImageMapper.delete(wrapper);
     }
 
     @Override
-    public MirrorImageDTO detailByClusterId(String clusterId) {
+    public MirrorImageDTO detailByClusterId(String clusterId, String namespace) {
         QueryWrapper<BeanMirrorImage> wrapper = new QueryWrapper<>();
-        wrapper.eq("cluster_id",clusterId).eq("is_default", CommonConstant.NUM_ONE);
+        wrapper.eq("cluster_id",clusterId).eq("namespace",namespace);
         List<BeanMirrorImage> beanMirrorImages = beanMirrorImageMapper.selectList(wrapper);
         MirrorImageDTO mirrorImageDTO = new MirrorImageDTO();
         if (!beanMirrorImages.isEmpty()) {
             BeanUtils.copyProperties(beanMirrorImages.get(0),mirrorImageDTO);
         }
         return mirrorImageDTO;
-    }
-
-    @Override
-    public MirrorImageDTO detailById(Integer id) {
-        MirrorImageDTO mirrorImageDTO = new MirrorImageDTO();
-        BeanMirrorImage beanMirrorImage = beanMirrorImageMapper.selectById(id);
-        BeanUtils.copyProperties(beanMirrorImage,mirrorImageDTO);
-        return mirrorImageDTO;
-    }
-
-    @Override
-    public void removeMirrorImage(String clusterId) {
-        QueryWrapper<BeanMirrorImage> wrapper = new QueryWrapper<>();
-        wrapper.eq("cluster_id",clusterId);
-        beanMirrorImageMapper.delete(wrapper);
     }
 }

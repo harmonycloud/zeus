@@ -19,7 +19,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
-import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.zeus.service.middleware.MirrorImageService;
 import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
 import org.apache.commons.lang3.SerializationUtils;
@@ -415,8 +414,6 @@ public class ClusterServiceImpl implements ClusterService {
         CLUSTER_MAP.remove(clusterId);
         // 关联数据库信息删除
         bindResourceDelete(cluster);
-        // 移除镜像仓库信息
-        mirrorImageService.removeMirrorImage(clusterId);
     }
 
     public void bindResourceDelete(MiddlewareClusterDTO cluster){
@@ -512,17 +509,16 @@ public class ClusterServiceImpl implements ClusterService {
         BeanUtils.copyProperties(registry,mirrorImageDTO);
         mirrorImageDTO.setUsername(registry.getUser());
         mirrorImageDTO.setProject(registry.getChartRepo());
-        mirrorImageDTO.setIsDefault(CommonConstant.NUM_ONE);
-        mirrorImageService.insert(clusterDTO.getName(), mirrorImageDTO);
+        mirrorImageService.insert(clusterDTO.getName(),null, mirrorImageDTO);
     }
 
     public void updateMysqlMirrorImage(MiddlewareClusterDTO clusterDTO) {
         Registry registry = clusterDTO.getRegistry();
-        MirrorImageDTO mirrorImageDTO = mirrorImageService.detailByClusterId(clusterDTO.getName());
+        MirrorImageDTO mirrorImageDTO = mirrorImageService.detailByClusterId(clusterDTO.getName(),null);
         BeanUtils.copyProperties(registry,mirrorImageDTO);
         mirrorImageDTO.setUsername(registry.getUser());
         mirrorImageDTO.setProject(registry.getChartRepo());
-        mirrorImageService.update(clusterDTO.getName(),mirrorImageDTO);
+        mirrorImageService.update(clusterDTO.getName(),null,mirrorImageDTO);
     }
 
     public void clusterResource(MiddlewareClusterDTO cluster){

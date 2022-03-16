@@ -374,7 +374,6 @@ CREATE TABLE `mirror_image` (
   `username` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT '用户名',
   `password` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT '密码',
   `description` varchar(512) COLLATE utf8_bin DEFAULT NULL COMMENT '描述',
-  `is_default` int(11) COLLATE utf8_bin DEFAULT NULL COMMENT '是否默认',
   `create_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
   `update_time` timestamp NULL DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`)

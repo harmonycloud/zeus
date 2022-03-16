@@ -85,12 +85,6 @@ public class BeanMirrorImage {
     private String description;
 
     /**
-     * 是否默认
-     */
-    @TableField(value = "is_default")
-    private Integer isDefault;
-
-    /**
      * 创建时间
      */
     @TableField(value = "create_time")

@@ -18,7 +18,6 @@ import com.harmonycloud.caas.common.model.PrometheusResponse;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
-import com.harmonycloud.zeus.service.middleware.*;
 import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
 import com.harmonycloud.zeus.util.ChartVersionUtil;
 import org.apache.commons.lang3.SerializationUtils;
@@ -47,6 +46,10 @@ import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.operator.BaseOperator;
 import com.harmonycloud.zeus.service.AbstractBaseService;
 import com.harmonycloud.zeus.service.k8s.*;
+import com.harmonycloud.zeus.service.middleware.CacheMiddlewareService;
+import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.YamlUtil;
 
@@ -84,8 +87,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private ConfigMapService configMapService;
     @Autowired
     private PrometheusResourceMonitorService prometheusResourceMonitorService;
-    @Autowired
-    private MirrorImageService mirrorImageService;
 
     @Override
     public List<Middleware> simpleList(String clusterId, String namespace, String type, String keyword) {
@@ -155,7 +156,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(middleware.getClusterId());
         // pre check
         operator.createPreCheck(middleware, cluster);
-        updateRegistry(middleware,cluster);
         // create
         operator.create(middleware, cluster);
         // 查看middleware有没有创建出来
@@ -1011,29 +1011,5 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             return true;
         }
         return false;
-    }
-
-    /**
-     * 填充镜像仓库信息
-     */
-    public void updateRegistry(Middleware middleware, MiddlewareClusterDTO middlewareClusterDTO) {
-        Registry registry = middlewareClusterDTO.getRegistry();
-        if (StringUtils.isNotEmpty(middleware.getMirrorImageId())) {
-            getMirrorImageDTO(middleware.getMirrorImageId(),registry);
-        }
-        if (middleware.getDynamicValues() != null) {
-            if (StringUtils.isNotEmpty(middleware.getDynamicValues().get("mirrorImageId"))) {
-                getMirrorImageDTO(middleware.getDynamicValues().get("mirrorImageId"),registry);
-            }
-        }
-    }
-
-    public void getMirrorImageDTO(String mirrorImageId, Registry registry) {
-        MirrorImageDTO mirrorImageDTO = mirrorImageService.detailById(Integer.valueOf(mirrorImageId));
-        BeanUtils.copyProperties(mirrorImageDTO,registry);
-        registry.setUser(mirrorImageDTO.getUsername());
-        registry.setChartRepo(mirrorImageDTO.getProject());
-        registry.setPort(Integer.valueOf(mirrorImageDTO.getPort()));
-        registry.setAddress(mirrorImageDTO.getHostAddress());
     }
 }
