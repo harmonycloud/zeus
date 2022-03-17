@@ -4,7 +4,6 @@ DROP TABLE IF EXISTS `mirror_image`;
 CREATE TABLE `mirror_image` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `cluster_id` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT '集群',
-  `namespace` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT '命名空间',
   `protocol` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '协议',
   `address` varchar(64) COLLATE utf8_bin DEFAULT NULL COMMENT 'harbor地址',
   `host_address` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT 'harbor主机地址',
@@ -13,6 +12,7 @@ CREATE TABLE `mirror_image` (
   `username` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT '用户名',
   `password` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT '密码',
   `description` varchar(512) COLLATE utf8_bin DEFAULT NULL COMMENT '描述',
+  `is_default` int(11) COLLATE utf8_bin DEFAULT NULL COMMENT '是否默认',
   `create_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
   `update_time` timestamp NULL DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`)
