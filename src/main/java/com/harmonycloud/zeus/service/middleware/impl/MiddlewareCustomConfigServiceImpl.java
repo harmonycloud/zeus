@@ -178,7 +178,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         }
         updateValues(middleware, data, cluster, values);
         // 添加修改历史
-        customConfigHistoryService.insert(cluster.getName(), oldDate, config);
+        customConfigHistoryService.insert(config.getName(), oldDate, config);
         if (restart) {
             // 重启pod
             Middleware ware =
