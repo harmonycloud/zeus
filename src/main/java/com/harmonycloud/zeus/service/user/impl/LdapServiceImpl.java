@@ -72,8 +72,10 @@ public class LdapServiceImpl implements LdapService {
     @Override
     public void disable() {
         BeanLdapConfig isOnConfig = findByConfigName(LdapConfigConstant.IS_ON);
-        isOnConfig.setConfigValue(LdapConfigConstant.LDAP_DISABLE);
-        update(isOnConfig);
+        if (isOnConfig != null) {
+            isOnConfig.setConfigValue(LdapConfigConstant.LDAP_DISABLE);
+            update(isOnConfig);
+        }
     }
 
     @Override
