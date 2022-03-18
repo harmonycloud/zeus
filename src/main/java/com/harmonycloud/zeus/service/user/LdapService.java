@@ -57,5 +57,5 @@ public interface LdapService {
      * @param ldapConfigDto
      * @return
      */
-    boolean connectionCheck(LdapConfigDto ldapConfigDto);
+    void connectionCheck(LdapConfigDto ldapConfigDto);
 }

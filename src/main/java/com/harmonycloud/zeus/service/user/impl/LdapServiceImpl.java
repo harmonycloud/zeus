@@ -2,6 +2,8 @@ package com.harmonycloud.zeus.service.user.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.constants.LdapConfigConstant;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.LdapConfigDto;
 import com.harmonycloud.zeus.bean.BeanLdapConfig;
 import com.harmonycloud.zeus.dao.BeanLdapConfigMapper;
@@ -118,16 +120,15 @@ public class LdapServiceImpl implements LdapService {
     }
 
     @Override
-    public boolean connectionCheck(LdapConfigDto ldapConfigDto) {
+    public void connectionCheck(LdapConfigDto ldapConfigDto) {
         try {
             log.info("开始ldap连接测试", ldapConfigDto);
             LdapTemplate template = getTemplate(ldapConfigDto);
             template.list("");
         } catch (Exception e) {
             log.error("ldap连接失败", e);
-            return false;
+            throw new BusinessException(ErrorMessage.LDAP_SERVER_CONNECT_FAILED);
         }
-        return true;
     }
 
     public static LdapTemplate getTemplate(LdapConfigDto ldapConfigDto) {
