@@ -513,7 +513,9 @@ public class ClusterServiceImpl implements ClusterService {
         mirrorImageDTO.setUsername(registry.getUser());
         mirrorImageDTO.setProject(registry.getChartRepo());
         mirrorImageDTO.setIsDefault(CommonConstant.NUM_ONE);
-        mirrorImageService.insert(clusterDTO.getName(), mirrorImageDTO);
+        mirrorImageDTO.setPort(registry.getPort().toString());
+        mirrorImageDTO.setHostAddress(registry.getAddress());
+        mirrorImageService.insert(clusterDTO.getId(), mirrorImageDTO);
     }
 
     public void updateMysqlMirrorImage(MiddlewareClusterDTO clusterDTO) {
@@ -522,7 +524,10 @@ public class ClusterServiceImpl implements ClusterService {
         BeanUtils.copyProperties(registry,mirrorImageDTO);
         mirrorImageDTO.setUsername(registry.getUser());
         mirrorImageDTO.setProject(registry.getChartRepo());
-        mirrorImageService.update(clusterDTO.getName(),mirrorImageDTO);
+        mirrorImageDTO.setIsDefault(CommonConstant.NUM_ONE);
+        mirrorImageDTO.setPort(registry.getPort().toString());
+        mirrorImageDTO.setHostAddress(registry.getAddress());
+        mirrorImageService.update(clusterDTO.getId(),mirrorImageDTO);
     }
 
     public void clusterResource(MiddlewareClusterDTO cluster){
