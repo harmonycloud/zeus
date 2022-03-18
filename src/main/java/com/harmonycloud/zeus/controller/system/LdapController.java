@@ -30,11 +30,8 @@ public class LdapController {
     @ApiOperation(value = "连接测试", notes = "连接测试")
     @PostMapping("/connectionCheck")
     public BaseResult connectionCheck(@RequestBody LdapConfigDto ldapConfigDto) {
-        if (ldapService.connectionCheck(ldapConfigDto)) {
-            return BaseResult.ok();
-        } else {
-            return BaseResult.error();
-        }
+        ldapService.connectionCheck(ldapConfigDto);
+        return BaseResult.ok();
     }
 
     @ApiOperation(value = "查询Ldap配置信息", notes = "查询Ldap配置信息")

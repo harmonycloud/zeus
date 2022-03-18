@@ -2,11 +2,14 @@ package com.harmonycloud.zeus.service.user.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.constants.LdapConfigConstant;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.LdapConfigDto;
 import com.harmonycloud.zeus.bean.BeanLdapConfig;
 import com.harmonycloud.zeus.dao.BeanLdapConfigMapper;
 import com.harmonycloud.zeus.service.user.LdapService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.core.support.LdapContextSource;
@@ -72,8 +75,10 @@ public class LdapServiceImpl implements LdapService {
     @Override
     public void disable() {
         BeanLdapConfig isOnConfig = findByConfigName(LdapConfigConstant.IS_ON);
-        isOnConfig.setConfigValue(LdapConfigConstant.LDAP_DISABLE);
-        update(isOnConfig);
+        if (isOnConfig != null) {
+            isOnConfig.setConfigValue(LdapConfigConstant.LDAP_DISABLE);
+            update(isOnConfig);
+        }
     }
 
     @Override
@@ -116,16 +121,16 @@ public class LdapServiceImpl implements LdapService {
     }
 
     @Override
-    public boolean connectionCheck(LdapConfigDto ldapConfigDto) {
+    public void connectionCheck(LdapConfigDto ldapConfigDto) {
+        paramCheck(ldapConfigDto);
         try {
             log.info("开始ldap连接测试", ldapConfigDto);
             LdapTemplate template = getTemplate(ldapConfigDto);
             template.list("");
         } catch (Exception e) {
             log.error("ldap连接失败", e);
-            return false;
+            throw new BusinessException(ErrorMessage.LDAP_SERVER_CONNECT_FAILED);
         }
-        return true;
     }
 
     public static LdapTemplate getTemplate(LdapConfigDto ldapConfigDto) {
@@ -138,6 +143,14 @@ public class LdapServiceImpl implements LdapService {
         LdapTemplate template = new LdapTemplate();
         template.setContextSource(contextSource);
         return template;
+    }
+
+    public void paramCheck(LdapConfigDto ldapConfigDto) {
+        if (StringUtils.isAnyBlank(ldapConfigDto.getIp(), ldapConfigDto.getPort(), ldapConfigDto.getPassword(),
+                ldapConfigDto.getUserdn(), ldapConfigDto.getBase(), ldapConfigDto.getPassword(), ldapConfigDto.getSearchAttribute(),
+                ldapConfigDto.getDisplayNameAttribute(), ldapConfigDto.getObjectClass(), ldapConfigDto.getSearchAttribute())) {
+            throw new BusinessException(ErrorMessage.LDAP_INCOMPLETE_PARAMETERS);
+        }
     }
 
 }
