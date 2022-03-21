@@ -21,9 +21,10 @@ public interface MiddlewareCustomConfigService  {
      * @param namespace      命名空间
      * @param middlewareName 中间件名称
      * @param type 中间件类型
+     * @param order 排序: ascend|descend
      * @return List<CustomConfig>
      */
-    List<CustomConfig> listCustomConfig(String clusterId, String namespace, String middlewareName, String type) throws Exception;
+    List<CustomConfig> listCustomConfig(String clusterId, String namespace, String middlewareName, String type, String order) throws Exception;
 
     /**
      * 更新自定义配置

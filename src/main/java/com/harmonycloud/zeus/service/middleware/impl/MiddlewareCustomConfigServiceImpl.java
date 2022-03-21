@@ -42,6 +42,9 @@ import com.harmonycloud.zeus.service.registry.HelmChartService;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ASCEND;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.DESCEND;
+
 /**
  * @author xutianhong
  * @Date 2021/4/23 4:32 下午
@@ -68,7 +71,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
     private BeanMiddlewareParamTopMapper beanMiddlewareParamTopMapper;
 
     @Override
-    public List<CustomConfig> listCustomConfig(String clusterId, String namespace, String middlewareName, String type)
+    public List<CustomConfig> listCustomConfig(String clusterId, String namespace, String middlewareName, String type, String order)
         throws Exception {
         Middleware middleware = new Middleware(clusterId, namespace, middlewareName, type);
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
@@ -128,7 +131,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             customConfigList.add(customConfig);
         });
         customConfigList.sort((o1, o2) -> o1.getTopping() == null ? 1 : o2.getTopping() == null ? -1 : 0);
-        return customConfigList;
+        return sortByOrder(customConfigList, order);
     }
 
     @Override
@@ -441,6 +444,23 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             beanCustomConfigHistoryListMap.get(key).sort((o1, o2) -> o1.getDate() == null ? -1
                 : o2.getDate() == null ? -1 : o2.getDate().compareTo(o1.getDate()));
         }
+    }
+    
+    public List<CustomConfig> sortByOrder(List<CustomConfig> customConfigList, String order) {
+        if (StringUtils.isEmpty(order)) {
+            return customConfigList;
+        }
+        List<CustomConfig> top = customConfigList.stream()
+            .filter(customConfig -> customConfig.getTopping() != null && customConfig.getTopping())
+            .collect(Collectors.toList());
+        customConfigList.removeAll(top);
+        top.sort((o1, o2) -> o1.getUpdateTime() == null ? 1 : o2.getUpdateTime() == null ? 1 : ASCEND.equals(order)
+            ? o1.getUpdateTime().compareTo(o2.getUpdateTime()) : o2.getUpdateTime().compareTo(o1.getUpdateTime()));
+        customConfigList
+            .sort((o1, o2) -> o1.getUpdateTime() == null ? 1 : o2.getUpdateTime() == null ? 1 : ASCEND.equals(order)
+                ? o1.getUpdateTime().compareTo(o2.getUpdateTime()) : o2.getUpdateTime().compareTo(o1.getUpdateTime()));
+        top.addAll(customConfigList);
+        return top;
     }
 
 }

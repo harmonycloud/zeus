@@ -35,13 +35,15 @@ public class MiddlewareCustomConfigController {
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "order", value = "排序", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping
     public BaseResult<List<CustomConfig>> list(@PathVariable("clusterId") String clusterId,
                                                @PathVariable("namespace") String namespace,
                                                @PathVariable("middlewareName") String middlewareName,
-                                               @RequestParam("type") String type) throws Exception {
-        return BaseResult.ok(middlewareCustomConfigService.listCustomConfig(clusterId, namespace, middlewareName, type));
+                                               @RequestParam("type") String type,
+                                               @RequestParam(value = "order", required = false) String order) throws Exception {
+        return BaseResult.ok(middlewareCustomConfigService.listCustomConfig(clusterId, namespace, middlewareName, type, order));
     }
 
     @ApiOperation(value = "更新自定义配置", notes = "更新自定义配置")
