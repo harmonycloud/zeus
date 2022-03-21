@@ -400,6 +400,7 @@ INSERT INTO `resource_menu` VALUES (14, 'roleManagement', '角色管理', 'syste
 INSERT INTO `resource_menu` VALUES (15, 'systemAlarm', '系统告警', 'systemManagement/systemAlarm', 73, NULL, 7, NULL);
 INSERT INTO `resource_menu` VALUES (16, 'operationAudit', '操作审计', 'systemManagement/operationAudit', 74, NULL, 7, NULL);
 INSERT INTO `resource_menu` VALUES (17, 'resourcePoolManagement', '资源池', 'systemManagement/resourcePoolManagement', 75, NULL, 7, NULL);
+INSERT INTO `resource_menu` VALUES (18, 'openCenter', '开放中心', 'systemManagement/openCenter', 76, NULL, 7, NULL);
 COMMIT;
 
 -- ----------------------------
@@ -435,6 +436,7 @@ INSERT INTO `resource_menu_role` VALUES (14, 1, 14, 1);
 INSERT INTO `resource_menu_role` VALUES (15, 1, 15, 1);
 INSERT INTO `resource_menu_role` VALUES (16, 1, 16, 1);
 INSERT INTO `resource_menu_role` VALUES (17, 1, 17, 1);
+INSERT INTO `resource_menu_role` VALUES (18, 1, 18, 1);
 COMMIT;
 
 -- ----------------------------
