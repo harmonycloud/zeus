@@ -186,10 +186,15 @@ public abstract class AbstractBaseOperator {
 
 
     public void delete(Middleware middleware) {
-        ingressService.delete(middleware.getClusterId(), middleware.getNamespace(),
-                middleware.getType(), middleware.getName());
         // 获取集群
         MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(middleware.getClusterId());
+        //check exist
+        List<HelmListInfo> list = helmChartService.listHelm(middleware.getNamespace(), middleware.getName(), cluster);
+        if (CollectionUtils.isEmpty(list)){
+            throw new BusinessException(ErrorMessage.MIDDLEWARE_NOT_EXIST);
+        }
+        ingressService.delete(middleware.getClusterId(), middleware.getNamespace(),
+                middleware.getType(), middleware.getName());
         // 获取values.yaml 并写入数据库
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
         BeanCacheMiddleware beanCacheMiddleware = new BeanCacheMiddleware();
