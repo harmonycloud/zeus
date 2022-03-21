@@ -45,3 +45,12 @@ CREATE TABLE `ldap_config` (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `config_name` (`config_name`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT COMMENT='ldap配置表';
+
+
+-- 2022.3.21 liyinlong
+-- 菜单位置调整
+UPDATE `resource_menu` SET `weight` = 71 WHERE `name` = 'resourcePoolManagement';
+UPDATE `resource_menu` SET `weight` = 72 WHERE `name` = 'userManagement';
+UPDATE `resource_menu` SET `weight` = 73 WHERE `name` = 'roleManagement';
+UPDATE `resource_menu` SET `weight` = 74 WHERE `name` = 'systemAlarm';
+UPDATE `resource_menu` SET `weight` = 75 WHERE `name` = 'operationAudit';
