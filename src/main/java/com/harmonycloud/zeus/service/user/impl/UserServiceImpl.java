@@ -440,9 +440,7 @@ public class UserServiceImpl implements UserService {
             }
         }
         String voiceBase64= Base64.getEncoder().encodeToString(bus);
-        return voiceBase64.getBytes();
-
-
+        return Base64.getDecoder().decode(voiceBase64);
     }
 
     /**

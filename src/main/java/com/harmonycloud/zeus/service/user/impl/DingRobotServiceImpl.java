@@ -161,7 +161,7 @@ public class DingRobotServiceImpl implements DingRobotService {
     public void insert(List<DingRobotInfo> dingRobotInfos) {
         List<DingRobotDTO> dingRobotDTOS = this.dingConnect(dingRobotInfos);
         dingRobotDTOS.stream().forEach(dingRobotDTO -> {
-            if ("false".equals(dingRobotDTO.isSuccess())) {
+            if (!dingRobotDTO.isSuccess()) {
                 throw new BusinessException(ErrorMessage.DING_SERVER_CONNECT_FAILED);
             }
         });
