@@ -45,10 +45,3 @@ CREATE TABLE `ldap_config` (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `config_name` (`config_name`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT COMMENT='ldap配置表';
-
--- 2022.3.21 liyinlong
--- 新增开放中心菜单
-DELETE FROM `resource_menu_role` WHERE `resource_menu_id` = 18;
-INSERT INTO `resource_menu_role` (role_id, resource_menu_id, available) VALUES (1, 18, 1);
-DELETE FROM `resource_menu` WHERE `name` = 'openCenter';
-INSERT INTO `resource_menu` VALUES (18, 'openCenter', '开放中心', 'systemManagement/openCenter', 76, NULL, 7, NULL);
