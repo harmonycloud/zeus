@@ -2,6 +2,8 @@ package com.harmonycloud.zeus.service.user.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.constants.CommonConstant;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.DingRobotDTO;
 import com.harmonycloud.caas.common.model.SendResult;
 import com.harmonycloud.caas.common.model.TextMessage;
@@ -17,9 +19,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -158,6 +159,12 @@ public class DingRobotServiceImpl implements DingRobotService {
 
     @Override
     public void insert(List<DingRobotInfo> dingRobotInfos) {
+        List<DingRobotDTO> dingRobotDTOS = this.dingConnect(dingRobotInfos);
+        dingRobotDTOS.stream().forEach(dingRobotDTO -> {
+            if ("false".equals(dingRobotDTO.isSuccess())) {
+                throw new BusinessException(ErrorMessage.DING_SERVER_CONNECT_FAILED);
+            }
+        });
         QueryWrapper<DingRobotInfo> wrapper = new QueryWrapper<>();
         List<DingRobotInfo> list = dingRobotMapper.selectList(wrapper);
         if (list.size() == 0) {

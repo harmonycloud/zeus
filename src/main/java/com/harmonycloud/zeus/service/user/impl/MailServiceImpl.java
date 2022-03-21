@@ -1,6 +1,8 @@
 package com.harmonycloud.zeus.service.user.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.AlertDTO;
 import com.harmonycloud.caas.common.model.middleware.AlertInfoDto;
 import com.harmonycloud.zeus.bean.MailInfo;
@@ -109,6 +111,11 @@ public class MailServiceImpl implements MailService {
 
     @Override
     public void insertMail(MailInfo mailInfo) {
+        paramsCheck(mailInfo);
+        boolean flag = this.checkEmail(mailInfo.getUserName(),mailInfo.getPassword());
+        if (!flag) {
+            throw new BusinessException(ErrorMessage.MAIL_SERVER_CONNECT_FAILED);
+        }
         QueryWrapper<MailInfo> wrapper = new QueryWrapper<>();
         List<MailInfo> list = mailMapper.selectList(wrapper);
         if (list.size() == 0) {
@@ -239,5 +246,12 @@ public class MailServiceImpl implements MailService {
         htmlText = htmlText.replaceAll("<td>", "<td style=\"padding:6px 10px; line-height: 150%;\">");
         htmlText = htmlText.replaceAll("<tr>", "<tr style=\"border-bottom: 1px solid #eee; color:#666;\">");
         return htmlText;
+    }
+
+    public void paramsCheck(MailInfo mailInfo) {
+        if (StringUtils.isAnyBlank(mailInfo.getMailPath(),mailInfo.getMailServer(),
+                mailInfo.getPassword(),mailInfo.getUserName(),String.valueOf(mailInfo.getPort()))) {
+            throw new BusinessException(ErrorMessage.MAIL_INCOMPLETE_PARAMETERS);
+        }
     }
 }
