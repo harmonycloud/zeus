@@ -44,6 +44,7 @@ import cn.hutool.json.JSONUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.ObjectUtils;
 
 /**
  * @author dengyulong
@@ -145,6 +146,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
         convertCommonByHelmChart(middleware, values);
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
+        convertRegistry(middleware, cluster);
 
         // 处理mysql的特有参数
         if (values != null) {

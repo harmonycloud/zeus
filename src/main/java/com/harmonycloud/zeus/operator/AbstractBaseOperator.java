@@ -1051,4 +1051,15 @@ public abstract class AbstractBaseOperator {
             || middleware.getType().equals(MiddlewareTypeEnum.KAFKA.getType())
             || middleware.getType().equals(MiddlewareTypeEnum.ROCKET_MQ.getType());
     }
+
+    /**
+     * 非自定义中间件镜像仓库信息转换
+     */
+    protected void convertRegistry(Middleware middleware, MiddlewareClusterDTO middlewareClusterDTO) {
+        if (!ObjectUtils.isEmpty(middlewareClusterDTO.getRegistry())) {
+            Registry registry = middlewareClusterDTO.getRegistry();
+            String path = registry.getAddress() + ":" + registry.getPort() + "/" + registry.getChartRepo();
+            middleware.setMirrorImage(path);
+        }
+    }
 }
