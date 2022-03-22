@@ -454,10 +454,10 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             .filter(customConfig -> customConfig.getTopping() != null && customConfig.getTopping())
             .collect(Collectors.toList());
         customConfigList.removeAll(top);
-        top.sort((o1, o2) -> o1.getUpdateTime() == null ? 1 : o2.getUpdateTime() == null ? 1 : ASCEND.equals(order)
+        top.sort((o1, o2) -> o1.getUpdateTime() == null ? 1 : o2.getUpdateTime() == null ? -1 : ASCEND.equals(order)
             ? o1.getUpdateTime().compareTo(o2.getUpdateTime()) : o2.getUpdateTime().compareTo(o1.getUpdateTime()));
         customConfigList
-            .sort((o1, o2) -> o1.getUpdateTime() == null ? 1 : o2.getUpdateTime() == null ? 1 : ASCEND.equals(order)
+            .sort((o1, o2) -> o1.getUpdateTime() == null ? 1 : o2.getUpdateTime() == null ? -1 : ASCEND.equals(order)
                 ? o1.getUpdateTime().compareTo(o2.getUpdateTime()) : o2.getUpdateTime().compareTo(o1.getUpdateTime()));
         top.addAll(customConfigList);
         return top;
