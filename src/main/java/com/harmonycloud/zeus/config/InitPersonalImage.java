@@ -55,6 +55,7 @@ public class InitPersonalImage {
         InputStream backIs = InitPersonalImage.class.getClassLoader().getResourceAsStream("images/background.svg");
         InputStream homeIs = InitPersonalImage.class.getClassLoader().getResourceAsStream("images/homelogo.svg");
         InputStream loginIs = InitPersonalImage.class.getClassLoader().getResourceAsStream("images/loginlogo.svg");
+        InputStream tabIs = InitPersonalImage.class.getClassLoader().getResourceAsStream("images/tablogo.svg");
         PersonalizedConfiguration personal = new PersonalizedConfiguration();
         personal.setBackgroundPath("background.svg");
         personal.setBackgroundImage(loadFile(backIs,"background.svg"));
@@ -62,6 +63,8 @@ public class InitPersonalImage {
         personal.setHomeLogo(loadFile(homeIs,"homelogo.svg"));
         personal.setLoginLogoPath("loginlogo.svg");
         personal.setLoginLogo(loadFile(loginIs,"loginlogo.svg"));
+        personal.setTabLogo(loadFile(tabIs,"tablogo.svg"));
+        personal.setTabLogoPath("tablogo.svg");
         personal.setTitle("Zeus");
         personal.setSlogan("让IT更美好");
         personal.setCopyrightNotice("Copyeight © 2021 杭州谐云科技有限公司 All rights reserved.Copyeight.");

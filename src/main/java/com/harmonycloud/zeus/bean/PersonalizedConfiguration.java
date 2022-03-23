@@ -61,6 +61,18 @@ public class PersonalizedConfiguration {
     private String homeLogoPath;
 
     /**
+     * tab栏logo
+     */
+    @TableField (value = "tab_logo")
+    private String tabLogo;
+
+    /**
+     * tab栏logo地址
+     */
+    @TableField (value = "tab_logo_path")
+    private String tabLogoPath;
+
+    /**
      * 平台名称
      */
     @TableField (value = "platform_name")

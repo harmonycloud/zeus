@@ -336,6 +336,8 @@ data:
       `login_logo_path` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '登录页logo地址',
       `home_logo` mediumblob COMMENT '主页logo',
       `home_logo_path` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '主页logo地址',
+      `tab_logo` mediumblob COMMENT 'tab栏logo',
+      `tab_logo_path` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT 'tab栏logo地址',
       `platform_name` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '平台名称',
       `slogan` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '标语',
       `copyright_notice` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '版权声明',

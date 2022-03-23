@@ -327,28 +327,15 @@ public class UserServiceImpl implements UserService {
     /**
      * 个性化配置相关图片上传
      * @param file
-     * @param type
      * @throws IOException
      */
     @Override
-    public UploadImageFileDto uploadFile(MultipartFile file, String type) throws IOException {
+    public UploadImageFileDto uploadFile(MultipartFile file) throws IOException {
         byte[] bytes = null;
         UploadImageFileDto uploadImageFileDto = new UploadImageFileDto();
-        if ("background".equals(type)) {
-            bytes = loadFile(file);
-            uploadImageFileDto.setBytes(bytes);
-            uploadImageFileDto.setType(file.getOriginalFilename().split("\\.")[1]);
-        }
-        if ("login".equals(type)) {
-            bytes = loadFile(file);
-            uploadImageFileDto.setBytes(bytes);
-            uploadImageFileDto.setType(file.getOriginalFilename().split("\\.")[1]);
-        }
-        if ("home".equals(type)) {
-            bytes = loadFile(file);
-            uploadImageFileDto.setBytes(bytes);
-            uploadImageFileDto.setType(file.getOriginalFilename().split("\\.")[1]);
-        }
+        bytes = loadFile(file);
+        uploadImageFileDto.setBytes(bytes);
+        uploadImageFileDto.setType(file.getOriginalFilename().split("\\.")[1]);
         return uploadImageFileDto;
     }
 

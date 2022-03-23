@@ -131,10 +131,9 @@ public interface UserService {
     /**
      * 上传图片
      * @param file
-     * @param type
      * @throws IOException
      */
-    UploadImageFileDto uploadFile(MultipartFile file, String type) throws IOException;
+    UploadImageFileDto uploadFile(MultipartFile file) throws IOException;
 
     MailUserDTO getUserList(String alertruleId);
 }

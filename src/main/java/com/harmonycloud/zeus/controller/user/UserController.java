@@ -137,14 +137,12 @@ public class UserController {
 
     @ApiImplicitParams({
             @ApiImplicitParam(name = "file", value = "图片",paramType = "form",dataTypeClass = File.class),
-            @ApiImplicitParam(name = "type", value = "图片类型",paramType = "path", dataTypeClass = String.class)
     })
     @ApiOperation(value = "上传图片", notes = "上传图片")
     @ResponseBody
     @PostMapping("/uploadFile")
-    public BaseResult UploadFile(@RequestPart("file") MultipartFile file,
-                                 @RequestParam String type) throws IOException {
-        return BaseResult.ok(userService.uploadFile(file,type));
+    public BaseResult UploadFile(@RequestPart("file") MultipartFile file) throws IOException {
+        return BaseResult.ok(userService.uploadFile(file));
     }
 
     @ApiImplicitParams({
