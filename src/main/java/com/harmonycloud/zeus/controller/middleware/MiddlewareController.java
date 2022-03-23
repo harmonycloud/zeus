@@ -272,7 +272,7 @@ public class MiddlewareController {
         return BaseResult.ok(middlewareService.topology(clusterId, namespace, name, type));
     }
 
-    @ApiOperation(value = "查询拓扑图相关信息", notes = "查询拓扑图相关信息")
+    @ApiOperation(value = "查询管理控制台地址", notes = "查询管理控制台地址")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
