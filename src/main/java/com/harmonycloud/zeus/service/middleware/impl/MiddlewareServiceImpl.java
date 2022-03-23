@@ -426,17 +426,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             }
             finalMiddlewareList.add(middleware);
         });
-        /*finalMiddlewareList.forEach(middleware -> {
-            if ("Preparing".equals(middleware.getStatus())) {
-                finalHelmListInfoList.forEach(helmListInfo -> {
-                    if (middleware.getName().equals(helmListInfo.getName())) {
-                        if (compareTime(helmListInfo.getUpdateTime())) {
-                            middleware.setStatus("failed");
-                        }
-                    }
-                });
-            }
-        });*/
         // 获取values.yaml的详情
         final CountDownLatch count = new CountDownLatch(finalMiddlewareList.size());
         finalMiddlewareList.forEach(mw -> ThreadPoolExecutorFactory.executor.execute(() -> {
@@ -467,8 +456,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         finalMiddlewareList.sort(new MiddlewareComparator());
         // 封装数据
         List<MiddlewareBriefInfoDTO> list = new ArrayList<>();
-        Map<String, String> middlewareImagePathMap = middlewareInfoService.filter(beanMiddlewareInfoList).stream()
-            .collect(Collectors.toMap(BeanMiddlewareInfo::getChartName, BeanMiddlewareInfo::getImagePath));
+        Map<String,
+            String> middlewareImagePathMap = middlewareInfoService.filter(beanMiddlewareInfoList).stream()
+                .filter(beanMiddlewareInfo -> beanMiddlewareInfo.getImagePath() != null)
+                .collect(Collectors.toMap(BeanMiddlewareInfo::getChartName, BeanMiddlewareInfo::getImagePath));
         Map<String, List<Middleware>> middlewareListMap =
             finalMiddlewareList.stream().collect(Collectors.groupingBy(Middleware::getType));
         for (String key : middlewareListMap.keySet()) {
