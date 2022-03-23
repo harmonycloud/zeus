@@ -67,6 +67,8 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
         convertCommonByHelmChart(middleware, values);
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
+        convertRegistry(middleware, cluster);
+
         // 处理kafka的特有参数
         if (values != null && values.getJSONObject("zookeeper") != null) {
             JSONObject args = values.getJSONObject("zookeeper");

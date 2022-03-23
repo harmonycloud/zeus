@@ -11,11 +11,17 @@ import com.harmonycloud.zeus.service.user.LdapService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.ldap.core.ContextMapper;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.core.support.LdapContextSource;
+import org.springframework.ldap.filter.AndFilter;
+import org.springframework.ldap.filter.EqualsFilter;
+import org.springframework.ldap.filter.LikeFilter;
 import org.springframework.stereotype.Service;
 
+import javax.naming.NamingException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author liyinlong
@@ -126,7 +132,14 @@ public class LdapServiceImpl implements LdapService {
         try {
             log.info("开始ldap连接测试", ldapConfigDto);
             LdapTemplate template = getTemplate(ldapConfigDto);
-            template.list("");
+            AndFilter andFilter = new AndFilter();
+            andFilter.and(new EqualsFilter("objectClass", ldapConfigDto.getObjectClass()));
+            andFilter.and(new LikeFilter(ldapConfigDto.getSearchAttribute(), "*"));
+            andFilter.and(new LikeFilter(ldapConfigDto.getDisplayNameAttribute(), "*"));
+            List<Map<String, String>> results = template.search("", andFilter.encode(), (ContextMapper<Map<String, String>>) o -> null);
+            if (!(results.size() > 0)) {
+                throw new BusinessException(ErrorMessage.LDAP_SERVER_CONNECT_FAILED);
+            }
         } catch (Exception e) {
             log.error("ldap连接失败", e);
             throw new BusinessException(ErrorMessage.LDAP_SERVER_CONNECT_FAILED);

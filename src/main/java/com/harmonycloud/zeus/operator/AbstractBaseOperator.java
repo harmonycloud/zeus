@@ -1011,4 +1011,15 @@ public abstract class AbstractBaseOperator {
         wrapper.eq("cluster_id",middleware.getClusterId()).eq("namespace",middleware.getNamespace()).eq("middleware_name",middleware.getName());
         middlewareAlertInfoMapper.delete(wrapper);
     }
+
+    /**
+     * 非自定义中间件镜像仓库信息转换
+     */
+    protected void convertRegistry(Middleware middleware, MiddlewareClusterDTO middlewareClusterDTO) {
+        if (!ObjectUtils.isEmpty(middlewareClusterDTO.getRegistry())) {
+            Registry registry = middlewareClusterDTO.getRegistry();
+            String path = registry.getAddress() + ":" + registry.getPort() + "/" + registry.getChartRepo();
+            middleware.setMirrorImage(path);
+        }
+    }
 }

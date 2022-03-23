@@ -139,7 +139,7 @@ public class AuthManager4LdapImpl implements AuthManager4Ldap {
     /**
      * 节点的 Dn映射
      */
-    public class DnMapper implements ContextMapper {
+    public static class DnMapper implements ContextMapper {
         @Override
         public Map<String, String> mapFromContext(Object ctx) {
             Map<String, String> result = new HashMap<>();

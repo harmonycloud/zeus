@@ -93,6 +93,7 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
         convertCommonByHelmChart(middleware, values);
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
+        convertRegistry(middleware, cluster);
 
         // 处理mq特有参数
         if (values != null) {
