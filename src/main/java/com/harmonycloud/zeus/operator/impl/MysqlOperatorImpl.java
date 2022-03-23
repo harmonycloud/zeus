@@ -115,7 +115,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             MysqlDTO mysqlDTO = middleware.getMysqlDTO();
             if (mysqlDTO.getReplicaCount() != null && mysqlDTO.getReplicaCount() > 0) {
                 int replicaCount = mysqlDTO.getReplicaCount();
-                replicaCount++;
                 values.put(MysqlConstant.REPLICA_COUNT, replicaCount);
             }
             if (mysqlDTO.getOpenDisasterRecoveryMode() != null && mysqlDTO.getOpenDisasterRecoveryMode()) {
