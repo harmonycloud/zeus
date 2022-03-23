@@ -411,8 +411,15 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         List<Middleware> middlewareList = middlewareCRService.list(clusterId, namespace, type, false);
 
         List<HelmListInfo> finalHelmListInfoList = helmListInfoList;
-        // 过滤掉helm中没有的middleware
-        middlewareList = middlewareList.stream().filter(mw -> finalHelmListInfoList.stream().anyMatch(info -> info.getName().equals(mw.getName()))).collect(Collectors.toList());
+        // 过滤掉helm中没有的middleware 并设置chart-version
+        middlewareList = middlewareList.stream().filter(mw -> finalHelmListInfoList.stream().anyMatch(info -> {
+            if (info.getName().equals(mw.getName())) {
+                mw.setChartVersion(info.getChart().split("-")[1]);
+                return true;
+            } else {
+                return false;
+            }
+        })).collect(Collectors.toList());
         // 获取还未创建出middleware的release
         List<Middleware> finalMiddlewareList = middlewareList;
         helmListInfoList = helmListInfoList.stream().filter(info -> finalMiddlewareList.stream().noneMatch(mw -> mw.getName().equals(info.getName()))).collect(Collectors.toList());
@@ -434,6 +441,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 if (values != null) {
                     mw.setAliasName(values.containsKey("aliasName") ? values.getString("aliasName") : "");
                     mw.setDescription(values.containsKey("middleware-desc") ? values.getString("middleware-desc") : "");
+
                 }
             }finally {
                 count.countDown();
