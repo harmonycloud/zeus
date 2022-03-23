@@ -435,8 +435,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // 获取values.yaml的详情
         finalMiddlewareList.forEach(mw -> {
             JSONObject values = helmChartService.getInstalledValues(mw.getName(), mw.getNamespace(), cluster);
-            mw.setAliasName(values.getOrDefault("aliasName", mw.getName()).toString());
-            mw.setDescription(values.getOrDefault("middleware-desc", "").toString());
+            if (values != null){
+                mw.setAliasName(values.containsKey("aliasName") ? values.getString("aliasName") : "");
+                mw.setDescription(values.containsKey("middleware-desc") ? values.getString("middleware-desc") : "");
+            }
         });
         // 获取未完全删除的中间件
         if (StringUtils.isNotBlank(type)) {
