@@ -8,6 +8,7 @@ import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterStorageSupport;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
@@ -16,12 +17,14 @@ import com.harmonycloud.zeus.util.AssertUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import static com.harmonycloud.caas.common.constants.CommonConstant.ALREADY_EXISTED;
 import static com.harmonycloud.caas.common.constants.NameConstant.SUPPORT;
@@ -45,20 +48,24 @@ public class LVMServiceImpl extends AbstractBaseOperator implements LVMService {
     @Override
     public void integrate(MiddlewareClusterDTO cluster) {
         MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
-        if (!existCluster.getStorage().containsKey(SUPPORT)){
-            existCluster.getStorage().put(SUPPORT, new ArrayList<JSONObject>());
+        if (existCluster.getStorage().getSupport() == null) {
+            existCluster.getStorage().setSupport(new ArrayList<>());
         }
-        List<JSONObject> existSupport = (List<JSONObject>)existCluster.getStorage().get(SUPPORT);
-        List<JSONObject> support = (List<JSONObject>)cluster.getStorage().get(SUPPORT);
+        List<MiddlewareClusterStorageSupport> existSupport = existCluster.getStorage().getSupport();
+        List<MiddlewareClusterStorageSupport> support = cluster.getStorage().getSupport();
+        existSupport = existSupport.stream().filter(st -> !ComponentsEnum.LVM.getName().equals(st.getType()))
+            .collect(Collectors.toList());
         existSupport.addAll(support);
-        existCluster.getStorage().put(SUPPORT, existSupport);
+        existCluster.getStorage().setSupport(existSupport);
         clusterService.update(existCluster);
     }
 
     @Override
     public void delete(MiddlewareClusterDTO cluster, Integer status) {
         helmChartService.uninstall(cluster, "middleware-operator", ComponentsEnum.LVM.getName());
-        cluster.getStorage().remove(StorageClassProvisionerEnum.CSI_LVM.getType());
+        List<MiddlewareClusterStorageSupport> support = cluster.getStorage().getSupport();
+        support = support.stream().filter(st -> !"lvm".equals(st.getType())).collect(Collectors.toList());
+        cluster.getStorage().setSupport(support);
         clusterService.update(cluster);
     }
 
@@ -91,16 +98,16 @@ public class LVMServiceImpl extends AbstractBaseOperator implements LVMService {
 
     @Override
     protected void updateCluster(MiddlewareClusterDTO cluster) {
-        if (!cluster.getStorage().containsKey(SUPPORT)){
-            cluster.getStorage().put(SUPPORT, new ArrayList<JSONObject>());
+        if (CollectionUtils.isEmpty(cluster.getStorage().getSupport())) {
+            cluster.getStorage().setSupport(new ArrayList<>());
         }
-        JSONObject object = new JSONObject();
-        object.put("name", "middleware-lvm");
-        object.put("type", "lvm");
-        object.put("namespace", "middleware-operator");
-        List<JSONObject> support = (List<JSONObject>)cluster.getStorage().get(SUPPORT);
-        support.add(object);
-        cluster.getStorage().put(SUPPORT, support);
+        MiddlewareClusterStorageSupport support = new MiddlewareClusterStorageSupport();
+        support.setName("lvm");
+        support.setType("lvm");
+        support.setNamespace("middleware-operator");
+        List<MiddlewareClusterStorageSupport> list = new ArrayList<>();
+        list.add(support);
+        cluster.getStorage().setSupport(list);
         clusterService.update(cluster);
     }
 

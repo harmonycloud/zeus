@@ -7,15 +7,18 @@ import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterStorageSupport;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.LocalPathService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.harmonycloud.caas.common.constants.NameConstant.SUPPORT;
 
@@ -47,20 +50,25 @@ public class LocalPathServiceImpl extends AbstractBaseOperator implements LocalP
     @Override
     public void integrate(MiddlewareClusterDTO cluster) {
         MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
-        if (!existCluster.getStorage().containsKey(SUPPORT)){
-            existCluster.getStorage().put(SUPPORT, new ArrayList<JSONObject>());
+        if (existCluster.getStorage().getSupport() == null) {
+            existCluster.getStorage().setSupport(new ArrayList<>());
         }
-        List<JSONObject> existSupport = (List<JSONObject>)existCluster.getStorage().get(SUPPORT);
-        List<JSONObject> support = (List<JSONObject>)cluster.getStorage().get(SUPPORT);
+        List<MiddlewareClusterStorageSupport> existSupport = existCluster.getStorage().getSupport();
+        List<MiddlewareClusterStorageSupport> support = cluster.getStorage().getSupport();
+        existSupport = existSupport.stream().filter(st -> !ComponentsEnum.LOCAL_PATH.getName().equals(st.getType()))
+            .collect(Collectors.toList());
         existSupport.addAll(support);
-        existCluster.getStorage().put(SUPPORT, existSupport);
+        existCluster.getStorage().setSupport(existSupport);
         clusterService.update(existCluster);
     }
 
     @Override
     public void delete(MiddlewareClusterDTO cluster, Integer status) {
-        helmChartService.uninstall(cluster, "middleware-operator", ComponentsEnum.LOCAL_PATH.getName());
-        cluster.getStorage().remove(StorageClassProvisionerEnum.LOCAL_PATH.getType());
+        helmChartService.uninstall(cluster, "middleware-operator", ComponentsEnum.LVM.getName());
+        List<MiddlewareClusterStorageSupport> support = cluster.getStorage().getSupport();
+        support = support.stream().filter(st -> !ComponentsEnum.LOCAL_PATH.getName().equals(st.getType()))
+            .collect(Collectors.toList());
+        cluster.getStorage().setSupport(support);
         clusterService.update(cluster);
     }
 
@@ -80,16 +88,16 @@ public class LocalPathServiceImpl extends AbstractBaseOperator implements LocalP
 
     @Override
     protected void updateCluster(MiddlewareClusterDTO cluster) {
-        if (!cluster.getStorage().containsKey(SUPPORT)){
-            cluster.getStorage().put(SUPPORT, new ArrayList<JSONObject>());
+        if (CollectionUtils.isEmpty(cluster.getStorage().getSupport())) {
+            cluster.getStorage().setSupport(new ArrayList<>());
         }
-        JSONObject object = new JSONObject();
-        object.put("name", "local-path");
-        object.put("type", "local-path");
-        object.put("namespace", "middleware-operator");
-        List<JSONObject> support = (List<JSONObject>)cluster.getStorage().get(SUPPORT);
-        support.add(object);
-        cluster.getStorage().put(SUPPORT, support);
+        MiddlewareClusterStorageSupport support = new MiddlewareClusterStorageSupport();
+        support.setName(ComponentsEnum.LOCAL_PATH.getName());
+        support.setType(ComponentsEnum.LOCAL_PATH.getName());
+        support.setNamespace("middleware-operator");
+        List<MiddlewareClusterStorageSupport> list = new ArrayList<>();
+        list.add(support);
+        cluster.getStorage().setSupport(list);
         clusterService.update(cluster);
     }
 

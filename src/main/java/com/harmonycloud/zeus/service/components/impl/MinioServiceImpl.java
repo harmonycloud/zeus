@@ -40,11 +40,7 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
     @Override
     public void integrate(MiddlewareClusterDTO cluster) {
         MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
-        if (CollectionUtils.isEmpty(existCluster.getStorage())){
-            existCluster.setStorage(new HashMap<>());
-        }
-        existCluster.getStorage().put("backup", cluster.getStorage().get("backup"));
-        existCluster.getStorage().put("type", "minio");
+        existCluster.getStorage().setBackup(cluster.getStorage().getBackup());
         clusterService.update(existCluster);
     }
 
@@ -54,7 +50,7 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
             // uninstall
             helmChartService.uninstall(cluster, "minio", ComponentsEnum.MINIO.getName());
         }
-        cluster.getStorage().remove("backup");
+        cluster.getStorage().setBackup(null);
         clusterService.update(cluster);
     }
 
@@ -89,7 +85,7 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
         Map<String, Object> backup = new HashMap<>();
         backup.put("type", "minio");
         backup.put("storage", storage);
-        cluster.getStorage().put("backup", backup);
+        cluster.getStorage().setBackup(backup);
         clusterService.update(cluster);
     }
 

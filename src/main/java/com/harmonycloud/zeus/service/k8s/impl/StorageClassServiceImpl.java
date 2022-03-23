@@ -48,10 +48,6 @@ public class StorageClassServiceImpl implements StorageClassService {
     @Override
     public List<StorageClass> list(String clusterId, String namespace, boolean onlyMiddleware) {
         List<io.fabric8.kubernetes.api.model.storage.StorageClass> scList = scWrapper.list(clusterId);
-        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        if (CollectionUtils.isEmpty(cluster.getStorage())) {
-            return new ArrayList<>(0);
-        }
         List<StorageClass> list = new ArrayList<>();
 
         // 取出存储配额

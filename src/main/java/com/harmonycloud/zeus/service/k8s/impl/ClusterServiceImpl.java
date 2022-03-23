@@ -388,11 +388,11 @@ public class ClusterServiceImpl implements ClusterService {
             cluster.getLogging().setElasticSearch(new MiddlewareClusterLoggingInfo());
         }
         
-        // 设置存储限额
+        // 初始化存储相关内容
         if (cluster.getStorage() == null) {
-            cluster.setStorage(new HashMap<>());
+            cluster.setStorage(new MiddlewareClusterStorage());
         }
-        cluster.getStorage().computeIfAbsent(SUPPORT, k -> new HashMap<String, Object>());
+        //cluster.getStorage().computeIfAbsent(SUPPORT, k -> new HashMap<String, Object>());
     }
 
     @Override
@@ -610,8 +610,10 @@ public class ClusterServiceImpl implements ClusterService {
                 mwCrd -> namespaceList.stream().anyMatch(ns -> ns.getName().equals(mwCrd.getMetadata().getNamespace())))
             .collect(Collectors.toList());
         // 获取中间件图片路径
-        List<MiddlewareInfoDTO> middlewareInfoDTOList = middlewareInfoService.list(clusterId);
-        Map<String, String> imagePathMap = middlewareInfoDTOList.stream().collect(Collectors.toMap(MiddlewareInfoDTO::getChartName, MiddlewareInfoDTO::getImagePath));
+        List<MiddlewareInfoDTO> middlewareInfoDTOList = middlewareInfoService.list(clusterId).stream()
+            .filter(info -> info.getImagePath() != null).collect(Collectors.toList());
+        Map<String, String> imagePathMap = middlewareInfoDTOList.stream()
+            .collect(Collectors.toMap(MiddlewareInfoDTO::getChartName, MiddlewareInfoDTO::getImagePath));
         List<MiddlewareResourceInfo> mwResourceInfoList = new ArrayList<>();
         final CountDownLatch clusterCountDownLatch = new CountDownLatch(mwCrdList.size());
         mwCrdList.forEach(mwCrd -> ThreadPoolExecutorFactory.executor.execute(() -> {
