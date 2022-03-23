@@ -35,7 +35,7 @@ public class MiddlewareController {
     public BaseResult<MiddlewareBriefInfoDTO> list(@PathVariable("clusterId") String clusterId,
                                                    @PathVariable("namespace") String namespace,
                                                    @RequestParam(value = "type", required = false) String type,
-                                                   @RequestParam(value = "keyword", required = false) String keyword) {
+                                                   @RequestParam(value = "keyword", required = false) String keyword) throws Exception {
         if ("all".equals(namespace)){
             namespace = null;
         }

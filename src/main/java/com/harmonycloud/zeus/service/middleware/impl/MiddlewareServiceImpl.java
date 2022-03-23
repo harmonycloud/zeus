@@ -391,7 +391,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public List<MiddlewareBriefInfoDTO> list(String clusterId, String namespace, String type, String keyword) {
+    public List<MiddlewareBriefInfoDTO> list(String clusterId, String namespace, String type, String keyword) throws Exception {
         // 获取中间件chart包信息
         List<BeanMiddlewareInfo> beanMiddlewareInfoList = middlewareInfoService.list(true);
         // get cluster
@@ -417,11 +417,16 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         List<Middleware> finalMiddlewareList = middlewareList;
         helmListInfoList = helmListInfoList.stream().filter(info -> finalMiddlewareList.stream().noneMatch(mw -> mw.getName().equals(info.getName()))).collect(Collectors.toList());
         helmListInfoList.forEach(info -> {
-            Middleware middleware = new Middleware(clusterId, info.getNamespace(), info.getName(), info.getChart().split("-")[0]);
-            middleware.setStatus("Preparing");
+            Middleware middleware =
+                new Middleware(clusterId, info.getNamespace(), info.getName(), info.getChart().split("-")[0]);
+            if (compareTime(info.getUpdateTime())) {
+                middleware.setStatus("failed");
+            } else {
+                middleware.setStatus("Preparing");
+            }
             finalMiddlewareList.add(middleware);
         });
-        finalMiddlewareList.forEach(middleware -> {
+        /*finalMiddlewareList.forEach(middleware -> {
             if ("Preparing".equals(middleware.getStatus())) {
                 finalHelmListInfoList.forEach(helmListInfo -> {
                     if (middleware.getName().equals(helmListInfo.getName())) {
@@ -431,15 +436,22 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                     }
                 });
             }
-        });
+        });*/
         // 获取values.yaml的详情
-        finalMiddlewareList.forEach(mw -> {
-            JSONObject values = helmChartService.getInstalledValues(mw.getName(), mw.getNamespace(), cluster);
-            if (values != null){
-                mw.setAliasName(values.containsKey("aliasName") ? values.getString("aliasName") : "");
-                mw.setDescription(values.containsKey("middleware-desc") ? values.getString("middleware-desc") : "");
+        final CountDownLatch count = new CountDownLatch(finalMiddlewareList.size());
+        finalMiddlewareList.forEach(mw -> ThreadPoolExecutorFactory.executor.execute(() -> {
+            try {
+                JSONObject values = helmChartService.getInstalledValues(mw.getName(), mw.getNamespace(), cluster);
+                if (values != null) {
+                    mw.setAliasName(values.containsKey("aliasName") ? values.getString("aliasName") : "");
+                    mw.setDescription(values.containsKey("middleware-desc") ? values.getString("middleware-desc") : "");
+                }
+            }finally {
+                count.countDown();
             }
-        });
+        })
+        );
+        count.await();
         // 获取未完全删除的中间件
         if (StringUtils.isNotBlank(type)) {
             List<BeanCacheMiddleware> beanCacheMiddlewareList = cacheMiddlewareService.list(clusterId, namespace, type);

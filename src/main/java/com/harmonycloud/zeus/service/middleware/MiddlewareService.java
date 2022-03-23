@@ -24,7 +24,7 @@ public interface MiddlewareService {
      * @param keyword 搜索关键词
      * @return
      */
-    List<MiddlewareBriefInfoDTO> list(String clusterId, String namespace,String type, String keyword);
+    List<MiddlewareBriefInfoDTO> list(String clusterId, String namespace,String type, String keyword) throws Exception;
 
     /**
      * 查询中间件列表
