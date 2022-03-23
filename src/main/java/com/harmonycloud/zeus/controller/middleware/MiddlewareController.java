@@ -36,6 +36,9 @@ public class MiddlewareController {
                                                    @PathVariable("namespace") String namespace,
                                                    @RequestParam(value = "type", required = false) String type,
                                                    @RequestParam(value = "keyword", required = false) String keyword) {
+        if ("all".equals(namespace)){
+            namespace = null;
+        }
         return BaseResult.ok(middlewareService.list(clusterId, namespace, type, keyword));
     }
 
@@ -267,6 +270,21 @@ public class MiddlewareController {
                                                       @PathVariable("middlewareName") String name,
                                                       @RequestParam("type") String type) throws Exception {
         return BaseResult.ok(middlewareService.topology(clusterId, namespace, name, type));
+    }
+
+    @ApiOperation(value = "查询拓扑图相关信息", notes = "查询拓扑图相关信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("/{middlewareName}/platform")
+    public BaseResult<MiddlewareTopologyDTO> platform(@PathVariable("clusterId") String clusterId,
+                                                      @PathVariable("namespace") String namespace,
+                                                      @PathVariable("middlewareName") String name,
+                                                      @RequestParam("type") String type) {
+        return BaseResult.ok(middlewareService.platform(clusterId, namespace, name, type));
     }
 
 }

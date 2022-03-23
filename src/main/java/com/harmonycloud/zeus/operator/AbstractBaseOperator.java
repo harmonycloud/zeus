@@ -445,12 +445,6 @@ public abstract class AbstractBaseOperator {
 
             // 设置服务备份状态
             middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(middleware.getClusterId(),middleware.getNamespace(),middleware.getType(),middleware.getName()));
-            // 设置管理平台地址
-            try {
-                setManagePlatformAddress(middleware);
-            } catch (Exception e){
-                log.error("获取管理控制台地址失败", e);
-            }
         } else {
             middleware.setAliasName(middleware.getName());
         }
@@ -1016,39 +1010,5 @@ public abstract class AbstractBaseOperator {
         QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
         wrapper.eq("cluster_id",middleware.getClusterId()).eq("namespace",middleware.getNamespace()).eq("middleware_name",middleware.getName());
         middlewareAlertInfoMapper.delete(wrapper);
-    }
-
-    /**
-     * 设置管理平台地址 
-     */
-    public void setManagePlatformAddress(Middleware middleware) {
-        label:
-        if (middlewareManagePlatformFilter(middleware)) {
-            middleware.setManagePlatform(true);
-            middleware.setManagePlatformAddress("");
-            List<IngressDTO> ingressDTOS = ingressService.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
-            String servicePort = ServiceNameConvertUtil.getManagePlatformServicePort(middleware);
-            for (IngressDTO ingressDTO : ingressDTOS) {
-                List<ServiceDTO> serviceList = ingressDTO.getServiceList();
-                if (!CollectionUtils.isEmpty(serviceList)) {
-                    for (ServiceDTO serviceDTO : serviceList) {
-                        if (servicePort.equals(serviceDTO.getServicePort())) {
-                            String address = ingressDTO.getExposeIP() + ":" + serviceDTO.getExposePort();
-                            middleware.setManagePlatformAddress(address);
-                            break label;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    /**
-     * 中间件管理平台过滤 
-     */
-    public boolean middlewareManagePlatformFilter(Middleware middleware){
-        return middleware.getType().equals(MiddlewareTypeEnum.ELASTIC_SEARCH.getType())
-            || middleware.getType().equals(MiddlewareTypeEnum.KAFKA.getType())
-            || middleware.getType().equals(MiddlewareTypeEnum.ROCKET_MQ.getType());
     }
 }

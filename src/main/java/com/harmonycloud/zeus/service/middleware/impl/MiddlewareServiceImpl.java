@@ -21,6 +21,7 @@ import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.service.middleware.*;
 import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
 import com.harmonycloud.zeus.util.ChartVersionUtil;
+import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -86,6 +87,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private PrometheusResourceMonitorService prometheusResourceMonitorService;
     @Autowired
     private MirrorImageService mirrorImageService;
+    @Autowired
+    private IngressService ingressService;
 
     @Override
     public List<Middleware> simpleList(String clusterId, String namespace, String type, String keyword) {
@@ -414,13 +417,13 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         List<Middleware> finalMiddlewareList = middlewareList;
         helmListInfoList = helmListInfoList.stream().filter(info -> finalMiddlewareList.stream().noneMatch(mw -> mw.getName().equals(info.getName()))).collect(Collectors.toList());
         helmListInfoList.forEach(info -> {
-            Middleware middleware = new Middleware(clusterId, namespace, info.getName(), info.getChart().split("-")[0]);
+            Middleware middleware = new Middleware(clusterId, info.getNamespace(), info.getName(), info.getChart().split("-")[0]);
             middleware.setStatus("Preparing");
             finalMiddlewareList.add(middleware);
         });
-        finalMiddlewareList.stream().forEach(middleware -> {
+        finalMiddlewareList.forEach(middleware -> {
             if ("Preparing".equals(middleware.getStatus())) {
-                finalHelmListInfoList.stream().forEach(helmListInfo -> {
+                finalHelmListInfoList.forEach(helmListInfo -> {
                     if (middleware.getName().equals(helmListInfo.getName())) {
                         if (compareTime(helmListInfo.getUpdateTime())) {
                             middleware.setStatus("failed");
@@ -430,7 +433,11 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             }
         });
         // 获取values.yaml的详情
-        finalMiddlewareList.forEach(mw -> mw = getOperator(BaseOperator.class, BaseOperator.class, mw).convertByHelmChart(mw, cluster));
+        finalMiddlewareList.forEach(mw -> {
+            JSONObject values = helmChartService.getInstalledValues(mw.getName(), mw.getNamespace(), cluster);
+            mw.setAliasName(values.getOrDefault("aliasName", mw.getName()).toString());
+            mw.setDescription(values.getOrDefault("middleware-desc", "").toString());
+        });
         // 获取未完全删除的中间件
         if (StringUtils.isNotBlank(type)) {
             List<BeanCacheMiddleware> beanCacheMiddlewareList = cacheMiddlewareService.list(clusterId, namespace, type);
@@ -442,6 +449,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 finalMiddlewareList.add(middleware);
             }
         }
+        //todo 根据项目分区进行过滤
         finalMiddlewareList.sort(new MiddlewareComparator());
         // 封装数据
         List<MiddlewareBriefInfoDTO> list = new ArrayList<>();
@@ -851,6 +859,28 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         }
 
         return middlewareTopologyDTO;
+    }
+
+    @Override
+    public String platform(String clusterId, String namespace, String name, String type) {
+        if (!type.equals(MiddlewareTypeEnum.ELASTIC_SEARCH.getType())
+            && !type.equals(MiddlewareTypeEnum.KAFKA.getType())
+            && !type.equals(MiddlewareTypeEnum.ROCKET_MQ.getType())) {
+            throw new BusinessException(ErrorMessage.MIDDLEWARE_MANAGER_PLATFORM_NOT_SUPPORT);
+        }
+        List<IngressDTO> ingressDTOS = ingressService.get(clusterId, namespace, type, name);
+        String servicePort = ServiceNameConvertUtil.getManagePlatformServicePort(type);
+        for (IngressDTO ingressDTO : ingressDTOS) {
+            List<ServiceDTO> serviceList = ingressDTO.getServiceList();
+            if (!CollectionUtils.isEmpty(serviceList)) {
+                for (ServiceDTO serviceDTO : serviceList) {
+                    if (serviceDTO.getServicePort().equals(servicePort)) {
+                        return ingressDTO.getExposeIP() + ":" + serviceDTO.getExposePort();
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     /**
