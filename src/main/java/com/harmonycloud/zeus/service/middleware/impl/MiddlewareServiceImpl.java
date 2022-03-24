@@ -86,7 +86,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Autowired
     private PrometheusResourceMonitorService prometheusResourceMonitorService;
     @Autowired
-    private MirrorImageService mirrorImageService;
+    private ImageRepositoryService imageRepositoryService;
     @Autowired
     private IngressService ingressService;
 
@@ -1072,11 +1072,11 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     public void getMirrorImageDTO(String mirrorImageId, Registry registry) {
-        MirrorImageDTO mirrorImageDTO = mirrorImageService.detailById(Integer.valueOf(mirrorImageId));
-        BeanUtils.copyProperties(mirrorImageDTO,registry);
-        registry.setUser(mirrorImageDTO.getUsername());
-        registry.setChartRepo(mirrorImageDTO.getProject());
-        registry.setPort(Integer.valueOf(mirrorImageDTO.getPort()));
-        registry.setAddress(mirrorImageDTO.getHostAddress());
+        ImageRepositoryDTO imageRepositoryDTO = imageRepositoryService.detailById(Integer.valueOf(mirrorImageId));
+        BeanUtils.copyProperties(imageRepositoryDTO,registry);
+        registry.setUser(imageRepositoryDTO.getUsername());
+        registry.setChartRepo(imageRepositoryDTO.getProject());
+        registry.setPort(Integer.valueOf(imageRepositoryDTO.getPort()));
+        registry.setAddress(imageRepositoryDTO.getHostAddress());
     }
 }

@@ -361,10 +361,10 @@ CREATE TABLE `resource_menu` (
 ) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='菜单资源表';
 
 -- ----------------------------
--- Table structure for mirror_image
+-- Table structure for image_repository
 -- ----------------------------
-DROP TABLE IF EXISTS `mirror_image`;
-CREATE TABLE `mirror_image` (
+DROP TABLE IF EXISTS `image_repository`;
+CREATE TABLE `image_repository` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `cluster_id` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT '集群',
   `protocol` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '协议',

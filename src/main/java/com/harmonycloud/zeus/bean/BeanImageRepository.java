@@ -15,8 +15,8 @@ import java.util.Date;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("mirror_image")
-public class BeanMirrorImage {
+@TableName("image_repository")
+public class BeanImageRepository {
 
     /**
      * 自增id

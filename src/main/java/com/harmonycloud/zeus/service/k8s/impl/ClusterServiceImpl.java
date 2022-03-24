@@ -20,7 +20,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.constants.CommonConstant;
-import com.harmonycloud.zeus.service.middleware.MirrorImageService;
+import com.harmonycloud.zeus.service.middleware.ImageRepositoryService;
 import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -40,7 +40,6 @@ import com.harmonycloud.caas.common.enums.ErrorCodeMessage;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
-import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
 import com.harmonycloud.caas.common.model.*;
@@ -114,7 +113,7 @@ public class ClusterServiceImpl implements ClusterService {
     @Autowired
     private IngressComponentService ingressComponentService;
     @Autowired
-    private MirrorImageService mirrorImageService;
+    private ImageRepositoryService imageRepositoryService;
 
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
@@ -304,7 +303,7 @@ public class ClusterServiceImpl implements ClusterService {
             throw new BusinessException(DictEnum.CLUSTER, cluster.getNickname(), ErrorMessage.ADD_FAIL);
         }
         // 将镜像仓库信息存进数据库
-        insertMysqlMirrorImage(cluster);
+        insertMysqlImageRepository(cluster);
         // 将chart包存进数据库
         insertMysqlChart(cluster.getId());
     }
@@ -347,7 +346,7 @@ public class ClusterServiceImpl implements ClusterService {
 
         update(oldCluster);
         // 修改镜像仓库信息
-        updateMysqlMirrorImage(cluster);
+        updateMysqlImageRepository(cluster);
     }
 
     @Override
@@ -416,7 +415,7 @@ public class ClusterServiceImpl implements ClusterService {
         // 关联数据库信息删除
         bindResourceDelete(cluster);
         // 移除镜像仓库信息
-        mirrorImageService.removeMirrorImage(clusterId);
+        imageRepositoryService.removeImageRepository(clusterId);
     }
 
     public void bindResourceDelete(MiddlewareClusterDTO cluster){
@@ -506,28 +505,28 @@ public class ClusterServiceImpl implements ClusterService {
         }
     }
 
-    public void insertMysqlMirrorImage(MiddlewareClusterDTO clusterDTO) {
-        MirrorImageDTO mirrorImageDTO = new MirrorImageDTO();
+    public void insertMysqlImageRepository(MiddlewareClusterDTO clusterDTO) {
+        ImageRepositoryDTO imageRepositoryDTO = new ImageRepositoryDTO();
         Registry registry = clusterDTO.getRegistry();
-        BeanUtils.copyProperties(registry,mirrorImageDTO);
-        mirrorImageDTO.setUsername(registry.getUser());
-        mirrorImageDTO.setProject(registry.getChartRepo());
-        mirrorImageDTO.setIsDefault(CommonConstant.NUM_ONE);
-        mirrorImageDTO.setPort(registry.getPort().toString());
-        mirrorImageDTO.setHostAddress(registry.getAddress());
-        mirrorImageService.insert(clusterDTO.getId(), mirrorImageDTO);
+        BeanUtils.copyProperties(registry, imageRepositoryDTO);
+        imageRepositoryDTO.setUsername(registry.getUser());
+        imageRepositoryDTO.setProject(registry.getChartRepo());
+        imageRepositoryDTO.setIsDefault(CommonConstant.NUM_ONE);
+        imageRepositoryDTO.setPort(registry.getPort().toString());
+        imageRepositoryDTO.setHostAddress(registry.getAddress());
+        imageRepositoryService.insert(clusterDTO.getId(), imageRepositoryDTO);
     }
 
-    public void updateMysqlMirrorImage(MiddlewareClusterDTO clusterDTO) {
+    public void updateMysqlImageRepository(MiddlewareClusterDTO clusterDTO) {
         Registry registry = clusterDTO.getRegistry();
-        MirrorImageDTO mirrorImageDTO = mirrorImageService.detailByClusterId(clusterDTO.getName());
-        BeanUtils.copyProperties(registry,mirrorImageDTO);
-        mirrorImageDTO.setUsername(registry.getUser());
-        mirrorImageDTO.setProject(registry.getChartRepo());
-        mirrorImageDTO.setIsDefault(CommonConstant.NUM_ONE);
-        mirrorImageDTO.setPort(registry.getPort().toString());
-        mirrorImageDTO.setHostAddress(registry.getAddress());
-        mirrorImageService.update(clusterDTO.getId(),mirrorImageDTO);
+        ImageRepositoryDTO imageRepositoryDTO = imageRepositoryService.detailByClusterId(clusterDTO.getName());
+        BeanUtils.copyProperties(registry, imageRepositoryDTO);
+        imageRepositoryDTO.setUsername(registry.getUser());
+        imageRepositoryDTO.setProject(registry.getChartRepo());
+        imageRepositoryDTO.setIsDefault(CommonConstant.NUM_ONE);
+        imageRepositoryDTO.setPort(registry.getPort().toString());
+        imageRepositoryDTO.setHostAddress(registry.getAddress());
+        imageRepositoryService.update(clusterDTO.getId(), imageRepositoryDTO);
     }
 
     public void clusterResource(MiddlewareClusterDTO cluster){

@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.harmonycloud.zeus.bean.BeanMirrorImage;
+import com.harmonycloud.zeus.bean.BeanImageRepository;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -10,5 +10,5 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 
-public interface BeanMirrorImageMapper extends BaseMapper<BeanMirrorImage> {
+public interface BeanImageRepositoryMapper extends BaseMapper<BeanImageRepository> {
 }

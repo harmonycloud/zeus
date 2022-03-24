@@ -1,7 +1,7 @@
 -- 2022.3.10
 -- 新增镜像仓库表
-DROP TABLE IF EXISTS `mirror_image`;
-CREATE TABLE `mirror_image` (
+DROP TABLE IF EXISTS `image_repository`;
+CREATE TABLE `image_repository` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `cluster_id` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT '集群',
   `protocol` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '协议',
