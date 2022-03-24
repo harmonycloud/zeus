@@ -414,7 +414,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // 过滤掉helm中没有的middleware 并设置chart-version
         middlewareList = middlewareList.stream().filter(mw -> finalHelmListInfoList.stream().anyMatch(info -> {
             if (info.getName().equals(mw.getName())) {
-                mw.setChartVersion(info.getChart().split("-")[1]);
+                mw.setChartVersion(info.getChart().replace(info.getChart().split("-")[0] + "-", ""));
                 return true;
             } else {
                 return false;
