@@ -71,9 +71,6 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private MailToUserMapper mailToUserMapper;
 
-    @Autowired
-    private BeanRoleMapper beanRoleMapper;
-
 
     @Value("${system.images.path:/usr/local/zeus-pv/images/middleware}")
     private String imagePath;
@@ -363,11 +360,7 @@ public class UserServiceImpl implements UserService {
                 }
                 UserDto userDto = new UserDto();
                 BeanUtils.copyProperties(beanUser,userDto);
-                if (!ObjectUtils.isEmpty(userRole)) {
-                    BeanRole beanRole = beanRoleMapper.selectOne(new QueryWrapper<BeanRole>().eq("id",userRole.getRoleId()));
-                    userDto.setRoleId(beanRole.getId());
-                    userDto.setUserName(userRole.getUserName());
-                }
+                userDto.setRoleId(userRole.getRoleId());
                 return userDto;
             }).collect(Collectors.toList());
         }

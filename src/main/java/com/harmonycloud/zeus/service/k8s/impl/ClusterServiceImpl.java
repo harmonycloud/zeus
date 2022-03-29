@@ -11,10 +11,7 @@ import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
@@ -81,7 +78,7 @@ public class ClusterServiceImpl implements ClusterService {
     private String uploadPath;
 
     @Autowired
-    private ClusterWrapper clusterWrapper;
+    private MiddlewareClusterService middlewareClusterService;
     @Autowired
     private ClusterCertService clusterCertService;
     @Autowired
@@ -129,7 +126,7 @@ public class ClusterServiceImpl implements ClusterService {
     @Override
     public List<MiddlewareClusterDTO> listClusters(boolean detail, String key) {
         List<MiddlewareClusterDTO> clusters;
-        List<MiddlewareCluster> clusterList = clusterWrapper.listClusters();
+        List<MiddlewareCluster> clusterList = middlewareClusterService.listClusters();
         if (clusterList.size() <= 0) {
             return new ArrayList<>(0);
         }
@@ -294,11 +291,11 @@ public class ClusterServiceImpl implements ClusterService {
         // 保存集群
         MiddlewareCluster mw = convert(cluster);
         try {
-            MiddlewareCluster c = clusterWrapper.create(mw);
+            middlewareClusterService.create(cluster.getName(),mw);
             JSONObject attributes = new JSONObject();
-            attributes.put(CREATE_TIME, DateUtils.parseUTCDate(c.getMetadata().getCreationTimestamp()));
+            attributes.put(CREATE_TIME, new Date());
             cluster.setAttributes(attributes);
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("集群id：{}，添加集群异常", cluster.getId());
             throw new BusinessException(DictEnum.CLUSTER, cluster.getNickname(), ErrorMessage.ADD_FAIL);
         }
@@ -352,8 +349,8 @@ public class ClusterServiceImpl implements ClusterService {
     @Override
     public void update(MiddlewareClusterDTO cluster) {
         try {
-            clusterWrapper.update(convert(cluster));
-        } catch (IOException e) {
+            middlewareClusterService.update(cluster.getName(), convert(cluster));
+        } catch (Exception e) {
             log.error("集群{}的accessToken更新失败", cluster.getId());
             throw new BusinessException(DictEnum.CLUSTER, cluster.getNickname(), ErrorMessage.UPDATE_FAIL);
         }
@@ -404,8 +401,8 @@ public class ClusterServiceImpl implements ClusterService {
             return;
         }
         try {
-            clusterWrapper.delete(cluster.getDcId(), cluster.getName());
-        } catch (IOException e) {
+            middlewareClusterService.delete(cluster.getName());
+        } catch (Exception e) {
             log.error("集群id：{}，删除集群异常", clusterId, e);
             throw new BusinessException(DictEnum.CLUSTER, cluster.getNickname(), ErrorMessage.DELETE_FAIL);
         }
