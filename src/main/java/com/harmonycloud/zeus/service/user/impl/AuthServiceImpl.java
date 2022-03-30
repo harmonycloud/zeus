@@ -120,12 +120,8 @@ public class AuthServiceImpl implements AuthService {
      * 校验用户角色权限
      */
     public void checkAuth(UserDto userDto){
-        if (userDto.getRoleId() == null){
+        if (CollectionUtils.isEmpty(userDto.getUserRoleList())){
             throw new BusinessException(ErrorMessage.USER_ROLE_NOT_EXIT);
-        }
-        List<ResourceMenuDto> menuDtoList = roleService.listMenuByRoleId(String.valueOf(userDto.getRoleId()));
-        if (CollectionUtils.isEmpty(menuDtoList)){
-            throw new BusinessException(ErrorMessage.ROLE_PERMISSION_IS_EMPTY);
         }
     }
 
