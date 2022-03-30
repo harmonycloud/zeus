@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.util;
 
+import com.harmonycloud.caas.common.model.MysqlAccessInfo;
 import com.harmonycloud.caas.common.model.MysqlDbDTO;
 import com.harmonycloud.caas.common.model.MysqlUserDTO;
 
@@ -34,30 +35,39 @@ public class MysqlConnectionUtil {
         return String.format("%s_%s_%s", userDTO.getClusterId(), userDTO.getNamespace(), userDTO.getMiddlewareName());
     }
 
-    public static Connection getDBConnection(MysqlDbDTO dbDTO) {
-        String clusterId = dbDTO.getClusterId();
-        String namespace = dbDTO.getNamespace();
-        String middlewareName = dbDTO.getMiddlewareName();
-        String type = dbDTO.getType();
-        // 获取mysql service信息
-        String host = "10.10.101.140";
-        int port = 31227;
-        String user = "root";
-        String password = "XtcTHMZ6QW";
-        // 获取一个mysql连接
-        return MysqlConnectionUtil.getDbConn(host, port, user, password);
-    }
+//    public static Connection getDBConnection(MysqlDbDTO dbDTO) {
+//        String clusterId = dbDTO.getClusterId();
+//        String namespace = dbDTO.getNamespace();
+//        String middlewareName = dbDTO.getMiddlewareName();
+//        String type = dbDTO.getType();
+//        // 获取mysql service信息
+//        String host = "10.10.101.140";
+//        int port = 31227;
+//        String user = "root";
+//        String password = "XtcTHMZ6QW";
+//        // 获取一个mysql连接
+//        return MysqlConnectionUtil.getDbConn(host, port, user, password);
+//    }
 
-    public static Connection getDBConnection(MysqlUserDTO userDTO) {
-        String clusterId = userDTO.getClusterId();
-        String namespace = userDTO.getNamespace();
-        String middlewareName = userDTO.getMiddlewareName();
-        String type = userDTO.getType();
-        // 获取mysql service信息
-        String host = "10.10.101.140";
-        int port = 31227;
-        String user = "root";
-        String password = "XtcTHMZ6QW";
+//    public static Connection getDBConnection(MysqlUserDTO userDTO) {
+//        String clusterId = userDTO.getClusterId();
+//        String namespace = userDTO.getNamespace();
+//        String middlewareName = userDTO.getMiddlewareName();
+//        String type = userDTO.getType();
+//        // 获取mysql service信息
+//        String host = "10.10.101.140";
+//        int port = 31227;
+//        String user = "root";
+//        String password = "XtcTHMZ6QW";
+//        // 获取一个mysql连接
+//        return MysqlConnectionUtil.getDbConn(host, port, user, password);
+//    }
+
+    public static Connection getDBConnection(MysqlAccessInfo mysqlAccessInfo) {
+        String host = mysqlAccessInfo.getHost();
+        int port = Integer.parseInt(mysqlAccessInfo.getPort());
+        String user = mysqlAccessInfo.getUsername();
+        String password = mysqlAccessInfo.getPassword();
         // 获取一个mysql连接
         return MysqlConnectionUtil.getDbConn(host, port, user, password);
     }

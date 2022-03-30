@@ -3,17 +3,21 @@ package com.harmonycloud.zeus.service.mysql.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.enums.MysqlPrivilegeEnum;
+import com.harmonycloud.caas.common.model.MysqlAccessInfo;
 import com.harmonycloud.caas.common.model.MysqlDbPrivilege;
 import com.harmonycloud.caas.common.model.MysqlUserDTO;
 import com.harmonycloud.caas.common.model.MysqlUserDetail;
 import com.harmonycloud.zeus.bean.BeanMysqlDbPriv;
 import com.harmonycloud.zeus.bean.BeanMysqlUser;
 import com.harmonycloud.zeus.dao.BeanMysqlUserMapper;
+import com.harmonycloud.zeus.service.middleware.MysqlService;
+import com.harmonycloud.zeus.service.middleware.impl.MysqlServiceImpl;
 import com.harmonycloud.zeus.service.mysql.MysqlDbPrivService;
 import com.harmonycloud.zeus.service.mysql.MysqlUserService;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -41,12 +45,15 @@ public class MysqlUserServiceImpl implements MysqlUserService {
     private BeanMysqlUserMapper beanMysqlUserMapper;
     @Autowired
     private MysqlDbPrivService dbPrivService;
+    @Autowired
+    private MysqlServiceImpl mysqlService;
 
     private String initialUser = "zabbixjk,operator,replic";
 
     @Override
     public BaseResult create(MysqlUserDTO user) {
-        if (nativeCreate(getDBConnection(user), user.getUser(), user.getPassword())) {
+        Connection con = getDBConnection(mysqlService.queryAccessInfo(user));
+        if (nativeCreate(con, user.getUser(), user.getPassword())) {
             BeanMysqlUser mysqlUser = new BeanMysqlUser();
             mysqlUser.setCreatetime(LocalDateTime.now());
             mysqlUser.setUser(user.getUser());
@@ -56,7 +63,7 @@ public class MysqlUserServiceImpl implements MysqlUserService {
             beanMysqlUserMapper.insert(mysqlUser);
             // 授权数据库
             List<MysqlDbPrivilege> privilegeList = user.getPrivilegeList();
-            grantUserDbPrivilege(getDBConnection(user), user.getUser(), getMysqlQualifiedName(user), privilegeList);
+            grantUserDbPrivilege(con, user.getUser(), getMysqlQualifiedName(user), privilegeList);
             return BaseResult.ok();
         }
         return BaseResult.error();
@@ -80,7 +87,7 @@ public class MysqlUserServiceImpl implements MysqlUserService {
 
     @Override
     public BaseResult delete(MysqlUserDTO mysqlUserDTO) {
-        if (nativeDelete(getDBConnection(mysqlUserDTO), mysqlUserDTO.getUser())) {
+        if (nativeDelete(getDBConnection(mysqlService.queryAccessInfo(mysqlUserDTO)), mysqlUserDTO.getUser())) {
             beanMysqlUserMapper.deleteById(mysqlUserDTO.getId());
             //TODO 删除用户数据库关联关系
             return BaseResult.ok();
@@ -90,13 +97,18 @@ public class MysqlUserServiceImpl implements MysqlUserService {
 
     @Override
     public BaseResult grantUser(MysqlUserDTO mysqlUserDTO) {
-        grantUserDbPrivilege(getDBConnection(mysqlUserDTO), mysqlUserDTO.getUser(), getMysqlQualifiedName(mysqlUserDTO), mysqlUserDTO.getPrivilegeList());
+        BeanMysqlUser beanMysqlUser = beanMysqlUserMapper.selectById(mysqlUserDTO.getId());
+        if (StringUtils.isNotBlank(mysqlUserDTO.getDescription())) {
+            beanMysqlUser.setDescription(mysqlUserDTO.getDescription());
+            beanMysqlUserMapper.updateById(beanMysqlUser);
+        }
+        grantUserDbPrivilege(getDBConnection(mysqlService.queryAccessInfo(mysqlUserDTO)), mysqlUserDTO.getUser(), getMysqlQualifiedName(mysqlUserDTO), mysqlUserDTO.getPrivilegeList());
         return BaseResult.ok();
     }
 
     @Override
     public BaseResult updatePassword(MysqlUserDTO mysqlUserDTO) {
-        if (nativeUpdatePassword(getDBConnection(mysqlUserDTO), mysqlUserDTO.getUser(), mysqlUserDTO.getPassword())) {
+        if (nativeUpdatePassword(getDBConnection(mysqlService.queryAccessInfo(mysqlUserDTO)), mysqlUserDTO.getUser(), mysqlUserDTO.getPassword())) {
             // 更新数据库密码
             BeanMysqlUser mysqlUser = beanMysqlUserMapper.selectById(mysqlUserDTO.getId());
             mysqlUser.setPassword(mysqlUserDTO.getPassword());
@@ -185,7 +197,7 @@ public class MysqlUserServiceImpl implements MysqlUserService {
         QueryRunner qr = new QueryRunner();
         String selectSchemaSql = "select User from mysql.user where Host !='localhost'";
         //TODO 查询数据库连接信息 ip，端口，用户名，密码
-        Connection con = getDBConnection(userDTO);
+        Connection con = getDBConnection(mysqlService.queryAccessInfo(userDTO));
         try {
             List<MysqlUserDetail> userList = qr.query(con, selectSchemaSql, new BeanListHandler<>(MysqlUserDetail.class));
             //TODO 添加root用户信息

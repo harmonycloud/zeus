@@ -8,6 +8,7 @@ import com.harmonycloud.caas.common.model.MysqlDbPrivilege;
 import com.harmonycloud.zeus.bean.BeanMysqlDb;
 import com.harmonycloud.zeus.bean.BeanMysqlDbPriv;
 import com.harmonycloud.zeus.dao.BeanMysqlDbMapper;
+import com.harmonycloud.zeus.service.middleware.impl.MysqlServiceImpl;
 import com.harmonycloud.zeus.service.mysql.MysqlDbPrivService;
 import com.harmonycloud.zeus.service.mysql.MysqlDbService;
 import org.apache.commons.dbutils.DbUtils;
@@ -39,12 +40,14 @@ public class MysqlDbServiceImpl implements MysqlDbService {
     private BeanMysqlDbMapper beanMysqlDbMapper;
     @Autowired
     private MysqlDbPrivService dbPrivService;
+    @Autowired
+    private MysqlServiceImpl mysqlService;
 
     private String initialDb = "*,information_schema,mysql,performance_schema,sys";
 
     @Override
     public BaseResult create(MysqlDbDTO db) {
-        if (nativeCreate(getDBConnection(db), db.getDb(), db.getCharset())) {
+        if (nativeCreate(getDBConnection(mysqlService.queryAccessInfo(db)), db.getDb(), db.getCharset())) {
             BeanMysqlDb mysqlDb = new BeanMysqlDb();
             mysqlDb.setDb(db.getDb());
             mysqlDb.setMysqlQualifiedName(getMysqlQualifiedName(db));
@@ -66,7 +69,7 @@ public class MysqlDbServiceImpl implements MysqlDbService {
 
     @Override
     public BaseResult delete(MysqlDbDTO db) {
-        if (nativeDelete(getDBConnection(db), db.getDb())) {
+        if (nativeDelete(getDBConnection(mysqlService.queryAccessInfo(db)), db.getDb())) {
             beanMysqlDbMapper.deleteById(db.getId());
             //TODO 删除数据库用户关联关系
             return BaseResult.ok();
@@ -82,7 +85,7 @@ public class MysqlDbServiceImpl implements MysqlDbService {
 
     @Override
     public List<MysqlDbDTO> listCharset(MysqlDbDTO db) {
-        return nativeListCharset(getDBConnection(db));
+        return nativeListCharset(getDBConnection(mysqlService.queryAccessInfo(db)));
     }
 
     @Override
@@ -127,7 +130,7 @@ public class MysqlDbServiceImpl implements MysqlDbService {
     public List<MysqlDbDetail> nativeList(MysqlDbDTO db) {
         QueryRunner qr = new QueryRunner();
         String selectSchemaSql = "select SCHEMA_NAME,DEFAULT_CHARACTER_SET_NAME from information_schema.SCHEMATA ";
-        Connection con = getDBConnection(db);
+        Connection con = getDBConnection(mysqlService.queryAccessInfo(db));
         try {
             List<MysqlDbDetail> dbList = qr.query(con, selectSchemaSql, new BeanListHandler<>(MysqlDbDetail.class));
             // 过滤掉初始化的数据库

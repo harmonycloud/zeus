@@ -4,6 +4,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.harmonycloud.caas.common.model.MysqlAccessInfo;
+import com.harmonycloud.caas.common.model.MysqlDbDTO;
+import com.harmonycloud.caas.common.model.MysqlUserDTO;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.excel.ExcelUtil;
@@ -78,17 +81,17 @@ public class MysqlServiceImpl implements MysqlService {
         MysqlDTO mysqlDTO = middleware.getMysqlDTO();
         if (mysqlDTO != null) {
             Boolean isSource = mysqlDTO.getIsSource();
-            JSONObject source = queryAllAccessInfo(clusterId, namespace, middlewareName, isSource);
-            source.put("password", middleware.getPassword());
-            source.put("clusterId", clusterId);
-            source.put("namespace", namespace);
-            source.put("middlewareName", middlewareName);
+            MysqlAccessInfo source = queryBasicAccessInfo(clusterId, namespace, middlewareName, middleware);
+            source.setPassword(middleware.getPassword());
+            source.setClusterId(clusterId);
+            source.setNamespace(namespace);
+            source.setMiddlewareName(middlewareName);
             res.put(getInstanceType(isSource, mysqlDTO.getOpenDisasterRecoveryMode()), source);
             if (isSource != null && mysqlDTO.getOpenDisasterRecoveryMode() != null && mysqlDTO.getOpenDisasterRecoveryMode()) {
                 String relationClusterId = mysqlDTO.getRelationClusterId();
                 String relationNamespace = mysqlDTO.getRelationNamespace();
                 String relationName = mysqlDTO.getRelationName();
-                Middleware relationMiddleware = null;
+                Middleware relationMiddleware;
                 try {
                     relationMiddleware = middlewareService.detail(relationClusterId, relationNamespace, relationName, MiddlewareTypeEnum.MYSQL.getType());
                 } catch (Exception e) {
@@ -96,16 +99,16 @@ public class MysqlServiceImpl implements MysqlService {
                     return BaseResult.ok(res);
                 }
                 MysqlDTO relationMiddlewareMysqlDTO = relationMiddleware.getMysqlDTO();
-                JSONObject relation;
+                MysqlAccessInfo relation;
                 if (relationMiddlewareMysqlDTO != null) {
-                    relation = queryAllAccessInfo(relationClusterId, relationNamespace, relationName, relationMiddlewareMysqlDTO.getIsSource());
+                    relation = queryBasicAccessInfo(relationClusterId, relationNamespace, relationName, middleware);
                 } else {
-                    relation = queryAllAccessInfo(relationClusterId, relationNamespace, relationName, null);
+                    relation = queryBasicAccessInfo(relationClusterId, relationNamespace, relationName, middleware);
                 }
-                relation.put("password", relationMiddleware.getPassword());
-                relation.put("clusterId", relationClusterId);
-                relation.put("namespace", relationNamespace);
-                relation.put("middlewareName", relationName);
+                relation.setPassword( relationMiddleware.getPassword());
+                relation.setClusterId( relationClusterId);
+                relation.setNamespace(relationNamespace);
+                relation.setMiddlewareName( relationName);
                 res.put(getInstanceType(!isSource, relationMiddleware.getMysqlDTO().getOpenDisasterRecoveryMode()), relation);
             }
         }
@@ -143,13 +146,16 @@ public class MysqlServiceImpl implements MysqlService {
         ExcelUtil.writeExcel(ExcelUtil.OFFICE_EXCEL_XLSX, "mysqlslowsql", null, titleMap, demoValues, response, request);
     }
 
-    public JSONObject queryAllAccessInfo(String clusterId, String namespace, String middlewareName, Boolean isSource) {
+    public MysqlAccessInfo queryBasicAccessInfo(String clusterId, String namespace, String middlewareName, Middleware middleware) {
+        if (middleware == null) {
+            middleware = middlewareService.detail(clusterId, namespace, middlewareName, MiddlewareTypeEnum.MYSQL.getType());
+        }
         List<IngressDTO> ingressDTOS = ingressService.get(clusterId, namespace, MiddlewareTypeEnum.MYSQL.name(), middlewareName);
         ingressDTOS = ingressDTOS.stream().filter(ingressDTO -> (
                 !ingressDTO.getName().contains("readonly") && ingressDTO.getExposeType().equals(MIDDLEWARE_EXPOSE_NODEPORT))
         ).collect(Collectors.toList());
 
-        JSONObject mysqlInfo = new JSONObject();
+        MysqlAccessInfo mysqlAccessInfo = new MysqlAccessInfo();
         if (!CollectionUtils.isEmpty(ingressDTOS)) {
             // 优先使用ingress或NodePort暴露的服务
             IngressDTO ingressDTO = ingressDTOS.get(0);
@@ -158,19 +164,34 @@ public class MysqlServiceImpl implements MysqlService {
             if (!CollectionUtils.isEmpty(serviceList)) {
                 ServiceDTO serviceDTO = serviceList.get(0);
                 String exposePort = serviceDTO.getExposePort();
-                mysqlInfo.put("address", exposeIP + ":" + exposePort + " (集群外部)");
+                mysqlAccessInfo.setAddress(exposeIP + ":" + exposePort + " (集群外部)");
+                mysqlAccessInfo.setHost(exposeIP);
+                mysqlAccessInfo.setPort(exposePort);
             }
-        }else{
+            mysqlAccessInfo.setOpenService(true);
+        } else {
             // 没有暴露对外服务，则使用集群内服务
             ServicePortDTO servicePortDTO = serviceService.get(clusterId, namespace, middlewareName);
             if (servicePortDTO != null && !CollectionUtils.isEmpty(servicePortDTO.getPortDetailDtoList())) {
-                mysqlInfo.put("address", servicePortDTO.getClusterIP() + ":" + servicePortDTO.getPortDetailDtoList().get(0).getTargetPort() + "(集群内部)");
+                mysqlAccessInfo.setAddress(servicePortDTO.getClusterIP() + ":" + servicePortDTO.getPortDetailDtoList().get(0).getTargetPort() + "(集群内部)");
+                mysqlAccessInfo.setHost(servicePortDTO.getClusterIP());
+                mysqlAccessInfo.setPort(servicePortDTO.getPortDetailDtoList().get(0).getTargetPort());
             } else {
-                mysqlInfo.put("address", "无");
+                mysqlAccessInfo.setAddress("无");
             }
+            mysqlAccessInfo.setOpenService(false);
         }
-        mysqlInfo.put("username", "root");
-        return mysqlInfo;
+        mysqlAccessInfo.setUsername("root");
+        mysqlAccessInfo.setPassword(middleware.getPassword());
+        return mysqlAccessInfo;
+    }
+
+    public MysqlAccessInfo queryAccessInfo(MysqlUserDTO user) {
+        return queryBasicAccessInfo(user.getClusterId(), user.getNamespace(), user.getMiddlewareName(), null);
+    }
+
+    public MysqlAccessInfo queryAccessInfo(MysqlDbDTO db) {
+        return queryBasicAccessInfo(db.getClusterId(), db.getNamespace(), db.getMiddlewareName(), null);
     }
 
     /**
