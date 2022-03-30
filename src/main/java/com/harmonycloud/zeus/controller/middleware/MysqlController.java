@@ -163,8 +163,9 @@ public class MysqlController {
     public BaseResult listUser(@PathVariable("clusterId") String clusterId,
                                @RequestParam("namespace") String namespace,
                                @RequestParam("middlewareName") String middlewareName,
-                               @RequestParam(value = "user", required = false) String user) {
-        return BaseResult.ok(mysqlUserService.list(clusterId, namespace, middlewareName, user));
+                               @RequestParam(value = "user", required = false) String user,
+                               @RequestParam(value = "keyword", required = false) String keyword) {
+        return BaseResult.ok(mysqlUserService.list(clusterId, namespace, middlewareName, user, keyword));
     }
 
     @ApiOperation(value = "创建数据库", notes = "创建数据库")
@@ -189,8 +190,9 @@ public class MysqlController {
     @GetMapping("/listDb")
     public BaseResult listDb(@PathVariable("clusterId") String clusterId,
                              @RequestParam("namespace") String namespace,
-                             @RequestParam("middlewareName") String middlewareName) {
-        return BaseResult.ok(mysqlDbService.list(clusterId, namespace, middlewareName));
+                             @RequestParam("middlewareName") String middlewareName,
+                             @RequestParam(value = "keyword", required = false) String keyword) {
+        return BaseResult.ok(mysqlDbService.list(clusterId, namespace, middlewareName, keyword));
     }
 
     @ApiOperation(value = "删除数据库", notes = "删除数据库")

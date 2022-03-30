@@ -41,8 +41,8 @@ public interface MysqlUserService {
 
     boolean nativeUpdatePassword(Connection con, String user, String newPassword);
 
-    List<MysqlUserDetail> list(String clusterId, String namespace, String middlewareName, String user);
+    List<MysqlUserDetail> list(String clusterId, String namespace, String middlewareName,String user, String keyword);
 
-    List<MysqlDbPrivilege> nativeListDbUser(Connection con, String user, String mysqlQualifiedName);
+    List<MysqlDbPrivilege> nativeListUserDb(Connection con, String user, String mysqlQualifiedName, String keyword);
 
 }

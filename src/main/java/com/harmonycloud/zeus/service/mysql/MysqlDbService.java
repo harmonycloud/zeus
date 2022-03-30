@@ -62,7 +62,7 @@ public interface MysqlDbService {
      * @author liyinlong
      * @since 2022/3/25 3:00 下午
      */
-    List<MysqlDbDetail> list(String clusterId, String namespace, String middlewareName);
+    List<MysqlDbDetail> list(String clusterId, String namespace, String middlewareName,String keyword);
 
     /**
      * @param con

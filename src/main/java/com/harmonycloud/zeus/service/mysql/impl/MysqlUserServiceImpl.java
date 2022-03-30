@@ -220,11 +220,15 @@ public class MysqlUserServiceImpl implements MysqlUserService {
     }
 
     @Override
-    public List<MysqlUserDetail> list(String clusterId, String namespace, String middlewareName,String user) {
+    public List<MysqlUserDetail> list(String clusterId, String namespace, String middlewareName,String user, String keyword) {
         QueryRunner qr = new QueryRunner();
         String selectSchemaSql = "select User from mysql.user where Host !='localhost'";
         if (StringUtils.isNotBlank(user)) {
             selectSchemaSql = "select User from mysql.user where Host !='localhost' and User = '" + user + "'";
+        } else {
+            if (StringUtils.isNotBlank(keyword)) {
+                selectSchemaSql = "select User from mysql.user where Host !='localhost' and User like '%" + keyword + "%'";
+            }
         }
         Connection con = getDBConnection(mysqlService.getAccessInfo(clusterId, namespace, middlewareName));
         try {
@@ -238,7 +242,7 @@ public class MysqlUserServiceImpl implements MysqlUserService {
             // 查询每个用户所拥有的数据库及权限
             userList.forEach(item -> {
                 String mysqlQualifiedName = getMysqlQualifiedName(clusterId, namespace, middlewareName);
-                List<MysqlDbPrivilege> privileges = nativeListDbUser(con, item.getUser(), mysqlQualifiedName);
+                List<MysqlDbPrivilege> privileges = nativeListUserDb(con, item.getUser(), mysqlQualifiedName, keyword);
                 // 查询平台存储的用户信息
                 BeanMysqlUser beanMysqlUser = select(mysqlQualifiedName, item.getUser());
                 if (beanMysqlUser != null) {
@@ -260,9 +264,12 @@ public class MysqlUserServiceImpl implements MysqlUserService {
     }
 
     @Override
-    public List<MysqlDbPrivilege> nativeListDbUser(Connection con, String user, String mysqlQualifiedName) {
+    public List<MysqlDbPrivilege> nativeListUserDb(Connection con, String user, String mysqlQualifiedName,String keyword) {
         QueryRunner qr = new QueryRunner();
         String selectUserDb = String.format("select Db from mysql.db where User = '%s'", user);
+        if (StringUtils.isNotBlank(keyword)) {
+            selectUserDb = String.format("select Db from mysql.db where User = '%s' and Db like '%s'", user, "%" + keyword + "%");
+        }
         // 查询用户拥有的数据库
         try {
             List<MysqlDbPrivilege> privileges = qr.query(con, selectUserDb, new BeanListHandler<>(MysqlDbPrivilege.class));

@@ -132,9 +132,12 @@ public class MysqlDbServiceImpl implements MysqlDbService {
     }
 
     @Override
-    public List<MysqlDbDetail> list(String clusterId, String namespace, String middlewareName) {
+    public List<MysqlDbDetail> list(String clusterId, String namespace, String middlewareName,String keyword) {
         QueryRunner qr = new QueryRunner();
         String selectSchemaSql = "select SCHEMA_NAME,DEFAULT_CHARACTER_SET_NAME from information_schema.SCHEMATA ";
+        if (StringUtils.isNotBlank(keyword)) {
+            selectSchemaSql = "select SCHEMA_NAME,DEFAULT_CHARACTER_SET_NAME from information_schema.SCHEMATA  and SCHEMA_NAME like '%" + keyword + "%'";
+        }
         Connection con = getDBConnection(mysqlService.getAccessInfo(clusterId, namespace, middlewareName));
         try {
             List<MysqlDbDetail> dbList = qr.query(con, selectSchemaSql, new BeanListHandler<>(MysqlDbDetail.class));
