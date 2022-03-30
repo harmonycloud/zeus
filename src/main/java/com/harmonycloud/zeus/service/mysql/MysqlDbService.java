@@ -21,24 +21,22 @@ public interface MysqlDbService {
      * @author liyinlong
      * @since 2022/3/25 2:59 下午
      */
-    BaseResult create(MysqlDbDTO db);
+    BaseResult create(MysqlDbDTO dbDTO);
 
     /**
-     * @param db
+     * @param dbDTO
      * @return
      * @description 平台层更新数据库备注
      * @author liyinlong
      * @since 2022/3/25 3:46 下午
      */
-    BaseResult update(MysqlDbDTO db);
+    BaseResult update(MysqlDbDTO dbDTO);
 
-    BaseResult delete(MysqlDbDTO db);
+    BaseResult delete(String clusterId, String namespace, String middlewareName, String db);
 
-    List<MysqlDbDetail> list(MysqlDbDTO db);
+    List<MysqlDbDTO> listCharset(String clusterId,String namespace,String middlewareName);
 
-    List<MysqlDbDTO> listCharset(MysqlDbDTO db);
-
-    BeanMysqlDb select(String mysqlQualifiedName,String db);
+    BeanMysqlDb select(String mysqlQualifiedName, String db);
 
     /**
      * 创建数据库
@@ -64,7 +62,7 @@ public interface MysqlDbService {
      * @author liyinlong
      * @since 2022/3/25 3:00 下午
      */
-    List<MysqlDbDetail> nativeList(MysqlDbDTO db);
+    List<MysqlDbDetail> list(String clusterId, String namespace, String middlewareName);
 
     /**
      * @param con
@@ -76,11 +74,11 @@ public interface MysqlDbService {
     List<MysqlDbDTO> nativeListCharset(Connection con);
 
     /**
-     * @description 查询数据库用户
-     * @author  liyinlong
-     * @since 2022/3/25 4:58 下午
      * @param con
      * @return
+     * @description 查询数据库用户
+     * @author liyinlong
+     * @since 2022/3/25 4:58 下午
      */
-    List<MysqlDbPrivilege> nativeListDbUser(Connection con,String db,String mysqlQualifiedName);
+    List<MysqlDbPrivilege> nativeListDbUser(Connection con, String db, String mysqlQualifiedName);
 }

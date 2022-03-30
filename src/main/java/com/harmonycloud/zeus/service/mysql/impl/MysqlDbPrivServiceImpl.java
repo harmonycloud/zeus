@@ -52,4 +52,20 @@ public class MysqlDbPrivServiceImpl implements MysqlDbPrivService {
         }
     }
 
+    @Override
+    public void deleteByUser(String mysqlQualifiedName, String user) {
+        QueryWrapper<BeanMysqlDbPriv> wrapper = new QueryWrapper<>();
+        wrapper.eq("user", user);
+        wrapper.eq("mysql_qualified_name", mysqlQualifiedName);
+        mysqlDbPrivMapper.delete(wrapper);
+    }
+
+    @Override
+    public void deleteByDb(String mysqlQualifiedName, String db) {
+        QueryWrapper<BeanMysqlDbPriv> wrapper = new QueryWrapper<>();
+        wrapper.eq("db", db);
+        wrapper.eq("mysql_qualified_name", mysqlQualifiedName);
+        mysqlDbPrivMapper.delete(wrapper);
+    }
+
 }

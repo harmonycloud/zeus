@@ -23,7 +23,7 @@ public interface MysqlUserService {
 
     BeanMysqlUser select(String mysqlQualifiedName, String user);
 
-    BaseResult delete(MysqlUserDTO mysqlUserDTO);
+    BaseResult delete(String clusterId, String namespace, String middlewareName, String user);
 
     BaseResult grantUser(MysqlUserDTO mysqlUserDTO);
 
@@ -33,13 +33,15 @@ public interface MysqlUserService {
 
     boolean nativeGrantUser(Connection con, String user, int authority, String db);
 
+    boolean nativeRevokeUser(Connection con, String user);
+
     boolean nativeCreate(Connection con, String user, String password);
 
     boolean nativeDelete(Connection con, String user);
 
     boolean nativeUpdatePassword(Connection con, String user, String newPassword);
 
-    List<MysqlUserDetail> list(MysqlUserDTO userDTO);
+    List<MysqlUserDetail> list(String clusterId, String namespace, String middlewareName, String user);
 
     List<MysqlDbPrivilege> nativeListDbUser(Connection con, String user, String mysqlQualifiedName);
 
