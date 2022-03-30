@@ -56,7 +56,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
     @Override
     public void deploy(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
         //创建分区
-        namespaceService.save(cluster.getId(), "logging", null);
+        namespaceService.save(cluster.getId(), "logging", null, null);
         // 校验是否已发布elasticsearch
         List<BeanClusterMiddlewareInfo> beanClusterMiddlewareInfoList =
             clusterMiddlewareInfoService.list(cluster.getId());

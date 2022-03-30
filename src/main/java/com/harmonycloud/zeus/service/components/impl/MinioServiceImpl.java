@@ -32,7 +32,7 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
     @Override
     public void deploy(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto){
         //创建minio分区
-        namespaceService.save(cluster.getId(), "minio", null);
+        namespaceService.save(cluster.getId(), "minio", null, null);
         //发布minio
         super.deploy(cluster, clusterComponentsDto);
     }

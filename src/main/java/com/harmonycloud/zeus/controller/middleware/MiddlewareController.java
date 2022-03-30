@@ -36,7 +36,7 @@ public class MiddlewareController {
                                                    @PathVariable("namespace") String namespace,
                                                    @RequestParam(value = "type", required = false) String type,
                                                    @RequestParam(value = "keyword", required = false) String keyword) throws Exception {
-        if ("all".equals(namespace)){
+        if ("*".equals(namespace)){
             namespace = null;
         }
         return BaseResult.ok(middlewareService.list(clusterId, namespace, type, keyword));

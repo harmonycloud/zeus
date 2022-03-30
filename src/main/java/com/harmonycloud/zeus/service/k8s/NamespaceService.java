@@ -53,20 +53,21 @@ public interface NamespaceService {
     /**
      * 创建命名空间
      *
-     * @param clusterId     集群id
-     * @param name          命名空间名称
+     * @param namespace 分区对象
      * @param label         标签
      * @param exist    是否校验分区同名
      */
-    void save(String clusterId, String name, Map<String, String> label, Boolean exist);
+    void save(Namespace namespace, Map<String, String> label, Boolean exist);
 
     /**
      * 创建命名空间
      *
      * @param clusterId     集群id
      * @param name          命名空间名称
+     * @param label         label
+     * @param annotations   annotations
      */
-    void save(String clusterId, String name, Map<String, String> label);
+    void save(String clusterId, String name, Map<String, String> label, Map<String, String> annotations);
 
     /**
      * 删除命名空间

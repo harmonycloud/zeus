@@ -1,6 +1,8 @@
 package com.harmonycloud.zeus.controller.k8s;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -49,12 +51,15 @@ public class NamespaceController {
     @ApiOperation(value = "创建命名空间", notes = "创建命名空间")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "name", value = "分区名称", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区对象", paramType = "query", dataTypeClass = Namespace.class),
     })
     @PostMapping
     public BaseResult create(@PathVariable("clusterId") String clusterId,
-                             @RequestParam("name") String name){
-        namespaceService.save(clusterId, name, null, true);
+                             @RequestBody Namespace namespace){
+        Map<String, String> label = new HashMap<>();
+        label.put("middleware", "middleware");
+        namespace.setClusterId(clusterId);
+        namespaceService.save(namespace, label, true);
         return BaseResult.ok();
     }
 

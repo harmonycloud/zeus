@@ -564,7 +564,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
                 if (CollectionUtils.isEmpty(namespaceList)) {
                     Map<String, String> label = new HashMap<>();
                     label.put("middleware", "middleware");
-                    namespaceService.save(clusterId, "middleware-operator", label);
+                    namespaceService.save(clusterId, "middleware-operator", label, null);
                 }
             }
             // 检验operator是否已创建

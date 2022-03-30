@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.service.k8s.impl;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.zeus.service.user.ProjectService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -52,6 +53,8 @@ public class NamespaceServiceImpl implements NamespaceService {
     private MiddlewareCRService middlewareCRService;
     @Autowired
     private ClusterRoleService clusterRoleService;
+    @Autowired
+    private ProjectService projectService;
 
     @Value("${k8s.namespace.protect:default,kube-system,kube-public,cluster-top,cicd,caas-system,kube-federation-system,harbor-system,logging,monitoring,velero,middleware-system}")
     private void setProtectNamespaceList(String protectNamespaces) {
@@ -87,8 +90,8 @@ public class NamespaceServiceImpl implements NamespaceService {
                 Namespace namespace = new Namespace().setName(ns.getMetadata().getName()).setClusterId(clusterId);
                 // 昵称
                 if (ns.getMetadata().getAnnotations() != null
-                    && ns.getMetadata().getAnnotations().containsKey("aliasName")) {
-                    namespace.setAliasName(ns.getMetadata().getAnnotations().get("aliasName"));
+                    && ns.getMetadata().getAnnotations().containsKey("alias_name")) {
+                    namespace.setAliasName(ns.getMetadata().getAnnotations().get("alias_name"));
                 }
                 // 是否已注册
                 namespace.setRegistered(ns.getMetadata().getLabels() != null
@@ -101,8 +104,8 @@ public class NamespaceServiceImpl implements NamespaceService {
                 return namespace;
             }).collect(Collectors.toList());
 
-        // 根据用户角色集群分区权限进行过滤
-        CurrentUser currentUser = CurrentUserRepository.getUserExistNull();
+        //todo 根据用户角色集群分区权限进行过滤
+        /*CurrentUser currentUser = CurrentUserRepository.getUserExistNull();
         if (!ObjectUtils.isEmpty(currentUser)) {
             JSONObject role = JwtTokenComponent.checkToken(currentUser.getToken()).getValue();
             if (!"超级管理员".equals(role.getString("roleName"))) {
@@ -112,7 +115,7 @@ public class NamespaceServiceImpl implements NamespaceService {
                         ns -> cluster.getNamespaceList().stream().anyMatch(cns -> cns.getName().equals(ns.getName())))
                     .collect(Collectors.toList());
             }
-        }
+        }*/
 
         // 返回其他信息
         if (withQuota || withMiddleware) {
@@ -149,15 +152,23 @@ public class NamespaceServiceImpl implements NamespaceService {
     }
 
     @Override
-    public void save(String clusterId, String name, Map<String, String> label, Boolean exist) {
-        if (exist && checkExist(clusterId, name)){
+    public void save(Namespace namespace, Map<String, String> label, Boolean exist) {
+        if (exist && checkExist(namespace.getClusterId(), namespace.getName())){
             throw new BusinessException(ErrorMessage.NAMESPACE_EXIST);
         }
-        save(clusterId, name, label);
+        Map<String, String> annotations = new HashMap<>();
+        if(StringUtils.isNotEmpty(namespace.getAliasName())){
+            annotations.put("alias_name", namespace.getAliasName());
+        }
+        if (StringUtils.isNotEmpty(namespace.getProjectId())){
+            annotations.put("project_id", namespace.getProjectId());
+            projectService.bindNamespace(namespace);
+        }
+        save(namespace.getClusterId(), namespace.getName(), label, annotations);
     }
 
     @Override
-    public void save(String clusterId, String name, Map<String, String> label) {
+    public void save(String clusterId, String name, Map<String, String> label, Map<String, String> annotations) {
         // 创建namespace
         io.fabric8.kubernetes.api.model.Namespace ns = new io.fabric8.kubernetes.api.model.Namespace();
         if (CollectionUtils.isEmpty(label)){
@@ -166,6 +177,7 @@ public class NamespaceServiceImpl implements NamespaceService {
         ObjectMeta meta = new ObjectMeta();
         meta.setName(name);
         meta.setLabels(label);
+        meta.setAnnotations(annotations);
         ns.setMetadata(meta);
         namespaceWrapper.save(clusterId, ns);
     }
