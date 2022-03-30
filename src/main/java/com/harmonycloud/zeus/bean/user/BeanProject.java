@@ -12,14 +12,14 @@ import java.util.Date;
 
 /**
  * @author xutianhong
- * @Date 2021/7/27 2:35 下午
+ * @Date 2022/3/24 8:30 下午
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("role")
-public class BeanRole implements Serializable {
+@TableName("project")
+public class BeanProject implements Serializable {
 
-    private static final long serialVersionUID = -656783133L;
+    private static final long serialVersionUID = -685617284133433L;
 
     /**
      * 自增id
@@ -27,28 +27,34 @@ public class BeanRole implements Serializable {
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
     /**
-     * 名称
+     * 项目id
+     */
+    @TableField("project_id")
+    private String projectId;
+    /**
+     * 项目名称
      */
     @TableField("name")
     private String name;
+    /**
+     * 别名
+     */
+    @TableField("alias_name")
+    private String aliasName;
     /**
      * 描述
      */
     @TableField("description")
     private String description;
     /**
-     * 父id
+     * 项目成员，以逗号分隔
      */
-    @TableField("parent")
-    private Integer parent;
+    @TableField("user")
+    private String user;
     /**
      * 创建时间
      */
-    @TableField("create_Time")
+    @TableField("create_time")
     private Date createTime;
-    /**
-     * 是否可用
-     */
-    @TableField("status")
-    private Boolean status;
+
 }

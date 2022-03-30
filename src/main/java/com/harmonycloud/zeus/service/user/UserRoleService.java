@@ -18,7 +18,15 @@ public interface UserRoleService {
      * @param userName 账户
      * @return BeanSysRole
      */
-    UserRole get(String userName) throws Exception;
+    List<UserRole> get(String userName);
+
+    /**
+     * 校验是否为超级管理员权限
+     *
+     * @param username 用户名
+     * @return Boolean
+     */
+    Boolean checkAdmin(String username);
 
     /**
      * 获取绑定制定角色的用户
@@ -29,31 +37,33 @@ public interface UserRoleService {
     List<UserRole> findByRoleId(Integer roleId);
 
     /**
-     * 获取角色
+     * 获取用户角色关联关系
      *
      * @return List<BeanSysRole>
      */
-    List<UserRole> list(List<BeanUser> beanUserList);
+    List<UserRole> list();
 
     /**
      * 创建用户角色关联
      *
-     * @param userDto 用户信息
+     * @param projectId  项目id
+     * @param username   用户名
+     * @param roleId     角色id
      */
-    void insert(UserDto userDto);
+    void insert(String projectId, String username, Integer roleId);
 
     /**
      * 删除用户角色关联
      *
      * @param userName 账户
      */
-    void delete(String userName);
+    void delete(String userName, String projectId);
 
     /**
      * 创建用户角色关联
      *
      * @param userDto 用户信息
      */
-    void update(UserDto userDto);
+    void update(UserDto userDto, String projectId);
 
 }

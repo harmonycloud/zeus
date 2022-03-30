@@ -24,7 +24,7 @@ public interface UserService {
      *
      * @return UserDto
      */
-    UserDto getUserDto(String userName) throws Exception;
+    UserDto getUserDto(String userName);
 
     /**
      * 查询用户原始信息
@@ -48,7 +48,7 @@ public interface UserService {
      *
      * @return List<UserDto>
      */
-    List<UserDto> list(String keyword) throws Exception;
+    List<UserDto> list(String keyword);
 
     /**
      * 创建用户
@@ -136,4 +136,11 @@ public interface UserService {
     UploadImageFileDto uploadFile(MultipartFile file) throws IOException;
 
     MailUserDTO getUserList(String alertruleId);
+
+    /**
+     * 切换项目
+     * @param projectId 项目id
+     *
+     */
+    String switchProject(String projectId);
 }

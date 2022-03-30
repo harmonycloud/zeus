@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import com.harmonycloud.caas.common.model.user.RoleDto;
 import com.harmonycloud.zeus.service.user.RoleService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -37,35 +38,44 @@ public class UserRoleServiceImpl implements UserRoleService {
     private BeanUserRoleMapper beanUserRoleMapper;
 
     @Override
-    public UserRole get(String userName) throws Exception {
+    public List<UserRole> get(String userName) {
         // 获取角色用户对应关系
         QueryWrapper<BeanUserRole> roleUserWrapper = new QueryWrapper<BeanUserRole>().eq("username", userName);
-        BeanUserRole beanUserRole = beanUserRoleMapper.selectOne(roleUserWrapper);
-        if (ObjectUtils.isEmpty(beanUserRole)) {
-            return null;
-        }
+        List<BeanUserRole> beanUserRoleList = beanUserRoleMapper.selectList(roleUserWrapper);
         // 获取角色信息
-        RoleDto roleDto = roleService.get(beanUserRole.getRoleId());
-
-        return new UserRole().setUserName(userName).setRoleId(roleDto.getId()).setRoleName(roleDto.getName());
+        RoleDto roleDto = roleService.get(beanUserRoleList.get(0).getRoleId());
+        return beanUserRoleList.stream().map(beanUserRole -> {
+            UserRole userRole = new UserRole();
+            BeanUtils.copyProperties(beanUserRole, userRole);
+            userRole.setRoleName(roleDto.getName());
+            return userRole;
+        }).collect(Collectors.toList());
     }
 
     @Override
-    public List<UserRole> list(List<BeanUser> beanUserList) {
+    public Boolean checkAdmin(String username) {
+        // 获取角色用户对应关系
+        QueryWrapper<BeanUserRole> roleUserWrapper =
+            new QueryWrapper<BeanUserRole>().eq("username", username).eq("role_id", "1");
+        List<BeanUserRole> beanUserRoleList = beanUserRoleMapper.selectList(roleUserWrapper);
+        return !CollectionUtils.isEmpty(beanUserRoleList);
+    }
+
+    @Override
+    public List<UserRole> list() {
         // 获取所有角色用户对照关系
         QueryWrapper<BeanUserRole> roleUserWrapper = new QueryWrapper<>();
-        List<BeanUserRole> beanUserRole = beanUserRoleMapper.selectList(roleUserWrapper);
-        Map<String, Integer> beanSysRoleUserMap =
-            beanUserRole.stream().collect(Collectors.toMap(BeanUserRole::getUserName, BeanUserRole::getRoleId));
+        List<BeanUserRole> beanUserRoleList = beanUserRoleMapper.selectList(roleUserWrapper);
         // 获取所有角色信息
         List<RoleDto> beanRoleList = roleService.list(null);
         Map<Integer, String> beanSysRoleMap =
             beanRoleList.stream().collect(Collectors.toMap(RoleDto::getId, RoleDto::getName));
         // 封装返回信息
-        return beanUserList.stream().map(beanUser -> {
+        return beanUserRoleList.stream().map(beanUser -> {
             UserRole userRole = new UserRole();
-            userRole.setUserName(beanUser.getUserName()).setRoleId(beanSysRoleUserMap.get(beanUser.getUserName()))
-                .setRoleName(beanSysRoleMap.get(beanSysRoleUserMap.get(beanUser.getUserName())));
+            BeanUtils.copyProperties(beanUser, userRole);
+            userRole.setUserName(beanUser.getUserName())
+                .setRoleName(beanSysRoleMap.get(beanUser.getRoleId()));
             return userRole;
         }).collect(Collectors.toList());
     }
@@ -85,32 +95,40 @@ public class UserRoleServiceImpl implements UserRoleService {
     }
 
     @Override
-    public void insert(UserDto userDto) {
-        QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("username", userDto.getUserName());
+    public void insert(String projectId, String username, Integer roleId) {
+        QueryWrapper<BeanUserRole> wrapper =
+            new QueryWrapper<BeanUserRole>().eq("project_id", projectId).eq("username", username);
         BeanUserRole existBind = beanUserRoleMapper.selectOne(wrapper);
         if (!ObjectUtils.isEmpty(existBind)) {
             throw new BusinessException(ErrorMessage.USER_ROLE_EXIST);
         }
         BeanUserRole beanUserRole = new BeanUserRole();
-        beanUserRole.setRoleId(userDto.getRoleId());
-        beanUserRole.setUserName(userDto.getUserName());
+        beanUserRole.setProjectId(projectId);
+        beanUserRole.setRoleId(roleId);
+        beanUserRole.setUserName(username);
         beanUserRoleMapper.insert(beanUserRole);
     }
 
     @Override
-    public void delete(String userName) {
+    public void delete(String userName, String projectId) {
         QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("username", userName);
+        if(StringUtils.isNotEmpty(projectId)){
+            wrapper.eq("project_id", projectId);
+        }
         beanUserRoleMapper.delete(wrapper);
     }
 
     @Override
-    public void update(UserDto userDto) {
+    public void update(UserDto userDto, String projectId) {
         QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("username", userDto.getUserName());
-        BeanUserRole existBind = beanUserRoleMapper.selectOne(wrapper);
+        List<BeanUserRole> beanUserRoleList = beanUserRoleMapper.selectList(wrapper);
         BeanUserRole beanUserRole = new BeanUserRole();
         beanUserRole.setUserName(userDto.getUserName());
         beanUserRole.setRoleId(userDto.getRoleId());
-        if (ObjectUtils.isEmpty(existBind)) {
+        if (StringUtils.isNotEmpty(projectId)){
+            beanUserRole.setProjectId(projectId);
+        }
+        if (CollectionUtils.isEmpty(beanUserRoleList)) {
             beanUserRoleMapper.insert(beanUserRole);
         } else {
             beanUserRoleMapper.update(beanUserRole, wrapper);

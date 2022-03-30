@@ -8,18 +8,17 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
-import java.util.Date;
 
 /**
  * @author xutianhong
- * @Date 2021/7/27 2:35 下午
+ * @Date 2022/3/25 11:30 上午
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("role")
-public class BeanRole implements Serializable {
+@TableName("project_namespace")
+public class BeanProjectNamespace implements Serializable {
 
-    private static final long serialVersionUID = -656783133L;
+    private static final long serialVersionUID = -893624875721973864L;
 
     /**
      * 自增id
@@ -27,28 +26,25 @@ public class BeanRole implements Serializable {
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
     /**
-     * 名称
+     * 项目id
      */
-    @TableField("name")
-    private String name;
+    @TableField("project_id")
+    private String projectId;
     /**
-     * 描述
+     * 分区名称
      */
-    @TableField("description")
-    private String description;
+    @TableField("namespace")
+    private String namespace;
     /**
-     * 父id
+     * 分区别名
      */
-    @TableField("parent")
-    private Integer parent;
+    @TableField("alias_name")
+    private String aliasName;
     /**
-     * 创建时间
+     * 集群id
      */
-    @TableField("create_Time")
-    private Date createTime;
-    /**
-     * 是否可用
-     */
-    @TableField("status")
-    private Boolean status;
+    @TableField("cluster_id")
+    private String clusterId;
+
+
 }

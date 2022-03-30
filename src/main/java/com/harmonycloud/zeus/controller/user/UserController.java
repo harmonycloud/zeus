@@ -37,7 +37,7 @@ public class UserController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "userName", value = "账户", paramType = "query", dataTypeClass = String.class),})
     @GetMapping
-    public BaseResult<UserDto> get(@RequestParam(value = "userName", required = false) String userName) throws Exception {
+    public BaseResult<UserDto> get(@RequestParam(value = "userName", required = false) String userName) {
         return BaseResult.ok(userService.getUserDto(userName));
     }
 
@@ -46,7 +46,7 @@ public class UserController {
             @ApiImplicitParam(name = "keyword", value = "过滤字", required = false, paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/list")
-    public BaseResult<List<UserDto>> list(@RequestParam(value = "keyword", required = false) String keyword) throws Exception {
+    public BaseResult<List<UserDto>> list(@RequestParam(value = "keyword", required = false) String keyword) {
         return BaseResult.ok(userService.list(keyword));
     }
 
@@ -152,5 +152,13 @@ public class UserController {
     @GetMapping("/users")
     public BaseResult getUsers(@RequestParam(value = "alertRuleId", required = false) String alertRuleId) {
         return BaseResult.ok(userService.getUserList(alertRuleId));
+    }
+
+    @ApiOperation(value = "切换项目", notes = "切换项目")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),})
+    @GetMapping("/switchProject")
+    public BaseResult<String> switchProject(@RequestParam(value = "projectId") String projectId) {
+        return BaseResult.ok(userService.switchProject(projectId));
     }
 }

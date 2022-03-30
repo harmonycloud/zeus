@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.service.k8s.impl;
 import static com.harmonycloud.caas.common.constants.NameConstant.*;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
+import static com.harmonycloud.caas.common.constants.user.UserConstant.SUPER_MANAGER;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -133,18 +134,18 @@ public class ClusterServiceImpl implements ClusterService {
         if (clusterList.size() <= 0) {
             return new ArrayList<>(0);
         }
-        // 根据角色集群权限过滤
-        CurrentUser currentUser = CurrentUserRepository.getUserExistNull();
+        //todo 根据角色集群权限过滤
+        /*CurrentUser currentUser = CurrentUserRepository.getUserExistNull();
         if (!ObjectUtils.isEmpty(currentUser)) {
             JSONObject role = JwtTokenComponent.checkToken(currentUser.getToken()).getValue();
-            if (!"超级管理员".equals(role.getString("roleName"))) {
+            if (!SUPER_MANAGER.equals(role.getString("roleName"))) {
                 List<MiddlewareClusterDTO> limitCluster = clusterRoleService.get(role.getInteger("roleId"));
                 clusterList = clusterList.stream()
                     .filter(cluster -> limitCluster.stream()
                         .anyMatch(lc -> lc.getId().equals(K8sClient.getClusterId(cluster.getMetadata()))))
                     .collect(Collectors.toList());
             }
-        }
+        }*/
 
         // 封装数据
         clusters = clusterList.stream().map(c -> {

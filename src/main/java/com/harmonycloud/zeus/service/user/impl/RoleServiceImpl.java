@@ -1,13 +1,10 @@
 package com.harmonycloud.zeus.service.user.impl;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import com.harmonycloud.zeus.bean.user.BeanClusterRole;
-import com.harmonycloud.zeus.dao.user.BeanClusterRoleMapper;
+import com.harmonycloud.zeus.bean.user.BeanRoleAuthority;
+import com.harmonycloud.zeus.dao.user.BeanRoleAuthorityMapper;
 import com.harmonycloud.zeus.service.user.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -31,6 +28,8 @@ import com.harmonycloud.zeus.dao.user.BeanRoleMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_ONE;
+
 /**
  * @author xutianhong
  * @Date 2021/7/27 2:54 下午
@@ -42,22 +41,19 @@ public class RoleServiceImpl implements RoleService {
     @Autowired
     private BeanRoleMapper beanRoleMapper;
     @Autowired
-    private ResourceMenuRoleService resourceMenuRoleService;
-    @Autowired
     private ResourceMenuService resourceMenuService;
     @Autowired
     private UserRoleService userRoleService;
     @Autowired
     private ClusterRoleService clusterRoleService;
+    @Autowired
+    private RoleAuthorityService roleAuthorityService;
 
     @Override
     public void add(RoleDto roleDto) {
         // 校验角色名称是否已存在
         if (checkExist(roleDto.getName())) {
             throw new BusinessException(ErrorMessage.ROLE_EXIST);
-        }
-        if (!checkMenu(roleDto)) {
-            throw new BusinessException(ErrorMessage.CREATE_ROLE_FAILED);
         }
         BeanRole beanRole = new BeanRole();
         BeanUtils.copyProperties(roleDto, beanRole);
@@ -71,8 +67,8 @@ public class RoleServiceImpl implements RoleService {
         QueryWrapper<BeanRole> wrapper = new QueryWrapper<BeanRole>().eq("name", roleDto.getName()).eq("status", true);
         BeanRole exit = beanRoleMapper.selectOne(wrapper);
         roleDto.setId(exit.getId());
-        // 绑定角色菜单权限
-        bindResourceMenu(roleDto);
+        // 绑定角色权限
+        bindRolePower(roleDto);
     }
 
     @Override
@@ -94,48 +90,27 @@ public class RoleServiceImpl implements RoleService {
         checkUserBind(roleId);
         //删除角色
         beanRoleMapper.deleteById(roleId);
-        //删除角色菜单绑定
-        resourceMenuRoleService.delete(roleId);
+        //删除角色权限绑定
+        roleAuthorityService.delete(roleId);
         //删除角色集群绑定
         clusterRoleService.delete(roleId);
     }
 
     @Override
     public List<RoleDto> list(String key) {
-        // 获取当前用户的角色id
-        CurrentUser currentUser = CurrentUserRepository.getUser();
-        String currentRoleId = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString("roleId");
         // 获取所有角色信息
         QueryWrapper<BeanRole> roleWrapper = new QueryWrapper<>();
         List<BeanRole> beanRoleList = beanRoleMapper.selectList(roleWrapper);
-        // 获取所有角色菜单(权限)映照
-        List<BeanResourceMenuRole> beanResourceMenuRoleList = resourceMenuRoleService.list(null);
-        Map<Integer, List<BeanResourceMenuRole>> rmRoleMap =
-            beanResourceMenuRoleList.stream().collect(Collectors.groupingBy(BeanResourceMenuRole::getRoleId));
-        // 获取当前角色的菜单权限
-        List<Integer> currentRoleMenuList = rmRoleMap.get(Integer.valueOf(currentRoleId)).stream()
-            .map(BeanResourceMenuRole::getResourceMenuId).collect(Collectors.toList());
-        // 过滤权限为当前用户子权限的角色
-        beanRoleList = beanRoleList.stream().filter(role -> {
-            if (rmRoleMap.containsKey(role.getId())) {
-                return currentRoleMenuList.containsAll(rmRoleMap.get(role.getId()).stream()
-                    .map(BeanResourceMenuRole::getResourceMenuId).collect(Collectors.toList()));
-            } else {
-                rmRoleMap.put(role.getId(), new ArrayList<>());
-                return true;
-            }
-        }).collect(Collectors.toList());
+        // 获取所有角色(权限)映照
+        List<BeanRoleAuthority> beanRoleAuthorityList = roleAuthorityService.list(null);
+        Map<Integer, List<BeanRoleAuthority>> beanRoleAuthorityListMap =
+            beanRoleAuthorityList.stream().collect(Collectors.groupingBy(BeanRoleAuthority::getRoleId));
+        // 封装返还数据，并根据关键词过滤
         return beanRoleList.stream().map(beanRole -> {
             RoleDto roleDto = new RoleDto();
             BeanUtils.copyProperties(beanRole, roleDto);
-            roleDto.setMenu(resourceMenuService.list(rmRoleMap.get(beanRole.getId()).stream()
-                .map(BeanResourceMenuRole::getResourceMenuId).collect(Collectors.toList())).stream()
-                .peek(resourceMenuDto -> {
-                    if (resourceMenuDto.getId() == 5 || resourceMenuDto.getId() == 6 || resourceMenuDto.getId() == 7) {
-                        resourceMenuDto.setOwn(false);
-                    }
-                }).collect(Collectors.toList()));
-            roleDto.setClusterList(clusterRoleService.get(roleDto.getId()));
+            roleDto.setPower(beanRoleAuthorityListMap.get(roleDto.getId()).stream()
+                .collect(Collectors.toMap(BeanRoleAuthority::getType, BeanRoleAuthority::getPower)));
             return roleDto;
         }).filter(roleDto -> {
             if (StringUtils.isNotEmpty(key)) {
@@ -147,35 +122,28 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public void update(RoleDto roleDto) {
-        if (!checkMenu(roleDto)) {
-            throw new BusinessException(ErrorMessage.UPDATE_ROLE_FAILED);
-        }
         // 更新角色信息
         BeanRole beanRole = new BeanRole();
         beanRole.setId(roleDto.getId());
         beanRole.setName(roleDto.getName());
         beanRole.setDescription(roleDto.getDescription());
         beanRoleMapper.updateById(beanRole);
-        // 更新角色菜单权限
-        if (!CollectionUtils.isEmpty(roleDto.getMenu())) {
-            CurrentUser currentUser = CurrentUserRepository.getUser();
-            String roleId = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString("roleId");
-            if (roleId.equals(String.valueOf(roleDto.getId()))) {
-                throw new BusinessException(ErrorMessage.NO_AUTHORITY);
-            }
-            roleDto.getMenu()
-                .forEach(menu -> resourceMenuRoleService.update(roleDto.getId(), menu.getId(), menu.getOwn()));
-        }
-        clusterRoleService.update(roleDto.getId(), roleDto.getClusterList());
+        // 更新角色权限
+        roleAuthorityService.update(roleDto.getId(), roleDto.getPower());
     }
 
     @Override
-    public List<ResourceMenuDto> listMenuByRoleId(String roleId) {
-        // 获取角色菜单映照
-        List<BeanResourceMenuRole> beanResourceMenuRoleList = resourceMenuRoleService.list(roleId);
+    public List<ResourceMenuDto> listMenuByRoleId(String username) {
+        // 菜单只存在两种情况
+        Boolean flag = userRoleService.checkAdmin(username);
+        List<Integer> ids;
+        if (flag) {
+            ids = Arrays.asList(1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19);
+        } else {
+            ids = Arrays.asList(3, 4, 5, 6, 7, 9, 10, 11, 12, 13);
+        }
         // 获取菜单信息
-        List<ResourceMenuDto> resourceMenuDtoList = resourceMenuService.list(beanResourceMenuRoleList.stream()
-            .map(BeanResourceMenuRole::getResourceMenuId).collect(Collectors.toList()));
+        List<ResourceMenuDto> resourceMenuDtoList = resourceMenuService.list(ids);
         return resourceMenuDtoList.stream().filter(ResourceMenuDto::getOwn).collect(Collectors.toList());
     }
 
@@ -189,53 +157,12 @@ public class RoleServiceImpl implements RoleService {
     }
 
     /**
-     * 校验角色菜单权限
+     * 绑定角色权限
      */
-    public boolean checkMenu(RoleDto roleDto) {
-        if (CollectionUtils.isEmpty(roleDto.getMenu())) {
-            return true;
+    private void bindRolePower(RoleDto roleDto) {
+        for (String key : roleDto.getPower().keySet()){
+            roleAuthorityService.insert(roleDto.getId(), key, roleDto.getPower().get(key));
         }
-        // 获取当前用户的角色id
-        CurrentUser currentUser = CurrentUserRepository.getUser();
-        String currentRoleId = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString("roleId");
-        List<BeanResourceMenuRole> rmRoleList = resourceMenuRoleService.list(currentRoleId);
-        // 判断创建角色的权限是否是当前登陆用户角色权限的子集
-        if (!rmRoleList.stream().map(BeanResourceMenuRole::getResourceMenuId).collect(Collectors.toList())
-            .containsAll(roleDto.getMenu().stream().filter(ResourceMenuDto::getOwn).map(ResourceMenuDto::getId).collect(Collectors.toList()))) {
-            log.error("创建/更新 角色的权限不能大于当前登陆用户的角色权限");
-            return false;
-        }
-        // 判断更新的角色的权限，是否大于该角色曾创建过的角色的权限的最大集合
-        if (roleDto.getId() != null) {
-            QueryWrapper<BeanRole> wrapper = new QueryWrapper<BeanRole>().eq("parent", roleDto.getId());
-            List<BeanRole> beanRoleList = beanRoleMapper.selectList(wrapper);
-            if (!CollectionUtils.isEmpty(beanRoleList)) {
-                for (BeanRole beanRole : beanRoleList) {
-                    List<BeanResourceMenuRole> list = resourceMenuRoleService.list(beanRole.getId().toString());
-                    if (!roleDto.getMenu().stream().map(ResourceMenuDto::getId).collect(Collectors.toList())
-                        .containsAll(
-                            list.stream().map(BeanResourceMenuRole::getResourceMenuId).collect(Collectors.toList()))) {
-                        log.error("更新角色的权限不能小于该角色曾创建过的角色的权限的最大集合");
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
-    /**
-     * 绑定角色菜单权限
-     */
-    private void bindResourceMenu(RoleDto roleDto) {
-        roleDto.getMenu().forEach(menu -> resourceMenuRoleService.add(roleDto.getId(), menu.getId(), menu.getOwn()));
-    }
-
-    /**
-     * 绑定角色集群分区权限
-     */
-    public void bindCluster(RoleDto roleDto) {
-        clusterRoleService.add(roleDto.getId(), roleDto.getClusterList());
     }
 
     /**

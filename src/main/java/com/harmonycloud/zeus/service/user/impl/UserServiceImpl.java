@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.constants.LdapConfigConstant;
 import com.harmonycloud.caas.common.model.MailUserDTO;
 import com.harmonycloud.caas.common.model.UploadImageFileDto;
@@ -19,6 +20,7 @@ import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.user.RoleService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
 import com.harmonycloud.zeus.service.user.UserService;
+import com.harmonycloud.zeus.util.ApplicationUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -26,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -42,6 +45,8 @@ import com.harmonycloud.zeus.dao.user.BeanUserMapper;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.tool.encrypt.RSAUtils;
 import org.springframework.web.multipart.MultipartFile;
+
+import static com.harmonycloud.caas.common.constants.user.UserConstant.USERNAME;
 
 
 /**
@@ -79,7 +84,7 @@ public class UserServiceImpl implements UserService {
     private String imagePath;
 
     @Override
-    public UserDto getUserDto(String userName) throws Exception {
+    public UserDto getUserDto(String userName) {
         if (StringUtils.isEmpty(userName)) {
             CurrentUser currentUser = CurrentUserRepository.getUser();
             userName = currentUser.getUsername();
@@ -100,7 +105,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto getUserDto(String userName, Boolean withPassword) throws Exception {
+    public UserDto getUserDto(String userName, Boolean withPassword) {
         QueryWrapper<BeanUser> wrapper = new QueryWrapper<BeanUser>().eq("username", userName);
         BeanUser beanUser = beanUserMapper.selectOne(wrapper);
         if (ObjectUtils.isEmpty(beanUser)) {
@@ -108,9 +113,9 @@ public class UserServiceImpl implements UserService {
         }
         UserDto userDto = new UserDto();
         BeanUtils.copyProperties(beanUser, userDto);
-        UserRole userRole = userRoleService.get(userName);
-        if (userRole != null) {
-            userDto.setRoleId(userRole.getRoleId()).setRoleName(userRole.getRoleName());
+        List<UserRole> userRoleList = userRoleService.get(userName);
+        if (!CollectionUtils.isEmpty(userRoleList)) {
+            userDto.setUserRoleList(userRoleList);
         }
         if (!withPassword) {
             userDto.setPassword(null);
@@ -119,25 +124,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserDto> list(String keyword) throws Exception {
-        CurrentUser currentUser = CurrentUserRepository.getUser();
-        String roleId = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString("roleId");
+    public List<UserDto> list(String keyword) {
         QueryWrapper<BeanUser> userWrapper = new QueryWrapper<>();
         // 非超级管理员角色用户 获取创建者为自身的用户
-        if(!"1".equals(roleId)){
-            userWrapper.eq("creator", currentUser.getUsername());
-        }
         List<BeanUser> beanUserList = beanUserMapper.selectList(userWrapper);
         // 获取角色
-        List<UserRole> userRoleList = userRoleService.list(beanUserList);
-        Map<String, UserRole> userRoleMap =
-                userRoleList.stream().collect(Collectors.toMap(UserRole::getUserName, ur -> ur));
+        List<UserRole> userRoleList = userRoleService.list();
+        Map<String, List<UserRole>> userRoleMap =
+            userRoleList.stream().collect(Collectors.groupingBy(UserRole::getUserName));
         // 封装数据
         List<UserDto> userDtoList = beanUserList.stream().map(beanUser -> {
             UserDto userDto = new UserDto();
             BeanUtils.copyProperties(beanUser, userDto, "password");
-            userDto.setRoleId(userRoleMap.get(beanUser.getUserName()).getRoleId());
-            userDto.setRoleName(userRoleMap.get(beanUser.getUserName()).getRoleName());
+            userDto.setUserRoleList(userRoleMap.get(beanUser.getUserName()));
             return userDto;
         }).collect(Collectors.toList());
         // 过滤
@@ -179,7 +178,7 @@ public class UserServiceImpl implements UserService {
         beanUserMapper.update(beanUser, wrapper);
         // 修改角色
         if (userDto.getRoleId() != null) {
-            userRoleService.update(userDto);
+            userRoleService.update(userDto, null);
         }
     }
 
@@ -198,7 +197,7 @@ public class UserServiceImpl implements UserService {
         QueryWrapper<BeanUser> wrapper = new QueryWrapper<BeanUser>().eq("username", userName);
         beanUserMapper.delete(wrapper);
         // 删除用户角色关系
-        userRoleService.delete(userName);
+        userRoleService.delete(userName, null);
         return true;
     }
 
@@ -248,8 +247,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<ResourceMenuDto> menu(String clusterId) {
         CurrentUser currentUser = CurrentUserRepository.getUser();
-        String roleId = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString("roleId");
-        List<ResourceMenuDto> resourceMenuDtoList = roleService.listMenuByRoleId(roleId);
+        String username = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString(USERNAME);
+        List<ResourceMenuDto> resourceMenuDtoList = roleService.listMenuByRoleId(username);
 
         Map<Integer, List<ResourceMenuDto>> resourceMenuDtoMap =
                 resourceMenuDtoList.stream().collect(Collectors.groupingBy(ResourceMenuDto::getParentId));
@@ -355,24 +354,24 @@ public class UserServiceImpl implements UserService {
             List<MailToUser> mailToUsers = mailToUserMapper.selectList(mailToUserQueryWrapper);
             userDtoList = mailToUsers.stream().map(mailToUser -> {
                 BeanUser beanUser = beanUserMapper.selectOne(new QueryWrapper<BeanUser>().eq("id",mailToUser.getUserId()));
-                UserRole userRole = new UserRole();
-                try {
-                    userRole = userRoleService.get(beanUser.getUserName());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                List<UserRole> userRoleList = userRoleService.get(beanUser.getUserName());
                 UserDto userDto = new UserDto();
                 BeanUtils.copyProperties(beanUser,userDto);
-                if (!ObjectUtils.isEmpty(userRole)) {
-                    BeanRole beanRole = beanRoleMapper.selectOne(new QueryWrapper<BeanRole>().eq("id",userRole.getRoleId()));
-                    userDto.setRoleId(beanRole.getId());
-                    userDto.setUserName(userRole.getUserName());
-                }
+                userDto.setUserRoleList(userRoleList);
                 return userDto;
             }).collect(Collectors.toList());
         }
         MailUserDTO mailUserDTO = new MailUserDTO();
         return mailUserDTO.setUsers(userDtos).setUserBy(userDtoList);
+    }
+
+    @Override
+    public String switchProject(String projectId) {
+        JSONObject userMap = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue();
+        userMap.put("projectId", projectId);
+        long currentTime = System.currentTimeMillis();
+        return JwtTokenComponent.generateToken("userInfo", userMap,
+            new Date(currentTime + (long)(ApplicationUtil.getExpire() * 3600000L)), new Date(currentTime - 300000L));
     }
 
     /**

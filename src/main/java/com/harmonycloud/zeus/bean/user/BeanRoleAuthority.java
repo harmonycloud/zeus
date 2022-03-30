@@ -7,16 +7,18 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.io.Serializable;
+
 /**
  * @author xutianhong
- * @Date 2021/7/27 2:59 下午
+ * @Date 2022/3/28 4:02 下午
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("role_user")
-public class BeanUserRole {
+@TableName("role_authority")
+public class BeanRoleAuthority implements Serializable {
 
-    private static final long serialVersionUID = -6579876133L;
+    private static final long serialVersionUID = -4612389176982342L;
 
     /**
      * 自增id
@@ -24,20 +26,19 @@ public class BeanUserRole {
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
     /**
-     * 项目id
-     */
-    @TableField("project_id")
-    private String projectId;
-    /**
-     * 名称
-     */
-    @TableField("username")
-    private String userName;
-    /**
-     * 名称
+     * 角色id
      */
     @TableField("role_id")
     private Integer roleId;
+    /**
+     * 类型
+     */
+    @TableField("type")
+    private String type;
+    /**
+     * 能力
+     */
+    @TableField("power")
+    private String power;
+
 }
-
-
