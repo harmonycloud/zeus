@@ -152,7 +152,7 @@ public class MysqlServiceImpl implements MysqlService {
         }
         List<IngressDTO> ingressDTOS = ingressService.get(clusterId, namespace, MiddlewareTypeEnum.MYSQL.name(), middlewareName);
         ingressDTOS = ingressDTOS.stream().filter(ingressDTO -> (
-                !ingressDTO.getName().contains("readonly") && ingressDTO.getExposeType().equals(MIDDLEWARE_EXPOSE_NODEPORT))
+                !ingressDTO.getName().contains("readonly"))
         ).collect(Collectors.toList());
 
         MysqlAccessInfo mysqlAccessInfo = new MysqlAccessInfo();
