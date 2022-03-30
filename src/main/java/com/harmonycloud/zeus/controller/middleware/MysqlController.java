@@ -1,10 +1,14 @@
 package com.harmonycloud.zeus.controller.middleware;
 
 import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.model.MysqlDbDTO;
+import com.harmonycloud.caas.common.model.MysqlUserDTO;
 import com.harmonycloud.caas.common.model.middleware.MysqlSlowSqlDTO;
 import com.harmonycloud.caas.common.model.middleware.SlowLogQuery;
 import com.harmonycloud.tool.page.PageObject;
 import com.harmonycloud.zeus.service.middleware.MysqlService;
+import com.harmonycloud.zeus.service.mysql.MysqlDbService;
+import com.harmonycloud.zeus.service.mysql.MysqlUserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -19,13 +23,17 @@ import javax.servlet.http.HttpServletResponse;
  * @author dengyulong
  * @date 2021/03/23
  */
-@Api(tags = {"服务列表","服务管理"}, value = "mysql中间件", description = "mysql中间件")
+@Api(tags = {"服务列表", "服务管理"}, value = "mysql中间件", description = "mysql中间件")
 @RestController
 @RequestMapping("/clusters/{clusterId}/middlewares/mysql")
 public class MysqlController {
 
     @Autowired
     private MysqlService mysqlService;
+    @Autowired
+    private MysqlUserService mysqlUserService;
+    @Autowired
+    private MysqlDbService mysqlDbService;
 
     @ApiOperation(value = "灾备切换", notes = "灾备切换")
     @ApiImplicitParams({
@@ -36,7 +44,7 @@ public class MysqlController {
     @PostMapping("/{middlewareName}/disasterRecovery")
     public BaseResult switchDisasterRecovery(@PathVariable("clusterId") String clusterId,
                                              @RequestParam("namespace") String namespace,
-                                             @PathVariable("middlewareName") String middlewareName){
+                                             @PathVariable("middlewareName") String middlewareName) {
         return mysqlService.switchDisasterRecovery(clusterId, namespace, middlewareName);
     }
 
@@ -124,5 +132,73 @@ public class MysqlController {
         slowLogQuery.setSearchType(searchType);
         mysqlService.slowsqlExcel(slowLogQuery, response, request);
     }
+
+    @ApiOperation(value = "创建用户", notes = "创建用户")
+    @PostMapping("/createUser")
+    public BaseResult createUser(@RequestBody MysqlUserDTO mysqlUserDTO) {
+        return mysqlUserService.create(mysqlUserDTO);
+    }
+
+    @ApiOperation(value = "更新用户", notes = "更新用户")
+    @PutMapping("/updateUser")
+    public BaseResult updateUser(@RequestBody MysqlUserDTO mysqlUserDTO) {
+        return mysqlUserService.update(mysqlUserDTO);
+    }
+
+    @ApiOperation(value = "删除用户", notes = "删除用户")
+    @DeleteMapping("/deleteUser")
+    public BaseResult deleteUser(@RequestBody MysqlUserDTO mysqlUserDTO) {
+        return mysqlUserService.delete(mysqlUserDTO);
+    }
+
+    @ApiOperation(value = "查询用户列表", notes = "查询用户列表")
+    @GetMapping("/listUser")
+    public BaseResult listUser(@RequestBody MysqlUserDTO mysqlUserDTO) {
+        return BaseResult.ok(mysqlUserService.list(mysqlUserDTO));
+    }
+
+    @ApiOperation(value = "创建数据库", notes = "创建数据库")
+    @PostMapping("/createDb")
+    public BaseResult createDb(@RequestBody MysqlDbDTO mysqlDbDTO) {
+        mysqlDbService.create(mysqlDbDTO);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "更新数据库备注", notes = "更新数据库备注")
+    @PutMapping("/updateDb")
+    public BaseResult updateDb(@RequestBody MysqlDbDTO mysqlDbDTO) {
+        return mysqlDbService.update(mysqlDbDTO);
+    }
+
+    @ApiOperation(value = "查询数据库列表", notes = "查询数据库列表")
+    @GetMapping("/listDb")
+    public BaseResult listDb(@RequestBody MysqlDbDTO mysqlDbDTO) {
+        return BaseResult.ok(mysqlDbService.list(mysqlDbDTO));
+    }
+
+    @ApiOperation(value = "删除数据库", notes = "删除数据库")
+    @DeleteMapping("/deleteDb")
+    public BaseResult deleteDb(@RequestBody MysqlDbDTO mysqlDbDTO) {
+        return mysqlDbService.delete(mysqlDbDTO);
+    }
+
+    @ApiOperation(value = "授权数据库", notes = "授权数据库")
+    @PostMapping("/grantUser")
+    public BaseResult grantUser(@RequestBody MysqlUserDTO mysqlUserDTO) {
+        return mysqlUserService.grantUser(mysqlUserDTO);
+    }
+
+    @ApiOperation(value = "修改密码", notes = "修改密码")
+    @PutMapping("/updatePassword")
+    public BaseResult updatePassword(@RequestBody MysqlUserDTO mysqlUserDTO) {
+        return mysqlUserService.updatePassword(mysqlUserDTO);
+    }
+
+    @ApiOperation(value = "查询字符集", notes = "查询字符集")
+    @GetMapping("/listCharset")
+    public BaseResult listCharset(@RequestBody MysqlDbDTO mysqlDbDTO) {
+        return BaseResult.ok(mysqlDbService.listCharset(mysqlDbDTO));
+    }
+
 
 }

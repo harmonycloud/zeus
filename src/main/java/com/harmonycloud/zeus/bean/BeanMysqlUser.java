@@ -34,12 +34,6 @@ public class BeanMysqlUser implements Serializable {
     private String mysqlQualifiedName;
 
     /**
-     * mysql服务id
-     */
-    @TableField("middleware_id")
-    private Integer middlewareId;
-
-    /**
      * 用户名
      */
     @TableField("user")

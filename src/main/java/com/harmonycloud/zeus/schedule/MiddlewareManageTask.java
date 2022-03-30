@@ -66,4 +66,14 @@ public class MiddlewareManageTask {
         mysqlOperator.createDisasterRecoveryMiddleware(middleware);
     }
 
+    /**
+     * 异步创建mysql对外服务
+     * @param mysqlOperator
+     * @param middleware
+     */
+    @Async("singleThreadExecutor")
+    public void asyncCreateMysqlOpenService(MysqlOperatorImpl mysqlOperator, Middleware middleware){
+        mysqlOperator.createOpenService(middleware);
+    }
+
 }

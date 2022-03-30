@@ -1,13 +1,18 @@
 package com.harmonycloud.zeus.operator.impl;
 
 import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_INGRESS;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_NODEPORT;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.enums.Protocol;
+import com.harmonycloud.caas.common.model.IngressComponentDto;
+import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
+import com.harmonycloud.zeus.service.k8s.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -30,9 +35,6 @@ import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.operator.BaseOperator;
 import com.harmonycloud.zeus.operator.api.MysqlOperator;
 import com.harmonycloud.zeus.operator.miiddleware.AbstractMysqlOperator;
-import com.harmonycloud.zeus.service.k8s.ClusterService;
-import com.harmonycloud.zeus.service.k8s.MysqlReplicateCRDService;
-import com.harmonycloud.zeus.service.k8s.StorageClassService;
 import com.harmonycloud.zeus.service.middleware.BackupService;
 import com.harmonycloud.zeus.service.middleware.MysqlScheduleBackupService;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareServiceImpl;
@@ -73,6 +75,10 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     private StorageClassService storageClassService;
     @Autowired
     private MysqlBackupServiceImpl mysqlBackupService;
+    @Autowired
+    private IngressComponentService ingressComponentService;
+    @Autowired
+    private ServiceService serviceService;
 
     @Override
     public boolean support(Middleware middleware) {
@@ -214,6 +220,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             middleware.setRelationMiddleware(relationMiddleware);
             middlewareManageTask.asyncCreateDisasterRecoveryMiddleware(this, middleware);
         }
+        // 创建对外服务
+        middlewareManageTask.asyncCreateMysqlOpenService(this, middleware);
     }
 
     @Override
@@ -608,6 +616,88 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             }
         } else {
             log.info("未找到只读服务，无法创建MysqlReplicate");
+        }
+    }
+
+    public void createOpenService(Middleware middleware) {
+        boolean success = false;
+        MiddlewareServiceNameIndex middlewareServiceNameIndex = ServiceNameConvertUtil.convertMysql(middleware.getName(), false);
+        for (int i = 0; i < (60 * 10 * 60) && !success; i++) {
+            Middleware detail = middlewareService.detail(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
+            log.info("为实例：{}创建对外服务：状态：{},已用时：{}s", detail.getName(), detail.getStatus(), i);
+            if (detail != null) {
+                if (detail.getStatus() != null && "Running".equals(detail.getStatus())) {
+                    executeCreateOpenService(middleware, middlewareServiceNameIndex);
+                    success = true;
+                }
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void executeCreateOpenService(Middleware middleware, MiddlewareServiceNameIndex middlewareServiceNameIndex) {
+        List<IngressComponentDto> ingressComponentList = ingressComponentService.list(middleware.getClusterId());
+        if (CollectionUtils.isEmpty(ingressComponentList)) {
+            super.createOpenService(middleware, middlewareServiceNameIndex);
+        } else {
+            createIngressService(middleware);
+        }
+    }
+
+    /**
+     * 为mysql创建一个service
+     * @param middleware
+     */
+    public void createIngressService(Middleware middleware) {
+        List<IngressComponentDto> ingressComponentList = ingressComponentService.list(middleware.getClusterId());
+        if (CollectionUtils.isEmpty(ingressComponentList)) {
+            return;
+        }
+        IngressComponentDto ingressComponentDto = ingressComponentList.get(0);
+        String ingressClassName = ingressComponentDto.getIngressClassName();
+        IngressDTO ingressDTO = new IngressDTO();
+        ingressDTO.setIngressClassName(ingressClassName);
+        ingressDTO.setExposeType(MIDDLEWARE_EXPOSE_INGRESS);
+        ingressDTO.setProtocol(Protocol.TCP.getValue());
+        ingressDTO.setMiddlewareType(middleware.getType());
+        // 获取mysql服务列表
+        List<ServicePortDTO> servicePortDTOList = serviceService.list(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
+        servicePortDTOList = servicePortDTOList.stream().filter(item ->
+                (item.getServiceName().contains("headless") && (item.getServiceName().contains("readonly"))))
+                .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(servicePortDTOList)) {
+            return;
+        }
+        ServicePortDTO servicePortDTO = servicePortDTOList.get(0);
+        if (CollectionUtils.isEmpty(servicePortDTO.getPortDetailDtoList())) {
+            return;
+        }
+        // 设置需要暴露的服务信息
+        PortDetailDTO portDetailDTO = servicePortDTO.getPortDetailDtoList().get(0);
+        ServiceDTO serviceDTO = new ServiceDTO();
+        serviceDTO.setTargetPort(portDetailDTO.getTargetPort());
+        serviceDTO.setServicePort(portDetailDTO.getPort());
+        serviceDTO.setServiceName(servicePortDTO.getServiceName());
+        List<ServiceDTO> serviceDTOS = new ArrayList<>();
+        serviceDTOS.add(serviceDTO);
+
+        ingressDTO.setServiceList(serviceDTOS);
+        boolean successCreateService = false;
+        int servicePort = 31000;
+        while (!successCreateService) {
+            serviceDTO.setExposePort(String.valueOf(servicePort));
+            try {
+                ingressService.create(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), ingressDTO);
+                successCreateService = true;
+            } catch (Exception e) {
+                e.printStackTrace();
+                servicePort++;
+                successCreateService = false;
+            }
         }
     }
 

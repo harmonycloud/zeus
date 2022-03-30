@@ -1,9 +1,12 @@
 package com.harmonycloud.zeus.bean;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableField;
 import java.io.Serializable;
+import java.time.LocalDateTime;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -22,7 +25,7 @@ public class BeanMysqlDb implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @TableId("id")
+    @TableId(value="id",type= IdType.AUTO)
     private Integer id;
 
     /**
@@ -36,6 +39,12 @@ public class BeanMysqlDb implements Serializable {
      */
     @TableField("db")
     private String db;
+
+    /**
+     * 创建时间
+     */
+    @TableField("createtime")
+    private LocalDateTime createtime;
 
     /**
      * 备注
