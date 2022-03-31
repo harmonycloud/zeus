@@ -26,6 +26,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -173,7 +174,19 @@ public class MysqlDbServiceImpl implements MysqlDbService {
                     item.setCreateTime(Date.from(beanMysqlDb.getCreatetime().atZone(ZoneId.systemDefault()).toInstant()));
                 }
             });
-            dbList.sort(Comparator.comparing(MysqlDbDetail::getCreateTime));
+            Collections.sort(dbList, (o1, o2) -> {
+                if (o1.getCreateTime() == null) {
+                    return 1;
+                }
+                if (o2.getCreateTime() == null) {
+                    return 1;
+                }
+                if (o1.getCreateTime().before(o2.getCreateTime())) {
+                    return 1;
+                } else {
+                    return -1;
+                }
+            });
             return dbList;
         } catch (SQLException e) {
             e.printStackTrace();
