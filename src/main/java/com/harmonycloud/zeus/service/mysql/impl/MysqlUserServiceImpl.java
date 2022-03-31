@@ -16,6 +16,7 @@ import com.harmonycloud.zeus.service.mysql.MysqlDbPrivService;
 import com.harmonycloud.zeus.service.mysql.MysqlUserService;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -179,6 +180,9 @@ public class MysqlUserServiceImpl implements MysqlUserService {
     @Override
     public boolean nativeCreate(Connection con, String user, String password) {
         QueryRunner qr = new QueryRunner();
+        if (nativeCheckUserExists(con, user)) {
+            throw new BusinessException(ErrorMessage.MYSQL_USER_EXISTS);
+        }
         String sql = String.format("create user '%s'@'%s' identified by '%s'", user, "%", password);
         try {
             qr.execute(con, sql, null);
@@ -213,6 +217,21 @@ public class MysqlUserServiceImpl implements MysqlUserService {
         try {
             qr.execute(con, sql, null);
             return true;
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean nativeCheckUserExists(Connection con, String user) {
+        QueryRunner qr = new QueryRunner();
+        String selectSchemaSql = "select User from mysql.user where Host !='localhost' and User = '" + user + "'";
+        try {
+            MysqlUserDetail mysqlUserDetail = qr.query(con, selectSchemaSql, new BeanHandler<>(MysqlUserDetail.class));
+            if (mysqlUserDetail != null) {
+                return true;
+            }
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }

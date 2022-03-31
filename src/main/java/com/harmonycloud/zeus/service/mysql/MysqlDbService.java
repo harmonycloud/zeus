@@ -4,9 +4,13 @@ import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.MysqlDbDTO;
 import com.harmonycloud.caas.common.model.MysqlDbDetail;
 import com.harmonycloud.caas.common.model.MysqlDbPrivilege;
+import com.harmonycloud.caas.common.model.MysqlUserDetail;
 import com.harmonycloud.zeus.bean.BeanMysqlDb;
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.BeanHandler;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -72,6 +76,8 @@ public interface MysqlDbService {
      * @since 2022/3/25 4:02 下午
      */
     List<MysqlDbDTO> nativeListCharset(Connection con);
+
+    boolean nativeCheckDbExists(Connection con, String db);
 
     /**
      * @param con

@@ -7,6 +7,7 @@ import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.MysqlDbDTO;
 import com.harmonycloud.caas.common.model.MysqlDbDetail;
 import com.harmonycloud.caas.common.model.MysqlDbPrivilege;
+import com.harmonycloud.caas.common.model.MysqlUserDetail;
 import com.harmonycloud.zeus.bean.BeanMysqlDb;
 import com.harmonycloud.zeus.bean.BeanMysqlDbPriv;
 import com.harmonycloud.zeus.dao.BeanMysqlDbMapper;
@@ -15,6 +16,7 @@ import com.harmonycloud.zeus.service.mysql.MysqlDbPrivService;
 import com.harmonycloud.zeus.service.mysql.MysqlDbService;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -103,6 +105,9 @@ public class MysqlDbServiceImpl implements MysqlDbService {
 
     @Override
     public boolean nativeCreate(Connection con, String dbName, String charset) {
+        if (nativeCheckDbExists(con, dbName)) {
+            throw new BusinessException(ErrorMessage.MYSQL_DB_EXISTS);
+        }
         QueryRunner qr = new QueryRunner();
         String sql = String.format("create database %s DEFAULT CHARACTER SET %s", dbName, charset);
         try {
@@ -136,7 +141,7 @@ public class MysqlDbServiceImpl implements MysqlDbService {
         QueryRunner qr = new QueryRunner();
         String selectSchemaSql = "select SCHEMA_NAME,DEFAULT_CHARACTER_SET_NAME from information_schema.SCHEMATA ";
         if (StringUtils.isNotBlank(keyword)) {
-            selectSchemaSql = "select SCHEMA_NAME,DEFAULT_CHARACTER_SET_NAME from information_schema.SCHEMATA  and SCHEMA_NAME like '%" + keyword + "%'";
+            selectSchemaSql = "select SCHEMA_NAME,DEFAULT_CHARACTER_SET_NAME from information_schema.SCHEMATA  where SCHEMA_NAME like '%" + keyword + "%'";
         }
         Connection con = getDBConnection(mysqlService.getAccessInfo(clusterId, namespace, middlewareName));
         try {
@@ -183,6 +188,21 @@ public class MysqlDbServiceImpl implements MysqlDbService {
             DbUtils.closeQuietly(con);
         }
         return null;
+    }
+
+    @Override
+    public boolean nativeCheckDbExists(Connection con, String db) {
+        QueryRunner qr = new QueryRunner();
+        String selectSchemaSql = "select SCHEMA_NAME,DEFAULT_CHARACTER_SET_NAME from information_schema.SCHEMATA  where SCHEMA_NAME = '" + db + "'";
+        try {
+            MysqlDbDetail mysqlDbDetail = qr.query(con, selectSchemaSql, new BeanHandler<>(MysqlDbDetail.class));
+            if (mysqlDbDetail != null) {
+                return true;
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return false;
     }
 
     @Override
