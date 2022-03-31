@@ -5,6 +5,7 @@ import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConsta
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_NODEPORT;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -656,8 +657,10 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     public void executeCreateOpenService(Middleware middleware, MiddlewareServiceNameIndex middlewareServiceNameIndex) {
         List<IngressComponentDto> ingressComponentList = ingressComponentService.list(middleware.getClusterId());
         if (CollectionUtils.isEmpty(ingressComponentList)) {
+            log.info("不存在ingress，使用NodePort暴露服务");
             super.createOpenService(middleware, middlewareServiceNameIndex);
         } else {
+            log.info("存在ingress，使用ingress暴露服务");
             createIngressService(middleware);
         }
     }
@@ -681,7 +684,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         // 获取mysql服务列表
         List<ServicePortDTO> servicePortDTOList = serviceService.list(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
         servicePortDTOList = servicePortDTOList.stream().filter(item ->
-                (item.getServiceName().contains("headless") && (item.getServiceName().contains("readonly"))))
+                ( (!item.getServiceName().contains("headless")) && (!item.getServiceName().contains("readonly"))))
                 .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(servicePortDTOList)) {
             return;
@@ -765,6 +768,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         clearDbManageData(middleware);
         BeanMysqlUser mysqlUser = new BeanMysqlUser();
         mysqlUser.setUser("root");
+        mysqlUser.setCreatetime(LocalDateTime.now());
         mysqlUser.setPassword(middleware.getPassword());
         mysqlUser.setMysqlQualifiedName(MysqlConnectionUtil.getMysqlQualifiedName(middleware.getClusterId(), middleware.getNamespace(), middleware.getName()));
         mysqlUserService.create(mysqlUser);

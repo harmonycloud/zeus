@@ -173,6 +173,7 @@ public class MysqlDbServiceImpl implements MysqlDbService {
                     item.setCreateTime(Date.from(beanMysqlDb.getCreatetime().atZone(ZoneId.systemDefault()).toInstant()));
                 }
             });
+            dbList.sort(Comparator.comparing(MysqlDbDetail::getCreateTime));
             return dbList;
         } catch (SQLException e) {
             e.printStackTrace();
