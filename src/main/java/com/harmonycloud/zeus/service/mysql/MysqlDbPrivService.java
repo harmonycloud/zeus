@@ -16,6 +16,8 @@ public interface MysqlDbPrivService {
 
     void deleteByUser(String mysqlQualifiedName, String user);
 
+    void delete(String clusterId,String namespace,String middlewareName);
+
     void deleteByDb(String mysqlQualifiedName, String db);
 
 }

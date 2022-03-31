@@ -38,6 +38,8 @@ public interface MysqlDbService {
 
     BaseResult delete(String clusterId, String namespace, String middlewareName, String db);
 
+    void delete(String clusterId, String namespace, String middlewareName);
+
     List<MysqlDbDTO> listCharset(String clusterId,String namespace,String middlewareName);
 
     BeanMysqlDb select(String mysqlQualifiedName, String db);

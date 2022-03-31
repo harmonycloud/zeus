@@ -19,11 +19,15 @@ public interface MysqlUserService {
 
     BaseResult create(MysqlUserDTO mysqlUserDTO);
 
+    void create(BeanMysqlUser beanMysqlUser);
+
     BaseResult update(MysqlUserDTO mysqlUserDTO);
 
     BeanMysqlUser select(String mysqlQualifiedName, String user);
 
     BaseResult delete(String clusterId, String namespace, String middlewareName, String user);
+
+    void delete(String clusterId, String namespace, String middlewareName);
 
     BaseResult grantUser(MysqlUserDTO mysqlUserDTO);
 

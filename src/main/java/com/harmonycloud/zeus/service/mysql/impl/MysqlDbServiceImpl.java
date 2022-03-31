@@ -83,11 +83,19 @@ public class MysqlDbServiceImpl implements MysqlDbService {
         if (nativeDelete(getDBConnection(mysqlService.getAccessInfo(clusterId, namespace, middlewareName)), db)) {
             QueryWrapper<BeanMysqlDb> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("db", db);
+            queryWrapper.eq("mysql_qualified_name", getMysqlQualifiedName(clusterId, namespace, middlewareName));
             beanMysqlDbMapper.delete(queryWrapper);
             dbPrivService.deleteByDb(getMysqlQualifiedName(clusterId, namespace, middlewareName), db);
             return BaseResult.ok();
         }
         return BaseResult.error();
+    }
+
+    @Override
+    public void delete(String clusterId, String namespace, String middlewareName) {
+        QueryWrapper<BeanMysqlDb> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("mysql_qualified_name", getMysqlQualifiedName(clusterId, namespace, middlewareName));
+        beanMysqlDbMapper.delete(queryWrapper);
     }
 
     @Override

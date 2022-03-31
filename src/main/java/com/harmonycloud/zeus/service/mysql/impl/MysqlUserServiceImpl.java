@@ -74,6 +74,11 @@ public class MysqlUserServiceImpl implements MysqlUserService {
     }
 
     @Override
+    public void create(BeanMysqlUser beanMysqlUser) {
+        beanMysqlUserMapper.insert(beanMysqlUser);
+    }
+
+    @Override
     public BaseResult update(MysqlUserDTO mysqlUserDTO) {
         BeanMysqlUser mysqlUser = beanMysqlUserMapper.selectById(mysqlUserDTO.getId());
         mysqlUser.setDescription(mysqlUserDTO.getDescription());
@@ -83,7 +88,7 @@ public class MysqlUserServiceImpl implements MysqlUserService {
 
     @Override
     public BeanMysqlUser select(String mysqlQualifiedName, String user) {
-        QueryWrapper wrapper = new QueryWrapper();
+        QueryWrapper<BeanMysqlUser> wrapper = new QueryWrapper<>();
         wrapper.eq("mysql_qualified_name", mysqlQualifiedName);
         wrapper.eq("user", user);
         return beanMysqlUserMapper.selectOne(wrapper);
@@ -98,6 +103,13 @@ public class MysqlUserServiceImpl implements MysqlUserService {
             return BaseResult.ok();
         }
         return BaseResult.error();
+    }
+
+    @Override
+    public void delete(String clusterId, String namespace, String middlewareName) {
+        QueryWrapper<BeanMysqlUser> wrapper = new QueryWrapper<>();
+        wrapper.eq("mysql_qualified_name", getMysqlQualifiedName(clusterId, namespace, middlewareName));
+        beanMysqlUserMapper.delete(wrapper);
     }
 
     @Override
