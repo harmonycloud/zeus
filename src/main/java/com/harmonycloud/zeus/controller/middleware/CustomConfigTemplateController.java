@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.controller.middleware;
 import java.util.List;
 
 import com.harmonycloud.caas.common.model.middleware.CustomConfig;
+import com.harmonycloud.zeus.annotation.Authority;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +34,7 @@ public class CustomConfigTemplateController {
             @ApiImplicitParam(name = "customConfigTemplateDTO", value = "模板对象", paramType = "query", dataTypeClass = String.class)
     })
     @PostMapping
+    @Authority(power = 3)
     public BaseResult create(@PathVariable("type") String type,
                              @RequestBody CustomConfigTemplateDTO customConfigTemplateDTO) {
         customConfigTemplateDTO.setType(type);
@@ -45,6 +47,7 @@ public class CustomConfigTemplateController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "path", dataTypeClass = String.class)
     })
     @GetMapping
+    @Authority(power = 3)
     public BaseResult<List<CustomConfigTemplateDTO>> list(@PathVariable("type") String type) {
         return BaseResult.ok(configTemplateService.list(type));
     }
@@ -56,6 +59,7 @@ public class CustomConfigTemplateController {
             @ApiImplicitParam(name = "chartVersion", value = "中间件版本", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/{uid}")
+    @Authority(power = 3)
     public BaseResult<CustomConfigTemplateDTO> get(@PathVariable("type") String type,
                                                    @PathVariable("uid") String uid,
                                                    @RequestParam("chartVersion") String chartVersion) {
@@ -68,6 +72,7 @@ public class CustomConfigTemplateController {
             @ApiImplicitParam(name = "chartVersion", value = "中间件版本", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/init")
+    @Authority(power = 3)
     public BaseResult<List<CustomConfig>> get(@PathVariable("type") String type,
                                               @RequestParam("chartVersion") String chartVersion) {
         return BaseResult.ok(configTemplateService.get(type, chartVersion));
@@ -80,6 +85,7 @@ public class CustomConfigTemplateController {
             @ApiImplicitParam(name = "customConfigTemplateDTO", value = "模板对象", paramType = "query", dataTypeClass = String.class),
     })
     @PutMapping("/{uid}")
+    @Authority(power = 3)
     public BaseResult update(@PathVariable("type") String type,
                              @PathVariable("uid") String uid,
                              @RequestBody CustomConfigTemplateDTO customConfigTemplateDTO) {
@@ -94,6 +100,7 @@ public class CustomConfigTemplateController {
             @ApiImplicitParam(name = "uids", value = "模板id", paramType = "query", dataTypeClass = String.class),
     })
     @DeleteMapping
+    @Authority(power = 3)
     public BaseResult delete(@PathVariable("type") String type,
                              @RequestParam("uids") String uids) {
         configTemplateService.delete(type, uids);

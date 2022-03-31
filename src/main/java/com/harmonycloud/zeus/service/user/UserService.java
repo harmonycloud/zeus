@@ -9,6 +9,7 @@ import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
 import com.harmonycloud.zeus.bean.user.BeanUser;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 
@@ -142,5 +143,5 @@ public interface UserService {
      * @param projectId 项目id
      *
      */
-    String switchProject(String projectId);
+    void switchProject(String projectId, HttpServletResponse response);
 }

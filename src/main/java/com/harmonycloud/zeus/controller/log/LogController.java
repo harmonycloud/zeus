@@ -5,6 +5,7 @@ import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.model.middleware.LogQuery;
 import com.harmonycloud.caas.common.model.middleware.LogQueryDto;
+import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.annotation.ExcludeAuditMethod;
 import com.harmonycloud.zeus.service.log.LogService;
 import io.swagger.annotations.Api;
@@ -41,6 +42,7 @@ public class LogController {
     @ApiOperation(value = "查询日志", notes = "查询日志")
     @ResponseBody
     @RequestMapping(method = RequestMethod.POST)
+    @Authority(power = 3)
     public BaseResult queryLog(@PathVariable("clusterId") String clusterId,
                                @PathVariable("namespace") String namespace,
                                @PathVariable("middlewareName") String middlewareName,
@@ -68,6 +70,7 @@ public class LogController {
      */
     @ApiOperation(value = "导出日志", notes = "导出查询日志")
     @RequestMapping(value = "/export", method = RequestMethod.GET)
+    @Authority(power = 3)
     public void exportLog(@PathVariable("clusterId") String clusterId,
                           @PathVariable("namespace") String namespace,
                           @PathVariable("middlewareName") String middlewareName,
@@ -89,6 +92,7 @@ public class LogController {
     @ApiOperation(value = "查询pod日志文件列表", notes = "从es获取pod的日志文件列表")
     @ResponseBody
     @RequestMapping(value = "/filenames", method = RequestMethod.GET)
+    @Authority(power = 3)
     public BaseResult listLogFilenames(@PathVariable("clusterId") String clusterId,
                                        @PathVariable("namespace") String namespace,
                                        @PathVariable("middlewareName") String middlewareName,

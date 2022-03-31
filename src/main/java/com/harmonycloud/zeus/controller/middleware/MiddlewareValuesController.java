@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.controller.middleware;
 
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareValues;
+import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.middleware.MiddlewareValuesService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -29,6 +30,7 @@ public class MiddlewareValuesController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping
+    @Authority(power = 4)
     public BaseResult<String> get(@PathVariable("clusterId") String clusterId,
                                   @PathVariable("namespace") String namespace,
                                   @PathVariable("middlewareName") String name) {
@@ -43,6 +45,7 @@ public class MiddlewareValuesController {
             @ApiImplicitParam(name = "middlewareValues", value = "中间件values", paramType = "query", dataTypeClass = MiddlewareValues.class),
     })
     @PutMapping
+    @Authority(power = 4)
     public BaseResult update(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
                              @PathVariable("middlewareName") String name,

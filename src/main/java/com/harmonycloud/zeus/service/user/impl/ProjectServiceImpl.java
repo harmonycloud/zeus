@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.user.UserRole;
 import com.harmonycloud.zeus.bean.user.BeanUserRole;
 import com.harmonycloud.zeus.service.user.UserService;
@@ -58,9 +59,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public void add(ProjectDto projectDto) {
-        if(StringUtils.isEmpty(projectDto.getUser())){
-            projectDto.setUser("admin");
-        }
+        AssertUtil.notBlank(projectDto.getUser(), DictEnum.USERNAME);
         String projectId = UUIDUtils.get16UUID();
         BeanProject beanProject = new BeanProject();
         BeanUtils.copyProperties(projectDto, beanProject);
@@ -87,9 +86,18 @@ public class ProjectServiceImpl implements ProjectService {
         List<BeanProject> beanProjectList = beanProjectMapper.selectList(wrapper);
         CurrentUser currentUser = CurrentUserRepository.getUserExistNull();
         JSONObject user = JwtTokenComponent.checkToken(currentUser.getToken()).getValue();
-        if (!userRoleService.checkAdmin(user.getString(USERNAME))) {
-            beanProjectList = beanProjectList.stream().filter(bp -> (StringUtils.isNotEmpty(bp.getUser())
-                && Arrays.asList(bp.getUser().split(",")).contains(USERNAME))).collect(Collectors.toList());
+        // 获取用户角色对应
+        UserDto userDto = userService.list(null).stream().filter(u -> u.getUserName().equals(user.getString(USERNAME)))
+            .collect(Collectors.toList()).get(0);
+        Map<String, UserRole> userRoleMap = userDto.getUserRoleList().stream().collect(Collectors.toMap(UserRole::getProjectId, u -> u));
+        // 是否为 admin
+        boolean flag = userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getRoleId() == 1);
+        // 非admin,进行过滤
+        if (!flag) {
+            beanProjectList = beanProjectList.stream()
+                .filter(bp -> StringUtils.isNotEmpty(bp.getUser())
+                    && Arrays.asList(bp.getUser().split(",")).contains(user.getString(USERNAME)))
+                .collect(Collectors.toList());
         }
         // 获取项目分区
         QueryWrapper<BeanProjectNamespace> nsWrapper = new QueryWrapper<>();
@@ -97,6 +105,7 @@ public class ProjectServiceImpl implements ProjectService {
         Map<String, List<BeanProjectNamespace>> beanProjectNamespaceListMap =
             beanProjectNamespaceList.stream().collect(Collectors.groupingBy(BeanProjectNamespace::getProjectId));
 
+        // 封装数据
         List<ProjectDto> projectDtoList = new ArrayList<>();
         beanProjectList.forEach(beanProject -> {
             ProjectDto projectDto = new ProjectDto();
@@ -104,8 +113,15 @@ public class ProjectServiceImpl implements ProjectService {
             if (StringUtils.isNotEmpty(beanProject.getUser())) {
                 projectDto.setMemberCount(beanProject.getUser().split(",").length);
             }
-            if (beanProjectNamespaceListMap.containsKey(projectDto.getProjectId())){
+            if (beanProjectNamespaceListMap.containsKey(projectDto.getProjectId())) {
                 projectDto.setNamespaceCount(beanProjectNamespaceListMap.get(projectDto.getProjectId()).size());
+            }
+            if (flag) {
+                projectDto.setRoleId(1);
+                projectDto.setRoleName("超级管理员");
+            } else {
+                projectDto.setRoleId(userRoleMap.get(projectDto.getProjectId()).getRoleId());
+                projectDto.setRoleName(userRoleMap.get(projectDto.getProjectId()).getRoleName());
             }
             projectDtoList.add(projectDto);
         });
@@ -132,22 +148,21 @@ public class ProjectServiceImpl implements ProjectService {
         BeanProject beanProject = checkExist(projectId);
         List<String> usernameList = Arrays.asList(beanProject.getUser().split(","));
         List<UserDto> userDtoList = userService.list(null);
-        userDtoList = userDtoList.stream()
+        return userDtoList.stream()
             .filter(userDto -> usernameList.stream().anyMatch(username -> userDto.getUserName().equals(username)))
-            .collect(Collectors.toList());
-
-        return userDtoList.stream().peek(userDto -> {
-            if (!CollectionUtils.isEmpty(userDto.getUserRoleList())) {
-                List<UserRole> userRoleList = userDto.getUserRoleList().stream()
-                    .filter(userRole -> StringUtils.isNotEmpty(userRole.getProjectId())
-                        && userRole.getProjectId().equals(projectId))
-                    .collect(Collectors.toList());
-                if (!CollectionUtils.isEmpty(userRoleList)) {
-                    userDto.setRoleId(userRoleList.get(0).getRoleId()).setRoleName(userRoleList.get(0).getRoleName());
+            .peek(userDto -> {
+                if (!CollectionUtils.isEmpty(userDto.getUserRoleList())) {
+                    List<UserRole> userRoleList = userDto.getUserRoleList().stream()
+                        .filter(userRole -> StringUtils.isNotEmpty(userRole.getProjectId())
+                            && userRole.getProjectId().equals(projectId))
+                        .collect(Collectors.toList());
+                    if (!CollectionUtils.isEmpty(userRoleList)) {
+                        userDto.setRoleId(userRoleList.get(0).getRoleId())
+                            .setRoleName(userRoleList.get(0).getRoleName());
+                    }
+                    userDto.setUserRoleList(null);
                 }
-                userDto.setUserRoleList(null);
-            }
-        }).collect(Collectors.toList());
+            }).collect(Collectors.toList());
     }
 
     @Override
@@ -209,6 +224,22 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public void unBindNamespace(String projectId, String namespace) {
 
+    }
+
+    @Override
+    public Map<String, List<MiddlewareResourceInfo>> middlewareResource(String projectId) throws Exception {
+        QueryWrapper<BeanProjectNamespace> wrapper =
+            new QueryWrapper<BeanProjectNamespace>().eq("project_id", projectId);
+        List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
+        Set<String> cluster = new HashSet<>();
+        beanProjectNamespaceList.forEach(beanProjectNamespace -> {
+            cluster.add(beanProjectNamespace.getClusterId());
+        });
+        List<MiddlewareResourceInfo> all = new ArrayList<>();
+        for (String clusterId : cluster) {
+            all.addAll(clusterService.getMwResource(clusterId));
+        }
+        return all.stream().collect(Collectors.groupingBy(MiddlewareResourceInfo::getType));
     }
 
     /**

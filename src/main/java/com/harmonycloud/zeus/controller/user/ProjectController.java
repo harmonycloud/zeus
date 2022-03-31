@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.controller.user;
 
 import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.common.model.user.ProjectDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author xutianhong
@@ -135,6 +137,15 @@ public class ProjectController {
                                  @RequestParam("username") String username) {
         projectService.unbindUser(projectId, username);
         return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "获取项目下中间件资源", notes = "获取项目下中间件资源")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
+    })
+    @GetMapping("/{projectId}/middleware")
+    public BaseResult<Map<String, List<MiddlewareResourceInfo>>> getMiddlewareResource(@PathVariable("projectId") String projectId) throws Exception {
+        return BaseResult.ok(projectService.middlewareResource(projectId));
     }
 
 

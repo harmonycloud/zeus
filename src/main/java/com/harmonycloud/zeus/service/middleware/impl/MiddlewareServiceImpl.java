@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
+import static com.harmonycloud.caas.common.constants.CommonConstant.PROJECT_ID;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
 import java.math.BigDecimal;
@@ -16,10 +17,13 @@ import com.harmonycloud.caas.common.model.MonitorResourceQuota;
 import com.harmonycloud.caas.common.model.MonitorResourceQuotaBase;
 import com.harmonycloud.caas.common.model.PrometheusResponse;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
+import com.harmonycloud.caas.filters.token.JwtTokenComponent;
+import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.service.middleware.*;
 import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
+import com.harmonycloud.zeus.service.user.ProjectService;
 import com.harmonycloud.zeus.util.ChartVersionUtil;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import org.apache.commons.lang3.SerializationUtils;
@@ -89,6 +93,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private ImageRepositoryService imageRepositoryService;
     @Autowired
     private IngressService ingressService;
+    @Autowired
+    private ProjectService projectService;
 
     @Override
     public List<Middleware> simpleList(String clusterId, String namespace, String type, String keyword) {
@@ -391,17 +397,17 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public List<MiddlewareBriefInfoDTO> list(String clusterId, String namespace, String type, String keyword) throws Exception {
+    public List<MiddlewareBriefInfoDTO> list(String clusterId, String namespace, String type, String keyword)
+        throws Exception {
         // 获取中间件chart包信息
         List<BeanMiddlewareInfo> beanMiddlewareInfoList = middlewareInfoService.list(true);
         // get cluster
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         // helm list 并过滤获取属于中间件的发布
-        List<HelmListInfo> helmListInfoList =
-            helmChartService.listHelm(namespace, null, cluster).stream()
-                .filter(info -> beanMiddlewareInfoList.stream()
-                    .anyMatch(mwInfo -> info.getChart().equals(mwInfo.getChartName() + "-" + mwInfo.getChartVersion())))
-                .collect(Collectors.toList());
+        List<HelmListInfo> helmListInfoList = helmChartService.listHelm(namespace, null, cluster).stream()
+            .filter(info -> beanMiddlewareInfoList.stream()
+                .anyMatch(mwInfo -> info.getChart().equals(mwInfo.getChartName() + "-" + mwInfo.getChartVersion())))
+            .collect(Collectors.toList());
         // 过滤获取指定类型
         if (StringUtils.isNotEmpty(type)) {
             helmListInfoList =
@@ -422,7 +428,9 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         })).collect(Collectors.toList());
         // 获取还未创建出middleware的release
         List<Middleware> finalMiddlewareList = middlewareList;
-        helmListInfoList = helmListInfoList.stream().filter(info -> finalMiddlewareList.stream().noneMatch(mw -> mw.getName().equals(info.getName()))).collect(Collectors.toList());
+        helmListInfoList = helmListInfoList.stream()
+            .filter(info -> finalMiddlewareList.stream().noneMatch(mw -> mw.getName().equals(info.getName())))
+            .collect(Collectors.toList());
         helmListInfoList.forEach(info -> {
             Middleware middleware =
                 new Middleware(clusterId, info.getNamespace(), info.getName(), info.getChart().split("-")[0]);
@@ -443,11 +451,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                     mw.setDescription(values.containsKey("middleware-desc") ? values.getString("middleware-desc") : "");
 
                 }
-            }finally {
+            } finally {
                 count.countDown();
             }
-        })
-        );
+        }));
         count.await();
         // 获取未完全删除的中间件
         if (StringUtils.isNotBlank(type)) {
@@ -460,8 +467,16 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 finalMiddlewareList.add(middleware);
             }
         }
-        //todo 根据项目分区进行过滤
-        finalMiddlewareList.sort(new MiddlewareComparator());
+        // 根据项目分区进行过滤
+        List<Middleware> result = finalMiddlewareList;
+        JSONObject userMap = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue();
+        if (userMap.containsKey(PROJECT_ID)) {
+            List<Namespace> projectNamespaceList = projectService.getNamespace(userMap.getString(PROJECT_ID));
+            result = result.stream()
+                .filter(mw -> projectNamespaceList.stream().anyMatch(pn -> pn.getName().equals(mw.getNamespace())))
+                .collect(Collectors.toList());
+        }
+        result.sort(new MiddlewareComparator());
         // 封装数据
         List<MiddlewareBriefInfoDTO> list = new ArrayList<>();
         Map<String,
@@ -469,7 +484,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 .filter(beanMiddlewareInfo -> beanMiddlewareInfo.getImagePath() != null)
                 .collect(Collectors.toMap(BeanMiddlewareInfo::getChartName, BeanMiddlewareInfo::getImagePath));
         Map<String, List<Middleware>> middlewareListMap =
-            finalMiddlewareList.stream().collect(Collectors.groupingBy(Middleware::getType));
+            result.stream().collect(Collectors.groupingBy(Middleware::getType));
         for (String key : middlewareListMap.keySet()) {
             // 根据创建时间排序
             List<Middleware> tempMiddlewareList = middlewareListMap.get(key);
@@ -893,6 +908,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 }
             }
         }
+        return null;
+    }
+
+    @Override
+    public Integer middlewareCount(String clusterId, String namespace, String name, String type) {
+        
         return null;
     }
 

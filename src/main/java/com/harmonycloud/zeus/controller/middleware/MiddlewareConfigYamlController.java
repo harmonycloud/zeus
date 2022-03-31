@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.controller.middleware;
 
 import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.middleware.MiddlewareConfigYamlService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -32,6 +33,7 @@ public class MiddlewareConfigYamlController {
             @ApiImplicitParam(name = "chartVersion", value = "中间件版本", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping
+    @Authority(power = 3)
     public BaseResult<List<String>> nameList(@PathVariable("clusterId") String clusterId,
                                              @PathVariable("namespace") String namespace,
                                              @RequestParam("middlewareName") String middlewareName,
@@ -47,6 +49,7 @@ public class MiddlewareConfigYamlController {
             @ApiImplicitParam(name = "configMapName", value = "配置文件名称", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/{configMapName}")
+    @Authority(power = 3)
     public BaseResult<String> get(@PathVariable("clusterId") String clusterId,
                                   @PathVariable("namespace") String namespace,
                                   @PathVariable("configMapName") String configMapName) {
@@ -61,6 +64,7 @@ public class MiddlewareConfigYamlController {
             @ApiImplicitParam(name = "config", value = "配置文件", paramType = "query", dataTypeClass = String.class),
     })
     @PutMapping("/{configMapName}")
+    @Authority(power = 3)
     public BaseResult update(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
                              @PathVariable("configMapName") String configMapName,

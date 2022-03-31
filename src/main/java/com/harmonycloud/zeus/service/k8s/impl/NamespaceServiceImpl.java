@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.zeus.service.user.ProjectService;
+import com.harmonycloud.zeus.service.user.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +32,7 @@ import com.harmonycloud.zeus.service.user.ClusterRoleService;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.harmonycloud.caas.common.constants.CommonConstant.PROJECT_ID;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
 
 /**
@@ -51,8 +53,6 @@ public class NamespaceServiceImpl implements NamespaceService {
     private ResourceQuotaService resourceQuotaService;
     @Autowired
     private MiddlewareCRService middlewareCRService;
-    @Autowired
-    private ClusterRoleService clusterRoleService;
     @Autowired
     private ProjectService projectService;
 
@@ -104,19 +104,14 @@ public class NamespaceServiceImpl implements NamespaceService {
                 return namespace;
             }).collect(Collectors.toList());
 
-        //todo 根据用户角色集群分区权限进行过滤
-        /*CurrentUser currentUser = CurrentUserRepository.getUserExistNull();
-        if (!ObjectUtils.isEmpty(currentUser)) {
-            JSONObject role = JwtTokenComponent.checkToken(currentUser.getToken()).getValue();
-            if (!"超级管理员".equals(role.getString("roleName"))) {
-                MiddlewareClusterDTO cluster = clusterRoleService.get(role.getInteger("roleId"), clusterId);
-                list = list.stream()
-                    .filter(
-                        ns -> cluster.getNamespaceList().stream().anyMatch(cns -> cns.getName().equals(ns.getName())))
-                    .collect(Collectors.toList());
-            }
-        }*/
-
+        // 根据用户角色集群分区权限进行过滤
+        JSONObject userMap = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue();
+        if (userMap.containsKey(PROJECT_ID)) {
+            List<Namespace> projectNamespaceList = projectService.getNamespace(userMap.getString(PROJECT_ID));
+            list = list.stream()
+                .filter(ns -> projectNamespaceList.stream().anyMatch(pns -> pns.getName().equals(ns.getName())))
+                .collect(Collectors.toList());
+        }
         // 返回其他信息
         if (withQuota || withMiddleware) {
             // 命名空间配额

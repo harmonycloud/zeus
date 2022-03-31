@@ -17,6 +17,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.util.ChartVersionUtil;
 import org.apache.commons.io.FileUtils;
@@ -62,7 +63,9 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
 
     @Override
     public List<BeanMiddlewareInfo> list(Boolean all) {
-        QueryWrapper<BeanMiddlewareInfo> wrapper = new QueryWrapper<>();
+        QueryWrapper<BeanMiddlewareInfo> wrapper = new QueryWrapper<BeanMiddlewareInfo>().select("id", "name",
+            "description", "type", "version", "image_path", "chart_name", "chart_version", "operator_name",
+            "grafana_id", "create_time", "update_time", "official", "compatible_versions");
         List<BeanMiddlewareInfo> list = middlewareInfoMapper.selectList(wrapper);
         if (CollectionUtils.isEmpty(list)) {
             return new ArrayList<>();
@@ -95,13 +98,15 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     @Override
     public List<MiddlewareInfoDTO> list(String clusterId) {
         //获取中间件列表
-        QueryWrapper<BeanMiddlewareInfo> wrapper = new QueryWrapper<>();
-        List<BeanMiddlewareInfo> mwInfoList = middlewareInfoMapper.selectList(wrapper);
+        List<BeanMiddlewareInfo> mwInfoList = this.list(true);
         if (mwInfoList.size() == 0) {
             return new ArrayList<>(0);
         }
         Map<String, List<BeanMiddlewareInfo>> mwInfoMap =
                 mwInfoList.stream().collect(Collectors.groupingBy(BeanMiddlewareInfo::getChartName));
+        if (StringUtils.isEmpty(clusterId)) {
+            return simpleList(mwInfoMap);
+        }
         //获取集群中间件关联信息
         List<BeanClusterMiddlewareInfo> clusterMwInfoList = clusterMiddlewareInfoService.list(clusterId);
         //校验数据完整性
@@ -426,5 +431,15 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
 
     public void compareChartVersion(List<BeanMiddlewareInfo> mwInfoList){
         mwInfoList.sort((o1, o2) -> ChartVersionUtil.compare(o1.getChartVersion(), o2.getChartVersion()));
+    }
+
+    public List<MiddlewareInfoDTO> simpleList(Map<String, List<BeanMiddlewareInfo>> mwInfoMap){
+        List<MiddlewareInfoDTO> list = new ArrayList<>();
+        for (String key : mwInfoMap.keySet()) {
+            MiddlewareInfoDTO middlewareInfoDTO = new MiddlewareInfoDTO().setChartName(key)
+                    .setName(MiddlewareOfficialNameEnum.findByMiddlewareName(key));
+            list.add(middlewareInfoDTO);
+        }
+        return list;
     }
 }

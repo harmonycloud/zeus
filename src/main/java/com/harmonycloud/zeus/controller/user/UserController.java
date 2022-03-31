@@ -20,6 +20,8 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * @author xutianhong
  * @Date 2021/7/22 11:52 上午
@@ -158,7 +160,9 @@ public class UserController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),})
     @GetMapping("/switchProject")
-    public BaseResult<String> switchProject(@RequestParam(value = "projectId") String projectId) {
-        return BaseResult.ok(userService.switchProject(projectId));
+    public BaseResult<String> switchProject(@RequestParam(value = "projectId") String projectId,
+                                            HttpServletResponse response) {
+        userService.switchProject(projectId, response);
+        return BaseResult.ok();
     }
 }
