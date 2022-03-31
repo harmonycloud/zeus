@@ -269,7 +269,11 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             throw new BusinessException(ErrorMessage.GRAFANA_ID_NOT_FOUND);
         }
 
-        MiddlewareClusterMonitorInfo monitorInfo = cluster.getMonitor().getGrafana();
+        MiddlewareClusterMonitor monitor = cluster.getMonitor();
+        if (monitor == null){
+            throw new BusinessException(ErrorMessage.CLUSTER_MONITOR_INFO_NOT_FOUND);
+        }
+        MiddlewareClusterMonitorInfo monitorInfo =monitor.getGrafana();
         if (monitorInfo == null
                 || StringUtils.isAnyEmpty(monitorInfo.getProtocol(), monitorInfo.getHost(), monitorInfo.getPort())) {
             throw new BusinessException(ErrorMessage.CLUSTER_MONITOR_INFO_NOT_FOUND);
