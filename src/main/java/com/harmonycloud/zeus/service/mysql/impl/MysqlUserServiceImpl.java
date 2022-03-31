@@ -27,6 +27,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -286,7 +287,24 @@ public class MysqlUserServiceImpl implements MysqlUserService {
                 }
                 item.setDbs(privileges);
             });
-            userList.sort(Comparator.comparing(MysqlUserDetail::getCreateTime));
+            Collections.sort(userList, new Comparator<MysqlUserDetail>() {
+                @Override
+                public int compare(MysqlUserDetail o1, MysqlUserDetail o2) {
+                    if (o1.getCreateTime() == null) {
+                        return 0;
+                    }
+                    if (o2.getCreateTime() == null) {
+                        return 0;
+                    }
+                    if (o1.getCreateTime().before(o2.getCreateTime())) {
+                        return 1;
+                    } else {
+                        return -1;
+                    }
+                }
+            });
+
+//            userList.sort(Comparator.comparing(MysqlUserDetail::getCreateTime));
             return userList;
         } catch (SQLException throwables) {
             throwables.printStackTrace();

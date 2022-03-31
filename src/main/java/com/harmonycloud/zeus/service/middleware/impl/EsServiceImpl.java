@@ -144,7 +144,7 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
     }
 
     @Override
-    public PageObject<MysqlSlowSqlDTO> getSlowSql(MiddlewareClusterDTO cluster, MysqlLogQuery slowLogQuery) throws Exception {
+    public PageObject<MysqlLogDTO> getSlowSql(MiddlewareClusterDTO cluster, MysqlLogQuery slowLogQuery) throws Exception {
         if (cluster == null) {
             return new PageObject<>(new ArrayList<>(), CommonConstant.NUM_ZERO);
         }
@@ -159,7 +159,7 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
         if (CollectionUtils.isEmpty(indexNameList)) {
             return new PageObject<>(new ArrayList<>(), CommonConstant.NUM_ZERO);
         }
-        PageObject<MysqlSlowSqlDTO> mysqlSlowSqlDTOPageObject = searchFromIndex(esClient, query, slowLogQuery.getCurrent(), slowLogQuery.getSize(), indexNameList);
+        PageObject<MysqlLogDTO> mysqlSlowSqlDTOPageObject = searchFromIndex(esClient, query, slowLogQuery.getCurrent(), slowLogQuery.getSize(), indexNameList);
         return mysqlSlowSqlDTOPageObject;
     }
 
@@ -313,7 +313,7 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
     }
 
 
-    private PageObject<MysqlSlowSqlDTO> searchFromIndex(RestHighLevelClient esClient, BoolQueryBuilder query, Integer current, Integer size, List<String> indexNameList) throws IOException {
+    private PageObject<MysqlLogDTO> searchFromIndex(RestHighLevelClient esClient, BoolQueryBuilder query, Integer current, Integer size, List<String> indexNameList) throws IOException {
         SortBuilder sortBuilder = SortBuilders.fieldSort("@timestamp")
                 .order(SortOrder.DESC).unmappedType("integer");
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
@@ -323,16 +323,16 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
         SearchResponse response;
         response = esClient.search(request, RequestOptions.DEFAULT);
         Iterator<SearchHit> it = response.getHits().iterator();
-        List<MysqlSlowSqlDTO> searchResults = new ArrayList<>();
+        List<MysqlLogDTO> searchResults = new ArrayList<>();
         while (it.hasNext()) {
             SearchHit sh = it.next();
             Map<String, Object> doc = sh.getSourceAsMap();
-            MysqlSlowSqlDTO mysqlSlowSqlDTO = new MysqlSlowSqlDTO();
+            MysqlLogDTO mysqlSlowSqlDTO = new MysqlLogDTO();
             mysqlSlowSqlDTO.toDTO(doc);
             searchResults.add(mysqlSlowSqlDTO);
         }
         long totalHits = response.getHits().totalHits;
-        PageObject<MysqlSlowSqlDTO> objectPageObject = new PageObject(searchResults, new Long(totalHits).intValue());
+        PageObject<MysqlLogDTO> objectPageObject = new PageObject(searchResults, new Long(totalHits).intValue());
         return objectPageObject;
     }
 
