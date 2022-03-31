@@ -139,22 +139,33 @@ public class MysqlController {
         return mysqlUserService.create(mysqlUserDTO);
     }
 
-    @ApiOperation(value = "更新用户", notes = "更新用户")
-    @PutMapping("/updateUser")
-    public BaseResult updateUser(@RequestBody MysqlUserDTO mysqlUserDTO) {
-        return mysqlUserService.update(mysqlUserDTO);
-    }
-
     @ApiOperation(value = "删除用户", notes = "删除用户")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class)
+    })
     @DeleteMapping("/deleteUser")
-    public BaseResult deleteUser(@RequestBody MysqlUserDTO mysqlUserDTO) {
-        return mysqlUserService.delete(mysqlUserDTO);
+    public BaseResult deleteUser(@PathVariable("clusterId") String clusterId,
+                                 @RequestParam("namespace") String namespace,
+                                 @RequestParam("middlewareName") String middlewareName,
+                                 @RequestParam("user") String user) {
+        return mysqlUserService.delete(clusterId, namespace, middlewareName, user);
     }
 
     @ApiOperation(value = "查询用户列表", notes = "查询用户列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class)
+    })
     @GetMapping("/listUser")
-    public BaseResult listUser(@RequestBody MysqlUserDTO mysqlUserDTO) {
-        return BaseResult.ok(mysqlUserService.list(mysqlUserDTO));
+    public BaseResult listUser(@PathVariable("clusterId") String clusterId,
+                               @RequestParam("namespace") String namespace,
+                               @RequestParam("middlewareName") String middlewareName,
+                               @RequestParam(value = "user", required = false) String user,
+                               @RequestParam(value = "keyword", required = false) String keyword) {
+        return BaseResult.ok(mysqlUserService.list(clusterId, namespace, middlewareName, user, keyword));
     }
 
     @ApiOperation(value = "创建数据库", notes = "创建数据库")
@@ -171,15 +182,31 @@ public class MysqlController {
     }
 
     @ApiOperation(value = "查询数据库列表", notes = "查询数据库列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class)
+    })
     @GetMapping("/listDb")
-    public BaseResult listDb(@RequestBody MysqlDbDTO mysqlDbDTO) {
-        return BaseResult.ok(mysqlDbService.list(mysqlDbDTO));
+    public BaseResult listDb(@PathVariable("clusterId") String clusterId,
+                             @RequestParam("namespace") String namespace,
+                             @RequestParam("middlewareName") String middlewareName,
+                             @RequestParam(value = "keyword", required = false) String keyword) {
+        return BaseResult.ok(mysqlDbService.list(clusterId, namespace, middlewareName, keyword));
     }
 
     @ApiOperation(value = "删除数据库", notes = "删除数据库")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class)
+    })
     @DeleteMapping("/deleteDb")
-    public BaseResult deleteDb(@RequestBody MysqlDbDTO mysqlDbDTO) {
-        return mysqlDbService.delete(mysqlDbDTO);
+    public BaseResult deleteDb(@PathVariable("clusterId") String clusterId,
+                               @RequestParam("namespace") String namespace,
+                               @RequestParam("middlewareName") String middlewareName,
+                               @RequestParam("db") String db) {
+        return mysqlDbService.delete(clusterId, namespace, middlewareName, db);
     }
 
     @ApiOperation(value = "授权数据库", notes = "授权数据库")
@@ -195,10 +222,16 @@ public class MysqlController {
     }
 
     @ApiOperation(value = "查询字符集", notes = "查询字符集")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class)
+    })
     @GetMapping("/listCharset")
-    public BaseResult listCharset(@RequestBody MysqlDbDTO mysqlDbDTO) {
-        return BaseResult.ok(mysqlDbService.listCharset(mysqlDbDTO));
+    public BaseResult listCharset(@PathVariable("clusterId") String clusterId,
+                                  @RequestParam("namespace") String namespace,
+                                  @RequestParam("middlewareName") String middlewareName) {
+        return BaseResult.ok(mysqlDbService.listCharset(clusterId, namespace, middlewareName));
     }
-
 
 }

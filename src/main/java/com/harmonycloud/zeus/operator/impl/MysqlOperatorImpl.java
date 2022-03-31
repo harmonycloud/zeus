@@ -5,6 +5,7 @@ import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConsta
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_NODEPORT;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -12,7 +13,12 @@ import com.harmonycloud.caas.common.enums.Protocol;
 import com.harmonycloud.caas.common.model.IngressComponentDto;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
+import com.harmonycloud.zeus.bean.BeanMysqlUser;
 import com.harmonycloud.zeus.service.k8s.*;
+import com.harmonycloud.zeus.service.mysql.MysqlDbPrivService;
+import com.harmonycloud.zeus.service.mysql.MysqlDbService;
+import com.harmonycloud.zeus.service.mysql.MysqlUserService;
+import com.harmonycloud.zeus.util.MysqlConnectionUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -79,6 +85,12 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     private IngressComponentService ingressComponentService;
     @Autowired
     private ServiceService serviceService;
+    @Autowired
+    private MysqlDbService mysqlDbService;
+    @Autowired
+    private MysqlUserService mysqlUserService;
+    @Autowired
+    private MysqlDbPrivService mysqlDbPrivService;
 
     @Override
     public boolean support(Middleware middleware) {
@@ -222,6 +234,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
         // 创建对外服务
         middlewareManageTask.asyncCreateMysqlOpenService(this, middleware);
+        // 准备数据库管理环境
+        prepareDbManageEnv(middleware);
     }
 
     @Override
@@ -301,6 +315,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     public void deleteStorage(Middleware middleware) {
         this.deleteDisasterRecoveryInfo(middleware);
         super.deleteStorage(middleware);
+        clearDbManageData(middleware);
         if (middleware.getDeleteBackupInfo() == null || middleware.getDeleteBackupInfo()) {
             // 删除备份相关
             mysqlBackupService.deleteMiddlewareBackupInfo(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
@@ -642,8 +657,10 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     public void executeCreateOpenService(Middleware middleware, MiddlewareServiceNameIndex middlewareServiceNameIndex) {
         List<IngressComponentDto> ingressComponentList = ingressComponentService.list(middleware.getClusterId());
         if (CollectionUtils.isEmpty(ingressComponentList)) {
+            log.info("不存在ingress，使用NodePort暴露服务");
             super.createOpenService(middleware, middlewareServiceNameIndex);
         } else {
+            log.info("存在ingress，使用ingress暴露服务");
             createIngressService(middleware);
         }
     }
@@ -667,7 +684,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         // 获取mysql服务列表
         List<ServicePortDTO> servicePortDTOList = serviceService.list(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
         servicePortDTOList = servicePortDTOList.stream().filter(item ->
-                (item.getServiceName().contains("headless") && (item.getServiceName().contains("readonly"))))
+                ( (!item.getServiceName().contains("headless")) && (!item.getServiceName().contains("readonly"))))
                 .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(servicePortDTOList)) {
             return;
@@ -743,5 +760,28 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
     }
 
+    /**
+     * 清除数据库管理可能存在的脏数据，并保存root用户信息到数据库
+     * @param middleware
+     */
+    public void prepareDbManageEnv(Middleware middleware) {
+        clearDbManageData(middleware);
+        BeanMysqlUser mysqlUser = new BeanMysqlUser();
+        mysqlUser.setUser("root");
+        mysqlUser.setCreatetime(LocalDateTime.now());
+        mysqlUser.setPassword(middleware.getPassword());
+        mysqlUser.setMysqlQualifiedName(MysqlConnectionUtil.getMysqlQualifiedName(middleware.getClusterId(), middleware.getNamespace(), middleware.getName()));
+        mysqlUserService.create(mysqlUser);
+    }
+
+    /**
+     * 清除可能残留的已发布同名服务的数据库、用户、数据授权信息
+     * @param middleware
+     */
+    public void clearDbManageData(Middleware middleware) {
+        mysqlDbService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
+        mysqlUserService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
+        mysqlDbPrivService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
+    }
 
 }

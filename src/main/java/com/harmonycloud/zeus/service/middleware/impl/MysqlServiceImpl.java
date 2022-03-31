@@ -186,12 +186,16 @@ public class MysqlServiceImpl implements MysqlService {
         return mysqlAccessInfo;
     }
 
-    public MysqlAccessInfo queryAccessInfo(MysqlUserDTO user) {
+    public MysqlAccessInfo getAccessInfo(MysqlUserDTO user) {
         return queryBasicAccessInfo(user.getClusterId(), user.getNamespace(), user.getMiddlewareName(), null);
     }
 
-    public MysqlAccessInfo queryAccessInfo(MysqlDbDTO db) {
+    public MysqlAccessInfo getAccessInfo(MysqlDbDTO db) {
         return queryBasicAccessInfo(db.getClusterId(), db.getNamespace(), db.getMiddlewareName(), null);
+    }
+
+    public MysqlAccessInfo getAccessInfo(String clusterId, String namespace, String middlewareName) {
+        return queryBasicAccessInfo(clusterId, namespace, middlewareName, null);
     }
 
     /**

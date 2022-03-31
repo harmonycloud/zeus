@@ -7,7 +7,7 @@ import com.harmonycloud.zeus.service.mysql.MysqlDbPrivService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import static com.harmonycloud.zeus.util.MysqlConnectionUtil.getMysqlQualifiedName;
 
 /**
  * @author liyinlong
@@ -50,6 +50,30 @@ public class MysqlDbPrivServiceImpl implements MysqlDbPrivService {
             dbPriv.setAuthority(beanMysqlDbPriv.getAuthority());
             mysqlDbPrivMapper.updateById(dbPriv);
         }
+    }
+
+    @Override
+    public void deleteByUser(String mysqlQualifiedName, String user) {
+        QueryWrapper<BeanMysqlDbPriv> wrapper = new QueryWrapper<>();
+        wrapper.eq("user", user);
+        wrapper.eq("mysql_qualified_name", mysqlQualifiedName);
+        mysqlDbPrivMapper.delete(wrapper);
+    }
+
+    @Override
+    public void delete(String clusterId, String namespace, String middlewareName) {
+        QueryWrapper<BeanMysqlDbPriv> wrapper = new QueryWrapper<>();
+        wrapper.eq("mysql_qualified_name", getMysqlQualifiedName(clusterId, namespace, middlewareName));
+        mysqlDbPrivMapper.delete(wrapper);
+
+    }
+
+    @Override
+    public void deleteByDb(String mysqlQualifiedName, String db) {
+        QueryWrapper<BeanMysqlDbPriv> wrapper = new QueryWrapper<>();
+        wrapper.eq("db", db);
+        wrapper.eq("mysql_qualified_name", mysqlQualifiedName);
+        mysqlDbPrivMapper.delete(wrapper);
     }
 
 }

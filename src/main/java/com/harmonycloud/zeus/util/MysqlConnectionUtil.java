@@ -25,6 +25,10 @@ public class MysqlConnectionUtil {
         return String.format("%s_%s_%s", dbDTO.getClusterId(), dbDTO.getNamespace(), dbDTO.getMiddlewareName());
     }
 
+    public static String getMysqlQualifiedName(String clusterId,String namespace,String middlewareName) {
+        return String.format("%s_%s_%s", clusterId, namespace, middlewareName);
+    }
+
     /**
      * 获取mysql限定名
      *
@@ -35,34 +39,6 @@ public class MysqlConnectionUtil {
         return String.format("%s_%s_%s", userDTO.getClusterId(), userDTO.getNamespace(), userDTO.getMiddlewareName());
     }
 
-//    public static Connection getDBConnection(MysqlDbDTO dbDTO) {
-//        String clusterId = dbDTO.getClusterId();
-//        String namespace = dbDTO.getNamespace();
-//        String middlewareName = dbDTO.getMiddlewareName();
-//        String type = dbDTO.getType();
-//        // 获取mysql service信息
-//        String host = "10.10.101.140";
-//        int port = 31227;
-//        String user = "root";
-//        String password = "XtcTHMZ6QW";
-//        // 获取一个mysql连接
-//        return MysqlConnectionUtil.getDbConn(host, port, user, password);
-//    }
-
-//    public static Connection getDBConnection(MysqlUserDTO userDTO) {
-//        String clusterId = userDTO.getClusterId();
-//        String namespace = userDTO.getNamespace();
-//        String middlewareName = userDTO.getMiddlewareName();
-//        String type = userDTO.getType();
-//        // 获取mysql service信息
-//        String host = "10.10.101.140";
-//        int port = 31227;
-//        String user = "root";
-//        String password = "XtcTHMZ6QW";
-//        // 获取一个mysql连接
-//        return MysqlConnectionUtil.getDbConn(host, port, user, password);
-//    }
-
     public static Connection getDBConnection(MysqlAccessInfo mysqlAccessInfo) {
         String host = mysqlAccessInfo.getHost();
         int port = Integer.parseInt(mysqlAccessInfo.getPort());
@@ -72,13 +48,10 @@ public class MysqlConnectionUtil {
         return MysqlConnectionUtil.getDbConn(host, port, user, password);
     }
 
-    public static boolean passwordCheck(MysqlUserDTO userDTO, String user, String password) {
-        // 获取mysql service信息
-        String host = "10.10.101.140";
-        int port = 31227;
+    public static boolean passwordCheck(MysqlAccessInfo mysqlAccessInfo, String user, String password) {
         try {
             Class.forName(DBDRIVER);
-            String dbUrl = "jdbc:mysql://" + host + ":" + port + "/?characterEncoding=UTF-8";
+            String dbUrl = "jdbc:mysql://" + mysqlAccessInfo.getHost() + ":" + mysqlAccessInfo.getPort() + "/?characterEncoding=UTF-8";
             DriverManager.getConnection(dbUrl, user, password);
             return true;
         } catch (Exception e) {
