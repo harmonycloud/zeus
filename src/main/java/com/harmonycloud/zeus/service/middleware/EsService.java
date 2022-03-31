@@ -1,8 +1,8 @@
 package com.harmonycloud.zeus.service.middleware;
 
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.caas.common.model.middleware.MysqlLogQuery;
 import com.harmonycloud.caas.common.model.middleware.MysqlSlowSqlDTO;
-import com.harmonycloud.caas.common.model.middleware.SlowLogQuery;
 import com.harmonycloud.tool.page.PageObject;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -58,7 +58,7 @@ public interface EsService {
      */
     boolean deleteIndex(String indexName, MiddlewareClusterDTO cluster) throws Exception;
 
-    PageObject<MysqlSlowSqlDTO> getSlowSql(MiddlewareClusterDTO cluster, SlowLogQuery slowLogQuery) throws Exception;
+    PageObject<MysqlSlowSqlDTO> getSlowSql(MiddlewareClusterDTO cluster, MysqlLogQuery slowLogQuery) throws Exception;
 
     /**
      * 校验es
