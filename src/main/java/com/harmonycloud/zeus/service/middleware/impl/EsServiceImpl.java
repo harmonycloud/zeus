@@ -144,7 +144,7 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
     }
 
     @Override
-    public PageObject<MysqlSlowSqlDTO> getSlowSql(MiddlewareClusterDTO cluster, SlowLogQuery slowLogQuery) throws Exception {
+    public PageObject<MysqlSlowSqlDTO> getSlowSql(MiddlewareClusterDTO cluster, MysqlLogQuery slowLogQuery) throws Exception {
         if (cluster == null) {
             return new PageObject<>(new ArrayList<>(), CommonConstant.NUM_ZERO);
         }
@@ -221,7 +221,7 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
     /**
      * 根据查询条件设置SearchRequestBuilder
      */
-    private BoolQueryBuilder getSearchRequestBuilder(SlowLogQuery slowLogQuery) {
+    private BoolQueryBuilder getSearchRequestBuilder(MysqlLogQuery slowLogQuery) {
 
         String startTime = slowLogQuery.getStartTime();
         String endTime = slowLogQuery.getEndTime();
@@ -428,6 +428,7 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
                 initStdoutIndexTemplate(esClient);
                 //初始化文件日志索引模板
                 initLogstashIndexTemplate(esClient);
+                //初始化mysql SQL审计模版
                 log.info("集群:{}索引模板初始化完成", cluster.getName());
                 return true;
             } catch (Exception e) {
