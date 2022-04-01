@@ -72,8 +72,7 @@ public class MiddlewareController {
                              @PathVariable("namespace") String namespace,
                              @RequestBody Middleware middleware) {
         middleware.setClusterId(clusterId).setNamespace(namespace);
-        //middlewareService.create(middleware)
-        return BaseResult.ok();
+        return BaseResult.ok(middlewareService.create(middleware));
     }
 
     @ApiOperation(value = "恢复中间件", notes = "恢复中间件")
