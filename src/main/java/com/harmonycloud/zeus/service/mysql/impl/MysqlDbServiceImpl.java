@@ -2,12 +2,12 @@ package com.harmonycloud.zeus.service.mysql.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.constants.MysqlConstant;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.MysqlDbDTO;
 import com.harmonycloud.caas.common.model.MysqlDbDetail;
 import com.harmonycloud.caas.common.model.MysqlDbPrivilege;
-import com.harmonycloud.caas.common.model.MysqlUserDetail;
 import com.harmonycloud.zeus.bean.BeanMysqlDb;
 import com.harmonycloud.zeus.bean.BeanMysqlDbPriv;
 import com.harmonycloud.zeus.dao.BeanMysqlDbMapper;
@@ -84,7 +84,7 @@ public class MysqlDbServiceImpl implements MysqlDbService {
         if (nativeDelete(getDBConnection(mysqlService.getAccessInfo(clusterId, namespace, middlewareName)), db)) {
             QueryWrapper<BeanMysqlDb> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("db", db);
-            queryWrapper.eq("mysql_qualified_name", getMysqlQualifiedName(clusterId, namespace, middlewareName));
+            queryWrapper.eq(MysqlConstant.MYSQL_QUALIFIED_NAME, getMysqlQualifiedName(clusterId, namespace, middlewareName));
             beanMysqlDbMapper.delete(queryWrapper);
             dbPrivService.deleteByDb(getMysqlQualifiedName(clusterId, namespace, middlewareName), db);
             return BaseResult.ok();
@@ -95,19 +95,19 @@ public class MysqlDbServiceImpl implements MysqlDbService {
     @Override
     public void delete(String clusterId, String namespace, String middlewareName) {
         QueryWrapper<BeanMysqlDb> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("mysql_qualified_name", getMysqlQualifiedName(clusterId, namespace, middlewareName));
+        queryWrapper.eq(MysqlConstant.MYSQL_QUALIFIED_NAME, getMysqlQualifiedName(clusterId, namespace, middlewareName));
         beanMysqlDbMapper.delete(queryWrapper);
     }
 
     @Override
-    public List<MysqlDbDTO> listCharset(String clusterId,String namespace,String middlewareName) {
+    public List<MysqlDbDTO> listCharset(String clusterId, String namespace, String middlewareName) {
         return nativeListCharset(getDBConnection(mysqlService.getAccessInfo(clusterId, namespace, middlewareName)));
     }
 
     @Override
     public BeanMysqlDb select(String mysqlQualifiedName, String db) {
         QueryWrapper<BeanMysqlDb> wrapper = new QueryWrapper<>();
-        wrapper.eq("mysql_qualified_name", mysqlQualifiedName);
+        wrapper.eq(MysqlConstant.MYSQL_QUALIFIED_NAME, mysqlQualifiedName);
         wrapper.eq("db", db);
         return beanMysqlDbMapper.selectOne(wrapper);
     }
@@ -120,7 +120,7 @@ public class MysqlDbServiceImpl implements MysqlDbService {
         QueryRunner qr = new QueryRunner();
         String sql = String.format("create database %s DEFAULT CHARACTER SET %s", dbName, charset);
         try {
-            qr.execute(con, sql, null);
+            qr.execute(con, sql);
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -135,7 +135,7 @@ public class MysqlDbServiceImpl implements MysqlDbService {
         QueryRunner qr = new QueryRunner();
         String sql = String.format("drop database %s ", dbName);
         try {
-            qr.execute(con, sql, null);
+            qr.execute(con, sql);
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -146,7 +146,7 @@ public class MysqlDbServiceImpl implements MysqlDbService {
     }
 
     @Override
-    public List<MysqlDbDetail> list(String clusterId, String namespace, String middlewareName,String keyword) {
+    public List<MysqlDbDetail> list(String clusterId, String namespace, String middlewareName, String keyword) {
         QueryRunner qr = new QueryRunner();
         String selectSchemaSql = "select SCHEMA_NAME,DEFAULT_CHARACTER_SET_NAME from information_schema.SCHEMATA ";
         if (StringUtils.isNotBlank(keyword)) {
@@ -156,12 +156,7 @@ public class MysqlDbServiceImpl implements MysqlDbService {
         try {
             List<MysqlDbDetail> dbList = qr.query(con, selectSchemaSql, new BeanListHandler<>(MysqlDbDetail.class));
             // 过滤掉初始化的数据库
-            dbList = dbList.stream().filter(item -> {
-                if (initialDb.contains(item.getSCHEMA_NAME())) {
-                    return false;
-                }
-                return true;
-            }).collect(Collectors.toList());
+            dbList = dbList.stream().filter(item -> initialDb.contains(item.getSCHEMA_NAME())).collect(Collectors.toList());
             // 查询每个数据库的使用用户、数据库备注
             dbList.forEach(item -> {
                 String mysqlQualifiedName = getMysqlQualifiedName(clusterId, namespace, middlewareName);
@@ -193,7 +188,7 @@ public class MysqlDbServiceImpl implements MysqlDbService {
         } finally {
             DbUtils.closeQuietly(con);
         }
-        return null;
+        return Collections.emptyList();
     }
 
     @Override
@@ -209,7 +204,7 @@ public class MysqlDbServiceImpl implements MysqlDbService {
         } finally {
             DbUtils.closeQuietly(con);
         }
-        return null;
+        return Collections.emptyList();
     }
 
     @Override
@@ -235,7 +230,7 @@ public class MysqlDbServiceImpl implements MysqlDbService {
             // 查询数据库的用户
             List<MysqlDbPrivilege> privileges = qr.query(con, selectDbUser, new BeanListHandler<>(MysqlDbPrivilege.class));
             privileges.forEach(item -> {
-                BeanMysqlDbPriv dbPriv = dbPrivService.selectByUser(mysqlQualifiedName, item.getUser(), db);
+                BeanMysqlDbPriv dbPriv = dbPrivService.select(mysqlQualifiedName, item.getUser(), db);
                 if (dbPriv != null) {
                     item.setAuthority(dbPriv.getAuthority());
                 }
@@ -244,7 +239,7 @@ public class MysqlDbServiceImpl implements MysqlDbService {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return null;
+        return Collections.emptyList();
     }
 
 }

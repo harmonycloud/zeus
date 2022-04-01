@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.mysql.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.constants.MysqlConstant;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.MysqlPrivilegeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
@@ -28,10 +29,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.harmonycloud.zeus.util.MysqlConnectionUtil.getDBConnection;
@@ -52,7 +50,7 @@ public class MysqlUserServiceImpl implements MysqlUserService {
     @Autowired
     private MysqlServiceImpl mysqlService;
 
-    private String initialUser = "zabbixjk,operator,replic";
+    private static final String INITIAL_USER = "zabbixjk,operator,replic";
 
     @Override
     public BaseResult create(MysqlUserDTO user) {
@@ -92,7 +90,7 @@ public class MysqlUserServiceImpl implements MysqlUserService {
     @Override
     public BeanMysqlUser select(String mysqlQualifiedName, String user) {
         QueryWrapper<BeanMysqlUser> wrapper = new QueryWrapper<>();
-        wrapper.eq("mysql_qualified_name", mysqlQualifiedName);
+        wrapper.eq(MysqlConstant.MYSQL_QUALIFIED_NAME, mysqlQualifiedName);
         wrapper.eq("user", user);
         return beanMysqlUserMapper.selectOne(wrapper);
     }
@@ -111,7 +109,7 @@ public class MysqlUserServiceImpl implements MysqlUserService {
     @Override
     public void delete(String clusterId, String namespace, String middlewareName) {
         QueryWrapper<BeanMysqlUser> wrapper = new QueryWrapper<>();
-        wrapper.eq("mysql_qualified_name", getMysqlQualifiedName(clusterId, namespace, middlewareName));
+        wrapper.eq(MysqlConstant.MYSQL_QUALIFIED_NAME, getMysqlQualifiedName(clusterId, namespace, middlewareName));
         beanMysqlUserMapper.delete(wrapper);
     }
 
@@ -171,7 +169,7 @@ public class MysqlUserServiceImpl implements MysqlUserService {
         try {
             String privilege = MysqlPrivilegeEnum.findPrivilege(authority).getPrivilege();
             String grantPrivilegeSql = String.format(" grant %s on %s.* to '%s' ", privilege, db, user);
-            qr.execute(con, grantPrivilegeSql, null);
+            qr.execute(con, grantPrivilegeSql);
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -184,7 +182,7 @@ public class MysqlUserServiceImpl implements MysqlUserService {
         QueryRunner qr = new QueryRunner();
         try {
             String grantPrivilegeSql = String.format("REVOKE ALL PRIVILEGES, GRANT OPTION FROM '%s' ", user);
-            qr.execute(con, grantPrivilegeSql, null);
+            qr.execute(con, grantPrivilegeSql);
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -200,7 +198,7 @@ public class MysqlUserServiceImpl implements MysqlUserService {
         }
         String sql = String.format("create user '%s'@'%s' identified by '%s'", user, "%", password);
         try {
-            qr.execute(con, sql, null);
+            qr.execute(con, sql);
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -215,7 +213,7 @@ public class MysqlUserServiceImpl implements MysqlUserService {
         QueryRunner qr = new QueryRunner();
         String sql = String.format("drop user %s@'%s'", user, "%");
         try {
-            qr.execute(con, sql, null);
+            qr.execute(con, sql);
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -230,10 +228,10 @@ public class MysqlUserServiceImpl implements MysqlUserService {
         QueryRunner qr = new QueryRunner();
         String sql = String.format("SET PASSWORD FOR '%s'@'%s' = PASSWORD ('%s'); ", user, "%", newPassword);
         try {
-            qr.execute(con, sql, null);
+            qr.execute(con, sql);
             return true;
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
         return false;
     }
@@ -247,32 +245,19 @@ public class MysqlUserServiceImpl implements MysqlUserService {
             if (mysqlUserDetail != null) {
                 return true;
             }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
         return false;
     }
 
     @Override
-    public List<MysqlUserDetail> list(String clusterId, String namespace, String middlewareName,String user, String keyword) {
+    public List<MysqlUserDetail> list(String clusterId, String namespace, String middlewareName, String user, String keyword) {
         QueryRunner qr = new QueryRunner();
-        String selectSchemaSql = "select User from mysql.user where Host !='localhost'";
-        if (StringUtils.isNotBlank(user)) {
-            selectSchemaSql = "select User from mysql.user where Host !='localhost' and User = '" + user + "'";
-        } else {
-            if (StringUtils.isNotBlank(keyword)) {
-                selectSchemaSql = "select User from mysql.user where Host !='localhost' and User like '%" + keyword + "%'";
-            }
-        }
         Connection con = getDBConnection(mysqlService.getAccessInfo(clusterId, namespace, middlewareName));
         try {
-            List<MysqlUserDetail> userList = qr.query(con, selectSchemaSql, new BeanListHandler<>(MysqlUserDetail.class));
-            userList = userList.stream().filter(item -> {
-                if (initialUser.contains(item.getUser())) {
-                    return false;
-                }
-                return true;
-            }).collect(Collectors.toList());
+            List<MysqlUserDetail> userList = qr.query(con, generateDbQuerySql(user, keyword), new BeanListHandler<>(MysqlUserDetail.class));
+            userList = userList.stream().filter(item -> !INITIAL_USER.contains(item.getUser())).collect(Collectors.toList());
             // 查询每个用户所拥有的数据库及权限
             MysqlAccessInfo accessInfo = mysqlService.getAccessInfo(clusterId, namespace, middlewareName);
             userList.forEach(item -> {
@@ -289,12 +274,12 @@ public class MysqlUserServiceImpl implements MysqlUserService {
                 }
                 item.setDbs(privileges);
             });
-            Collections.sort(userList, (o1, o2) -> {
+            userList.sort((o1, o2) -> {
                 if (o1.getCreateTime() == null) {
-                    return 1;
+                    return 0;
                 }
                 if (o2.getCreateTime() == null) {
-                    return 1;
+                    return 0;
                 }
                 if (o1.getCreateTime().before(o2.getCreateTime())) {
                     return 1;
@@ -303,16 +288,16 @@ public class MysqlUserServiceImpl implements MysqlUserService {
                 }
             });
             return userList;
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
         } finally {
             DbUtils.closeQuietly(con);
         }
-        return null;
+        return Collections.emptyList();
     }
 
     @Override
-    public List<MysqlDbPrivilege> nativeListUserDb(Connection con, String user, String mysqlQualifiedName,String keyword) {
+    public List<MysqlDbPrivilege> nativeListUserDb(Connection con, String user, String mysqlQualifiedName, String keyword) {
         QueryRunner qr = new QueryRunner();
         String selectUserDb = String.format("select Db from mysql.db where User = '%s'", user);
         if (StringUtils.isNotBlank(keyword)) {
@@ -322,17 +307,28 @@ public class MysqlUserServiceImpl implements MysqlUserService {
         try {
             List<MysqlDbPrivilege> privileges = qr.query(con, selectUserDb, new BeanListHandler<>(MysqlDbPrivilege.class));
             privileges.forEach(item -> {
-                BeanMysqlDbPriv dbPriv = dbPrivService.selectByUser(mysqlQualifiedName, user, item.getDb());
+                BeanMysqlDbPriv dbPriv = dbPrivService.select(mysqlQualifiedName, user, item.getDb());
                 if (dbPriv != null) {
                     item.setAuthority(dbPriv.getAuthority());
                 }
             });
             return privileges;
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        return null;
+        return Collections.emptyList();
     }
 
+    public String generateDbQuerySql(String user, String keyword) {
+        String selectSchemaSql = "select User from mysql.user where Host !='localhost'";
+        if (StringUtils.isNotBlank(user)) {
+            selectSchemaSql = "select User from mysql.user where Host !='localhost' and User = '" + user + "'";
+            return selectSchemaSql;
+        }
+        if (StringUtils.isNotBlank(keyword)) {
+            selectSchemaSql = "select User from mysql.user where Host !='localhost' and User like '%" + keyword + "%'";
+        }
+        return selectSchemaSql;
+    }
 
 }

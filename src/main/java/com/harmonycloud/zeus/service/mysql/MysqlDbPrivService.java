@@ -8,9 +8,7 @@ import com.harmonycloud.zeus.bean.BeanMysqlDbPriv;
  */
 public interface MysqlDbPrivService {
 
-    BeanMysqlDbPriv selectByUser(String mysqlQualifiedName, String user,String db);
-
-    BeanMysqlDbPriv selectByDb(String mysqlQualifiedName, String user,String db);
+    BeanMysqlDbPriv select(String mysqlQualifiedName, String user,String db);
 
     void createOrUpdate(BeanMysqlDbPriv beanMysqlDbPriv);
 

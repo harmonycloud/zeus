@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.mysql.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.constants.MysqlConstant;
 import com.harmonycloud.zeus.bean.BeanMysqlDbPriv;
 import com.harmonycloud.zeus.dao.BeanMysqlDbPrivMapper;
 import com.harmonycloud.zeus.service.mysql.MysqlDbPrivService;
@@ -20,18 +21,9 @@ public class MysqlDbPrivServiceImpl implements MysqlDbPrivService {
     private BeanMysqlDbPrivMapper mysqlDbPrivMapper;
 
     @Override
-    public BeanMysqlDbPriv selectByUser(String mysqlQualifiedName, String user, String db) {
+    public BeanMysqlDbPriv select(String mysqlQualifiedName, String user, String db) {
         QueryWrapper<BeanMysqlDbPriv> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("mysql_qualified_name", mysqlQualifiedName);
-        queryWrapper.eq("user", user);
-        queryWrapper.eq("db", db);
-        return mysqlDbPrivMapper.selectOne(queryWrapper);
-    }
-
-    @Override
-    public BeanMysqlDbPriv selectByDb(String mysqlQualifiedName, String user, String db) {
-        QueryWrapper<BeanMysqlDbPriv> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("mysql_qualified_name", mysqlQualifiedName);
+        queryWrapper.eq(MysqlConstant.MYSQL_QUALIFIED_NAME, mysqlQualifiedName);
         queryWrapper.eq("user", user);
         queryWrapper.eq("db", db);
         return mysqlDbPrivMapper.selectOne(queryWrapper);
@@ -42,7 +34,7 @@ public class MysqlDbPrivServiceImpl implements MysqlDbPrivService {
         QueryWrapper<BeanMysqlDbPriv> wrapper = new QueryWrapper<>();
         wrapper.eq("db", beanMysqlDbPriv.getDb());
         wrapper.eq("user", beanMysqlDbPriv.getUser());
-        wrapper.eq("mysql_qualified_name", beanMysqlDbPriv.getMysqlQualifiedName());
+        wrapper.eq(MysqlConstant.MYSQL_QUALIFIED_NAME, beanMysqlDbPriv.getMysqlQualifiedName());
         BeanMysqlDbPriv dbPriv = mysqlDbPrivMapper.selectOne(wrapper);
         if (dbPriv == null) {
             mysqlDbPrivMapper.insert(beanMysqlDbPriv);
@@ -56,14 +48,14 @@ public class MysqlDbPrivServiceImpl implements MysqlDbPrivService {
     public void deleteByUser(String mysqlQualifiedName, String user) {
         QueryWrapper<BeanMysqlDbPriv> wrapper = new QueryWrapper<>();
         wrapper.eq("user", user);
-        wrapper.eq("mysql_qualified_name", mysqlQualifiedName);
+        wrapper.eq(MysqlConstant.MYSQL_QUALIFIED_NAME, mysqlQualifiedName);
         mysqlDbPrivMapper.delete(wrapper);
     }
 
     @Override
     public void delete(String clusterId, String namespace, String middlewareName) {
         QueryWrapper<BeanMysqlDbPriv> wrapper = new QueryWrapper<>();
-        wrapper.eq("mysql_qualified_name", getMysqlQualifiedName(clusterId, namespace, middlewareName));
+        wrapper.eq(MysqlConstant.MYSQL_QUALIFIED_NAME, getMysqlQualifiedName(clusterId, namespace, middlewareName));
         mysqlDbPrivMapper.delete(wrapper);
 
     }
@@ -72,7 +64,7 @@ public class MysqlDbPrivServiceImpl implements MysqlDbPrivService {
     public void deleteByDb(String mysqlQualifiedName, String db) {
         QueryWrapper<BeanMysqlDbPriv> wrapper = new QueryWrapper<>();
         wrapper.eq("db", db);
-        wrapper.eq("mysql_qualified_name", mysqlQualifiedName);
+        wrapper.eq(MysqlConstant.MYSQL_QUALIFIED_NAME, mysqlQualifiedName);
         mysqlDbPrivMapper.delete(wrapper);
     }
 
