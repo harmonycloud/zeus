@@ -51,8 +51,9 @@ public class ClusterController {
     })
     @GetMapping
     public BaseResult<List<MiddlewareClusterDTO>> list(@RequestParam(value = "detail", defaultValue = "false") boolean detail,
-                                                       @RequestParam(value = "key", required = false) String key) {
-        List<MiddlewareClusterDTO> list = clusterService.listClusters(detail, key);
+                                                       @RequestParam(value = "key", required = false) String key,
+                                                       @RequestParam(value = "projectId", required = false) String projectId) {
+        List<MiddlewareClusterDTO> list = clusterService.listClusters(detail, key, projectId);
         list.forEach(this::desensitize);
         return BaseResult.ok(list);
     }

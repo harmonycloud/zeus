@@ -75,11 +75,11 @@ public class NamespaceServiceImpl implements NamespaceService {
 
     @Override
     public List<Namespace> list(String clusterId, boolean all, String keyword) {
-        return list(clusterId, all, false, false, keyword);
+        return list(clusterId, all, false, false, keyword, null);
     }
 
     @Override
-    public List<Namespace> list(String clusterId, boolean all, boolean withQuota, boolean withMiddleware, String keyword) {
+    public List<Namespace> list(String clusterId, boolean all, boolean withQuota, boolean withMiddleware, String keyword, String projectId) {
         List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId);
         List<Namespace> list = nsList.stream()
             .filter(ns -> (all || ns.getMetadata().getLabels() != null
@@ -103,15 +103,14 @@ public class NamespaceServiceImpl implements NamespaceService {
                 namespace.setPhase(ns.getStatus().getPhase());
                 return namespace;
             }).collect(Collectors.toList());
-
-        // 根据用户角色集群分区权限进行过滤
-        JSONObject userMap = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue();
-        if (userMap.containsKey(PROJECT_ID)) {
-            List<Namespace> projectNamespaceList = projectService.getNamespace(userMap.getString(PROJECT_ID));
-            list = list.stream()
-                .filter(ns -> projectNamespaceList.stream().anyMatch(pns -> pns.getName().equals(ns.getName())))
+        
+        if (StringUtils.isNotEmpty(projectId)) {
+            List<Namespace> alNsList = projectService.getNamespace(projectId).stream()
+                .filter(ns -> ns.getClusterId().equals(clusterId)).collect(Collectors.toList());
+            list = list.stream().filter(ns -> alNsList.stream().anyMatch(alNs -> alNs.getName().equals(ns.getName())))
                 .collect(Collectors.toList());
         }
+
         // 返回其他信息
         if (withQuota || withMiddleware) {
             // 命名空间配额

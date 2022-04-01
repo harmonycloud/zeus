@@ -36,15 +36,17 @@ public class NamespaceController {
             @ApiImplicitParam(name = "all", value = "是否查询所有命名空间，默认false", paramType = "query", dataTypeClass = Boolean.class),
             @ApiImplicitParam(name = "withQuota", value = "是否返回命名空间配额，默认false", paramType = "query", dataTypeClass = Boolean.class),
             @ApiImplicitParam(name = "withMiddleware", value = "是否返回中间件实例信息，默认false", paramType = "query", dataTypeClass = Boolean.class),
-            @ApiImplicitParam(name = "keyword", value = "模糊搜索关键词", paramType = "query", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "keyword", value = "模糊搜索关键词", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping
     public BaseResult<List<Namespace>> list(@PathVariable("clusterId") String clusterId,
                                             @RequestParam(value = "all", defaultValue = "false") boolean all,
                                             @RequestParam(value = "withQuota", defaultValue = "false") boolean withQuota,
                                             @RequestParam(value = "withMiddleware", defaultValue = "false") boolean withMiddleware,
-                                            @RequestParam(value = "keyword", required = false) String keyword) {
-        return BaseResult.ok(namespaceService.list(clusterId, all, withQuota, withMiddleware, keyword));
+                                            @RequestParam(value = "keyword", required = false) String keyword,
+                                            @RequestParam(value = "projectId", required = false) String projectId) {
+        return BaseResult.ok(namespaceService.list(clusterId, all, withQuota, withMiddleware, keyword, projectId));
     }
 
 

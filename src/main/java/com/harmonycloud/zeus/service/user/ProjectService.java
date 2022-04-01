@@ -1,7 +1,9 @@
 package com.harmonycloud.zeus.service.user;
 
+import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
+import com.harmonycloud.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.user.ProjectDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
 
@@ -35,11 +37,18 @@ public interface ProjectService {
     List<Namespace> getNamespace(String projectId);
 
     /**
+     * 查询项目下分区
+     * @param projectId 项目id
+     * @return List<Namespace>
+     */
+    List<MiddlewareClusterDTO> getAllocatableNamespace(String projectId);
+
+    /**
      * 查询项目下用户
      * @param projectId 项目id
      * @return List<UserDto>
      */
-    List<UserDto> getUser(String projectId);
+    List<UserDto> getUser(String projectId, Boolean allocatable);
 
     /**
      * 项目绑定用户
@@ -92,6 +101,12 @@ public interface ProjectService {
      * 获取项目下中间件资源
      * @param projectId 项目id
      */
-    Map<String, List<MiddlewareResourceInfo>> middlewareResource(String projectId) throws Exception;
+    List<ProjectMiddlewareResourceInfo> middlewareResource(String projectId) throws Exception;
+
+    /**
+     * 查询项目列表
+     * @return List<ProjectDto>
+     */
+    List<String> getClusters(String projectId);
 
 }

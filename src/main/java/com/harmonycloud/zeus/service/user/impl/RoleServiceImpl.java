@@ -3,8 +3,10 @@ package com.harmonycloud.zeus.service.user.impl;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.bean.user.BeanRoleAuthority;
 import com.harmonycloud.zeus.dao.user.BeanRoleAuthorityMapper;
+import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.user.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -48,6 +50,8 @@ public class RoleServiceImpl implements RoleService {
     private ClusterRoleService clusterRoleService;
     @Autowired
     private RoleAuthorityService roleAuthorityService;
+    @Autowired
+    private MiddlewareInfoService middlewareInfoService;
 
     @Override
     public void add(RoleDto roleDto) {
@@ -59,15 +63,13 @@ public class RoleServiceImpl implements RoleService {
         BeanUtils.copyProperties(roleDto, beanRole);
         beanRole.setStatus(true);
         beanRole.setCreateTime(new Date());
-        CurrentUser currentUser = CurrentUserRepository.getUser();
-        String currentRoleId = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString("roleId");
-        beanRole.setParent(Integer.parseInt(currentRoleId));
         beanRoleMapper.insert(beanRole);
         // 获取id
         QueryWrapper<BeanRole> wrapper = new QueryWrapper<BeanRole>().eq("name", roleDto.getName()).eq("status", true);
         BeanRole exit = beanRoleMapper.selectOne(wrapper);
         roleDto.setId(exit.getId());
         // 绑定角色权限
+        initRolePower(roleDto);
         bindRolePower(roleDto);
     }
 
@@ -173,5 +175,12 @@ public class RoleServiceImpl implements RoleService {
         if (!CollectionUtils.isEmpty(userRoleList)){
             throw new BusinessException(ErrorMessage.ROLE_HAS_BEEN_BOUND);
         }
+    }
+
+    public void initRolePower(RoleDto roleDto){
+        List<BeanMiddlewareInfo> beanMiddlewareInfoList = middlewareInfoService.list(false);
+        Map<String, String> power = new HashMap<>();
+        beanMiddlewareInfoList.forEach(beanMiddlewareInfo -> power.put(beanMiddlewareInfo.getChartName(), "0000"));
+        roleDto.setPower(power);
     }
 }

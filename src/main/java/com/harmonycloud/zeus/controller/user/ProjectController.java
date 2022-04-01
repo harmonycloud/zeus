@@ -1,8 +1,10 @@
 package com.harmonycloud.zeus.controller.user;
 
 import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
+import com.harmonycloud.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.user.ProjectDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.zeus.service.user.ProjectService;
@@ -80,6 +82,15 @@ public class ProjectController {
         return BaseResult.ok(projectService.getNamespace(projectId));
     }
 
+    @ApiOperation(value = "获取项目下可分配分区", notes = "获取项目下可分配分区")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
+    })
+    @GetMapping("/{projectId}/namespace/allocatable")
+    public BaseResult<List<MiddlewareClusterDTO>> getAllocatableNamespace(@PathVariable("projectId") String projectId) {
+        return BaseResult.ok(projectService.getAllocatableNamespace(projectId));
+    }
+
     @ApiOperation(value = "项目绑定分区", notes = "项目绑定分区")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
@@ -96,10 +107,12 @@ public class ProjectController {
     @ApiOperation(value = "获取项目下成员", notes = "获取项目下成员")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "allocatable", value = "可分配的", paramType = "query", dataTypeClass = Boolean.class),
     })
     @GetMapping("/{projectId}/user")
-    public BaseResult<List<UserDto>> getUser(@PathVariable("projectId") String projectId) {
-        return BaseResult.ok(projectService.getUser(projectId));
+    public BaseResult<List<UserDto>> getUser(@PathVariable("projectId") String projectId,
+                                             @RequestParam("allocatable") Boolean allocatable) {
+        return BaseResult.ok(projectService.getUser(projectId, allocatable));
     }
 
     @ApiOperation(value = "项目绑定成员", notes = "项目绑定成员")
@@ -115,7 +128,7 @@ public class ProjectController {
         return BaseResult.ok();
     }
 
-    @ApiOperation(value = "项目绑定成员", notes = "项目绑定成员")
+    @ApiOperation(value = "更新项目下成员角色", notes = "更新项目下成员角色")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "userDto", value = "用户对象", paramType = "query", dataTypeClass = UserDto.class),
@@ -144,7 +157,7 @@ public class ProjectController {
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
     })
     @GetMapping("/{projectId}/middleware")
-    public BaseResult<Map<String, List<MiddlewareResourceInfo>>> getMiddlewareResource(@PathVariable("projectId") String projectId) throws Exception {
+    public BaseResult<List<ProjectMiddlewareResourceInfo>> getMiddlewareResource(@PathVariable("projectId") String projectId) throws Exception {
         return BaseResult.ok(projectService.middlewareResource(projectId));
     }
 

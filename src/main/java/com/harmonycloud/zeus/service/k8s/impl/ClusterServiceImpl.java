@@ -18,8 +18,10 @@ import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.constants.CommonConstant;
+import com.harmonycloud.zeus.bean.user.BeanProjectNamespace;
 import com.harmonycloud.zeus.service.middleware.ImageRepositoryService;
 import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
+import com.harmonycloud.zeus.service.user.ProjectService;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -112,6 +114,8 @@ public class ClusterServiceImpl implements ClusterService {
     private IngressComponentService ingressComponentService;
     @Autowired
     private ImageRepositoryService imageRepositoryService;
+    @Autowired
+    private ProjectService projectService;
 
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
@@ -126,32 +130,24 @@ public class ClusterServiceImpl implements ClusterService {
 
     @Override
     public List<MiddlewareClusterDTO> listClusters(boolean detail, String key) {
+        return listClusters(detail, key, null);
+    }
+
+    @Override
+    public List<MiddlewareClusterDTO> listClusters(boolean detail, String key, String projectId) {
         List<MiddlewareClusterDTO> clusters;
         List<MiddlewareCluster> clusterList = middlewareClusterService.listClusters();
         if (clusterList.size() <= 0) {
             return new ArrayList<>(0);
         }
-        //todo 根据角色集群权限过滤
-        /*CurrentUser currentUser = CurrentUserRepository.getUserExistNull();
-        if (!ObjectUtils.isEmpty(currentUser)) {
-            JSONObject role = JwtTokenComponent.checkToken(currentUser.getToken()).getValue();
-            if (!SUPER_MANAGER.equals(role.getString("roleName"))) {
-                List<MiddlewareClusterDTO> limitCluster = clusterRoleService.get(role.getInteger("roleId"));
-                clusterList = clusterList.stream()
-                    .filter(cluster -> limitCluster.stream()
-                        .anyMatch(lc -> lc.getId().equals(K8sClient.getClusterId(cluster.getMetadata()))))
-                    .collect(Collectors.toList());
-            }
-        }*/
-
         // 封装数据
         clusters = clusterList.stream().map(c -> {
             MiddlewareClusterInfo info = c.getSpec().getInfo();
             MiddlewareClusterDTO cluster = new MiddlewareClusterDTO();
             BeanUtils.copyProperties(info, cluster);
             cluster.setId(K8sClient.getClusterId(c.getMetadata())).setHost(info.getAddress())
-                .setName(c.getMetadata().getName()).setDcId(c.getMetadata().getNamespace())
-                .setIngressList(info.getIngressList()).setAnnotations(c.getMetadata().getAnnotations());
+                    .setName(c.getMetadata().getName()).setDcId(c.getMetadata().getNamespace())
+                    .setIngressList(info.getIngressList()).setAnnotations(c.getMetadata().getAnnotations());
             if (!CollectionUtils.isEmpty(c.getMetadata().getAnnotations())) {
                 cluster.setNickname(c.getMetadata().getAnnotations().get(NAME));
             }
@@ -163,7 +159,7 @@ public class ClusterServiceImpl implements ClusterService {
         }).collect(Collectors.toList());
         if (StringUtils.isNotEmpty(key)){
             clusters = clusters.stream().filter(clusterDTO -> clusterDTO.getNickname().contains(key))
-                .collect(Collectors.toList());
+                    .collect(Collectors.toList());
         }
         // 返回命名空间信息
         if (detail && clusters.size() > 0) {
@@ -171,7 +167,7 @@ public class ClusterServiceImpl implements ClusterService {
                 // 初始化集群信息
                 initClusterAttributes(cluster);
                 try {
-                    List<Namespace> list = namespaceService.list(cluster.getId());
+                    List<Namespace> list = namespaceService.list(cluster.getId(), false, false, false, null, projectId);
                     cluster.getAttributes().put(NS_COUNT, list.size());
                     cluster.setNamespaceList(list);
                 } catch (Exception e) {
@@ -185,6 +181,13 @@ public class ClusterServiceImpl implements ClusterService {
                 //判断集群是否可删除
                 cluster.setRemovable(checkDelete(cluster.getId()));
             });
+        }
+        // 根据项目进行过滤
+        if (StringUtils.isNotEmpty(projectId)) {
+            List<String> availableClusterList = projectService.getClusters(projectId);
+            clusters = clusters.stream()
+                .filter(cluster -> availableClusterList.stream().anyMatch(ac -> ac.equals(cluster.getId())))
+                .collect(Collectors.toList());
         }
         return clusters;
     }
@@ -988,7 +991,7 @@ public class ClusterServiceImpl implements ClusterService {
         if (clusterDTO == null) {
             return new ArrayList();
         }
-        List<Namespace> namespaces = namespaceService.list(clusterDTO.getId(), false, false, false, null);
+        List<Namespace> namespaces = namespaceService.list(clusterDTO.getId(), false, false, false, null, null);
         return namespaces.stream().filter(namespace -> namespace.isRegistered()).collect(Collectors.toList());
     }
 
@@ -1058,6 +1061,7 @@ public class ClusterServiceImpl implements ClusterService {
     public void refresh(String clusterId) {
         if (run) {
             ThreadPoolExecutorFactory.executor.execute(() -> {
+                run = false;
                 List<MiddlewareClusterDTO> clusterList = listClusters().stream()
                     .filter(clusterDTO -> clusterDTO.getId().equals(clusterId)).collect(Collectors.toList());
                 if (CollectionUtils.isEmpty(clusterList)) {
@@ -1065,7 +1069,6 @@ public class ClusterServiceImpl implements ClusterService {
                 }
                 MiddlewareClusterDTO dto = clusterList.get(0);
                 CLUSTER_MAP.put(clusterId, SerializationUtils.clone(dto));
-                run = false;
                 try {
                     log.info("刷新集群信息成功，将静默10s");
                     Thread.sleep(10000);

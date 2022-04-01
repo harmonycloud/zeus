@@ -37,9 +37,10 @@ public interface NamespaceService {
      * @param withQuota      是否返回配额
      * @param withMiddleware 是否返回中间件实例信息
      * @param keyword        模糊搜索关键词
+     * @param projectId      项目id
      * @return
      */
-    List<Namespace> list(String clusterId, boolean all, boolean withQuota, boolean withMiddleware, String keyword);
+    List<Namespace> list(String clusterId, boolean all, boolean withQuota, boolean withMiddleware, String keyword, String projectId);
 
     /**
      * 查询命名空间列表

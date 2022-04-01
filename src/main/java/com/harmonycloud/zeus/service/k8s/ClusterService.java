@@ -31,6 +31,14 @@ public interface ClusterService {
     List<MiddlewareClusterDTO> listClusters(boolean detail, String key);
 
     /**
+     * 获取所有集群
+     *
+     * @param detail 是否返回明细信息
+     * @return
+     */
+    List<MiddlewareClusterDTO> listClusters(boolean detail, String key, String projectId);
+
+    /**
      * 设置集群属性
      *
      * @param clusters 集群列表

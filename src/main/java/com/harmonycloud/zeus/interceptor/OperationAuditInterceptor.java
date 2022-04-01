@@ -83,35 +83,35 @@ public class OperationAuditInterceptor {
 
     @Before("authcut() && @annotation(authority)")
     public void before(JoinPoint joinPoint, Authority authority) {
-//        JSONObject userMap = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue();
-//        if (userMap.containsKey(PROJECT_ID)) {
-//            List<
-//                UserRole> userRoleList =
-//                    userRoleService.get(userMap.getString("username")).stream()
-//                        .filter(userRole -> StringUtils.isNotEmpty(userRole.getProjectId())
-//                            && userRole.getProjectId().equals(userMap.getString("projectId")))
-//                        .collect(Collectors.toList());
-//            if (CollectionUtils.isEmpty(userRoleList)) {
-//                throw new BusinessException(ErrorMessage.NO_AUTHORITY);
-//            }
-//            UserRole userRole = userRoleList.get(0);
-//            if (userRole.getRoleId() != 1) {
-//                JSONObject params =
-//                    getParams(((MethodSignature)joinPoint.getSignature()).getParameterNames(), joinPoint.getArgs());
-//                String type = tryGetType(params);
-//                if (StringUtils.isNotEmpty(type)) {
-//                    List<BeanRoleAuthority> beanRoleAuthorityList = roleAuthorityService.list(userRole.getRoleId())
-//                        .stream().filter(beanRoleAuthority -> beanRoleAuthority.getType().equals(type))
-//                        .collect(Collectors.toList());
-//                    if (!CollectionUtils.isEmpty(beanRoleAuthorityList)) {
-//                        String[] power = beanRoleAuthorityList.get(0).getPower().split("");
-//                        if (Integer.parseInt(power[authority.power()]) == 0) {
-//                            throw new BusinessException(ErrorMessage.NO_AUTHORITY);
-//                        }
-//                    }
-//                }
-//            }
-//        }
+        JSONObject userMap = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue();
+        if (userMap.containsKey(PROJECT_ID)) {
+            List<
+                UserRole> userRoleList =
+                    userRoleService.get(userMap.getString("username")).stream()
+                        .filter(userRole -> StringUtils.isNotEmpty(userRole.getProjectId())
+                            && userRole.getProjectId().equals(userMap.getString("projectId")))
+                        .collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(userRoleList)) {
+                throw new BusinessException(ErrorMessage.NO_AUTHORITY);
+            }
+            UserRole userRole = userRoleList.get(0);
+            if (userRole.getRoleId() != 1) {
+                JSONObject params =
+                    getParams(((MethodSignature)joinPoint.getSignature()).getParameterNames(), joinPoint.getArgs());
+                String type = tryGetType(params);
+                if (StringUtils.isNotEmpty(type)) {
+                    List<BeanRoleAuthority> beanRoleAuthorityList = roleAuthorityService.list(userRole.getRoleId())
+                        .stream().filter(beanRoleAuthority -> beanRoleAuthority.getType().equals(type))
+                        .collect(Collectors.toList());
+                    if (!CollectionUtils.isEmpty(beanRoleAuthorityList)) {
+                        String[] power = beanRoleAuthorityList.get(0).getPower().split("");
+                        if (Integer.parseInt(power[authority.power()]) == 0) {
+                            throw new BusinessException(ErrorMessage.NO_AUTHORITY);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**

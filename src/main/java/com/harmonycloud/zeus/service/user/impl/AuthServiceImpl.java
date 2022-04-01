@@ -5,6 +5,7 @@ import static com.harmonycloud.caas.filters.base.GlobalKey.USER_TOKEN;
 
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -70,7 +71,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         //校验用户权限
-        checkAuth(userDto);
+        Boolean isAdmin = checkAuth(userDto);
         //校验密码
         if (!md5Password.equals(userDto.getPassword())) {
             throw new BusinessException(ErrorMessage.AUTH_FAILED);
@@ -83,6 +84,7 @@ public class AuthServiceImpl implements AuthService {
         JSONObject res = new JSONObject();
         res.put("userName", userName);
         res.put("token", token);
+        res.put("isAdmin", isAdmin);
         //校验密码日期
         if (userDto.getPasswordTime() != null) {
             long passwordTime = DateUtils.getIntervalDays(new Date(), userDto.getPasswordTime()) / 3600 / 24 / 1000;
@@ -119,10 +121,11 @@ public class AuthServiceImpl implements AuthService {
     /**
      * 校验用户角色权限
      */
-    public void checkAuth(UserDto userDto){
+    public Boolean checkAuth(UserDto userDto){
         if (CollectionUtils.isEmpty(userDto.getUserRoleList())){
             throw new BusinessException(ErrorMessage.USER_ROLE_NOT_EXIT);
         }
+        return userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getRoleId() == 1);
     }
 
     private boolean isLdapOn(LdapConfigDto ldapConfigDto) {
