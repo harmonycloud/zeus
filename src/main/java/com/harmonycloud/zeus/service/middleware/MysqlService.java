@@ -1,8 +1,8 @@
 package com.harmonycloud.zeus.service.middleware;
 
 import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.middleware.MysqlSlowSqlDTO;
-import com.harmonycloud.caas.common.model.middleware.SlowLogQuery;
+import com.harmonycloud.caas.common.model.middleware.MysqlLogDTO;
+import com.harmonycloud.caas.common.model.middleware.MysqlLogQuery;
 import com.harmonycloud.tool.page.PageObject;
 
 import javax.servlet.http.HttpServletRequest;
@@ -34,18 +34,26 @@ public interface MysqlService {
 
     /**
      * mysql慢日志查询
-     * @param slowLogQuery 慢日志查询对象
+     * @param mysqlLogQuery 慢日志查询对象
      *
      * @return PageObject<MysqlSlowSqlDTO>
      */
-    PageObject<MysqlSlowSqlDTO> slowsql(SlowLogQuery slowLogQuery) throws Exception;
+    PageObject<MysqlLogDTO> slowsql(MysqlLogQuery mysqlLogQuery) throws Exception;
 
     /**
      * 慢日志导出
-     * @param slowLogQuery 慢日志查询对象
+     * @param mysqlLogQuery 慢日志查询对象
      * @param response     返回体
      * @param request      请求体
      *
      */
-    void slowsqlExcel(SlowLogQuery slowLogQuery, HttpServletResponse response, HttpServletRequest request) throws Exception;
+    void slowsqlExcel(MysqlLogQuery mysqlLogQuery, HttpServletResponse response, HttpServletRequest request) throws Exception;
+
+    /**
+     * 查询审计日志
+     * @param auditLogQuery
+     * @return
+     * @throws Exception
+     */
+    PageObject<MysqlLogDTO> auditSql(MysqlLogQuery auditLogQuery);
 }

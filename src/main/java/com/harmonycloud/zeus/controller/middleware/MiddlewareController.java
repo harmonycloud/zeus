@@ -5,6 +5,7 @@ import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBriefInfoDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareTopologyDTO;
 import com.harmonycloud.caas.common.model.middleware.MonitorDto;
+import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -32,6 +33,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping
+    @Authority
     public BaseResult<MiddlewareBriefInfoDTO> list(@PathVariable("clusterId") String clusterId,
                                                    @PathVariable("namespace") String namespace,
                                                    @RequestParam(value = "type", required = false) String type,
@@ -50,6 +52,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/{middlewareName}")
+    @Authority
     public BaseResult<Middleware> detail(@PathVariable("clusterId") String clusterId,
                                          @PathVariable("namespace") String namespace,
                                          @PathVariable("middlewareName") String name,
@@ -64,11 +67,13 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "middleware", value = "middleware信息", paramType = "query", dataTypeClass = Middleware.class)
     })
     @PostMapping
+    @Authority(power = 1)
     public BaseResult create(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
                              @RequestBody Middleware middleware) {
         middleware.setClusterId(clusterId).setNamespace(namespace);
-        return BaseResult.ok(middlewareService.create(middleware));
+        //middlewareService.create(middleware)
+        return BaseResult.ok();
     }
 
     @ApiOperation(value = "恢复中间件", notes = "恢复中间件")
@@ -79,6 +84,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "middleware", value = "middleware信息", paramType = "query", dataTypeClass = Middleware.class)
     })
     @PostMapping("/{middlewareName}/recovery")
+    @Authority(power = 3)
     public BaseResult recovery(@PathVariable("clusterId") String clusterId,
                                @PathVariable("namespace") String namespace,
                                @PathVariable("middlewareName") String name,
@@ -96,6 +102,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "middleware", value = "middleware信息", paramType = "query", dataTypeClass = Middleware.class)
     })
     @PutMapping("/{middlewareName}")
+    @Authority(power = 3)
     public BaseResult update(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
                              @PathVariable("middlewareName") String name,
@@ -113,6 +120,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
     })
     @DeleteMapping("/{middlewareName}")
+    @Authority(power = 2)
     public BaseResult delete(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
                              @PathVariable("middlewareName") String name,
@@ -128,6 +136,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
     })
     @DeleteMapping("/{middlewareName}/storage")
+    @Authority(power = 2)
     public BaseResult deleteStorage(@PathVariable("clusterId") String clusterId,
                                     @PathVariable("namespace") String namespace,
                                     @PathVariable("middlewareName") String name,
@@ -145,6 +154,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "isAuto", value = "true开启/false关闭自动切换，不传/传null都为手动切换", paramType = "query", dataTypeClass = Boolean.class),
     })
     @PutMapping("/{middlewareName}/switch")
+    @Authority(power = 3)
     public BaseResult switchMiddleware(@PathVariable("clusterId") String clusterId,
                                        @PathVariable("namespace") String namespace,
                                        @PathVariable("middlewareName") String name,
@@ -161,6 +171,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("{middlewareName}/monitor")
+    @Authority(power = 3)
     public BaseResult<MonitorDto> monitor(@PathVariable("clusterId") String clusterId,
                                           @PathVariable("namespace") String namespace,
                                           @PathVariable("middlewareName") String name,
@@ -177,6 +188,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("{middlewareName}/version")
+    @Authority(power = 3)
     public BaseResult version(@PathVariable("clusterId") String clusterId,
                               @PathVariable("namespace") String namespace,
                               @PathVariable("middlewareName") String middlewareName,
@@ -194,6 +206,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "upgradeChartVersion", value = "升级chart版本", paramType = "query", dataTypeClass = String.class),
     })
     @PostMapping("{middlewareName}/upgradeChart")
+    @Authority(power = 3)
     public BaseResult upgradeChart(@PathVariable("clusterId") String clusterId,
                                    @PathVariable("namespace") String namespace,
                                    @PathVariable("middlewareName") String middlewareName,
@@ -213,6 +226,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "upgradeChartVersion", value = "升级chart版本", paramType = "query", dataTypeClass = String.class),
     })
     @PostMapping("{middlewareName}/upgradeCheck")
+    @Authority(power = 3)
     public BaseResult upgradeCheck(@PathVariable("clusterId") String clusterId,
                                    @PathVariable("namespace") String namespace,
                                    @PathVariable("middlewareName") String middlewareName,
@@ -230,6 +244,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class)
     })
     @PostMapping("/{middlewareName}/reboot")
+    @Authority(power = 3)
     public BaseResult reboot(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
                              @PathVariable("middlewareName") String name,
@@ -246,6 +261,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "middleware", value = "中间件内容", paramType = "query", dataTypeClass = Middleware.class)
     })
     @PutMapping("/{middlewareName}/storage")
+    @Authority(power = 3)
     public BaseResult updateStorage(@PathVariable("clusterId") String clusterId,
                                     @PathVariable("namespace") String namespace,
                                     @PathVariable("middlewareName") String name,
@@ -265,6 +281,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/{middlewareName}/topology")
+    @Authority(power = 3)
     public BaseResult<MiddlewareTopologyDTO> topology(@PathVariable("clusterId") String clusterId,
                                                       @PathVariable("namespace") String namespace,
                                                       @PathVariable("middlewareName") String name,
@@ -280,6 +297,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/{middlewareName}/platform")
+    @Authority(power = 3)
     public BaseResult<MiddlewareTopologyDTO> platform(@PathVariable("clusterId") String clusterId,
                                                       @PathVariable("namespace") String namespace,
                                                       @PathVariable("middlewareName") String name,

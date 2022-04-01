@@ -116,17 +116,17 @@ public class MysqlServiceImpl implements MysqlService {
     }
 
     @Override
-    public PageObject<MysqlSlowSqlDTO> slowsql(SlowLogQuery slowLogQuery) throws Exception {
+    public PageObject<MysqlLogDTO> slowsql(MysqlLogQuery slowLogQuery) throws Exception {
         MiddlewareClusterDTO cluster = clusterService.findById(slowLogQuery.getClusterId());
-        PageObject<MysqlSlowSqlDTO> slowSqlDTOS = esComponentService.getSlowSql(cluster, slowLogQuery);
+        PageObject<MysqlLogDTO> slowSqlDTOS = esComponentService.getSlowSql(cluster, slowLogQuery);
         return slowSqlDTOS;
     }
 
     @Override
-    public void slowsqlExcel(SlowLogQuery slowLogQuery, HttpServletResponse response, HttpServletRequest request) throws Exception {
+    public void slowsqlExcel(MysqlLogQuery slowLogQuery, HttpServletResponse response, HttpServletRequest request) throws Exception {
         slowLogQuery.setCurrent(1);
         slowLogQuery.setSize(CommonConstant.NUM_ONE_THOUSAND);
-        PageObject<MysqlSlowSqlDTO> slowsql = slowsql(slowLogQuery);
+        PageObject<MysqlLogDTO> slowsql = slowsql(slowLogQuery);
         List<Map<String, Object>> demoValues = new ArrayList<>();
         slowsql.getData().stream().forEach(mysqlSlowSqlDTO -> {
             Map<String, Object> demoValue = new HashMap<String, Object>() {
@@ -144,6 +144,18 @@ public class MysqlServiceImpl implements MysqlService {
             demoValues.add(demoValue);
         });
         ExcelUtil.writeExcel(ExcelUtil.OFFICE_EXCEL_XLSX, "mysqlslowsql", null, titleMap, demoValues, response, request);
+    }
+
+    @Override
+    public PageObject<MysqlLogDTO> auditSql(MysqlLogQuery auditLogQuery) {
+        MiddlewareClusterDTO cluster = clusterService.findById(auditLogQuery.getClusterId());
+        PageObject<MysqlLogDTO> slowSqlDTOS = null;
+        try {
+            slowSqlDTOS = esComponentService.getAuditSql(cluster, auditLogQuery);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return slowSqlDTOS;
     }
 
     public MysqlAccessInfo queryBasicAccessInfo(String clusterId, String namespace, String middlewareName, Middleware middleware) {
@@ -186,12 +198,16 @@ public class MysqlServiceImpl implements MysqlService {
         return mysqlAccessInfo;
     }
 
-    public MysqlAccessInfo queryAccessInfo(MysqlUserDTO user) {
+    public MysqlAccessInfo getAccessInfo(MysqlUserDTO user) {
         return queryBasicAccessInfo(user.getClusterId(), user.getNamespace(), user.getMiddlewareName(), null);
     }
 
-    public MysqlAccessInfo queryAccessInfo(MysqlDbDTO db) {
+    public MysqlAccessInfo getAccessInfo(MysqlDbDTO db) {
         return queryBasicAccessInfo(db.getClusterId(), db.getNamespace(), db.getMiddlewareName(), null);
+    }
+
+    public MysqlAccessInfo getAccessInfo(String clusterId, String namespace, String middlewareName) {
+        return queryBasicAccessInfo(clusterId, namespace, middlewareName, null);
     }
 
     /**

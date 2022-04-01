@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.controller.k8s;
 
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
+import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.k8s.PodService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -30,6 +31,7 @@ public class PodController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping
+    @Authority(power = 3)
     public BaseResult<Middleware> list(@PathVariable("clusterId") String clusterId,
                                        @PathVariable("namespace") String namespace,
                                        @PathVariable("middlewareName") String middlewareName,
@@ -46,6 +48,7 @@ public class PodController {
             @ApiImplicitParam(name = "podName", value = "pod名称", paramType = "path", dataTypeClass = String.class),
     })
     @PostMapping("/{podName}/restart")
+    @Authority(power = 3)
     public BaseResult restart(@PathVariable("clusterId") String clusterId,
                               @PathVariable("namespace") String namespace,
                               @PathVariable("middlewareName") String middlewareName,
@@ -64,6 +67,7 @@ public class PodController {
             @ApiImplicitParam(name = "podName", value = "pod名称", paramType = "path", dataTypeClass = String.class),
     })
     @GetMapping("/{podName}/yaml")
+    @Authority(power = 3)
     public BaseResult<String> yaml(@PathVariable("clusterId") String clusterId,
                                        @PathVariable("namespace") String namespace,
                                        @PathVariable("middlewareName") String middlewareName,

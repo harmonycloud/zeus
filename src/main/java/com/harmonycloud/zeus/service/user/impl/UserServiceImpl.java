@@ -46,7 +46,10 @@ import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.tool.encrypt.RSAUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
+
 import static com.harmonycloud.caas.common.constants.user.UserConstant.USERNAME;
+import static com.harmonycloud.caas.filters.base.GlobalKey.USER_TOKEN;
 
 
 /**
@@ -366,12 +369,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String switchProject(String projectId) {
+    public void switchProject(String projectId, HttpServletResponse response) {
         JSONObject userMap = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue();
         userMap.put("projectId", projectId);
         long currentTime = System.currentTimeMillis();
-        return JwtTokenComponent.generateToken("userInfo", userMap,
-            new Date(currentTime + (long)(ApplicationUtil.getExpire() * 3600000L)), new Date(currentTime - 300000L));
+        response.setHeader(USER_TOKEN, JwtTokenComponent.generateToken("userInfo", userMap,
+            new Date(currentTime + (long)(ApplicationUtil.getExpire() * 3600000L)), new Date(currentTime - 300000L)));
     }
 
     /**

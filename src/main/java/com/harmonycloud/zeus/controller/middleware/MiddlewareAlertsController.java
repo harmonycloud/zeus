@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.harmonycloud.caas.common.model.AlertUserDTO;
 import com.harmonycloud.caas.common.model.AlertsUserDTO;
+import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.bean.user.BeanUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -38,6 +39,7 @@ public class MiddlewareAlertsController {
             @ApiImplicitParam(name = "keyword", value = "关键字", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/used")
+    @Authority(power = 3)
     public BaseResult<List<MiddlewareAlertsDTO>> listUsedRules(@PathVariable("clusterId") String clusterId,
                                                                @PathVariable(value = "namespace", required = false) String namespace,
                                                                @PathVariable(value = "middlewareName", required = false) String middlewareName,
@@ -54,6 +56,7 @@ public class MiddlewareAlertsController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping
+    @Authority(power = 3)
     public BaseResult<List<MiddlewareAlertsDTO>> listRules(@PathVariable("clusterId") String clusterId,
                                                            @PathVariable(value = "namespace", required = false) String namespace,
                                                            @PathVariable(value = "middlewareName", required = false) String middlewareName,
@@ -70,6 +73,7 @@ public class MiddlewareAlertsController {
             @ApiImplicitParam(name = "alertsUserDTO", value = "中间件告警规则和用户", paramType = "query", dataTypeClass = AlertsUserDTO.class)
             })
     @PostMapping
+    @Authority(power = 3)
     public BaseResult createRules(@PathVariable("clusterId") String clusterId,
                                   @PathVariable(value = "namespace", required = false) String namespace,
                                   @PathVariable(value = "middlewareName", required = false) String middlewareName,
@@ -88,6 +92,7 @@ public class MiddlewareAlertsController {
             @ApiImplicitParam(name = "alertRuleId", value = "规则ID", paramType = "query", dataTypeClass = String.class)
     })
     @DeleteMapping
+    @Authority(power = 3)
     public BaseResult deleteRules(@PathVariable("clusterId") String clusterId,
                                   @PathVariable(value = "namespace", required = false) String namespace,
                                   @PathVariable(value = "middlewareName", required = false) String middlewareName,
@@ -107,6 +112,7 @@ public class MiddlewareAlertsController {
             @ApiImplicitParam(name = "alertUserDTO", value = "中间件告警规则和用户", paramType = "query", dataTypeClass = AlertUserDTO.class)
     })
     @PostMapping("/update")
+    @Authority(power = 3)
     public BaseResult updateRules(@PathVariable("clusterId") String clusterId,
                                   @PathVariable(value = "namespace", required = false) String namespace,
                                   @PathVariable(value = "middlewareName", required = false) String middlewareName,
@@ -167,6 +173,7 @@ public class MiddlewareAlertsController {
             @ApiImplicitParam(name = "alertRuleId", value = "规则ID", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/detail")
+    @Authority(power = 3)
     public BaseResult<MiddlewareAlertsDTO> alertRuleDetail(@RequestParam("alertRuleId") String alertRuleId) {
         return BaseResult.ok(middlewareAlertsService.alertRuleDetail(alertRuleId));
     }

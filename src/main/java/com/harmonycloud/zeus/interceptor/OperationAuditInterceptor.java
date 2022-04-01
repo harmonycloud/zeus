@@ -1,40 +1,56 @@
 package com.harmonycloud.zeus.interceptor;
 
+import java.lang.reflect.Method;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.user.UserRole;
+import com.harmonycloud.caas.filters.user.CurrentUserRepository;
+import com.harmonycloud.zeus.bean.user.BeanRoleAuthority;
+import com.harmonycloud.zeus.service.user.RoleAuthorityService;
+import com.harmonycloud.zeus.service.user.UserRoleService;
+import org.apache.commons.lang3.StringUtils;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
+import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.filters.token.JwtTokenComponent;
+import com.harmonycloud.tool.api.util.HttpMethod;
+import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.bean.BeanOperationAudit;
 import com.harmonycloud.zeus.service.system.OperationAuditService;
-import com.harmonycloud.tool.api.util.HttpMethod;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.apache.commons.lang3.StringUtils;
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Pointcut;
-import org.aspectj.lang.reflect.MethodSignature;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
+import lombok.extern.slf4j.Slf4j;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.lang.reflect.Method;
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
+import static com.harmonycloud.caas.common.constants.CommonConstant.PROJECT_ID;
+import static com.harmonycloud.caas.common.constants.CommonConstant.TYPE;
 
 /**
  * 操作审计拦截器
@@ -44,16 +60,58 @@ import java.util.Map;
  */
 @Aspect
 @Component
+@Slf4j
 public class OperationAuditInterceptor {
-
-    private Logger log = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
     private OperationAuditService operationAuditService;
+    @Autowired
+    private UserRoleService userRoleService;
+    @Autowired
+    private RoleAuthorityService roleAuthorityService;
+
 
     @Pointcut("@annotation(io.swagger.annotations.ApiOperation) && (!@annotation(com.harmonycloud.zeus.annotation.ExcludeAuditMethod)) &&(!@annotation(org.springframework.web.bind.annotation.GetMapping))")
     public void pointcut() {
 
+    }
+
+    @Pointcut("@annotation(com.harmonycloud.zeus.annotation.Authority)")
+    public void authcut() {
+
+    }
+
+    @Before("authcut() && @annotation(authority)")
+    public void before(JoinPoint joinPoint, Authority authority) {
+//        JSONObject userMap = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue();
+//        if (userMap.containsKey(PROJECT_ID)) {
+//            List<
+//                UserRole> userRoleList =
+//                    userRoleService.get(userMap.getString("username")).stream()
+//                        .filter(userRole -> StringUtils.isNotEmpty(userRole.getProjectId())
+//                            && userRole.getProjectId().equals(userMap.getString("projectId")))
+//                        .collect(Collectors.toList());
+//            if (CollectionUtils.isEmpty(userRoleList)) {
+//                throw new BusinessException(ErrorMessage.NO_AUTHORITY);
+//            }
+//            UserRole userRole = userRoleList.get(0);
+//            if (userRole.getRoleId() != 1) {
+//                JSONObject params =
+//                    getParams(((MethodSignature)joinPoint.getSignature()).getParameterNames(), joinPoint.getArgs());
+//                String type = tryGetType(params);
+//                if (StringUtils.isNotEmpty(type)) {
+//                    List<BeanRoleAuthority> beanRoleAuthorityList = roleAuthorityService.list(userRole.getRoleId())
+//                        .stream().filter(beanRoleAuthority -> beanRoleAuthority.getType().equals(type))
+//                        .collect(Collectors.toList());
+//                    if (!CollectionUtils.isEmpty(beanRoleAuthorityList)) {
+//                        String[] power = beanRoleAuthorityList.get(0).getPower().split("");
+//                        if (Integer.parseInt(power[authority.power()]) == 0) {
+//                            throw new BusinessException(ErrorMessage.NO_AUTHORITY);
+//                        }
+//                    }
+//                }
+//            }
+//        }
     }
 
     /**
@@ -220,6 +278,36 @@ public class OperationAuditInterceptor {
         } else {
             operationAudit.setRemoteIp(request.getRemoteHost());
         }
+    }
+
+    public JSONObject getParams(String[] paramNames, Object[] args) {
+        JSONObject params = new JSONObject();
+        for (int i = 0; i < paramNames.length; ++i) {
+            if (args[i] instanceof String) {
+                params.put(paramNames[i], args[i]);
+            } else {
+                params.put(paramNames[i], JSONObject.parseObject(JSONObject.toJSONString(args[i])));
+            }
+
+        }
+        return params;
+    }
+
+    public String tryGetType(JSONObject params){
+        String type = null;
+        if (params.containsKey(TYPE)) {
+            type = params.getString(TYPE);
+        } else {
+            for (String key : params.keySet()) {
+                if (params.get(key) instanceof JSONObject) {
+                    JSONObject temp = params.getJSONObject(key);
+                    if (temp.containsKey(TYPE)) {
+                        type = temp.getString(TYPE);
+                    }
+                }
+            }
+        }
+        return type;
     }
 
 }

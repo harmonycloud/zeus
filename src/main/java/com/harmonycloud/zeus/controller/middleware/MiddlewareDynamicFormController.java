@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.controller.middleware;
 
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.middleware.QuestionYaml;
+import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.middleware.MiddlewareDynamicFormService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -31,6 +32,7 @@ public class MiddlewareDynamicFormController {
             @ApiImplicitParam(name = "chartVersion", value = "chart包版本", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping
+    @Authority(power = 1)
     public BaseResult<QuestionYaml> dynamicForm(@PathVariable("clusterId") String clusterId,
                                                 @RequestParam("chartName") String chartName,
                                                 @RequestParam("chartVersion") String chartVersion) {

@@ -1,10 +1,12 @@
 package com.harmonycloud.zeus.service.user;
 
+import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.common.model.user.ProjectDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author xutianhong
@@ -85,5 +87,11 @@ public interface ProjectService {
      * @param namespace 分区名称
      */
     void unBindNamespace(String projectId, String namespace);
+
+    /**
+     * 获取项目下中间件资源
+     * @param projectId 项目id
+     */
+    Map<String, List<MiddlewareResourceInfo>> middlewareResource(String projectId) throws Exception;
 
 }

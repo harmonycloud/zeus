@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.controller.middleware;
 
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
+import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -36,6 +37,7 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "limitRecord", value = "备份保留数量", paramType = "query", dataTypeClass = Integer.class),
     })
     @PostMapping
+    @Authority(power = 3)
     public BaseResult create(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
                              @RequestParam("type") String type,
@@ -56,6 +58,7 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "limitRecord", value = "备份保留数量", paramType = "query", dataTypeClass = Integer.class),
     })
     @PutMapping
+    @Authority(power = 3)
     public BaseResult update(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
                              @RequestParam("type") String type,
@@ -75,6 +78,7 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "keyword", value = "备份源名称关键词", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping()
+    @Authority(power = 3)
     public BaseResult listSchedule(@PathVariable("clusterId") String clusterId,
                                    @PathVariable("namespace") String namespace,
                                    @RequestParam("type") String type,
@@ -91,6 +95,7 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "backupScheduleName", value = "备份规则名称", paramType = "query", dataTypeClass = String.class)
     })
     @DeleteMapping()
+    @Authority(power = 3)
     public BaseResult deleteSchedule(@PathVariable("clusterId") String clusterId,
                                      @PathVariable("namespace") String namespace,
                                      @RequestParam("type") String type,
@@ -106,6 +111,7 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "backupName", value = "备份名称", paramType = "query", dataTypeClass = String.class)
     })
     @DeleteMapping("/record")
+    @Authority(power = 3)
     public BaseResult delete(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
                              @RequestParam("type") String type,
@@ -123,6 +129,7 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class)
     })
     @GetMapping("/record")
+    @Authority(power = 3)
     public BaseResult listRecord(@PathVariable("clusterId") String clusterId,
                                  @PathVariable("namespace") String namespace,
                                  @RequestParam("type") String type,
@@ -141,6 +148,7 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "pods", value = "pod名称", paramType = "query", dataTypeClass = List.class)
     })
     @PostMapping("/restore")
+    @Authority(power = 3)
     public BaseResult createRestore(@PathVariable("clusterId") String clusterId,
                                     @PathVariable("namespace") String namespace,
                                     @RequestParam("type") String type,

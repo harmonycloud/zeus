@@ -114,6 +114,14 @@ data:
           document_type =>"_doc"
         }
       }
+     else if [index] == "mysqlaudit"{
+        elasticsearch {
+        hosts => ["middleware-elasticsearch-master:9200"]
+        index => "mysqlaudit-%{+YYYY.MM.dd}"
+        user => "elastic"
+        password => "Hc@Cloud01"
+       }
+      }
       else {
         elasticsearch {
           hosts => ["middleware-elasticsearch-master:9200"]

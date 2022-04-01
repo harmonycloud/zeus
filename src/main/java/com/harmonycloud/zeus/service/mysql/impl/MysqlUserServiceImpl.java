@@ -2,7 +2,9 @@ package com.harmonycloud.zeus.service.mysql.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.MysqlPrivilegeEnum;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.MysqlAccessInfo;
 import com.harmonycloud.caas.common.model.MysqlDbPrivilege;
 import com.harmonycloud.caas.common.model.MysqlUserDTO;
@@ -10,12 +12,12 @@ import com.harmonycloud.caas.common.model.MysqlUserDetail;
 import com.harmonycloud.zeus.bean.BeanMysqlDbPriv;
 import com.harmonycloud.zeus.bean.BeanMysqlUser;
 import com.harmonycloud.zeus.dao.BeanMysqlUserMapper;
-import com.harmonycloud.zeus.service.middleware.MysqlService;
 import com.harmonycloud.zeus.service.middleware.impl.MysqlServiceImpl;
 import com.harmonycloud.zeus.service.mysql.MysqlDbPrivService;
 import com.harmonycloud.zeus.service.mysql.MysqlUserService;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -52,7 +56,10 @@ public class MysqlUserServiceImpl implements MysqlUserService {
 
     @Override
     public BaseResult create(MysqlUserDTO user) {
-        Connection con = getDBConnection(mysqlService.queryAccessInfo(user));
+        if (StringUtils.isAnyBlank(user.getClusterId(), user.getNamespace(), user.getMiddlewareName(), user.getUser(), user.getPassword())) {
+            throw new BusinessException(ErrorMessage.MYSQL_INCOMPLETE_PARAMETERS);
+        }
+        Connection con = getDBConnection(mysqlService.getAccessInfo(user));
         if (nativeCreate(con, user.getUser(), user.getPassword())) {
             BeanMysqlUser mysqlUser = new BeanMysqlUser();
             mysqlUser.setCreatetime(LocalDateTime.now());
@@ -70,6 +77,11 @@ public class MysqlUserServiceImpl implements MysqlUserService {
     }
 
     @Override
+    public void create(BeanMysqlUser beanMysqlUser) {
+        beanMysqlUserMapper.insert(beanMysqlUser);
+    }
+
+    @Override
     public BaseResult update(MysqlUserDTO mysqlUserDTO) {
         BeanMysqlUser mysqlUser = beanMysqlUserMapper.selectById(mysqlUserDTO.getId());
         mysqlUser.setDescription(mysqlUserDTO.getDescription());
@@ -79,36 +91,47 @@ public class MysqlUserServiceImpl implements MysqlUserService {
 
     @Override
     public BeanMysqlUser select(String mysqlQualifiedName, String user) {
-        QueryWrapper wrapper = new QueryWrapper();
+        QueryWrapper<BeanMysqlUser> wrapper = new QueryWrapper<>();
         wrapper.eq("mysql_qualified_name", mysqlQualifiedName);
         wrapper.eq("user", user);
         return beanMysqlUserMapper.selectOne(wrapper);
     }
 
     @Override
-    public BaseResult delete(MysqlUserDTO mysqlUserDTO) {
-        if (nativeDelete(getDBConnection(mysqlService.queryAccessInfo(mysqlUserDTO)), mysqlUserDTO.getUser())) {
-            beanMysqlUserMapper.deleteById(mysqlUserDTO.getId());
-            //TODO 删除用户数据库关联关系
+    public BaseResult delete(String clusterId, String namespace, String middlewareName, String user) {
+        if (nativeDelete(getDBConnection(mysqlService.getAccessInfo(clusterId, namespace, middlewareName)), user)) {
+            BeanMysqlUser mysqlUser = select(getMysqlQualifiedName(clusterId, namespace, middlewareName), user);
+            beanMysqlUserMapper.deleteById(mysqlUser);
+            dbPrivService.deleteByUser(getMysqlQualifiedName(clusterId, namespace, middlewareName), user);
             return BaseResult.ok();
         }
         return BaseResult.error();
     }
 
     @Override
+    public void delete(String clusterId, String namespace, String middlewareName) {
+        QueryWrapper<BeanMysqlUser> wrapper = new QueryWrapper<>();
+        wrapper.eq("mysql_qualified_name", getMysqlQualifiedName(clusterId, namespace, middlewareName));
+        beanMysqlUserMapper.delete(wrapper);
+    }
+
+    @Override
     public BaseResult grantUser(MysqlUserDTO mysqlUserDTO) {
+        if (StringUtils.isAnyBlank(mysqlUserDTO.getId())) {
+            throw new BusinessException(ErrorMessage.MYSQL_INCOMPLETE_PARAMETERS);
+        }
         BeanMysqlUser beanMysqlUser = beanMysqlUserMapper.selectById(mysqlUserDTO.getId());
         if (StringUtils.isNotBlank(mysqlUserDTO.getDescription())) {
             beanMysqlUser.setDescription(mysqlUserDTO.getDescription());
             beanMysqlUserMapper.updateById(beanMysqlUser);
         }
-        grantUserDbPrivilege(getDBConnection(mysqlService.queryAccessInfo(mysqlUserDTO)), mysqlUserDTO.getUser(), getMysqlQualifiedName(mysqlUserDTO), mysqlUserDTO.getPrivilegeList());
+        grantUserDbPrivilege(getDBConnection(mysqlService.getAccessInfo(mysqlUserDTO)), mysqlUserDTO.getUser(), getMysqlQualifiedName(mysqlUserDTO), mysqlUserDTO.getPrivilegeList());
         return BaseResult.ok();
     }
 
     @Override
     public BaseResult updatePassword(MysqlUserDTO mysqlUserDTO) {
-        if (nativeUpdatePassword(getDBConnection(mysqlService.queryAccessInfo(mysqlUserDTO)), mysqlUserDTO.getUser(), mysqlUserDTO.getPassword())) {
+        if (nativeUpdatePassword(getDBConnection(mysqlService.getAccessInfo(mysqlUserDTO)), mysqlUserDTO.getUser(), mysqlUserDTO.getPassword())) {
             // 更新数据库密码
             BeanMysqlUser mysqlUser = beanMysqlUserMapper.selectById(mysqlUserDTO.getId());
             mysqlUser.setPassword(mysqlUserDTO.getPassword());
@@ -123,6 +146,13 @@ public class MysqlUserServiceImpl implements MysqlUserService {
         if (CollectionUtils.isEmpty(privileges)) {
             return;
         }
+        // 先取消该用户所有数据库授权
+        if (!nativeRevokeUser(con, user)) {
+            return;
+        }
+        // 删除平台该用户所有授权记录
+        dbPrivService.deleteByUser(mysqlQualifiedName, user);
+        // 重新授权数据库权限
         privileges.forEach(item -> {
             if (nativeGrantUser(con, user, item.getAuthority(), item.getDb())) {
                 BeanMysqlDbPriv dbPriv = new BeanMysqlDbPriv();
@@ -150,8 +180,24 @@ public class MysqlUserServiceImpl implements MysqlUserService {
     }
 
     @Override
+    public boolean nativeRevokeUser(Connection con, String user) {
+        QueryRunner qr = new QueryRunner();
+        try {
+            String grantPrivilegeSql = String.format("REVOKE ALL PRIVILEGES, GRANT OPTION FROM '%s' ", user);
+            qr.execute(con, grantPrivilegeSql, null);
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    @Override
     public boolean nativeCreate(Connection con, String user, String password) {
         QueryRunner qr = new QueryRunner();
+        if (nativeCheckUserExists(con, user)) {
+            throw new BusinessException(ErrorMessage.MYSQL_USER_EXISTS);
+        }
         String sql = String.format("create user '%s'@'%s' identified by '%s'", user, "%", password);
         try {
             qr.execute(con, sql, null);
@@ -193,14 +239,34 @@ public class MysqlUserServiceImpl implements MysqlUserService {
     }
 
     @Override
-    public List<MysqlUserDetail> list(MysqlUserDTO userDTO) {
+    public boolean nativeCheckUserExists(Connection con, String user) {
+        QueryRunner qr = new QueryRunner();
+        String selectSchemaSql = "select User from mysql.user where Host !='localhost' and User = '" + user + "'";
+        try {
+            MysqlUserDetail mysqlUserDetail = qr.query(con, selectSchemaSql, new BeanHandler<>(MysqlUserDetail.class));
+            if (mysqlUserDetail != null) {
+                return true;
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return false;
+    }
+
+    @Override
+    public List<MysqlUserDetail> list(String clusterId, String namespace, String middlewareName,String user, String keyword) {
         QueryRunner qr = new QueryRunner();
         String selectSchemaSql = "select User from mysql.user where Host !='localhost'";
-        //TODO 查询数据库连接信息 ip，端口，用户名，密码
-        Connection con = getDBConnection(mysqlService.queryAccessInfo(userDTO));
+        if (StringUtils.isNotBlank(user)) {
+            selectSchemaSql = "select User from mysql.user where Host !='localhost' and User = '" + user + "'";
+        } else {
+            if (StringUtils.isNotBlank(keyword)) {
+                selectSchemaSql = "select User from mysql.user where Host !='localhost' and User like '%" + keyword + "%'";
+            }
+        }
+        Connection con = getDBConnection(mysqlService.getAccessInfo(clusterId, namespace, middlewareName));
         try {
             List<MysqlUserDetail> userList = qr.query(con, selectSchemaSql, new BeanListHandler<>(MysqlUserDetail.class));
-            //TODO 添加root用户信息
             userList = userList.stream().filter(item -> {
                 if (initialUser.contains(item.getUser())) {
                     return false;
@@ -208,9 +274,10 @@ public class MysqlUserServiceImpl implements MysqlUserService {
                 return true;
             }).collect(Collectors.toList());
             // 查询每个用户所拥有的数据库及权限
+            MysqlAccessInfo accessInfo = mysqlService.getAccessInfo(clusterId, namespace, middlewareName);
             userList.forEach(item -> {
-                String mysqlQualifiedName = getMysqlQualifiedName(userDTO);
-                List<MysqlDbPrivilege> privileges = nativeListDbUser(con, item.getUser(), mysqlQualifiedName);
+                String mysqlQualifiedName = getMysqlQualifiedName(clusterId, namespace, middlewareName);
+                List<MysqlDbPrivilege> privileges = nativeListUserDb(con, item.getUser(), mysqlQualifiedName, keyword);
                 // 查询平台存储的用户信息
                 BeanMysqlUser beanMysqlUser = select(mysqlQualifiedName, item.getUser());
                 if (beanMysqlUser != null) {
@@ -218,9 +285,22 @@ public class MysqlUserServiceImpl implements MysqlUserService {
                     item.setDescription(beanMysqlUser.getDescription());
                     item.setPassword(beanMysqlUser.getPassword());
                     item.setCreateTime(Date.from(beanMysqlUser.getCreatetime().atZone(ZoneId.systemDefault()).toInstant()));
-                    item.setPasswordCheck(passwordCheck(userDTO, item.getUser(), item.getPassword()));
+                    item.setPasswordCheck(passwordCheck(accessInfo, item.getUser(), item.getPassword()));
                 }
                 item.setDbs(privileges);
+            });
+            Collections.sort(userList, (o1, o2) -> {
+                if (o1.getCreateTime() == null) {
+                    return 1;
+                }
+                if (o2.getCreateTime() == null) {
+                    return 1;
+                }
+                if (o1.getCreateTime().before(o2.getCreateTime())) {
+                    return 1;
+                } else {
+                    return -1;
+                }
             });
             return userList;
         } catch (SQLException throwables) {
@@ -232,9 +312,12 @@ public class MysqlUserServiceImpl implements MysqlUserService {
     }
 
     @Override
-    public List<MysqlDbPrivilege> nativeListDbUser(Connection con, String user, String mysqlQualifiedName) {
+    public List<MysqlDbPrivilege> nativeListUserDb(Connection con, String user, String mysqlQualifiedName,String keyword) {
         QueryRunner qr = new QueryRunner();
         String selectUserDb = String.format("select Db from mysql.db where User = '%s'", user);
+        if (StringUtils.isNotBlank(keyword)) {
+            selectUserDb = String.format("select Db from mysql.db where User = '%s' and Db like '%s'", user, "%" + keyword + "%");
+        }
         // 查询用户拥有的数据库
         try {
             List<MysqlDbPrivilege> privileges = qr.query(con, selectUserDb, new BeanListHandler<>(MysqlDbPrivilege.class));

@@ -30,7 +30,7 @@ public class MiddlewareInfoController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping
-    public BaseResult list(@RequestParam(value = "clusterId") String clusterId) {
+    public BaseResult list(@RequestParam(value = "clusterId", required = false) String clusterId) {
         return BaseResult.ok(middlewareInfoService.list(clusterId));
     }
 
