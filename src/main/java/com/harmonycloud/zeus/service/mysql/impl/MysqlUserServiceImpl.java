@@ -5,6 +5,7 @@ import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.MysqlPrivilegeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.MysqlAccessInfo;
 import com.harmonycloud.caas.common.model.MysqlDbPrivilege;
 import com.harmonycloud.caas.common.model.MysqlUserDTO;
 import com.harmonycloud.caas.common.model.MysqlUserDetail;
@@ -273,6 +274,7 @@ public class MysqlUserServiceImpl implements MysqlUserService {
                 return true;
             }).collect(Collectors.toList());
             // 查询每个用户所拥有的数据库及权限
+            MysqlAccessInfo accessInfo = mysqlService.getAccessInfo(clusterId, namespace, middlewareName);
             userList.forEach(item -> {
                 String mysqlQualifiedName = getMysqlQualifiedName(clusterId, namespace, middlewareName);
                 List<MysqlDbPrivilege> privileges = nativeListUserDb(con, item.getUser(), mysqlQualifiedName, keyword);
@@ -283,28 +285,23 @@ public class MysqlUserServiceImpl implements MysqlUserService {
                     item.setDescription(beanMysqlUser.getDescription());
                     item.setPassword(beanMysqlUser.getPassword());
                     item.setCreateTime(Date.from(beanMysqlUser.getCreatetime().atZone(ZoneId.systemDefault()).toInstant()));
-                    item.setPasswordCheck(passwordCheck(mysqlService.getAccessInfo(clusterId, namespace, middlewareName), item.getUser(), item.getPassword()));
+                    item.setPasswordCheck(passwordCheck(accessInfo, item.getUser(), item.getPassword()));
                 }
                 item.setDbs(privileges);
             });
-            Collections.sort(userList, new Comparator<MysqlUserDetail>() {
-                @Override
-                public int compare(MysqlUserDetail o1, MysqlUserDetail o2) {
-                    if (o1.getCreateTime() == null) {
-                        return 0;
-                    }
-                    if (o2.getCreateTime() == null) {
-                        return 0;
-                    }
-                    if (o1.getCreateTime().before(o2.getCreateTime())) {
-                        return 1;
-                    } else {
-                        return -1;
-                    }
+            Collections.sort(userList, (o1, o2) -> {
+                if (o1.getCreateTime() == null) {
+                    return 1;
+                }
+                if (o2.getCreateTime() == null) {
+                    return 1;
+                }
+                if (o1.getCreateTime().before(o2.getCreateTime())) {
+                    return 1;
+                } else {
+                    return -1;
                 }
             });
-
-//            userList.sort(Comparator.comparing(MysqlUserDetail::getCreateTime));
             return userList;
         } catch (SQLException throwables) {
             throwables.printStackTrace();
