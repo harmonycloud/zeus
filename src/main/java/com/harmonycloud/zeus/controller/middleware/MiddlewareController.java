@@ -31,17 +31,19 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping
     @Authority
     public BaseResult<MiddlewareBriefInfoDTO> list(@PathVariable("clusterId") String clusterId,
                                                    @PathVariable("namespace") String namespace,
                                                    @RequestParam(value = "type", required = false) String type,
-                                                   @RequestParam(value = "keyword", required = false) String keyword) throws Exception {
+                                                   @RequestParam(value = "keyword", required = false) String keyword,
+                                                   @RequestParam(value = "projectId", required = false) String projectId) throws Exception {
         if ("*".equals(namespace)){
             namespace = null;
         }
-        return BaseResult.ok(middlewareService.list(clusterId, namespace, type, keyword));
+        return BaseResult.ok(middlewareService.list(clusterId, namespace, type, keyword, projectId));
     }
 
     @ApiOperation(value = "查询中间件详情", notes = "查询中间件详情")

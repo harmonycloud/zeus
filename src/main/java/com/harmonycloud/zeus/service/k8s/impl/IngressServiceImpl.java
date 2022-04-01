@@ -952,6 +952,8 @@ public class IngressServiceImpl implements IngressService {
             middlewareMap.put("serviceNum", ingressDTOList.size());
             ingressList.add(middlewareMap);
         });
+
+        // todo filter
         Collections.sort(ingressList, new MiddlewareServiceImpl.ServiceMapComparator());
         return ingressList;
     }

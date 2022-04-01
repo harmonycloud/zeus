@@ -401,7 +401,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public List<MiddlewareBriefInfoDTO> list(String clusterId, String namespace, String type, String keyword)
+    public List<MiddlewareBriefInfoDTO> list(String clusterId, String namespace, String type, String keyword, String projetcId)
         throws Exception {
         // 获取中间件chart包信息
         List<BeanMiddlewareInfo> beanMiddlewareInfoList = middlewareInfoService.list(true);
@@ -473,9 +473,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         }
         // 根据项目分区进行过滤
         List<Middleware> result = finalMiddlewareList;
-        JSONObject userMap = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue();
-        if (userMap.containsKey(PROJECT_ID)) {
-            List<Namespace> projectNamespaceList = projectService.getNamespace(userMap.getString(PROJECT_ID));
+        if (StringUtils.isNotEmpty(projetcId)) {
+            List<Namespace> projectNamespaceList = projectService.getNamespace(projetcId);
             result = result.stream()
                 .filter(mw -> projectNamespaceList.stream().anyMatch(pn -> pn.getName().equals(mw.getNamespace())))
                 .collect(Collectors.toList());

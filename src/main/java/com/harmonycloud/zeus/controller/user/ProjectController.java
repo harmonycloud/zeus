@@ -160,6 +160,4 @@ public class ProjectController {
     public BaseResult<List<ProjectMiddlewareResourceInfo>> getMiddlewareResource(@PathVariable("projectId") String projectId) throws Exception {
         return BaseResult.ok(projectService.middlewareResource(projectId));
     }
-
-
 }

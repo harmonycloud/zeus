@@ -243,7 +243,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public void bindNamespace(Namespace namespace) {
         QueryWrapper<BeanProjectNamespace> wrapper =
-            new QueryWrapper<BeanProjectNamespace>().eq("namespace", namespace.getName());
+            new QueryWrapper<BeanProjectNamespace>().eq("namespace", namespace.getName()).eq("cluster_id", namespace.getClusterId());
         List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
         if (!CollectionUtils.isEmpty(beanProjectNamespaceList)) {
             throw new BusinessException(ErrorMessage.PROJECT_NAMESPACE_ALREADY_BIND);
@@ -266,14 +266,24 @@ public class ProjectServiceImpl implements ProjectService {
         QueryWrapper<BeanProjectNamespace> wrapper =
             new QueryWrapper<BeanProjectNamespace>().eq("project_id", projectId);
         List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
+        // 获取集群
         Set<String> cluster = new HashSet<>();
         beanProjectNamespaceList.forEach(beanProjectNamespace -> {
             cluster.add(beanProjectNamespace.getClusterId());
         });
+        // 查询数据
         List<MiddlewareResourceInfo> all = new ArrayList<>();
         for (String clusterId : cluster) {
             all.addAll(clusterService.getMwResource(clusterId));
         }
+        // 根据分区过滤
+        all = all.stream().filter(middlewareResourceInfo -> beanProjectNamespaceList.stream().anyMatch(
+            beanProjectNamespace -> beanProjectNamespace.getNamespace().equals(middlewareResourceInfo.getNamespace())))
+            .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(all)){
+            return new ArrayList<>();
+        }
+        // 封装数据
         Map<String, List<MiddlewareResourceInfo>> map =
             all.stream().collect(Collectors.groupingBy(MiddlewareResourceInfo::getType));
         List<ProjectMiddlewareResourceInfo> infoList = new ArrayList<>();

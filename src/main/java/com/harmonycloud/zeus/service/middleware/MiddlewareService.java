@@ -22,9 +22,10 @@ public interface MiddlewareService {
      * @param namespace 分区
      * @param type 服务类型，例如：mysql
      * @param keyword 搜索关键词
+     * @param projectId 项目id
      * @return
      */
-    List<MiddlewareBriefInfoDTO> list(String clusterId, String namespace,String type, String keyword) throws Exception;
+    List<MiddlewareBriefInfoDTO> list(String clusterId, String namespace,String type, String keyword, String projectId) throws Exception;
 
     /**
      * 查询中间件列表
