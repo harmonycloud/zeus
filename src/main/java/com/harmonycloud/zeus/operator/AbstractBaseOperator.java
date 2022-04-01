@@ -959,46 +959,48 @@ public abstract class AbstractBaseOperator {
     /**
      *发布服务时,告警规则入库
      */
-    private void add2sql(Middleware middleware){
+    public void add2sql(Middleware middleware){
         QueryWrapper<BeanAlertRule> wrapper = new QueryWrapper<>();
         wrapper.eq("chart_name",middleware.getType()).eq("chart_version",middleware.getChartVersion());
-        BeanAlertRule beanAlertRule = beanAlertRuleMapper.selectOne(wrapper);
-        if (beanAlertRule == null) {
+        List<BeanAlertRule> beanAlertRules = beanAlertRuleMapper.selectList(wrapper);
+        if (beanAlertRules.isEmpty()) {
             return;
         }
-        JSONObject jsonObject = JSONObject.parseObject(beanAlertRule.getAlert());
-        PrometheusRule prometheusRule = JSONObject.toJavaObject(jsonObject,PrometheusRule.class);
-        for (PrometheusRuleGroups prometheusRuleGroups : prometheusRule.getSpec().getGroups()) {
-            if (prometheusRuleGroups.getRules().size() == 0 || prometheusRuleGroups.getRules() == null) {
-                return;
-            }
-            prometheusRuleGroups.getRules().stream().forEach(rule -> {
-                if (StringUtils.isNotEmpty(rule.getAlert())) {
-                    MiddlewareAlertInfo middlewareAlertInfo = new MiddlewareAlertInfo();
-                    middlewareAlertInfo.setAlert(rule.getAlert());
-                    middlewareAlertInfo.setExpr(rule.getExpr());
-                    middlewareAlertInfo.setSymbol(middlewareAlertsService.getSymbol(rule.getExpr()));
-                    middlewareAlertInfo.setThreshold(middlewareAlertsService.getThreshold(rule.getExpr()));
-                    middlewareAlertInfo.setTime(rule.getTime());
-                    rule.getLabels().put("middleware",middleware.getType());
-                    middlewareAlertInfo.setLabels(JSONUtil.toJsonStr(rule.getLabels()));
-                    middlewareAlertInfo.setAnnotations(JSONUtil.toJsonStr(rule.getAnnotations()));
-                    middlewareAlertInfo.setEnable("1");
-                    middlewareAlertInfo.setLay("service");
-                    middlewareAlertInfo.setClusterId(middleware.getClusterId());
-                    middlewareAlertInfo.setNamespace(middleware.getNamespace());
-                    middlewareAlertInfo.setMiddlewareName(middleware.getName());
-                    middlewareAlertInfo.setName(middleware.getClusterId());
-                    middlewareAlertInfo.setCreateTime(new Date());
-                    middlewareAlertInfo.setType(middleware.getType());
-                    middlewareAlertInfo.setDescription(rule.getAlert());
-                    String expr = rule.getAlert() + middlewareAlertsService.getSymbol(rule.getExpr())
-                            + middlewareAlertsService.getThreshold(rule.getExpr()) + "%"  + "且" + middlewareAlertInfo.getAlertTime()
-                            + "分钟内触发" + middlewareAlertInfo.getAlertTimes() + "次";
-                    middlewareAlertInfo.setAlertExpr(expr);
-                    middlewareAlertInfoMapper.insert(middlewareAlertInfo);
+        JSONObject jsonObject = JSONObject.parseObject(beanAlertRules.get(0).getAlert());
+        if (!jsonObject.isEmpty()) {
+            PrometheusRule prometheusRule = JSONObject.toJavaObject(jsonObject,PrometheusRule.class);
+            for (PrometheusRuleGroups prometheusRuleGroups : prometheusRule.getSpec().getGroups()) {
+                if (prometheusRuleGroups.getRules().size() == 0 || prometheusRuleGroups.getRules() == null) {
+                    return;
                 }
-            });
+                prometheusRuleGroups.getRules().stream().forEach(rule -> {
+                    if (StringUtils.isNotEmpty(rule.getAlert())) {
+                        MiddlewareAlertInfo middlewareAlertInfo = new MiddlewareAlertInfo();
+                        middlewareAlertInfo.setAlert(rule.getAlert());
+                        middlewareAlertInfo.setExpr(rule.getExpr());
+                        middlewareAlertInfo.setSymbol(middlewareAlertsService.getSymbol(rule.getExpr()));
+                        middlewareAlertInfo.setThreshold(middlewareAlertsService.getThreshold(rule.getExpr()));
+                        middlewareAlertInfo.setTime(rule.getTime());
+                        rule.getLabels().put("middleware",middleware.getType());
+                        middlewareAlertInfo.setLabels(JSONUtil.toJsonStr(rule.getLabels()));
+                        middlewareAlertInfo.setAnnotations(JSONUtil.toJsonStr(rule.getAnnotations()));
+                        middlewareAlertInfo.setEnable("1");
+                        middlewareAlertInfo.setLay("service");
+                        middlewareAlertInfo.setClusterId(middleware.getClusterId());
+                        middlewareAlertInfo.setNamespace(middleware.getNamespace());
+                        middlewareAlertInfo.setMiddlewareName(middleware.getName());
+                        middlewareAlertInfo.setName(middleware.getClusterId());
+                        middlewareAlertInfo.setCreateTime(new Date());
+                        middlewareAlertInfo.setType(middleware.getType());
+                        middlewareAlertInfo.setDescription(rule.getAlert());
+                        String expr = rule.getAlert() + middlewareAlertsService.getSymbol(rule.getExpr())
+                                + middlewareAlertsService.getThreshold(rule.getExpr()) + "%"  + "且" + middlewareAlertInfo.getAlertTime()
+                                + "分钟内触发" + middlewareAlertInfo.getAlertTimes() + "次";
+                        middlewareAlertInfo.setAlertExpr(expr);
+                        middlewareAlertInfoMapper.insert(middlewareAlertInfo);
+                    }
+                });
+            }
         }
     }
 
