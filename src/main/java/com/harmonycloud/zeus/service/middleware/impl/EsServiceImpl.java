@@ -429,6 +429,7 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
                 //初始化文件日志索引模板
                 initLogstashIndexTemplate(esClient);
                 //初始化mysql SQL审计模版
+                initAuditSqlTemplate(esClient);
                 log.info("集群:{}索引模板初始化完成", cluster.getName());
                 return true;
             } catch (Exception e) {
@@ -523,46 +524,18 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
     }
 
     /**
-     * 初始化标准输出日志索引模板
-     * @author liyinlong
-     * @date 2021/8/11 4:54 下午
+     * 初始化mysql sql审计索引模板
      * @param esClient
      */
-    public void initStdoutIndexTemplete(RestHighLevelClient esClient){
+    public void initAuditSqlTemplate(RestHighLevelClient esClient) {
         try {
-            PutIndexTemplateRequest request = new PutIndexTemplateRequest(EsTemplateEnum.STDOUT.getName());
-
-            JSONObject codeJson = JSONObject.parseObject(EsTemplateEnum.STDOUT.getCode());
+            PutIndexTemplateRequest request = new PutIndexTemplateRequest(EsTemplateEnum.MYSQL_AUDIT_SQL.getName());
+            JSONObject codeJson = JSONObject.parseObject(EsTemplateEnum.MYSQL_AUDIT_SQL.getCode());
             setCommonTemplate(request, codeJson);
-            JSONObject mappings = codeJson.getJSONObject("mappings").getJSONObject("doc");
-            request.mapping(mappings.toString(), XContentType.JSON);
-
             esClient.indices().putTemplate(request, RequestOptions.DEFAULT);
-            log.info("标准输出日志索引模板初始化成功");
+            log.info("SQL审计索引模板mysqlaudit初始化成功");
         } catch (IOException e) {
-            log.error("标准输出日志索引模板初始化失败", e);
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * 初始化文件日志索引模板
-     * @author liyinlong
-     * @date 2021/8/11 4:58 下午
-     * @param esClient
-     */
-    public void initLogstashIndexTemplete(RestHighLevelClient esClient){
-        try {
-            PutIndexTemplateRequest request = new PutIndexTemplateRequest(EsTemplateEnum.LOG_STASH.getName());
-
-            JSONObject codeJson = JSONObject.parseObject(EsTemplateEnum.LOG_STASH.getCode());
-            setCommonTemplate(request, codeJson);
-            JSONObject mappings = codeJson.getJSONObject("mappings").getJSONObject("doc");
-            request.mapping(mappings.toString(), XContentType.JSON);
-            esClient.indices().putTemplate(request, RequestOptions.DEFAULT);
-            log.info("文件日志索引模板logstash初始化成功");
-        } catch (IOException e) {
-            log.error("文件日志索引模板logstash初始化失败", e);
+            log.error("SQL审计索引模板mysqlaudit初始化失败", e);
             e.printStackTrace();
         }
     }
