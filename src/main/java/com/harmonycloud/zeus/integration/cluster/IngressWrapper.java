@@ -50,7 +50,7 @@ public class IngressWrapper {
 
     public Ingress create(String clusterId, String namespace, Ingress ingress) {
         try {
-            return K8sClient.getClient(clusterId).extensions().ingresses().inNamespace(namespace).create(ingress);
+            return K8sClient.getClient(clusterId).extensions().ingresses().inNamespace(namespace).createOrReplace(ingress);
         } catch (KubernetesClientException e) {
             if (e.getCode() == 409) {
                 throw new BusinessException(DictEnum.INGRESS, ingress.getMetadata().getName(), ErrorMessage.EXIST);

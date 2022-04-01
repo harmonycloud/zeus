@@ -33,15 +33,6 @@ public interface IngressService {
     void create(String clusterId, String namespace, String middlewareName, IngressDTO ingressDTO);
 
     /**
-     * 更新中间件对外访问
-     * @param clusterId
-     * @param namespace
-     * @param middlewareName
-     * @param ingressDTO
-     */
-    void update(String clusterId, String namespace, String middlewareName, IngressDTO ingressDTO);
-
-    /**
      * 校验中间件对外访问端口
      *
      * @param cluster     集群

@@ -8,6 +8,7 @@ import com.harmonycloud.caas.common.enums.Protocol;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
 import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.ConfigMapWrapper;
 import com.harmonycloud.zeus.integration.cluster.IngressWrapper;
@@ -58,7 +59,7 @@ public class IngressServiceImpl implements IngressService {
     private static final String MIDDLEWARE_NAME = "middleware_name";
     private static final String INGRESS_CLASS_NAME = "kubernetes.io/ingress.class";
     private static final String NODE_PORT = "nodeport";
-    private static final int randomLength = 6;
+    private static final int RANDOM_LENGTH = 6;
 
     @Autowired
     private IngressWrapper ingressWrapper;
@@ -164,11 +165,6 @@ public class IngressServiceImpl implements IngressService {
         } else {
             throw new CaasRuntimeException(ErrorMessage.UNSUPPORT_EXPOSE_TYPE);
         }
-    }
-
-    @Override
-    public void update(String clusterId, String namespace, String middlewareName, IngressDTO ingressDTO) {
-
     }
 
     @Override
@@ -292,7 +288,7 @@ public class IngressServiceImpl implements IngressService {
                 String baseIngressName =
                     getBaseIngressName(middlewareName, type, Protocol.HTTP.getValue().toLowerCase());
                 if (!ing.getMetadata().getName().startsWith(baseIngressName)
-                    || ing.getMetadata().getName().length() != baseIngressName.length() + 1 + randomLength) {
+                    || ing.getMetadata().getName().length() != baseIngressName.length() + 1 + RANDOM_LENGTH) {
                     return;
                 }
                 resList.add(convertDto(ing));
@@ -428,7 +424,7 @@ public class IngressServiceImpl implements IngressService {
 
             io.fabric8.kubernetes.api.model.Service service = new io.fabric8.kubernetes.api.model.Service();
             ObjectMeta objectMeta = new ObjectMeta();
-            objectMeta.setName(getNodePortSvcName(serviceName));
+            objectMeta.setName(getNodePortSvcName(serviceName, ingressDTO.getName()));
             objectMeta.setNamespace(namespace);
             //取原services labels
             Map<String, String> labels = new HashMap<>();
@@ -468,7 +464,14 @@ public class IngressServiceImpl implements IngressService {
     }
 
     private String getNodePortSvcName(String serviceName) {
-        return serviceName + "-" + NODE_PORT;
+        return serviceName + "-" + NODE_PORT + "-" + UUIDUtils.get8UUID().substring(0, 6);
+    }
+
+    private String getNodePortSvcName(String serviceName, String nodePortName) {
+        if (StringUtils.isNotEmpty(nodePortName)) {
+            return nodePortName;
+        }
+        return serviceName + "-" + NODE_PORT + "-" + UUIDUtils.get8UUID().substring(0, 6);
     }
 
     private ServicePort covertServicePort(ServiceDTO serviceDTO) {
@@ -662,15 +665,36 @@ public class IngressServiceImpl implements IngressService {
                 throw new CaasRuntimeException(ErrorMessage.INGRESS_TCP_PORT_NOT_NULL);
             }
 
-            if (StringUtils.isNotBlank(data.get(serviceDTO.getExposePort()))) {
-                throw new CaasRuntimeException(ErrorMessage.INGRESS_TCP_PORT_EXIST);
+            if(StringUtils.isNotEmpty(ingressDTO.getName()) && StringUtils.isEmpty(serviceDTO.getOldExposePort())){
+                throw new CaasRuntimeException(ErrorMessage.INGRESS_TCP_OLD_PORT_NOT_NULL);
             }
 
+            checkExposePort(serviceDTO, ingressDTO, data);
+
+            if (StringUtils.isNotEmpty(ingressDTO.getName())) {
+                String oldServiceInfo = namespace + "/" + serviceDTO.getOldServiceName() + ":" + serviceDTO.getOldServicePort();
+                data.remove(serviceDTO.getOldExposePort(), oldServiceInfo);
+            }
             String serviceInfo = namespace + "/" + serviceDTO.getServiceName() + ":" + serviceDTO.getServicePort();
             data.put(serviceDTO.getExposePort(), serviceInfo);
         }
         configMap.setData(data);
         return configMap;
+    }
+
+    /**
+     * 检查ingress tcp端口是否冲突
+     * @param serviceDTO
+     * @param ingressDTO
+     * @param data
+     */
+    private void checkExposePort(ServiceDTO serviceDTO, IngressDTO ingressDTO, Map<String, String> data) {
+        if ((StringUtils.isNotEmpty(ingressDTO.getName()) && serviceDTO.getExposePort().equals(serviceDTO.getOldExposePort()))) {
+            return;
+        }
+        if (StringUtils.isNotBlank(data.get(serviceDTO.getExposePort()))) {
+            throw new CaasRuntimeException(ErrorMessage.INGRESS_TCP_PORT_EXIST);
+        }
     }
 
     /**
@@ -836,7 +860,6 @@ public class IngressServiceImpl implements IngressService {
 
         spec.setRules(rules);
 
-        // TODO support HTTPS
         if (ingressDTO.getProtocol().equals(Protocol.HTTPS.getValue())) {
             List<IngressTLS> tls = new ArrayList<>(1);
             IngressTLS ingressTls = new IngressTLS();
@@ -869,7 +892,7 @@ public class IngressServiceImpl implements IngressService {
     private String getIngressName(IngressDTO ingressDTO) {
         return getBaseIngressName(ingressDTO.getMiddlewareName(), ingressDTO.getMiddlewareType(),
             ingressDTO.getProtocol().toLowerCase()) + "-"
-            + PasswordUtils.generateCommonPassword(randomLength).toLowerCase();
+            + PasswordUtils.generateCommonPassword(RANDOM_LENGTH).toLowerCase();
     }
 
     private String getIngressTcpName(String serviceName, String namespace) {
