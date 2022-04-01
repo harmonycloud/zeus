@@ -57,7 +57,8 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
         Map<String, String> label = null;
         if (StringUtils.isNotEmpty(type)) {
             label = new HashMap<>(1);
-            label.put("type", MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType());
+            String crType = MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType();
+            label.put("type", StringUtils.isNotEmpty(crType) ? crType : type);
         }
 
         List<MiddlewareCRD> middlewareCRDList = this.listCR(clusterId, namespace, label);
