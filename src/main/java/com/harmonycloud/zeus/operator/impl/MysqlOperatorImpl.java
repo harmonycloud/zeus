@@ -9,9 +9,11 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.alibaba.fastjson.JSON;
 import com.harmonycloud.caas.common.enums.Protocol;
 import com.harmonycloud.caas.common.model.IngressComponentDto;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
+import com.harmonycloud.caas.common.model.MysqlDbDTO;
 import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
 import com.harmonycloud.zeus.bean.BeanMysqlUser;
 import com.harmonycloud.zeus.service.k8s.*;
@@ -117,10 +119,11 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
 
         // mysql参数
         JSONObject mysqlArgs = values.getJSONObject("args");
+        JSONObject features = values.getJSONObject("features");
         if (StringUtils.isBlank(middleware.getPassword())) {
             middleware.setPassword(PasswordUtils.generateCommonPassword(10));
         }
-        log.info("mysql特有参数：", mysqlArgs);
+        log.info("mysql特有参数：{}", mysqlArgs);
         mysqlArgs.put("root_password", middleware.getPassword());
         if (StringUtils.isNotBlank(middleware.getCharSet())) {
             mysqlArgs.put("character_set_server", middleware.getCharSet());
@@ -145,6 +148,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             if (StringUtils.isNotBlank(mysqlDTO.getType())) {
                 values.put(MysqlConstant.SPEC_TYPE, mysqlDTO.getType());
             }
+            //设置SQL审计开关
+            checkAndSetAuditSqlStatus(features, mysqlDTO);
         }
         //配置mysql环境变量
         if (!CollectionUtils.isEmpty(middleware.getEnvironment())) {
@@ -226,8 +231,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         super.create(middleware, cluster);
         MysqlDTO mysqlDTO = middleware.getMysqlDTO();
         if (mysqlDTO.getOpenDisasterRecoveryMode() != null && mysqlDTO.getOpenDisasterRecoveryMode() && mysqlDTO.getIsSource()) {
-            String jsonStr = JSONObject.toJSONString(middleware);
-            Middleware relationMiddleware = JSONObject.parseObject(jsonStr, Middleware.class);
+            String jsonStr = JSON.toJSONString(middleware);
+            Middleware relationMiddleware = JSON.parseObject(jsonStr, Middleware.class);
             middleware.setRelationMiddleware(relationMiddleware);
             middlewareManageTask.asyncCreateDisasterRecoveryMiddleware(this, middleware);
         }
@@ -295,6 +300,17 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         helmChartService.upgrade(middleware, sb.toString(), cluster);
         if (mysqlDTO != null && mysqlDTO.getOpenDisasterRecoveryMode() != null && mysqlDTO.getOpenDisasterRecoveryMode() && mysqlDTO.getIsSource()) {
             this.createDisasterRecoveryMiddleware(middleware);
+        }
+    }
+
+    /**
+     * 检查并设置mysql SQL审计采集开关
+     * @param features
+     * @param mysqlDTO
+     */
+    private void checkAndSetAuditSqlStatus(JSONObject features, MysqlDTO mysqlDTO) {
+        if (features != null && mysqlDTO.getAuditSqlEnabled() != null && features.getJSONObject("auditLog") != null) {
+            features.getJSONObject("auditLog").put("enabled", mysqlDTO.getAuditSqlEnabled());
         }
     }
 
@@ -390,9 +406,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         // 构造新configmap
         StringBuilder temp = new StringBuilder();
         for (String str : data) {
-            {
-                temp.append(str).append("\n");
-            }
+            temp.append(str).append("\n");
         }
         configMap.getData().put("my.cnf.tmpl", temp.toString());
     }

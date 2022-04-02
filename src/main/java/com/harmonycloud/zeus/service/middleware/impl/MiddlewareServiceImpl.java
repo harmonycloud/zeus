@@ -1034,10 +1034,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private static boolean isOverBigVersion(String currentVersion, String upgradeVersion) {
         String current = currentVersion.split("\\.")[0];
         String upgrade = upgradeVersion.split("\\.")[0];
-        if (!current.equals(upgrade)) {
-            return false;
-        }
-        return true;
+        return !current.equals(upgrade);
     }
 
     public Map<String, Double> convertResponse(PrometheusResponse response) {
