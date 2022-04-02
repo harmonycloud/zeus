@@ -14,6 +14,8 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import static com.harmonycloud.caas.common.constants.CommonConstant.ASTERISK;
+
 /**
  * @author dengyulong
  * @date 2021/03/23
@@ -40,7 +42,7 @@ public class MiddlewareController {
                                                    @RequestParam(value = "type", required = false) String type,
                                                    @RequestParam(value = "keyword", required = false) String keyword,
                                                    @RequestParam(value = "projectId", required = false) String projectId) throws Exception {
-        if ("*".equals(namespace)){
+        if (namespace.equals(ASTERISK)){
             namespace = null;
         }
         return BaseResult.ok(middlewareService.list(clusterId, namespace, type, keyword, projectId));

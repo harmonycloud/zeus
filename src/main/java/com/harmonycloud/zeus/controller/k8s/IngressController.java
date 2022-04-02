@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import static com.harmonycloud.caas.common.constants.CommonConstant.ASTERISK;
+
 /**
  * @author dengyulong
  * @date 2021/03/23
@@ -36,6 +38,9 @@ public class IngressController {
     public BaseResult<List<IngressDTO>> list(@PathVariable("clusterId") String clusterId,
                                              @PathVariable(value = "namespace") String namespace,
                                              @RequestParam(value = "keyword", required = false) String keyword) {
+        if (namespace.equals(ASTERISK)){
+            namespace = null;
+        }
         return BaseResult.ok(ingressService.listAllIngress(clusterId, namespace, keyword));
     }
 

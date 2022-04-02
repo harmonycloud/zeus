@@ -5,6 +5,7 @@ import com.harmonycloud.caas.common.enums.DateType;
 import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.Protocol;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
 import com.harmonycloud.caas.common.model.middleware.*;
@@ -733,7 +734,7 @@ public class IngressServiceImpl implements IngressService {
             for (MiddlewareInfo middlewareInfo : middlewareInfoList) {
                 Map<String, String> map = new HashMap<>(2);
                 map.put("name", middleware.getSpec().getName());
-                map.put("type", middleware.getSpec().getType());
+                map.put("type", MiddlewareTypeEnum.findTypeByCrdType(middleware.getSpec().getType()));
                 mapHashMap.put(middlewareInfo.getName(), map);
             }
         }
@@ -753,7 +754,7 @@ public class IngressServiceImpl implements IngressService {
             if (serviceNames.length != 2) {
                 continue;
             }
-            if (!StringUtils.equals(serviceNames[0], namespace)) {
+            if (StringUtils.isNotEmpty(namespace) && !StringUtils.equals(serviceNames[0], namespace)) {
                 continue;
             }
             serviceDTO.setServiceName(serviceNames[1]);
