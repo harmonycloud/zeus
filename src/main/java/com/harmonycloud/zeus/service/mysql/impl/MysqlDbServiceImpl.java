@@ -156,7 +156,7 @@ public class MysqlDbServiceImpl implements MysqlDbService {
         try {
             List<MysqlDbDetail> dbList = qr.query(con, selectSchemaSql, new BeanListHandler<>(MysqlDbDetail.class));
             // 过滤掉初始化的数据库
-            dbList = dbList.stream().filter(item -> initialDb.contains(item.getSCHEMA_NAME())).collect(Collectors.toList());
+            dbList = dbList.stream().filter(item -> !initialDb.contains(item.getSCHEMA_NAME())).collect(Collectors.toList());
             // 查询每个数据库的使用用户、数据库备注
             dbList.forEach(item -> {
                 String mysqlQualifiedName = getMysqlQualifiedName(clusterId, namespace, middlewareName);
