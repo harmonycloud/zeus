@@ -131,6 +131,9 @@ public class UserRoleServiceImpl implements UserRoleService {
     @Override
     public void update(UserDto userDto, String projectId) {
         QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("username", userDto.getUserName());
+        if (StringUtils.isNotEmpty(projectId)){
+            wrapper.eq("project_id", projectId);
+        }
         List<BeanUserRole> beanUserRoleList = beanUserRoleMapper.selectList(wrapper);
         BeanUserRole beanUserRole = new BeanUserRole();
         beanUserRole.setUserName(userDto.getUserName());
