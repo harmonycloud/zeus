@@ -14,7 +14,6 @@ import com.harmonycloud.zeus.dao.BeanMysqlDbMapper;
 import com.harmonycloud.zeus.service.middleware.impl.MysqlServiceImpl;
 import com.harmonycloud.zeus.service.mysql.MysqlDbPrivService;
 import com.harmonycloud.zeus.service.mysql.MysqlDbService;
-import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
@@ -124,8 +123,6 @@ public class MysqlDbServiceImpl implements MysqlDbService {
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            DbUtils.closeQuietly(con);
         }
         return false;
     }
@@ -139,8 +136,6 @@ public class MysqlDbServiceImpl implements MysqlDbService {
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            DbUtils.closeQuietly(con);
         }
         return false;
     }
@@ -185,8 +180,6 @@ public class MysqlDbServiceImpl implements MysqlDbService {
             return dbList;
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            DbUtils.closeQuietly(con);
         }
         return Collections.emptyList();
     }
@@ -201,8 +194,6 @@ public class MysqlDbServiceImpl implements MysqlDbService {
             return charsets;
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            DbUtils.closeQuietly(con);
         }
         return Collections.emptyList();
     }

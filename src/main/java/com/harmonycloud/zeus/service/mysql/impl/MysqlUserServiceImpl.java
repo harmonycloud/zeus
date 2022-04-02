@@ -16,7 +16,7 @@ import com.harmonycloud.zeus.dao.BeanMysqlUserMapper;
 import com.harmonycloud.zeus.service.middleware.impl.MysqlServiceImpl;
 import com.harmonycloud.zeus.service.mysql.MysqlDbPrivService;
 import com.harmonycloud.zeus.service.mysql.MysqlUserService;
-import org.apache.commons.dbutils.DbUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
@@ -29,17 +29,18 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.harmonycloud.zeus.util.MysqlConnectionUtil.getDBConnection;
-import static com.harmonycloud.zeus.util.MysqlConnectionUtil.getMysqlQualifiedName;
-import static com.harmonycloud.zeus.util.MysqlConnectionUtil.passwordCheck;
+import static com.harmonycloud.zeus.util.MysqlConnectionUtil.*;
 
 /**
  * @author liyinlong
  * @since 2022/3/28 10:09 上午
  */
+@Slf4j
 @Service
 public class MysqlUserServiceImpl implements MysqlUserService {
 
@@ -181,6 +182,9 @@ public class MysqlUserServiceImpl implements MysqlUserService {
     public boolean nativeRevokeUser(Connection con, String user) {
         QueryRunner qr = new QueryRunner();
         try {
+            if (!nativeCheckUserExists(con, user)) {
+                return true;
+            }
             String grantPrivilegeSql = String.format("REVOKE ALL PRIVILEGES, GRANT OPTION FROM '%s' ", user);
             qr.execute(con, grantPrivilegeSql);
             return true;
@@ -202,8 +206,6 @@ public class MysqlUserServiceImpl implements MysqlUserService {
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            DbUtils.closeQuietly(con);
         }
         return false;
     }
@@ -217,8 +219,6 @@ public class MysqlUserServiceImpl implements MysqlUserService {
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            DbUtils.closeQuietly(con);
         }
         return false;
     }
@@ -290,8 +290,6 @@ public class MysqlUserServiceImpl implements MysqlUserService {
             return userList;
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            DbUtils.closeQuietly(con);
         }
         return Collections.emptyList();
     }
