@@ -152,19 +152,18 @@ public class ProjectServiceImpl implements ProjectService {
             return namespace;
         }).collect(Collectors.toList());
     }
-    
+
     @Override
     public List<MiddlewareClusterDTO> getAllocatableNamespace(String projectId) {
         List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(true, null);
-        QueryWrapper<BeanProjectNamespace> wrapper =
-            new QueryWrapper<BeanProjectNamespace>().eq("project_id", projectId);
+        QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<>();
         List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
         Map<String, List<BeanProjectNamespace>> nsMap =
             beanProjectNamespaceList.stream().collect(Collectors.groupingBy(BeanProjectNamespace::getClusterId));
         clusterList.forEach(cluster -> {
             List<Namespace> list = cluster.getNamespaceList().stream()
-                .filter(
-                    ns -> !nsMap.containsKey(ns.getClusterId()) || nsMap.get(cluster.getId()).stream().noneMatch(pNs -> pNs.getNamespace().equals(ns.getName())))
+                .filter(ns -> !nsMap.containsKey(ns.getClusterId())
+                    || nsMap.get(cluster.getId()).stream().noneMatch(pNs -> pNs.getNamespace().equals(ns.getName())))
                 .collect(Collectors.toList());
             cluster.setNamespaceList(list);
         });
