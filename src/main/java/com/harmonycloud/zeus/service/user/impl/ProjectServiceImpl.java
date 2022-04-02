@@ -13,6 +13,8 @@ import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.user.UserRole;
 import com.harmonycloud.zeus.bean.user.BeanUserRole;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
+import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.user.UserService;
 import org.apache.commons.lang3.StringUtils;
@@ -62,6 +64,8 @@ public class ProjectServiceImpl implements ProjectService {
     private UserService userService;
     @Autowired
     private NamespaceService namespaceService;
+    @Autowired
+    private MiddlewareCRService middlewareCRService;
 
     @Override
     public void add(ProjectDto projectDto) {
@@ -219,17 +223,28 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public void unbindUser(String projectId, String username) {
-        BeanProject beanProject = checkExist(projectId);
-        beanProject.setUser(beanProject.getUser().replace("," + username, ""));
-        beanProjectMapper.updateById(beanProject);
+        if (StringUtils.isNotEmpty(username)){
+            BeanProject beanProject = checkExist(projectId);
+            beanProject.setUser(beanProject.getUser().replace("," + username, ""));
+            beanProjectMapper.updateById(beanProject);
+        }
         userRoleService.delete(username, projectId);
     }
 
     @Override
     public void delete(String projectId) {
-        //todo 有服务存在是否允许删除  同步将用户和分区解绑
+        // 有服务存在不允许删除
+        List<ProjectDto> projectDtoList = getMiddlewareCount(projectId);
+        if (!CollectionUtils.isEmpty(projectDtoList) && projectDtoList.get(0).getMiddlewareCount() != 0) {
+            throw new BusinessException(ErrorMessage.PROJECT_IS_NOT_EMPTY);
+        }
+        // 删除项目
         QueryWrapper<BeanProject> wrapper = new QueryWrapper<BeanProject>().eq("projectId", projectId);
         beanProjectMapper.delete(wrapper);
+        // 解绑项目下分区
+        unBindNamespace(projectId, null, null);
+        // 解绑项目下用户
+        unbindUser(projectId, null);
     }
 
     @Override
@@ -257,8 +272,20 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public void unBindNamespace(String projectId, String namespace) {
-
+    public void unBindNamespace(String projectId, String clusterId, String namespace) {
+        QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<BeanProjectNamespace>()
+            .eq("project_id", projectId);
+        if (StringUtils.isNotEmpty(clusterId)){
+            wrapper.eq("cluster_id", clusterId);
+        }
+        if (StringUtils.isNotEmpty(namespace)){
+            wrapper.eq("namespace", namespace);
+        }
+        List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
+        if (CollectionUtils.isEmpty(beanProjectNamespaceList)) {
+            throw new BusinessException(ErrorMessage.NAMESPACE_NOT_FOUND);
+        }
+        beanProjectNamespaceMapper.delete(wrapper);
     }
 
     @Override
@@ -300,6 +327,63 @@ public class ProjectServiceImpl implements ProjectService {
     public List<String> getClusters(String projectId) {
         List<Namespace> namespaceList = this.getNamespace(projectId);
         return namespaceList.stream().map(Namespace::getClusterId).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ProjectDto> getMiddlewareCount(String projectId) {
+        QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<>();
+        if (StringUtils.isNotEmpty(projectId)) {
+            wrapper.eq("project_id", projectId);
+        }
+        String username = CurrentUserRepository.getUser().getUsername();
+        // 获取项目分区列表
+        List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
+        // 教研角色权限
+        Boolean isAdmin = userRoleService.checkAdmin(username);
+        if (!isAdmin) {
+            QueryWrapper<BeanProject> projectQueryWrapper = new QueryWrapper<>();
+            List<BeanProject> beanProjectList = beanProjectMapper
+                .selectList(projectQueryWrapper).stream().filter(beanProject -> Arrays
+                    .asList(beanProject.getUser().split(",")).stream().anyMatch(name -> name.equals(username)))
+                .collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(beanProjectList)) {
+                beanProjectNamespaceList = beanProjectNamespaceList.stream()
+                    .filter(beanProjectNamespace -> beanProjectList.stream().anyMatch(
+                        beanProject -> beanProject.getProjectId().equals(beanProjectNamespace.getProjectId())))
+                    .collect(Collectors.toList());
+            }
+        }
+        if (CollectionUtils.isEmpty(beanProjectNamespaceList)) {
+            return null;
+        }
+        Set<String> clusterIdList =
+            beanProjectNamespaceList.stream().map(BeanProjectNamespace::getClusterId).collect(Collectors.toSet());
+        Map<String, List<MiddlewareCRD>> middlewareCRListMap = new HashMap<>();
+        for (String clusterId : clusterIdList) {
+            List<MiddlewareCRD> middlewareCRList = middlewareCRService.listCR(clusterId, null, null);
+            middlewareCRListMap.put(clusterId, middlewareCRList);
+        }
+        Map<String, List<BeanProjectNamespace>> beanProjectNamespaceListMap =
+            beanProjectNamespaceList.stream().collect(Collectors.groupingBy(BeanProjectNamespace::getProjectId));
+        List<ProjectDto> projectDtoList = new ArrayList<>();
+        for (String key : beanProjectNamespaceListMap.keySet()) {
+            ProjectDto projectDto = new ProjectDto();
+            projectDto.setProjectId(key);
+            int count = 0;
+            for (String clusterId : middlewareCRListMap.keySet()) {
+                for (MiddlewareCRD middlewareCr : middlewareCRListMap.get(clusterId)) {
+                    if (beanProjectNamespaceListMap.get(key).stream()
+                        .anyMatch(beanProjectNamespace -> beanProjectNamespace.getNamespace()
+                            .equals(middlewareCr.getMetadata().getNamespace())
+                            && beanProjectNamespace.getClusterId().equals(clusterId))) {
+                        count = count + 1;
+                    }
+                }
+            }
+            projectDto.setMiddlewareCount(count);
+            projectDtoList.add(projectDto);
+        }
+        return projectDtoList;
     }
 
     /**

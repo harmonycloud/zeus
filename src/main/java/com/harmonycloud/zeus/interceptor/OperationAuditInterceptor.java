@@ -83,14 +83,16 @@ public class OperationAuditInterceptor {
 
     @Before("authcut() && @annotation(authority)")
     public void before(JoinPoint joinPoint, Authority authority) {
-        JSONObject userMap = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue();
-        if (userMap.containsKey(PROJECT_ID)) {
-            List<
-                UserRole> userRoleList =
-                    userRoleService.get(userMap.getString("username")).stream()
-                        .filter(userRole -> StringUtils.isNotEmpty(userRole.getProjectId())
-                            && userRole.getProjectId().equals(userMap.getString("projectId")))
-                        .collect(Collectors.toList());
+        HttpServletRequest request =
+            ((ServletRequestAttributes)RequestContextHolder.getRequestAttributes()).getRequest();
+        String projectId = request.getHeader("projectId");
+        if (StringUtils.isNotEmpty(projectId)) {
+            // 校验角色权限
+            JSONObject userMap = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue();
+            List<UserRole> userRoleList = userRoleService.get(userMap.getString("username")).stream()
+                .filter(userRole -> StringUtils.isNotEmpty(userRole.getProjectId())
+                    && userRole.getProjectId().equals(projectId))
+                .collect(Collectors.toList());
             if (CollectionUtils.isEmpty(userRoleList)) {
                 throw new BusinessException(ErrorMessage.NO_AUTHORITY);
             }

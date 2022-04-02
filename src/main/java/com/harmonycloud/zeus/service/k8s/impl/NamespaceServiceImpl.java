@@ -181,6 +181,7 @@ public class NamespaceServiceImpl implements NamespaceService {
         if (MIDDLEWARE_OPERATOR.equals(name)){
             throw new BusinessException(ErrorMessage.CAN_NOT_DELETE_NS_MIDDLEWARE_OPERATOR);
         }
+        // todo 判断是否存在中间件
         io.fabric8.kubernetes.api.model.Namespace ns = new io.fabric8.kubernetes.api.model.Namespace();
         ObjectMeta meta = new ObjectMeta();
         meta.setName(name);

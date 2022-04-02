@@ -95,7 +95,7 @@ public interface ProjectService {
      * @param projectId 项目id
      * @param namespace 分区名称
      */
-    void unBindNamespace(String projectId, String namespace);
+    void unBindNamespace(String projectId, String clusterId, String namespace);
 
     /**
      * 获取项目下中间件资源
@@ -108,5 +108,11 @@ public interface ProjectService {
      * @return List<ProjectDto>
      */
     List<String> getClusters(String projectId);
+
+    /**
+     * 查询项目列表
+     * @return List<ProjectDto>
+     */
+    List<ProjectDto> getMiddlewareCount(String projectId);
 
 }

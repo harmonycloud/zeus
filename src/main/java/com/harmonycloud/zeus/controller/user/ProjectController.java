@@ -104,6 +104,20 @@ public class ProjectController {
         return BaseResult.ok();
     }
 
+    @ApiOperation(value = "项目解绑分区", notes = "项目解绑分区")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "query", dataTypeClass = String.class),
+    })
+    @DeleteMapping("/{projectId}/namespace")
+    public BaseResult unBindNamespace(@PathVariable("projectId") String projectId,
+                                    @RequestParam("clusterId") String clusterId,
+                                    @RequestParam("namespace") String namespace) {
+        projectService.unBindNamespace(projectId, clusterId, namespace);
+        return BaseResult.ok();
+    }
+
     @ApiOperation(value = "获取项目下成员", notes = "获取项目下成员")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
@@ -159,5 +173,13 @@ public class ProjectController {
     @GetMapping("/{projectId}/middleware")
     public BaseResult<List<ProjectMiddlewareResourceInfo>> getMiddlewareResource(@PathVariable("projectId") String projectId) throws Exception {
         return BaseResult.ok(projectService.middlewareResource(projectId));
+    }
+
+    @ApiOperation(value = "获取项目下服务数量", notes = "获取项目下服务数量")
+    @ApiImplicitParams({
+    })
+    @GetMapping("/middleware/count")
+    public BaseResult<List<ProjectDto>> getMiddlewareCount() {
+        return BaseResult.ok(projectService.getMiddlewareCount(null));
     }
 }
