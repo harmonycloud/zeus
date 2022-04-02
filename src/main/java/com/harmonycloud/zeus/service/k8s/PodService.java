@@ -2,7 +2,7 @@ package com.harmonycloud.zeus.service.k8s;
 
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 
 import java.util.List;
 import java.util.Map;
@@ -74,7 +74,7 @@ public interface PodService {
      * @param type           中间件类型
      * @return
      */
-    Middleware listPods(MiddlewareCRD mw, String clusterId, String namespace, String middlewareName, String type);
+    Middleware listPods(MiddlewareCR mw, String clusterId, String namespace, String middlewareName, String type);
     /**
      * 查询pod yaml
      *

@@ -38,7 +38,7 @@ public class MiddlewareRestoreWrapper {
      * @param middlewareBackupCRD
      * @throws IOException
      */
-    public void create(String clusterId, MiddlewareRestoreCRD middlewareBackupCRD) throws IOException {
+    public void create(String clusterId, MiddlewareRestoreCR middlewareBackupCRD) throws IOException {
         K8sClient.getClient(clusterId).customResource(CONTEXT).create(middlewareBackupCRD.getMetadata().getNamespace(),
                 JSONObject.parseObject(JSONObject.toJSONString(middlewareBackupCRD)));
     }

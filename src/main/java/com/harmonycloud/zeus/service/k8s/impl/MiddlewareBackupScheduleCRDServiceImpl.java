@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
 import com.harmonycloud.zeus.integration.cluster.MiddlewareBackupScheduleWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupScheduleCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupScheduleCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupScheduleList;
 import com.harmonycloud.zeus.service.k8s.MiddlewareBackupScheduleCRDService;
 import lombok.extern.slf4j.Slf4j;
@@ -23,17 +23,17 @@ public class MiddlewareBackupScheduleCRDServiceImpl implements MiddlewareBackupS
     private MiddlewareBackupScheduleWrapper middlewareBackupScheduleWrapper;
 
     @Override
-    public void create(String clusterId, MiddlewareBackupScheduleCRD middlewareBackupScheduleCRD) throws IOException {
-        middlewareBackupScheduleWrapper.create(clusterId, middlewareBackupScheduleCRD);
+    public void create(String clusterId, MiddlewareBackupScheduleCR middlewareBackupScheduleCR) throws IOException {
+        middlewareBackupScheduleWrapper.create(clusterId, middlewareBackupScheduleCR);
     }
 
     @Override
-    public void update(String clusterId, MiddlewareBackupScheduleCRD middlewareBackupScheduleCRD) throws IOException {
-        middlewareBackupScheduleWrapper.update(clusterId, middlewareBackupScheduleCRD);
+    public void update(String clusterId, MiddlewareBackupScheduleCR middlewareBackupScheduleCR) throws IOException {
+        middlewareBackupScheduleWrapper.update(clusterId, middlewareBackupScheduleCR);
     }
 
     @Override
-    public MiddlewareBackupScheduleCRD get(String clusterId, String namespace, String backupName) {
+    public MiddlewareBackupScheduleCR get(String clusterId, String namespace, String backupName) {
         return middlewareBackupScheduleWrapper.get(clusterId, namespace, backupName);
     }
 

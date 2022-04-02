@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.service.k8s;
 
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupScheduleCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupScheduleCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupScheduleList;
 
 import java.io.IOException;
@@ -16,18 +16,18 @@ public interface MiddlewareBackupScheduleCRDService {
     /**
      * 创建备份
      * @param clusterId
-     * @param middlewareBackupScheduleCRD
+     * @param middlewareBackupScheduleCR
      * @throws IOException
      */
-    void create(String clusterId, MiddlewareBackupScheduleCRD middlewareBackupScheduleCRD)  throws IOException;
+    void create(String clusterId, MiddlewareBackupScheduleCR middlewareBackupScheduleCR)  throws IOException;
 
     /**
      * 更新备份
      * @param clusterId
-     * @param middlewareBackupScheduleCRD
+     * @param middlewareBackupScheduleCR
      * @throws IOException
      */
-    void update(String clusterId, MiddlewareBackupScheduleCRD middlewareBackupScheduleCRD)  throws IOException;
+    void update(String clusterId, MiddlewareBackupScheduleCR middlewareBackupScheduleCR)  throws IOException;
 
     /**
      * 查询备份
@@ -36,7 +36,7 @@ public interface MiddlewareBackupScheduleCRDService {
      * @param backupName
      * @return
      */
-    MiddlewareBackupScheduleCRD get(String clusterId, String namespace, String backupName);
+    MiddlewareBackupScheduleCR get(String clusterId, String namespace, String backupName);
 
     /**
      * 删除定时备份

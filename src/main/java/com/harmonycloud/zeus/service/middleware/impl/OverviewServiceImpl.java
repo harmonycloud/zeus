@@ -1,7 +1,6 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -22,7 +21,7 @@ import com.harmonycloud.zeus.dao.BeanAlertRecordMapper;
 import com.harmonycloud.zeus.dao.MiddlewareAlertInfoMapper;
 import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
 import com.harmonycloud.zeus.integration.cluster.ResourceQuotaWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareSpec;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareStatus;
@@ -167,13 +166,13 @@ public class OverviewServiceImpl implements OverviewService {
         String startTime, String endTime) throws Exception {
 
         // 获取中间件crd对象
-        MiddlewareCRD middlewareCRD = middlewareCRService.getCR(clusterId, namespace, type, name);
+        MiddlewareCR middlewareCR = middlewareCRService.getCR(clusterId, namespace, type, name);
 
         // 获取pod列表
-        if (ObjectUtils.isEmpty(middlewareCRD.getStatus().getInclude())) {
+        if (ObjectUtils.isEmpty(middlewareCR.getStatus().getInclude())) {
             throw new CaasRuntimeException(ErrorMessage.MIDDLEWARE_CLUSTER_STATUS_ABNORMAL);
         }
-        List<MiddlewareInfo> podInfo = middlewareCRD.getStatus().getInclude().get(PODS);
+        List<MiddlewareInfo> podInfo = middlewareCR.getStatus().getInclude().get(PODS);
         if (CollectionUtils.isEmpty(podInfo)) {
             return new ArrayList<>(0);
         }
@@ -189,7 +188,7 @@ public class OverviewServiceImpl implements OverviewService {
             pods.append(middlewareInfo.getName()).append("|");
         }
         // 获取pvc列表
-        List<MiddlewareInfo> pvcInfo = middlewareCRD.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
+        List<MiddlewareInfo> pvcInfo = middlewareCR.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
         StringBuilder pvcs = new StringBuilder();
         if (!CollectionUtils.isEmpty(pvcInfo)) {
             for (MiddlewareInfo middlewareInfo : pvcInfo) {
@@ -709,7 +708,7 @@ public class OverviewServiceImpl implements OverviewService {
             List<Namespace> registeredNamespace = namespaces.stream().filter(namespace -> namespace.isRegistered()).collect(Collectors.toList());
             registeredNamespace.stream().forEach(namespace -> {
                 //获取分区下所有实例
-                List<MiddlewareCRD> middlewareCRDS = middlewareCRService.listCR(clusterDTO.getId(), namespace.getName(), null);
+                List<MiddlewareCR> middlewareCRS = middlewareCRService.listCR(clusterDTO.getId(), namespace.getName(), null);
                 Map<String, List<String>> quotas = namespace.getQuotas();
 
                 String namespaceCpu = null;
@@ -725,7 +724,7 @@ public class OverviewServiceImpl implements OverviewService {
                     }
                 }
 
-                for (MiddlewareCRD middlewareCRD : middlewareCRDS) {
+                for (MiddlewareCR middlewareCR : middlewareCRS) {
                     MiddlewareDTO middlewareDTO = new MiddlewareDTO();
                     middlewareDTO.setClusterName(clusterDTO.getName());
                     middlewareDTO.setClusterId(clusterDTO.getId());
@@ -733,7 +732,7 @@ public class OverviewServiceImpl implements OverviewService {
                     middlewareDTO.setNamespaceCpu(namespaceCpu);
                     middlewareDTO.setNamespaceMemory(namespaceMemory);
 
-                    MiddlewareSpec spec = middlewareCRD.getSpec();
+                    MiddlewareSpec spec = middlewareCR.getSpec();
                     if (spec != null) {
                         middlewareDTO.setType(MiddlewareTypeEnum.findTypeByCrdType(spec.getType()));
                         Middleware detail = middlewareService.detail(clusterDTO.getId(), namespace.getName(), spec.getName(), middlewareDTO.getType());
@@ -756,7 +755,7 @@ public class OverviewServiceImpl implements OverviewService {
                         }
                     }
 
-                    MiddlewareStatus status = middlewareCRD.getStatus();
+                    MiddlewareStatus status = middlewareCR.getStatus();
                     if (status != null && status.getResources() != null) {
                         middlewareDTO.setStatus(status.getPhase());
                         String creationTimestamp = status.getCreationTimestamp();

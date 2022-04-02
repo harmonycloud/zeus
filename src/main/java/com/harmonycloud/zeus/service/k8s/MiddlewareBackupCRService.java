@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.service.k8s;
 
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupList;
 
 import java.io.IOException;
@@ -11,15 +11,15 @@ import java.util.Map;
  * @author  liyinlong
  * @since 2021/9/14 10:43 上午
  */
-public interface MiddlewareBackupCRDService {
+public interface MiddlewareBackupCRService {
 
     /**
      * 创建备份
      * @param clusterId
-     * @param middlewareBackupCRD
+     * @param middlewareBackupCR
      * @throws IOException
      */
-    void create(String clusterId, MiddlewareBackupCRD middlewareBackupCRD)  throws IOException;
+    void create(String clusterId, MiddlewareBackupCR middlewareBackupCR)  throws IOException;
 
     /**
      * 删除备份记录
@@ -46,5 +46,5 @@ public interface MiddlewareBackupCRDService {
      * @param name
      * @return
      */
-    MiddlewareBackupCRD get(String clusterId, String namespace,String name) throws IOException;
+    MiddlewareBackupCR get(String clusterId, String namespace, String name) throws IOException;
 }

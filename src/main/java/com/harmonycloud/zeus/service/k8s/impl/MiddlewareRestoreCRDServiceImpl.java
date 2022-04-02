@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
 import com.harmonycloud.zeus.integration.cluster.MiddlewareRestoreWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareRestoreCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareRestoreCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareRestoreList;
 import com.harmonycloud.zeus.service.k8s.MiddlewareRestoreCRDService;
 import lombok.extern.slf4j.Slf4j;
@@ -23,8 +23,8 @@ public class MiddlewareRestoreCRDServiceImpl implements MiddlewareRestoreCRDServ
     private MiddlewareRestoreWrapper middlewareRestoreWrapper;
 
     @Override
-    public void create(String clusterId, MiddlewareRestoreCRD middlewareRestoreCRD) throws IOException {
-        middlewareRestoreWrapper.create(clusterId, middlewareRestoreCRD);
+    public void create(String clusterId, MiddlewareRestoreCR middlewareRestoreCR) throws IOException {
+        middlewareRestoreWrapper.create(clusterId, middlewareRestoreCR);
     }
 
     @Override

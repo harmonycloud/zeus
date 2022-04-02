@@ -3,9 +3,8 @@ package com.harmonycloud.zeus.integration.cluster;
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupList;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupScheduleCRD;
 import com.harmonycloud.zeus.util.K8sClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
@@ -40,12 +38,12 @@ public class MiddlewareBackupWrapper {
     /**
      * 创建备份(立即备份)
      * @param clusterId
-     * @param middlewareBackupCRD
+     * @param middlewareBackupCR
      * @throws IOException
      */
-    public void create(String clusterId, MiddlewareBackupCRD middlewareBackupCRD) throws IOException {
-        K8sClient.getClient(clusterId).customResource(CONTEXT).create(middlewareBackupCRD.getMetadata().getNamespace(),
-                JSONObject.parseObject(JSONObject.toJSONString(middlewareBackupCRD)));
+    public void create(String clusterId, MiddlewareBackupCR middlewareBackupCR) throws IOException {
+        K8sClient.getClient(clusterId).customResource(CONTEXT).create(middlewareBackupCR.getMetadata().getNamespace(),
+                JSONObject.parseObject(JSONObject.toJSONString(middlewareBackupCR)));
     }
 
     /**
@@ -84,7 +82,7 @@ public class MiddlewareBackupWrapper {
         return JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareBackupList.class);
     }
 
-    public MiddlewareBackupCRD get(String clusterId, String namespace, String name) throws IOException {
+    public MiddlewareBackupCR get(String clusterId, String namespace, String name) throws IOException {
         Map<String, Object> map = null;
         try {
             map = K8sClient.getClient(clusterId).customResource(CONTEXT).get(namespace, name);
@@ -94,7 +92,7 @@ public class MiddlewareBackupWrapper {
         if (CollectionUtils.isEmpty(map)) {
             return null;
         }
-        return JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareBackupCRD.class);
+        return JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareBackupCR.class);
     }
 
 }

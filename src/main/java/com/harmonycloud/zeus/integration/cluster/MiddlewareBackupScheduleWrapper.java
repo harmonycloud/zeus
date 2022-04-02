@@ -1,8 +1,7 @@
 package com.harmonycloud.zeus.integration.cluster;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupList;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupScheduleCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupScheduleCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupScheduleList;
 import com.harmonycloud.zeus.util.K8sClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
@@ -37,23 +36,23 @@ public class MiddlewareBackupScheduleWrapper {
     /**
      * 创建备份
      * @param clusterId
-     * @param middlewareBackupScheduleCRD
+     * @param middlewareBackupScheduleCR
      * @throws IOException
      */
-    public void create(String clusterId, MiddlewareBackupScheduleCRD middlewareBackupScheduleCRD) throws IOException {
-        K8sClient.getClient(clusterId).customResource(CONTEXT).create(middlewareBackupScheduleCRD.getMetadata().getNamespace(),
-                JSONObject.parseObject(JSONObject.toJSONString(middlewareBackupScheduleCRD)));
+    public void create(String clusterId, MiddlewareBackupScheduleCR middlewareBackupScheduleCR) throws IOException {
+        K8sClient.getClient(clusterId).customResource(CONTEXT).create(middlewareBackupScheduleCR.getMetadata().getNamespace(),
+                JSONObject.parseObject(JSONObject.toJSONString(middlewareBackupScheduleCR)));
     }
 
     /**
      * 更新
      * @param clusterId
-     * @param middlewareBackupScheduleCRD
+     * @param middlewareBackupScheduleCR
      * @throws IOException
      */
-    public void update(String clusterId, MiddlewareBackupScheduleCRD middlewareBackupScheduleCRD) throws IOException {
-        K8sClient.getClient(clusterId).customResource(CONTEXT).createOrReplace(middlewareBackupScheduleCRD.getMetadata().getNamespace(),
-                JSONObject.parseObject(JSONObject.toJSONString(middlewareBackupScheduleCRD)));
+    public void update(String clusterId, MiddlewareBackupScheduleCR middlewareBackupScheduleCR) throws IOException {
+        K8sClient.getClient(clusterId).customResource(CONTEXT).createOrReplace(middlewareBackupScheduleCR.getMetadata().getNamespace(),
+                JSONObject.parseObject(JSONObject.toJSONString(middlewareBackupScheduleCR)));
     }
 
     /**
@@ -74,7 +73,7 @@ public class MiddlewareBackupScheduleWrapper {
      * @param name
      * @return
      */
-    public MiddlewareBackupScheduleCRD get(String clusterId, String namespace, String name){
+    public MiddlewareBackupScheduleCR get(String clusterId, String namespace, String name){
         Map<String, Object> map = null;
         try {
             map = K8sClient.getClient(clusterId).customResource(CONTEXT).get(namespace, name);
@@ -85,7 +84,7 @@ public class MiddlewareBackupScheduleWrapper {
         if (CollectionUtils.isEmpty(map)) {
             return null;
         }
-        return JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareBackupScheduleCRD.class);
+        return JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareBackupScheduleCR.class);
     }
 
     public MiddlewareBackupScheduleList list(String clusterId, String namespace, Map<String,String> labels){

@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.zeus.integration.cluster.MiddlewareWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.PodService;
@@ -61,14 +61,14 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
             label.put("type", StringUtils.isNotEmpty(crType) ? crType : type);
         }
 
-        List<MiddlewareCRD> middlewareCRDList = this.listCR(clusterId, namespace, label);
-        if (CollectionUtils.isEmpty(middlewareCRDList)) {
+        List<MiddlewareCR> middlewareCRList = this.listCR(clusterId, namespace, label);
+        if (CollectionUtils.isEmpty(middlewareCRList)) {
             return new ArrayList<>(0);
         }
 
         List<Middleware> middlewares = new ArrayList<>();
         // 封装数据
-        middlewareCRDList.forEach(k8sMiddleware -> {
+        middlewareCRList.forEach(k8sMiddleware -> {
             Middleware middleware;
             if (detail) {
                 middleware = convertMiddleware(k8sMiddleware);
@@ -82,7 +82,7 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
     }
 
     @Override
-    public List<MiddlewareCRD> listCR(String clusterId, String namespace, Map<String, String> label) {
+    public List<MiddlewareCR> listCR(String clusterId, String namespace, Map<String, String> label) {
         return middlewareWrapper.list(clusterId, namespace, label);
     }
 
@@ -97,7 +97,7 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
      */
     @Override
     public Middleware simpleDetail(String clusterId, String namespace, String type, String name) {
-        MiddlewareCRD cr = getCR(clusterId, namespace, type, name);
+        MiddlewareCR cr = getCR(clusterId, namespace, type, name);
         Middleware pods = podService.listPods(cr, clusterId, namespace, name, type);
         Middleware middleware = simpleConvert(cr);
         middleware.setIsAllLvmStorage(pods.getIsAllLvmStorage()).setClusterId(clusterId);
@@ -105,24 +105,24 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
     }
 
     @Override
-    public MiddlewareCRD getCR(String clusterId, String namespace, String type, String name) {
+    public MiddlewareCR getCR(String clusterId, String namespace, String type, String name) {
         if (MiddlewareTypeEnum.isType(type)) {
             String crdName = MiddlewareCRService.getCrName(type, name);
             return middlewareWrapper.get(clusterId, namespace, crdName);
         } else {
-            List<MiddlewareCRD> middlewareCRDList = middlewareWrapper.list(clusterId, namespace, null);
-            middlewareCRDList = middlewareCRDList.stream().filter(mwCRD -> mwCRD.getSpec().getName().equals(name))
+            List<MiddlewareCR> middlewareCRList = middlewareWrapper.list(clusterId, namespace, null);
+            middlewareCRList = middlewareCRList.stream().filter(mwCRD -> mwCRD.getSpec().getName().equals(name))
                 .collect(Collectors.toList());
-            if (CollectionUtils.isEmpty(middlewareCRDList)) {
+            if (CollectionUtils.isEmpty(middlewareCRList)) {
                 throw new BusinessException(DictEnum.MIDDLEWARE, name, ErrorMessage.NOT_EXIST);
             }
-            return middlewareCRDList.get(0);
+            return middlewareCRList.get(0);
         }
     }
 
     @Override
-    public MiddlewareCRD getCRAndCheckRunning(Middleware middleware) {
-        MiddlewareCRD mw =
+    public MiddlewareCR getCRAndCheckRunning(Middleware middleware) {
+        MiddlewareCR mw =
             getCR(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
         if (mw == null) {
             throw new BusinessException(DictEnum.MIDDLEWARE, middleware.getName(), ErrorMessage.NOT_EXIST);
@@ -136,38 +136,38 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
     /**
      * 封装middleware
      *
-     * @param k8SMiddlewareCRD
+     * @param k8SMiddlewareCR
      * @return Middleware
      */
-    public Middleware convertMiddleware(MiddlewareCRD k8SMiddlewareCRD) {
-        Middleware middleware = simpleConvert(k8SMiddlewareCRD);
-        middleware.setVersion(k8SMiddlewareCRD.getMetadata().getResourceVersion());
-        if (!CollectionUtils.isEmpty(k8SMiddlewareCRD.getMetadata().getLabels())) {
+    public Middleware convertMiddleware(MiddlewareCR k8SMiddlewareCR) {
+        Middleware middleware = simpleConvert(k8SMiddlewareCR);
+        middleware.setVersion(k8SMiddlewareCR.getMetadata().getResourceVersion());
+        if (!CollectionUtils.isEmpty(k8SMiddlewareCR.getMetadata().getLabels())) {
             StringBuilder sb = new StringBuilder();
-            k8SMiddlewareCRD.getMetadata().getLabels()
+            k8SMiddlewareCR.getMetadata().getLabels()
                 .forEach((k, v) -> sb.append(k).append("=").append(v).append(","));
             sb.deleteCharAt(sb.length() - 1);
             middleware.setLabels(sb.toString());
         }
         MiddlewareQuota middlewareQuota = new MiddlewareQuota();
-        middlewareQuota.setNum(k8SMiddlewareCRD.getStatus().getReplicas());
-        if (!CollectionUtils.isEmpty(k8SMiddlewareCRD.getStatus().getResources().getRequests())) {
-            middlewareQuota.setCpu(k8SMiddlewareCRD.getStatus().getResources().getRequests().get("cpu"));
-            middlewareQuota.setMemory(k8SMiddlewareCRD.getStatus().getResources().getRequests().get("memory"));
+        middlewareQuota.setNum(k8SMiddlewareCR.getStatus().getReplicas());
+        if (!CollectionUtils.isEmpty(k8SMiddlewareCR.getStatus().getResources().getRequests())) {
+            middlewareQuota.setCpu(k8SMiddlewareCR.getStatus().getResources().getRequests().get("cpu"));
+            middlewareQuota.setMemory(k8SMiddlewareCR.getStatus().getResources().getRequests().get("memory"));
         }
-        if (!CollectionUtils.isEmpty(k8SMiddlewareCRD.getStatus().getResources().getLimits())) {
-            middlewareQuota.setCpu(k8SMiddlewareCRD.getStatus().getResources().getLimits().get("cpu"));
-            middlewareQuota.setMemory(k8SMiddlewareCRD.getStatus().getResources().getLimits().get("memory"));
+        if (!CollectionUtils.isEmpty(k8SMiddlewareCR.getStatus().getResources().getLimits())) {
+            middlewareQuota.setCpu(k8SMiddlewareCR.getStatus().getResources().getLimits().get("cpu"));
+            middlewareQuota.setMemory(k8SMiddlewareCR.getStatus().getResources().getLimits().get("memory"));
         }
         Map<String, MiddlewareQuota> middlewareQuotaMap = new HashMap<>();
         middlewareQuotaMap.put(middleware.getType(), middlewareQuota);
         middleware.setQuota(middlewareQuotaMap);
         List<PodInfo> podInfoList = new ArrayList<>();
-        Map<String, List<MiddlewareInfo>> include = k8SMiddlewareCRD.getStatus().getInclude();
+        Map<String, List<MiddlewareInfo>> include = k8SMiddlewareCR.getStatus().getInclude();
         if (CollectionUtils.isEmpty(include)){
             return middleware;
         }
-        List<MiddlewareInfo> middlewareInfoList = k8SMiddlewareCRD.getStatus().getInclude().get("pods");
+        List<MiddlewareInfo> middlewareInfoList = k8SMiddlewareCR.getStatus().getInclude().get("pods");
         if (CollectionUtils.isEmpty(middlewareInfoList)) {
             middleware.setPods(new ArrayList<>(0));
         } else {
@@ -183,7 +183,7 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
     }
 
     @Override
-    public Middleware simpleConvert(MiddlewareCRD mw) {
+    public Middleware simpleConvert(MiddlewareCR mw) {
         return mw == null ? null : new Middleware()
                 .setName(mw.getSpec().getName())
                 .setNamespace(mw.getMetadata().getNamespace())
@@ -204,12 +204,12 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
     @Override
     public List<String> getPvc(String clusterId, String namespace, String type, String name) {
         // query middleware cr
-        MiddlewareCRD mw = this.getCR(clusterId, namespace, type, name);
+        MiddlewareCR mw = this.getCR(clusterId, namespace, type, name);
         return getPvc(mw);
     }
 
     @Override
-    public List<String> getPvc(MiddlewareCRD mw) {
+    public List<String> getPvc(MiddlewareCR mw) {
         if (mw == null || mw.getStatus() == null || mw.getStatus().getInclude() == null
                 || !mw.getStatus().getInclude().containsKey(PERSISTENT_VOLUME_CLAIMS)) {
             return new ArrayList<>();
@@ -227,7 +227,7 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
      * @param mw
      * @return
      */
-    private int getPodNum(MiddlewareCRD mw) {
+    private int getPodNum(MiddlewareCR mw) {
         if ((mw.getStatus() != null && mw.getStatus().getInclude() != null && mw.getStatus().getInclude().get(PODS) != null)) {
             return mw.getStatus().getInclude().get(PODS).size();
         } else {
@@ -240,7 +240,7 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
      * @param mw
      * @return List<PodInfo>
      */
-    private List<PodInfo> getPodName(MiddlewareCRD mw) {
+    private List<PodInfo> getPodName(MiddlewareCR mw) {
         if (mw.getStatus() != null && mw.getStatus().getInclude() != null && mw.getStatus().getInclude().containsKey("pods")) {
             return mw.getStatus().getInclude().get("pods").stream().map(pod -> {
                 PodInfo podInfo = new PodInfo();

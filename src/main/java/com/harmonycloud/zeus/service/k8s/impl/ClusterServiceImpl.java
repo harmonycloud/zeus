@@ -3,7 +3,6 @@ package com.harmonycloud.zeus.service.k8s.impl;
 import static com.harmonycloud.caas.common.constants.NameConstant.*;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
-import static com.harmonycloud.caas.common.constants.user.UserConstant.SUPER_MANAGER;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -18,7 +17,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.constants.CommonConstant;
-import com.harmonycloud.zeus.bean.user.BeanProjectNamespace;
 import com.harmonycloud.zeus.service.middleware.ImageRepositoryService;
 import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
 import com.harmonycloud.zeus.service.user.ProjectService;
@@ -29,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.alibaba.fastjson.JSONObject;
@@ -46,12 +43,8 @@ import com.harmonycloud.caas.common.model.*;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
-import com.harmonycloud.caas.filters.token.JwtTokenComponent;
-import com.harmonycloud.caas.filters.user.CurrentUser;
-import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
-import com.harmonycloud.zeus.integration.cluster.ClusterWrapper;
 import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.service.k8s.*;
@@ -468,8 +461,8 @@ public class ClusterServiceImpl implements ClusterService {
      */
     public boolean checkDelete(String clusterId) {
         try {
-            List<MiddlewareCRD> middlewareCRDList = middlewareCRService.listCR(clusterId, null, null);
-            if (!CollectionUtils.isEmpty(middlewareCRDList) && middlewareCRDList.stream().anyMatch(
+            List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(clusterId, null, null);
+            if (!CollectionUtils.isEmpty(middlewareCRList) && middlewareCRList.stream().anyMatch(
                 middlewareCRD -> !"escluster-middleware-elasticsearch".equals(middlewareCRD.getMetadata().getName())
                     && !"mysqlcluster-zeus-mysql".equals(middlewareCRD.getMetadata().getName()))) {
                 return false;
@@ -602,7 +595,7 @@ public class ClusterServiceImpl implements ClusterService {
     @Override
     public List<MiddlewareResourceInfo> getMwResource(String clusterId) throws Exception {
         // 获取集群下所有中间件信息
-        List<MiddlewareCRD> mwCrdList = middlewareCRService.listCR(clusterId, null, null);
+        List<MiddlewareCR> mwCrdList = middlewareCRService.listCR(clusterId, null, null);
         // 过滤未注册的分区
         List<Namespace> namespaceList = namespaceService.list(clusterId);
         mwCrdList = mwCrdList.stream()
@@ -938,7 +931,7 @@ public class ClusterServiceImpl implements ClusterService {
         return ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(Double.parseDouble(num)), 2, RoundingMode.CEILING);
     }
 
-    public StringBuilder getPodName(MiddlewareCRD mwCrd) {
+    public StringBuilder getPodName(MiddlewareCR mwCrd) {
         StringBuilder pods = new StringBuilder();
         List<MiddlewareInfo> podInfo = mwCrd.getStatus().getInclude().get(PODS);
         if (!CollectionUtils.isEmpty(podInfo)) {
@@ -949,7 +942,7 @@ public class ClusterServiceImpl implements ClusterService {
         return pods;
     }
 
-    public StringBuilder getPvcs(MiddlewareCRD mwCrd){
+    public StringBuilder getPvcs(MiddlewareCR mwCrd){
         StringBuilder pvcs = new StringBuilder();
         List<MiddlewareInfo> pvcInfo = mwCrd.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
         if (!CollectionUtils.isEmpty(pvcInfo)) {

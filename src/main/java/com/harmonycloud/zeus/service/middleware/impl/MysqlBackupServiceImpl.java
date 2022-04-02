@@ -35,10 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.harmonycloud.caas.common.constants.MinioConstant.BACKUP;
-import static com.harmonycloud.caas.common.constants.MinioConstant.MINIO;
 import static com.harmonycloud.caas.common.constants.NameConstant.STORAGE;
-import static com.harmonycloud.caas.common.constants.NameConstant.TYPE;
 
 /**
  * mysql备份
@@ -120,7 +117,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public BaseResult updateBackupSchedule(MiddlewareBackupDTO backupDTO) {
-        MysqlScheduleBackupCRD backupCRD = mysqlScheduleBackupService.get(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getBackupScheduleName());
+        MysqlScheduleBackupCR backupCRD = mysqlScheduleBackupService.get(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getBackupScheduleName());
         MysqlScheduleBackupSpec spec = backupCRD.getSpec();
         spec.setSchedule(CronUtils.parseMysqlUtcCron(backupDTO.getCron()));
         spec.setKeepBackups(backupDTO.getLimitRecord());
@@ -159,9 +156,9 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         metaData.setNamespace(backupDTO.getNamespace());
         metaData.setClusterName(backupDTO.getMiddlewareName());
 
-        MysqlScheduleBackupCRD mysqlScheduleBackupCRD =
-                new MysqlScheduleBackupCRD().setKind("MysqlBackupSchedule").setSpec(spec).setMetadata(metaData);
-        mysqlScheduleBackupService.create(backupDTO.getClusterId(), mysqlScheduleBackupCRD);
+        MysqlScheduleBackupCR mysqlScheduleBackupCR =
+                new MysqlScheduleBackupCR().setKind("MysqlBackupSchedule").setSpec(spec).setMetadata(metaData);
+        mysqlScheduleBackupService.create(backupDTO.getClusterId(), mysqlScheduleBackupCR);
         return BaseResult.ok();
     }
 
@@ -178,8 +175,8 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         metaData.setLabels(labels);
         metaData.setNamespace(backupDTO.getNamespace());
         metaData.setClusterName(backupDTO.getMiddlewareName());
-        BackupCRD backupCRD = new BackupCRD().setKind("MysqlBackup").setSpec(spec).setMetadata(metaData);
-        backupService.create(backupDTO.getClusterId(), backupCRD);
+        BackupCR backupCR = new BackupCR().setKind("MysqlBackup").setSpec(spec).setMetadata(metaData);
+        backupService.create(backupDTO.getClusterId(), backupCR);
         return BaseResult.ok();
     }
 

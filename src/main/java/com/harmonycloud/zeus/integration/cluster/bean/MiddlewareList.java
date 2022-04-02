@@ -20,5 +20,5 @@ public class MiddlewareList {
 
     private ObjectMeta metadata;
 
-    private List<MiddlewareCRD> items;
+    private List<MiddlewareCR> items;
 }

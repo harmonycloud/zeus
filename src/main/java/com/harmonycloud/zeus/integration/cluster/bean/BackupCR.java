@@ -5,13 +5,12 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 /**
- * mysql灾备crd
- * @author  liyinlong
- * @since 2021/9/13 4:31 下午
+ * @author xutianhong
+ * @Date 2021/4/6 4:46 下午
  */
 @Data
 @Accessors(chain = true)
-public class MysqlReplicateCRD {
+public class BackupCR {
 
     private String apiVersion = "mysql.middleware.harmonycloud.cn/v1alpha1";
 
@@ -19,8 +18,8 @@ public class MysqlReplicateCRD {
 
     private ObjectMeta metadata;
 
-    private MysqlReplicateSpec spec;
+    private BackupSpec spec;
 
-    private MysqlReplicateStatus status;
+    private BackupStatus status;
 
 }

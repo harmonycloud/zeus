@@ -20,7 +20,7 @@ public class MiddlewareRestoreList {
 
     private ObjectMeta metadata;
 
-    private List<MiddlewareRestoreCRD> items;
+    private List<MiddlewareRestoreCR> items;
 
 
 }

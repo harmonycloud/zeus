@@ -20,6 +20,6 @@ public class ScheduleBackupList {
 
     private ObjectMeta metadata;
 
-    private List<MysqlScheduleBackupCRD> items;
+    private List<MysqlScheduleBackupCR> items;
 
 }

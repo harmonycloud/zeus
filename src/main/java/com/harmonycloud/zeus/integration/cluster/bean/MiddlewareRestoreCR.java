@@ -8,7 +8,7 @@ import lombok.Data;
  * @since 2021/9/15 5:04 下午
  */
 @Data
-public class MiddlewareRestoreCRD {
+public class MiddlewareRestoreCR {
 
     private String apiVersion = "harmonycloud.cn/v1";
 
@@ -20,10 +20,10 @@ public class MiddlewareRestoreCRD {
 
     private MiddlewareRestoreStatus status;
 
-    public MiddlewareRestoreCRD() {
+    public MiddlewareRestoreCR() {
     }
 
-    public MiddlewareRestoreCRD(String backupName,String middlewareName) {
+    public MiddlewareRestoreCR(String backupName, String middlewareName) {
         this.spec = spec;
     }
 }

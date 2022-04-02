@@ -13,7 +13,7 @@ import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.ConfigMapWrapper;
 import com.harmonycloud.zeus.integration.cluster.IngressWrapper;
 import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareStatus;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
@@ -265,7 +265,7 @@ public class IngressServiceImpl implements IngressService {
 
     @Override
     public List<IngressDTO> get(String clusterId, String namespace, String type, String middlewareName) {
-        MiddlewareCRD crd = middlewareCRService.getCR(clusterId, namespace, type, middlewareName);
+        MiddlewareCR crd = middlewareCRService.getCR(clusterId, namespace, type, middlewareName);
         if (crd == null) {
             throw new BusinessException(DictEnum.MIDDLEWARE, middlewareName, ErrorMessage.NOT_EXIST);
         }
@@ -577,7 +577,7 @@ public class IngressServiceImpl implements IngressService {
         return tcpRoutineMap;
     }
 
-    private List<IngressDTO> getTcpRoutineDetail(String clusterId, String namespace, MiddlewareCRD crd,
+    private List<IngressDTO> getTcpRoutineDetail(String clusterId, String namespace, MiddlewareCR crd,
                                                  String svcName, Map<String, List<ServiceDTO>> tcpRoutineMap) {
         String nsSvcName = namespace + "/" + svcName;
         List<ServiceDTO> svcDtoList = tcpRoutineMap.get(nsSvcName);
@@ -715,12 +715,12 @@ public class IngressServiceImpl implements IngressService {
         }
         Map<String, String> data = configMap.getData();
 
-        List<MiddlewareCRD> middlewareList = middlewareCRService.listCR(clusterId, namespace, null);
+        List<MiddlewareCR> middlewareList = middlewareCRService.listCR(clusterId, namespace, null);
         if (CollectionUtils.isEmpty(middlewareList)) {
             return;
         }
         Map<String, Map<String, String>> mapHashMap = new HashMap<>(10);
-        for (MiddlewareCRD middleware : middlewareList) {
+        for (MiddlewareCR middleware : middlewareList) {
             MiddlewareStatus status = middleware.getStatus();
             if (status == null) {
                 continue;

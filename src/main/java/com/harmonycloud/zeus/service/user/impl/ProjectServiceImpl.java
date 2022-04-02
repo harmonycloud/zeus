@@ -12,8 +12,7 @@ import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.user.UserRole;
-import com.harmonycloud.zeus.bean.user.BeanUserRole;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.user.UserService;
@@ -358,9 +357,9 @@ public class ProjectServiceImpl implements ProjectService {
         }
         Set<String> clusterIdList =
             beanProjectNamespaceList.stream().map(BeanProjectNamespace::getClusterId).collect(Collectors.toSet());
-        Map<String, List<MiddlewareCRD>> middlewareCRListMap = new HashMap<>();
+        Map<String, List<MiddlewareCR>> middlewareCRListMap = new HashMap<>();
         for (String clusterId : clusterIdList) {
-            List<MiddlewareCRD> middlewareCRList = middlewareCRService.listCR(clusterId, null, null);
+            List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(clusterId, null, null);
             middlewareCRListMap.put(clusterId, middlewareCRList);
         }
         Map<String, List<BeanProjectNamespace>> beanProjectNamespaceListMap =
@@ -371,7 +370,7 @@ public class ProjectServiceImpl implements ProjectService {
             projectDto.setProjectId(key);
             int count = 0;
             for (String clusterId : middlewareCRListMap.keySet()) {
-                for (MiddlewareCRD middlewareCr : middlewareCRListMap.get(clusterId)) {
+                for (MiddlewareCR middlewareCr : middlewareCRListMap.get(clusterId)) {
                     if (beanProjectNamespaceListMap.get(key).stream()
                         .anyMatch(beanProjectNamespace -> beanProjectNamespace.getNamespace()
                             .equals(middlewareCr.getMetadata().getNamespace())

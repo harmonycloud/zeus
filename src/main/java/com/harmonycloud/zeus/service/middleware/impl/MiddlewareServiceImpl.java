@@ -1,6 +1,5 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.PROJECT_ID;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
 import java.math.BigDecimal;
@@ -17,8 +16,6 @@ import com.harmonycloud.caas.common.model.MonitorResourceQuota;
 import com.harmonycloud.caas.common.model.MonitorResourceQuotaBase;
 import com.harmonycloud.caas.common.model.PrometheusResponse;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
-import com.harmonycloud.caas.filters.token.JwtTokenComponent;
-import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.service.middleware.*;
@@ -46,7 +43,7 @@ import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
 import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.operator.BaseOperator;
@@ -113,7 +110,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 nameFilter = true;
             }
         }
-        List<MiddlewareCRD> mwList = middlewareCRService.listCR(clusterId, namespace, label);
+        List<MiddlewareCR> mwList = middlewareCRService.listCR(clusterId, namespace, label);
         if (CollectionUtils.isEmpty(mwList)) {
             return new ArrayList<>(0);
         }
@@ -169,15 +166,15 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         operator.create(middleware, cluster);
         // 查看middleware有没有创建出来
         boolean result = false;
-        MiddlewareCRD middlewareCRD = null;
+        MiddlewareCR middlewareCR = null;
         for (int i = 0; i < (60 * 10 ) && !result; i++) {
             try {
-                 middlewareCRD = middlewareCRService.getCR(middleware.getClusterId(), middleware.getNamespace(),
+                 middlewareCR = middlewareCRService.getCR(middleware.getClusterId(), middleware.getNamespace(),
                         middleware.getType(), middleware.getName());
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            if (middlewareCRD != null) {
+            if (middlewareCR != null) {
                 result = true;
             }
             try {
@@ -296,7 +293,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Override
     public void reboot(String clusterId, String namespace, String name, String type) {
         try {
-            MiddlewareCRD mw = middlewareCRService.getCR(clusterId, namespace, type, name);
+            MiddlewareCR mw = middlewareCRService.getCR(clusterId, namespace, type, name);
             List<MiddlewareInfo> pods = mw.getStatus().getInclude().get(PODS);
             if(!CollectionUtils.isEmpty(pods)){
                 pods.forEach(pod -> podService.restart(clusterId, namespace, name, type, pod.getName()));

@@ -3,7 +3,7 @@ package com.harmonycloud.zeus.service.k8s.impl;
 import com.harmonycloud.caas.common.model.middleware.PortDetailDTO;
 import com.harmonycloud.caas.common.model.middleware.ServicePortDTO;
 import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareStatus;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
@@ -34,7 +34,7 @@ public class ServiceServiceImpl implements ServiceService {
 
     @Override
     public List<ServicePortDTO> list(String clusterId, String namespace, String name, String type) {
-        MiddlewareCRD middleware = middlewareCRService.getCR(clusterId, namespace, type, name);
+        MiddlewareCR middleware = middlewareCRService.getCR(clusterId, namespace, type, name);
         if (middleware == null || middleware.getStatus() == null) {
             return null;
         }

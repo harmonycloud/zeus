@@ -5,7 +5,7 @@ import java.util.Map;
 
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 
 /**
  * @author xutianhong
@@ -32,7 +32,7 @@ public interface MiddlewareCRService {
      * @param label     标签
      * @return List<MiddlewareCRD>
      */
-    List<MiddlewareCRD> listCR(String clusterId, String namespace, Map<String, String> label);
+    List<MiddlewareCR> listCR(String clusterId, String namespace, Map<String, String> label);
 
     /**
      * 查询中间件简单详情
@@ -54,7 +54,7 @@ public interface MiddlewareCRService {
      * @param name      中间件名称
      * @return
      */
-    MiddlewareCRD getCR(String clusterId, String namespace, String type, String name);
+    MiddlewareCR getCR(String clusterId, String namespace, String type, String name);
 
     /**
      * 获取中间件pvc名称
@@ -62,7 +62,7 @@ public interface MiddlewareCRService {
      * @param mw
      * @return
      */
-    List<String> getPvc(MiddlewareCRD mw);
+    List<String> getPvc(MiddlewareCR mw);
 
     /**
      * 获取中间件pvc名称
@@ -81,7 +81,7 @@ public interface MiddlewareCRService {
      * @param middleware 中间件参数，clusterId/namespace/type/name
      * @return
      */
-    MiddlewareCRD getCRAndCheckRunning(Middleware middleware);
+    MiddlewareCR getCRAndCheckRunning(Middleware middleware);
 
     /**
      * crd简单转middleware
@@ -89,7 +89,7 @@ public interface MiddlewareCRService {
      * @param mw crd
      * @return
      */
-    Middleware simpleConvert(MiddlewareCRD mw);
+    Middleware simpleConvert(MiddlewareCR mw);
 
 
     /**

@@ -11,7 +11,7 @@ import lombok.experimental.Accessors;
  */
 @Data
 @Accessors(chain = true)
-public class MiddlewareBackupCRD {
+public class MiddlewareBackupCR {
 
     private String apiVersion = "harmonycloud.cn/v1";
 

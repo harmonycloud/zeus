@@ -52,7 +52,6 @@ import cn.hutool.json.JSONUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.ObjectUtils;
 
 /**
  * @author dengyulong
@@ -201,7 +200,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 mysqlDTO.setRelationExist(baseOperator.checkIfExist(relationNamespace, relationName, cluster));
                 middleware.setChartName(chartName);
 
-                MysqlReplicateCRD mysqlReplicate;
+                MysqlReplicateCR mysqlReplicate;
                 if (isSource) {
                     mysqlReplicate = mysqlReplicateCRDService.getMysqlReplicate(relationClusterId, relationNamespace, relationName);
                 } else {
@@ -506,7 +505,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 String relationName = mysqlDTO.getRelationName();
 
                 //获取mysql复制关系，关闭复制关系
-                MysqlReplicateCRD mysqlReplicate;
+                MysqlReplicateCR mysqlReplicate;
                 if (isSource) {
                     mysqlReplicate = mysqlReplicateCRDService.getMysqlReplicate(relationClusterId, relationNamespace, relationName);
                 } else {
@@ -607,7 +606,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                     MysqlReplicateSpec spec = new MysqlReplicateSpec(true, disasterRecovery.getName(),
                             ingressDTO.getExposeIP(), Integer.parseInt(serviceDTO.getExposePort()), "root", middleware.getPassword());
 
-                    MysqlReplicateCRD mysqlReplicateCRD = new MysqlReplicateCRD();
+                    MysqlReplicateCR mysqlReplicateCR = new MysqlReplicateCR();
                     ObjectMeta metaData = new ObjectMeta();
                     metaData.setName(disasterRecovery.getName());
                     metaData.setNamespace(disasterRecovery.getNamespace());
@@ -615,13 +614,13 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                     labels.put("operatorname", "mysql-operator");
                     metaData.setLabels(labels);
 
-                    mysqlReplicateCRD.setSpec(spec);
-                    mysqlReplicateCRD.setMetadata(metaData);
-                    mysqlReplicateCRD.setKind("MysqlReplicate");
+                    mysqlReplicateCR.setSpec(spec);
+                    mysqlReplicateCR.setMetadata(metaData);
+                    mysqlReplicateCR.setKind("MysqlReplicate");
 
                     try {
                         log.info("创建mysql实例 {} 和 {} 的关联关系MysqlReplicate", original.getName(), middleware.getName());
-                        mysqlReplicateCRDService.createMysqlReplicate(disasterRecovery.getClusterId(), mysqlReplicateCRD);
+                        mysqlReplicateCRDService.createMysqlReplicate(disasterRecovery.getClusterId(), mysqlReplicateCR);
                         log.info("MysqlReplicate创建成功");
                     } catch (IOException e) {
                         log.error("MysqlReplicate创建失败", e);

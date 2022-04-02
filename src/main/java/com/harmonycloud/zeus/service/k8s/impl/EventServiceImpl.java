@@ -3,7 +3,7 @@ package com.harmonycloud.zeus.service.k8s.impl;
 import com.harmonycloud.caas.common.model.EventDetail;
 import com.harmonycloud.caas.common.model.ObjectReference;
 import com.harmonycloud.zeus.integration.cluster.EventWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.service.k8s.EventService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.tool.date.DateUtils;
@@ -43,7 +43,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventDetail> getEvents(String clusterId, String namespace, String middlewareName, String middlewareType, 
         String eventType, String kind) {
-        MiddlewareCRD mw = middlewareCRService.getCR(clusterId, namespace, middlewareType, middlewareName);
+        MiddlewareCR mw = middlewareCRService.getCR(clusterId, namespace, middlewareType, middlewareName);
         if (mw == null) {
             return new ArrayList<>(0);
         }

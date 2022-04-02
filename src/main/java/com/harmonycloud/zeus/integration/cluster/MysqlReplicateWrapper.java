@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.integration.cluster;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.zeus.integration.cluster.bean.MysqlReplicateCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MysqlReplicateCR;
 import com.harmonycloud.zeus.util.K8sClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import lombok.extern.slf4j.Slf4j;
@@ -35,17 +35,17 @@ public class MysqlReplicateWrapper {
     /**
      * 创建mysql复制
      */
-    public void create(String clusterId, MysqlReplicateCRD mysqlReplicateCRD) throws IOException {
-        K8sClient.getClient(clusterId).customResource(CONTEXT).create(mysqlReplicateCRD.getMetadata().getNamespace(),
-                JSONObject.parseObject(JSONObject.toJSONString(mysqlReplicateCRD)));
+    public void create(String clusterId, MysqlReplicateCR mysqlReplicateCR) throws IOException {
+        K8sClient.getClient(clusterId).customResource(CONTEXT).create(mysqlReplicateCR.getMetadata().getNamespace(),
+                JSONObject.parseObject(JSONObject.toJSONString(mysqlReplicateCR)));
     }
 
     /**
      * 替换mysql复制
      */
-    public void replace(String clusterId, MysqlReplicateCRD mysqlReplicateCRD) throws IOException {
-        K8sClient.getClient(clusterId).customResource(CONTEXT).createOrReplace(mysqlReplicateCRD.getMetadata().getNamespace(),
-                JSONObject.parseObject(JSONObject.toJSONString(mysqlReplicateCRD)));
+    public void replace(String clusterId, MysqlReplicateCR mysqlReplicateCR) throws IOException {
+        K8sClient.getClient(clusterId).customResource(CONTEXT).createOrReplace(mysqlReplicateCR.getMetadata().getNamespace(),
+                JSONObject.parseObject(JSONObject.toJSONString(mysqlReplicateCR)));
     }
 
     /**
@@ -58,7 +58,7 @@ public class MysqlReplicateWrapper {
     /**
      * 查询mysql复制
      */
-    public MysqlReplicateCRD getMysqlReplicate(String clusterId, String namespace, String name){
+    public MysqlReplicateCR getMysqlReplicate(String clusterId, String namespace, String name){
         Map<String, Object> map = null;
         try {
             map = K8sClient.getClient(clusterId).customResource(CONTEXT).get(namespace, name);
@@ -69,7 +69,7 @@ public class MysqlReplicateWrapper {
         if (CollectionUtils.isEmpty(map)) {
             return null;
         }
-        return JSONObject.parseObject(JSONObject.toJSONString(map), MysqlReplicateCRD.class);
+        return JSONObject.parseObject(JSONObject.toJSONString(map), MysqlReplicateCR.class);
     }
 
 }

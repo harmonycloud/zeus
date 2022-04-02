@@ -18,7 +18,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareList;
 import com.harmonycloud.zeus.util.K8sClient;
 
@@ -44,7 +44,7 @@ public class MiddlewareWrapper {
             .withPlural(MIDDLEWARE_PLURAL)
             .build();
 
-    public List<MiddlewareCRD> list(String clusterId, String namespace, Map<String, String> labels) {
+    public List<MiddlewareCR> list(String clusterId, String namespace, Map<String, String> labels) {
         if (StringUtils.isBlank(namespace)) {
             namespace = null;
         }
@@ -68,10 +68,10 @@ public class MiddlewareWrapper {
         }
     }
 
-    public MiddlewareCRD get(String clusterId, String namespace, String name) {
+    public MiddlewareCR get(String clusterId, String namespace, String name) {
         try {
             Map<String, Object> map = K8sClient.getClient(clusterId).customResource(CONTEXT).get(namespace, name);
-            return JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareCRD.class);
+            return JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareCR.class);
         } catch (KubernetesClientException e) {
             if (e.getCode() == 404) {
                 throw new BusinessException(DictEnum.MIDDLEWARE, name, ErrorMessage.NOT_EXIST);

@@ -6,11 +6,11 @@ import lombok.experimental.Accessors;
 
 /**
  * @author xutianhong
- * @Date 2021/4/6 4:46 下午
+ * @Date 2021/4/2 2:36 下午
  */
 @Data
 @Accessors(chain = true)
-public class BackupCRD {
+public class MysqlScheduleBackupCR {
 
     private String apiVersion = "mysql.middleware.harmonycloud.cn/v1alpha1";
 
@@ -18,8 +18,8 @@ public class BackupCRD {
 
     private ObjectMeta metadata;
 
-    private BackupSpec spec;
+    private MysqlScheduleBackupSpec spec;
 
-    private BackupStatus status;
+    private MysqlScheduleBackupStatus status;
 
 }

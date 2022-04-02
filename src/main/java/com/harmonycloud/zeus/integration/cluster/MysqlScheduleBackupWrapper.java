@@ -1,12 +1,11 @@
 package com.harmonycloud.zeus.integration.cluster;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.zeus.integration.cluster.bean.MysqlScheduleBackupCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MysqlScheduleBackupCR;
 import com.harmonycloud.zeus.integration.cluster.bean.ScheduleBackupList;
 import com.harmonycloud.zeus.util.K8sClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.type.Alias;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -34,7 +33,7 @@ public class MysqlScheduleBackupWrapper {
     /**
      * 获取定时备份列表
      */
-    public List<MysqlScheduleBackupCRD> list(String clusterId, String namespace){
+    public List<MysqlScheduleBackupCR> list(String clusterId, String namespace){
         Map<String, Object> map = null;
         try {
             map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace);
@@ -52,10 +51,10 @@ public class MysqlScheduleBackupWrapper {
     /**
      * 创建定时备份
      */
-    public void create(String clusterId, MysqlScheduleBackupCRD mysqlScheduleBackupCRD) throws IOException {
+    public void create(String clusterId, MysqlScheduleBackupCR mysqlScheduleBackupCR) throws IOException {
         K8sClient.getClient(clusterId).customResource(CONTEXT).createOrReplace(
-            mysqlScheduleBackupCRD.getMetadata().getNamespace(),
-            JSONObject.parseObject(JSONObject.toJSONString(mysqlScheduleBackupCRD)));
+            mysqlScheduleBackupCR.getMetadata().getNamespace(),
+            JSONObject.parseObject(JSONObject.toJSONString(mysqlScheduleBackupCR)));
     }
 
 
@@ -69,13 +68,13 @@ public class MysqlScheduleBackupWrapper {
     /**
      * 更新定时备份
      * @param clusterId
-     * @param mysqlScheduleBackupCRD
+     * @param mysqlScheduleBackupCR
      * @throws IOException
      */
-    public void update(String clusterId, MysqlScheduleBackupCRD mysqlScheduleBackupCRD) throws IOException {
+    public void update(String clusterId, MysqlScheduleBackupCR mysqlScheduleBackupCR) throws IOException {
         K8sClient.getClient(clusterId).customResource(CONTEXT).createOrReplace(
-                mysqlScheduleBackupCRD.getMetadata().getNamespace(),
-                JSONObject.parseObject(JSONObject.toJSONString(mysqlScheduleBackupCRD)));
+                mysqlScheduleBackupCR.getMetadata().getNamespace(),
+                JSONObject.parseObject(JSONObject.toJSONString(mysqlScheduleBackupCR)));
     }
 
     /**
@@ -85,10 +84,10 @@ public class MysqlScheduleBackupWrapper {
      * @param backupScheduleName
      * @return
      */
-    public MysqlScheduleBackupCRD get(String clusterId, String namespace, String backupScheduleName){
+    public MysqlScheduleBackupCR get(String clusterId, String namespace, String backupScheduleName){
         Map<String, Object> map = K8sClient.getClient(clusterId).customResource(CONTEXT).get(namespace, backupScheduleName);
-        MysqlScheduleBackupCRD mysqlScheduleBackupCRD = JSONObject.parseObject(JSONObject.toJSONString(map), MysqlScheduleBackupCRD.class);
-        return mysqlScheduleBackupCRD;
+        MysqlScheduleBackupCR mysqlScheduleBackupCR = JSONObject.parseObject(JSONObject.toJSONString(map), MysqlScheduleBackupCR.class);
+        return mysqlScheduleBackupCR;
     }
 
 }
