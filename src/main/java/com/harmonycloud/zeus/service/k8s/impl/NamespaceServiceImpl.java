@@ -4,35 +4,26 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.zeus.service.user.ProjectService;
-import com.harmonycloud.zeus.service.user.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.ObjectUtils;
 
-import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.common.model.middleware.ResourceQuotaDTO;
-import com.harmonycloud.caas.filters.token.JwtTokenComponent;
-import com.harmonycloud.caas.filters.user.CurrentUser;
-import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
-import com.harmonycloud.zeus.service.user.ClusterRoleService;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.PROJECT_ID;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
 
 /**
@@ -122,9 +113,9 @@ public class NamespaceServiceImpl implements NamespaceService {
                 }
             }
             // 中间件实例信息
-            Map<String, List<MiddlewareCRD>> mwMap = null;
+            Map<String, List<MiddlewareCR>> mwMap = null;
             if (withMiddleware) {
-                List<MiddlewareCRD> middlewares = middlewareCRService.listCR(clusterId, null, null);
+                List<MiddlewareCR> middlewares = middlewareCRService.listCR(clusterId, null, null);
                 if (!CollectionUtils.isEmpty(middlewares)) {
                     mwMap = middlewares.stream().collect(Collectors.groupingBy(mw -> mw.getMetadata().getNamespace()));
                 }
@@ -181,7 +172,11 @@ public class NamespaceServiceImpl implements NamespaceService {
         if (MIDDLEWARE_OPERATOR.equals(name)){
             throw new BusinessException(ErrorMessage.CAN_NOT_DELETE_NS_MIDDLEWARE_OPERATOR);
         }
-        // todo 判断是否存在中间件
+        // 判断是否存在中间件
+        List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(clusterId, name, null);
+        if(CollectionUtils.isEmpty(middlewareCRList)){
+            throw new BusinessException(ErrorMessage.NAMESPACE_NOT_EMPTY);
+        }
         io.fabric8.kubernetes.api.model.Namespace ns = new io.fabric8.kubernetes.api.model.Namespace();
         ObjectMeta meta = new ObjectMeta();
         meta.setName(name);
