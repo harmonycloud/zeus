@@ -466,6 +466,7 @@ public class IngressServiceImpl implements IngressService {
     }
 
     private String getNodePortSvcName(String serviceName, String nodePortName) {
+        log.info("获取服务 {} nodeport的名称 {}", serviceName, nodePortName);
         if (StringUtils.isNotEmpty(nodePortName)) {
             return nodePortName;
         }
