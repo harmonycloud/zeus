@@ -16,6 +16,7 @@ import com.harmonycloud.zeus.dao.BeanMysqlUserMapper;
 import com.harmonycloud.zeus.service.middleware.impl.MysqlServiceImpl;
 import com.harmonycloud.zeus.service.mysql.MysqlDbPrivService;
 import com.harmonycloud.zeus.service.mysql.MysqlUserService;
+import com.harmonycloud.zeus.util.MyAESUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.BeanHandler;
@@ -66,7 +67,7 @@ public class MysqlUserServiceImpl implements MysqlUserService {
             mysqlUser.setPassword(user.getPassword());
             mysqlUser.setDescription(user.getDescription());
             mysqlUser.setMysqlQualifiedName(getMysqlQualifiedName(user));
-            beanMysqlUserMapper.insert(mysqlUser);
+            create(mysqlUser);
             // 授权数据库
             List<MysqlDbPrivilege> privilegeList = user.getPrivilegeList();
             grantUserDbPrivilege(con, user.getUser(), getMysqlQualifiedName(user), privilegeList);
@@ -77,6 +78,7 @@ public class MysqlUserServiceImpl implements MysqlUserService {
 
     @Override
     public void create(BeanMysqlUser beanMysqlUser) {
+        beanMysqlUser.setPassword(MyAESUtil.encodeBase64(beanMysqlUser.getPassword()));
         beanMysqlUserMapper.insert(beanMysqlUser);
     }
 
@@ -133,7 +135,7 @@ public class MysqlUserServiceImpl implements MysqlUserService {
         if (nativeUpdatePassword(getDBConnection(mysqlService.getAccessInfo(mysqlUserDTO)), mysqlUserDTO.getUser(), mysqlUserDTO.getPassword())) {
             // 更新数据库密码
             BeanMysqlUser mysqlUser = beanMysqlUserMapper.selectById(mysqlUserDTO.getId());
-            mysqlUser.setPassword(mysqlUserDTO.getPassword());
+            mysqlUser.setPassword(MyAESUtil.encodeBase64(mysqlUserDTO.getPassword()));
             beanMysqlUserMapper.updateById(mysqlUser);
             return BaseResult.ok();
         }
@@ -267,10 +269,10 @@ public class MysqlUserServiceImpl implements MysqlUserService {
                 BeanMysqlUser beanMysqlUser = select(mysqlQualifiedName, item.getUser());
                 if (beanMysqlUser != null) {
                     item.setId(beanMysqlUser.getId());
-                    item.setDescription(beanMysqlUser.getDescription());
-                    item.setPassword(beanMysqlUser.getPassword());
-                    item.setCreateTime(Date.from(beanMysqlUser.getCreatetime().atZone(ZoneId.systemDefault()).toInstant()));
+                    item.setPassword(MyAESUtil.decodeBase64(beanMysqlUser.getPassword()));
                     item.setPasswordCheck(passwordCheck(accessInfo, item.getUser(), item.getPassword()));
+                    item.setDescription(beanMysqlUser.getDescription());
+                    item.setCreateTime(Date.from(beanMysqlUser.getCreatetime().atZone(ZoneId.systemDefault()).toInstant()));
                 }
                 item.setDbs(privileges);
             });
