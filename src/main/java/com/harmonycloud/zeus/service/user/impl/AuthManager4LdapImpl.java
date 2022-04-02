@@ -98,7 +98,7 @@ public class AuthManager4LdapImpl implements AuthManager4Ldap {
             user.setCreateTime(new Date());
             user.setAliasName(userAttributes.get(ldapConfigDto.getDisplayNameAttribute()) == null ? userName : userAttributes.get(ldapConfigDto.getDisplayNameAttribute()));
             userService.create(user);
-            return userService.getUserDto(userName, true);
+            return userService.getUserDto(userName);
         }
         boolean userInfoChanged = false;
         if (StringUtils.isNotBlank(userAttributes.get(LDAP_MAIL)) && !userAttributes.get(LDAP_MAIL).equals(user.getEmail())) {
@@ -120,7 +120,7 @@ public class AuthManager4LdapImpl implements AuthManager4Ldap {
         if (userInfoChanged) {
             userService.update(user);
         }
-        return userService.getUserDto(userName, true);
+        return userService.getUserDto(userName);
     }
 
     private Map<String, String> getUserAttribute(String cn, LdapTemplate template, LdapConfigDto ldapConfigDto) {

@@ -17,9 +17,7 @@ import com.harmonycloud.zeus.dao.user.PersonalMapper;
 
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
-import com.harmonycloud.zeus.service.user.RoleService;
-import com.harmonycloud.zeus.service.user.UserRoleService;
-import com.harmonycloud.zeus.service.user.UserService;
+import com.harmonycloud.zeus.service.user.*;
 import com.harmonycloud.zeus.util.ApplicationUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -64,35 +62,24 @@ public class UserServiceImpl implements UserService {
     private static final Map<String, Object> IMAGE_MAP = new HashMap<>();
     @Autowired
     private BeanUserMapper beanUserMapper;
-
     @Autowired
     private UserRoleService userRoleService;
-
     @Autowired
     private RoleService roleService;
     @Autowired
     private MiddlewareService middlewareService;
-
     @Autowired
     private PersonalMapper personalMapper;
-
     @Autowired
     private MailToUserMapper mailToUserMapper;
 
-    @Autowired
-    private BeanRoleMapper beanRoleMapper;
-
-
-    @Value("${system.images.path:/usr/local/zeus-pv/images/middleware}")
-    private String imagePath;
-
     @Override
-    public UserDto getUserDto(String userName) {
+    public UserDto getUserDto(String userName, String projectId) {
         if (StringUtils.isEmpty(userName)) {
             CurrentUser currentUser = CurrentUserRepository.getUser();
             userName = currentUser.getUsername();
         }
-        return getUserDto(userName, false);
+        return getUserDto(userName);
     }
 
     @Override
@@ -108,7 +95,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto getUserDto(String userName, Boolean withPassword) {
+    public UserDto getUserDto(String userName) {
         QueryWrapper<BeanUser> wrapper = new QueryWrapper<BeanUser>().eq("username", userName);
         BeanUser beanUser = beanUserMapper.selectOne(wrapper);
         if (ObjectUtils.isEmpty(beanUser)) {
@@ -119,9 +106,6 @@ public class UserServiceImpl implements UserService {
         List<UserRole> userRoleList = userRoleService.get(userName);
         if (!CollectionUtils.isEmpty(userRoleList)) {
             userDto.setUserRoleList(userRoleList);
-        }
-        if (!withPassword) {
-            userDto.setPassword(null);
         }
         return userDto;
     }

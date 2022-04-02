@@ -37,10 +37,13 @@ public class UserController {
 
     @ApiOperation(value = "获取用户信息", notes = "获取用户信息")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "userName", value = "账户", paramType = "query", dataTypeClass = String.class),})
+            @ApiImplicitParam(name = "userName", value = "账户", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
+    })
     @GetMapping
-    public BaseResult<UserDto> get(@RequestParam(value = "userName", required = false) String userName) {
-        return BaseResult.ok(userService.getUserDto(userName));
+    public BaseResult<UserDto> get(@RequestParam(value = "userName", required = false) String userName,
+                                   @RequestParam(value = "projectId", required = false) String projectId) {
+        return BaseResult.ok(userService.getUserDto(userName, projectId));
     }
 
     @ApiOperation(value = "获取用户列表", notes = "获取用户列表")

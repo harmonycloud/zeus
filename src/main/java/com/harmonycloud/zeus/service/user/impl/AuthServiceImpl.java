@@ -63,11 +63,11 @@ public class AuthServiceImpl implements AuthService {
 
         UserDto userDto;
         if (userName.equals("admin")) {
-            userDto = userService.getUserDto(userName, true);
+            userDto = userService.getUserDto(userName);
         } else if (isLdapOn(ldapConfigDto)) {
             userDto = authManager4Ldap.auth(userName, decryptPassword, ldapConfigDto);
         } else {
-            userDto = userService.getUserDto(userName, true);
+            userDto = userService.getUserDto(userName);
         }
 
         //校验用户权限

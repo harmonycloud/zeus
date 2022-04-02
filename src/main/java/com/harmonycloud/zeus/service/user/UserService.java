@@ -25,7 +25,7 @@ public interface UserService {
      *
      * @return UserDto
      */
-    UserDto getUserDto(String userName);
+    UserDto getUserDto(String userName, String projectId);
 
     /**
      * 查询用户原始信息
@@ -41,7 +41,7 @@ public interface UserService {
      *
      * @return UserDto
      */
-    UserDto getUserDto(String userName, Boolean withPassword) throws Exception;
+    UserDto getUserDto(String userName) throws Exception;
 
     /**
      * 获取用户列表

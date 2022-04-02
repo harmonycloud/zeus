@@ -202,6 +202,7 @@ public class ProjectServiceImpl implements ProjectService {
         }).collect(Collectors.toList());
     }
 
+
     @Override
     public void bindUser(ProjectDto projectDto) {
         BeanProject beanProject = checkExist(projectDto.getProjectId());
@@ -336,7 +337,7 @@ public class ProjectServiceImpl implements ProjectService {
         String username = CurrentUserRepository.getUser().getUsername();
         // 获取项目分区列表
         List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
-        // 教研角色权限
+        // 校验角色权限
         Boolean isAdmin = userRoleService.checkAdmin(username);
         if (!isAdmin) {
             QueryWrapper<BeanProject> projectQueryWrapper = new QueryWrapper<>();

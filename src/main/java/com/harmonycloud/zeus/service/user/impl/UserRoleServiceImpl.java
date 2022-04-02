@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.model.user.RoleDto;
+import com.harmonycloud.zeus.bean.user.BeanRoleAuthority;
+import com.harmonycloud.zeus.service.user.RoleAuthorityService;
 import com.harmonycloud.zeus.service.user.RoleService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
 import org.apache.commons.lang3.StringUtils;
@@ -43,11 +45,16 @@ public class UserRoleServiceImpl implements UserRoleService {
         QueryWrapper<BeanUserRole> roleUserWrapper = new QueryWrapper<BeanUserRole>().eq("username", userName);
         List<BeanUserRole> beanUserRoleList = beanUserRoleMapper.selectList(roleUserWrapper);
         // 获取角色信息
-        RoleDto roleDto = roleService.get(beanUserRoleList.get(0).getRoleId());
+        Map<Integer,
+            RoleDto> roleDtoMap = roleService.list(null).stream()
+                .filter(roleDto -> beanUserRoleList.stream()
+                    .anyMatch(beanUserRole -> beanUserRole.getRoleId().equals(roleDto.getId())))
+                .collect(Collectors.toMap(RoleDto::getId, r -> r));
         return beanUserRoleList.stream().map(beanUserRole -> {
             UserRole userRole = new UserRole();
             BeanUtils.copyProperties(beanUserRole, userRole);
-            userRole.setRoleName(roleDto.getName());
+            userRole.setRoleName(roleDtoMap.get(beanUserRole.getRoleId()).getName());
+            userRole.setPower(roleDtoMap.get(beanUserRole.getRoleId()).getPower());
             return userRole;
         }).collect(Collectors.toList());
     }
