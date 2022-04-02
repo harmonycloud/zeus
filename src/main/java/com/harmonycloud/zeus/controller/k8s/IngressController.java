@@ -32,16 +32,18 @@ public class IngressController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "keyword", value = "模糊搜索", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/ingress")
     @Authority(power = 3)
     public BaseResult<List<IngressDTO>> list(@PathVariable("clusterId") String clusterId,
                                              @PathVariable(value = "namespace") String namespace,
-                                             @RequestParam(value = "keyword", required = false) String keyword) {
+                                             @RequestParam(value = "keyword", required = false) String keyword,
+                                             @RequestParam(value = "type", required = false) String type) {
         if (namespace.equals(ASTERISK)){
             namespace = null;
         }
-        return BaseResult.ok(ingressService.listAllIngress(clusterId, namespace, keyword));
+        return BaseResult.ok(ingressService.listAllIngress(clusterId, namespace, keyword, type));
     }
 
     @ApiOperation(value = "创建中间件对外访问", notes = "创建中间件对外访问")

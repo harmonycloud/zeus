@@ -969,12 +969,12 @@ public class IngressServiceImpl implements IngressService {
     }
 
     @Override
-    public List listAllIngress(String clusterId, String namespace, String keyword) {
+    public List listAllIngress(String clusterId, String namespace, String keyword, String type) {
         List<Map<String, Object>> ingressList = new ArrayList<>();
         boolean filter = StringUtils.isNotBlank(keyword);
         List<IngressDTO> allIngress = list(clusterId, namespace, null);
         List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.list(false);
-        middlewareInfoList.forEach(mwInfo -> {
+        for (BeanMiddlewareInfo mwInfo : middlewareInfoList){
             List<IngressDTO> ingressDTOList = new ArrayList<>();
             for (IngressDTO ingressDTO : allIngress) {
                 if (mwInfo.getName().equals(ingressDTO.getMiddlewareType())) {
@@ -993,9 +993,10 @@ public class IngressServiceImpl implements IngressService {
             middlewareMap.put("ingressList", ingressDTOList);
             middlewareMap.put("serviceNum", ingressDTOList.size());
             ingressList.add(middlewareMap);
-        });
-
-        // todo filter
+        }
+        if (StringUtils.isNotEmpty(type)){
+            ingressList.removeIf(ingress -> !ingress.get("chartName").toString().equals(type));
+        }
         Collections.sort(ingressList, new MiddlewareServiceImpl.ServiceMapComparator());
         return ingressList;
     }
