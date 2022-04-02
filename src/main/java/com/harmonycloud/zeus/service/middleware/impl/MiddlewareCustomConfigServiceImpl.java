@@ -130,7 +130,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             }
             customConfigList.add(customConfig);
         });
-        customConfigList.sort((o1, o2) -> o1.getTopping() == null ? 1 : o2.getTopping() == null ? -1 : 0);
+        customConfigList.sort((o1, o2) -> o1.getTopping() == null && o2.getTopping() == null ? 0 : o1.getTopping() == null ? 1 : o2.getTopping() == null ? -1 : 0);
         return sortByOrder(customConfigList, order);
     }
 
@@ -454,10 +454,11 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             .filter(customConfig -> customConfig.getTopping() != null && customConfig.getTopping())
             .collect(Collectors.toList());
         customConfigList.removeAll(top);
-        top.sort((o1, o2) -> o1.getUpdateTime() == null ? 1 : o2.getUpdateTime() == null ? -1 : ASCEND.equals(order)
-            ? o1.getUpdateTime().compareTo(o2.getUpdateTime()) : o2.getUpdateTime().compareTo(o1.getUpdateTime()));
-        customConfigList
-            .sort((o1, o2) -> o1.getUpdateTime() == null ? 1 : o2.getUpdateTime() == null ? -1 : ASCEND.equals(order)
+        top.sort((o1, o2) -> o1.getTopping() == null && o2.getTopping() == null ? 0
+            : o1.getUpdateTime() == null ? 1 : o2.getUpdateTime() == null ? -1 : ASCEND.equals(order)
+                ? o1.getUpdateTime().compareTo(o2.getUpdateTime()) : o2.getUpdateTime().compareTo(o1.getUpdateTime()));
+        customConfigList.sort((o1, o2) -> o1.getTopping() == null && o2.getTopping() == null ? 0
+            : o1.getUpdateTime() == null ? 1 : o2.getUpdateTime() == null ? -1 : ASCEND.equals(order)
                 ? o1.getUpdateTime().compareTo(o2.getUpdateTime()) : o2.getUpdateTime().compareTo(o1.getUpdateTime()));
         top.addAll(customConfigList);
         return top;
