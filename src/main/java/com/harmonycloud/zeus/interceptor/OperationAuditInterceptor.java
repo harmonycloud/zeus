@@ -49,8 +49,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.PROJECT_ID;
-import static com.harmonycloud.caas.common.constants.CommonConstant.TYPE;
+import static com.harmonycloud.caas.common.constants.CommonConstant.*;
 
 /**
  * 操作审计拦截器
@@ -295,7 +294,7 @@ public class OperationAuditInterceptor {
         return params;
     }
 
-    public String tryGetType(JSONObject params){
+    public String tryGetType(JSONObject params) {
         String type = null;
         if (params.containsKey(TYPE)) {
             type = params.getString(TYPE);
@@ -305,6 +304,8 @@ public class OperationAuditInterceptor {
                     JSONObject temp = params.getJSONObject(key);
                     if (temp.containsKey(TYPE)) {
                         type = temp.getString(TYPE);
+                    } else if (temp.containsKey(MIDDLEWARE_TYPE)) {
+                        type = temp.getString(MIDDLEWARE_TYPE);
                     }
                 }
             }
