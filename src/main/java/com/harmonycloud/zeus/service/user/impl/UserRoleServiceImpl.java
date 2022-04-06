@@ -6,7 +6,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.model.user.RoleDto;
-import com.harmonycloud.zeus.bean.user.BeanRoleAuthority;
+import com.harmonycloud.zeus.bean.user.*;
+import com.harmonycloud.zeus.dao.user.BeanProjectMapper;
 import com.harmonycloud.zeus.service.user.RoleAuthorityService;
 import com.harmonycloud.zeus.service.user.RoleService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
@@ -22,9 +23,6 @@ import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.caas.common.model.user.UserRole;
-import com.harmonycloud.zeus.bean.user.BeanRole;
-import com.harmonycloud.zeus.bean.user.BeanUserRole;
-import com.harmonycloud.zeus.bean.user.BeanUser;
 import com.harmonycloud.zeus.dao.user.BeanUserRoleMapper;
 
 /**
@@ -38,6 +36,8 @@ public class UserRoleServiceImpl implements UserRoleService {
     private RoleService roleService;
     @Autowired
     private BeanUserRoleMapper beanUserRoleMapper;
+    @Autowired
+    private BeanProjectMapper beanProjectMapper;
 
     @Override
     public List<UserRole> get(String userName) {
@@ -73,6 +73,10 @@ public class UserRoleServiceImpl implements UserRoleService {
         // 获取所有角色用户对照关系
         QueryWrapper<BeanUserRole> roleUserWrapper = new QueryWrapper<>();
         List<BeanUserRole> beanUserRoleList = beanUserRoleMapper.selectList(roleUserWrapper);
+        // 获取项目数据
+        QueryWrapper<BeanProject> wrapper = new QueryWrapper<>();
+        Map<String, BeanProject> beanProjectMap =
+            beanProjectMapper.selectList(wrapper).stream().collect(Collectors.toMap(BeanProject::getProjectId, b -> b));
         // 获取所有角色信息
         List<RoleDto> beanRoleList = roleService.list(null);
         Map<Integer, String> beanSysRoleMap =
@@ -81,8 +85,10 @@ public class UserRoleServiceImpl implements UserRoleService {
         return beanUserRoleList.stream().map(beanUser -> {
             UserRole userRole = new UserRole();
             BeanUtils.copyProperties(beanUser, userRole);
-            userRole.setUserName(beanUser.getUserName())
-                .setRoleName(beanSysRoleMap.get(beanUser.getRoleId()));
+            userRole.setUserName(beanUser.getUserName()).setRoleName(beanSysRoleMap.get(beanUser.getRoleId()));
+            if (StringUtils.isNotEmpty(userRole.getProjectId())) {
+                userRole.setProjectName(beanProjectMap.get(userRole.getProjectId()).getAliasName());
+            }
             return userRole;
         }).collect(Collectors.toList());
     }
