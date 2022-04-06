@@ -12,9 +12,11 @@ import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.user.UserRole;
+import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.user.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -62,9 +64,9 @@ public class ProjectServiceImpl implements ProjectService {
     @Autowired
     private UserService userService;
     @Autowired
-    private NamespaceService namespaceService;
-    @Autowired
     private MiddlewareCRService middlewareCRService;
+    @Autowired
+    private MiddlewareInfoService middlewareInfoService;
 
     @Override
     public void add(ProjectDto projectDto) {
@@ -308,9 +310,14 @@ public class ProjectServiceImpl implements ProjectService {
         all = all.stream().filter(middlewareResourceInfo -> beanProjectNamespaceList.stream().anyMatch(
             beanProjectNamespace -> beanProjectNamespace.getNamespace().equals(middlewareResourceInfo.getNamespace())))
             .collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(all)){
+        if (CollectionUtils.isEmpty(all)) {
             return new ArrayList<>();
         }
+        // 获取image.path
+        Map<String,
+            String> middlewareImagePathMap = middlewareInfoService.list(false).stream()
+                .filter(beanMiddlewareInfo -> beanMiddlewareInfo.getImagePath() != null)
+                .collect(Collectors.toMap(BeanMiddlewareInfo::getChartName, BeanMiddlewareInfo::getImagePath));
         // 封装数据
         Map<String, List<MiddlewareResourceInfo>> map =
             all.stream().collect(Collectors.groupingBy(MiddlewareResourceInfo::getType));
@@ -318,7 +325,8 @@ public class ProjectServiceImpl implements ProjectService {
         for (String key : map.keySet()) {
             ProjectMiddlewareResourceInfo projectMiddlewareResourceInfo = new ProjectMiddlewareResourceInfo()
                 .setType(key).setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(key))
-                .setMiddlewareResourceInfoList(map.get(key));
+                .setMiddlewareResourceInfoList(map.get(key))
+                .setImagePath(middlewareImagePathMap.getOrDefault(key, null));
             infoList.add(projectMiddlewareResourceInfo);
         }
         return infoList;
