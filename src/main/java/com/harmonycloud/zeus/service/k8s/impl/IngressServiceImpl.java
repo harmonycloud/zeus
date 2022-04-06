@@ -9,6 +9,9 @@ import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
 import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.caas.common.model.user.UserRole;
+import com.harmonycloud.caas.filters.token.JwtTokenComponent;
+import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.ConfigMapWrapper;
@@ -25,7 +28,10 @@ import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareServiceImpl;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
+import com.harmonycloud.zeus.service.user.UserRoleService;
+import com.harmonycloud.zeus.service.user.UserService;
 import com.harmonycloud.zeus.util.DateUtil;
+import com.harmonycloud.zeus.util.RequestUtil;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.*;
 import lombok.extern.slf4j.Slf4j;
@@ -35,13 +41,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_ONE;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
 import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.HELM_RELEASE_ANNOTATION_KEY;
 import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.HELM_RELEASE_LABEL_KEY;
@@ -84,6 +87,8 @@ public class IngressServiceImpl implements IngressService {
     private MiddlewareInfoService middlewareInfoService;
     @Autowired
     private HelmChartService helmChartService;
+    @Autowired
+    private UserService userService;
 
     @Value("${k8s.ingress.default.name:nginx-ingress-controller}")
     private String defaultIngressName;
@@ -692,7 +697,7 @@ public class IngressServiceImpl implements IngressService {
             return;
         }
         if (StringUtils.isNotBlank(data.get(serviceDTO.getExposePort()))) {
-            throw new CaasRuntimeException(ErrorMessage.INGRESS_TCP_PORT_EXIST);
+            throw new BusinessException(ErrorMessage.INGRESS_TCP_PORT_EXIST);
         }
     }
 
@@ -970,12 +975,12 @@ public class IngressServiceImpl implements IngressService {
     }
 
     @Override
-    public List listAllIngress(String clusterId, String namespace, String keyword, String type) {
+    public List listAllIngress(String clusterId, String namespace, String keyword) {
         List<Map<String, Object>> ingressList = new ArrayList<>();
         boolean filter = StringUtils.isNotBlank(keyword);
         List<IngressDTO> allIngress = list(clusterId, namespace, null);
         List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.list(false);
-        for (BeanMiddlewareInfo mwInfo : middlewareInfoList){
+        for (BeanMiddlewareInfo mwInfo : middlewareInfoList) {
             List<IngressDTO> ingressDTOList = new ArrayList<>();
             for (IngressDTO ingressDTO : allIngress) {
                 if (mwInfo.getName().equals(ingressDTO.getMiddlewareType())) {
@@ -995,8 +1000,14 @@ public class IngressServiceImpl implements IngressService {
             middlewareMap.put("serviceNum", ingressDTOList.size());
             ingressList.add(middlewareMap);
         }
-        if (StringUtils.isNotEmpty(type)){
-            ingressList.removeIf(ingress -> !ingress.get("chartName").toString().equals(type));
+
+        Map<String, String> power = userService.getPower();
+        if (!CollectionUtils.isEmpty(power)){
+            Set<String> typeSet = power.keySet().stream()
+                    .filter(key -> power.get(key).split("")[1].equals(String.valueOf(NUM_ONE))).collect(Collectors.toSet());
+            ingressList = ingressList.stream()
+                    .filter(ingress -> typeSet.stream().anyMatch(key -> ingress.get("chartName").equals(key)))
+                    .collect(Collectors.toList());
         }
         Collections.sort(ingressList, new MiddlewareServiceImpl.ServiceMapComparator());
         return ingressList;

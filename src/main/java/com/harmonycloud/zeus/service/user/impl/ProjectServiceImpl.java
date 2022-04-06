@@ -12,9 +12,11 @@ import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.user.UserRole;
+import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.user.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -62,13 +64,12 @@ public class ProjectServiceImpl implements ProjectService {
     @Autowired
     private UserService userService;
     @Autowired
-    private NamespaceService namespaceService;
-    @Autowired
     private MiddlewareCRService middlewareCRService;
+    @Autowired
+    private MiddlewareInfoService middlewareInfoService;
 
     @Override
     public void add(ProjectDto projectDto) {
-        AssertUtil.notBlank(projectDto.getUser(), DictEnum.USERNAME);
         AssertUtil.notBlank(projectDto.getName(), DictEnum.PROJECT_NAME);
         String projectId = UUIDUtils.get16UUID();
         BeanProject beanProject = new BeanProject();
@@ -76,7 +77,9 @@ public class ProjectServiceImpl implements ProjectService {
         beanProject.setProjectId(projectId);
         beanProject.setCreateTime(new Date());
         //绑定用户角色
-        userRoleService.insert(projectId, projectDto.getUser(), 2);
+        if (StringUtils.isNotEmpty(projectDto.getUser())){
+            userRoleService.insert(projectId, projectDto.getUser(), 2);
+        }
         // 绑定分区
         if (projectDto.getClusterList() != null) {
             projectDto.getClusterList().forEach(cluster -> {
@@ -91,7 +94,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<ProjectDto> list() {
+    public List<ProjectDto> list(String key) {
         QueryWrapper<BeanProject> wrapper = new QueryWrapper<>();
         List<BeanProject> beanProjectList = beanProjectMapper.selectList(wrapper);
         CurrentUser currentUser = CurrentUserRepository.getUserExistNull();
@@ -117,7 +120,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 封装数据
         List<ProjectDto> projectDtoList = new ArrayList<>();
-        beanProjectList.forEach(beanProject -> {
+        for (BeanProject beanProject : beanProjectList) {
             ProjectDto projectDto = new ProjectDto();
             BeanUtils.copyProperties(beanProject, projectDto);
             if (StringUtils.isNotEmpty(beanProject.getUser())) {
@@ -134,7 +137,18 @@ public class ProjectServiceImpl implements ProjectService {
                 projectDto.setRoleName(userRoleMap.get(projectDto.getProjectId()).getRoleName());
             }
             projectDtoList.add(projectDto);
-        });
+        }
+
+        // 根据key进行过滤
+        if (StringUtils.isNotEmpty(key)) {
+            projectDtoList = projectDtoList.stream()
+                .filter(projectDto -> (StringUtils.isNotEmpty(projectDto.getAliasName())
+                    && projectDto.getAliasName().contains(key))
+                    || (StringUtils.isNotEmpty(projectDto.getDescription())
+                        && projectDto.getDescription().contains(key)))
+                .collect(Collectors.toList());
+        }
+
         return projectDtoList;
     }
 
@@ -239,7 +253,7 @@ public class ProjectServiceImpl implements ProjectService {
             throw new BusinessException(ErrorMessage.PROJECT_IS_NOT_EMPTY);
         }
         // 删除项目
-        QueryWrapper<BeanProject> wrapper = new QueryWrapper<BeanProject>().eq("projectId", projectId);
+        QueryWrapper<BeanProject> wrapper = new QueryWrapper<BeanProject>().eq("project_id", projectId);
         beanProjectMapper.delete(wrapper);
         // 解绑项目下分区
         unBindNamespace(projectId, null, null);
@@ -282,10 +296,9 @@ public class ProjectServiceImpl implements ProjectService {
             wrapper.eq("namespace", namespace);
         }
         List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
-        if (CollectionUtils.isEmpty(beanProjectNamespaceList)) {
-            throw new BusinessException(ErrorMessage.NAMESPACE_NOT_FOUND);
+        if (!CollectionUtils.isEmpty(beanProjectNamespaceList)) {
+            beanProjectNamespaceMapper.delete(wrapper);
         }
-        beanProjectNamespaceMapper.delete(wrapper);
     }
 
     @Override
@@ -307,9 +320,14 @@ public class ProjectServiceImpl implements ProjectService {
         all = all.stream().filter(middlewareResourceInfo -> beanProjectNamespaceList.stream().anyMatch(
             beanProjectNamespace -> beanProjectNamespace.getNamespace().equals(middlewareResourceInfo.getNamespace())))
             .collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(all)){
+        if (CollectionUtils.isEmpty(all)) {
             return new ArrayList<>();
         }
+        // 获取image.path
+        Map<String,
+            String> middlewareImagePathMap = middlewareInfoService.list(false).stream()
+                .filter(beanMiddlewareInfo -> beanMiddlewareInfo.getImagePath() != null)
+                .collect(Collectors.toMap(BeanMiddlewareInfo::getChartName, BeanMiddlewareInfo::getImagePath));
         // 封装数据
         Map<String, List<MiddlewareResourceInfo>> map =
             all.stream().collect(Collectors.groupingBy(MiddlewareResourceInfo::getType));
@@ -317,7 +335,8 @@ public class ProjectServiceImpl implements ProjectService {
         for (String key : map.keySet()) {
             ProjectMiddlewareResourceInfo projectMiddlewareResourceInfo = new ProjectMiddlewareResourceInfo()
                 .setType(key).setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(key))
-                .setMiddlewareResourceInfoList(map.get(key));
+                .setMiddlewareResourceInfoList(map.get(key))
+                .setImagePath(middlewareImagePathMap.getOrDefault(key, null));
             infoList.add(projectMiddlewareResourceInfo);
         }
         return infoList;

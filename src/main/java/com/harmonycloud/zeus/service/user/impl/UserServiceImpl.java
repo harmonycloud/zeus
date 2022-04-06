@@ -19,6 +19,7 @@ import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.user.*;
 import com.harmonycloud.zeus.util.ApplicationUtil;
+import com.harmonycloud.zeus.util.RequestUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -359,6 +360,22 @@ public class UserServiceImpl implements UserService {
         long currentTime = System.currentTimeMillis();
         response.setHeader(USER_TOKEN, JwtTokenComponent.generateToken("userInfo", userMap,
             new Date(currentTime + (long)(ApplicationUtil.getExpire() * 3600000L)), new Date(currentTime - 300000L)));
+    }
+
+    @Override
+    public Map<String, String> getPower() {
+        String projectId = RequestUtil.getProjectId();
+        if (StringUtils.isNotEmpty(projectId)) {
+            JSONObject userMap = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue();
+            List<UserRole> userRoleList = userRoleService.get(userMap.getString("username"));
+            userRoleList = userRoleList.stream()
+                .filter(userRole -> userRole.getRoleId() == 1 || userRole.getProjectId().equals(projectId))
+                .collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(userRoleList)) {
+                return userRoleList.get(0).getPower();
+            }
+        }
+        return new HashMap<>();
     }
 
     /**

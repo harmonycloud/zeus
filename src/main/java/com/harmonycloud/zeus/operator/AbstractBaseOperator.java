@@ -15,6 +15,7 @@ import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
+import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.bean.BeanAlertRule;
 import com.harmonycloud.zeus.bean.MiddlewareAlertInfo;
 import com.harmonycloud.zeus.dao.BeanAlertRuleMapper;
@@ -909,6 +910,7 @@ public abstract class AbstractBaseOperator {
                         middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), servicePort);
                 try {
                     IngressDTO ingressDTO = new IngressDTO();
+                    ingressDTO.setName(middleware.getName() + "-nodeport-" +UUIDUtils.get8UUID().substring(0, 4));
                     List<ServiceDTO> serviceDTOList = new ArrayList<>();
                     ServiceDTO serviceDTO = new ServiceDTO();
                     serviceDTO.setExposePort(String.valueOf(servicePort));

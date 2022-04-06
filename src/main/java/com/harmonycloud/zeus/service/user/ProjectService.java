@@ -27,7 +27,7 @@ public interface ProjectService {
      * 查询项目列表
      * @return List<ProjectDto>
      */
-    List<ProjectDto> list();
+    List<ProjectDto> list(String key);
 
     /**
      * 查询项目下分区

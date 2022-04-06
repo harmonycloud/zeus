@@ -30,23 +30,6 @@ data:
           - cmd: #{GetPhase}
             value: "Running"
             name: "phaseRunning"
-      # 删除所有slave测试
-      - name: "DeleteAllSlave"
-        cmd: #{DeleteAllSlave}
-        timeout: 5m
-        initTime: 5s
-        interval: 5s
-        variable:
-          - key: resourceVersion
-            valueFromCmd: #{GetRevision}
-        verificate:
-          - cmd: #{GetRevision}
-            operator: "noEqual"
-            name: "versionChange"
-            value: "@resourceVersion"
-          - cmd: #{GetPhase}
-            value: "Running"
-            name: "phaseRunning"
       # 删除一个master测试
       - name: "DeleteOneMaster"
         cmd: #{DeleteOneMaster}
@@ -67,6 +50,23 @@ data:
             operator: "noEqual"
             name: "podNameChange"
             value: "@masterPodName"
+          - cmd: #{GetPhase}
+            value: "Running"
+            name: "phaseRunning"
+      # 删除所有slave测试
+      - name: "DeleteAllSlave"
+        cmd: #{DeleteAllSlave}
+        timeout: 5m
+        initTime: 5s
+        interval: 5s
+        variable:
+          - key: resourceVersion
+            valueFromCmd: #{GetRevision}
+        verificate:
+          - cmd: #{GetRevision}
+            operator: "noEqual"
+            name: "versionChange"
+            value: "@resourceVersion"
           - cmd: #{GetPhase}
             value: "Running"
             name: "phaseRunning"

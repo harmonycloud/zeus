@@ -20,6 +20,7 @@ import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.zeus.bean.user.BeanRoleAuthority;
 import com.harmonycloud.zeus.service.user.RoleAuthorityService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
+import com.harmonycloud.zeus.util.RequestUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -82,9 +83,7 @@ public class OperationAuditInterceptor {
 
     @Before("authcut() && @annotation(authority)")
     public void before(JoinPoint joinPoint, Authority authority) {
-        HttpServletRequest request =
-            ((ServletRequestAttributes)RequestContextHolder.getRequestAttributes()).getRequest();
-        String projectId = request.getHeader("projectId");
+        String projectId = RequestUtil.getProjectId();
         if (StringUtils.isNotEmpty(projectId)) {
             // 校验角色权限
             JSONObject userMap = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue();

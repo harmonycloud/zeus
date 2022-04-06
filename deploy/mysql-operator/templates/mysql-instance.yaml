@@ -71,12 +71,22 @@ spec:
       value: "%"
     - name: MYSQL_ROOT_HOST
       value: "%"
+  {{- if eq .Values.args.slow_query_log "ON" }}
     - name: aliyun_logs_mysqlslow
       value: /data/mysql/db_{{ include "mysql.fullname" . }}/elog/slow.log
     - name: aliyun_logs_mysqlslow_format
       value: mysql_slow_log
     - name: aliyun_logs_mysqlslow_tags
       value: middleware_name={{ include "mysql.fullname" . }}
+  {{- end}}
+  {{- if .Values.features.auditLog.enabled }}
+    - name: aliyun_logs_mysqlaudit
+      value: /data/mysql/db_{{ include "mysql.fullname" . }}/elog/mysql-audit.json
+    - name: aliyun_logs_mysqlaudit_format
+      value: json
+    - name: aliyun_logs_mysqlaudit_tags
+      value: middleware_name={{ include "mysql.fullname" . }}
+  {{- end}}
   {{- if ((((.Values.logging).collection).stdout).enabled)}}
     - name: aliyun_logs_middlewarestdout
       value: stdout
@@ -103,6 +113,7 @@ spec:
     backupRestoreImage: {{ .Values.image.repository }}/mysql-xtrabackup:{{ .Values.image.backupRestoreImageTag}}
   {{- end }}
     monitorImage: {{ .Values.image.repository }}/mysqld-exporter:{{ .Values.image.monitorImageTag}}
+    logrotateImage: {{ .Values.image.repository }}/logrotate:{{ .Values.image.logrotateImageTag}}
     imagePullPolicy: {{ .Values.image.pullPolicy }}
     serverPort: {{ .Values.args.server_port }}
     nodePort: {{ .Values.service.nodePort }}

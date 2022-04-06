@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author xutianhong
@@ -144,4 +145,6 @@ public interface UserService {
      *
      */
     void switchProject(String projectId, HttpServletResponse response);
+
+    Map<String, String> getPower();
 }

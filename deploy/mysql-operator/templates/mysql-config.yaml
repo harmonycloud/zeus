@@ -26,12 +26,12 @@ data:
     {{- $memory := regexFind "[0-9]*" .Values.resources.limits.memory }}
     {{- if or (contains "MI" (upper .Values.resources.limits.memory)) (contains "M" (upper .Values.resources.limits.memory)) }}
     {{- $maxConnectionsMemory := div $memory 4 }}
-    {{- $bufferMemory := printf "%d%s" (div (mul $memory  4) 5) "M" }}
+    {{- $bufferMemory := printf "%d%s" (div (mul $memory  1) 2) "M" }}
     max_connections                 ={{ .Values.args.max_connections | default $maxConnectionsMemory }}
     innodb_buffer_pool_size         ={{ .Values.args.innodb_buffer_pool_size | default $bufferMemory }} }}
     {{- else if or (contains "GI" (upper .Values.resources.limits.memory)) (contains "G" (upper .Values.resources.limits.memory)) }}
     {{- $maxConnectionsMemory := div (mul $memory  1024) 4 }}
-    {{- $bufferMemory := printf "%d%s"  (div (mul $memory  4) 5) "G" }}
+    {{- $bufferMemory := printf "%d%s"  (div (mul $memory  1) 2) "G" }}
     {{- if eq $maxConnectionsMemory 0 }}
     {{- $maxConnectionsMemory = 256 }}
     {{- end }}
@@ -182,6 +182,28 @@ data:
     innodb_rollback_on_timeout          ={{ .Values.args.innodb_rollback_on_timeout | default "ON" }}
     innodb_adaptive_hash_index          ={{ .Values.args.innodb_adaptive_hash_index | default "ON" }}
     performance_schema_max_table_instances ={{ .Values.args.performance_schema_max_table_instances | default -1 }}
+    #*************** plugins ***************
+    {{- if .Values.features.threadpool.enabled }}
+    plugin-load-add=threadpool.so
+    {{- end }}
+
+    {{- if .Values.features.recycle.enabled }}
+    plugin-load-add=recycle_bin.so
+    recycle_bin_enabled=ON
+    {{- end }}
+
+    {{- if .Values.features.bufferpoolControl.enabled }}
+    plugin-load-add=buffer_pool_control.so
+    buffer_pool_control_enabled=ON
+    {{- end }}
+
+    {{- if .Values.features.auditLog.enabled }}
+    plugin-load-add=libaudit_plugin.so
+    audit_json_log_file             =/data/mysql/DBNAME/elog/mysql-audit.json
+    audit_whitelist_users           =operator,healthchecker,replic,zabbixjk,boot,skip-grants user
+    audit_json_file                 =ON
+    {{- end }}
+
 kind: ConfigMap
 metadata:
   name: {{ include "mysql.fullname" . }}-config

@@ -326,6 +326,7 @@ CREATE TABLE `custom_config_template` (
   `type` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '中间件类型',
   `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '模板描述',
   `config` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '配置内容',
+  `create_time` timestamp DEFAULT NULL COMMENT '创建时间',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='自定义配置模板表';
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -752,6 +753,16 @@ LOCK TABLES `personal_config` WRITE;
 /*!40000 ALTER TABLE `personal_config` DISABLE KEYS */;
 /*!40000 ALTER TABLE `personal_config` ENABLE KEYS */;
 UNLOCK TABLES;
+
+DROP TABLE IF EXISTS `middleware_param_top`;
+CREATE TABLE `middleware_param_top`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `cluster_id` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '集群id',
+  `namespace` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '分区',
+  `name` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '名称',
+  `param` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '参数名',
+  PRIMARY KEY (`id`)
+);
 
 --
 -- Table structure for table `project`

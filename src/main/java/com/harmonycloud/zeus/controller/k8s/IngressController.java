@@ -35,15 +35,14 @@ public class IngressController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/ingress")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult<List<IngressDTO>> list(@PathVariable("clusterId") String clusterId,
                                              @PathVariable(value = "namespace") String namespace,
-                                             @RequestParam(value = "keyword", required = false) String keyword,
-                                             @RequestParam(value = "type", required = false) String type) {
+                                             @RequestParam(value = "keyword", required = false) String keyword) {
         if (namespace.equals(ASTERISK)){
             namespace = null;
         }
-        return BaseResult.ok(ingressService.listAllIngress(clusterId, namespace, keyword, type));
+        return BaseResult.ok(ingressService.listAllIngress(clusterId, namespace, keyword));
     }
 
     @ApiOperation(value = "创建中间件对外访问", notes = "创建中间件对外访问")
@@ -54,7 +53,7 @@ public class IngressController {
             @ApiImplicitParam(name = "ingress", value = "对外访问信息", paramType = "query", dataTypeClass = IngressDTO.class)
     })
     @PostMapping("/{middlewareName}/ingress")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult create(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
                              @PathVariable("middlewareName") String middlewareName,
@@ -72,7 +71,7 @@ public class IngressController {
             @ApiImplicitParam(name = "ingress", value = "对外访问信息", paramType = "query", dataTypeClass = IngressDTO.class)
     })
     @DeleteMapping("/{middlewareName}/ingress/{name}")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult delete(@PathVariable("clusterId") String clusterId,
                              @PathVariable(value = "namespace") String namespace,
                              @PathVariable("middlewareName") String middlewareName,
@@ -90,7 +89,7 @@ public class IngressController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/{middlewareName}/ingress")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult<List<IngressDTO>> get(@PathVariable("clusterId") String clusterId,
                                       @PathVariable("namespace") String namespace,
                                       @PathVariable("middlewareName") String middlewareName,

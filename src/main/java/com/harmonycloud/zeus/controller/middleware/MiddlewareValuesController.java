@@ -30,7 +30,7 @@ public class MiddlewareValuesController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult<String> get(@PathVariable("clusterId") String clusterId,
                                   @PathVariable("namespace") String namespace,
                                   @PathVariable("middlewareName") String name) {
@@ -45,7 +45,7 @@ public class MiddlewareValuesController {
             @ApiImplicitParam(name = "middlewareValues", value = "中间件values", paramType = "query", dataTypeClass = MiddlewareValues.class),
     })
     @PutMapping
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult update(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
                              @PathVariable("middlewareName") String name,

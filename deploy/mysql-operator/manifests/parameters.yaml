@@ -190,7 +190,7 @@ parameters:
         value: "Log all queries that have taken more than long_query_time seconds to execute to file. The argument will be treated as a decimal value with microsecond precision"
   - log_queries_not_using_indexes:
       - name: default
-        value: 1
+        value: 0
       - name: isReboot
         value: n
       - name: range
@@ -748,7 +748,7 @@ parameters:
         value: "Enable InnoDB adaptive hash index (enabled by default). Disable with --skip-innodb-adaptive-hash-index."
   - performance_schema_max_table_instances:
       - name: default
-        value: ON
+        value: -1
       - name: isReboot
         value: y
       - name: range
