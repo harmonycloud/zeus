@@ -210,11 +210,6 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
         return dbs;
     }
 
-    private void convertDtoByType() {
-
-    }
-
-
     public RedisAccessInfo queryBasicAccessInfo(String clusterId, String namespace, String middlewareName, Middleware middleware) {
         if (middleware == null) {
             middleware = middlewareService.detail(clusterId, namespace, middlewareName, MiddlewareTypeEnum.REDIS.getType());
@@ -258,9 +253,6 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
 
     public void paddingDataByType(Jedis jedis, RedisDbDTO redisDbDTO) {
         if (!StringUtils.isEmpty(redisDbDTO.getType())) {
-            if (redisDbDTO.getTimeOut() != null) {
-                jedis.expire(redisDbDTO.getKey(),redisDbDTO.getTimeOut().intValue());
-            }
             switch (redisDbDTO.getType()) {
                 case RedisConstant.STRING:
                     jedis.set(redisDbDTO.getKey(),redisDbDTO.getValue());
@@ -287,6 +279,9 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
                     break;
                 default:
 
+            }
+            if (redisDbDTO.getTimeOut() != null && redisDbDTO.getTimeOut().intValue() != -1 ) {
+                jedis.expire(redisDbDTO.getKey(),redisDbDTO.getTimeOut().intValue());
             }
         }
     }
