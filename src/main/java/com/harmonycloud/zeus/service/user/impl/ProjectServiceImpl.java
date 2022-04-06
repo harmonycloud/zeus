@@ -242,7 +242,7 @@ public class ProjectServiceImpl implements ProjectService {
             throw new BusinessException(ErrorMessage.PROJECT_IS_NOT_EMPTY);
         }
         // 删除项目
-        QueryWrapper<BeanProject> wrapper = new QueryWrapper<BeanProject>().eq("projectId", projectId);
+        QueryWrapper<BeanProject> wrapper = new QueryWrapper<BeanProject>().eq("project_id", projectId);
         beanProjectMapper.delete(wrapper);
         // 解绑项目下分区
         unBindNamespace(projectId, null, null);
