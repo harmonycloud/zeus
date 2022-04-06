@@ -68,7 +68,6 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public void add(ProjectDto projectDto) {
-        AssertUtil.notBlank(projectDto.getUser(), DictEnum.USERNAME);
         AssertUtil.notBlank(projectDto.getName(), DictEnum.PROJECT_NAME);
         String projectId = UUIDUtils.get16UUID();
         BeanProject beanProject = new BeanProject();
@@ -76,7 +75,9 @@ public class ProjectServiceImpl implements ProjectService {
         beanProject.setProjectId(projectId);
         beanProject.setCreateTime(new Date());
         //绑定用户角色
-        userRoleService.insert(projectId, projectDto.getUser(), 2);
+        if (StringUtils.isNotEmpty(projectDto.getUser())){
+            userRoleService.insert(projectId, projectDto.getUser(), 2);
+        }
         // 绑定分区
         if (projectDto.getClusterList() != null) {
             projectDto.getClusterList().forEach(cluster -> {
