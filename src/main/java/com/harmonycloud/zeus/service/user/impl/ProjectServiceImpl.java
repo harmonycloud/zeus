@@ -180,7 +180,8 @@ public class ProjectServiceImpl implements ProjectService {
             // 获取可分配的
             userDtoList = userDtoList.stream()
                 .filter(userDto -> usernameList.stream().noneMatch(username -> userDto.getUserName().equals(username)))
-                .filter(userDto -> userDto.getUserRoleList().stream().noneMatch(userRole -> userRole.getRoleId() == 1))
+                .filter(userDto -> CollectionUtils.isEmpty(userDto.getUserRoleList())
+                    || userDto.getUserRoleList().stream().noneMatch(userRole -> userRole.getRoleId() == 1))
                 .collect(Collectors.toList());
         } else {
             // 获取已分配的
