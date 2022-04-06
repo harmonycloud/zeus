@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -47,8 +48,8 @@ public class InitMiddlewareCluster {
     }
 
     public void initMiddlewareCluster() {
-        List<MiddlewareCluster> clusterList = clusterWrapper.listClusters();
-        if (!clusterList.isEmpty()) {
+        try {
+            List<MiddlewareCluster> clusterList  = clusterWrapper.listClusters();
             clusterList.forEach(middlewareCluster -> {
                 BeanMiddlewareCluster beanMiddlewareCluster = new BeanMiddlewareCluster();
                 String name = middlewareCluster.getMetadata().getName();
@@ -59,6 +60,8 @@ public class InitMiddlewareCluster {
                     middlewareClusterMapper.insert(beanMiddlewareCluster);
                 }
             });
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
