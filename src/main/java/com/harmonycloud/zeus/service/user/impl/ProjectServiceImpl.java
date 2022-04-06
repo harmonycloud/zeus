@@ -285,10 +285,9 @@ public class ProjectServiceImpl implements ProjectService {
             wrapper.eq("namespace", namespace);
         }
         List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
-        if (CollectionUtils.isEmpty(beanProjectNamespaceList)) {
-            throw new BusinessException(ErrorMessage.NAMESPACE_NOT_FOUND);
+        if (!CollectionUtils.isEmpty(beanProjectNamespaceList)) {
+            beanProjectNamespaceMapper.delete(wrapper);
         }
-        beanProjectNamespaceMapper.delete(wrapper);
     }
 
     @Override
