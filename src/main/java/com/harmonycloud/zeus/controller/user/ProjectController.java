@@ -44,10 +44,11 @@ public class ProjectController {
 
     @ApiOperation(value = "获取项目列表", notes = "获取项目列表")
     @ApiImplicitParams({
+            @ApiImplicitParam(name = "key", value = "关键词检索", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping
-    public BaseResult<List<ProjectDto>> list() {
-        return BaseResult.ok(projectService.list());
+    public BaseResult<List<ProjectDto>> list(@RequestParam(value = "key", required = false) String key) {
+        return BaseResult.ok(projectService.list(key));
     }
 
     @ApiOperation(value = "删除项目", notes = "删除项目")

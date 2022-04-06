@@ -94,7 +94,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<ProjectDto> list() {
+    public List<ProjectDto> list(String key) {
         QueryWrapper<BeanProject> wrapper = new QueryWrapper<>();
         List<BeanProject> beanProjectList = beanProjectMapper.selectList(wrapper);
         CurrentUser currentUser = CurrentUserRepository.getUserExistNull();
@@ -120,7 +120,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 封装数据
         List<ProjectDto> projectDtoList = new ArrayList<>();
-        beanProjectList.forEach(beanProject -> {
+        for (BeanProject beanProject : beanProjectList) {
             ProjectDto projectDto = new ProjectDto();
             BeanUtils.copyProperties(beanProject, projectDto);
             if (StringUtils.isNotEmpty(beanProject.getUser())) {
@@ -137,7 +137,18 @@ public class ProjectServiceImpl implements ProjectService {
                 projectDto.setRoleName(userRoleMap.get(projectDto.getProjectId()).getRoleName());
             }
             projectDtoList.add(projectDto);
-        });
+        }
+
+        // 根据key进行过滤
+        if (StringUtils.isNotEmpty(key)) {
+            projectDtoList = projectDtoList.stream()
+                .filter(projectDto -> (StringUtils.isNotEmpty(projectDto.getAliasName())
+                    && projectDto.getAliasName().contains(key))
+                    || (StringUtils.isNotEmpty(projectDto.getDescription())
+                        && projectDto.getDescription().contains(key)))
+                .collect(Collectors.toList());
+        }
+
         return projectDtoList;
     }
 
