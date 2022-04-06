@@ -81,8 +81,8 @@ public class ProjectServiceImpl implements ProjectService {
         if (projectDto.getClusterList() != null) {
             projectDto.getClusterList().forEach(cluster -> {
                 if (cluster.getNamespaceList() != null) {
-                    cluster.getNamespaceList()
-                        .forEach(namespace -> this.bindNamespace(namespace.setProjectId(projectId)));
+                    cluster.getNamespaceList().forEach(namespace -> this
+                        .bindNamespace(namespace.setProjectId(projectId).setClusterId(cluster.getId())));
                 }
             });
         }
