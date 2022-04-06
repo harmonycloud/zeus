@@ -368,7 +368,8 @@ public class UserServiceImpl implements UserService {
         if (StringUtils.isNotEmpty(projectId)) {
             JSONObject userMap = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue();
             List<UserRole> userRoleList = userRoleService.get(userMap.getString("username"));
-            userRoleList = userRoleList.stream().filter(userRole -> userRole.getProjectId().equals(projectId))
+            userRoleList = userRoleList.stream()
+                .filter(userRole -> userRole.getRoleId() == 1 || userRole.getProjectId().equals(projectId))
                 .collect(Collectors.toList());
             if (!CollectionUtils.isEmpty(userRoleList)) {
                 return userRoleList.get(0).getPower();
