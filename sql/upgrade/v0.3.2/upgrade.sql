@@ -80,6 +80,8 @@ DELETE from role WHERE id != '1';
 insert into role values(2, '项目管理员', '拥有项目管理权限', null, null, null);
 insert into role values(3, '运维人员', '拥有中间件运维权限', null, null, null);
 insert into role values(4, '普通用户', '拥有平台查看权限', null, null, null);
+-- 修改user_role 添加字段
+alter table role_user add COLUMN `project_id` varchar(64) collate utf8mb4_general_ci DEFAULT null comment '项目ID' AFTER `id`;
 -- 创建角色权限对应表
 DROP TABLE IF EXISTS `role_authority`;
 CREATE TABLE `role_authority` (
