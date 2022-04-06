@@ -117,6 +117,6 @@ public interface IngressService {
      * @param type
      * @return
      */
-    List listAllIngress(String clusterId, String namespace, String keyword, String type);
+    List listAllIngress(String clusterId, String namespace, String keyword);
 
 }

@@ -31,7 +31,7 @@ public class PodController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult<Middleware> list(@PathVariable("clusterId") String clusterId,
                                        @PathVariable("namespace") String namespace,
                                        @PathVariable("middlewareName") String middlewareName,
@@ -48,7 +48,7 @@ public class PodController {
             @ApiImplicitParam(name = "podName", value = "pod名称", paramType = "path", dataTypeClass = String.class),
     })
     @PostMapping("/{podName}/restart")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult restart(@PathVariable("clusterId") String clusterId,
                               @PathVariable("namespace") String namespace,
                               @PathVariable("middlewareName") String middlewareName,
@@ -67,7 +67,7 @@ public class PodController {
             @ApiImplicitParam(name = "podName", value = "pod名称", paramType = "path", dataTypeClass = String.class),
     })
     @GetMapping("/{podName}/yaml")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult<String> yaml(@PathVariable("clusterId") String clusterId,
                                        @PathVariable("namespace") String namespace,
                                        @PathVariable("middlewareName") String middlewareName,

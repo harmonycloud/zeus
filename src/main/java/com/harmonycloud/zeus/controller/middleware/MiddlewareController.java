@@ -71,7 +71,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "middleware", value = "middleware信息", paramType = "query", dataTypeClass = Middleware.class)
     })
     @PostMapping
-    @Authority(power = 1)
+    @Authority(power = 2)
     public BaseResult create(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
                              @RequestBody Middleware middleware) {
@@ -87,7 +87,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "middleware", value = "middleware信息", paramType = "query", dataTypeClass = Middleware.class)
     })
     @PostMapping("/{middlewareName}/recovery")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult recovery(@PathVariable("clusterId") String clusterId,
                                @PathVariable("namespace") String namespace,
                                @PathVariable("middlewareName") String name,
@@ -105,7 +105,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "middleware", value = "middleware信息", paramType = "query", dataTypeClass = Middleware.class)
     })
     @PutMapping("/{middlewareName}")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult update(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
                              @PathVariable("middlewareName") String name,
@@ -123,7 +123,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
     })
     @DeleteMapping("/{middlewareName}")
-    @Authority(power = 2)
+    @Authority(power = 3)
     public BaseResult delete(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
                              @PathVariable("middlewareName") String name,
@@ -139,7 +139,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
     })
     @DeleteMapping("/{middlewareName}/storage")
-    @Authority(power = 2)
+    @Authority(power = 3)
     public BaseResult deleteStorage(@PathVariable("clusterId") String clusterId,
                                     @PathVariable("namespace") String namespace,
                                     @PathVariable("middlewareName") String name,
@@ -157,7 +157,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "isAuto", value = "true开启/false关闭自动切换，不传/传null都为手动切换", paramType = "query", dataTypeClass = Boolean.class),
     })
     @PutMapping("/{middlewareName}/switch")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult switchMiddleware(@PathVariable("clusterId") String clusterId,
                                        @PathVariable("namespace") String namespace,
                                        @PathVariable("middlewareName") String name,
@@ -174,7 +174,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("{middlewareName}/monitor")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult<MonitorDto> monitor(@PathVariable("clusterId") String clusterId,
                                           @PathVariable("namespace") String namespace,
                                           @PathVariable("middlewareName") String name,
@@ -191,7 +191,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("{middlewareName}/version")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult version(@PathVariable("clusterId") String clusterId,
                               @PathVariable("namespace") String namespace,
                               @PathVariable("middlewareName") String middlewareName,
@@ -209,7 +209,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "upgradeChartVersion", value = "升级chart版本", paramType = "query", dataTypeClass = String.class),
     })
     @PostMapping("{middlewareName}/upgradeChart")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult upgradeChart(@PathVariable("clusterId") String clusterId,
                                    @PathVariable("namespace") String namespace,
                                    @PathVariable("middlewareName") String middlewareName,
@@ -229,7 +229,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "upgradeChartVersion", value = "升级chart版本", paramType = "query", dataTypeClass = String.class),
     })
     @PostMapping("{middlewareName}/upgradeCheck")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult upgradeCheck(@PathVariable("clusterId") String clusterId,
                                    @PathVariable("namespace") String namespace,
                                    @PathVariable("middlewareName") String middlewareName,
@@ -247,7 +247,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class)
     })
     @PostMapping("/{middlewareName}/reboot")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult reboot(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
                              @PathVariable("middlewareName") String name,
@@ -264,7 +264,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "middleware", value = "中间件内容", paramType = "query", dataTypeClass = Middleware.class)
     })
     @PutMapping("/{middlewareName}/storage")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult updateStorage(@PathVariable("clusterId") String clusterId,
                                     @PathVariable("namespace") String namespace,
                                     @PathVariable("middlewareName") String name,
@@ -284,7 +284,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/{middlewareName}/topology")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult<MiddlewareTopologyDTO> topology(@PathVariable("clusterId") String clusterId,
                                                       @PathVariable("namespace") String namespace,
                                                       @PathVariable("middlewareName") String name,
@@ -300,7 +300,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/{middlewareName}/platform")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult<MiddlewareTopologyDTO> platform(@PathVariable("clusterId") String clusterId,
                                                       @PathVariable("namespace") String namespace,
                                                       @PathVariable("middlewareName") String name,

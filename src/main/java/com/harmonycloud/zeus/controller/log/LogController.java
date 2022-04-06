@@ -42,7 +42,7 @@ public class LogController {
     @ApiOperation(value = "查询日志", notes = "查询日志")
     @ResponseBody
     @RequestMapping(method = RequestMethod.POST)
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult queryLog(@PathVariable("clusterId") String clusterId,
                                @PathVariable("namespace") String namespace,
                                @PathVariable("middlewareName") String middlewareName,
@@ -70,7 +70,7 @@ public class LogController {
      */
     @ApiOperation(value = "导出日志", notes = "导出查询日志")
     @RequestMapping(value = "/export", method = RequestMethod.GET)
-    @Authority(power = 3)
+    @Authority(power = 1)
     public void exportLog(@PathVariable("clusterId") String clusterId,
                           @PathVariable("namespace") String namespace,
                           @PathVariable("middlewareName") String middlewareName,
@@ -92,7 +92,7 @@ public class LogController {
     @ApiOperation(value = "查询pod日志文件列表", notes = "从es获取pod的日志文件列表")
     @ResponseBody
     @RequestMapping(value = "/filenames", method = RequestMethod.GET)
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult listLogFilenames(@PathVariable("clusterId") String clusterId,
                                        @PathVariable("namespace") String namespace,
                                        @PathVariable("middlewareName") String middlewareName,
