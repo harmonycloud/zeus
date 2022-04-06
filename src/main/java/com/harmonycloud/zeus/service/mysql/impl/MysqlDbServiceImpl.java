@@ -69,7 +69,7 @@ public class MysqlDbServiceImpl implements MysqlDbService {
 
     @Override
     public BaseResult update(MysqlDbDTO dbDTO) {
-        if (StringUtils.isAnyBlank(dbDTO.getId(), dbDTO.getDescription())) {
+        if (StringUtils.isNotEmpty(dbDTO.getId())) {
             throw new BusinessException(ErrorMessage.MYSQL_INCOMPLETE_PARAMETERS);
         }
         BeanMysqlDb beanMysqlDb = beanMysqlDbMapper.selectById(dbDTO.getId());
