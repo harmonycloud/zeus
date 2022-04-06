@@ -692,7 +692,7 @@ public class IngressServiceImpl implements IngressService {
             return;
         }
         if (StringUtils.isNotBlank(data.get(serviceDTO.getExposePort()))) {
-            throw new CaasRuntimeException(ErrorMessage.INGRESS_TCP_PORT_EXIST);
+            throw new BusinessException(ErrorMessage.INGRESS_TCP_PORT_EXIST);
         }
     }
 

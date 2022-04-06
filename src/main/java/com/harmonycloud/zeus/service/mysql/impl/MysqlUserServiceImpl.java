@@ -256,25 +256,25 @@ public class MysqlUserServiceImpl implements MysqlUserService {
     @Override
     public List<MysqlUserDetail> list(String clusterId, String namespace, String middlewareName, String user, String keyword) {
         QueryRunner qr = new QueryRunner();
-        Connection con = getDBConnection(mysqlService.getAccessInfo(clusterId, namespace, middlewareName));
+        MysqlAccessInfo accessInfo = mysqlService.getAccessInfo(clusterId, namespace, middlewareName);
+        Connection con = getDBConnection(accessInfo);
         try {
             List<MysqlUserDetail> userList = qr.query(con, generateDbQuerySql(user, keyword), new BeanListHandler<>(MysqlUserDetail.class));
             userList = userList.stream().filter(item -> !INITIAL_USER.contains(item.getUser())).collect(Collectors.toList());
             // 查询每个用户所拥有的数据库及权限
-            MysqlAccessInfo accessInfo = mysqlService.getAccessInfo(clusterId, namespace, middlewareName);
-            userList.forEach(item -> {
+            userList.forEach(userDetail -> {
                 String mysqlQualifiedName = getMysqlQualifiedName(clusterId, namespace, middlewareName);
-                List<MysqlDbPrivilege> privileges = nativeListUserDb(con, item.getUser(), mysqlQualifiedName, keyword);
+                List<MysqlDbPrivilege> privileges = nativeListUserDb(con, userDetail.getUser(), mysqlQualifiedName, keyword);
                 // 查询平台存储的用户信息
-                BeanMysqlUser beanMysqlUser = select(mysqlQualifiedName, item.getUser());
+                BeanMysqlUser beanMysqlUser = select(mysqlQualifiedName, userDetail.getUser());
                 if (beanMysqlUser != null) {
-                    item.setId(beanMysqlUser.getId());
-                    item.setPassword(MyAESUtil.decodeBase64(beanMysqlUser.getPassword()));
-                    item.setPasswordCheck(passwordCheck(accessInfo, item.getUser(), item.getPassword()));
-                    item.setDescription(beanMysqlUser.getDescription());
-                    item.setCreateTime(Date.from(beanMysqlUser.getCreatetime().atZone(ZoneId.systemDefault()).toInstant()));
+                    userDetail.setId(beanMysqlUser.getId());
+                    userDetail.setPassword(MyAESUtil.decodeBase64(beanMysqlUser.getPassword()));
+                    userDetail.setPasswordCheck(passwordCheck(accessInfo, userDetail.getUser(), userDetail.getPassword()));
+                    userDetail.setDescription(beanMysqlUser.getDescription());
+                    userDetail.setCreateTime(Date.from(beanMysqlUser.getCreatetime().atZone(ZoneId.systemDefault()).toInstant()));
                 }
-                item.setDbs(privileges);
+                userDetail.setDbs(privileges);
             });
             userList.sort((o1, o2) -> {
                 if (o1.getCreateTime() == null) {
