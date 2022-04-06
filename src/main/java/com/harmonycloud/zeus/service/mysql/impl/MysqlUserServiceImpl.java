@@ -56,8 +56,11 @@ public class MysqlUserServiceImpl implements MysqlUserService {
 
     @Override
     public BaseResult create(MysqlUserDTO user) {
-        if (StringUtils.isAnyBlank(user.getClusterId(), user.getNamespace(), user.getMiddlewareName(), user.getUser(), user.getPassword())) {
+        if (StringUtils.isAnyBlank(user.getClusterId(), user.getNamespace(), user.getMiddlewareName(), user.getUser(), user.getPassword(), user.getConfirmPassword())) {
             throw new BusinessException(ErrorMessage.MYSQL_INCOMPLETE_PARAMETERS);
+        }
+        if (!user.getPassword().equals(user.getConfirmPassword())) {
+            throw new BusinessException(ErrorMessage.MYSQL_PASSWORD_NOT_MATCH);
         }
         Connection con = getDBConnection(mysqlService.getAccessInfo(user));
         if (nativeCreate(con, user.getUser(), user.getPassword())) {
@@ -132,6 +135,9 @@ public class MysqlUserServiceImpl implements MysqlUserService {
 
     @Override
     public BaseResult updatePassword(MysqlUserDTO mysqlUserDTO) {
+        if(StringUtils.isAnyEmpty(mysqlUserDTO.getUser(), mysqlUserDTO.getPassword(), mysqlUserDTO.getConfirmPassword())){
+            throw new BusinessException(ErrorMessage.MYSQL_PASSWORD_NOT_MATCH);
+        }
         if (nativeUpdatePassword(getDBConnection(mysqlService.getAccessInfo(mysqlUserDTO)), mysqlUserDTO.getUser(), mysqlUserDTO.getPassword())) {
             // 更新数据库密码
             BeanMysqlUser mysqlUser = beanMysqlUserMapper.selectById(mysqlUserDTO.getId());

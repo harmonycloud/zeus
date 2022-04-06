@@ -223,7 +223,10 @@ public class ProjectServiceImpl implements ProjectService {
         BeanProject beanProject = checkExist(projectDto.getProjectId());
         StringBuilder sb = new StringBuilder();
         projectDto.getUserDtoList().forEach(userDto -> {
-            sb.append(",").append(userDto.getUserName());
+            if (StringUtils.isNotEmpty(userDto.getUserName())){
+                sb.append(",");
+            }
+            sb.append(userDto.getUserName());
             userRoleService.insert(projectDto.getProjectId(), userDto.getUserName(), userDto.getRoleId());
         });
         beanProject.setUser(beanProject.getUser() + sb.toString());

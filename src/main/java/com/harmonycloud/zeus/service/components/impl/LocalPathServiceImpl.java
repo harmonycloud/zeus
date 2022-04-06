@@ -64,7 +64,7 @@ public class LocalPathServiceImpl extends AbstractBaseOperator implements LocalP
 
     @Override
     public void delete(MiddlewareClusterDTO cluster, Integer status) {
-        helmChartService.uninstall(cluster, "middleware-operator", ComponentsEnum.LVM.getName());
+        helmChartService.uninstall(cluster, "middleware-operator", ComponentsEnum.LOCAL_PATH.getName());
         List<MiddlewareClusterStorageSupport> support = cluster.getStorage().getSupport();
         support = support.stream().filter(st -> !ComponentsEnum.LOCAL_PATH.getName().equals(st.getType()))
             .collect(Collectors.toList());
