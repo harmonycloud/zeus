@@ -31,7 +31,6 @@ public class PrometheusWebhookController {
     })
     @PostMapping
     public BaseResult alert(@RequestBody String json) throws Exception {
-        log.info(json);
         prometheusWebhookService.alert(json);
         return BaseResult.ok();
     }
