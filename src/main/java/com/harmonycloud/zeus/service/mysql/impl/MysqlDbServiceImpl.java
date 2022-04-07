@@ -14,6 +14,7 @@ import com.harmonycloud.zeus.dao.BeanMysqlDbMapper;
 import com.harmonycloud.zeus.service.middleware.impl.MysqlServiceImpl;
 import com.harmonycloud.zeus.service.mysql.MysqlDbPrivService;
 import com.harmonycloud.zeus.service.mysql.MysqlDbService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
@@ -38,6 +39,7 @@ import static com.harmonycloud.zeus.util.MysqlConnectionUtil.getMysqlQualifiedNa
  * @author liyinlong
  * @since 2022/3/25 10:51 上午
  */
+@Slf4j
 @Service
 public class MysqlDbServiceImpl implements MysqlDbService {
 
@@ -190,6 +192,8 @@ public class MysqlDbServiceImpl implements MysqlDbService {
         String sql = "show char set";
         try {
             List<MysqlDbDTO> charsets = qr.query(con, sql, new BeanListHandler<>(MysqlDbDTO.class));
+            log.info("charsets size:{}", charsets.size());
+            log.info("charsets:{}", charsets);
             charsets.sort(Comparator.comparing(MysqlDbDTO::getCharset));
             return charsets;
         } catch (SQLException e) {
