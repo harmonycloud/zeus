@@ -192,8 +192,6 @@ public class MysqlDbServiceImpl implements MysqlDbService {
         String sql = "show char set";
         try {
             List<MysqlDbDTO> charsets = qr.query(con, sql, new BeanListHandler<>(MysqlDbDTO.class));
-            log.info("charsets size:{}", charsets.size());
-            log.info("charsets:{}", charsets);
             charsets.sort(Comparator.comparing(MysqlDbDTO::getCharset));
             return charsets;
         } catch (SQLException e) {
