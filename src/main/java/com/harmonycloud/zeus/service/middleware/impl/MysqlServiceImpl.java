@@ -202,6 +202,7 @@ public class MysqlServiceImpl implements MysqlService {
         }
         mysqlAccessInfo.setUsername("root");
         setPassword(middleware, mysqlAccessInfo);
+        log.info("{}的访问信息:{}", middleware.getName(), mysqlAccessInfo);
         return mysqlAccessInfo;
     }
 
