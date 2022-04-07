@@ -1,7 +1,6 @@
 package com.harmonycloud.zeus.service.middleware;
 
 import com.harmonycloud.caas.common.model.RedisDbDTO;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
 
 import java.util.List;
 
