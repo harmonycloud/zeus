@@ -124,8 +124,8 @@ DROP TABLE IF EXISTS `project`;
 CREATE TABLE `project` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增id',
   `project_id` varchar(64) CHARACTER SET utf8mb4 DEFAULT NULL COMMENT '项目id',
-  `name` varchar(64) CHARACTER SET utf8mb4 DEFAULT NULL COMMENT '项目名称',
-  `alias_name` varchar(64) CHARACTER SET utf8mb4 DEFAULT NULL COMMENT '项目别名',
+  `name` varchar(128) CHARACTER SET utf8mb4 DEFAULT NULL COMMENT '项目名称',
+  `alias_name` varchar(128) CHARACTER SET utf8mb4 DEFAULT NULL COMMENT '项目别名',
   `description` text CHARACTER SET utf8mb4 COMMENT '项目描述',
   `user` text CHARACTER SET utf8mb4 COMMENT '用户',
   `create_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
