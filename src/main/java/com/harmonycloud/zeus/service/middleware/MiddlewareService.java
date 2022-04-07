@@ -53,7 +53,7 @@ public interface MiddlewareService {
      *
      * @param middleware 中间件信息
      */
-    String create(Middleware middleware);
+    Middleware create(Middleware middleware);
 
     /**
      * 恢复中间件

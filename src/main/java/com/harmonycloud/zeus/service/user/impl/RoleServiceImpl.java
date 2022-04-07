@@ -131,7 +131,9 @@ public class RoleServiceImpl implements RoleService {
         beanRole.setDescription(roleDto.getDescription());
         beanRoleMapper.updateById(beanRole);
         // 更新角色权限
-        roleAuthorityService.update(roleDto.getId(), roleDto.getPower());
+        if (!CollectionUtils.isEmpty(roleDto.getPower())) {
+            roleAuthorityService.update(roleDto.getId(), roleDto.getPower());
+        }
     }
 
     @Override

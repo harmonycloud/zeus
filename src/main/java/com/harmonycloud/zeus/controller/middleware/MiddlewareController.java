@@ -72,9 +72,9 @@ public class MiddlewareController {
     })
     @PostMapping
     @Authority(power = 2)
-    public BaseResult create(@PathVariable("clusterId") String clusterId,
-                             @PathVariable("namespace") String namespace,
-                             @RequestBody Middleware middleware) {
+    public BaseResult<Middleware> create(@PathVariable("clusterId") String clusterId,
+                                         @PathVariable("namespace") String namespace,
+                                         @RequestBody Middleware middleware) {
         middleware.setClusterId(clusterId).setNamespace(namespace);
         return BaseResult.ok(middlewareService.create(middleware));
     }

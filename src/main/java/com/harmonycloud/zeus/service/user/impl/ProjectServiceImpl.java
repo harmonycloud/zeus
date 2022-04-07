@@ -76,6 +76,8 @@ public class ProjectServiceImpl implements ProjectService {
         BeanUtils.copyProperties(projectDto, beanProject);
         beanProject.setProjectId(projectId);
         beanProject.setCreateTime(new Date());
+        // 添加项目
+        beanProjectMapper.insert(beanProject);
         //绑定用户角色
         if (StringUtils.isNotEmpty(projectDto.getUser())){
             userRoleService.insert(projectId, projectDto.getUser(), 2);
@@ -89,8 +91,6 @@ public class ProjectServiceImpl implements ProjectService {
                 }
             });
         }
-        // 添加项目
-        beanProjectMapper.insert(beanProject);
     }
 
     @Override
