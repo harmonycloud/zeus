@@ -174,7 +174,7 @@ public class NamespaceServiceImpl implements NamespaceService {
         }
         // 判断是否存在中间件
         List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(clusterId, name, null);
-        if(CollectionUtils.isEmpty(middlewareCRList)){
+        if(!CollectionUtils.isEmpty(middlewareCRList)){
             throw new BusinessException(ErrorMessage.NAMESPACE_NOT_EMPTY);
         }
         io.fabric8.kubernetes.api.model.Namespace ns = new io.fabric8.kubernetes.api.model.Namespace();
