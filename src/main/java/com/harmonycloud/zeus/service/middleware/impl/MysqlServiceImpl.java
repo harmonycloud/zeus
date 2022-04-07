@@ -11,12 +11,17 @@ import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.excel.ExcelUtil;
 import com.harmonycloud.tool.page.PageObject;
+import com.harmonycloud.zeus.bean.BeanMysqlUser;
 import com.harmonycloud.zeus.operator.api.MysqlOperator;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.IngressService;
 import com.harmonycloud.zeus.service.k8s.impl.ServiceServiceImpl;
 import com.harmonycloud.zeus.service.log.EsComponentService;
 import com.harmonycloud.zeus.service.middleware.MysqlService;
+import com.harmonycloud.zeus.service.mysql.MysqlDbService;
+import com.harmonycloud.zeus.service.mysql.MysqlUserService;
+import com.harmonycloud.zeus.util.MyAESUtil;
+import com.harmonycloud.zeus.util.MysqlConnectionUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -49,6 +54,8 @@ public class MysqlServiceImpl implements MysqlService {
     private ClusterService clusterService;
     @Autowired
     private EsComponentService esComponentService;
+    @Autowired
+    private MysqlUserService mysqlUserService;
 
     private final static Map<String, String> titleMap = new HashMap<String, String>(7) {
         {
@@ -194,8 +201,22 @@ public class MysqlServiceImpl implements MysqlService {
             mysqlAccessInfo.setOpenService(false);
         }
         mysqlAccessInfo.setUsername("root");
-        mysqlAccessInfo.setPassword(middleware.getPassword());
+        setPassword(middleware, mysqlAccessInfo);
         return mysqlAccessInfo;
+    }
+
+    /**
+     * 设置mysql root 用户密码，默认从数据库中查，查不到再取values.yaml中的
+     * @param middleware
+     * @param mysqlAccessInfo
+     */
+    public void setPassword(Middleware middleware, MysqlAccessInfo mysqlAccessInfo) {
+        BeanMysqlUser mysqlUser = mysqlUserService.select(MysqlConnectionUtil.getMysqlQualifiedName(middleware.getClusterId(), middleware.getNamespace(), middleware.getName()), "root");
+        if (mysqlUser != null) {
+            mysqlAccessInfo.setPassword(MyAESUtil.decodeBase64(mysqlUser.getPassword()));
+        } else {
+            mysqlAccessInfo.setPassword(middleware.getPassword());
+        }
     }
 
     public MysqlAccessInfo getAccessInfo(MysqlUserDTO user) {
