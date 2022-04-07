@@ -48,6 +48,23 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
     private ServiceServiceImpl serviceService;
 
     @Override
+    public List<RedisDbDTO> listRedisDb(String clusterId, String namespace, String middlewareName, String db, String keyWord) {
+        RedisAccessInfo redisAccessInfo = queryBasicAccessInfo(clusterId,namespace,middlewareName,null);
+        Jedis jedis = getRedisSentinelIsOk(redisAccessInfo);
+        List<RedisDbDTO> dbs = new LinkedList<>();
+        if (RedisConstant.PONG.equalsIgnoreCase(jedis.ping())) {
+            if (SENTINEL.equals(redisAccessInfo.getMode())) {
+                jedis.select(Integer.valueOf(db));
+                dbs = convertDTO(jedis,Integer.valueOf(db),keyWord);
+            } else {
+                throw new BusinessException(ErrorMessage.TEMPORARY_NOT_SUPPORT_CLUSTER);
+            }
+        }
+        jedis.close();
+        return dbs;
+    }
+
+    @Override
     public void create(String clusterId, String namespace, String middlewareName, RedisDbDTO db) {
         RedisAccessInfo redisAccessInfo = queryBasicAccessInfo(clusterId,namespace,middlewareName,null);
         Jedis jedis = new Jedis();
@@ -71,21 +88,18 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
             jedis = getRedisSentinelIsOk(redisAccessInfo);
             if (RedisConstant.PONG.equalsIgnoreCase(jedis.ping())) {
                 jedis.select(Integer.valueOf(db.getDb()));
-                deleteKey(jedis,db);
+                if (jedis.exists(db.getKey())) {
+                    Long time = jedis.ttl(db.getKey());
+                    if (db.getTimeOut() == null) {
+                        db.setTimeOut(time);
+                    }
+                    updateByType(jedis,db);
+                }
             }
         } else {
             throw new BusinessException(ErrorMessage.TEMPORARY_NOT_SUPPORT_CLUSTER);
         }
         jedis.close();
-    }
-
-    private void deleteKey(Jedis jedis,RedisDbDTO db) {
-        if (jedis.exists(db.getKey())) {
-            jedis.del(db.getKey());
-            Long time = jedis.ttl(db.getKey());
-            db.setTimeOut(time);
-            paddingDataByType(jedis,db);
-        }
     }
 
     @Override
@@ -106,6 +120,45 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
         jedis.close();
     }
 
+    /**
+     * 修改时先删后增
+     */
+    public void updateByType(Jedis jedis, RedisDbDTO redisDbDTO) {
+        if (RedisConstant.LIST.equals(redisDbDTO.getType())) {
+            for (String mapKey : redisDbDTO.getList().keySet()) {
+                jedis.lset(redisDbDTO.getKey(),Long.parseLong(mapKey),redisDbDTO.getList().get(mapKey));
+            }
+        }
+        if (RedisConstant.HASH.equals(redisDbDTO.getType())) {
+            for (String mapKey : redisDbDTO.getOldHash().keySet()) {
+                jedis.hdel(redisDbDTO.getKey(),mapKey);
+            }
+            jedis.hmset(redisDbDTO.getKey(),redisDbDTO.getHash());
+        }
+        if (RedisConstant.STRING.equals(redisDbDTO.getType())) {
+            jedis.set(redisDbDTO.getKey(),redisDbDTO.getValue());
+        }
+        if (RedisConstant.SET.equals(redisDbDTO.getType())) {
+            jedis.srem(redisDbDTO.getKey(),redisDbDTO.getOldSet());
+            jedis.sadd(redisDbDTO.getKey(),redisDbDTO.getSet());
+        }
+        if (RedisConstant.Z_SET.equals(redisDbDTO.getType())) {
+            for (String score : redisDbDTO.getZset().keySet()) {
+                for (String mapKey : redisDbDTO.getOldZset().keySet()) {
+                    jedis.zrem(redisDbDTO.getKey(),redisDbDTO.getOldZset().get(mapKey));
+                }
+                try {
+                    jedis.zadd(redisDbDTO.getKey(), Double.parseDouble(score),redisDbDTO.getZset().get(score));
+                } catch (Exception e) {
+                    jedis.zadd(redisDbDTO.getKey(), 0,redisDbDTO.getZset().get(score));
+                }
+            }
+        }
+    }
+
+    /**
+     * 删除时分外部删除和内部删除
+     */
     public void removeByType(Jedis jedis, RedisDbDTO redisDbDTO) {
         if (RedisConstant.LIST.equals(redisDbDTO.getType())) {
             if (MapUtils.isEmpty(redisDbDTO.getList())) {
@@ -144,23 +197,6 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
                 }
             }
         }
-    }
-
-    @Override
-    public List<RedisDbDTO> listRedisDb(String clusterId, String namespace, String middlewareName, String db, String keyWord) {
-        RedisAccessInfo redisAccessInfo = queryBasicAccessInfo(clusterId,namespace,middlewareName,null);
-        Jedis jedis = getRedisSentinelIsOk(redisAccessInfo);
-        List<RedisDbDTO> dbs = new LinkedList<>();
-        if (RedisConstant.PONG.equalsIgnoreCase(jedis.ping())) {
-            if (SENTINEL.equals(redisAccessInfo.getMode())) {
-                jedis.select(Integer.valueOf(db));
-                dbs = convertDTO(jedis,Integer.valueOf(db),keyWord);
-            } else {
-                throw new BusinessException(ErrorMessage.TEMPORARY_NOT_SUPPORT_CLUSTER);
-            }
-        }
-        jedis.close();
-        return dbs;
     }
 
     public List<RedisDbDTO> convertDTO(Jedis jedis, int db, String keyWord) {
@@ -210,6 +246,48 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
         return dbs;
     }
 
+    public void paddingDataByType(Jedis jedis, RedisDbDTO redisDbDTO) {
+        if (!StringUtils.isEmpty(redisDbDTO.getType())) {
+            switch (redisDbDTO.getType()) {
+                case RedisConstant.STRING:
+                    jedis.set(redisDbDTO.getKey(),redisDbDTO.getValue());
+                    break;
+                case RedisConstant.LIST:
+                    for (String direction : redisDbDTO.getList().keySet()) {
+                        if (RedisConstant.FRONT.equals(direction)) {
+                            jedis.lpush(redisDbDTO.getKey(), redisDbDTO.getList().get(direction));
+                        } else {
+                            jedis.rpush(redisDbDTO.getKey(), redisDbDTO.getList().get(direction));
+                        }
+                    }
+                    break;
+                case RedisConstant.HASH:
+                    jedis.hmset(redisDbDTO.getKey(),redisDbDTO.getHash());
+                    break;
+                case RedisConstant.SET:
+                    jedis.sadd(redisDbDTO.getKey(),redisDbDTO.getSet());
+                    break;
+                case RedisConstant.Z_SET:
+                    for (String score : redisDbDTO.getZset().keySet()) {
+                        try {
+                            jedis.zadd(redisDbDTO.getKey(), Double.parseDouble(score),redisDbDTO.getZset().get(score));
+                        } catch (Exception e) {
+                            jedis.zadd(redisDbDTO.getKey(), 0,redisDbDTO.getZset().get(score));
+                        }
+                    }
+                    break;
+                default:
+
+            }
+            if (redisDbDTO.getTimeOut() != null && redisDbDTO.getTimeOut().intValue() != -1 ) {
+                jedis.expire(redisDbDTO.getKey(),redisDbDTO.getTimeOut().intValue());
+            }
+        }
+    }
+
+    /**
+     * 获取redis暴露出来的地址
+     */
     public RedisAccessInfo queryBasicAccessInfo(String clusterId, String namespace, String middlewareName, Middleware middleware) {
         if (middleware == null) {
             middleware = middlewareService.detail(clusterId, namespace, middlewareName, MiddlewareTypeEnum.REDIS.getType());
@@ -249,41 +327,6 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
         redisAccessInfo.setPassword(middleware.getPassword());
         redisAccessInfo.setMode(middleware.getMode());
         return redisAccessInfo;
-    }
-
-    public void paddingDataByType(Jedis jedis, RedisDbDTO redisDbDTO) {
-        if (!StringUtils.isEmpty(redisDbDTO.getType())) {
-            switch (redisDbDTO.getType()) {
-                case RedisConstant.STRING:
-                    jedis.set(redisDbDTO.getKey(),redisDbDTO.getValue());
-                    break;
-                case RedisConstant.LIST:
-                    for (String direction : redisDbDTO.getList().keySet()) {
-                        if (RedisConstant.FRONT.equals(direction)) {
-                            jedis.lpush(redisDbDTO.getKey(), redisDbDTO.getList().get(direction));
-                        } else {
-                            jedis.rpush(redisDbDTO.getKey(), redisDbDTO.getList().get(direction));
-                        }
-                    }
-                    break;
-                case RedisConstant.HASH:
-                    jedis.hmset(redisDbDTO.getKey(),redisDbDTO.getHash());
-                    break;
-                case RedisConstant.SET:
-                    jedis.sadd(redisDbDTO.getKey(),redisDbDTO.getSet());
-                    break;
-                case RedisConstant.Z_SET:
-                    for (String score : redisDbDTO.getZset().keySet()) {
-                        jedis.zadd(redisDbDTO.getKey(), Double.parseDouble(redisDbDTO.getZset().get(score)),score);
-                    }
-                    break;
-                default:
-
-            }
-            if (redisDbDTO.getTimeOut() != null && redisDbDTO.getTimeOut().intValue() != -1 ) {
-                jedis.expire(redisDbDTO.getKey(),redisDbDTO.getTimeOut().intValue());
-            }
-        }
     }
 
     public void paramCheck(String clusterId, String namespace, String middlewareName) {
