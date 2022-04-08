@@ -347,6 +347,9 @@ public class ClusterServiceImpl implements ClusterService {
     public void update(MiddlewareClusterDTO cluster) {
         try {
             middlewareClusterService.update(cluster.getName(), convert(cluster));
+            if (CLUSTER_MAP.containsKey(cluster.getId())){
+                CLUSTER_MAP.put(cluster.getId(), cluster);
+            }
         } catch (Exception e) {
             log.error("集群{}的accessToken更新失败", cluster.getId());
             throw new BusinessException(DictEnum.CLUSTER, cluster.getNickname(), ErrorMessage.UPDATE_FAIL);

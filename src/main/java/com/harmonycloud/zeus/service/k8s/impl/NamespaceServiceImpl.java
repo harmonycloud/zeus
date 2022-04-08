@@ -38,6 +38,8 @@ public class NamespaceServiceImpl implements NamespaceService {
     private static String labelKey = null;
     private static String labelValue = null;
 
+    private static final String KEY_NAMESPACE_CHINESE = "alias_name";
+
     @Autowired
     private NamespaceWrapper namespaceWrapper;
     @Autowired
@@ -76,13 +78,13 @@ public class NamespaceServiceImpl implements NamespaceService {
             .filter(ns -> (all || ns.getMetadata().getLabels() != null
                 && StringUtils.equals(ns.getMetadata().getLabels().get(labelKey), labelValue))
                 && !protectNamespaceList.contains(ns.getMetadata().getName())
-                && (StringUtils.isBlank(keyword) || ns.getMetadata().getName().contains(keyword)))
+                && (StringUtils.isBlank(keyword) || (ns.getMetadata().getAnnotations() != null && ns.getMetadata().getAnnotations().containsKey(KEY_NAMESPACE_CHINESE) && ns.getMetadata().getAnnotations().get(KEY_NAMESPACE_CHINESE).contains(keyword)) ))
             .map(ns -> {
                 Namespace namespace = new Namespace().setName(ns.getMetadata().getName()).setClusterId(clusterId);
                 // 昵称
                 if (ns.getMetadata().getAnnotations() != null
-                    && ns.getMetadata().getAnnotations().containsKey("alias_name")) {
-                    namespace.setAliasName(ns.getMetadata().getAnnotations().get("alias_name"));
+                    && ns.getMetadata().getAnnotations().containsKey(KEY_NAMESPACE_CHINESE)) {
+                    namespace.setAliasName(ns.getMetadata().getAnnotations().get(KEY_NAMESPACE_CHINESE));
                 }
                 // 是否已注册
                 namespace.setRegistered(ns.getMetadata().getLabels() != null
@@ -174,7 +176,7 @@ public class NamespaceServiceImpl implements NamespaceService {
         }
         // 判断是否存在中间件
         List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(clusterId, name, null);
-        if(CollectionUtils.isEmpty(middlewareCRList)){
+        if(!CollectionUtils.isEmpty(middlewareCRList)){
             throw new BusinessException(ErrorMessage.NAMESPACE_NOT_EMPTY);
         }
         io.fabric8.kubernetes.api.model.Namespace ns = new io.fabric8.kubernetes.api.model.Namespace();
