@@ -67,7 +67,7 @@ public class InitPersonalImage {
         personal.setTabLogoPath("tablogo.svg");
         personal.setTitle("Zeus");
         personal.setSlogan("让IT更美好");
-        personal.setCopyrightNotice("Copyeight © 2021 杭州谐云科技有限公司 All rights reserved.Copyeight.");
+        personal.setCopyrightNotice("Copyright © 2021 杭州谐云科技有限公司 All rights reserved.Copyright.");
         personal.setPlatformName("Zeus | 中间件管理一体化平台");
         personal.setCreateTime(new Date());
         personal.setStatus("0");
