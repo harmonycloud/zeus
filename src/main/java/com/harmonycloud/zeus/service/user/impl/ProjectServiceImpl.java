@@ -181,7 +181,6 @@ public class ProjectServiceImpl implements ProjectService {
                 .collect(Collectors.toList());
             cluster.setNamespaceList(list);
         });
-        clusterList.removeIf(cluster -> CollectionUtils.isEmpty(cluster.getNamespaceList()));
         return clusterList;
     }
 
