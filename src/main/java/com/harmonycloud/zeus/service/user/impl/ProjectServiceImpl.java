@@ -181,7 +181,6 @@ public class ProjectServiceImpl implements ProjectService {
                 .collect(Collectors.toList());
             cluster.setNamespaceList(list);
         });
-        clusterList.removeIf(cluster -> CollectionUtils.isEmpty(cluster.getNamespaceList()));
         return clusterList;
     }
 
@@ -290,8 +289,10 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public void unBindNamespace(String projectId, String clusterId, String namespace) {
-        QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<BeanProjectNamespace>()
-            .eq("project_id", projectId);
+        QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<BeanProjectNamespace>();
+        if (StringUtils.isNotEmpty(projectId)){
+            wrapper.eq("project_id", projectId);
+        }
         if (StringUtils.isNotEmpty(clusterId)){
             wrapper.eq("cluster_id", clusterId);
         }

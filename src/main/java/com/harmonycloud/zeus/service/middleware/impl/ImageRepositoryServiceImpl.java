@@ -3,6 +3,8 @@ package com.harmonycloud.zeus.service.middleware.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.pagehelper.PageInfo;
 import com.harmonycloud.caas.common.constants.CommonConstant;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.middleware.ImageRepositoryDTO;
 import com.harmonycloud.zeus.bean.BeanImageRepository;
 import com.harmonycloud.zeus.dao.BeanImageRepositoryMapper;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * @author yushuaikang
@@ -29,6 +32,7 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
 
     @Override
     public void insert(String clusterId, ImageRepositoryDTO imageRepositoryDTO) {
+        check(imageRepositoryDTO);
         BeanImageRepository beanImageRepository = new BeanImageRepository();
         BeanUtils.copyProperties(imageRepositoryDTO, beanImageRepository);
         String address = imageRepositoryDTO.getHostAddress() + ":" + imageRepositoryDTO.getPort() + "/" + imageRepositoryDTO.getProject();
@@ -56,6 +60,7 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
 
     @Override
     public void update(String clusterId, ImageRepositoryDTO imageRepositoryDTO) {
+        check(imageRepositoryDTO);
         BeanImageRepository beanImageRepository = new BeanImageRepository();
         BeanUtils.copyProperties(imageRepositoryDTO, beanImageRepository);
         String address = imageRepositoryDTO.getHostAddress() + ":" + imageRepositoryDTO.getPort() + "/" + imageRepositoryDTO.getProject();
@@ -97,5 +102,15 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         QueryWrapper<BeanImageRepository> wrapper = new QueryWrapper<>();
         wrapper.eq("cluster_id",clusterId);
         beanImageRepositoryMapper.delete(wrapper);
+    }
+
+    /**
+     * 中文字符校验
+     */
+    public void check(ImageRepositoryDTO imageRepositoryDTO){
+        Pattern pattern = Pattern.compile("[\u4e00-\u9fa5]");
+        if (pattern.matcher(imageRepositoryDTO.getProject()).find() || pattern.matcher(imageRepositoryDTO.getPort()).find() || pattern.matcher(imageRepositoryDTO.getHostAddress()).find()){
+            throw new BusinessException(ErrorMessage.DO_NOT_USE_CHINESE);
+        }
     }
 }
