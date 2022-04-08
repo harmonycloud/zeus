@@ -43,6 +43,7 @@ import com.harmonycloud.zeus.service.user.UserRoleService;
 import com.harmonycloud.zeus.util.AssertUtil;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 /**
@@ -69,6 +70,7 @@ public class ProjectServiceImpl implements ProjectService {
     private MiddlewareInfoService middlewareInfoService;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void add(ProjectDto projectDto) {
         AssertUtil.notBlank(projectDto.getName(), DictEnum.PROJECT_NAME);
         String projectId = UUIDUtils.get16UUID();
@@ -168,7 +170,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<MiddlewareClusterDTO> getAllocatableNamespace(String projectId) {
+    public List<MiddlewareClusterDTO> getAllocatableNamespace() {
         List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(true, null);
         QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<>();
         List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);

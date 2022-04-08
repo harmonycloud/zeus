@@ -8,12 +8,14 @@ import org.springframework.boot.autoconfigure.ldap.LdapAutoConfiguration;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 import springfox.documentation.oas.annotations.EnableOpenApi;
 
 @EnableAsync
 @EnableOpenApi
 @EnableScheduling
 @EnableFeignClients
+@EnableTransactionManagement
 @MapperScan("com.harmonycloud.zeus.dao")
 @SpringBootApplication(scanBasePackages = "com.harmonycloud", exclude = {LdapAutoConfiguration.class, RedisAutoConfiguration.class})
 public class ZeusApplication {
