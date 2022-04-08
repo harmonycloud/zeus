@@ -184,6 +184,8 @@ public class NamespaceServiceImpl implements NamespaceService {
         meta.setName(name);
         ns.setMetadata(meta);
         namespaceWrapper.delete(clusterId, ns);
+        // 解绑分区
+        projectService.unBindNamespace(null, clusterId, name);
     }
 
     @Override
