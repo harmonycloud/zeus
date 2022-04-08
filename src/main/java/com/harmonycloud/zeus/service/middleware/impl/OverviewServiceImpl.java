@@ -60,6 +60,8 @@ import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
+import static com.harmonycloud.caas.common.constants.AlertConstant.*;
+
 /**
  * @author xutianhong
  * @Date 2021/3/26 2:35 下午
@@ -331,23 +333,14 @@ public class OverviewServiceImpl implements OverviewService {
         if (StringUtils.isNotEmpty(lay)) {
             wrapper.eq("lay",lay);
         }
-        if (StringUtils.isNotEmpty(clusterId) && StringUtils.isNotEmpty(namespace)) {
-            if ("system".equals(lay)) { //系统告警记录
-                    wrapper.eq("cluster_id", clusterId).eq("namespace", NameConstant.MONITORING).eq("name", NameConstant.PROMETHEUS_K8S_RULES);
-            }
-            if ("service".equals(lay)){ //服务告警记录
-                    wrapper.eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", middlewareName);
-            }
-        } else if (StringUtils.isNotEmpty(clusterId) && StringUtils.isEmpty(namespace)) {
-            wrapper.eq("cluster_id", clusterId).eq("namespace", NameConstant.MONITORING).eq("name", NameConstant.PROMETHEUS_K8S_RULES);
+        if (SERVICE.equals(lay)) {
+            wrapper.eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", middlewareName);
         } else {
-            wrapper.isNotNull("cluster_id").isNotNull("namespace").ne("cluster_id", "").eq("lay","service");
+            wrapper.eq("namespace", NameConstant.MONITORING).eq("name", NameConstant.PROMETHEUS_K8S_RULES);
         }
-
         if (StringUtils.isNotEmpty(level)) {
             wrapper.eq("level", level);
         }
-
         if (StringUtils.isNotEmpty(keyword)) {
             String alertID = keyword.replaceAll("GJ","");
             if (middlewareAlertsService.isNumeric(alertID)) {
