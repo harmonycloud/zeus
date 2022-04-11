@@ -509,7 +509,7 @@ public class ClusterServiceImpl implements ClusterService {
         imageRepositoryDTO.setUsername(registry.getUser());
         imageRepositoryDTO.setProject(registry.getChartRepo());
         imageRepositoryDTO.setIsDefault(CommonConstant.NUM_ONE);
-        imageRepositoryDTO.setPort(registry.getPort().toString());
+        imageRepositoryDTO.setPort(registry.getPort());
         imageRepositoryDTO.setHostAddress(registry.getAddress());
         imageRepositoryService.insert(clusterDTO.getId(), imageRepositoryDTO);
     }
@@ -521,7 +521,7 @@ public class ClusterServiceImpl implements ClusterService {
         imageRepositoryDTO.setUsername(registry.getUser());
         imageRepositoryDTO.setProject(registry.getChartRepo());
         imageRepositoryDTO.setIsDefault(CommonConstant.NUM_ONE);
-        imageRepositoryDTO.setPort(registry.getPort().toString());
+        imageRepositoryDTO.setPort(registry.getPort());
         imageRepositoryDTO.setHostAddress(registry.getAddress());
         imageRepositoryService.update(clusterDTO.getId(), imageRepositoryDTO);
     }

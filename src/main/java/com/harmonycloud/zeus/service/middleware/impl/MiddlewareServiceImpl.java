@@ -1094,7 +1094,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         BeanUtils.copyProperties(imageRepositoryDTO,registry);
         registry.setUser(imageRepositoryDTO.getUsername());
         registry.setChartRepo(imageRepositoryDTO.getProject());
-        registry.setPort(Integer.valueOf(imageRepositoryDTO.getPort()));
+        registry.setPort(imageRepositoryDTO.getPort());
         registry.setAddress(imageRepositoryDTO.getHostAddress());
     }
 }

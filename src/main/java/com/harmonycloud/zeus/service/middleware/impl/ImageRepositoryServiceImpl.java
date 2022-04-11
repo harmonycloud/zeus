@@ -109,7 +109,7 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
      */
     public void check(ImageRepositoryDTO imageRepositoryDTO){
         Pattern pattern = Pattern.compile("[\u4e00-\u9fa5]");
-        if (pattern.matcher(imageRepositoryDTO.getProject()).find() || pattern.matcher(imageRepositoryDTO.getPort()).find() || pattern.matcher(imageRepositoryDTO.getHostAddress()).find()){
+        if (pattern.matcher(imageRepositoryDTO.getProject()).find() || pattern.matcher(imageRepositoryDTO.getPort().toString()).find() || pattern.matcher(imageRepositoryDTO.getHostAddress()).find()){
             throw new BusinessException(ErrorMessage.DO_NOT_USE_CHINESE);
         }
     }
