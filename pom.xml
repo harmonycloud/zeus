@@ -75,11 +75,11 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.harmonycloud</groupId>
-            <artifactId>aspect</artifactId>
-            <version>0.0.1</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.harmonycloud</groupId>-->
+<!--            <artifactId>aspect</artifactId>-->
+<!--            <version>0.0.1</version>-->
+<!--        </dependency>-->
 
         <!-- websocket -->
         <dependency>
