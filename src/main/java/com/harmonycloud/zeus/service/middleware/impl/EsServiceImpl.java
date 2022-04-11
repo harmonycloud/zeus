@@ -553,6 +553,9 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
         for (Object pattern : codeJson.getJSONArray("index_patterns")) {
             list.add(pattern.toString());
         }
+        if (codeJson.getJSONObject("mappings") != null) {
+            request.mapping(codeJson.getJSONObject("mappings").toJSONString(), XContentType.JSON);
+        }
         request.patterns(list);
         request.order(codeJson.getIntValue("order"));
     }

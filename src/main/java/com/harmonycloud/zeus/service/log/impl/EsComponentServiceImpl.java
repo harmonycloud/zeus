@@ -291,14 +291,9 @@ public class EsComponentServiceImpl implements EsComponentService {
         query.must(QueryBuilders.matchQuery("k8s_pod_namespace", auditLogQuery.getNamespace()));
         query.must(QueryBuilders.matchQuery("middleware_name", auditLogQuery.getMiddlewareName()));
         if (StringUtils.isNotBlank(auditLogQuery.getSearchWord())) {
-            String keyWord = auditLogQuery.getSearchWord().trim().toLowerCase();
             //日志内容关键字查询
-            keyWord = auditLogQuery.getSearchWord();
-            //模糊查询如果参数没有*，添加*进行模糊匹配
-            if (!keyWord.contains("*")) {
-                keyWord = "*" + keyWord + "*";
-            }
-            query = query.must(QueryBuilders.wildcardQuery("query", keyWord));
+            String keyWord = auditLogQuery.getSearchWord();
+            query = query.must(QueryBuilders.matchPhraseQuery("query", keyWord));
         }
         return query;
     }
@@ -403,7 +398,7 @@ public class EsComponentServiceImpl implements EsComponentService {
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.query(query).sort(sortBuilder).from((current - CommonConstant.NUM_ONE) * size).size(size).explain(true);
         SearchRequest request = multiIndexSearch(searchSourceBuilder, indexNameList);
-        request.types(CoreConstant.ES_TYPE_MYSQL_SLOW_LOG).source(searchSourceBuilder);
+        request.types(CoreConstant.ES_TYPE_MYSQL_AUDIT_LOG).source(searchSourceBuilder);
         SearchResponse response;
         response = esClient.search(request, RequestOptions.DEFAULT);
         Iterator<SearchHit> it = response.getHits().iterator();
