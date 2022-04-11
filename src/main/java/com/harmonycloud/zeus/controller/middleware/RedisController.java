@@ -50,6 +50,7 @@ public class RedisController {
             @ApiImplicitParam(name = "keyWord", value = "关键词", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping
+    @Authority(power = 3)
     public BaseResult ListDb(@PathVariable("clusterId") String clusterId,
                              @PathVariable(value = "namespace") String namespace,
                              @PathVariable(value = "middlewareName") String middlewareName,
@@ -66,6 +67,7 @@ public class RedisController {
             @ApiImplicitParam(name = "redisDbDTO", value = "redis参数", paramType = "query", dataTypeClass = RedisDbDTO.class)
     })
     @PutMapping
+    @Authority(power = 3)
     public BaseResult updateDb(@PathVariable("clusterId") String clusterId,
                                @PathVariable(value = "namespace") String namespace,
                                @PathVariable(value = "middlewareName") String middlewareName,
@@ -82,6 +84,7 @@ public class RedisController {
             @ApiImplicitParam(name = "redisDbDTO", value = "redis参数", paramType = "query", dataTypeClass = RedisDbDTO.class)
     })
     @DeleteMapping
+    @Authority(power = 3)
     public BaseResult deleteDb(@PathVariable("clusterId") String clusterId,
                                @PathVariable(value = "namespace") String namespace,
                                @PathVariable(value = "middlewareName") String middlewareName,

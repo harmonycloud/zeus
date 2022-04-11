@@ -7,6 +7,11 @@ metadata:
   name: {{ include "elasticsearch.fullname" . }}
 spec:
   clusterMode: {{ .Values.cluster.mode }}
+{{- if not .Values.clusterName }}
+  clusterName: {{ include "elasticsearch.fullname" . }}
+{{- else }}
+  clusterName: {{ .Values.clusterName }}
+{{- end }}
   checkHealthConfigMap: {{ include "elasticsearch.fullname" . }}-checkhealth-config
   elasticKibanaConfigMap: {{ include "elasticsearch.fullname" . }}-kibana-config
   elasticSearchConfigMap: {{ include "elasticsearch.fullname" . }}-es-config
@@ -22,10 +27,10 @@ spec:
   nodeSelector:
     {{- toYaml . | nindent 4 }}
   {{- end }}
-{{- if eq .Values.version "7.10" }}
-  kibanaImage: {{ .Values.image.repository }}/kibana:{{ .Values.image.kibanaImageTag_7 }}
-{{- else }}
+{{- if eq .Values.version "6.8" }}
   kibanaImage: {{ .Values.image.repository }}/kibana:{{ .Values.image.kibanaImageTag }}
+{{- else }}
+  kibanaImage: {{ .Values.image.repository }}/kibana:{{ .Values.image.kibanaImageTag_7 }}
 {{- end }}
   elasticBusyImage: {{ .Values.image.repository }}/busybox:{{ .Values.image.busyImageTag }}
   masterReplaces: {{ .Values.cluster.masterReplacesCount }}
@@ -35,8 +40,6 @@ spec:
   totalReplaces: {{ add .Values.cluster.masterReplacesCount .Values.cluster.dataReplacesCount .Values.cluster.clientReplacesCount .Values.cluster.coldReplacesCount  }}
   pod:
   - env:
-    - name: TZ
-      value: Asia/Shanghai
   {{- if ((((.Values.logging).collection).stdout).enabled)}}
     - name: aliyun_logs_stdout
       value: stdout
@@ -49,6 +52,8 @@ spec:
     - name: aliyun_logs_logstash_tags
       value: middleware_name={{ include "elasticsearch.fullname" . }}
   {{- end}}
+    - name: PathRepo
+      value: {{ .Values.args.path_repo | default "/data/elastic/{ClusterName}/{PodName}/data/data_back" }}
     initImage: {{ .Values.image.repository }}/es-init:{{ .Values.image.initImageTag }}
     podAntiAffinityTopologKey: {{ .Values.podAntiAffinityTopologKey }}
     podAntiAffinity: {{ .Values.podAntiAffinity }}
@@ -65,10 +70,14 @@ spec:
     jvm:
     {{- toYaml .| nindent 6 }}
     {{- end }}
-  {{- if eq .Values.version "7.10" }}
-    middlewareImage: {{ .Values.image.repository }}/elastic:{{ .Values.image.elasticImageTag_7 }}
-  {{- else }}
+	{{- with .Values.extraVolumeMounts }}
+    extraVolumeMounts:
+    {{- toYaml .| nindent 6 }}
+    {{- end }}
+  {{- if eq .Values.version "6.8" }}
     middlewareImage: {{ .Values.image.repository }}/elastic:{{ .Values.image.elasticImageTag }}
+  {{- else }}
+    middlewareImage: {{ .Values.image.repository }}/elastic:{{ .Values.image.elasticImageTag_7 }}
   {{- end }}
     monitorImage: {{ .Values.image.repository }}/es-exporter:{{ .Values.image.exporterImageTag }}
     hostNetwork: {{ default false .Values.hostNetwork }}
@@ -79,10 +88,10 @@ spec:
   repository: {{ .Values.image.repository }}
   type: {{ .Values.cluster.mode }}
   updateStrategy: {}
-{{- if eq .Values.version "7.10" }}
-  version: 7.10.1
+{{- if eq .Values.version "6.8" }}
+  version: "6.8"
 {{- else }}
-  version: 6.8.10
+  version: "7.16"
 {{- end }}
   statefulset:
     spec:
@@ -163,3 +172,7 @@ spec:
       {{- end}}
     status: {}
   volumes: {}
+  {{- with .Values.extraVolumes }}
+  extraVolumes:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
