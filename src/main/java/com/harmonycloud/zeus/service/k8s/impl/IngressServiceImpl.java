@@ -311,7 +311,7 @@ public class IngressServiceImpl implements IngressService {
             if (!CollectionUtils.isEmpty(svcList)) {
                 svcList.forEach(svc -> {
                     // 过滤不包含命名规则的中间件
-                    if (!svc.getMetadata().getName().contains(middlewareName + "-nodeport") || svc.getMetadata().getLabels() == null || !svc.getMetadata().getLabels().containsKey(MIDDLEWARE_NAME) || !svc.getMetadata().getLabels().containsValue(middlewareName)) {
+                    if (!svc.getMetadata().getName().contains(middlewareName) || !svc.getMetadata().getName().contains("nodeport") || svc.getMetadata().getLabels() == null || !svc.getMetadata().getLabels().containsKey(MIDDLEWARE_NAME) || !svc.getMetadata().getLabels().containsValue(middlewareName)) {
                         return;
                     }
                     IngressDTO dto = dealNodePortRoutine(clusterId, namespace, cluster.getHost(), svc);
