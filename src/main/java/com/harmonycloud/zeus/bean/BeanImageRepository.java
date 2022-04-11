@@ -52,7 +52,7 @@ public class BeanImageRepository {
      * 端口号
      */
     @TableField(value = "port")
-    private String port;
+    private Integer port;
 
     /**
      * harbor项目
