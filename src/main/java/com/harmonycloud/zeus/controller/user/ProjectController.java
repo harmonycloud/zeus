@@ -85,11 +85,10 @@ public class ProjectController {
 
     @ApiOperation(value = "获取项目下可分配分区", notes = "获取项目下可分配分区")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
     })
-    @GetMapping("/{projectId}/namespace/allocatable")
-    public BaseResult<List<MiddlewareClusterDTO>> getAllocatableNamespace(@PathVariable("projectId") String projectId) {
-        return BaseResult.ok(projectService.getAllocatableNamespace(projectId));
+    @GetMapping("/namespace/allocatable")
+    public BaseResult<List<MiddlewareClusterDTO>> getAllocatableNamespace() {
+        return BaseResult.ok(projectService.getAllocatableNamespace());
     }
 
     @ApiOperation(value = "项目绑定分区", notes = "项目绑定分区")

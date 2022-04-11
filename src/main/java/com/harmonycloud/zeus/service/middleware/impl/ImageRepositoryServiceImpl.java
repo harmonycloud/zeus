@@ -6,9 +6,11 @@ import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.middleware.ImageRepositoryDTO;
+import com.harmonycloud.caas.common.model.middleware.Registry;
 import com.harmonycloud.zeus.bean.BeanImageRepository;
 import com.harmonycloud.zeus.dao.BeanImageRepositoryMapper;
 import com.harmonycloud.zeus.service.middleware.ImageRepositoryService;
+import com.harmonycloud.zeus.service.registry.RegistryService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -29,6 +31,8 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
 
     @Autowired
     private BeanImageRepositoryMapper beanImageRepositoryMapper;
+    @Autowired
+    private RegistryService registryService;
 
     @Override
     public void insert(String clusterId, ImageRepositoryDTO imageRepositoryDTO) {
@@ -105,12 +109,17 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
     }
 
     /**
-     * 中文字符校验
+     * 校验仓库是否可以连接
      */
     public void check(ImageRepositoryDTO imageRepositoryDTO){
-        Pattern pattern = Pattern.compile("[\u4e00-\u9fa5]");
-        if (pattern.matcher(imageRepositoryDTO.getProject()).find() || pattern.matcher(imageRepositoryDTO.getPort().toString()).find() || pattern.matcher(imageRepositoryDTO.getHostAddress()).find()){
-            throw new BusinessException(ErrorMessage.DO_NOT_USE_CHINESE);
-        }
+        Registry registry = new Registry()
+                .setAddress(imageRepositoryDTO.getHostAddress())
+                .setProtocol(imageRepositoryDTO.getProtocol())
+                .setPort(imageRepositoryDTO.getPort())
+                .setChartRepo(imageRepositoryDTO.getPassword())
+                .setType("harbor")
+                .setUser(imageRepositoryDTO.getUsername())
+                .setPassword(imageRepositoryDTO.getPassword());
+        registryService.validate(registry);
     }
 }

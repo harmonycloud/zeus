@@ -38,10 +38,9 @@ public interface ProjectService {
 
     /**
      * 查询项目下分区
-     * @param projectId 项目id
      * @return List<Namespace>
      */
-    List<MiddlewareClusterDTO> getAllocatableNamespace(String projectId);
+    List<MiddlewareClusterDTO> getAllocatableNamespace();
 
     /**
      * 查询项目下用户
