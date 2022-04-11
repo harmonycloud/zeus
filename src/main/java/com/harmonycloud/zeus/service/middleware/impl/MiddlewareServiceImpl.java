@@ -757,7 +757,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
                 String usedMemoryQuery = "sum(container_memory_working_set_bytes{pod=~\"" + pods.toString()
-                    + "\",namespace=\"" + namespace + "\"}) by (pod) /1024/1024/1024";
+                    + "\",namespace=\"" + namespace + "\"}) by (pod) /1024/1024/1024/2";
                 PrometheusResponse usedMemory = prometheusResourceMonitorService.query(clusterId, usedMemoryQuery);
                 Map<String, Double> result = convertResponse(usedMemory);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
