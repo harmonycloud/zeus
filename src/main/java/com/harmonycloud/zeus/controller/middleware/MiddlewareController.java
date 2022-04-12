@@ -301,7 +301,7 @@ public class MiddlewareController {
     })
     @GetMapping("/{middlewareName}/platform")
     @Authority(power = 1)
-    public BaseResult<MiddlewareTopologyDTO> platform(@PathVariable("clusterId") String clusterId,
+    public BaseResult<String> platform(@PathVariable("clusterId") String clusterId,
                                                       @PathVariable("namespace") String namespace,
                                                       @PathVariable("middlewareName") String name,
                                                       @RequestParam("type") String type) {
