@@ -3,6 +3,9 @@ package com.harmonycloud.zeus.service.k8s.impl;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.zeus.bean.user.BeanProjectNamespace;
+import com.harmonycloud.zeus.dao.user.BeanProjectNamespaceMapper;
 import com.harmonycloud.zeus.service.user.ProjectService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +51,8 @@ public class NamespaceServiceImpl implements NamespaceService {
     private MiddlewareCRService middlewareCRService;
     @Autowired
     private ProjectService projectService;
+    @Autowired
+    private BeanProjectNamespaceMapper beanProjectNamespaceMapper;
 
     @Value("${k8s.namespace.protect:default,kube-system,kube-public,cluster-top,cicd,caas-system,kube-federation-system,harbor-system,logging,monitoring,velero,middleware-system}")
     private void setProtectNamespaceList(String protectNamespaces) {
@@ -202,6 +207,12 @@ public class NamespaceServiceImpl implements NamespaceService {
             }
             ns.getMetadata().getLabels().put(labelKey, labelValue);
         } else {
+            // 校验是否绑定项目
+            QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<BeanProjectNamespace>().eq("namespace", name);
+            List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
+            if (!CollectionUtils.isEmpty(beanProjectNamespaceList)){
+                throw new BusinessException(ErrorMessage.PROJECT_NAMESPACE_ALREADY_BIND);
+            }
             ns.getMetadata().getLabels().remove(labelKey);
         }
         try {
