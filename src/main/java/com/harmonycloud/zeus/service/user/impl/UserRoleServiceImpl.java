@@ -60,6 +60,16 @@ public class UserRoleServiceImpl implements UserRoleService {
     }
 
     @Override
+    public Integer getRoleId(String userName, String projectId) {
+        QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("username", userName).eq("project_id", projectId);
+        List<BeanUserRole> beanUserRoleList = beanUserRoleMapper.selectList(wrapper);
+        if (!CollectionUtils.isEmpty(beanUserRoleList)){
+            return beanUserRoleList.get(0).getRoleId();
+        }
+        return null;
+    }
+
+    @Override
     public Boolean checkAdmin(String username) {
         // 获取角色用户对应关系
         QueryWrapper<BeanUserRole> roleUserWrapper =
