@@ -213,27 +213,27 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                         && prometheusRules.getAlert().equals(middlewareAlertsDTO.getAlert()));
                 prometheusRuleService.update(clusterId, prometheusRule);
             });
-            middlewareAlertsDTO.getAnnotations().put("group",group);
-            updateAlerts2Mysql(clusterId,namespace,middlewareName,middlewareAlertsDTO);
+            middlewareAlertsDTO.getAnnotations().put("group", group);
+            updateAlerts2Mysql(clusterId, namespace, middlewareName, middlewareAlertsDTO);
             return;
         }
         //组装prometheusRule
-        assemblePrometheusrule(clusterId,middlewareName,middlewareAlertsDTO,prometheusRule);
+        assemblePrometheusrule(clusterId, middlewareName, middlewareAlertsDTO, prometheusRule);
         prometheusRuleService.update(clusterId, prometheusRule);
-        updateAlerts2Mysql(clusterId,namespace,middlewareName,middlewareAlertsDTO);
+        updateAlerts2Mysql(clusterId, namespace, middlewareName, middlewareAlertsDTO);
         if (!alertUserDTO.getUsers().isEmpty()) {
             List<BeanUser> beanUsers = alertUserDTO.getUsers().stream().map(userDto -> {
                 BeanUser beanUser = new BeanUser();
-                BeanUtils.copyProperties(userDto,beanUser);
+                BeanUtils.copyProperties(userDto, beanUser);
                 return beanUser;
             }).collect(Collectors.toList());
-            addMail2Sql(beanUsers,ding,analysisID(alertRuleId));
+            addMail2Sql(beanUsers, ding, analysisID(alertRuleId));
         }
     }
 
     @Override
     public void createSystemRule(String clusterId, String ding, AlertsUserDTO alertsUserDTO) {
-        alertsUserDTO.getMiddlewareAlertsDTOList().stream().forEach(middlewareAlertsDTO -> {
+        alertsUserDTO.getMiddlewareAlertsDTOList().forEach(middlewareAlertsDTO -> {
             //构建执行规则
             String expr = buildExpr(middlewareAlertsDTO);
             middlewareAlertsDTO.setExpr(expr);
@@ -246,7 +246,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             middlewareAlertsDTO.getAnnotations().put("group", "memory-used");
             middlewareAlertsDTO.getAnnotations().put("name", "memory-used");
             middlewareAlertsDTO.getAnnotations().put("message",middlewareAlertsDTO.getContent());
-            middlewareAlertsDTO.getAnnotations().put("summary",middlewareAlertsDTO.getContent());
+            middlewareAlertsDTO.getAnnotations().put("summary",buildSummary(middlewareAlertsDTO));
             // 写入集群
             middlewareAlertsDTO.getLabels().put("clusterId", clusterId);
             middlewareAlertsDTO.getLabels().put("namespace",NameConstant.MONITORING);
@@ -381,7 +381,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     /**
      * 构建执行规则
      */
-    public String buildExpr(MiddlewareAlertsDTO middlewareAlertsDTO) {
+    private String buildExpr(MiddlewareAlertsDTO middlewareAlertsDTO) {
         String expr = "";
         if (CPU_USING_RATE.equals(middlewareAlertsDTO.getAlert())) {
             expr =
@@ -396,6 +396,18 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         }
         expr = expr + middlewareAlertsDTO.getSymbol() + " " + middlewareAlertsDTO.getThreshold();
         return expr;
+    }
+
+    private String buildSummary(MiddlewareAlertsDTO middlewareAlertsDTO) {
+        String summary = "";
+        if (CPU_USING_RATE.equals(middlewareAlertsDTO.getAlert())) {
+            summary = "node CPU alert warning";
+        } else if (MEMORY_USING_RATE.equals(middlewareAlertsDTO.getAlert())) {
+            summary = "node memory alert warning";
+        } else if (PVC_USING_RATE.equals(middlewareAlertsDTO.getAlert())) {
+            summary = "node pv alert warning";
+        }
+        return summary;
     }
     /**
      * 更新告警规则至数据库
