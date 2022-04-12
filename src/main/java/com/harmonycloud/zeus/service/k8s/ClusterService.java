@@ -161,4 +161,11 @@ public interface ClusterService {
      * @return
      */
     BaseResult quickAdd(MultipartFile adminConf, String name);
+
+    /**
+     * 获取集群已注册分区
+     * @param clusterId 集群id
+     * @return
+     */
+    List<Namespace> listRegisteredNamespace(String clusterId);
 }

@@ -926,6 +926,14 @@ public class ClusterServiceImpl implements ClusterService {
         return BaseResult.ok("集群添加成功");
     }
 
+    public List<Namespace> listRegisteredNamespace(String clusterId) {
+        if (StringUtils.isEmpty(clusterId)) {
+            return Collections.emptyList();
+        }
+        List<Namespace> namespaces = namespaceService.list(clusterId, false, false, false, null, null);
+        return namespaces.stream().filter(namespace -> namespace.isRegistered()).collect(Collectors.toList());
+    }
+
     public Map<Map<String, String>, List<String>> getResultMap(PrometheusResponse response){
         return response.getData().getResult().stream().collect(Collectors.toMap(PrometheusResult::getMetric, PrometheusResult::getValue));
     }

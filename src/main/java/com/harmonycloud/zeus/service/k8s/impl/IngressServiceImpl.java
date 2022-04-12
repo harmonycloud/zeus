@@ -9,6 +9,7 @@ import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
 import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.common.model.user.UserRole;
 import com.harmonycloud.caas.filters.token.JwtTokenComponent;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
@@ -23,6 +24,7 @@ import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareStatus;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.IngressService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
+import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
@@ -89,6 +91,8 @@ public class IngressServiceImpl implements IngressService {
     private HelmChartService helmChartService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private NamespaceService namespaceService;
 
     @Value("${k8s.ingress.default.name:nginx-ingress-controller}")
     private String defaultIngressName;
@@ -125,6 +129,11 @@ public class IngressServiceImpl implements IngressService {
         if (CollectionUtils.isEmpty(ingressDtoList)) {
             return ingressDtoList;
         }
+
+        // 过滤未纳管的分区中的服务
+        List<Namespace> registeredNamespace = clusterService.listRegisteredNamespace(clusterId);
+        List<String> registeredNamespaceNameList = registeredNamespace.stream().map(Namespace::getName).collect(Collectors.toList());
+        ingressDtoList = ingressDtoList.stream().filter(ingressDTO -> registeredNamespaceNameList.contains(ingressDTO.getNamespace())).collect(Collectors.toList());
 
         // package assembly
         for (IngressDTO ingressDTO : ingressDtoList) {
@@ -518,7 +527,7 @@ public class IngressServiceImpl implements IngressService {
             return null;
         }
         IngressDTO ingressDTO = new IngressDTO();
-        ingressDTO.setNamespace(namespace);
+        ingressDTO.setNamespace(service.getMetadata().getNamespace());
         ingressDTO.setClusterId(clusterId);
         ingressDTO.setName(service.getMetadata().getName());
         ingressDTO.setExposeIP(exposeIP);
