@@ -116,7 +116,7 @@ public class IngressServiceImpl implements IngressService {
                     ConfigMap configMap =
                         configMapWrapper.get(clusterId, getIngressTcpNamespace(cluster, ingress.getIngressClassName()),
                             ingress.getTcp().getConfigMapName());
-                    dealTcpRoutine(clusterId, namespace, configMap, ingressDtoList);
+                    dealTcpRoutine(clusterId, namespace, configMap, ingressDtoList, ingress.getIngressClassName());
                 }
             }
         }
@@ -718,7 +718,7 @@ public class IngressServiceImpl implements IngressService {
      * @param configMap
      * @param ingressDtoList
      */
-    private void dealTcpRoutine(String clusterId, String namespace, ConfigMap configMap, List<IngressDTO> ingressDtoList) {
+    private void dealTcpRoutine(String clusterId, String namespace, ConfigMap configMap, List<IngressDTO> ingressDtoList, String ingressClassName) {
         if (configMap == null) {
             return;
         }
@@ -791,6 +791,7 @@ public class IngressServiceImpl implements IngressService {
             ingressDTO.setName(getIngressTcpName(serviceNames[1], serviceNames[0]));
             ingressDTO.setExposeIP(middlewareCluster.getHost());
             ingressDTO.setExposeType(MIDDLEWARE_EXPOSE_INGRESS);
+            ingressDTO.setIngressClassName(ingressClassName);
             Map<String,String> stringStringMap = mapHashMap.get(serviceNames[1]);
             if (stringStringMap != null) {
                 ingressDTO.setMiddlewareType(stringStringMap.get("type"));
