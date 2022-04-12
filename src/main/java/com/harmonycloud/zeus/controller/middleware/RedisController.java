@@ -16,7 +16,7 @@ import io.swagger.annotations.Api;
  * @author dengyulong
  * @date 2021/03/23
  */
-@Api(tags = {"服务列表", "Redis KV管理"}, value = "redis中间件", description = "redis中间件")
+@Api(tags = {"服务列表", "数据库管理"}, value = "redis中间件", description = "redis中间件")
 @RestController
 @RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/middlewares/{middlewareName}/redis")
 public class RedisController {
