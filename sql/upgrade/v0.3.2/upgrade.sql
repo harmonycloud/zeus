@@ -82,6 +82,7 @@ insert into role values(3, '运维人员', '拥有中间件运维权限', null, 
 insert into role values(4, '普通用户', '拥有平台查看权限', null, null, null);
 -- 修改user_role 添加字段
 alter table role_user add COLUMN `project_id` varchar(64) collate utf8mb4_general_ci DEFAULT null comment '项目ID' AFTER `id`;
+delete from role_user where role_id != '1';
 -- 创建角色权限对应表
 DROP TABLE IF EXISTS `role_authority`;
 CREATE TABLE `role_authority` (

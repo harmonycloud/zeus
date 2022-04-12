@@ -177,7 +177,7 @@ public class MysqlUserServiceImpl implements MysqlUserService {
         QueryRunner qr = new QueryRunner();
         try {
             String privilege = MysqlPrivilegeEnum.findPrivilege(authority).getPrivilege();
-            String grantPrivilegeSql = String.format(" grant %s on %s.* to '%s' ", privilege, db, user);
+            String grantPrivilegeSql = String.format(" grant %s on `%s`.* to '%s' ", privilege, db, user);
             qr.execute(con, grantPrivilegeSql);
             return true;
         } catch (SQLException e) {

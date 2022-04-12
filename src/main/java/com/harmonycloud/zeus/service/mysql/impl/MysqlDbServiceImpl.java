@@ -119,8 +119,9 @@ public class MysqlDbServiceImpl implements MysqlDbService {
             throw new BusinessException(ErrorMessage.MYSQL_DB_EXISTS);
         }
         QueryRunner qr = new QueryRunner();
-        String sql = String.format("create database %s DEFAULT CHARACTER SET %s", dbName, charset);
+        String sql = String.format("create database `%s` DEFAULT CHARACTER SET `%s`", dbName, charset);
         try {
+            log.info(sql);
             qr.execute(con, sql);
             return true;
         } catch (SQLException e) {
@@ -132,7 +133,7 @@ public class MysqlDbServiceImpl implements MysqlDbService {
     @Override
     public boolean nativeDelete(Connection con, String dbName) {
         QueryRunner qr = new QueryRunner();
-        String sql = String.format("drop database %s ", dbName);
+        String sql = String.format("drop database `%s` ", dbName);
         try {
             qr.execute(con, sql);
             return true;

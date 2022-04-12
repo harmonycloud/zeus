@@ -9,6 +9,7 @@ import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
 import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.common.model.user.UserRole;
 import com.harmonycloud.caas.filters.token.JwtTokenComponent;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
@@ -23,6 +24,7 @@ import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareStatus;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.IngressService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
+import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
@@ -89,6 +91,8 @@ public class IngressServiceImpl implements IngressService {
     private HelmChartService helmChartService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private NamespaceService namespaceService;
 
     @Value("${k8s.ingress.default.name:nginx-ingress-controller}")
     private String defaultIngressName;
@@ -112,7 +116,7 @@ public class IngressServiceImpl implements IngressService {
                     ConfigMap configMap =
                         configMapWrapper.get(clusterId, getIngressTcpNamespace(cluster, ingress.getIngressClassName()),
                             ingress.getTcp().getConfigMapName());
-                    dealTcpRoutine(clusterId, namespace, configMap, ingressDtoList);
+                    dealTcpRoutine(clusterId, namespace, configMap, ingressDtoList, ingress.getIngressClassName());
                 }
             }
         }
@@ -125,6 +129,11 @@ public class IngressServiceImpl implements IngressService {
         if (CollectionUtils.isEmpty(ingressDtoList)) {
             return ingressDtoList;
         }
+
+        // 过滤未纳管的分区中的服务
+        List<Namespace> registeredNamespace = clusterService.listRegisteredNamespace(clusterId);
+        List<String> registeredNamespaceNameList = registeredNamespace.stream().map(Namespace::getName).collect(Collectors.toList());
+        ingressDtoList = ingressDtoList.stream().filter(ingressDTO -> registeredNamespaceNameList.contains(ingressDTO.getNamespace())).collect(Collectors.toList());
 
         // package assembly
         for (IngressDTO ingressDTO : ingressDtoList) {
@@ -311,7 +320,7 @@ public class IngressServiceImpl implements IngressService {
             if (!CollectionUtils.isEmpty(svcList)) {
                 svcList.forEach(svc -> {
                     // 过滤不包含命名规则的中间件
-                    if (!svc.getMetadata().getName().contains(middlewareName + "-nodeport") || svc.getMetadata().getLabels() == null || !svc.getMetadata().getLabels().containsKey(MIDDLEWARE_NAME) || !svc.getMetadata().getLabels().containsValue(middlewareName)) {
+                    if (!svc.getMetadata().getName().contains(middlewareName) || !svc.getMetadata().getName().contains("nodeport") || svc.getMetadata().getLabels() == null || !svc.getMetadata().getLabels().containsKey(MIDDLEWARE_NAME) || !svc.getMetadata().getLabels().containsValue(middlewareName)) {
                         return;
                     }
                     IngressDTO dto = dealNodePortRoutine(clusterId, namespace, cluster.getHost(), svc);
@@ -518,7 +527,7 @@ public class IngressServiceImpl implements IngressService {
             return null;
         }
         IngressDTO ingressDTO = new IngressDTO();
-        ingressDTO.setNamespace(namespace);
+        ingressDTO.setNamespace(service.getMetadata().getNamespace());
         ingressDTO.setClusterId(clusterId);
         ingressDTO.setName(service.getMetadata().getName());
         ingressDTO.setExposeIP(exposeIP);
@@ -709,7 +718,7 @@ public class IngressServiceImpl implements IngressService {
      * @param configMap
      * @param ingressDtoList
      */
-    private void dealTcpRoutine(String clusterId, String namespace, ConfigMap configMap, List<IngressDTO> ingressDtoList) {
+    private void dealTcpRoutine(String clusterId, String namespace, ConfigMap configMap, List<IngressDTO> ingressDtoList, String ingressClassName) {
         if (configMap == null) {
             return;
         }
@@ -782,6 +791,7 @@ public class IngressServiceImpl implements IngressService {
             ingressDTO.setName(getIngressTcpName(serviceNames[1], serviceNames[0]));
             ingressDTO.setExposeIP(middlewareCluster.getHost());
             ingressDTO.setExposeType(MIDDLEWARE_EXPOSE_INGRESS);
+            ingressDTO.setIngressClassName(ingressClassName);
             Map<String,String> stringStringMap = mapHashMap.get(serviceNames[1]);
             if (stringStringMap != null) {
                 ingressDTO.setMiddlewareType(stringStringMap.get("type"));

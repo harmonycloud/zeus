@@ -188,7 +188,7 @@ public interface MiddlewareService {
     MiddlewareTopologyDTO topology(String clusterId, String namespace, String name, String type) throws Exception;
 
     /**
-     * 查询中间件详情
+     * 查询中间件管理控制台
      *
      * @param clusterId 集群id
      * @param namespace 命名空间
