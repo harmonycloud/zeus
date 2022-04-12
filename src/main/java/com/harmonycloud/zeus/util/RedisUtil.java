@@ -1,5 +1,7 @@
 package com.harmonycloud.zeus.util;
 
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.RedisAccessInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,16 +112,15 @@ public class RedisUtil {
      * @return
      */
     public static Jedis getRedisSentinelIsOk(RedisAccessInfo redisAccessInfo) {
-        Jedis jedis = new Jedis();
         try {
-            jedis = new Jedis(redisAccessInfo.getHost(), Integer.parseInt(redisAccessInfo.getPort()));
+            Jedis jedis = new Jedis(redisAccessInfo.getHost(), Integer.parseInt(redisAccessInfo.getPort()));
             if (!StringUtils.isEmpty(redisAccessInfo.getPassword())) {
                 jedis.auth(redisAccessInfo.getPassword());
             }
+            return jedis;
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new BusinessException(ErrorMessage.REDIS_SERVER_CONNECT_FAILED);
         }
-        return jedis;
     }
 
     /**
