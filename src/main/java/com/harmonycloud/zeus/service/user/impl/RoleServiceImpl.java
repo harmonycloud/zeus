@@ -3,11 +3,14 @@ package com.harmonycloud.zeus.service.user.impl;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.bean.user.BeanRoleAuthority;
+import com.harmonycloud.zeus.bean.user.BeanUser;
 import com.harmonycloud.zeus.dao.user.BeanRoleAuthorityMapper;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.user.*;
+import com.harmonycloud.zeus.util.RequestUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +55,8 @@ public class RoleServiceImpl implements RoleService {
     private RoleAuthorityService roleAuthorityService;
     @Autowired
     private MiddlewareInfoService middlewareInfoService;
+    @Autowired
+    private UserService userService;
 
     @Override
     public void add(RoleDto roleDto) {
@@ -137,14 +142,21 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public List<ResourceMenuDto> listMenuByRoleId(String username) {
-        // 菜单只存在两种情况
-        Boolean flag = userRoleService.checkAdmin(username);
+    public List<ResourceMenuDto> listMenuByRoleId(UserDto userDto) {
+        String projectId = RequestUtil.getProjectId();
         List<Integer> ids;
-        if (flag) {
-            ids = Arrays.asList(1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19);
+        if (StringUtils.isNotEmpty(projectId)) {
+            ids = Arrays.asList(3, 4);
+            UserRole userRole = userDto.getUserRoleList().stream().filter(ur -> ur.getProjectId().equals(projectId))
+                .collect(Collectors.toList()).get(0);
+            for (String key : userRole.getPower().keySet()) {
+                if (Integer.parseInt(userRole.getPower().get(key).split("")[1]) == 1) {
+                    ids = Arrays.asList(3, 4, 5, 6, 7, 9, 10, 11, 12, 13);
+                    break;
+                }
+            }
         } else {
-            ids = Arrays.asList(3, 4, 5, 6, 7, 9, 10, 11, 12, 13);
+            ids = Arrays.asList(1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19);
         }
         // 获取菜单信息
         List<ResourceMenuDto> resourceMenuDtoList = resourceMenuService.list(ids);

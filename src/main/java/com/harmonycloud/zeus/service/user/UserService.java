@@ -38,11 +38,10 @@ public interface UserService {
     /**
      * 获取用户信息
      * @param userName 账户
-     * @param withPassword 携带密码
      *
      * @return UserDto
      */
-    UserDto getUserDto(String userName) throws Exception;
+    UserDto getUserDto(String userName);
 
     /**
      * 获取用户列表
