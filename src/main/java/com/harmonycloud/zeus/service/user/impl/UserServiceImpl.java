@@ -107,6 +107,7 @@ public class UserServiceImpl implements UserService {
         List<UserRole> userRoleList = userRoleService.get(userName);
         if (!CollectionUtils.isEmpty(userRoleList)) {
             userDto.setUserRoleList(userRoleList);
+            userDto.setIsAdmin(userRoleList.stream().anyMatch(userRole -> userRole.getRoleId() == 1));
         }
         return userDto;
     }
@@ -253,7 +254,7 @@ public class UserServiceImpl implements UserService {
         });
         if (StringUtils.isNotBlank(clusterId)) {
             Map<String, String> power = new HashMap<>();
-            if (StringUtils.isNotEmpty(projectId)) {
+            if (!userDto.getIsAdmin() && StringUtils.isNotEmpty(projectId)) {
                 power.putAll(
                     userDto.getUserRoleList().stream().filter(userRole -> userRole.getProjectId().equals(projectId))
                         .collect(Collectors.toList()).get(0).getPower());

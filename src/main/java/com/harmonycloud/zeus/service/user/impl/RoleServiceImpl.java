@@ -145,7 +145,7 @@ public class RoleServiceImpl implements RoleService {
     public List<ResourceMenuDto> listMenuByRoleId(UserDto userDto) {
         String projectId = RequestUtil.getProjectId();
         List<Integer> ids;
-        if (StringUtils.isNotEmpty(projectId)) {
+        if (!userDto.getIsAdmin() && StringUtils.isNotEmpty(projectId)) {
             ids = Arrays.asList(3, 4);
             UserRole userRole = userDto.getUserRoleList().stream().filter(ur -> ur.getProjectId().equals(projectId))
                 .collect(Collectors.toList()).get(0);
