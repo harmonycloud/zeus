@@ -146,6 +146,9 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
             if (redisDbDTO.getTimeOut() == null || "".equals(redisDbDTO.getTimeOut())) {
                 time = -1;
             } else {
+                if (redisDbDTO.getTimeOut().length() >= 16) {
+                    throw new BusinessException(ErrorMessage.OUT_OF_RANGE);
+                }
                 time = Long.parseLong(redisDbDTO.getTimeOut());
             }
             if (RedisConstant.LIST.equals(redisDbDTO.getType())) {
@@ -282,6 +285,9 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
             if (redisDbDTO.getTimeOut() == null || "".equals(redisDbDTO.getTimeOut())) {
                 time = -1;
             } else {
+                if (redisDbDTO.getTimeOut().length() >= 16) {
+                    throw new BusinessException(ErrorMessage.OUT_OF_RANGE);
+                }
                 time = Long.parseLong(redisDbDTO.getTimeOut());
             }
             if (!StringUtils.isEmpty(redisDbDTO.getType())) {
