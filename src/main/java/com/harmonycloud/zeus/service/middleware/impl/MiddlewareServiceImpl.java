@@ -483,7 +483,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             // 根据项目分区进行过滤
             List<Namespace> projectNamespaceList = projectService.getNamespace(projectId);
             result = result.stream()
-                .filter(mw -> projectNamespaceList.stream().anyMatch(pn -> pn.getName().equals(mw.getNamespace())))
+                .filter(mw -> projectNamespaceList.stream().anyMatch(
+                    pn -> pn.getName().equals(mw.getNamespace()) && pn.getClusterId().equals(mw.getClusterId())))
                 .collect(Collectors.toList());
             // 根据类型进行过滤
             if (StringUtils.isEmpty(type)) {
