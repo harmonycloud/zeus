@@ -49,6 +49,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
 
     @Override
     public List<RedisDbDTO> listRedisDb(String clusterId, String namespace, String middlewareName, String db, String keyWord) {
+        paramCheck(db);
         RedisAccessInfo redisAccessInfo = queryBasicAccessInfo(clusterId,namespace,middlewareName,null);
         Jedis jedis = getRedisSentinelIsOk(redisAccessInfo);
         List<RedisDbDTO> dbs;
@@ -68,6 +69,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
 
     @Override
     public void create(String clusterId, String namespace, String middlewareName, RedisDbDTO db) {
+        paramCheck(db.getDb());
         RedisAccessInfo redisAccessInfo = queryBasicAccessInfo(clusterId,namespace,middlewareName,null);
         Jedis jedis;
         if (SENTINEL.equals(redisAccessInfo.getMode())) {
@@ -91,6 +93,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
 
     @Override
     public void update(String clusterId, String namespace, String middlewareName, RedisDbDTO db) {
+        paramCheck(db.getDb());
         RedisAccessInfo redisAccessInfo = queryBasicAccessInfo(clusterId,namespace,middlewareName,null);
         Jedis jedis;
         if (SENTINEL.equals(redisAccessInfo.getMode())) {
@@ -115,6 +118,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
 
     @Override
     public void delete(String clusterId, String namespace, String middlewareName, RedisDbDTO redisDbDTO) {
+        paramCheck(redisDbDTO.getDb());
         RedisAccessInfo redisAccessInfo = queryBasicAccessInfo(clusterId,namespace,middlewareName,null);
         Jedis jedis;
         if (SENTINEL.equals(redisAccessInfo.getMode())) {
@@ -365,9 +369,9 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
         return redisAccessInfo;
     }
 
-    public void paramCheck(String clusterId, String namespace, String middlewareName) {
-        if (StringUtils.isAnyEmpty(clusterId,namespace,middlewareName)) {
-            throw new BusinessException(ErrorMessage.REDIS_INCOMPLETE_PARAMETERS);
+    public void paramCheck(String db) {
+        if (StringUtils.isEmpty(db)) {
+            throw new BusinessException(ErrorMessage.NOT_SELECT_DATABASE);
         }
     }
 
