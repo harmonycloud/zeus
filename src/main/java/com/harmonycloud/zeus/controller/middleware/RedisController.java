@@ -54,7 +54,7 @@ public class RedisController {
     public BaseResult ListDb(@PathVariable("clusterId") String clusterId,
                              @PathVariable(value = "namespace") String namespace,
                              @PathVariable(value = "middlewareName") String middlewareName,
-                             @RequestParam(value = "db") String db,
+                             @RequestParam(value = "db", required = false) String db,
                              @RequestParam(value = "keyWord") String keyWord) {
         return BaseResult.ok(redisService.listRedisDb(clusterId,namespace,middlewareName,db,keyWord));
     }
