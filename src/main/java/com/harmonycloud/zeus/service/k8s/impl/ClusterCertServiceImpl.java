@@ -90,8 +90,8 @@ public class ClusterCertServiceImpl implements ClusterCertService {
 
         // 记录文件到数据库
         QueryWrapper<BeanKubeConfig> wrapper = new QueryWrapper<BeanKubeConfig>().eq("cluster_id", cluster.getId());
-        BeanKubeConfig exist = beanKubeConfigMapper.selectOne(wrapper);
-        if (ObjectUtils.isEmpty(exist)){
+        List<BeanKubeConfig> exist = beanKubeConfigMapper.selectList(wrapper);
+        if (CollectionUtils.isEmpty(exist)){
             BeanKubeConfig kubeConfig = new BeanKubeConfig();
             kubeConfig.setClusterId(cluster.getId());
             kubeConfig.setConf(adminConfYaml);
