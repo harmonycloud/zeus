@@ -179,7 +179,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
                 }
             }
             if (time >= 0) {
-                jedis.expire(redisDbDTO.getKey(), (int) time);
+                jedis.expireAt(redisDbDTO.getKey(), time);
             }
         } catch (NumberFormatException e) {
             throw new BusinessException(ErrorMessage.OUT_OF_RANGE);
@@ -317,7 +317,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
 
                 }
                 if (time >= 0) {
-                    jedis.expire(redisDbDTO.getKey(), (int) time);
+                    jedis.expireAt(redisDbDTO.getKey(), time);
                 }
             }
         } catch (NumberFormatException e) {
