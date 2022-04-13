@@ -42,7 +42,7 @@ public class MysqlController {
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class)
     })
-    @Authority(power = 3)
+    @Authority(power = 1)
     @PostMapping("/{middlewareName}/disasterRecovery")
     public BaseResult switchDisasterRecovery(@PathVariable("clusterId") String clusterId,
                                              @RequestParam("namespace") String namespace,
@@ -56,7 +56,7 @@ public class MysqlController {
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "mysqlName", value = "中间件名称", paramType = "path", dataTypeClass = String.class)
     })
-    @Authority(power = 3)
+    @Authority(power = 1)
     @GetMapping("/{middlewareName}/queryAccessInfo")
     public BaseResult queryAccessInfo(@PathVariable("clusterId") String clusterId,
                                       @RequestParam("namespace") String namespace,
@@ -78,7 +78,7 @@ public class MysqlController {
             @ApiImplicitParam(name = "searchWord", value = "关键词", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "size", value = "每页记录数", paramType = "query", dataTypeClass = Long.class),
     })
-    @Authority(power = 3)
+    @Authority(power = 1)
     @GetMapping("{middlewareName}/slowsql")
     public BaseResult slowsql(@PathVariable("clusterId") String clusterId,
                               @RequestParam("namespace") String namespace,
@@ -117,7 +117,7 @@ public class MysqlController {
             @ApiImplicitParam(name = "searchType", value = "搜索类型", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "searchWord", value = "关键词", paramType = "query", dataTypeClass = String.class),
     })
-    @Authority(power = 3)
+    @Authority(power = 1)
     @GetMapping("{middlewareName}/slowsql/file")
     public void slowsqlExcel(@PathVariable("clusterId") String clusterId,
                              @RequestParam("namespace") String namespace,
@@ -140,7 +140,7 @@ public class MysqlController {
 
     @ApiOperation(value = "创建用户", notes = "创建用户")
     @PostMapping("/createUser")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult createUser(@RequestBody MysqlUserDTO mysqlUserDTO) {
         return mysqlUserService.create(mysqlUserDTO);
     }
@@ -152,7 +152,7 @@ public class MysqlController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class)
     })
     @DeleteMapping("/deleteUser")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult deleteUser(@PathVariable("clusterId") String clusterId,
                                  @RequestParam("namespace") String namespace,
                                  @RequestParam("middlewareName") String middlewareName,
@@ -167,7 +167,7 @@ public class MysqlController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/listUser")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult listUser(@PathVariable("clusterId") String clusterId,
                                @RequestParam("namespace") String namespace,
                                @RequestParam("middlewareName") String middlewareName,
@@ -178,7 +178,7 @@ public class MysqlController {
 
     @ApiOperation(value = "创建数据库", notes = "创建数据库")
     @PostMapping("/createDb")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult createDb(@RequestBody MysqlDbDTO mysqlDbDTO) {
         mysqlDbService.create(mysqlDbDTO);
         return BaseResult.ok();
@@ -186,7 +186,7 @@ public class MysqlController {
 
     @ApiOperation(value = "更新数据库备注", notes = "更新数据库备注")
     @PutMapping("/updateDb")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult updateDb(@RequestBody MysqlDbDTO mysqlDbDTO) {
         return mysqlDbService.update(mysqlDbDTO);
     }
@@ -198,7 +198,7 @@ public class MysqlController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/listDb")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult listDb(@PathVariable("clusterId") String clusterId,
                              @RequestParam("namespace") String namespace,
                              @RequestParam("middlewareName") String middlewareName,
@@ -213,7 +213,7 @@ public class MysqlController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class)
     })
     @DeleteMapping("/deleteDb")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult deleteDb(@PathVariable("clusterId") String clusterId,
                                @RequestParam("namespace") String namespace,
                                @RequestParam("middlewareName") String middlewareName,
@@ -223,14 +223,14 @@ public class MysqlController {
 
     @ApiOperation(value = "授权数据库", notes = "授权数据库")
     @PostMapping("/grantUser")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult grantUser(@RequestBody MysqlUserDTO mysqlUserDTO) {
         return mysqlUserService.grantUser(mysqlUserDTO);
     }
 
     @ApiOperation(value = "修改密码", notes = "修改密码")
     @PutMapping("/updatePassword")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult updatePassword(@RequestBody MysqlUserDTO mysqlUserDTO) {
         return mysqlUserService.updatePassword(mysqlUserDTO);
     }
@@ -242,7 +242,7 @@ public class MysqlController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/listCharset")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult listCharset(@PathVariable("clusterId") String clusterId,
                                   @RequestParam("namespace") String namespace,
                                   @RequestParam("middlewareName") String middlewareName) {
@@ -251,7 +251,7 @@ public class MysqlController {
 
     @ApiOperation(value = "查询审计日志", notes = "查询审计日志")
     @PostMapping("/queryAuditSql")
-    @Authority(power = 3)
+    @Authority(power = 1)
     public BaseResult queryAuditSql(@RequestBody MysqlLogQuery auditLogQuery) {
         return BaseResult.ok(mysqlService.auditSql(auditLogQuery));
     }

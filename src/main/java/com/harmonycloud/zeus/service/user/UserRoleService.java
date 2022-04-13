@@ -5,6 +5,7 @@ import java.util.List;
 import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.caas.common.model.user.UserRole;
 import com.harmonycloud.zeus.bean.user.BeanUser;
+import com.harmonycloud.zeus.bean.user.BeanUserRole;
 
 /**
  * @author xutianhong
@@ -19,6 +20,14 @@ public interface UserRoleService {
      * @return BeanSysRole
      */
     List<UserRole> get(String userName);
+
+    /**
+     * 获取角色id
+     *
+     * @param userName 账户
+     * @return BeanSysRole
+     */
+    Integer getRoleId(String userName, String projectId);
 
     /**
      * 校验是否为超级管理员权限

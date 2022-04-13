@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.caas.common.model.user.RoleDto;
+import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.zeus.bean.user.BeanRole;
 
 /**
@@ -55,7 +56,7 @@ public interface RoleService {
      *
      * @return List<ResourceMenuDto>
      */
-    List<ResourceMenuDto> listMenuByRoleId(String username);
+    List<ResourceMenuDto> listMenuByRoleId(UserDto userDto);
 
 
 }

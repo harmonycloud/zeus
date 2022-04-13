@@ -15,12 +15,17 @@ import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.harmonycloud.caas.common.model.MonitorResourceQuota;
 import com.harmonycloud.caas.common.model.MonitorResourceQuotaBase;
 import com.harmonycloud.caas.common.model.PrometheusResponse;
+import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
+import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.harmonycloud.zeus.bean.user.BeanRoleAuthority;
 import com.harmonycloud.zeus.service.middleware.*;
 import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
 import com.harmonycloud.zeus.service.user.ProjectService;
+import com.harmonycloud.zeus.service.user.RoleAuthorityService;
+import com.harmonycloud.zeus.service.user.UserRoleService;
 import com.harmonycloud.zeus.util.ChartVersionUtil;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import org.apache.commons.lang3.SerializationUtils;
@@ -92,6 +97,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private IngressService ingressService;
     @Autowired
     private ProjectService projectService;
+    @Autowired
+    private UserRoleService userRoleService;
+    @Autowired
+    private RoleAuthorityService roleAuthorityService;
 
     @Override
     public List<Middleware> simpleList(String clusterId, String namespace, String type, String keyword) {
@@ -398,7 +407,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public List<MiddlewareBriefInfoDTO> list(String clusterId, String namespace, String type, String keyword, String projetcId)
+    public List<MiddlewareBriefInfoDTO> list(String clusterId, String namespace, String type, String keyword, String projectId)
         throws Exception {
         // 获取中间件chart包信息
         List<BeanMiddlewareInfo> beanMiddlewareInfoList = middlewareInfoService.list(true);
@@ -468,13 +477,23 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 finalMiddlewareList.add(middleware);
             }
         }
-        // 根据项目分区进行过滤
+        
         List<Middleware> result = finalMiddlewareList;
-        if (StringUtils.isNotEmpty(projetcId)) {
-            List<Namespace> projectNamespaceList = projectService.getNamespace(projetcId);
+        if (StringUtils.isNotEmpty(projectId)) {
+            // 根据项目分区进行过滤
+            List<Namespace> projectNamespaceList = projectService.getNamespace(projectId);
             result = result.stream()
                 .filter(mw -> projectNamespaceList.stream().anyMatch(pn -> pn.getName().equals(mw.getNamespace())))
                 .collect(Collectors.toList());
+            // 根据类型进行过滤
+            if (StringUtils.isEmpty(type)) {
+                Integer roleId = userRoleService.getRoleId(CurrentUserRepository.getUser().getUsername(), projectId);
+                List<BeanRoleAuthority> power = roleAuthorityService.list(roleId);
+                result = result.stream()
+                    .filter(mw -> power.stream()
+                        .anyMatch(ra -> ra.getType().equals(mw.getType()) && !"0000".equals(ra.getPower())))
+                    .collect(Collectors.toList());
+            }
         }
         result.sort(new MiddlewareComparator());
         // 封装数据

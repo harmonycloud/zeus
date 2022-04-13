@@ -107,6 +107,7 @@ public class UserServiceImpl implements UserService {
         List<UserRole> userRoleList = userRoleService.get(userName);
         if (!CollectionUtils.isEmpty(userRoleList)) {
             userDto.setUserRoleList(userRoleList);
+            userDto.setIsAdmin(userRoleList.stream().anyMatch(userRole -> userRole.getRoleId() == 1));
         }
         return userDto;
     }
@@ -236,10 +237,12 @@ public class UserServiceImpl implements UserService {
     public List<ResourceMenuDto> menu(String clusterId) {
         CurrentUser currentUser = CurrentUserRepository.getUser();
         String username = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString(USERNAME);
-        List<ResourceMenuDto> resourceMenuDtoList = roleService.listMenuByRoleId(username);
+        UserDto userDto = this.getUserDto(username);
+        String projectId = RequestUtil.getProjectId();
+        List<ResourceMenuDto> resourceMenuDtoList = roleService.listMenuByRoleId(userDto);
 
         Map<Integer, List<ResourceMenuDto>> resourceMenuDtoMap =
-                resourceMenuDtoList.stream().collect(Collectors.groupingBy(ResourceMenuDto::getParentId));
+            resourceMenuDtoList.stream().collect(Collectors.groupingBy(ResourceMenuDto::getParentId));
         List<ResourceMenuDto> firstMenuList = resourceMenuDtoMap.get(0);
         resourceMenuDtoMap.remove(0);
         firstMenuList.forEach(firstMenu -> {
@@ -250,7 +253,13 @@ public class UserServiceImpl implements UserService {
             Collections.sort(firstMenu.getSubMenu());
         });
         if (StringUtils.isNotBlank(clusterId)) {
-            setServiceMenuSubMenu(firstMenuList, clusterId);
+            Map<String, String> power = new HashMap<>();
+            if (!userDto.getIsAdmin() && StringUtils.isNotEmpty(projectId)) {
+                power.putAll(
+                    userDto.getUserRoleList().stream().filter(userRole -> userRole.getProjectId().equals(projectId))
+                        .collect(Collectors.toList()).get(0).getPower());
+            }
+            setServiceMenuSubMenu(firstMenuList, clusterId, power);
         }
         Collections.sort(firstMenuList);
         return firstMenuList;
@@ -457,16 +466,23 @@ public class UserServiceImpl implements UserService {
      * @author  liyinlong
      * @since 2021/11/2 4:09 下午
      */
-    public void setServiceMenuSubMenu(List<ResourceMenuDto> menuDtos, String clusterId) {
-        menuDtos.forEach(parentMenu -> {
+    public void setServiceMenuSubMenu(List<ResourceMenuDto> menuDtoList, String clusterId, Map<String, String> power) {
+        menuDtoList.forEach(parentMenu -> {
             if ("serviceList".equals(parentMenu.getName())) {
                 List<ResourceMenuDto> resourceMenuDtos = middlewareService.listAllMiddlewareAsMenu(clusterId);
+                if (!CollectionUtils.isEmpty(power)) {
+                    resourceMenuDtos = resourceMenuDtos.stream()
+                        .filter(resourceMenuDto -> power.keySet().stream()
+                            .anyMatch(key -> !"0000".equals(power.get(key)) && key.equals(resourceMenuDto.getName())))
+                        .collect(Collectors.toList());
+                }
                 resourceMenuDtos.forEach(resourceMenuDto -> {
-                    resourceMenuDto.setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(resourceMenuDto.getAliasName()));
-                    resourceMenuDto.setUrl(parentMenu.getUrl() + "/" + resourceMenuDto.getName() +"/" + resourceMenuDto.getAliasName());
+                    resourceMenuDto
+                        .setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(resourceMenuDto.getAliasName()));
+                    resourceMenuDto.setUrl(
+                        parentMenu.getUrl() + "/" + resourceMenuDto.getName() + "/" + resourceMenuDto.getAliasName());
                 });
                 parentMenu.setSubMenu(resourceMenuDtos);
-                return;
             }
         });
     }
