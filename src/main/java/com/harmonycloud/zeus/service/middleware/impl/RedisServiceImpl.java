@@ -27,6 +27,8 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Tuple;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.harmonycloud.zeus.util.RedisUtil.getRedisClusterIsOk;
@@ -70,6 +72,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
     @Override
     public void create(String clusterId, String namespace, String middlewareName, RedisDbDTO db) {
         paramCheck(db.getDb());
+        isNumeric(db.getTimeOut());
         RedisAccessInfo redisAccessInfo = queryBasicAccessInfo(clusterId,namespace,middlewareName,null);
         Jedis jedis;
         if (SENTINEL.equals(redisAccessInfo.getMode())) {
@@ -94,6 +97,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
     @Override
     public void update(String clusterId, String namespace, String middlewareName, RedisDbDTO db) {
         paramCheck(db.getDb());
+        isNumeric(db.getTimeOut());
         RedisAccessInfo redisAccessInfo = queryBasicAccessInfo(clusterId,namespace,middlewareName,null);
         Jedis jedis;
         if (SENTINEL.equals(redisAccessInfo.getMode())) {
@@ -179,7 +183,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
                 }
             }
             if (time >= 0) {
-                jedis.expire(redisDbDTO.getKey(), (int) time);
+                jedis.expireAt(redisDbDTO.getKey(),time);
             }
         } catch (NumberFormatException e) {
             throw new BusinessException(ErrorMessage.OUT_OF_RANGE);
@@ -317,7 +321,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
 
                 }
                 if (time >= 0) {
-                    jedis.expire(redisDbDTO.getKey(), (int) time);
+                    jedis.expireAt(redisDbDTO.getKey(),time);
                 }
             }
         } catch (NumberFormatException e) {
@@ -369,9 +373,17 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
         return redisAccessInfo;
     }
 
-    public void paramCheck(String db) {
+    private void paramCheck(String db) {
         if (StringUtils.isEmpty(db)) {
             throw new BusinessException(ErrorMessage.NOT_SELECT_DATABASE);
+        }
+    }
+
+    private void isNumeric(String str){
+        Pattern pattern = Pattern.compile("[0-9]*");
+        Matcher isNum = pattern.matcher(str);
+        if( !isNum.matches() ){
+            throw new BusinessException(ErrorMessage.NOT_AN_INTEGER_VALUE);
         }
     }
 
