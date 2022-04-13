@@ -63,10 +63,8 @@ public class K8sClient {
         if (K8S_CLIENT_MAP.containsKey(DEFAULT_CLIENT)) {
             return K8S_CLIENT_MAP.get(DEFAULT_CLIENT);
         }
-        KubernetesClient client = initDefaultClient();
         //初始化所有集群连接
-        initClients();
-        return client;
+        return initClients();
     }
 
     /**
@@ -87,12 +85,14 @@ public class K8sClient {
     /**
      * 初始化
      */
-    public void initClients() {
+    public KubernetesClient initClients() {
+        KubernetesClient client = initDefaultClient();
         List<MiddlewareClusterDTO> middlewareClusters = clusterService.listClusters();
         if (middlewareClusters.size() > 0) {
             addK8sClients(middlewareClusters);
             clusterService.initClusterAttributes(middlewareClusters);
         }
+        return client;
     }
 
     /**
