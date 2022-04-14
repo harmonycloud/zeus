@@ -141,51 +141,45 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
      * 修改时先删后增
      */
     private void updateByType(Jedis jedis, RedisDbDTO redisDbDTO) {
-        try {
-            long time = 0;
-            if (redisDbDTO.getTimeOut() == null || "".equals(redisDbDTO.getTimeOut())) {
-                time = -1;
-            } else {
-                if (redisDbDTO.getTimeOut().length() >= 16) {
-                    throw new BusinessException(ErrorMessage.OUT_OF_RANGE);
+        long time = -1;
+        if (StringUtils.isNotBlank(redisDbDTO.getTimeOut())) {
+            if (redisDbDTO.getTimeOut().length() >= 16) {
+                throw new BusinessException(ErrorMessage.OUT_OF_RANGE);
+            }
+            time = Long.parseLong(redisDbDTO.getTimeOut());
+        }
+        if (RedisConstant.LIST.equals(redisDbDTO.getType())) {
+            for (String mapKey : redisDbDTO.getList().keySet()) {
+                jedis.lset(redisDbDTO.getKey(),Long.parseLong(mapKey),redisDbDTO.getList().get(mapKey));
+            }
+        }
+        if (RedisConstant.HASH.equals(redisDbDTO.getType())) {
+            for (String mapKey : redisDbDTO.getOldHash().keySet()) {
+                jedis.hdel(redisDbDTO.getKey(),mapKey);
+            }
+            jedis.hmset(redisDbDTO.getKey(),redisDbDTO.getHash());
+        }
+        if (RedisConstant.STRING.equals(redisDbDTO.getType())) {
+            jedis.set(redisDbDTO.getKey(),redisDbDTO.getValue());
+        }
+        if (RedisConstant.SET.equals(redisDbDTO.getType())) {
+            jedis.srem(redisDbDTO.getKey(),redisDbDTO.getOldSet());
+            jedis.sadd(redisDbDTO.getKey(),redisDbDTO.getSet());
+        }
+        if (RedisConstant.Z_SET.equals(redisDbDTO.getType())) {
+            for (String score : redisDbDTO.getZset().keySet()) {
+                for (String mapKey : redisDbDTO.getOldZset().keySet()) {
+                    jedis.zrem(redisDbDTO.getKey(),redisDbDTO.getOldZset().get(mapKey));
                 }
-                time = Long.parseLong(redisDbDTO.getTimeOut());
-            }
-            if (RedisConstant.LIST.equals(redisDbDTO.getType())) {
-                for (String mapKey : redisDbDTO.getList().keySet()) {
-                    jedis.lset(redisDbDTO.getKey(),Long.parseLong(mapKey),redisDbDTO.getList().get(mapKey));
-                }
-            }
-            if (RedisConstant.HASH.equals(redisDbDTO.getType())) {
-                for (String mapKey : redisDbDTO.getOldHash().keySet()) {
-                    jedis.hdel(redisDbDTO.getKey(),mapKey);
-                }
-                jedis.hmset(redisDbDTO.getKey(),redisDbDTO.getHash());
-            }
-            if (RedisConstant.STRING.equals(redisDbDTO.getType())) {
-                jedis.set(redisDbDTO.getKey(),redisDbDTO.getValue());
-            }
-            if (RedisConstant.SET.equals(redisDbDTO.getType())) {
-                jedis.srem(redisDbDTO.getKey(),redisDbDTO.getOldSet());
-                jedis.sadd(redisDbDTO.getKey(),redisDbDTO.getSet());
-            }
-            if (RedisConstant.Z_SET.equals(redisDbDTO.getType())) {
-                for (String score : redisDbDTO.getZset().keySet()) {
-                    for (String mapKey : redisDbDTO.getOldZset().keySet()) {
-                        jedis.zrem(redisDbDTO.getKey(),redisDbDTO.getOldZset().get(mapKey));
-                    }
-                    try {
-                        jedis.zadd(redisDbDTO.getKey(), Double.parseDouble(score),redisDbDTO.getZset().get(score));
-                    } catch (Exception e) {
-                        jedis.zadd(redisDbDTO.getKey(), 0,redisDbDTO.getZset().get(score));
-                    }
+                try {
+                    jedis.zadd(redisDbDTO.getKey(), Double.parseDouble(score),redisDbDTO.getZset().get(score));
+                } catch (Exception e) {
+                    jedis.zadd(redisDbDTO.getKey(), 0,redisDbDTO.getZset().get(score));
                 }
             }
-            if (time >= 0) {
-                jedis.expireAt(redisDbDTO.getKey(), time);
-            }
-        } catch (NumberFormatException e) {
-            throw new BusinessException(ErrorMessage.OUT_OF_RANGE);
+        }
+        if (time >= 0) {
+            jedis.expireAt(redisDbDTO.getKey(), time);
         }
     }
 
@@ -280,54 +274,48 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
     }
 
     private void paddingDataByType(Jedis jedis, RedisDbDTO redisDbDTO) {
-        try {
-            long time = 0;
-            if (redisDbDTO.getTimeOut() == null || "".equals(redisDbDTO.getTimeOut())) {
-                time = -1;
-            } else {
-                if (redisDbDTO.getTimeOut().length() >= 16) {
-                    throw new BusinessException(ErrorMessage.OUT_OF_RANGE);
-                }
-                time = Long.parseLong(redisDbDTO.getTimeOut());
+        long time = -1;
+        if (StringUtils.isNotBlank(redisDbDTO.getTimeOut())) {
+            if (redisDbDTO.getTimeOut().length() >= 16) {
+                throw new BusinessException(ErrorMessage.OUT_OF_RANGE);
             }
-            if (!StringUtils.isEmpty(redisDbDTO.getType())) {
-                switch (redisDbDTO.getType()) {
-                    case RedisConstant.STRING:
-                        jedis.set(redisDbDTO.getKey(),redisDbDTO.getValue());
-                        break;
-                    case RedisConstant.LIST:
-                        for (String direction : redisDbDTO.getList().keySet()) {
-                            if (RedisConstant.FRONT.equals(direction)) {
-                                jedis.lpush(redisDbDTO.getKey(), redisDbDTO.getList().get(direction));
-                            } else {
-                                jedis.rpush(redisDbDTO.getKey(), redisDbDTO.getList().get(direction));
-                            }
+            time = Long.parseLong(redisDbDTO.getTimeOut());
+        }
+        if (!StringUtils.isEmpty(redisDbDTO.getType())) {
+            switch (redisDbDTO.getType()) {
+                case RedisConstant.STRING:
+                    jedis.set(redisDbDTO.getKey(),redisDbDTO.getValue());
+                    break;
+                case RedisConstant.LIST:
+                    for (String direction : redisDbDTO.getList().keySet()) {
+                        if (RedisConstant.FRONT.equals(direction)) {
+                            jedis.lpush(redisDbDTO.getKey(), redisDbDTO.getList().get(direction));
+                        } else {
+                            jedis.rpush(redisDbDTO.getKey(), redisDbDTO.getList().get(direction));
                         }
-                        break;
-                    case RedisConstant.HASH:
-                        jedis.hmset(redisDbDTO.getKey(),redisDbDTO.getHash());
-                        break;
-                    case RedisConstant.SET:
-                        jedis.sadd(redisDbDTO.getKey(),redisDbDTO.getSet());
-                        break;
-                    case RedisConstant.Z_SET:
-                        for (String score : redisDbDTO.getZset().keySet()) {
-                            try {
-                                jedis.zadd(redisDbDTO.getKey(), Double.parseDouble(score),redisDbDTO.getZset().get(score));
-                            } catch (Exception e) {
-                                jedis.zadd(redisDbDTO.getKey(), 0,redisDbDTO.getZset().get(score));
-                            }
+                    }
+                    break;
+                case RedisConstant.HASH:
+                    jedis.hmset(redisDbDTO.getKey(),redisDbDTO.getHash());
+                    break;
+                case RedisConstant.SET:
+                    jedis.sadd(redisDbDTO.getKey(),redisDbDTO.getSet());
+                    break;
+                case RedisConstant.Z_SET:
+                    for (String score : redisDbDTO.getZset().keySet()) {
+                        try {
+                            jedis.zadd(redisDbDTO.getKey(), Double.parseDouble(score),redisDbDTO.getZset().get(score));
+                        } catch (Exception e) {
+                            jedis.zadd(redisDbDTO.getKey(), 0,redisDbDTO.getZset().get(score));
                         }
-                        break;
-                    default:
+                    }
+                    break;
+                default:
 
-                }
-                if (time >= 0) {
-                    jedis.expireAt(redisDbDTO.getKey(), time);
-                }
             }
-        } catch (NumberFormatException e) {
-            throw new BusinessException(ErrorMessage.OUT_OF_RANGE);
+            if (time >= 0) {
+                jedis.expireAt(redisDbDTO.getKey(), time);
+            }
         }
     }
 
