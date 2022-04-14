@@ -1053,9 +1053,14 @@ public class IngressServiceImpl implements IngressService {
                 }
             }
             //根据服务暴露名称、服务名称、服务中文名称过滤
-            if (ingressDTO.getName().contains(keyword) || ingressDTO.getMiddlewareName().contains(keyword) || ingressDTO.getMiddlewareNickName().contains(keyword)) {
+            if (StringUtils.isNotBlank(ingressDTO.getMiddlewareNickName())) {
+                if (ingressDTO.getName().contains(keyword) || ingressDTO.getMiddlewareName().contains(keyword) || ingressDTO.getMiddlewareNickName().contains(keyword)) {
+                    filteredIngressList.add(ingressDTO);
+                }
+            } else if (ingressDTO.getName().contains(keyword) || ingressDTO.getMiddlewareName().contains(keyword)) {
                 filteredIngressList.add(ingressDTO);
             }
+
         }
         return filteredIngressList;
     }
