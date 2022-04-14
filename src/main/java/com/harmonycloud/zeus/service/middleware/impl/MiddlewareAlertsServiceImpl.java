@@ -93,7 +93,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             String alertID = keyword.replaceAll("GJ","");
             if (isNumeric(alertID)) {
                 queryWrapper.and(wrapper ->
-                        wrapper.eq("alert_id",Integer.parseInt(alertID)).or().like("alert_expr",keyword));
+                        wrapper.like("alert_id",Integer.parseInt(alertID)).or().like("alert_expr",keyword));
             } else {
                 queryWrapper.and(wrapper ->
                         wrapper.or().eq("alert",keyword).or().eq("symbol",keyword)
