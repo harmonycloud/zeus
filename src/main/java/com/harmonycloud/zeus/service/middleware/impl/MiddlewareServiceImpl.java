@@ -27,7 +27,6 @@ import com.harmonycloud.zeus.service.user.ProjectService;
 import com.harmonycloud.zeus.service.user.RoleAuthorityService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
 import com.harmonycloud.zeus.util.ChartVersionUtil;
-import com.harmonycloud.zeus.util.RequestUtil;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -671,7 +670,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     public List<Middleware> queryAllClusterService(List<MiddlewareClusterDTO> clusterDTOList) {
         List<Namespace> namespaceList = new ArrayList<>();
         clusterDTOList.forEach(cluster -> {
-            namespaceList.addAll(namespaceService.list(cluster.getId(), false, false, false, null, RequestUtil.getProjectId()));
+            namespaceList.addAll(namespaceService.list(cluster.getId(), false, null));
         });
         List<Middleware> middlewareServiceList = new ArrayList<>();
         namespaceList.forEach(namespace -> {
