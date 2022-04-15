@@ -991,52 +991,54 @@ public class IngressServiceImpl implements IngressService {
 
     @Override
     public List listAllIngress(String clusterId, String namespace, String keyword) {
-        List<Map<String, Object>> ingressList = new ArrayList<>();
-        boolean filter = StringUtils.isNotBlank(keyword);
-        List<IngressDTO> allIngress = list(clusterId, namespace, null);
-        List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.list(false);
-        for (BeanMiddlewareInfo mwInfo : middlewareInfoList) {
-            List<IngressDTO> ingressDTOList = new ArrayList<>();
-            for (IngressDTO ingressDTO : allIngress) {
-                if (mwInfo.getName().equals(ingressDTO.getMiddlewareType())) {
-                    ingressDTOList.add(ingressDTO);
-                }
-            }
-            if (filter) {
-                ingressDTOList = filterByKeyword(ingressDTOList, keyword);
-            }
-            Map<String, Object> middlewareMap = new HashMap<>();
-            middlewareMap.put("name", mwInfo.getChartName());
-            middlewareMap.put("imagePath", mwInfo.getImagePath());
-            middlewareMap.put("chartName", mwInfo.getChartName());
-            middlewareMap.put("chartVersion", mwInfo.getChartVersion());
-            middlewareMap.put("version", mwInfo.getVersion());
-            middlewareMap.put("ingressList", ingressDTOList);
-            middlewareMap.put("serviceNum", ingressDTOList.size());
-            ingressList.add(middlewareMap);
+        List<Map<String, Object>> result = new ArrayList<>();
+        // 获取所有ingress
+        List<IngressDTO> ingressDTOLists = list(clusterId, namespace, null);
+        // 关键词过滤
+        if (StringUtils.isNotEmpty(keyword)) {
+            ingressDTOLists = filterByKeyword(ingressDTOLists, keyword);
         }
-
+        // 数据整理
+        Map<String, List<IngressDTO>> ingressDtoListMap =
+            ingressDTOLists.stream().filter(ingressDTO -> StringUtils.isNotEmpty(ingressDTO.getMiddlewareType()))
+                .collect(Collectors.groupingBy(IngressDTO::getMiddlewareType));
+        Map<String, BeanMiddlewareInfo> middlewareInfoMap = middlewareInfoService.list(false).stream()
+            .collect(Collectors.toMap(BeanMiddlewareInfo::getChartName, mw -> mw));
+        // 封装数据
+        for (String key : ingressDtoListMap.keySet()) {
+            if (middlewareInfoMap.containsKey(key)) {
+                Map<String, Object> middlewareMap = new HashMap<>();
+                BeanMiddlewareInfo mwInfo = middlewareInfoMap.get(key);
+                middlewareMap.put("name", mwInfo.getChartName());
+                middlewareMap.put("imagePath", mwInfo.getImagePath());
+                middlewareMap.put("chartName", mwInfo.getChartName());
+                middlewareMap.put("ingressList", ingressDtoListMap.get(key));
+                middlewareMap.put("serviceNum", ingressDtoListMap.get(key).size());
+                result.add(middlewareMap);
+            }
+        }
+        // 过滤数据
         Map<String, String> power = userService.getPower();
-        if (!CollectionUtils.isEmpty(power)){
+        if (!CollectionUtils.isEmpty(power)) {
             Set<String> typeSet = power.keySet().stream()
-                    .filter(key -> power.get(key).split("")[1].equals(String.valueOf(NUM_ONE))).collect(Collectors.toSet());
-            ingressList = ingressList.stream()
-                    .filter(ingress -> typeSet.stream().anyMatch(key -> ingress.get("chartName").equals(key)))
-                    .collect(Collectors.toList());
+                .filter(key -> power.get(key).split("")[1].equals(String.valueOf(NUM_ONE))).collect(Collectors.toSet());
+            result = result.stream()
+                .filter(ingress -> typeSet.stream().anyMatch(key -> ingress.get("chartName").equals(key)))
+                .collect(Collectors.toList());
         }
-        Collections.sort(ingressList, new MiddlewareServiceImpl.ServiceMapComparator());
-        return ingressList;
+        Collections.sort(result, new MiddlewareServiceImpl.ServiceMapComparator());
+        return result;
     }
 
     private List<IngressDTO> filterByKeyword(List<IngressDTO> ingressDTOList, String keyword) {
-        List<IngressDTO> filteredIngressList = new ArrayList<>();
-        for (IngressDTO ingressDTO : ingressDTOList) {
+        ingressDTOList = ingressDTOList.stream().filter(ingressDTO -> {
             // NodePort服务地址过滤
-            if (StringUtils.isNotBlank(ingressDTO.getExposeIP()) && !CollectionUtils.isEmpty(ingressDTO.getServiceList())) {
+            if (StringUtils.isNotBlank(ingressDTO.getExposeIP())
+                && !CollectionUtils.isEmpty(ingressDTO.getServiceList())) {
                 for (ServiceDTO serviceDTO : ingressDTO.getServiceList()) {
                     String address = ingressDTO.getExposeIP() + ":" + serviceDTO.getExposePort();
                     if (address.contains(keyword)) {
-                        filteredIngressList.add(ingressDTO);
+                        return true;
                     }
                 }
             }
@@ -1045,24 +1047,23 @@ public class IngressServiceImpl implements IngressService {
                 List<IngressRuleDTO> rules = ingressDTO.getRules();
                 for (IngressRuleDTO rule : rules) {
                     for (IngressHttpPath ingressHttpPath : rule.getIngressHttpPaths()) {
-                        String address = rule.getDomain() + ":" + ingressHttpPath.getServicePort() + ingressHttpPath.getPath();
+                        String address =
+                            rule.getDomain() + ":" + ingressHttpPath.getServicePort() + ingressHttpPath.getPath();
                         if (address.contains(keyword)) {
-                            filteredIngressList.add(ingressDTO);
+                            return true;
                         }
                     }
                 }
             }
-            //根据服务暴露名称、服务名称、服务中文名称过滤
+            // 根据服务暴露名称、服务名称、服务中文名称过滤
             if (StringUtils.isNotBlank(ingressDTO.getMiddlewareNickName())) {
-                if (ingressDTO.getName().contains(keyword) || ingressDTO.getMiddlewareName().contains(keyword) || ingressDTO.getMiddlewareNickName().contains(keyword)) {
-                    filteredIngressList.add(ingressDTO);
-                }
-            } else if (ingressDTO.getName().contains(keyword) || ingressDTO.getMiddlewareName().contains(keyword)) {
-                filteredIngressList.add(ingressDTO);
+                return ingressDTO.getName().contains(keyword) || ingressDTO.getMiddlewareName().contains(keyword)
+                    || ingressDTO.getMiddlewareNickName().contains(keyword);
+            } else {
+                return ingressDTO.getName().contains(keyword) || ingressDTO.getMiddlewareName().contains(keyword);
             }
-
-        }
-        return filteredIngressList;
+        }).collect(Collectors.toList());
+        return ingressDTOList;
     }
 
 }
