@@ -621,6 +621,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         if (!CollectionUtils.isEmpty(helmInfos)) {
             // 获取configmap
             HelmListInfo helmInfo = helmInfos.get(0);
+            // 特殊处理pg
+            if ("postgresql".equals(mwInfo.getChartName())){
+                alias = alias + "-postgresql";
+            }
             ConfigMap configMap =
                     configMapService.get(middleware.getClusterId(), helmInfo.getNamespace(), alias + "-dashboard");
             if (!ObjectUtils.isEmpty(configMap)) {
