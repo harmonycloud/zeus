@@ -30,7 +30,7 @@ public interface MailService {
      * 添加邮箱
      * @param mailInfo
      */
-    void insertMail(MailInfo mailInfo);
+    void insertMail(MailInfo mailInfo) throws IllegalAccessException;
 
     /**
      * 邮箱信息回显

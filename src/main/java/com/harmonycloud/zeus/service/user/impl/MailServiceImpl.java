@@ -30,6 +30,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
+import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
@@ -110,7 +111,7 @@ public class MailServiceImpl implements MailService {
     }
 
     @Override
-    public void insertMail(MailInfo mailInfo) {
+    public void insertMail(MailInfo mailInfo) throws IllegalAccessException {
         paramsCheck(mailInfo);
         boolean flag = this.checkEmail(mailInfo.getUserName(),mailInfo.getPassword());
         if (!flag) {
@@ -118,6 +119,7 @@ public class MailServiceImpl implements MailService {
         }
         QueryWrapper<MailInfo> wrapper = new QueryWrapper<>();
         List<MailInfo> list = mailMapper.selectList(wrapper);
+        objectToTrim(mailInfo);
         if (list.size() == 0) {
             mailMapper.insert(mailInfo);
         }else {
@@ -253,5 +255,34 @@ public class MailServiceImpl implements MailService {
                 mailInfo.getPassword(),mailInfo.getUserName(),String.valueOf(mailInfo.getPort()))) {
             throw new BusinessException(ErrorMessage.MAIL_INCOMPLETE_PARAMETERS);
         }
+    }
+
+    /**
+     * 去除两端空格
+     * @param obj
+     * @throws IllegalAccessException
+     */
+    public static void objectToTrim(Object obj) throws IllegalAccessException {
+        Map<String,String> map = new HashMap<>();
+        Field[] declaredFields = obj.getClass().getDeclaredFields();
+        for (Field field:declaredFields){
+            String type = field.getType().getCanonicalName();
+            if (StringUtils.equals("java.lang.String", type)){
+                field.setAccessible(true);
+                Object object = field.get(obj);
+                if (object != null) {
+                    String trim = object.toString().replace(" ","");
+                    map.put(field.getName(),trim);
+                }
+            }
+        }
+        for (Field field:declaredFields){
+            if (map.get(field.getName())!=null){
+                String s = map.get(field.getName());
+                field.setAccessible(true);
+                field.set(obj,s);
+            }
+        }
+
     }
 }
