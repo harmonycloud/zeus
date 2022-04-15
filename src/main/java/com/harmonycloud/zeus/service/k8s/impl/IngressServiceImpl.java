@@ -1048,7 +1048,7 @@ public class IngressServiceImpl implements IngressService {
                 for (IngressRuleDTO rule : rules) {
                     for (IngressHttpPath ingressHttpPath : rule.getIngressHttpPaths()) {
                         String address =
-                            rule.getDomain() + ":" + ingressHttpPath.getServicePort() + ingressHttpPath.getPath();
+                            rule.getDomain() + ":80" + ingressHttpPath.getPath();
                         if (address.contains(keyword)) {
                             return true;
                         }
