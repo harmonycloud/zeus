@@ -18,6 +18,10 @@ import org.springframework.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.EXPORTER;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.HEADLESS;
 
 /**
  * @author tangtx
@@ -75,7 +79,8 @@ public class ServiceServiceImpl implements ServiceService {
             }
             servicePortDTOList.add(servicePortDTO);
         }
-        return servicePortDTOList;
+        return servicePortDTOList.stream().filter(servicePortDTO -> !servicePortDTO.getServiceName().contains(EXPORTER)
+            && !servicePortDTO.getServiceName().contains(HEADLESS)).collect(Collectors.toList());
     }
 
     @Override
