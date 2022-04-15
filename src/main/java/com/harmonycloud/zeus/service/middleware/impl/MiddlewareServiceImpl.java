@@ -455,12 +455,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         final CountDownLatch count = new CountDownLatch(finalMiddlewareList.size());
         finalMiddlewareList.forEach(mw -> ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
-                JSONObject values = helmChartService.getInstalledValues(mw.getName(), mw.getNamespace(), cluster);
-                if (values != null) {
-                    mw.setAliasName(values.containsKey("aliasName") ? values.getString("aliasName") : "");
-                    mw.setDescription(values.containsKey("middleware-desc") ? values.getString("middleware-desc") : "");
-
-                }
+                 getOperator(BaseOperator.class, BaseOperator.class, mw).convertByHelmChart(mw, cluster);
             } finally {
                 count.countDown();
             }
