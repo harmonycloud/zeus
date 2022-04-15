@@ -538,6 +538,7 @@ public class IngressServiceImpl implements IngressService {
         ingressDTO.setExposeIP(exposeIP);
         ingressDTO.setExposeType(MIDDLEWARE_EXPOSE_NODEPORT);
         ingressDTO.setProtocol(Protocol.TCP.getValue());
+        ingressDTO.setLabels(service.getMetadata().getLabels());
         ingressDTO.setCreateTime(DateUtil.utc2Local(service.getMetadata().getCreationTimestamp(),
                 DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue()));
         List<OwnerReference> ownerReferences = service.getMetadata().getOwnerReferences();

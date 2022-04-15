@@ -1,8 +1,7 @@
 package com.harmonycloud.zeus.operator.impl;
 
 import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_INGRESS;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_NODEPORT;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -616,9 +615,13 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 middleware.getType(), middleware.getName());
         log.info("准备创建MysqlReplicate,middleware={},ingressDTOS={}", middleware, ingressDTOS);
         if (!CollectionUtils.isEmpty(ingressDTOS)) {
-            List<IngressDTO> readonlyIngressDTOList = ingressDTOS.stream().filter(ingressDTO -> (
-                    ingressDTO.getName().contains("readonly") && ingressDTO.getExposeType().equals(MIDDLEWARE_EXPOSE_NODEPORT))
-            ).collect(Collectors.toList());
+            List<IngressDTO> readonlyIngressDTOList =
+                ingressDTOS.stream()
+                    .filter(ingressDTO -> (ingressDTO.getLabels() != null
+                        && ingressDTO.getLabels().containsKey(SERVICE_TYPE)
+                        && Slave_All.equals(ingressDTO.getLabels().get(SERVICE_TYPE))
+                        && ingressDTO.getExposeType().equals(MIDDLEWARE_EXPOSE_NODEPORT)))
+                    .collect(Collectors.toList());
             if (!CollectionUtils.isEmpty(readonlyIngressDTOList)) {
                 IngressDTO ingressDTO = readonlyIngressDTOList.get(0);
                 List<ServiceDTO> serviceList = ingressDTO.getServiceList();
