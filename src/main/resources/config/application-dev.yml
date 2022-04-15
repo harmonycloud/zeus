@@ -1,15 +1,15 @@
 spring:
   datasource:
     username: root # change this
-    password: ZeuS@Middleware01 # change this
-    url: jdbc:mysql://10.10.101.140:31221/middleware_platform?useUnicode=true&characterEncoding=utf-8 # change this
+    password: root # change this
+    url: jdbc:mysql://127.0.0.1:3306/middleware_platform?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC # change this
     driver-class-name: com.mysql.cj.jdbc.Driver
   servlet:
     multipart:
       max-file-size: 10GB
       max-request-size: 10GB
   resources:
-    static-locations: file:/Users/yushuaikang/Desktop/upload,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/
+    static-locations: file:/MyPath/upload,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/ # change this
   jackson:
     time-zone: GMT+8
     date-format: yyyy-MM-dd HH:mm:ss
@@ -22,6 +22,7 @@ logging:
     com.harmonycloud.tool.api: debug
     com.harmonycloud.caas.filters.filters: debug
     root: info
+
 management:
   endpoint:
     health:
@@ -49,18 +50,14 @@ k8s:
     label: middleware=true
   token:
     # debug时填写本地的token文件路径，有默认值，仅开发使用
-    path: /Users/Aive/Desktop/upload/token-12 # change me
+    path: /MyPath/kube-token # change this
   service:
-    # 默认fabric8客户端的地址，有默认值，仅开发使用
-    host: 10.1.10.12
+    # 默认kubernetes fabric8客户端的地址，有默认值，仅开发使用
+    host: 127.0.0.1
     port: 6443
   kubeconfig:
     # debug时填写本地的kube config文件路径，有默认值，仅开发使用
-    path: /Users/yushuaikang/Desktop/upload
-  component:
-    helm: /Users/Aive/Desktop/helm
-    middleware: /Users/yushuaikang/Desktop/middleware
-    components: /Users/yushuaikang/Desktop/components
+    path: /MyPath/upload # change this
 
 #分页pageHelper
 pagehelper:
@@ -68,24 +65,23 @@ pagehelper:
   reasonable: true
   support-methods-arguments: true
 
-
 system:
   upload:
-    # debug时填写自己本地的一个可访问的目录，仅开发使用，默认值：/usr/local/zeus-pv/upload
-    path: /Users/yushuaikang/Desktop/upload
+    # debug时填写自己本地的一个可访问的目录，仅开发使用，默认值：/usr/local/Zeus-pv/upload
+    path: /MyPath/upload
   images:
-    path: /Users/yushuaikang/Desktop/upload/images
+    path: /MyPath/upload/images
   user:
     username: admin
     # 密码Ab123456!
     password: 5B99164F828AED74140E5FDA077B634C
     # token有效期，8小时
     expire: 8
-
+  platform:
+    #平台版本
+    version: v0.2.1
+#ssl
 server:
-  http:
-    port: 8080
-  port: 8443
   ssl:
     key-alias: zeushttps
     key-store-password: Ab123456

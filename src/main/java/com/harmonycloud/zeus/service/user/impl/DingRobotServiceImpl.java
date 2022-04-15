@@ -31,6 +31,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author yushuaikang
@@ -160,7 +161,7 @@ public class DingRobotServiceImpl implements DingRobotService {
     @Override
     public void insert(List<DingRobotInfo> dingRobotInfos) {
         List<DingRobotDTO> dingRobotDTOS = this.dingConnect(dingRobotInfos);
-        dingRobotDTOS.stream().forEach(dingRobotDTO -> {
+        dingRobotDTOS.forEach(dingRobotDTO -> {
             if (!dingRobotDTO.isSuccess()) {
                 throw new BusinessException(ErrorMessage.DING_SERVER_CONNECT_FAILED);
             }
@@ -191,9 +192,13 @@ public class DingRobotServiceImpl implements DingRobotService {
 
     @Override
     public List<DingRobotDTO> dingConnect(List<DingRobotInfo> dingRobotInfos) {
+        List<String> collect = dingRobotInfos.stream().map(DingRobotInfo::getWebhook).distinct().collect(Collectors.toList());
+        if (collect.size() < dingRobotInfos.size()) {
+            throw new BusinessException(ErrorMessage.WEB_HOOK_REPETITION);
+        }
         TextMessage textMessage = new TextMessage("告警连接测试,请忽略!");
         List<DingRobotDTO> dingRobotDTOS = new ArrayList<>();
-        dingRobotInfos.stream().forEach(dingRobotInfo -> {
+        dingRobotInfos.forEach(dingRobotInfo -> {
             SendResult sendResult = null;
             DingRobotDTO dingRobotDTO = new DingRobotDTO();
             if (StringUtils.isEmpty(dingRobotInfo.getSecretKey())) {
@@ -205,11 +210,7 @@ public class DingRobotServiceImpl implements DingRobotService {
             }else {
                 try {
                     sendResult = robot.send(secret(dingRobotInfo.getWebhook(),dingRobotInfo.getSecretKey()),textMessage);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (NoSuchAlgorithmException e) {
-                    e.printStackTrace();
-                } catch (InvalidKeyException e) {
+                } catch (IOException | NoSuchAlgorithmException | InvalidKeyException e) {
                     e.printStackTrace();
                 }
             }
@@ -222,7 +223,7 @@ public class DingRobotServiceImpl implements DingRobotService {
 
     @Override
     public void removeDing(List<DingRobotInfo> dingRobotInfos) {
-        dingRobotInfos.stream().forEach(dingRobotInfo -> {
+        dingRobotInfos.forEach(dingRobotInfo -> {
             dingRobotMapper.deleteById(dingRobotInfo.getId());
         });
     }
@@ -259,16 +260,18 @@ public class DingRobotServiceImpl implements DingRobotService {
             case CommonConstant.CRITICAL:
                 level = "严重";
                 break;
+            default:
+
         }
         String time = DateFormatUtils.format(alertInfoDto.getAlertTime(), "yyyy-MM-dd HH:mm:ss");
         StringBuffer sb = new StringBuffer();
-        sb.append("告警ID: " + alertInfoDto.getRuleID()).append(NEWLINE);
-        sb.append("告警等级: " + level).append(NEWLINE);
-        sb.append("告警内容: " + alertInfoDto.getContent()).append(NEWLINE);
-        sb.append("告警对象: " + alertInfoDto.getClusterId()).append(NEWLINE);
-        sb.append("规则描述: " + alertInfoDto.getDescription()).append(NEWLINE);
-        sb.append("实际监测: " + alertInfoDto.getMessage()).append(NEWLINE);
-        sb.append("告警时间: " + time);
+        sb.append("告警ID: ").append(alertInfoDto.getRuleID()).append(NEWLINE);
+        sb.append("告警等级: ").append(level).append(NEWLINE);
+        sb.append("告警内容: ").append(alertInfoDto.getContent()).append(NEWLINE);
+        sb.append("告警对象: ").append(alertInfoDto.getClusterId()).append(NEWLINE);
+        sb.append("规则描述: ").append(alertInfoDto.getDescription()).append(NEWLINE);
+        sb.append("实际监测: ").append(alertInfoDto.getMessage()).append(NEWLINE);
+        sb.append("告警时间: ").append(time);
 
         return sb.toString();
     }

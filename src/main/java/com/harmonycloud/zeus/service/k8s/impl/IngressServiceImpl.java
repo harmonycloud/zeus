@@ -36,6 +36,7 @@ import com.harmonycloud.zeus.util.DateUtil;
 import com.harmonycloud.zeus.util.RequestUtil;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.*;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -163,13 +164,17 @@ public class IngressServiceImpl implements IngressService {
             ingressDTO.setMiddlewareName(middlewareName);
         }
         if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_INGRESS)) {
-            if (ingressDTO.getProtocol().equals(Protocol.HTTP.getValue())) {
-                Ingress ingress = convertK8sIngress(namespace, ingressDTO);
-                ingressWrapper.create(clusterId, namespace, ingress);
-            } else if (ingressDTO.getProtocol().equals(Protocol.TCP.getValue())) {
-                MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-                ConfigMap configMap = covertTcpConfig(cluster, namespace, ingressDTO);
-                configMapWrapper.update(clusterId, getIngressTcpNamespace(cluster, ingressDTO.getIngressClassName()), configMap);
+            try {
+                if (ingressDTO.getProtocol().equals(Protocol.HTTP.getValue())) {
+                    Ingress ingress = convertK8sIngress(namespace, ingressDTO);
+                    ingressWrapper.create(clusterId, namespace, ingress);
+                } else if (ingressDTO.getProtocol().equals(Protocol.TCP.getValue())) {
+                    MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+                    ConfigMap configMap = covertTcpConfig(cluster, namespace, ingressDTO);
+                    configMapWrapper.update(clusterId, getIngressTcpNamespace(cluster, ingressDTO.getIngressClassName()), configMap);
+                }
+            } catch (KubernetesClientException e) {
+                throw new CaasRuntimeException(ErrorMessage.INGRESS_DOMAIN_NAME_FORMAT_NOT_SUPPORT);
             }
         } else if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_NODEPORT)) {
             List<io.fabric8.kubernetes.api.model.Service> serviceList = covertNodePortService(clusterId, namespace, middlewareName, ingressDTO);
@@ -1048,9 +1053,14 @@ public class IngressServiceImpl implements IngressService {
                 }
             }
             //根据服务暴露名称、服务名称、服务中文名称过滤
-            if (ingressDTO.getName().contains(keyword) || ingressDTO.getMiddlewareName().contains(keyword) || ingressDTO.getMiddlewareNickName().contains(keyword)) {
+            if (StringUtils.isNotBlank(ingressDTO.getMiddlewareNickName())) {
+                if (ingressDTO.getName().contains(keyword) || ingressDTO.getMiddlewareName().contains(keyword) || ingressDTO.getMiddlewareNickName().contains(keyword)) {
+                    filteredIngressList.add(ingressDTO);
+                }
+            } else if (ingressDTO.getName().contains(keyword) || ingressDTO.getMiddlewareName().contains(keyword)) {
                 filteredIngressList.add(ingressDTO);
             }
+
         }
         return filteredIngressList;
     }
