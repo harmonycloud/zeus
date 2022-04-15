@@ -29,7 +29,7 @@ public class MailController {
             @ApiImplicitParam(name = "mailInfo", value = "邮箱信息", paramType = "query", dataTypeClass = MailInfo.class),
     })
     @PostMapping
-    public BaseResult creat(@RequestBody MailInfo mailInfo) {
+    public BaseResult creat(@RequestBody MailInfo mailInfo) throws IllegalAccessException {
         mailService.insertMail(mailInfo);
         return BaseResult.ok();
     }
