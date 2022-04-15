@@ -1,4 +1,4 @@
-apiVersion: apiextensions.k8s.io/v1
+apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   name: esclusters.es.middleware.hc.cn
@@ -15,7 +15,7 @@ spec:
     shortNames:
     - esc
     singular: escluster
-  preserveUnknownFields: false
+  preserveUnknownFields: true
   scope: Namespaced
   validation:
     openAPIV3Schema:
@@ -29,8 +29,3 @@ spec:
   - name: v1alpha1
     served: true
     storage: true
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-

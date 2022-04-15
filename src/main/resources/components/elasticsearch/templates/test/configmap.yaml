@@ -30,7 +30,7 @@ data:
       # 删除一个master测试
       - name: "DeleteOneMaster"
         cmd: #{DeleteMaster}
-        timeout: 10m
+        timeout: 5m
         initTime: 5s
         interval: 5s
         variable:

@@ -5,41 +5,39 @@ args: {}
 #  xpack_watcher_enabled: false
 
 storage:
-  masterSize: 5Gi
-  dataSize: 5Gi
-  clientSize: 5Gi
-  coldSize: 5Gi
+  masterSize: 1Gi
+  dataSize: 1Gi
+  clientSize: 1Gi
+  coldSize: 1Gi
 hostNetwork: false
-
-# 默认使用es6.8版本; 如需使用7.16版本，则值改为7.16
-version: "6.8"
 
 image:
   repository: harbor.middleware.com/middleware
   pullPolicy: IfNotPresent
   busyImageTag: "1.0"
   kibanaImageTag: 6.8.10
-  kibanaImageTag_7: 7.16.3
-  initImageTag: 1.5.1
-  elasticImageTag: 6.8.22-3
-  elasticImageTag_7: 7.16.3-1
+  initImageTag: 1.4.1
+  elasticImageTag: 6.8.10-5
   exporterImageTag: 1.1.0rc1
   testImageTag: v0.3
-
-# 集群名称
-clusterName: {}
 
 cluster:
   mode: simple
   masterReplacesCount: 3
+# coldReplacesCount: 3
+
+#  mode: regular
+#  masterReplacesCount: 3
+#  dataReplacesCount: 3
+#  coldReplacesCount: 3
 
 #  mode: complex
 #  masterReplacesCount: 3
 #  dataReplacesCount: 3
-#  clientReplacesCount: 2
+#  clientReplacesCount: 1
 #  coldReplacesCount: 3
 
-
+  
 nameOverride: ""
 fullnameOverride: ""
 
@@ -85,16 +83,6 @@ resources:
 
 nodeSelector: {}
 
-# 支持扩展statefulset.spec.template.spec
-statefulSetConfiguration: {} 
-#  tolerations:
-#  - key: "example-key"
-#    operator: "Exists"
-#    effect: "NoSchedule"
-
-# 支持扩展deployment.spec.template.spec
-deploymentConfiguration: {}
-
 #设置nodeAffinity
 nodeAffinity: {}
 #  requiredDuringSchedulingIgnoredDuringExecution:
@@ -109,22 +97,3 @@ podAntiAffinityTopologKey: "kubernetes.io/hostname"
 
 #取值[hard|soft] hard:强制反亲和 soft:非强制反亲和
 podAntiAffinity: "soft"
-
-tolerations: []
-#- key: "example-key"
-#  operator: "Exists"
-#  effect: "NoSchedule"
-
-annotations: {}
-
-labels: {}
-
-extraVolumes: {}
-#  name: elasticsearch-backup
-#  persistentVolumeClaim:
-#    claimName: elasticsearch-backup
-
-extraVolumeMounts: {}
-#  mountPath: /data-backup
-#  name: elasticsearch-backup
-
