@@ -208,3 +208,6 @@ CREATE TABLE `project_namespace` (
   `cluster_id` varchar(64) CHARACTER SET utf8mb4 DEFAULT NULL COMMENT '集群id',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+-- 修改长度
+alter table alert_rule_id modify threshold varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '阈值';
