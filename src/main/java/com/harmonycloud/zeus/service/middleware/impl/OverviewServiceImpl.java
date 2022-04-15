@@ -813,24 +813,36 @@ public class OverviewServiceImpl implements OverviewService {
         recordQueryWrapper.ge("time", beginTime);
         recordQueryWrapper.le("time", endTime);
         recordQueryWrapper.orderByDesc("time");
-        PageHelper.startPage(1, 10);
+        PageHelper.startPage(current, size);
         List<BeanAlertRecord> alertRecordList = beanAlertRecordMapper.selectList(recordQueryWrapper);
-        PageInfo<BeanAlertRecord> pageInfo = new PageInfo<>(alertRecordList);
-        pageInfo.getList().forEach(record -> {
-            String chartVersion = middlewareChartVersion.get(record.getName());
-            if (chartVersion == null) {
-                JSONObject installedValues;
+        PageInfo<AlertDTO> pageInfo = new PageInfo<>();
+        BeanUtils.copyProperties(new PageInfo<>(alertRecordList), pageInfo);
+        Map<Middleware, String> middlewareMap = new HashMap<>();
+        pageInfo.setList(alertRecordList.stream().map(record -> {
+            AlertDTO alertDTO = new AlertDTO();
+            BeanUtils.copyProperties(record, alertDTO);
+            Middleware middleware = new Middleware().setName(alertDTO.getName()).setNamespace(alertDTO.getNamespace())
+                    .setClusterId(alertDTO.getClusterId());
+            if (middlewareMap.containsKey(middleware)) {
+                alertDTO.setChartVersion(middlewareMap.get(middleware));
+            } else {
                 try {
-                    installedValues = helmChartService.getInstalledValues(record.getName(), record.getNamespace(), clusterService.findById(record.getClusterId()));
-                    chartVersion = installedValues.getString("chart-version");
-                    middlewareChartVersion.put(record.getName(), chartVersion);
+                    JSONObject values = helmChartService.getInstalledValues(middleware, clusterService.findById(alertDTO.getClusterId()));
+                    if (values != null && values.containsKey("chart-version")) {
+                        String version = values.getString("chart-version");
+                        middlewareMap.put(middleware, version);
+                        alertDTO.setChartVersion(version);
+                    } else {
+                        middlewareMap.put(middleware, null);
+                        alertDTO.setChartVersion(null);
+                    }
                 } catch (Exception e) {
-                    log.error("查询服务values信息出错了", e);
+                    alertDTO.setChartVersion(null);
                 }
             }
-            record.setChartVersion(chartVersion);
             record.setCapitalType(MiddlewareOfficialNameEnum.findByMiddlewareName(record.getType()));
-        });
+            return alertDTO;
+        }).collect(Collectors.toList()));
 
         List<String> hourList = DateUtil.calcHour(now);
         List<Map<String, Object>> criticalList = beanAlertRecordMapper.queryByTimeAndLevel(beginTime, endTime, "critical");
