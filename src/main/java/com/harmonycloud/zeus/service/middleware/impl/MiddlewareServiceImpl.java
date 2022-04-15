@@ -429,7 +429,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         List<HelmListInfo> finalHelmListInfoList = helmListInfoList;
         // 过滤掉helm中没有的middleware 并设置chart-version
         middlewareList = middlewareList.stream().filter(mw -> finalHelmListInfoList.stream().anyMatch(info -> {
-            if (info.getName().equals(mw.getName()) || info.getName().equals("harmonycloud-" + mw.getName())) {
+            if (info.getName().equals(mw.getName()) || ("harmonycloud-" +info.getName()).equals(mw.getName())) {
                 mw.setChartVersion(info.getChart().replace(info.getChart().split("-")[0] + "-", ""));
                 return true;
             } else {
@@ -439,7 +439,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // 获取还未创建出middleware的release
         List<Middleware> finalMiddlewareList = middlewareList;
         helmListInfoList = helmListInfoList.stream()
-            .filter(info -> finalMiddlewareList.stream().noneMatch(mw -> mw.getName().equals(info.getName())))
+            .filter(info -> finalMiddlewareList.stream().noneMatch(mw -> info.getName().equals(mw.getName()) || ("harmonycloud-" +info.getName()).equals(mw.getName())))
             .collect(Collectors.toList());
         helmListInfoList.forEach(info -> {
             Middleware middleware =
