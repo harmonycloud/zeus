@@ -365,6 +365,9 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             if (errorMsg.startsWith("WARNING: ") || errorMsg.contains("warning: ")) {
                 return errorMsg;
             }
+            if (errorMsg.contains("OperatorConfiguration") || errorMsg.contains("operatorconfigurations")){
+                return errorMsg;
+            }
             throw new RuntimeException(errorMsg);
         };
     }
