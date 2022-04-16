@@ -6,12 +6,15 @@ metadata:
     developerPass: es
   name: {{ include "elasticsearch.fullname" . }}
 spec:
-  checkHealthConfigMap: {{ include "elasticsearch.fullname" . }}-checkhealth-config
   clusterMode: {{ .Values.cluster.mode }}
-  elasticBusyImage: {{ .Values.image.repository }}/busybox:{{ .Values.image.busyImageTag }}
+{{- if not .Values.clusterName }}
+  clusterName: {{ include "elasticsearch.fullname" . }}
+{{- else }}
+  clusterName: {{ .Values.clusterName }}
+{{- end }}
+  checkHealthConfigMap: {{ include "elasticsearch.fullname" . }}-checkhealth-config
   elasticKibanaConfigMap: {{ include "elasticsearch.fullname" . }}-kibana-config
   elasticSearchConfigMap: {{ include "elasticsearch.fullname" . }}-es-config
-  elasticSearchNoBoxTypeConfigMap: {{ include "elasticsearch.fullname" . }}-es-no-boxtype-config
   esExporterPort: 19114
   esHttpPort: 9200
   esKibanaPort: 5200
@@ -24,7 +27,12 @@ spec:
   nodeSelector:
     {{- toYaml . | nindent 4 }}
   {{- end }}
+{{- if eq .Values.version "6.8" }}
   kibanaImage: {{ .Values.image.repository }}/kibana:{{ .Values.image.kibanaImageTag }}
+{{- else }}
+  kibanaImage: {{ .Values.image.repository }}/kibana:{{ .Values.image.kibanaImageTag_7 }}
+{{- end }}
+  elasticBusyImage: {{ .Values.image.repository }}/busybox:{{ .Values.image.busyImageTag }}
   masterReplaces: {{ .Values.cluster.masterReplacesCount }}
   dataReplaces: {{ .Values.cluster.dataReplacesCount }}
   clientReplaces: {{ .Values.cluster.clientReplacesCount }}
@@ -32,8 +40,6 @@ spec:
   totalReplaces: {{ add .Values.cluster.masterReplacesCount .Values.cluster.dataReplacesCount .Values.cluster.clientReplacesCount .Values.cluster.coldReplacesCount  }}
   pod:
   - env:
-    - name: TZ
-      value: Asia/Shanghai
   {{- if ((((.Values.logging).collection).stdout).enabled)}}
     - name: aliyun_logs_stdout
       value: stdout
@@ -46,6 +52,8 @@ spec:
     - name: aliyun_logs_logstash_tags
       value: middleware_name={{ include "elasticsearch.fullname" . }}
   {{- end}}
+    - name: PathRepo
+      value: {{ .Values.args.path_repo | default "/data/elastic/{ClusterName}/{PodName}/data/data_back" }}
     initImage: {{ .Values.image.repository }}/es-init:{{ .Values.image.initImageTag }}
     podAntiAffinityTopologKey: {{ .Values.podAntiAffinityTopologKey }}
     podAntiAffinity: {{ .Values.podAntiAffinity }}
@@ -62,7 +70,15 @@ spec:
     jvm:
     {{- toYaml .| nindent 6 }}
     {{- end }}
+	{{- with .Values.extraVolumeMounts }}
+    extraVolumeMounts:
+    {{- toYaml .| nindent 6 }}
+    {{- end }}
+  {{- if eq .Values.version "6.8" }}
     middlewareImage: {{ .Values.image.repository }}/elastic:{{ .Values.image.elasticImageTag }}
+  {{- else }}
+    middlewareImage: {{ .Values.image.repository }}/elastic:{{ .Values.image.elasticImageTag_7 }}
+  {{- end }}
     monitorImage: {{ .Values.image.repository }}/es-exporter:{{ .Values.image.exporterImageTag }}
     hostNetwork: {{ default false .Values.hostNetwork }}
     resources:
@@ -72,7 +88,74 @@ spec:
   repository: {{ .Values.image.repository }}
   type: {{ .Values.cluster.mode }}
   updateStrategy: {}
-  version: 6.8.10
+{{- if eq .Values.version "6.8" }}
+  version: "6.8"
+{{- else }}
+  version: "7.16"
+{{- end }}
+  statefulset:
+    spec:
+      updateStrategy:
+        type: RollingUpdate
+      template:
+        metadata:
+          {{- with .Values.annotations }}
+          annotations:
+          {{- toYaml . | nindent 13 }}
+          {{- end }}
+          {{- with .Values.labels }}
+          labels:
+          {{- toYaml . | nindent 13 }}
+          {{- end }}
+        spec:
+        {{- with .Values.statefulSetConfiguration }}
+        {{- toYaml . | nindent 11 }}
+        {{- end }}
+        {{- with .Values.tolerations }}
+          tolerations:
+        {{- toYaml . | nindent 13 }}
+        {{- end }}
+  deploymentComponent:
+    kibana:
+      spec:
+        template:
+          metadata:
+            {{- with .Values.annotations }}
+            annotations:
+            {{- toYaml . | nindent 15 }}
+            {{- end }}
+            {{- with .Values.labels }}
+            labels:
+            {{- toYaml . | nindent 15 }}
+            {{- end }}
+          spec:
+          {{- with .Values.deploymentConfiguration }}
+          {{- toYaml . | nindent 13 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+            tolerations:
+          {{- toYaml . | nindent 15 }}
+          {{- end }}
+    exporter:
+      spec:
+        template:
+          metadata:
+            {{- with .Values.annotations }}
+            annotations:
+            {{- toYaml . | nindent 15 }}
+            {{- end }}
+            {{- with .Values.labels }}
+            labels:
+            {{- toYaml . | nindent 15 }}
+            {{- end }}
+          spec:
+          {{- with .Values.deploymentConfiguration }}
+          {{- toYaml . | nindent 13 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+            tolerations:
+          {{- toYaml . | nindent 15 }}
+          {{- end }}
   volumeClaimTemplates:
   - metadata:
       creationTimestamp: null
@@ -89,3 +172,7 @@ spec:
       {{- end}}
     status: {}
   volumes: {}
+  {{- with .Values.extraVolumes }}
+  extraVolumes:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}

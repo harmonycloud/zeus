@@ -1,17 +1,37 @@
 apiVersion: v1
 data:
-  elasticsearch.yml: "cluster.name: {ClusterName}\nbootstrap.memory_lock: false\nnode.name:
-    {PodName}\nnode.master: {IsMasterNode}\nnode.data: {IsDataNode}\nnetwork.host:
-    {PodIP}\nnetwork.publish_host: {PodIP}\nhttp.port: 9200\nnode.attr.box_type: {BoxType}\ntransport.tcp.port: 9300\ndiscovery.zen.ping.unicast.hosts:
-    {discoveryZenPingUnicastHosts}\nxpack.security.enabled: true\nxpack.ml.enabled:
-    false\nxpack.monitoring.collection.enabled: true\nxpack.watcher.enabled: false\nhttp.cors.enabled:
-    true\nhttp.cors.allow-origin: \"*\" \nhttp.cors.allow-headers: \"Authorization\"\npath.repo:
-    /data/elastic/{ClusterName}/{PodName}/data/data_back\npath.logs: /data/elastic/{ClusterName}/{PodName}/log\npath.data:
-    /data/elastic/{ClusterName}/{PodName}/data\ndiscovery.zen.minimum_master_nodes:
-    {minimum_master_nodes}\nxpack.security.transport.ssl.enabled: true\nxpack.security.transport.ssl.keystore.path:
-    /data/elastic/{ClusterName}/{PodName}/config/elastic-certificates.p12\nxpack.security.transport.ssl.truststore.path:
-    /data/elastic/{ClusterName}/{PodName}/config/elastic-certificates.p12\nxpack.security.transport.ssl.verification_mode:
-    certificate\n"
+  elasticsearch.yml: |
+    cluster.name: {ClusterName}
+    bootstrap.memory_lock: false
+    node.name: {PodName}
+    node.master: {IsMasterNode}
+    node.data: {IsDataNode}
+    network.host: {PodIP}
+    network.publish_host: {PodIP}
+    http.port: 9200
+    transport.tcp.port: 9300
+    node.attr.box_type: {BoxType}
+  {{- if eq .Values.version "6.8" }}
+    discovery.zen.ping.unicast.hosts: {discoveryZenPingUnicastHosts}
+  {{- else }}
+    discovery.seed_hosts: {discoveryZenPingUnicastHosts}
+    cluster.initial_master_nodes: {Masternodes}
+  {{- end }}
+    xpack.security.enabled: true
+    xpack.ml.enabled: false
+    xpack.monitoring.collection.enabled: true
+    xpack.watcher.enabled: false
+    http.cors.enabled: true
+    http.cors.allow-origin: "*" 
+    http.cors.allow-headers: "Authorization"
+    path.repo: {{ .Values.args.path_repo | default "/data/elastic/{ClusterName}/{PodName}/data/data_back" }}
+    path.logs: /data/elastic/{ClusterName}/{PodName}/log
+    path.data: /data/elastic/{ClusterName}/{PodName}/data
+    discovery.zen.minimum_master_nodes: {minimum_master_nodes}
+    xpack.security.transport.ssl.enabled: true
+    xpack.security.transport.ssl.keystore.path: /data/elastic/{ClusterName}/{PodName}/config/elastic-certificates.p12 
+    xpack.security.transport.ssl.truststore.path: /data/elastic/{ClusterName}/{PodName}/config/elastic-certificates.p12
+    xpack.security.transport.ssl.verification_mode: certificate
   jvm.options: |
     ## JVM configuration
 
@@ -104,6 +124,7 @@ data:
     # log4j 2
     -Dlog4j.shutdownHookEnabled=false
     -Dlog4j2.disable.jmx=true
+    -Dlog4j2.formatMsgNoLookups=true
 
     -Djava.io.tmpdir=${ES_TMPDIR}
 

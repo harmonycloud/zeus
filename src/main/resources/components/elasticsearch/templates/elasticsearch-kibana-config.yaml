@@ -4,7 +4,11 @@ data:
     server.name: kibana
     server.host: "0"
     server.port: "5200"
+  {{- if eq .Values.version "6.8" }}
     elasticsearch.url: http://elasticsearch:9200
+  {{- else }}
+    elasticsearch.hosts: ["http://elasticsearch:9200"]
+  {{- end }}
     elasticsearch.username: elastic
     elasticsearch.password: {{ .Values.elasticPassword | quote}}
     server.defaultRoute: /app/monitoring
