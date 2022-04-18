@@ -126,12 +126,12 @@ public class IngressComponentServiceImpl implements IngressComponentService {
         BeanIngressComponents beanIngressComponents = beanIngressComponentsMapper.selectOne(wrapper);
         // 校验是否存在
         if (cluster.getIngressList().stream()
-            .noneMatch(ingress -> ingress.getIngressClassName().equals(beanIngressComponents.getName()))) {
+            .noneMatch(ingress -> ingress.getIngressClassName().equals(beanIngressComponents.getIngressClassName()))) {
             throw new BusinessException(ErrorMessage.INGRESS_CLASS_NOT_EXISTED);
         }
         // 更新集群信息
         cluster.getIngressList().forEach(ingress -> {
-            if (ingress.getIngressClassName().equals(beanIngressComponents.getName())) {
+            if (ingress.getIngressClassName().equals(beanIngressComponents.getIngressClassName())) {
                 ingress.setAddress(ingressComponentDto.getAddress())
                     .setIngressClassName(ingressComponentDto.getIngressClassName());
                 ingress.getTcp().setConfigMapName(ingressComponentDto.getConfigMapName())
