@@ -8,6 +8,7 @@ import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
 import com.harmonycloud.zeus.dao.BeanMiddlewareClusterMapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCluster;
 import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
+import com.harmonycloud.zeus.util.K8sClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,8 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
 
     @Autowired
     private BeanMiddlewareClusterMapper middlewareClusterMapper;
+    @Autowired
+    private K8sClient k8sClient;
 
     @Override
     public void create(String name, MiddlewareCluster middlewareCluster) {
@@ -37,6 +40,7 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
 
     @Override
     public List<MiddlewareCluster> listClusters() {
+        k8sClient.getDefaultClient();
         QueryWrapper<BeanMiddlewareCluster> wrapper = new QueryWrapper<>();
         wrapper.isNotNull("clusterId").isNotNull("middleware_cluster");
         List<BeanMiddlewareCluster> beanMiddlewareClusters = middlewareClusterMapper.selectList(wrapper);
@@ -67,6 +71,7 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
 
     @Override
     public List<BeanMiddlewareCluster> listClustersByClusterId(String clusterId) {
+        k8sClient.getDefaultClient();
         QueryWrapper<BeanMiddlewareCluster> wrapper = new QueryWrapper<>();
         wrapper.eq("clusterId",clusterId);
         return middlewareClusterMapper.selectList(wrapper);
