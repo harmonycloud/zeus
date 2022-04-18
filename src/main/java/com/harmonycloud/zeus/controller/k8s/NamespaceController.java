@@ -1,16 +1,12 @@
 package com.harmonycloud.zeus.controller.k8s;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
@@ -40,34 +36,59 @@ public class NamespaceController {
             @ApiImplicitParam(name = "all", value = "是否查询所有命名空间，默认false", paramType = "query", dataTypeClass = Boolean.class),
             @ApiImplicitParam(name = "withQuota", value = "是否返回命名空间配额，默认false", paramType = "query", dataTypeClass = Boolean.class),
             @ApiImplicitParam(name = "withMiddleware", value = "是否返回中间件实例信息，默认false", paramType = "query", dataTypeClass = Boolean.class),
-            @ApiImplicitParam(name = "keyword", value = "模糊搜索关键词", paramType = "query", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "keyword", value = "模糊搜索关键词", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping
     public BaseResult<List<Namespace>> list(@PathVariable("clusterId") String clusterId,
                                             @RequestParam(value = "all", defaultValue = "false") boolean all,
                                             @RequestParam(value = "withQuota", defaultValue = "false") boolean withQuota,
                                             @RequestParam(value = "withMiddleware", defaultValue = "false") boolean withMiddleware,
-                                            @RequestParam(value = "keyword", required = false) String keyword) {
-        return BaseResult.ok(namespaceService.list(clusterId, all, withQuota, withMiddleware, keyword));
+                                            @RequestParam(value = "keyword", required = false) String keyword,
+                                            @RequestParam(value = "projectId", required = false) String projectId) {
+        return BaseResult.ok(namespaceService.list(clusterId, all, withQuota, withMiddleware, keyword, projectId));
+    }
+
+
+    @ApiOperation(value = "创建命名空间", notes = "创建命名空间")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区对象", paramType = "query", dataTypeClass = Namespace.class),
+    })
+    @PostMapping
+    public BaseResult create(@PathVariable("clusterId") String clusterId,
+                             @RequestBody Namespace namespace){
+        Map<String, String> label = new HashMap<>();
+        label.put("middleware", "middleware");
+        namespace.setClusterId(clusterId);
+        namespaceService.save(namespace, label, true);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "删除命名空间", notes = "删除命名空间")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "分区名称", paramType = "query", dataTypeClass = String.class),
+    })
+    @DeleteMapping("/{name}")
+    public BaseResult delete(@PathVariable("clusterId") String clusterId,
+                             @PathVariable("name") String name){
+        namespaceService.delete(clusterId, name);
+        return BaseResult.ok();
     }
 
     @ApiOperation(value = "注册命名空间", notes = "注册命名空间")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "namespaceList", value = "命名空间列表", paramType = "query", dataTypeClass = List.class)
+            @ApiImplicitParam(name = "name", value = "分区名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "query", dataTypeClass = String.class),
     })
-    @PutMapping
+    @PutMapping("/{name}")
     public BaseResult registry(@PathVariable("clusterId") String clusterId,
-                               @RequestBody List<String> namespaceList) {
-        String msg;
-        List<String> failNsList = namespaceService.registry(clusterId, namespaceList);
-        if (CollectionUtils.isEmpty(failNsList)) {
-            msg = LanguageEnum.isChinese() ? "全部命名空间保存成功" : "These namespaces save successfully";
-        } else {
-            msg = (LanguageEnum.isChinese() ? "操作失败的命名空间：" : "Here are some namespaces that failed to save: ")
-                + failNsList.toString();
-        }
-        return BaseResult.ok(msg);
+                               @PathVariable("name") String name,
+                               @RequestParam Boolean registered){
+        namespaceService.registry(clusterId, name, registered);
+        return BaseResult.ok();
     }
     
 }

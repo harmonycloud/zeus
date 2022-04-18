@@ -68,6 +68,11 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
                 clusterInfo.put("membersPerGroup", 2);
                 clusterInfo.put("groupReplica", 3);
                 break;
+            case DLEDGER:
+                clusterInfo.put("allMaster", false);
+                clusterInfo.put("membersPerGroup", middleware.getRocketMQParam().getReplicas());
+                clusterInfo.put("groupReplica", 1);
+                break;
             default:
         }
 
@@ -88,6 +93,7 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
         convertCommonByHelmChart(middleware, values);
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
+        convertRegistry(middleware, cluster);
 
         // 处理mq特有参数
         if (values != null) {
@@ -175,6 +181,9 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
                     middleware.getType(), podInfo.getPodName()));
         }
 
+        // 更新通用字段
+        super.updateCommonValues(sb, middleware);
+
         // 没有修改，直接返回
         if (sb.length() == 0) {
             return;
@@ -246,46 +255,47 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
             acl.put("enable", rocketMQACL.getEnable());
             acl.put("globalWhiteRemoteAddresses", StringUtils.isNotEmpty(rocketMQACL.getGlobalWhiteRemoteAddresses())
                 ? Arrays.asList(rocketMQACL.getGlobalWhiteRemoteAddresses().split(";")) : "");
-            
-            JSONArray accounts = new JSONArray();
-            for (RocketMQAccount mqAccount : rocketMQACL.getRocketMQAccountList()) {
-                JSONObject account = new JSONObject();
-                account.put("accessKey", mqAccount.getAccessKey());
-                account.put("secretKey", mqAccount.getSecretKey());
-                account.put("whiteRemoteAddress",
-                    StringUtils.isNotEmpty(mqAccount.getWhiteRemoteAddress()) ? mqAccount.getWhiteRemoteAddress() : "");
-                account.put("admin", mqAccount.getAdmin());
-                account.put("defaultTopicPerm", mqAccount.getTopicPerms().get("defaultTopicPerm"));
-                account.put("defaultGroupPerm", mqAccount.getGroupPerms().get("defaultGroupPerm"));
+            if (!rocketMQACL.getRocketMQAccountList().isEmpty()) {
+                JSONArray accounts = new JSONArray();
+                for (RocketMQAccount mqAccount : rocketMQACL.getRocketMQAccountList()) {
+                    JSONObject account = new JSONObject();
+                    account.put("accessKey", mqAccount.getAccessKey());
+                    account.put("secretKey", mqAccount.getSecretKey());
+                    account.put("whiteRemoteAddress",
+                            StringUtils.isNotEmpty(mqAccount.getWhiteRemoteAddress()) ? mqAccount.getWhiteRemoteAddress() : "");
+                    account.put("admin", mqAccount.getAdmin());
+                    account.put("defaultTopicPerm", mqAccount.getTopicPerms().get("defaultTopicPerm"));
+                    account.put("defaultGroupPerm", mqAccount.getGroupPerms().get("defaultGroupPerm"));
 
-                if (mqAccount.getTopicPerms().size() > 1) {
-                    JSONArray topicPerms = new JSONArray();
-                    for (String key : mqAccount.getTopicPerms().keySet()) {
-                        if ("defaultTopicPerm".equals(key)) {
-                            continue;
+                    if (mqAccount.getTopicPerms().size() > 1) {
+                        JSONArray topicPerms = new JSONArray();
+                        for (String key : mqAccount.getTopicPerms().keySet()) {
+                            if ("defaultTopicPerm".equals(key)) {
+                                continue;
+                            }
+                            topicPerms.add(key + "=" + mqAccount.getTopicPerms().get(key));
                         }
-                        topicPerms.add(key + "=" + mqAccount.getTopicPerms().get(key));
+                        account.put("topicPerms", topicPerms);
+                    } else {
+                        account.put("topicPerms", "");
                     }
-                    account.put("topicPerms", topicPerms);
-                } else {
-                    account.put("topicPerms", "");
-                }
 
-                if (mqAccount.getGroupPerms().size() > 1) {
-                    JSONArray groupPerms = new JSONArray();
-                    for (String key : mqAccount.getGroupPerms().keySet()) {
-                        if ("defaultGroupPerm".equals(key)) {
-                            continue;
+                    if (mqAccount.getGroupPerms().size() > 1) {
+                        JSONArray groupPerms = new JSONArray();
+                        for (String key : mqAccount.getGroupPerms().keySet()) {
+                            if ("defaultGroupPerm".equals(key)) {
+                                continue;
+                            }
+                            groupPerms.add(key + "=" + mqAccount.getGroupPerms().get(key));
                         }
-                        groupPerms.add(key + "=" + mqAccount.getGroupPerms().get(key));
+                        account.put("groupPerms", groupPerms);
+                    } else {
+                        account.put("groupPerms", "");
                     }
-                    account.put("groupPerms", groupPerms);
-                } else {
-                    account.put("groupPerms", "");
+                    accounts.add(account);
                 }
-                accounts.add(account);
+                acl.put("accounts", accounts);
             }
-            acl.put("accounts", accounts);
         } else {
             acl.put("enable", false);
         }
@@ -360,6 +370,5 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
     @Override
     public void create(Middleware middleware, MiddlewareClusterDTO cluster) {
         super.create(middleware, cluster);
-        tryCreateOpenService(middleware, ServiceNameConvertUtil.convertMq(middleware.getName()), false);
     }
 }

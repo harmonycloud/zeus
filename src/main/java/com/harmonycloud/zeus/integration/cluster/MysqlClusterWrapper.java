@@ -41,7 +41,8 @@ public class MysqlClusterWrapper {
         if (CollectionUtils.isEmpty(map)) {
             return null;
         }
-        return JSONObject.parseObject(JSONObject.toJSONString(map), MysqlCluster.class);
+        JSONObject resObj = JSONObject.parseObject(JSONObject.toJSONString(map));
+        return JSONObject.parseObject(JSONObject.toJSONString(resObj), MysqlCluster.class);
     }
 
     public void update(String clusterId, String namespace, MysqlCluster mysqlCluster) throws IOException {

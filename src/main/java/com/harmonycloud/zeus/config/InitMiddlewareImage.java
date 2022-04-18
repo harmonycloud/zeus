@@ -1,10 +1,9 @@
 package com.harmonycloud.zeus.config;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
+import java.io.*;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.PostConstruct;
 
@@ -28,20 +27,48 @@ import lombok.extern.slf4j.Slf4j;
 public class InitMiddlewareImage {
 
     @Value("${system.images.path:/usr/local/zeus-pv/images/middleware}")
-    private String imagePath;
+    private String tempImagePath;
 
     @Autowired
-    private BeanMiddlewareInfoMapper middlewareInfoMapper;
+    private BeanMiddlewareInfoMapper tempMiddlewareInfoMapper;
+
+    private static BeanMiddlewareInfoMapper middlewareInfoMapper;
+    private static String imagePath;
+    /**
+     * 中间件图片名称缓存
+     */
+    private static Set<String> images = new HashSet<>();
 
     @PostConstruct
     public void init() throws Exception {
+        if (middlewareInfoMapper == null) {
+            middlewareInfoMapper = tempMiddlewareInfoMapper;
+            imagePath = tempImagePath;
+        }
+        initImage();
+    }
+
+    public void initIfNotExists(String path) {
+        try {
+            String imageName = path.substring(path.lastIndexOf("/") + 1);
+            if (!images.contains(imageName)) {
+                initImage();
+            }
+        } catch (Exception e) {
+            log.error("初始化中间件图片失败了", e);
+        }
+    }
+
+    public void initImage() throws Exception {
         QueryWrapper<BeanMiddlewareInfo> wrapper = new QueryWrapper<>();
         List<BeanMiddlewareInfo> mwInfoList = middlewareInfoMapper.selectList(wrapper);
         for (BeanMiddlewareInfo mwInfo : mwInfoList) {
-            if (StringUtils.isEmpty(mwInfo.getImagePath())){
+            if (StringUtils.isEmpty(mwInfo.getImagePath())) {
                 continue;
             }
-            File file = new File(imagePath + File.separator + mwInfo.getImagePath());
+            String filePath = imagePath + File.separator + mwInfo.getImagePath();
+            images.add(mwInfo.getImagePath());
+            File file = new File(filePath);
             if (!file.exists()) {
                 InputStream in = new ByteArrayInputStream(mwInfo.getImage());
                 FileOutputStream fileOutputStream = null;
@@ -53,8 +80,9 @@ public class InitMiddlewareImage {
                         fileOutputStream.write(buf, 0, len);
                     }
                     fileOutputStream.flush();
+                    log.info("中间件{} 图片初始化加载成功 path：{}", mwInfo.getChartName() + "-" + mwInfo.getChartVersion(), filePath);
                 } catch (Exception e) {
-                    log.error("中间件{} 图片初始化加载失败", mwInfo.getChartName() + "-" + mwInfo.getChartVersion());
+                    log.error("中间件{} 图片初始化加载失败", mwInfo.getChartName() + "-" + mwInfo.getChartVersion(), e);
                 } finally {
                     in.close();
                     if (fileOutputStream != null) {
@@ -64,5 +92,4 @@ public class InitMiddlewareImage {
             }
         }
     }
-
 }

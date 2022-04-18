@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.controller.middleware;
 
 import java.util.List;
 
+import com.harmonycloud.zeus.annotation.Authority;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,13 +36,16 @@ public class MiddlewareCustomConfigController {
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "order", value = "排序", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping
+    @Authority(power = 1)
     public BaseResult<List<CustomConfig>> list(@PathVariable("clusterId") String clusterId,
                                                @PathVariable("namespace") String namespace,
                                                @PathVariable("middlewareName") String middlewareName,
-                                               @RequestParam("type") String type) throws Exception {
-        return BaseResult.ok(middlewareCustomConfigService.listCustomConfig(clusterId, namespace, middlewareName, type));
+                                               @RequestParam("type") String type,
+                                               @RequestParam(value = "order", required = false) String order) throws Exception {
+        return BaseResult.ok(middlewareCustomConfigService.listCustomConfig(clusterId, namespace, middlewareName, type, order));
     }
 
     @ApiOperation(value = "更新自定义配置", notes = "更新自定义配置")
@@ -52,6 +56,7 @@ public class MiddlewareCustomConfigController {
             @ApiImplicitParam(name = "middlewareCustomConfig", value = "自定义配置", paramType = "query", dataTypeClass = String.class),
     })
     @PutMapping
+    @Authority(power = 1)
     public BaseResult<Middleware> put(@PathVariable("clusterId") String clusterId,
                                       @PathVariable("namespace") String namespace,
                                       @PathVariable("middlewareName") String middlewareName,
@@ -74,6 +79,7 @@ public class MiddlewareCustomConfigController {
             @ApiImplicitParam(name = "endTime", value = "结束时间", required = false, paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/history")
+    @Authority(power = 1)
     public BaseResult<List<CustomConfigHistoryDTO>> getHistory(@PathVariable("clusterId") String clusterId,
                                                                @PathVariable("namespace") String namespace,
                                                                @PathVariable("middlewareName") String middlewareName,
@@ -83,6 +89,25 @@ public class MiddlewareCustomConfigController {
                                                                @RequestParam(value = "endTime", required = false) String endTime) {
         return BaseResult.ok(middlewareCustomConfigService.getCustomConfigHistory(clusterId, namespace,
                 middlewareName, type, item, startTime, endTime));
+    }
+
+    @ApiOperation(value = "置顶指定参数", notes = "置顶指定参数")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "configName", value = "自定义参数名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+    })
+    @PutMapping("/{configName}/top")
+    @Authority(power = 1)
+    public BaseResult topping(@PathVariable("clusterId") String clusterId,
+                              @PathVariable("namespace") String namespace,
+                              @PathVariable("middlewareName") String middlewareName,
+                              @PathVariable("configName") String configName,
+                              @RequestParam("type") String type) {
+        middlewareCustomConfigService.topping(clusterId, namespace, middlewareName, configName, type);
+        return BaseResult.ok();
     }
 
 }

@@ -1,10 +1,12 @@
 package com.harmonycloud.zeus.schedule;
 
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.zeus.operator.BaseOperator;
 import com.harmonycloud.zeus.operator.impl.MysqlOperatorImpl;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
+import com.harmonycloud.zeus.service.registry.HelmChartService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -65,21 +67,13 @@ public class MiddlewareManageTask {
     }
 
     /**
-     * 创建恢复
-     * @param clusterId
-     * @param namespace
-     * @param type
-     * @param middlewareName
-     * @param backupName
-     * @param restoreName
-     * @param backupService
+     * 异步创建mysql对外服务
+     * @param mysqlOperator
+     * @param middleware
      */
     @Async("singleThreadExecutor")
-    public void asyncCreateBackupRestore(String clusterId, String namespace, String type, String middlewareName, String backupName, String restoreName, MiddlewareBackupServiceImpl backupService){
-        try {
-            backupService.tryCreateMiddlewareRestore(clusterId, namespace, type, middlewareName, backupName, restoreName);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void asyncCreateMysqlOpenService(MysqlOperatorImpl mysqlOperator, Middleware middleware){
+        mysqlOperator.createOpenService(middleware);
     }
+
 }

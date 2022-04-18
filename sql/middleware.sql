@@ -113,6 +113,7 @@ CREATE TABLE `middleware_info` (
   `update_time` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间',
   `cluster_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '集群id',
   `official` tinyint(1) DEFAULT NULL COMMENT '官方中间件',
+  `compatible_versions` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '升级所需最低版本',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='中间件表';
 
@@ -134,7 +135,7 @@ CREATE TABLE `operation_audit` (
   `request_method` char(8) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '请求方法类型',
   `request_params` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '请求参数',
   `response` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '响应内容',
-  `remote_ip` char(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '请求ip',
+  `remote_ip` char(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '请求ip',
   `status` char(8) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '状态码',
   `begin_time` datetime NOT NULL COMMENT '请求开始时间',
   `action_time` datetime NOT NULL COMMENT '请求响应时间',
@@ -163,6 +164,27 @@ CREATE TABLE `resource_menu` (
   `module` varchar(0) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '模块',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='菜单资源表';
+
+-- ----------------------------
+-- Table structure for image_repository
+-- ----------------------------
+DROP TABLE IF EXISTS `image_repository`;
+CREATE TABLE `image_repository` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `cluster_id` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT '集群',
+  `protocol` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '协议',
+  `address` varchar(64) COLLATE utf8_bin DEFAULT NULL COMMENT 'harbor地址',
+  `host_address` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT 'harbor主机地址',
+  `port` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '端口',
+  `project` varchar(64) COLLATE utf8_bin DEFAULT NULL COMMENT 'harbor项目',
+  `username` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT '用户名',
+  `password` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT '密码',
+  `description` varchar(512) COLLATE utf8_bin DEFAULT NULL COMMENT '描述',
+  `is_default` int(11) COLLATE utf8_bin DEFAULT NULL COMMENT '是否默认',
+  `create_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
+  `update_time` timestamp NULL DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='镜像仓库表';
 
 -- ----------------------------
 -- Records of resource_menu
@@ -323,3 +345,55 @@ CREATE TABLE `k8s_default_cluster` (
 
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- ----------------------------
+-- Table structure for ldap_config
+-- ----------------------------
+CREATE TABLE `ldap_config` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `config_name` varchar(64) NOT NULL COMMENT '配置名',
+  `config_value` varchar(2048) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `create_user` varchar(64) DEFAULT NULL COMMENT '创建人',
+  `update_user` varchar(64) DEFAULT NULL COMMENT '修改人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `config_name` (`config_name`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT COMMENT='ldap配置表';
+
+-- ----------------------------
+-- Table structure for mysql_db
+-- ----------------------------
+CREATE TABLE `mysql_db` (
+                            `id` int(11) NOT NULL AUTO_INCREMENT,
+                            `mysql_qualified_name` varchar(512) NOT NULL COMMENT 'mysql服务限定名',
+                            `db` char(64) NOT NULL COMMENT '数据库名',
+                            `createtime` datetime NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间',
+                            `description` varchar(512) DEFAULT NULL COMMENT '备注',
+                            `charset` varchar(32) NOT NULL COMMENT '字符集',
+                            PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='mysql数据库';
+
+-- ----------------------------
+-- Table structure for mysql_user
+-- ----------------------------
+CREATE TABLE `mysql_user` (
+                              `id` int(11) NOT NULL AUTO_INCREMENT,
+                              `mysql_qualified_name` varchar(512) NOT NULL COMMENT 'mysql服务限定名',
+                              `user` char(32) NOT NULL COMMENT '用户名',
+                              `password` varchar(255) NOT NULL COMMENT '密码',
+                              `createtime` datetime NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间',
+                              `description` varchar(512) DEFAULT NULL COMMENT '备注',
+                              PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='mysql用户';
+
+-- ----------------------------
+-- Table structure for mysql_db_priv
+-- ----------------------------
+CREATE TABLE `mysql_db_priv` (
+                                 `id` int(11) NOT NULL AUTO_INCREMENT,
+                                 `mysql_qualified_name` varchar(512) NOT NULL COMMENT 'mysql服务限定名',
+                                 `db` char(64) NOT NULL COMMENT '数据库名',
+                                 `user` char(32) NOT NULL COMMENT '用户名',
+                                 `authority` int(11) NOT NULL COMMENT '权限：1：只读，2：读写，3：仅DDL，4：仅DML',
+                                 PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Mysql数据库授权';

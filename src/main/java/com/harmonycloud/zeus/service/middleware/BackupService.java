@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.harmonycloud.caas.common.model.middleware.Backup;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.zeus.integration.cluster.bean.BackupCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.BackupCR;
 import com.harmonycloud.zeus.integration.cluster.bean.BackupStorageProvider;
 
 /**
@@ -25,10 +25,10 @@ public interface BackupService {
     /**
      * 创建备份
      *
-     * @param backupCRD
+     * @param backupCR
      * @return
      */
-    void create(String clusterId, BackupCRD backupCRD);
+    void create(String clusterId, BackupCR backupCR);
 
     /**
      * 删除备份cr

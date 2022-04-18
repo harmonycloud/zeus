@@ -5,7 +5,7 @@ data:
       datasource:
         username: root # change this
         password: ZeuS@Middleware01 # change this
-        url: jdbc:mysql://zeus-mysql/middleware_platform?useUnicode=true&characterEncoding=utf-8 # change this
+        url: jdbc:mysql://zeus-mysql/middleware_platform?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC # change this
         driver-class-name: com.mysql.cj.jdbc.Driver
       servlet:
         multipart:
@@ -46,7 +46,7 @@ data:
 
     k8s:
       namespace:
-        protect: default,kube-system,kube-node-lease,kube-public,caas-system,harbor-system,logging,monitoring,velero,middleware-system,zeus
+        protect: default,kube-system,kube-node-lease,kube-public,caas-system,harbor-system,logging,monitoring,velero,middleware-system,zeus,minio
         label: middleware=true
       kubeconfig:
         path: /usr/local/kubeconfig
@@ -57,8 +57,10 @@ data:
         path: /usr/local/zeus-pv/upload
       images:
         path: /usr/local/zeus-pv/images/middleware
-    platform:
-      version: v0.1.1
+      platform:
+        version: v1.0.0
+      user:
+        expire: 1
 
     overview:
       overall:

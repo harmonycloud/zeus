@@ -1,14 +1,14 @@
 package com.harmonycloud.zeus.operator.impl;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.CLUSTER;
-import static com.harmonycloud.caas.common.constants.NameConstant.MODE;
-import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
-import static com.harmonycloud.caas.common.constants.NameConstant.STORAGE;
-
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.operator.miiddleware.AbstractEsOperator;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.Quantity;
 import org.apache.commons.lang3.StringUtils;
 
 import com.alibaba.fastjson.JSONObject;
@@ -16,8 +16,11 @@ import com.harmonycloud.caas.common.enums.middleware.ElasticSearchRoleEnum;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.operator.api.EsOperator;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
+
+import static com.harmonycloud.caas.common.constants.NameConstant.*;
 
 /**
  * @author dengyulong
@@ -33,7 +36,8 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
         replaceCommonValues(middleware, cluster, values);
 
         JSONObject clusterInfo = values.getJSONObject(CLUSTER);
-        clusterInfo.put(MODE, middleware.getMode());
+        clusterInfo.put(MODE, convertMode(middleware.getMode()));
+        clusterInfo.put(MODE_DESC, middleware.getMode());
         if (!values.containsKey(STORAGE)) {
             values.put(STORAGE, new JSONObject());
         }
@@ -77,8 +81,8 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
                 case COLD:
                     clusterInfo.put("coldReplacesCount", quota.getNum());
                     // 存储
-                    storage.put("clientClass", quota.getStorageClassName());
-                    storage.put("clientSize", quota.getStorageClassQuota() + "Gi");
+                    storage.put("coldClass", quota.getStorageClassName());
+                    storage.put("coldSize", quota.getStorageClassQuota() + "Gi");
                     break;
                 default:
                     // kibana无需额外处理，实例数不用修改且不需要使用存储
@@ -96,12 +100,13 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
     public Middleware convertByHelmChart(Middleware middleware, MiddlewareClusterDTO cluster) {
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
         convertCommonByHelmChart(middleware, values);
+        convertRegistry(middleware, cluster);
 
         // 处理es特有参数
         if (values != null) {
             // 模式
             JSONObject clusterInfo = values.getJSONObject(CLUSTER);
-            middleware.setMode(clusterInfo.getString(MODE));
+            middleware.setMode(clusterInfo.getString(MODE_DESC));
             // 资源配额
             JSONObject resources = values.getJSONObject(RESOURCES);
             JSONObject storage = values.getJSONObject(STORAGE);
@@ -116,26 +121,34 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
                         convertStoragesByHelmChart(middleware, k, values);
                         middleware.getQuota().get(k).setNum(clusterInfo.getIntValue("masterReplacesCount"))
                             .setStorageClassName(storage.getString("masterClass"))
-                            .setStorageClassQuota(storage.getString("masterSize"));
+                            .setStorageClassQuota(storage.getString("masterSize"))
+                            .setIsLvmStorage(storageClassService.checkLVMStorage(middleware.getClusterId(),
+                                middleware.getNamespace(), storage.getString("masterClass")));
                         break;
                     case DATA:
                         middleware.getQuota().get(k).setNum(clusterInfo.getIntValue("dataReplacesCount"))
                             .setStorageClassName(storage.getString("dataClass"))
-                            .setStorageClassQuota(storage.getString("dataSize"));
+                            .setStorageClassQuota(storage.getString("dataSize"))
+                            .setIsLvmStorage(storageClassService.checkLVMStorage(middleware.getClusterId(),
+                                middleware.getNamespace(), storage.getString("dataClass")));;
                         break;
                     case CLIENT:
                         middleware.getQuota().get(k).setNum(clusterInfo.getIntValue("clientReplacesCount"))
                             .setStorageClassName(storage.getString("clientClass"))
-                            .setStorageClassQuota(storage.getString("clientSize"));
+                            .setStorageClassQuota(storage.getString("clientSize"))
+                            .setIsLvmStorage(storageClassService.checkLVMStorage(middleware.getClusterId(),
+                                middleware.getNamespace(), storage.getString("clientClass")));;
                         break;
                     case KIBANA:
                         middleware.getQuota().get(k).setNum(1);
                         break;
-                        // kibana不用存储，无需设置
+                    // kibana不用存储，无需设置
                     case COLD:
                         middleware.getQuota().get(k).setNum(clusterInfo.getIntValue("coldReplacesCount"))
-                                .setStorageClassName(storage.getString("clientClass"))
-                                .setStorageClassQuota(storage.getString("clientSize"));
+                            .setStorageClassName(storage.getString("coldClass"))
+                            .setStorageClassQuota(storage.getString("coldSize"))
+                            .setIsLvmStorage(storageClassService.checkLVMStorage(middleware.getClusterId(),
+                                middleware.getNamespace(), storage.getString("coldClass")));;
                         break;
                     default:
                 }
@@ -212,6 +225,9 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
             sb.append("elasticPassword=").append(middleware.getPassword()).append(",");
         }
 
+        // 更新通用字段
+        super.updateCommonValues(sb, middleware);
+
         // 没有修改，直接返回
         if (sb.length() == 0) {
             return;
@@ -237,6 +253,9 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
     }
 
     private void checkNum(Middleware middleware) {
+        if (middleware.getQuota() == null) {
+            return;
+        }
         // 主节点
         MiddlewareQuota master = middleware.getQuota().get(ElasticSearchRoleEnum.MASTER.getRole());
         if (master == null || StringUtils.isAnyBlank(master.getCpu(), master.getMemory())) {
@@ -308,6 +327,37 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
     @Override
     public void create(Middleware middleware, MiddlewareClusterDTO cluster) {
         super.create(middleware, cluster);
-        tryCreateOpenService(middleware, new MiddlewareServiceNameIndex("kibana-nodeport", "-kibana"), false);
+    }
+
+    @Override
+    public void updatePvc(Middleware middleware, List<PersistentVolumeClaim> pvcList) {
+        for (PersistentVolumeClaim pvc : pvcList){
+            if (CollectionUtils.isEmpty(pvc.getMetadata().getAnnotations())
+                    || !pvc.getMetadata().getAnnotations().containsKey("volume.beta.kubernetes.io/storage-provisioner")
+                    || !StorageClassProvisionerEnum.CSI_LVM.getProvisioner()
+                    .equals(pvc.getMetadata().getAnnotations().get("volume.beta.kubernetes.io/storage-provisioner"))) {
+                continue;
+            }
+            // 获取对应类型的storage: master data client cold
+            String[] names = pvc.getMetadata().getName().split("-");
+            String storage = middleware.getQuota().get(names[names.length - 2]).getStorageClassQuota();
+            // update
+            pvc.getSpec().getResources().getRequests().put(STORAGE, new Quantity(storage));
+            pvcWrapper.update(middleware.getClusterId(), middleware.getNamespace(), pvc);
+        }
+
+    }
+
+    /**
+     * 转换es模式
+     * @param mode
+     * @return
+     */
+    public static String convertMode(String mode) {
+        if ("simple".equals(mode)) {
+            return "simple";
+        } else {
+            return "complex";
+        }
     }
 }

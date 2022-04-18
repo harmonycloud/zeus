@@ -75,6 +75,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
         convertCommonByHelmChart(middleware, values);
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
+        convertRegistry(middleware,cluster);
 
         // 处理redis特有参数
         if (values != null) {
@@ -129,6 +130,9 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         if (StringUtils.isNotBlank(middleware.getPassword())) {
             sb.append("redisPassword=").append(middleware.getPassword()).append(",");
         }
+
+        // 更新通用字段
+        super.updateCommonValues(sb, middleware);
 
         // 没有修改，直接返回
         if (sb.length() == 0) {

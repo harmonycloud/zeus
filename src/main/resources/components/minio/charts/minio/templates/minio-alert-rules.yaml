@@ -1,3 +1,4 @@
+{{- if  .Capabilities.APIVersions.Has "monitoring.coreos.com/v1" }}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -5,6 +6,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     prometheus: k8s
     role: alert-rules
+    {{- include "minio.labels" . | nindent 4 }}
   name: {{ include "minio.fullname" . }}
 spec:
   groups:
@@ -60,13 +62,14 @@ spec:
       for: 30s
       labels:
         severity: critical
-    - alert: s3_errors  larger than 10%
-      annotations:
-        message: s3_errors  larger than 10%
-        product: harmonycloud
-        service: metrics
-        summary:  s3_errors  larger than 10%
-      expr: s3_errors_total / s3_requests_current * 100 > 10
-      for: 30s
-      labels:
-        severity: critical
+#    - alert: s3_errors  larger than 10%
+#      annotations:
+#        message: s3_errors  larger than 10%
+#        product: harmonycloud
+#        service: metrics
+#        summary:  s3_errors  larger than 10%
+#      expr: s3_errors_total / s3_requests_current * 100 > 10
+#      for: 30s
+#      labels:
+#        severity: critical
+{{- end }}

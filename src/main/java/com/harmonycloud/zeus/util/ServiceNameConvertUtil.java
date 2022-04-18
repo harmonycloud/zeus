@@ -75,4 +75,21 @@ public class ServiceNameConvertUtil {
             return null;
         }
     }
+
+    /**
+     * 获取web管理控制台服务端口
+     * @param type 中间件类型
+     * @return
+     */
+    public static String getManagePlatformServicePort(String type) {
+        if (type.equals(MiddlewareTypeEnum.ELASTIC_SEARCH.getType())) {
+            return "5200";
+        } else if (type.equals(MiddlewareTypeEnum.KAFKA.getType())) {
+            return "9000";
+        } else if (type.equals(MiddlewareTypeEnum.ROCKET_MQ.getType())) {
+            return "8080";
+        } else {
+            return null;
+        }
+    }
 }

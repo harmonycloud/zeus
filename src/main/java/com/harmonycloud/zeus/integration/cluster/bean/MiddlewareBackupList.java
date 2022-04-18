@@ -21,6 +21,6 @@ public class MiddlewareBackupList {
 
     private ObjectMeta metadata;
 
-    private List<MiddlewareBackupCRD> items;
+    private List<MiddlewareBackupCR> items;
 
 }

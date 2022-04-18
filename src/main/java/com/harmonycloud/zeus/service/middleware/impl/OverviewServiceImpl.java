@@ -4,10 +4,10 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.constants.NameConstant;
 import com.harmonycloud.caas.common.enums.DateType;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
@@ -16,20 +16,18 @@ import com.harmonycloud.caas.common.model.*;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
-import com.harmonycloud.zeus.bean.BeanAlertRecord;
-import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
-import com.harmonycloud.zeus.bean.BeanOperationAudit;
-import com.harmonycloud.zeus.bean.PlatformOverviewDTO;
+import com.harmonycloud.zeus.bean.*;
 import com.harmonycloud.zeus.dao.BeanAlertRecordMapper;
+import com.harmonycloud.zeus.dao.MiddlewareAlertInfoMapper;
 import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
 import com.harmonycloud.zeus.integration.cluster.ResourceQuotaWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareSpec;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareStatus;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
-import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
+import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
@@ -42,6 +40,7 @@ import com.harmonycloud.zeus.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -61,6 +60,8 @@ import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
+import static com.harmonycloud.caas.common.constants.AlertConstant.*;
+
 /**
  * @author xutianhong
  * @Date 2021/3/26 2:35 下午
@@ -72,7 +73,7 @@ public class OverviewServiceImpl implements OverviewService {
     @Autowired
     private PrometheusWrapper prometheusWrapper;
     @Autowired
-    private MiddlewareCRDService middlewareCRDService;
+    private MiddlewareCRService middlewareCRService;
     @Autowired
     protected HelmChartService helmChartService;
     @Autowired
@@ -91,9 +92,18 @@ public class OverviewServiceImpl implements OverviewService {
     private MiddlewareService middlewareService;
     @Autowired
     private OperationAuditService operationAuditService;
+    @Autowired
+    private MiddlewareAlertInfoMapper middlewareAlertInfoMapper;
+    @Autowired
+    private MiddlewareAlertsServiceImpl middlewareAlertsService;
 
     @Value("${system.platform.version:v0.1.0}")
     private String version;
+
+    /**
+     * 服务chartVersion缓存
+     */
+    private static Map<String, String> middlewareChartVersion = new HashMap<>();
     /**
      * 查询中间件状态
      *
@@ -107,7 +117,7 @@ public class OverviewServiceImpl implements OverviewService {
     public List<MiddlewareStatusDto> getMiddlewareStatus(String clusterId, String namespace) {
 
         // 封装middleware
-        List<Middleware> middlewares = middlewareCRDService.list(clusterId, namespace, null);
+        List<Middleware> middlewares = middlewareCRService.list(clusterId, namespace, null, true);
         if (CollectionUtils.isEmpty(middlewares)) {
             return null;
         }
@@ -158,13 +168,13 @@ public class OverviewServiceImpl implements OverviewService {
         String startTime, String endTime) throws Exception {
 
         // 获取中间件crd对象
-        MiddlewareCRD middlewareCRD = middlewareCRDService.getCR(clusterId, namespace, type, name);
+        MiddlewareCR middlewareCR = middlewareCRService.getCR(clusterId, namespace, type, name);
 
         // 获取pod列表
-        if (ObjectUtils.isEmpty(middlewareCRD.getStatus().getInclude())) {
+        if (ObjectUtils.isEmpty(middlewareCR.getStatus().getInclude())) {
             throw new CaasRuntimeException(ErrorMessage.MIDDLEWARE_CLUSTER_STATUS_ABNORMAL);
         }
-        List<MiddlewareInfo> podInfo = middlewareCRD.getStatus().getInclude().get(PODS);
+        List<MiddlewareInfo> podInfo = middlewareCR.getStatus().getInclude().get(PODS);
         if (CollectionUtils.isEmpty(podInfo)) {
             return new ArrayList<>(0);
         }
@@ -180,7 +190,7 @@ public class OverviewServiceImpl implements OverviewService {
             pods.append(middlewareInfo.getName()).append("|");
         }
         // 获取pvc列表
-        List<MiddlewareInfo> pvcInfo = middlewareCRD.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
+        List<MiddlewareInfo> pvcInfo = middlewareCR.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
         StringBuilder pvcs = new StringBuilder();
         if (!CollectionUtils.isEmpty(pvcInfo)) {
             for (MiddlewareInfo middlewareInfo : pvcInfo) {
@@ -312,45 +322,102 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
     @Override
-    public PageInfo<AlertDTO> getAlertRecord(String clusterId, String namespace, Integer current, Integer size, String level) {
+    public PageInfo<AlertDTO> getAlertRecord(String clusterId, String namespace,
+                                             String middlewareName, Integer current,
+                                             Integer size, String level,
+                                             String keyword, String lay) {
         if (current != null && size != null) {
             PageHelper.startPage(current, size);
         }
         QueryWrapper<BeanAlertRecord> wrapper = new QueryWrapper<>();
-        if (StringUtils.isNotEmpty(clusterId) && StringUtils.isNotEmpty(namespace)) {
-            wrapper.eq("cluster_id", clusterId).eq("namespace", namespace);
+        if (StringUtils.isNotEmpty(lay)) {
+            wrapper.eq("lay",lay);
+        }
+        if (SERVICE.equals(lay)) {
+            wrapper.eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", middlewareName);
         } else {
-            wrapper.isNotNull("cluster_id").isNotNull("namespace").ne("cluster_id", "");
+            wrapper.eq("namespace", NameConstant.MONITORING).eq("name", NameConstant.PROMETHEUS_K8S_RULES);
         }
         if (StringUtils.isNotEmpty(level)) {
             wrapper.eq("level", level);
         }
-        wrapper.last("order by id desc");
+        if (StringUtils.isNotEmpty(keyword)) {
+            String alertID = keyword.replaceAll("GJ","");
+            if (middlewareAlertsService.isNumeric(alertID)) {
+                wrapper.and(queryWrapper -> {
+                    queryWrapper.like("id",Integer.parseInt(alertID)).or().like("alert_id",Integer.parseInt(alertID));
+                });
+            } else if (alertID.contains("-")) {
+                String[] alert = alertID.split("-");
+                if (alert.length == 1) {
+                    wrapper.and(queryWrapper -> {
+                        queryWrapper.like("id",Integer.parseInt(alert[0])).or().like("alert_id",Integer.parseInt(alert[0]));
+                    });
+                }
+                if (alert.length == 2) {
+                    wrapper.and(queryWrapper -> {
+                        queryWrapper.like("id",Integer.parseInt(alert[1])).like("alert_id",Integer.parseInt(alert[0]));
+                    });
+                }
+            } else {
+                wrapper.and(queryWrapper -> {
+                    queryWrapper.eq("id",keyword).or().like("alert",keyword)
+                            .or().like("content",keyword).or().like("expr",keyword)
+                            .or().like("summary",keyword).or().like("message",keyword);
+                });
+            }
+        }
+
+        //最近24小时
+        if (StringUtils.isEmpty(clusterId)) {
+            Date date = new Date();
+            String end = DateFormatUtils.format(date, "yyyy-MM-dd HH:mm:ss");
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(date);
+            calendar.add(Calendar.DAY_OF_MONTH, -1);
+            String begin = DateFormatUtils.format(calendar.getTime(), "yyyy-MM-dd HH:mm:ss");
+
+            wrapper.ge("time",begin);
+            wrapper.le("time",end);
+        }
+        wrapper.orderByDesc("id");
         List<BeanAlertRecord> recordList = beanAlertRecordMapper.selectList(wrapper);
         PageInfo<AlertDTO> alertDTOPage = new PageInfo<>();
         BeanUtils.copyProperties(new PageInfo<>(recordList), alertDTOPage);
+        if (CollectionUtils.isEmpty(recordList)) {
+            return alertDTOPage;
+        }
         Map<Middleware, String> middlewareMap = new HashMap<>();
         alertDTOPage.setList(recordList.stream().map(record -> {
             AlertDTO alertDTO = new AlertDTO();
             BeanUtils.copyProperties(record, alertDTO);
-            alertDTO.setTime(DateUtils.addInteger(alertDTO.getTime(), Calendar.HOUR_OF_DAY, 8));
             Middleware middleware = new Middleware().setName(alertDTO.getName()).setNamespace(alertDTO.getNamespace())
                 .setClusterId(alertDTO.getClusterId());
             if (middlewareMap.containsKey(middleware)) {
                 alertDTO.setChartVersion(middlewareMap.get(middleware));
             } else {
-                JSONObject values =
-                    helmChartService.getInstalledValues(middleware, clusterService.findById(alertDTO.getClusterId()));
-                if (values != null && values.containsKey("chart-version")) {
-                    String version = values.getString("chart-version");
-                    middlewareMap.put(middleware, version);
-                    alertDTO.setChartVersion(version);
-                } else {
-                    middlewareMap.put(middleware, null);
+                try {
+                    JSONObject values = helmChartService.getInstalledValues(middleware, clusterService.findById(alertDTO.getClusterId()));
+                    if (values != null && values.containsKey("chart-version")) {
+                        String version = values.getString("chart-version");
+                        middlewareMap.put(middleware, version);
+                        alertDTO.setChartVersion(version);
+                    } else {
+                        middlewareMap.put(middleware, null);
+                        alertDTO.setChartVersion(null);
+                    }
+                } catch (Exception e) {
                     alertDTO.setChartVersion(null);
                 }
             }
-            return alertDTO;
+           if (record.getAlertId() != null) {
+                //告警记录ID
+                alertDTO.setAlertId(middlewareAlertsService.calculateID(record.getAlertId())
+                        + "-" + middlewareAlertsService.createId(record.getId()));
+            }
+          //返回大写类型
+           changeType(record,alertDTO);
+           return alertDTO;
         }).collect(Collectors.toList()));
         alertDTOPage.getList().sort(
             (o1, o2) -> o1.getTime() == null ? -1 : o2.getTime() == null ? -1 : o2.getTime().compareTo(o1.getTime()));
@@ -458,7 +525,7 @@ public class OverviewServiceImpl implements OverviewService {
 
             overviewClusterInfo.setNamespaces(new ArrayList<>());
 
-            List<Namespace> namespaces = namespaceService.list(clusterDTO.getId(), false, false, false, null);
+            List<Namespace> namespaces = namespaceService.list(clusterDTO.getId(), false, false, false, null, null);
             if (CollectionUtils.isEmpty(namespaces)) {
                 return;
             }
@@ -475,7 +542,7 @@ public class OverviewServiceImpl implements OverviewService {
                 return overviewNSInfo;
             }).collect(Collectors.toMap(OverviewNamespaceInfo::getName, Function.identity()));
 
-            List<Middleware> middlewareInfoDTOList = middlewareCRDService.list(clusterDTO.getId(), null, null);
+            List<Middleware> middlewareInfoDTOList = middlewareCRService.list(clusterDTO.getId(), null, null, true);
             //获取chartName对应的chartVersion
             List<HelmListInfo> helmListInfoList = helmChartService.listHelm("", "", clusterDTO);
             Map<String, List<HelmListInfo>> helmListMap =
@@ -594,6 +661,30 @@ public class OverviewServiceImpl implements OverviewService {
         return b1.add(b2).doubleValue();
     }
 
+    private void changeType(BeanAlertRecord record,AlertDTO alertDTO) {
+        if (StringUtils.isNotEmpty(record.getType())) {
+            if ("mysql".equals(record.getType())) {
+                alertDTO.setCapitalType("MySQL");
+            }
+            if ("elasticsearch".equals(record.getType())) {
+                alertDTO.setCapitalType("Elasticsearch");
+            }
+            if ("kafka".equals(record.getType())) {
+                alertDTO.setCapitalType("Kafka");
+            }
+            if ("redis".equals(record.getType())) {
+                alertDTO.setCapitalType("Redis");
+            }
+            if ("rocketmq".equals(record.getType())) {
+                alertDTO.setCapitalType("RocketMQ");
+            }
+            if ("zookeeper".equals(record.getType())) {
+                alertDTO.setCapitalType("ZooKeeper");
+            }
+        }
+
+    }
+
     @Override
     public List<MiddlewareDTO> getListPlatformOverview() {
         //获取所有集群
@@ -601,7 +692,7 @@ public class OverviewServiceImpl implements OverviewService {
         List<MiddlewareDTO> middlewareDTOList = new ArrayList<>();
         clusterDTOS.forEach(clusterDTO -> {
             //获取所有分区namespaces
-            List<Namespace> namespaces = namespaceService.list(clusterDTO.getId(), true, true, true, null);
+            List<Namespace> namespaces = namespaceService.list(clusterDTO.getId(), true, true, true, null, null);
             if (CollectionUtils.isEmpty(namespaces)) {
                 return;
             }
@@ -610,7 +701,7 @@ public class OverviewServiceImpl implements OverviewService {
             List<Namespace> registeredNamespace = namespaces.stream().filter(namespace -> namespace.isRegistered()).collect(Collectors.toList());
             registeredNamespace.stream().forEach(namespace -> {
                 //获取分区下所有实例
-                List<MiddlewareCRD> middlewareCRDS = middlewareCRDService.listCR(clusterDTO.getId(), namespace.getName(), null);
+                List<MiddlewareCR> middlewareCRS = middlewareCRService.listCR(clusterDTO.getId(), namespace.getName(), null);
                 Map<String, List<String>> quotas = namespace.getQuotas();
 
                 String namespaceCpu = null;
@@ -626,7 +717,7 @@ public class OverviewServiceImpl implements OverviewService {
                     }
                 }
 
-                for (MiddlewareCRD middlewareCRD : middlewareCRDS) {
+                for (MiddlewareCR middlewareCR : middlewareCRS) {
                     MiddlewareDTO middlewareDTO = new MiddlewareDTO();
                     middlewareDTO.setClusterName(clusterDTO.getName());
                     middlewareDTO.setClusterId(clusterDTO.getId());
@@ -634,7 +725,7 @@ public class OverviewServiceImpl implements OverviewService {
                     middlewareDTO.setNamespaceCpu(namespaceCpu);
                     middlewareDTO.setNamespaceMemory(namespaceMemory);
 
-                    MiddlewareSpec spec = middlewareCRD.getSpec();
+                    MiddlewareSpec spec = middlewareCR.getSpec();
                     if (spec != null) {
                         middlewareDTO.setType(MiddlewareTypeEnum.findTypeByCrdType(spec.getType()));
                         Middleware detail = middlewareService.detail(clusterDTO.getId(), namespace.getName(), spec.getName(), middlewareDTO.getType());
@@ -657,7 +748,7 @@ public class OverviewServiceImpl implements OverviewService {
                         }
                     }
 
-                    MiddlewareStatus status = middlewareCRD.getStatus();
+                    MiddlewareStatus status = middlewareCR.getStatus();
                     if (status != null && status.getResources() != null) {
                         middlewareDTO.setStatus(status.getPhase());
                         String creationTimestamp = status.getCreationTimestamp();
@@ -674,14 +765,7 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
     @Override
-    public BaseResult getPlatformOverview() {
-        MiddlewareOverviewDTO chartPlatformOverview = this.getChartPlatformOverview();
-        chartPlatformOverview.setMiddlewareDTOList(this.getListPlatformOverview());
-        return BaseResult.ok(chartPlatformOverview);
-    }
-
-    @Override
-    public BaseResult getClusterPlatformOverview(String clusterId) {
+    public PlatformOverviewDTO getClusterPlatformOverview(String clusterId) {
         List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(true, null);
         if (StringUtils.isNotBlank(clusterId)) {
             clusterList = clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
@@ -701,11 +785,65 @@ public class OverviewServiceImpl implements OverviewService {
         MiddlewareOperatorDTO operatorInfo = middlewareInfoService.getOperatorInfo(clusterList);
         platformOverviewDTO.setOperatorDTO(operatorInfo);
 
+        //获取审计信息
+        List<BeanOperationAudit> auditList = operationAuditService.listRecent(20);
+        platformOverviewDTO.setAuditList(auditList);
+        return platformOverviewDTO;
+    }
+
+    @Override
+    public AlertMessageDTO getAlertInfo(String clusterId, Integer current, Integer size, String level) {
+        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(true, null);
+        if (StringUtils.isNotBlank(clusterId)) {
+            clusterList = clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
+        }
         //获取异常告警信息
         Date now = new Date();
         Date ago = DateUtil.addHour(now, -24);
         String beginTime = DateUtils.DateToString(ago, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
         String endTime = DateUtils.DateToString(now, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
+        QueryWrapper<BeanAlertRecord> recordQueryWrapper = new QueryWrapper<>();
+        if (StringUtils.isNotBlank(level)) {
+            recordQueryWrapper.eq("level", level);
+        }
+        recordQueryWrapper.ne("cluster_id", "");
+        recordQueryWrapper.ne("namespace", "");
+        recordQueryWrapper.ne("name", "");
+        recordQueryWrapper.eq("lay", "service");
+        recordQueryWrapper.ge("time", beginTime);
+        recordQueryWrapper.le("time", endTime);
+        recordQueryWrapper.orderByDesc("time");
+        PageHelper.startPage(current, size);
+        List<BeanAlertRecord> alertRecordList = beanAlertRecordMapper.selectList(recordQueryWrapper);
+        PageInfo<AlertDTO> pageInfo = new PageInfo<>();
+        BeanUtils.copyProperties(new PageInfo<>(alertRecordList), pageInfo);
+        Map<Middleware, String> middlewareMap = new HashMap<>();
+        pageInfo.setList(alertRecordList.stream().map(record -> {
+            AlertDTO alertDTO = new AlertDTO();
+            BeanUtils.copyProperties(record, alertDTO);
+            Middleware middleware = new Middleware().setName(alertDTO.getName()).setNamespace(alertDTO.getNamespace())
+                    .setClusterId(alertDTO.getClusterId());
+            if (middlewareMap.containsKey(middleware)) {
+                alertDTO.setChartVersion(middlewareMap.get(middleware));
+            } else {
+                try {
+                    JSONObject values = helmChartService.getInstalledValues(middleware, clusterService.findById(alertDTO.getClusterId()));
+                    if (values != null && values.containsKey("chart-version")) {
+                        String version = values.getString("chart-version");
+                        middlewareMap.put(middleware, version);
+                        alertDTO.setChartVersion(version);
+                    } else {
+                        middlewareMap.put(middleware, null);
+                        alertDTO.setChartVersion(null);
+                    }
+                } catch (Exception e) {
+                    alertDTO.setChartVersion(null);
+                }
+            }
+            record.setCapitalType(MiddlewareOfficialNameEnum.findByMiddlewareName(record.getType()));
+            return alertDTO;
+        }).collect(Collectors.toList()));
+
         List<String> hourList = DateUtil.calcHour(now);
         List<Map<String, Object>> criticalList = beanAlertRecordMapper.queryByTimeAndLevel(beginTime, endTime, "critical");
         List<Map<String, Object>> infoList = beanAlertRecordMapper.queryByTimeAndLevel(beginTime, endTime, "info");
@@ -718,25 +856,44 @@ public class OverviewServiceImpl implements OverviewService {
         alertSummaryDTO.setCriticalSum(AlertDataUtil.countAlertNum(criticalList));
         alertSummaryDTO.setInfoSum(AlertDataUtil.countAlertNum(infoList));
         alertSummaryDTO.setWarningSum(AlertDataUtil.countAlertNum(warningList));
-        platformOverviewDTO.setAlertSummary(alertSummaryDTO);
 
-        //获取审计信息
-        List<BeanOperationAudit> auditList = operationAuditService.listRecent(20);
-        platformOverviewDTO.setAuditList(auditList);
-        return BaseResult.ok(platformOverviewDTO);
+        AlertMessageDTO alertMessageDTO = new AlertMessageDTO();
+        alertMessageDTO.setAlertSummary(alertSummaryDTO);
+        alertMessageDTO.setAlertPageInfo(pageInfo);
+        return alertMessageDTO;
     }
 
     @Override
-    public BaseResult getClusterMiddlewareInfo(String clusterId) {
-        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(true, null);
+    public List getClusterMiddlewareInfo(String clusterId) {
+        List<MiddlewareClusterDTO> clusterList = null;
+        try {
+            clusterList = clusterService.listClusters(true, null);
+        } catch (BusinessException e) {
+            log.error("集群列表查询失败", e);
+        }
+        if (CollectionUtils.isEmpty(clusterList)) {
+            return new ArrayList<>();
+        }
         if (StringUtils.isNotBlank(clusterId)) {
             clusterList = clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
         }
-        PlatformOverviewDTO platformOverviewDTO = new PlatformOverviewDTO();
-        //获取各中间件服务数量信息
         List<MiddlewareBriefInfoDTO> middlewareBriefInfoList = middlewareService.getMiddlewareBriefInfoList(clusterList);
-        platformOverviewDTO.setBriefInfoList(middlewareBriefInfoList);
-        return BaseResult.ok(platformOverviewDTO);
+        // 多集群时，合并相同中间件数量信息
+        if (StringUtils.isBlank(clusterId) && clusterList.size() > 1) {
+            Map<String, MiddlewareBriefInfoDTO> resMap = new HashMap<>();
+            middlewareBriefInfoList.forEach(mwInfo -> {
+                MiddlewareBriefInfoDTO briefInfoDTO = resMap.get(mwInfo.getName());
+                if (briefInfoDTO != null) {
+                    briefInfoDTO.setServiceNum(briefInfoDTO.getServiceNum() + mwInfo.getServiceNum());
+                    briefInfoDTO.setErrServiceNum(briefInfoDTO.getErrServiceNum() + mwInfo.getErrServiceNum());
+                } else {
+                    resMap.put(mwInfo.getName(), mwInfo);
+                }
+            });
+            middlewareBriefInfoList.clear();
+            middlewareBriefInfoList.addAll(resMap.values());
+        }
+        return middlewareBriefInfoList;
     }
 
 }

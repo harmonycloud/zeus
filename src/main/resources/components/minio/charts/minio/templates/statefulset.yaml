@@ -20,6 +20,7 @@ metadata:
   name: {{ include "minio.fullname" . }}-svc
   labels:
     app: {{ include "minio.fullname" . }}
+    {{- include "minio.labels" . | nindent 4 }}
 spec:
   type: NodePort
   ports:
@@ -34,6 +35,10 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ include "minio.fullname" . }}
+  labels:
+    app: {{ include "minio.fullname" . }}
+    component: minio
+    {{- include "minio.labels" . | nindent 4 }}
 spec:
   serviceName: {{ include "minio.fullname" . }}-svc
   selector:
@@ -46,6 +51,7 @@ spec:
         app: {{ include "minio.fullname" . }}
     spec:
       affinity:
+        {{- if eq .Values.podAntiAffinity "hard"}}
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
           - labelSelector:
@@ -53,8 +59,21 @@ spec:
               - key: app
                 operator: In
                 values:
-                - "{{ include "minio.fullname" . }}"
-            topologyKey: kubernetes.io/hostname
+                - {{ include "minio.fullname" . }}
+            topologyKey: {{ .Values.podAntiAffinityTopologKey }}
+        {{- else if eq .Values.podAntiAffinity "soft"}}
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              topologyKey: {{ .Values.podAntiAffinityTopologKey }}
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - {{ include "minio.fullname" . }}
+        {{- end}}
       {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
@@ -72,7 +91,29 @@ spec:
           value: {{ .Values.secretKey }}
         - name: MINIO_PROMETHEUS_AUTH_TYPE
           value: "public"
+        {{- range $key, $val := .Values.environment }}
+        - name: {{ $key }}
+          value: {{ $val | quote }}
+        {{- end}}
         image: {{ .Values.image.repository }}/minio:{{ .Values.image.minioTag }}
+        livenessProbe:
+          httpGet:
+            path: /minio/health/live
+            {{- if .Values.tls.enabled }}
+            port: 9000
+            {{ else }}
+            port: 9000
+            {{- end }}
+            {{- if .Values.tls.enabled }}
+            scheme: HTTPS
+            {{ else }}
+            scheme: HTTP
+            {{- end }}
+          initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+          successThreshold: {{ .Values.livenessProbe.successThreshold }}
+          failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
         args:
         - server
         - {{- range $i := until $zoneCount }}{{ $factor := mul $i $nodeCount }}{{ $endIndex := add $factor $nodeCount }}{{ $beginIndex := mul $i $nodeCount }}  {{ $scheme }}://{{ template `minio.fullname` $ }}-{{ `{` }}{{ $beginIndex }}...{{ sub $endIndex 1 }}{{ `}`}}.{{ template `minio.fullname` $ }}-svc.{{ $.Release.Namespace }}.svc.{{ $.Values.clusterDomain }}{{if (gt $drivesPerNode 1)}}{{ $bucketRoot }}-{{ `{` }}0...{{ sub $drivesPerNode 1 }}{{ `}` }}{{else}}{{ $bucketRoot }}{{end}}{{- end}}{{- template `minio.extraArgs` . }}
@@ -136,6 +177,7 @@ metadata:
   name: {{ include "minio.fullname" . }}-setup
   labels:
     app: {{ include "minio.fullname" . }}
+    {{- include "minio.labels" . | nindent 4 }}
 spec:
   template:
     metadata:
@@ -149,6 +191,13 @@ spec:
       - name: mc
         image: {{ .Values.image.repository }}/minio-mc:{{ .Values.image.mcTag }}
         imagePullPolicy: IfNotPresent
+        resources:
+           limits:
+             cpu: 500m
+             memory: 1024Mi
+           requests:
+             cpu: 100m
+             memory: 256Mi
         command:
         - /bin/sh
         - -c

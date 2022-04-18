@@ -1,11 +1,11 @@
 package com.harmonycloud.zeus.service.middleware;
 
 import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
+import com.harmonycloud.caas.common.model.MiddlewareBackupScheduleConfig;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
-import io.fabric8.kubernetes.api.model.OwnerReference;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author dengyulong
@@ -14,94 +14,96 @@ import java.util.Map;
 public interface MiddlewareBackupService {
 
     /**
-     * 查询备份数据列表
+     * 创建备份(创建备份规则，或者立即备份)
      *
-     * @param clusterId      集群id
-     * @param namespace      命名空间
-     * @param type           中间件类型
-     * @param middlewareName 中间件名称
+     * @param middlewareBackupDTO 备份信息
      * @return
      */
-    List<MiddlewareBackupRecord> list(String clusterId, String namespace, String middlewareName, String type);
+    BaseResult createBackup(MiddlewareBackupDTO middlewareBackupDTO);
 
     /**
-     * 创建备份
+     * 更新备份规则
      *
-     * @param clusterId      集群id
-     * @param namespace      命名空间
-     * @param type           中间件类型
-     * @param middlewareName 中间件名称
+     * @param middlewareBackupDTO
      * @return
      */
-    BaseResult create(String clusterId, String namespace, String middlewareName, String type, String cron, Integer limitRecord);
+    BaseResult updateBackupSchedule(MiddlewareBackupDTO middlewareBackupDTO);
 
     /**
-     * 更新备份配置
+     * 创建备份规则
      *
-     * @param clusterId      集群id
-     * @param namespace      命名空间
-     * @param type           中间件类型
-     * @param middlewareName 中间件名称
+     * @param backupDTO
      * @return
      */
-    BaseResult update(String clusterId, String namespace, String middlewareName, String type, String cron, Integer limitRecord, String pause);
-
-    /**
-     * 删除备份记录
-     * @param clusterId
-     * @param namespace
-     * @param middlewareName
-     * @param type
-     * @param backupName
-     * @param backupFileName
-     * @return
-     */
-    BaseResult delete(String clusterId, String namespace,String middlewareName, String type, String backupName, String backupFileName);
-
-    /**
-     * 查询备份设置
-     *
-     * @param clusterId      集群id
-     * @param namespace      命名空间
-     * @param type           中间件类型
-     * @param middlewareName 中间件名称
-     * @return
-     */
-    BaseResult get(String clusterId, String namespace, String middlewareName, String type);
-
-    /**
-     * 创建定时备份
-     *
-     * @param clusterId          集群id
-     * @param namespace          命名空间
-     * @param middlewareRealName 中间件名称
-     * @param cron               cron表达式
-     * @param limitRecord        备份保留个数
-     * @return
-     */
-    BaseResult createScheduleBackup(String clusterId, String namespace, String middlewareName, String crdType,
-                                    String middlewareRealName, String cron, Integer limitRecord, Map<String,String> labels);
+    BaseResult createBackupSchedule(MiddlewareBackupDTO backupDTO);
 
     /**
      * 立即备份
      *
-     * @param clusterId          集群id
-     * @param namespace          命名空间
-     * @param middlewareRealName 中间件名称
+     * @param backupDTO
      * @return
      */
-    BaseResult createNormalBackup(String clusterId, String namespace, String middlewareName, String crdType, String middlewareRealName, Map<String,String> labels);
+    BaseResult createNormalBackup(MiddlewareBackupDTO backupDTO);
+
+    /**
+     * 查询备份规则列表
+     *
+     * @param clusterId      集群id
+     * @param namespace      分区
+     * @param type           中间件类型
+     * @param middlewareName 中间件名称
+     * @return
+     */
+    List<MiddlewareBackupScheduleConfig> listBackupSchedule(String clusterId, String namespace, String type, String middlewareName, String keyword);
+
+    /**
+     * 删除备份规则
+     *
+     * @param clusterId          集群id
+     * @param namespace          分区
+     * @param type
+     * @param backupScheduleName 备份规则名称
+     * @return
+     */
+    BaseResult deleteSchedule(String clusterId, String namespace, String type, String backupScheduleName);
+
+    /**
+     * 删除备份记录
+     *
+     * @param clusterId      集群id
+     * @param namespace      分区
+     * @param middlewareName 中间件名称
+     * @param type           中间件类型
+     * @param backupName     备份记录名称
+     * @param backupFileName 备份文件名称(mysql特有)
+     * @return
+     */
+    BaseResult deleteRecord(String clusterId, String namespace, String middlewareName, String type, String backupName, String backupFileName);
+
+    /**
+     * 查询备份记录列表
+     *
+     * @param clusterId      集群id
+     * @param namespace      命名空间
+     * @param type           中间件类型
+     * @param middlewareName 中间件名称
+     * @return
+     */
+    List<MiddlewareBackupRecord> listRecord(String clusterId, String namespace, String middlewareName, String type);
 
     /**
      * 创建恢复
      *
-     * @param clusterId
-     * @param namespace
-     * @param backupName 恢复服务名称
-     * @param aliasName
+     * @param clusterId      集群id
+     * @param namespace      分区
+     * @param middlewareName 服务名称
+     * @param type           服务类型
+     * @param backupName     备份记录名称
+     * @param backupFileName 备份文件名称
+     * @param pods           pod列表
      * @return
      */
-    BaseResult createRestore(String clusterId, String namespace, String middlewareName, String type, String restoreName, String backupName, String backupFileName, String aliasName);
+    BaseResult createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String backupFileName, List<String> pods);
 
     /**
      * 尝试创建中间件恢复实例
@@ -117,10 +119,32 @@ public interface MiddlewareBackupService {
 
     /**
      * 删除中间件备份相关信息，包括定时备份、立即备份、备份恢复
+     *
      * @param clusterId
      * @param namespace
      * @param type
      * @param middlewareName
      */
     void deleteMiddlewareBackupInfo(String clusterId, String namespace, String type, String middlewareName);
+
+    /**
+     * 检查中间件是否已创建备份规则
+     * @param clusterId
+     * @param namespace
+     * @param middlewareName
+     * @return
+     */
+    boolean checkIfAlreadyBackup(String clusterId, String namespace, String type, String middlewareName);
+
+    /**
+     * 检查中间件pod是否已创建备份规则
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param middlewareName
+     * @param podName
+     * @return
+     */
+    boolean checkIfAlreadyBackup(String clusterId, String namespace, String type, String middlewareName,String podName);
+
 }

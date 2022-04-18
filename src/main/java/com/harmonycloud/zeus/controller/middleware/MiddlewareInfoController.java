@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.controller.middleware;
 
+import com.harmonycloud.caas.common.model.middleware.MiddlewareInfoDTO;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,12 +27,22 @@ public class MiddlewareInfoController {
 
     @ApiOperation(value = "查询可用的中间件列表", notes = "查询可用的中间件列表")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "query", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping
-    public BaseResult list(@RequestParam(value = "clusterId") String clusterId) {
+    public BaseResult list(@RequestParam(value = "clusterId", required = false) String clusterId) {
         return BaseResult.ok(middlewareInfoService.list(clusterId));
+    }
+
+    @ApiOperation(value = "查询可发布的中间件信息", notes = "查询可发布的中间件信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "类型", paramType = "path", dataTypeClass = String.class)
+    })
+    @GetMapping("/{type}")
+    public BaseResult<MiddlewareInfoDTO> get(@RequestParam(value = "clusterId") String clusterId,
+                                             @PathVariable("type") String type) {
+        return BaseResult.ok(middlewareInfoService.getByType(clusterId, type));
     }
 
     @ApiOperation(value = "查询指定中间件版本", notes = "查询指定中间件版本")

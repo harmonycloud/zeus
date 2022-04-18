@@ -9,6 +9,8 @@ import com.harmonycloud.caas.common.model.MiddlewareDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareMonitorDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareOverviewDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareStatusDto;
+import com.harmonycloud.zeus.bean.AlertMessageDTO;
+import com.harmonycloud.zeus.bean.PlatformOverviewDTO;
 
 /**
  * @author xutianhong
@@ -44,12 +46,6 @@ public interface OverviewService {
         String endTime) throws Exception;
 
     /**
-     * 平台总览
-     * @return 返回结果
-     */
-    BaseResult getPlatformOverview();
-
-    /**
      * 获取告警记录
      *
      * @param clusterId 集群id
@@ -60,7 +56,7 @@ public interface OverviewService {
      *
      * @return List<AlertDTO>
      */
-    PageInfo<AlertDTO> getAlertRecord(String clusterId, String namespace, Integer current, Integer size, String level);
+    PageInfo<AlertDTO> getAlertRecord(String clusterId, String namespace, String middlewareName, Integer current, Integer size, String level, String keyword, String lay);
 
     MiddlewareOverviewDTO getChartPlatformOverview();
 
@@ -74,14 +70,23 @@ public interface OverviewService {
      * 获取指定集群的数据总览
      *
      * @param clusterId
-     * @return
+     * @return PlatformOverviewDTO
      */
-    BaseResult getClusterPlatformOverview(String clusterId);
+    PlatformOverviewDTO getClusterPlatformOverview(String clusterId);
 
     /**
      * 平台总览获取服务信息
      * @param clusterId
+     * @return PlatformOverviewDTO
+     */
+    List getClusterMiddlewareInfo(String clusterId);
+
+    /**
+     * 获取告警信息
+     * @param clusterId
+     * @param current
+     * @param size
      * @return
      */
-    BaseResult getClusterMiddlewareInfo(String clusterId);
+    AlertMessageDTO getAlertInfo(String clusterId, Integer current, Integer size, String level);
 }

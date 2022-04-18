@@ -30,9 +30,9 @@ public class PrometheusWrapper {
 
     @Autowired
     private ClusterService clusterService;
-    @Value("${k8s.monitoring.prometheus.port:30003}")
+    @Value("${k8s.monitoring.prometheus.port:31900}")
     private String prometheusPort;
-    @Value("${k8s.monitoring.alertManager.port:31252}")
+    @Value("${k8s.monitoring.alertManager.port:31902}")
     private String alertManagerPort;
 
     public PrometheusResponse get(String clusterId, String prometheusApiVersion, Map<String, String> queryMap)
@@ -74,7 +74,7 @@ public class PrometheusWrapper {
     private MiddlewareClusterMonitorInfo getPrometheusInfo(MiddlewareClusterDTO cluster) {
         MiddlewareClusterMonitorInfo prometheus;
         if (cluster.getMonitor() == null || cluster.getMonitor().getPrometheus() == null) {
-            throw new BusinessException(ErrorMessage.NOT_EXIST);
+            throw new BusinessException(ErrorMessage.PROMETHEUS_NOT_INSTALLED);
         } else {
             prometheus = cluster.getMonitor().getPrometheus();
             if (StringUtils.isBlank(cluster.getMonitor().getPrometheus().getProtocol())) {

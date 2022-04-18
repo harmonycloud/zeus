@@ -24,6 +24,11 @@ public class BeanUserRole {
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
     /**
+     * 项目id
+     */
+    @TableField("project_id")
+    private String projectId;
+    /**
      * 名称
      */
     @TableField("username")

@@ -1247,11 +1247,24 @@ public class DateUtil {
     public static List<String> calcHour(Date current) {
         List<String> hours = new ArrayList<>();
         for (int i = 0; i < 24; i++) {
-            Date ago = DateUtil.addHour(current, -(24-i));
+            Date ago = DateUtil.addHour(current, -(23-i));
             String agoStr = DateUtils.DateToString(ago, "yyyy-MM-dd HH:00:00");
             hours.add(agoStr);
         }
         return hours;
+    }
+
+    /**
+     *
+     * @param date
+     * @param count
+     * @return
+     */
+    public static String addHourAndGetNormal(String date, int count) {
+        Date original = DateUtils.parseDate(date, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
+        Date real = DateUtil.addHour(original, count);
+        String realDate = DateUtils.DateToString(real, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
+        return realDate;
     }
 
 }

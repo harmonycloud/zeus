@@ -1,3 +1,13 @@
+## Use this field to add environment variables relevant to Minio server. These fields will be passed on to Minio container(s)
+## when Chart is deployed
+## Please refer for comprehensive list https://docs.minio.io/docs/minio-server-configuration-guide.html
+environment:
+## Erasure Coding set
+## Refer to README.md for configuration
+#  MINIO_STORAGE_CLASS_STANDARD: EC:4
+#  MINIO_STORAGE_CLASS_RRS: EC:2
+
+
 minioArgs:
   bucketName: minio-test
   regionName: cn-north-1
@@ -9,15 +19,15 @@ nameOverride: ""
 ## Provide a name to substitute for the full names of resources
 fullnameOverride: ""
 
-replicas: 2
+replicas: 4
 zones: 1
 #Number of disks per node
-drivesPerNode: 2
+drivesPerNode: 1
 
 mode: distributed
 image:
-  repository: harmonyware.harbor.cn/middleware
-  minioTag: RELEASE.2020-12-03T05-49-24Z
+  repository: harbor.middleware.com/middleware
+  minioTag: RELEASE.2021-02-14T04-01-33Z
   mcTag: RELEASE.2020-06-16T19-24-41Z
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart version.
@@ -51,7 +61,7 @@ StatefulSetUpdate:
 service:
   type: ClusterIP
   port: 9000
-  nodePort: 31902
+  nodePort: 32000
 
 accessKey: "minio"
 secretKey: "minio123"
@@ -80,18 +90,25 @@ resources:
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
   # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
    limits:
-     cpu: 200m
-     memory: 512Mi
+     cpu: 500m
+     memory: 1024Mi
    requests:
-     cpu: 200m
-     memory: 512Mi
+     cpu: 500m
+     memory: 1024Mi
+
+## Liveness and Readiness probe values.
+livenessProbe:
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 1
+  successThreshold: 1
+  failureThreshold: 1
 
 nodeSelector: {}
 
 tolerations: []
 
-affinity: {}
+podAntiAffinityTopologKey: "kubernetes.io/hostname"
 
-ingress:
-  host: minio.middleware.com
-  ingressClass: nginx-ingress-controller
+#取值[hard|soft] hard:强制反亲和 soft:非强制反亲和
+podAntiAffinity: "soft"

@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.controller.k8s;
 
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.middleware.IngressDTO;
+import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.k8s.IngressService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -11,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static com.harmonycloud.caas.common.constants.CommonConstant.ASTERISK;
 
 /**
  * @author dengyulong
@@ -29,11 +32,16 @@ public class IngressController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "keyword", value = "模糊搜索", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/ingress")
+    @Authority(power = 1)
     public BaseResult<List<IngressDTO>> list(@PathVariable("clusterId") String clusterId,
                                              @PathVariable(value = "namespace") String namespace,
                                              @RequestParam(value = "keyword", required = false) String keyword) {
+        if (namespace.equals(ASTERISK)){
+            namespace = null;
+        }
         return BaseResult.ok(ingressService.listAllIngress(clusterId, namespace, keyword));
     }
 
@@ -45,6 +53,7 @@ public class IngressController {
             @ApiImplicitParam(name = "ingress", value = "对外访问信息", paramType = "query", dataTypeClass = IngressDTO.class)
     })
     @PostMapping("/{middlewareName}/ingress")
+    @Authority(power = 1)
     public BaseResult create(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
                              @PathVariable("middlewareName") String middlewareName,
@@ -62,6 +71,7 @@ public class IngressController {
             @ApiImplicitParam(name = "ingress", value = "对外访问信息", paramType = "query", dataTypeClass = IngressDTO.class)
     })
     @DeleteMapping("/{middlewareName}/ingress/{name}")
+    @Authority(power = 1)
     public BaseResult delete(@PathVariable("clusterId") String clusterId,
                              @PathVariable(value = "namespace") String namespace,
                              @PathVariable("middlewareName") String middlewareName,
@@ -79,6 +89,7 @@ public class IngressController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/{middlewareName}/ingress")
+    @Authority(power = 1)
     public BaseResult<List<IngressDTO>> get(@PathVariable("clusterId") String clusterId,
                                       @PathVariable("namespace") String namespace,
                                       @PathVariable("middlewareName") String middlewareName,

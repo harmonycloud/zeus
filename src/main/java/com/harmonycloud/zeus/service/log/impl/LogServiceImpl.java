@@ -4,6 +4,7 @@ package com.harmonycloud.zeus.service.log.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.enums.*;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
 import com.harmonycloud.caas.common.model.middleware.LogQuery;
 import com.harmonycloud.caas.common.model.middleware.LogQueryDto;
@@ -17,6 +18,7 @@ import com.harmonycloud.zeus.util.DateUtil;
 import com.harmonycloud.tool.date.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.ConnectionClosedException;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
@@ -445,7 +447,13 @@ public class LogServiceImpl implements LogService {
         Set<String> indexes = new HashSet<>();
         Date indexDate = from;
         MiddlewareClusterDTO middlewareClusterDTO = clusterService.findById(clusterId);
-        List<String> existIndexes = esService.getIndexes(middlewareClusterDTO);
+        List<String> existIndexes = null;
+        try {
+            existIndexes = esService.getIndexes(middlewareClusterDTO);
+        } catch (ConnectionClosedException e) {
+            log.error("连接elasticsearch出错了", e);
+            throw new BusinessException(ErrorMessage.ELASTICSEARCH_CONNECT_FAILED);
+        }
         while (indexDate.before(to)) {
             String index = esService.getLogIndexPrefix(isPodLog) + DateUtil.DateToString(indexDate, DateType.YYYYMMDD_DOT);
             String snapshotIndex = index + ES_INDEX_SNAPSHOT_RESTORE;

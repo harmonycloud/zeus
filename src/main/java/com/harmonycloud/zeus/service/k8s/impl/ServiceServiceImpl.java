@@ -3,12 +3,13 @@ package com.harmonycloud.zeus.service.k8s.impl;
 import com.harmonycloud.caas.common.model.middleware.PortDetailDTO;
 import com.harmonycloud.caas.common.model.middleware.ServicePortDTO;
 import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareStatus;
-import com.harmonycloud.zeus.service.k8s.MiddlewareCRDService;
+import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.ServiceService;
 import io.fabric8.kubernetes.api.model.ServicePort;
+import io.fabric8.kubernetes.api.model.ServiceSpec;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,10 @@ import org.springframework.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.EXPORTER;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.HEADLESS;
 
 /**
  * @author tangtx
@@ -26,14 +31,14 @@ import java.util.Map;
 public class ServiceServiceImpl implements ServiceService {
 
     @Autowired
-    private MiddlewareCRDService middlewareCRDService;
+    private MiddlewareCRService middlewareCRService;
 
     @Autowired
     private ServiceWrapper serviceWrapper;
 
     @Override
     public List<ServicePortDTO> list(String clusterId, String namespace, String name, String type) {
-        MiddlewareCRD middleware = middlewareCRDService.getCR(clusterId, namespace, type, name);
+        MiddlewareCR middleware = middlewareCRService.getCR(clusterId, namespace, type, name);
         if (middleware == null || middleware.getStatus() == null) {
             return null;
         }
@@ -74,6 +79,29 @@ public class ServiceServiceImpl implements ServiceService {
             }
             servicePortDTOList.add(servicePortDTO);
         }
-        return servicePortDTOList;
+        return servicePortDTOList.stream().filter(servicePortDTO -> !servicePortDTO.getServiceName().contains(EXPORTER)
+            && !servicePortDTO.getServiceName().contains(HEADLESS)).collect(Collectors.toList());
+    }
+
+    @Override
+    public ServicePortDTO get(String clusterId, String namespace, String name) {
+        io.fabric8.kubernetes.api.model.Service service = serviceWrapper.get(clusterId, namespace, name);
+        if (service == null || service.getSpec() == null || CollectionUtils.isEmpty(service.getSpec().getPorts())) {
+            return null;
+        }
+        ServiceSpec spec = service.getSpec();
+        ServicePort servicePort = spec.getPorts().get(0);
+        ServicePortDTO servicePortDTO = new ServicePortDTO();
+        List<PortDetailDTO> portDetailDtoList = new ArrayList<>();
+        PortDetailDTO portDetailDTO = new PortDetailDTO();
+        portDetailDTO.setPort(String.valueOf(servicePort.getPort().intValue()));
+        portDetailDTO.setTargetPort(String.valueOf(servicePort.getTargetPort().getIntVal()));
+        portDetailDTO.setProtocol(servicePort.getProtocol());
+        portDetailDtoList.add(portDetailDTO);
+
+        servicePortDTO.setServiceName(name);
+        servicePortDTO.setClusterIP(spec.getClusterIP());
+        servicePortDTO.setPortDetailDtoList(portDetailDtoList);
+        return servicePortDTO;
     }
 }

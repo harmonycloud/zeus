@@ -34,7 +34,7 @@ public class MiddlewareClusterInfo {
     @ApiModelProperty("对外服务")
     private List<MiddlewareClusterIngress> ingressList;
     @ApiModelProperty("存储相关信息")
-    private Map<String, Object> storage;
+    private MiddlewareClusterStorage storage;
     @ApiModelProperty("制品服务相关信息")
     private Registry registry;
     @ApiModelProperty("监控相关")

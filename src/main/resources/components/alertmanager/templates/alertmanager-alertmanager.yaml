@@ -8,7 +8,7 @@ spec:
   image: {{ .Values.image.alertmanager.repository }}:{{ .Values.image.alertmanager.tag }}
   nodeSelector:
     kubernetes.io/os: linux
-  replicas: 3
+  replicas: {{ .Values.replicas }}
   securityContext:
     fsGroup: 2000
     runAsNonRoot: true

@@ -1,10 +1,18 @@
 package com.harmonycloud.zeus.service.user;
 
+import com.harmonycloud.caas.common.model.MailUserDTO;
+import com.harmonycloud.caas.common.model.UploadImageFileDto;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareAlertsDTO;
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
+import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
+import com.harmonycloud.zeus.bean.user.BeanUser;
+import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author xutianhong
@@ -18,16 +26,22 @@ public interface UserService {
      *
      * @return UserDto
      */
-    UserDto get(String userName) throws Exception;
+    UserDto getUserDto(String userName, String projectId);
+
+    /**
+     * 查询用户原始信息
+     * @param userName
+     * @return
+     */
+    BeanUser get(String userName);
 
     /**
      * 获取用户信息
      * @param userName 账户
-     * @param withPassword 携带密码
      *
      * @return UserDto
      */
-    UserDto get(String userName, Boolean withPassword) throws Exception;
+    UserDto getUserDto(String userName);
 
     /**
      * 获取用户列表
@@ -35,7 +49,7 @@ public interface UserService {
      *
      * @return List<UserDto>
      */
-    List<UserDto> list(String keyword) throws Exception;
+    List<UserDto> list(String keyword);
 
     /**
      * 创建用户
@@ -45,10 +59,22 @@ public interface UserService {
     void create(UserDto userDto) throws Exception;
 
     /**
+     * 创建用户
+     * @param beanUser
+     */
+    void create(BeanUser beanUser);
+
+    /**
      * 更新用户信息
      * @param userDto 用户对象
      */
     void update(UserDto userDto) throws Exception;
+
+    /**
+     * 更新用户信息
+     * @param beanUser
+     */
+    void update(BeanUser beanUser) ;
 
     /**
      * 删除用户
@@ -85,7 +111,39 @@ public interface UserService {
 
     /**
      * 获取菜单栏
+     * @param clusterId
+     * @return
+     * @throws Exception
      */
-    List<ResourceMenuDto> menu() throws Exception;
+    List<ResourceMenuDto> menu(String clusterId) throws Exception;
 
+    /**
+     * 个性化配置
+     */
+    void insertPersonalConfig(PersonalizedConfiguration configuration,String status) throws Exception;
+
+    /**
+     * 获取个性化配置信息
+     * @return
+     * @throws IOException
+     */
+    PersonalizedConfiguration getPersonalConfig() throws IOException;
+
+    /**
+     * 上传图片
+     * @param file
+     * @throws IOException
+     */
+    UploadImageFileDto uploadFile(MultipartFile file) throws IOException;
+
+    MailUserDTO getUserList(String alertruleId);
+
+    /**
+     * 切换项目
+     * @param projectId 项目id
+     *
+     */
+    void switchProject(String projectId, HttpServletResponse response);
+
+    Map<String, String> getPower();
 }

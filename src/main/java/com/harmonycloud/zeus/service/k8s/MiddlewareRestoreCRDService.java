@@ -1,7 +1,6 @@
 package com.harmonycloud.zeus.service.k8s;
 
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupList;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareRestoreCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareRestoreCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareRestoreList;
 
 import java.io.IOException;
@@ -17,10 +16,10 @@ public interface MiddlewareRestoreCRDService {
     /**
      * 创建恢复
      * @param clusterId
-     * @param middlewareRestoreCRD
+     * @param middlewareRestoreCR
      * @throws IOException
      */
-    void create(String clusterId, MiddlewareRestoreCRD middlewareRestoreCRD)  throws IOException;
+    void create(String clusterId, MiddlewareRestoreCR middlewareRestoreCR)  throws IOException;
 
 
     /**

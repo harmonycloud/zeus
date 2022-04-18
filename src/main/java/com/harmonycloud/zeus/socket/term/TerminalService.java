@@ -52,6 +52,8 @@ public class TerminalService {
     private ClusterService clusterService;
     @Autowired
     private com.harmonycloud.zeus.service.log.TerminalService terminalService;
+    @Autowired
+    private MiddlewareCommandService middlewareCommandService;
 
     private boolean isReady;
     private String[] termCommand;
@@ -67,12 +69,12 @@ public class TerminalService {
 
     public void onTerminalInit() {}
 
-    public void onTerminalReady(String container, String pod, String namespace, String clusterId, String scriptType) {
+    public void onTerminalReady(String container, String pod, String namespace, String clusterId, String scriptType, String middlewareName, String middlewareType) {
 
         ThreadHelper.start(() -> {
             isReady = true;
             try {
-                initializeProcess(container, pod, namespace, clusterId, scriptType);
+                initializeProcess(container, pod, namespace, clusterId, scriptType, middlewareName, middlewareType);
             } catch (Exception e) {
                 LOGGER.error("服务web控制台初始化失败,namespace:{},pod:{}", namespace, pod, e);
             }
@@ -92,7 +94,7 @@ public class TerminalService {
 
     }
 
-    private void initializeProcess(String container, String pod, String namespace, String clusterId, String scriptType)
+    private void initializeProcess(String container, String pod, String namespace, String clusterId, String scriptType, String middlewareName, String middlewareType)
         throws Exception {
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         String userHome = System.getProperty("user.home");
@@ -126,7 +128,9 @@ public class TerminalService {
         ThreadHelper.start(() -> {
             printReader(errorReader);
         });
-
+        if(StringUtils.isNotEmpty(middlewareName) && StringUtils.isNotEmpty(middlewareType)){
+            onCommand(getDatabaseCommand(cluster, namespace, middlewareName, middlewareType));
+        }
         process.waitFor();
 
     }
@@ -160,6 +164,12 @@ public class TerminalService {
                     logQueryDto.getPod(), logQueryDto.getContainer(), logQueryDto.getNamespace(), cluster.getAddress(),
                     cluster.getAccessToken(), DEFAULT_LOG_LINES, logQueryDto.getLogDir(), logQueryDto.getLogFile());
             }
+        } else if (LogService.LOG_TYPE_PREVIOUS_LOG.equalsIgnoreCase(logQueryDto.getLogSource())) {
+            AssertUtil.notBlank(logQueryDto.getContainer(), DictEnum.CONTAINER);
+            command = MessageFormat.format(
+                    "kubectl logs {0} -c {1} -n {2} -p --server={3} --token={4} --insecure-skip-tls-verify=true",
+                    logQueryDto.getPod(), logQueryDto.getContainer(), logQueryDto.getNamespace(),
+                    cluster.getAddress(), cluster.getAccessToken());
         }
         LOGGER.info("执行kubectl命令：{}", command);
         this.termCommand = command.split("\\s+");
@@ -195,7 +205,7 @@ public class TerminalService {
         map.put("text", text);
 
         String message = new ObjectMapper().writeValueAsString(map);
-
+        System.out.println(message);
         webSocketSession.sendMessage(new TextMessage(message));
 
     }
@@ -297,5 +307,25 @@ public class TerminalService {
      */
     public void deleteConsoleProcess(WebSocketSession session) {
         terminalService.deleteConsoleProcess(session);
+    }
+
+    /**
+     * 执行进入指定数据库数据
+     */
+    public String getDatabaseCommand(MiddlewareClusterDTO cluster, String namespace, String name, String type){
+        String command;
+        switch (type){
+            case "redis":
+                command = middlewareCommandService.getRedisCommand(cluster, namespace, name);
+                break;
+            case "mysql":
+                command = middlewareCommandService.getMysqlCommand(cluster, namespace, name);
+                break;
+            default:
+                LOGGER.error("该类型中间件不支持进入库表");
+                command = "ls";
+        }
+        command = command + "\r";
+        return command;
     }
 }

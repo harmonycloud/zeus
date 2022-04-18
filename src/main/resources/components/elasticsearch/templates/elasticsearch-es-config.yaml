@@ -11,11 +11,11 @@ data:
     http.port: 9200
     transport.tcp.port: 9300
     node.attr.box_type: {BoxType}
-  {{- if eq .Values.version "7.10" }}
-    discovery.seed_hosts: {discoveryZenPingUnicastHosts}
-    cluster.initial_master_nodes: {Masternodes}    
-  {{- else }}
+  {{- if eq .Values.version "6.8" }}
     discovery.zen.ping.unicast.hosts: {discoveryZenPingUnicastHosts}
+  {{- else }}
+    discovery.seed_hosts: {discoveryZenPingUnicastHosts}
+    cluster.initial_master_nodes: {Masternodes}
   {{- end }}
     xpack.security.enabled: true
     xpack.ml.enabled: false
@@ -24,7 +24,7 @@ data:
     http.cors.enabled: true
     http.cors.allow-origin: "*" 
     http.cors.allow-headers: "Authorization"
-    path.repo: /data/elastic/{ClusterName}/{PodName}/data/data_back
+    path.repo: {{ .Values.args.path_repo | default "/data/elastic/{ClusterName}/{PodName}/data/data_back" }}
     path.logs: /data/elastic/{ClusterName}/{PodName}/log
     path.data: /data/elastic/{ClusterName}/{PodName}/data
     discovery.zen.minimum_master_nodes: {minimum_master_nodes}
@@ -124,6 +124,7 @@ data:
     # log4j 2
     -Dlog4j.shutdownHookEnabled=false
     -Dlog4j2.disable.jmx=true
+    -Dlog4j2.formatMsgNoLookups=true
 
     -Djava.io.tmpdir=${ES_TMPDIR}
 

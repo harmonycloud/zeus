@@ -1,4 +1,4 @@
-IMAGE_REPO ?= middleware.harmonycloud.cn:38080
+IMAGE_REPO ?= middleware.harmonycloud.cn:58080
 TYPE ?= docker-compose
 DEPLOY ?= online
 STORAGE_CLASS ?= default

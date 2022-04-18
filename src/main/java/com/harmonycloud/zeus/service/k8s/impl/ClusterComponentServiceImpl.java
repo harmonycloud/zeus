@@ -1,50 +1,38 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import com.harmonycloud.caas.common.model.middleware.IngressDTO;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.ServiceDTO;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.enums.ComponentsEnum;
+import com.harmonycloud.caas.common.model.ClusterComponentsDto;
+import com.harmonycloud.caas.common.model.MultipleComponentsInstallDto;
+import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.caas.common.model.registry.HelmChartFile;
+import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
+import com.harmonycloud.tool.date.DateUtils;
+import com.harmonycloud.zeus.bean.BeanClusterComponents;
+import com.harmonycloud.zeus.dao.BeanClusterComponentsMapper;
+import com.harmonycloud.zeus.service.middleware.MiddlewareManagerService;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
-import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.enums.DictEnum;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.Protocol;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitor;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitorInfo;
-import com.harmonycloud.zeus.integration.registry.bean.harbor.V1HelmChartVersion;
+import com.harmonycloud.zeus.service.AbstractBaseService;
+import com.harmonycloud.zeus.service.components.BaseComponentsService;
 import com.harmonycloud.zeus.service.k8s.ClusterComponentService;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
-import com.harmonycloud.zeus.service.k8s.GrafanaService;
-import com.harmonycloud.zeus.service.k8s.IngressService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
 
-import static com.harmonycloud.caas.common.constants.MinioConstant.ACCESS_KEY;
-import static com.harmonycloud.caas.common.constants.MinioConstant.ACCESS_KEY_ID;
-import static com.harmonycloud.caas.common.constants.MinioConstant.BACKUP;
-import static com.harmonycloud.caas.common.constants.MinioConstant.BUCKET_NAME;
-import static com.harmonycloud.caas.common.constants.MinioConstant.MINIO;
-import static com.harmonycloud.caas.common.constants.MinioConstant.MINIO_SC;
-import static com.harmonycloud.caas.common.constants.MinioConstant.SECRET_ACCESS_KEY;
-import static com.harmonycloud.caas.common.constants.MinioConstant.SECRET_KEY;
-import static com.harmonycloud.caas.common.constants.NameConstant.ENDPOINT;
-import static com.harmonycloud.caas.common.constants.NameConstant.NAME;
-import static com.harmonycloud.caas.common.constants.NameConstant.STORAGE;
-import static com.harmonycloud.caas.common.constants.NameConstant.TYPE;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_INGRESS;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
+
+import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_FIVE;
+import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_TWO;
 
 /**
  * @author dengyulong
@@ -52,203 +40,151 @@ import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConsta
  */
 @Slf4j
 @Service
-public class ClusterComponentServiceImpl implements ClusterComponentService {
+public class ClusterComponentServiceImpl extends AbstractBaseService implements ClusterComponentService {
 
     @Autowired
     private ClusterService clusterService;
     @Autowired
     private HelmChartService helmChartService;
     @Autowired
-    private GrafanaService grafanaService;
+    private BeanClusterComponentsMapper beanClusterComponentsMapper;
     @Autowired
-    private IngressService ingressService;
-
-    @Value("${k8s.component.minio.name:minio}")
-    private String minioHelmChartName;
-    @Value("${k8s.component.minio.service.port:9000}")
-    private String minioServicePort;
-    @Value("${k8s.component.monitor.name:prometheus}")
-    private String monitorHelmChartName;
-    @Value("${k8s.component.monitor.grafana.service.port:3000}")
-    private String monitorGrafanaServicePort;
-    @Value("${k8s.component.monitor.prometheus.service.port:9090}")
-    private String monitorPrometheusServicePort;
-    @Value("${k8s.storageclass.default:default}")
-    private String defaultStorageClassName;
+    private MiddlewareManagerService middlewareManagerService;
 
     @Override
-    public void deploy(MiddlewareClusterDTO cluster, String componentName) {
-        MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
-
-        // todo 支持自动部署ingress
-        // 必须要部署ingress
-        if (CollectionUtils.isEmpty(existCluster.getIngressList())
-            || StringUtils.isEmpty(existCluster.getIngressList().get(0).getAddress())
-            || existCluster.getIngressList().get(0).getTcp() == null
-            || !existCluster.getIngressList().get(0).getTcp().isEnabled()) {
-            throw new BusinessException(ErrorMessage.INGRESS_CONTROLLER_FIRST);
-        }
-
+    public void deploy(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
+        //特殊处理grafana
+        grafana(cluster, clusterComponentsDto);
+        // 获取service
+        BaseComponentsService service =
+                getOperator(BaseComponentsService.class, BaseComponentsService.class, clusterComponentsDto.getComponent());
         // 部署组件
-        deployComponent(existCluster, componentName, cluster);
-
-        // 对接数据
-        integrate(existCluster, componentName);
+        service.deploy(cluster, clusterComponentsDto);
+        //记录数据库
+        record(cluster.getId(), clusterComponentsDto.getComponent(), 2);
+        // 检查是否安装成功
+        ThreadPoolExecutorFactory.executor.execute(() -> {
+            try {
+                Thread.sleep(55000);
+                installSuccessCheck(cluster, clusterComponentsDto.getComponent());
+            } catch (InterruptedException e) {
+                log.error("更新组件安装中状态失败");
+            }
+        });
     }
 
-    private void deployComponent(MiddlewareClusterDTO cluster, String componentName, MiddlewareClusterDTO paramCluster) {
-        String repository = cluster.getRegistry().getRegistryAddress() + "/" + cluster.getRegistry().getChartRepo();
-        switch (componentName) {
-            case "storageBackup":
-                if (CollectionUtils.isEmpty(paramCluster.getStorage()) || paramCluster.getStorage().get(BACKUP) == null) {
-                    throw new IllegalArgumentException("Minio Ingress TCP port is null");
+    @Override
+    public void multipleDeploy(MiddlewareClusterDTO cluster, MultipleComponentsInstallDto multipleComponentsInstallDto)
+        throws Exception {
+        List<ClusterComponentsDto> componentsDtoList = multipleComponentsInstallDto.getClusterComponentsDtoList();
+        // 优先部署内容local-path
+        if (componentsDtoList.stream().anyMatch(
+            clusterComponentsDto -> clusterComponentsDto.getComponent().equals(ComponentsEnum.LOCAL_PATH.getName()))) {
+            deploy(cluster, new ClusterComponentsDto().setComponent(ComponentsEnum.LOCAL_PATH.getName()).setType(""));
+            componentsDtoList = componentsDtoList.stream().filter(clusterComponentsDto -> !clusterComponentsDto
+                .getComponent().equals(ComponentsEnum.LOCAL_PATH.getName())).collect(Collectors.toList());
+        }
+        // 优先部署prometheus
+        if (componentsDtoList.stream().anyMatch(
+                clusterComponentsDto -> clusterComponentsDto.getComponent().equals(ComponentsEnum.PROMETHEUS.getName()))) {
+            deploy(cluster, new ClusterComponentsDto().setComponent(ComponentsEnum.PROMETHEUS.getName()).setType(""));
+            componentsDtoList = componentsDtoList.stream().filter(clusterComponentsDto -> !clusterComponentsDto
+                    .getComponent().equals(ComponentsEnum.PROMETHEUS.getName())).collect(Collectors.toList());
+        }
+        // 部署operator
+        final CountDownLatch operatorCount =
+            new CountDownLatch(multipleComponentsInstallDto.getMiddlewareInfoDTOList().size());
+        multipleComponentsInstallDto.getMiddlewareInfoDTOList()
+            .forEach(info -> ThreadPoolExecutorFactory.executor.execute(() -> {
+                try {
+                    middlewareManagerService.install(cluster.getId(), info.getChartName(), info.getChartVersion(),
+                        info.getType());
+                } catch (Exception e) {
+                    log.error("集群{}  operator{} 安装失败", cluster.getId(), info.getChartName());
+                } finally {
+                    operatorCount.countDown();
                 }
-                Map<String, Object> backup = (Map<String, Object>) paramCluster.getStorage().get(BACKUP);
-                deployMinio(cluster, paramCluster.getDcId(), repository, backup.get("port").toString());
-                break;
-            case "monitor":
-                if (paramCluster.getMonitor() == null || paramCluster.getMonitor().getGrafana() == null
-                    || StringUtils.isBlank(paramCluster.getMonitor().getGrafana().getPort())
-                    || paramCluster.getMonitor().getPrometheus() == null
-                    || StringUtils.isBlank(paramCluster.getMonitor().getPrometheus().getPort())) {
-                    throw new IllegalArgumentException("Grafana port or Prometheus port is null");
+            }));
+        operatorCount.await();
+        // 部署组件
+        final CountDownLatch componentsCount = new CountDownLatch(componentsDtoList.size());
+        componentsDtoList.forEach(clusterComponentsDto -> ThreadPoolExecutorFactory.executor.execute(() -> {
+            try {
+                this.deploy(cluster, clusterComponentsDto);
+            } catch (Exception e) {
+                log.error("集群{}  组件{}  安装失败", cluster.getId(), clusterComponentsDto.getComponent(), e);
+            } finally {
+                componentsCount.countDown();
+            }
+        }));
+        componentsCount.await();
+    }
+
+
+    @Override
+    public void integrate(MiddlewareClusterDTO cluster, String componentName, Boolean update) {
+        BaseComponentsService service = getOperator(BaseComponentsService.class, BaseComponentsService.class, componentName);
+        service.integrate(cluster);
+        if (!update){
+            record(cluster.getId(), componentName, 1);
+        }
+    }
+
+    @Override
+    public void delete(MiddlewareClusterDTO cluster, String componentName, Integer status) {
+        // 删除集群组件
+        BaseComponentsService service =
+            getOperator(BaseComponentsService.class, BaseComponentsService.class, componentName);
+        service.delete(cluster, status);
+        // 更新数据库
+        QueryWrapper<BeanClusterComponents> wrapper =
+            new QueryWrapper<BeanClusterComponents>().eq("cluster_id", cluster.getId()).eq("component", componentName);
+        BeanClusterComponents beanClusterComponents = new BeanClusterComponents();
+        beanClusterComponents.setClusterId(cluster.getId());
+        beanClusterComponents.setComponent(componentName);
+        beanClusterComponents.setStatus(status == 1 ? 0 : 5);
+        beanClusterComponentsMapper.update(beanClusterComponents, wrapper);
+
+    }
+
+    @Override
+    public List<ClusterComponentsDto> list(String clusterId) throws Exception {
+        QueryWrapper<BeanClusterComponents> wrapper =
+            new QueryWrapper<BeanClusterComponents>().eq("cluster_id", clusterId);
+        List<BeanClusterComponents> clusterComponentsList = beanClusterComponentsMapper.selectList(wrapper);
+        if (CollectionUtils.isEmpty(clusterComponentsList)) {
+            clusterComponentsList = initClusterComponents(clusterId);
+        }
+        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+        //另起线程更新所有组件状态
+        final CountDownLatch count = new CountDownLatch(clusterComponentsList.size());
+        clusterComponentsList.forEach(cc -> ThreadPoolExecutorFactory.executor.execute(() -> {
+            try {
+                // 接入组件不更新状态
+                if (cc.getStatus() == 1){
+                    return;
                 }
-                deployMonitor(cluster, paramCluster.getDcId(), repository, paramCluster.getMonitor());
-                break;
-            default:
-                throw new BusinessException(ErrorMessage.CLUSTER_COMPONENT_UNSUPPORTED);
-        }
+                BaseComponentsService service = getOperator(BaseComponentsService.class, BaseComponentsService.class, cc.getComponent());
+                service.updateStatus(cluster, cc);
+            } finally {
+                count.countDown();
+            }
+        }));
+        count.await();
+        return clusterComponentsList.stream().map(cm -> {
+            ClusterComponentsDto dto = new ClusterComponentsDto();
+            BeanUtils.copyProperties(cm, dto);
+            if (cm.getStatus() == NUM_TWO){
+                dto.setSeconds(DateUtils.getIntervalDays(new Date(), dto.getCreateTime()));
+            }
+            return dto;
+        }).collect(Collectors.toList());
     }
 
-    /**
-     * 部署minio
-     */
-    private void deployMinio(MiddlewareClusterDTO cluster, String namespace, String repository, String port) {
-        // 校验端口
-        List<ServiceDTO> serviceList = Collections.singletonList(new ServiceDTO().setExposePort(port));
-        ingressService.checkIngressTcpPort(cluster, namespace, serviceList);
-
-        // 获取chart最新版本
-        V1HelmChartVersion version = getHelmChartLatestVersion(cluster, minioHelmChartName);
-
-        // 拼接更新参数
-        String bucketName = minioHelmChartName + "-" + namespace;
-        String setValues = "image.repository=" + repository 
-                + ",minio.storageClassName=" + defaultStorageClassName 
-                + ",minioArgs.bucketName=" + bucketName + ",";
-        // 发布
-        //删除该方法  后续有需求再修改
-        /*helmChartService.upgradeInstall(minioHelmChartName, namespace, setValues, minioHelmChartName,
-            version.getVersion(), cluster);*/
-        JSONObject values = helmChartService.getInstalledValues(minioHelmChartName, namespace, cluster);
-
-        // 添加Ingress TCP配置
-        try {
-            String servicePort = values.getJSONObject("service") != null
-                && StringUtils.isNotBlank(values.getJSONObject("service").getString("port"))
-                    ? values.getJSONObject("service").getString("port") : minioServicePort;
-            serviceList.get(0).setServiceName(minioHelmChartName + "-svc").setServicePort(servicePort);
-            ingressService.createIngressTcp(cluster, namespace, serviceList, false);
-        } catch (Exception e) {
-            // 回滚Ingress TCP配置
-            rollbackHelmRelease(cluster, minioHelmChartName, namespace);
-            throw e;
-        }
-
-        // 回填数据
-        JSONObject storage = new JSONObject();
-        storage.put(ACCESS_KEY_ID, values.getString(ACCESS_KEY));
-        storage.put(SECRET_ACCESS_KEY, values.getString(SECRET_KEY));
-        storage.put(BUCKET_NAME, bucketName);
-        storage.put(NAME, MINIO_SC);
-        storage.put(ENDPOINT,
-            Protocol.HTTP.getValue().toLowerCase() + "://" + cluster.getIngressList().get(0).getAddress() + ":" + port);
-
-        JSONObject backup = new JSONObject();
-        backup.put(TYPE, MINIO);
-        backup.put(STORAGE, storage);
-        if (cluster.getStorage() == null) {
-            cluster.setStorage(new HashMap<>(5));
-        }
-        cluster.getStorage().put(BACKUP, backup);
-    }
-
-    /**
-     * 部署监控
-     */
-    private void deployMonitor(MiddlewareClusterDTO cluster, String namespace, String repository, 
-                               MiddlewareClusterMonitor monitor) {
-        String prometheusIngressPort = monitor.getPrometheus().getPort();
-        String grafanaIngressPort = monitor.getGrafana().getPort();
-        
-        // 获取chart最新版本
-        V1HelmChartVersion version = getHelmChartLatestVersion(cluster, monitorHelmChartName);
-
-        // 校验端口
-        List<ServiceDTO> serviceList = new ArrayList<>(2);
-        serviceList.add(new ServiceDTO().setExposePort(grafanaIngressPort));
-        serviceList.add(new ServiceDTO().setExposePort(prometheusIngressPort));
-        ingressService.checkIngressTcpPort(cluster, namespace, serviceList);
-        
-        // 拼接更新参数
-        String setValues = "image.prometheus.repository=" + repository + "/prometheus" +
-                ",image.configmapReload.repository=" + repository + "/configmap-reload" +
-                ",image.nodeExporter.repository=" + repository + "/node-exporter" +
-                ",image.kubeRbacProxy.repository=" + repository + "/kube-rbac-proxy" +
-                ",image.prometheusAdapter.repository=" + repository + "/k8s-prometheus-adapter-amd64" +
-                ",image.prometheusOperator.repository=" + repository + "/prometheus-operator" +
-                ",image.prometheusConfigReloader.repository=" + repository + "/prometheus-config-reloader" +
-                ",image.kubeStateMetrics.repository=" + repository + "/kube-state-metrics" +
-                ",image.nodeExporter.repository=" + repository + "/node-exporter" +
-                ",image.grafana.repository=" + repository + "/grafana" +
-                ",image.dashboard.repository=" + repository + "/k8s-sidecar" +
-                ",image.busybox.repository=" + repository + "/grafana" +
-                ",storage.storageClass=" + defaultStorageClassName;
-        // 发布
-        //删除该方法 后续有需求再修改
-        /*helmChartService.upgradeInstall(monitorHelmChartName, namespace, setValues, monitorHelmChartName,
-            version.getVersion(), cluster);*/
-
-        try {
-            // todo values.yaml里没有配置service信息，因此直接使用默认配置
-            serviceList.get(0).setServiceName(monitorHelmChartName + "-grafana")
-                .setServicePort(monitorGrafanaServicePort);
-            serviceList.get(1).setServiceName(monitorHelmChartName + "-svc")
-                .setServicePort(monitorPrometheusServicePort);
-            ingressService.createIngressTcp(cluster, namespace, serviceList, false);
-        } catch (Exception e) {
-            // 回滚helm release
-            rollbackHelmRelease(cluster, monitorHelmChartName, namespace);
-            throw e;
-        }
-
-        // 回填数据
-        MiddlewareClusterMonitorInfo prometheus =
-            new MiddlewareClusterMonitorInfo().setProtocol(Protocol.HTTP.getValue().toLowerCase())
-                .setHost(cluster.getIngressList().get(0).getAddress()).setPort(prometheusIngressPort);
-        MiddlewareClusterMonitorInfo grafana =
-            new MiddlewareClusterMonitorInfo().setProtocol(Protocol.HTTP.getValue().toLowerCase())
-                .setHost(cluster.getIngressList().get(0).getAddress()).setPort(grafanaIngressPort);
-        try {
-            // 生成grafana的api token
-            grafanaService.setToken(grafana);
-        } catch (Exception e) {
-            // 回滚Ingress TCP配置
-            rollbackIngress(cluster, namespace, serviceList);
-            // 回滚helm release
-            rollbackHelmRelease(cluster, monitorHelmChartName, namespace);
-            throw e;
-        }
-        cluster.setMonitor(new MiddlewareClusterMonitor().setPrometheus(prometheus).setGrafana(grafana));
-    }
-
-    /**
-     * 回滚Ingress TCP配置
-     */
-    private void rollbackIngress(MiddlewareClusterDTO cluster, String namespace, List<ServiceDTO> serviceList) {
-        IngressDTO ingress = new IngressDTO().setExposeType(MIDDLEWARE_EXPOSE_INGRESS)
-            .setProtocol(Protocol.TCP.getValue()).setServiceList(serviceList);
-        ingressService.delete(cluster.getId(), namespace, null, null, ingress);
+    @Override
+    public void delete(String clusterId) {
+        QueryWrapper<BeanClusterComponents> wrapper = new QueryWrapper<BeanClusterComponents>().eq("cluster_id", clusterId);
+        beanClusterComponentsMapper.delete(wrapper);
     }
 
     /**
@@ -259,41 +195,58 @@ public class ClusterComponentServiceImpl implements ClusterComponentService {
         helmChartService.uninstall(middleware, cluster);
     }
 
-    private V1HelmChartVersion getHelmChartLatestVersion(MiddlewareClusterDTO cluster, String chartName) {
-        List<V1HelmChartVersion> versions = helmChartService.listHelmChartVersions(cluster.getRegistry(), chartName);
-        if (CollectionUtils.isEmpty(versions)) {
-            throw new BusinessException(DictEnum.CHART, chartName, ErrorMessage.NOT_EXIST);
-        }
-        return versions.get(0);
+    /**
+     * 记入数据库
+     */
+    private void record(String clusterId, String name, Integer status){
+        QueryWrapper<BeanClusterComponents> wrapper = new QueryWrapper<BeanClusterComponents>().eq("cluster_id", clusterId).eq("component", name);
+        BeanClusterComponents cm = new BeanClusterComponents();
+        cm.setClusterId(clusterId);
+        cm.setComponent(name);
+        cm.setStatus(status);
+        cm.setCreateTime(new Date());
+        beanClusterComponentsMapper.update(cm, wrapper);
     }
 
-    @Override
-    public void integrate(MiddlewareClusterDTO cluster, String componentName) {
-        MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
-        switch (componentName) {
-            case "ingress":
-                if (cluster.getIngressList().get(0) == null) {
-                    throw new IllegalArgumentException("ingress info is null");
-                }
-                existCluster.setIngressList(cluster.getIngressList());
-                break;
-            case "storageBackup":
-                if (cluster.getStorage() == null || cluster.getStorage().get("backup") == null) {
-                    throw new IllegalArgumentException("storage backup info is null");
-                }
-                existCluster.getStorage().put("backup", cluster.getStorage().get("backup"));
-                break;
-            case "monitor":
-                if (cluster.getMonitor() == null || cluster.getMonitor().getPrometheus() == null
-                    || cluster.getMonitor().getGrafana() == null) {
-                    throw new IllegalArgumentException("monitor info is null");
-                }
-                existCluster.setMonitor(cluster.getMonitor());
-                break;
-            default:
+    /**
+     * 初始化集群组件映照表
+     */
+    public List<BeanClusterComponents> initClusterComponents(String clusterId) {
+        List<BeanClusterComponents> list = new ArrayList<>();
+        for (ComponentsEnum e : ComponentsEnum.values()) {
+            BeanClusterComponents cc = new BeanClusterComponents();
+            cc.setClusterId(clusterId);
+            cc.setStatus(0);
+            cc.setComponent(e.getName());
+            list.add(cc);
+            beanClusterComponentsMapper.insert(cc);
         }
-        // 更新集群
-        clusterService.update(existCluster);
+        return list;
+    }
+
+    /**
+     * 特殊处理grafana，写入protocol
+     */
+    public void grafana(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
+        if (StringUtils.isNotEmpty(clusterComponentsDto.getProtocol())
+            && clusterComponentsDto.getComponent().equals(ComponentsEnum.GRAFANA.getName())) {
+            if (cluster.getMonitor() == null) {
+                cluster.setMonitor(new MiddlewareClusterMonitor());
+            }
+            if (cluster.getMonitor().getGrafana() == null) {
+                cluster.getMonitor().setGrafana(new MiddlewareClusterMonitorInfo());
+            }
+            cluster.getMonitor().getGrafana().setProtocol(clusterComponentsDto.getProtocol());
+        }
+    }
+
+    public void installSuccessCheck(MiddlewareClusterDTO cluster, String componentName){
+        QueryWrapper<BeanClusterComponents> wrapper = new QueryWrapper<BeanClusterComponents>().eq("cluster_id", cluster.getId()).eq("component", componentName);
+        BeanClusterComponents clusterComponents = beanClusterComponentsMapper.selectOne(wrapper);
+        if (clusterComponents.getStatus() == 2){
+            clusterComponents.setStatus(6);
+            beanClusterComponentsMapper.updateById(clusterComponents);
+        }
     }
 
 }

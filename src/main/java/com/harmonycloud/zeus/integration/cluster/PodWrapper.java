@@ -7,7 +7,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author dengyulong
@@ -25,8 +27,11 @@ public class PodWrapper {
         return list.getItems();
     }
 
-    public List<Pod> list(String clusterId, String namespace, String label) {
-        PodList list = K8sClient.getClient(clusterId).pods().inNamespace(namespace).withLabel(label).list();
+    public List<Pod> list(String clusterId, String namespace, Map<String, String> labels) {
+        if (CollectionUtils.isEmpty(labels)){
+            labels = new HashMap<>(0);
+        }
+        PodList list = K8sClient.getClient(clusterId).pods().inNamespace(namespace).withLabels(labels).list();
         if (list == null || CollectionUtils.isEmpty(list.getItems())) {
             return new ArrayList<>(0);
         }

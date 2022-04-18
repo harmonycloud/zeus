@@ -1,11 +1,13 @@
 package com.harmonycloud.zeus.controller.user;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
+import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
 import com.harmonycloud.zeus.service.user.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,11 +18,15 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author xutianhong
  * @Date 2021/7/22 11:52 上午
  */
+@Slf4j
 @Api(tags = {"系统管理","用户管理"}, value = "用户信息")
 @RestController
 @RequestMapping("/user")
@@ -31,10 +37,13 @@ public class UserController {
 
     @ApiOperation(value = "获取用户信息", notes = "获取用户信息")
     @ApiImplicitParams({
-        @ApiImplicitParam(name = "userName", value = "账户", paramType = "query", dataTypeClass = String.class),})
+            @ApiImplicitParam(name = "userName", value = "账户", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
+    })
     @GetMapping
-    public BaseResult<UserDto> get(@RequestParam(value = "userName", required = false) String userName) throws Exception {
-        return BaseResult.ok(userService.get(userName));
+    public BaseResult<UserDto> get(@RequestParam(value = "userName", required = false) String userName,
+                                   @RequestParam(value = "projectId", required = false) String projectId) {
+        return BaseResult.ok(userService.getUserDto(userName, projectId));
     }
 
     @ApiOperation(value = "获取用户列表", notes = "获取用户列表")
@@ -42,7 +51,7 @@ public class UserController {
             @ApiImplicitParam(name = "keyword", value = "过滤字", required = false, paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/list")
-    public BaseResult<List<UserDto>> list(@RequestParam(value = "keyword", required = false) String keyword) throws Exception {
+    public BaseResult<List<UserDto>> list(@RequestParam(value = "keyword", required = false) String keyword) {
         return BaseResult.ok(userService.list(keyword));
     }
 
@@ -105,7 +114,58 @@ public class UserController {
 
     @ApiOperation(value = "获取菜单列表", notes = "获取菜单列表")
     @GetMapping("/menu")
-    public BaseResult<List<ResourceMenuDto>> menu() throws Exception {
-        return BaseResult.ok(userService.menu());
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群", paramType = "query", dataTypeClass = String.class),
+    })
+    public BaseResult<List<ResourceMenuDto>> menu(@RequestParam(value = "clusterId", required = false) String clusterId) throws Exception {
+        log.info("获取菜单列表：{}", clusterId);
+        return BaseResult.ok(userService.menu(clusterId));
+    }
+
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "personalizedConfiguration", value = "个性化配置信息", paramType = "query", dataTypeClass = PersonalizedConfiguration.class),
+            @ApiImplicitParam(name = "status", value = "恢复初始化设置",paramType = "path", dataTypeClass = String.class),
+    })
+    @ApiOperation(value = "添加个性化配置", notes = "添加个性化配置")
+    @PostMapping("/personalized")
+    public BaseResult Personalized(@RequestBody PersonalizedConfiguration personalizedConfiguration,
+                                   @RequestParam String status) throws Exception {
+        userService.insertPersonalConfig(personalizedConfiguration,status);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "获取个性化配置", notes = "获取个性化配置")
+    @GetMapping("/getPersonalConfig")
+    public BaseResult getPersonalConfig() throws IOException {
+        return BaseResult.ok(userService.getPersonalConfig());
+    }
+
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "file", value = "图片",paramType = "form",dataTypeClass = File.class),
+    })
+    @ApiOperation(value = "上传图片", notes = "上传图片")
+    @ResponseBody
+    @PostMapping("/uploadFile")
+    public BaseResult UploadFile(@RequestPart("file") MultipartFile file) throws IOException {
+        return BaseResult.ok(userService.uploadFile(file));
+    }
+
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "alertRuleId", value = "规则ID", paramType = "query", dataTypeClass = String.class),
+    })
+    @ApiOperation(value = "获取登录用户列表及通知人列表", notes = "获取登录用户列表及通知人列表")
+    @GetMapping("/users")
+    public BaseResult getUsers(@RequestParam(value = "alertRuleId", required = false) String alertRuleId) {
+        return BaseResult.ok(userService.getUserList(alertRuleId));
+    }
+
+    @ApiOperation(value = "切换项目", notes = "切换项目")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),})
+    @GetMapping("/switchProject")
+    public BaseResult<String> switchProject(@RequestParam(value = "projectId") String projectId,
+                                            HttpServletResponse response) {
+        userService.switchProject(projectId, response);
+        return BaseResult.ok();
     }
 }

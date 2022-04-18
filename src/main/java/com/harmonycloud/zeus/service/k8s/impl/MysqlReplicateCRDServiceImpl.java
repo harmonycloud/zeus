@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
 import com.harmonycloud.zeus.integration.cluster.MysqlReplicateWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.MysqlReplicateCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MysqlReplicateCR;
 import com.harmonycloud.zeus.service.k8s.MysqlReplicateCRDService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,13 +22,13 @@ public class MysqlReplicateCRDServiceImpl implements MysqlReplicateCRDService {
     private MysqlReplicateWrapper mysqlReplicateWrapper;
 
     @Override
-    public void createMysqlReplicate(String clusterId, MysqlReplicateCRD mysqlReplicateCRD) throws IOException {
-        mysqlReplicateWrapper.create(clusterId, mysqlReplicateCRD);
+    public void createMysqlReplicate(String clusterId, MysqlReplicateCR mysqlReplicateCR) throws IOException {
+        mysqlReplicateWrapper.create(clusterId, mysqlReplicateCR);
     }
 
     @Override
-    public void replaceMysqlReplicate(String clusterId, MysqlReplicateCRD mysqlReplicateCRD) throws IOException {
-        mysqlReplicateWrapper.replace(clusterId, mysqlReplicateCRD);
+    public void replaceMysqlReplicate(String clusterId, MysqlReplicateCR mysqlReplicateCR) throws IOException {
+        mysqlReplicateWrapper.replace(clusterId, mysqlReplicateCR);
     }
 
     @Override
@@ -37,7 +37,7 @@ public class MysqlReplicateCRDServiceImpl implements MysqlReplicateCRDService {
     }
 
     @Override
-    public MysqlReplicateCRD getMysqlReplicate(String clusterId, String namespace, String name) {
+    public MysqlReplicateCR getMysqlReplicate(String clusterId, String namespace, String name) {
         return mysqlReplicateWrapper.getMysqlReplicate(clusterId, namespace, name);
     }
 }

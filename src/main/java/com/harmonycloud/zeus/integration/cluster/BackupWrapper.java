@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.integration.cluster;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.zeus.integration.cluster.bean.BackupCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.BackupCR;
 import com.harmonycloud.zeus.integration.cluster.bean.BackupList;
 import com.harmonycloud.zeus.util.K8sClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
@@ -32,7 +32,7 @@ public class BackupWrapper {
     /**
      * 获取备份
      */
-    public List<BackupCRD> list(String clusterId, String namespace){
+    public List<BackupCR> list(String clusterId, String namespace){
         Map<String, Object> map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace);
         BackupList backupList = JSONObject.parseObject(JSONObject.toJSONString(map), BackupList.class);
         if (backupList == null || CollectionUtils.isEmpty(backupList.getItems())){
@@ -45,9 +45,9 @@ public class BackupWrapper {
     /**
      * 创建备份
      */
-    public void create(String clusterId, BackupCRD backupCRD) throws IOException {
-        K8sClient.getClient(clusterId).customResource(CONTEXT).createOrReplace(backupCRD.getMetadata().getNamespace(),
-            JSONObject.parseObject(JSONObject.toJSONString(backupCRD)));
+    public void create(String clusterId, BackupCR backupCR) throws IOException {
+        K8sClient.getClient(clusterId).customResource(CONTEXT).createOrReplace(backupCR.getMetadata().getNamespace(),
+            JSONObject.parseObject(JSONObject.toJSONString(backupCR)));
     }
 
     /**

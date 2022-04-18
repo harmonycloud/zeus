@@ -29,20 +29,20 @@ public class AlertDataUtil {
             list.forEach(item -> {
                 String alerttime = item.get("alerttime").toString();
                 String num = item.get("num").toString();
-                map.put(alerttime, num);
+                map.put(DateUtil.addHourAndGetNormal(alerttime, 8), num);
             });
         }
 
         hourList.forEach(item -> {
             Map<String, Object> single = new HashMap();
             if (map.containsKey(item)) {
-                single.put(item, map.get(item));
+                single.put(DateUtil.addHourAndGetNormal(item, 0), map.get(item));
                 single.put("num", map.get(item));
-                single.put("alerttime", item);
+                single.put("alerttime", DateUtil.addHourAndGetNormal(item, 0));
             } else {
-                single.put(item, "0");
+                single.put(DateUtil.addHourAndGetNormal(item, 0), "0");
                 single.put("num", 0);
-                single.put("alerttime", item);
+                single.put("alerttime", DateUtil.addHourAndGetNormal(item, 0));
             }
             resList.add(single);
         });

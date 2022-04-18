@@ -3,7 +3,6 @@ package com.harmonycloud.zeus.integration.cluster.bean;
 import lombok.Data;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author liyinlong
@@ -14,14 +13,13 @@ public class MiddlewareRestoreSpec {
 
     private String name;
 
-    private String backupName;
-
     private String type;
 
-    private List<String> pods;
+    private String backupName;
 
-    private Map<String,String> restoreBind;
+    private List<RestoreObject> restoreObjects;
 
     public MiddlewareRestoreSpec() {
     }
+
 }

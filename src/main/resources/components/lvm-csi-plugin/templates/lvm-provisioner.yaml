@@ -1,0 +1,94 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: {{ include "lvm.fullname" . }}-provisioner
+spec:
+  selector:
+    matchLabels:
+      app: {{ include "lvm.fullname" . }}-provisioner
+  replicas: {{ .Values.provisioner.replicas }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "lvm.fullname" . }}-provisioner
+    spec:
+      tolerations:
+      - operator: "Exists"
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: Exists
+      priorityClassName: system-node-critical
+      serviceAccount: {{ include "lvm.fullname" . }}
+      hostNetwork: true
+      containers:
+        - name: external-local-provisioner
+          image: "{{ .Values.image.repository }}/csi-provisioner:{{ .Values.image.provisionerImageTag }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          args:
+            - "--csi-address=$(ADDRESS)"
+            - "--feature-gates=Topology=True"
+            - "--volume-name-prefix=disk"
+            - "--strict-topology=true"
+            - "--timeout=600s"
+            - "--extra-create-metadata=true"
+            - "--enable-leader-election=true"
+            - "--leader-election-type=leases"
+            - "--retry-interval-start=500ms"
+            #- "--default-fstype=ext4"
+            - "--v=5"
+          env:
+            - name: ADDRESS
+              value: /socketDir/csi.sock
+          resources:
+            {{- toYaml .Values.provisioner.provisioner.resources | nindent 12 }}
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /socketDir
+        - name: external-snapshot-controller
+          image: {{ .Values.image.repository }}/snapshot-controller:{{ .Values.image.snapshotControllerImageTag }}
+          args:
+            - "--v=5"
+            - "--leader-election=false"
+          imagePullPolicy: IfNotPresent
+        - name: csi-snapshotter
+          image: {{ .Values.image.repository }}/csi-snapshotter:{{ .Values.image.csiSnapshotterImageTag }}
+          args:
+            - "--csi-address=$(ADDRESS)"
+            - "--v=5"
+            - "--timeout=600s"
+            - "--leader-election=false"
+            - "--extra-create-metadata=true"
+          env:
+            - name: ADDRESS
+              value: unix:///csi/csi.sock
+          imagePullPolicy: "IfNotPresent"
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+        - name: external-local-resizer
+          image: "{{ .Values.image.repository }}/csi-resizer:{{ .Values.image.resizerImageTag }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          args:
+            - "--v=5"
+            - "--csi-address=$(ADDRESS)"
+            - "--leader-election"
+          env:
+            - name: ADDRESS
+              value: /socketDir/csi.sock
+          resources:
+            {{- toYaml .Values.provisioner.resizer.resources | nindent 12 }}
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /socketDir/
+      volumes:
+        - name: socket-dir
+          hostPath:
+            path: /var/lib/kubelet/csi-plugins/localplugin.csi.alibabacloud.com
+            type: DirectoryOrCreate

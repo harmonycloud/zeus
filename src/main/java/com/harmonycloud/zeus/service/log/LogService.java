@@ -19,10 +19,14 @@ public interface LogService {
     String LOG_TYPE_STDOUT = "stdoutlog";
 
     /**
-     * 日志文件
+     * 文件日志
      */
     String LOG_TYPE_LOGFILE = "filelog";
 
+    /**
+     * 上一次日志
+     */
+    String LOG_TYPE_PREVIOUS_LOG = "previouslog";
 
     /**
      * 导出日志为txt文件

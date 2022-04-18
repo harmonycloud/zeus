@@ -1,10 +1,12 @@
 package com.harmonycloud.zeus.service.middleware;
 
-import java.util.List;
-
 import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.middleware.MysqlBackupDto;
-import com.harmonycloud.caas.common.model.middleware.ScheduleBackupConfig;
+import com.harmonycloud.caas.common.model.middleware.MysqlLogDTO;
+import com.harmonycloud.caas.common.model.middleware.MysqlLogQuery;
+import com.harmonycloud.tool.page.PageObject;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author dengyulong
@@ -13,61 +15,8 @@ import com.harmonycloud.caas.common.model.middleware.ScheduleBackupConfig;
 public interface MysqlService {
 
     /**
-     * 查询备份列表
-     *
-     * @param clusterId      集群id
-     * @param namespace      命名空间
-     * @param middlewareName 中间件名称
-     * @return
-     */
-    List<MysqlBackupDto> listBackups(String clusterId, String namespace, String middlewareName);
-
-    /**
-     * 查询定时备份配置
-     *
-     * @param clusterId      集群id
-     * @param namespace      命名空间
-     * @param middlewareName 中间件名称
-     * @return
-     */
-    ScheduleBackupConfig getScheduleBackups(String clusterId, String namespace, String middlewareName);
-
-    /**
-     * 创建定时备份
-     *
-     * @param clusterId      集群id
-     * @param namespace      命名空间
-     * @param middlewareName 中间件名称
-     * @param keepBackups    备份数量
-     * @param cron           cron表达式
-     * @return
-     */
-    void createScheduleBackup(String clusterId, String namespace, String middlewareName,Integer keepBackups, String cron);
-
-    /**
-     * 创建备份
-     *
-     * @param clusterId      集群id
-     * @param namespace      命名空间
-     * @param middlewareName 中间件名称
-     * @return
-     */
-    void createBackup(String clusterId, String namespace, String middlewareName);
-
-    /**
-     * 删除备份
-     *
-     * @param clusterId      集群id
-     * @param namespace      命名空间
-     * @param middlewareName 中间件名称
-     * @param backupFileName 备份文件名称
-     * @param backupName     备份名称
-     * @return
-     */
-    void deleteBackup(String clusterId, String namespace, String middlewareName, String backupFileName, String backupName) throws Exception;
-
-    /**
      * 灾备切换
+     *
      * @param clusterId      集群id
      * @param namespace      命名空间
      * @param middlewareName 中间件名称
@@ -75,10 +24,36 @@ public interface MysqlService {
     BaseResult switchDisasterRecovery(String clusterId, String namespace, String middlewareName);
 
     /**
-     * 灾备切换
+     * 查询mysql访问信息
+     *
      * @param clusterId      集群id
      * @param namespace      命名空间
      * @param middlewareName 中间件名称
      */
     BaseResult queryAccessInfo(String clusterId, String namespace, String middlewareName);
+
+    /**
+     * mysql慢日志查询
+     * @param mysqlLogQuery 慢日志查询对象
+     *
+     * @return PageObject<MysqlSlowSqlDTO>
+     */
+    PageObject<MysqlLogDTO> slowsql(MysqlLogQuery mysqlLogQuery) throws Exception;
+
+    /**
+     * 慢日志导出
+     * @param mysqlLogQuery 慢日志查询对象
+     * @param response     返回体
+     * @param request      请求体
+     *
+     */
+    void slowsqlExcel(MysqlLogQuery mysqlLogQuery, HttpServletResponse response, HttpServletRequest request) throws Exception;
+
+    /**
+     * 查询审计日志
+     * @param auditLogQuery
+     * @return
+     * @throws Exception
+     */
+    PageObject<MysqlLogDTO> auditSql(MysqlLogQuery auditLogQuery);
 }

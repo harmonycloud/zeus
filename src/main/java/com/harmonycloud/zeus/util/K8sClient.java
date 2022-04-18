@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.zeus.bean.BeanK8sDefaultCluster;
 import com.harmonycloud.zeus.service.k8s.K8sDefaultClusterService;
+import com.harmonycloud.zeus.service.k8s.impl.ClusterServiceImpl;
 import com.harmonycloud.zeus.service.middleware.EsService;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import org.apache.commons.lang3.StringUtils;
@@ -73,10 +74,6 @@ public class K8sClient {
      * 获取client
      */
     public static KubernetesClient getClient(String clusterId) {
-        if (!K8S_CLIENT_MAP.containsKey(clusterId)) {
-            K8sClient k8sClient = new K8sClient();
-            k8sClient.initClients();
-        }
         KubernetesClient client = K8S_CLIENT_MAP.get(clusterId);
         if (client == null) {
             throw new CaasRuntimeException(ErrorMessage.CLUSTER_NOT_FOUND);

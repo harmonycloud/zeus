@@ -59,4 +59,28 @@ public interface ClusterMiddlewareInfoService {
      */
     void delete(String clusterId, String chartName, String chartVersion);
 
+
+    /**
+     * @description 查询集群已安装中间件列表
+     * @author  liyinlong
+     * @since 2021/11/5 11:49 上午
+     * @param clusterId 集群id
+     * @param installed 是否查询已安装的中间件
+     * @return
+     */
+    List<BeanClusterMiddlewareInfo> list(String clusterId, Boolean installed);
+
+    /**
+     * 查询集群安装的中间件
+     * @param clusterIds 集群id集合
+     * @return
+     */
+    List<BeanClusterMiddlewareInfo> list(List<String> clusterIds);
+
+    /**
+     * 查询集群已安装和安装中的中间件
+     * @param clusterIds 集群id数组
+     * @return
+     */
+    List<BeanClusterMiddlewareInfo> listAll(List<String> clusterIds);
 }

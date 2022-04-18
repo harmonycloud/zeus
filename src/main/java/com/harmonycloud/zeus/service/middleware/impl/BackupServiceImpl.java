@@ -17,7 +17,7 @@ import com.harmonycloud.caas.common.exception.CaasRuntimeException;
 import com.harmonycloud.caas.common.model.middleware.Backup;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.zeus.integration.cluster.BackupWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.BackupCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.BackupCR;
 import com.harmonycloud.zeus.service.middleware.BackupService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -42,13 +42,13 @@ public class BackupServiceImpl implements BackupService {
      */
     @Override
     public List<Backup> listBackup(String clusterId, String namespace) {
-        List<BackupCRD> backupCRDList = backupWrapper.list(clusterId, namespace);
-        if (CollectionUtils.isEmpty(backupCRDList)) {
+        List<BackupCR> backupCRList = backupWrapper.list(clusterId, namespace);
+        if (CollectionUtils.isEmpty(backupCRList)) {
             return new ArrayList<>(0);
         }
 
         List<Backup> backupList = new ArrayList<>();
-        backupCRDList.forEach(backupCRD -> {
+        backupCRList.forEach(backupCRD -> {
             Backup backup = new Backup().setName(backupCRD.getMetadata().getName())
                 .setNamespace(backupCRD.getMetadata().getNamespace())
                 .setControllerName(backupCRD.getMetadata().getLabels().get("controllername"))
@@ -68,15 +68,15 @@ public class BackupServiceImpl implements BackupService {
     /**
      * 创建备份
      *
-     * @param backupCRD
+     * @param backupCR
      * @return
      */
     @Override
-    public void create(String clusterId, BackupCRD backupCRD) {
+    public void create(String clusterId, BackupCR backupCR) {
         try {
-            backupWrapper.create(clusterId, backupCRD);
+            backupWrapper.create(clusterId, backupCR);
         } catch (IOException e) {
-            log.error("备份{}创建失败", backupCRD.getMetadata().getName());
+            log.error("备份{}创建失败", backupCR.getMetadata().getName());
             throw new CaasRuntimeException(ErrorMessage.CREATE_BACKUP_FAILED);
         }
     }
@@ -107,17 +107,17 @@ public class BackupServiceImpl implements BackupService {
      */
     @Override
     public BackupStorageProvider getStorageProvider(Middleware middleware) {
-        List<BackupCRD> backupCRDList = backupWrapper.list(middleware.getClusterId(), middleware.getNamespace());
+        List<BackupCR> backupCRList = backupWrapper.list(middleware.getClusterId(), middleware.getNamespace());
 
-        backupCRDList = backupCRDList.stream()
+        backupCRList = backupCRList.stream()
             .filter(crd -> crd.getStatus() != null
                 && StringUtils.equals(crd.getStatus().getBackupFileName(), middleware.getBackupFileName()))
             .collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(backupCRDList)) {
+        if (CollectionUtils.isEmpty(backupCRList)) {
             throw new CaasRuntimeException(ErrorMessage.BACKUP_FILE_NOT_EXIST);
         }
 
-        BackupStorageProvider backupStorageProvider = backupCRDList.get(0).getSpec().getStorageProvider();
+        BackupStorageProvider backupStorageProvider = backupCRList.get(0).getSpec().getStorageProvider();
         backupStorageProvider.getMinio().setBackupFileName(middleware.getBackupFileName());
         return backupStorageProvider;
     }

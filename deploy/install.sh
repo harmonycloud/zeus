@@ -7,19 +7,10 @@ STORAGE_CLASS=$4
 HA=$5
 
 if [ $LINE_TYPE == "offline" ]; then
-  echo "######  Load images ######"
-  docker load -i ./deploy/zeus-offline.tar
-  echo "######  Load images done !  ######"
-  echo
   echo "######  Push images  ######"
-  IMAGES=$(cat ./build/image.conf)
-  for IMG in $IMAGES
-  do
-  {
-    docker tag $IMG $IMAGE_REPO"/"$IMG
-    docker push $IMAGE_REPO"/"$IMG
-  }
-  done
+
+  sh ./deploy/load-image.sh ./deploy $IMAGE_REPO
+
   echo "######  Push images done !  ######"
 fi
 
@@ -39,13 +30,15 @@ function deploy_helm() {
   # install mysql-operator
   helm install -n middleware-operator mysql-operator deploy/mysql-operator/charts/mysql-operator --set image.repository=$IMAGE_REPO"/middleware"
   # install mysql instance
-  helm install -n zeus zeus-mysql deploy/mysql-operator --set mysql-operator.enabled=false,image.repository=$IMAGE_REPO"/middleware",args.root_password="ZeuS@Middleware01",storageClassName=$STORAGE_CLASS
+  MYSQL_REPLICATE="replicaCount=1"
+  if [ $HA == "true" ]; then
+    MYSQL_REPLICATE="replicaCount=2"
+  fi
+  helm install -n zeus zeus-mysql deploy/mysql-operator --set mysql-operator.enabled=false,image.repository=$IMAGE_REPO"/middleware",args.root_password="ZeuS@Middleware01",storageClassName=$STORAGE_CLASS,$MYSQL_REPLICATE
   # install zeus platform
   HELM_ARGS="global.replicaCount=1"
   if [ $HA == "true" ]; then
     HELM_ARGS="global.replicaCount=3"
-    echo -n "请输入Zeus平台使用的共享存储服务名称:"
-    read STORAGE_CLASS
   fi
   helm install -n zeus zeus deploy/helm --set global.repository=$IMAGE_REPO"/middleware",global.storageClass=$STORAGE_CLASS,$HELM_ARGS
 }

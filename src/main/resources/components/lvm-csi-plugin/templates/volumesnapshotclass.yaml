@@ -1,0 +1,23 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: minio-repo-secret
+data:
+  backupPassword: {{ .Values.volumeSnapshotClass.backupPassword }}
+  userId: {{ .Values.volumeSnapshotClass.userId }}
+  userKey: {{ .Values.volumeSnapshotClass.userKey }}
+type: Opaque
+---
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: minio-snapclass
+deletionPolicy: Delete
+driver: localplugin.csi.alibabacloud.com
+parameters:
+  bucket: {{ .Values.volumeSnapshotClass.bucket }}
+  csi.storage.k8s.io/snapshotter-secret-name: minio-repo-secret
+  csi.storage.k8s.io/snapshotter-secret-namespace: {{ .Release.Namespace }}
+  type: {{ .Values.volumeSnapshotClass.type }}
+  url: {{ .Values.volumeSnapshotClass.url }}

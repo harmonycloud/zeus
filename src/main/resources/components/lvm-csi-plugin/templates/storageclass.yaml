@@ -1,0 +1,15 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+    storageLimit: "{{ .Values.storage.size }}"
+    type: CSI-LVM
+  name: {{ .Values.storage.storageClassName }}
+provisioner: localplugin.csi.alibabacloud.com
+parameters:
+    volumeType: LVM
+    vgName: {{ .Values.storage.vgName }}
+    fsType: ext4
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true

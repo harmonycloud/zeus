@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.service.k8s;
 
-import com.harmonycloud.zeus.integration.cluster.bean.MysqlReplicateCRD;
+import com.harmonycloud.zeus.integration.cluster.bean.MysqlReplicateCR;
 
 import java.io.IOException;
 
@@ -14,16 +14,16 @@ public interface MysqlReplicateCRDService {
     /**
      * 创建mysql源实例和灾备实例的复制关系
      * @param clusterId 灾备实例集群id
-     * @param mysqlReplicateCRD mysql复制关系
+     * @param mysqlReplicateCR mysql复制关系
      */
-    void createMysqlReplicate(String clusterId, MysqlReplicateCRD mysqlReplicateCRD) throws IOException;
+    void createMysqlReplicate(String clusterId, MysqlReplicateCR mysqlReplicateCR) throws IOException;
 
     /**
      * 修改mysql源实例和灾备实例的复制关系
      * @param clusterId 灾备实例集群id
-     * @param mysqlReplicateCRD mysql复制关系
+     * @param mysqlReplicateCR mysql复制关系
      */
-    void replaceMysqlReplicate(String clusterId, MysqlReplicateCRD mysqlReplicateCRD) throws IOException;
+    void replaceMysqlReplicate(String clusterId, MysqlReplicateCR mysqlReplicateCR) throws IOException;
 
     /**
      * 删除mysql源实例和灾备实例的复制关系
@@ -41,5 +41,5 @@ public interface MysqlReplicateCRDService {
      * @param name 中间件名称
      * @return
      */
-    MysqlReplicateCRD getMysqlReplicate(String clusterId, String namespace, String name);
+    MysqlReplicateCR getMysqlReplicate(String clusterId, String namespace, String name);
 }

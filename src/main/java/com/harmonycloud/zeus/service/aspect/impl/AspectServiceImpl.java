@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.aspect.impl;
 
 import java.util.Map;
 
+import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -41,16 +42,16 @@ public class AspectServiceImpl implements AspectService {
     }
 
     @Override
-    public void operation(String host, Middleware middleware, Map<String, String> dynamicValues, JSONObject values){
+    public void operation(MiddlewareClusterDTO cluster, Middleware middleware, Map<String, String> dynamicValues, JSONObject values){
         try {
             Object service = SpringContextUtils.getBean(name);
             dynamicValues.put("namespace", middleware.getNamespace());
             dynamicValues.put("name", middleware.getName());
             dynamicValues.put("middlewareType", middleware.getType());
-            service.getClass().getMethod("operation", String.class, Map.class, JSONObject.class).invoke(service, host, dynamicValues, values);
+            service.getClass().getMethod("operation", JSONObject.class, Map.class, JSONObject.class).invoke(service, JSONObject.parseObject(JSONObject.toJSONString(cluster)), dynamicValues, values);
         } catch (Exception e){
             log.error("调用外部服务失败");
-            //throw new BusinessException(ErrorMessage.CALL_EXTERNAL_SERVICE_FAILED);
+            // throw new BusinessException(ErrorMessage.CALL_EXTERNAL_SERVICE_FAILED);
         }
     }
 }

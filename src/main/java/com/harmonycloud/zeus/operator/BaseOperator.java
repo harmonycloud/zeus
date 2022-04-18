@@ -81,6 +81,13 @@ public interface BaseOperator {
     void delete(Middleware middleware);
 
     /**
+     * 删除中间件相关存储
+     *
+     * @param middleware 中间件信息
+     */
+    void deleteStorage(Middleware middleware);
+
+    /**
      * 手动切换中间件
      *
      * @param middleware 中间件信息
@@ -88,12 +95,12 @@ public interface BaseOperator {
     void switchMiddleware(Middleware middleware);
 
     /**
-     * 性能监控
+     * pvc扩缩容
      *
      * @param middleware 中间件信息
-     * @return string
+     * @return
      */
-    MonitorDto monitor(Middleware middleware);
+    void updateStorage(Middleware middleware);
 
     /**
      * 获取自定义配置列表
@@ -109,6 +116,7 @@ public interface BaseOperator {
      * @param configMap 配置文件
      * @return List<CustomConfig>
      */
+    @Deprecated
     Map<String, String> configMap2Data(ConfigMap configMap);
 
     /**
@@ -117,6 +125,7 @@ public interface BaseOperator {
      * @param customConfig 自定义参数
      * @param data
      */
+    @Deprecated
     void editConfigMapData(CustomConfig customConfig, List<String> data);
 
     /**
@@ -126,6 +135,7 @@ public interface BaseOperator {
      * @param data      配置内容
      * @return void
      */
+    @Deprecated
     void updateConfigData(ConfigMap configMap, List<String> data);
 
 

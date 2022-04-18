@@ -19,5 +19,5 @@ public class BackupList {
 
     private ObjectMeta metadata;
 
-    private List<BackupCRD> items;
+    private List<BackupCR> items;
 }

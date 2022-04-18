@@ -25,6 +25,7 @@ public interface HelmChartService {
      * @param chartName chart名称
      * @return
      */
+    @Deprecated
     List<V1HelmChartVersion> listHelmChartVersions(Registry registry, String chartName);
 
     /**
@@ -36,6 +37,7 @@ public interface HelmChartService {
      * @param name 名称
      * @return
      */
+    @Deprecated
     HelmChartFile getHelmChart(String clusterId, String namespace, String name, String type);
 
     /**
@@ -46,6 +48,7 @@ public interface HelmChartService {
      * @param chartVersion chart版本
      * @return
      */
+    @Deprecated
     File downloadHelmChart(Registry registry, String chartName, String chartVersion);
 
     /**
@@ -64,14 +67,6 @@ public interface HelmChartService {
      * @param helmChart helm chart信息
      */
     void coverYamlFile(HelmChartFile helmChart);
-
-    /**
-     * 把新的yaml内容覆盖掉本地文件(template内文件)
-     *
-     * @param helmChart helm chart信息
-     * @param fileName 文件名
-     */
-    void coverTemplateFile(HelmChartFile helmChart, String fileName);
 
     /**
      * 查询helm chart列表
@@ -101,6 +96,16 @@ public interface HelmChartService {
      * @return
      */
     JSONObject getInstalledValues(String name, String namespace, MiddlewareClusterDTO cluster);
+
+    /**
+     * 获取已发布helm chart的values,并转为标准json对象返回
+     *
+     * @param name      helm发布实例的名称
+     * @param namespace 命名空间
+     * @param cluster   集群信息
+     * @return
+     */
+    JSONObject getInstalledValuesAsNormalJson(String name, String namespace, MiddlewareClusterDTO cluster);
 
     /**
      * 打包chart文件
@@ -133,16 +138,6 @@ public interface HelmChartService {
     void install(String name, String namespace, String chartName, String chartVersion, String tgzFilePath, MiddlewareClusterDTO cluster);
 
     /**
-     * 发布helm chart包
-     *
-     * @param name          helm发布的实例名称
-     * @param namespace     命名空间
-     * @param tgzFilePath   tgz文件的绝对路径（包含文件名）
-     * @param cluster       集群信息
-     */
-    void install(String name, String namespace, String tgzFilePath, MiddlewareClusterDTO cluster);
-
-    /**
      * 更新已发布的helm chart
      *
      * @param middleware   中间件信息
@@ -166,11 +161,12 @@ public interface HelmChartService {
      *
      * @param name      helm发布的实例名称
      * @param namespace 命名空间
-     * @param setValues 设置的值
-     * @param chartUrl  远端chart文件地址
+     * @param path      包路径
+     * @param values    原values.yaml
+     * @param newValues 新values
      * @param cluster   集群信息
      */
-    void upgradeInstall(String name, String namespace, String path, JSONObject values, JSONObject newValues, MiddlewareClusterDTO cluster);
+    void installComponents(String name, String namespace, String path, JSONObject values, JSONObject newValues, MiddlewareClusterDTO cluster);
 
     /**
      * 更新/发布 chart
@@ -181,7 +177,7 @@ public interface HelmChartService {
      * @param chartUrl  远端chart文件地址
      * @param cluster   集群信息
      */
-    void upgradeInstall(String name, String namespace, String setValues, String chartUrl, MiddlewareClusterDTO cluster);
+    void installComponents(String name, String namespace, String setValues, String chartUrl, MiddlewareClusterDTO cluster);
 
     /**
      * 卸载已发布的helm chart
@@ -195,7 +191,7 @@ public interface HelmChartService {
      * 卸载已发布的helm chart
      *
      * @param cluster    集群信息
-     * @param operatorName 中间件信息
+     * @param operatorName 组件名称
      * @param namespace 分区
      */
     void uninstall(MiddlewareClusterDTO cluster, String namespace, String operatorName);
@@ -214,7 +210,7 @@ public interface HelmChartService {
      * @param clusterId 集群id
      * @param operatorChartPath chart包位置
      */
-    void editOperatorChart(String clusterId, String operatorChartPath);
+    void editOperatorChart(String clusterId, String operatorChartPath, String type);
 
     /**
      * 从mysql中取出helm chart
@@ -231,6 +227,6 @@ public interface HelmChartService {
      * @param clusterId 集群id
      * @param helmChartFile chart包对象
      */
-    void createOperator(String chartPath, String clusterId, HelmChartFile helmChartFile);
+    void createOperator(String chartPath, String clusterId, HelmChartFile helmChartFile, String type);
 
 }

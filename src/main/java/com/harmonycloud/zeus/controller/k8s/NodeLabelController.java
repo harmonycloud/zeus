@@ -37,6 +37,4 @@ public class NodeLabelController {
     public BaseResult<List<Node>> restart(@PathVariable("clusterId") String clusterId) {
         return BaseResult.ok(nodeLabelService.list(clusterId));
     }
-
-
 }

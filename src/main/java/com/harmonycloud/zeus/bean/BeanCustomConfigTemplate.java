@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.bean;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -7,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * @author xutianhong
@@ -22,8 +24,14 @@ public class BeanCustomConfigTemplate implements Serializable {
     /**
      * 自增id
      */
-    @TableId("id")
+    @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
+
+    /**
+     * 模板uid
+     */
+    @TableField("uid")
+    private String uid;
 
     /**
      * 模板名称
@@ -32,10 +40,10 @@ public class BeanCustomConfigTemplate implements Serializable {
     private String name;
 
     /**
-     * 模板中文名称
+     * 模板名称
      */
-    @TableField("alias_name")
-    private String aliasName;
+    @TableField("description")
+    private String description;
 
     /**
      * 中间件类型
@@ -48,5 +56,11 @@ public class BeanCustomConfigTemplate implements Serializable {
      */
     @TableField("config")
     private String config;
+
+    /**
+     * 创建时间
+     */
+    @TableField("create_time")
+    private Date createTime;
 
 }

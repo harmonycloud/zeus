@@ -1,8 +1,12 @@
 package com.harmonycloud.zeus.dao;
 
+import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import feign.Param;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 /**
  * <p>
@@ -14,5 +18,5 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface BeanMiddlewareInfoMapper extends BaseMapper<BeanMiddlewareInfo> {
-
+    List<BeanMiddlewareInfo> listInstalledWithMiddlewareDetail(@Param("clusters") List<MiddlewareClusterDTO> clusters);
 }

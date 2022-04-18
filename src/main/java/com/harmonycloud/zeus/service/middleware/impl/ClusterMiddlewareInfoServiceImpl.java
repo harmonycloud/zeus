@@ -7,6 +7,7 @@ import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
@@ -60,5 +61,38 @@ public class ClusterMiddlewareInfoServiceImpl implements ClusterMiddlewareInfoSe
         QueryWrapper<BeanClusterMiddlewareInfo> wrapper =
             new QueryWrapper<BeanClusterMiddlewareInfo>().eq("chart_name", chartName).eq("chart_version", chartVersion);
         beanClusterMiddlewareInfoMapper.delete(wrapper);
+    }
+
+    @Override
+    public List<BeanClusterMiddlewareInfo> list(String clusterId, Boolean installed) {
+        QueryWrapper<BeanClusterMiddlewareInfo> wrapper =
+            new QueryWrapper<BeanClusterMiddlewareInfo>().eq("cluster_id", clusterId);
+        if (installed) {
+            wrapper.eq("status", 1);
+        }
+        wrapper.orderByAsc("chart_name");
+        return beanClusterMiddlewareInfoMapper.selectList(wrapper);
+    }
+
+    @Override
+    public List<BeanClusterMiddlewareInfo> list(List<String> clusterIds) {
+        if (CollectionUtils.isEmpty(clusterIds)) {
+            return null;
+        }
+        QueryWrapper<BeanClusterMiddlewareInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("cluster_id", clusterIds);
+        queryWrapper.eq("status", 1);
+        return beanClusterMiddlewareInfoMapper.selectList(queryWrapper);
+    }
+
+    @Override
+    public List<BeanClusterMiddlewareInfo> listAll(List<String> clusterIds) {
+        if (CollectionUtils.isEmpty(clusterIds)) {
+            return null;
+        }
+        QueryWrapper<BeanClusterMiddlewareInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("cluster_id", clusterIds);
+        queryWrapper.ne("status", 2);
+        return beanClusterMiddlewareInfoMapper.selectList(queryWrapper);
     }
 }

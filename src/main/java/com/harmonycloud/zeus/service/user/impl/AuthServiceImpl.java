@@ -5,15 +5,16 @@ import static com.harmonycloud.caas.filters.base.GlobalKey.USER_TOKEN;
 
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.harmonycloud.caas.common.model.LdapConfigDto;
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.tool.date.DateUtils;
-import com.harmonycloud.zeus.service.user.AuthService;
-import com.harmonycloud.zeus.service.user.RoleService;
-import com.harmonycloud.zeus.service.user.UserService;
+import com.harmonycloud.tool.encrypt.RSAUtils;
+import com.harmonycloud.zeus.service.user.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,7 +26,6 @@ import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.caas.filters.token.JwtTokenComponent;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
-import com.harmonycloud.tool.encrypt.RSAUtils;
 import org.springframework.util.CollectionUtils;
 
 /**
@@ -39,6 +39,13 @@ public class AuthServiceImpl implements AuthService {
     private UserService userService;
     @Autowired
     private RoleService roleService;
+    @Value("${system.user.expire:0.5}")
+    private Double expireTime;
+
+    @Autowired
+    private AuthManager4Ldap authManager4Ldap;
+    @Autowired
+    private LdapService ldapService;
 
     @Override
     public JSONObject login(String userName, String password, HttpServletResponse response) throws Exception {
@@ -51,9 +58,20 @@ public class AuthServiceImpl implements AuthService {
         }
         //md5加密
         String md5Password = PasswordUtils.md5(decryptPassword);
-        UserDto userDto = userService.get(userName, true);
+        // 获取ldap配置信息
+        LdapConfigDto ldapConfigDto = ldapService.queryLdapDetail();
+
+        UserDto userDto;
+        if (userName.equals("admin")) {
+            userDto = userService.getUserDto(userName);
+        } else if (isLdapOn(ldapConfigDto)) {
+            userDto = authManager4Ldap.auth(userName, decryptPassword, ldapConfigDto);
+        } else {
+            userDto = userService.getUserDto(userName);
+        }
+
         //校验用户权限
-        checkAuth(userDto);
+        Boolean isAdmin = checkAuth(userDto);
         //校验密码
         if (!md5Password.equals(userDto.getPassword())) {
             throw new BusinessException(ErrorMessage.AUTH_FAILED);
@@ -61,11 +79,12 @@ public class AuthServiceImpl implements AuthService {
         JSONObject admin = convertUserInfo(userDto);
         long currentTime = System.currentTimeMillis();
         String token = JwtTokenComponent.generateToken("userInfo", admin,
-            new Date(currentTime + 1800000L), new Date(currentTime - 300000L));
+            new Date(currentTime + (long)(expireTime * 3600000L)), new Date(currentTime - 300000L));
         response.setHeader(SET_TOKEN, token);
         JSONObject res = new JSONObject();
         res.put("userName", userName);
         res.put("token", token);
+        res.put("isAdmin", isAdmin);
         //校验密码日期
         if (userDto.getPasswordTime() != null) {
             long passwordTime = DateUtils.getIntervalDays(new Date(), userDto.getPasswordTime()) / 3600 / 24 / 1000;
@@ -102,14 +121,17 @@ public class AuthServiceImpl implements AuthService {
     /**
      * 校验用户角色权限
      */
-    public void checkAuth(UserDto userDto){
-        if (userDto.getRoleId() == null){
+    public Boolean checkAuth(UserDto userDto){
+        if (CollectionUtils.isEmpty(userDto.getUserRoleList())){
             throw new BusinessException(ErrorMessage.USER_ROLE_NOT_EXIT);
         }
-        List<ResourceMenuDto> menuDtoList = roleService.listMenuByRoleId(String.valueOf(userDto.getRoleId()));
-        if (CollectionUtils.isEmpty(menuDtoList)){
-            throw new BusinessException(ErrorMessage.ROLE_PERMISSION_IS_EMPTY);
-        }
+        return userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getRoleId() == 1);
     }
 
+    private boolean isLdapOn(LdapConfigDto ldapConfigDto) {
+        if (ldapConfigDto != null && ldapConfigDto.getIsOn() != null && ldapConfigDto.getIsOn() == 1) {
+            return true;
+        }
+        return false;
+    }
 }

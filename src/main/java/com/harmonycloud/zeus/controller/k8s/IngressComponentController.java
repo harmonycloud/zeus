@@ -42,13 +42,28 @@ public class IngressComponentController {
     @ApiOperation(value = "对接集群ingress组件", notes = "对接集群ingress组件")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "cluster", value = "集群信息", paramType = "query", dataTypeClass = MiddlewareClusterDTO.class)
+            @ApiImplicitParam(name = "ingressComponentDto", value = "ingress信息", paramType = "query", dataTypeClass = IngressComponentDto.class)
     })
     @PutMapping
     public BaseResult integrate(@PathVariable("clusterId") String clusterId,
-                                @RequestBody MiddlewareClusterDTO cluster) {
-        cluster.setId(clusterId);
-        ingressComponentService.integrate(cluster);
+                                @RequestBody IngressComponentDto ingressComponentDto) {
+        ingressComponentDto.setClusterId(clusterId);
+        ingressComponentService.integrate(ingressComponentDto);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "更新集群ingress组件信息", notes = "更新集群ingress组件信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "ingressComponentDto", value = "ingress信息", paramType = "query", dataTypeClass = IngressComponentDto.class),
+            @ApiImplicitParam(name = "ingressName", value = "ingress名称", paramType = "path", dataTypeClass = IngressComponentDto.class),
+    })
+    @PutMapping("/{ingressName}")
+    public BaseResult update(@PathVariable("clusterId") String clusterId,
+                             @RequestBody IngressComponentDto ingressComponentDto,
+                             @PathVariable("ingressName") String ingressName) {
+        ingressComponentDto.setIngressClassName(ingressName).setClusterId(clusterId);
+        ingressComponentService.update(ingressComponentDto);
         return BaseResult.ok();
     }
 

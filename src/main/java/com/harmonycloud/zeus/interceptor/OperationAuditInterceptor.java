@@ -1,38 +1,56 @@
 package com.harmonycloud.zeus.interceptor;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.constants.CommonConstant;
-import com.harmonycloud.caas.filters.token.JwtTokenComponent;
-import com.harmonycloud.zeus.bean.BeanOperationAudit;
-import com.harmonycloud.zeus.service.system.OperationAuditService;
-import com.harmonycloud.tool.api.util.HttpMethod;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Pointcut;
-import org.aspectj.lang.reflect.MethodSignature;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.user.UserRole;
+import com.harmonycloud.caas.filters.user.CurrentUserRepository;
+import com.harmonycloud.zeus.bean.user.BeanRoleAuthority;
+import com.harmonycloud.zeus.service.user.RoleAuthorityService;
+import com.harmonycloud.zeus.service.user.UserRoleService;
+import com.harmonycloud.zeus.util.RequestUtil;
+import org.apache.commons.lang3.StringUtils;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
+import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.constants.CommonConstant;
+import com.harmonycloud.caas.filters.token.JwtTokenComponent;
+import com.harmonycloud.tool.api.util.HttpMethod;
+import com.harmonycloud.zeus.annotation.Authority;
+import com.harmonycloud.zeus.bean.BeanOperationAudit;
+import com.harmonycloud.zeus.service.system.OperationAuditService;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+
+import static com.harmonycloud.caas.common.constants.CommonConstant.*;
 
 /**
  * 操作审计拦截器
@@ -42,16 +60,62 @@ import java.util.Map;
  */
 @Aspect
 @Component
+@Slf4j
 public class OperationAuditInterceptor {
-
-    private Logger log = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
     private OperationAuditService operationAuditService;
+    @Autowired
+    private UserRoleService userRoleService;
+    @Autowired
+    private RoleAuthorityService roleAuthorityService;
+
 
     @Pointcut("@annotation(io.swagger.annotations.ApiOperation) && (!@annotation(com.harmonycloud.zeus.annotation.ExcludeAuditMethod)) &&(!@annotation(org.springframework.web.bind.annotation.GetMapping))")
     public void pointcut() {
 
+    }
+
+    @Pointcut("@annotation(com.harmonycloud.zeus.annotation.Authority)")
+    public void authcut() {
+
+    }
+
+    @Before("authcut() && @annotation(authority)")
+    public void before(JoinPoint joinPoint, Authority authority) {
+        String projectId = RequestUtil.getProjectId();
+        if (StringUtils.isNotEmpty(projectId)) {
+            // 校验角色权限
+            JSONObject userMap = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue();
+            List<UserRole> userRoleList = userRoleService.get(userMap.getString("username"));
+            // 判断是否为超级管理员
+            boolean notAdmin = CollectionUtils.isEmpty(
+                userRoleList.stream().filter(userRole -> userRole.getRoleId() == 1).collect(Collectors.toList()));
+            if (notAdmin) {
+                userRoleList = userRoleList.stream().filter(userRole -> StringUtils.isNotEmpty(userRole.getProjectId())
+                    && userRole.getProjectId().equals(projectId)).collect(Collectors.toList());
+                if (CollectionUtils.isEmpty(userRoleList)) {
+                    throw new BusinessException(ErrorMessage.NO_AUTHORITY);
+                }
+                UserRole userRole = userRoleList.get(0);
+                if (userRole.getRoleId() != 1) {
+                    JSONObject params =
+                        getParams(((MethodSignature)joinPoint.getSignature()).getParameterNames(), joinPoint.getArgs());
+                    String type = tryGetType(params);
+                    if (StringUtils.isNotEmpty(type)) {
+                        List<BeanRoleAuthority> beanRoleAuthorityList = roleAuthorityService.list(userRole.getRoleId())
+                            .stream().filter(beanRoleAuthority -> beanRoleAuthority.getType().equals(type))
+                            .collect(Collectors.toList());
+                        if (!CollectionUtils.isEmpty(beanRoleAuthorityList)) {
+                            String[] power = beanRoleAuthorityList.get(0).getPower().split("");
+                            if (Integer.parseInt(power[authority.power()]) == 0) {
+                                throw new BusinessException(ErrorMessage.NO_AUTHORITY);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -117,7 +181,7 @@ public class OperationAuditInterceptor {
         Class<?> aClass = joinPoint.getTarget().getClass();
 
         operationAudit.setUrl(request.getRequestURI());
-        operationAudit.setRemoteIp(request.getRemoteHost());
+        setRealIp(request, operationAudit);
         operationAudit.setRequestMethod(request.getMethod());
 
         if (result != null) {
@@ -204,5 +268,52 @@ public class OperationAuditInterceptor {
         operationAuditService.insert(operationAudit);
     }
 
+    /**
+     * 设置真实请求ip
+     * @param request
+     * @param operationAudit
+     */
+    public void setRealIp(HttpServletRequest request, BeanOperationAudit operationAudit) {
+        String remoteRealIp = request.getHeader("x-forwarded-for");
+        log.info("x-forwarded-for:{}", remoteRealIp);
+        log.info("remoteHost:{}", request.getRemoteHost());
+        if (remoteRealIp != null && !StringUtils.isBlank(remoteRealIp)) {
+            operationAudit.setRemoteIp(remoteRealIp);
+        } else {
+            operationAudit.setRemoteIp(request.getRemoteHost());
+        }
+    }
+
+    public JSONObject getParams(String[] paramNames, Object[] args) {
+        JSONObject params = new JSONObject();
+        for (int i = 0; i < paramNames.length; ++i) {
+            if (args[i] instanceof String) {
+                params.put(paramNames[i], args[i]);
+            } else {
+                params.put(paramNames[i], JSONObject.parseObject(JSONObject.toJSONString(args[i])));
+            }
+
+        }
+        return params;
+    }
+
+    public String tryGetType(JSONObject params) {
+        String type = null;
+        if (params.containsKey(TYPE)) {
+            type = params.getString(TYPE);
+        } else {
+            for (String key : params.keySet()) {
+                if (params.get(key) instanceof JSONObject) {
+                    JSONObject temp = params.getJSONObject(key);
+                    if (temp.containsKey(TYPE)) {
+                        type = temp.getString(TYPE);
+                    } else if (temp.containsKey(MIDDLEWARE_TYPE)) {
+                        type = temp.getString(MIDDLEWARE_TYPE);
+                    }
+                }
+            }
+        }
+        return type;
+    }
 
 }

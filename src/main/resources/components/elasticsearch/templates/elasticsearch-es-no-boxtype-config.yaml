@@ -1,0 +1,221 @@
+apiVersion: v1
+data:
+  elasticsearch.yml: "cluster.name: {ClusterName}\nbootstrap.memory_lock: false\nnode.name:
+    {PodName}\nnode.master: {IsMasterNode}\nnode.data: {IsDataNode}\nnetwork.host:
+    {PodIP}\nnetwork.publish_host: {PodIP}\nhttp.port: 9200\ntransport.tcp.port: 9300\ndiscovery.zen.ping.unicast.hosts:
+    {discoveryZenPingUnicastHosts}\nxpack.security.enabled: true\nxpack.ml.enabled:
+    false\nxpack.monitoring.collection.enabled: true\nxpack.watcher.enabled: false\nhttp.cors.enabled:
+    true\nhttp.cors.allow-origin: \"*\" \nhttp.cors.allow-headers: \"Authorization\"\npath.repo:
+    /data/elastic/{ClusterName}/{PodName}/data/data_back\npath.logs: /data/elastic/{ClusterName}/{PodName}/log\npath.data:
+    /data/elastic/{ClusterName}/{PodName}/data\ndiscovery.zen.minimum_master_nodes:
+    {minimum_master_nodes}\nxpack.security.transport.ssl.enabled: true\nxpack.security.transport.ssl.keystore.path:
+    /data/elastic/{ClusterName}/{PodName}/config/elastic-certificates.p12\nxpack.security.transport.ssl.truststore.path:
+    /data/elastic/{ClusterName}/{PodName}/config/elastic-certificates.p12\nxpack.security.transport.ssl.verification_mode:
+    certificate\n"
+  jvm.options: |
+    ## JVM configuration
+
+    ################################################################
+    ## IMPORTANT: JVM heap size
+    ################################################################
+    ##
+    ## You should always set the min and max JVM heap
+    ## size to the same value. For example, to set
+    ## the heap to 4 GB, set:
+    ##
+    ## -Xms4g
+    ## -Xmx4g
+    ##
+    ## See https://www.elastic.co/guide/en/elasticsearch/reference/current/heap-size.html
+    ## for more information
+    ##
+    ################################################################
+
+    # Xms represents the initial size of total heap space
+    # Xmx represents the maximum size of total heap space
+
+
+    ################################################################
+    ## Expert settings
+    ################################################################
+    ##
+    ## All settings below this section are considered
+    ## expert settings. Don't tamper with them unless
+    ## you understand what you are doing
+    ##
+    ################################################################
+
+    ## GC configuration
+    8-13:-XX:+UseConcMarkSweepGC
+    8-13:-XX:CMSInitiatingOccupancyFraction=75
+    8-13:-XX:+UseCMSInitiatingOccupancyOnly
+
+    ## G1GC Configuration
+    # NOTE: G1 GC is only supported on JDK version 10 or later
+    # to use G1GC, uncomment the next two lines and update the version on the
+    # following three lines to your version of the JDK
+    # 10-13:-XX:-UseConcMarkSweepGC
+    # 10-13:-XX:-UseCMSInitiatingOccupancyOnly
+    14-:-XX:+UseG1GC
+    14-:-XX:G1ReservePercent=25
+    14-:-XX:InitiatingHeapOccupancyPercent=30
+
+    ## DNS cache policy
+    # cache ttl in seconds for positive DNS lookups noting that this overrides the
+    # JDK security property networkaddress.cache.ttl; set to -1 to cache forever
+    -Des.networkaddress.cache.ttl=60
+    # cache ttl in seconds for negative DNS lookups noting that this overrides the
+    # JDK security property networkaddress.cache.negative ttl; set to -1 to cache
+    # forever
+    -Des.networkaddress.cache.negative.ttl=10
+
+    ## optimizations
+
+    # pre-touch memory pages used by the JVM during initialization
+    -XX:+AlwaysPreTouch
+
+    ## basic
+
+    # explicitly set the stack size
+    -Xss1m
+
+    # set to headless, just in case
+    -Djava.awt.headless=true
+
+    # ensure UTF-8 encoding by default (e.g. filenames)
+    -Dfile.encoding=UTF-8
+
+    # use our provided JNA always versus the system one
+    -Djna.nosys=true
+
+    # turn off a JDK optimization that throws away stack traces for common
+    # exceptions because stack traces are important for debugging
+    -XX:-OmitStackTraceInFastThrow
+
+    # enable helpful NullPointerExceptions (https://openjdk.java.net/jeps/358), if
+    # they are supported
+    14-:-XX:+ShowCodeDetailsInExceptionMessages
+
+    # flags to configure Netty
+    -Dio.netty.noUnsafe=true
+    -Dio.netty.noKeySetOptimization=true
+    -Dio.netty.recycler.maxCapacityPerThread=0
+
+    # log4j 2
+    -Dlog4j.shutdownHookEnabled=false
+    -Dlog4j2.disable.jmx=true
+
+    -Djava.io.tmpdir=${ES_TMPDIR}
+
+    ## heap dumps
+
+    # generate a heap dump when an allocation from the Java heap fails
+    # heap dumps are created in the working directory of the JVM
+    -XX:+HeapDumpOnOutOfMemoryError
+
+    # specify an alternative path for heap dumps; ensure the directory exists and
+    # has sufficient space
+    -XX:HeapDumpPath=data
+
+    # specify an alternative path for JVM fatal error logs
+    -XX:ErrorFile=logs/hs_err_pid%p.log
+
+    ## JDK 8 GC logging
+
+    8:-XX:+PrintGCDetails
+    8:-XX:+PrintGCDateStamps
+    8:-XX:+PrintTenuringDistribution
+    8:-XX:+PrintGCApplicationStoppedTime
+    8:-Xloggc:logs/gc.log
+    8:-XX:+UseGCLogFileRotation
+    8:-XX:NumberOfGCLogFiles=32
+    8:-XX:GCLogFileSize=64m
+
+    # JDK 9+ GC logging
+    9-:-Xlog:gc*,gc+age=trace,safepoint:file=logs/gc.log:utctime,pid,tags:filecount=32,filesize=64m
+    # due to internationalization enhancements in JDK 9 Elasticsearch need to set the provider to COMPAT otherwise
+    # time/date parsing will break in an incompatible way for some date patterns and locals
+    9-:-Djava.locale.providers=COMPAT
+
+    # temporary workaround for C2 bug with JDK 10 on hardware with AVX-512
+    #10-:-XX:UseAVX=2
+  log4j2.properties: |-
+    status = error
+
+    # log action execution errors for easier debugging
+    logger.action.name = org.elasticsearch.action
+    logger.action.level = debug
+
+    appender.console.type = Console
+    appender.console.name = console
+    appender.console.layout.type = PatternLayout
+    appender.console.layout.pattern = [%d{ISO8601}][%-5p][%-25c{1.}] %marker%m%n
+
+    appender.rolling.type = RollingFile
+    appender.rolling.name = rolling
+    appender.rolling.fileName = ${sys:es.logs.base_path}${sys:file.separator}${sys:es.logs.cluster_name}_runlog.log
+    appender.rolling.layout.type = PatternLayout
+    appender.rolling.layout.pattern = [%d{ISO8601}][%-5p][%-25c{1.}] %marker%.-10000m%n
+    appender.rolling.filePattern = ${sys:es.logs.base_path}${sys:file.separator}${sys:es.logs.cluster_name}_runlog-%d{yyyy-MM-dd}.log
+    appender.rolling.policies.type = Policies
+    appender.rolling.policies.time.type = TimeBasedTriggeringPolicy
+    appender.rolling.policies.time.interval = 1
+    appender.rolling.policies.time.modulate = true
+
+    rootLogger.level = info
+    rootLogger.appenderRef.console.ref = console
+    rootLogger.appenderRef.rolling.ref = rolling
+
+    appender.deprecation_rolling.type = RollingFile
+    appender.deprecation_rolling.name = deprecation_rolling
+    appender.deprecation_rolling.fileName = ${sys:es.logs.base_path}${sys:file.separator}${sys:es.logs.cluster_name}_deprecation.log
+    appender.deprecation_rolling.layout.type = PatternLayout
+    appender.deprecation_rolling.layout.pattern = [%d{ISO8601}][%-5p][%-25c{1.}] %marker%.-10000m%n
+    appender.deprecation_rolling.filePattern = ${sys:es.logs.base_path}${sys:file.separator}${sys:es.logs.cluster_name}_deprecation-%i.log.gz
+    appender.deprecation_rolling.policies.type = Policies
+    appender.deprecation_rolling.policies.size.type = SizeBasedTriggeringPolicy
+    appender.deprecation_rolling.policies.size.size = 1GB
+    appender.deprecation_rolling.strategy.type = DefaultRolloverStrategy
+    appender.deprecation_rolling.strategy.max = 4
+
+    logger.deprecation.name = org.elasticsearch.deprecation
+    logger.deprecation.level = warn
+    logger.deprecation.appenderRef.deprecation_rolling.ref = deprecation_rolling
+    logger.deprecation.additivity = false
+
+    appender.index_search_slowlog_rolling.type = RollingFile
+    appender.index_search_slowlog_rolling.name = index_search_slowlog_rolling
+    appender.index_search_slowlog_rolling.fileName = ${sys:es.logs.base_path}${sys:file.separator}${sys:es.logs.cluster_name}_index_search_slowlog.log
+    appender.index_search_slowlog_rolling.layout.type = PatternLayout
+    appender.index_search_slowlog_rolling.layout.pattern = [%d{ISO8601}][%-5p][%-25c] %marker%.-10000m%n
+    appender.index_search_slowlog_rolling.filePattern = ${sys:es.logs.base_path}${sys:file.separator}${sys:es.logs.cluster_name}_index_search_slowlog-%d{yyyy-MM-dd}.log
+    appender.index_search_slowlog_rolling.policies.type = Policies
+    appender.index_search_slowlog_rolling.policies.time.type = TimeBasedTriggeringPolicy
+    appender.index_search_slowlog_rolling.policies.time.interval = 1
+    appender.index_search_slowlog_rolling.policies.time.modulate = true
+
+    logger.index_search_slowlog_rolling.name = index.search.slowlog
+    logger.index_search_slowlog_rolling.level = trace
+    logger.index_search_slowlog_rolling.appenderRef.index_search_slowlog_rolling.ref = index_search_slowlog_rolling
+    logger.index_search_slowlog_rolling.additivity = false
+
+    appender.index_indexing_slowlog_rolling.type = RollingFile
+    appender.index_indexing_slowlog_rolling.name = index_indexing_slowlog_rolling
+    appender.index_indexing_slowlog_rolling.fileName = ${sys:es.logs.base_path}${sys:file.separator}${sys:es.logs.cluster_name}_index_indexing_slowlog.log
+    appender.index_indexing_slowlog_rolling.layout.type = PatternLayout
+    appender.index_indexing_slowlog_rolling.layout.pattern = [%d{ISO8601}][%-5p][%-25c] %marker%.-10000m%n
+    appender.index_indexing_slowlog_rolling.filePattern = ${sys:es.logs.base_path}${sys:file.separator}${sys:es.logs.cluster_name}_index_indexing_slowlog-%d{yyyy-MM-dd}.log
+    appender.index_indexing_slowlog_rolling.policies.type = Policies
+    appender.index_indexing_slowlog_rolling.policies.time.type = TimeBasedTriggeringPolicy
+    appender.index_indexing_slowlog_rolling.policies.time.interval = 1
+    appender.index_indexing_slowlog_rolling.policies.time.modulate = true
+
+    logger.index_indexing_slowlog.name = index.indexing.slowlog.index
+    logger.index_indexing_slowlog.level = trace
+    logger.index_indexing_slowlog.appenderRef.index_indexing_slowlog_rolling.ref = index_indexing_slowlog_rolling
+    logger.index_indexing_slowlog.additivity = false
+kind: ConfigMap
+metadata:
+  labels:
+    clusterName: {{ include "elasticsearch.fullname" . }}
+  name: {{ include "elasticsearch.fullname" . }}-es-no-boxtype-config

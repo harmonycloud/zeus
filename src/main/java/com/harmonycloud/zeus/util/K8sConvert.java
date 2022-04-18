@@ -1,10 +1,11 @@
 package com.harmonycloud.zeus.util;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
+import com.alibaba.fastjson.JSONArray;
+import com.harmonycloud.caas.common.model.AffinityDTO;
+import io.fabric8.kubernetes.api.model.*;
 import org.apache.commons.lang3.StringUtils;
 
 import com.alibaba.fastjson.JSON;
@@ -14,11 +15,6 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.fabric8.kubernetes.api.model.NodeAffinity;
-import io.fabric8.kubernetes.api.model.NodeSelector;
-import io.fabric8.kubernetes.api.model.NodeSelectorRequirement;
-import io.fabric8.kubernetes.api.model.NodeSelectorTerm;
-import io.fabric8.kubernetes.api.model.PreferredSchedulingTerm;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -50,7 +46,6 @@ public class K8sConvert {
         nsr.setOperator("In");
         nsr.setValues(Collections.singletonList(labelArr[1]));
         nsrList.add(nsr);
-
         NodeSelectorTerm nst = new NodeSelectorTerm();
         nst.setMatchExpressions(nsrList);
 
@@ -71,9 +66,97 @@ public class K8sConvert {
         }
         return nf;
     }
-    
-    public static JSONObject convertNodeAffinity2Json(String label, boolean isRequired) {
-        NodeAffinity nodeAffinity = convertNodeAffinity(label, isRequired);
+
+    /**
+     * 将labels转为NodeAffinity
+     * @param labels
+     * @return
+     */
+    public static NodeAffinity convertNodeAffinity(List<String> labels, Boolean required) {
+        NodeAffinity nf = new NodeAffinity();
+        List<PreferredSchedulingTerm> pstList = new ArrayList<>(1);
+        List<NodeSelectorTerm> nss = new ArrayList<>(1);
+
+        for (int i = 0; i < labels.size(); i++) {
+            String[] labelArr = labels.get(i).split("=");
+            NodeSelectorTerm nst;
+            if (labelArr.length == 2) {
+                nst = convertNodeSelectorTerm(labelArr[0], labelArr[1]);
+            } else if (labelArr.length == 1) {
+                nst = convertNodeSelectorTerm(labelArr[0]);
+            } else {
+                continue;
+            }
+
+            if (required) {
+                nss.add(nst);
+            } else {
+                PreferredSchedulingTerm p = new PreferredSchedulingTerm();
+                p.setPreference(nst);
+                // 权重
+                p.setWeight(labels.size() - i);
+                pstList.add(p);
+            }
+        }
+        if (required) {
+            NodeSelector ns = new NodeSelector();
+            ns.setNodeSelectorTerms(nss);
+            nf.setRequiredDuringSchedulingIgnoredDuringExecution(ns);
+        } else {
+            nf.setPreferredDuringSchedulingIgnoredDuringExecution(pstList);
+        }
+        return nf;
+    }
+
+    /**
+     * 将label转为NodeSelectorTerm
+     *
+     * @param key   label的key
+     * @param value label的value
+     * @return
+     */
+    public static NodeSelectorTerm convertNodeSelectorTerm(String key, String value) {
+        if (StringUtils.isBlank(key) || StringUtils.isBlank(value)) {
+            return null;
+        }
+        List<NodeSelectorRequirement> nsrList = new ArrayList<>(1);
+        NodeSelectorRequirement nsr = new NodeSelectorRequirement();
+        nsr.setKey(key);
+        nsr.setOperator("In");
+        nsr.setValues(Collections.singletonList(value));
+        nsrList.add(nsr);
+
+        NodeSelectorTerm nst = new NodeSelectorTerm();
+        nst.setMatchExpressions(nsrList);
+        return nst;
+    }
+
+    public static NodeSelectorTerm convertNodeSelectorTerm(String key) {
+        List<NodeSelectorRequirement> nsrList = new ArrayList<>(1);
+        NodeSelectorRequirement nsr = new NodeSelectorRequirement();
+        nsr.setKey(key);
+        nsr.setOperator("Exists");
+        nsrList.add(nsr);
+
+        NodeSelectorTerm nst = new NodeSelectorTerm();
+        nst.setMatchExpressions(nsrList);
+        return nst;
+    }
+
+    public static JSONObject convertNodeAffinity2Json(List<AffinityDTO> dtoLis) {
+        if (CollectionUtils.isEmpty(dtoLis)) {
+            return null;
+        }
+        NodeAffinity nodeAffinity;
+        if (dtoLis.get(0) != null && dtoLis.get(0).isRequired()) {
+            nodeAffinity = convertNodeAffinity(dtoLis.stream().map(AffinityDTO::getLabel).collect(Collectors.toList()), true);
+        } else {
+            nodeAffinity = convertNodeAffinity(dtoLis.stream().map(AffinityDTO::getLabel).collect(Collectors.toList()), false);
+        }
+        return convertNodeAffinity2Json(nodeAffinity);
+    }
+
+    public static JSONObject convertNodeAffinity2Json(NodeAffinity nodeAffinity) {
         if (nodeAffinity == null) {
             return null;
         }
@@ -112,7 +195,7 @@ public class K8sConvert {
                 if (nsqList != null && nsqList.size() > 0) {
                     for (NodeSelectorRequirement nsq : nsqList) {
                         json.put("required", false);
-                        json.put("label", nsq.getKey() + "=" + nsq.getValues().get(0));
+                        json.put("label", nsq.getKey() + "=" + (CollectionUtils.isEmpty(nsq.getValues()) ? "" : nsq.getValues().get(0)));
                         list.add(JSONObject.toJavaObject(json, tClass));
                     }
                 }
@@ -136,6 +219,52 @@ public class K8sConvert {
             }
         }
         return list;
+    }
+
+    public static Toleration convertToleration(String tolerationStr) {
+        Toleration toleration = new Toleration();
+        String[] tolerationAry = tolerationStr.split(":");
+        String[] pair = tolerationAry[0].split("=");
+        toleration.setKey(pair[0]);
+        if (tolerationStr.contains("Exists")) {
+            toleration.setOperator("Exists");
+            toleration.setEffect(tolerationAry[2]);
+        } else {
+            toleration.setOperator("Equal");
+            toleration.setValue(pair[1]);
+            toleration.setEffect(tolerationAry[1]);
+        }
+        return toleration;
+    }
+
+    public static JSONObject convertObject2Json(Object obj) {
+        if (obj == null) {
+            return null;
+        }
+        ObjectMapper objectMapper = new ObjectMapper();
+        String na;
+        try {
+            na = objectMapper.writeValueAsString(obj);
+        } catch (JsonProcessingException e) {
+            log.error("jackson转换错误，将使用fastjson转换", e);
+            SimplePropertyPreFilter filter = new SimplePropertyPreFilter();
+            filter.getExcludes().add("additionalProperties");
+            na = JSON.toJSONString(obj, filter);
+        }
+        if (StringUtils.isEmpty(na)) {
+            return null;
+        }
+        return JSON.parseObject(na);
+    }
+
+    public static JSONArray convertToleration2Json(List<String> tolerationList){
+        JSONArray jsonArray = new JSONArray();
+        tolerationList.forEach(tolerationStr ->{
+            Toleration toleration = convertToleration(tolerationStr);
+            JSONObject jsonObject = convertObject2Json(toleration);
+            jsonArray.add(jsonObject);
+        });
+        return jsonArray;
     }
 
 }

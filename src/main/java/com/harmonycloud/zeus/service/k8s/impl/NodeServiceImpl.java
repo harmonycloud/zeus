@@ -3,10 +3,15 @@ package com.harmonycloud.zeus.service.k8s.impl;
 import static com.harmonycloud.caas.common.constants.NameConstant.CONTAINER_RUNTIME_VERSION;
 import static com.harmonycloud.caas.common.constants.NameConstant.KUBELET_VERSION;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.service.k8s.NodeService;
+import com.harmonycloud.zeus.util.K8sConvert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -39,7 +44,7 @@ public class NodeServiceImpl implements NodeService {
         return nodes.stream().map(no -> {
             Node node = new Node().setName(no.getMetadata().getName()).setLabels(no.getMetadata().getLabels());
             // taint
-            if (CollectionUtils.isEmpty(no.getSpec().getTaints())) {
+            if (!CollectionUtils.isEmpty(no.getSpec().getTaints())) {
                 node.setTaints(JSONArray.parseArray(JSONArray.toJSONString(no.getSpec().getTaints()), Taint.class));
             }
             // ip
@@ -55,6 +60,17 @@ public class NodeServiceImpl implements NodeService {
             cpu.setAllocated(no.getStatus().getAllocatable().get("cpu").getAmount());
             memory.setTotal(no.getStatus().getCapacity().get("memory").getAmount());
             memory.setAllocated(no.getStatus().getAllocatable().get("memory").getAmount());
+            node.setCpu(cpu);
+            node.setMemory(memory);
+            //status
+            no.getStatus().getConditions().forEach(nodeCondition -> {
+                if ("Ready".equals(nodeCondition.getType())){
+                    node.setStatus(nodeCondition.getStatus());
+                }
+            });
+            //createTime
+            node.setCreateTime(
+                DateUtils.parseDate(no.getMetadata().getCreationTimestamp(), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
             return node;
         }).collect(Collectors.toList());
     }
@@ -78,5 +94,33 @@ public class NodeServiceImpl implements NodeService {
             log.error("集群：{}，查询节点列表设置k8s版本异常", cluster.getId(), e);
         }
     }
+
+    @Override
+    public List<String> listTaints(String clusterId) {
+        List<Node> list = list(clusterId);
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>(0);
+        }
+        Set<String> taintsSet = new HashSet<>();
+        list.forEach(node -> {
+            if (!CollectionUtils.isEmpty(node.getTaints())) {
+                node.getTaints().forEach(taint -> {
+                    StringBuffer sbf = new StringBuffer();
+                    sbf.append(taint.getKey());
+                    sbf.append("=");
+                    if (taint.getValue() != null) {
+                        sbf.append(taint.getValue());
+                    }else{
+                        sbf.append(":Exists");
+                    }
+                    sbf.append(":" + taint.getEffect());
+                    log.info("node {} taints {}", node.getIp(), sbf);
+                    taintsSet.add(sbf.toString());
+                });
+            }
+        });
+        return new ArrayList<>(taintsSet);
+    }
+
 
 }

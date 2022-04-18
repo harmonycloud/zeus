@@ -20,6 +20,6 @@ public class MiddlewareBackupScheduleList {
 
     private ObjectMeta metadata;
 
-    private List<MiddlewareBackupScheduleCRD> items;
+    private List<MiddlewareBackupScheduleCR> items;
 
 }
