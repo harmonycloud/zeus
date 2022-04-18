@@ -31,7 +31,7 @@ public interface MysqlUserService {
 
     BaseResult grantUser(MysqlUserDTO mysqlUserDTO);
 
-    BaseResult updatePassword(MysqlUserDTO mysqlUserDTO);
+    void updatePassword(MysqlUserDTO mysqlUserDTO);
 
     void grantUserDbPrivilege(Connection con, String user, String mysqlQualifiedName, List<MysqlDbPrivilege> privileges);
 

@@ -35,6 +35,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ROOT;
 import static com.harmonycloud.zeus.util.MysqlConnectionUtil.*;
 
 /**
@@ -134,18 +135,26 @@ public class MysqlUserServiceImpl implements MysqlUserService {
     }
 
     @Override
-    public BaseResult updatePassword(MysqlUserDTO mysqlUserDTO) {
-        if(StringUtils.isAnyEmpty(mysqlUserDTO.getUser(), mysqlUserDTO.getPassword(), mysqlUserDTO.getConfirmPassword())){
+    public void updatePassword(MysqlUserDTO mysqlUserDTO) {
+        if (StringUtils.isAnyEmpty(mysqlUserDTO.getUser(), mysqlUserDTO.getPassword(),
+            mysqlUserDTO.getConfirmPassword())) {
             throw new BusinessException(ErrorMessage.MYSQL_PASSWORD_NOT_MATCH);
         }
-        if (nativeUpdatePassword(getDBConnection(mysqlService.getAccessInfo(mysqlUserDTO)), mysqlUserDTO.getUser(), mysqlUserDTO.getPassword())) {
+        if (nativeUpdatePassword(getDBConnection(mysqlService.getAccessInfo(mysqlUserDTO)), mysqlUserDTO.getUser(),
+            mysqlUserDTO.getPassword())) {
             // 更新数据库密码
             BeanMysqlUser mysqlUser = beanMysqlUserMapper.selectById(mysqlUserDTO.getId());
-            mysqlUser.setPassword(MyAESUtil.encodeBase64(mysqlUserDTO.getPassword()));
-            beanMysqlUserMapper.updateById(mysqlUser);
-            return BaseResult.ok();
+            if (mysqlUser == null) {
+                String name = getMysqlQualifiedName(mysqlUserDTO.getClusterId(), mysqlUserDTO.getNamespace(),
+                    mysqlUserDTO.getMiddlewareName());
+                initMysqlUserInfo(name, mysqlUserDTO.getPassword(), mysqlUserDTO.getUser());
+            } else {
+                mysqlUser.setPassword(MyAESUtil.encodeBase64(mysqlUserDTO.getPassword()));
+                beanMysqlUserMapper.updateById(mysqlUser);
+            }
+        } else {
+            throw new BusinessException(ErrorMessage.MYSQL_UPDATE_PASSWORD_FAILED);
         }
-        return BaseResult.error();
     }
 
     @Override
@@ -270,17 +279,23 @@ public class MysqlUserServiceImpl implements MysqlUserService {
             // 查询每个用户所拥有的数据库及权限
             userList.forEach(userDetail -> {
                 String mysqlQualifiedName = getMysqlQualifiedName(clusterId, namespace, middlewareName);
-                List<MysqlDbPrivilege> privileges = nativeListUserDb(con, userDetail.getUser(), mysqlQualifiedName, keyword);
+                List<MysqlDbPrivilege> privileges =
+                    nativeListUserDb(con, userDetail.getUser(), mysqlQualifiedName, keyword);
                 // 查询平台存储的用户信息
                 BeanMysqlUser beanMysqlUser = select(mysqlQualifiedName, userDetail.getUser());
+                if (beanMysqlUser == null && ROOT.equals(userDetail.getUser())) {
+                    beanMysqlUser = initMysqlUserInfo(mysqlQualifiedName, accessInfo.getPassword(), ROOT);
+                }
                 if (beanMysqlUser != null) {
                     userDetail.setId(beanMysqlUser.getId());
                     userDetail.setPassword(MyAESUtil.decodeBase64(beanMysqlUser.getPassword()));
-                    userDetail.setPasswordCheck(passwordCheck(accessInfo, userDetail.getUser(), userDetail.getPassword()));
+                    userDetail
+                        .setPasswordCheck(passwordCheck(accessInfo, userDetail.getUser(), userDetail.getPassword()));
                     userDetail.setDescription(beanMysqlUser.getDescription());
-                    userDetail.setCreateTime(Date.from(beanMysqlUser.getCreatetime().atZone(ZoneId.systemDefault()).toInstant()));
+                    userDetail.setCreateTime(
+                        Date.from(beanMysqlUser.getCreatetime().atZone(ZoneId.systemDefault()).toInstant()));
+                    userDetail.setDbs(privileges);
                 }
-                userDetail.setDbs(privileges);
             });
             userList.sort((o1, o2) -> {
                 if (o1.getCreateTime() == null) {
@@ -335,6 +350,16 @@ public class MysqlUserServiceImpl implements MysqlUserService {
             selectSchemaSql = "select User from mysql.user where Host !='localhost' and User like '%" + keyword + "%'";
         }
         return selectSchemaSql;
+    }
+
+    public BeanMysqlUser initMysqlUserInfo(String mysqlQualifiedName, String password, String user) {
+        BeanMysqlUser beanMysqlUser = new BeanMysqlUser();
+        beanMysqlUser.setMysqlQualifiedName(mysqlQualifiedName);
+        beanMysqlUser.setUser(user);
+        beanMysqlUser.setPassword(MyAESUtil.encodeBase64(password));
+        beanMysqlUser.setCreatetime(LocalDateTime.now());
+        beanMysqlUserMapper.insert(beanMysqlUser);
+        return select(mysqlQualifiedName, user);
     }
 
 }

@@ -232,7 +232,8 @@ public class MysqlController {
     @PutMapping("/updatePassword")
     @Authority(power = 1)
     public BaseResult updatePassword(@RequestBody MysqlUserDTO mysqlUserDTO) {
-        return mysqlUserService.updatePassword(mysqlUserDTO);
+        mysqlUserService.updatePassword(mysqlUserDTO);
+        return BaseResult.ok();
     }
 
     @ApiOperation(value = "查询字符集", notes = "查询字符集")
