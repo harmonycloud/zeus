@@ -9,7 +9,7 @@ HA=$5
 if [ $LINE_TYPE == "offline" ]; then
   echo "######  Push images  ######"
 
-  sh ./deploy/load-image.sh ./deploy
+  sh ./deploy/load-image.sh ./deploy $IMAGE_REPO
 
   echo "######  Push images done !  ######"
 fi
