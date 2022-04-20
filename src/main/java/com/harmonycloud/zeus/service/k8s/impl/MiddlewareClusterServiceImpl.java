@@ -3,12 +3,14 @@ package com.harmonycloud.zeus.service.k8s.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.model.middleware.ImageRepositoryDTO;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
 import com.harmonycloud.zeus.dao.BeanMiddlewareClusterMapper;
 import com.harmonycloud.zeus.integration.cluster.ClusterWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCluster;
 import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
+import com.harmonycloud.zeus.service.middleware.ImageRepositoryService;
 import com.harmonycloud.zeus.util.K8sClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +32,8 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
     private BeanMiddlewareClusterMapper middlewareClusterMapper;
     @Autowired
     private ClusterWrapper clusterWrapper;
+    @Autowired
+    private ImageRepositoryService imageRepositoryService;
 
     @Override
     public void create(String clusterId, MiddlewareCluster middlewareCluster) {
@@ -97,9 +101,20 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
             return new ArrayList<>();
         }
         for (MiddlewareCluster middlewareCluster : middlewareClusterList) {
-            this.create(K8sClient.getClusterId(middlewareCluster.getMetadata()), middlewareCluster);
+            // 获取集群id
+            String clusterId = K8sClient.getClusterId(middlewareCluster.getMetadata());
+            // 创建集群在数据库中的记录
+            this.create(clusterId, middlewareCluster);
+            // 初始化集群默认的镜像仓库
+            try {
+                ImageRepositoryDTO imageRepositoryDTO =
+                    imageRepositoryService.convertRegistry(middlewareCluster.getSpec().getInfo().getRegistry());
+                imageRepositoryService.insert(clusterId, imageRepositoryDTO);
+            } catch (Exception e) {
+                log.error("集群{} 初始化镜像仓库失败", clusterId, e);
+            }
         }
         return middlewareClusterMapper.selectList(
-            new QueryWrapper<BeanMiddlewareCluster>().isNotNull("clusterId").isNotNull("middleware_cluster"));
+            new QueryWrapper<BeanMiddlewareCluster>().isNotNull("cluster_id").isNotNull("middleware_cluster"));
     }
 }

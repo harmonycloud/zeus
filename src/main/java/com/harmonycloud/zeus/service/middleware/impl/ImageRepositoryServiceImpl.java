@@ -108,6 +108,18 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         beanImageRepositoryMapper.delete(wrapper);
     }
 
+    @Override
+    public ImageRepositoryDTO convertRegistry(Registry registry) {
+        ImageRepositoryDTO imageRepositoryDTO = new ImageRepositoryDTO();
+        BeanUtils.copyProperties(registry, imageRepositoryDTO);
+        imageRepositoryDTO.setUsername(registry.getUser());
+        imageRepositoryDTO.setProject(registry.getChartRepo());
+        imageRepositoryDTO.setIsDefault(CommonConstant.NUM_ONE);
+        imageRepositoryDTO.setPort(registry.getPort());
+        imageRepositoryDTO.setHostAddress(registry.getAddress());
+        return imageRepositoryDTO;
+    }
+
     /**
      * 校验仓库是否可以连接
      */

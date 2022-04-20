@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.middleware;
 
 import com.github.pagehelper.PageInfo;
 import com.harmonycloud.caas.common.model.middleware.ImageRepositoryDTO;
+import com.harmonycloud.caas.common.model.middleware.Registry;
 
 /**
  * @author yushuaikang
@@ -57,4 +58,11 @@ public interface ImageRepositoryService {
      * @param clusterId
      */
     void removeImageRepository(String clusterId);
+
+    /**
+     * 通过主键ID查看详情
+     * @param id
+     * @return
+     */
+    ImageRepositoryDTO convertRegistry(Registry registry);
 }
