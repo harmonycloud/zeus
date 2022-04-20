@@ -42,7 +42,7 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
     public List<MiddlewareCluster> listClusters() {
         k8sClient.getDefaultClient();
         QueryWrapper<BeanMiddlewareCluster> wrapper = new QueryWrapper<>();
-        wrapper.isNotNull("clusterId").isNotNull("middleware_cluster");
+        wrapper.isNotNull("cluster_id").isNotNull("middleware_cluster");
         List<BeanMiddlewareCluster> beanMiddlewareClusters = middlewareClusterMapper.selectList(wrapper);
         List<MiddlewareCluster> middlewareClusters = new ArrayList<>();
         beanMiddlewareClusters.forEach(beanMiddlewareCluster -> {
@@ -55,7 +55,7 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
     @Override
     public void update(String clusterId, MiddlewareCluster middlewareCluster) {
         QueryWrapper<BeanMiddlewareCluster> wrapper = new QueryWrapper<>();
-        wrapper.eq("clusterId", clusterId);
+        wrapper.eq("cluster_id", clusterId);
         BeanMiddlewareCluster beanMiddlewareCluster = new BeanMiddlewareCluster();
         beanMiddlewareCluster.setClusterId(clusterId);
         beanMiddlewareCluster.setMiddlewareCluster(JSONObject.toJSONString(middlewareCluster));
@@ -65,7 +65,7 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
     @Override
     public void delete(String clusterId) {
         QueryWrapper<BeanMiddlewareCluster> wrapper = new QueryWrapper<>();
-        wrapper.eq("clusterId", clusterId);
+        wrapper.eq("cluster_id", clusterId);
         middlewareClusterMapper.delete(wrapper);
     }
 
@@ -73,7 +73,7 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
     public List<BeanMiddlewareCluster> listClustersByClusterId(String clusterId) {
         k8sClient.getDefaultClient();
         QueryWrapper<BeanMiddlewareCluster> wrapper = new QueryWrapper<>();
-        wrapper.eq("clusterId", clusterId);
+        wrapper.eq("cluster_id", clusterId);
         return middlewareClusterMapper.selectList(wrapper);
     }
 
