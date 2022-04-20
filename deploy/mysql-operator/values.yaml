@@ -41,13 +41,13 @@ replicaCount: 2
 
 image:
   repository: harbor.middleware.com/middleware
-  middlewareImageTag: v5.7.35-hc.3
-  middlewareImageTag_8: v8.0.26-hc.2
-  initImageTag: 1.1.1
-  initImageTag_8: 1.0.5-8.0
+  middlewareImageTag: v5.7.35-hc.4
+  middlewareImageTag_8: v8.0.26-hc.3
+  initImageTag: 1.1.2
+  initImageTag_8: 1.0.6-8.0
   monitorImageTag: v0.12.1
-  backupRestoreImageTag: v1.2.0-hc.6
-  backupRestoreImageTag_8: v8.0-1
+  backupRestoreImageTag: v1.2.0-hc.7
+  backupRestoreImageTag_8: v8.0-2
   helmtestImageTag: v1.0.0
   pullPolicy: IfNotPresent
   testImageTag: v0.3
