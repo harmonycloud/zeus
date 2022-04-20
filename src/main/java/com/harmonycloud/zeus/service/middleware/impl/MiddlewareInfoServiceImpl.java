@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.middleware.impl;
 
 import static com.harmonycloud.caas.common.constants.CommonConstant.*;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.HARMONY_CLOUD;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
 import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.ICON_SVG;
 import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.SVG;
 
@@ -19,6 +20,9 @@ import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
+import com.harmonycloud.zeus.service.k8s.ClusterService;
+import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.ChartVersionUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -60,6 +64,10 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     private ClusterMiddlewareInfoService clusterMiddlewareInfoService;
     @Autowired
     private PodService podService;
+    @Autowired
+    private HelmChartService helmChartService;
+    @Autowired
+    private ClusterService clusterService;
 
     @Override
     public List<BeanMiddlewareInfo> list(Boolean all) {
@@ -110,23 +118,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         //获取集群中间件关联信息
         List<BeanClusterMiddlewareInfo> clusterMwInfoList = clusterMiddlewareInfoService.list(clusterId);
         //校验数据完整性
-        if (CollectionUtils.isEmpty(clusterMwInfoList) || clusterMwInfoList.size() < mwInfoMap.size()) {
-            for (String key : mwInfoMap.keySet()) {
-                if (clusterMwInfoList.stream().noneMatch(
-                        clusterMwInfo -> clusterMwInfo.getChartName().equals(mwInfoMap.get(key).get(0).getChartName()))) {
-                    //获取最新版本的中间件写入集群中间件关联关系
-                    List<BeanMiddlewareInfo> list = mwInfoMap.get(key);
-                    compareChartVersion(list);
-                    BeanClusterMiddlewareInfo clusterMwInfo = new BeanClusterMiddlewareInfo();
-                    clusterMwInfo.setClusterId(clusterId);
-                    clusterMwInfo.setChartName(list.get(0).getChartName());
-                    clusterMwInfo.setChartVersion(list.get(0).getChartVersion());
-                    clusterMwInfo.setStatus(2);
-                    clusterMiddlewareInfoService.insert(clusterMwInfo);
-                    clusterMwInfoList.add(clusterMwInfo);
-                }
-            }
-        }
+        checkDate(clusterMwInfoList, mwInfoMap, clusterId);
         //过滤中间件
         mwInfoList =
                 mwInfoList.stream()
@@ -441,5 +433,69 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
             list.add(middlewareInfoDTO);
         }
         return list;
+    }
+
+    /**
+     * 数据校验
+     */
+    public void checkDate(List<BeanClusterMiddlewareInfo> clusterMwInfoList,
+        Map<String, List<BeanMiddlewareInfo>> mwInfoMap, String clusterId) {
+        // 判断存在数据缺失
+        if (CollectionUtils.isEmpty(clusterMwInfoList) || clusterMwInfoList.size() < mwInfoMap.size()) {
+            // 查寻是否存在已安装的operator
+            Map<String, String> alreadyInstalledOperator = findAlreadyInstalledOperator(clusterId, mwInfoMap);
+            for (String key : mwInfoMap.keySet()) {
+                // 匹配缺失类型
+                if (clusterMwInfoList.stream().noneMatch(
+                    clusterMwInfo -> clusterMwInfo.getChartName().equals(mwInfoMap.get(key).get(0).getChartName()))) {
+                    // 获取最新版本的中间件写入集群中间件关联关系
+                    List<BeanMiddlewareInfo> list = mwInfoMap.get(key);
+                    compareChartVersion(list);
+                    BeanClusterMiddlewareInfo clusterMwInfo = new BeanClusterMiddlewareInfo();
+                    clusterMwInfo.setClusterId(clusterId);
+                    clusterMwInfo.setChartName(key);
+                    if (alreadyInstalledOperator.containsKey(key)) {
+                        clusterMwInfo.setChartVersion(alreadyInstalledOperator.get(key));
+                    } else {
+                        clusterMwInfo.setChartVersion(list.get(0).getChartVersion());
+                    }
+                    clusterMwInfo.setStatus(2);
+                    clusterMiddlewareInfoService.insert(clusterMwInfo);
+                    clusterMwInfoList.add(clusterMwInfo);
+                }
+            }
+        }
+    }
+
+    /**
+     * 获取环境中当前的operator版本
+     */
+    public Map<String, String> findAlreadyInstalledOperator(String clusterId,
+        Map<String, List<BeanMiddlewareInfo>> mwInfoMap) {
+        List<HelmListInfo> helmInfoList =
+            helmChartService.listHelm(MIDDLEWARE_OPERATOR, null, clusterService.findById(clusterId));
+        Map<String, String> helmInfoMap =
+            helmInfoList.stream().collect(Collectors.toMap(HelmListInfo::getName, HelmListInfo::getChart));
+        Map<String, String> operatorNameMap = getOperatorName(mwInfoMap);
+
+        Map<String, String> res = new HashMap<>();
+        operatorNameMap.forEach((k, v) -> {
+            if (helmInfoMap.containsKey(v)) {
+                String chartVersion = helmInfoMap.get(v).replace(v + "-", "");
+                res.put(k, chartVersion);
+            }
+        });
+        return res;
+    }
+
+    /**
+     * 获取operatorname
+     */
+    public Map<String, String> getOperatorName(Map<String, List<BeanMiddlewareInfo>> mwInfoMap){
+        Map<String, String> operatorMap = new HashMap<>();
+        mwInfoMap.forEach((k, v) -> {
+            operatorMap.put(k, mwInfoMap.get(k).get(0).getOperatorName());
+        });
+        return operatorMap;
     }
 }
