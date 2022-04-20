@@ -6,12 +6,14 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
 import com.harmonycloud.zeus.dao.BeanMiddlewareClusterMapper;
+import com.harmonycloud.zeus.integration.cluster.ClusterWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCluster;
 import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import com.harmonycloud.zeus.util.K8sClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -27,7 +29,7 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
     @Autowired
     private BeanMiddlewareClusterMapper middlewareClusterMapper;
     @Autowired
-    private K8sClient k8sClient;
+    private ClusterWrapper clusterWrapper;
 
     @Override
     public void create(String clusterId, MiddlewareCluster middlewareCluster) {
@@ -40,10 +42,12 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
 
     @Override
     public List<MiddlewareCluster> listClusters() {
-        k8sClient.getDefaultClient();
         QueryWrapper<BeanMiddlewareCluster> wrapper = new QueryWrapper<>();
         wrapper.isNotNull("clusterId").isNotNull("middleware_cluster");
         List<BeanMiddlewareCluster> beanMiddlewareClusters = middlewareClusterMapper.selectList(wrapper);
+        if (CollectionUtils.isEmpty(beanMiddlewareClusters)){
+            beanMiddlewareClusters = initMiddlewareCluster();
+        }
         List<MiddlewareCluster> middlewareClusters = new ArrayList<>();
         beanMiddlewareClusters.forEach(beanMiddlewareCluster -> {
             MiddlewareCluster middlewareCluster = JSONObject.parseObject(JSONObject.toJSONString(JSON.parse(beanMiddlewareCluster.getMiddlewareCluster())), MiddlewareCluster.class);
@@ -71,7 +75,6 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
 
     @Override
     public List<BeanMiddlewareCluster> listClustersByClusterId(String clusterId) {
-        k8sClient.getDefaultClient();
         QueryWrapper<BeanMiddlewareCluster> wrapper = new QueryWrapper<>();
         wrapper.eq("clusterId",clusterId);
         return middlewareClusterMapper.selectList(wrapper);
@@ -83,5 +86,20 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
         Date now = calendar.getTime();
         now = DateUtils.addInteger(now,Calendar.HOUR_OF_DAY,-8);
         return sdf.format(now);
+    }
+
+    /**
+     * 初始化middlewareCluster
+     */
+    public List<BeanMiddlewareCluster> initMiddlewareCluster() {
+        List<MiddlewareCluster> middlewareClusterList = clusterWrapper.listClusters();
+        if (CollectionUtils.isEmpty(middlewareClusterList)) {
+            return new ArrayList<>();
+        }
+        for (MiddlewareCluster middlewareCluster : middlewareClusterList) {
+            this.create(K8sClient.getClusterId(middlewareCluster.getMetadata()), middlewareCluster);
+        }
+        return middlewareClusterMapper.selectList(
+            new QueryWrapper<BeanMiddlewareCluster>().isNotNull("clusterId").isNotNull("middleware_cluster"));
     }
 }
