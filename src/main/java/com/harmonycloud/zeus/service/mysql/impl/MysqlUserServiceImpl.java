@@ -5,14 +5,17 @@ import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.constants.MysqlConstant;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.MysqlPrivilegeEnum;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.MysqlAccessInfo;
 import com.harmonycloud.caas.common.model.MysqlDbPrivilege;
 import com.harmonycloud.caas.common.model.MysqlUserDTO;
 import com.harmonycloud.caas.common.model.MysqlUserDetail;
+import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.zeus.bean.BeanMysqlDbPriv;
 import com.harmonycloud.zeus.bean.BeanMysqlUser;
 import com.harmonycloud.zeus.dao.BeanMysqlUserMapper;
+import com.harmonycloud.zeus.operator.api.MysqlOperator;
 import com.harmonycloud.zeus.service.middleware.impl.MysqlServiceImpl;
 import com.harmonycloud.zeus.service.mysql.MysqlDbPrivService;
 import com.harmonycloud.zeus.service.mysql.MysqlUserService;
@@ -52,6 +55,8 @@ public class MysqlUserServiceImpl implements MysqlUserService {
     private MysqlDbPrivService dbPrivService;
     @Autowired
     private MysqlServiceImpl mysqlService;
+    @Autowired
+    private MysqlOperator mysqlOperator;
 
     private static final String INITIAL_USER = "zabbixjk,operator,replic";
 
@@ -360,6 +365,14 @@ public class MysqlUserServiceImpl implements MysqlUserService {
         beanMysqlUser.setCreatetime(LocalDateTime.now());
         beanMysqlUserMapper.insert(beanMysqlUser);
         return select(mysqlQualifiedName, user);
+    }
+
+    // 校验对外服务是否存在，若不存在，则创建
+    public void checkAndCreateOpenService(String clusterId,String namespace,String middlewareName, MysqlAccessInfo mysqlAccessInfo){
+        if(!mysqlAccessInfo.isOpenService()){
+
+
+        }
     }
 
 }

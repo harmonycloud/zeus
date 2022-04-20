@@ -236,7 +236,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             middlewareManageTask.asyncCreateDisasterRecoveryMiddleware(this, middleware);
         }
         // 创建对外服务
-        middlewareManageTask.asyncCreateMysqlOpenService(this, middleware);
+        prepareDbManageOpenService(middleware);
         // 准备数据库管理环境
         prepareDbManageEnv(middleware);
     }
@@ -300,6 +300,10 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         if (mysqlDTO != null && mysqlDTO.getOpenDisasterRecoveryMode() != null && mysqlDTO.getOpenDisasterRecoveryMode() && mysqlDTO.getIsSource()) {
             this.createDisasterRecoveryMiddleware(middleware);
         }
+    }
+
+    public void prepareDbManageOpenService(Middleware middleware){
+        middlewareManageTask.asyncCreateMysqlOpenService(this, middleware);
     }
 
     /**
@@ -566,11 +570,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
     }
 
-    /**
-     * 创建灾备实例
-     *
-     * @param middleware
-     */
     public void createDisasterRecoveryMiddleware(Middleware middleware) {
         MysqlDTO mysqlDTO = middleware.getMysqlDTO();
         //1.为实例创建只读对外服务(NodePort)
@@ -677,7 +676,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
     }
 
-    public void executeCreateOpenService(Middleware middleware, MiddlewareServiceNameIndex middlewareServiceNameIndex) {
+    private void executeCreateOpenService(Middleware middleware, MiddlewareServiceNameIndex middlewareServiceNameIndex) {
         List<IngressComponentDto> ingressComponentList = ingressComponentService.list(middleware.getClusterId());
         log.info("开始为{}创建对外服务，参数：{}", middleware.getName(), middleware);
         if (CollectionUtils.isEmpty(ingressComponentList)) {
@@ -689,10 +688,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
     }
 
-    /**
-     * 为mysql创建一个service
-     * @param middleware
-     */
     public void createIngressService(Middleware middleware) {
         List<IngressComponentDto> ingressComponentList = ingressComponentService.list(middleware.getClusterId());
         if (CollectionUtils.isEmpty(ingressComponentList)) {
@@ -743,11 +738,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
     }
 
-    /**
-     * 删除灾备关联关系和关联信息
-     *
-     * @param middleware
-     */
     public void deleteDisasterRecoveryInfo(Middleware middleware) {
         // 获取values.yaml
         BeanCacheMiddleware beanCacheMiddleware = cacheMiddlewareService.get(middleware);
@@ -785,10 +775,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
     }
 
-    /**
-     * 清除数据库管理可能存在的脏数据，并保存root用户信息到数据库
-     * @param middleware
-     */
     public void prepareDbManageEnv(Middleware middleware) {
         clearDbManageData(middleware);
         BeanMysqlUser mysqlUser = new BeanMysqlUser();
@@ -799,10 +785,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         mysqlUserService.create(mysqlUser);
     }
 
-    /**
-     * 清除可能残留的已发布同名服务的数据库、用户、数据授权信息
-     * @param middleware
-     */
     public void clearDbManageData(Middleware middleware) {
         mysqlDbService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
         mysqlUserService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
