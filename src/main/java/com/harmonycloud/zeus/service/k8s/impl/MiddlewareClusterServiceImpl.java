@@ -43,7 +43,7 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
     @Override
     public List<MiddlewareCluster> listClusters() {
         QueryWrapper<BeanMiddlewareCluster> wrapper = new QueryWrapper<>();
-        wrapper.isNotNull("clusterId").isNotNull("middleware_cluster");
+        wrapper.isNotNull("cluster_id").isNotNull("middleware_cluster");
         List<BeanMiddlewareCluster> beanMiddlewareClusters = middlewareClusterMapper.selectList(wrapper);
         if (CollectionUtils.isEmpty(beanMiddlewareClusters)){
             beanMiddlewareClusters = initMiddlewareCluster();
@@ -59,7 +59,7 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
     @Override
     public void update(String clusterId, MiddlewareCluster middlewareCluster) {
         QueryWrapper<BeanMiddlewareCluster> wrapper = new QueryWrapper<>();
-        wrapper.eq("clusterId", clusterId);
+        wrapper.eq("cluster_id", clusterId);
         BeanMiddlewareCluster beanMiddlewareCluster = new BeanMiddlewareCluster();
         beanMiddlewareCluster.setClusterId(clusterId);
         beanMiddlewareCluster.setMiddlewareCluster(JSONObject.toJSONString(middlewareCluster));
@@ -69,14 +69,14 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
     @Override
     public void delete(String clusterId) {
         QueryWrapper<BeanMiddlewareCluster> wrapper = new QueryWrapper<>();
-        wrapper.eq("clusterId", clusterId);
+        wrapper.eq("cluster_id", clusterId);
         middlewareClusterMapper.delete(wrapper);
     }
 
     @Override
     public List<BeanMiddlewareCluster> listClustersByClusterId(String clusterId) {
         QueryWrapper<BeanMiddlewareCluster> wrapper = new QueryWrapper<>();
-        wrapper.eq("clusterId", clusterId);
+        wrapper.eq("cluster_id", clusterId);
         return middlewareClusterMapper.selectList(wrapper);
     }
 
