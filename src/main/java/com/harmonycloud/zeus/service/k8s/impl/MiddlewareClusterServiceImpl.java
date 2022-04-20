@@ -55,17 +55,17 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
     @Override
     public void update(String clusterId, MiddlewareCluster middlewareCluster) {
         QueryWrapper<BeanMiddlewareCluster> wrapper = new QueryWrapper<>();
-        wrapper.eq("clusterId",clusterId);
+        wrapper.eq("clusterId", clusterId);
         BeanMiddlewareCluster beanMiddlewareCluster = new BeanMiddlewareCluster();
         beanMiddlewareCluster.setClusterId(clusterId);
         beanMiddlewareCluster.setMiddlewareCluster(JSONObject.toJSONString(middlewareCluster));
-        middlewareClusterMapper.update(beanMiddlewareCluster,wrapper);
+        middlewareClusterMapper.update(beanMiddlewareCluster, wrapper);
     }
 
     @Override
     public void delete(String clusterId) {
         QueryWrapper<BeanMiddlewareCluster> wrapper = new QueryWrapper<>();
-        wrapper.eq("clusterId",clusterId);
+        wrapper.eq("clusterId", clusterId);
         middlewareClusterMapper.delete(wrapper);
     }
 
@@ -73,7 +73,7 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
     public List<BeanMiddlewareCluster> listClustersByClusterId(String clusterId) {
         k8sClient.getDefaultClient();
         QueryWrapper<BeanMiddlewareCluster> wrapper = new QueryWrapper<>();
-        wrapper.eq("clusterId",clusterId);
+        wrapper.eq("clusterId", clusterId);
         return middlewareClusterMapper.selectList(wrapper);
     }
 
@@ -81,7 +81,7 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         Calendar calendar = Calendar.getInstance();
         Date now = calendar.getTime();
-        now = DateUtils.addInteger(now,Calendar.HOUR_OF_DAY,-8);
+        now = DateUtils.addInteger(now, Calendar.HOUR_OF_DAY, -8);
         return sdf.format(now);
     }
 }

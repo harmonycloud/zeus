@@ -75,7 +75,7 @@ ADD COLUMN `tab_logo` mediumblob COMMENT 'tab栏logo' AFTER `home_logo_path`;
 -- 新增集群表
 CREATE TABLE `middleware_cluster` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `clusterId` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT '集群ID',
+  `cluster_id` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT '集群ID',
   `middleware_cluster` text COLLATE utf8_bin COMMENT '集群对象',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;

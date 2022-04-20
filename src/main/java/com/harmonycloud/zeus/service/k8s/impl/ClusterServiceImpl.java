@@ -288,7 +288,7 @@ public class ClusterServiceImpl implements ClusterService {
         // 保存集群
         MiddlewareCluster mw = convert(cluster);
         try {
-            middlewareClusterService.create(cluster.getId(),mw);
+            middlewareClusterService.create(cluster.getId(), mw);
             JSONObject attributes = new JSONObject();
             attributes.put(CREATE_TIME, new Date());
             cluster.setAttributes(attributes);
