@@ -26,7 +26,7 @@ public class BeanMiddlewareCluster {
     /**
      * 集群ID
      */
-    @TableField(value = "clusterId")
+    @TableField(value = "cluster_id")
     private String clusterId;
 
     /**
