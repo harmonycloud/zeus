@@ -30,9 +30,9 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
     private K8sClient k8sClient;
 
     @Override
-    public void create(String name, MiddlewareCluster middlewareCluster) {
+    public void create(String clusterId, MiddlewareCluster middlewareCluster) {
         BeanMiddlewareCluster beanMiddlewareCluster = new BeanMiddlewareCluster();
-        beanMiddlewareCluster.setClusterId(name);
+        beanMiddlewareCluster.setClusterId(clusterId);
         middlewareCluster.getMetadata().setCreationTimestamp(convertDateToUTC());
         beanMiddlewareCluster.setMiddlewareCluster(JSONObject.toJSONString(middlewareCluster));
         middlewareClusterMapper.insert(beanMiddlewareCluster);
@@ -45,7 +45,7 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
         wrapper.isNotNull("clusterId").isNotNull("middleware_cluster");
         List<BeanMiddlewareCluster> beanMiddlewareClusters = middlewareClusterMapper.selectList(wrapper);
         List<MiddlewareCluster> middlewareClusters = new ArrayList<>();
-        beanMiddlewareClusters.stream().forEach(beanMiddlewareCluster -> {
+        beanMiddlewareClusters.forEach(beanMiddlewareCluster -> {
             MiddlewareCluster middlewareCluster = JSONObject.parseObject(JSONObject.toJSONString(JSON.parse(beanMiddlewareCluster.getMiddlewareCluster())), MiddlewareCluster.class);
             middlewareClusters.add(middlewareCluster);
         });
@@ -53,19 +53,19 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
     }
 
     @Override
-    public void update(String name, MiddlewareCluster middlewareCluster) {
+    public void update(String clusterId, MiddlewareCluster middlewareCluster) {
         QueryWrapper<BeanMiddlewareCluster> wrapper = new QueryWrapper<>();
-        wrapper.eq("clusterId",name);
+        wrapper.eq("clusterId",clusterId);
         BeanMiddlewareCluster beanMiddlewareCluster = new BeanMiddlewareCluster();
-        beanMiddlewareCluster.setClusterId(name);
+        beanMiddlewareCluster.setClusterId(clusterId);
         beanMiddlewareCluster.setMiddlewareCluster(JSONObject.toJSONString(middlewareCluster));
         middlewareClusterMapper.update(beanMiddlewareCluster,wrapper);
     }
 
     @Override
-    public void delete(String name) {
+    public void delete(String clusterId) {
         QueryWrapper<BeanMiddlewareCluster> wrapper = new QueryWrapper<>();
-        wrapper.eq("clusterId",name);
+        wrapper.eq("clusterId",clusterId);
         middlewareClusterMapper.delete(wrapper);
     }
 

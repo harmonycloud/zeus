@@ -288,7 +288,7 @@ public class ClusterServiceImpl implements ClusterService {
         // 保存集群
         MiddlewareCluster mw = convert(cluster);
         try {
-            middlewareClusterService.create(cluster.getName(),mw);
+            middlewareClusterService.create(cluster.getId(),mw);
             JSONObject attributes = new JSONObject();
             attributes.put(CREATE_TIME, new Date());
             cluster.setAttributes(attributes);
@@ -346,7 +346,7 @@ public class ClusterServiceImpl implements ClusterService {
     @Override
     public void update(MiddlewareClusterDTO cluster) {
         try {
-            middlewareClusterService.update(cluster.getName(), convert(cluster));
+            middlewareClusterService.update(cluster.getId(), convert(cluster));
             if (CLUSTER_MAP.containsKey(cluster.getId())){
                 CLUSTER_MAP.put(cluster.getId(), cluster);
             }
@@ -401,7 +401,7 @@ public class ClusterServiceImpl implements ClusterService {
             return;
         }
         try {
-            middlewareClusterService.delete(cluster.getName());
+            middlewareClusterService.delete(clusterId);
         } catch (Exception e) {
             log.error("集群id：{}，删除集群异常", clusterId, e);
             throw new BusinessException(DictEnum.CLUSTER, cluster.getNickname(), ErrorMessage.DELETE_FAIL);
