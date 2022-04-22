@@ -1,16 +1,15 @@
 package com.harmonycloud.zeus.service.middleware;
 
-import java.util.List;
-
 import com.github.pagehelper.PageInfo;
-import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.AlertDTO;
 import com.harmonycloud.caas.common.model.MiddlewareDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareMonitorDto;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareOverviewDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareStatusDto;
+import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.bean.AlertMessageDTO;
+import com.harmonycloud.zeus.bean.BeanOperationAudit;
 import com.harmonycloud.zeus.bean.PlatformOverviewDTO;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author xutianhong
@@ -75,18 +74,45 @@ public interface OverviewService {
     PlatformOverviewDTO getClusterPlatformOverview(String clusterId);
 
     /**
-     * 平台总览获取服务信息
+     * 获取集群资源信息（包括集群数、分区数、CPU、内存）
+     * @param clusterId
+     * @return
+     */
+    ClusterQuotaDTO resources(String clusterId);
+
+    /**
+     * 控制器状态信息
+     * @param clusterId
+     * @return
+     */
+    MiddlewareOperatorDTO operatorStatus(String clusterId);
+
+    /**
+     * 服务信息（包含全部服务数量和异常服务数量）
      * @param clusterId
      * @return PlatformOverviewDTO
      */
-    List getClusterMiddlewareInfo(String clusterId);
+    List<MiddlewareBriefInfoDTO> getClusterMiddlewareInfo(String clusterId);
 
     /**
-     * 获取告警信息
+     * 告警信息
      * @param clusterId
      * @param current
      * @param size
      * @return
      */
     AlertMessageDTO getAlertInfo(String clusterId, Integer current, Integer size, String level);
+
+    /**
+     * 近20条操作审计信息
+     * @return
+     */
+    List<BeanOperationAudit> recentAudit();
+
+    /**
+     * 平台版本信息
+     * @return
+     */
+    Map<String,String> version();
+
 }
