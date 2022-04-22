@@ -286,6 +286,7 @@ public class MysqlUserServiceImpl implements MysqlUserService {
                 String mysqlQualifiedName = getMysqlQualifiedName(clusterId, namespace, middlewareName);
                 List<MysqlDbPrivilege> privileges =
                     nativeListUserDb(con, userDetail.getUser(), mysqlQualifiedName, keyword);
+                userDetail.setDbs(privileges);
                 // 查询平台存储的用户信息
                 BeanMysqlUser beanMysqlUser = select(mysqlQualifiedName, userDetail.getUser());
                 if (beanMysqlUser == null && ROOT.equals(userDetail.getUser())) {
@@ -299,7 +300,6 @@ public class MysqlUserServiceImpl implements MysqlUserService {
                     userDetail.setDescription(beanMysqlUser.getDescription());
                     userDetail.setCreateTime(
                         Date.from(beanMysqlUser.getCreatetime().atZone(ZoneId.systemDefault()).toInstant()));
-                    userDetail.setDbs(privileges);
                 }
             });
             userList.sort((o1, o2) -> {

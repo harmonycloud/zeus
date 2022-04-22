@@ -120,6 +120,7 @@ data:
         index => "mysqlaudit-%{+YYYY.MM.dd}"
         user => "elastic"
         password => "Hc@Cloud01"
+        document_type =>"_doc"
        }
       }
       else {
