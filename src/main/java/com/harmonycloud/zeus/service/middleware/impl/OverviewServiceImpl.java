@@ -200,7 +200,7 @@ public class OverviewServiceImpl implements OverviewService {
 
         // 获取cpu使用情况
         String cpuUsedQuery = "sum by (container_name)(rate(container_cpu_usage_seconds_total{pod=~\"" + pods.toString()
-            + "\",namespace=\"" + namespace + "\" + ,endpoint!= + \"\"}[1m]))";
+            + "\",namespace=\"" + namespace + "\" + ,endpoint!=\"\"}[1m]))";
         queryMap.put("query", cpuUsedQuery);
         PrometheusResponse prometheusCpuUsed =
             prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
