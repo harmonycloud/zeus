@@ -246,7 +246,7 @@ public class ProjectServiceImpl implements ProjectService {
             beanProject.setUser(beanProject.getUser().replace("," + username, ""));
             beanProjectMapper.updateById(beanProject);
         }
-        userRoleService.delete(username, projectId);
+        userRoleService.delete(username, projectId, null);
     }
 
     @Override

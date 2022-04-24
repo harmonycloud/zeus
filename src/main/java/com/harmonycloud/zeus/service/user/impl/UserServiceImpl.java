@@ -192,7 +192,7 @@ public class UserServiceImpl implements UserService {
         QueryWrapper<BeanUser> wrapper = new QueryWrapper<BeanUser>().eq("username", userName);
         beanUserMapper.delete(wrapper);
         // 删除用户角色关系
-        userRoleService.delete(userName, null);
+        userRoleService.delete(userName, null, null);
         return true;
     }
 
@@ -505,7 +505,7 @@ public class UserServiceImpl implements UserService {
         if (userDto.getIsAdmin()) {
             userRoleService.insert(null, userDto.getUserName(), NUM_ROLE_ADMIN);
         } else {
-            userRoleService.delete(userDto.getUserName(), null);
+            userRoleService.delete(userDto.getUserName(), null, NUM_ROLE_ADMIN);
         }
     }
 }
