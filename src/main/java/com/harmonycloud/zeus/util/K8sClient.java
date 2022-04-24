@@ -90,6 +90,9 @@ public class K8sClient {
      * 初始化
      */
     public void initClients() {
+        if (!K8S_CLIENT_MAP.containsKey(K8sClient.DEFAULT_CLIENT)){
+            initDefaultClient();
+        }
         List<MiddlewareClusterDTO> middlewareClusters = clusterService.listClusters();
         if (middlewareClusters.size() > 0) {
             addK8sClients(middlewareClusters);
