@@ -120,7 +120,10 @@ public class UserRoleServiceImpl implements UserRoleService {
     @Override
     public void insert(String projectId, String username, Integer roleId) {
         QueryWrapper<BeanUserRole> wrapper =
-            new QueryWrapper<BeanUserRole>().eq("project_id", projectId).eq("username", username);
+            new QueryWrapper<BeanUserRole>().eq("username", username);
+        if (StringUtils.isNotEmpty(projectId)){
+            wrapper.eq("project_id", projectId);
+        }
         BeanUserRole existBind = beanUserRoleMapper.selectOne(wrapper);
         if (!ObjectUtils.isEmpty(existBind)) {
             throw new BusinessException(ErrorMessage.USER_ROLE_EXIST);
