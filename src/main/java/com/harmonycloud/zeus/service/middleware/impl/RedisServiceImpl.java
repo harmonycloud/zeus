@@ -6,12 +6,14 @@ import com.harmonycloud.caas.common.constants.RedisConstant;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.MysqlAccessInfo;
 import com.harmonycloud.caas.common.model.RedisAccessInfo;
 import com.harmonycloud.caas.common.model.RedisDbDTO;
 import com.harmonycloud.caas.common.model.middleware.IngressDTO;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.ServiceDTO;
 import com.harmonycloud.caas.common.model.middleware.ServicePortDTO;
+import com.harmonycloud.zeus.operator.impl.RedisOperatorImpl;
 import com.harmonycloud.zeus.service.k8s.IngressService;
 import com.harmonycloud.zeus.service.k8s.impl.ServiceServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -46,11 +48,13 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
     private MiddlewareServiceImpl middlewareService;
     @Autowired
     private ServiceServiceImpl serviceService;
+    @Autowired
+    private RedisOperatorImpl redisOperator;
 
     @Override
     public List<RedisDbDTO> listRedisDb(String clusterId, String namespace, String middlewareName, String db, String keyWord) {
         paramCheck(db);
-        RedisAccessInfo redisAccessInfo = queryBasicAccessInfo(clusterId,namespace,middlewareName,null);
+        RedisAccessInfo redisAccessInfo = checkAndGetDbManageAccessInfo(clusterId,namespace,middlewareName);
         Jedis jedis = getRedisSentinelIsOk(redisAccessInfo);
         List<RedisDbDTO> dbs;
         if (SENTINEL.equals(redisAccessInfo.getMode())) {
@@ -70,7 +74,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
     @Override
     public void create(String clusterId, String namespace, String middlewareName, RedisDbDTO db) {
         paramCheck(db.getDb());
-        RedisAccessInfo redisAccessInfo = queryBasicAccessInfo(clusterId,namespace,middlewareName,null);
+        RedisAccessInfo redisAccessInfo = checkAndGetDbManageAccessInfo(clusterId,namespace,middlewareName);
         Jedis jedis;
         if (SENTINEL.equals(redisAccessInfo.getMode())) {
             jedis = getRedisSentinelIsOk(redisAccessInfo);
@@ -94,7 +98,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
     @Override
     public void update(String clusterId, String namespace, String middlewareName, RedisDbDTO db) {
         paramCheck(db.getDb());
-        RedisAccessInfo redisAccessInfo = queryBasicAccessInfo(clusterId,namespace,middlewareName,null);
+        RedisAccessInfo redisAccessInfo = checkAndGetDbManageAccessInfo(clusterId,namespace,middlewareName);
         Jedis jedis;
         if (SENTINEL.equals(redisAccessInfo.getMode())) {
             jedis = getRedisSentinelIsOk(redisAccessInfo);
@@ -119,7 +123,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
     @Override
     public void delete(String clusterId, String namespace, String middlewareName, RedisDbDTO redisDbDTO) {
         paramCheck(redisDbDTO.getDb());
-        RedisAccessInfo redisAccessInfo = queryBasicAccessInfo(clusterId,namespace,middlewareName,null);
+        RedisAccessInfo redisAccessInfo = checkAndGetDbManageAccessInfo(clusterId,namespace,middlewareName);
         Jedis jedis;
         if (SENTINEL.equals(redisAccessInfo.getMode())) {
             jedis = getRedisSentinelIsOk(redisAccessInfo);
@@ -316,6 +320,21 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
             if (time >= 0) {
                 jedis.expireAt(redisDbDTO.getKey(), time);
             }
+        }
+    }
+
+    private RedisAccessInfo checkAndGetDbManageAccessInfo(String clusterId, String namespace, String middlewareName) {
+        RedisAccessInfo redisAccessInfo = queryBasicAccessInfo(clusterId, namespace, middlewareName, null);
+        if (redisAccessInfo.isOpenService()) {
+            return redisAccessInfo;
+        } else {
+            Middleware middleware = new Middleware();
+            middleware.setClusterId(clusterId);
+            middleware.setNamespace(namespace);
+            middleware.setName(middlewareName);
+            middleware.setType(MiddlewareTypeEnum.REDIS.getType());
+            redisOperator.createOpenService(middleware);
+            return queryBasicAccessInfo(clusterId, namespace, middlewareName, null);
         }
     }
 
