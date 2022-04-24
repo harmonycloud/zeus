@@ -47,6 +47,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 
+import static com.harmonycloud.caas.common.constants.user.UserConstant.ADMIN;
 import static com.harmonycloud.caas.common.constants.user.UserConstant.USERNAME;
 import static com.harmonycloud.caas.filters.base.GlobalKey.NUM_ROLE_ADMIN;
 import static com.harmonycloud.caas.filters.base.GlobalKey.USER_TOKEN;
@@ -496,6 +497,11 @@ public class UserServiceImpl implements UserService {
      * 绑定或解绑超级管理员
      */
     public void bindAdmin(UserDto userDto) {
+        String username =
+            JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue().getString(USERNAME);
+        if (!ADMIN.equals(username)) {
+            throw new BusinessException(ErrorMessage.NO_AUTHORITY);
+        }
         if (userDto.getIsAdmin()) {
             userRoleService.insert(null, userDto.getUserName(), NUM_ROLE_ADMIN);
         } else {
