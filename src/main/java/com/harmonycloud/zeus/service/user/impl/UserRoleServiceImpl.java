@@ -125,7 +125,7 @@ public class UserRoleServiceImpl implements UserRoleService {
             wrapper.eq("project_id", projectId);
         }
         BeanUserRole existBind = beanUserRoleMapper.selectOne(wrapper);
-        if (!ObjectUtils.isEmpty(existBind)) {
+        if (!ObjectUtils.isEmpty(existBind) && roleId != 1) {
             throw new BusinessException(ErrorMessage.USER_ROLE_EXIST);
         }
         BeanUserRole beanUserRole = new BeanUserRole();
