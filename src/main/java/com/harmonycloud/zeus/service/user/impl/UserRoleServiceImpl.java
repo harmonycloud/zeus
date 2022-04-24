@@ -136,13 +136,16 @@ public class UserRoleServiceImpl implements UserRoleService {
     }
 
     @Override
-    public void delete(String userName, String projectId, String roleId) {
+    public void delete(String userName, String projectId, Integer roleId) {
         QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>();
         if (StringUtils.isNotEmpty(userName)){
             wrapper.eq("username", userName);
         }
         if(StringUtils.isNotEmpty(projectId)){
             wrapper.eq("project_id", projectId);
+        }
+        if (roleId != null ){
+            wrapper.eq("role_id", roleId);
         }
         beanUserRoleMapper.delete(wrapper);
     }
