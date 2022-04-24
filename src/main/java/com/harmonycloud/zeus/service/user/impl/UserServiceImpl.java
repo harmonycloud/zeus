@@ -166,9 +166,9 @@ public class UserServiceImpl implements UserService {
         beanUser.setPhone(userDto.getPhone());
         beanUserMapper.update(beanUser, wrapper);
         // 修改角色
-        /*if (userDto.getRoleId() != null) {
+        if (userDto.getRoleId() != null) {
             userRoleService.update(userDto, null);
-        }*/
+        }
     }
 
     @Override
