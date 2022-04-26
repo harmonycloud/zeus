@@ -368,6 +368,9 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             if (errorMsg.contains("OperatorConfiguration") || errorMsg.contains("operatorconfigurations")){
                 return errorMsg;
             }
+            if (errorMsg.contains("CustomResourceDefinition is deprecated") || errorMsg.contains("apiextensions.k8s.io/v1beta1")){
+                return errorMsg;
+            }
             throw new RuntimeException(errorMsg);
         };
     }

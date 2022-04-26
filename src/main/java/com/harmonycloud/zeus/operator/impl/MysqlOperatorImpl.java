@@ -573,7 +573,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     public void createDisasterRecoveryMiddleware(Middleware middleware) {
         MysqlDTO mysqlDTO = middleware.getMysqlDTO();
         //1.为实例创建只读对外服务(NodePort)
-        tryCreateOpenService(middleware, ServiceNameConvertUtil.convertMysql(middleware.getName(), true), false);
+//        tryCreateOpenService(middleware, ServiceNameConvertUtil.convertMysql(middleware.getName(), true), false);
+        createOpenService(middleware, true);
         //2.设置灾备实例信息，创建灾备实例
         //2.1 设置灾备实例信息
         Middleware relationMiddleware = middleware.getRelationMiddleware();
@@ -614,13 +615,10 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 middleware.getType(), middleware.getName());
         log.info("准备创建MysqlReplicate,middleware={},ingressDTOS={}", middleware, ingressDTOS);
         if (!CollectionUtils.isEmpty(ingressDTOS)) {
-            List<IngressDTO> readonlyIngressDTOList =
-                ingressDTOS.stream()
-                    .filter(ingressDTO -> (ingressDTO.getLabels() != null
-                        && ingressDTO.getLabels().containsKey(SERVICE_TYPE)
-                        && Slave_All.equals(ingressDTO.getLabels().get(SERVICE_TYPE))
-                        && ingressDTO.getExposeType().equals(MIDDLEWARE_EXPOSE_NODEPORT)))
-                    .collect(Collectors.toList());
+            // 查询只读服务
+            List<IngressDTO> readonlyIngressDTOList = ingressDTOS.stream().filter(item -> item.getName().contains("readonly"))
+                            .collect(Collectors.toList());
+
             if (!CollectionUtils.isEmpty(readonlyIngressDTOList)) {
                 IngressDTO ingressDTO = readonlyIngressDTOList.get(0);
                 List<ServiceDTO> serviceList = ingressDTO.getServiceList();
@@ -641,6 +639,13 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                     mysqlReplicateCR.setMetadata(metaData);
                     mysqlReplicateCR.setKind("MysqlReplicate");
 
+                    // 先删除mysqlreplicate
+                    try {
+                        mysqlReplicateCRDService.deleteMysqlReplicate(disasterRecovery.getClusterId(), disasterRecovery.getNamespace(), mysqlReplicateCR.getMetadata().getName());
+                    } catch (Exception e) {
+                        log.error("删除mysqlreplicate出错了", e);
+                    }
+
                     try {
                         log.info("创建mysql实例 {} 和 {} 的关联关系MysqlReplicate", original.getName(), middleware.getName());
                         mysqlReplicateCRDService.createMysqlReplicate(disasterRecovery.getClusterId(), mysqlReplicateCR);
@@ -656,15 +661,14 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
     }
 
-    public void createOpenService(Middleware middleware) {
+    public void createOpenService(Middleware middleware, boolean isReadOnlyService) {
         boolean success = false;
-        MiddlewareServiceNameIndex middlewareServiceNameIndex = ServiceNameConvertUtil.convertMysql(middleware.getName(), false);
         for (int i = 0; i < (60 * 10 * 60) && !success; i++) {
             Middleware detail = middlewareService.detail(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
             log.info("为实例：{}创建对外服务：状态：{},已用时：{}s", detail.getName(), detail.getStatus(), i);
             if (detail != null) {
                 if (detail.getStatus() != null && "Running".equals(detail.getStatus())) {
-                    executeCreateOpenService(middleware, middlewareServiceNameIndex);
+                    executeCreateOpenService(middleware, isReadOnlyService);
                     success = true;
                 }
             }
@@ -676,19 +680,20 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
     }
 
-    private void executeCreateOpenService(Middleware middleware, MiddlewareServiceNameIndex middlewareServiceNameIndex) {
+    private void executeCreateOpenService(Middleware middleware, boolean isReadOnlyService) {
         List<IngressComponentDto> ingressComponentList = ingressComponentService.list(middleware.getClusterId());
         log.info("开始为{}创建对外服务，参数：{}", middleware.getName(), middleware);
         if (CollectionUtils.isEmpty(ingressComponentList)) {
             log.info("不存在ingress，使用NodePort暴露服务");
+            MiddlewareServiceNameIndex middlewareServiceNameIndex = ServiceNameConvertUtil.convertMysql(middleware.getName(), isReadOnlyService);
             super.createOpenService(middleware, middlewareServiceNameIndex);
         } else {
             log.info("存在ingress，使用ingress暴露服务");
-            createIngressService(middleware);
+            createIngressService(middleware, isReadOnlyService);
         }
     }
 
-    public void createIngressService(Middleware middleware) {
+    public void createIngressService(Middleware middleware, boolean isReadOnlyService) {
         List<IngressComponentDto> ingressComponentList = ingressComponentService.list(middleware.getClusterId());
         if (CollectionUtils.isEmpty(ingressComponentList)) {
             return;
@@ -702,9 +707,17 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         ingressDTO.setMiddlewareType(middleware.getType());
         // 获取mysql服务列表
         List<ServicePortDTO> servicePortDTOList = serviceService.list(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
-        servicePortDTOList = servicePortDTOList.stream().filter(item ->
-                ( (!item.getServiceName().contains("headless")) && (!item.getServiceName().contains("readonly"))))
-                .collect(Collectors.toList());
+
+        if (isReadOnlyService) {
+            servicePortDTOList = servicePortDTOList.stream().filter(item ->
+                    (item.getServiceName().contains("readonly")))
+                    .collect(Collectors.toList());
+        } else {
+            servicePortDTOList = servicePortDTOList.stream().filter(item ->
+                    ((!item.getServiceName().contains("headless")) && (!item.getServiceName().contains("readonly"))))
+                    .collect(Collectors.toList());
+        }
+
         if (CollectionUtils.isEmpty(servicePortDTOList)) {
             return;
         }

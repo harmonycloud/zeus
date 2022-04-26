@@ -969,14 +969,16 @@ public class IngressServiceImpl implements IngressService {
         ingressDTO.setRules(rules);
 
         Map<String, String> labels = ingress.getMetadata().getLabels();
-        if (StringUtils.isNotBlank(labels.get(MIDDLEWARE_TYPE))) {
-            ingressDTO.setMiddlewareType(labels.get(MIDDLEWARE_TYPE));
-        }
-        if (StringUtils.isNotBlank(labels.get(MIDDLEWARE_NAME))) {
-            ingressDTO.setMiddlewareName(labels.get(MIDDLEWARE_NAME));
-        }
-        if (StringUtils.isNotEmpty(ingress.getMetadata().getAnnotations().get(INGRESS_CLASS_NAME))){
-            ingressDTO.setIngressClassName(ingress.getMetadata().getAnnotations().get(INGRESS_CLASS_NAME));
+        if(!CollectionUtils.isEmpty(labels)){
+            if (StringUtils.isNotBlank(labels.get(MIDDLEWARE_TYPE))) {
+                ingressDTO.setMiddlewareType(labels.get(MIDDLEWARE_TYPE));
+            }
+            if (StringUtils.isNotBlank(labels.get(MIDDLEWARE_NAME))) {
+                ingressDTO.setMiddlewareName(labels.get(MIDDLEWARE_NAME));
+            }
+            if (StringUtils.isNotEmpty(ingress.getMetadata().getAnnotations().get(INGRESS_CLASS_NAME))){
+                ingressDTO.setIngressClassName(ingress.getMetadata().getAnnotations().get(INGRESS_CLASS_NAME));
+            }
         }
         return ingressDTO;
     }
