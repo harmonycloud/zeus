@@ -292,6 +292,7 @@ public class ClusterServiceImpl implements ClusterService {
             JSONObject attributes = new JSONObject();
             attributes.put(CREATE_TIME, new Date());
             cluster.setAttributes(attributes);
+            CLUSTER_MAP.put(cluster.getId(), cluster);
         } catch (Exception e) {
             log.error("集群id：{}，添加集群异常", cluster.getId());
             throw new BusinessException(DictEnum.CLUSTER, cluster.getNickname(), ErrorMessage.ADD_FAIL);
