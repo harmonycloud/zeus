@@ -233,7 +233,7 @@ public class MysqlServiceImpl implements MysqlService {
             middleware.setNamespace(namespace);
             middleware.setName(middlewareName);
             middleware.setType(MiddlewareTypeEnum.MYSQL.getType());
-            mysqlOperator.createOpenService(middleware);
+            mysqlOperator.createOpenService(middleware, false);
             return queryBasicAccessInfo(clusterId, namespace, middlewareName, null);
         }
     }

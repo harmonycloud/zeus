@@ -301,6 +301,16 @@ public class ClusterServiceImpl implements ClusterService {
         insertMysqlImageRepository(cluster);
         // 将chart包存进数据库
         insertMysqlChart(cluster.getId());
+        // 判断middleware-operator分区是否存在，不存在则创建
+        synchronized (this) {
+            List<Namespace> namespaceList = namespaceService.list(cluster.getId(), false, "middleware-operator");
+            // 检验分区是否存在
+            if (CollectionUtils.isEmpty(namespaceList)) {
+                Map<String, String> label = new HashMap<>();
+                label.put("middleware", "middleware");
+                namespaceService.save(cluster.getId(), "middleware-operator", label, null);
+            }
+        }
     }
 
     @Override
