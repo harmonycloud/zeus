@@ -120,9 +120,12 @@ public class UserRoleServiceImpl implements UserRoleService {
     @Override
     public void insert(String projectId, String username, Integer roleId) {
         QueryWrapper<BeanUserRole> wrapper =
-            new QueryWrapper<BeanUserRole>().eq("project_id", projectId).eq("username", username);
+            new QueryWrapper<BeanUserRole>().eq("username", username);
+        if (StringUtils.isNotEmpty(projectId)){
+            wrapper.eq("project_id", projectId);
+        }
         BeanUserRole existBind = beanUserRoleMapper.selectOne(wrapper);
-        if (!ObjectUtils.isEmpty(existBind)) {
+        if (!ObjectUtils.isEmpty(existBind) && roleId != 1) {
             throw new BusinessException(ErrorMessage.USER_ROLE_EXIST);
         }
         BeanUserRole beanUserRole = new BeanUserRole();
@@ -133,13 +136,16 @@ public class UserRoleServiceImpl implements UserRoleService {
     }
 
     @Override
-    public void delete(String userName, String projectId) {
+    public void delete(String userName, String projectId, Integer roleId) {
         QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>();
         if (StringUtils.isNotEmpty(userName)){
             wrapper.eq("username", userName);
         }
         if(StringUtils.isNotEmpty(projectId)){
             wrapper.eq("project_id", projectId);
+        }
+        if (roleId != null ){
+            wrapper.eq("role_id", roleId);
         }
         beanUserRoleMapper.delete(wrapper);
     }

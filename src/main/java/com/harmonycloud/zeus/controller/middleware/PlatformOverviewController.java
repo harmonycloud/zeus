@@ -2,7 +2,11 @@ package com.harmonycloud.zeus.controller.middleware;
 
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.AlertDTO;
+import com.harmonycloud.caas.common.model.middleware.ClusterQuotaDTO;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareBriefInfoDTO;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareOperatorDTO;
 import com.harmonycloud.zeus.bean.AlertMessageDTO;
+import com.harmonycloud.zeus.bean.BeanOperationAudit;
 import com.harmonycloud.zeus.bean.PlatformOverviewDTO;
 import com.harmonycloud.zeus.service.middleware.OverviewService;
 import io.swagger.annotations.Api;
@@ -16,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author zackchen
@@ -38,7 +43,25 @@ public class PlatformOverviewController {
         return BaseResult.ok(overviewService.getClusterPlatformOverview(clusterId));
     }
 
-    @ApiOperation(value = "平台总览-获取告警信息", notes = "平台总览-获取告警信息")
+    @ApiOperation(value = "资源信息", notes = "资源信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class)
+    })
+    @GetMapping("/resources")
+    public BaseResult<ClusterQuotaDTO> resources(@RequestParam(value = "clusterId", required = false) String clusterId) {
+        return BaseResult.ok(overviewService.resources(clusterId));
+    }
+
+    @ApiOperation(value = "控制器状态信息", notes = "控制器状态信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class)
+    })
+    @GetMapping("/operatorStatus")
+    public BaseResult<MiddlewareOperatorDTO> operatorStatus(@RequestParam(value = "clusterId", required = false) String clusterId) {
+        return BaseResult.ok(overviewService.operatorStatus(clusterId));
+    }
+
+    @ApiOperation(value = "告警信息", notes = "告警信息")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "current", value = "当前页", paramType = "query", dataTypeClass = String.class),
@@ -53,16 +76,28 @@ public class PlatformOverviewController {
         return BaseResult.ok(overviewService.getAlertInfo(clusterId, current, size, level));
     }
 
-    @ApiOperation(value = "平台总览-获取服务信息", notes = "服务信息")
+    @ApiOperation(value = "服务信息", notes = "服务信息")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/middlewareInfo")
-    public BaseResult getMiddlewareInfo(@RequestParam(value = "clusterId", required = false) String clusterId) {
+    public BaseResult<List<MiddlewareBriefInfoDTO>> getMiddlewareInfo(@RequestParam(value = "clusterId", required = false) String clusterId) {
         return BaseResult.ok(overviewService.getClusterMiddlewareInfo(clusterId));
     }
 
-    @ApiOperation(value = "查询告警记录", notes = "查询告警记录")
+    @ApiOperation(value = "操作审计信息", notes = "操作审计信息")
+    @GetMapping("/audit")
+    public BaseResult<List<BeanOperationAudit>> audit() {
+        return BaseResult.ok(overviewService.recentAudit());
+    }
+
+    @ApiOperation(value = "版本信息", notes = "版本信息")
+    @GetMapping("/version")
+    public BaseResult<Map<String, String>> version() {
+        return BaseResult.ok(overviewService.version());
+    }
+
+    @ApiOperation(value = "告警记录", notes = "告警记录")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", required = false, dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "分区", paramType = "query", required = false, dataTypeClass = String.class),
@@ -81,4 +116,5 @@ public class PlatformOverviewController {
                                                       @RequestParam(value = "keyword", required = false) String keyword) {
         return BaseResult.ok(overviewService.getAlertRecord(clusterId, namespace, middlewareName, current, size,level, keyword, lay));
     }
+
 }

@@ -1,5 +1,7 @@
 package com.harmonycloud.zeus.util;
 
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.MysqlAccessInfo;
 import com.harmonycloud.caas.common.model.MysqlDbDTO;
 import com.harmonycloud.caas.common.model.MysqlUserDTO;
@@ -76,8 +78,8 @@ public class MysqlConnectionUtil {
             return DriverManager.getConnection(dbUrl, user, password);
         } catch (Exception e) {
             e.printStackTrace();
+            throw new BusinessException(ErrorMessage.MYSQL_CONNECTION_FAILED);
         }
-        return null;
     }
 
     /**

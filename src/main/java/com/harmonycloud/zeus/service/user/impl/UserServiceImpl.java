@@ -47,7 +47,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 
+import static com.harmonycloud.caas.common.constants.user.UserConstant.ADMIN;
 import static com.harmonycloud.caas.common.constants.user.UserConstant.USERNAME;
+import static com.harmonycloud.caas.filters.base.GlobalKey.NUM_ROLE_ADMIN;
 import static com.harmonycloud.caas.filters.base.GlobalKey.USER_TOKEN;
 
 
@@ -151,6 +153,10 @@ public class UserServiceImpl implements UserService {
         }
         // 写入用户表
         insertUser(userDto);
+        // 分配超级管理员角色
+        if (userDto.getIsAdmin() != null){
+            bindAdmin(userDto);
+        }
     }
 
     @Override
@@ -165,10 +171,10 @@ public class UserServiceImpl implements UserService {
         beanUser.setEmail(userDto.getEmail());
         beanUser.setPhone(userDto.getPhone());
         beanUserMapper.update(beanUser, wrapper);
-        // 修改角色
-        /*if (userDto.getRoleId() != null) {
-            userRoleService.update(userDto, null);
-        }*/
+        // 分配或删除超级管理员角色
+        if (userDto.getIsAdmin() != null){
+            bindAdmin(userDto);
+        }
     }
 
     @Override
@@ -186,7 +192,7 @@ public class UserServiceImpl implements UserService {
         QueryWrapper<BeanUser> wrapper = new QueryWrapper<BeanUser>().eq("username", userName);
         beanUserMapper.delete(wrapper);
         // 删除用户角色关系
-        userRoleService.delete(userName, null);
+        userRoleService.delete(userName, null, null);
         return true;
     }
 
@@ -485,5 +491,21 @@ public class UserServiceImpl implements UserService {
                 parentMenu.setSubMenu(resourceMenuDtos);
             }
         });
+    }
+
+    /**
+     * 绑定或解绑超级管理员
+     */
+    public void bindAdmin(UserDto userDto) {
+        String username =
+            JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue().getString(USERNAME);
+        if (!ADMIN.equals(username)) {
+            throw new BusinessException(ErrorMessage.NO_AUTHORITY);
+        }
+        if (userDto.getIsAdmin()) {
+            userRoleService.insert(null, userDto.getUserName(), NUM_ROLE_ADMIN);
+        } else {
+            userRoleService.delete(userDto.getUserName(), null, NUM_ROLE_ADMIN);
+        }
     }
 }

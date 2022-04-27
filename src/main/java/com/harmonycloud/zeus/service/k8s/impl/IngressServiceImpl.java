@@ -762,6 +762,7 @@ public class IngressServiceImpl implements IngressService {
 
         MiddlewareClusterDTO middlewareCluster = clusterService.findById(clusterId);
         Map<String, IngressDTO> map = new HashMap<>(10);
+        List<IngressDTO> middlewareIngressList = new ArrayList<>();
         for (String key : data.keySet()) {
             String serviceInfo = data.get(key);
             String[] serviceInfos = serviceInfo.split(":");
@@ -780,14 +781,7 @@ public class IngressServiceImpl implements IngressService {
             }
             serviceDTO.setServiceName(serviceNames[1]);
 
-            IngressDTO ingressDTO = map.get(serviceInfos[0]);
-            if (ingressDTO != null) {
-                List<ServiceDTO> serviceDTOList = ingressDTO.getServiceList();
-                serviceDTOList.add(serviceDTO);
-                continue;
-            }
-
-            ingressDTO = new IngressDTO();
+            IngressDTO ingressDTO = new IngressDTO();
             ingressDTO.setClusterId(clusterId);
             ingressDTO.setNamespace(serviceNames[0]);
             List<ServiceDTO> list = new ArrayList<>(1);
@@ -803,13 +797,10 @@ public class IngressServiceImpl implements IngressService {
                 ingressDTO.setMiddlewareType(stringStringMap.get("type"));
                 ingressDTO.setMiddlewareName(stringStringMap.get("name"));
             }
-
-            map.put(serviceInfos[0], ingressDTO);
+            middlewareIngressList.add(ingressDTO);
         }
 
-        for (String key : map.keySet()) {
-            ingressDtoList.add(map.get(key));
-        }
+        ingressDtoList.addAll(middlewareIngressList);
     }
 
 
@@ -978,14 +969,16 @@ public class IngressServiceImpl implements IngressService {
         ingressDTO.setRules(rules);
 
         Map<String, String> labels = ingress.getMetadata().getLabels();
-        if (StringUtils.isNotBlank(labels.get(MIDDLEWARE_TYPE))) {
-            ingressDTO.setMiddlewareType(labels.get(MIDDLEWARE_TYPE));
-        }
-        if (StringUtils.isNotBlank(labels.get(MIDDLEWARE_NAME))) {
-            ingressDTO.setMiddlewareName(labels.get(MIDDLEWARE_NAME));
-        }
-        if (StringUtils.isNotEmpty(ingress.getMetadata().getAnnotations().get(INGRESS_CLASS_NAME))){
-            ingressDTO.setIngressClassName(ingress.getMetadata().getAnnotations().get(INGRESS_CLASS_NAME));
+        if(!CollectionUtils.isEmpty(labels)){
+            if (StringUtils.isNotBlank(labels.get(MIDDLEWARE_TYPE))) {
+                ingressDTO.setMiddlewareType(labels.get(MIDDLEWARE_TYPE));
+            }
+            if (StringUtils.isNotBlank(labels.get(MIDDLEWARE_NAME))) {
+                ingressDTO.setMiddlewareName(labels.get(MIDDLEWARE_NAME));
+            }
+            if (StringUtils.isNotEmpty(ingress.getMetadata().getAnnotations().get(INGRESS_CLASS_NAME))){
+                ingressDTO.setIngressClassName(ingress.getMetadata().getAnnotations().get(INGRESS_CLASS_NAME));
+            }
         }
         return ingressDTO;
     }

@@ -57,6 +57,14 @@ public class ServiceNameConvertUtil {
     }
 
     /**
+     * 转换redis服务名称
+     * @return
+     */
+    public static MiddlewareServiceNameIndex convertRedis(String middlewareName) {
+        return new MiddlewareServiceNameIndex(middlewareName + "-nodeport", middlewareName);
+    }
+
+    /**
      * 根据中间件类型返回服务名称
      *
      * @param middleware

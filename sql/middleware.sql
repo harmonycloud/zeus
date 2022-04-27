@@ -349,6 +349,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- ----------------------------
 -- Table structure for ldap_config
 -- ----------------------------
+DROP TABLE IF EXISTS `ldap_config`;
 CREATE TABLE `ldap_config` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT 'id',
   `config_name` varchar(64) NOT NULL COMMENT '配置名',
@@ -363,6 +364,7 @@ CREATE TABLE `ldap_config` (
 -- ----------------------------
 -- Table structure for mysql_db
 -- ----------------------------
+DROP TABLE IF EXISTS `mysql_db`;
 CREATE TABLE `mysql_db` (
                             `id` int(11) NOT NULL AUTO_INCREMENT,
                             `mysql_qualified_name` varchar(512) NOT NULL COMMENT 'mysql服务限定名',
@@ -376,6 +378,7 @@ CREATE TABLE `mysql_db` (
 -- ----------------------------
 -- Table structure for mysql_user
 -- ----------------------------
+DROP TABLE IF EXISTS `mysql_user`;
 CREATE TABLE `mysql_user` (
                               `id` int(11) NOT NULL AUTO_INCREMENT,
                               `mysql_qualified_name` varchar(512) NOT NULL COMMENT 'mysql服务限定名',
@@ -389,6 +392,7 @@ CREATE TABLE `mysql_user` (
 -- ----------------------------
 -- Table structure for mysql_db_priv
 -- ----------------------------
+DROP TABLE IF EXISTS `mysql_db_priv`;
 CREATE TABLE `mysql_db_priv` (
                                  `id` int(11) NOT NULL AUTO_INCREMENT,
                                  `mysql_qualified_name` varchar(512) NOT NULL COMMENT 'mysql服务限定名',

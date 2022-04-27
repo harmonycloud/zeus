@@ -288,10 +288,11 @@ public class ClusterServiceImpl implements ClusterService {
         // 保存集群
         MiddlewareCluster mw = convert(cluster);
         try {
-            middlewareClusterService.create(cluster.getName(),mw);
+            middlewareClusterService.create(cluster.getId(), mw);
             JSONObject attributes = new JSONObject();
             attributes.put(CREATE_TIME, new Date());
             cluster.setAttributes(attributes);
+            CLUSTER_MAP.put(cluster.getId(), cluster);
         } catch (Exception e) {
             log.error("集群id：{}，添加集群异常", cluster.getId());
             throw new BusinessException(DictEnum.CLUSTER, cluster.getNickname(), ErrorMessage.ADD_FAIL);
@@ -300,6 +301,16 @@ public class ClusterServiceImpl implements ClusterService {
         insertMysqlImageRepository(cluster);
         // 将chart包存进数据库
         insertMysqlChart(cluster.getId());
+        // 判断middleware-operator分区是否存在，不存在则创建
+        synchronized (this) {
+            List<Namespace> namespaceList = namespaceService.list(cluster.getId(), false, "middleware-operator");
+            // 检验分区是否存在
+            if (CollectionUtils.isEmpty(namespaceList)) {
+                Map<String, String> label = new HashMap<>();
+                label.put("middleware", "middleware");
+                namespaceService.save(cluster.getId(), "middleware-operator", label, null);
+            }
+        }
     }
 
     @Override
@@ -346,7 +357,7 @@ public class ClusterServiceImpl implements ClusterService {
     @Override
     public void update(MiddlewareClusterDTO cluster) {
         try {
-            middlewareClusterService.update(cluster.getName(), convert(cluster));
+            middlewareClusterService.update(cluster.getId(), convert(cluster));
             if (CLUSTER_MAP.containsKey(cluster.getId())){
                 CLUSTER_MAP.put(cluster.getId(), cluster);
             }
@@ -401,7 +412,7 @@ public class ClusterServiceImpl implements ClusterService {
             return;
         }
         try {
-            middlewareClusterService.delete(cluster.getName());
+            middlewareClusterService.delete(clusterId);
         } catch (Exception e) {
             log.error("集群id：{}，删除集群异常", clusterId, e);
             throw new BusinessException(DictEnum.CLUSTER, cluster.getNickname(), ErrorMessage.DELETE_FAIL);
@@ -503,14 +514,7 @@ public class ClusterServiceImpl implements ClusterService {
     }
 
     public void insertMysqlImageRepository(MiddlewareClusterDTO clusterDTO) {
-        ImageRepositoryDTO imageRepositoryDTO = new ImageRepositoryDTO();
-        Registry registry = clusterDTO.getRegistry();
-        BeanUtils.copyProperties(registry, imageRepositoryDTO);
-        imageRepositoryDTO.setUsername(registry.getUser());
-        imageRepositoryDTO.setProject(registry.getChartRepo());
-        imageRepositoryDTO.setIsDefault(CommonConstant.NUM_ONE);
-        imageRepositoryDTO.setPort(registry.getPort());
-        imageRepositoryDTO.setHostAddress(registry.getAddress());
+        ImageRepositoryDTO imageRepositoryDTO = imageRepositoryService.convertRegistry(clusterDTO.getRegistry());
         imageRepositoryService.insert(clusterDTO.getId(), imageRepositoryDTO);
     }
 
@@ -642,7 +646,7 @@ public class ClusterServiceImpl implements ClusterService {
                 // 查询cpu每5分钟平均用量
                 try {
                     String per5MinCpuUsedQuery = "sum(rate(container_cpu_usage_seconds_total{pod=~\"" + pods.toString()
-                        + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"}[5m]))";
+                        + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\",endpoint!=\"\"}[5m]))";
                     queryMap.put("query", per5MinCpuUsedQuery);
                     PrometheusResponse per5MinCpuUsed =
                         prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
@@ -674,7 +678,7 @@ public class ClusterServiceImpl implements ClusterService {
                 // 查询memory每5分钟平均用量
                 try {
                     String per5MinMemoryUsedQuery = "sum(avg_over_time(container_memory_working_set_bytes{pod=~\""
-                        + pods.toString() + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"}[5m])) /1024/1024/1024/2";
+                        + pods.toString() + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\",endpoint!=\"\"}[5m])) /1024/1024/1024/2";
                     queryMap.put("query", per5MinMemoryUsedQuery);
                     PrometheusResponse per5MinMemoryUsed =
                         prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);

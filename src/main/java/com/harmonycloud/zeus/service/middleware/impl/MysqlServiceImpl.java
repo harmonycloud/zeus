@@ -223,16 +223,31 @@ public class MysqlServiceImpl implements MysqlService {
         }
     }
 
+    public MysqlAccessInfo checkAndGetDbManageAccessInfo(String clusterId, String namespace, String middlewareName) {
+        MysqlAccessInfo mysqlAccessInfo = queryBasicAccessInfo(clusterId, namespace, middlewareName, null);
+        if (mysqlAccessInfo.isOpenService()) {
+            return mysqlAccessInfo;
+        } else {
+            Middleware middleware = new Middleware();
+            middleware.setClusterId(clusterId);
+            middleware.setNamespace(namespace);
+            middleware.setName(middlewareName);
+            middleware.setType(MiddlewareTypeEnum.MYSQL.getType());
+            mysqlOperator.createOpenService(middleware, false);
+            return queryBasicAccessInfo(clusterId, namespace, middlewareName, null);
+        }
+    }
+
     public MysqlAccessInfo getAccessInfo(MysqlUserDTO user) {
-        return queryBasicAccessInfo(user.getClusterId(), user.getNamespace(), user.getMiddlewareName(), null);
+        return checkAndGetDbManageAccessInfo(user.getClusterId(), user.getNamespace(), user.getMiddlewareName());
     }
 
     public MysqlAccessInfo getAccessInfo(MysqlDbDTO db) {
-        return queryBasicAccessInfo(db.getClusterId(), db.getNamespace(), db.getMiddlewareName(), null);
+        return checkAndGetDbManageAccessInfo(db.getClusterId(), db.getNamespace(), db.getMiddlewareName());
     }
 
     public MysqlAccessInfo getAccessInfo(String clusterId, String namespace, String middlewareName) {
-        return queryBasicAccessInfo(clusterId, namespace, middlewareName, null);
+        return checkAndGetDbManageAccessInfo(clusterId, namespace, middlewareName);
     }
 
     /**

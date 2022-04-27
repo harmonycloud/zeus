@@ -101,10 +101,6 @@ public class OverviewServiceImpl implements OverviewService {
     private String version;
 
     /**
-     * 服务chartVersion缓存
-     */
-    private static Map<String, String> middlewareChartVersion = new HashMap<>();
-    /**
      * 查询中间件状态
      *
      * @param clusterId
@@ -200,7 +196,7 @@ public class OverviewServiceImpl implements OverviewService {
 
         // 获取cpu使用情况
         String cpuUsedQuery = "sum by (container_name)(rate(container_cpu_usage_seconds_total{pod=~\"" + pods.toString()
-            + "\",namespace=\"" + namespace + "\"}[1m]))";
+            + "\",namespace=\"" + namespace + "\",endpoint!=\"\"}[1m]))";
         queryMap.put("query", cpuUsedQuery);
         PrometheusResponse prometheusCpuUsed =
             prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
@@ -529,7 +525,7 @@ public class OverviewServiceImpl implements OverviewService {
             if (CollectionUtils.isEmpty(namespaces)) {
                 return;
             }
-            Map<String, OverviewNamespaceInfo> namespaceMap = namespaces.stream().filter(namespace -> namespace.isRegistered()).map(namespace -> {
+            Map<String, OverviewNamespaceInfo> namespaceMap = namespaces.stream().filter(Namespace::isRegistered).map(namespace -> {
                 OverviewNamespaceInfo overviewNSInfo = new OverviewNamespaceInfo();
                 BeanUtils.copyProperties(namespace, overviewNSInfo);
                 // 累计集群的注册命名空间数
@@ -698,8 +694,8 @@ public class OverviewServiceImpl implements OverviewService {
             }
 
             //获取已注册分区
-            List<Namespace> registeredNamespace = namespaces.stream().filter(namespace -> namespace.isRegistered()).collect(Collectors.toList());
-            registeredNamespace.stream().forEach(namespace -> {
+            List<Namespace> registeredNamespace = namespaces.stream().filter(Namespace::isRegistered).collect(Collectors.toList());
+            registeredNamespace.forEach(namespace -> {
                 //获取分区下所有实例
                 List<MiddlewareCR> middlewareCRS = middlewareCRService.listCR(clusterDTO.getId(), namespace.getName(), null);
                 Map<String, List<String>> quotas = namespace.getQuotas();
@@ -792,11 +788,24 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
     @Override
+    public ClusterQuotaDTO resources(String clusterId) {
+        List<MiddlewareClusterDTO> clusterList = getClusterList(clusterId);
+        //获取集群已注册分区
+        List<Namespace> registeredNamespaceList = clusterService.getRegisteredNamespaceNum(clusterList);
+        //获取集群CPU和内存的配额信息
+        ClusterQuotaDTO clusterQuota = clusterService.getClusterQuota(clusterList);
+        clusterQuota.setClusterNum(clusterList.size());
+        clusterQuota.setNamespaceNum(registeredNamespaceList.size());
+        return clusterQuota;
+    }
+
+    @Override
+    public MiddlewareOperatorDTO operatorStatus(String clusterId) {
+        return middlewareInfoService.getOperatorInfo(getClusterList(clusterId));
+    }
+
+    @Override
     public AlertMessageDTO getAlertInfo(String clusterId, Integer current, Integer size, String level) {
-        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(true, null);
-        if (StringUtils.isNotBlank(clusterId)) {
-            clusterList = clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
-        }
         //获取异常告警信息
         Date now = new Date();
         Date ago = DateUtil.addHour(now, -24);
@@ -864,7 +873,7 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
     @Override
-    public List getClusterMiddlewareInfo(String clusterId) {
+    public List<MiddlewareBriefInfoDTO> getClusterMiddlewareInfo(String clusterId) {
         List<MiddlewareClusterDTO> clusterList = null;
         try {
             clusterList = clusterService.listClusters(true, null);
@@ -894,6 +903,26 @@ public class OverviewServiceImpl implements OverviewService {
             middlewareBriefInfoList.addAll(resMap.values());
         }
         return middlewareBriefInfoList;
+    }
+
+    @Override
+    public List<BeanOperationAudit> recentAudit() {
+        return operationAuditService.listRecent(20);
+    }
+
+    @Override
+    public Map<String, String> version() {
+        Map<String, String> versionMap = new HashMap<>();
+        versionMap.put("platform", version);
+        return versionMap;
+    }
+
+    private List<MiddlewareClusterDTO> getClusterList(String clusterId) {
+        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(true, null);
+        if (StringUtils.isNotBlank(clusterId)) {
+            clusterList = clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
+        }
+        return clusterList;
     }
 
 }

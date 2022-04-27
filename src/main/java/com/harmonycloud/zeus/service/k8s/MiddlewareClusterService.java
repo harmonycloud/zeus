@@ -14,7 +14,7 @@ public interface MiddlewareClusterService {
     /**
      * 创建集群
      */
-    void create(String name, MiddlewareCluster middlewareCluster);
+    void create(String clusterId, MiddlewareCluster middlewareCluster);
 
     /**
      * 查询集群列表
@@ -24,12 +24,12 @@ public interface MiddlewareClusterService {
     /**
      * 修改集群
      */
-    void update(String name, MiddlewareCluster middlewareCluster);
+    void update(String clusterId, MiddlewareCluster middlewareCluster);
 
     /**
      * 删除集群
      */
-    void delete(String name);
+    void delete(String clusterId);
 
     /**
      * 查询集群列表

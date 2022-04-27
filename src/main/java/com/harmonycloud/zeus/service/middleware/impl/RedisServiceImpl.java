@@ -1,6 +1,16 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
 import static com.harmonycloud.caas.common.constants.NameConstant.SENTINEL;
+import static com.harmonycloud.zeus.util.RedisUtil.getRedisSentinelIsOk;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import com.harmonycloud.caas.common.constants.RedisConstant;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
@@ -12,25 +22,15 @@ import com.harmonycloud.caas.common.model.middleware.IngressDTO;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.ServiceDTO;
 import com.harmonycloud.caas.common.model.middleware.ServicePortDTO;
+import com.harmonycloud.zeus.operator.impl.RedisOperatorImpl;
 import com.harmonycloud.zeus.service.k8s.IngressService;
 import com.harmonycloud.zeus.service.k8s.impl.ServiceServiceImpl;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.MapUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.harmonycloud.zeus.service.middleware.AbstractMiddlewareService;
 import com.harmonycloud.zeus.service.middleware.RedisService;
-import org.springframework.util.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
+
+import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Tuple;
-
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static com.harmonycloud.zeus.util.RedisUtil.getRedisClusterIsOk;
-import static com.harmonycloud.zeus.util.RedisUtil.getRedisSentinelIsOk;
 
 /**
  * @author dengyulong
@@ -46,17 +46,20 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
     private MiddlewareServiceImpl middlewareService;
     @Autowired
     private ServiceServiceImpl serviceService;
+    @Autowired
+    private RedisOperatorImpl redisOperator;
 
     @Override
-    public List<RedisDbDTO> listRedisDb(String clusterId, String namespace, String middlewareName, String db, String keyWord) {
+    public List<RedisDbDTO> listRedisDb(String clusterId, String namespace, String middlewareName, String db,
+        String keyWord) {
         paramCheck(db);
-        RedisAccessInfo redisAccessInfo = queryBasicAccessInfo(clusterId,namespace,middlewareName,null);
+        RedisAccessInfo redisAccessInfo = checkAndGetDbManageAccessInfo(clusterId, namespace, middlewareName);
         Jedis jedis = getRedisSentinelIsOk(redisAccessInfo);
         List<RedisDbDTO> dbs;
         if (SENTINEL.equals(redisAccessInfo.getMode())) {
             if (RedisConstant.PONG.equalsIgnoreCase(jedis.ping())) {
                 jedis.select(Integer.parseInt(db));
-                dbs = convertDTO(jedis,Integer.parseInt(db),keyWord);
+                dbs = convertDTO(jedis, Integer.parseInt(db), keyWord);
             } else {
                 throw new BusinessException(ErrorMessage.REDIS_SERVER_CONNECT_FAILED);
             }
@@ -70,7 +73,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
     @Override
     public void create(String clusterId, String namespace, String middlewareName, RedisDbDTO db) {
         paramCheck(db.getDb());
-        RedisAccessInfo redisAccessInfo = queryBasicAccessInfo(clusterId,namespace,middlewareName,null);
+        RedisAccessInfo redisAccessInfo = checkAndGetDbManageAccessInfo(clusterId, namespace, middlewareName);
         Jedis jedis;
         if (SENTINEL.equals(redisAccessInfo.getMode())) {
             jedis = getRedisSentinelIsOk(redisAccessInfo);
@@ -81,7 +84,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
                         throw new BusinessException(ErrorMessage.KEY_ALREADY_EXISTS);
                     }
                 }
-                paddingDataByType(jedis,db);
+                paddingDataByType(jedis, db);
             } else {
                 throw new BusinessException(ErrorMessage.REDIS_SERVER_CONNECT_FAILED);
             }
@@ -94,7 +97,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
     @Override
     public void update(String clusterId, String namespace, String middlewareName, RedisDbDTO db) {
         paramCheck(db.getDb());
-        RedisAccessInfo redisAccessInfo = queryBasicAccessInfo(clusterId,namespace,middlewareName,null);
+        RedisAccessInfo redisAccessInfo = checkAndGetDbManageAccessInfo(clusterId, namespace, middlewareName);
         Jedis jedis;
         if (SENTINEL.equals(redisAccessInfo.getMode())) {
             jedis = getRedisSentinelIsOk(redisAccessInfo);
@@ -105,7 +108,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
                     if (db.getTimeOut() == null) {
                         db.setTimeOut(String.valueOf(time));
                     }
-                    updateByType(jedis,db);
+                    updateByType(jedis, db);
                 }
             } else {
                 throw new BusinessException(ErrorMessage.REDIS_SERVER_CONNECT_FAILED);
@@ -119,14 +122,14 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
     @Override
     public void delete(String clusterId, String namespace, String middlewareName, RedisDbDTO redisDbDTO) {
         paramCheck(redisDbDTO.getDb());
-        RedisAccessInfo redisAccessInfo = queryBasicAccessInfo(clusterId,namespace,middlewareName,null);
+        RedisAccessInfo redisAccessInfo = checkAndGetDbManageAccessInfo(clusterId, namespace, middlewareName);
         Jedis jedis;
         if (SENTINEL.equals(redisAccessInfo.getMode())) {
             jedis = getRedisSentinelIsOk(redisAccessInfo);
             if (RedisConstant.PONG.equalsIgnoreCase(jedis.ping())) {
                 jedis.select(Integer.parseInt(redisDbDTO.getDb()));
                 if (jedis.exists(redisDbDTO.getKey())) {
-                    removeByType(jedis,redisDbDTO);
+                    removeByType(jedis, redisDbDTO);
                 }
             } else {
                 throw new BusinessException(ErrorMessage.REDIS_SERVER_CONNECT_FAILED);
@@ -150,31 +153,31 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
         }
         if (RedisConstant.LIST.equals(redisDbDTO.getType())) {
             for (String mapKey : redisDbDTO.getList().keySet()) {
-                jedis.lset(redisDbDTO.getKey(),Long.parseLong(mapKey),redisDbDTO.getList().get(mapKey));
+                jedis.lset(redisDbDTO.getKey(), Long.parseLong(mapKey), redisDbDTO.getList().get(mapKey));
             }
         }
         if (RedisConstant.HASH.equals(redisDbDTO.getType())) {
             for (String mapKey : redisDbDTO.getOldHash().keySet()) {
-                jedis.hdel(redisDbDTO.getKey(),mapKey);
+                jedis.hdel(redisDbDTO.getKey(), mapKey);
             }
-            jedis.hmset(redisDbDTO.getKey(),redisDbDTO.getHash());
+            jedis.hmset(redisDbDTO.getKey(), redisDbDTO.getHash());
         }
         if (RedisConstant.STRING.equals(redisDbDTO.getType())) {
-            jedis.set(redisDbDTO.getKey(),redisDbDTO.getValue());
+            jedis.set(redisDbDTO.getKey(), redisDbDTO.getValue());
         }
         if (RedisConstant.SET.equals(redisDbDTO.getType())) {
-            jedis.srem(redisDbDTO.getKey(),redisDbDTO.getOldSet());
-            jedis.sadd(redisDbDTO.getKey(),redisDbDTO.getSet());
+            jedis.srem(redisDbDTO.getKey(), redisDbDTO.getOldSet());
+            jedis.sadd(redisDbDTO.getKey(), redisDbDTO.getSet());
         }
         if (RedisConstant.Z_SET.equals(redisDbDTO.getType())) {
             for (String score : redisDbDTO.getZset().keySet()) {
                 for (String mapKey : redisDbDTO.getOldZset().keySet()) {
-                    jedis.zrem(redisDbDTO.getKey(),redisDbDTO.getOldZset().get(mapKey));
+                    jedis.zrem(redisDbDTO.getKey(), redisDbDTO.getOldZset().get(mapKey));
                 }
                 try {
-                    jedis.zadd(redisDbDTO.getKey(), Double.parseDouble(score),redisDbDTO.getZset().get(score));
+                    jedis.zadd(redisDbDTO.getKey(), Double.parseDouble(score), redisDbDTO.getZset().get(score));
                 } catch (Exception e) {
-                    jedis.zadd(redisDbDTO.getKey(), 0,redisDbDTO.getZset().get(score));
+                    jedis.zadd(redisDbDTO.getKey(), 0, redisDbDTO.getZset().get(score));
                 }
             }
         }
@@ -192,7 +195,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
                 jedis.del(redisDbDTO.getKey());
             } else {
                 for (String mapKey : redisDbDTO.getList().keySet()) {
-                    jedis.lrem(redisDbDTO.getKey(),Long.parseLong(mapKey),redisDbDTO.getList().get(mapKey));
+                    jedis.lrem(redisDbDTO.getKey(), Long.parseLong(mapKey), redisDbDTO.getList().get(mapKey));
                 }
             }
         }
@@ -201,7 +204,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
                 jedis.del(redisDbDTO.getKey());
             } else {
                 for (String mapKey : redisDbDTO.getHash().keySet()) {
-                    jedis.hdel(redisDbDTO.getKey(),mapKey);
+                    jedis.hdel(redisDbDTO.getKey(), mapKey);
                 }
             }
         }
@@ -212,7 +215,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
             if (StringUtils.isEmpty(redisDbDTO.getSet())) {
                 jedis.del(redisDbDTO.getKey());
             } else {
-                jedis.srem(redisDbDTO.getKey(),redisDbDTO.getSet());
+                jedis.srem(redisDbDTO.getKey(), redisDbDTO.getSet());
             }
         }
         if (RedisConstant.Z_SET.equals(redisDbDTO.getType())) {
@@ -220,7 +223,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
                 jedis.del(redisDbDTO.getKey());
             } else {
                 for (String mapKey : redisDbDTO.getZset().keySet()) {
-                    jedis.zrem(redisDbDTO.getKey(),redisDbDTO.getZset().get(mapKey));
+                    jedis.zrem(redisDbDTO.getKey(), redisDbDTO.getZset().get(mapKey));
                 }
             }
         }
@@ -230,7 +233,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
         List<RedisDbDTO> dbs = new LinkedList<>();
         Set<String> keys;
         if (StringUtils.isEmpty(keyWord)) {
-             keys = jedis.keys("*");
+            keys = jedis.keys("*");
         } else {
             keys = jedis.keys(keyWord + "*");
         }
@@ -247,13 +250,12 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
             }
             if (RedisConstant.HASH.equals(type)) {
                 hashs = jedis.hgetAll(key);
-
             }
             if (RedisConstant.LIST.equals(type)) {
-                lists = jedis.lrange(key,0,-1);
+                lists = jedis.lrange(key, 0, -1);
             }
             if (RedisConstant.Z_SET.equals(type)) {
-                zsets = jedis.zrangeWithScores(key,0,-1);
+                zsets = jedis.zrangeWithScores(key, 0, -1);
             }
             if (RedisConstant.SET.equals(type)) {
                 sets = jedis.smembers(key);
@@ -284,7 +286,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
         if (!StringUtils.isEmpty(redisDbDTO.getType())) {
             switch (redisDbDTO.getType()) {
                 case RedisConstant.STRING:
-                    jedis.set(redisDbDTO.getKey(),redisDbDTO.getValue());
+                    jedis.set(redisDbDTO.getKey(), redisDbDTO.getValue());
                     break;
                 case RedisConstant.LIST:
                     for (String direction : redisDbDTO.getList().keySet()) {
@@ -296,17 +298,17 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
                     }
                     break;
                 case RedisConstant.HASH:
-                    jedis.hmset(redisDbDTO.getKey(),redisDbDTO.getHash());
+                    jedis.hmset(redisDbDTO.getKey(), redisDbDTO.getHash());
                     break;
                 case RedisConstant.SET:
-                    jedis.sadd(redisDbDTO.getKey(),redisDbDTO.getSet());
+                    jedis.sadd(redisDbDTO.getKey(), redisDbDTO.getSet());
                     break;
                 case RedisConstant.Z_SET:
                     for (String score : redisDbDTO.getZset().keySet()) {
                         try {
-                            jedis.zadd(redisDbDTO.getKey(), Double.parseDouble(score),redisDbDTO.getZset().get(score));
+                            jedis.zadd(redisDbDTO.getKey(), Double.parseDouble(score), redisDbDTO.getZset().get(score));
                         } catch (Exception e) {
-                            jedis.zadd(redisDbDTO.getKey(), 0,redisDbDTO.getZset().get(score));
+                            jedis.zadd(redisDbDTO.getKey(), 0, redisDbDTO.getZset().get(score));
                         }
                     }
                     break;
@@ -320,16 +322,36 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
     }
 
     /**
+     * 如果没有暴露服务则手动暴露
+     */
+    private RedisAccessInfo checkAndGetDbManageAccessInfo(String clusterId, String namespace, String middlewareName) {
+        RedisAccessInfo redisAccessInfo = queryBasicAccessInfo(clusterId, namespace, middlewareName, null);
+        if (redisAccessInfo.isOpenService()) {
+            return redisAccessInfo;
+        } else {
+            Middleware middleware = new Middleware();
+            middleware.setClusterId(clusterId);
+            middleware.setNamespace(namespace);
+            middleware.setName(middlewareName);
+            middleware.setType(MiddlewareTypeEnum.REDIS.getType());
+            redisOperator.createOpenService(middleware);
+            return queryBasicAccessInfo(clusterId, namespace, middlewareName, null);
+        }
+    }
+
+    /**
      * 获取redis暴露出来的地址
      */
-    private RedisAccessInfo queryBasicAccessInfo(String clusterId, String namespace, String middlewareName, Middleware middleware) {
+    private RedisAccessInfo queryBasicAccessInfo(String clusterId, String namespace, String middlewareName,
+        Middleware middleware) {
         if (middleware == null) {
-            middleware = middlewareService.detail(clusterId, namespace, middlewareName, MiddlewareTypeEnum.REDIS.getType());
+            middleware =
+                middlewareService.detail(clusterId, namespace, middlewareName, MiddlewareTypeEnum.REDIS.getType());
         }
-        List<IngressDTO> ingressDTOS = ingressService.get(clusterId, namespace, MiddlewareTypeEnum.REDIS.name(), middlewareName);
-        ingressDTOS = ingressDTOS.stream().filter(ingressDTO -> (
-                !ingressDTO.getName().contains("readonly"))
-        ).collect(Collectors.toList());
+        List<IngressDTO> ingressDTOS =
+            ingressService.get(clusterId, namespace, MiddlewareTypeEnum.REDIS.name(), middlewareName);
+        ingressDTOS = ingressDTOS.stream().filter(ingressDTO -> (!ingressDTO.getName().contains("readonly")))
+            .collect(Collectors.toList());
 
         RedisAccessInfo redisAccessInfo = new RedisAccessInfo();
         if (!CollectionUtils.isEmpty(ingressDTOS)) {
@@ -349,7 +371,8 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
             // 没有暴露对外服务，则使用集群内服务
             ServicePortDTO servicePortDTO = serviceService.get(clusterId, namespace, middlewareName);
             if (servicePortDTO != null && !CollectionUtils.isEmpty(servicePortDTO.getPortDetailDtoList())) {
-                redisAccessInfo.setAddress(servicePortDTO.getClusterIP() + ":" + servicePortDTO.getPortDetailDtoList().get(0).getTargetPort() + "(集群内部)");
+                redisAccessInfo.setAddress(servicePortDTO.getClusterIP() + ":"
+                    + servicePortDTO.getPortDetailDtoList().get(0).getTargetPort() + "(集群内部)");
                 redisAccessInfo.setHost(servicePortDTO.getClusterIP());
                 redisAccessInfo.setPort(servicePortDTO.getPortDetailDtoList().get(0).getTargetPort());
                 Map<String, Integer> map = new HashMap<>();

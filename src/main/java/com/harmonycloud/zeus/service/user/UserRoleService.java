@@ -66,7 +66,7 @@ public interface UserRoleService {
      *
      * @param userName 账户
      */
-    void delete(String userName, String projectId);
+    void delete(String userName, String projectId, Integer roleId);
 
     /**
      * 创建用户角色关联
