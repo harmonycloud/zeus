@@ -40,9 +40,10 @@ data:
     {{- end }}
     max_connections                 ={{ .Values.args.max_connections | default $maxConnectionsMemory }}
     innodb_buffer_pool_size         ={{ .Values.args.innodb_buffer_pool_size | default $bufferMemory  }}
-    {{- end }}
     max_connect_errors              ={{ .Values.args.max_connect_errors | default 100000 }}
-    max_user_connections            ={{ .Values.args.max_user_connections | default 1200 }}
+    {{- $maxUserConnections := div (mul $maxConnectionsMemory  1) 2 }}
+    max_user_connections            ={{ .Values.args.max_user_connections | default $maxUserConnections }}
+    {{- end }}
     #************** sql timeout & limits ***************
     max_execution_time              ={{ .Values.args.max_execution_time | default 10000 }}
     group_concat_max_len            ={{ .Values.args.group_concat_max_len | default 1048576 }}
