@@ -30,6 +30,8 @@ import com.harmonycloud.zeus.service.middleware.RedisService;
 
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.ScanParams;
+import redis.clients.jedis.ScanResult;
 import redis.clients.jedis.Tuple;
 
 /**
@@ -231,12 +233,20 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
 
     private List<RedisDbDTO> convertDTO(Jedis jedis, int db, String keyWord) {
         List<RedisDbDTO> dbs = new LinkedList<>();
-        Set<String> keys;
+        Set<String> keys = new HashSet<>();
+        ScanParams scanParams = new ScanParams();
         if (StringUtils.isEmpty(keyWord)) {
-            keys = jedis.keys("*");
+            scanParams.match("*");
         } else {
-            keys = jedis.keys(keyWord + "*");
+            scanParams.match("*" + keyWord + "*");
         }
+        scanParams.count(100000);// 每10万条查询
+        String scanRet = "0";
+        do {
+            ScanResult<String> result = jedis.scan(scanRet, scanParams);
+            scanRet = result.getCursor();// 返回用于下次遍历的游标
+            keys.addAll(result.getResult());// 返回结果
+        } while (!scanRet.equals("0"));
         for (String key : keys) {
             String type = jedis.type(key);
             RedisDbDTO redisDbDTO = new RedisDbDTO();
