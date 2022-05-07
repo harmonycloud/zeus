@@ -91,6 +91,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     private MysqlUserService mysqlUserService;
     @Autowired
     private MysqlDbPrivService mysqlDbPrivService;
+    @Autowired
+    private IngressService ingressService;
 
     @Override
     public boolean support(Middleware middleware) {
@@ -573,7 +575,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     public void createDisasterRecoveryMiddleware(Middleware middleware) {
         MysqlDTO mysqlDTO = middleware.getMysqlDTO();
         //1.为实例创建只读对外服务(NodePort)
-//        tryCreateOpenService(middleware, ServiceNameConvertUtil.convertMysql(middleware.getName(), true), false);
         createOpenService(middleware, true);
         //2.设置灾备实例信息，创建灾备实例
         //2.1 设置灾备实例信息
@@ -662,22 +663,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     }
 
     public void createOpenService(Middleware middleware, boolean isReadOnlyService) {
-        boolean success = false;
-        for (int i = 0; i < (60 * 10 * 60) && !success; i++) {
-            Middleware detail = middlewareService.detail(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
-            log.info("为实例：{}创建对外服务：状态：{},已用时：{}s", detail.getName(), detail.getStatus(), i);
-            if (detail != null) {
-                if (detail.getStatus() != null && "Running".equals(detail.getStatus())) {
-                    executeCreateOpenService(middleware, isReadOnlyService);
-                    success = true;
-                }
-            }
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        log.info("为实例：{} 创建对外服务");
+        executeCreateOpenService(middleware, isReadOnlyService);
     }
 
     private void executeCreateOpenService(Middleware middleware, boolean isReadOnlyService) {
@@ -735,19 +722,12 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         serviceDTOS.add(serviceDTO);
 
         ingressDTO.setServiceList(serviceDTOS);
-        boolean successCreateService = false;
-        int servicePort = 31000;
-        while (!successCreateService) {
-            serviceDTO.setExposePort(String.valueOf(servicePort));
-            log.info("使用端口{}暴露服务", servicePort);
-            try {
-                ingressService.create(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), ingressDTO);
-                successCreateService = true;
-            } catch (Exception e) {
-                log.error("使用ingress暴露服务出错了,端口：{}", servicePort, e);
-                servicePort++;
-                successCreateService = false;
-            }
+        int availablePort = ingressService.getAvailablePort(middleware.getClusterId(), ingressClassName);
+        serviceDTO.setExposePort(String.valueOf(availablePort));
+        try {
+            ingressService.create(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), ingressDTO);
+        } catch (Exception e) {
+            log.error("使用ingress暴露服务出错了" , e);
         }
     }
 
@@ -789,6 +769,9 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     }
 
     public void prepareDbManageEnv(Middleware middleware) {
+        if (middleware.getMysqlDTO() != null && middleware.getMysqlDTO().getDeleteDBManageInfo() != null && Boolean.FALSE.equals(middleware.getMysqlDTO().getDeleteDBManageInfo())) {
+            return;
+        }
         clearDbManageData(middleware);
         BeanMysqlUser mysqlUser = new BeanMysqlUser();
         mysqlUser.setUser("root");

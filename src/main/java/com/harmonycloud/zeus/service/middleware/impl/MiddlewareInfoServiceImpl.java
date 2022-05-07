@@ -116,9 +116,12 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
             return simpleList(mwInfoMap);
         }
         //获取集群中间件关联信息
-        List<BeanClusterMiddlewareInfo> clusterMwInfoList = clusterMiddlewareInfoService.list(clusterId);
-        //校验数据完整性
-        checkDate(clusterMwInfoList, mwInfoMap, clusterId);
+        List<BeanClusterMiddlewareInfo> clusterMwInfoList;
+        synchronized (this){
+            clusterMwInfoList = clusterMiddlewareInfoService.list(clusterId);
+            //校验数据完整性
+            checkDate(clusterMwInfoList, mwInfoMap, clusterId);
+        }
         //过滤中间件
         mwInfoList =
                 mwInfoList.stream()

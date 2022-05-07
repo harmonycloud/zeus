@@ -903,34 +903,26 @@ public abstract class AbstractBaseOperator {
             ServicePortDTO servicePortDTO = serviceList.get(0);
             PortDetailDTO portDetailDTO = servicePortDTO.getPortDetailDtoList().get(0);
             //2.将服务通过NodePort暴露为对外服务
-            boolean successCreateService = false;
-            int servicePort = 31000;
-            while (!successCreateService) {
-                log.info("开始创建对外服务,clusterId={},namespace={},middlewareName={},port={}",
-                        middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), servicePort);
-                try {
-                    IngressDTO ingressDTO = new IngressDTO();
-                    ingressDTO.setName(middleware.getName() + "-nodeport-" +UUIDUtils.get8UUID().substring(0, 4));
-                    List<ServiceDTO> serviceDTOList = new ArrayList<>();
-                    ServiceDTO serviceDTO = new ServiceDTO();
-                    serviceDTO.setExposePort(String.valueOf(servicePort));
-                    serviceDTO.setTargetPort(portDetailDTO.getTargetPort());
-                    serviceDTO.setServicePort(portDetailDTO.getPort());
-                    serviceDTO.setServiceName(servicePortDTO.getServiceName());
-                    serviceDTOList.add(serviceDTO);
+            log.info("开始创建对外服务,clusterId={},namespace={},middlewareName={}",
+                    middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
+            try {
+                IngressDTO ingressDTO = new IngressDTO();
+                ingressDTO.setName(middleware.getName() + "-nodeport-" +UUIDUtils.get8UUID().substring(0, 4));
+                List<ServiceDTO> serviceDTOList = new ArrayList<>();
+                ServiceDTO serviceDTO = new ServiceDTO();
+                serviceDTO.setTargetPort(portDetailDTO.getTargetPort());
+                serviceDTO.setServicePort(portDetailDTO.getPort());
+                serviceDTO.setServiceName(servicePortDTO.getServiceName());
+                serviceDTOList.add(serviceDTO);
 
-                    ingressDTO.setMiddlewareType(middleware.getType());
-                    ingressDTO.setServiceList(serviceDTOList);
-                    ingressDTO.setExposeType(MIDDLEWARE_EXPOSE_NODEPORT);
-                    ingressDTO.setProtocol("TCP");
-                    ingressService.create(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), ingressDTO);
-                    successCreateService = true;
-                    log.info("对外服务创建成功");
-                } catch (Exception e) {
-                    servicePort++;
-                    log.error("对外服务创建失败，尝试端口：{}", servicePort);
-                    successCreateService = false;
-                }
+                ingressDTO.setMiddlewareType(middleware.getType());
+                ingressDTO.setServiceList(serviceDTOList);
+                ingressDTO.setExposeType(MIDDLEWARE_EXPOSE_NODEPORT);
+                ingressDTO.setProtocol("TCP");
+                ingressService.create(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), ingressDTO);
+                log.info("对外服务创建成功");
+            } catch (Exception e) {
+                log.error("对外服务创建失败", e);
             }
         }
     }

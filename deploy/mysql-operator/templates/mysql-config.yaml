@@ -94,13 +94,23 @@ data:
     #*************** rpl_semi_sync ***************
     {{- if eq .Values.version "5.7" }}
     rpl_semi_sync_master_enabled                =ON
-    rpl_semi_sync_master_timeout                =1000
+    rpl_semi_sync_master_timeout                =100000000000
     rpl_semi_sync_master_trace_level            =32
     rpl_semi_sync_master_wait_for_slave_count   =1
-    rpl_semi_sync_master_wait_no_slave          =ON
+    rpl_semi_sync_master_wait_no_slave          =OFF
     rpl_semi_sync_master_wait_point             =AFTER_SYNC
     rpl_semi_sync_slave_enabled                 =ON
     rpl_semi_sync_slave_trace_level             =32
+    {{- end }}
+    {{- if eq .Values.version "8.0" }}
+    loose-rpl_semi_sync_master_enabled                =ON
+    loose-rpl_semi_sync_master_timeout                =100000000000
+    loose-rpl_semi_sync_master_trace_level            =32
+    loose-rpl_semi_sync_master_wait_for_slave_count   =1
+    loose-rpl_semi_sync_master_wait_no_slave          =OFF
+    loose-rpl_semi_sync_master_wait_point             =AFTER_SYNC
+    loose-rpl_semi_sync_slave_enabled                 =ON
+    loose-rpl_semi_sync_slave_trace_level             =32
     {{- end }}
     #*************** group commit ***************
     binlog_group_commit_sync_delay              =1
