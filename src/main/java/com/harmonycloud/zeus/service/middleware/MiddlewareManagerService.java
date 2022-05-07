@@ -22,6 +22,7 @@ public interface MiddlewareManagerService {
      * @param clusterId 集群id
      * @param chartName chart名称
      * @param chartVersion chart版本
+     * @param type 是否高可用
      */
     void install(String clusterId, String chartName, String chartVersion, String type);
 

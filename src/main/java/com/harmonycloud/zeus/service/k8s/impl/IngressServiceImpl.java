@@ -8,6 +8,7 @@ import com.harmonycloud.caas.common.enums.Protocol;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
+import com.harmonycloud.caas.common.model.IngressComponentDto;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.common.model.user.UserRole;
@@ -655,15 +656,9 @@ public class IngressServiceImpl implements IngressService {
         if (CollectionUtils.isEmpty(ingressDTO.getServiceList())) {
             throw new CaasRuntimeException(ErrorMessage.INGRESS_TCP_NOT_NULL);
         }
-        //获取制定ingress
-        List<MiddlewareClusterIngress> ingressList = cluster.getIngressList().stream()
-                .filter(ingress -> ingress.getIngressClassName().equals(ingressDTO.getIngressClassName()))
-                .collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(ingressList) || ingressList.get(0).getTcp() == null
-                || !ingressList.get(0).getTcp().isEnabled()) {
-            throw new CaasRuntimeException(ErrorMessage.UNSUPPORT_EXPOSE_TYPE);
-        }
-        String ingressTcpCmName = ingressList.get(0).getTcp().getConfigMapName();
+        // 获取指定的ingress tcpCmName
+        MiddlewareClusterIngress middlewareClusterIngress = getMiddlewareClusterIngress(cluster, ingressDTO.getIngressClassName());
+        String ingressTcpCmName = middlewareClusterIngress.getTcp().getConfigMapName();
         String ingressTcpNamespace = getIngressTcpNamespace(cluster, ingressDTO.getIngressClassName());
 
         // tcp routing list
@@ -1022,6 +1017,38 @@ public class IngressServiceImpl implements IngressService {
         }
         Collections.sort(result, new MiddlewareServiceImpl.ServiceMapComparator());
         return result;
+    }
+
+    @Override
+    public MiddlewareClusterIngress getMiddlewareClusterIngress(MiddlewareClusterDTO cluster, String ingressClassName) {
+        //获取制定ingress
+        List<MiddlewareClusterIngress> ingressList = cluster.getIngressList().stream()
+                .filter(ingress -> ingress.getIngressClassName().equals(ingressClassName))
+                .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(ingressList) || ingressList.get(0).getTcp() == null
+                || !ingressList.get(0).getTcp().isEnabled()) {
+            throw new CaasRuntimeException(ErrorMessage.UNSUPPORT_EXPOSE_TYPE);
+        }
+        return ingressList.get(0);
+    }
+
+    @Override
+    public int getAvailablePort(String clusterId, String ingressClassName) {
+        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+        //获取指定ingress
+        MiddlewareClusterIngress middlewareClusterIngress = getMiddlewareClusterIngress(cluster, ingressClassName);
+        String ingressTcpCmName = middlewareClusterIngress.getTcp().getConfigMapName();
+        String ingressTcpNamespace = getIngressTcpNamespace(cluster, ingressClassName);
+        // tcp routing list
+        ConfigMap configMap = configMapWrapper.get(cluster.getId(), ingressTcpNamespace, ingressTcpCmName);
+        Map<String, String> data = configMap.getData();
+        int port = 31000;
+        for (; ; ) {
+            if (null == data.get(String.valueOf(port))) {
+                return port;
+            }
+            port++;
+        }
     }
 
     private List<IngressDTO> filterByKeyword(List<IngressDTO> ingressDTOList, String keyword) {

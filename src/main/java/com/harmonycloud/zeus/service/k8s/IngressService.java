@@ -1,9 +1,6 @@
 package com.harmonycloud.zeus.service.k8s;
 
-import com.harmonycloud.caas.common.model.middleware.IngressDTO;
-import com.harmonycloud.caas.common.model.middleware.IngressRuleDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.ServiceDTO;
+import com.harmonycloud.caas.common.model.middleware.*;
 
 import java.util.List;
 
@@ -114,9 +111,24 @@ public interface IngressService {
      * @param clusterId
      * @param namespace
      * @param keyword
-     * @param type
      * @return
      */
     List listAllIngress(String clusterId, String namespace, String keyword);
+
+    /**
+     * 根据ingressClassName获取ingress
+     * @param cluster
+     * @param ingressClassName
+     * @return
+     */
+    MiddlewareClusterIngress getMiddlewareClusterIngress(MiddlewareClusterDTO cluster, String ingressClassName);
+
+    /**
+     * 获取一个未被占用的ingress端口
+     * @param clusterId
+     * @param ingressClassName
+     * @return
+     */
+    int getAvailablePort(String clusterId, String ingressClassName);
 
 }

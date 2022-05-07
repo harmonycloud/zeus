@@ -191,7 +191,11 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         mysql.setStorageClassQuota(String.valueOf(Integer.parseInt(storageClassQuota) + 3));
         middleware.setBackupFileName(backupFileName);
         middleware.setDeleteBackupInfo(false);
-        //删除原中间件
+        // 设置不删除平台存储的数据库管理相关数据
+        MysqlDTO mysqlDTO = new MysqlDTO();
+        mysqlDTO.setDeleteDBManageInfo(false);
+        middleware.setMysqlDTO(mysqlDTO);
+        // 删除原中间件
         BaseOperator operator = middlewareService.getOperator(BaseOperator.class, BaseOperator.class, middleware);
         operator.delete(middleware);
         operator.deleteStorage(middleware);
