@@ -186,10 +186,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             if (middlewareCR != null) {
                 result = true;
             }
-            try {
-                Thread.sleep(10000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            if (!result){
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
         if (result) {
