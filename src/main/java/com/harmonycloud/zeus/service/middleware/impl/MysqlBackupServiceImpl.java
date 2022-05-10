@@ -149,7 +149,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         MysqlScheduleBackupSpec spec =
                 new MysqlScheduleBackupSpec().setSchedule(CronUtils.parseMysqlUtcCron(backupDTO.getCron())).setBackupTemplate(backupTemplate).setKeepBackups(backupDTO.getLimitRecord());
         ObjectMeta metaData = new ObjectMeta();
-        metaData.setName(getBackupName(backupDTO));
+        metaData.setName(backupDTO.getMiddlewareName());
         Map<String, String> labels = new HashMap<>();
         labels.put("controllername", "backup-schedule-controller");
         metaData.setLabels(labels);
@@ -165,11 +165,10 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public BaseResult createNormalBackup(MiddlewareBackupDTO backupDTO) {
         middlewareCRService.getCRAndCheckRunning(convertBackupToMiddleware(backupDTO));
-        String backupName = getBackupName(backupDTO) + "-" + UUIDUtils.get8UUID();
         BackupSpec spec = new BackupSpec().setClusterName(backupDTO.getMiddlewareName())
                 .setStorageProvider(new BackupStorageProvider().setMinio(getMinio(backupDTO.getClusterId())));
         ObjectMeta metaData = new ObjectMeta();
-        metaData.setName(backupName);
+        metaData.setName(backupDTO.getMiddlewareName() + UUIDUtils.get8UUID());
         Map<String, String> labels = new HashMap<>(1);
         labels.put("controllername", "backup-controller");
         metaData.setLabels(labels);
@@ -211,10 +210,9 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public void deleteMiddlewareBackupInfo(String clusterId, String namespace, String type, String middlewareName) {
-        String backupName = getBackupName(clusterId, namespace, middlewareName);
         List<Backup> backupList = backupService.listBackup(clusterId, namespace);
         backupList.forEach(backup -> {
-            if (!backup.getName().contains(backupName)) {
+            if (!backup.getName().contains(middlewareName)) {
                 return;
             }
             try {
@@ -293,14 +291,6 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         }
     }
 
-    private String getBackupName(MiddlewareBackupDTO backupDTO) {
-        return getBackupName(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getMiddlewareName());
-    }
-
-    private String getBackupName(String clusterId, String namespace, String middlewareName) {
-        return clusterId + "-" + namespace + "-" + middlewareName;
-    }
-
     public Minio getMinio(String clusterId) {
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         // 获取minio的数据
@@ -334,9 +324,8 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
      * @return
      */
     private List<MysqlBackupDto> listRecord(String clusterId, String namespace, String middlewareName) {
-        String name = getBackupName(clusterId, namespace, middlewareName);
         List<Backup> backupList = backupService.listBackup(clusterId, namespace);
-        backupList = backupList.stream().filter(backup -> backup.getName().contains(name)).collect(Collectors.toList());
+        backupList = backupList.stream().filter(backup -> backup.getName().contains(middlewareName)).collect(Collectors.toList());
         List<MysqlBackupDto> mysqlBackupDtoList = new ArrayList<>();
         // 设置备份状态
         backupList.forEach(backup -> {
@@ -369,8 +358,9 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         Map<String, MiddlewareQuota> quota = middleware.getQuota();
         if (quota != null) {
             quota.forEach((k, v) -> {
-                if (v.getStorageClassQuota() != null)
+                if (v.getStorageClassQuota() != null){
                     v.setStorageClassQuota(v.getStorageClassQuota().replaceAll("Gi", ""));
+                }
             });
         }
     }
