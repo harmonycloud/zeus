@@ -474,8 +474,13 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 finalMiddlewareList.add(middleware);
             }
         }
-        
+
         List<Middleware> result = finalMiddlewareList;
+        // 关键词过滤
+        result = result.stream()
+            .filter(mw -> mw.getName().contains(keyword)
+                || (StringUtils.isNotEmpty(mw.getAliasName()) && mw.getAliasName().contains(keyword)))
+            .collect(Collectors.toList());
         if (StringUtils.isNotEmpty(projectId)) {
             // 根据项目分区进行过滤
             List<Namespace> projectNamespaceList = projectService.getNamespace(projectId);
