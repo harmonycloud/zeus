@@ -54,6 +54,7 @@ public class LdapServiceImpl implements LdapService {
         BeanLdapConfig config = findByConfigName(config_name);
         if(config == null){
             ldapConfigMapper.insert(ldapConfig);
+            return;
         }
         config.setConfigValue(config_value);
         ldapConfigMapper.updateById(config);
