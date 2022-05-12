@@ -474,8 +474,13 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 finalMiddlewareList.add(middleware);
             }
         }
-        
+
         List<Middleware> result = finalMiddlewareList;
+        // 关键词过滤
+        result = result.stream()
+            .filter(mw -> mw.getName().contains(keyword)
+                || (StringUtils.isNotEmpty(mw.getAliasName()) && mw.getAliasName().contains(keyword)))
+            .collect(Collectors.toList());
         if (StringUtils.isNotEmpty(projectId)) {
             // 根据项目分区进行过滤
             List<Namespace> projectNamespaceList = projectService.getNamespace(projectId);
@@ -577,6 +582,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // 执行升级
         Middleware middleware = detail(clusterId, namespace, name, type);
         middleware.setChartName(chartName);
+        middleware.setChartVersion(upgradeChartVersion);
         helmChartService.upgrade(middleware, currentValues, upgradeValues, clusterService.findById(clusterId));
         return BaseResult.ok();
     }
@@ -584,7 +590,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Override
     public BaseResult upgradeCheck(String clusterId, String namespace, String name, String type, String chartName, String upgradeChartVersion) {
         HelmChartFile helmChart = helmChartService.getHelmChartFromMysql(chartName, upgradeChartVersion);
-        JSONObject upgradeValues = YamlUtil.convertYamlAsNormalJsonObject(helmChart.getValueYaml());
         JSONObject currentValues = helmChartService.getInstalledValuesAsNormalJson(name, namespace, clusterService.findById(clusterId));
 
         String currentChartVersion = currentValues.getString("chart-version");

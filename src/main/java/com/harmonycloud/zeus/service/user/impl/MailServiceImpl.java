@@ -250,9 +250,9 @@ public class MailServiceImpl implements MailService {
         return htmlText;
     }
 
-    public void paramsCheck(MailInfo mailInfo) {
-        if (StringUtils.isAnyBlank(mailInfo.getMailPath(),mailInfo.getMailServer(),
-                mailInfo.getPassword(),mailInfo.getUserName(),String.valueOf(mailInfo.getPort()))) {
+    private void paramsCheck(MailInfo mailInfo) {
+        if (StringUtils.isAnyBlank(mailInfo.getMailServer(), mailInfo.getPassword(), mailInfo.getUserName(),
+            String.valueOf(mailInfo.getPort()))) {
             throw new BusinessException(ErrorMessage.MAIL_INCOMPLETE_PARAMETERS);
         }
     }
