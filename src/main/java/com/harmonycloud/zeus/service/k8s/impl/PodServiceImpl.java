@@ -322,8 +322,10 @@ public class PodServiceImpl implements PodService {
         Map<String, Node> nodeMap = nodeList.stream().collect(Collectors.toMap(Node::getName, Node -> Node));
         podInfoList.forEach(podInfo -> {
             Node node = nodeMap.get(podInfo.getNodeName());
-            if (node.getLabels() != null) {
+            if (node.getLabels() != null && node.getLabels().containsKey("zone")) {
                 podInfo.setNodeZone(node.getLabels().get("zone"));
+            } else {
+                podInfo.setNodeZone("");
             }
         });
     }
