@@ -1,8 +1,10 @@
 package com.harmonycloud.zeus.integration.cluster;
 
 import com.harmonycloud.zeus.util.K8sClient;
+import io.fabric8.kubernetes.api.model.DoneableNamespace;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceList;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -46,6 +48,10 @@ public class NamespaceWrapper {
 
     public void delete(String clusterId, Namespace ns) {
         K8sClient.getClient(clusterId).namespaces().delete(ns);
+    }
+
+    public Namespace get(String clusterId,String name){
+        return K8sClient.getClient(clusterId).namespaces().withName(name).get();
     }
 
 }

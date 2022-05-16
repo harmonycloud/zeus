@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.constants.NamespaceConstant;
 import com.harmonycloud.zeus.bean.user.BeanProjectNamespace;
 import com.harmonycloud.zeus.dao.user.BeanProjectNamespaceMapper;
 import com.harmonycloud.zeus.service.user.ProjectService;
@@ -26,6 +27,7 @@ import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.ObjectUtils;
 
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
 
@@ -99,6 +101,8 @@ public class NamespaceServiceImpl implements NamespaceService {
                     DateUtils.parseDate(ns.getMetadata().getCreationTimestamp(), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
                 // 状态
                 namespace.setPhase(ns.getStatus().getPhase());
+                // 可用域状态
+                this.setAvailableDomain(clusterId, namespace.getName(), ns, namespace);
                 return namespace;
             }).collect(Collectors.toList());
         
@@ -220,6 +224,27 @@ public class NamespaceServiceImpl implements NamespaceService {
         } catch (Exception e) {
             log.error("分区{}  注册失败", name);
             throw new BusinessException(ErrorMessage.NAMESPACE_REGISTRY_FAILED);
+        }
+    }
+
+    @Override
+    public void updateAvailableDomain(String clusterId, String name, boolean availableDomain) {
+        io.fabric8.kubernetes.api.model.Namespace namespace = namespaceWrapper.get(clusterId, name);
+        Map<String, String> labels = namespace.getMetadata().getLabels();
+        labels.put(NamespaceConstant.KEY_AVAILABLE_DOMAIN, String.valueOf(availableDomain));
+        namespaceWrapper.save(clusterId, namespace);
+    }
+
+    @Override
+    public void setAvailableDomain(String clusterId, String name, io.fabric8.kubernetes.api.model.Namespace originalNamespace, Namespace namespace) {
+        if (originalNamespace == null) {
+            originalNamespace = namespaceWrapper.get(clusterId, name);
+        }
+        if (originalNamespace != null && originalNamespace.getMetadata() != null && originalNamespace.getMetadata().getLabels() != null
+                && originalNamespace.getMetadata().getLabels().containsKey(NamespaceConstant.KEY_AVAILABLE_DOMAIN)) {
+            namespace.setAvailableDomain(Boolean.parseBoolean(originalNamespace.getMetadata().getLabels().get(NamespaceConstant.KEY_AVAILABLE_DOMAIN)));
+        } else {
+            namespace.setAvailableDomain(false);
         }
     }
 

@@ -161,6 +161,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             BackupStorageProvider backupStorageProvider = backupService.getStorageProvider(middleware);
             values.put("storageProvider", JSONObject.toJSON(backupStorageProvider));
         }
+        // 添加双活配置
+
     }
 
     @Override
@@ -326,6 +328,15 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
     }
 
+    /**
+     * 检查是否是双活分区并设置双活配追字段
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param values chart values
+     */
+    private void checkAndSetDoubleActive(String clusterId,String namespace,JSONObject values){
+        // TODO
+    }
     /*@Override
     public void delete(Middleware middleware) {
         this.deleteDisasterRecoveryInfo(middleware);

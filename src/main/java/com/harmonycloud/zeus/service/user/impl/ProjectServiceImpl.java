@@ -13,6 +13,7 @@ import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.user.UserRole;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
+import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
@@ -68,6 +69,8 @@ public class ProjectServiceImpl implements ProjectService {
     private MiddlewareCRService middlewareCRService;
     @Autowired
     private MiddlewareInfoService middlewareInfoService;
+    @Autowired
+    private NamespaceService namespaceService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -165,6 +168,7 @@ public class ProjectServiceImpl implements ProjectService {
             BeanUtils.copyProperties(beanProjectNamespace, namespace);
             namespace.setClusterAliasName(clusterService.findById(namespace.getClusterId()).getNickname());
             namespace.setName(beanProjectNamespace.getNamespace());
+            namespaceService.setAvailableDomain(namespace.getClusterId(), namespace.getName(), null, namespace);
             return namespace;
         }).collect(Collectors.toList());
     }
