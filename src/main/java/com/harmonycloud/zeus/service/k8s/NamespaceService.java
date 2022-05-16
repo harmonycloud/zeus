@@ -103,4 +103,12 @@ public interface NamespaceService {
      */
     void setAvailableDomain(String clusterId, String name, io.fabric8.kubernetes.api.model.Namespace originalNamespace, Namespace namespace);
 
+    /**
+     * 检查是否开启可用域
+     * @param clusterId 集群id
+     * @param name 分区名称
+     * @return
+     */
+    boolean checkAvailableDomain(String clusterId, String name);
+
 }

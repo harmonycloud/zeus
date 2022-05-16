@@ -248,6 +248,15 @@ public class NamespaceServiceImpl implements NamespaceService {
         }
     }
 
+    @Override
+    public boolean checkAvailableDomain(String clusterId, String name) {
+        io.fabric8.kubernetes.api.model.Namespace namespace = namespaceWrapper.get(clusterId, name);
+        if (namespace == null || namespace.getMetadata().getLabels() == null || (!namespace.getMetadata().getLabels().containsKey(NamespaceConstant.KEY_AVAILABLE_DOMAIN))) {
+            return false;
+        }
+        return Boolean.parseBoolean(namespace.getMetadata().getLabels().get(NamespaceConstant.KEY_AVAILABLE_DOMAIN));
+    }
+
     public boolean checkExist(String clusterId, String name) {
         List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId);
         return nsList.stream().anyMatch(ns -> ns.getMetadata().getName().equals(name));
