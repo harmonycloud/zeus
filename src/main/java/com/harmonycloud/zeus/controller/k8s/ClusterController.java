@@ -140,9 +140,12 @@ public class ClusterController {
             @ApiImplicitParam(name = "apiAddress", value = "接口访问前缀", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/clusterJoinCommand")
-    public BaseResult clusterJoinCommand(@RequestParam(value = "name") String name, @RequestParam(value = "apiAddress") String apiAddress, HttpServletRequest request) {
+    public BaseResult clusterJoinCommand(@RequestParam(value = "name") String name,
+                                         @RequestParam(value = "apiAddress") String apiAddress,
+                                         @RequestParam("activeActive") Boolean activeActive,
+                                         HttpServletRequest request) {
         String userToken = request.getHeader("userToken");
-        return BaseResult.ok(clusterService.getClusterJoinCommand(name, apiAddress, userToken));
+        return BaseResult.ok(clusterService.getClusterJoinCommand(name, apiAddress, userToken, activeActive));
     }
 
     @ApiImplicitParams({
@@ -150,9 +153,11 @@ public class ClusterController {
             @ApiImplicitParam(name = "name", value = "集群名称", paramType = "query", dataTypeClass = String.class)
     })
     @PostMapping("/quickAdd")
-    public BaseResult quickAdd(@RequestParam("adminConf") MultipartFile adminConf,@RequestParam("name") String name) {
+    public BaseResult quickAdd(@RequestParam("adminConf") MultipartFile adminConf,
+                               @RequestParam("name") String name,
+                               @RequestParam("activeActive") Boolean activeActive) {
         log.info("name{}", name);
-        return clusterService.quickAdd(adminConf, name);
+        return clusterService.quickAdd(adminConf, name, activeActive);
     }
 
     /**

@@ -753,41 +753,9 @@ public class ClusterServiceImpl implements ClusterService {
     }
 
     @Override
-    public List<ClusterNodeResourceDto> getNodeResource(String clusterId) throws Exception {
+    public List<ClusterNodeResourceDto> getNodeResource(String clusterId) {
         List<Node> nodeList = nodeService.list(clusterId);
-        // 查询cpu使用量
-        String nodeCpuQuery = "sum(irate(node_cpu_seconds_total{mode!=\"idle\"}[5m])) by (kubernetes_pod_node_name)";
-        Map<String, Double> nodeCpuUsed = nodeQuery(clusterId, nodeCpuQuery);
-        // 查询memory使用量
-        String nodeMemoryQuery = "((node_memory_MemTotal_bytes - node_memory_MemFree_bytes - node_memory_Cached_bytes - node_memory_Buffers_bytes - node_memory_Slab_bytes)/1024/1024/1024)";
-        Map<String, Double> nodeMemoryUsed = nodeQuery(clusterId, nodeMemoryQuery);
-        // 查询memory总量
-        String nodeMemoryTotalQuery = "(node_memory_MemTotal_bytes/1024/1024/1024)";
-        Map<String, Double> nodeMemoryTotal = nodeQuery(clusterId, nodeMemoryTotalQuery);
-        return nodeList.stream().map(node -> {
-            ClusterNodeResourceDto nodeRs = new ClusterNodeResourceDto();
-            nodeRs.setClusterId(clusterId);
-            nodeRs.setIp(node.getIp());
-            nodeRs.setStatus(node.getStatus());
-            nodeRs.setCreateTime(node.getCreateTime());
-            // 设置cpu
-            nodeRs.setCpuUsed(nodeCpuUsed.getOrDefault(node.getName(), null));
-            nodeRs.setCpuTotal(Double.parseDouble(node.getCpu().getTotal()));
-            if (nodeRs.getCpuUsed() != null) {
-                nodeRs.setCpuRate(ResourceCalculationUtil.roundNumber(
-                    BigDecimal.valueOf(nodeRs.getCpuUsed() / nodeRs.getCpuTotal() * 100), 2, RoundingMode.CEILING));
-            }
-            // 设置memory
-            nodeRs.setMemoryUsed(nodeMemoryUsed.getOrDefault(node.getName(), null));
-            nodeRs.setMemoryTotal(nodeMemoryTotal.getOrDefault(node.getName(), null));
-            if (nodeRs.getMemoryUsed() != null){
-                nodeRs.setMemoryRate(ResourceCalculationUtil.roundNumber(
-                        BigDecimal.valueOf(nodeRs.getMemoryUsed() / nodeRs.getMemoryTotal() * 100), 2, RoundingMode.CEILING));
-            }
-            return nodeRs;
-        }).sorted((o1, o2) -> o1.getCreateTime() == null ? -1
-            : o2.getCreateTime() == null ? -1 : o2.getCreateTime().compareTo(o1.getCreateTime()))
-            .collect(Collectors.toList());
+        return nodeService.getNodeResource(clusterId, nodeList, true);
     }
 
     @Override
@@ -884,15 +852,18 @@ public class ClusterServiceImpl implements ClusterService {
     }
 
     @Override
-    public String getClusterJoinCommand(String clusterName, String apiAddress, String userToken) {
+    public String getClusterJoinCommand(String clusterName, String apiAddress, String userToken, Boolean activeActive) {
         String clusterJoinUrl = apiAddress + "/clusters/quickAdd";
         String curlCommand = "curl -X POST --url %s?name=%s --header Content-Type:multipart/form-data --header userToken:%s -F adminConf=@/etc/kubernetes/admin.conf";
+        if(activeActive){
+            curlCommand = "curl -X POST --url %s?name=%s&activeActive=true --header Content-Type:multipart/form-data --header userToken:%s -F adminConf=@/etc/kubernetes/admin.conf";
+        }
         String res = String.format(curlCommand, clusterJoinUrl, clusterName, userToken);
         return res;
     }
 
     @Override
-    public BaseResult quickAdd(MultipartFile adminConf, String name) {
+    public BaseResult quickAdd(MultipartFile adminConf, String name, Boolean activeActive) {
         String filePath = uploadPath + "/" + adminConf.getName();
         try {
             File dir = new File(uploadPath);
@@ -926,10 +897,14 @@ public class ClusterServiceImpl implements ClusterService {
             log.error("集群添加失败", e);
             throw new BusinessException(DictEnum.CLUSTER, name, ErrorMessage.ADD_FAIL);
         }
+        if (activeActive){
+            cluster.setActiveActive(true);
+        }
         addCluster(cluster);
         return BaseResult.ok("集群添加成功");
     }
 
+    @Override
     public List<Namespace> listRegisteredNamespace(String clusterId) {
         if (StringUtils.isEmpty(clusterId)) {
             return Collections.emptyList();
@@ -966,26 +941,6 @@ public class ClusterServiceImpl implements ClusterService {
             }
         }
         return pvcs;
-    }
-
-    public Map<String, Double> nodeQuery(String clusterId, String query){
-        Map<String, Double> resultMap = new HashMap<>();
-        Map<String, String> queryMap = new HashMap<>();
-        // 查询cpu使用量
-        try {
-            queryMap.put("query", query);
-            PrometheusResponse nodeMemoryRequest =
-                    prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
-            if (!CollectionUtils.isEmpty(nodeMemoryRequest.getData().getResult())) {
-                nodeMemoryRequest.getData().getResult().forEach(result -> {
-                    resultMap.put(result.getMetric().get("kubernetes_pod_node_name"), ResourceCalculationUtil.roundNumber(
-                            BigDecimal.valueOf(Double.parseDouble(result.getValue().get(1))), 2, RoundingMode.CEILING));
-                });
-            }
-        }catch (Exception e){
-            log.error("node列表，查询cpu失败");
-        }
-        return resultMap;
     }
 
 
