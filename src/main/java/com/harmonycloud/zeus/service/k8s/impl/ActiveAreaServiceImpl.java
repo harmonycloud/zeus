@@ -269,6 +269,7 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
             activeAreaDto.setAliasName(ActiveAreaEnum.getByName(areaName));
         } else {
             activeAreaDto.setAliasName(beanActiveArea.getAliasName());
+            activeAreaDto.setInit(true);
         }
         return activeAreaDto;
     }
