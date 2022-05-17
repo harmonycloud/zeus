@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.harmonycloud.caas.common.constants.NamespaceConstant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
@@ -57,9 +58,10 @@ public class NamespaceController {
     })
     @PostMapping
     public BaseResult create(@PathVariable("clusterId") String clusterId,
-                             @RequestBody Namespace namespace){
+                             @RequestBody Namespace namespace) {
         Map<String, String> label = new HashMap<>();
         label.put("middleware", "middleware");
+        label.put(NamespaceConstant.KEY_AVAILABLE_DOMAIN, String.valueOf(namespace.isAvailableDomain()));
         namespace.setClusterId(clusterId);
         namespaceService.save(namespace, label, true);
         return BaseResult.ok();
@@ -90,5 +92,19 @@ public class NamespaceController {
         namespaceService.registry(clusterId, name, registered);
         return BaseResult.ok();
     }
-    
+
+    @ApiOperation(value = "修改分区可用域状态", notes = "修改分区可用域状态")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "分区名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "availableDomain", value = "是否开启可用域", paramType = "query", dataTypeClass = String.class),
+    })
+    @PutMapping("/{name}/update")
+    public BaseResult update(@PathVariable("clusterId") String clusterId,
+                             @PathVariable("name") String name,
+                             @RequestParam boolean availableDomain) {
+        namespaceService.updateAvailableDomain(clusterId, name, availableDomain);
+        return BaseResult.ok();
+    }
+
 }

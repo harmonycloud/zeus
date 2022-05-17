@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.service.k8s;
 import com.harmonycloud.caas.common.model.ActiveAreaDto;
 import com.harmonycloud.caas.common.model.ActivePoolDto;
 import com.harmonycloud.caas.common.model.ClusterNodeResourceDto;
+import com.harmonycloud.zeus.bean.BeanActiveArea;
 
 import java.util.List;
 
@@ -78,4 +79,13 @@ public interface ActiveAreaService {
      * @return ActiveAreaDto
      */
     List<ClusterNodeResourceDto> getAreaNode(String clusterId, String areaName);
+
+    /**
+     * 获取可用区详细信息
+     * @param clusterId 集群id
+     * @param areaName 可用区英文名
+     * @return
+     */
+    BeanActiveArea get(String clusterId, String areaName);
+
 }

@@ -5,18 +5,18 @@ import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.ContainerWithStatus;
+import com.harmonycloud.caas.common.model.Node;
 import com.harmonycloud.caas.common.model.StorageClassDTO;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareQuota;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.caas.common.model.middleware.PodInfoGroup;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.harmonycloud.zeus.bean.BeanActiveArea;
 import com.harmonycloud.zeus.integration.cluster.PodWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
-import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
-import com.harmonycloud.zeus.service.k8s.PodService;
-import com.harmonycloud.zeus.service.k8s.StorageClassService;
+import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
@@ -57,6 +57,10 @@ public class PodServiceImpl implements PodService {
     private StorageClassService storageClassService;
     @Autowired
     private MiddlewareBackupServiceImpl middlewareBackupService;
+    @Autowired
+    private NodeService nodeService;
+    @Autowired
+    private ActiveAreaService activeAreaService;
 
     @Override
     public Middleware list(String clusterId, String namespace, String middlewareName, String type) {
@@ -317,6 +321,30 @@ public class PodServiceImpl implements PodService {
         podInfo.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(clusterId, namespace, type, middlewareName, podInfo.getPodName()));
     }
 
+    /**
+     * 设置pod所在的可用区
+     * @param clusterId 集群id
+     * @param podInfoList pod集合
+     */
+    private void setPodArea(String clusterId, List<PodInfo> podInfoList) {
+        List<Node> nodeList = nodeService.list(clusterId);
+        Map<String, Node> nodeMap = nodeList.stream().collect(Collectors.toMap(Node::getName, Node -> Node));
+        podInfoList.forEach(podInfo -> {
+            Node node = nodeMap.get(podInfo.getNodeName());
+            if (node.getLabels() != null && node.getLabels().containsKey("zone")) {
+                String areaName = node.getLabels().get("zone");
+                BeanActiveArea beanActiveArea = activeAreaService.get(clusterId, areaName);
+                if (beanActiveArea == null) {
+                    podInfo.setNodeZone(areaName);
+                } else {
+                    podInfo.setNodeZone(beanActiveArea.getAliasName());
+                }
+            } else {
+                podInfo.setNodeZone("");
+            }
+        });
+    }
+
     @Override
     public Middleware listPods(MiddlewareCR mw, String clusterId, String namespace, String middlewareName, String type){
         if (mw == null) {
@@ -357,6 +385,8 @@ public class PodServiceImpl implements PodService {
             setPodBackupStatus(clusterId, namespace, type, middlewareName, pi);
             podInfoList.add(pi);
         }
+        // 设置pod所在可用区
+        this.setPodArea(clusterId, podInfoList);
         middleware.setIsAllLvmStorage(isAllLvmStorage.get());
         middleware.setPodInfoGroup(convertListToGroup(podInfoList));
         middleware.setPods(podInfoList);
