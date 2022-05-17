@@ -10,6 +10,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.model.middleware.PodInfo;
+import com.harmonycloud.zeus.integration.cluster.PodWrapper;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
+import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
+import com.harmonycloud.zeus.service.k8s.PodService;
+import io.fabric8.kubernetes.api.model.Pod;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -46,19 +53,23 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
     private NodeService nodeService;
     @Autowired
     private BeanActiveAreaMapper beanActiveAreaMapper;
+    @Autowired
+    private PodWrapper podWrapper;
+    @Autowired
+    private MiddlewareCRService middlewareCRService;
 
     @Override
-    public void dividePool(String clusterId, ActivePoolDto activePoolDto){
+    public void dividePool(String clusterId, ActivePoolDto activePoolDto) {
         List<io.fabric8.kubernetes.api.model.Node> nodes = nodeWrapper.list(clusterId);
         nodes =
             nodes.stream()
                 .filter(node -> activePoolDto.getNodeList().stream()
                     .anyMatch(node1 -> node1.getName().equals(node.getMetadata().getName())))
                 .collect(Collectors.toList());
-        for (io.fabric8.kubernetes.api.model.Node node : nodes){
+        for (io.fabric8.kubernetes.api.model.Node node : nodes) {
             // 设置污点
             List<Taint> taintList = node.getSpec().getTaints();
-            if (CollectionUtils.isEmpty(taintList)){
+            if (CollectionUtils.isEmpty(taintList)) {
                 taintList = new ArrayList<>();
             }
             Taint taint = new Taint();
@@ -70,7 +81,7 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
 
             // 添加标签
             Map<String, String> labels = node.getMetadata().getLabels();
-            if (CollectionUtils.isEmpty(labels)){
+            if (CollectionUtils.isEmpty(labels)) {
                 labels = new HashMap<>();
             }
             labels.put("type", "active-active");
@@ -106,12 +117,15 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
             if (CollectionUtils.isEmpty(taintList)) {
                 taintList = new ArrayList<>();
             }
-            Taint taint = new Taint();
-            taint.setKey("harm.cn/type");
-            taint.setValue("active-active");
-            taint.setEffect("NoSchedule");
-            taintList.add(taint);
-            node.getSpec().setTaints(taintList);
+            if (taintList.stream().noneMatch(
+                taint -> "harm.cn/type".equals(taint.getKey()) && "active-active".equals(taint.getValue()))) {
+                Taint taint = new Taint();
+                taint.setKey("harm.cn/type");
+                taint.setValue("active-active");
+                taint.setEffect("NoSchedule");
+                taintList.add(taint);
+                node.getSpec().setTaints(taintList);
+            }
 
             // 添加标签
             Map<String, String> labels = node.getMetadata().getLabels();
@@ -128,11 +142,26 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
     @Override
     public void removeActiveAreaNode(String clusterId, String areaName, String nodeName) {
         io.fabric8.kubernetes.api.model.Node node = nodeWrapper.get(clusterId, nodeName);
-        if (node == null){
+        if (node == null) {
             throw new BusinessException(ErrorMessage.NODE_NOT_FOUND);
         }
+        // 验证节点是否存在中间件服务
+        Map<String, String> fields = new HashMap<>();
+        fields.put("spec.nodeName", "host-232");
+        List<Pod> podList = podWrapper.listByFields(clusterId, null, fields);
+
+        List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(clusterId, null, null);
+        podList =
+            podList.stream()
+                .filter(pod -> middlewareCRList.stream().anyMatch(middlewareCR -> pod.getMetadata().getName()
+                    .substring(0, pod.getMetadata().getName().length() - 2).equals(middlewareCR.getSpec().getName())))
+                .collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(podList)) {
+            throw new BusinessException(ErrorMessage.NODE_CONTAINS_MIDDLEWARE_PODS);
+        }
+
         Map<String, String> labels = node.getMetadata().getLabels();
-        if (!CollectionUtils.isEmpty(labels) && labels.containsKey(ZONE) && areaName.equals(labels.get(ZONE))){
+        if (!CollectionUtils.isEmpty(labels) && labels.containsKey(ZONE) && areaName.equals(labels.get(ZONE))) {
             labels.remove(ZONE, areaName);
             node.getMetadata().setLabels(labels);
         }
@@ -142,20 +171,31 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
     @Override
     public List<ActiveAreaDto> list(String clusterId) {
         QueryWrapper<BeanActiveArea> wrapper = new QueryWrapper<BeanActiveArea>().eq("cluster_id", clusterId);
-        List<BeanActiveArea> beanActiveAreaList = beanActiveAreaMapper.selectList(wrapper);
-        Map<String, String> map = new HashMap<>();
-        if (!CollectionUtils.isEmpty(beanActiveAreaList)) {
-            map = beanActiveAreaList.stream()
-                .collect(Collectors.toMap(BeanActiveArea::getAreaName, BeanActiveArea::getAliasName));
+        List<BeanActiveArea> beanActiveAreaList;
+        synchronized (this) {
+            beanActiveAreaList = beanActiveAreaMapper.selectList(wrapper);
+            if (CollectionUtils.isEmpty(beanActiveAreaList)) {
+                beanActiveAreaList = initBeanActiveArea(clusterId);
+            }
         }
+        Map<String, BeanActiveArea> map =
+            beanActiveAreaList.stream().collect(Collectors.toMap(BeanActiveArea::getAreaName, a -> a));
         List<ActiveAreaDto> activeAreaDtoList = new ArrayList<>();
         for (ActiveAreaEnum activeAreaEnum : ActiveAreaEnum.values()) {
             ActiveAreaDto activeAreaDto = new ActiveAreaDto();
             activeAreaDto.setName(activeAreaEnum.getName());
-            if (map.containsKey(activeAreaEnum.getName())) {
-                activeAreaDto.setAliasName(map.get(activeAreaEnum.getName()));
-            } else {
-                activeAreaDto.setAliasName(activeAreaEnum.getAliasName());
+            // 获取中文别名
+            activeAreaDto.setAliasName(map.get(activeAreaEnum.getName()).getAliasName());
+            // 更新可用区是否已经初始化
+            activeAreaDto.setInit(map.get(activeAreaEnum.getName()).getInit());
+            if (!activeAreaDto.getInit()) {
+                Map<String, String> labels = new HashMap<>();
+                labels.put(ZONE, activeAreaEnum.getName());
+                List<Node> nodes = nodeService.list(clusterId, labels);
+                if (!CollectionUtils.isEmpty(nodes)) {
+                    beanActiveAreaMapper.updateById(map.get(activeAreaEnum.getName()).setInit(true));
+                    activeAreaDto.setInit(true);
+                }
             }
             activeAreaDtoList.add(activeAreaDto);
         }
@@ -170,6 +210,7 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
         beanActiveArea.setClusterId(clusterId);
         beanActiveArea.setAreaName(areaName);
         beanActiveArea.setAliasName(aliasName);
+        beanActiveArea.setInit(true);
         BeanActiveArea exist = beanActiveAreaMapper.selectOne(wrapper);
         if (exist == null) {
             beanActiveAreaMapper.insert(beanActiveArea);
@@ -187,10 +228,10 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
         // 计算可用节点数量
         int runningNode = 0;
         int errorNode = 0;
-        for (Node node : nodes){
-            if ("True".equals(node.getStatus())){
+        for (Node node : nodes) {
+            if ("True".equals(node.getStatus())) {
                 runningNode = runningNode + 1;
-            }else {
+            } else {
                 errorNode = errorNode + 1;
             }
         }
@@ -240,4 +281,18 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
         List<Node> nodes = nodeService.list(clusterId, labels);
         return nodeService.getNodeResource(clusterId, nodes, false);
     }
+
+    public List<BeanActiveArea> initBeanActiveArea(String clusterId) {
+        List<BeanActiveArea> beanActiveAreaList = new ArrayList<>();
+        for (ActiveAreaEnum activeAreaEnum : ActiveAreaEnum.values()) {
+            BeanActiveArea beanActiveArea = new BeanActiveArea();
+            beanActiveArea.setClusterId(clusterId).setAreaName(activeAreaEnum.getName())
+                .setAliasName(activeAreaEnum.getAliasName()).setInit(false);
+            beanActiveAreaList.add(beanActiveArea);
+            beanActiveAreaMapper.insert(beanActiveArea);
+        }
+        return beanActiveAreaList;
+    }
+
+
 }

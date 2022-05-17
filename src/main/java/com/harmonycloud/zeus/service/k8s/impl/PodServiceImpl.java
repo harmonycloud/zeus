@@ -94,6 +94,15 @@ public class PodServiceImpl implements PodService {
         return list.stream().map(this::convertPodInfo).collect(Collectors.toList());
     }
 
+    @Override
+    public List<PodInfo> listByFields(String clusterId, String namespace, Map<String, String> fields) {
+        List<Pod> list = podWrapper.listByFields(clusterId, namespace, fields);
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>(0);
+        }
+        return list.stream().map(this::convertPodInfo).collect(Collectors.toList());
+    }
+
     /**
      * 将podlist进行分组
      * @param podInfoList

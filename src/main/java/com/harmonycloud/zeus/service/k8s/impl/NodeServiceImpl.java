@@ -162,6 +162,7 @@ public class NodeServiceImpl implements NodeService {
             ClusterNodeResourceDto nodeRs = new ClusterNodeResourceDto();
             nodeRs.setClusterId(clusterId);
             nodeRs.setIp(node.getIp());
+            nodeRs.setNodeName(node.getName());
             nodeRs.setStatus(node.getStatus());
             nodeRs.setCreateTime(node.getCreateTime());
             // 设置cpu
