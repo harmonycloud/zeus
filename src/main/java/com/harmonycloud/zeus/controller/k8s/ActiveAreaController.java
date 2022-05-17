@@ -64,7 +64,8 @@ public class ActiveAreaController {
     @ApiOperation(value = "更新可用区", notes = "更新可用区")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "activePoolDto", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "areaName", value = "可用区名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "aliasName", value = "可用区别名", paramType = "path", dataTypeClass = String.class),
     })
     @PutMapping("/{areaName}")
     public BaseResult update(@PathVariable("clusterId") String clusterId,
