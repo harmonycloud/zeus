@@ -240,4 +240,12 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
         List<Node> nodes = nodeService.list(clusterId, labels);
         return nodeService.getNodeResource(clusterId, nodes, false);
     }
+
+    @Override
+    public BeanActiveArea get(String clusterId, String areaName) {
+        QueryWrapper<BeanActiveArea> queryWrapper  = new QueryWrapper<>();
+        queryWrapper.eq("cluster_id", clusterId);
+        queryWrapper.eq("area_name", areaName);
+        return beanActiveAreaMapper.selectOne(queryWrapper);
+    }
 }
