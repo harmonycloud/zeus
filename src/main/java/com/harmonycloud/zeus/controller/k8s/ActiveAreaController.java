@@ -38,7 +38,7 @@ public class ActiveAreaController {
         return BaseResult.ok();
     }
 
-    @ApiOperation(value = "划分可用区", notes = "划分可用区")
+    @ApiOperation(value = "移除节点", notes = "移除节点")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "activePoolDto", value = "集群id", paramType = "path", dataTypeClass = String.class),

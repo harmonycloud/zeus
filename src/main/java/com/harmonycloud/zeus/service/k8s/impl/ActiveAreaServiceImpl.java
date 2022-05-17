@@ -46,6 +46,9 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class ActiveAreaServiceImpl implements ActiveAreaService {
+    
+    private static final String taintType = "harm.cn/type";
+    private static final String taintValue = "active-active";
 
     @Autowired
     private NodeWrapper nodeWrapper;
@@ -118,7 +121,7 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
                 taintList = new ArrayList<>();
             }
             if (taintList.stream().noneMatch(
-                taint -> "harm.cn/type".equals(taint.getKey()) && "active-active".equals(taint.getValue()))) {
+                taint -> taintType.equals(taint.getKey()) && taintValue.equals(taint.getValue()))) {
                 Taint taint = new Taint();
                 taint.setKey("harm.cn/type");
                 taint.setValue("active-active");
@@ -160,10 +163,17 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
             throw new BusinessException(ErrorMessage.NODE_CONTAINS_MIDDLEWARE_PODS);
         }
 
+        // 移除labels
         Map<String, String> labels = node.getMetadata().getLabels();
         if (!CollectionUtils.isEmpty(labels) && labels.containsKey(ZONE) && areaName.equals(labels.get(ZONE))) {
             labels.remove(ZONE, areaName);
             node.getMetadata().setLabels(labels);
+        }
+        // 移除污点
+        if (node.getSpec().getTaints().stream()
+            .anyMatch(taint -> taintType.equals(taint.getKey()) && taintValue.equals(taint.getValue()))) {
+            node.getSpec().getTaints()
+                .removeIf(taint -> taintType.equals(taint.getKey()) && taintValue.equals(taint.getValue()));
         }
         nodeWrapper.update(node, clusterId);
     }
