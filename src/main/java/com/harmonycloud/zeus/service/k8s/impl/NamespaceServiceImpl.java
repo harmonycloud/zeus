@@ -152,6 +152,10 @@ public class NamespaceServiceImpl implements NamespaceService {
         if (exist && checkExist(namespace.getClusterId(), namespace.getName())){
             throw new BusinessException(ErrorMessage.NAMESPACE_EXIST);
         }
+        // 判断中文名是否重复
+        if (exist && checkAliasNameExist(namespace.getClusterId(), namespace.getAliasName())){
+            throw new BusinessException(ErrorMessage.NAMESPACE_ALIAS_NAME_EXIST);
+        }
         Map<String, String> annotations = new HashMap<>();
         if(StringUtils.isNotEmpty(namespace.getAliasName())){
             annotations.put("alias_name", namespace.getAliasName());
@@ -261,4 +265,16 @@ public class NamespaceServiceImpl implements NamespaceService {
         List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId);
         return nsList.stream().anyMatch(ns -> ns.getMetadata().getName().equals(name));
     }
+
+    public boolean checkAliasNameExist(String clusterId, String aliasName) {
+        List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId);
+        for (io.fabric8.kubernetes.api.model.Namespace ns : nsList) {
+            if (ns.getMetadata().getAnnotations() != null && ns.getMetadata().getAnnotations().containsKey("alias_name")
+                    && aliasName.equals(ns.getMetadata().getAnnotations().get("alias_name"))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }
