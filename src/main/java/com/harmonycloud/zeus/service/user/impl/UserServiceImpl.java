@@ -246,13 +246,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<ResourceMenuDto> menu(String clusterId, String namespace) {
-//        CurrentUser currentUser = CurrentUserRepository.getUser();
-//        String username = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString(USERNAME);
-//        UserDto userDto = this.getUserDto(username);
-//        String projectId = RequestUtil.getProjectId();
-
-        UserDto userDto = this.getUserDto("admin");
-        String projectId = "0f25e88e089f4c3f";
+        CurrentUser currentUser = CurrentUserRepository.getUser();
+        String username = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString(USERNAME);
+        UserDto userDto = this.getUserDto(username);
+        String projectId = RequestUtil.getProjectId();
         List<ResourceMenuDto> resourceMenuDtoList = roleService.listMenuByRoleId(userDto);
 
         Map<Integer, List<ResourceMenuDto>> resourceMenuDtoMap =
