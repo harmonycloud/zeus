@@ -16,6 +16,7 @@ import com.harmonycloud.zeus.dao.user.BeanRoleMapper;
 import com.harmonycloud.zeus.dao.user.PersonalMapper;
 
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
+import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.user.*;
 import com.harmonycloud.zeus.util.ApplicationUtil;
@@ -62,6 +63,8 @@ import static com.harmonycloud.caas.filters.base.GlobalKey.USER_TOKEN;
 @Slf4j
 public class UserServiceImpl implements UserService {
 
+    @Value("${system.platform.activeActiveChart:mysql}")
+    private String activeActiveChart;
     private static final Map<String, Object> IMAGE_MAP = new HashMap<>();
     @Autowired
     private BeanUserMapper beanUserMapper;
@@ -75,6 +78,8 @@ public class UserServiceImpl implements UserService {
     private PersonalMapper personalMapper;
     @Autowired
     private MailToUserMapper mailToUserMapper;
+    @Autowired
+    private NamespaceService namespaceService;
 
     @Override
     public UserDto getUserDto(String userName, String projectId) {
@@ -240,11 +245,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<ResourceMenuDto> menu(String clusterId) {
-        CurrentUser currentUser = CurrentUserRepository.getUser();
-        String username = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString(USERNAME);
-        UserDto userDto = this.getUserDto(username);
-        String projectId = RequestUtil.getProjectId();
+    public List<ResourceMenuDto> menu(String clusterId, String namespace) {
+//        CurrentUser currentUser = CurrentUserRepository.getUser();
+//        String username = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString(USERNAME);
+//        UserDto userDto = this.getUserDto(username);
+//        String projectId = RequestUtil.getProjectId();
+
+        UserDto userDto = this.getUserDto("admin");
+        String projectId = "0f25e88e089f4c3f";
         List<ResourceMenuDto> resourceMenuDtoList = roleService.listMenuByRoleId(userDto);
 
         Map<Integer, List<ResourceMenuDto>> resourceMenuDtoMap =
@@ -265,9 +273,10 @@ public class UserServiceImpl implements UserService {
                     userDto.getUserRoleList().stream().filter(userRole -> userRole.getProjectId().equals(projectId))
                         .collect(Collectors.toList()).get(0).getPower());
             }
-            setServiceMenuSubMenu(firstMenuList, clusterId, power);
+            setServiceMenuSubMenu(firstMenuList, clusterId, power, namespace);
         }
         Collections.sort(firstMenuList);
+
         return firstMenuList;
     }
 
@@ -472,10 +481,12 @@ public class UserServiceImpl implements UserService {
      * @author  liyinlong
      * @since 2021/11/2 4:09 下午
      */
-    public void setServiceMenuSubMenu(List<ResourceMenuDto> menuDtoList, String clusterId, Map<String, String> power) {
+    public void setServiceMenuSubMenu(List<ResourceMenuDto> menuDtoList, String clusterId, Map<String, String> power,String namespace) {
         menuDtoList.forEach(parentMenu -> {
             if ("serviceList".equals(parentMenu.getName())) {
                 List<ResourceMenuDto> resourceMenuDtos = middlewareService.listAllMiddlewareAsMenu(clusterId);
+                resourceMenuDtos = filterActiveActiveMiddleware(resourceMenuDtos, clusterId, namespace);
+                // 过滤
                 if (!CollectionUtils.isEmpty(power)) {
                     resourceMenuDtos = resourceMenuDtos.stream()
                         .filter(resourceMenuDto -> power.keySet().stream()
@@ -508,4 +519,19 @@ public class UserServiceImpl implements UserService {
             userRoleService.delete(userDto.getUserName(), null, NUM_ROLE_ADMIN);
         }
     }
+
+    /**
+     * 双活分区只展示支持双活的中间件,如果分区是双活分区，则只展示双活中间件作为菜单
+     * @param menuDtoList 菜单集合
+     * @param namespace 分区名称
+     */
+    private List<ResourceMenuDto> filterActiveActiveMiddleware(List<ResourceMenuDto> menuDtoList, String clusterId, String namespace) {
+        String[] middlewareCharts = activeActiveChart.split(",");
+        Set<String> middlewareSet = new HashSet<>(Arrays.asList(middlewareCharts));
+        if (!StringUtils.isEmpty(namespace) && namespaceService.checkAvailableDomain(clusterId, namespace)) {
+            return menuDtoList.stream().filter(item -> middlewareSet.contains(item.getName())).collect(Collectors.toList());
+        }
+        return menuDtoList;
+    }
+
 }

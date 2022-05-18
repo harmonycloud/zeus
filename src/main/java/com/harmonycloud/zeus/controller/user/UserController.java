@@ -116,10 +116,12 @@ public class UserController {
     @GetMapping("/menu")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "query", dataTypeClass = String.class),
     })
-    public BaseResult<List<ResourceMenuDto>> menu(@RequestParam(value = "clusterId", required = false) String clusterId) throws Exception {
+    public BaseResult<List<ResourceMenuDto>> menu(@RequestParam(value = "clusterId", required = false) String clusterId,
+            @RequestParam(value = "namespace", required = false) String namespace) throws Exception {
         log.info("获取菜单列表：{}", clusterId);
-        return BaseResult.ok(userService.menu(clusterId));
+        return BaseResult.ok(userService.menu(clusterId, namespace));
     }
 
     @ApiImplicitParams({
