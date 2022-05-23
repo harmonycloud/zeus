@@ -332,9 +332,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
 
     /**
      * 检查是否是双活分区并设置双活配置字段
-     * @param clusterId 集群id
-     * @param namespace 分区
-     * @param values chart values
+     * @param values
+     * @param middleware
      */
     private void checkAndSetActiveActive(JSONObject values, Middleware middleware) {
         if (namespaceService.checkAvailableDomain(middleware.getClusterId(), middleware.getNamespace())) {

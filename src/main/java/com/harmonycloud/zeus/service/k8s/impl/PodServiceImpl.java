@@ -331,7 +331,7 @@ public class PodServiceImpl implements PodService {
         Map<String, Node> nodeMap = nodeList.stream().collect(Collectors.toMap(Node::getName, Node -> Node));
         podInfoList.forEach(podInfo -> {
             Node node = nodeMap.get(podInfo.getNodeName());
-            if (node.getLabels() != null && node.getLabels().containsKey("zone")) {
+            if (node != null && node.getLabels() != null && node.getLabels().containsKey("zone")) {
                 String areaName = node.getLabels().get("zone");
                 BeanActiveArea beanActiveArea = activeAreaService.get(clusterId, areaName);
                 if (beanActiveArea == null) {
