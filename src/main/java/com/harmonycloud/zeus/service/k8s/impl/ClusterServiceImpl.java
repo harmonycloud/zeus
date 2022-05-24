@@ -17,6 +17,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.constants.CommonConstant;
+import com.harmonycloud.caas.common.enums.registry.RegistryType;
 import com.harmonycloud.zeus.service.middleware.ImageRepositoryService;
 import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
 import com.harmonycloud.zeus.service.user.ProjectService;
@@ -72,6 +73,24 @@ public class ClusterServiceImpl implements ClusterService {
     private static boolean run = true;
     @Value("${system.upload.path:/usr/local/zeus-pv/upload}")
     private String uploadPath;
+    @Value("${registry.registryType:harbor}")
+    private String registryType;
+    @Value("${registry.registryProtocol:https}")
+    private String registryProtocol;
+    @Value("${registry.registryAddress:10.10.101.22}")
+    private String registryAddress;
+    @Value("${registry.registryPort:8443}")
+    private Integer registryPort;
+    @Value("${registry.registryUser:admin}")
+    private String registryUser;
+    @Value("${registry.registryPassword:Harbor12345}")
+    private String registryPassword;
+    @Value("${registry.registryImageRepo:middleware}")
+    private String registryImageRepo;
+    @Value("${registry.registryChartRepo:middleware}")
+    private String registryChartRepo;
+    @Value("${registry.registryVersion:v2}")
+    private String registryVersion;
 
     @Autowired
     private MiddlewareClusterService middlewareClusterService;
@@ -348,6 +367,7 @@ public class ClusterServiceImpl implements ClusterService {
         oldCluster.setIngressList(cluster.getIngressList());
         oldCluster.setRegistry(cluster.getRegistry());
         oldCluster.setLogging(cluster.getLogging());
+        oldCluster.setActiveActive(cluster.getActiveActive());
 
         update(oldCluster);
         // 修改镜像仓库信息
@@ -854,9 +874,9 @@ public class ClusterServiceImpl implements ClusterService {
     @Override
     public String getClusterJoinCommand(String clusterName, String apiAddress, String userToken, Boolean activeActive) {
         String clusterJoinUrl = apiAddress + "/clusters/quickAdd";
-        String curlCommand = "curl -X POST --url %s?name=%s --header Content-Type:multipart/form-data --header userToken:%s -F adminConf=@/etc/kubernetes/admin.conf";
+        String curlCommand = "curl -X POST --url '%s?name=%s' --header Content-Type:multipart/form-data --header userToken:%s -F adminConf=@/etc/kubernetes/admin.conf";
         if(activeActive){
-            curlCommand = "curl -X POST --url %s?name=%s&activeActive=true --header Content-Type:multipart/form-data --header userToken:%s -F adminConf=@/etc/kubernetes/admin.conf";
+            curlCommand = "curl -X POST --url '%s?name=%s&activeActive=true' --header Content-Type:multipart/form-data --header userToken:%s -F adminConf=@/etc/kubernetes/admin.conf";
         }
         String res = String.format(curlCommand, clusterJoinUrl, clusterName, userToken);
         return res;
@@ -900,6 +920,7 @@ public class ClusterServiceImpl implements ClusterService {
         if (activeActive){
             cluster.setActiveActive(true);
         }
+        setClusterRegistry(cluster);
         addCluster(cluster);
         return BaseResult.ok("集群添加成功");
     }
@@ -1019,6 +1040,24 @@ public class ClusterServiceImpl implements ClusterService {
         cluster.setProtocol(serverInfos[0]);
         cluster.setHost(host);
         cluster.setPort(Integer.parseInt(serverInfos[2]));
+    }
+
+    /**
+     * 设置集群制品仓库信息
+     * @param cluster
+     */
+    private void setClusterRegistry(MiddlewareClusterDTO cluster) {
+        Registry registry = new Registry();
+        registry.setType(registryType);
+        registry.setProtocol(registryProtocol);
+        registry.setAddress(registryAddress);
+        registry.setPort(registryPort);
+        registry.setUser(registryUser);
+        registry.setPassword(registryPassword);
+        registry.setImageRepo(registryImageRepo);
+        registry.setChartRepo(registryChartRepo);
+        registry.setVersion(registryVersion);
+        cluster.setRegistry(registry);
     }
 
     public void refresh(String clusterId) {
