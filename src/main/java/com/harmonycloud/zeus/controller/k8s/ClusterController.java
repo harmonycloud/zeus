@@ -155,7 +155,7 @@ public class ClusterController {
     @PostMapping("/quickAdd")
     public BaseResult quickAdd(@RequestParam("adminConf") MultipartFile adminConf,
                                @RequestParam("name") String name,
-                               @RequestParam("activeActive") Boolean activeActive) {
+                               @RequestParam(value = "activeActive", required = false) boolean activeActive) {
         log.info("name{}", name);
         return clusterService.quickAdd(adminConf, name, activeActive);
     }
