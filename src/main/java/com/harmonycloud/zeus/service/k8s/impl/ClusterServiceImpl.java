@@ -367,6 +367,7 @@ public class ClusterServiceImpl implements ClusterService {
         oldCluster.setIngressList(cluster.getIngressList());
         oldCluster.setRegistry(cluster.getRegistry());
         oldCluster.setLogging(cluster.getLogging());
+        oldCluster.setActiveActive(cluster.getActiveActive());
 
         update(oldCluster);
         // 修改镜像仓库信息
