@@ -85,7 +85,8 @@ public class NamespaceServiceImpl implements NamespaceService {
             .filter(ns -> (all || ns.getMetadata().getLabels() != null
                 && StringUtils.equals(ns.getMetadata().getLabels().get(labelKey), labelValue))
                 && !protectNamespaceList.contains(ns.getMetadata().getName())
-                && (StringUtils.isBlank(keyword) || (ns.getMetadata().getAnnotations() != null && ns.getMetadata().getAnnotations().containsKey(KEY_NAMESPACE_CHINESE) && ns.getMetadata().getAnnotations().get(KEY_NAMESPACE_CHINESE).contains(keyword)) ))
+                && (StringUtils.isBlank(keyword) || (ns.getMetadata().getName().contains(keyword) || (ns.getMetadata().getAnnotations() != null && ns.getMetadata().getAnnotations().containsKey(KEY_NAMESPACE_CHINESE)
+                    && ns.getMetadata().getAnnotations().get(KEY_NAMESPACE_CHINESE).contains(keyword))) ))
             .map(ns -> {
                 Namespace namespace = new Namespace().setName(ns.getMetadata().getName()).setClusterId(clusterId);
                 // 昵称
