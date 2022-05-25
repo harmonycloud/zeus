@@ -150,7 +150,7 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
         }
         // 验证节点是否存在中间件服务
         Map<String, String> fields = new HashMap<>();
-        fields.put("spec.nodeName", "host-232");
+        fields.put("spec.nodeName", nodeName);
         List<Pod> podList = podWrapper.listByFields(clusterId, null, fields);
 
         List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(clusterId, null, null);
