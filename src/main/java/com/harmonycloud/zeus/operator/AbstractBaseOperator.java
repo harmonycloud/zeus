@@ -1070,25 +1070,23 @@ public abstract class AbstractBaseOperator {
     }
     
     public void checkSvcCreated(Middleware middleware) {
-        if (middleware.getIngresses().get(0).getExposeType().equals(MIDDLEWARE_EXPOSE_NODEPORT)) {
-            middleware.getIngresses().forEach(ingressDTO -> ingressDTO.getServiceList().forEach(serviceDTO -> {
-                boolean again = true;
-                while (again) {
-                    try {
-                        Thread.sleep(3000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    Service service = serviceWrapper.get(middleware.getClusterId(), middleware.getNamespace(),
-                        serviceDTO.getServiceName());
-                    if (service != null) {
-                        again = false;
-                        String port = service.getSpec().getPorts().get(0).getPort().toString();
-                        serviceDTO.setServicePort(port);
-                        serviceDTO.setTargetPort(port);
-                    }
+        middleware.getIngresses().forEach(ingressDTO -> ingressDTO.getServiceList().forEach(serviceDTO -> {
+            boolean again = true;
+            while (again) {
+                try {
+                    Thread.sleep(3000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-            }));
-        }
+                Service service = serviceWrapper.get(middleware.getClusterId(), middleware.getNamespace(),
+                        serviceDTO.getServiceName());
+                if (service != null) {
+                    again = false;
+                    String port = service.getSpec().getPorts().get(0).getPort().toString();
+                    serviceDTO.setServicePort(port);
+                    serviceDTO.setTargetPort(port);
+                }
+            }
+        }));
     }
 }
