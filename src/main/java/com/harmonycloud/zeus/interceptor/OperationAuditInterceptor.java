@@ -15,11 +15,14 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.caas.common.model.user.UserRole;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.zeus.bean.user.BeanRoleAuthority;
+import com.harmonycloud.zeus.bean.user.BeanUser;
 import com.harmonycloud.zeus.service.user.RoleAuthorityService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
+import com.harmonycloud.zeus.service.user.UserService;
 import com.harmonycloud.zeus.util.RequestUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.JoinPoint;
@@ -69,7 +72,8 @@ public class OperationAuditInterceptor {
     private UserRoleService userRoleService;
     @Autowired
     private RoleAuthorityService roleAuthorityService;
-
+    @Autowired
+    private UserService userService;
 
     @Pointcut("@annotation(io.swagger.annotations.ApiOperation) && (!@annotation(com.harmonycloud.zeus.annotation.ExcludeAuditMethod)) &&(!@annotation(org.springframework.web.bind.annotation.GetMapping))")
     public void pointcut() {
@@ -202,9 +206,10 @@ public class OperationAuditInterceptor {
         JSONObject userJson = resultEnum.getValue();
 
         if (userJson != null) {
+            UserDto userDto = userService.getUserDto(userJson.getString("username"));
+            setUserRole(userDto, operationAudit);
             operationAudit.setAccount(userJson.getString("username"));
             operationAudit.setUserName(userJson.getString("aliasName"));
-            operationAudit.setRoleName(userJson.getString("roleName"));
             operationAudit.setPhone(userJson.getString("phone"));
         } else {
             if (result != null && result instanceof BaseResult) {
@@ -314,6 +319,21 @@ public class OperationAuditInterceptor {
             }
         }
         return type;
+    }
+
+    /**
+     * 设置用户角色
+     */
+    private void setUserRole(UserDto userDto, BeanOperationAudit operationAudit) {
+        StringBuilder roleName = new StringBuilder();
+        if (!CollectionUtils.isEmpty(userDto.getUserRoleList())) {
+            for (UserRole userRole : userDto.getUserRoleList()) {
+                userRole.getRoleName();
+                roleName.append(userRole.getRoleName());
+                roleName.append(" ");
+            }
+        }
+        operationAudit.setRoleName(roleName.toString());
     }
 
 }
