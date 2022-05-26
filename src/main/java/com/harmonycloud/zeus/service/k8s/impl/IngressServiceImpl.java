@@ -1104,10 +1104,16 @@ public class IngressServiceImpl implements IngressService {
         // 修改端口
         for (ServiceDTO serviceDTO : ingressDTO.getServiceList()) {
             List<String> svsNameTagList = Arrays.asList(external.getString(SVC_NAME_TAG).split(splitTag));
-            int num = svsNameTagList.indexOf(serviceDTO.getOldServiceName());
+            int num;
+            String svcName = serviceDTO.getServiceName();
+            if (svsNameTagList.contains(svcName)) {
+                num = svsNameTagList.indexOf(svcName);
+            } else {
+                continue;
+            }
             String iPort = external.getString(EXTERNAL_IP_ADDRESS).split(splitTag)[num];
-            external.put(EXTERNAL_IP_ADDRESS, external.getString(EXTERNAL_IP_ADDRESS).replace(iPort,
-                    exposeIp + ":" + serviceDTO.getExposePort()));
+            external.put(EXTERNAL_IP_ADDRESS,
+                external.getString(EXTERNAL_IP_ADDRESS).replace(iPort, exposeIp + ":" + serviceDTO.getExposePort()));
         }
         // upgrade
         Middleware middleware = new Middleware().setChartName(ingressDTO.getMiddlewareType()).setName(middlewareName)
