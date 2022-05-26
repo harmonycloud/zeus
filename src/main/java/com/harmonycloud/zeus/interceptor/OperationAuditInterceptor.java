@@ -328,15 +328,9 @@ public class OperationAuditInterceptor {
         if (userDto == null) {
             return;
         }
-        StringBuilder roleName = new StringBuilder();
         if (!CollectionUtils.isEmpty(userDto.getUserRoleList())) {
-            for (UserRole userRole : userDto.getUserRoleList()) {
-                userRole.getRoleName();
-                roleName.append(userRole.getRoleName());
-                roleName.append(" ");
-            }
+            operationAudit.setRoleName(userDto.getUserRoleList().get(0).getRoleName());
         }
-        operationAudit.setRoleName(roleName.toString());
     }
 
 }
