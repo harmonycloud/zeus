@@ -1083,6 +1083,9 @@ public abstract class AbstractBaseOperator {
                         serviceDTO.getServiceName());
                     if (service != null) {
                         again = false;
+                        String port = service.getSpec().getPorts().get(0).getPort().toString();
+                        serviceDTO.setServicePort(port);
+                        serviceDTO.setTargetPort(port);
                     }
                 }
             }));
