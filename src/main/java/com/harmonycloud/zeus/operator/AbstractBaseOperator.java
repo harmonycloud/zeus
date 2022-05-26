@@ -1,7 +1,10 @@
 package com.harmonycloud.zeus.operator;
 
+import static com.harmonycloud.caas.common.constants.CommonConstant.FALSE;
+import static com.harmonycloud.caas.common.constants.CommonConstant.TRUE;
 import static com.harmonycloud.caas.common.constants.NameConstant.*;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_NODEPORT;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.USE_NODE_PORT;
 import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.CHART_YAML_NAME;
 
 import java.math.BigDecimal;
@@ -12,14 +15,17 @@ import java.util.stream.Collectors;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.constants.CommonConstant;
+import com.harmonycloud.caas.common.enums.Protocol;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
+import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.bean.BeanAlertRule;
 import com.harmonycloud.zeus.bean.MiddlewareAlertInfo;
 import com.harmonycloud.zeus.dao.BeanAlertRuleMapper;
 import com.harmonycloud.zeus.dao.MiddlewareAlertInfoMapper;
+import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.prometheus.PrometheusRuleGroups;
 import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
 import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
@@ -37,6 +43,7 @@ import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.K8sConvert;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.Service;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.BeanUtils;
@@ -111,6 +118,8 @@ public abstract class AbstractBaseOperator {
     private MiddlewareAlertInfoMapper middlewareAlertInfoMapper;
     @Autowired
     private MiddlewareAlertsServiceImpl middlewareAlertsService;
+    @Autowired
+    private ServiceWrapper serviceWrapper;
 
     /**
      * 是否支持该中间件
@@ -166,16 +175,19 @@ public abstract class AbstractBaseOperator {
         helmChartService.install(middleware, tgzFilePath, cluster);
 
         // 4. 创建对外访问
-        if (!CollectionUtils.isEmpty(middleware.getIngresses())) {
-            try {
-                middleware.getIngresses().forEach(ingress -> ingressService.create(middleware.getClusterId(),
+        ThreadPoolExecutorFactory.executor.execute(() -> {
+            if (middleware.getHostNetwork() && !CollectionUtils.isEmpty(middleware.getIngresses())) {
+                try {
+                    // 校验svc是否已创建
+                    checkSvcCreated(middleware);
+                    middleware.getIngresses().forEach(ingress -> ingressService.create(middleware.getClusterId(),
                         middleware.getNamespace(), middleware.getName(), ingress));
-            } catch (Exception e) {
-                log.error("集群：{}，命名空间：{}，中间件：{}，创建对外访问异常", middleware.getClusterId(), middleware.getNamespace(),
+                } catch (Exception e) {
+                    log.error("集群：{}，命名空间：{}，中间件：{}，创建对外访问异常", middleware.getClusterId(), middleware.getNamespace(),
                         middleware.getName(), e);
-                throw new BusinessException(ErrorMessage.MIDDLEWARE_SUCCESS_INGRESS_FAIL);
+                }
             }
-        }
+        });
         //5. 修改prometheusRules添加集群
         updateAlerts(middleware);
         add2sql(middleware);
@@ -1012,6 +1024,68 @@ public abstract class AbstractBaseOperator {
             Registry registry = middlewareClusterDTO.getRegistry();
             String path = registry.getAddress() + ":" + registry.getPort() + "/" + registry.getChartRepo();
             middleware.setMirrorImage(path);
+        }
+    }
+
+    public void convertExternal(JSONObject values, Middleware middleware, MiddlewareClusterDTO cluster){
+        // 开启对外访问
+        JSONObject external = values.getJSONObject(EXTERNAL);
+        external.put(ENABLE, TRUE);
+        if (external.containsKey(USE_NODE_PORT)) {
+            external.put(USE_NODE_PORT, FALSE);
+        }
+        for (IngressDTO ingressDTO : middleware.getIngresses()){
+            // 获取暴露ip地址
+            String exposeIp = getExposeIp(cluster, ingressDTO);
+            // 指定分隔符号
+            String splitTag = ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.ROCKET_MQ.getType()) ? ";" : ",";
+            // 初始化
+            StringBuilder ipSb = new StringBuilder();
+            StringBuilder svcSb = new StringBuilder();
+            for (ServiceDTO serviceDTO : ingressDTO.getServiceList()) {
+                ipSb.append(exposeIp).append(":").append(serviceDTO.getExposePort()).append(splitTag);
+                svcSb.append(serviceDTO.getServiceName()).append(splitTag);
+            }
+            // 去除最后一位分隔符
+            ipSb.deleteCharAt(ipSb.length() - 1);
+            svcSb.deleteCharAt(svcSb.length() - 1);
+            external.put(EXTERNAL_IP_ADDRESS, ipSb.toString());
+            external.put(SVC_NAME_TAG, svcSb.toString());
+        }
+    }
+
+    public String getExposeIp(MiddlewareClusterDTO cluster, IngressDTO ingressDTO){
+        if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_NODEPORT)){
+            return cluster.getHost();
+        } else if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_INGRESS)
+                && ingressDTO.getProtocol().equals(Protocol.TCP.getValue())){
+            List<MiddlewareClusterIngress> middlewareClusterIngressList = cluster.getIngressList().stream()
+                    .filter(ingress -> ingress.getIngressClassName().equals(ingressDTO.getIngressClassName()))
+                    .collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(middlewareClusterIngressList)){
+                return middlewareClusterIngressList.get(0).getAddress();
+            }
+        }
+        return cluster.getHost();
+    }
+    
+    public void checkSvcCreated(Middleware middleware) {
+        if (middleware.getIngresses().get(0).getExposeType().equals(MIDDLEWARE_EXPOSE_NODEPORT)) {
+            middleware.getIngresses().forEach(ingressDTO -> ingressDTO.getServiceList().forEach(serviceDTO -> {
+                boolean again = true;
+                while (again) {
+                    try {
+                        Thread.sleep(3000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    Service service = serviceWrapper.get(middleware.getClusterId(), middleware.getNamespace(),
+                        serviceDTO.getServiceName());
+                    if (service != null) {
+                        again = false;
+                    }
+                }
+            }));
         }
     }
 }

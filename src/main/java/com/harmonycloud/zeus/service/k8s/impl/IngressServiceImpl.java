@@ -50,6 +50,7 @@ import java.util.stream.Collectors;
 
 import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_ONE;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
+import static com.harmonycloud.caas.common.constants.CommonConstant.*;
 import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.HELM_RELEASE_ANNOTATION_KEY;
 import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.HELM_RELEASE_LABEL_KEY;
 import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.HELM_RELEASE_LABEL_VALUE;
@@ -118,7 +119,7 @@ public class IngressServiceImpl implements IngressService {
                     ConfigMap configMap =
                         configMapWrapper.get(clusterId, getIngressTcpNamespace(cluster, ingress.getIngressClassName()),
                             ingress.getTcp().getConfigMapName());
-                    dealTcpRoutine(clusterId, namespace, configMap, ingressDtoList, ingress.getIngressClassName());
+                    dealTcpRoutine(clusterId, namespace, configMap, ingressDtoList, ingress);
                 }
             }
         }
@@ -185,6 +186,10 @@ public class IngressServiceImpl implements IngressService {
             serviceWrapper.batchCreate(clusterId, namespace, serviceList);
         } else {
             throw new CaasRuntimeException(ErrorMessage.UNSUPPORT_EXPOSE_TYPE);
+        }
+        // 特殊处理kafka和rocketmq(仅更新端口时)
+        if (ingressDTO.getServiceList().size() == 1){
+            upgradeValues(clusterId, namespace, middlewareName, ingressDTO);
         }
     }
 
@@ -719,7 +724,7 @@ public class IngressServiceImpl implements IngressService {
      * @param configMap
      * @param ingressDtoList
      */
-    private void dealTcpRoutine(String clusterId, String namespace, ConfigMap configMap, List<IngressDTO> ingressDtoList, String ingressClassName) {
+    private void dealTcpRoutine(String clusterId, String namespace, ConfigMap configMap, List<IngressDTO> ingressDtoList, MiddlewareClusterIngress ingress) {
         if (configMap == null) {
             return;
         }
@@ -784,9 +789,9 @@ public class IngressServiceImpl implements IngressService {
             ingressDTO.setServiceList(list);
             ingressDTO.setProtocol(Protocol.TCP.getValue());
             ingressDTO.setName(getIngressTcpName(serviceNames[1], serviceNames[0]));
-            ingressDTO.setExposeIP(middlewareCluster.getHost());
+            ingressDTO.setExposeIP(ingress.getAddress() == null ? middlewareCluster.getHost() : ingress.getAddress());
             ingressDTO.setExposeType(MIDDLEWARE_EXPOSE_INGRESS);
-            ingressDTO.setIngressClassName(ingressClassName);
+            ingressDTO.setIngressClassName(ingress.getIngressClassName());
             Map<String,String> stringStringMap = mapHashMap.get(serviceNames[1]);
             if (stringStringMap != null) {
                 ingressDTO.setMiddlewareType(stringStringMap.get("type"));
@@ -1085,6 +1090,44 @@ public class IngressServiceImpl implements IngressService {
             }
         }).collect(Collectors.toList());
         return ingressDTOList;
+    }
+
+    public void upgradeValues(String clusterId, String namespace, String middlewareName, IngressDTO ingressDTO) {
+        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+        JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
+        // 开启对外访问
+        JSONObject external = values.getJSONObject(EXTERNAL);
+        // 获取暴露ip地址
+        String exposeIp = getExposeIp(cluster, ingressDTO);
+        // 指定分隔符号
+        String splitTag = ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.ROCKET_MQ.getType()) ? ";" : ",";
+        // 修改端口
+        for (ServiceDTO serviceDTO : ingressDTO.getServiceList()) {
+            List<String> svsNameTagList = Arrays.asList(external.getString(SVC_NAME_TAG).split(splitTag));
+            int num = svsNameTagList.indexOf(serviceDTO.getOldServiceName());
+            String iPort = external.getString(EXTERNAL_IP_ADDRESS).split(splitTag)[num];
+            external.put(EXTERNAL_IP_ADDRESS, external.getString(EXTERNAL_IP_ADDRESS).replace(iPort,
+                    exposeIp + ":" + serviceDTO.getExposePort()));
+        }
+        // upgrade
+        Middleware middleware = new Middleware().setChartName(ingressDTO.getMiddlewareType()).setName(middlewareName)
+            .setChartVersion(values.getString("chart-version")).setNamespace(namespace);
+        helmChartService.upgrade(middleware, values, values, cluster);
+    }
+
+    public String getExposeIp(MiddlewareClusterDTO cluster, IngressDTO ingressDTO){
+        if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_NODEPORT)){
+            return cluster.getHost();
+        } else if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_INGRESS)
+                && ingressDTO.getProtocol().equals(Protocol.TCP.getValue())){
+            List<MiddlewareClusterIngress> middlewareClusterIngressList = cluster.getIngressList().stream()
+                    .filter(ingress -> ingress.getIngressClassName().equals(ingressDTO.getIngressClassName()))
+                    .collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(middlewareClusterIngressList)){
+                return middlewareClusterIngressList.get(0).getAddress();
+            }
+        }
+        return cluster.getHost();
     }
 
 }
