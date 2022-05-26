@@ -206,8 +206,7 @@ public class OperationAuditInterceptor {
         JSONObject userJson = resultEnum.getValue();
 
         if (userJson != null) {
-            UserDto userDto = userService.getUserDto(userJson.getString("username"));
-            setUserRole(userDto, operationAudit);
+            setUserRole(userJson.getString("username"), operationAudit);
             operationAudit.setAccount(userJson.getString("username"));
             operationAudit.setUserName(userJson.getString("aliasName"));
             operationAudit.setPhone(userJson.getString("phone"));
@@ -219,9 +218,9 @@ public class OperationAuditInterceptor {
                     String token = resultData.getString("token");
                     resultEnum = JwtTokenComponent.checkToken(token);
                     userJson = resultEnum.getValue();
+                    setUserRole(userJson.getString("username"), operationAudit);
                     operationAudit.setAccount(userJson.getString("username"));
                     operationAudit.setUserName(userJson.getString("aliasName"));
-                    operationAudit.setRoleName(userJson.getString("roleName"));
                     operationAudit.setPhone(userJson.getString("phone"));
                 }
             }
@@ -324,7 +323,11 @@ public class OperationAuditInterceptor {
     /**
      * 设置用户角色
      */
-    private void setUserRole(UserDto userDto, BeanOperationAudit operationAudit) {
+    private void setUserRole(String username, BeanOperationAudit operationAudit) {
+        UserDto userDto = userService.getUserDto(username);
+        if (userDto == null) {
+            return;
+        }
         StringBuilder roleName = new StringBuilder();
         if (!CollectionUtils.isEmpty(userDto.getUserRoleList())) {
             for (UserRole userRole : userDto.getUserRoleList()) {
