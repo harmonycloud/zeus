@@ -78,6 +78,7 @@ public class RobotClientUtil implements Runnable {
                 sendResult.setIsSuccess(errcode.equals(0));
             }
         } catch (Exception e) {
+            logger.error("钉钉连接失败:", e);
             sendResult.setIsSuccess(false);
             return sendResult;
         }
