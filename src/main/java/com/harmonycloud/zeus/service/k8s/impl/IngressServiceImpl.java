@@ -188,7 +188,9 @@ public class IngressServiceImpl implements IngressService {
             throw new CaasRuntimeException(ErrorMessage.UNSUPPORT_EXPOSE_TYPE);
         }
         // 特殊处理kafka和rocketmq(仅更新端口时)
-        if (ingressDTO.getServiceList().size() == 1){
+        if ((ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.ROCKET_MQ.getType())
+            || ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.KAFKA.getType()))
+            && ingressDTO.getServiceList().size() == 1) {
             upgradeValues(clusterId, namespace, middlewareName, ingressDTO);
         }
     }
