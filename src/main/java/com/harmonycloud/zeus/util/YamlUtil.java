@@ -136,15 +136,18 @@ public class YamlUtil {
         return normalJsonObj;
     }
 
-    public static void main(String[] args) throws IOException {
-        String source = "/Users/liyinlong/elasticsearch/values.yaml";
-        JSONObject srcObject = loadAsNormalJsonObject(source);
-        String add = "/Users/liyinlong/elasticsearch/add.yaml";
-        JSONObject addObject = loadAsNormalJsonObject(add);
-
-        JSONObject jsonObject = jsonMerge(addObject, srcObject);
-
-        System.out.println(jsonObject);
+    /**
+     * 将values的json对象字段类型转为标准字段类型,空的tolerations应为[]，而底座chart包中是{}
+     *
+     * @param upgradeValues
+     */
+    public static void convertToStandardJsonObject(JSONObject upgradeValues) {
+        Object tolerations = upgradeValues.get("tolerations");
+        if (tolerations instanceof JSONObject) {
+            JSONArray tolerationsArray = new JSONArray();
+            tolerationsArray.add(tolerations);
+            upgradeValues.put("tolerations", tolerationsArray);
+        }
     }
 
 }

@@ -554,6 +554,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     public BaseResult upgradeChart(String clusterId, String namespace, String name, String type, String chartName, String upgradeChartVersion) {
         HelmChartFile helmChart = helmChartService.getHelmChartFromMysql(chartName, upgradeChartVersion);
         JSONObject upgradeValues = YamlUtil.convertYamlAsNormalJsonObject(helmChart.getValueYaml());
+        YamlUtil.convertToStandardJsonObject(upgradeValues);
         JSONObject currentValues = helmChartService.getInstalledValuesAsNormalJson(name, namespace, clusterService.findById(clusterId));
 
         String currentChartVersion = currentValues.getString("chart-version");
