@@ -618,7 +618,7 @@ public class IngressServiceImpl implements IngressService {
             List<ServiceDTO> serviceList = new ArrayList<>(1);
             serviceList.add(svcDto);
             IngressDTO ingressDTO = new IngressDTO()
-                    .setMiddlewareName(crd.getMetadata().getName())
+                    .setMiddlewareName(crd.getSpec().getName())
                     .setClusterId(clusterId)
                     .setClusterNickname(middlewareClusterDTO.getNickname())
                     .setName(getIngressTcpName(svcDtoList.get(0).getServiceName(), namespace))
