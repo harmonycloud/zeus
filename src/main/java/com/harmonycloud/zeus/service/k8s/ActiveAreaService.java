@@ -88,4 +88,10 @@ public interface ActiveAreaService {
      */
     BeanActiveArea get(String clusterId, String areaName);
 
+    /**
+     * 删除可用区初始化信息
+     * @param clusterId
+     */
+    void delete(String clusterId);
+
 }

@@ -314,4 +314,12 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
         queryWrapper.eq("area_name", areaName);
         return beanActiveAreaMapper.selectOne(queryWrapper);
     }
+
+    @Override
+    public void delete(String clusterId) {
+        QueryWrapper<BeanActiveArea> queryWrapper  = new QueryWrapper<>();
+        queryWrapper.eq("cluster_id", clusterId);
+        beanActiveAreaMapper.delete(queryWrapper);
+    }
+
 }
