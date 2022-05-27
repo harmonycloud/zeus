@@ -128,6 +128,8 @@ public class ClusterServiceImpl implements ClusterService {
     private ImageRepositoryService imageRepositoryService;
     @Autowired
     private ProjectService projectService;
+    @Autowired
+    private ActiveAreaService activeAreaService;
 
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
@@ -452,6 +454,8 @@ public class ClusterServiceImpl implements ClusterService {
         bindResourceDelete(cluster);
         // 移除镜像仓库信息
         imageRepositoryService.removeImageRepository(clusterId);
+        // 删除可用区初始化状态信息
+        activeAreaService.delete(clusterId);
     }
 
     public void bindResourceDelete(MiddlewareClusterDTO cluster){
