@@ -1108,6 +1108,10 @@ public class IngressServiceImpl implements IngressService {
             List<String> svsNameTagList = Arrays.asList(external.getString(SVC_NAME_TAG).split(splitTag));
             int num;
             String svcName = serviceDTO.getServiceName();
+            // 去除nodePort后缀
+            if (svcName.contains("-nodeport-")){
+                svcName = svcName.substring(0, svcName.substring(0, svcName.lastIndexOf("-")).lastIndexOf("-"));
+            }
             if (svsNameTagList.contains(svcName)) {
                 num = svsNameTagList.indexOf(svcName);
             } else {
