@@ -1043,6 +1043,9 @@ public abstract class AbstractBaseOperator {
             StringBuilder ipSb = new StringBuilder();
             StringBuilder svcSb = new StringBuilder();
             for (ServiceDTO serviceDTO : ingressDTO.getServiceList()) {
+                if (serviceDTO.getServiceName().contains("-nameserver-proxy-svc")){
+                    continue;
+                }
                 ipSb.append(exposeIp).append(":").append(serviceDTO.getExposePort()).append(splitTag);
                 svcSb.append(serviceDTO.getServiceName()).append(splitTag);
             }
