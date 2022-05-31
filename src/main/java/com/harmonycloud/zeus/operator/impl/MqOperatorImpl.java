@@ -82,9 +82,9 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
         javaOpts.put("xms", mem);
         javaOpts.put("xmx", mem);
 
-        // 集群对外访问
-        if (middleware.getHostNetwork() != null){
-            values.put("hostNetwork", middleware.getHostNetwork());
+        // 对外服务
+        if (middleware.getHostNetwork()){
+            convertExternal(values, middleware, cluster);
         }
     }
 
@@ -102,11 +102,6 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
 
             JSONObject clusterInfo = values.getJSONObject(CLUSTER);
             middleware.setMode(clusterInfo.getString(MODE));
-
-            // 集群对外访问
-            if (values.containsKey("hostNetwork")){
-                middleware.setHostNetwork(values.getBoolean("hostNetwork"));
-            }
         }
 
         middleware.setManagePlatform(true);
