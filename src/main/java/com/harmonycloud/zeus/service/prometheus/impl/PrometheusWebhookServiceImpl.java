@@ -3,10 +3,7 @@ package com.harmonycloud.zeus.service.prometheus.impl;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import com.harmonycloud.zeus.bean.DingRobotInfo;
 import com.harmonycloud.zeus.bean.MailToUser;
@@ -104,14 +101,12 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             List<MiddlewareAlertInfo> alertInfos = middlewareAlertInfoMapper.selectList(wrapper);
             if (!CollectionUtils.isEmpty(alertInfos)) {
                 alertInfo = alertInfos.get(0);
-            }
-            if (ObjectUtils.isEmpty(alertInfo)) {
-                beanAlertRecord.setLay("service");
-            } else {
                 beanAlertRecord.setLay(alertInfo.getLay());
                 beanAlertRecord.setAlertId(alertInfo.getAlertId());
                 beanAlertRecord.setExpr(alertInfo.getDescription()+alertInfo.getSymbol()+alertInfo.getThreshold()+"%");
                 beanAlertRecord.setContent(alertInfo.getContent());
+            } else {
+                beanAlertRecord.setLay("service");
             }
             beanAlertRecordMapper.insert(beanAlertRecord);
             // 设置通道沉默时间
@@ -152,7 +147,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             //钉钉发送
             List<DingRobotInfo> dings = dingRobotMapper.selectList(new QueryWrapper<DingRobotInfo>());
             if ("ding".equals(alertInfo.getDing())) {
-                dings.stream().forEach(dingRobotInfo -> {
+                dings.forEach(dingRobotInfo -> {
                     dingRobotService.send(alertInfoDto,dingRobotInfo);
                 });
             }
@@ -161,15 +156,13 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             mailToUserQueryWrapper.eq("alert_rule_id",alertInfo.getAlertId());
             List<MailToUser> users = mailToUserMapper.selectList(mailToUserQueryWrapper);
             if ("mail".equals(alertInfo.getMail())) {
-                users.stream().forEach(mailToUser -> {
+                users.forEach(mailToUser -> {
                     QueryWrapper<BeanUser> userQueryWrapper = new QueryWrapper<>();
                     userQueryWrapper.eq("id",mailToUser.getUserId());
                     BeanUser beanUser = beanUserMapper.selectOne(userQueryWrapper);
                     try {
                         mailService.sendHtmlMail(alertInfoDto,beanUser);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (MessagingException e) {
+                    } catch (IOException | MessagingException e) {
                         e.printStackTrace();
                     }
                 });
