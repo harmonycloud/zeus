@@ -338,7 +338,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     private void checkAndSetActiveActive(JSONObject values, Middleware middleware) {
         if (namespaceService.checkAvailableDomain(middleware.getClusterId(), middleware.getNamespace())) {
             values.put("podAntiAffinityTopologKey", "zone");
-            values.put("podAntiAffinity", "hard");
+            values.put("podAntiAffinity", "soft");
             AffinityDTO affinityDTO = new AffinityDTO();
             affinityDTO.setLabel("zone=zoneC");
             affinityDTO.setRequired(true);
