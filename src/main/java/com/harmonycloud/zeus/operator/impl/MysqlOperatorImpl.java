@@ -227,6 +227,9 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                     }
                 }
             }
+            // 是否自动切换
+            MysqlCluster mysqlCluster = mysqlClusterWrapper.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
+            middleware.setAutoSwitch(mysqlCluster.getSpec().getPassiveSwitched() == null);
         }
         return middleware;
     }
