@@ -15,11 +15,14 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.caas.common.model.user.UserRole;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.zeus.bean.user.BeanRoleAuthority;
+import com.harmonycloud.zeus.bean.user.BeanUser;
 import com.harmonycloud.zeus.service.user.RoleAuthorityService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
+import com.harmonycloud.zeus.service.user.UserService;
 import com.harmonycloud.zeus.util.RequestUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.JoinPoint;
@@ -69,7 +72,8 @@ public class OperationAuditInterceptor {
     private UserRoleService userRoleService;
     @Autowired
     private RoleAuthorityService roleAuthorityService;
-
+    @Autowired
+    private UserService userService;
 
     @Pointcut("@annotation(io.swagger.annotations.ApiOperation) && (!@annotation(com.harmonycloud.zeus.annotation.ExcludeAuditMethod)) &&(!@annotation(org.springframework.web.bind.annotation.GetMapping))")
     public void pointcut() {
@@ -90,22 +94,22 @@ public class OperationAuditInterceptor {
             List<UserRole> userRoleList = userRoleService.get(userMap.getString("username"));
             // 判断是否为超级管理员
             boolean notAdmin = CollectionUtils.isEmpty(
-                userRoleList.stream().filter(userRole -> userRole.getRoleId() == 1).collect(Collectors.toList()));
+                    userRoleList.stream().filter(userRole -> userRole.getRoleId() == 1).collect(Collectors.toList()));
             if (notAdmin) {
                 userRoleList = userRoleList.stream().filter(userRole -> StringUtils.isNotEmpty(userRole.getProjectId())
-                    && userRole.getProjectId().equals(projectId)).collect(Collectors.toList());
+                        && userRole.getProjectId().equals(projectId)).collect(Collectors.toList());
                 if (CollectionUtils.isEmpty(userRoleList)) {
                     throw new BusinessException(ErrorMessage.NO_AUTHORITY);
                 }
                 UserRole userRole = userRoleList.get(0);
                 if (userRole.getRoleId() != 1) {
                     JSONObject params =
-                        getParams(((MethodSignature)joinPoint.getSignature()).getParameterNames(), joinPoint.getArgs());
+                            getParams(((MethodSignature)joinPoint.getSignature()).getParameterNames(), joinPoint.getArgs());
                     String type = tryGetType(params);
                     if (StringUtils.isNotEmpty(type)) {
                         List<BeanRoleAuthority> beanRoleAuthorityList = roleAuthorityService.list(userRole.getRoleId())
-                            .stream().filter(beanRoleAuthority -> beanRoleAuthority.getType().equals(type))
-                            .collect(Collectors.toList());
+                                .stream().filter(beanRoleAuthority -> beanRoleAuthority.getType().equals(type))
+                                .collect(Collectors.toList());
                         if (!CollectionUtils.isEmpty(beanRoleAuthorityList)) {
                             String[] power = beanRoleAuthorityList.get(0).getPower().split("");
                             if (Integer.parseInt(power[authority.power()]) == 0) {
@@ -202,9 +206,9 @@ public class OperationAuditInterceptor {
         JSONObject userJson = resultEnum.getValue();
 
         if (userJson != null) {
+            setUserRole(userJson.getString("username"), operationAudit);
             operationAudit.setAccount(userJson.getString("username"));
             operationAudit.setUserName(userJson.getString("aliasName"));
-            operationAudit.setRoleName(userJson.getString("roleName"));
             operationAudit.setPhone(userJson.getString("phone"));
         } else {
             if (result != null && result instanceof BaseResult) {
@@ -214,9 +218,9 @@ public class OperationAuditInterceptor {
                     String token = resultData.getString("token");
                     resultEnum = JwtTokenComponent.checkToken(token);
                     userJson = resultEnum.getValue();
+                    setUserRole(userJson.getString("username"), operationAudit);
                     operationAudit.setAccount(userJson.getString("username"));
                     operationAudit.setUserName(userJson.getString("aliasName"));
-                    operationAudit.setRoleName(userJson.getString("roleName"));
                     operationAudit.setPhone(userJson.getString("phone"));
                 }
             }
@@ -314,6 +318,19 @@ public class OperationAuditInterceptor {
             }
         }
         return type;
+    }
+
+    /**
+     * 设置用户角色
+     */
+    private void setUserRole(String username, BeanOperationAudit operationAudit) {
+        UserDto userDto = userService.getUserDto(username);
+        if (userDto == null) {
+            return;
+        }
+        if (!CollectionUtils.isEmpty(userDto.getUserRoleList())) {
+            operationAudit.setRoleName(userDto.getUserRoleList().get(0).getRoleName());
+        }
     }
 
 }
