@@ -709,7 +709,7 @@ public class ClusterServiceImpl implements ClusterService {
                 try {
                     String pvcUsedQuery = "sum(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\""
                         + pvcs.toString() + "\",namespace=\"" + mwCrd.getMetadata().getNamespace()
-                        + "\"}) by (persistentvolumeclaim) /1024/1024/1024";
+                        + "\",endpoint!=\"\"}) by (persistentvolumeclaim) /1024/1024/1024";
                     Double pvcUsed = prometheusResourceMonitorService.queryAndConvert(clusterId, pvcUsedQuery);
                     middlewareResourceInfo.setPer5MinStorage(pvcUsed);
                 } catch (Exception e) {
@@ -800,7 +800,7 @@ public class ClusterServiceImpl implements ClusterService {
         PrometheusResponse cpuRequest = prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
 
         // 查询cpu每5分钟平均用量
-        String per5MinCpuUsedQuery = "sum(rate(container_cpu_usage_seconds_total[3m])) by (namespace)";
+        String per5MinCpuUsedQuery = "sum(rate(container_cpu_usage_seconds_total{endpoint!=\"\"}[3m])) by (namespace)";
         queryMap.put("query", per5MinCpuUsedQuery);
         PrometheusResponse per5MinCpuUsed =
             prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
@@ -813,7 +813,7 @@ public class ClusterServiceImpl implements ClusterService {
 
         // 查询memory每5分钟平均用量
         String per5MinMemoryUsedQuery =
-            "(sum(avg_over_time(container_memory_usage_bytes[5m])) by (namespace))/1024/1024/1024";
+            "(sum(avg_over_time(container_memory_usage_bytes{endpoint!=\"\"}[5m])) by (namespace))/1024/1024/1024";
         queryMap.put("query", per5MinMemoryUsedQuery);
         PrometheusResponse per5MinMemoryUsed =
             prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
@@ -825,7 +825,7 @@ public class ClusterServiceImpl implements ClusterService {
                 prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
 
         // 查询pvc使用量
-        String pvcUsingQuery = "sum(kubelet_volume_stats_used_bytes) by (namespace) /1024/1024/1024";
+        String pvcUsingQuery = "sum(kubelet_volume_stats_used_bytes{endpoint!=\"\"}) by (namespace) /1024/1024/1024";
         queryMap.put("query", pvcUsingQuery);
         PrometheusResponse pvcUsing =
                 prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);

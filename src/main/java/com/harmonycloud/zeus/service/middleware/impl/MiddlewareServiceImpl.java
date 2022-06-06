@@ -809,7 +809,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 String totalStorageQuery =
                     "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{persistentvolumeclaim=~\""
                         + pvcs.toString() + "\",namespace=\"" + namespace
-                        + "\"}) by (persistentvolumeclaim) /1024/1024/1024";
+                        + "\",endpoint!=\"\"}) by (persistentvolumeclaim) /1024/1024/1024";
                 PrometheusResponse totalStorage = prometheusResourceMonitorService.query(clusterId, totalStorageQuery);
                 Map<String, Double> result = convertResponse(totalStorage);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
@@ -832,7 +832,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 String usedStorageQuery =
                     "sum(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\""
                         + pvcs.toString() + "\",namespace=\"" + namespace
-                        + "\"}) by (persistentvolumeclaim) /1024/1024/1024";
+                        + "\",endpoint!=\"\"}) by (persistentvolumeclaim) /1024/1024/1024";
                 PrometheusResponse usedStorage = prometheusResourceMonitorService.query(clusterId, usedStorageQuery);
                 Map<String, Double> result = convertResponse(usedStorage);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
