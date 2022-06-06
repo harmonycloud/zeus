@@ -2,7 +2,7 @@ global:
   repository: harbor.middleware.com/middleware
   middleware_controller:
     image: middleware-controller
-    tag: v1.2.4
+    tag: v1.2.5
     resources:
       limits:
         cpu: 200m
