@@ -74,7 +74,7 @@ public class StorageController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "storageDto", value = "存储业务对象", paramType = "query", dataTypeClass = StorageDto.class)
     })
-    @DeleteMapping("/{storageName}")
+    @PutMapping("/{storageName}")
     public BaseResult update(@PathVariable("clusterId") String clusterId,
                              @RequestBody StorageDto storageDto) {
         storageDto.setClusterId(clusterId);

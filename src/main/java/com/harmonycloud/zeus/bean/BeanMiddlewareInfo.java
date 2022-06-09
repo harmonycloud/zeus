@@ -123,7 +123,7 @@ public class BeanMiddlewareInfo implements Serializable {
     private Boolean official;
 
     /**
-     * 是否可用：0-非官方 1-官方
+     * chart包
      */
     @TableField("chart")
     private byte[] chart;
