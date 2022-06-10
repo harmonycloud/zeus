@@ -16,6 +16,7 @@ import com.harmonycloud.zeus.annotation.MiddlewareBackup;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.util.CronUtils;
 import com.harmonycloud.zeus.util.DateUtil;
@@ -60,6 +61,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private PodService podService;
     @Autowired
     private MiddlewareService middlewareService;
+    @Autowired
+    private MiddlewareCrTypeService middlewareCrTypeService;
 
     @Override
     public List<MiddlewareBackupRecord> listRecord(String clusterId, String namespace, String middlewareName, String type) {
@@ -299,7 +302,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * @return
      */
     public String getRealMiddlewareName(String type, String middlewareName) {
-        return MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType() + "-" + middlewareName;
+        return middlewareCrTypeService.findByType(type) + "-" + middlewareName;
     }
 
     /**
@@ -310,7 +313,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * @return
      */
     public String getRestoreName(String type, String middlewareName) {
-        return MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType() + "-" + middlewareName + "-restore" + UUIDUtils.get8UUID();
+        return middlewareCrTypeService.findByType(type) + "-" + middlewareName + "-restore" + UUIDUtils.get8UUID();
     }
 
     @Override
@@ -507,7 +510,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             spec.setName(middlewareName);
             spec.setBackupName(backupName);
             spec.setRestoreObjects(convertRestoreObjects(pods, backup.getStatus().getBackupInfos(), pvcs));
-            spec.setType(MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType());
+            spec.setType(middlewareCrTypeService.findByType(type));
             crd.setSpec(spec);
             restoreCRDService.create(clusterId, crd);
         } catch (IOException e) {
@@ -526,7 +529,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         String middlewareName = backupDTO.getMiddlewareName();
 
         String middlewareRealName = getRealMiddlewareName(type, middlewareName);
-        String middlewareCrdType = MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType();
+        String middlewareCrdType = middlewareCrTypeService.findByType(type);
         Map<String, String> backupLabel = getBackupLabel(middlewareName, type);
         Map<String, String> middlewareLabel = getBackupLabel(middlewareName, type);
         backupLabel.putAll(middlewareLabel);

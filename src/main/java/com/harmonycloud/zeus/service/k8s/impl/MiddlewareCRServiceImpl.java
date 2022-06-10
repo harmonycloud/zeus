@@ -11,6 +11,7 @@ import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.PodService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,8 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
     private MiddlewareWrapper middlewareWrapper;
     @Autowired
     private PodService podService;
+    @Autowired
+    private MiddlewareCrTypeService middlewareCrTypeService;
     /**
      * 查询中间件列表
      *
@@ -57,7 +60,7 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
         Map<String, String> label = null;
         if (StringUtils.isNotEmpty(type)) {
             label = new HashMap<>(1);
-            String crType = MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType();
+            String crType = middlewareCrTypeService.findByType(type);
             label.put("type", StringUtils.isNotEmpty(crType) ? crType : type);
         }
 
@@ -107,7 +110,7 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
     @Override
     public MiddlewareCR getCR(String clusterId, String namespace, String type, String name) {
         if (MiddlewareTypeEnum.isType(type)) {
-            String crdName = MiddlewareCRService.getCrName(type, name);
+            String crdName = middlewareCrTypeService.findByType(type);
             return middlewareWrapper.get(clusterId, namespace, crdName);
         } else {
             List<MiddlewareCR> middlewareCRList = middlewareWrapper.list(clusterId, namespace, null);
@@ -187,7 +190,7 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
         return mw == null ? null : new Middleware()
                 .setName(mw.getSpec().getName().startsWith("harmonycloud-") ? mw.getSpec().getName().replace("harmonycloud-", "") : mw.getSpec().getName())
                 .setNamespace(mw.getMetadata().getNamespace())
-                .setType(MiddlewareTypeEnum.findTypeByCrdType(mw.getSpec().getType()))
+                .setType(middlewareCrTypeService.findTypeByCrType(mw.getSpec().getType()))
                 .setStatus(mw.getStatus() != null ? mw.getStatus().getPhase() : "")
                 .setReason(mw.getStatus() != null ? mw.getStatus().getReason() : "")
                 .setCreateTime(DateUtils.parseUTCDate(mw.getMetadata().getCreationTimestamp()))
@@ -197,7 +200,7 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
 
     @Override
     public boolean checkIfExist(String clusterId, String namespace, String type, String middlewareName) {
-        String crdName = MiddlewareCRService.getCrName(type, middlewareName);
+        String crdName = middlewareCrTypeService.findByType(type);
         return middlewareWrapper.checkIfExist(clusterId, namespace, crdName);
     }
 

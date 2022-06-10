@@ -8,6 +8,7 @@ import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.k8s.StorageService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -28,6 +29,8 @@ public class StorageController {
 
     @Autowired
     private StorageService storageService;
+    @Autowired
+    private MiddlewareCrTypeService middlewareCrTypeService;
 
     @ApiOperation(value = "查询存储列表", notes = "查询存储列表")
     @ApiImplicitParams({
@@ -115,6 +118,16 @@ public class StorageController {
                                           @PathVariable("storageName") String storageName,
                                           @PathVariable("middlewareName") String middlewareName){
         return BaseResult.ok(storageService.pods(clusterId, storageName, middlewareName));
+    }
+
+    @ApiOperation(value = "获取中间件存储使用情况", notes = "获取中间件存储使用情况")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "storageName", value = "存储名称", paramType = "query", dataTypeClass = String.class)
+    })
+    @GetMapping("/test")
+    public BaseResult<List<MiddlewareResourceInfo>> test(@PathVariable("clusterId") String clusterId) {
+        return BaseResult.ok(middlewareCrTypeService.findByType("mysql"));
     }
 
 }

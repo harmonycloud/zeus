@@ -30,6 +30,7 @@ import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.middleware.OverviewService;
@@ -96,6 +97,8 @@ public class OverviewServiceImpl implements OverviewService {
     private MiddlewareAlertInfoMapper middlewareAlertInfoMapper;
     @Autowired
     private MiddlewareAlertsServiceImpl middlewareAlertsService;
+    @Autowired
+    private MiddlewareCrTypeService middlewareCrTypeService;
 
     @Value("${system.platform.version:v0.1.0}")
     private String version;
@@ -723,7 +726,7 @@ public class OverviewServiceImpl implements OverviewService {
 
                     MiddlewareSpec spec = middlewareCR.getSpec();
                     if (spec != null) {
-                        middlewareDTO.setType(MiddlewareTypeEnum.findTypeByCrdType(spec.getType()));
+                        middlewareDTO.setType(middlewareCrTypeService.findByType(spec.getType()));
                         Middleware detail = middlewareService.detail(clusterDTO.getId(), namespace.getName(), spec.getName(), middlewareDTO.getType());
                         Map<String, MiddlewareQuota> quota = detail.getQuota();
                         if (quota != null && quota.get(middlewareDTO.getType()) != null) {
@@ -734,7 +737,7 @@ public class OverviewServiceImpl implements OverviewService {
                         middlewareDTO.setChartVersion(detail.getChartVersion());
                         middlewareDTO.setName(spec.getName());
                         //mysql实例判断是否是备实例
-                        if (MiddlewareTypeEnum.MYSQL.getType().equals(MiddlewareTypeEnum.findTypeByCrdType(spec.getType()))) {
+                        if (MiddlewareTypeEnum.MYSQL.getType().equals(middlewareCrTypeService.findTypeByCrType(spec.getType()))) {
                             MysqlDTO mysqlDTO = detail.getMysqlDTO();
                             if (mysqlDTO != null && mysqlDTO.getIsSource() != null) {
                                 middlewareDTO.setSource(mysqlDTO.getIsSource());

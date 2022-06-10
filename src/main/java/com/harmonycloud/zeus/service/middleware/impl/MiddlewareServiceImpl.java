@@ -101,6 +101,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private UserRoleService userRoleService;
     @Autowired
     private RoleAuthorityService roleAuthorityService;
+    @Autowired
+    private MiddlewareCrTypeService middlewareCrTypeService;
 
     @Override
     public List<Middleware> simpleList(String clusterId, String namespace, String type, String keyword) {
@@ -112,7 +114,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         if (StringUtils.isNotEmpty(type)){
             if (MiddlewareTypeEnum.isType(type)){
                 label = new HashMap<>(1);
-                label.put("type", MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType());
+                label.put("type", middlewareCrTypeService.findByType(type));
             }
             else {
                 nameList = getNameList(clusterId, namespace, type);
@@ -139,7 +141,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         Map<String, BaseOperator> operatorMap = new HashMap<>();
         boolean filter = StringUtils.isNotBlank(keyword);
         return mwList.stream().filter(mw -> !filter || mw.getMetadata().getName().contains(keyword)).map(mw -> {
-            String middlewareType = MiddlewareTypeEnum.findTypeByCrdType(mw.getSpec().getType());
+            String middlewareType = middlewareCrTypeService.findTypeByCrType(mw.getSpec().getType());
             if (!operatorMap.containsKey(middlewareType)) {
                 middleware.setType(middlewareType);
                 operatorMap.put(middlewareType, getOperator(BaseOperator.class, BaseOperator.class, middleware));

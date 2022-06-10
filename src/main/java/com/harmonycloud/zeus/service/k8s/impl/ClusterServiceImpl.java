@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.zeus.service.middleware.ImageRepositoryService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
 import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
 import com.harmonycloud.zeus.service.user.ProjectService;
 import org.apache.commons.lang3.SerializationUtils;
@@ -96,8 +97,6 @@ public class ClusterServiceImpl implements ClusterService {
     @Autowired
     private MiddlewareCRService middlewareCRService;
     @Autowired
-    private ClusterRoleService clusterRoleService;
-    @Autowired
     private PrometheusResourceMonitorService prometheusResourceMonitorService;
     @Autowired
     private MiddlewareService middlewareService;
@@ -109,6 +108,8 @@ public class ClusterServiceImpl implements ClusterService {
     private ImageRepositoryService imageRepositoryService;
     @Autowired
     private ProjectService projectService;
+    @Autowired
+    private MiddlewareCrTypeService middlewareCrTypeService;
 
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
@@ -619,7 +620,7 @@ public class ClusterServiceImpl implements ClusterService {
         mwCrdList.forEach(mwCrd -> ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
                 Middleware middleware = middlewareService.detail(clusterId, mwCrd.getMetadata().getNamespace(),
-                    mwCrd.getSpec().getName(), MiddlewareTypeEnum.findTypeByCrdType(mwCrd.getSpec().getType()));
+                    mwCrd.getSpec().getName(), middlewareCrTypeService.findTypeByCrType(mwCrd.getSpec().getType()));
                 MiddlewareResourceInfo middlewareResourceInfo = new MiddlewareResourceInfo();
                 BeanUtils.copyProperties(middleware, middlewareResourceInfo);
                 middlewareResourceInfo.setClusterId(clusterId);

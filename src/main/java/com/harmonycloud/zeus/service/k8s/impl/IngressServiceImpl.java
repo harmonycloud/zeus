@@ -26,6 +26,7 @@ import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.IngressService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
@@ -96,6 +97,8 @@ public class IngressServiceImpl implements IngressService {
     private UserService userService;
     @Autowired
     private NamespaceService namespaceService;
+    @Autowired
+    private MiddlewareCrTypeService middlewareCrTypeService;
 
     @Value("${k8s.ingress.default.name:nginx-ingress-controller}")
     private String defaultIngressName;
@@ -757,7 +760,7 @@ public class IngressServiceImpl implements IngressService {
             for (MiddlewareInfo middlewareInfo : middlewareInfoList) {
                 Map<String, String> map = new HashMap<>(2);
                 map.put("name", middleware.getSpec().getName());
-                map.put("type", MiddlewareTypeEnum.findTypeByCrdType(middleware.getSpec().getType()));
+                map.put("type", middlewareCrTypeService.findTypeByCrType(middleware.getSpec().getType()));
                 mapHashMap.put(middlewareInfo.getName(), map);
             }
         }

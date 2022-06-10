@@ -206,6 +206,10 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
 
         Map<String, String> yamlFileMap = HelmChartUtil.getYamlFileMap(tarFilePath);
         yamlFileMap.putAll(HelmChartUtil.getParameters(tarFilePath));
+        if (!CollectionUtils.isEmpty(dependencies)){
+            String operatorName = dependencies.get(0).get("alias");
+            yamlFileMap.putAll(HelmChartUtil.getCrds(tarFilePath, operatorName));
+        }
         yamlFileMap.put(CHART_YAML_NAME, JSONObject.toJSONString(infoMap));
 
         return new HelmChartFile().setDescription(description).setIconPath(iconPath).setType(type)
