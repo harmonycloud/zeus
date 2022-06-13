@@ -478,7 +478,7 @@ public class ClusterServiceImpl implements ClusterService {
         try {
             List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(clusterId, null, null);
             if (!CollectionUtils.isEmpty(middlewareCRList) && middlewareCRList.stream().anyMatch(
-                middlewareCRD -> !"escluster-middleware-elasticsearch".equals(middlewareCRD.getMetadata().getName())
+                middlewareCRD -> !"escluster-kubernetes-logging".equals(middlewareCRD.getMetadata().getName())
                     && !"mysqlcluster-zeus-mysql".equals(middlewareCRD.getMetadata().getName()))) {
                 return false;
             }

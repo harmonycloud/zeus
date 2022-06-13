@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 @Operator(paramTypes4One = String.class)
 public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingService {
 
-    private static final String ES_NAME = "middleware-elasticsearch";
+    private static final String ES_NAME = "kubernetes-logging";
     @Autowired
     private EsService esService;
     @Autowired
@@ -91,8 +91,8 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
     @Override
     protected String getValues(String repository, MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
         String setValues = "image.repository=" + repository +
-                ",aliasName=middleware-elasticsearch" +
-                ",nameOverride=middleware-elasticsearch" +
+                ",aliasName=kubernetes-logging" +
+                ",nameOverride=kubernetes-logging" +
                 ",elasticsearch-operator.enabled=false" +
                 ",elasticPassword=Hc@Cloud01" +
                 ",storage.masterClass=local-path" +
@@ -156,12 +156,12 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         List<ServiceDTO> serviceList = new ArrayList<>();
         ServiceDTO serviceDTO = new ServiceDTO();
         serviceDTO.setExposePort("30092");
-        serviceDTO.setServiceName("middleware-elasticsearch-master");
+        serviceDTO.setServiceName("kubernetes-logging-master");
         serviceDTO.setServicePort("9200");
         serviceDTO.setTargetPort("9200");
         serviceList.add(serviceDTO);
         ingressDTO.setServiceList(serviceList);
-        ingressService.create(cluster.getId(), "logging", "middleware-elasticsearch", ingressDTO);
+        ingressService.create(cluster.getId(), "logging", "kubernetes-logging", ingressDTO);
     }
 
     public void logPilot(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
