@@ -8,6 +8,7 @@ import com.harmonycloud.caas.common.model.ClusterNodeResourceDto;
 import com.harmonycloud.caas.common.model.Node;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
+import com.harmonycloud.caas.common.model.middleware.Registry;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -137,22 +138,57 @@ public class ClusterController {
     @ApiOperation(value = "获取集群纳管指令", notes = "获取集群纳管指令")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "name", value = "集群名称", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "apiAddress", value = "接口访问前缀", paramType = "query", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "apiAddress", value = "接口访问前缀", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "protocol", value = "协议", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "address", value = "地址", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "port", value = "端口", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "user", value = "用户", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "password", value = "密码", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/clusterJoinCommand")
-    public BaseResult clusterJoinCommand(@RequestParam(value = "name") String name, @RequestParam(value = "apiAddress") String apiAddress, HttpServletRequest request) {
+    public BaseResult clusterJoinCommand(@RequestParam(value = "name") String name,
+                                         @RequestParam(value = "apiAddress") String apiAddress,
+                                         @RequestParam("protocol") String protocol,
+                                         @RequestParam("address") String address,
+                                         @RequestParam("port") Integer port,
+                                         @RequestParam("user") String user,
+                                         @RequestParam("password") String password,
+                                         HttpServletRequest request) {
         String userToken = request.getHeader("userToken");
-        return BaseResult.ok(clusterService.getClusterJoinCommand(name, apiAddress, userToken));
+        Registry registry = new Registry();
+        registry.setProtocol(protocol);
+        registry.setAddress(address);
+        registry.setPort(port);
+        registry.setUser(user);
+        registry.setPassword(password);
+        return BaseResult.ok(clusterService.getClusterJoinCommand(name, apiAddress, userToken, registry));
     }
 
     @ApiImplicitParams({
             @ApiImplicitParam(name = "adminConf", value = "集群名称", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "name", value = "集群名称", paramType = "query", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "name", value = "集群名称", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "protocol", value = "协议", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "address", value = "地址", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "port", value = "端口", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "user", value = "用户", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "password", value = "密码", paramType = "query", dataTypeClass = String.class),
     })
     @PostMapping("/quickAdd")
-    public BaseResult quickAdd(@RequestParam("adminConf") MultipartFile adminConf,@RequestParam("name") String name) {
+    public BaseResult quickAdd(@RequestParam("adminConf") MultipartFile adminConf,
+                               @RequestParam("name") String name,
+                               @RequestParam("protocol") String protocol,
+                               @RequestParam("address") String address,
+                               @RequestParam("port") Integer port,
+                               @RequestParam("user") String user,
+                               @RequestParam("password") String password) {
         log.info("name{}", name);
-        return clusterService.quickAdd(adminConf, name);
+        Registry registry = new Registry();
+        registry.setProtocol(protocol);
+        registry.setAddress(address);
+        registry.setPort(port);
+        registry.setUser(user);
+        registry.setPassword(password);
+        return clusterService.quickAdd(adminConf, name, registry);
     }
 
     /**

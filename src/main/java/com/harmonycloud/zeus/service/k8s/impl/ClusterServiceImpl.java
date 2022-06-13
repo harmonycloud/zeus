@@ -885,15 +885,16 @@ public class ClusterServiceImpl implements ClusterService {
     }
 
     @Override
-    public String getClusterJoinCommand(String clusterName, String apiAddress, String userToken) {
+    public String getClusterJoinCommand(String clusterName, String apiAddress, String userToken, Registry registry) {
         String clusterJoinUrl = apiAddress + "/clusters/quickAdd";
-        String curlCommand = "curl -X POST --url %s?name=%s --header Content-Type:multipart/form-data --header userToken:%s -F adminConf=@/etc/kubernetes/admin.conf";
-        String res = String.format(curlCommand, clusterJoinUrl, clusterName, userToken);
-        return res;
+        String curlCommand =
+            "curl -X POST --url %s?name=%s&protocol=%s&address=%s&port=%s&user=%s&&password=%s --header Content-Type:multipart/form-data --header userToken:%s -F adminConf=@/etc/kubernetes/admin.conf";
+        return String.format(curlCommand, clusterJoinUrl, clusterName, registry.getProtocol(), registry.getAddress(),
+            registry.getPort(), registry.getUser(), registry.getPassword(), userToken);
     }
 
     @Override
-    public BaseResult quickAdd(MultipartFile adminConf, String name) {
+    public BaseResult quickAdd(MultipartFile adminConf, String name, Registry registry) {
         String filePath = uploadPath + "/" + adminConf.getName();
         try {
             File dir = new File(uploadPath);
@@ -923,6 +924,10 @@ public class ClusterServiceImpl implements ClusterService {
             cluster.setName(name);
             cluster.setNickname(name);
             setClusterAddressInfo(cluster, serverAddress);
+            // 设置镜像仓库
+            registry.setType("harbor");
+            registry.setChartRepo("middleware");
+            cluster.setRegistry(registry);
         } catch (Exception e) {
             log.error("集群添加失败", e);
             throw new BusinessException(DictEnum.CLUSTER, name, ErrorMessage.ADD_FAIL);
