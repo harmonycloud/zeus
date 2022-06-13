@@ -110,7 +110,7 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
     @Override
     public MiddlewareCR getCR(String clusterId, String namespace, String type, String name) {
         if (MiddlewareTypeEnum.isType(type)) {
-            String crdName = middlewareCrTypeService.findByType(type);
+            String crdName = middlewareCrTypeService.findByType(type) + "-" + name;
             return middlewareWrapper.get(clusterId, namespace, crdName);
         } else {
             List<MiddlewareCR> middlewareCRList = middlewareWrapper.list(clusterId, namespace, null);
@@ -200,7 +200,7 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
 
     @Override
     public boolean checkIfExist(String clusterId, String namespace, String type, String middlewareName) {
-        String crdName = middlewareCrTypeService.findByType(type);
+        String crdName = middlewareCrTypeService.findByType(type) + "-" + middlewareName;
         return middlewareWrapper.checkIfExist(clusterId, namespace, crdName);
     }
 
