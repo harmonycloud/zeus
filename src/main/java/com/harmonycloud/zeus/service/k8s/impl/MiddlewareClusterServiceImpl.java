@@ -13,6 +13,7 @@ import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import com.harmonycloud.zeus.service.middleware.ImageRepositoryService;
 import com.harmonycloud.zeus.util.K8sClient;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -80,7 +81,9 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
     @Override
     public List<BeanMiddlewareCluster> listClustersByClusterId(String clusterId) {
         QueryWrapper<BeanMiddlewareCluster> wrapper = new QueryWrapper<>();
-        wrapper.eq("cluster_id", clusterId);
+        if (StringUtils.isNotEmpty(clusterId)) {
+            wrapper.eq("cluster_id", clusterId);
+        }
         return middlewareClusterMapper.selectList(wrapper);
     }
 
