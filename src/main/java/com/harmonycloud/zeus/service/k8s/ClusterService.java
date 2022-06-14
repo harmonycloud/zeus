@@ -152,7 +152,7 @@ public interface ClusterService {
      * @param userToken
      * @return
      */
-    String getClusterJoinCommand(String clusterName, String apiAddress, String userToken);
+    String getClusterJoinCommand(String clusterName, String apiAddress, String userToken, Registry registry);
 
     /**
      * curl指令快捷添加集群
@@ -160,7 +160,7 @@ public interface ClusterService {
      * @param name 集群名称
      * @return
      */
-    BaseResult quickAdd(MultipartFile adminConf, String name);
+    BaseResult quickAdd(MultipartFile adminConf, String name, Registry registry);
 
     /**
      * 获取集群已注册分区

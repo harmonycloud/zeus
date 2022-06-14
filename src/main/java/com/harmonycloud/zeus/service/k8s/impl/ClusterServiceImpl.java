@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.zeus.service.middleware.ImageRepositoryService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
 import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
 import com.harmonycloud.zeus.service.user.ProjectService;
 import org.apache.commons.lang3.SerializationUtils;
@@ -96,8 +97,6 @@ public class ClusterServiceImpl implements ClusterService {
     @Autowired
     private MiddlewareCRService middlewareCRService;
     @Autowired
-    private ClusterRoleService clusterRoleService;
-    @Autowired
     private PrometheusResourceMonitorService prometheusResourceMonitorService;
     @Autowired
     private MiddlewareService middlewareService;
@@ -109,6 +108,8 @@ public class ClusterServiceImpl implements ClusterService {
     private ImageRepositoryService imageRepositoryService;
     @Autowired
     private ProjectService projectService;
+    @Autowired
+    private MiddlewareCrTypeService middlewareCrTypeService;
 
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
@@ -477,7 +478,7 @@ public class ClusterServiceImpl implements ClusterService {
         try {
             List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(clusterId, null, null);
             if (!CollectionUtils.isEmpty(middlewareCRList) && middlewareCRList.stream().anyMatch(
-                middlewareCRD -> !"escluster-middleware-elasticsearch".equals(middlewareCRD.getMetadata().getName())
+                middlewareCRD -> !"escluster-kubernetes-logging".equals(middlewareCRD.getMetadata().getName())
                     && !"mysqlcluster-zeus-mysql".equals(middlewareCRD.getMetadata().getName()))) {
                 return false;
             }
@@ -619,7 +620,7 @@ public class ClusterServiceImpl implements ClusterService {
         mwCrdList.forEach(mwCrd -> ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
                 Middleware middleware = middlewareService.detail(clusterId, mwCrd.getMetadata().getNamespace(),
-                    mwCrd.getSpec().getName(), MiddlewareTypeEnum.findTypeByCrdType(mwCrd.getSpec().getType()));
+                    mwCrd.getSpec().getName(), middlewareCrTypeService.findTypeByCrType(mwCrd.getSpec().getType()));
                 MiddlewareResourceInfo middlewareResourceInfo = new MiddlewareResourceInfo();
                 BeanUtils.copyProperties(middleware, middlewareResourceInfo);
                 middlewareResourceInfo.setClusterId(clusterId);
@@ -709,7 +710,7 @@ public class ClusterServiceImpl implements ClusterService {
                 try {
                     String pvcUsedQuery = "sum(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\""
                         + pvcs.toString() + "\",namespace=\"" + mwCrd.getMetadata().getNamespace()
-                        + "\"}) by (persistentvolumeclaim) /1024/1024/1024";
+                        + "\",endpoint!=\"\"}) by (persistentvolumeclaim) /1024/1024/1024";
                     Double pvcUsed = prometheusResourceMonitorService.queryAndConvert(clusterId, pvcUsedQuery);
                     middlewareResourceInfo.setPer5MinStorage(pvcUsed);
                 } catch (Exception e) {
@@ -800,7 +801,7 @@ public class ClusterServiceImpl implements ClusterService {
         PrometheusResponse cpuRequest = prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
 
         // 查询cpu每5分钟平均用量
-        String per5MinCpuUsedQuery = "sum(rate(container_cpu_usage_seconds_total[3m])) by (namespace)";
+        String per5MinCpuUsedQuery = "sum(rate(container_cpu_usage_seconds_total{endpoint!=\"\"}[3m])) by (namespace)";
         queryMap.put("query", per5MinCpuUsedQuery);
         PrometheusResponse per5MinCpuUsed =
             prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
@@ -813,7 +814,7 @@ public class ClusterServiceImpl implements ClusterService {
 
         // 查询memory每5分钟平均用量
         String per5MinMemoryUsedQuery =
-            "(sum(avg_over_time(container_memory_usage_bytes[5m])) by (namespace))/1024/1024/1024";
+            "(sum(avg_over_time(container_memory_usage_bytes{endpoint!=\"\"}[5m])) by (namespace))/1024/1024/1024";
         queryMap.put("query", per5MinMemoryUsedQuery);
         PrometheusResponse per5MinMemoryUsed =
             prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
@@ -825,7 +826,7 @@ public class ClusterServiceImpl implements ClusterService {
                 prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
 
         // 查询pvc使用量
-        String pvcUsingQuery = "sum(kubelet_volume_stats_used_bytes) by (namespace) /1024/1024/1024";
+        String pvcUsingQuery = "sum(kubelet_volume_stats_used_bytes{endpoint!=\"\"}) by (namespace) /1024/1024/1024";
         queryMap.put("query", pvcUsingQuery);
         PrometheusResponse pvcUsing =
                 prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
@@ -884,15 +885,21 @@ public class ClusterServiceImpl implements ClusterService {
     }
 
     @Override
-    public String getClusterJoinCommand(String clusterName, String apiAddress, String userToken) {
+    public String getClusterJoinCommand(String clusterName, String apiAddress, String userToken, Registry registry) {
         String clusterJoinUrl = apiAddress + "/clusters/quickAdd";
-        String curlCommand = "curl -X POST --url %s?name=%s --header Content-Type:multipart/form-data --header userToken:%s -F adminConf=@/etc/kubernetes/admin.conf";
-        String res = String.format(curlCommand, clusterJoinUrl, clusterName, userToken);
-        return res;
+        String param = "name=" + clusterName;
+        if (registry != null) {
+            param = param + "&protocol=%s&address=%s&port=%s&user=%s&&password=%s";
+            param = String.format(param, registry.getProtocol(), registry.getAddress(), registry.getPort(),
+                registry.getUser(), registry.getPassword());
+        }
+        String curlCommand = "curl -X POST --url %s?" + param
+            + " --header Content-Type:multipart/form-data --header userToken:%s -F adminConf=@/etc/kubernetes/admin.conf";
+        return String.format(curlCommand, clusterJoinUrl, clusterName, userToken);
     }
 
     @Override
-    public BaseResult quickAdd(MultipartFile adminConf, String name) {
+    public BaseResult quickAdd(MultipartFile adminConf, String name, Registry registry) {
         String filePath = uploadPath + "/" + adminConf.getName();
         try {
             File dir = new File(uploadPath);
@@ -922,6 +929,12 @@ public class ClusterServiceImpl implements ClusterService {
             cluster.setName(name);
             cluster.setNickname(name);
             setClusterAddressInfo(cluster, serverAddress);
+            // 设置镜像仓库
+            if (registry != null){
+                registry.setType("harbor");
+                registry.setChartRepo("middleware");
+                cluster.setRegistry(registry);
+            }
         } catch (Exception e) {
             log.error("集群添加失败", e);
             throw new BusinessException(DictEnum.CLUSTER, name, ErrorMessage.ADD_FAIL);
