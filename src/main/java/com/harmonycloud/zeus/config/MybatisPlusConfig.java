@@ -17,5 +17,10 @@ public class MybatisPlusConfig {
         interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
         return interceptor;
     }
+
+    @Bean
+    public EasysqlInjector easysqlInjector() {
+        return new EasysqlInjector();
+    }
     
 }

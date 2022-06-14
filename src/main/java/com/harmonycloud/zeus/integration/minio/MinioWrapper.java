@@ -1,22 +1,26 @@
 package com.harmonycloud.zeus.integration.minio;
 
 import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
 import com.harmonycloud.zeus.integration.cluster.bean.Minio;
-import io.minio.ListObjectsArgs;
-import io.minio.MinioClient;
-import io.minio.RemoveObjectArgs;
-import io.minio.Result;
+import io.minio.*;
 import io.minio.errors.MinioException;
 import io.minio.messages.Item;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * @author xutianhong
  * @Date 2021/4/6 11:42 上午
  */
 @Component
+@Slf4j
 public class MinioWrapper {
 
     /**
@@ -49,6 +53,36 @@ public class MinioWrapper {
             minioClient.removeObject(objectArgs);
         } catch (MinioException e) {
             throw new CaasRuntimeException(ErrorMessage.DELETE_BACKUP_FILE_FAILED);
+        }
+    }
+
+    /**
+     * 校验minio连接
+     * @param minio
+     */
+    public void checkMinio(Minio minio) {
+        try {
+            MinioClient minioClient = MinioWrapper.build(minio);
+            minioClient.listBuckets();
+        } catch (Exception e) {
+            log.error("minio连接失败:", e);
+            throw new BusinessException(ErrorMessage.MINIO_CONNECTION_FAILED);
+        }
+    }
+
+    /**
+     * 删除bucket
+     */
+    public void deleteBucket(Minio minio) {
+        try {
+            MinioClient minioClient = MinioWrapper.build(minio);
+            // 删除之前先检查bucket是否存在。
+            boolean found = minioClient.bucketExists(BucketExistsArgs.builder().bucket(minio.getBucketName()).build());
+            if (found) {
+                minioClient.removeBucket(RemoveBucketArgs.builder().bucket(minio.getBucketName()).build());
+            }
+        } catch (MinioException | IOException | InvalidKeyException | NoSuchAlgorithmException e) {
+            log.error("bucket删除失败:", e);
         }
     }
 

@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.middleware;
 
+import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareInfoDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareOperatorDTO;
@@ -114,4 +115,7 @@ public interface MiddlewareInfoService {
      * @return
      */
     MiddlewareOperatorDTO getOperatorInfo(List<MiddlewareClusterDTO> clusterList);
+
+    List<Middleware> middlewareList(String type, String keyword);
+
 }

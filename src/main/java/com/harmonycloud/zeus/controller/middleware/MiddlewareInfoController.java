@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.controller.middleware;
 
+import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareInfoDTO;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import org.apache.commons.lang3.StringUtils;
@@ -12,6 +13,8 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+
+import java.util.List;
 
 /**
  * @author dengyulong
@@ -66,6 +69,16 @@ public class MiddlewareInfoController {
                               @RequestParam(value = "chartVersion") String chartVersion) {
         middlewareInfoService.delete(chartName, chartVersion);
         return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "已纳管集群服务", notes = "已纳管集群服务")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "type", value = "类型", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "keyword", value = "关键词", paramType = "query", dataTypeClass = String.class)})
+    @GetMapping("/list")
+    public BaseResult middlewareList(@RequestParam(value = "type") String type,
+                                        @RequestParam(value = "keyword") String keyword) {
+        return BaseResult.ok(middlewareInfoService.middlewareList(type, keyword));
     }
 
 }
