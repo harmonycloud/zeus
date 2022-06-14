@@ -10,6 +10,7 @@ import com.harmonycloud.caas.common.model.PersistentVolumeClaim;
 import com.harmonycloud.caas.common.model.StorageClassDTO;
 import com.harmonycloud.caas.common.model.StorageDto;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.tool.date.DateUtils;
@@ -33,8 +34,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.ALIAS_NAME;
-import static com.harmonycloud.caas.common.constants.CommonConstant.TRUE;
+import static com.harmonycloud.caas.common.constants.CommonConstant.*;
 import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
 
@@ -65,25 +65,36 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public List<StorageDto> list(String clusterId, String key, String type, Boolean all) {
-        List<StorageClass> storageClassList = storageClassWrapper.list(clusterId);
-        return storageClassList.stream()
-            .filter(storageClass -> all
-                || storageClass.getMetadata() != null && storageClass.getMetadata().getLabels() != null
-                    && storageClass.getMetadata().getLabels().containsKey(MIDDLEWARE))
-            .map(storageClass -> {
-                // 初始化业务对象
-                return convert(clusterId, storageClass);
-            }).filter(storageDto -> {
-                if (StringUtils.isNotEmpty(key)) {
-                    return storageDto.getAliasName().contains(key) || storageDto.getName().contains(key);
-                }
-                return true;
-            }).filter(storageDto -> {
-                if (StringUtils.isNotEmpty(type)) {
-                    return storageDto.getVolumeType().equals(type);
-                }
-                return true;
-            }).collect(Collectors.toList());
+        List<MiddlewareClusterDTO> clusterList = new ArrayList<>();
+        if (clusterId.equals(ASTERISK)) {
+            clusterList = clusterService.listClusters();
+        } else {
+            clusterList.add(clusterService.findById(clusterId));
+        }
+        List<StorageDto> result = new ArrayList<>();
+        for (MiddlewareClusterDTO cluster : clusterList) {
+            List<StorageClass> storageClassList = storageClassWrapper.list(cluster.getId());
+            List<StorageDto> storageDtoList = storageClassList.stream()
+                .filter(storageClass -> all
+                    || storageClass.getMetadata() != null && storageClass.getMetadata().getLabels() != null
+                        && storageClass.getMetadata().getLabels().containsKey(MIDDLEWARE))
+                .map(storageClass -> {
+                    // 初始化业务对象
+                    return convert(cluster.getId(), storageClass);
+                }).filter(storageDto -> {
+                    if (StringUtils.isNotEmpty(key)) {
+                        return storageDto.getAliasName().contains(key) || storageDto.getName().contains(key);
+                    }
+                    return true;
+                }).filter(storageDto -> {
+                    if (StringUtils.isNotEmpty(type)) {
+                        return storageDto.getVolumeType().equals(type);
+                    }
+                    return true;
+                }).collect(Collectors.toList());
+            result.addAll(storageDtoList);
+        }
+        return result;
     }
 
     @Override
