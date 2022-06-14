@@ -20,8 +20,11 @@ import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
+import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.ChartVersionUtil;
 import org.apache.commons.io.FileUtils;
@@ -68,6 +71,10 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     private HelmChartService helmChartService;
     @Autowired
     private ClusterService clusterService;
+    @Autowired
+    private MiddlewareClusterService middlewareClusterService;
+    @Autowired
+    private MiddlewareService middlewareService;
 
     @Override
     public List<BeanMiddlewareInfo> list(Boolean all) {
@@ -410,6 +417,19 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         operatorDTO.setErrorPercent(MathUtil.calcPercent(errorOperator.get(), operatorList.size()));
         operatorDTO.setRunningPercent(MathUtil.calcPercent(runningOperator.get(), operatorList.size()));
         return operatorDTO;
+    }
+
+    @Override
+    public List<Middleware> middlewareList(String type, String keyword) {
+        List<BeanMiddlewareCluster> clusterList = middlewareClusterService.listClustersByClusterId(null);
+        List<Middleware> middlewareList = new ArrayList<>();
+        clusterList.forEach(cluster -> {
+            List<Middleware> middlewares = middlewareService.simpleList(cluster.getClusterId(), null, null, null);
+            middlewareList.addAll(middlewares.stream()
+                .filter(middleware -> middleware.getType().equals(type) && middleware.getName().contains(keyword))
+                .collect(Collectors.toList()));
+        });
+        return middlewareList;
     }
 
     @Override
