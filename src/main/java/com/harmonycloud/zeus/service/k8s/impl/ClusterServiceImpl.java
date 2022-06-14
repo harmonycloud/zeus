@@ -887,10 +887,15 @@ public class ClusterServiceImpl implements ClusterService {
     @Override
     public String getClusterJoinCommand(String clusterName, String apiAddress, String userToken, Registry registry) {
         String clusterJoinUrl = apiAddress + "/clusters/quickAdd";
-        String curlCommand =
-            "curl -X POST --url %s?name=%s&protocol=%s&address=%s&port=%s&user=%s&&password=%s --header Content-Type:multipart/form-data --header userToken:%s -F adminConf=@/etc/kubernetes/admin.conf";
-        return String.format(curlCommand, clusterJoinUrl, clusterName, registry.getProtocol(), registry.getAddress(),
-            registry.getPort(), registry.getUser(), registry.getPassword(), userToken);
+        String param = "name=" + clusterName;
+        if (registry != null) {
+            param = param + "&protocol=%s&address=%s&port=%s&user=%s&&password=%s";
+            param = String.format(param, registry.getProtocol(), registry.getAddress(), registry.getPort(),
+                registry.getUser(), registry.getPassword());
+        }
+        String curlCommand = "curl -X POST --url %s?" + param
+            + " --header Content-Type:multipart/form-data --header userToken:%s -F adminConf=@/etc/kubernetes/admin.conf";
+        return String.format(curlCommand, clusterJoinUrl, clusterName, userToken);
     }
 
     @Override
@@ -925,9 +930,11 @@ public class ClusterServiceImpl implements ClusterService {
             cluster.setNickname(name);
             setClusterAddressInfo(cluster, serverAddress);
             // 设置镜像仓库
-            registry.setType("harbor");
-            registry.setChartRepo("middleware");
-            cluster.setRegistry(registry);
+            if (registry != null){
+                registry.setType("harbor");
+                registry.setChartRepo("middleware");
+                cluster.setRegistry(registry);
+            }
         } catch (Exception e) {
             log.error("集群添加失败", e);
             throw new BusinessException(DictEnum.CLUSTER, name, ErrorMessage.ADD_FAIL);

@@ -90,7 +90,7 @@ public class StorageController {
     @ApiOperation(value = "获取存储详情", notes = "获取存储详情")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "customConfigTemplateDTO", value = "模板对象", paramType = "query", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "storageName", value = "存储名称", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/{storageName}")
     public BaseResult<StorageDto> detail(@PathVariable("clusterId") String clusterId,

@@ -11,6 +11,7 @@ import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.middleware.Registry;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -148,19 +149,22 @@ public class ClusterController {
     @GetMapping("/clusterJoinCommand")
     public BaseResult clusterJoinCommand(@RequestParam(value = "name") String name,
                                          @RequestParam(value = "apiAddress") String apiAddress,
-                                         @RequestParam("protocol") String protocol,
-                                         @RequestParam("address") String address,
-                                         @RequestParam("port") Integer port,
-                                         @RequestParam("user") String user,
-                                         @RequestParam("password") String password,
+                                         @RequestParam(value = "protocol", required = false) String protocol,
+                                         @RequestParam(value = "address", required = false) String address,
+                                         @RequestParam(value = "port", required = false) Integer port,
+                                         @RequestParam(value = "user", required = false) String user,
+                                         @RequestParam(value = "password", required = false) String password,
                                          HttpServletRequest request) {
         String userToken = request.getHeader("userToken");
-        Registry registry = new Registry();
-        registry.setProtocol(protocol);
-        registry.setAddress(address);
-        registry.setPort(port);
-        registry.setUser(user);
-        registry.setPassword(password);
+        Registry registry = null;
+        if (StringUtils.isNoneEmpty(protocol, address, user, password)){
+            registry = new Registry();
+            registry.setProtocol(protocol);
+            registry.setAddress(address);
+            registry.setPort(port);
+            registry.setUser(user);
+            registry.setPassword(password);
+        }
         return BaseResult.ok(clusterService.getClusterJoinCommand(name, apiAddress, userToken, registry));
     }
 
@@ -176,18 +180,21 @@ public class ClusterController {
     @PostMapping("/quickAdd")
     public BaseResult quickAdd(@RequestParam("adminConf") MultipartFile adminConf,
                                @RequestParam("name") String name,
-                               @RequestParam("protocol") String protocol,
-                               @RequestParam("address") String address,
-                               @RequestParam("port") Integer port,
-                               @RequestParam("user") String user,
-                               @RequestParam("password") String password) {
+                               @RequestParam(value = "protocol", required = false) String protocol,
+                               @RequestParam(value = "address", required = false) String address,
+                               @RequestParam(value = "port", required = false) Integer port,
+                               @RequestParam(value = "user", required = false) String user,
+                               @RequestParam(value = "password", required = false) String password) {
         log.info("name{}", name);
-        Registry registry = new Registry();
-        registry.setProtocol(protocol);
-        registry.setAddress(address);
-        registry.setPort(port);
-        registry.setUser(user);
-        registry.setPassword(password);
+        Registry registry = null;
+        if (StringUtils.isNoneEmpty(protocol, address, user, password)){
+            registry = new Registry();
+            registry.setProtocol(protocol);
+            registry.setAddress(address);
+            registry.setPort(port);
+            registry.setUser(user);
+            registry.setPassword(password);
+        }
         return clusterService.quickAdd(adminConf, name, registry);
     }
 

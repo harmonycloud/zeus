@@ -98,6 +98,10 @@ public class StorageServiceImpl implements StorageService {
         }
         labels.put(MIDDLEWARE, TRUE);
         labels.put(ALIAS_NAME, storageDto.getAliasName());
+        List<StorageClass> storageClassList = storageClassWrapper.list(storageDto.getClusterId(), labels);
+        if (!CollectionUtils.isEmpty(storageClassList)){
+            throw new BusinessException(ErrorMessage.STORAGE_CLASS_NAME_EXIST);
+        }
         storageClassWrapper.update(storageDto.getClusterId(), storageClass);
     }
 
@@ -117,7 +121,21 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public void update(StorageDto storageDto) {
-
+        StorageClass storageClass = storageClassWrapper.get(storageDto.getClusterId(), storageDto.getName());
+        if (storageClass == null){
+            throw new BusinessException(ErrorMessage.STORAGE_CLASS_NOT_FOUND);
+        }
+        Map<String, String> labels = storageClass.getMetadata().getLabels();
+        if (labels == null){
+            labels = new HashMap<>();
+        }
+        labels.put(MIDDLEWARE, TRUE);
+        labels.put(ALIAS_NAME, storageDto.getAliasName());
+        List<StorageClass> storageClassList = storageClassWrapper.list(storageDto.getClusterId(), labels);
+        if (!CollectionUtils.isEmpty(storageClassList)){
+            throw new BusinessException(ErrorMessage.STORAGE_CLASS_NAME_EXIST);
+        }
+        storageClassWrapper.update(storageDto.getClusterId(), storageClass);
     }
 
     @Override
@@ -126,9 +144,8 @@ public class StorageServiceImpl implements StorageService {
         StorageDto storageDto = convert(clusterId, storageClass);
 
         // 查询存储
-        Map<String, String> fields = new HashMap<>();
-        fields.put("storageClassName", storageClass.getMetadata().getName());
-        List<PersistentVolumeClaim> pvcList = pvcService.listWithFields(clusterId, null, fields);
+        List<PersistentVolumeClaim> pvcList = pvcService.list(clusterId, null);
+        pvcList = pvcList.stream().filter(pvc -> pvc.getStorageClassName().equals(storageName)).collect(Collectors.toList());
 
 
         StringBuilder sb = new StringBuilder();
@@ -161,7 +178,7 @@ public class StorageServiceImpl implements StorageService {
 
         // 获取使用了该存储的pvc
         Map<String, String> fields = new HashMap<>();
-        fields.put("storageClassName", storageName);
+        fields.put("spec.storageClassName", storageName);
         List<PersistentVolumeClaim> pvcList = pvcService.listWithFields(clusterId, null, fields);
 
         // 过滤获取到使用了该存储的中间件

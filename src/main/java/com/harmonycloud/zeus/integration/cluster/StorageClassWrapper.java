@@ -27,6 +27,14 @@ public class StorageClassWrapper {
         return list.getItems();
     }
 
+    public List<StorageClass> list(String clusterId, Map<String, String> labels) {
+        StorageClassList list = K8sClient.getClient(clusterId).storage().storageClasses().withLabels(labels).list();
+        if (list == null || CollectionUtils.isEmpty(list.getItems())) {
+            return new ArrayList<>(0);
+        }
+        return list.getItems();
+    }
+
     public StorageClass get(String clusterId, String storageClassName) {
         return K8sClient.getClient(clusterId).storage().storageClasses().withName(storageClassName).get();
     }
