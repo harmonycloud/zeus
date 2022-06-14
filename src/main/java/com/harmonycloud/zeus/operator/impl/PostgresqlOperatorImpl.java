@@ -52,8 +52,6 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         values.put("userPasswords", userPasswords);
         // 替换版本
         values.put("pgsqlVersion", middleware.getVersion());
-        // 去除teamId
-        values.remove("teamId");
     }
 
     @Override
