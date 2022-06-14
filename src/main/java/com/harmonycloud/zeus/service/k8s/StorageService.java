@@ -62,7 +62,7 @@ public interface StorageService {
      * @param storageName 存储名称
      * @return List<MiddlewareResourceInfo>
      */
-    List<MiddlewareResourceInfo> middlewares(String clusterId, String storageName);
+    List<Middleware> middlewares(String clusterId, String storageName);
 
     /**
      * 查询中间件存储使用情况

@@ -1,34 +1,42 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
+import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.MonitorResourceQuota;
 import com.harmonycloud.caas.common.model.PersistentVolumeClaim;
 import com.harmonycloud.caas.common.model.StorageClassDTO;
 import com.harmonycloud.caas.common.model.StorageDto;
+import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
+import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.integration.cluster.StorageClassWrapper;
-import com.harmonycloud.zeus.service.k8s.PvcService;
-import com.harmonycloud.zeus.service.k8s.StorageService;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
+import com.harmonycloud.zeus.service.k8s.*;
+import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
 import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
+import com.harmonycloud.zeus.service.registry.HelmChartService;
 import io.fabric8.kubernetes.api.model.storage.StorageClass;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.harmonycloud.caas.common.constants.CommonConstant.ALIAS_NAME;
 import static com.harmonycloud.caas.common.constants.CommonConstant.TRUE;
 import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.STORAGE_LIMIT;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
 
 /**
  * @author xutianhong
@@ -44,24 +52,37 @@ public class StorageServiceImpl implements StorageService {
     private PvcService pvcService;
     @Autowired
     private PrometheusResourceMonitorService prometheusResourceMonitorService;
-
+    @Autowired
+    private MiddlewareCRService middlewareCRService;
+    @Autowired
+    private PodService podService;
+    @Autowired
+    private MiddlewareCrTypeService middlewareCrTypeService;
+    @Autowired
+    private HelmChartService helmChartService;
+    @Autowired
+    private ClusterService clusterService;
 
     @Override
     public List<StorageDto> list(String clusterId, String key, String type, Boolean all) {
         List<StorageClass> storageClassList = storageClassWrapper.list(clusterId);
         return storageClassList.stream()
-            .filter(storageClass -> all || storageClass.getMetadata() != null
-                && storageClass.getMetadata().getLabels() != null
-                && storageClass.getMetadata().getLabels().containsKey(MIDDLEWARE))
+            .filter(storageClass -> all
+                || storageClass.getMetadata() != null && storageClass.getMetadata().getLabels() != null
+                    && storageClass.getMetadata().getLabels().containsKey(MIDDLEWARE))
             .map(storageClass -> {
                 // 初始化业务对象
-                StorageDto storageDto = convert(clusterId, storageClass);
-                /*if (!all){
-                    Map<String, String> fields = new HashMap<>();
-                    fields.put("storageClassName", storageClass.getMetadata().getName());
-                    pvcService.listWithFields(clusterId, null, fields);
-                }*/
-                return storageDto;
+                return convert(clusterId, storageClass);
+            }).filter(storageDto -> {
+                if (StringUtils.isNotEmpty(key)) {
+                    return storageDto.getAliasName().contains(key) || storageDto.getName().contains(key);
+                }
+                return true;
+            }).filter(storageDto -> {
+                if (StringUtils.isNotEmpty(type)) {
+                    return storageDto.getVolumeType().equals(type);
+                }
+                return true;
             }).collect(Collectors.toList());
     }
 
@@ -104,8 +125,6 @@ public class StorageServiceImpl implements StorageService {
         StorageClass storageClass = storageClassWrapper.get(clusterId, storageName);
         StorageDto storageDto = convert(clusterId, storageClass);
 
-        //todo 根据源获取类型
-
         // 查询存储
         Map<String, String> fields = new HashMap<>();
         fields.put("storageClassName", storageClass.getMetadata().getName());
@@ -136,8 +155,83 @@ public class StorageServiceImpl implements StorageService {
     }
 
     @Override
-    public List<MiddlewareResourceInfo> middlewares(String clusterId, String storageName) {
-        return null;
+    public List<Middleware> middlewares(String clusterId, String storageName) {
+        // 获取所有中间件cr
+        List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(clusterId, null, null);
+
+        // 获取使用了该存储的pvc
+        Map<String, String> fields = new HashMap<>();
+        fields.put("storageClassName", storageName);
+        List<PersistentVolumeClaim> pvcList = pvcService.listWithFields(clusterId, null, fields);
+
+        // 过滤获取到使用了该存储的中间件
+        middlewareCRList = middlewareCRList.stream().filter(middlewareCr -> {
+            Map<String, List<MiddlewareInfo>> include = middlewareCr.getStatus().getInclude();
+            if (CollectionUtils.isEmpty(include) || !include.containsKey(PERSISTENT_VOLUME_CLAIMS)) {
+                return false;
+            }
+            List<MiddlewareInfo> middlewareInfoList = include.get(PERSISTENT_VOLUME_CLAIMS);
+            return pvcList.stream().anyMatch(pvc -> middlewareInfoList.stream()
+                .anyMatch(middlewareInfo -> middlewareInfo.getName().equals(pvc.getName())));
+        }).collect(Collectors.toList());
+
+        List<Middleware> middlewareList = new ArrayList<>();
+        for (MiddlewareCR middlewareCr : middlewareCRList){
+            // 获取pod列表
+            Middleware middleware = podService.list(clusterId, middlewareCr.getMetadata().getNamespace(),
+                middlewareCr.getMetadata().getName(),
+                middlewareCrTypeService.findTypeByCrType(middlewareCr.getSpec().getType()));
+            // 转换创建时间
+            middleware.setCreateTime(DateUtils.parseUTCDate(middlewareCr.getMetadata().getCreationTimestamp()));
+
+            List<MiddlewareInfo> pvcNameList = middlewareCr.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
+
+            StringBuilder pvcs = new StringBuilder();
+            pvcNameList.forEach(pvcName -> pvcs.append(pvcName).append("|"));
+
+            // 查询storage request
+            String totalStorageQuery =
+                    "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{persistentvolumeclaim=~\""
+                            + pvcs.toString() + "\",namespace=\"" + middlewareCr.getMetadata().getNamespace()
+                            + "\"}) by (persistentvolumeclaim) /1024/1024/1024";
+            Map<String, Double> totalResult = prometheusResourceMonitorService.queryPvcs(clusterId, totalStorageQuery);
+
+            // 查询storage using
+            String usedStorageQuery =
+                    "sum(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\""
+                            + pvcs.toString() + "\",namespace=\"" + middlewareCr.getMetadata().getNamespace()
+                            + "\",endpoint!=\"\"}) by (persistentvolumeclaim) /1024/1024/1024";
+            Map<String, Double> usingResult = prometheusResourceMonitorService.queryPvcs(clusterId, usedStorageQuery);
+
+            // 封装数据
+            // 计算该中间件总存储
+            double totalStorage = 0.0;
+            double usedStorage = 0.0;
+            for (PodInfo pod : middleware.getPods()) {
+                MonitorResourceQuota podQuota = new MonitorResourceQuota();
+                String num = pod.getPodName().substring(pod.getPodName().length() - 1);
+                podQuota.getStorage().setTotal(totalResult.get(num));
+                podQuota.getStorage().setUsed(usingResult.get(num));
+                // calculate
+                totalStorage = totalStorage + totalResult.get(num);
+                usedStorage = usedStorage + usingResult.get(num);
+
+                pod.setMonitorResourceQuota(podQuota);
+            }
+
+            MonitorResourceQuota middlewareQuota = new MonitorResourceQuota();
+            middlewareQuota.getStorage().setTotal(totalStorage);
+            middlewareQuota.getStorage().setUsed(usedStorage);
+
+            middleware.setMonitorResourceQuota(middlewareQuota);
+            JSONObject values = helmChartService.getInstalledValues(middleware, clusterService.findById(clusterId));
+            if (values.containsKey("chart-version")){
+                middleware.setImagePath(middleware.getType() + "-" + values.getString("chart-version") + ".svg");
+            }
+            middleware.setAliasName(values.getOrDefault("aliasName", null).toString());
+        }
+
+        return middlewareList;
     }
 
     @Override
@@ -155,7 +249,7 @@ public class StorageServiceImpl implements StorageService {
         Map<String, String> annotations =  storageClass.getMetadata().getAnnotations();
         if (annotations != null && annotations.containsKey(STORAGE_LIMIT)){
             MonitorResourceQuota monitorResourceQuota = new MonitorResourceQuota();
-            Double total = ResourceCalculationUtil.getResourceValue(annotations.get(STORAGE_LIMIT), MEMORY, ResourceUnitEnum.GI.getUnit());
+            Double total = Double.parseDouble(Pattern.compile("[^0-9]").matcher(annotations.get(STORAGE_LIMIT)).replaceAll("").trim());
             monitorResourceQuota.getStorage().setTotal(total);
             storageDto.setMonitorResourceQuota(monitorResourceQuota);
         }
@@ -168,6 +262,10 @@ public class StorageServiceImpl implements StorageService {
         storageDto.setClusterId(clusterId);
         storageDto.setName(storageClass.getMetadata().getName());
         storageDto.setProvisioner(storageClass.getProvisioner());
+
+        // 获取类型
+        String type = StorageClassProvisionerEnum.findByProvisioner(storageClass.getProvisioner()).getType();
+        storageDto.setVolumeType(type == null ? "unknown" : type);
 
         return storageDto;
     }

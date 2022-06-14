@@ -39,11 +39,27 @@ public class PrometheusResourceMonitorServiceImpl implements PrometheusResourceM
                     BigDecimal.valueOf(Double.parseDouble(response.getData().getResult().get(0).getValue().get(1))), 2,
                     RoundingMode.CEILING);
             }
-            return res;
         } catch (Exception e) {
             log.error("集群:{} 执行语句:{} 失败", clusterId, query, e);
         }
         return res;
+    }
+
+    @Override
+    public Map<String, Double> queryPvcs(String clusterId, String query) {
+        Map<String, Double> map = new HashMap<>();
+        try {
+            PrometheusResponse response = this.query(clusterId, query);
+            response.getData().getResult().forEach(res -> {
+                res.getMetric().forEach((k, v) -> {
+                    map.put(v.substring(v.length() - 1), ResourceCalculationUtil.roundNumber(
+                            BigDecimal.valueOf(Double.parseDouble(res.getValue().get(1))), 2, RoundingMode.CEILING));
+                });
+            });
+        } catch (Exception e) {
+            log.error("集群:{} 执行语句:{} 失败", clusterId, query, e);
+        }
+        return map;
     }
 
     @Override

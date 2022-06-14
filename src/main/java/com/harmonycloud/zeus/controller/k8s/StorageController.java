@@ -4,6 +4,7 @@ import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.StorageClassDTO;
 import com.harmonycloud.caas.common.model.StorageDto;
 import com.harmonycloud.caas.common.model.middleware.CustomConfigTemplateDTO;
+import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.annotation.Authority;
@@ -29,8 +30,6 @@ public class StorageController {
 
     @Autowired
     private StorageService storageService;
-    @Autowired
-    private MiddlewareCrTypeService middlewareCrTypeService;
 
     @ApiOperation(value = "查询存储列表", notes = "查询存储列表")
     @ApiImplicitParams({
@@ -41,8 +40,8 @@ public class StorageController {
     })
     @GetMapping
     public BaseResult<List<StorageDto>> list(@PathVariable("clusterId") String clusterId,
-                                             @RequestParam("key") String key,
-                                             @RequestParam("type") String type,
+                                             @RequestParam(value = "key", required = false) String key,
+                                             @RequestParam(value = "type", required = false) String type,
                                              @RequestParam("all") Boolean all) {
         return BaseResult.ok(storageService.list(clusterId, key, type, all));
     }
@@ -75,12 +74,15 @@ public class StorageController {
     @ApiOperation(value = "更新存储信息", notes = "更新存储信息")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "storageName", value = "存储名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "storageDto", value = "存储业务对象", paramType = "query", dataTypeClass = StorageDto.class)
     })
     @PutMapping("/{storageName}")
     public BaseResult update(@PathVariable("clusterId") String clusterId,
+                             @PathVariable("storageName") String storageName,
                              @RequestBody StorageDto storageDto) {
         storageDto.setClusterId(clusterId);
+        storageDto.setName(storageName);
         storageService.update(storageDto);
         return BaseResult.ok();
     }
@@ -102,8 +104,8 @@ public class StorageController {
             @ApiImplicitParam(name = "storageName", value = "存储名称", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/{storageName}/middlewares")
-    public BaseResult<List<MiddlewareResourceInfo>> middlewares(@PathVariable("clusterId") String clusterId,
-                                                                @PathVariable("storageName") String storageName) {
+    public BaseResult<List<Middleware>> middlewares(@PathVariable("clusterId") String clusterId,
+                                                    @PathVariable("storageName") String storageName) {
         return BaseResult.ok(storageService.middlewares(clusterId, storageName));
     }
 
@@ -118,16 +120,6 @@ public class StorageController {
                                           @PathVariable("storageName") String storageName,
                                           @PathVariable("middlewareName") String middlewareName){
         return BaseResult.ok(storageService.pods(clusterId, storageName, middlewareName));
-    }
-
-    @ApiOperation(value = "获取中间件存储使用情况", notes = "获取中间件存储使用情况")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "storageName", value = "存储名称", paramType = "query", dataTypeClass = String.class)
-    })
-    @GetMapping("/test")
-    public BaseResult<List<MiddlewareResourceInfo>> test(@PathVariable("clusterId") String clusterId) {
-        return BaseResult.ok(middlewareCrTypeService.findByType("mysql"));
     }
 
 }
