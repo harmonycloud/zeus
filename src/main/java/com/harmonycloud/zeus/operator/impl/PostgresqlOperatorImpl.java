@@ -39,7 +39,8 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         JSONObject userPasswords = new JSONObject();
         userPasswords.put("postgres", middleware.getPassword());
         values.put("userPasswords", userPasswords);
-
+        // 替换版本
+        values.put("pgsqlVersion", middleware.getVersion());
     }
 
     @Override
