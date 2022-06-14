@@ -1,6 +1,8 @@
 package com.harmonycloud.zeus.operator.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.harmonycloud.caas.common.model.middleware.CustomConfig;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareQuota;
@@ -8,8 +10,12 @@ import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.operator.api.PostgresqlOperator;
 import com.harmonycloud.zeus.operator.miiddleware.AbstractPostgresqlOperator;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+
+import java.util.List;
+import java.util.Map;
 
 import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
 
@@ -20,6 +26,11 @@ import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
 @Slf4j
 @Operator(paramTypes4One = Middleware.class)
 public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implements PostgresqlOperator {
+
+    @Override
+    public boolean support(Middleware middleware) {
+        return MiddlewareTypeEnum.POSTGRESQL == MiddlewareTypeEnum.findByType(middleware.getType());
+    }
 
     @Override
     public void replaceValues(Middleware middleware, MiddlewareClusterDTO cluster, JSONObject values) {
@@ -41,6 +52,8 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         values.put("userPasswords", userPasswords);
         // 替换版本
         values.put("pgsqlVersion", middleware.getVersion());
+        // 去除teamId
+        values.remove("teamId");
     }
 
     @Override
@@ -50,6 +63,8 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
         convertRegistry(middleware, cluster);
 
+        middleware.setVersion(values.getString("pgsqlVersion"));
+        middleware.setPassword(values.getJSONObject("userPasswords").getString("postgres"));
         return middleware;
     }
 
@@ -82,6 +97,25 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         helmChartService.upgrade(middleware, sb.toString(), cluster);
     }
 
+    @Override
+    public List<String> getConfigmapDataList(ConfigMap configMap) {
+        return null;
+    }
+
+    @Override
+    public Map<String, String> configMap2Data(ConfigMap configMap) {
+        return null;
+    }
+
+    @Override
+    public void editConfigMapData(CustomConfig customConfig, List<String> data) {
+
+    }
+
+    @Override
+    public void updateConfigData(ConfigMap configMap, List<String> data) {
+
+    }
 
 
 }
