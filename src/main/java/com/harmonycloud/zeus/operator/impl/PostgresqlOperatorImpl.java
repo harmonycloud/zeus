@@ -44,7 +44,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
 
         // 替换pgSQL专用
         // 替换实例数
-        values.put("instances", quota.getNum());
+        values.put("instances", quota.getNum() + 1);
         if (quota.getNum() == NUM_ONE){
             values.getJSONObject(ARGS).put("synchronous_commit", "off");
         }
