@@ -64,6 +64,12 @@ public class StorageServiceImpl implements StorageService {
     private ClusterService clusterService;
 
     @Override
+    public List<String> getType() {
+        return Arrays.stream(StorageClassProvisionerEnum.values()).map(StorageClassProvisionerEnum::getType)
+            .collect(Collectors.toList());
+    }
+
+    @Override
     public List<StorageDto> list(String clusterId, String key, String type, Boolean all) {
         List<MiddlewareClusterDTO> clusterList = new ArrayList<>();
         if (clusterId.equals(ASTERISK)) {

@@ -14,6 +14,11 @@ import java.util.List;
 public interface StorageService {
 
     /**
+     * 获取存储类型
+     */
+    List<String> getType();
+
+    /**
      * 查询存储列表
      *
      * @param clusterId 集群id

@@ -31,6 +31,16 @@ public class StorageController {
     @Autowired
     private StorageService storageService;
 
+    @ApiOperation(value = "查询存储类型", notes = "查询存储类型")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+    })
+    @GetMapping("/type")
+    public BaseResult<List<String>> getType(@PathVariable("clusterId") String clusterId) {
+        return BaseResult.ok(storageService.getType());
+    }
+
+
     @ApiOperation(value = "查询存储列表", notes = "查询存储列表")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
