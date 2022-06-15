@@ -1,20 +1,29 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
+import static com.harmonycloud.caas.common.constants.CommonConstant.*;
+import static com.harmonycloud.caas.common.constants.NameConstant.VG_NAME;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
+
+import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
 import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.MonitorResourceQuota;
 import com.harmonycloud.caas.common.model.PersistentVolumeClaim;
-import com.harmonycloud.caas.common.model.StorageClassDTO;
 import com.harmonycloud.caas.common.model.StorageDto;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.tool.date.DateUtils;
-import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.integration.cluster.StorageClassWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
@@ -22,21 +31,9 @@ import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
 import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
+
 import io.fabric8.kubernetes.api.model.storage.StorageClass;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.parameters.P;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-
-import java.util.*;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import static com.harmonycloud.caas.common.constants.CommonConstant.*;
-import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
 
 /**
  * @author xutianhong
@@ -291,6 +288,10 @@ public class StorageServiceImpl implements StorageService {
         Map<String, String> labels = storageClass.getMetadata().getLabels();
         if (labels != null && labels.containsKey(ALIAS_NAME)){
             storageDto.setAliasName(labels.get(ALIAS_NAME));
+        }
+        // 获取vg_name
+        if (storageClass.getParameters() != null && storageClass.getParameters().containsKey(VG_NAME)){
+            storageDto.setVgName(storageClass.getParameters().get(VG_NAME));
         }
 
         storageDto.setClusterId(clusterId);
