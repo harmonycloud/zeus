@@ -17,7 +17,9 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.List;
 import java.util.Map;
 
+import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_ONE;
 import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ARGS;
 
 /**
  * @author xutianhong
@@ -43,6 +45,9 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         // 替换pgSQL专用
         // 替换实例数
         values.put("instances", quota.getNum());
+        if (quota.getNum() == NUM_ONE){
+            values.getJSONObject(ARGS).put("synchronous_commit", "off");
+        }
         // 替换密码
         if (StringUtils.isBlank(middleware.getPassword())) {
             middleware.setPassword(PasswordUtils.generateCommonPassword(10));
