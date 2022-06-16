@@ -101,21 +101,22 @@ public class StorageServiceImpl implements StorageService {
     }
 
     @Override
-    public void add(StorageDto storageDto) {
+    public void addOrUpdate(StorageDto storageDto) {
         StorageClass storageClass = storageClassWrapper.get(storageDto.getClusterId(), storageDto.getName());
         if (storageClass == null){
             throw new BusinessException(ErrorMessage.STORAGE_CLASS_NOT_FOUND);
         }
+        // checkAliasName
+        checkAliasName(storageDto, storageClass);
+        // 获取labels
         Map<String, String> labels = storageClass.getMetadata().getLabels();
         if (labels == null){
             labels = new HashMap<>();
         }
         labels.put(MIDDLEWARE, TRUE);
         labels.put(ALIAS_NAME, storageDto.getAliasName());
-        List<StorageClass> storageClassList = storageClassWrapper.list(storageDto.getClusterId(), labels);
-        if (!CollectionUtils.isEmpty(storageClassList)){
-            throw new BusinessException(ErrorMessage.STORAGE_CLASS_NAME_EXIST);
-        }
+        labels.put(REQUEST_QUOTA, storageDto.getRequestQuota().toString());
+        storageClass.getMetadata().setLabels(labels);
         storageClassWrapper.update(storageDto.getClusterId(), storageClass);
     }
 
@@ -131,25 +132,6 @@ public class StorageServiceImpl implements StorageService {
             labels.remove(ALIAS_NAME);
             storageClassWrapper.update(clusterId, storageClass);
         }
-    }
-
-    @Override
-    public void update(StorageDto storageDto) {
-        StorageClass storageClass = storageClassWrapper.get(storageDto.getClusterId(), storageDto.getName());
-        if (storageClass == null){
-            throw new BusinessException(ErrorMessage.STORAGE_CLASS_NOT_FOUND);
-        }
-        Map<String, String> labels = storageClass.getMetadata().getLabels();
-        if (labels == null){
-            labels = new HashMap<>();
-        }
-        labels.put(MIDDLEWARE, TRUE);
-        labels.put(ALIAS_NAME, storageDto.getAliasName());
-        List<StorageClass> storageClassList = storageClassWrapper.list(storageDto.getClusterId(), labels);
-        if (!CollectionUtils.isEmpty(storageClassList)){
-            throw new BusinessException(ErrorMessage.STORAGE_CLASS_NAME_EXIST);
-        }
-        storageClassWrapper.update(storageDto.getClusterId(), storageClass);
     }
 
     @Override
@@ -277,15 +259,20 @@ public class StorageServiceImpl implements StorageService {
         // 初始化业务对象
         StorageDto storageDto = new StorageDto();
         // 获取存储配额
-        Map<String, String> annotations =  storageClass.getMetadata().getAnnotations();
-        if (annotations != null && annotations.containsKey(STORAGE_LIMIT)){
-            MonitorResourceQuota monitorResourceQuota = new MonitorResourceQuota();
-            Double total = Double.parseDouble(Pattern.compile("[^0-9]").matcher(annotations.get(STORAGE_LIMIT)).replaceAll("").trim());
-            monitorResourceQuota.getStorage().setTotal(total);
-            storageDto.setMonitorResourceQuota(monitorResourceQuota);
-        }
-        // 获取中文名称
         Map<String, String> labels = storageClass.getMetadata().getLabels();
+        Map<String, String> annotations =  storageClass.getMetadata().getAnnotations();
+        double total = 0.0;
+        if (labels != null && labels.containsKey(REQUEST_QUOTA)) {
+            total = Double.parseDouble(labels.get(REQUEST_QUOTA));
+        } else if (annotations != null && annotations.containsKey(STORAGE_LIMIT)) {
+            total = Double
+                .parseDouble(Pattern.compile("[^0-9]").matcher(annotations.get(STORAGE_LIMIT)).replaceAll("").trim());
+        }
+        MonitorResourceQuota monitorResourceQuota = new MonitorResourceQuota();
+        monitorResourceQuota.getStorage().setTotal(total);
+        storageDto.setMonitorResourceQuota(monitorResourceQuota);
+        storageDto.setRequestQuota(total);
+        // 获取中文名称
         if (labels != null && labels.containsKey(ALIAS_NAME)){
             storageDto.setAliasName(labels.get(ALIAS_NAME));
         }
@@ -303,6 +290,26 @@ public class StorageServiceImpl implements StorageService {
         storageDto.setVolumeType(type == null ? "unknown" : type);
 
         return storageDto;
+    }
+
+    public void checkAliasName(StorageDto storageDto, StorageClass storageClass){
+        // 1.判断是否已分配中文名
+        Map<String, String> labels = storageClass.getMetadata().getLabels();
+        if (CollectionUtils.isEmpty(labels)){
+            return;
+        }
+        // 2.判断此中文名是否需求修改
+        if (!labels.containsKey(ALIAS_NAME)  || storageDto.getAliasName().equals(labels.get(ALIAS_NAME))){
+            return;
+        }
+        // 3.查询修改后中文名是否已存在
+        Map<String, String> aliasNameMap = new HashMap<>();
+        aliasNameMap.put(ALIAS_NAME, labels.get(ALIAS_NAME));
+
+        List<StorageClass> storageClassList = storageClassWrapper.list(storageDto.getClusterId(), aliasNameMap);
+        if (!CollectionUtils.isEmpty(storageClassList)){
+            throw new BusinessException(ErrorMessage.STORAGE_CLASS_NAME_EXIST);
+        }
     }
 
 }

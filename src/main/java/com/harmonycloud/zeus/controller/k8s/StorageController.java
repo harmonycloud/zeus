@@ -65,7 +65,7 @@ public class StorageController {
     public BaseResult add(@PathVariable("clusterId") String clusterId,
                           @RequestBody StorageDto storageDto) {
         storageDto.setClusterId(clusterId);
-        storageService.add(storageDto);
+        storageService.addOrUpdate(storageDto);
         return BaseResult.ok();
     }
 
@@ -93,7 +93,7 @@ public class StorageController {
                              @RequestBody StorageDto storageDto) {
         storageDto.setClusterId(clusterId);
         storageDto.setName(storageName);
-        storageService.update(storageDto);
+        storageService.addOrUpdate(storageDto);
         return BaseResult.ok();
     }
 

@@ -30,11 +30,11 @@ public interface StorageService {
     List<StorageDto> list(String clusterId, String key, String type, Boolean all);
 
     /**
-     * 添加存储
+     * 添加或更新存储
      *
      * @param storageDto 存储业务对象
      */
-    void add(StorageDto storageDto);
+    void addOrUpdate(StorageDto storageDto);
 
     /**
      * 删除存储
@@ -43,13 +43,6 @@ public interface StorageService {
      * @param storageName 存储名称
      */
     void delete(String clusterId, String storageName);
-
-    /**
-     * 更新存储信息
-     *
-     * @param storageDto 存储业务对象
-     */
-    void update(StorageDto storageDto);
 
     /**
      * 查询存储详情
