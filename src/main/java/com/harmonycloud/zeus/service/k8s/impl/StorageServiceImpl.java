@@ -8,6 +8,8 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.enums.DateType;
+import com.harmonycloud.zeus.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -83,7 +85,7 @@ public class StorageServiceImpl implements StorageService {
                 return all == flag;
             }).map(storageClass -> {
                 // 初始化业务对象
-                    return convert(cluster.getId(), storageClass).setClusterAliasName(cluster.getNickname());
+                    return convert(cluster.getId(), storageClass);
                 }).filter(storageDto -> {
                     if (StringUtils.isNotEmpty(key)) {
                         return storageDto.getAliasName().contains(key) || storageDto.getName().contains(key);
@@ -120,7 +122,6 @@ public class StorageServiceImpl implements StorageService {
         }
         annotations.put(MIDDLEWARE, TRUE);
         annotations.put(ALIAS_NAME, storageDto.getAliasName());
-        annotations.put(REQUEST_QUOTA, storageDto.getRequestQuota().toString());
         storageClass.getMetadata().setAnnotations(annotations);
         storageClassWrapper.update(storageDto.getClusterId(), storageClass);
     }
@@ -261,28 +262,15 @@ public class StorageServiceImpl implements StorageService {
      * 封装业务对象
      */
     public StorageDto convert(String clusterId, StorageClass storageClass){
+        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         // 初始化业务对象
         StorageDto storageDto = new StorageDto();
         // 获取存储配额
         Map<String, String> annotations = storageClass.getMetadata().getAnnotations();
-        double total = 0.0;
-        if (!CollectionUtils.isEmpty(annotations)) {
-            // 获取存储配额
-            if (annotations.containsKey(REQUEST_QUOTA)) {
-                total = Double.parseDouble(annotations.get(REQUEST_QUOTA));
-            } else if (annotations.containsKey(STORAGE_LIMIT)) {
-                total = Double.parseDouble(
-                    Pattern.compile("[^0-9]").matcher(annotations.get(STORAGE_LIMIT)).replaceAll("").trim());
-            }
-            // 获取中文名称
-            if (annotations.containsKey(ALIAS_NAME)) {
-                storageDto.setAliasName(annotations.get(ALIAS_NAME));
-            }
+        // 获取中文名称
+        if (!CollectionUtils.isEmpty(annotations) && annotations.containsKey(ALIAS_NAME)) {
+            storageDto.setAliasName(annotations.get(ALIAS_NAME));
         }
-        MonitorResourceQuota monitorResourceQuota = new MonitorResourceQuota();
-        monitorResourceQuota.getStorage().setTotal(total);
-        storageDto.setMonitorResourceQuota(monitorResourceQuota);
-        storageDto.setRequestQuota(total);
         // 获取vg_name
         if (storageClass.getParameters() != null && storageClass.getParameters().containsKey(VG_NAME)){
             storageDto.setVgName(storageClass.getParameters().get(VG_NAME));
@@ -291,6 +279,8 @@ public class StorageServiceImpl implements StorageService {
         storageDto.setClusterId(clusterId);
         storageDto.setName(storageClass.getMetadata().getName());
         storageDto.setProvisioner(storageClass.getProvisioner());
+        storageDto.setClusterAliasName(cluster.getNickname());
+        storageDto.setCreateTime(DateUtil.StringToDate(storageClass.getMetadata().getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z));
 
         // 获取类型
         String type = StorageClassProvisionerEnum.findByProvisioner(storageClass.getProvisioner()).getType();

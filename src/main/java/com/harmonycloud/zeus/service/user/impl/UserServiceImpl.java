@@ -75,6 +75,8 @@ public class UserServiceImpl implements UserService {
     private PersonalMapper personalMapper;
     @Autowired
     private MailToUserMapper mailToUserMapper;
+    @Autowired
+    private ProjectService projectService;
 
     @Override
     public UserDto getUserDto(String userName, String projectId) {
@@ -193,6 +195,7 @@ public class UserServiceImpl implements UserService {
         beanUserMapper.delete(wrapper);
         // 删除用户角色关系
         userRoleService.delete(userName, null, null);
+        // 从项目中移除
         return true;
     }
 
