@@ -77,12 +77,12 @@ public class StorageServiceImpl implements StorageService {
         List<StorageDto> result = new ArrayList<>();
         for (MiddlewareClusterDTO cluster : clusterList) {
             List<StorageClass> storageClassList = storageClassWrapper.list(cluster.getId());
-            List<StorageDto> storageDtoList = storageClassList.stream()
-                .filter(storageClass -> all
-                    || storageClass.getMetadata() != null && storageClass.getMetadata().getLabels() != null
-                        && storageClass.getMetadata().getLabels().containsKey(MIDDLEWARE))
-                .map(storageClass -> {
-                    // 初始化业务对象
+            List<StorageDto> storageDtoList = storageClassList.stream().filter(storageClass -> {
+                boolean flag = CollectionUtils.isEmpty(storageClass.getMetadata().getLabels())
+                    || !storageClass.getMetadata().getLabels().containsKey(MIDDLEWARE);
+                return all == flag;
+            }).map(storageClass -> {
+                // 初始化业务对象
                     return convert(cluster.getId(), storageClass).setClusterAliasName(cluster.getNickname());
                 }).filter(storageDto -> {
                     if (StringUtils.isNotEmpty(key)) {
