@@ -83,7 +83,7 @@ public class StorageServiceImpl implements StorageService {
                         && storageClass.getMetadata().getLabels().containsKey(MIDDLEWARE))
                 .map(storageClass -> {
                     // 初始化业务对象
-                    return convert(cluster.getId(), storageClass);
+                    return convert(cluster.getId(), storageClass).setClusterAliasName(cluster.getNickname());
                 }).filter(storageDto -> {
                     if (StringUtils.isNotEmpty(key)) {
                         return storageDto.getAliasName().contains(key) || storageDto.getName().contains(key);
