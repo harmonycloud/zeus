@@ -197,7 +197,7 @@ public class StorageServiceImpl implements StorageService {
         for (MiddlewareCR middlewareCr : middlewareCRList){
             // 获取pod列表
             Middleware middleware = podService.list(clusterId, middlewareCr.getMetadata().getNamespace(),
-                middlewareCr.getMetadata().getName(),
+                middlewareCr.getSpec().getName(),
                 middlewareCrTypeService.findTypeByCrType(middlewareCr.getSpec().getType()));
             // 转换创建时间
             middleware.setCreateTime(DateUtils.parseUTCDate(middlewareCr.getMetadata().getCreationTimestamp()));
@@ -205,7 +205,7 @@ public class StorageServiceImpl implements StorageService {
             List<MiddlewareInfo> pvcNameList = middlewareCr.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
 
             StringBuilder pvcs = new StringBuilder();
-            pvcNameList.forEach(pvcName -> pvcs.append(pvcName).append("|"));
+            pvcNameList.forEach(pvcName -> pvcs.append(pvcName.getName()).append("|"));
 
             // 查询storage request
             String totalStorageQuery =
@@ -228,12 +228,14 @@ public class StorageServiceImpl implements StorageService {
             for (PodInfo pod : middleware.getPods()) {
                 MonitorResourceQuota podQuota = new MonitorResourceQuota();
                 String num = pod.getPodName().substring(pod.getPodName().length() - 1);
-                podQuota.getStorage().setTotal(totalResult.get(num));
-                podQuota.getStorage().setUsed(usingResult.get(num));
-                // calculate
-                totalStorage = totalStorage + totalResult.get(num);
-                usedStorage = usedStorage + usingResult.get(num);
-
+                if (totalResult.containsKey(num)){
+                    podQuota.getStorage().setTotal(totalResult.get(num));
+                    totalStorage = totalStorage + totalResult.get(num);
+                }
+                if (usingResult.containsKey(num)){
+                    podQuota.getStorage().setUsed(usingResult.get(num));
+                    usedStorage = usedStorage + usingResult.get(num);
+                }
                 pod.setMonitorResourceQuota(podQuota);
             }
 
@@ -247,6 +249,8 @@ public class StorageServiceImpl implements StorageService {
                 middleware.setImagePath(middleware.getType() + "-" + values.getString("chart-version") + ".svg");
             }
             middleware.setAliasName(values.getOrDefault("aliasName", null).toString());
+
+            middlewareList.add(middleware);
         }
 
         return middlewareList;
