@@ -102,21 +102,26 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public void addOrUpdate(StorageDto storageDto) {
-        StorageClass storageClass = storageClassWrapper.get(storageDto.getClusterId(), storageDto.getName());
-        if (storageClass == null){
+        List<StorageClass> storageClassList = storageClassWrapper.list(storageDto.getClusterId());
+        // 校验该存储是否存在
+        if (CollectionUtils.isEmpty(storageClassList) || storageClassList.stream()
+            .noneMatch(storageClass -> storageClass.getMetadata().getName().equals(storageDto.getName()))) {
             throw new BusinessException(ErrorMessage.STORAGE_CLASS_NOT_FOUND);
         }
-        // checkAliasName
-        checkAliasName(storageDto, storageClass);
+        // 校验中文名称
+        checkAliasName(storageDto, storageClassList);
+
+        StorageClass storageClass = storageClassList.stream()
+            .filter(sc -> sc.getMetadata().getName().equals(storageDto.getName())).collect(Collectors.toList()).get(0);
         // 获取labels
-        Map<String, String> labels = storageClass.getMetadata().getLabels();
-        if (labels == null){
-            labels = new HashMap<>();
+        Map<String, String> annotations = storageClass.getMetadata().getAnnotations();
+        if (annotations == null) {
+            annotations = new HashMap<>();
         }
-        labels.put(MIDDLEWARE, TRUE);
-        labels.put(ALIAS_NAME, storageDto.getAliasName());
-        labels.put(REQUEST_QUOTA, storageDto.getRequestQuota().toString());
-        storageClass.getMetadata().setLabels(labels);
+        annotations.put(MIDDLEWARE, TRUE);
+        annotations.put(ALIAS_NAME, storageDto.getAliasName());
+        annotations.put(REQUEST_QUOTA, storageDto.getRequestQuota().toString());
+        storageClass.getMetadata().setAnnotations(annotations);
         storageClassWrapper.update(storageDto.getClusterId(), storageClass);
     }
 
@@ -259,23 +264,25 @@ public class StorageServiceImpl implements StorageService {
         // 初始化业务对象
         StorageDto storageDto = new StorageDto();
         // 获取存储配额
-        Map<String, String> labels = storageClass.getMetadata().getLabels();
-        Map<String, String> annotations =  storageClass.getMetadata().getAnnotations();
+        Map<String, String> annotations = storageClass.getMetadata().getAnnotations();
         double total = 0.0;
-        if (labels != null && labels.containsKey(REQUEST_QUOTA)) {
-            total = Double.parseDouble(labels.get(REQUEST_QUOTA));
-        } else if (annotations != null && annotations.containsKey(STORAGE_LIMIT)) {
-            total = Double
-                .parseDouble(Pattern.compile("[^0-9]").matcher(annotations.get(STORAGE_LIMIT)).replaceAll("").trim());
+        if (!CollectionUtils.isEmpty(annotations)) {
+            // 获取存储配额
+            if (annotations.containsKey(REQUEST_QUOTA)) {
+                total = Double.parseDouble(annotations.get(REQUEST_QUOTA));
+            } else if (annotations.containsKey(STORAGE_LIMIT)) {
+                total = Double.parseDouble(
+                    Pattern.compile("[^0-9]").matcher(annotations.get(STORAGE_LIMIT)).replaceAll("").trim());
+            }
+            // 获取中文名称
+            if (annotations.containsKey(ALIAS_NAME)) {
+                storageDto.setAliasName(annotations.get(ALIAS_NAME));
+            }
         }
         MonitorResourceQuota monitorResourceQuota = new MonitorResourceQuota();
         monitorResourceQuota.getStorage().setTotal(total);
         storageDto.setMonitorResourceQuota(monitorResourceQuota);
         storageDto.setRequestQuota(total);
-        // 获取中文名称
-        if (labels != null && labels.containsKey(ALIAS_NAME)){
-            storageDto.setAliasName(labels.get(ALIAS_NAME));
-        }
         // 获取vg_name
         if (storageClass.getParameters() != null && storageClass.getParameters().containsKey(VG_NAME)){
             storageDto.setVgName(storageClass.getParameters().get(VG_NAME));
@@ -292,23 +299,19 @@ public class StorageServiceImpl implements StorageService {
         return storageDto;
     }
 
-    public void checkAliasName(StorageDto storageDto, StorageClass storageClass){
-        // 1.判断是否已分配中文名
-        Map<String, String> labels = storageClass.getMetadata().getLabels();
-        if (CollectionUtils.isEmpty(labels)){
-            return;
-        }
-        // 2.判断此中文名是否需求修改
-        if (!labels.containsKey(ALIAS_NAME)  || storageDto.getAliasName().equals(labels.get(ALIAS_NAME))){
-            return;
-        }
-        // 3.查询修改后中文名是否已存在
-        Map<String, String> aliasNameMap = new HashMap<>();
-        aliasNameMap.put(ALIAS_NAME, labels.get(ALIAS_NAME));
-
-        List<StorageClass> storageClassList = storageClassWrapper.list(storageDto.getClusterId(), aliasNameMap);
-        if (!CollectionUtils.isEmpty(storageClassList)){
-            throw new BusinessException(ErrorMessage.STORAGE_CLASS_NAME_EXIST);
+    /**
+     * 校验中文名称是否已存在
+     */
+    public void checkAliasName(StorageDto storageDto, List<StorageClass> storageClassList) {
+        for (StorageClass storageClass : storageClassList) {
+            Map<String, String> labels = storageClass.getMetadata().getLabels();
+            if (CollectionUtils.isEmpty(labels)) {
+                return;
+            }
+            if (labels.containsKey(ALIAS_NAME) && labels.get(ALIAS_NAME).equals(storageDto.getAliasName())
+                && !storageClass.getMetadata().getName().equals(storageDto.getName())) {
+                throw new BusinessException(ErrorMessage.STORAGE_CLASS_NAME_EXIST);
+            }
         }
     }
 
