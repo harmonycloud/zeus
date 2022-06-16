@@ -178,10 +178,9 @@ public class StorageServiceImpl implements StorageService {
         // 获取所有中间件cr
         List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(clusterId, null, null);
 
-        // 获取使用了该存储的pvc
-        Map<String, String> fields = new HashMap<>();
-        fields.put("spec.storageClassName", storageName);
-        List<PersistentVolumeClaim> pvcList = pvcService.listWithFields(clusterId, null, fields);
+        // 查询存储
+        List<PersistentVolumeClaim> all = pvcService.list(clusterId, null);
+        List<PersistentVolumeClaim> pvcList = all.stream().filter(pvc -> pvc.getStorageClassName().equals(storageName)).collect(Collectors.toList());
 
         // 过滤获取到使用了该存储的中间件
         middlewareCRList = middlewareCRList.stream().filter(middlewareCr -> {
