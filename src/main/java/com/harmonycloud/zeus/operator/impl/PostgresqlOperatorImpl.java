@@ -1,5 +1,14 @@
 package com.harmonycloud.zeus.operator.impl;
 
+import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_ZERO;
+import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ARGS;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
+
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.model.middleware.CustomConfig;
@@ -10,16 +19,9 @@ import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.operator.api.PostgresqlOperator;
 import com.harmonycloud.zeus.operator.miiddleware.AbstractPostgresqlOperator;
+
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-
-import java.util.List;
-import java.util.Map;
-
-import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_ONE;
-import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ARGS;
 
 /**
  * @author xutianhong
@@ -45,7 +47,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         // 替换pgSQL专用
         // 替换实例数
         values.put("instances", quota.getNum() + 1);
-        if (quota.getNum() == NUM_ONE){
+        if (quota.getNum() == NUM_ZERO){
             values.getJSONObject(ARGS).put("synchronous_commit", "off");
         }
         // 替换密码
