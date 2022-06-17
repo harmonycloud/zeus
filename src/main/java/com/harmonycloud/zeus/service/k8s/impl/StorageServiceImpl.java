@@ -280,11 +280,6 @@ public class StorageServiceImpl implements StorageService {
         return mwStorageInfoList;
     }
 
-    @Override
-    public List<PodInfo> pods(String clusterId, String storageName, String middlewareName) {
-        return null;
-    }
-
     /**
      * 封装业务对象
      */

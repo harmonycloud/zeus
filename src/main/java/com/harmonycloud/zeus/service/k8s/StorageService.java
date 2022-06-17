@@ -63,15 +63,5 @@ public interface StorageService {
      */
     List<MiddlewareStorageInfoDto> middlewares(String clusterId, String storageName);
 
-    /**
-     * 查询中间件存储使用情况
-     *
-     * @param clusterId   集群id
-     * @param storageName 存储名称
-     * @param middlewareName 中间件名称
-     * @return List<PodInfo>
-     */
-    List<PodInfo> pods(String clusterId, String storageName, String middlewareName);
-
 
 }

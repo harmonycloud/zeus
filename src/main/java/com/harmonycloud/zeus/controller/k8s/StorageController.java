@@ -116,17 +116,4 @@ public class StorageController {
         return BaseResult.ok(storageService.middlewares(clusterId, storageName));
     }
 
-    @ApiOperation(value = "获取中间件存储使用详情", notes = "获取中间件存储使用详情")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群ID", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "storageName", value = "存储名称", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class),
-    })
-    @GetMapping("/{storageName}/middlewares/{middlewareName}")
-    public BaseResult<List<PodInfo>> pods(@PathVariable("clusterId") String clusterId,
-                                          @PathVariable("storageName") String storageName,
-                                          @PathVariable("middlewareName") String middlewareName){
-        return BaseResult.ok(storageService.pods(clusterId, storageName, middlewareName));
-    }
-
 }
