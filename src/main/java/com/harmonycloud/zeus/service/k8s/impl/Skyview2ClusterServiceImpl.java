@@ -5,7 +5,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.base.CaasResult;
 import com.harmonycloud.caas.common.model.ClusterCert;
 import com.harmonycloud.caas.common.model.ClusterDTO;
-import com.harmonycloud.caas.common.model.ProjectDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.Registry;
 import com.harmonycloud.zeus.service.k8s.AbstractClusterService;

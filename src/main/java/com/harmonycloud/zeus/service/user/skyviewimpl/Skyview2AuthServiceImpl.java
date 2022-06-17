@@ -5,6 +5,7 @@ import com.harmonycloud.caas.common.base.CaasResult;
 import com.harmonycloud.caas.common.enums.CaasErrorMessage;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.tool.encrypt.RSAUtils;
 import com.harmonycloud.zeus.service.user.AbstractAuthService;
 import com.harmonycloud.zeus.service.user.UserService;
 import com.harmonycloud.zeus.skyviewservice.Skyview2UserServiceClient;
@@ -35,14 +36,14 @@ public class Skyview2AuthServiceImpl extends AbstractAuthService {
     public JSONObject login(String userName, String password, HttpServletResponse response) throws Exception {
         //解密密码
         String decryptPassword;
-//        try {
-//            decryptPassword = RSAUtils.decryptByPrivateKey(password);
-//        } catch (Exception e) {
-//            throw new BusinessException(ErrorMessage.RSA_DECRYPT_FAILED);
-//        }
+        try {
+            decryptPassword = RSAUtils.decryptByPrivateKey(password);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorMessage.RSA_DECRYPT_FAILED);
+        }
 
-        //TODO 连接观云台，登录
-        CaasResult loginResult = skyview2UserService.login(userName, password, "ch");
+        // 连接观云台，登录
+        CaasResult loginResult = skyview2UserService.login(userName, decryptPassword, "ch");
         System.out.println(loginResult);
         if (CaasResponseUtil.fitError(loginResult, CaasErrorMessage.AUTH_FAIL)) {
             throw new BusinessException(ErrorMessage.AUTH_FAILED);
