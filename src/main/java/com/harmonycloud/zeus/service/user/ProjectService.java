@@ -114,4 +114,13 @@ public interface ProjectService {
      */
     List<ProjectDto> getMiddlewareCount(String projectId);
 
+
+    /**
+     * 通过分区查询项目
+     * @param namespace 分区
+     *
+     * @return ProjectDto
+     */
+    ProjectDto findProjectByNamespace(String namespace);
+
 }

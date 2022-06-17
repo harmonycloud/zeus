@@ -9,6 +9,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.enums.DateType;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareStorageInfoDto;
+import com.harmonycloud.caas.common.model.user.ProjectDto;
+import com.harmonycloud.zeus.service.user.ProjectService;
 import com.harmonycloud.zeus.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +64,10 @@ public class StorageServiceImpl implements StorageService {
     private HelmChartService helmChartService;
     @Autowired
     private ClusterService clusterService;
+    @Autowired
+    private ProjectService projectService;
+    @Autowired
+    private NamespaceService namespaceService;
 
     @Override
     public List<String> getType() {
@@ -80,8 +87,8 @@ public class StorageServiceImpl implements StorageService {
         for (MiddlewareClusterDTO cluster : clusterList) {
             List<StorageClass> storageClassList = storageClassWrapper.list(cluster.getId());
             List<StorageDto> storageDtoList = storageClassList.stream().filter(storageClass -> {
-                boolean flag = CollectionUtils.isEmpty(storageClass.getMetadata().getLabels())
-                    || !storageClass.getMetadata().getLabels().containsKey(MIDDLEWARE);
+                boolean flag = CollectionUtils.isEmpty(storageClass.getMetadata().getAnnotations())
+                    || !storageClass.getMetadata().getAnnotations().containsKey(MIDDLEWARE);
                 return all == flag;
             }).map(storageClass -> {
                 // 初始化业务对象
@@ -174,7 +181,7 @@ public class StorageServiceImpl implements StorageService {
     }
 
     @Override
-    public List<Middleware> middlewares(String clusterId, String storageName) {
+    public List<MiddlewareStorageInfoDto> middlewares(String clusterId, String storageName) {
         // 获取所有中间件cr
         List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(clusterId, null, null);
 
@@ -193,14 +200,17 @@ public class StorageServiceImpl implements StorageService {
                 .anyMatch(middlewareInfo -> middlewareInfo.getName().equals(pvc.getName())));
         }).collect(Collectors.toList());
 
-        List<Middleware> middlewareList = new ArrayList<>();
+        List<MiddlewareStorageInfoDto> mwStorageInfoList = new ArrayList<>();
         for (MiddlewareCR middlewareCr : middlewareCRList){
+            MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+            MiddlewareStorageInfoDto mwStoInfo = new MiddlewareStorageInfoDto();
             // 获取pod列表
+            String type = middlewareCrTypeService.findTypeByCrType(middlewareCr.getSpec().getType());
             Middleware middleware = podService.list(clusterId, middlewareCr.getMetadata().getNamespace(),
-                middlewareCr.getSpec().getName(),
-                middlewareCrTypeService.findTypeByCrType(middlewareCr.getSpec().getType()));
+                middlewareCr.getSpec().getName(), type);
+            mwStoInfo.setPods(middleware.getPods());
             // 转换创建时间
-            middleware.setCreateTime(DateUtils.parseUTCDate(middlewareCr.getMetadata().getCreationTimestamp()));
+            mwStoInfo.setCreateTime(DateUtils.parseUTCDate(middlewareCr.getMetadata().getCreationTimestamp()));
 
             List<MiddlewareInfo> pvcNameList = middlewareCr.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
 
@@ -243,17 +253,31 @@ public class StorageServiceImpl implements StorageService {
             middlewareQuota.getStorage().setTotal(totalStorage);
             middlewareQuota.getStorage().setUsed(usedStorage);
 
-            middleware.setMonitorResourceQuota(middlewareQuota);
+            mwStoInfo.setMonitorResourceQuota(middlewareQuota);
             JSONObject values = helmChartService.getInstalledValues(middleware, clusterService.findById(clusterId));
             if (values.containsKey("chart-version")){
-                middleware.setImagePath(middleware.getType() + "-" + values.getString("chart-version") + ".svg");
+                mwStoInfo.setImagePath(middleware.getType() + "-" + values.getString("chart-version") + ".svg");
             }
-            middleware.setAliasName(values.getOrDefault("aliasName", null).toString());
+            mwStoInfo.setMiddlewareName(middlewareCr.getSpec().getName());
+            mwStoInfo.setStatus(middlewareCr.getStatus().getPhase());
+            mwStoInfo.setType(type);
+            mwStoInfo.setMiddlewareAliasName(values.getOrDefault("aliasName", null).toString());
 
-            middlewareList.add(middleware);
+            // 获取所在项目
+            ProjectDto projectDto = projectService.findProjectByNamespace(middlewareCr.getMetadata().getNamespace());
+            mwStoInfo.setProjectId(projectDto.getProjectId());
+            mwStoInfo.setProjectAliasName(projectDto.getAliasName());
+            // 获取项目名称
+            mwStoInfo.setNamespace(middlewareCr.getMetadata().getNamespace());
+            mwStoInfo.setNamespaceAliasName(namespaceService.get(clusterId, mwStoInfo.getNamespace()).getAliasName());
+
+            mwStoInfo.setClusterId(clusterId);
+            mwStoInfo.setClusterAliasName(cluster.getNickname());
+
+            mwStorageInfoList.add(mwStoInfo);
         }
 
-        return middlewareList;
+        return mwStorageInfoList;
     }
 
     @Override

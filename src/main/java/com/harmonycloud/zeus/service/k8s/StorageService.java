@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.service.k8s;
 import com.harmonycloud.caas.common.model.StorageDto;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareStorageInfoDto;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 
 import java.util.List;
@@ -60,7 +61,7 @@ public interface StorageService {
      * @param storageName 存储名称
      * @return List<MiddlewareResourceInfo>
      */
-    List<Middleware> middlewares(String clusterId, String storageName);
+    List<MiddlewareStorageInfoDto> middlewares(String clusterId, String storageName);
 
     /**
      * 查询中间件存储使用情况

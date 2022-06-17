@@ -40,6 +40,10 @@ public class NamespaceWrapper {
         return list.getItems();
     }
 
+    public Namespace get(String clusterId, String namespace){
+        return K8sClient.getClient(clusterId).namespaces().withName(namespace).get();
+    }
+
     public void save(String clusterId, Namespace ns) {
         K8sClient.getClient(clusterId).namespaces().createOrReplace(ns);
     }

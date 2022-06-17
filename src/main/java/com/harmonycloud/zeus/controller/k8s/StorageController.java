@@ -3,10 +3,7 @@ package com.harmonycloud.zeus.controller.k8s;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.StorageClassDTO;
 import com.harmonycloud.caas.common.model.StorageDto;
-import com.harmonycloud.caas.common.model.middleware.CustomConfigTemplateDTO;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
-import com.harmonycloud.caas.common.model.middleware.PodInfo;
+import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.k8s.StorageService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
@@ -114,8 +111,8 @@ public class StorageController {
             @ApiImplicitParam(name = "storageName", value = "存储名称", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/{storageName}/middlewares")
-    public BaseResult<List<Middleware>> middlewares(@PathVariable("clusterId") String clusterId,
-                                                    @PathVariable("storageName") String storageName) {
+    public BaseResult<List<MiddlewareStorageInfoDto>> middlewares(@PathVariable("clusterId") String clusterId,
+                                                                  @PathVariable("storageName") String storageName) {
         return BaseResult.ok(storageService.middlewares(clusterId, storageName));
     }
 

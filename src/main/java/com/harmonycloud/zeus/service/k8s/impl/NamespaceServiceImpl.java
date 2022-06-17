@@ -67,6 +67,12 @@ public class NamespaceServiceImpl implements NamespaceService {
     }
 
     @Override
+    public Namespace get(String clusterId, String namespace) {
+        io.fabric8.kubernetes.api.model.Namespace ns = namespaceWrapper.get(clusterId, namespace);
+        return convertNamespace(clusterId, ns);
+    }
+
+    @Override
     public List<Namespace> list(String clusterId) {
         return list(clusterId, false, null);
     }
@@ -77,31 +83,18 @@ public class NamespaceServiceImpl implements NamespaceService {
     }
 
     @Override
-    public List<Namespace> list(String clusterId, boolean all, boolean withQuota, boolean withMiddleware, String keyword, String projectId) {
+    public List<Namespace> list(String clusterId, boolean all, boolean withQuota, boolean withMiddleware,
+        String keyword, String projectId) {
         List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId);
         List<Namespace> list = nsList.stream()
             .filter(ns -> (all || ns.getMetadata().getLabels() != null
                 && StringUtils.equals(ns.getMetadata().getLabels().get(labelKey), labelValue))
                 && !protectNamespaceList.contains(ns.getMetadata().getName())
-                && (StringUtils.isBlank(keyword) || (ns.getMetadata().getAnnotations() != null && ns.getMetadata().getAnnotations().containsKey(KEY_NAMESPACE_CHINESE) && ns.getMetadata().getAnnotations().get(KEY_NAMESPACE_CHINESE).contains(keyword)) ))
-            .map(ns -> {
-                Namespace namespace = new Namespace().setName(ns.getMetadata().getName()).setClusterId(clusterId);
-                // 昵称
-                if (ns.getMetadata().getAnnotations() != null
-                    && ns.getMetadata().getAnnotations().containsKey(KEY_NAMESPACE_CHINESE)) {
-                    namespace.setAliasName(ns.getMetadata().getAnnotations().get(KEY_NAMESPACE_CHINESE));
-                }
-                // 是否已注册
-                namespace.setRegistered(ns.getMetadata().getLabels() != null
-                    && StringUtils.equals(ns.getMetadata().getLabels().get(labelKey), labelValue));
-                // 创建时间
-                namespace.setCreateTime(
-                    DateUtils.parseDate(ns.getMetadata().getCreationTimestamp(), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
-                // 状态
-                namespace.setPhase(ns.getStatus().getPhase());
-                return namespace;
-            }).collect(Collectors.toList());
-        
+                && (StringUtils.isBlank(keyword) || (ns.getMetadata().getAnnotations() != null
+                    && ns.getMetadata().getAnnotations().containsKey(KEY_NAMESPACE_CHINESE)
+                    && ns.getMetadata().getAnnotations().get(KEY_NAMESPACE_CHINESE).contains(keyword))))
+            .map(ns -> convertNamespace(clusterId, ns)).collect(Collectors.toList());
+
         if (StringUtils.isNotEmpty(projectId)) {
             List<Namespace> alNsList = projectService.getNamespace(projectId).stream()
                 .filter(ns -> ns.getClusterId().equals(clusterId)).collect(Collectors.toList());
@@ -226,5 +219,23 @@ public class NamespaceServiceImpl implements NamespaceService {
     public boolean checkExist(String clusterId, String name) {
         List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId);
         return nsList.stream().anyMatch(ns -> ns.getMetadata().getName().equals(name));
+    }
+    
+    public Namespace convertNamespace(String clusterId, io.fabric8.kubernetes.api.model.Namespace ns){
+        Namespace namespace = new Namespace().setName(ns.getMetadata().getName()).setClusterId(clusterId);
+        // 昵称
+        if (ns.getMetadata().getAnnotations() != null
+                && ns.getMetadata().getAnnotations().containsKey(KEY_NAMESPACE_CHINESE)) {
+            namespace.setAliasName(ns.getMetadata().getAnnotations().get(KEY_NAMESPACE_CHINESE));
+        }
+        // 是否已注册
+        namespace.setRegistered(ns.getMetadata().getLabels() != null
+                && StringUtils.equals(ns.getMetadata().getLabels().get(labelKey), labelValue));
+        // 创建时间
+        namespace.setCreateTime(
+                DateUtils.parseDate(ns.getMetadata().getCreationTimestamp(), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
+        // 状态
+        namespace.setPhase(ns.getStatus().getPhase());
+        return namespace;
     }
 }
