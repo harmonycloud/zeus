@@ -209,6 +209,7 @@ public class StorageServiceImpl implements StorageService {
             Middleware middleware = podService.list(clusterId, middlewareCr.getMetadata().getNamespace(),
                 middlewareCr.getSpec().getName(), type);
             mwStoInfo.setPods(middleware.getPods());
+            mwStoInfo.setPodNum(middleware.getPodNum());
             // 转换创建时间
             mwStoInfo.setCreateTime(DateUtils.parseUTCDate(middlewareCr.getMetadata().getCreationTimestamp()));
 
