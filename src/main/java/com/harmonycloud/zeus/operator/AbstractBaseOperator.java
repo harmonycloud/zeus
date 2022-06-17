@@ -689,9 +689,11 @@ public abstract class AbstractBaseOperator {
         }
         // image
         JSONObject image = values.getJSONObject("image");
-        Registry registry = cluster.getRegistry();
-        image.put("repository", registry.getRegistryAddress() + "/"
+        if (image != null) {
+            Registry registry = cluster.getRegistry();
+            image.put("repository", registry.getRegistryAddress() + "/"
                 + (StringUtils.isBlank(registry.getImageRepo()) ? registry.getChartRepo() : registry.getImageRepo()));
+        }
     }
 
     /**

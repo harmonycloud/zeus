@@ -3,10 +3,7 @@ package com.harmonycloud.zeus.controller.k8s;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.StorageClassDTO;
 import com.harmonycloud.caas.common.model.StorageDto;
-import com.harmonycloud.caas.common.model.middleware.CustomConfigTemplateDTO;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
-import com.harmonycloud.caas.common.model.middleware.PodInfo;
+import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.k8s.StorageService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
@@ -30,6 +27,16 @@ public class StorageController {
 
     @Autowired
     private StorageService storageService;
+
+    @ApiOperation(value = "查询存储类型", notes = "查询存储类型")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+    })
+    @GetMapping("/type")
+    public BaseResult<List<String>> getType(@PathVariable("clusterId") String clusterId) {
+        return BaseResult.ok(storageService.getType());
+    }
+
 
     @ApiOperation(value = "查询存储列表", notes = "查询存储列表")
     @ApiImplicitParams({
@@ -55,7 +62,7 @@ public class StorageController {
     public BaseResult add(@PathVariable("clusterId") String clusterId,
                           @RequestBody StorageDto storageDto) {
         storageDto.setClusterId(clusterId);
-        storageService.add(storageDto);
+        storageService.addOrUpdate(storageDto);
         return BaseResult.ok();
     }
 
@@ -83,13 +90,13 @@ public class StorageController {
                              @RequestBody StorageDto storageDto) {
         storageDto.setClusterId(clusterId);
         storageDto.setName(storageName);
-        storageService.update(storageDto);
+        storageService.addOrUpdate(storageDto);
         return BaseResult.ok();
     }
 
     @ApiOperation(value = "获取存储详情", notes = "获取存储详情")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "storageName", value = "存储名称", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/{storageName}")
@@ -104,22 +111,9 @@ public class StorageController {
             @ApiImplicitParam(name = "storageName", value = "存储名称", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/{storageName}/middlewares")
-    public BaseResult<List<Middleware>> middlewares(@PathVariable("clusterId") String clusterId,
-                                                    @PathVariable("storageName") String storageName) {
+    public BaseResult<List<MiddlewareStorageInfoDto>> middlewares(@PathVariable("clusterId") String clusterId,
+                                                                  @PathVariable("storageName") String storageName) {
         return BaseResult.ok(storageService.middlewares(clusterId, storageName));
-    }
-
-    @ApiOperation(value = "获取中间件存储使用详情", notes = "获取中间件存储使用详情")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群ID", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "storageName", value = "存储名称", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class),
-    })
-    @GetMapping("/{storageName}/middlewares/{middlewareName}")
-    public BaseResult<List<PodInfo>> pods(@PathVariable("clusterId") String clusterId,
-                                          @PathVariable("storageName") String storageName,
-                                          @PathVariable("middlewareName") String middlewareName){
-        return BaseResult.ok(storageService.pods(clusterId, storageName, middlewareName));
     }
 
 }

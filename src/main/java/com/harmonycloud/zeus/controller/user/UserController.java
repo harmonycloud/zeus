@@ -9,6 +9,7 @@ import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
 import com.harmonycloud.zeus.service.user.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import com.harmonycloud.caas.common.base.BaseResult;
@@ -20,6 +21,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 
 /**
@@ -34,6 +36,8 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    @Value("${system.usercenter:zeus}")
+    private String userCenter;
 
     @ApiOperation(value = "获取用户信息", notes = "获取用户信息")
     @ApiImplicitParams({
@@ -168,4 +172,11 @@ public class UserController {
         userService.switchProject(projectId, response);
         return BaseResult.ok();
     }
+
+    @ApiOperation(value = "查询是否接入观云台", notes = "查询是否接入观云台")
+    @GetMapping("/useOpenUserCenter")
+    public BaseResult<Boolean> userCenter() {
+        return BaseResult.ok(userCenter.contains("skyview2"));
+    }
+
 }

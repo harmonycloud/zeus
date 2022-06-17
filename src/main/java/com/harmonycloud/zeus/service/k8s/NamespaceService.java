@@ -15,6 +15,15 @@ public interface NamespaceService {
      * 查询命名空间列表
      *
      * @param clusterId 集群id
+     * @param namespace 分区
+     * @return Namespace
+     */
+    Namespace get(String clusterId, String namespace);
+
+    /**
+     * 查询命名空间列表
+     *
+     * @param clusterId 集群id
      * @return
      */
     List<Namespace> list(String clusterId);

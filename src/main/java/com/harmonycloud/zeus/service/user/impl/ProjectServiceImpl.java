@@ -411,6 +411,23 @@ public class ProjectServiceImpl implements ProjectService {
         return projectDtoList;
     }
 
+    @Override
+    public ProjectDto findProjectByNamespace(String namespace) {
+        QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<BeanProjectNamespace>().eq("namespace", namespace);
+        List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
+
+        ProjectDto projectDto = new ProjectDto();
+        if (!CollectionUtils.isEmpty(beanProjectNamespaceList)){
+            String projectId = beanProjectNamespaceList.get(0).getProjectId();
+            QueryWrapper<BeanProject> projectWrapper = new QueryWrapper<BeanProject>().eq("project_id", projectId);
+            List<BeanProject> beanProjectList = beanProjectMapper.selectList(projectWrapper);
+            if (!CollectionUtils.isEmpty(beanProjectList)){
+                BeanUtils.copyProperties(beanProjectList.get(0), projectDto);
+            }
+        }
+        return projectDto;
+    }
+
     /**
      * 校验项目是否存在
      */

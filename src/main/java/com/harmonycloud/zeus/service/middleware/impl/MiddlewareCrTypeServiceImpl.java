@@ -70,6 +70,11 @@ public class MiddlewareCrTypeServiceImpl implements MiddlewareCrTypeService {
     }
 
     @Override
+    public void put(String type, String crType) {
+        MIDDLEWARE_CR_TYPE.put(type, crType);
+    }
+
+    @Override
     public String findByType(String type) {
         // 首先从map中获取
         if (MIDDLEWARE_CR_TYPE.containsKey(type)){
