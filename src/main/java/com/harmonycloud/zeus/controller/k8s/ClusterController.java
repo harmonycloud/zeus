@@ -3,13 +3,16 @@ package com.harmonycloud.zeus.controller.k8s;
 import java.io.InputStream;
 import java.util.List;
 
+import com.harmonycloud.caas.common.model.ClusterCert;
 import com.harmonycloud.caas.common.model.ClusterNamespaceResourceDto;
 import com.harmonycloud.caas.common.model.ClusterNodeResourceDto;
 import com.harmonycloud.caas.common.model.Node;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.middleware.Registry;
+import com.harmonycloud.zeus.service.k8s.ClusterCertService;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
+import com.harmonycloud.zeus.service.k8s.impl.ClusterCertServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,6 +77,9 @@ public class ClusterController {
         }
         return BaseResult.ok(cluster);
     }
+
+    @Autowired
+    private ClusterCertServiceImpl clusterCertService;
 
     @ApiOperation(value = "添加集群", notes = "添加集群")
     @ApiImplicitParams({

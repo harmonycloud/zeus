@@ -75,4 +75,18 @@ public interface UserRoleService {
      */
     void update(UserDto userDto, String projectId);
 
+    /**
+     * 查询用户是否存在普通角色（即非超级管理员、非项目管理员）
+     * @param userName
+     * @return
+     */
+    boolean checkExistsNormalRole(String userName);
+
+    /**
+     * 查询用户项目角色
+     * @param userName
+     * @param projectId
+     * @return
+     */
+    BeanUserRole get(String userName,String projectId);
 }

@@ -115,7 +115,7 @@ public interface UserService {
      * @return
      * @throws Exception
      */
-    List<ResourceMenuDto> menu(String clusterId) throws Exception;
+    List<ResourceMenuDto> menu(String clusterId) ;
 
     /**
      * 个性化配置

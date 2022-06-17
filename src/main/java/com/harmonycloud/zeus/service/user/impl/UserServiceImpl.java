@@ -25,6 +25,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -60,7 +62,8 @@ import static com.harmonycloud.caas.filters.base.GlobalKey.USER_TOKEN;
 @Service
 @Component
 @Slf4j
-public class UserServiceImpl implements UserService {
+@ConditionalOnProperty(value="system.usercenter",havingValue = "zeus")
+public class UserServiceImpl extends AbstractUserService {
 
     private static final Map<String, Object> IMAGE_MAP = new HashMap<>();
     @Autowired
@@ -81,8 +84,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto getUserDto(String userName, String projectId) {
         if (StringUtils.isEmpty(userName)) {
-            CurrentUser currentUser = CurrentUserRepository.getUser();
-            userName = currentUser.getUsername();
+            userName = super.getUsername();
         }
         return getUserDto(userName);
     }
@@ -108,10 +110,9 @@ public class UserServiceImpl implements UserService {
         }
         UserDto userDto = new UserDto();
         BeanUtils.copyProperties(beanUser, userDto);
-        List<UserRole> userRoleList = userRoleService.get(userName);
-        if (!CollectionUtils.isEmpty(userRoleList)) {
-            userDto.setUserRoleList(userRoleList);
-            userDto.setIsAdmin(userRoleList.stream().anyMatch(userRole -> userRole.getRoleId() == 1));
+        super.setUserRoleList(userName, userDto);
+        if (!CollectionUtils.isEmpty(userDto.getUserRoleList())) {
+            userDto.setIsAdmin(userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getRoleId() == 1));
         }
         return userDto;
     }
@@ -244,34 +245,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<ResourceMenuDto> menu(String clusterId) {
-        CurrentUser currentUser = CurrentUserRepository.getUser();
-        String username = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString(USERNAME);
-        UserDto userDto = this.getUserDto(username);
-        String projectId = RequestUtil.getProjectId();
-        List<ResourceMenuDto> resourceMenuDtoList = roleService.listMenuByRoleId(userDto);
-
-        Map<Integer, List<ResourceMenuDto>> resourceMenuDtoMap =
-            resourceMenuDtoList.stream().collect(Collectors.groupingBy(ResourceMenuDto::getParentId));
-        List<ResourceMenuDto> firstMenuList = resourceMenuDtoMap.get(0);
-        resourceMenuDtoMap.remove(0);
-        firstMenuList.forEach(firstMenu -> {
-            if (!resourceMenuDtoMap.containsKey(firstMenu.getId())) {
-                return;
-            }
-            firstMenu.setSubMenu(resourceMenuDtoMap.get(firstMenu.getId()));
-            Collections.sort(firstMenu.getSubMenu());
-        });
-        if (StringUtils.isNotBlank(clusterId)) {
-            Map<String, String> power = new HashMap<>();
-            if (!userDto.getIsAdmin() && StringUtils.isNotEmpty(projectId)) {
-                power.putAll(
-                    userDto.getUserRoleList().stream().filter(userRole -> userRole.getProjectId().equals(projectId))
-                        .collect(Collectors.toList()).get(0).getPower());
-            }
-            setServiceMenuSubMenu(firstMenuList, clusterId, power);
-        }
-        Collections.sort(firstMenuList);
-        return firstMenuList;
+        return super.menu(clusterId);
     }
 
     /**
@@ -468,32 +442,6 @@ public class UserServiceImpl implements UserService {
             queryWrapper.eq("status","1");
             personalMapper.update(configuration,queryWrapper);
         }
-    }
-
-    /**
-     * @description 将中间件设为服务列表菜单的子菜单
-     * @author  liyinlong
-     * @since 2021/11/2 4:09 下午
-     */
-    public void setServiceMenuSubMenu(List<ResourceMenuDto> menuDtoList, String clusterId, Map<String, String> power) {
-        menuDtoList.forEach(parentMenu -> {
-            if ("serviceList".equals(parentMenu.getName())) {
-                List<ResourceMenuDto> resourceMenuDtos = middlewareService.listAllMiddlewareAsMenu(clusterId);
-                if (!CollectionUtils.isEmpty(power)) {
-                    resourceMenuDtos = resourceMenuDtos.stream()
-                        .filter(resourceMenuDto -> power.keySet().stream()
-                            .anyMatch(key -> !"0000".equals(power.get(key)) && key.equals(resourceMenuDto.getName())))
-                        .collect(Collectors.toList());
-                }
-                resourceMenuDtos.forEach(resourceMenuDto -> {
-                    resourceMenuDto
-                        .setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(resourceMenuDto.getAliasName()));
-                    resourceMenuDto.setUrl(
-                        parentMenu.getUrl() + "/" + resourceMenuDto.getName() + "/" + resourceMenuDto.getAliasName());
-                });
-                parentMenu.setSubMenu(resourceMenuDtos);
-            }
-        });
     }
 
     /**

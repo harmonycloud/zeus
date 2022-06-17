@@ -169,4 +169,18 @@ public class UserRoleServiceImpl implements UserRoleService {
             beanUserRoleMapper.update(beanUserRole, wrapper);
         }
     }
+
+    @Override
+    public boolean checkExistsNormalRole(String userName) {
+        QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("username", userName).gt("role_id", 2);
+        List<BeanUserRole> beanUserRoleList = beanUserRoleMapper.selectList(wrapper);
+        return !CollectionUtils.isEmpty(beanUserRoleList);
+    }
+
+    @Override
+    public BeanUserRole get(String userName, String projectId) {
+        QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("username", userName).eq("project_id", projectId);
+        return beanUserRoleMapper.selectOne(wrapper);
+    }
+
 }
