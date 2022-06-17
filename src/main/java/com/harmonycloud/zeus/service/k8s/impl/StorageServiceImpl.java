@@ -261,7 +261,7 @@ public class StorageServiceImpl implements StorageService {
             mwStoInfo.setMiddlewareName(middlewareCr.getSpec().getName());
             mwStoInfo.setStatus(middlewareCr.getStatus().getPhase());
             mwStoInfo.setType(type);
-            mwStoInfo.setMiddlewareAliasName(values.getOrDefault("aliasName", null).toString());
+            mwStoInfo.setMiddlewareAliasName(values.getOrDefault("aliasName", "").toString());
 
             // 获取所在项目
             ProjectDto projectDto = projectService.findProjectByNamespace(middlewareCr.getMetadata().getNamespace());
