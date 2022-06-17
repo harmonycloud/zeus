@@ -15,5 +15,5 @@ import java.util.List;
 @Repository
 public interface BeanMiddlewareBackupAddressMapper extends BaseMapper<BeanMiddlewareBackupAddress> {
 
-    Integer insertBatchSomeColumn(List<BeanMiddlewareBackupAddress> entityList);
+    void insertBatchSomeColumn(List<BeanMiddlewareBackupAddress> entityList);
 }

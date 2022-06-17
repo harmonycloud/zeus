@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author yushuaikang
@@ -23,12 +24,6 @@ public class BeanMiddlewareBackupAddress {
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
-
-    /**
-     * 集群ID
-     */
-    @TableField(value = "cluster_id")
-    private String clusterId;
 
     /**
      * 中文名称

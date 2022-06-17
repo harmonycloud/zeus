@@ -1,6 +1,9 @@
 package com.harmonycloud.zeus.service.middleware;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterBackupAddressDTO;
+import com.harmonycloud.zeus.bean.BeanMiddlewareBackupAddress;
 
 import java.util.List;
 
@@ -13,10 +16,9 @@ public interface MiddlewareBackupAddressService {
     /**
      * 创建备份位置
      *
-     * @param clusters                          集群ID集合
      * @param middlewareClusterBackupAddressDTO 备份位置信息
      */
-    void createBackupAddress(List<String> clusters, MiddlewareClusterBackupAddressDTO middlewareClusterBackupAddressDTO);
+    void createBackupAddress(MiddlewareClusterBackupAddressDTO middlewareClusterBackupAddressDTO);
 
     /**
      * 更改备份位置
@@ -28,23 +30,27 @@ public interface MiddlewareBackupAddressService {
     /**
      * 查询备份位置
      *
+     * @param name      中文名称
      * @param keyWord 关键词
      * @return
      */
-    List<MiddlewareClusterBackupAddressDTO> listBackupAddress(String keyWord);
+    List<MiddlewareClusterBackupAddressDTO> listBackupAddress(String name, String keyWord);
+
+    /**
+     * 查询备份位置详情
+     *
+     * @param id
+     * @return
+     */
+    MiddlewareClusterBackupAddressDTO detail(Integer id);
 
     /**
      * 删除备份位置
      *
-     * @param accessKeyId       用户名
-     * @param secretAccessKey   密码
-     * @param bucketName        bucket名称
-     * @param endpoint          地址
-     * @param name              中文名称
-     * @param id                ID
+     * @param id        id
+     * @param clusterId 集群ID
      */
-    void deleteBackupAddress(String accessKeyId, String secretAccessKey, String bucketName, String endpoint,
-                             String name, Integer id);
+    void deleteBackupAddress(Integer id, String clusterId);
 
     /**
      * minio连接校验
@@ -52,5 +58,13 @@ public interface MiddlewareBackupAddressService {
      * @param middlewareClusterBackupAddressDTO 备份位置信息
      */
     void checkMinio(MiddlewareClusterBackupAddressDTO middlewareClusterBackupAddressDTO);
+
+    /**
+     * 计算任务关联数
+     *
+     * @param name      中文名称
+     * @param flag      标识
+     */
+    void calRelevanceNum(String name, boolean flag);
 
 }

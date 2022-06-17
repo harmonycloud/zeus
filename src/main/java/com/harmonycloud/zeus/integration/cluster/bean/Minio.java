@@ -11,6 +11,8 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class Minio {
 
+    private String name;
+
     private String endpoint;
 
     private String bucketName;

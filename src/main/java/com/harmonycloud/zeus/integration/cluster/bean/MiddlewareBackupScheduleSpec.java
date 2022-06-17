@@ -11,6 +11,11 @@ import java.util.List;
 public class MiddlewareBackupScheduleSpec {
 
     /**
+     * 地址信息
+     */
+    private MiddlewareBackupScheduleDestination backupDestination;
+
+    /**
      * 备份名称
      */
     private String name;
@@ -20,15 +25,6 @@ public class MiddlewareBackupScheduleSpec {
      */
     private String type;
 
-    /**
-     * 备份信息
-     */
-    private List<BackupObject> backupObjects;
-
-    /**
-     * 备份存储
-     */
-    private String backendStorage;
 
     /**
      * 是否开启备份
@@ -43,12 +39,51 @@ public class MiddlewareBackupScheduleSpec {
     public MiddlewareBackupScheduleSpec() {
     }
 
-    public MiddlewareBackupScheduleSpec(String name, String type,String cron, Integer limitRecord, List<BackupObject> backupObjects) {
+    public MiddlewareBackupScheduleSpec(MiddlewareBackupScheduleDestination backupDestination, String name, String type, String pause, String cron, Integer limitRecord) {
+        this.backupDestination = backupDestination;
         this.name = name;
         this.type = type;
-        this.backupObjects = backupObjects;
+        this.pause = pause;
         if (StringUtils.isNotBlank(cron)) {
             this.schedule = new Schedule(cron, limitRecord);
+        }
+    }
+
+    @Data
+    public static class MiddlewareBackupScheduleDestination {
+
+        private String destinationType;
+
+        private MiddlewareBackupParameters parameters;
+
+        public MiddlewareBackupScheduleDestination() {
+
+        }
+
+        @Data
+        public static class MiddlewareBackupParameters {
+
+            private String bucket;
+
+            private String url;
+
+            private String bucketSubPath;
+
+            private String userId;
+
+            private String userKey;
+
+            private String backupPassword;
+
+            public MiddlewareBackupParameters(String bucket, String url, String bucketSubPath, String userId, String userKey, String backupPassword) {
+                this.bucket = bucket;
+                this.url = url;
+                this.bucketSubPath = bucketSubPath;
+                this.userId = userId;
+                this.userKey = userKey;
+                this.backupPassword = backupPassword;
+            }
+
         }
     }
 
@@ -64,11 +99,6 @@ public class MiddlewareBackupScheduleSpec {
          * 备份保留个数
          */
         private Integer limitRecord;
-
-        /**
-         * 开始时间
-         */
-        private String startTime;
 
         public Schedule() {
         }

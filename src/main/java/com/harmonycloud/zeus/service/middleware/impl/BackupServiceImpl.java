@@ -46,7 +46,6 @@ public class BackupServiceImpl implements BackupService {
         if (CollectionUtils.isEmpty(backupCRList)) {
             return new ArrayList<>(0);
         }
-
         List<Backup> backupList = new ArrayList<>();
         backupCRList.forEach(backupCRD -> {
             Backup backup = new Backup().setName(backupCRD.getMetadata().getName())
@@ -54,7 +53,9 @@ public class BackupServiceImpl implements BackupService {
                 .setControllerName(backupCRD.getMetadata().getLabels().get("controllername"))
                 .setMiddlewareCluster(backupCRD.getSpec().getClusterName())
                 .setBucketName(backupCRD.getSpec().getStorageProvider().getMinio().getBucketName())
-                .setEndPoint(backupCRD.getSpec().getStorageProvider().getMinio().getEndpoint());
+                .setEndPoint(backupCRD.getSpec().getStorageProvider().getMinio().getEndpoint())
+                .setAddressName(backupCRD.getMetadata().getAnnotations().get("addressName"))
+                .setTaskName(backupCRD.getMetadata().getAnnotations().get("taskName"));
             if (!ObjectUtils.isEmpty(backupCRD.getStatus())) {
                 backup.setBackupFileName(backupCRD.getStatus().getBackupFileName())
                     .setBackupTime(backupCRD.getStatus().getBackupTime()).setPhase(backupCRD.getStatus().getPhase());

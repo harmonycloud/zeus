@@ -116,6 +116,18 @@ public interface MiddlewareInfoService {
      */
     MiddlewareOperatorDTO getOperatorInfo(List<MiddlewareClusterDTO> clusterList);
 
+    /**
+     * 已纳管集群下服务
+     * @param type
+     * @param keyword
+     * @return
+     */
     List<Middleware> middlewareList(String type, String keyword);
 
+    /**
+     * 查询多集群中间件列表
+     *
+     * @return
+     */
+    List<MiddlewareInfoDTO> clusterList();
 }

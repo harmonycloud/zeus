@@ -1,11 +1,14 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
+import com.harmonycloud.caas.common.enums.DateType;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
 import com.harmonycloud.caas.common.model.middleware.ScheduleBackup;
 import com.harmonycloud.zeus.integration.cluster.MysqlScheduleBackupWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.MysqlScheduleBackupCR;
+import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.service.middleware.MysqlScheduleBackupService;
+import com.harmonycloud.zeus.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,21 +53,50 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
         List<ScheduleBackup> scheduleBackupList = new ArrayList<>();
         mysqlScheduleBackupCRList.forEach(scheduleBackupCRD -> {
             ScheduleBackup scheduleBackup = new ScheduleBackup().setName(scheduleBackupCRD.getMetadata().getName())
-                .setNamespace(scheduleBackupCRD.getMetadata().getNamespace())
-                .setControllerName(scheduleBackupCRD.getMetadata().getLabels().get("controllername"))
-                .setMiddlewareCluster(scheduleBackupCRD.getSpec().getBackupTemplate().getClusterName())
-                .setSchedule(scheduleBackupCRD.getSpec().getSchedule())
-                .setKeepBackups(scheduleBackupCRD.getSpec().getKeepBackups())
-                .setCreationTimestamp(scheduleBackupCRD.getMetadata().getCreationTimestamp());
+                    .setNamespace(scheduleBackupCRD.getMetadata().getNamespace())
+                    .setControllerName(scheduleBackupCRD.getMetadata().getLabels().get("controllername"))
+                    .setMiddlewareCluster(scheduleBackupCRD.getSpec().getBackupTemplate().getClusterName())
+                    .setSchedule(scheduleBackupCRD.getSpec().getSchedule())
+                    .setKeepBackups(scheduleBackupCRD.getSpec().getKeepBackups())
+                    .setCreationTimestamp(scheduleBackupCRD.getMetadata().getCreationTimestamp());
             if (!ObjectUtils.isEmpty(scheduleBackupCRD.getStatus())) {
                 scheduleBackup.setLastBackupName(scheduleBackupCRD.getStatus().getLastBackupName())
-                    .setLastBackupFileName(scheduleBackupCRD.getStatus().getLastBackupFileName())
-                    .setLastBackupTime(scheduleBackupCRD.getStatus().getLastBackupTime())
-                    .setLastBackupPhase(scheduleBackupCRD.getStatus().getLastBackupPhase());
+                        .setLastBackupFileName(scheduleBackupCRD.getStatus().getLastBackupFileName())
+                        .setLastBackupTime(scheduleBackupCRD.getStatus().getLastBackupTime())
+                        .setLastBackupPhase(scheduleBackupCRD.getStatus().getLastBackupPhase());
             }
             scheduleBackupList.add(scheduleBackup);
         });
         return scheduleBackupList;
+    }
+
+    public List<MiddlewareBackupRecord> listScheduleBackupRecord(String clusterId, String namespace, String name) {
+        List<MysqlScheduleBackupCR> mysqlScheduleBackupCRList = mysqlScheduleBackupWrapper.list(clusterId, namespace);
+        if (CollectionUtils.isEmpty(mysqlScheduleBackupCRList)) {
+            return null;
+        }
+        mysqlScheduleBackupCRList = mysqlScheduleBackupCRList.stream()
+                .filter(scheduleBackup -> scheduleBackup.getSpec().getBackupTemplate().getClusterName().equals(name))
+                .collect(Collectors.toList());
+        List<MiddlewareBackupRecord> recordList = new ArrayList<>();
+        mysqlScheduleBackupCRList.forEach(schedule -> {
+            MysqlScheduleBackupStatus backupStatus = schedule.getStatus();
+            MiddlewareBackupRecord backupRecord = new MiddlewareBackupRecord();
+//                setBackupSourceInfo(middlewareName, item.getSpec().getBackupObjects(), backupRecord, podInfo);
+            String backupTime = DateUtil.utc2Local(schedule.getMetadata().getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
+            backupRecord.setBackupTime(backupTime);
+            backupRecord.setBackupName(schedule.getMetadata().getName());
+            MysqlScheduleBackupSpec spec = schedule.getSpec();
+            Minio minio = spec.getBackupTemplate().getStorageProvider().getMinio();
+            String position = "minio" + "(" + minio.getEndpoint() + "/" + minio.getBucketName() + ")";
+            backupRecord.setPosition(position);
+            backupRecord.setPhrase(backupStatus.getLastBackupPhase());
+//            setMiddlewareAliasName(middleware.getAliasName(), backupRecord);
+            backupRecord.setTaskName(schedule.getMetadata().getAnnotations().get("taskName"));
+            backupRecord.setAddressName(schedule.getMetadata().getAnnotations().get("addressName"));
+            recordList.add(backupRecord);
+        });
+        return recordList;
     }
 
     /**

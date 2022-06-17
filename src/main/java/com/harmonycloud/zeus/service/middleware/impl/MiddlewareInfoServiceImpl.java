@@ -425,11 +425,33 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         List<Middleware> middlewareList = new ArrayList<>();
         clusterList.forEach(cluster -> {
             List<Middleware> middlewares = middlewareService.simpleList(cluster.getClusterId(), null, null, null);
-            middlewareList.addAll(middlewares.stream()
-                .filter(middleware -> middleware.getType().equals(type) && middleware.getName().contains(keyword))
-                .collect(Collectors.toList()));
+            if (StringUtils.isEmpty(keyword) && StringUtils.isEmpty(type)) {
+                middlewareList.addAll(middlewares);
+            } else {
+                if (StringUtils.isNotEmpty(keyword)) {
+                    middlewareList.addAll(middlewares.stream()
+                            .filter(middleware -> middleware.getType().equals(type) && middleware.getName().contains(keyword))
+                            .collect(Collectors.toList()));
+                } else {
+                    middlewareList.addAll(middlewares.stream().filter(middleware -> middleware.getType().equals(type))
+                            .collect(Collectors.toList()));
+                }
+            }
         });
         return middlewareList;
+    }
+
+    @Override
+    public List<MiddlewareInfoDTO> clusterList() {
+        List<BeanMiddlewareCluster> clusterList = middlewareClusterService.listClustersByClusterId(null);
+        List<MiddlewareInfoDTO> middlewareInfoDTOS = new ArrayList<>();
+        clusterList.forEach(cluster -> {
+            middlewareInfoDTOS.addAll(list(cluster.getClusterId()));
+        });
+        HashSet set = new HashSet(middlewareInfoDTOS);
+        middlewareInfoDTOS.clear();
+        middlewareInfoDTOS.addAll(set);
+        return middlewareInfoDTOS;
     }
 
     @Override

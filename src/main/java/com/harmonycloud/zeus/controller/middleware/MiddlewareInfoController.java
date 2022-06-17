@@ -76,9 +76,14 @@ public class MiddlewareInfoController {
             @ApiImplicitParam(name = "type", value = "类型", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "keyword", value = "关键词", paramType = "query", dataTypeClass = String.class)})
     @GetMapping("/list")
-    public BaseResult middlewareList(@RequestParam(value = "type") String type,
-                                        @RequestParam(value = "keyword") String keyword) {
+    public BaseResult middlewareList(@RequestParam(value = "type", required = false) String type,
+                                     @RequestParam(value = "keyword", required = false) String keyword) {
         return BaseResult.ok(middlewareInfoService.middlewareList(type, keyword));
     }
 
+    @ApiOperation(value = "已纳管集群下中间件", notes = "已纳管集群下中间件")
+    @GetMapping("/middleware")
+    public BaseResult clusterList() {
+        return BaseResult.ok(middlewareInfoService.clusterList());
+    }
 }

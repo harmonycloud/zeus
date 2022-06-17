@@ -19,7 +19,7 @@ public interface MiddlewareBackupService {
      * @param middlewareBackupDTO 备份信息
      * @return
      */
-    BaseResult createBackup(MiddlewareBackupDTO middlewareBackupDTO);
+    void createBackup(MiddlewareBackupDTO middlewareBackupDTO);
 
     /**
      * 更新备份规则
@@ -27,7 +27,7 @@ public interface MiddlewareBackupService {
      * @param middlewareBackupDTO
      * @return
      */
-    BaseResult updateBackupSchedule(MiddlewareBackupDTO middlewareBackupDTO);
+    void updateBackupSchedule(MiddlewareBackupDTO middlewareBackupDTO);
 
     /**
      * 创建备份规则
@@ -35,7 +35,7 @@ public interface MiddlewareBackupService {
      * @param backupDTO
      * @return
      */
-    BaseResult createBackupSchedule(MiddlewareBackupDTO backupDTO);
+    void createBackupSchedule(MiddlewareBackupDTO backupDTO);
 
     /**
      * 立即备份
@@ -43,7 +43,7 @@ public interface MiddlewareBackupService {
      * @param backupDTO
      * @return
      */
-    BaseResult createNormalBackup(MiddlewareBackupDTO backupDTO);
+    void createNormalBackup(MiddlewareBackupDTO backupDTO);
 
     /**
      * 查询备份规则列表
@@ -54,7 +54,7 @@ public interface MiddlewareBackupService {
      * @param middlewareName 中间件名称
      * @return
      */
-    List<MiddlewareBackupScheduleConfig> listBackupSchedule(String clusterId, String namespace, String type, String middlewareName, String keyword);
+    List<MiddlewareBackupRecord> listBackupSchedule(String clusterId, String namespace, String type, String middlewareName, String keyword);
 
     /**
      * 删除备份规则
@@ -65,7 +65,7 @@ public interface MiddlewareBackupService {
      * @param backupScheduleName 备份规则名称
      * @return
      */
-    BaseResult deleteSchedule(String clusterId, String namespace, String type, String backupScheduleName);
+    void deleteSchedule(String clusterId, String namespace, String type, String backupScheduleName);
 
     /**
      * 删除备份记录
@@ -76,9 +76,10 @@ public interface MiddlewareBackupService {
      * @param type           中间件类型
      * @param backupName     备份记录名称
      * @param backupFileName 备份文件名称(mysql特有)
+     * @param chineseName    备份位置中文名称
      * @return
      */
-    BaseResult deleteRecord(String clusterId, String namespace, String middlewareName, String type, String backupName, String backupFileName);
+    void deleteRecord(String clusterId, String namespace, String middlewareName, String type, String backupName, String backupFileName, String chineseName);
 
     /**
      * 查询备份记录列表
@@ -89,7 +90,7 @@ public interface MiddlewareBackupService {
      * @param middlewareName 中间件名称
      * @return
      */
-    List<MiddlewareBackupRecord> listRecord(String clusterId, String namespace, String middlewareName, String type);
+    List<MiddlewareBackupRecord> listRecord(String clusterId, String namespace, String middlewareName, String type, String keyword);
 
     /**
      * 创建恢复
@@ -103,7 +104,7 @@ public interface MiddlewareBackupService {
      * @param pods           pod列表
      * @return
      */
-    BaseResult createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String backupFileName, List<String> pods);
+    void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String backupFileName, List<String> pods);
 
     /**
      * 尝试创建中间件恢复实例
@@ -147,4 +148,13 @@ public interface MiddlewareBackupService {
      */
     boolean checkIfAlreadyBackup(String clusterId, String namespace, String type, String middlewareName,String podName);
 
+    /**
+     * 备份任务列表
+     * @param clusterId
+     * @param namespace
+     * @param middlewareName
+     * @param type
+     * @return
+     */
+    List<MiddlewareBackupRecord> backupRecordList(String clusterId, String namespace, String middlewareName, String type, String keyword);
 }
