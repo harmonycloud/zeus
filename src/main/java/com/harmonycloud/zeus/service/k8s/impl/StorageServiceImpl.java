@@ -92,7 +92,7 @@ public class StorageServiceImpl implements StorageService {
                 return all == flag;
             }).map(storageClass -> {
                 // 初始化业务对象
-                    return convert(cluster.getId(), storageClass);
+                    return all ? convert(cluster.getId(), storageClass) : detail(cluster.getId(), storageClass.getMetadata().getName());
                 }).filter(storageDto -> {
                     if (StringUtils.isNotEmpty(key)) {
                         return storageDto.getAliasName().contains(key) || storageDto.getName().contains(key);
@@ -177,6 +177,7 @@ public class StorageServiceImpl implements StorageService {
         }
         monitorResourceQuota.getStorage().setRequest(request);
         monitorResourceQuota.getStorage().setUsed(used);
+        storageDto.setMonitorResourceQuota(monitorResourceQuota);
         return storageDto;
     }
 
