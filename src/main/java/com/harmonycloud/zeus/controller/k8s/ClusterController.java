@@ -78,9 +78,6 @@ public class ClusterController {
         return BaseResult.ok(cluster);
     }
 
-    @Autowired
-    private ClusterCertServiceImpl clusterCertService;
-
     @ApiOperation(value = "添加集群", notes = "添加集群")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "cluster", value = "集群信息", paramType = "query", dataTypeClass = MiddlewareClusterDTO.class)
