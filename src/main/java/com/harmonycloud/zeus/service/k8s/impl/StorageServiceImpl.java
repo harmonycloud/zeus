@@ -163,12 +163,12 @@ public class StorageServiceImpl implements StorageService {
         }
         // 查询申请配额
         String requestQuery = "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{persistentvolumeclaim=~\""
-                + sb.toString() + "\"}) by (persistentvolumeclaim) /1024/1024/1024";
+                + sb.toString() + "\"})/1024/1024/1024";
         double request = prometheusResourceMonitorService.queryAndConvert(clusterId, requestQuery);
 
         // 查询使用量
         String usedQuery = "sum(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\""
-                + sb.toString() + "\",endpoint!=\"\"}) by (persistentvolumeclaim) /1024/1024/1024";
+                + sb.toString() + "\",endpoint!=\"\"}) /1024/1024/1024";
         double used = prometheusResourceMonitorService.queryAndConvert(clusterId, usedQuery);
 
         MonitorResourceQuota monitorResourceQuota = storageDto.getMonitorResourceQuota();
