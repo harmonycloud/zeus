@@ -69,7 +69,22 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public List<MiddlewareBackupRecord> listRecord(String clusterId, String namespace, String middlewareName, String type, String keyword) {
-        List<MysqlBackupDto> backups = listRecord(clusterId, namespace, middlewareName);
+        List<MysqlBackupDto> backups = new ArrayList<>();
+        if (StringUtils.isEmpty(type)) {
+            backups = listMysqlBackupRecord(clusterId, namespace, middlewareName);
+        } else {
+            backups = listRecord(clusterId, namespace, middlewareName);
+        }
+        return convertMysqlBackupDto(backups, middlewareName, keyword, true);
+    }
+
+    @Override
+    public List<MiddlewareBackupRecord> listMysqlBackupScheduleRecord(String clusterId, String namespace, String backupName) {
+        List<MysqlBackupDto> backups = listMysqlBackupDto(clusterId, namespace, backupName);
+        return convertMysqlBackupDto(backups, backupName, null, false);
+    }
+
+    private List<MiddlewareBackupRecord> convertMysqlBackupDto(List<MysqlBackupDto> backups, String middlewareName, String keyword, boolean cron) {
         List<MiddlewareBackupRecord> list = new ArrayList<>();
         for (MysqlBackupDto backup : backups) {
             MiddlewareBackupRecord record = new MiddlewareBackupRecord();
@@ -104,6 +119,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
             record.setPosition(backup.getPosition());
             record.setAddressName(backup.getAddressName());
             record.setTaskName(backup.getTaskName());
+            record.setCron(null);
             list.add(record);
         }
         if (StringUtils.isNotBlank(keyword)) {
@@ -164,7 +180,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         MysqlScheduleBackupSpec spec =
                 new MysqlScheduleBackupSpec().setSchedule(CronUtils.parseMysqlUtcCron(backupDTO.getCron())).setBackupTemplate(backupTemplate).setKeepBackups(backupDTO.getLimitRecord());
         ObjectMeta metaData = new ObjectMeta();
-        metaData.setName(backupDTO.getMiddlewareName());
+        metaData.setName(backupDTO.getMiddlewareName() + UUIDUtils.get8UUID());
         Map<String, String> labels = new HashMap<>();
         labels.put("controllername", "backup-schedule-controller");
         Map<String, String> annotations = new HashMap<>();
@@ -207,7 +223,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String backupFileName, List<String> pods) {
+    public void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String backupFileName, List<String> pods, String addressName) {
         Middleware middleware = middlewareService.detail(clusterId, namespace, middlewareName, type);
         middleware.setChartName(type);
         fixStorageUnit(middleware);
@@ -272,7 +288,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void deleteSchedule(String clusterId, String namespace, String type, String backupScheduleName) {
+    public void deleteSchedule(String clusterId, String namespace, String type, String backupScheduleName, String addressName) {
         mysqlScheduleBackupService.delete(clusterId, namespace, backupScheduleName);
     }
 
@@ -292,8 +308,23 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public List<MiddlewareBackupRecord> backupRecordList(String clusterId, String namespace, String middlewareName, String type, String keyword) {
+    public List<MiddlewareBackupRecord> backupTaskList(String clusterId, String namespace, String middlewareName, String type, String keyword) {
         return null;
+    }
+
+    @Override
+    public List<MiddlewareBackupRecord> backupRecords(String clusterId, String namespace, String middlewareName, String type, String status) {
+        return null;
+    }
+
+    @Override
+    public void deleteBackUpTask(String clusterId, String namespace, String type, String backupName, String backupFileName, String addressName, String cron) {
+
+    }
+
+    @Override
+    public void deleteBackUpRecord(String clusterId, String namespace, String type, String backupName, String backupFileName, String addressName) {
+
     }
 
     private void tryCreateMiddleware(String clusterId, String namespace, String type, String middlewareName, Middleware middleware) {
@@ -346,6 +377,42 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         List<MysqlBackupDto> mysqlBackupDtoList = new ArrayList<>();
         // 设置备份状态
         backupList.forEach(backup -> {
+            MysqlBackupDto mysqlBackupDto = new MysqlBackupDto();
+            if (!"Complete".equals(backup.getPhase())) {
+                mysqlBackupDto.setStatus(backup.getPhase());
+                mysqlBackupDto.setBackupFileName("");
+            } else {
+                mysqlBackupDto.setStatus("Complete");
+                mysqlBackupDto.setBackupFileName(backup.getBackupFileName());
+            }
+            mysqlBackupDto.setBackupName(backup.getName());
+            mysqlBackupDto.setDate(DateUtils.parseUTCDate(backup.getBackupTime()));
+            mysqlBackupDto.setPosition("minio(" + backup.getEndPoint() + "/" + backup.getBucketName() + ")");
+            mysqlBackupDto.setAddressName(backup.getAddressName());
+            mysqlBackupDto.setType("all");
+            mysqlBackupDto.setTaskName(backup.getTaskName());
+            mysqlBackupDtoList.add(mysqlBackupDto);
+        });
+        // 根据时间降序
+        mysqlBackupDtoList.sort(
+                (o1, o2) -> o1.getDate() == null ? -1 : o2.getDate() == null ? -1 : o2.getDate().compareTo(o1.getDate()));
+        return mysqlBackupDtoList;
+    }
+
+    public List<MysqlBackupDto> listMysqlBackupRecord(String clusterId, String namespace, String backupName) {
+        List<Backup> backups = backupService.listBackup(clusterId,namespace);
+        backups.stream().filter(backup -> backupName.equals(backup.getName())).collect(Collectors.toList());
+        return convertBackup(backups);
+    }
+
+    public List<MysqlBackupDto> listMysqlBackupDto(String clusterId, String namespace, String backupName) {
+        List<Backup> backups = backupService.listScheduleBackup(clusterId, namespace, backupName);
+        return convertBackup(backups);
+    }
+
+    private List<MysqlBackupDto> convertBackup(List<Backup> backups) {
+        List<MysqlBackupDto> mysqlBackupDtoList = new ArrayList<>();
+        backups.forEach(backup -> {
             MysqlBackupDto mysqlBackupDto = new MysqlBackupDto();
             if (!"Complete".equals(backup.getPhase())) {
                 mysqlBackupDto.setStatus(backup.getPhase());

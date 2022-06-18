@@ -87,6 +87,8 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
             backupRecord.setBackupTime(backupTime);
             backupRecord.setBackupName(schedule.getMetadata().getName());
             MysqlScheduleBackupSpec spec = schedule.getSpec();
+            String time = schedule.getSpec().getSchedule();
+            backupRecord.setCron(time);
             Minio minio = spec.getBackupTemplate().getStorageProvider().getMinio();
             String position = "minio" + "(" + minio.getEndpoint() + "/" + minio.getBucketName() + ")";
             backupRecord.setPosition(position);
@@ -94,6 +96,7 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
 //            setMiddlewareAliasName(middleware.getAliasName(), backupRecord);
             backupRecord.setTaskName(schedule.getMetadata().getAnnotations().get("taskName"));
             backupRecord.setAddressName(schedule.getMetadata().getAnnotations().get("addressName"));
+            backupRecord.setCron(schedule.getSpec().getSchedule());
             recordList.add(backupRecord);
         });
         return recordList;

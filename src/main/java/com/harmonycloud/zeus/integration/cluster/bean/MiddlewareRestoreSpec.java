@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.integration.cluster.bean;
 
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ import java.util.Map;
  * @since 2021/9/15 5:07 下午
  */
 @Data
+@Accessors(chain = true)
 public class MiddlewareRestoreSpec {
 
     /**

@@ -1,12 +1,9 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
-import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.constants.BackupConstant;
 import com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant;
 import com.harmonycloud.caas.common.enums.BackupType;
 import com.harmonycloud.caas.common.enums.DateType;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
 import com.harmonycloud.caas.common.model.MiddlewareBackupScheduleConfig;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
@@ -16,10 +13,7 @@ import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.annotation.MiddlewareBackup;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.service.k8s.*;
-import com.harmonycloud.zeus.service.middleware.MiddlewareBackupAddressService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareService;
+import com.harmonycloud.zeus.service.middleware.*;
 import com.harmonycloud.zeus.util.CronUtils;
 import com.harmonycloud.zeus.util.DateUtil;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -32,8 +26,6 @@ import org.springframework.util.CollectionUtils;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static com.harmonycloud.caas.common.enums.ErrorMessage.BACKUP_ALREADY_EXISTS;
 
 /**
  * 中间件通用备份
@@ -81,10 +73,50 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 String backupTime = DateUtil.utc2Local(item.getMetadata().getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
                 backupRecord.setBackupTime(backupTime);
                 backupRecord.setBackupName(item.getMetadata().getName());
+                MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters parameters =  item.getSpec().getBackupDestination().getParameters();
+                String position = item.getSpec().getBackupDestination().getDestinationType() + "(" + parameters.getUrl() + "/" + parameters.getBucket() + ")";
+                backupRecord.setPosition(position);
+                backupRecord.setPhrase(backupStatus.getPhase());
+                setMiddlewareAliasName(middleware.getAliasName(), backupRecord);
+                backupRecord.setTaskName(item.getMetadata().getLabels().get("taskName"));
+                backupRecord.setCron(null);
+                recordList.add(backupRecord);
+            });
+        }
+        if (StringUtils.isNotBlank(keyword)) {
+            return recordList.stream().filter(record -> {
+                if (record.getTaskName().contains(keyword)) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }).collect(Collectors.toList());
+        }
+        return recordList;
+    }
+
+    @Override
+    public List<MiddlewareBackupRecord> listMysqlBackupScheduleRecord(String clusterId, String namespace, String backupName) {
+        return null;
+    }
+
+    public List<MiddlewareBackupRecord> listBackupScheduleRecord(String clusterId, String namespace, String backupName, String type, String keyword) {
+             List<MiddlewareBackupRecord> recordList = new ArrayList<>();
+        List<MiddlewareBackupCR> backupRecordList = getScheduleBackupRecordList(clusterId, namespace);
+        Middleware middleware = middlewareService.detail(clusterId, namespace, backupName, type);
+        if (!CollectionUtils.isEmpty(backupRecordList)) {
+            backupRecordList.forEach(item -> {
+                MiddlewareBackupStatus backupStatus = item.getStatus();
+                MiddlewareBackupRecord backupRecord = new MiddlewareBackupRecord();
+//                setBackupSourceInfo(middlewareName, item.getSpec().getBackupObjects(), backupRecord, podInfo);
+                String backupTime = DateUtil.utc2Local(item.getMetadata().getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
+                backupRecord.setBackupTime(backupTime);
+                backupRecord.setBackupName(item.getMetadata().getName());
                 MiddlewareBackupSpec spec = item.getSpec();
                 MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters parameters =  item.getSpec().getBackupDestination().getParameters();
                 String position = item.getSpec().getBackupDestination().getDestinationType() + "(" + parameters.getUrl() + "/" + parameters.getBucket() + ")";
                 backupRecord.setPosition(position);
+//                backupRecord.setCron(item.getSpec().get);
                 backupRecord.setPhrase(backupStatus.getPhase());
                 setMiddlewareAliasName(middleware.getAliasName(), backupRecord);
                 backupRecord.setTaskName(item.getMetadata().getLabels().get("taskName"));
@@ -141,12 +173,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void deleteRecord(String clusterId, String namespace, String middlewareName, String type, String backupName, String backupFileName, String chineseName) {
+    public void deleteRecord(String clusterId, String namespace, String middlewareName, String type, String backupName, String backupFileName, String addressName) {
         try {
             if ("mysql".equals(type)) {
-                mysqlAdapterService.deleteRecord(clusterId, namespace, middlewareName, type, backupName, backupFileName, chineseName);
+                mysqlAdapterService.deleteRecord(clusterId, namespace, middlewareName, type, backupName, backupFileName, addressName);
             }
             backupCRDService.delete(clusterId, namespace, backupName);
+            middlewareBackupAddressService.calRelevanceNum(addressName, false);
         } catch (IOException e) {
             log.error("删除备份记录失败");
         }
@@ -160,11 +193,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     public void createBackupSchedule(MiddlewareBackupDTO backupDTO) {
         Map<String, String> labels =
             getMiddlewareBackupLabels(backupDTO.getMiddlewareName(), null, backupDTO.getPods());
-        MiddlewareBackupScheduleList scheduleList =
-            backupScheduleCRDService.list(backupDTO.getClusterId(), backupDTO.getNamespace(), labels);
-        if (!CollectionUtils.isEmpty(scheduleList.getItems())) {
-            throw new BusinessException(BACKUP_ALREADY_EXISTS);
-        }
         Minio minio = mysqlAdapterService.getMinio(backupDTO.getAddressName());
         MiddlewareBackupScheduleCR crd = new MiddlewareBackupScheduleCR();
         ObjectMeta meta = getMiddlewareBackupMeta(backupDTO.getNamespace(), backupDTO.getMiddlewareName(),
@@ -332,14 +360,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String backupFileName, List<String> pods) {
+    public void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String backupFileName, List<String> pods, String addressName) {
         //设置中间件恢复信息
         try {
             if ("mysql".equals(type)) {
-                mysqlAdapterService.createRestore(clusterId, namespace, middlewareName, type, backupName, backupFileName, pods);
+                mysqlAdapterService.createRestore(clusterId, namespace, middlewareName, type, backupName, backupFileName, pods, addressName);
             }
             MiddlewareCR cr = middlewareCRService.getCR(clusterId, namespace, type, middlewareName);
-            createMiddlewareRestore(clusterId, namespace, type, middlewareName, backupName, cr.getStatus(), pods);
+            createMiddlewareRestore(clusterId, namespace, type, middlewareName, backupName, cr.getStatus(), pods, addressName);
         } catch (Exception e) {
             log.error("备份服务创建失败", e);
         }
@@ -437,6 +465,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 setMiddlewareAliasName(middleware.getAliasName(), backupRecord);
                 backupRecord.setTaskName(schedule.getMetadata().getAnnotations().get("taskName"));
                 backupRecord.setAddressName(schedule.getMetadata().getAnnotations().get("addressName"));
+                backupRecord.setCron(schedule.getSpec().getSchedule().getCron());
                 recordList.add(backupRecord);
             });
         }
@@ -453,12 +482,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void deleteSchedule(String clusterId, String namespace, String type, String backupScheduleName) {
+    public void deleteSchedule(String clusterId, String namespace, String type, String backupScheduleName, String addressName) {
         try {
             if ("mysql".equals(type)) {
-                mysqlAdapterService.deleteSchedule(clusterId, namespace, type, backupScheduleName);
+                mysqlAdapterService.deleteSchedule(clusterId, namespace, type, backupScheduleName, addressName);
             }
             backupScheduleCRDService.delete(clusterId, namespace, backupScheduleName);
+            middlewareBackupAddressService.calRelevanceNum(addressName, false);
         } catch (IOException e) {
             log.error("备份规则删除失败；{}", backupScheduleName, e);
         }
@@ -494,20 +524,61 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         return false;
     }
 
+    /**
+     * 查询所有的备份任务
+     */
     @Override
-    public List<MiddlewareBackupRecord> backupRecordList(String clusterId, String namespace, String middlewareName, String type, String keyword) {
+    public List<MiddlewareBackupRecord> backupTaskList(String clusterId, String namespace, String middlewareName, String type, String keyword) {
         List<Middleware> middlewares = middlewareService.simpleList(clusterId, null, null, null);
         List<MiddlewareBackupRecord> recordList = new ArrayList<>();
         if (StringUtils.isEmpty(middlewareName) && StringUtils.isEmpty(type)) {
             middlewares.forEach(middleware -> {
-                recordList.addAll(listRecord(clusterId, namespace, middleware.getName(), middleware.getType(), keyword));
-                recordList.addAll(listBackupSchedule(clusterId, namespace, middleware.getName(), middleware.getType(), keyword));
+                List<MiddlewareBackupRecord> backupRecords = listRecord(clusterId, namespace, middleware.getName(), middleware.getType(), keyword);
+                List<MiddlewareBackupRecord> backupSchedules = listBackupSchedule(clusterId, namespace, middleware.getName(), middleware.getType(), keyword);
+                //过滤backupSchedule所产生的backup
+                backupSchedules.forEach(schedule -> {
+                    backupRecords.stream().filter(record -> record.getBackupName().equals(schedule.getBackupName())).collect(Collectors.toList());
+                });
+                recordList.addAll(backupRecords);
+                recordList.addAll(backupSchedules);
             });
             return recordList;
         }
         recordList.addAll(listRecord(clusterId, namespace, middlewareName, type, keyword));
         recordList.addAll(listBackupSchedule(clusterId, namespace, middlewareName, type, keyword));
         return recordList;
+    }
+
+    @Override
+    public List<MiddlewareBackupRecord> backupRecords(String clusterId, String namespace, String backupName, String type, String cron) {
+        List<MiddlewareBackupRecord> records;
+        if (StringUtils.isEmpty(cron)) {
+            if ("mysql".equals(type)) {
+                records = mysqlAdapterService.listMysqlBackupScheduleRecord(clusterId, namespace, backupName);
+            }
+            records = listBackupScheduleRecord(clusterId, namespace, backupName, type, null);
+        } else {
+            if ("mysql".equals(type)) {
+                records = mysqlAdapterService.listRecord(clusterId, namespace, backupName, null, null);
+            }
+            records = listRecord(clusterId, namespace, backupName, null, null);
+
+        }
+        return records;
+    }
+
+    @Override
+    public void deleteBackUpTask(String clusterId, String namespace, String type, String backupName, String backupFileName, String addressName, String cron) {
+        if (StringUtils.isEmpty(cron)) {
+            deleteRecord(clusterId, namespace, null, type, backupName, backupFileName, addressName);
+        } else {
+            deleteSchedule(clusterId, namespace, type, backupName, addressName);
+        }
+    }
+
+    @Override
+    public void deleteBackUpRecord(String clusterId, String namespace, String type, String backupName, String backupFileName, String addressName) {
+        deleteRecord(clusterId, namespace, null, type, backupName, backupFileName, addressName);
     }
 
     /**
@@ -520,7 +591,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * @param backupName     备份名称
      * @param status         恢复中间件状态信息
      */
-    public void createMiddlewareRestore(String clusterId, String namespace, String type, String middlewareName, String backupName, MiddlewareStatus status, List<String> pods) {
+    public void createMiddlewareRestore(String clusterId, String namespace, String type, String middlewareName, String backupName, MiddlewareStatus status, List<String> pods, String addressName) {
         try {
             List<MiddlewareInfo> podList = status.getInclude().get(MiddlewareConstant.PODS);
             List<MiddlewareInfo> pvcs = status.getInclude().get(MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS);
@@ -532,6 +603,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             }
             MiddlewareBackupCR backup = backupCRDService.get(clusterId, namespace, backupName);
             MiddlewareRestoreCR crd = new MiddlewareRestoreCR();
+            Minio minio = mysqlAdapterService.getMinio(addressName);
             ObjectMeta meta = new ObjectMeta();
             meta.setNamespace(namespace);
             meta.setName(getRestoreName(type, middlewareName));
@@ -541,10 +613,23 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             meta.setLabels(backupLabel);
             crd.setMetadata(meta);
             MiddlewareRestoreSpec spec = new MiddlewareRestoreSpec();
+            MiddlewareRestoreSpec.MiddlewareBackupDestination destination =
+                    new  MiddlewareRestoreSpec.MiddlewareBackupDestination();
+            destination.setDestinationType("minio").setParameters(
+                    new MiddlewareRestoreSpec.MiddlewareBackupDestination.MiddlewareBackupParameters(
+                            minio.getBucketName(), minio.getEndpoint(), "/" + type, minio.getAccessKeyId(), minio.getSecretAccessKey(),
+                            null));
+            List<String> args = new ArrayList();
+            args.add("--backupResultName=brokercluster-logging-es-backup");
+            args.add("--backupNamespace=logging");
+            List<Map<String, List<String>>> customBackups = new ArrayList<>();
+            Map<String, List<String>> map = new HashMap<>();
+            map.put("args",args);
+            customBackups.add(map);
             spec.setName(middlewareName);
-//            spec.setBackupName(backupName);
-//            spec.setRestoreObjects(convertRestoreObjects(pods, backup.getStatus().getBackupInfos(), pvcs));
             spec.setType(middlewareCrTypeService.findByType(type));
+            spec.setBackupDestination(destination);
+            spec.setCustomBackups(customBackups);
             crd.setSpec(spec);
             restoreCRDService.create(clusterId, crd);
         } catch (IOException e) {
@@ -652,6 +737,15 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         Map<String, String> labels = new HashMap<>();
         labels.put("middleware", getRealMiddlewareName(type, middlewareName));
         MiddlewareBackupList backupList = backupCRDService.list(clusterId, namespace, labels);
+        if (backupList != null && !CollectionUtils.isEmpty(backupList.getItems())) {
+            resList.addAll(backupList.getItems());
+        }
+        return resList;
+    }
+
+    private List<MiddlewareBackupCR> getScheduleBackupRecordList(String clusterId, String namespace) {
+        List<MiddlewareBackupCR> resList = new ArrayList<>();
+        MiddlewareBackupList backupList = backupCRDService.list(clusterId, namespace);
         if (backupList != null && !CollectionUtils.isEmpty(backupList.getItems())) {
             resList.addAll(backupList.getItems());
         }

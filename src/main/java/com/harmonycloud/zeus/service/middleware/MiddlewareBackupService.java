@@ -63,9 +63,10 @@ public interface MiddlewareBackupService {
      * @param namespace          分区
      * @param type
      * @param backupScheduleName 备份规则名称
+     * @param addressName        备份地址名称
      * @return
      */
-    void deleteSchedule(String clusterId, String namespace, String type, String backupScheduleName);
+    void deleteSchedule(String clusterId, String namespace, String type, String backupScheduleName, String addressName);
 
     /**
      * 删除备份记录
@@ -82,7 +83,7 @@ public interface MiddlewareBackupService {
     void deleteRecord(String clusterId, String namespace, String middlewareName, String type, String backupName, String backupFileName, String chineseName);
 
     /**
-     * 查询备份记录列表
+     * 查询备份任务列表
      *
      * @param clusterId      集群id
      * @param namespace      命名空间
@@ -93,6 +94,15 @@ public interface MiddlewareBackupService {
     List<MiddlewareBackupRecord> listRecord(String clusterId, String namespace, String middlewareName, String type, String keyword);
 
     /**
+     * 定时任务所产生的backup
+     * @param clusterId
+     * @param namespace
+     * @param backupName
+     * @return
+     */
+    List<MiddlewareBackupRecord> listMysqlBackupScheduleRecord(String clusterId, String namespace, String backupName);
+
+    /**
      * 创建恢复
      *
      * @param clusterId      集群id
@@ -101,10 +111,11 @@ public interface MiddlewareBackupService {
      * @param type           服务类型
      * @param backupName     备份记录名称
      * @param backupFileName 备份文件名称
+     * @param addressName    备份地址名称
      * @param pods           pod列表
      * @return
      */
-    void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String backupFileName, List<String> pods);
+    void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String backupFileName, List<String> pods, String addressName);
 
     /**
      * 尝试创建中间件恢复实例
@@ -156,5 +167,41 @@ public interface MiddlewareBackupService {
      * @param type
      * @return
      */
-    List<MiddlewareBackupRecord> backupRecordList(String clusterId, String namespace, String middlewareName, String type, String keyword);
+    List<MiddlewareBackupRecord> backupTaskList(String clusterId, String namespace, String middlewareName, String type, String keyword);
+
+    /**
+     * 备份记录
+     * @param clusterId
+     * @param namespace
+     * @param middlewareName
+     * @param type
+     * @param cron
+     * @return
+     */
+    List<MiddlewareBackupRecord> backupRecords(String clusterId, String namespace, String middlewareName, String type, String cron);
+
+    /**
+     * 删除备份任务
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param backupName
+     * @param backupFileName
+     * @param addressName
+     * @param cron
+     */
+    void deleteBackUpTask(String clusterId, String namespace, String type, String backupName, String backupFileName, String addressName, String cron);
+
+    /**
+     * 删除备份记录
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param backupName
+     * @param backupFileName
+     * @param addressName
+     */
+    void deleteBackUpRecord(String clusterId, String namespace, String type, String backupName, String backupFileName, String addressName);
+
+
 }
