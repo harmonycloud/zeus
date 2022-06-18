@@ -158,21 +158,6 @@ public class ProjectServiceImpl extends AbstractProjectService {
     }
 
     @Override
-    public List<Namespace> getNamespace(String projectId) {
-        QueryWrapper<BeanProjectNamespace> wrapper =
-            new QueryWrapper<BeanProjectNamespace>().eq("project_id", projectId);
-        List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
-
-        return beanProjectNamespaceList.stream().map(beanProjectNamespace -> {
-            Namespace namespace = new Namespace();
-            BeanUtils.copyProperties(beanProjectNamespace, namespace);
-            namespace.setClusterAliasName(clusterService.findById(namespace.getClusterId()).getNickname());
-            namespace.setName(beanProjectNamespace.getNamespace());
-            return namespace;
-        }).collect(Collectors.toList());
-    }
-
-    @Override
     public List<MiddlewareClusterDTO> getAllocatableNamespace() {
         List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(true, null);
         QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<>();
@@ -338,12 +323,6 @@ public class ProjectServiceImpl extends AbstractProjectService {
             infoList.add(projectMiddlewareResourceInfo);
         }
         return infoList;
-    }
-
-    @Override
-    public List<String> getClusters(String projectId) {
-        List<Namespace> namespaceList = this.getNamespace(projectId);
-        return namespaceList.stream().map(Namespace::getClusterId).collect(Collectors.toList());
     }
 
     @Override

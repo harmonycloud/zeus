@@ -329,11 +329,6 @@ public class Skyview2ProjectServiceImpl extends AbstractProjectService {
     }
 
     @Override
-    public List<String> getClusters(String projectId) {
-        return null;
-    }
-
-    @Override
     public List<ProjectDto> getMiddlewareCount(String projectId) {
         return null;
     }
