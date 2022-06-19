@@ -5,6 +5,7 @@ import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.enums.BackupType;
 import com.harmonycloud.caas.common.enums.DateType;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
 import com.harmonycloud.caas.common.model.MiddlewareBackupScheduleConfig;
@@ -31,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -70,11 +72,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public List<MiddlewareBackupRecord> listRecord(String clusterId, String namespace, String middlewareName, String type, String keyword) {
         List<MysqlBackupDto> backups = new ArrayList<>();
-        if (StringUtils.isEmpty(type)) {
-            backups = listMysqlBackupRecord(clusterId, namespace, middlewareName);
-        } else {
-            backups = listRecord(clusterId, namespace, middlewareName);
-        }
+        backups = listRecord(clusterId, namespace, middlewareName);
         return convertMysqlBackupDto(backups, middlewareName, keyword, true);
     }
 
@@ -88,10 +86,11 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         List<MiddlewareBackupRecord> list = new ArrayList<>();
         for (MysqlBackupDto backup : backups) {
             MiddlewareBackupRecord record = new MiddlewareBackupRecord();
-            record.setSourceName(middlewareName);
+            record.setSourceName(backup.getName());
             record.setBackupType(BackupType.CLUSTER.getType());
             record.setBackupName(backup.getBackupName());
             record.setBackupFileName(backup.getBackupFileName());
+            record.setSourceType(MiddlewareTypeEnum.MYSQL.getType());
             if (backup.getDate() != null) {
                 String backupTime = DateUtil.utc2Local(backup.getDate(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
                 record.setBackupTime(backupTime);
@@ -120,6 +119,16 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
             record.setAddressName(backup.getAddressName());
             record.setTaskName(backup.getTaskName());
             record.setCron(null);
+            record.setUsage(0);
+            Minio minio = getMinio(backup.getAddressName());
+            record.setCapacity(minio.getCapacity());
+            record.setPercent("0%");
+//            DecimalFormat df = new DecimalFormat("0.00");
+//            if (0 == record.getCapacity()) {
+//                record.setPercent("0%");
+//            } else {
+//                record.setPercent(df.format(record.getUsage()/record.getCapacity()));
+//            }
             list.add(record);
         }
         if (StringUtils.isNotBlank(keyword)) {
@@ -186,6 +195,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         Map<String, String> annotations = new HashMap<>();
         annotations.put("taskName", backupDTO.getTaskName());
         annotations.put("addressName", backupDTO.getAddressName());
+        annotations.put("type", backupDTO.getType());
         metaData.setAnnotations(annotations);
         metaData.setLabels(labels);
         metaData.setNamespace(backupDTO.getNamespace());
@@ -207,12 +217,13 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         BackupSpec spec = new BackupSpec().setClusterName(backupDTO.getMiddlewareName())
                 .setStorageProvider(new BackupStorageProvider().setMinio(getMinio(backupDTO.getAddressName())));
         ObjectMeta metaData = new ObjectMeta();
-        metaData.setName(backupDTO.getMiddlewareName() + UUIDUtils.get8UUID());
-        Map<String, String> labels = new HashMap<>(2);
+        metaData.setName(backupDTO.getMiddlewareName() + "-" + UUIDUtils.get8UUID());
+        Map<String, String> labels = new HashMap<>(1);
         labels.put("controllername", "backup-controller");
-        Map<String, String> annotations = new HashMap<>(1);
+        Map<String, String> annotations = new HashMap<>();
         annotations.put("taskName", backupDTO.getTaskName());
         annotations.put("addressName", backupDTO.getAddressName());
+        annotations.put("type", backupDTO.getType());
         metaData.setLabels(labels);
         metaData.setAnnotations(annotations);
         metaData.setNamespace(backupDTO.getNamespace());
@@ -271,10 +282,10 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         if (CollectionUtils.isEmpty(recordList)) {
             return new ArrayList<MiddlewareBackupRecord>();
         }
-        Middleware middleware = middlewareService.detail(clusterId, namespace, middlewareName, type);
-        recordList.forEach(record -> {
-            setMiddlewareAliasName(middleware.getAliasName(), record);
-        });
+//        Middleware middleware = middlewareService.detail(clusterId, namespace, middlewareName, type);
+//        recordList.forEach(record -> {
+//            setMiddlewareAliasName(middleware.getAliasName(), record);
+//        });
         if (StringUtils.isNotBlank(keyword)) {
             return recordList.stream().filter(record -> {
                 if (record.getTaskName().contains(keyword)) {
@@ -313,7 +324,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public List<MiddlewareBackupRecord> backupRecords(String clusterId, String namespace, String middlewareName, String type, String status) {
+    public List<MiddlewareBackupRecord> backupRecords(String clusterId, String namespace, String middlewareName, String type) {
         return null;
     }
 
@@ -373,7 +384,6 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
      */
     private List<MysqlBackupDto> listRecord(String clusterId, String namespace, String middlewareName) {
         List<Backup> backupList = backupService.listBackup(clusterId, namespace);
-        backupList = backupList.stream().filter(backup -> backup.getName().contains(middlewareName)).collect(Collectors.toList());
         List<MysqlBackupDto> mysqlBackupDtoList = new ArrayList<>();
         // 设置备份状态
         backupList.forEach(backup -> {
@@ -385,11 +395,13 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
                 mysqlBackupDto.setStatus("Complete");
                 mysqlBackupDto.setBackupFileName(backup.getBackupFileName());
             }
-            mysqlBackupDto.setBackupName(backup.getName());
+            mysqlBackupDto.setBackupFileName(backup.getBackupFileName());
+            mysqlBackupDto.setName(backup.getName());
+            mysqlBackupDto.setBackupName(backup.getBackupName());
             mysqlBackupDto.setDate(DateUtils.parseUTCDate(backup.getBackupTime()));
             mysqlBackupDto.setPosition("minio(" + backup.getEndPoint() + "/" + backup.getBucketName() + ")");
             mysqlBackupDto.setAddressName(backup.getAddressName());
-            mysqlBackupDto.setType("all");
+            mysqlBackupDto.setType(backup.getType());
             mysqlBackupDto.setTaskName(backup.getTaskName());
             mysqlBackupDtoList.add(mysqlBackupDto);
         });
@@ -406,7 +418,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     public List<MysqlBackupDto> listMysqlBackupDto(String clusterId, String namespace, String backupName) {
-        List<Backup> backups = backupService.listScheduleBackup(clusterId, namespace, backupName);
+        List<Backup> backups = backupService.listScheduleBackup(clusterId, namespace);
         return convertBackup(backups);
     }
 
@@ -421,12 +433,14 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
                 mysqlBackupDto.setStatus("Complete");
                 mysqlBackupDto.setBackupFileName(backup.getBackupFileName());
             }
-            mysqlBackupDto.setBackupName(backup.getName());
+            mysqlBackupDto.setBackupName(backup.getBackupName());
             mysqlBackupDto.setDate(DateUtils.parseUTCDate(backup.getBackupTime()));
             mysqlBackupDto.setPosition("minio(" + backup.getEndPoint() + "/" + backup.getBucketName() + ")");
             mysqlBackupDto.setAddressName(backup.getAddressName());
             mysqlBackupDto.setType("all");
             mysqlBackupDto.setTaskName(backup.getTaskName());
+            mysqlBackupDto.setName(backup.getName());
+            mysqlBackupDto.setBackupFileName(backup.getBackupFileName());
             mysqlBackupDtoList.add(mysqlBackupDto);
         });
         // 根据时间降序
