@@ -222,6 +222,14 @@ public class Skyview2UserServiceImpl extends AbstractUserService {
             if (Boolean.FALSE.equals(userJson.getBoolean("admin"))) {
                 JSONArray otherProjects = userJson.getJSONArray("otherProjects");
                 userDto.setUserRoleList(convertUserRole(otherProjects, username));
+            } else {
+                RoleDto roleDto = roleService.get(1);
+                UserRole userRole = new UserRole();
+                userRole.setRoleId(roleDto.getId());
+                userRole.setRoleName(roleDto.getName());
+                ArrayList<UserRole> userRoles = new ArrayList<>();
+                userRoles.add(userRole);
+                userDto.setUserRoleList(userRoles);
             }
             userDtos.add(userDto);
         });
