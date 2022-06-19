@@ -211,6 +211,7 @@ public class Skyview2UserServiceImpl extends AbstractUserService {
             JSONObject userJson = (JSONObject) user;
             UserDto userDto = new UserDto();
             String username = userJson.getString("username");
+            userDto.setId(userJson.getInteger("id"));
             userDto.setUserName(username);
             userDto.setAliasName(userJson.getString("realName"));
             userDto.setIsAdmin(userJson.getBoolean("admin"));
