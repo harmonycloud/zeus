@@ -281,6 +281,9 @@ public class Skyview2UserServiceImpl extends AbstractUserService {
                 userRoles.add(userRole);
             }
         });
+        if (userRoles.isEmpty()) {
+            return null;
+        }
         return userRoles;
     }
 
