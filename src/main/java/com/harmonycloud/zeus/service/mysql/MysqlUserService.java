@@ -17,19 +17,19 @@ import java.util.List;
 @Service
 public interface MysqlUserService {
 
-    BaseResult create(MysqlUserDTO mysqlUserDTO);
+    boolean create(MysqlUserDTO mysqlUserDTO);
 
     void create(BeanMysqlUser beanMysqlUser);
 
-    BaseResult update(MysqlUserDTO mysqlUserDTO);
+    void update(MysqlUserDTO mysqlUserDTO);
 
     BeanMysqlUser select(String mysqlQualifiedName, String user);
 
-    BaseResult delete(String clusterId, String namespace, String middlewareName, String user);
+    boolean delete(String clusterId, String namespace, String middlewareName, String user);
 
     void delete(String clusterId, String namespace, String middlewareName);
 
-    BaseResult grantUser(MysqlUserDTO mysqlUserDTO);
+    void grantUser(MysqlUserDTO mysqlUserDTO);
 
     void updatePassword(MysqlUserDTO mysqlUserDTO);
 
