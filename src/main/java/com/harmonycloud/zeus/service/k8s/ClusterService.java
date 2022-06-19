@@ -18,6 +18,7 @@ public interface ClusterService {
 
     /**
      * 获取所有集群
+     *
      * @return
      */
     List<MiddlewareClusterDTO> listClusters();
@@ -147,8 +148,9 @@ public interface ClusterService {
 
     /**
      * 获取快捷添加集群curl指令
+     *
      * @param clusterName 集群名称
-     * @param apiAddress 接口前缀
+     * @param apiAddress  接口前缀
      * @param userToken
      * @return
      */
@@ -156,16 +158,26 @@ public interface ClusterService {
 
     /**
      * curl指令快捷添加集群
+     *
      * @param adminConf
-     * @param name 集群名称
+     * @param name      集群名称
      * @return
      */
     BaseResult quickAdd(MultipartFile adminConf, String name, Registry registry);
 
     /**
      * 获取集群已注册分区
+     *
      * @param clusterId 集群id
      * @return
      */
     List<Namespace> listRegisteredNamespace(String clusterId);
+
+    /**
+     * 将观云台集群id转化为中间件平台集群id
+     * @param skyviewClusterId
+     * @return
+     */
+    String convertClusterId(String skyviewClusterId);
+
 }

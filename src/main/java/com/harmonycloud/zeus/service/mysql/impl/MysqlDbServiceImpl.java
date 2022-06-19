@@ -53,7 +53,7 @@ public class MysqlDbServiceImpl implements MysqlDbService {
     private String initialDb = "*,information_schema,mysql,performance_schema,sys";
 
     @Override
-    public BaseResult create(MysqlDbDTO dbDTO) {
+    public void create(MysqlDbDTO dbDTO) {
         if (StringUtils.isAnyBlank(dbDTO.getClusterId(), dbDTO.getNamespace(), dbDTO.getMiddlewareName(), dbDTO.getDb(), dbDTO.getCharset())) {
             throw new BusinessException(ErrorMessage.MYSQL_INCOMPLETE_PARAMETERS);
         }
@@ -66,31 +66,29 @@ public class MysqlDbServiceImpl implements MysqlDbService {
             mysqlDb.setDescription(dbDTO.getDescription());
             beanMysqlDbMapper.insert(mysqlDb);
         }
-        return BaseResult.error();
     }
 
     @Override
-    public BaseResult update(MysqlDbDTO dbDTO) {
+    public void update(MysqlDbDTO dbDTO) {
         if (StringUtils.isEmpty(dbDTO.getId())) {
             throw new BusinessException(ErrorMessage.MYSQL_INCOMPLETE_PARAMETERS);
         }
         BeanMysqlDb beanMysqlDb = beanMysqlDbMapper.selectById(dbDTO.getId());
         beanMysqlDb.setDescription(dbDTO.getDescription());
         beanMysqlDbMapper.updateById(beanMysqlDb);
-        return BaseResult.ok();
     }
 
     @Override
-    public BaseResult delete(String clusterId, String namespace, String middlewareName, String db) {
+    public boolean delete(String clusterId, String namespace, String middlewareName, String db) {
         if (nativeDelete(getDBConnection(mysqlService.getAccessInfo(clusterId, namespace, middlewareName)), db)) {
             QueryWrapper<BeanMysqlDb> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("db", db);
             queryWrapper.eq(MysqlConstant.MYSQL_QUALIFIED_NAME, getMysqlQualifiedName(clusterId, namespace, middlewareName));
             beanMysqlDbMapper.delete(queryWrapper);
             dbPrivService.deleteByDb(getMysqlQualifiedName(clusterId, namespace, middlewareName), db);
-            return BaseResult.ok();
+            return true;
         }
-        return BaseResult.error();
+        return false;
     }
 
     @Override

@@ -17,10 +17,12 @@ import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
+import com.harmonycloud.zeus.service.user.AbstractProjectService;
 import com.harmonycloud.zeus.service.user.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson.JSONObject;
@@ -52,7 +54,8 @@ import org.springframework.util.CollectionUtils;
  */
 @Service
 @Slf4j
-public class ProjectServiceImpl implements ProjectService {
+@ConditionalOnProperty(value="system.usercenter",havingValue = "zeus")
+public class ProjectServiceImpl extends AbstractProjectService {
 
     @Autowired
     private BeanProjectMapper beanProjectMapper;
@@ -152,21 +155,6 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         return projectDtoList;
-    }
-
-    @Override
-    public List<Namespace> getNamespace(String projectId) {
-        QueryWrapper<BeanProjectNamespace> wrapper =
-            new QueryWrapper<BeanProjectNamespace>().eq("project_id", projectId);
-        List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
-
-        return beanProjectNamespaceList.stream().map(beanProjectNamespace -> {
-            Namespace namespace = new Namespace();
-            BeanUtils.copyProperties(beanProjectNamespace, namespace);
-            namespace.setClusterAliasName(clusterService.findById(namespace.getClusterId()).getNickname());
-            namespace.setName(beanProjectNamespace.getNamespace());
-            return namespace;
-        }).collect(Collectors.toList());
     }
 
     @Override
@@ -274,19 +262,8 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public void bindNamespace(Namespace namespace) {
-        QueryWrapper<BeanProjectNamespace> wrapper =
-            new QueryWrapper<BeanProjectNamespace>().eq("namespace", namespace.getName()).eq("cluster_id", namespace.getClusterId());
-        List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
-        if (!CollectionUtils.isEmpty(beanProjectNamespaceList)) {
-            throw new BusinessException(ErrorMessage.PROJECT_NAMESPACE_ALREADY_BIND);
-        }
-        AssertUtil.notBlank(namespace.getProjectId(), DictEnum.PROJECT_ID);
-        AssertUtil.notBlank(namespace.getName(), DictEnum.NAMESPACE_NAME);
-        BeanProjectNamespace beanProjectNamespace = new BeanProjectNamespace();
-        BeanUtils.copyProperties(namespace, beanProjectNamespace);
-        beanProjectNamespace.setNamespace(namespace.getName());
-        beanProjectNamespaceMapper.insert(beanProjectNamespace);
+    public void update(BeanProject beanProject) {
+        beanProjectMapper.updateById(beanProject);
     }
 
     @Override
@@ -346,12 +323,6 @@ public class ProjectServiceImpl implements ProjectService {
             infoList.add(projectMiddlewareResourceInfo);
         }
         return infoList;
-    }
-
-    @Override
-    public List<String> getClusters(String projectId) {
-        List<Namespace> namespaceList = this.getNamespace(projectId);
-        return namespaceList.stream().map(Namespace::getClusterId).collect(Collectors.toList());
     }
 
     @Override
@@ -426,6 +397,16 @@ public class ProjectServiceImpl implements ProjectService {
             }
         }
         return projectDto;
+    }
+
+    @Override
+    public BeanProject get(String projectId) {
+        QueryWrapper<BeanProject> wrapper = new QueryWrapper<BeanProject>().eq("project_id", projectId);
+        List<BeanProject> beanProjectList = beanProjectMapper.selectList(wrapper);
+        if (CollectionUtils.isEmpty(beanProjectList)) {
+            return null;
+        }
+        return beanProjectList.get(0);
     }
 
     /**
