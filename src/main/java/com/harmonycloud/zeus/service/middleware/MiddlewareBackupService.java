@@ -175,9 +175,10 @@ public interface MiddlewareBackupService {
      * @param namespace
      * @param middlewareName
      * @param type
+     * @param cron
      * @return
      */
-    List<MiddlewareBackupRecord> backupRecords(String clusterId, String namespace, String middlewareName, String type);
+    List<MiddlewareBackupRecord> backupRecords(String clusterId, String namespace, String middlewareName, String type, String cron);
 
     /**
      * 删除备份任务

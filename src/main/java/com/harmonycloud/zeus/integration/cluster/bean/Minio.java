@@ -23,6 +23,4 @@ public class Minio {
 
     private String secretAccessKey;
 
-    private Integer capacity;
-
 }

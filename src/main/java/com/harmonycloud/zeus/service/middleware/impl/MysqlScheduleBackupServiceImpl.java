@@ -75,6 +75,9 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
         if (CollectionUtils.isEmpty(mysqlScheduleBackupCRList)) {
             return null;
         }
+        mysqlScheduleBackupCRList = mysqlScheduleBackupCRList.stream()
+                .filter(scheduleBackup -> scheduleBackup.getSpec().getBackupTemplate().getClusterName().equals(name))
+                .collect(Collectors.toList());
         List<MiddlewareBackupRecord> recordList = new ArrayList<>();
         mysqlScheduleBackupCRList.forEach(schedule -> {
             MysqlScheduleBackupStatus backupStatus = schedule.getStatus();
@@ -89,10 +92,7 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
             Minio minio = spec.getBackupTemplate().getStorageProvider().getMinio();
             String position = "minio" + "(" + minio.getEndpoint() + "/" + minio.getBucketName() + ")";
             backupRecord.setPosition(position);
-            if (backupStatus != null) {
-                backupRecord.setPhrase(backupStatus.getLastBackupPhase());
-            }
-            backupRecord.setSourceType(schedule.getMetadata().getAnnotations().get("type"));
+            backupRecord.setPhrase(backupStatus.getLastBackupPhase());
 //            setMiddlewareAliasName(middleware.getAliasName(), backupRecord);
             backupRecord.setTaskName(schedule.getMetadata().getAnnotations().get("taskName"));
             backupRecord.setAddressName(schedule.getMetadata().getAnnotations().get("addressName"));
