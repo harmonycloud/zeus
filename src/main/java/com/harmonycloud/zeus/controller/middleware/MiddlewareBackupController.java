@@ -103,7 +103,7 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "keyword", value = "关键词", paramType = "path", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "keyword", value = "关键词", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/task")
     @Authority(power = 1)
@@ -121,16 +121,14 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "backupName", value = "备份名称", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "keyword", value = "关键词", paramType = "path", dataTypeClass = String.class)
     })
     @GetMapping("/record")
     @Authority(power = 1)
     public BaseResult listTaskRecord(@PathVariable("clusterId") String clusterId,
-                                 @PathVariable("namespace") String namespace,
-                                 @RequestParam(value = "type", required = false) String type,
-                                 @RequestParam(value = "backupName", required = false) String backupName,
-                                 @RequestParam(value = "cron") String cron) {
-        return BaseResult.ok(middlewareBackupService.backupRecords(clusterId, namespace, backupName, type, cron));
+                                    @PathVariable("namespace") String namespace,
+                                    @RequestParam(value = "type", required = false) String type,
+                                    @RequestParam(value = "backupName", required = false) String backupName) {
+        return BaseResult.ok(middlewareBackupService.backupRecords(clusterId, namespace, backupName, type));
     }
 
 

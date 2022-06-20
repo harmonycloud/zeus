@@ -32,7 +32,7 @@ public class MiddlewareRestoreSpec {
     /**
      * 通用备份
      */
-    private List<Map<String, List<String>>> customBackups;
+    private List<Map<String, List<String>>> customRestores;
 
     public MiddlewareRestoreSpec() {
     }
@@ -41,7 +41,7 @@ public class MiddlewareRestoreSpec {
         this.backupDestination = backupDestination;
         this.name = name;
         this.type = type;
-        this.customBackups = customBackups;
+        this.customRestores = customRestores;
     }
 
     @Data
