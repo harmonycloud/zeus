@@ -1,14 +1,21 @@
 package com.harmonycloud.zeus.operator.impl;
 
-import com.harmonycloud.caas.common.model.middleware.CustomConfig;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
+import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.operator.api.ZookeeperOperator;
 import com.harmonycloud.zeus.operator.miiddleware.AbstractZookeeperOperator;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 import java.util.List;
 import java.util.Map;
+
+import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
 
 /**
  * @author liyinlong
@@ -17,6 +24,83 @@ import java.util.Map;
 @Operator(paramTypes4One = Middleware.class)
 public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements ZookeeperOperator {
 
+    @Override
+    public void create(Middleware middleware, MiddlewareClusterDTO cluster) {
+        super.create(middleware, cluster);
+    }
+
+    @Override
+    protected void replaceValues(Middleware middleware, MiddlewareClusterDTO cluster, JSONObject values) {
+        // 替换通用的值
+        replaceCommonValues(middleware, cluster, values);
+
+        // 资源配额
+        MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
+        JSONObject jsonObject = (values.getJSONObject("pod")).getJSONObject(RESOURCES);
+        replaceCommonResources(quota, jsonObject);
+        replaceCommonStorages(quota, values);
+        values.put("replicas", quota.getNum());
+
+    }
+
+    @Override
+    public Middleware convertByHelmChart(Middleware middleware, MiddlewareClusterDTO cluster) {
+        JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
+        convertCommonByHelmChart(middleware, values);
+        convertStoragesByHelmChart(middleware, middleware.getType(), values);
+        convertRegistry(middleware, cluster);
+
+        // 处理kafka的特有参数
+        if (values != null && values.getJSONObject("zookeeper") != null) {
+            JSONObject args = values.getJSONObject("zookeeper");
+            KafkaDTO kafkaDTO = new KafkaDTO();
+            kafkaDTO.setZkAddress(args.getString("address"));
+            kafkaDTO.setPath(args.getString("path"));
+            String[] ports = args.getString("port").split("/");
+            kafkaDTO.setZkPort(ports[0]);
+            middleware.setKafkaDTO(kafkaDTO);
+        }
+        middleware.setManagePlatform(true);
+        return middleware;
+    }
+
+    @Override
+    public void update(Middleware middleware, MiddlewareClusterDTO cluster) {
+        StringBuilder sb = new StringBuilder();
+
+        // 实例扩容
+        if (middleware.getQuota() != null && middleware.getQuota().get(middleware.getType()) != null) {
+            MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
+            // 设置limit的resources
+            setLimitResources(quota);
+            // 实例规格扩容
+            // cpu
+            if (StringUtils.isNotBlank(quota.getCpu())) {
+                sb.append("resources.requests.cpu=").append(quota.getCpu()).append(",resources.limits.cpu=")
+                        .append(quota.getLimitCpu()).append(",");
+            }
+            // memory
+            if (StringUtils.isNotBlank(quota.getMemory())) {
+                sb.append("resources.requests.memory=").append(quota.getMemory()).append("resources.limits.memory=")
+                        .append(quota.getLimitMemory()).append(",");
+            }
+            // 实例模式扩容
+            if (quota.getNum() != null) {
+                sb.append("replicas=").append(quota.getNum()).append(",");
+            }
+        }
+
+        // 更新通用字段
+        super.updateCommonValues(sb, middleware);
+        // 没有修改，直接返回
+        if (sb.length() == 0) {
+            return;
+        }
+        // 去掉末尾的逗号
+        sb.deleteCharAt(sb.length() - 1);
+        // 更新helm
+        helmChartService.upgrade(middleware, sb.toString(), cluster);
+    }
 
     @Override
     public List<String> getConfigmapDataList(ConfigMap configMap) {
