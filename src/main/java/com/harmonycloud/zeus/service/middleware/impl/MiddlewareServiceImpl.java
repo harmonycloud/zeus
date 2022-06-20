@@ -356,34 +356,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public List<MiddlewareBriefInfoDTO> getMiddlewareBriefInfoList(List<MiddlewareClusterDTO> clusterDTOList) {
-        // 从数据库查询集群已安装的所有中间件版本、图片路径等基础信息
-        List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.listInstalledByClusters(clusterDTOList);
-        List<MiddlewareBriefInfoDTO> middlewareBriefInfoDTOList = new ArrayList<>();
-        // 查询集群内创建的所有中间件CR信息
-        List<Middleware> middlewares = queryAllClusterService(clusterDTOList);
-        middlewareInfoList.forEach(middlewareInfo -> {
-            AtomicInteger serviceNum = new AtomicInteger();
-            AtomicInteger errServiceNum = new AtomicInteger();
-            MiddlewareBriefInfoDTO middlewareBriefInfoDTO = new MiddlewareBriefInfoDTO();
-            countServiceNum(middlewareInfo.getClusterId(), middlewares, middlewareInfo.getChartName(), serviceNum, errServiceNum);
-            middlewareBriefInfoDTO.setName(middlewareInfo.getName());
-            middlewareBriefInfoDTO.setChartName(middlewareInfo.getChartName());
-            middlewareBriefInfoDTO.setImagePath(middlewareInfo.getImagePath());
-            middlewareBriefInfoDTO.setServiceNum(serviceNum.get());
-            middlewareBriefInfoDTO.setErrServiceNum(errServiceNum.get());
-            middlewareBriefInfoDTO.setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(middlewareInfo.getChartName()));
-            middlewareBriefInfoDTOList.add(middlewareBriefInfoDTO);
-        });
-        try {
-            Collections.sort(middlewareBriefInfoDTOList, new MiddlewareBriefInfoDTOComparator());
-        } catch (Exception e) {
-            log.error("对服务排序出错了", e);
-        }
-        return middlewareBriefInfoDTOList;
-    }
-
-    @Override
     public List<ResourceMenuDto> listAllMiddlewareAsMenu(String clusterId) {
         List<ResourceMenuDto> subMenuList = new ArrayList<>();
         try {
@@ -662,24 +634,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 log.error("统计服务数量出错了,chartName={},type={}", chartName, e);
             }
         }
-    }
-
-    /**
-     * 查询集群所有已发布的中间件
-     * @param clusterDTOList 集群列表
-     * @return
-     */
-    @Override
-    public List<Middleware> queryAllClusterService(List<MiddlewareClusterDTO> clusterDTOList) {
-        List<Namespace> namespaceList = new ArrayList<>();
-        clusterDTOList.forEach(cluster -> {
-            namespaceList.addAll(namespaceService.list(cluster.getId(), false, null));
-        });
-        List<Middleware> middlewareServiceList = new ArrayList<>();
-        namespaceList.forEach(namespace -> {
-            middlewareServiceList.addAll(simpleList(namespace.getClusterId(), namespace.getName(), null, ""));
-        });
-        return middlewareServiceList;
     }
 
     @Override

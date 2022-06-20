@@ -88,13 +88,9 @@ public class OverviewServiceImpl implements OverviewService {
     @Autowired
     private BeanAlertRecordMapper beanAlertRecordMapper;
     @Autowired
-    private ResourceQuotaWrapper resourceQuotaWrapper;
-    @Autowired
     private MiddlewareService middlewareService;
     @Autowired
     private OperationAuditService operationAuditService;
-    @Autowired
-    private MiddlewareAlertInfoMapper middlewareAlertInfoMapper;
     @Autowired
     private MiddlewareAlertsServiceImpl middlewareAlertsService;
     @Autowired
@@ -883,23 +879,38 @@ public class OverviewServiceImpl implements OverviewService {
         } else {
             clusterList.addAll(clusterService.listClusters());
         }
-        List<MiddlewareBriefInfoDTO> middlewareBriefInfoList = middlewareService.getMiddlewareBriefInfoList(clusterList);
-        // 多集群时，合并相同中间件数量信息
-        if (StringUtils.isBlank(clusterId) && clusterList.size() > 1) {
-            Map<String, MiddlewareBriefInfoDTO> resMap = new HashMap<>();
-            middlewareBriefInfoList.forEach(mwInfo -> {
-                MiddlewareBriefInfoDTO briefInfoDTO = resMap.get(mwInfo.getName());
-                if (briefInfoDTO != null) {
-                    briefInfoDTO.setServiceNum(briefInfoDTO.getServiceNum() + mwInfo.getServiceNum());
-                    briefInfoDTO.setErrServiceNum(briefInfoDTO.getErrServiceNum() + mwInfo.getErrServiceNum());
-                } else {
-                    resMap.put(mwInfo.getName(), mwInfo);
-                }
-            });
-            middlewareBriefInfoList.clear();
-            middlewareBriefInfoList.addAll(resMap.values());
+
+        Set<MiddlewareInfoDTO> middlewareInfoDtoSet = new HashSet<>();
+        List<Middleware> middlewareList = new ArrayList<>();
+        for (MiddlewareClusterDTO cluster : clusterList){
+            // 获取多集群中间件类型并集
+            middlewareInfoDtoSet.addAll(middlewareInfoService.list(cluster.getId()));
+            // 获取中间件
+            middlewareList.addAll(middlewareCRService.list(cluster.getId(), null, null, false));
         }
-        return middlewareBriefInfoList;
+
+        List<MiddlewareBriefInfoDTO> briefInfoDTOList = new ArrayList<>();
+        Map<String, List<Middleware>> middlewareListMap = middlewareList.stream().collect(Collectors.groupingBy(Middleware::getType));
+        for (MiddlewareInfoDTO mwInfo : middlewareInfoDtoSet){
+            MiddlewareBriefInfoDTO middlewareBriefInfoDTO = new MiddlewareBriefInfoDTO();
+            BeanUtils.copyProperties(mwInfo, middlewareBriefInfoDTO);
+            middlewareBriefInfoDTO.setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(mwInfo.getChartName()));
+            int svcCount = 0;
+            int errCount = 0;
+            if (middlewareListMap.containsKey(mwInfo.getChartName())){
+                svcCount = middlewareListMap.get(mwInfo.getChartName()).size();
+                for (Middleware mw : middlewareListMap.get(mwInfo.getChartName())){
+                    if (StringUtils.isEmpty(mw.getStatus()) || !NameConstant.RUNNING.equalsIgnoreCase(mw.getStatus())){
+                        errCount = errCount + 1;
+                    }
+                }
+            }
+            middlewareBriefInfoDTO.setServiceNum(svcCount);
+            middlewareBriefInfoDTO.setErrServiceNum(errCount);
+
+            briefInfoDTOList.add(middlewareBriefInfoDTO);
+        }
+        return briefInfoDTOList;
     }
 
     @Override
