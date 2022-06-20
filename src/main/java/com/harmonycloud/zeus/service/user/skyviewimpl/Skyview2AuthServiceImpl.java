@@ -41,7 +41,7 @@ public class Skyview2AuthServiceImpl extends AbstractAuthService {
         }
 
         // 连接观云台，登录
-        CaasResult loginResult = skyview2UserService.login(userName, decryptPassword, "ch");
+        CaasResult<JSONObject> loginResult = skyview2UserService.login(userName, decryptPassword, "ch");
 
         if (CaasResponseUtil.fitError(loginResult, CaasErrorMessage.AUTH_FAIL)) {
             throw new BusinessException(ErrorMessage.AUTH_FAILED);
@@ -55,7 +55,7 @@ public class Skyview2AuthServiceImpl extends AbstractAuthService {
         String realName = currentResult.getStringVal("realName");
         String userId =  currentResult.getStringVal("userId");
 
-        JSONObject admin = convertUserInfo(userName, realName, userId, caasToken, isAdmin);
+        JSONObject admin = convertUserInfo(userName, realName, userId, caasToken, isAdmin, password);
         String token = generateToken(admin);
         response.setHeader(SET_TOKEN, token);
         convertResult(userName, isAdmin, token);
@@ -68,7 +68,7 @@ public class Skyview2AuthServiceImpl extends AbstractAuthService {
         return super.logout(request, response);
     }
 
-    public JSONObject convertUserInfo(String username, String realName, String userId, String caastoken, boolean isAdmin) {
+    public JSONObject convertUserInfo(String username, String realName, String userId, String caastoken, boolean isAdmin,String password) {
         JSONObject admin = new JSONObject();
         admin.put("username", username);
         admin.put("realName", realName);
@@ -77,6 +77,7 @@ public class Skyview2AuthServiceImpl extends AbstractAuthService {
         JSONObject attributes = new JSONObject();
         attributes.put("caastoken", caastoken);
         attributes.put("isAdmin", isAdmin);
+        attributes.put("password", password);
         admin.put("attributes", attributes);
         return admin;
     }

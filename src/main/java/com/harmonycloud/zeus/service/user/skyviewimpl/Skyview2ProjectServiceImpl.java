@@ -26,6 +26,7 @@ import com.harmonycloud.zeus.skyviewservice.Skyview2ClusterServiceClient;
 import com.harmonycloud.zeus.skyviewservice.Skyview2ProjectServiceClient;
 import com.harmonycloud.zeus.skyviewservice.Skyview2UserServiceClient;
 import com.harmonycloud.zeus.util.YamlUtil;
+import com.harmonycloud.zeus.util.ZeusCurrentUser;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,7 +72,7 @@ public class Skyview2ProjectServiceImpl extends AbstractProjectService {
      * @param caastoken
      * @return
      */
-    public List<ProjectDTO> listAllTenantProject(String caastoken,  boolean isAdmin) {
+    public List<ProjectDTO> listAllTenantProject(String caastoken) {
         // 1、获取当前用户所有租户
         CaasResult<JSONObject> currentResult = userServiceClient.current(caastoken, true);
         JSONArray tenants = currentResult.getJSONArray("tenants");
@@ -211,11 +212,7 @@ public class Skyview2ProjectServiceImpl extends AbstractProjectService {
 
     @Override
     public List<ProjectDto> list(String key) {
-        CurrentUser currentUser = CurrentUserRepository.getUser();
-        Map<String, String> attributes = currentUser.getAttributes();
-        String caastoken = attributes.get("caastoken");
-        boolean isAdmin =  Boolean.parseBoolean(attributes.get("isAdmin"));
-        List<ProjectDTO> projectDTOS = listAllTenantProject(caastoken, isAdmin);
+        List<ProjectDTO> projectDTOS = listAllTenantProject(ZeusCurrentUser.getCaasToken());
         List<ProjectDto> projects = new ArrayList<>();
         projectDTOS.forEach(projectDTO -> {
             ProjectDto project = new ProjectDto();
@@ -245,10 +242,9 @@ public class Skyview2ProjectServiceImpl extends AbstractProjectService {
         CurrentUser currentUser = CurrentUserRepository.getUser();
         Map<String, String> attributes = currentUser.getAttributes();
         String caastoken = attributes.get("caastoken");
-        Boolean isAdmin = Boolean.parseBoolean(attributes.get("isAdmin"));
         String tenantId = projectTenantCache.get(projectId);
         if (StringUtils.isEmpty(tenantId)) {
-            listAllTenantProject(caastoken, isAdmin);
+            listAllTenantProject(caastoken);
             tenantId = projectTenantCache.get(projectId);
         }
         JSONArray projectNamespace = getProjectNamespace(caastoken, tenantId, projectId);
@@ -267,17 +263,13 @@ public class Skyview2ProjectServiceImpl extends AbstractProjectService {
     }
 
     @Override
-    public List<UserDto> getUser(String projectId, Boolean allocatable) {
-        CurrentUser currentUser = CurrentUserRepository.getUser();
-        Map<String, String> attributes = currentUser.getAttributes();
-        String caastoken = attributes.get("caastoken");
-        boolean isAdmin  =  Boolean.parseBoolean(attributes.get("isAdmin"));
+    public List<UserDto> getUser(String projectId, Boolean allocatable) { ;
         String tenantId = projectTenantCache.get(projectId);
         if (StringUtils.isEmpty(tenantId)) {
-            listAllTenantProject(caastoken, isAdmin);
+            listAllTenantProject(ZeusCurrentUser.getCaasToken());
             tenantId = projectTenantCache.get(projectId);
         }
-        CaasResult<JSONObject> projectMember = projectServiceClient.getProjectMember(caastoken, tenantId, projectId);
+        CaasResult<JSONObject> projectMember = projectServiceClient.getProjectMember(ZeusCurrentUser.getCaasToken(), tenantId, projectId);
         return convertProjectMember(projectMember.getJSONArray("userDataList"), projectId);
     }
 

@@ -2,11 +2,9 @@ package com.harmonycloud.zeus.skyviewservice;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.dtflys.forest.annotation.Address;
-import com.dtflys.forest.annotation.Get;
-import com.dtflys.forest.annotation.Query;
-import com.dtflys.forest.annotation.Var;
+import com.dtflys.forest.annotation.*;
 import com.harmonycloud.caas.common.base.CaasResult;
+import com.harmonycloud.zeus.config.ForestSuccessCondition;
 import com.harmonycloud.zeus.config.SkyviewAddressSource;
 
 @Address(source = SkyviewAddressSource.class)
