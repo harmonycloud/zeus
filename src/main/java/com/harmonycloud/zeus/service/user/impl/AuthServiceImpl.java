@@ -7,6 +7,7 @@ import com.harmonycloud.caas.common.model.LdapConfigDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
+import com.harmonycloud.tool.encrypt.RSAUtils;
 import com.harmonycloud.zeus.service.user.AbstractAuthService;
 import com.harmonycloud.zeus.service.user.AuthManager4Ldap;
 import com.harmonycloud.zeus.service.user.LdapService;
@@ -41,12 +42,12 @@ public class AuthServiceImpl extends AbstractAuthService {
     @Override
     public JSONObject login(String userName, String password, HttpServletResponse response) throws Exception {
         //解密密码
-        String decryptPassword = password;
-//        try {
-//            decryptPassword = RSAUtils.decryptByPrivateKey(password);
-//        } catch (Exception e) {
-//            throw new BusinessException(ErrorMessage.RSA_DECRYPT_FAILED);
-//        }
+        String decryptPassword;
+        try {
+            decryptPassword = RSAUtils.decryptByPrivateKey(password);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorMessage.RSA_DECRYPT_FAILED);
+        }
         //md5加密
         String md5Password = PasswordUtils.md5(decryptPassword);
         // 获取ldap配置信息
