@@ -877,17 +877,11 @@ public class OverviewServiceImpl implements OverviewService {
 
     @Override
     public List<MiddlewareBriefInfoDTO> getClusterMiddlewareInfo(String clusterId) {
-        List<MiddlewareClusterDTO> clusterList = null;
-        try {
-            clusterList = clusterService.listClusters(true, null);
-        } catch (BusinessException e) {
-            log.error("集群列表查询失败", e);
-        }
-        if (CollectionUtils.isEmpty(clusterList)) {
-            return new ArrayList<>();
-        }
-        if (StringUtils.isNotBlank(clusterId)) {
-            clusterList = clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
+        List<MiddlewareClusterDTO> clusterList = new ArrayList<>();
+        if (StringUtils.isNotEmpty(clusterId)) {
+            clusterList.add(clusterService.findById(clusterId));
+        } else {
+            clusterList.addAll(clusterService.listClusters());
         }
         List<MiddlewareBriefInfoDTO> middlewareBriefInfoList = middlewareService.getMiddlewareBriefInfoList(clusterList);
         // 多集群时，合并相同中间件数量信息

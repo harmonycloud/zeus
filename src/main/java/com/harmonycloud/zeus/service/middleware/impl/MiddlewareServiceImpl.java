@@ -420,13 +420,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // helm list 并过滤获取属于中间件的发布
         List<HelmListInfo> helmListInfoList = helmChartService.listHelm(namespace, null, cluster).stream()
             .filter(info -> beanMiddlewareInfoList.stream()
-                .anyMatch(mwInfo -> info.getChart().equals(mwInfo.getChartName() + "-" + mwInfo.getChartVersion())))
+                .anyMatch(mwInfo -> info.getChart().equals(mwInfo.getChartName() + "-" + mwInfo.getChartVersion()))).filter(info -> StringUtils.isNotEmpty(type) && info.getChart().contains(type))
             .collect(Collectors.toList());
-        // 过滤获取指定类型
-        if (StringUtils.isNotEmpty(type)) {
-            helmListInfoList =
-                helmListInfoList.stream().filter(info -> info.getChart().contains(type)).collect(Collectors.toList());
-        }
         // list middleware cr
         List<Middleware> middlewareList = middlewareCRService.list(clusterId, namespace, type, false);
 
