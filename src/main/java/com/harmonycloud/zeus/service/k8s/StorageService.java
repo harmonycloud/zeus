@@ -23,6 +23,16 @@ public interface StorageService {
      * 查询存储列表
      *
      * @param clusterId 集群id
+     * @param name 存储名称
+     * @param detail  是否详情
+     * @return List<StorageDto>
+     */
+    StorageDto get(String clusterId, String name, Boolean detail);
+
+    /**
+     * 查询存储列表
+     *
+     * @param clusterId 集群id
      * @param key       关键词检索
      * @param type      存储类型
      * @param all       是否全部

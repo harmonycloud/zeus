@@ -109,13 +109,6 @@ public interface MiddlewareService {
     MonitorDto monitor(String clusterId, String namespace, String name, String type, String chartVersion);
 
     /**
-     * 获取集群下中间件简要信息
-     * @param clusterDTOList 集群列表
-     * @return List<MiddlewareBriefInfoDTO>
-     */
-    List<MiddlewareBriefInfoDTO> getMiddlewareBriefInfoList(List<MiddlewareClusterDTO> clusterDTOList);
-
-    /**
      * 查询所有中间件并作为服务列表的子菜单
      * @param clusterId 集群id
      * @return List<ResourceMenuDto>
@@ -168,13 +161,6 @@ public interface MiddlewareService {
      * @param middleware 中间件对象
      */
     void updateStorage(Middleware middleware);
-
-    /**
-     * 查询集群所有服务
-     * @param clusterDTOList
-     * @return
-     */
-    List<Middleware> queryAllClusterService(List<MiddlewareClusterDTO> clusterDTOList);
 
     /**
      * 查询中间件详情

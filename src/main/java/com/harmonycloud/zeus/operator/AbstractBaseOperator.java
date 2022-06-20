@@ -19,6 +19,7 @@ import com.harmonycloud.caas.common.enums.Protocol;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
+import com.harmonycloud.caas.common.model.StorageDto;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.bean.BeanAlertRule;
@@ -120,6 +121,8 @@ public abstract class AbstractBaseOperator {
     private MiddlewareAlertsServiceImpl middlewareAlertsService;
     @Autowired
     private ServiceWrapper serviceWrapper;
+    @Autowired
+    private StorageService storageService;
 
     /**
      * 是否支持该中间件
@@ -478,7 +481,12 @@ public abstract class AbstractBaseOperator {
         MiddlewareQuota quota = checkMiddlewareQuota(middleware, quotaKey);
         quota.setStorageClassName(values.getString("storageClassName"))
             .setStorageClassQuota(values.getString("storageSize"));
-        quota.setIsLvmStorage(storageClassService.checkLVMStorage(middleware.getClusterId(), middleware.getNamespace(), values.getString("storageClassName")));
+        quota.setIsLvmStorage(storageClassService.checkLVMStorage(middleware.getClusterId(), middleware.getNamespace(),
+            values.getString("storageClassName")));
+
+        // 获取存储中文名
+        StorageDto storageDto = storageService.get(middleware.getClusterId(), values.getString("storageClassName"), false);
+        quota.setStorageClassAliasName(storageDto.getAliasName());
     }
 
 
