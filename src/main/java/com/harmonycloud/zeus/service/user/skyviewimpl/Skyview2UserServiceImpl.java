@@ -23,6 +23,7 @@ import com.harmonycloud.zeus.service.user.UserRoleService;
 import com.harmonycloud.zeus.skyviewservice.Skyview2ClusterServiceClient;
 import com.harmonycloud.zeus.skyviewservice.Skyview2ProjectServiceClient;
 import com.harmonycloud.zeus.skyviewservice.Skyview2UserServiceClient;
+import com.harmonycloud.zeus.util.ZeusCurrentUser;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,11 +68,9 @@ public class Skyview2UserServiceImpl extends AbstractUserService {
         syncCurrentUserInfo();
         // 如果用户名不为空，则查询当前登录用户的信息(即：用户在每个项目下的角色)
         UserDto userDto = new UserDto();
-        CurrentUser currentUser = CurrentUserRepository.getUser();
-        Map<String, String> attributes = currentUser.getAttributes();
-        userDto.setIsAdmin(Boolean.parseBoolean(attributes.get("isAdmin")));
-        userDto.setUserName(currentUser.getUsername());
-        userDto.setAliasName(currentUser.getNickname());
+        userDto.setIsAdmin(ZeusCurrentUser.isAdmin());
+        userDto.setUserName(ZeusCurrentUser.getUserName());
+        userDto.setAliasName(ZeusCurrentUser.getNickName());
         List<UserRole> userRoleList = userRoleService.get(userName);
         if (!CollectionUtils.isEmpty(userRoleList)) {
             userDto.setUserRoleList(userRoleList);
@@ -111,13 +110,7 @@ public class Skyview2UserServiceImpl extends AbstractUserService {
 
     @Override
     public List<UserDto> list(String keyword) {
-        CurrentUser currentUser = CurrentUserRepository.getUser();
-        Map<String, String> attributes = currentUser.getAttributes();
-        if (attributes == null || !attributes.containsKey("caastoken") || !attributes.containsKey("isAdmin")) {
-            return Collections.emptyList();
-        }
-        String caastoken = attributes.get("caastoken");
-        CaasResult<JSONArray> userResult = skyviewUserService.listUser(caastoken, keyword);
+        CaasResult<JSONArray> userResult = skyviewUserService.listUser(ZeusCurrentUser.getCaasToken(), keyword);
         JSONArray userData = userResult.getData();
         return convertUserData(userData);
     }
@@ -291,18 +284,13 @@ public class Skyview2UserServiceImpl extends AbstractUserService {
      * 同步当前用户角色、项目、项目分区信息
      */
     public void syncCurrentUserInfo(){
-        CurrentUser currentUser = CurrentUserRepository.getUser();
-        Map<String, String> attributes = currentUser.getAttributes();
-        String caastoken = attributes.get("caastoken");
-        boolean isAdmin = Boolean.parseBoolean(attributes.get("isAdmin"));
-        String username = currentUser.getUsername();
-
-        List<ProjectDTO>  projects =  skyview2ProjectService.listAllTenantProject(caastoken, isAdmin);
+        String username = ZeusCurrentUser.getUserName();
+        List<ProjectDTO>  projects =  skyview2ProjectService.listAllTenantProject(ZeusCurrentUser.getCaasToken());
 
         // 2、获取用户在每个项目下的角色
         projects.forEach(project -> {
             String projectId = project.getProjectId();
-            CaasResult<JSONArray> projectRoleResult = projectServiceClient.getUserProjectRole(caastoken, projectId);
+            CaasResult<JSONArray> projectRoleResult = projectServiceClient.getUserProjectRole(ZeusCurrentUser.getCaasToken(), projectId);
             Integer userRoleId = projectRoleResult.getJSONArrayIntegerVal(0, "id");
             project.setUserRoleId(userRoleId);
         });
@@ -314,7 +302,7 @@ public class Skyview2UserServiceImpl extends AbstractUserService {
         });
 
         // 4、判断是否是超级管理员，若是，则判断是否已存储该用户角色，没有则存储 => 超级管理员，超级管理员拥有所有项目权限
-        if (isAdmin) {
+        if (ZeusCurrentUser.isAdmin()) {
             List<UserRole> userRoles = userRoleService.get(username);
             if (CollectionUtils.isEmpty(userRoles)) {
                 userRoleService.insert(null, username, 1);
