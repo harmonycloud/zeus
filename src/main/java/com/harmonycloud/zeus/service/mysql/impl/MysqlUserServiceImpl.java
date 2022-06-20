@@ -61,7 +61,7 @@ public class MysqlUserServiceImpl implements MysqlUserService {
     private static final String INITIAL_USER = "zabbixjk,operator,replic";
 
     @Override
-    public BaseResult create(MysqlUserDTO user) {
+    public boolean create(MysqlUserDTO user) {
         if (StringUtils.isAnyBlank(user.getClusterId(), user.getNamespace(), user.getMiddlewareName(), user.getUser(), user.getPassword(), user.getConfirmPassword())) {
             throw new BusinessException(ErrorMessage.MYSQL_INCOMPLETE_PARAMETERS);
         }
@@ -80,9 +80,9 @@ public class MysqlUserServiceImpl implements MysqlUserService {
             // 授权数据库
             List<MysqlDbPrivilege> privilegeList = user.getPrivilegeList();
             grantUserDbPrivilege(con, user.getUser(), getMysqlQualifiedName(user), privilegeList);
-            return BaseResult.ok();
+            return true;
         }
-        return BaseResult.error();
+        return false;
     }
 
     @Override
@@ -92,11 +92,10 @@ public class MysqlUserServiceImpl implements MysqlUserService {
     }
 
     @Override
-    public BaseResult update(MysqlUserDTO mysqlUserDTO) {
+    public void update(MysqlUserDTO mysqlUserDTO) {
         BeanMysqlUser mysqlUser = beanMysqlUserMapper.selectById(mysqlUserDTO.getId());
         mysqlUser.setDescription(mysqlUserDTO.getDescription());
         beanMysqlUserMapper.updateById(mysqlUser);
-        return BaseResult.ok();
     }
 
     @Override
@@ -108,14 +107,14 @@ public class MysqlUserServiceImpl implements MysqlUserService {
     }
 
     @Override
-    public BaseResult delete(String clusterId, String namespace, String middlewareName, String user) {
+    public boolean delete(String clusterId, String namespace, String middlewareName, String user) {
         if (nativeDelete(getDBConnection(mysqlService.getAccessInfo(clusterId, namespace, middlewareName)), user)) {
             BeanMysqlUser mysqlUser = select(getMysqlQualifiedName(clusterId, namespace, middlewareName), user);
             beanMysqlUserMapper.deleteById(mysqlUser);
             dbPrivService.deleteByUser(getMysqlQualifiedName(clusterId, namespace, middlewareName), user);
-            return BaseResult.ok();
+            return true;
         }
-        return BaseResult.error();
+        return false;
     }
 
     @Override
@@ -126,7 +125,7 @@ public class MysqlUserServiceImpl implements MysqlUserService {
     }
 
     @Override
-    public BaseResult grantUser(MysqlUserDTO mysqlUserDTO) {
+    public void grantUser(MysqlUserDTO mysqlUserDTO) {
         if (StringUtils.isAnyBlank(mysqlUserDTO.getId())) {
             throw new BusinessException(ErrorMessage.MYSQL_INCOMPLETE_PARAMETERS);
         }
@@ -136,7 +135,6 @@ public class MysqlUserServiceImpl implements MysqlUserService {
             beanMysqlUserMapper.updateById(beanMysqlUser);
         }
         grantUserDbPrivilege(getDBConnection(mysqlService.getAccessInfo(mysqlUserDTO)), mysqlUserDTO.getUser(), getMysqlQualifiedName(mysqlUserDTO), mysqlUserDTO.getPrivilegeList());
-        return BaseResult.ok();
     }
 
     @Override

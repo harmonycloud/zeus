@@ -15,6 +15,7 @@ import com.harmonycloud.zeus.integration.cluster.ServiceAccountWrapper;
 import com.harmonycloud.zeus.service.k8s.ClusterCertService;
 import com.harmonycloud.zeus.util.K8sClient;
 import com.harmonycloud.tool.file.FileUtil;
+import com.harmonycloud.zeus.util.YamlUtil;
 import io.fabric8.kubernetes.api.model.AuthInfo;
 import io.fabric8.kubernetes.api.model.Cluster;
 import io.fabric8.kubernetes.api.model.Config;
@@ -72,7 +73,7 @@ public class ClusterCertServiceImpl implements ClusterCertService {
     @Override
     public void saveCert(MiddlewareClusterDTO cluster) {
         // 生成admin.conf内容
-        String adminConfYaml = generateAdminConf(cluster);
+        String adminConfYaml = YamlUtil.generateAdminConf(cluster.getCert(), cluster.getAddress());
         cluster.getCert().setCertificate(adminConfYaml);
 
         // 如果token为空，需要根据证书生成token
@@ -95,59 +96,6 @@ public class ClusterCertServiceImpl implements ClusterCertService {
             kubeConfig.setConf(adminConfYaml);
             beanKubeConfigMapper.insert(kubeConfig);
         }
-    }
-
-
-    /**
-     * 构建admin.conf证书文件
-     */
-    private String generateAdminConf(MiddlewareClusterDTO cluster) {
-        // check cert info
-        if (cluster.getCert() == null || StringUtils.isAnyEmpty(cluster.getCert().getCertificateAuthorityData(),
-            cluster.getCert().getClientCertificateData(), cluster.getCert().getClientKeyData())) {
-            throw new IllegalArgumentException("cert is null, please check MiddlewareCluster resource");
-        }
-
-        // clusters
-        ArrayList<Object> clusters = new ArrayList<>(1);
-        Map<String, Object> clusterMap = new HashMap<>(2);
-        Map<String, Object> map1 = new HashMap<>(2);
-        map1.put("certificate-authority-data", cluster.getCert().getCertificateAuthorityData());
-        map1.put("server", cluster.getAddress());
-        clusterMap.put("cluster", map1);
-        clusterMap.put("name", "kubernetes");
-        clusters.add(clusterMap);
-
-        // contexts
-        ArrayList<Object> contexts = new ArrayList<>(1);
-        Map<String, Object> contextMap = new HashMap<>(2);
-        Map<String, Object> map2 = new HashMap<>(2);
-        map2.put("cluster", "kubernetes");
-        map2.put("user", "kubernetes-admin");
-        contextMap.put("context", map2);
-        contextMap.put("name", "kubernetes-admin@kubernetes");
-        contexts.add(contextMap);
-
-        // users
-        ArrayList<Object> users = new ArrayList<>(1);
-        Map<String, Object> userMap = new HashMap<>(2);
-        Map<String, String> map3 = new HashMap<>(2);
-        map3.put("client-certificate-data", cluster.getCert().getClientCertificateData());
-        map3.put("client-key-data", cluster.getCert().getClientKeyData());
-        userMap.put("user", map3);
-        userMap.put("name", "kubernetes-admin");
-        users.add(userMap);
-
-        Map<String, Object> kubeConfig = new LinkedHashMap<>();
-        kubeConfig.put("apiVersion", "v1");
-        kubeConfig.put("clusters", clusters);
-        kubeConfig.put("contexts", contexts);
-        kubeConfig.put("current-context", "kubernetes-admin@kubernetes");
-        kubeConfig.put("kind", "Config");
-        kubeConfig.put("preferences", new HashMap<>());
-        kubeConfig.put("users", users);
-        Yaml yaml = new Yaml();
-        return yaml.dumpAsMap(kubeConfig);
     }
 
     @Override
