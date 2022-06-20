@@ -45,3 +45,28 @@ CREATE TABLE `backup_address_cluster` (
   `cluster_id` varchar(64) COLLATE utf8_bin DEFAULT NULL COMMENT '集群ID',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8 COLLATE=utf8_bin
+
+-- 2020.6.20 xutianhong
+-- 菜单更新
+DELETE FROM resource_menu;
+INSERT INTO `resource_menu` VALUES (1,'dataOverview','数据总览','dataOverview',1,'icon-shujuzonglan',0,NULL);
+INSERT INTO `resource_menu` VALUES (2,'middlewareRepository','中间件市场','middlewareRepository',2,'icon-cangku',0,NULL);
+INSERT INTO `resource_menu` VALUES (3,'myProject','我的项目','myProject',3,'icon-cangku',0,NULL);
+INSERT INTO `resource_menu` VALUES (4,'serviceList','服务列表','serviceList',4,'icon-fuwuliebiao',0,NULL);
+INSERT INTO `resource_menu` VALUES (5,'serviceAvailable','服务暴露','serviceAvailable',5,'icon-fuwutiaokuan',0,NULL);
+INSERT INTO `resource_menu` VALUES (6,'backupService','备份服务','backupService',6,'icon-fuwutiaokuan',0,NULL);
+INSERT INTO `resource_menu` VALUES (7,'monitorAlarm','监控告警','monitorAlarm',7,'icon-gaojingshijian',0,NULL);
+INSERT INTO `resource_menu` VALUES (8,'disasterBackup','灾备中心','disasterBackup',8,'icon-rongzaibeifen',0,NULL);
+INSERT INTO `resource_menu` VALUES (9,'storageManagement','存储管理','storageManagement',9,'icon-rongzaibeifen',0,NULL);
+INSERT INTO `resource_menu` VALUES (10,'systemManagement','系统管理','systemManagement',10,'icon-shezhi01',0,NULL);
+INSERT INTO `resource_menu` VALUES (11,'backupTask','备份任务','backupService/backupTask',61,'icon-fuwutiaokuan',6,NULL);
+INSERT INTO `resource_menu` VALUES (12,'backupPosition','备份位置','backupService/backupPosition',62,'icon-fuwutiaokuan',6,NULL);
+INSERT INTO `resource_menu` VALUES (13,'dataMonitor','数据监控','monitorAlarm/dataMonitor',71,NULL,7,NULL);
+INSERT INTO `resource_menu` VALUES (14,'logDetail','日志详情','monitorAlarm/logDetail',72,NULL,7,NULL);
+INSERT INTO `resource_menu` VALUES (15,'alarmCenter','服务告警','monitorAlarm/alarmCenter',73,NULL,7,NULL);
+INSERT INTO `resource_menu` VALUES (16,'resourcePoolManagement','集群管理','systemManagement/resourcePoolManagement',101,NULL,10,NULL);
+INSERT INTO `resource_menu` VALUES (17,'userManagement','用户管理','systemManagement/userManagement',102,NULL,10,NULL);
+INSERT INTO `resource_menu` VALUES (18,'projectManagement','项目管理','systemManagement/projectManagement',103,NULL,10,NULL);
+INSERT INTO `resource_menu` VALUES (19,'roleManagement','角色管理','systemManagement/roleManagement',104,NULL,10,NULL);
+INSERT INTO `resource_menu` VALUES (20,'systemAlarm','系统告警','systemManagement/systemAlarm',105,NULL,10,NULL);
+INSERT INTO `resource_menu` VALUES (21,'operationAudit','操作审计','systemManagement/operationAudit',106,NULL,10,NULL);
