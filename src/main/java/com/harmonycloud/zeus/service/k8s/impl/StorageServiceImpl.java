@@ -76,6 +76,12 @@ public class StorageServiceImpl implements StorageService {
     }
 
     @Override
+    public StorageDto get(String clusterId, String name, Boolean detail) {
+        StorageClass storageClass = storageClassWrapper.get(clusterId, name);
+        return detail ? detail(clusterId,  storageClass) : convert(clusterId, storageClass);
+    }
+
+    @Override
     public List<StorageDto> list(String clusterId, String key, String type, Boolean all) {
         List<MiddlewareClusterDTO> clusterList = new ArrayList<>();
         if (clusterId.equals(ASTERISK)) {
@@ -92,7 +98,7 @@ public class StorageServiceImpl implements StorageService {
                 return all == flag;
             }).map(storageClass -> {
                 // 初始化业务对象
-                    return all ? convert(cluster.getId(), storageClass) : detail(cluster.getId(), storageClass.getMetadata().getName());
+                    return all ? convert(cluster.getId(), storageClass) : detail(cluster.getId(), storageClass);
                 }).filter(storageDto -> {
                     if (StringUtils.isNotEmpty(key)) {
                         return storageDto.getAliasName().contains(key) || storageDto.getName().contains(key);
@@ -150,11 +156,15 @@ public class StorageServiceImpl implements StorageService {
     @Override
     public StorageDto detail(String clusterId, String storageName) {
         StorageClass storageClass = storageClassWrapper.get(clusterId, storageName);
-        StorageDto storageDto = convert(clusterId, storageClass);
+        return detail(clusterId, storageClass);
 
+    }
+
+    public StorageDto detail(String clusterId, StorageClass storageClass){
+        StorageDto storageDto = convert(clusterId, storageClass);
         // 查询存储
         List<PersistentVolumeClaim> pvcList = pvcService.list(clusterId, null);
-        pvcList = pvcList.stream().filter(pvc -> pvc.getStorageClassName().equals(storageName)).collect(Collectors.toList());
+        pvcList = pvcList.stream().filter(pvc -> pvc.getStorageClassName().equals(storageDto.getName())).collect(Collectors.toList());
 
 
         StringBuilder sb = new StringBuilder();
