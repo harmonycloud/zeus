@@ -910,6 +910,7 @@ public class OverviewServiceImpl implements OverviewService {
 
             briefInfoDTOList.add(middlewareBriefInfoDTO);
         }
+        briefInfoDTOList.sort(Comparator.comparingInt(MiddlewareBriefInfoDTO::getServiceNum).reversed());
         return briefInfoDTOList;
     }
 
