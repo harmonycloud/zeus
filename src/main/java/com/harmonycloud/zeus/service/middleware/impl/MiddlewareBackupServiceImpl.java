@@ -611,12 +611,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             meta.setLabels(backupLabel);
             crd.setMetadata(meta);
             MiddlewareRestoreSpec spec = new MiddlewareRestoreSpec();
-            MiddlewareRestoreSpec.MiddlewareBackupDestination destination =
-                    new  MiddlewareRestoreSpec.MiddlewareBackupDestination();
-            destination.setDestinationType("minio").setParameters(
-                    new MiddlewareRestoreSpec.MiddlewareBackupDestination.MiddlewareBackupParameters(
-                            minio.getBucketName(), minio.getEndpoint(), "/" + type, minio.getAccessKeyId(), minio.getSecretAccessKey(),
-                            null));
             List<String> args = new ArrayList();
             args.add("--backupResultName=" + backupName);
             args.add("--backupNamespace=" + namespace);
@@ -626,7 +620,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             customRestores.add(map);
             spec.setName(middlewareName);
             spec.setType(middlewareCrTypeService.findByType(type));
-            spec.setBackupDestination(destination);
             spec.setCustomRestores(customRestores);
             crd.setSpec(spec);
             restoreCRDService.create(clusterId, crd);
