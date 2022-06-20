@@ -29,21 +29,19 @@ public class Skyview2AuthServiceImpl extends AbstractAuthService {
 
     @Autowired
     private Skyview2UserServiceClient skyview2UserService;
-    @Autowired
-    private UserService userService;
 
     @Override
     public JSONObject login(String userName, String password, HttpServletResponse response) throws Exception {
         //解密密码
         String decryptPassword;
-//        try {
-//            decryptPassword = RSAUtils.decryptByPrivateKey(password);
-//        } catch (Exception e) {
-//            throw new BusinessException(ErrorMessage.RSA_DECRYPT_FAILED);
-//        }
+        try {
+            decryptPassword = RSAUtils.decryptByPrivateKey(password);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorMessage.RSA_DECRYPT_FAILED);
+        }
 
         // 连接观云台，登录
-        CaasResult loginResult = skyview2UserService.login(userName, password, "ch");
+        CaasResult loginResult = skyview2UserService.login(userName, decryptPassword, "ch");
 
         if (CaasResponseUtil.fitError(loginResult, CaasErrorMessage.AUTH_FAIL)) {
             throw new BusinessException(ErrorMessage.AUTH_FAILED);

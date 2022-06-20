@@ -3,9 +3,9 @@ package com.harmonycloud.zeus.service.user.skyviewimpl;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.base.CaasResult;
-import com.harmonycloud.caas.common.model.*;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.Registry;
+import com.harmonycloud.caas.common.model.MailUserDTO;
+import com.harmonycloud.caas.common.model.ProjectDTO;
+import com.harmonycloud.caas.common.model.UploadImageFileDto;
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.caas.common.model.user.RoleDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
@@ -13,7 +13,6 @@ import com.harmonycloud.caas.common.model.user.UserRole;
 import com.harmonycloud.caas.filters.user.CurrentUser;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
-import com.harmonycloud.zeus.bean.user.BeanProject;
 import com.harmonycloud.zeus.bean.user.BeanUser;
 import com.harmonycloud.zeus.bean.user.BeanUserRole;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
@@ -24,9 +23,7 @@ import com.harmonycloud.zeus.service.user.UserRoleService;
 import com.harmonycloud.zeus.skyviewservice.Skyview2ClusterServiceClient;
 import com.harmonycloud.zeus.skyviewservice.Skyview2ProjectServiceClient;
 import com.harmonycloud.zeus.skyviewservice.Skyview2UserServiceClient;
-import com.harmonycloud.zeus.util.YamlUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -36,7 +33,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -58,11 +54,7 @@ public class Skyview2UserServiceImpl extends AbstractUserService {
     @Autowired
     private Skyview2ProjectServiceClient projectServiceClient;
     @Autowired
-    private Skyview2ClusterServiceClient clusterServiceClient;
-    @Autowired
     private ProjectService projectService;
-    @Autowired
-    private ClusterService clusterService;
     @Autowired
     private Skyview2ProjectServiceImpl skyview2ProjectService;
 

@@ -60,8 +60,6 @@ public class Skyview2ProjectServiceImpl extends AbstractProjectService {
     private UserRoleService userRoleService;
     @Autowired
     private RoleService roleService;
-    @Autowired
-    private Skyview2ClusterServiceClient clusterServiceClient;
 
     /**
      * 项目租户id缓存 key:项目id value:租户id
