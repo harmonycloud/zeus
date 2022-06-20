@@ -6,12 +6,13 @@ import com.dtflys.forest.annotation.Address;
 import com.dtflys.forest.annotation.Get;
 import com.dtflys.forest.annotation.Var;
 import com.harmonycloud.caas.common.base.CaasResult;
+import com.harmonycloud.zeus.config.SkyviewAddressSource;
 
 /**
  * @author liyinlong
  * @since 2022/6/15 10:26 上午
  */
-@Address(host = "10.10.103.188", port = "80")
+@Address(source = SkyviewAddressSource.class)
 public interface Skyview2ClusterServiceClient {
 
     /**

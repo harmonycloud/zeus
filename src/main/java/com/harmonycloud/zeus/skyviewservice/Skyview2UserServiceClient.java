@@ -4,8 +4,9 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.dtflys.forest.annotation.*;
 import com.harmonycloud.caas.common.base.CaasResult;
+import com.harmonycloud.zeus.config.SkyviewAddressSource;
 
-@Address(host = "10.10.103.188", port = "80")
+@Address(source = SkyviewAddressSource.class)
 public interface Skyview2UserServiceClient {
 
     @Post("/user/auth/login")
