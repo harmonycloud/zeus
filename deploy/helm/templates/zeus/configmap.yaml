@@ -61,6 +61,12 @@ data:
         version: v1.1.1
       user:
         expire: 1
+      usercenter: zeus
+      skyview:
+        username: admin
+        password: Ab123456
+        ip: 10.10.103.188
+        port: 80
 
     overview:
       overall:
