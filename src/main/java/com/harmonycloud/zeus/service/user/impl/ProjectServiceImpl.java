@@ -13,6 +13,7 @@ import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.user.UserRole;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
+import com.harmonycloud.zeus.dao.user.BeanProjectUserMapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
@@ -54,7 +55,7 @@ import org.springframework.util.CollectionUtils;
  */
 @Service
 @Slf4j
-@ConditionalOnProperty(value="system.usercenter",havingValue = "zeus")
+@ConditionalOnProperty(value = "system.usercenter", havingValue = "zeus")
 public class ProjectServiceImpl extends AbstractProjectService {
 
     @Autowired
@@ -83,8 +84,8 @@ public class ProjectServiceImpl extends AbstractProjectService {
         beanProject.setCreateTime(new Date());
         // 添加项目
         beanProjectMapper.insert(beanProject);
-        //绑定用户角色
-        if (StringUtils.isNotEmpty(projectDto.getUser())){
+        // 绑定用户角色
+        if (StringUtils.isNotEmpty(projectDto.getUser())) {
             userRoleService.insert(projectId, projectDto.getUser(), 2);
         }
         // 绑定分区
@@ -107,14 +108,15 @@ public class ProjectServiceImpl extends AbstractProjectService {
         // 获取用户角色对应
         UserDto userDto = userService.list(null).stream().filter(u -> u.getUserName().equals(user.getString(USERNAME)))
             .collect(Collectors.toList()).get(0);
-        Map<String, UserRole> userRoleMap = userDto.getUserRoleList().stream().collect(Collectors.toMap(UserRole::getProjectId, u -> u));
+        Map<String, UserRole> userRoleMap =
+            userDto.getUserRoleList().stream().collect(Collectors.toMap(UserRole::getProjectId, u -> u));
         // 是否为 admin
         boolean flag = userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getRoleId() == 1);
         // 非admin,进行过滤
         if (!flag) {
             beanProjectList = beanProjectList.stream()
-                .filter(bp -> StringUtils.isNotEmpty(bp.getUser())
-                    && Arrays.asList(bp.getUser().split(",")).contains(user.getString(USERNAME)))
+                .filter(bp -> userDto.getUserRoleList().stream()
+                    .anyMatch(userRole -> userRole.getProjectId().equals(bp.getProjectId())))
                 .collect(Collectors.toList());
         }
         // 获取项目分区
@@ -123,14 +125,19 @@ public class ProjectServiceImpl extends AbstractProjectService {
         Map<String, List<BeanProjectNamespace>> beanProjectNamespaceListMap =
             beanProjectNamespaceList.stream().collect(Collectors.groupingBy(BeanProjectNamespace::getProjectId));
 
+        // 获取项目用户列表
+        List<UserRole> userRoleList = userRoleService.list().stream()
+            .filter(userRole -> StringUtils.isNotEmpty(userRole.getProjectId())).collect(Collectors.toList());
+        Map<String, List<UserRole>> userRoleListMap =
+            userRoleList.stream().collect(Collectors.groupingBy(UserRole::getProjectId));
+
         // 封装数据
         List<ProjectDto> projectDtoList = new ArrayList<>();
         for (BeanProject beanProject : beanProjectList) {
             ProjectDto projectDto = new ProjectDto();
             BeanUtils.copyProperties(beanProject, projectDto);
-            if (StringUtils.isNotEmpty(beanProject.getUser())) {
-                projectDto.setMemberCount(beanProject.getUser().split(",").length);
-            }
+            projectDto
+                .setMemberCount(userRoleListMap.getOrDefault(beanProject.getProjectId(), new ArrayList<>()).size());
             if (beanProjectNamespaceListMap.containsKey(projectDto.getProjectId())) {
                 projectDto.setNamespaceCount(beanProjectNamespaceListMap.get(projectDto.getProjectId()).size());
             }
@@ -176,20 +183,23 @@ public class ProjectServiceImpl extends AbstractProjectService {
 
     @Override
     public List<UserDto> getUser(String projectId, Boolean allocatable) {
-        BeanProject beanProject = checkExist(projectId);
-        List<String> usernameList = Arrays.asList(beanProject.getUser().split(","));
+        checkExist(projectId);
         List<UserDto> userDtoList = userService.list(null);
         if (allocatable) {
             // 获取可分配的
             userDtoList = userDtoList.stream()
-                .filter(userDto -> usernameList.stream().noneMatch(username -> userDto.getUserName().equals(username)))
                 .filter(userDto -> CollectionUtils.isEmpty(userDto.getUserRoleList())
-                    || userDto.getUserRoleList().stream().noneMatch(userRole -> userRole.getRoleId() == 1))
+                    || userDto.getUserRoleList().stream()
+                        .noneMatch(userRole -> StringUtils.isNotEmpty(userRole.getProjectId())
+                            && userRole.getProjectId().equals(projectId))
+                    && userDto.getUserRoleList().stream().noneMatch(userRole -> userRole.getRoleId() == 1))
                 .collect(Collectors.toList());
         } else {
             // 获取已分配的
             userDtoList = userDtoList.stream()
-                .filter(userDto -> usernameList.stream().anyMatch(username -> userDto.getUserName().equals(username)))
+                .filter(userDto -> !CollectionUtils.isEmpty(userDto.getUserRoleList()) && userDto.getUserRoleList()
+                    .stream().anyMatch(userRole -> StringUtils.isNotEmpty(userRole.getProjectId())
+                        && userRole.getProjectId().equals(projectId)))
                 .collect(Collectors.toList());
         }
         return userDtoList.stream().peek(userDto -> {
@@ -206,20 +216,11 @@ public class ProjectServiceImpl extends AbstractProjectService {
         }).collect(Collectors.toList());
     }
 
-
     @Override
     public void bindUser(ProjectDto projectDto) {
-        BeanProject beanProject = checkExist(projectDto.getProjectId());
-        StringBuilder sb = new StringBuilder();
-        projectDto.getUserDtoList().forEach(userDto -> {
-            if (StringUtils.isNotEmpty(userDto.getUserName())){
-                sb.append(",");
-            }
-            sb.append(userDto.getUserName());
-            userRoleService.insert(projectDto.getProjectId(), userDto.getUserName(), userDto.getRoleId());
-        });
-        beanProject.setUser(beanProject.getUser() + sb.toString());
-        beanProjectMapper.updateById(beanProject);
+        checkExist(projectDto.getProjectId());
+        projectDto.getUserDtoList().forEach(
+            userDto -> userRoleService.insert(projectDto.getProjectId(), userDto.getUserName(), userDto.getRoleId()));
     }
 
     @Override
@@ -229,11 +230,6 @@ public class ProjectServiceImpl extends AbstractProjectService {
 
     @Override
     public void unbindUser(String projectId, String username) {
-        if (StringUtils.isNotEmpty(username)){
-            BeanProject beanProject = checkExist(projectId);
-            beanProject.setUser(beanProject.getUser().replace("," + username, ""));
-            beanProjectMapper.updateById(beanProject);
-        }
         userRoleService.delete(username, projectId, null);
     }
 
@@ -269,13 +265,13 @@ public class ProjectServiceImpl extends AbstractProjectService {
     @Override
     public void unBindNamespace(String projectId, String clusterId, String namespace) {
         QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<BeanProjectNamespace>();
-        if (StringUtils.isNotEmpty(projectId)){
+        if (StringUtils.isNotEmpty(projectId)) {
             wrapper.eq("project_id", projectId);
         }
-        if (StringUtils.isNotEmpty(clusterId)){
+        if (StringUtils.isNotEmpty(clusterId)) {
             wrapper.eq("cluster_id", clusterId);
         }
-        if (StringUtils.isNotEmpty(namespace)){
+        if (StringUtils.isNotEmpty(namespace)) {
             wrapper.eq("namespace", namespace);
         }
         List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
@@ -334,14 +330,16 @@ public class ProjectServiceImpl extends AbstractProjectService {
         String username = CurrentUserRepository.getUser().getUsername();
         // 获取项目分区列表
         List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
-        // 校验角色权限
-        Boolean isAdmin = userRoleService.checkAdmin(username);
-        if (!isAdmin) {
+        // 查询用户信息
+        UserDto userDto = userService.getUserDto(username);
+        if (!userDto.getIsAdmin()) {
             QueryWrapper<BeanProject> projectQueryWrapper = new QueryWrapper<>();
-            List<BeanProject> beanProjectList = beanProjectMapper
-                .selectList(projectQueryWrapper).stream().filter(beanProject -> Arrays
-                    .asList(beanProject.getUser().split(",")).stream().anyMatch(name -> name.equals(username)))
+            // 获取该用户所属的各个项目
+            List<BeanProject> beanProjectList = beanProjectMapper.selectList(projectQueryWrapper).stream()
+                .filter(beanProject -> userDto.getUserRoleList().stream()
+                    .anyMatch(userRole -> userRole.getProjectId().equals(beanProject.getProjectId())))
                 .collect(Collectors.toList());
+            // 获取n个项目的分区
             if (!CollectionUtils.isEmpty(beanProjectList)) {
                 beanProjectNamespaceList = beanProjectNamespaceList.stream()
                     .filter(beanProjectNamespace -> beanProjectList.stream().anyMatch(
@@ -349,6 +347,7 @@ public class ProjectServiceImpl extends AbstractProjectService {
                     .collect(Collectors.toList());
             }
         }
+        // 分区为空
         if (CollectionUtils.isEmpty(beanProjectNamespaceList)) {
             return null;
         }
@@ -384,15 +383,16 @@ public class ProjectServiceImpl extends AbstractProjectService {
 
     @Override
     public ProjectDto findProjectByNamespace(String namespace) {
-        QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<BeanProjectNamespace>().eq("namespace", namespace);
+        QueryWrapper<BeanProjectNamespace> wrapper =
+            new QueryWrapper<BeanProjectNamespace>().eq("namespace", namespace);
         List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
 
         ProjectDto projectDto = new ProjectDto();
-        if (!CollectionUtils.isEmpty(beanProjectNamespaceList)){
+        if (!CollectionUtils.isEmpty(beanProjectNamespaceList)) {
             String projectId = beanProjectNamespaceList.get(0).getProjectId();
             QueryWrapper<BeanProject> projectWrapper = new QueryWrapper<BeanProject>().eq("project_id", projectId);
             List<BeanProject> beanProjectList = beanProjectMapper.selectList(projectWrapper);
-            if (!CollectionUtils.isEmpty(beanProjectList)){
+            if (!CollectionUtils.isEmpty(beanProjectList)) {
                 BeanUtils.copyProperties(beanProjectList.get(0), projectDto);
             }
         }
@@ -412,10 +412,10 @@ public class ProjectServiceImpl extends AbstractProjectService {
     /**
      * 校验项目是否存在
      */
-    public BeanProject checkExist(String projectId){
+    public BeanProject checkExist(String projectId) {
         QueryWrapper<BeanProject> wrapper = new QueryWrapper<BeanProject>().eq("project_id", projectId);
         List<BeanProject> beanProjectList = beanProjectMapper.selectList(wrapper);
-        if (CollectionUtils.isEmpty(beanProjectList)){
+        if (CollectionUtils.isEmpty(beanProjectList)) {
             throw new BusinessException(ErrorMessage.PROJECT_NOT_EXIST);
         }
         return beanProjectList.get(0);
