@@ -47,6 +47,7 @@ public abstract class AbstractAuthService implements AuthService{
         return res;
     }
 
+    @Override
     public String logout(HttpServletRequest request, HttpServletResponse response) {
         String token = request.getHeader(USER_TOKEN);
         if (StringUtils.isBlank(token)) {
