@@ -197,6 +197,7 @@ public class UserServiceImpl extends AbstractUserService {
         // 删除用户角色关系
         userRoleService.delete(userName, null, null);
         // 从项目中移除
+        projectService.unbindUser(null, userName);
         return true;
     }
 
