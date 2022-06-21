@@ -91,6 +91,8 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
             backupRecord.setPosition(position);
             if (backupStatus != null) {
                 backupRecord.setPhrase(backupStatus.getLastBackupPhase());
+            } else {
+                backupRecord.setPhrase("Unknown");
             }
             backupRecord.setSourceType(schedule.getMetadata().getAnnotations().get("type"));
 //            setMiddlewareAliasName(middleware.getAliasName(), backupRecord);
