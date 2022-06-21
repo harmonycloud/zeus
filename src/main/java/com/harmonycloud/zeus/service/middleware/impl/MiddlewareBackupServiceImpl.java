@@ -492,7 +492,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination.MiddlewareBackupParameters parameters =  spec.getBackupDestination().getParameters();
                 String position = spec.getBackupDestination().getDestinationType() + "(" + parameters.getUrl() + "/" + parameters.getBucket() + ")";
                 backupRecord.setPosition(position);
-                backupRecord.setPhrase(backupStatus.getPhase());
+                if (backupStatus == null) {
+                    backupRecord.setPhrase("Unknown");
+                } else {
+                    backupRecord.setPhrase(backupStatus.getPhase());
+                }
                 backupRecord.setSourceName(schedule.getSpec().getName());
                 backupRecord.setSourceType(schedule.getMetadata().getAnnotations().get("type"));
 //                setMiddlewareAliasName(middleware.getAliasName(), backupRecord);
