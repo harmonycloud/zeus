@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author liyinlong
@@ -56,11 +57,13 @@ public class Skyview2NamespaceServiceImpl extends NamespaceServiceImpl {
                                 String keyword, String projectId) {
         List<Namespace> namespaceList;
         if (StringUtils.isNotEmpty(projectId)) {
-            namespaceList = projectService.getNamespace(projectId);
+            String skyviewClusterId = Skyview2ClusterServiceImpl.convertSkyviewClusterId(clusterId);
+            namespaceList = projectService.getNamespace(projectId).stream().
+                    filter(namespace -> skyviewClusterId.equals(namespace.getClusterId())).
+                    collect(Collectors.toList());
         } else {
             namespaceList = listClusterNamespaces(clusterId);
         }
-
 
         if (withQuota) {
             super.listNamespaceWithQuota(namespaceList, clusterId);
