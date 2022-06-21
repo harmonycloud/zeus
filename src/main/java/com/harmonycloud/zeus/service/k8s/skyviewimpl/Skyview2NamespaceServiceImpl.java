@@ -57,9 +57,8 @@ public class Skyview2NamespaceServiceImpl extends NamespaceServiceImpl {
                                 String keyword, String projectId) {
         List<Namespace> namespaceList;
         if (StringUtils.isNotEmpty(projectId)) {
-            String skyviewClusterId = Skyview2ClusterServiceImpl.convertSkyviewClusterId(clusterId);
             namespaceList = projectService.getNamespace(projectId).stream().
-                    filter(namespace -> skyviewClusterId.equals(namespace.getClusterId())).
+                    filter(namespace -> clusterId.equals(namespace.getClusterId())).
                     collect(Collectors.toList());
         } else {
             namespaceList = listClusterNamespaces(clusterId);
