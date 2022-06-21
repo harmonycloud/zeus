@@ -296,7 +296,7 @@ public abstract class AbstractBaseOperator {
      */
     protected void updateCommonValues(StringBuilder sb, Middleware middleware){
         // 备注
-        if (StringUtils.isNotBlank(middleware.getDescription())) {
+        if (middleware.getDescription() != null) {
             sb.append("middleware-desc=").append(middleware.getDescription()).append(",");
         }
 
