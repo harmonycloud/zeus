@@ -6,21 +6,35 @@ import com.harmonycloud.caas.common.base.CaasResult;
 import com.harmonycloud.caas.common.model.ClusterCert;
 import com.harmonycloud.caas.common.model.ClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.common.model.middleware.Registry;
+import com.harmonycloud.tool.date.DateUtils;
+import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
+import com.harmonycloud.zeus.integration.cluster.ClusterWrapper;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCluster;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareClusterInfo;
 import com.harmonycloud.zeus.service.k8s.AbstractClusterService;
+import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import com.harmonycloud.zeus.skyviewservice.Skyview2ClusterServiceClient;
 import com.harmonycloud.zeus.skyviewservice.Skyview2UserServiceClient;
+import com.harmonycloud.zeus.util.K8sClient;
 import com.harmonycloud.zeus.util.YamlUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.lang3.SerializationUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.harmonycloud.caas.common.constants.NameConstant.*;
+import static com.harmonycloud.caas.common.constants.NameConstant.NS_COUNT;
 
 /**
  * @author liyinlong
@@ -40,6 +54,8 @@ public class Skyview2ClusterServiceImpl extends AbstractClusterService {
     private Skyview2UserServiceClient userServiceClient;
     @Autowired
     private Skyview2ClusterServiceClient clusterServiceClient;
+    @Autowired
+    private MiddlewareClusterService middlewareClusterService;
 
     private static Map<String, String> clusterIdMap = new HashMap<>();
 
@@ -47,7 +63,7 @@ public class Skyview2ClusterServiceImpl extends AbstractClusterService {
     public List<MiddlewareClusterDTO> listClusters() {
         // 同步集群
         syncCluster();
-        return listClusters(false, null, null);
+        return super.listClusters(false, null, null);
     }
 
     @Override
@@ -126,7 +142,12 @@ public class Skyview2ClusterServiceImpl extends AbstractClusterService {
         List<ClusterDTO> clusterList = convertCluster(clusterResult.getData(), caastoken).stream().
                 filter(item -> !"top".equals(item.getName())).collect(Collectors.toList());
         skyviewClusterMap = clusterList.stream().collect(Collectors.toMap(ClusterDTO::getHost, ClusterDTO::getId));
-        List<MiddlewareClusterDTO> clusterDTOS = super.listClusters(false, null, null);
+        List<MiddlewareClusterDTO> clusterDTOS = new ArrayList<>();
+        // 查询平台存储的全部集群
+        List<BeanMiddlewareCluster> clusters = middlewareClusterService.listClustersByClusterId(null);
+        if (!CollectionUtils.isEmpty(clusters)) {
+            clusterDTOS = super.listClusters(false, null, null);
+        }
         Set<String> cllusterHostSet = clusterDTOS.stream().map(MiddlewareClusterDTO::getHost).collect(Collectors.toSet());
         clusterList.forEach(clusterDTO -> {
             if (!cllusterHostSet.contains(clusterDTO.getHost())) {
@@ -135,7 +156,7 @@ public class Skyview2ClusterServiceImpl extends AbstractClusterService {
         });
         // 保存集群信息
         Map<String, String> zeusClusterMap = clusterDTOS.stream().collect(Collectors.toMap(MiddlewareClusterDTO::getHost, MiddlewareClusterDTO::getId));
-        skyviewClusterMap.forEach((k, v) -> clusterIdMap.put(v, zeusClusterMap.get(k)));
+        skyviewClusterMap.forEach((k, v) -> clusterIdMap.put(v, zeusClusterMap.get(k) != null ? zeusClusterMap.get(k) : k));
     }
 
 }
