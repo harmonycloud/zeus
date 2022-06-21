@@ -5,6 +5,7 @@ import lombok.experimental.Accessors;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Accessors(chain = true)
@@ -36,11 +37,14 @@ public class MiddlewareBackupScheduleSpec {
      */
     private Schedule schedule;
 
+    private List<Map<String, List<String>>> customBackups;
+
     public MiddlewareBackupScheduleSpec() {
     }
 
-    public MiddlewareBackupScheduleSpec(MiddlewareBackupScheduleDestination backupDestination, String name, String type, String pause, String cron, Integer limitRecord) {
+    public MiddlewareBackupScheduleSpec(MiddlewareBackupScheduleDestination backupDestination, List<Map<String, List<String>>> customBackups, String name, String type, String pause, String cron, Integer limitRecord) {
         this.backupDestination = backupDestination;
+        this.customBackups = customBackups;
         this.name = name;
         this.type = type;
         this.pause = pause;

@@ -46,6 +46,7 @@ public abstract class AbstractUserService implements UserService{
      * @param clusterId
      * @return
      */
+    @Override
     public List<ResourceMenuDto> menu(String clusterId) {
         CurrentUser currentUser = CurrentUserRepository.getUser();
         String username = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString(USERNAME);

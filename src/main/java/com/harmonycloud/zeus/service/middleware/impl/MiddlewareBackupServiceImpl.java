@@ -4,7 +4,9 @@ import com.harmonycloud.caas.common.constants.BackupConstant;
 import com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant;
 import com.harmonycloud.caas.common.enums.BackupType;
 import com.harmonycloud.caas.common.enums.DateType;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
 import com.harmonycloud.caas.common.model.MiddlewareBackupScheduleConfig;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
@@ -85,6 +87,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 backupRecord.setTaskName(item.getMetadata().getAnnotations().get("taskName"));
                 backupRecord.setSourceName(item.getSpec().getName());
                 backupRecord.setCron(null);
+                backupRecord.setRetentionTime(null);
                 recordList.add(backupRecord);
             });
         }
@@ -144,6 +147,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public void createBackup(MiddlewareBackupDTO backupDTO) {
         middlewareCRService.getCRAndCheckRunning(convertBackupToMiddleware(backupDTO));
+        checkBackupJobName(backupDTO);
         if (MiddlewareTypeEnum.MYSQL.getType().equals(backupDTO.getType())) {
             mysqlAdapterService.createBackup(backupDTO);
         } else {
@@ -212,9 +216,15 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             new MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination.MiddlewareBackupParameters(
                 minio.getBucketName(), minio.getEndpoint(), "/" + backupDTO.getType(), minio.getAccessKeyId(), minio.getSecretAccessKey(),
                 null));
+        List<String> args = new ArrayList();
+        args.add("--backupSize=10");
+        List<Map<String, List<String>>> customBackups = new ArrayList<>();
+        Map<String, List<String>> map = new HashMap<>();
+        map.put("args",args);
+        customBackups.add(map);
         MiddlewareBackupScheduleSpec.Schedule schedule = new MiddlewareBackupScheduleSpec.Schedule();
         schedule.setCron(CronUtils.parseUtcCron(backupDTO.getCron())).setLimitRecord(backupDTO.getLimitRecord());
-        MiddlewareBackupScheduleSpec spec = new MiddlewareBackupScheduleSpec(destination, backupDTO.getMiddlewareName(),
+        MiddlewareBackupScheduleSpec spec = new MiddlewareBackupScheduleSpec(destination, customBackups, backupDTO.getMiddlewareName(),
             backupDTO.getCrdType(), "off", CronUtils.parseUtcCron(backupDTO.getCron()), backupDTO.getLimitRecord());
         crd.setSpec(spec);
         try {
@@ -252,6 +262,16 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         } catch (IOException e) {
             log.error("立即备份失败", e);
         }
+    }
+
+    private void checkBackupJobName(MiddlewareBackupDTO backupDTO) {
+        List<MiddlewareBackupRecord> backupRecords = backupTaskList(backupDTO.getClusterId(), backupDTO.getNamespace(), null, null, null);
+        backupRecords.forEach(record -> {
+            if (backupDTO.getTaskName().equals(record.getTaskName())) {
+                throw new BusinessException(ErrorMessage.BACKUP_JOB_NAME_ALREADY_EXISTS);
+            }
+        });
+
     }
 
     /**

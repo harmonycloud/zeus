@@ -104,7 +104,11 @@ public class MiddlewareBackupScheduleWrapper {
     public MiddlewareBackupScheduleList list(String clusterId, String namespace){
         Map<String, Object> map = null;
         try {
-            map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace);
+            if ("*".equals(namespace)) {
+                map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(null);
+            } else {
+                map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace);
+            }
         } catch (Exception e) {
             log.error("查询MiddlewareBackupScheduleList出错了");
             return null;
