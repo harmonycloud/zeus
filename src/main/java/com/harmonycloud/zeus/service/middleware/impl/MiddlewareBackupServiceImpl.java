@@ -212,9 +212,15 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             new MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination.MiddlewareBackupParameters(
                 minio.getBucketName(), minio.getEndpoint(), "/" + backupDTO.getType(), minio.getAccessKeyId(), minio.getSecretAccessKey(),
                 null));
+        List<String> args = new ArrayList();
+        args.add("--backupSize=10");
+        List<Map<String, List<String>>> customBackups = new ArrayList<>();
+        Map<String, List<String>> map = new HashMap<>();
+        map.put("args",args);
+        customBackups.add(map);
         MiddlewareBackupScheduleSpec.Schedule schedule = new MiddlewareBackupScheduleSpec.Schedule();
         schedule.setCron(CronUtils.parseUtcCron(backupDTO.getCron())).setLimitRecord(backupDTO.getLimitRecord());
-        MiddlewareBackupScheduleSpec spec = new MiddlewareBackupScheduleSpec(destination, backupDTO.getMiddlewareName(),
+        MiddlewareBackupScheduleSpec spec = new MiddlewareBackupScheduleSpec(destination, customBackups, backupDTO.getMiddlewareName(),
             backupDTO.getCrdType(), "off", CronUtils.parseUtcCron(backupDTO.getCron()), backupDTO.getLimitRecord());
         crd.setSpec(spec);
         try {
