@@ -44,7 +44,6 @@ public class Skyview2NamespaceServiceImpl extends NamespaceServiceImpl {
                 namespace.setName(jsonNamespace.getString("name"));
                 namespace.setAliasName(jsonNamespace.getString("aliasName"));
                 namespace.setCreateTime(jsonNamespace.getDate("createTime"));
-                namespace.setRegistered(true);
                 namespaces.add(namespace);
             }
         }
