@@ -96,7 +96,7 @@ public class MiddlewareBackupAddressServiceImpl implements MiddlewareBackupAddre
     @Override
     public List<MiddlewareClusterBackupAddressDTO> listBackupAddress(String name, String keyWord) {
         QueryWrapper<BeanMiddlewareBackupAddress> wrapper = new QueryWrapper<>();
-        if (StringUtils.isNotEmpty(name) || StringUtils.isNotEmpty(keyWord)) {
+        if (StringUtils.isNotEmpty(name)) {
             wrapper.eq("name", name);
         }
         List<BeanMiddlewareBackupAddress> backups = middlewareBackupAddressMapper.selectList(wrapper);

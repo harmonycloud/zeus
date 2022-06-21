@@ -35,7 +35,6 @@ public class MiddlewareBackupAddressController {
     @ApiOperation(value = "查询备份地址", notes = "查询备份地址")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "keyword", value = "关键词", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "name", value = "中文名", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping
     public BaseResult get(@RequestParam(value = "keyword", required = false) String keyword,
