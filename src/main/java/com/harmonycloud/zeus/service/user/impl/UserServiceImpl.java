@@ -63,9 +63,8 @@ import static com.harmonycloud.caas.filters.base.GlobalKey.USER_TOKEN;
 @Component
 @Slf4j
 @ConditionalOnProperty(value="system.usercenter",havingValue = "zeus")
-public class UserServiceImpl extends AbstractUserService {
+public class UserServiceImpl implements UserService {
 
-    private static final Map<String, Object> IMAGE_MAP = new HashMap<>();
     @Autowired
     private BeanUserMapper beanUserMapper;
     @Autowired
@@ -78,13 +77,16 @@ public class UserServiceImpl extends AbstractUserService {
     private PersonalMapper personalMapper;
     @Autowired
     private MailToUserMapper mailToUserMapper;
-    @Autowired
-    private ProjectService projectService;
+
+    public String getUsername() {
+        CurrentUser currentUser = CurrentUserRepository.getUser();
+        return currentUser.getUsername();
+    }
 
     @Override
     public UserDto getUserDto(String userName, String projectId) {
         if (StringUtils.isEmpty(userName)) {
-            userName = super.getUsername();
+            userName = getUsername();
         }
         return getUserDto(userName);
     }
@@ -110,7 +112,7 @@ public class UserServiceImpl extends AbstractUserService {
         }
         UserDto userDto = new UserDto();
         BeanUtils.copyProperties(beanUser, userDto);
-        super.setUserRoleList(userName, userDto);
+        setUserRoleList(userName, userDto);
         if (!CollectionUtils.isEmpty(userDto.getUserRoleList())) {
             userDto.setIsAdmin(userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getRoleId() == 1));
         }
@@ -125,7 +127,7 @@ public class UserServiceImpl extends AbstractUserService {
         // 获取角色
         List<UserRole> userRoleList = userRoleService.list();
         Map<String, List<UserRole>> userRoleMap =
-            userRoleList.stream().collect(Collectors.groupingBy(UserRole::getUserName));
+                userRoleList.stream().collect(Collectors.groupingBy(UserRole::getUserName));
         // 封装数据
         List<UserDto> userDtoList = beanUserList.stream().map(beanUser -> {
             UserDto userDto = new UserDto();
@@ -157,7 +159,7 @@ public class UserServiceImpl extends AbstractUserService {
         // 写入用户表
         insertUser(userDto);
         // 分配超级管理员角色
-        if (userDto.getIsAdmin() != null){
+        if (userDto.getIsAdmin() != null) {
             bindAdmin(userDto);
         }
     }
@@ -175,7 +177,7 @@ public class UserServiceImpl extends AbstractUserService {
         beanUser.setPhone(userDto.getPhone());
         beanUserMapper.update(beanUser, wrapper);
         // 分配或删除超级管理员角色
-        if (userDto.getIsAdmin() != null){
+        if (userDto.getIsAdmin() != null) {
             bindAdmin(userDto);
         }
     }
@@ -244,9 +246,42 @@ public class UserServiceImpl extends AbstractUserService {
         beanUserMapper.updateById(beanUser);
     }
 
+    /**
+     * 查询菜单信息
+     *
+     * @param clusterId
+     * @return
+     */
     @Override
     public List<ResourceMenuDto> menu(String clusterId) {
-        return super.menu(clusterId);
+        CurrentUser currentUser = CurrentUserRepository.getUser();
+        String username = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString(USERNAME);
+        UserDto userDto = getUserDto(username);
+        String projectId = RequestUtil.getProjectId();
+        List<ResourceMenuDto> resourceMenuDtoList = roleService.listMenuByRoleId(userDto);
+
+        Map<Integer, List<ResourceMenuDto>> resourceMenuDtoMap =
+                resourceMenuDtoList.stream().collect(Collectors.groupingBy(ResourceMenuDto::getParentId));
+        List<ResourceMenuDto> firstMenuList = resourceMenuDtoMap.get(0);
+        resourceMenuDtoMap.remove(0);
+        firstMenuList.forEach(firstMenu -> {
+            if (!resourceMenuDtoMap.containsKey(firstMenu.getId())) {
+                return;
+            }
+            firstMenu.setSubMenu(resourceMenuDtoMap.get(firstMenu.getId()));
+            Collections.sort(firstMenu.getSubMenu());
+        });
+        if (StringUtils.isNotBlank(clusterId)) {
+            Map<String, String> power = new HashMap<>();
+            if (!userDto.getIsAdmin() && StringUtils.isNotEmpty(projectId)) {
+                power.putAll(
+                        userDto.getUserRoleList().stream().filter(userRole -> userRole.getProjectId().equals(projectId))
+                                .collect(Collectors.toList()).get(0).getPower());
+            }
+            setServiceMenuSubMenu(firstMenuList, clusterId, power);
+        }
+        Collections.sort(firstMenuList);
+        return firstMenuList;
     }
 
     /**
@@ -288,15 +323,16 @@ public class UserServiceImpl extends AbstractUserService {
 
     /**
      * 添加个性化配置相关信息
+     *
      * @param configuration
      * @param status
      * @throws Exception
      */
     @Override
-    public void insertPersonalConfig(PersonalizedConfiguration configuration,String status) throws Exception {
+    public void insertPersonalConfig(PersonalizedConfiguration configuration, String status) throws Exception {
         //判断是否要初始化
         if ("init".equals(status)) {
-            QueryWrapper<PersonalizedConfiguration> query = new QueryWrapper<PersonalizedConfiguration>().eq("status","1");
+            QueryWrapper<PersonalizedConfiguration> query = new QueryWrapper<PersonalizedConfiguration>().eq("status", "1");
             personalMapper.delete(query);
             return;
         }
@@ -306,6 +342,7 @@ public class UserServiceImpl extends AbstractUserService {
 
     /**
      * 个性化配置相关图片上传
+     *
      * @param file
      * @throws IOException
      */
@@ -330,14 +367,14 @@ public class UserServiceImpl extends AbstractUserService {
         List<UserDto> userDtoList = new ArrayList<>();
         if (StringUtils.isNotBlank(alertRuleId)) {
             QueryWrapper<MailToUser> mailToUserQueryWrapper = new QueryWrapper<>();
-            Integer alertId = Integer.parseInt(alertRuleId.replace("GJ",""));
-            mailToUserQueryWrapper.eq("alert_rule_id",alertId);
+            Integer alertId = Integer.parseInt(alertRuleId.replace("GJ", ""));
+            mailToUserQueryWrapper.eq("alert_rule_id", alertId);
             List<MailToUser> mailToUsers = mailToUserMapper.selectList(mailToUserQueryWrapper);
             userDtoList = mailToUsers.stream().map(mailToUser -> {
-                BeanUser beanUser = beanUserMapper.selectOne(new QueryWrapper<BeanUser>().eq("id",mailToUser.getUserId()));
+                BeanUser beanUser = beanUserMapper.selectOne(new QueryWrapper<BeanUser>().eq("id", mailToUser.getUserId()));
                 List<UserRole> userRoleList = userRoleService.get(beanUser.getUserName());
                 UserDto userDto = new UserDto();
-                BeanUtils.copyProperties(beanUser,userDto);
+                BeanUtils.copyProperties(beanUser, userDto);
                 userDto.setUserRoleList(userRoleList);
                 return userDto;
             }).collect(Collectors.toList());
@@ -352,7 +389,7 @@ public class UserServiceImpl extends AbstractUserService {
         userMap.put("projectId", projectId);
         long currentTime = System.currentTimeMillis();
         response.setHeader(USER_TOKEN, JwtTokenComponent.generateToken("userInfo", userMap,
-            new Date(currentTime + (long)(ApplicationUtil.getExpire() * 3600000L)), new Date(currentTime - 300000L)));
+                new Date(currentTime + (long) (ApplicationUtil.getExpire() * 3600000L)), new Date(currentTime - 300000L)));
     }
 
     @Override
@@ -362,8 +399,8 @@ public class UserServiceImpl extends AbstractUserService {
             JSONObject userMap = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue();
             List<UserRole> userRoleList = userRoleService.get(userMap.getString("username"));
             userRoleList = userRoleList.stream()
-                .filter(userRole -> userRole.getRoleId() == 1 || userRole.getProjectId().equals(projectId))
-                .collect(Collectors.toList());
+                    .filter(userRole -> userRole.getRoleId() == 1 || userRole.getProjectId().equals(projectId))
+                    .collect(Collectors.toList());
             if (!CollectionUtils.isEmpty(userRoleList)) {
                 return userRoleList.get(0).getPower();
             }
@@ -373,6 +410,7 @@ public class UserServiceImpl extends AbstractUserService {
 
     /**
      * 获取个性化配置信息
+     *
      * @return
      * @throws IOException
      */
@@ -381,7 +419,7 @@ public class UserServiceImpl extends AbstractUserService {
         QueryWrapper<PersonalizedConfiguration> queryWrapper = new QueryWrapper<PersonalizedConfiguration>();
         List<PersonalizedConfiguration> personals = personalMapper.selectList(queryWrapper);
         if (personals.size() > 1) {
-            queryWrapper.eq("status","1");
+            queryWrapper.eq("status", "1");
             List<PersonalizedConfiguration> personalList = personalMapper.selectList(queryWrapper);
             for (PersonalizedConfiguration personalizedConfiguration : personalList) {
                 return personalizedConfiguration;
@@ -395,6 +433,7 @@ public class UserServiceImpl extends AbstractUserService {
 
     /**
      * 将文件转为二进制数组
+     *
      * @param file
      * @return
      * @throws IOException
@@ -416,32 +455,33 @@ public class UserServiceImpl extends AbstractUserService {
                     }
                     bus = bos.toByteArray();
                 }
-            }catch (IOException e){
+            } catch (IOException e) {
                 e.printStackTrace();
-            }finally {
+            } finally {
                 inPut.close();
             }
         }
-        String voiceBase64= Base64.getEncoder().encodeToString(bus);
+        String voiceBase64 = Base64.getEncoder().encodeToString(bus);
         return Base64.getDecoder().decode(voiceBase64);
     }
 
     /**
      * 校验数据库数据
+     *
      * @param configuration
      */
     private void checkout(PersonalizedConfiguration configuration) {
         QueryWrapper<PersonalizedConfiguration> queryWrapper = new QueryWrapper<PersonalizedConfiguration>();
-        queryWrapper.eq("status","1");
+        queryWrapper.eq("status", "1");
         List<PersonalizedConfiguration> personals = personalMapper.selectList(queryWrapper);
         Date date = new Date();
         if (personals.size() == 0) {
             configuration.setCreateTime(date);
             personalMapper.insert(configuration);
-        }else {
+        } else {
             configuration.setUpdateTime(date);
-            queryWrapper.eq("status","1");
-            personalMapper.update(configuration,queryWrapper);
+            queryWrapper.eq("status", "1");
+            personalMapper.update(configuration, queryWrapper);
         }
     }
 
@@ -450,7 +490,7 @@ public class UserServiceImpl extends AbstractUserService {
      */
     public void bindAdmin(UserDto userDto) {
         String username =
-            JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue().getString(USERNAME);
+                JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue().getString(USERNAME);
         if (!ADMIN.equals(username)) {
             throw new BusinessException(ErrorMessage.NO_AUTHORITY);
         }
@@ -460,4 +500,45 @@ public class UserServiceImpl extends AbstractUserService {
             userRoleService.delete(userDto.getUserName(), null, NUM_ROLE_ADMIN);
         }
     }
+
+    /**
+     * @description 将中间件设为服务列表菜单的子菜单
+     * @author liyinlong
+     * @since 2021/11/2 4:09 下午
+     */
+    public void setServiceMenuSubMenu(List<ResourceMenuDto> menuDtoList, String clusterId, Map<String, String> power) {
+        menuDtoList.forEach(parentMenu -> {
+            if ("serviceList".equals(parentMenu.getName())) {
+                List<ResourceMenuDto> resourceMenuDtos = middlewareService.listAllMiddlewareAsMenu(clusterId);
+                if (!CollectionUtils.isEmpty(power)) {
+                    resourceMenuDtos = resourceMenuDtos.stream()
+                            .filter(resourceMenuDto -> power.keySet().stream()
+                                    .anyMatch(key -> !"0000".equals(power.get(key)) && key.equals(resourceMenuDto.getName())))
+                            .collect(Collectors.toList());
+                }
+                resourceMenuDtos.forEach(resourceMenuDto -> {
+                    resourceMenuDto
+                            .setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(resourceMenuDto.getAliasName()));
+                    resourceMenuDto.setUrl(
+                            parentMenu.getUrl() + "/" + resourceMenuDto.getName() + "/" + resourceMenuDto.getAliasName());
+                });
+                parentMenu.setSubMenu(resourceMenuDtos);
+            }
+        });
+    }
+
+    /**
+     * 设置用户的角色列表
+     *
+     * @param userName 用户名
+     * @param userDto
+     */
+    public void setUserRoleList(String userName, UserDto userDto) {
+        List<UserRole> userRoleList = userRoleService.get(userName);
+        if (!CollectionUtils.isEmpty(userRoleList)) {
+            userDto.setUserRoleList(userRoleList);
+            userDto.setIsAdmin(userRoleList.stream().anyMatch(userRole -> userRole.getRoleId() == 1));
+        }
+    }
+
 }

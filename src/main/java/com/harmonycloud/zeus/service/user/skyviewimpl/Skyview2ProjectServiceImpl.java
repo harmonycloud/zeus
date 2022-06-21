@@ -3,13 +3,10 @@ package com.harmonycloud.zeus.service.user.skyviewimpl;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.base.CaasResult;
-import com.harmonycloud.caas.common.model.ClusterCert;
-import com.harmonycloud.caas.common.model.ClusterDTO;
 import com.harmonycloud.caas.common.model.ProjectDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
-import com.harmonycloud.caas.common.model.middleware.Registry;
 import com.harmonycloud.caas.common.model.user.ProjectDto;
 import com.harmonycloud.caas.common.model.user.RoleDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
@@ -18,24 +15,19 @@ import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.zeus.bean.user.BeanProject;
 import com.harmonycloud.zeus.bean.user.BeanUserRole;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
-import com.harmonycloud.zeus.service.k8s.impl.Skyview2ClusterServiceImpl;
-import com.harmonycloud.zeus.service.user.AbstractProjectService;
 import com.harmonycloud.zeus.service.user.RoleService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
-import com.harmonycloud.zeus.skyviewservice.Skyview2ClusterServiceClient;
+import com.harmonycloud.zeus.service.user.impl.ProjectServiceImpl;
 import com.harmonycloud.zeus.skyviewservice.Skyview2ProjectServiceClient;
 import com.harmonycloud.zeus.skyviewservice.Skyview2UserServiceClient;
-import com.harmonycloud.zeus.util.YamlUtil;
 import com.harmonycloud.zeus.util.ZeusCurrentUser;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.beanutils.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,7 +41,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @ConditionalOnProperty(value="system.usercenter",havingValue = "skyview2")
-public class Skyview2ProjectServiceImpl extends AbstractProjectService {
+public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
 
     @Autowired
     private Skyview2ProjectServiceClient projectServiceClient;

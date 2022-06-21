@@ -1,4 +1,4 @@
-package com.harmonycloud.zeus.service.k8s.impl;
+package com.harmonycloud.zeus.service.k8s.skyviewimpl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -6,23 +6,15 @@ import com.harmonycloud.caas.common.base.CaasResult;
 import com.harmonycloud.caas.common.model.ClusterCert;
 import com.harmonycloud.caas.common.model.ClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.common.model.middleware.Registry;
-import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
-import com.harmonycloud.zeus.integration.cluster.ClusterWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCluster;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareClusterInfo;
-import com.harmonycloud.zeus.service.k8s.AbstractClusterService;
+import com.harmonycloud.zeus.service.k8s.ClusterServiceImpl;
 import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import com.harmonycloud.zeus.skyviewservice.Skyview2ClusterServiceClient;
 import com.harmonycloud.zeus.skyviewservice.Skyview2UserServiceClient;
-import com.harmonycloud.zeus.util.K8sClient;
 import com.harmonycloud.zeus.util.YamlUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.lang3.SerializationUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -33,9 +25,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.*;
-import static com.harmonycloud.caas.common.constants.NameConstant.NS_COUNT;
-
 /**
  * @author liyinlong
  * @since 2022/6/17 11:02 上午
@@ -43,7 +32,7 @@ import static com.harmonycloud.caas.common.constants.NameConstant.NS_COUNT;
 @Slf4j
 @Service
 @ConditionalOnProperty(value="system.usercenter",havingValue = "skyview2")
-public class Skyview2ClusterServiceImpl extends AbstractClusterService {
+public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
 
     @Value("${system.skyview.username:admin}")
     private String skyviewAdminName;
@@ -74,7 +63,27 @@ public class Skyview2ClusterServiceImpl extends AbstractClusterService {
     @Autowired
     private MiddlewareClusterService middlewareClusterService;
 
+    /**
+     * 中间件平台和观云台的clusterid缓存
+     * 格式  观云台clusterid:中间件平台clusterid
+     */
     private static Map<String, String> clusterIdMap = new HashMap<>();
+
+    /**
+     * 将中间件平台集群id转为观云台集群id
+     * @param zeusClusterId
+     * @return
+     */
+    public static String convertSkyviewClusterId(String zeusClusterId) {
+        StringBuilder skyviewClusterId = new StringBuilder();
+        clusterIdMap.forEach((k, v) -> {
+            if (zeusClusterId.equals(v)) {
+                skyviewClusterId.append(k);
+                return;
+            }
+        });
+        return skyviewClusterId.toString();
+    }
 
     @Override
     public List<MiddlewareClusterDTO> listClusters() {

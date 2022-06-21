@@ -1,18 +1,5 @@
 package com.harmonycloud.zeus.service.user.impl;
 
-import static com.harmonycloud.caas.common.constants.user.UserConstant.USERNAME;
-
-import java.util.*;
-import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
-
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.DictEnum;
@@ -39,12 +26,23 @@ import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
-import com.harmonycloud.zeus.service.user.AbstractProjectService;
+import com.harmonycloud.zeus.service.user.ProjectService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
 import com.harmonycloud.zeus.service.user.UserService;
 import com.harmonycloud.zeus.util.AssertUtil;
-
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.harmonycloud.caas.common.constants.user.UserConstant.USERNAME;
 
 /**
  * @author xutianhong
@@ -52,8 +50,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Slf4j
-@ConditionalOnProperty(value = "system.usercenter", havingValue = "zeus")
-public class ProjectServiceImpl extends AbstractProjectService {
+@ConditionalOnProperty(value="system.usercenter",havingValue = "zeus")
+public class ProjectServiceImpl implements ProjectService {
 
     @Autowired
     private BeanProjectMapper beanProjectMapper;
@@ -404,6 +402,59 @@ public class ProjectServiceImpl extends AbstractProjectService {
             return null;
         }
         return beanProjectList.get(0);
+    }
+
+    @Override
+    public void bindNamespace(Namespace namespace) {
+        QueryWrapper<BeanProjectNamespace> wrapper =
+                new QueryWrapper<BeanProjectNamespace>().eq("namespace", namespace.getName()).eq("cluster_id", namespace.getClusterId());
+        List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
+        if (!CollectionUtils.isEmpty(beanProjectNamespaceList)) {
+            throw new BusinessException(ErrorMessage.PROJECT_NAMESPACE_ALREADY_BIND);
+        }
+        AssertUtil.notBlank(namespace.getProjectId(), DictEnum.PROJECT_ID);
+        AssertUtil.notBlank(namespace.getName(), DictEnum.NAMESPACE_NAME);
+        BeanProjectNamespace beanProjectNamespace = new BeanProjectNamespace();
+        BeanUtils.copyProperties(namespace, beanProjectNamespace);
+        beanProjectNamespace.setNamespace(namespace.getName());
+        beanProjectNamespaceMapper.insert(beanProjectNamespace);
+    }
+
+    @Override
+    public void bindNamespace(List<Namespace> namespaceList) {
+        namespaceList.forEach(namespace -> {
+            try {
+                bindNamespace(namespace);
+            } catch (Exception e) {
+                log.error("绑定分区出错了", e);
+            }
+        });
+    }
+
+    @Override
+    public void add(BeanProject beanProject) {
+        beanProjectMapper.insert(beanProject);
+    }
+
+    @Override
+    public List<String> getClusters(String projectId) {
+        List<Namespace> namespaceList = this.getNamespace(projectId);
+        return namespaceList.stream().map(Namespace::getClusterId).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Namespace> getNamespace(String projectId) {
+        QueryWrapper<BeanProjectNamespace> wrapper =
+                new QueryWrapper<BeanProjectNamespace>().eq("project_id", projectId);
+        List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
+
+        return beanProjectNamespaceList.stream().map(beanProjectNamespace -> {
+            Namespace namespace = new Namespace();
+            BeanUtils.copyProperties(beanProjectNamespace, namespace);
+            namespace.setClusterAliasName(clusterService.findById(namespace.getClusterId()).getNickname());
+            namespace.setName(beanProjectNamespace.getNamespace());
+            return namespace;
+        }).collect(Collectors.toList());
     }
 
     /**
