@@ -60,6 +60,7 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
     public Middleware convertByHelmChart(Middleware middleware, MiddlewareClusterDTO cluster) {
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
         convertCommonByHelmChart(middleware, values);
+        convertResourcesByHelmChart(middleware, middleware.getType(), values.getJSONObject(RESOURCES));
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
         convertRegistry(middleware, cluster);
 

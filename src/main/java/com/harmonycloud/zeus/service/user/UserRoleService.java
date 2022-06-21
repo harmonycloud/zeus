@@ -38,12 +38,20 @@ public interface UserRoleService {
     Boolean checkAdmin(String username);
 
     /**
-     * 获取绑定制定角色的用户
+     * 获取绑定指定角色的用户
      *
      * @param roleId 角色id
      * @return BeanSysRole
      */
     List<UserRole> findByRoleId(Integer roleId);
+
+    /**
+     * 获取指定项目下的用户角色
+     *
+     * @param projectId 项目id
+     * @return BeanSysRole
+     */
+    List<UserRole> findByProjectId(String projectId);
 
     /**
      * 获取用户角色关联关系

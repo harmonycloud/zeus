@@ -1,26 +1,29 @@
 package com.harmonycloud.zeus.operator.impl;
 
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
-import com.harmonycloud.caas.common.model.middleware.*;
-import com.harmonycloud.zeus.operator.miiddleware.AbstractEsOperator;
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
-import io.fabric8.kubernetes.api.model.Quantity;
+import static com.harmonycloud.caas.common.constants.NameConstant.*;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.middleware.ElasticSearchRoleEnum;
+import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
+import com.harmonycloud.caas.common.model.StorageDto;
+import com.harmonycloud.caas.common.model.middleware.CustomConfig;
+import com.harmonycloud.caas.common.model.middleware.Middleware;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareQuota;
+import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.operator.api.EsOperator;
-import com.harmonycloud.tool.encrypt.PasswordUtils;
-import org.springframework.util.CollectionUtils;
+import com.harmonycloud.zeus.operator.miiddleware.AbstractEsOperator;
 
-import java.util.*;
-
-import static com.harmonycloud.caas.common.constants.NameConstant.*;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.Quantity;
 
 /**
  * @author dengyulong
@@ -151,6 +154,14 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
                                 middleware.getNamespace(), storage.getString("coldClass")));;
                         break;
                     default:
+                }
+                // 获取存储中文名
+                List<StorageDto> storageDtoList = storageService.list(cluster.getId(), null, null, false);
+                Map<String, String> storageNameMap =
+                    storageDtoList.stream().collect(Collectors.toMap(StorageDto::getName, StorageDto::getAliasName));
+                for (String key : middleware.getQuota().keySet()) {
+                    middleware.getQuota().get(key).setStorageClassAliasName(
+                        storageNameMap.get(middleware.getQuota().get(key).getStorageClassName()));
                 }
             });
             // 密码

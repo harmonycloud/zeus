@@ -122,7 +122,7 @@ public abstract class AbstractBaseOperator {
     @Autowired
     private ServiceWrapper serviceWrapper;
     @Autowired
-    private StorageService storageService;
+    protected StorageService storageService;
 
     /**
      * 是否支持该中间件
@@ -485,8 +485,12 @@ public abstract class AbstractBaseOperator {
             values.getString("storageClassName")));
 
         // 获取存储中文名
-        StorageDto storageDto = storageService.get(middleware.getClusterId(), values.getString("storageClassName"), false);
-        quota.setStorageClassAliasName(storageDto.getAliasName());
+        try {
+            StorageDto storageDto = storageService.get(middleware.getClusterId(), values.getString("storageClassName"), false);
+            quota.setStorageClassAliasName(storageDto.getAliasName());
+        } catch (Exception e){
+            log.error("中间件{}, 获取存储中文名失败", middleware.getName());
+        }
     }
 
 
