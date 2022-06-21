@@ -77,6 +77,8 @@ public class UserServiceImpl implements UserService {
     private PersonalMapper personalMapper;
     @Autowired
     private MailToUserMapper mailToUserMapper;
+    @Autowired
+    private ProjectService projectService;
 
     public String getUsername() {
         CurrentUser currentUser = CurrentUserRepository.getUser();
