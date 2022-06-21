@@ -128,7 +128,7 @@ public class StorageServiceImpl implements StorageService {
 
         StorageClass storageClass = storageClassList.stream()
             .filter(sc -> sc.getMetadata().getName().equals(storageDto.getName())).collect(Collectors.toList()).get(0);
-        // 获取labels
+        // 获取annotationss
         Map<String, String> annotations = storageClass.getMetadata().getAnnotations();
         if (annotations == null) {
             annotations = new HashMap<>();
@@ -145,10 +145,10 @@ public class StorageServiceImpl implements StorageService {
         if (storageClass == null){
             throw new BusinessException(ErrorMessage.STORAGE_CLASS_NOT_FOUND);
         }
-        Map<String, String> labels = storageClass.getMetadata().getLabels();
-        if (labels != null){
-            labels.remove(MIDDLEWARE);
-            labels.remove(ALIAS_NAME);
+        Map<String, String> annotations = storageClass.getMetadata().getAnnotations();
+        if (annotations != null){
+            annotations.remove(MIDDLEWARE);
+            annotations.remove(ALIAS_NAME);
             storageClassWrapper.update(clusterId, storageClass);
         }
     }
@@ -328,11 +328,11 @@ public class StorageServiceImpl implements StorageService {
      */
     public void checkAliasName(StorageDto storageDto, List<StorageClass> storageClassList) {
         for (StorageClass storageClass : storageClassList) {
-            Map<String, String> labels = storageClass.getMetadata().getLabels();
-            if (CollectionUtils.isEmpty(labels)) {
+            Map<String, String> annotations = storageClass.getMetadata().getAnnotations();
+            if (CollectionUtils.isEmpty(annotations)) {
                 return;
             }
-            if (labels.containsKey(ALIAS_NAME) && labels.get(ALIAS_NAME).equals(storageDto.getAliasName())
+            if (annotations.containsKey(ALIAS_NAME) && annotations.get(ALIAS_NAME).equals(storageDto.getAliasName())
                 && !storageClass.getMetadata().getName().equals(storageDto.getName())) {
                 throw new BusinessException(ErrorMessage.STORAGE_CLASS_NAME_EXIST);
             }
