@@ -6,8 +6,7 @@ import com.harmonycloud.caas.common.enums.CaasErrorMessage;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.tool.encrypt.RSAUtils;
-import com.harmonycloud.zeus.service.user.AbstractAuthService;
-import com.harmonycloud.zeus.service.user.UserService;
+import com.harmonycloud.zeus.service.user.impl.AuthServiceImpl;
 import com.harmonycloud.zeus.skyviewservice.Skyview2UserServiceClient;
 import com.harmonycloud.zeus.util.CaasResponseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +24,7 @@ import static com.harmonycloud.caas.filters.base.GlobalKey.SET_TOKEN;
  */
 @Service
 @ConditionalOnProperty(value="system.usercenter",havingValue = "skyview2")
-public class Skyview2AuthServiceImpl extends AbstractAuthService {
+public class Skyview2AuthServiceImpl extends AuthServiceImpl {
 
     @Autowired
     private Skyview2UserServiceClient skyview2UserService;

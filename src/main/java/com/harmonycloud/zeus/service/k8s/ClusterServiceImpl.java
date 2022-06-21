@@ -60,7 +60,7 @@ import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConsta
  * @since 2022/6/17 10:57 上午
  */
 @Slf4j
-public abstract class AbstractClusterService implements ClusterService{
+public class ClusterServiceImpl implements ClusterService{
 
     private static final Map<String, MiddlewareClusterDTO> CLUSTER_MAP = new ConcurrentHashMap<>();
     private static boolean run = true;

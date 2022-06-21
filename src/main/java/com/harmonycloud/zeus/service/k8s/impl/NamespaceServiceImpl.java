@@ -1,31 +1,31 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.zeus.bean.user.BeanProjectNamespace;
-import com.harmonycloud.zeus.dao.user.BeanProjectNamespaceMapper;
-import com.harmonycloud.zeus.service.user.ProjectService;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.common.model.middleware.ResourceQuotaDTO;
 import com.harmonycloud.tool.date.DateUtils;
+import com.harmonycloud.zeus.bean.user.BeanProjectNamespace;
+import com.harmonycloud.zeus.dao.user.BeanProjectNamespaceMapper;
 import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
+import com.harmonycloud.zeus.service.k8s.AbstractNamespaceService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
-
+import com.harmonycloud.zeus.service.user.ProjectService;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
 
@@ -35,6 +35,7 @@ import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConsta
  */
 @Slf4j
 @Service
+@ConditionalOnProperty(value = "system.usercenter", havingValue = "zeus")
 public class NamespaceServiceImpl implements NamespaceService {
 
     private static final Set<String> protectNamespaceList = new HashSet<>();
@@ -46,13 +47,13 @@ public class NamespaceServiceImpl implements NamespaceService {
     @Autowired
     private NamespaceWrapper namespaceWrapper;
     @Autowired
-    private ResourceQuotaService resourceQuotaService;
-    @Autowired
-    private MiddlewareCRService middlewareCRService;
-    @Autowired
     private ProjectService projectService;
     @Autowired
     private BeanProjectNamespaceMapper beanProjectNamespaceMapper;
+    @Autowired
+    public MiddlewareCRService middlewareCRService;
+    @Autowired
+    private ResourceQuotaService resourceQuotaService;
 
     @Value("${k8s.namespace.protect:default,kube-system,kube-public,cluster-top,cicd,caas-system,kube-federation-system,harbor-system,logging,monitoring,velero,middleware-system}")
     private void setProtectNamespaceList(String protectNamespaces) {
@@ -84,53 +85,29 @@ public class NamespaceServiceImpl implements NamespaceService {
 
     @Override
     public List<Namespace> list(String clusterId, boolean all, boolean withQuota, boolean withMiddleware,
-        String keyword, String projectId) {
+                                String keyword, String projectId) {
         List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId);
         List<Namespace> list = nsList.stream()
-            .filter(ns -> (all || ns.getMetadata().getLabels() != null
-                && StringUtils.equals(ns.getMetadata().getLabels().get(labelKey), labelValue))
-                && !protectNamespaceList.contains(ns.getMetadata().getName())
-                && (StringUtils.isBlank(keyword) || (ns.getMetadata().getAnnotations() != null
-                    && ns.getMetadata().getAnnotations().containsKey(KEY_NAMESPACE_CHINESE)
-                    && ns.getMetadata().getAnnotations().get(KEY_NAMESPACE_CHINESE).contains(keyword))))
-            .map(ns -> convertNamespace(clusterId, ns)).collect(Collectors.toList());
+                .filter(ns -> (all || ns.getMetadata().getLabels() != null
+                        && StringUtils.equals(ns.getMetadata().getLabels().get(labelKey), labelValue))
+                        && !protectNamespaceList.contains(ns.getMetadata().getName())
+                        && (StringUtils.isBlank(keyword) || (ns.getMetadata().getAnnotations() != null
+                        && ns.getMetadata().getAnnotations().containsKey(KEY_NAMESPACE_CHINESE)
+                        && ns.getMetadata().getAnnotations().get(KEY_NAMESPACE_CHINESE).contains(keyword))))
+                .map(ns -> convertNamespace(clusterId, ns)).collect(Collectors.toList());
 
         if (StringUtils.isNotEmpty(projectId)) {
             List<Namespace> alNsList = projectService.getNamespace(projectId).stream()
-                .filter(ns -> ns.getClusterId().equals(clusterId)).collect(Collectors.toList());
+                    .filter(ns -> ns.getClusterId().equals(clusterId)).collect(Collectors.toList());
             list = list.stream().filter(ns -> alNsList.stream().anyMatch(alNs -> alNs.getName().equals(ns.getName())))
-                .collect(Collectors.toList());
+                    .collect(Collectors.toList());
         }
 
-        // 返回其他信息
-        if (withQuota || withMiddleware) {
-            // 命名空间配额
-            Map<String, ResourceQuotaDTO> rqMap = null;
-            if (withQuota) {
-                List<ResourceQuotaDTO> rqDtoList = resourceQuotaService.list(clusterId);
-                if (!CollectionUtils.isEmpty(rqDtoList)) {
-                    rqMap = rqDtoList.stream().collect(Collectors.toMap(ResourceQuotaDTO::getNamespace, dto -> dto));
-                }
-            }
-            // 中间件实例信息
-            Map<String, List<MiddlewareCR>> mwMap = null;
-            if (withMiddleware) {
-                List<MiddlewareCR> middlewares = middlewareCRService.listCR(clusterId, null, null);
-                if (!CollectionUtils.isEmpty(middlewares)) {
-                    mwMap = middlewares.stream().collect(Collectors.groupingBy(mw -> mw.getMetadata().getNamespace()));
-                }
-            }
-            // 遍历赋值
-            if (rqMap != null || mwMap != null) {
-                for (Namespace ns : list) {
-                    if (rqMap != null && rqMap.get(ns.getName()) != null) {
-                        ns.setQuotas(rqMap.get(ns.getName()).getQuotas());
-                    }
-                    if (mwMap != null && mwMap.get(ns.getName()) != null) {
-                        ns.setMiddlewareReplicas(mwMap.get(ns.getName()).size());
-                    }
-                }
-            }
+        if (withQuota) {
+            listNamespaceWithQuota(list, clusterId);
+        }
+        if (withMiddleware) {
+            listNamespaceWithMiddleware(list, clusterId);
         }
 
         return list;
@@ -138,14 +115,14 @@ public class NamespaceServiceImpl implements NamespaceService {
 
     @Override
     public void save(Namespace namespace, Map<String, String> label, Boolean exist) {
-        if (exist && checkExist(namespace.getClusterId(), namespace.getName())){
+        if (exist && checkExist(namespace.getClusterId(), namespace.getName())) {
             throw new BusinessException(ErrorMessage.NAMESPACE_EXIST);
         }
         Map<String, String> annotations = new HashMap<>();
-        if(StringUtils.isNotEmpty(namespace.getAliasName())){
+        if (StringUtils.isNotEmpty(namespace.getAliasName())) {
             annotations.put("alias_name", namespace.getAliasName());
         }
-        if (StringUtils.isNotEmpty(namespace.getProjectId())){
+        if (StringUtils.isNotEmpty(namespace.getProjectId())) {
             annotations.put("project_id", namespace.getProjectId());
             projectService.bindNamespace(namespace);
         }
@@ -156,7 +133,7 @@ public class NamespaceServiceImpl implements NamespaceService {
     public void save(String clusterId, String name, Map<String, String> label, Map<String, String> annotations) {
         // 创建namespace
         io.fabric8.kubernetes.api.model.Namespace ns = new io.fabric8.kubernetes.api.model.Namespace();
-        if (CollectionUtils.isEmpty(label)){
+        if (CollectionUtils.isEmpty(label)) {
             label = new HashMap<>(1);
         }
         ObjectMeta meta = new ObjectMeta();
@@ -169,12 +146,12 @@ public class NamespaceServiceImpl implements NamespaceService {
 
     @Override
     public void delete(String clusterId, String name) {
-        if (MIDDLEWARE_OPERATOR.equals(name)){
+        if (MIDDLEWARE_OPERATOR.equals(name)) {
             throw new BusinessException(ErrorMessage.CAN_NOT_DELETE_NS_MIDDLEWARE_OPERATOR);
         }
         // 判断是否存在中间件
         List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(clusterId, name, null);
-        if(!CollectionUtils.isEmpty(middlewareCRList)){
+        if (!CollectionUtils.isEmpty(middlewareCRList)) {
             throw new BusinessException(ErrorMessage.NAMESPACE_NOT_EMPTY);
         }
         io.fabric8.kubernetes.api.model.Namespace ns = new io.fabric8.kubernetes.api.model.Namespace();
@@ -189,7 +166,7 @@ public class NamespaceServiceImpl implements NamespaceService {
     @Override
     public void registry(String clusterId, String name, Boolean registered) {
         List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId).stream()
-            .filter(ns -> ns.getMetadata().getName().equals(name)).collect(Collectors.toList());
+                .filter(ns -> ns.getMetadata().getName().equals(name)).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(nsList)) {
             throw new BusinessException(ErrorMessage.NAMESPACE_NOT_FOUND);
         }
@@ -203,7 +180,7 @@ public class NamespaceServiceImpl implements NamespaceService {
             // 校验是否绑定项目
             QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<BeanProjectNamespace>().eq("namespace", name);
             List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
-            if (!CollectionUtils.isEmpty(beanProjectNamespaceList)){
+            if (!CollectionUtils.isEmpty(beanProjectNamespaceList)) {
                 throw new BusinessException(ErrorMessage.PROJECT_NAMESPACE_ALREADY_BIND);
             }
             ns.getMetadata().getLabels().remove(labelKey);
@@ -220,8 +197,8 @@ public class NamespaceServiceImpl implements NamespaceService {
         List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId);
         return nsList.stream().anyMatch(ns -> ns.getMetadata().getName().equals(name));
     }
-    
-    public Namespace convertNamespace(String clusterId, io.fabric8.kubernetes.api.model.Namespace ns){
+
+    public Namespace convertNamespace(String clusterId, io.fabric8.kubernetes.api.model.Namespace ns) {
         Namespace namespace = new Namespace().setName(ns.getMetadata().getName()).setClusterId(clusterId);
         // 昵称
         if (ns.getMetadata().getAnnotations() != null
@@ -238,4 +215,36 @@ public class NamespaceServiceImpl implements NamespaceService {
         namespace.setPhase(ns.getStatus().getPhase());
         return namespace;
     }
+
+    @Override
+    public List<Namespace> listNamespaceWithQuota(List<Namespace> namespaces, String clusterId) {
+        Map<String, ResourceQuotaDTO> rqMap = null;
+        List<ResourceQuotaDTO> rqDtoList = resourceQuotaService.list(clusterId);
+        if (!CollectionUtils.isEmpty(rqDtoList)) {
+            rqMap = rqDtoList.stream().collect(Collectors.toMap(ResourceQuotaDTO::getNamespace, dto -> dto));
+        }
+        for (Namespace ns : namespaces) {
+            if (rqMap != null && rqMap.get(ns.getName()) != null) {
+                ns.setQuotas(rqMap.get(ns.getName()).getQuotas());
+            }
+        }
+        return namespaces;
+    }
+
+    @Override
+    public List<Namespace> listNamespaceWithMiddleware(List<Namespace> namespaces, String clusterId) {
+        // 中间件实例信息
+        Map<String, List<MiddlewareCR>> mwMap = null;
+        List<MiddlewareCR> middlewares = middlewareCRService.listCR(clusterId, null, null);
+        if (!CollectionUtils.isEmpty(middlewares)) {
+            mwMap = middlewares.stream().collect(Collectors.groupingBy(mw -> mw.getMetadata().getNamespace()));
+        }
+        for (Namespace ns : namespaces) {
+            if (mwMap != null && mwMap.get(ns.getName()) != null) {
+                ns.setMiddlewareReplicas(mwMap.get(ns.getName()).size());
+            }
+        }
+        return namespaces;
+    }
+
 }

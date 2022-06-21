@@ -3,24 +3,15 @@ package com.harmonycloud.zeus.service.user.skyviewimpl;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.base.CaasResult;
-import com.harmonycloud.caas.common.model.MailUserDTO;
 import com.harmonycloud.caas.common.model.ProjectDTO;
-import com.harmonycloud.caas.common.model.UploadImageFileDto;
-import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.caas.common.model.user.RoleDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.caas.common.model.user.UserRole;
-import com.harmonycloud.caas.filters.user.CurrentUser;
-import com.harmonycloud.caas.filters.user.CurrentUserRepository;
-import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
-import com.harmonycloud.zeus.bean.user.BeanUser;
 import com.harmonycloud.zeus.bean.user.BeanUserRole;
-import com.harmonycloud.zeus.service.k8s.ClusterService;
-import com.harmonycloud.zeus.service.user.AbstractUserService;
 import com.harmonycloud.zeus.service.user.ProjectService;
 import com.harmonycloud.zeus.service.user.RoleService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
-import com.harmonycloud.zeus.skyviewservice.Skyview2ClusterServiceClient;
+import com.harmonycloud.zeus.service.user.impl.UserServiceImpl;
 import com.harmonycloud.zeus.skyviewservice.Skyview2ProjectServiceClient;
 import com.harmonycloud.zeus.skyviewservice.Skyview2UserServiceClient;
 import com.harmonycloud.zeus.util.ZeusCurrentUser;
@@ -30,10 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -44,7 +32,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @ConditionalOnProperty(value="system.usercenter",havingValue = "skyview2")
-public class Skyview2UserServiceImpl extends AbstractUserService {
+public class Skyview2UserServiceImpl extends UserServiceImpl {
 
     @Autowired
     private UserRoleService userRoleService;
@@ -62,7 +50,7 @@ public class Skyview2UserServiceImpl extends AbstractUserService {
     @Override
     public UserDto getUserDto(String userName, String projectId) {
         if (StringUtils.isEmpty(userName)) {
-            userName = super.getUsername();
+            userName = getUsername();
         }
         // 如果用户名和项目id都为空，则查询角色列表
         syncCurrentUserInfo();
@@ -76,25 +64,6 @@ public class Skyview2UserServiceImpl extends AbstractUserService {
             userDto.setUserRoleList(userRoleList);
         }
         return userDto;
-    }
-
-    @Override
-    public BeanUser get(String userName) {
-        if (StringUtils.isEmpty(userName)) {
-            userName = super.getUsername();
-        }
-
-        // 1.获取用户的角色列表
-
-//        UserDto userDto = new UserDto();
-//        BeanUtils.copyProperties(beanUser, userDto);
-//        List<UserRole> userRoleList = userRoleService.get(userName);
-//        if (!CollectionUtils.isEmpty(userRoleList)) {
-//            userDto.setUserRoleList(userRoleList);
-//            userDto.setIsAdmin(userRoleList.stream().anyMatch(userRole -> userRole.getRoleId() == 1));
-//        }
-
-        return null;
     }
 
     @Override
@@ -115,80 +84,6 @@ public class Skyview2UserServiceImpl extends AbstractUserService {
         return convertUserData(userData);
     }
 
-    @Override
-    public void create(UserDto userDto) throws Exception {
-
-    }
-
-    @Override
-    public void create(BeanUser beanUser) {
-
-    }
-
-    @Override
-    public void update(UserDto userDto) throws Exception {
-
-    }
-
-    @Override
-    public void update(BeanUser beanUser) {
-
-    }
-
-    @Override
-    public Boolean delete(String userName) {
-        return null;
-    }
-
-    @Override
-    public Boolean reset(String userName) {
-        return null;
-    }
-
-    @Override
-    public void bind(String userName, String role) {
-
-    }
-
-    @Override
-    public void changePassword(String userName, String password, String newPassword, String reNewPassword) throws Exception {
-
-    }
-
-    @Override
-    public List<ResourceMenuDto> menu(String clusterId) {
-        return super.menu(clusterId);
-    }
-
-    @Override
-    public void insertPersonalConfig(PersonalizedConfiguration configuration, String status) throws Exception {
-
-    }
-
-    @Override
-    public PersonalizedConfiguration getPersonalConfig() throws IOException {
-        return null;
-    }
-
-    @Override
-    public UploadImageFileDto uploadFile(MultipartFile file) throws IOException {
-        return null;
-    }
-
-    @Override
-    public MailUserDTO getUserList(String alertruleId) {
-        return null;
-    }
-
-    @Override
-    public void switchProject(String projectId, HttpServletResponse response) {
-
-    }
-
-    @Override
-    public Map<String, String> getPower() {
-        return null;
-    }
 
     public List<UserDto> convertUserData(JSONArray userData) {
         ArrayList<UserDto> userDtos = new ArrayList<>();
