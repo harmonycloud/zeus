@@ -125,6 +125,7 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
      */
     public void check(ImageRepositoryDTO imageRepositoryDTO){
         Registry registry = new Registry()
+                .setVersion(imageRepositoryDTO.getVersion())
                 .setAddress(imageRepositoryDTO.getHostAddress())
                 .setProtocol(imageRepositoryDTO.getProtocol())
                 .setPort(imageRepositoryDTO.getPort())

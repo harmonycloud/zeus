@@ -46,9 +46,26 @@ import static com.harmonycloud.caas.common.constants.NameConstant.NS_COUNT;
 public class Skyview2ClusterServiceImpl extends AbstractClusterService {
 
     @Value("${system.skyview.username:admin}")
-    private String skyviewAdminName = "admin";
+    private String skyviewAdminName;
     @Value("${system.skyview.password:Hc@Cloud01}")
-    private String skyviewAdminPassword = "Ab123456";
+    private String skyviewAdminPassword;
+
+    @Value("${system.registry.protocol:https}")
+    private String protocol;
+    @Value("${system.registry.address}")
+    private String address;
+    @Value("${system.registry.port}")
+    private int port;
+    @Value("${system.registry.username}")
+    private String username;
+    @Value("${system.registry.password}")
+    private String password;
+    @Value("${system.registry.type:harbor}")
+    private String type;
+    @Value("${system.registry.chartRepo:middleware}")
+    private String chartRepo;
+    @Value("${system.registry.version:v2}")
+    private String version;
 
     @Autowired
     private Skyview2UserServiceClient userServiceClient;
@@ -94,14 +111,14 @@ public class Skyview2ClusterServiceImpl extends AbstractClusterService {
         cluster.setName(clusterDTO.getName());
         cluster.setNickname(clusterDTO.getAliasName());
         Registry registry = new Registry();
-        registry.setAddress("10.10.102.124");
-        registry.setProtocol("https");
-        registry.setPort(443);
-        registry.setUser("admin");
-        registry.setPassword("Harbor12345");
-        registry.setType("harbor");
-        registry.setChartRepo("middleware");
-        registry.setVersion("v2");
+        registry.setProtocol(protocol);
+        registry.setAddress(address);
+        registry.setPort(port);
+        registry.setUser(username);
+        registry.setPassword(password);
+        registry.setType(type);
+        registry.setChartRepo(chartRepo);
+        registry.setVersion(version);
         cluster.setRegistry(registry);
         try {
             addCluster(cluster);
