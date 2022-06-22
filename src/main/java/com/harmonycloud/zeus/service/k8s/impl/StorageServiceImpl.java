@@ -317,7 +317,11 @@ public class StorageServiceImpl implements StorageService {
         storageDto.setCreateTime(DateUtil.StringToDate(storageClass.getMetadata().getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z));
 
         // 获取类型
-        String type = StorageClassProvisionerEnum.findByProvisioner(storageClass.getProvisioner()).getType();
+        StorageClassProvisionerEnum provisionerEnum = StorageClassProvisionerEnum.findByProvisioner(storageClass.getProvisioner());
+        String type = null;
+        if (provisionerEnum != null) {
+            type = provisionerEnum.getType();
+        }
         storageDto.setVolumeType(type == null ? "unknown" : type);
 
         return storageDto;
