@@ -2,14 +2,19 @@ package com.harmonycloud.zeus.service.user.skyviewimpl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.base.CaasResult;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.harmonycloud.caas.common.model.ProjectDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
+import com.harmonycloud.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.user.ProjectDto;
 import com.harmonycloud.caas.common.model.user.RoleDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
+import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.bean.user.BeanProjectNamespace;
 import com.harmonycloud.zeus.bean.user.BeanUserRole;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
@@ -253,7 +258,7 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
             listAllTenantProject(ZeusCurrentUser.getCaasToken());
             tenantId = projectTenantCache.get(projectId);
         }
-        JSONArray projectNamespace = listProjectNamespace( tenantId, projectId);
+        JSONArray projectNamespace = listProjectNamespace(tenantId, projectId);
         List<Namespace> namespaces = convertProjectNamespace(projectNamespace, projectId);
         Map<String, String> clusterMap = clusterService.listClusters().stream().
                 collect(Collectors.toMap(MiddlewareClusterDTO::getId, MiddlewareClusterDTO::getNickname));
@@ -314,6 +319,45 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
             projectDtoList.add(projectDto);
         }
         return projectDtoList;
+    }
+
+    @Override
+    public List<ProjectMiddlewareResourceInfo> middlewareResource(String projectId) throws Exception {
+        List<Namespace> namespaceList = getNamespace(projectId);
+        // 获取集群
+        Set<String> cluster = new HashSet<>();
+        namespaceList.forEach(beanProjectNamespace -> {
+            cluster.add(beanProjectNamespace.getClusterId());
+        });
+        // 查询数据
+        List<MiddlewareResourceInfo> all = new ArrayList<>();
+        for (String clusterId : cluster) {
+            all.addAll(clusterService.getMwResource(clusterId));
+        }
+        // 根据分区过滤
+        all = all.stream().filter(middlewareResourceInfo -> namespaceList.stream().anyMatch(
+                namespace -> namespace.getName().equals(middlewareResourceInfo.getNamespace())))
+                .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(all)) {
+            return new ArrayList<>();
+        }
+        // 获取image.path
+        Map<String,
+                String> middlewareImagePathMap = middlewareInfoService.list(false).stream()
+                .filter(beanMiddlewareInfo -> beanMiddlewareInfo.getImagePath() != null)
+                .collect(Collectors.toMap(BeanMiddlewareInfo::getChartName, BeanMiddlewareInfo::getImagePath));
+        // 封装数据
+        Map<String, List<MiddlewareResourceInfo>> map =
+                all.stream().collect(Collectors.groupingBy(MiddlewareResourceInfo::getType));
+        List<ProjectMiddlewareResourceInfo> infoList = new ArrayList<>();
+        for (String key : map.keySet()) {
+            ProjectMiddlewareResourceInfo projectMiddlewareResourceInfo = new ProjectMiddlewareResourceInfo()
+                    .setType(key).setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(key))
+                    .setMiddlewareResourceInfoList(map.get(key))
+                    .setImagePath(middlewareImagePathMap.getOrDefault(key, null));
+            infoList.add(projectMiddlewareResourceInfo);
+        }
+        return infoList;
     }
 
 }

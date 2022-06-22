@@ -66,7 +66,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Autowired
     public MiddlewareCRService middlewareCRService;
     @Autowired
-    private MiddlewareInfoService middlewareInfoService;
+    public MiddlewareInfoService middlewareInfoService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
