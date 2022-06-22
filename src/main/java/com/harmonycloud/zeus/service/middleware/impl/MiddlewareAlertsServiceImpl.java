@@ -536,13 +536,14 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         middlewareAlertInfo.setCreateTime(date);
         middlewareAlertInfo.setName(clusterId);
         middlewareAlertInfo.setAlert(alert);
-        String expr = middlewareAlertsDTO.getDescription() + middlewareAlertsDTO.getSymbol()
-                + middlewareAlertsDTO.getThreshold() + "%" + "且" + middlewareAlertsDTO.getAlertTime()
-                + "分钟内触发" + middlewareAlertsDTO.getAlertTimes() + "次";
-        middlewareAlertInfo.setAlertExpr(expr);
         if (MiddlewareTypeEnum.ZOOKEEPER.getType().equals(middlewareAlertsDTO.getType()) || MiddlewareTypeEnum.POSTGRESQL.getType().equals(middlewareAlertsDTO.getType())) {
             middlewareAlertInfo.setDescription(middlewareAlertsDTO.getAlert());
         }
+        String expr = middlewareAlertInfo.getDescription() + middlewareAlertsDTO.getSymbol()
+                + middlewareAlertsDTO.getThreshold() + "%" + "且" + middlewareAlertsDTO.getAlertTime()
+                + "分钟内触发" + middlewareAlertsDTO.getAlertTimes() + "次";
+        middlewareAlertInfo.setAlertExpr(expr);
+
         middlewareAlertInfoMapper.insert(middlewareAlertInfo);
         List<BeanUser> beanUsers = userDtos.stream().map(userDto -> {
             BeanUser beanUser = new BeanUser();
