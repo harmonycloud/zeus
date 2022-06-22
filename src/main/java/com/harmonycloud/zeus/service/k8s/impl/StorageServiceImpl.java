@@ -145,6 +145,13 @@ public class StorageServiceImpl implements StorageService {
         if (storageClass == null){
             throw new BusinessException(ErrorMessage.STORAGE_CLASS_NOT_FOUND);
         }
+        // 查询存储
+        List<PersistentVolumeClaim> pvcList = pvcService.list(clusterId, null);
+        pvcList = pvcList.stream().filter(pvc -> StringUtils.isNotEmpty(pvc.getStorageClassName())
+                && pvc.getStorageClassName().equals(storageName)).collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(pvcList)){
+            throw new BusinessException(ErrorMessage.STORAGE_CLASS_IS_BEING_USED);
+        }
         Map<String, String> annotations = storageClass.getMetadata().getAnnotations();
         if (annotations != null){
             annotations.remove(MIDDLEWARE);
