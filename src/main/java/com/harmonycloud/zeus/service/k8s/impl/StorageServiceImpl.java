@@ -164,8 +164,8 @@ public class StorageServiceImpl implements StorageService {
         StorageDto storageDto = convert(clusterId, storageClass);
         // 查询存储
         List<PersistentVolumeClaim> pvcList = pvcService.list(clusterId, null);
-        pvcList = pvcList.stream().filter(pvc -> pvc.getStorageClassName().equals(storageDto.getName())).collect(Collectors.toList());
-
+        pvcList = pvcList.stream().filter(pvc -> StringUtils.isNotEmpty(pvc.getStorageClassName())
+            && pvc.getStorageClassName().equals(storageDto.getName())).collect(Collectors.toList());
 
         StringBuilder sb = new StringBuilder();
         for (PersistentVolumeClaim pvc : pvcList){
@@ -198,7 +198,9 @@ public class StorageServiceImpl implements StorageService {
 
         // 查询存储
         List<PersistentVolumeClaim> all = pvcService.list(clusterId, null);
-        List<PersistentVolumeClaim> pvcList = all.stream().filter(pvc -> pvc.getStorageClassName().equals(storageName)).collect(Collectors.toList());
+        List<PersistentVolumeClaim> pvcList = all.stream().filter(
+            pvc -> StringUtils.isNotEmpty(pvc.getStorageClassName()) && pvc.getStorageClassName().equals(storageName))
+            .collect(Collectors.toList());
 
         // 过滤获取到使用了该存储的中间件
         middlewareCRList = middlewareCRList.stream().filter(middlewareCr -> {
