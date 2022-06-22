@@ -164,8 +164,8 @@ public class StorageServiceImpl implements StorageService {
         StorageDto storageDto = convert(clusterId, storageClass);
         // 查询存储
         List<PersistentVolumeClaim> pvcList = pvcService.list(clusterId, null);
-        pvcList = pvcList.stream().filter(pvc -> pvc.getStorageClassName().equals(storageDto.getName())).collect(Collectors.toList());
-
+        pvcList = pvcList.stream().filter(pvc -> StringUtils.isNotEmpty(pvc.getStorageClassName())
+            && pvc.getStorageClassName().equals(storageDto.getName())).collect(Collectors.toList());
 
         StringBuilder sb = new StringBuilder();
         for (PersistentVolumeClaim pvc : pvcList){
@@ -198,7 +198,9 @@ public class StorageServiceImpl implements StorageService {
 
         // 查询存储
         List<PersistentVolumeClaim> all = pvcService.list(clusterId, null);
-        List<PersistentVolumeClaim> pvcList = all.stream().filter(pvc -> pvc.getStorageClassName().equals(storageName)).collect(Collectors.toList());
+        List<PersistentVolumeClaim> pvcList = all.stream().filter(
+            pvc -> StringUtils.isNotEmpty(pvc.getStorageClassName()) && pvc.getStorageClassName().equals(storageName))
+            .collect(Collectors.toList());
 
         // 过滤获取到使用了该存储的中间件
         middlewareCRList = middlewareCRList.stream().filter(middlewareCr -> {
@@ -317,7 +319,11 @@ public class StorageServiceImpl implements StorageService {
         storageDto.setCreateTime(DateUtil.StringToDate(storageClass.getMetadata().getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z));
 
         // 获取类型
-        String type = StorageClassProvisionerEnum.findByProvisioner(storageClass.getProvisioner()).getType();
+        StorageClassProvisionerEnum provisionerEnum = StorageClassProvisionerEnum.findByProvisioner(storageClass.getProvisioner());
+        String type = null;
+        if (provisionerEnum != null) {
+            type = provisionerEnum.getType();
+        }
         storageDto.setVolumeType(type == null ? "unknown" : type);
 
         return storageDto;
