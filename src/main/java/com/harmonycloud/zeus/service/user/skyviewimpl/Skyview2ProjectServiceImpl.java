@@ -228,6 +228,12 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
             project.setCreateTime(projectDTO.getCreateTime());
             project.setMemberCount(projectDTO.getMemberCount());
             project.setNamespaceCount(projectDTO.getNamespaceCount());
+            BeanUserRole beanUserRole = userRoleService.get(ZeusCurrentUser.getUserName(), projectDTO.getProjectId());
+            if (beanUserRole != null) {
+                RoleDto roleDto = roleService.get(beanUserRole.getRoleId());
+                project.setRoleId(beanUserRole.getRoleId());
+                project.setRoleName(roleDto.getName());
+            }
             projectTenantCache.put(project.getProjectId(), projectDTO.getTenantId());
             if (!StringUtils.isEmpty(key)) {
                 if (project.getName().contains(key) || project.getAliasName().contains(key)) {
