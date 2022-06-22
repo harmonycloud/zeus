@@ -6,14 +6,13 @@ import com.harmonycloud.caas.common.base.CaasResult;
 import com.harmonycloud.caas.common.model.ProjectDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
-import com.harmonycloud.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.user.ProjectDto;
 import com.harmonycloud.caas.common.model.user.RoleDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
-import com.harmonycloud.caas.filters.user.CurrentUser;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
-import com.harmonycloud.zeus.bean.user.BeanProject;
+import com.harmonycloud.zeus.bean.user.BeanProjectNamespace;
 import com.harmonycloud.zeus.bean.user.BeanUserRole;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.user.RoleService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
@@ -28,10 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -185,9 +181,15 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
         return userDtos;
     }
 
-    private JSONArray getProjectNamespace(String caastoken, String tenantId, String projectId) {
-        CaasResult<JSONArray> projectNamespace = projectServiceClient.getProjectNamespace(caastoken, tenantId, projectId);
-        CaasResult<JSONArray> federationProjectNamespace = projectServiceClient.getFederationProjectNamespace(caastoken, tenantId, projectId);
+    /**
+     * 查询项目分区
+     * @param tenantId
+     * @param projectId
+     * @return
+     */
+    private JSONArray listProjectNamespace(String tenantId, String projectId) {
+        CaasResult<JSONArray> projectNamespace = projectServiceClient.getProjectNamespace(ZeusCurrentUser.getCaasToken(), tenantId, projectId);
+        CaasResult<JSONArray> federationProjectNamespace = projectServiceClient.getFederationProjectNamespace(ZeusCurrentUser.getCaasToken(), tenantId, projectId);
         JSONArray projectAry = new JSONArray();
         if (projectNamespace.getData() != null && !projectNamespace.getData().isEmpty()) {
             projectAry.addAll(projectNamespace.getData());
@@ -196,6 +198,19 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
             projectAry.addAll(federationProjectNamespace.getData());
         }
         return projectAry;
+    }
+
+
+    /**
+     * 查询当前用户所有分区
+     * @param key
+     * @return
+     */
+    public List<Namespace> listUserNamespace(String key) {
+        List<ProjectDto> list = list(null);
+        List<Namespace> namespaceList = new ArrayList<>();
+        list.forEach(projectDto -> namespaceList.addAll(getNamespace(projectDto.getProjectId())));
+        return namespaceList;
     }
 
     @Override
@@ -227,15 +242,12 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
 
     @Override
     public List<Namespace> getNamespace(String projectId) {
-        CurrentUser currentUser = CurrentUserRepository.getUser();
-        Map<String, String> attributes = currentUser.getAttributes();
-        String caastoken = attributes.get("caastoken");
         String tenantId = projectTenantCache.get(projectId);
         if (StringUtils.isEmpty(tenantId)) {
-            listAllTenantProject(caastoken);
+            listAllTenantProject(ZeusCurrentUser.getCaasToken());
             tenantId = projectTenantCache.get(projectId);
         }
-        JSONArray projectNamespace = getProjectNamespace(caastoken, tenantId, projectId);
+        JSONArray projectNamespace = listProjectNamespace( tenantId, projectId);
         List<Namespace> namespaces = convertProjectNamespace(projectNamespace, projectId);
         Map<String, String> clusterMap = clusterService.listClusters().stream().
                 collect(Collectors.toMap(MiddlewareClusterDTO::getId, MiddlewareClusterDTO::getNickname));
@@ -254,6 +266,48 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
         }
         CaasResult<JSONObject> projectMember = projectServiceClient.getProjectMember(ZeusCurrentUser.getCaasToken(), tenantId, projectId);
         return convertProjectMember(projectMember.getJSONArray("userDataList"), projectId);
+    }
+
+    @Override
+    public List<ProjectDto> getMiddlewareCount(String projectId) {
+        List<Namespace> namespaceList;
+        if (org.apache.commons.lang3.StringUtils.isNotEmpty(projectId)) {
+            namespaceList = getNamespace(projectId);
+        } else {
+            namespaceList = listUserNamespace(null);
+        }
+        // 分区为空
+        if (CollectionUtils.isEmpty(namespaceList)) {
+            return Collections.emptyList();
+        }
+        Set<String> clusterIdList =
+                namespaceList.stream().map(Namespace::getClusterId).collect(Collectors.toSet());
+        Map<String, List<MiddlewareCR>> middlewareCRListMap = new HashMap<>();
+        for (String clusterId : clusterIdList) {
+            List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(clusterId, null, null);
+            middlewareCRListMap.put(clusterId, middlewareCRList);
+        }
+        Map<String, List<Namespace>> beanProjectNamespaceListMap =
+                namespaceList.stream().collect(Collectors.groupingBy(Namespace::getProjectId));
+        List<ProjectDto> projectDtoList = new ArrayList<>();
+        for (String key : beanProjectNamespaceListMap.keySet()) {
+            ProjectDto projectDto = new ProjectDto();
+            projectDto.setProjectId(key);
+            int count = 0;
+            for (String clusterId : middlewareCRListMap.keySet()) {
+                for (MiddlewareCR middlewareCr : middlewareCRListMap.get(clusterId)) {
+                    if (beanProjectNamespaceListMap.get(key).stream()
+                            .anyMatch(beanProjectNamespace -> beanProjectNamespace.getName()
+                                    .equals(middlewareCr.getMetadata().getNamespace())
+                                    && beanProjectNamespace.getClusterId().equals(clusterId))) {
+                        count = count + 1;
+                    }
+                }
+            }
+            projectDto.setMiddlewareCount(count);
+            projectDtoList.add(projectDto);
+        }
+        return projectDtoList;
     }
 
 }
