@@ -36,6 +36,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -60,6 +62,8 @@ import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConsta
  * @since 2022/6/17 10:57 上午
  */
 @Slf4j
+@Service
+@ConditionalOnProperty(value = "system.usercenter", havingValue = "zeus")
 public class ClusterServiceImpl implements ClusterService{
 
     private static final Map<String, MiddlewareClusterDTO> CLUSTER_MAP = new ConcurrentHashMap<>();

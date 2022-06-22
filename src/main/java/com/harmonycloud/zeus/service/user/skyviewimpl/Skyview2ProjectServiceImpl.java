@@ -250,11 +250,6 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
     }
 
     @Override
-    public List<MiddlewareClusterDTO> getAllocatableNamespace() {
-        return null;
-    }
-
-    @Override
     public List<UserDto> getUser(String projectId, Boolean allocatable) { ;
         String tenantId = projectTenantCache.get(projectId);
         if (StringUtils.isEmpty(tenantId)) {
@@ -265,63 +260,4 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
         return convertProjectMember(projectMember.getJSONArray("userDataList"), projectId);
     }
 
-    @Override
-    public void bindUser(ProjectDto projectDto) {
-
-    }
-
-    @Override
-    public void updateUserRole(String projectId, UserDto userDto) {
-
-    }
-
-    @Override
-    public void unbindUser(String projectId, String username) {
-
-    }
-
-    @Override
-    public void delete(String projectId) {
-
-    }
-
-    @Override
-    public void update(ProjectDto projectDto) {
-
-    }
-
-    @Override
-    public void update(BeanProject beanProject) {
-
-    }
-
-    @Override
-    public void bindNamespace(Namespace namespace) {
-        super.bindNamespace(namespace);
-    }
-
-    @Override
-    public void unBindNamespace(String projectId, String clusterId, String namespace) {
-
-    }
-
-    @Override
-    public List<ProjectMiddlewareResourceInfo> middlewareResource(String projectId) throws Exception {
-        return null;
-    }
-
-    @Override
-    public List<ProjectDto> getMiddlewareCount(String projectId) {
-        return null;
-    }
-
-    @Override
-    public ProjectDto findProjectByNamespace(String namespace) {
-        return null;
-    }
-
-    @Override
-    public BeanProject get(String projectId) {
-        return null;
-    }
 }
