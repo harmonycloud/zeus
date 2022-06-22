@@ -65,8 +65,8 @@ public class MinioWrapper {
             MinioClient minioClient = MinioWrapper.build(minio);
             minioClient.listBuckets();
         } catch (Exception e) {
-            log.error("minio连接失败:", e);
-            throw new BusinessException(ErrorMessage.MINIO_CONNECTION_FAILED);
+            log.error("连接失败:", e);
+            throw new BusinessException(ErrorMessage.CONNECTION_FAILED);
         }
     }
 
