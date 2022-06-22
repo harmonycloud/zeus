@@ -75,7 +75,7 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
             CaasResult<JSONArray> projectResult = projectServiceClient.getTenantProject(caastoken, jsonTenant.getString("tenantId"));
             if (Boolean.TRUE.equals(projectResult.getSuccess())) {
                 JSONArray projectList = projectResult.getData();
-                projects.addAll(convertProject(projectList, jsonTenant.getString("tenantName"), caastoken));
+                projects.addAll(convertProject(projectList, jsonTenant.getString("tenantName"), jsonTenant.getString("aliasName"), caastoken));
             }
         }
         return projects;
@@ -87,7 +87,7 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
      * @param tenantName
      * @return
      */
-    private  List<ProjectDTO> convertProject(JSONArray projects, String tenantName, String caastoken) {
+    private  List<ProjectDTO> convertProject(JSONArray projects, String tenantName, String tenantAliasName, String caastoken) {
         List<ProjectDTO> projectDTOList = new ArrayList<>();
         projects.forEach(project -> {
             JSONObject jsonProject = (JSONObject) project;
@@ -99,6 +99,7 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
             projectDTO.setTenantId(jsonProject.getString("tenantId"));
             projectDTO.setCreateTime(jsonProject.getDate("createTime"));
             projectDTO.setTenantName(tenantName);
+            projectDTO.setTenantAliasName(tenantAliasName);
             projectDTO.setNamespaces(convertProjectNamespace(jsonProject.getJSONArray("namespaceList"), projectDTO.getProjectId()));
             projectDTO.setNamespaceCount(projectDTO.getNamespaces().size());
             // 查询项目成员
@@ -198,18 +199,13 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
     }
 
     @Override
-    public void add(ProjectDto projectDto) {
-
-    }
-
-    @Override
     public List<ProjectDto> list(String key) {
         List<ProjectDTO> projectDTOS = listAllTenantProject(ZeusCurrentUser.getCaasToken());
         List<ProjectDto> projects = new ArrayList<>();
         projectDTOS.forEach(projectDTO -> {
             ProjectDto project = new ProjectDto();
             project.setName(projectDTO.getProjectName());
-            project.setAliasName(projectDTO.getProjectAliasName());
+            project.setAliasName(projectDTO.getProjectAliasName() + "（所属租户:" + projectDTO.getTenantAliasName() + "）");
             project.setNamespaceCount(projectDTO.getNamespaceCount());
             project.setUserDtoList(projectDTO.getUserDtos());
             project.setProjectId(projectDTO.getProjectId());
