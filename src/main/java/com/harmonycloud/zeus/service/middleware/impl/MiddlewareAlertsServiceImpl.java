@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageInfo;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.model.AlertUserDTO;
 import com.harmonycloud.caas.common.model.AlertsUserDTO;
 import com.harmonycloud.caas.common.model.user.UserDto;
@@ -515,18 +516,18 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
      * 添加告警规则至数据库
      */
     public void addAlerts2Sql(String clusterId, String namespace, String middlewareName,
-                              MiddlewareAlertsDTO middlewareAlertsDTO,String ding, List<UserDto> userDtos) {
+                              MiddlewareAlertsDTO middlewareAlertsDTO, String ding, List<UserDto> userDtos) {
         Date date = new Date();
         MiddlewareAlertInfo middlewareAlertInfo = new MiddlewareAlertInfo();
         String alert = middlewareAlertsDTO.getAlert() + "-" + UUIDUtils.get8UUID();
-        if("system".equals(middlewareAlertsDTO.getLay())) {
-            middlewareAlertsDTO.getLabels().put("alertname",alert);
+        if ("system".equals(middlewareAlertsDTO.getLay())) {
+            middlewareAlertsDTO.getLabels().put("alertname", alert);
         } else {
-            middlewareAlertsDTO.getLabels().put("namespace",namespace);
-            middlewareAlertsDTO.getLabels().put("service",middlewareName);
-            middlewareAlertsDTO.getLabels().put("middleware",middlewareAlertsDTO.getType());
+            middlewareAlertsDTO.getLabels().put("namespace", namespace);
+            middlewareAlertsDTO.getLabels().put("service", middlewareName);
+            middlewareAlertsDTO.getLabels().put("middleware", middlewareAlertsDTO.getType());
         }
-        BeanUtils.copyProperties(middlewareAlertsDTO,middlewareAlertInfo);
+        BeanUtils.copyProperties(middlewareAlertsDTO, middlewareAlertInfo);
         middlewareAlertInfo.setAnnotations(JSONUtil.toJsonStr(middlewareAlertsDTO.getAnnotations()));
         middlewareAlertInfo.setLabels(JSONUtil.toJsonStr(middlewareAlertsDTO.getLabels()));
         middlewareAlertInfo.setClusterId(clusterId);
@@ -535,20 +536,20 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         middlewareAlertInfo.setCreateTime(date);
         middlewareAlertInfo.setName(clusterId);
         middlewareAlertInfo.setAlert(alert);
-        String expr = middlewareAlertsDTO.getDescription() +middlewareAlertsDTO.getSymbol()
+        String expr = middlewareAlertsDTO.getDescription() + middlewareAlertsDTO.getSymbol()
                 + middlewareAlertsDTO.getThreshold() + "%" + "且" + middlewareAlertsDTO.getAlertTime()
                 + "分钟内触发" + middlewareAlertsDTO.getAlertTimes() + "次";
         middlewareAlertInfo.setAlertExpr(expr);
-        if ("zookeeper".equals(middlewareAlertsDTO.getType())) {
+        if (MiddlewareTypeEnum.ZOOKEEPER.getType().equals(middlewareAlertsDTO.getType()) || MiddlewareTypeEnum.POSTGRESQL.getType().equals(middlewareAlertsDTO.getType())) {
             middlewareAlertInfo.setDescription(middlewareAlertsDTO.getAlert());
         }
         middlewareAlertInfoMapper.insert(middlewareAlertInfo);
         List<BeanUser> beanUsers = userDtos.stream().map(userDto -> {
             BeanUser beanUser = new BeanUser();
-            BeanUtils.copyProperties(userDto,beanUser);
+            BeanUtils.copyProperties(userDto, beanUser);
             return beanUser;
         }).collect(Collectors.toList());
-        addMail2Sql(beanUsers,ding,middlewareAlertInfo.getAlertId());
+        addMail2Sql(beanUsers, ding, middlewareAlertInfo.getAlertId());
     }
 
     /**
