@@ -6,8 +6,6 @@ import java.util.stream.Collectors;
 import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.bean.user.BeanRoleAuthority;
-import com.harmonycloud.zeus.bean.user.BeanUser;
-import com.harmonycloud.zeus.dao.user.BeanRoleAuthorityMapper;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.user.*;
 import com.harmonycloud.zeus.util.RequestUtil;
@@ -33,7 +31,7 @@ import com.harmonycloud.zeus.dao.user.BeanRoleMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_ONE;
+import static com.harmonycloud.caas.common.constants.CommonConstant.*;
 
 /**
  * @author xutianhong
@@ -162,6 +160,23 @@ public class RoleServiceImpl implements RoleService {
         List<ResourceMenuDto> resourceMenuDtoList = resourceMenuService.list(ids);
         return resourceMenuDtoList.stream().filter(ResourceMenuDto::getOwn).collect(Collectors.toList());
     }
+
+    @Override
+    public void initMiddlewareAuthority(String type) {
+        QueryWrapper<BeanRole> wrapper = new QueryWrapper<>();
+        List<BeanRole> beanRoleList = beanRoleMapper.selectList(wrapper);
+        for (BeanRole beanRole : beanRoleList) {
+            if (beanRole.getId().equals(NUM_ONE) || beanRole.getId().equals(NUM_TWO)
+                || beanRole.getId().equals(NUM_THREE)) {
+                roleAuthorityService.insert(beanRole.getId(), type, "1111");
+            } else if (beanRole.getId().equals(NUM_FOUR)) {
+                roleAuthorityService.insert(beanRole.getId(), type, "1000");
+            } else {
+                roleAuthorityService.insert(beanRole.getId(), type, "0000");
+            }
+        }
+    }
+
 
     /**
      * 校验角色名是否存在
