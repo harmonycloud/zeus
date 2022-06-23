@@ -36,7 +36,7 @@ public class Skyview2AuthServiceImpl extends AuthServiceImpl {
         //解密密码
         String decryptPassword;
         try {
-            decryptPassword = password;
+            decryptPassword = RSAUtils.decryptByPrivateKey(password);
         } catch (Exception e) {
             throw new BusinessException(ErrorMessage.RSA_DECRYPT_FAILED);
         }
