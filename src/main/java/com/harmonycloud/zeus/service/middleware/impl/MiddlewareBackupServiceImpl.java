@@ -87,7 +87,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                     backupRecord.setPhrase(backupStatus.getPhase());
                     backupRecord.setReason(backupStatus.getReason());
                 } else {
-                    backupRecord.setPhrase("Unknow");
+                    backupRecord.setPhrase("Unknown");
                 }
                 backupRecord.setSourceType(item.getMetadata().getAnnotations().get("type"));
                 backupRecord.setTaskName(item.getMetadata().getAnnotations().get("taskName"));
@@ -133,9 +133,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                     if ("Failed".equals(backupStatus.getPhase())) {
                         backupRecord.setReason(backupStatus.getReason());
                     }
+                    backupRecord.setUsage(calUsage(backupStatus));
+                    backupRecord.setPhrase(backupStatus.getPhase());
                 }
-                backupRecord.setUsage(calUsage(backupStatus));
-                backupRecord.setPhrase(backupStatus.getPhase());
                 backupRecord.setSourceName(item.getSpec().getName());
                 backupRecord.setSourceType(item.getMetadata().getAnnotations().get("type"));
                 backupRecord.setTaskName(item.getMetadata().getAnnotations().get("taskName"));
@@ -540,9 +540,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 String position = spec.getBackupDestination().getDestinationType() + "(" + parameters.getUrl() + "/" + parameters.getBucket() + ")";
                 backupRecord.setPosition(position);
                 if (!ObjectUtils.isEmpty(backupStatus)) {
-                    backupRecord.setPhrase("Unknown");
-                } else {
                     backupRecord.setPhrase(backupStatus.getPhase());
+                } else {
+                    backupRecord.setPhrase("Unknown");
                 }
                 backupRecord.setSourceName(schedule.getSpec().getName());
                 backupRecord.setSourceType(schedule.getMetadata().getAnnotations().get("type"));
