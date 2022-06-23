@@ -22,13 +22,14 @@ import com.harmonycloud.zeus.util.DateUtil;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -82,7 +83,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 String position = item.getSpec().getBackupDestination().getDestinationType() + "(" + parameters.getUrl() + "/" + parameters.getBucket() + ")";
                 backupRecord.setPosition(position);
 //                backupRecord.setSourceName();
-                backupRecord.setPhrase(backupStatus.getPhase());
+                if (backupStatus != null) {
+                    backupRecord.setPhrase(backupStatus.getPhase());
+                } else {
+                    backupRecord.setPhrase("Unknow");
+                }
                 backupRecord.setSourceType(item.getMetadata().getAnnotations().get("type"));
                 backupRecord.setTaskName(item.getMetadata().getAnnotations().get("taskName"));
                 backupRecord.setSourceName(item.getSpec().getName());
@@ -109,7 +114,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     public List<MiddlewareBackupRecord> listBackupScheduleRecord(String clusterId, String namespace, String backupName, String type, String keyword) {
-             List<MiddlewareBackupRecord> recordList = new ArrayList<>();
+        List<MiddlewareBackupRecord> recordList = new ArrayList<>();
         List<MiddlewareBackupCR> backupRecordList = getScheduleBackupRecordList(clusterId, namespace);
         if (!CollectionUtils.isEmpty(backupRecordList)) {
             backupRecordList.forEach(item -> {
@@ -123,6 +128,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters parameters =  item.getSpec().getBackupDestination().getParameters();
                 String position = item.getSpec().getBackupDestination().getDestinationType() + "(" + parameters.getUrl() + "/" + parameters.getBucket() + ")";
                 backupRecord.setPosition(position);
+                if (backupStatus != null) {
+                    if ("Failed".equals(backupStatus.getPhase())) {
+                        backupRecord.setReason(backupStatus.getReason());
+                    }
+                }
+                backupRecord.setUsage(calUsage(backupStatus));
 //                backupRecord.setCron(item.getSpec().get);
                 backupRecord.setPhrase(backupStatus.getPhase());
                 backupRecord.setSourceName(item.getSpec().getName());
@@ -264,6 +275,43 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
     }
 
+
+    private String calUsage( MiddlewareBackupStatus backupStatus) {
+        int size = 0 ;
+        String unit = "";
+        if (backupStatus != null) {
+            if ("Success".equals(backupStatus.getPhase())) {
+                try {
+                    for(int i = 0;i < backupStatus.getBackupResults().size(); i++) {
+                        if (backupStatus.getBackupResults().get(i).containsKey("snapshotResults")) {
+                            List results = objToList(backupStatus.getBackupResults().get(i).get("snapshotResults"));
+                            for (int j = 0; j < results.size(); j++) {
+                                String[] str = calUsage(String.valueOf(objectToMap(results.get(j)).get("size")));
+                                size = size + Integer.valueOf(str[0]);
+                                unit = str[1];
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
+        StringBuffer buffer = new StringBuffer();
+        buffer.append(size).append(".").append(unit);
+        return buffer.toString();
+    }
+
+    private String[] calUsage(String size) {
+        String[] be = size.split(".");
+        String[] af = be[1].split(String.valueOf(be[1].charAt(1)));
+        String[] str = {be[0],af[1]};
+        return str;
+    }
     private void checkBackupJobName(MiddlewareBackupDTO backupDTO) {
         List<MiddlewareBackupRecord> backupRecords = backupTaskList(backupDTO.getClusterId(), backupDTO.getNamespace(), null, null, null);
         backupRecords.forEach(record -> {
@@ -868,5 +916,28 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 .setNamespace(backupDTO.getNamespace())
                 .setType(backupDTO.getType())
                 .setName(backupDTO.getMiddlewareName());
+    }
+
+    public List<Object> objToList(Object obj) {
+        List<Object> list = new ArrayList<Object>();
+        if (obj instanceof ArrayList<?>) {
+            for (Object o : (List<?>) obj) {
+                list.add(o);
+            }
+            return list;
+        }
+        return null;
+    }
+
+    public static Map<String, Object> objectToMap(Object obj) throws IllegalAccessException {
+        Map<String, Object> map = new HashMap<String, Object>();
+        Class<?> clazz = obj.getClass();
+        for (Field field : clazz.getDeclaredFields()) {
+            field.setAccessible(true);
+            String fieldName = field.getName();
+            Object value = field.get(obj);
+            map.put(fieldName, value);
+        }
+        return map;
     }
 }
