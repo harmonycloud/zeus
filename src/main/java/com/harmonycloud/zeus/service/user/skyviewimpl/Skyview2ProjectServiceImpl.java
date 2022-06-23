@@ -171,7 +171,7 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
                 } else if (id > 3) {
                     BeanUserRole beanUserRole = userRoleService.get(userDto.getUserName(), projectId);
                     if (beanUserRole == null) {
-                        userRoleService.insert(projectId, userDto.getUserName(), 3);
+                        userRoleService.insert(projectId, userDto.getUserName(), 4);
                         beanUserRole = userRoleService.get(userDto.getUserName(), projectId);
                     }
                     RoleDto roleDto = roleService.get(beanUserRole.getRoleId());
