@@ -20,7 +20,7 @@ import java.util.List;
  * @author xutianhong
  * @Date 2022/6/6 4:23 下午
  */
-@Api(tags = "storage", value = "存储服务", description = "存储服务")
+@Api(tags = "存储服务", value = "存储服务", description = "存储服务")
 @RestController
 @RequestMapping("/clusters/{clusterId}/storage")
 public class StorageController {
