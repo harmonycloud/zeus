@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
 import static com.harmonycloud.caas.common.constants.CommonConstant.*;
+import static com.harmonycloud.caas.common.constants.NameConstant.INTEGRATE_TIME;
 import static com.harmonycloud.caas.common.constants.NameConstant.VG_NAME;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
 
@@ -135,6 +136,10 @@ public class StorageServiceImpl implements StorageService {
         }
         annotations.put(MIDDLEWARE, TRUE);
         annotations.put(ALIAS_NAME, storageDto.getAliasName());
+        if (!annotations.containsKey(INTEGRATE_TIME)) {
+            annotations.put(INTEGRATE_TIME,
+                DateUtils.DateToString(new Date(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue()));
+        }
         storageClass.getMetadata().setAnnotations(annotations);
         storageClassWrapper.update(storageDto.getClusterId(), storageClass);
     }
@@ -156,6 +161,7 @@ public class StorageServiceImpl implements StorageService {
         if (annotations != null){
             annotations.remove(MIDDLEWARE);
             annotations.remove(ALIAS_NAME);
+            annotations.remove(INTEGRATE_TIME);
             storageClassWrapper.update(clusterId, storageClass);
         }
     }
@@ -310,9 +316,16 @@ public class StorageServiceImpl implements StorageService {
         StorageDto storageDto = new StorageDto();
         // 获取存储配额
         Map<String, String> annotations = storageClass.getMetadata().getAnnotations();
+        if (CollectionUtils.isEmpty(annotations)){
+            annotations = new HashMap<>();
+        }
         // 获取中文名称
-        if (!CollectionUtils.isEmpty(annotations) && annotations.containsKey(ALIAS_NAME)) {
+        if (annotations.containsKey(ALIAS_NAME)) {
             storageDto.setAliasName(annotations.get(ALIAS_NAME));
+        }
+        // 获取接入时间
+        if (annotations.containsKey(INTEGRATE_TIME)){
+            storageDto.setCreateTime(DateUtil.StringToDate(annotations.get(INTEGRATE_TIME), DateType.YYYY_MM_DD_T_HH_MM_SS_Z));
         }
         // 获取vg_name
         if (storageClass.getParameters() != null && storageClass.getParameters().containsKey(VG_NAME)){
@@ -323,7 +336,6 @@ public class StorageServiceImpl implements StorageService {
         storageDto.setName(storageClass.getMetadata().getName());
         storageDto.setProvisioner(storageClass.getProvisioner());
         storageDto.setClusterAliasName(cluster.getNickname());
-        storageDto.setCreateTime(DateUtil.StringToDate(storageClass.getMetadata().getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z));
 
         // 获取类型
         StorageClassProvisionerEnum provisionerEnum = StorageClassProvisionerEnum.findByProvisioner(storageClass.getProvisioner());
