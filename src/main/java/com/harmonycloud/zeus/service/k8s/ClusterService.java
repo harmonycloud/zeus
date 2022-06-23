@@ -5,6 +5,7 @@ import com.harmonycloud.caas.common.model.ClusterNamespaceResourceDto;
 import com.harmonycloud.caas.common.model.ClusterNodeResourceDto;
 import com.harmonycloud.caas.common.model.Node;
 import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -129,6 +130,14 @@ public interface ClusterService {
      * @return List<MiddlewareResourceInfo>
      */
     List<MiddlewareResourceInfo> getMwResource(String clusterId) throws Exception;
+
+    /**
+     * 过滤不需要展示的mw，未注册分区下的中间件不做统计
+     * @param clusterId
+     * @param mwCrdList
+     * @return
+     */
+    List<MiddlewareCR> filterByNamespace(String clusterId, List<MiddlewareCR> mwCrdList);
 
     /**
      * 获取集群主机资源列表

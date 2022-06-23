@@ -71,6 +71,7 @@ public class Skyview2AuthServiceImpl extends AuthServiceImpl {
         JSONObject admin = new JSONObject();
         admin.put("username", username);
         admin.put("realName", realName);
+        admin.put("aliasName", realName);
         admin.put("userId", userId);
         admin.put("phone", "");
         JSONObject attributes = new JSONObject();

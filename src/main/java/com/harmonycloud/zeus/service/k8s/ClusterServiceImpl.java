@@ -601,12 +601,7 @@ public class ClusterServiceImpl implements ClusterService{
     public List<MiddlewareResourceInfo> getMwResource(String clusterId) throws Exception {
         // 获取集群下所有中间件信息
         List<MiddlewareCR> mwCrdList = middlewareCRService.listCR(clusterId, null, null);
-        // 过滤未注册的分区
-        List<Namespace> namespaceList = namespaceService.list(clusterId);
-        mwCrdList = mwCrdList.stream()
-                .filter(
-                        mwCrd -> namespaceList.stream().anyMatch(ns -> ns.getName().equals(mwCrd.getMetadata().getNamespace())))
-                .collect(Collectors.toList());
+        mwCrdList = filterByNamespace(clusterId, mwCrdList);
         // 获取中间件图片路径
         List<MiddlewareInfoDTO> middlewareInfoDTOList = middlewareInfoService.list(clusterId).stream()
                 .filter(info -> info.getImagePath() != null).collect(Collectors.toList());
@@ -748,6 +743,16 @@ public class ClusterServiceImpl implements ClusterService{
         clusterCountDownLatch.await();
         log.info("查询完成，返回数据");
         return mwResourceInfoList;
+    }
+
+    @Override
+    public List<MiddlewareCR> filterByNamespace(String clusterId, List<MiddlewareCR> mwCrdList) {
+        // 过滤未注册的分区
+        List<Namespace> namespaceList = namespaceService.list(clusterId);
+        return mwCrdList.stream()
+                .filter(
+                        mwCrd -> namespaceList.stream().anyMatch(ns -> ns.getName().equals(mwCrd.getMetadata().getNamespace())))
+                .collect(Collectors.toList());
     }
 
     @Override

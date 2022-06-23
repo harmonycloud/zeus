@@ -37,7 +37,7 @@ public class ForestSuccessCondition implements SuccessWhen {
         // 返回值为 ture 则表示请求成功，false 表示请求失败
         CurrentUser user = CurrentUserRepository.getUser();
         Map<String, String> attributes = user.getAttributes();
-
+        System.out.println(res.getContent());
         if (res.getStatusCode() == 401) {
             String username = user.getUsername();
             String password = attributes.get("password");

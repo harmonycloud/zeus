@@ -56,17 +56,17 @@ public class ProjectServiceImpl implements ProjectService {
     @Autowired
     private BeanProjectMapper beanProjectMapper;
     @Autowired
-    private BeanProjectNamespaceMapper beanProjectNamespaceMapper;
+    public BeanProjectNamespaceMapper beanProjectNamespaceMapper;
     @Autowired
     private ClusterService clusterService;
     @Autowired
     private UserRoleService userRoleService;
     @Autowired
-    private UserService userService;
+    public UserService userService;
     @Autowired
-    private MiddlewareCRService middlewareCRService;
+    public MiddlewareCRService middlewareCRService;
     @Autowired
-    private MiddlewareInfoService middlewareInfoService;
+    public MiddlewareInfoService middlewareInfoService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
