@@ -119,17 +119,14 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
             record.setAddressName(backup.getAddressName());
             record.setTaskName(backup.getTaskName());
             record.setCron(null);
-            record.setUsage(0);
-            Minio minio = getMinio(backup.getAddressName());
-            record.setCapacity(minio.getCapacity());
-            record.setPercent("0%");
-//            DecimalFormat df = new DecimalFormat("0.00");
-//            if (0 == record.getCapacity()) {
-//                record.setPercent("0%");
-//            } else {
-//                record.setPercent(df.format(record.getUsage()/record.getCapacity()));
-//            }
+            record.setUsage(null);
             list.add(record);
+        }
+        //添加备份记录名称
+        for (int i=0; i<list.size();i++) {
+            StringBuffer buffer = new StringBuffer();
+            buffer.append(list.get(i).getAddressName()).append("-").append("记录").append(i+1);
+            list.get(i).setBackupName(buffer.toString());
         }
         if (StringUtils.isNotBlank(keyword)) {
             return list.stream().filter(record -> {

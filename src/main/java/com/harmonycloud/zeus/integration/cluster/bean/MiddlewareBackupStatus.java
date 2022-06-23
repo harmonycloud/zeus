@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 中间件备份记录状态
@@ -14,6 +15,8 @@ public class MiddlewareBackupStatus {
 
     private String creationTimestamp;
 
+    private List<Map<String, Object>> backupResults;
+
     private List<BackupInfo> backupInfos;
 
     private String phase;
@@ -21,6 +24,8 @@ public class MiddlewareBackupStatus {
     private String message;
 
     private StorageProvider storageProvider;
+
+    private String reason;
     /**
      * 备份记录
      */

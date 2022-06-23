@@ -95,6 +95,7 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
                 backupRecord.setPhrase("Unknown");
             }
             backupRecord.setSourceType(schedule.getMetadata().getAnnotations().get("type"));
+            backupRecord.setSourceName(schedule.getSpec().getBackupTemplate().getClusterName());
 //            setMiddlewareAliasName(middleware.getAliasName(), backupRecord);
             backupRecord.setTaskName(schedule.getMetadata().getAnnotations().get("taskName"));
             backupRecord.setAddressName(schedule.getMetadata().getAnnotations().get("addressName"));
