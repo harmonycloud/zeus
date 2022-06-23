@@ -6,8 +6,10 @@ import com.harmonycloud.caas.common.base.CaasResult;
 import com.harmonycloud.caas.common.model.ClusterCert;
 import com.harmonycloud.caas.common.model.ClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.common.model.middleware.Registry;
 import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.service.k8s.ClusterServiceImpl;
 import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import com.harmonycloud.zeus.skyviewservice.Skyview2ClusterServiceClient;
@@ -98,6 +100,11 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
             this.syncCluster();
         }
         return clusterIdMap.get(skyviewClusterId);
+    }
+
+    @Override
+    public List<MiddlewareCR> filterByNamespace(String clusterId, List<MiddlewareCR> mwCrdList) {
+        return mwCrdList;
     }
 
     /**
