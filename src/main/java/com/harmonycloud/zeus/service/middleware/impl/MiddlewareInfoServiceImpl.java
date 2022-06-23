@@ -424,19 +424,22 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         List<BeanMiddlewareCluster> clusterList = middlewareClusterService.listClustersByClusterId(null);
         List<Middleware> middlewareList = new ArrayList<>();
         clusterList.forEach(cluster -> {
-            List<Middleware> middlewares = middlewareService.simpleList(cluster.getClusterId(), null, null, null);
-            if (StringUtils.isEmpty(keyword) && StringUtils.isEmpty(type)) {
-                middlewareList.addAll(middlewares);
-            } else {
-                if (StringUtils.isNotEmpty(keyword)) {
-                    middlewareList.addAll(middlewares.stream()
-                            .filter(middleware -> middleware.getType().equals(type) && middleware.getName().contains(keyword))
-                            .collect(Collectors.toList()));
+            List<Namespace> listRegisteredNamespace = clusterService.listRegisteredNamespace(cluster.getClusterId());
+            listRegisteredNamespace.forEach(namespace -> {
+                List<Middleware> middlewares = middlewareService.simpleList(cluster.getClusterId(), namespace.getName(), null, null);
+                if (StringUtils.isEmpty(keyword) && StringUtils.isEmpty(type)) {
+                    middlewareList.addAll(middlewares);
                 } else {
-                    middlewareList.addAll(middlewares.stream().filter(middleware -> middleware.getType().equals(type))
-                            .collect(Collectors.toList()));
+                    if (StringUtils.isNotEmpty(keyword)) {
+                        middlewareList.addAll(middlewares.stream()
+                                .filter(middleware -> middleware.getType().equals(type) && middleware.getName().contains(keyword))
+                                .collect(Collectors.toList()));
+                    } else {
+                        middlewareList.addAll(middlewares.stream().filter(middleware -> middleware.getType().equals(type))
+                                .collect(Collectors.toList()));
+                    }
                 }
-            }
+            });
         });
         return middlewareList;
     }
