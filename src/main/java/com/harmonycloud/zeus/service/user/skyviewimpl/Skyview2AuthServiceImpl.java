@@ -9,6 +9,7 @@ import com.harmonycloud.tool.encrypt.RSAUtils;
 import com.harmonycloud.zeus.service.user.impl.AuthServiceImpl;
 import com.harmonycloud.zeus.skyviewservice.Skyview2UserServiceClient;
 import com.harmonycloud.zeus.util.CaasResponseUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import static com.harmonycloud.caas.filters.base.GlobalKey.SET_TOKEN;
  * @author liyinlong
  * @since 2022/6/9 11:16 上午
  */
+@Slf4j
 @Service
 @ConditionalOnProperty(value="system.usercenter",havingValue = "skyview2")
 public class Skyview2AuthServiceImpl extends AuthServiceImpl {
@@ -55,6 +57,7 @@ public class Skyview2AuthServiceImpl extends AuthServiceImpl {
         String userId =  currentResult.getStringVal("userId");
 
         JSONObject admin = convertUserInfo(userName, realName, userId, caasToken, isAdmin, password);
+        log.info("用户信息：", admin);
         String token = generateToken(admin);
         response.setHeader(SET_TOKEN, token);
         convertResult(userName, isAdmin, token);
