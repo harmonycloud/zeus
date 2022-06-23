@@ -25,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -65,7 +66,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public List<MiddlewareBackupRecord> listRecord(String clusterId, String namespace, String middlewareName, String type, String keyword) {
         List<MiddlewareBackupRecord> recordList = new ArrayList<>();
-        if ("mysql".equals(type)) {
+        if (MiddlewareTypeEnum.MYSQL.getType().equals(type)) {
             return mysqlAdapterService.listRecord(clusterId, namespace, middlewareName, type, keyword);
         }
         if (StringUtils.isEmpty(type)) {
@@ -82,7 +83,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters parameters = item.getSpec().getBackupDestination().getParameters();
                 String position = item.getSpec().getBackupDestination().getDestinationType() + "(" + parameters.getUrl() + "/" + parameters.getBucket() + ")";
                 backupRecord.setPosition(position);
-                if (backupStatus != null) {
+                if (!ObjectUtils.isEmpty(backupStatus)) {
                     backupRecord.setPhrase(backupStatus.getPhase());
                     backupRecord.setReason(backupStatus.getReason());
                 } else {
@@ -128,7 +129,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters parameters =  item.getSpec().getBackupDestination().getParameters();
                 String position = item.getSpec().getBackupDestination().getDestinationType() + "(" + parameters.getUrl() + "/" + parameters.getBucket() + ")";
                 backupRecord.setPosition(position);
-                if (backupStatus != null) {
+                if (!ObjectUtils.isEmpty(backupStatus)) {
                     if ("Failed".equals(backupStatus.getPhase())) {
                         backupRecord.setReason(backupStatus.getReason());
                     }
@@ -181,21 +182,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public void updateBackupSchedule(MiddlewareBackupDTO backupDTO) {
-        if ("mysql".equals(backupDTO.getType())) {
+        if (MiddlewareTypeEnum.MYSQL.getType().equals(backupDTO.getType())) {
             mysqlAdapterService.updateBackupSchedule(backupDTO);
         }
-        convertMiddlewareBackup(backupDTO);
         MiddlewareBackupScheduleCR middlewareBackupScheduleCR = backupScheduleCRDService.get(backupDTO.getClusterId(),
                 backupDTO.getNamespace(), backupDTO.getBackupScheduleName());
         try {
             MiddlewareBackupScheduleSpec spec = middlewareBackupScheduleCR.getSpec();
             spec.getSchedule().setCron(CronUtils.parseUtcCron(backupDTO.getCron()));
-            spec.getSchedule().setLimitRecord(backupDTO.getLimitRecord());
-            if (StringUtils.isBlank(backupDTO.getPause())) {
-                spec.setPause("off");
-            } else {
-                spec.setPause(backupDTO.getPause());
-            }
             backupScheduleCRDService.update(backupDTO.getClusterId(), middlewareBackupScheduleCR);
         } catch (IOException e) {
             log.error("中间件{}备份设置更新失败", backupDTO.getMiddlewareName());
@@ -205,7 +199,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public void deleteRecord(String clusterId, String namespace, String middlewareName, String type, String backupName, String backupFileName, String addressName) {
         try {
-            if ("mysql".equals(type)) {
+            if (MiddlewareTypeEnum.MYSQL.getType().equals(type)) {
                 mysqlAdapterService.deleteRecord(clusterId, namespace, middlewareName, type, backupName, backupFileName, addressName);
             } else {
                 backupCRDService.delete(clusterId, namespace, backupName);
@@ -286,7 +280,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private String calUsage(MiddlewareBackupStatus backupStatus) {
         int size = 0;
         String unit = "";
-        if (backupStatus != null) {
+        if (!ObjectUtils.isEmpty(backupStatus)) {
             if ("Success".equals(backupStatus.getPhase())) {
                 try {
                     for (int i = 0; i < backupStatus.getBackupResults().size(); i++) {
@@ -446,7 +440,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     public void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String backupFileName, List<String> pods, String addressName) {
         //设置中间件恢复信息
         try {
-            if ("mysql".equals(type)) {
+            if (MiddlewareTypeEnum.MYSQL.getType().equals(type)) {
                 mysqlAdapterService.createRestore(clusterId, namespace, middlewareName, type, backupName, backupFileName, pods, addressName);
             }
             MiddlewareCR cr = middlewareCRService.getCR(clusterId, namespace, type, middlewareName);
@@ -527,19 +521,17 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public List<MiddlewareBackupRecord> listBackupSchedule(String clusterId, String namespace, String type, String middlewareName, String keyword) {
         List<MiddlewareBackupRecord> recordList = new ArrayList<>();
-        if ("mysql".equals(type)) {
+        if (MiddlewareTypeEnum.MYSQL.getType().equals(type)) {
             return mysqlAdapterService.listBackupSchedule(clusterId, namespace, type, middlewareName, keyword);
         }
         if (StringUtils.isEmpty(type)) {
             recordList.addAll(mysqlAdapterService.listBackupSchedule(clusterId, namespace, type, middlewareName, keyword));
         }
         MiddlewareBackupScheduleList scheduleList = backupScheduleCRDService.list(clusterId, namespace);
-//        Middleware middleware = middlewareService.detail(clusterId, namespace, middlewareName, type);
         if (scheduleList != null && !CollectionUtils.isEmpty(scheduleList.getItems())) {
             scheduleList.getItems().forEach(schedule -> {
                 MiddlewareBackupScheduleStatus backupStatus = schedule.getStatus();
                 MiddlewareBackupRecord backupRecord = new MiddlewareBackupRecord();
-//                setBackupSourceInfo(middlewareName, item.getSpec().getBackupObjects(), backupRecord, podInfo);
                 String backupTime = DateUtil.utc2Local(schedule.getMetadata().getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
                 backupRecord.setBackupTime(backupTime);
                 backupRecord.setBackupName(schedule.getMetadata().getName());
@@ -547,14 +539,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination.MiddlewareBackupParameters parameters =  spec.getBackupDestination().getParameters();
                 String position = spec.getBackupDestination().getDestinationType() + "(" + parameters.getUrl() + "/" + parameters.getBucket() + ")";
                 backupRecord.setPosition(position);
-                if (backupStatus == null) {
+                if (!ObjectUtils.isEmpty(backupStatus)) {
                     backupRecord.setPhrase("Unknown");
                 } else {
                     backupRecord.setPhrase(backupStatus.getPhase());
                 }
                 backupRecord.setSourceName(schedule.getSpec().getName());
                 backupRecord.setSourceType(schedule.getMetadata().getAnnotations().get("type"));
-//                setMiddlewareAliasName(middleware.getAliasName(), backupRecord);
                 backupRecord.setTaskName(schedule.getMetadata().getAnnotations().get("taskName"));
                 backupRecord.setAddressName(schedule.getMetadata().getAnnotations().get("addressName"));
                 backupRecord.setCron(schedule.getSpec().getSchedule().getCron());
@@ -576,7 +567,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public void deleteSchedule(String clusterId, String namespace, String type, String backupScheduleName, String addressName) {
         try {
-            if ("mysql".equals(type)) {
+            if (MiddlewareTypeEnum.MYSQL.getType().equals(type)) {
                 mysqlAdapterService.deleteSchedule(clusterId, namespace, type, backupScheduleName, addressName);
             }
             backupScheduleCRDService.delete(clusterId, namespace, backupScheduleName);
@@ -588,7 +579,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public boolean checkIfAlreadyBackup(String clusterId, String namespace, String type, String middlewareName) {
-        if ("mysql".equals(type)) {
+        if (MiddlewareTypeEnum.MYSQL.getType().equals(type)) {
             return mysqlAdapterService.checkIfAlreadyBackup(clusterId, namespace, type, middlewareName);
         }
         Map<String, String> labels = getMiddlewareBackupLabels(getRealMiddlewareName(type, middlewareName), null, null);
@@ -601,7 +592,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public boolean checkIfAlreadyBackup(String clusterId, String namespace, String type, String middlewareName, String podName) {
-        if ("mysql".equals(type)) {
+        if (MiddlewareTypeEnum.MYSQL.getType().equals(type)) {
             return false;
         }
         List<String> pods = new ArrayList<>();

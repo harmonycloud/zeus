@@ -79,7 +79,6 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
         mysqlScheduleBackupCRList.forEach(schedule -> {
             MysqlScheduleBackupStatus backupStatus = schedule.getStatus();
             MiddlewareBackupRecord backupRecord = new MiddlewareBackupRecord();
-//                setBackupSourceInfo(middlewareName, item.getSpec().getBackupObjects(), backupRecord, podInfo);
             String backupTime = DateUtil.utc2Local(schedule.getMetadata().getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
             backupRecord.setBackupTime(backupTime);
             backupRecord.setBackupName(schedule.getMetadata().getName());
@@ -89,14 +88,13 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
             Minio minio = spec.getBackupTemplate().getStorageProvider().getMinio();
             String position = "minio" + "(" + minio.getEndpoint() + "/" + minio.getBucketName() + ")";
             backupRecord.setPosition(position);
-            if (backupStatus != null) {
+            if (!ObjectUtils.isEmpty(backupStatus)) {
                 backupRecord.setPhrase(backupStatus.getLastBackupPhase());
             } else {
                 backupRecord.setPhrase("Unknown");
             }
             backupRecord.setSourceType(schedule.getMetadata().getAnnotations().get("type"));
             backupRecord.setSourceName(schedule.getSpec().getBackupTemplate().getClusterName());
-//            setMiddlewareAliasName(middleware.getAliasName(), backupRecord);
             backupRecord.setTaskName(schedule.getMetadata().getAnnotations().get("taskName"));
             backupRecord.setAddressName(schedule.getMetadata().getAnnotations().get("addressName"));
             backupRecord.setCron(schedule.getSpec().getSchedule());
