@@ -5,11 +5,13 @@ import com.alibaba.fastjson.JSONObject;
 import com.dtflys.forest.annotation.*;
 import com.harmonycloud.caas.common.base.CaasResult;
 import com.harmonycloud.zeus.config.ForestSuccessCondition;
+import com.harmonycloud.zeus.config.ForestUnauthrizedSuccessCondition;
 import com.harmonycloud.zeus.config.SkyviewAddressSource;
 
 @Address(source = SkyviewAddressSource.class)
 public interface Skyview2UserServiceClient {
 
+    @Success(condition = ForestUnauthrizedSuccessCondition.class)
     @Post("/user/auth/login")
     CaasResult<JSONObject> login(@Query("username") String username, @Query("password") String password, @Query(value = "language", defaultValue = "ch") String anguage);
 

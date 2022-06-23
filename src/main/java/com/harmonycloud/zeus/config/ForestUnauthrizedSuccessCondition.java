@@ -5,6 +5,9 @@ import com.dtflys.forest.callback.SuccessWhen;
 import com.dtflys.forest.http.ForestRequest;
 import com.dtflys.forest.http.ForestResponse;
 import com.harmonycloud.caas.common.base.CaasResult;
+import com.harmonycloud.caas.common.enums.ErrorCodeMessage;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.filters.user.CurrentUser;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.encrypt.RSAUtils;
@@ -15,14 +18,14 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.Map;
 
-// 自定义成功/失败条件实现类
-// 需要实现 SuccessWhen 接口
+/**
+ * @description 未登录成功时的拦截器
+ * @author  liyinlong
+ * @since 2022/6/23 1:52 下午
+ */
 @Slf4j
 @Configuration
-public class ForestSuccessCondition implements SuccessWhen {
-
-    @Autowired
-    private Skyview2UserServiceClient userServiceClient;
+public class ForestUnauthrizedSuccessCondition implements SuccessWhen {
 
     /**
      * 请求成功条件
@@ -35,20 +38,10 @@ public class ForestSuccessCondition implements SuccessWhen {
         // req 为Forest请求对象，即 ForestRequest 类实例
         // res 为Forest响应对象，即 ForestResponse 类实例
         // 返回值为 ture 则表示请求成功，false 表示请求失败
-        CurrentUser user = CurrentUserRepository.getUser();
-        Map<String, String> attributes = user.getAttributes();
-        log.info(res.getContent());
-        if (res.getStatusCode() == 401) {
-            String username = user.getUsername();
-            String password = attributes.get("password");
-            try {
-                String decryptPassword = RSAUtils.decryptByPrivateKey(password);
-                CaasResult<JSONObject> loginResult = userServiceClient.login(username, decryptPassword, "ch");
-                String token = loginResult.getStringVal("token");
-                attributes.put("caastoken", token);
-            } catch (Exception e) {
-                log.error("登录失败", e);
-            }
+        log.info("请求失败:{}", res.getStatusCode());
+        String content = res.getContent();
+        if(content.contains(String.valueOf(ErrorCodeMessage.USER_NOT_AUTH.value()))){
+            throw new BusinessException(ErrorMessage.USER_NOT_AUTH);
         }
         return res.noException();
     }
