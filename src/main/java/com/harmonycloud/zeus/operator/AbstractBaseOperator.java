@@ -123,6 +123,8 @@ public abstract class AbstractBaseOperator {
     private ServiceWrapper serviceWrapper;
     @Autowired
     protected StorageService storageService;
+    @Autowired
+    protected NamespaceService namespaceService;
 
     /**
      * 是否支持该中间件
@@ -146,6 +148,7 @@ public abstract class AbstractBaseOperator {
         if (mw == null) {
             throw new BusinessException(DictEnum.MIDDLEWARE, middleware.getName(), ErrorMessage.NOT_EXIST);
         }
+        mw.setNamespaceAliasName(namespaceService.get(mw.getClusterId(), mw.getNamespace()).getAliasName());
         return convertByHelmChart(mw, cluster);
     }
 
