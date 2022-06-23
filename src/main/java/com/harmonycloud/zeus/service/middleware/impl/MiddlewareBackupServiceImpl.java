@@ -79,12 +79,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 String backupTime = DateUtil.utc2Local(item.getMetadata().getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
                 backupRecord.setBackupTime(backupTime);
                 backupRecord.setBackupName(item.getMetadata().getName());
-                MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters parameters =  item.getSpec().getBackupDestination().getParameters();
+                MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters parameters = item.getSpec().getBackupDestination().getParameters();
                 String position = item.getSpec().getBackupDestination().getDestinationType() + "(" + parameters.getUrl() + "/" + parameters.getBucket() + ")";
                 backupRecord.setPosition(position);
-//                backupRecord.setSourceName();
                 if (backupStatus != null) {
                     backupRecord.setPhrase(backupStatus.getPhase());
+                    backupRecord.setReason(backupStatus.getReason());
                 } else {
                     backupRecord.setPhrase("Unknow");
                 }
@@ -134,7 +134,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                     }
                 }
                 backupRecord.setUsage(calUsage(backupStatus));
-//                backupRecord.setCron(item.getSpec().get);
                 backupRecord.setPhrase(backupStatus.getPhase());
                 backupRecord.setSourceName(item.getSpec().getName());
                 backupRecord.setSourceType(item.getMetadata().getAnnotations().get("type"));
@@ -142,6 +141,15 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 backupRecord.setAddressName(item.getMetadata().getAnnotations().get("addressName"));
                 recordList.add(backupRecord);
             });
+        }
+        // 根据时间降序
+        recordList.sort(
+                (o1, o2) -> o1.getBackupTime() == null ? -1 : o2.getBackupTime() == null ? -1 : o2.getBackupTime().compareTo(o1.getBackupTime()));
+        //添加备份记录名称
+        for (int i = 0; i < recordList.size(); i++) {
+            StringBuffer buffer = new StringBuffer();
+            buffer.append(recordList.get(i).getAddressName()).append("-").append("记录").append(i + 1);
+            recordList.get(i).setBackupName(buffer.toString());
         }
         if (StringUtils.isNotBlank(keyword)) {
             return recordList.stream().filter(record -> {
@@ -275,14 +283,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
     }
 
-
-    private String calUsage( MiddlewareBackupStatus backupStatus) {
-        int size = 0 ;
+    private String calUsage(MiddlewareBackupStatus backupStatus) {
+        int size = 0;
         String unit = "";
         if (backupStatus != null) {
             if ("Success".equals(backupStatus.getPhase())) {
                 try {
-                    for(int i = 0;i < backupStatus.getBackupResults().size(); i++) {
+                    for (int i = 0; i < backupStatus.getBackupResults().size(); i++) {
                         if (backupStatus.getBackupResults().get(i).containsKey("snapshotResults")) {
                             List results = objToList(backupStatus.getBackupResults().get(i).get("snapshotResults"));
                             for (int j = 0; j < results.size(); j++) {

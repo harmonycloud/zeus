@@ -122,7 +122,12 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
             record.setUsage(null);
             list.add(record);
         }
-
+        //添加备份记录名称
+        for (int i=0; i<list.size();i++) {
+            StringBuffer buffer = new StringBuffer();
+            buffer.append(list.get(i).getAddressName()).append("-").append("记录").append(i+1);
+            list.get(i).setBackupName(buffer.toString());
+        }
         if (StringUtils.isNotBlank(keyword)) {
             return list.stream().filter(record -> {
                 if (record.getTaskName().contains(keyword)) {
