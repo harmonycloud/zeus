@@ -19,7 +19,7 @@ import io.swagger.annotations.ApiOperation;
  * @author dengyulong
  * @date 2021/03/31
  */
-@Api(tags = "storageClass", value = "存储服务", description = "存储服务")
+@Api(tags = "存储服务", value = "存储服务", description = "存储服务")
 @RestController
 @RequestMapping("/clusters/{clusterId}/storageclasses")
 public class StorageClassController {
