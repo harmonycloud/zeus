@@ -36,7 +36,7 @@ public class Skyview2AuthServiceImpl extends AuthServiceImpl {
         //解密密码
         String decryptPassword;
         try {
-            decryptPassword = RSAUtils.decryptByPrivateKey(password);
+            decryptPassword = password;
         } catch (Exception e) {
             throw new BusinessException(ErrorMessage.RSA_DECRYPT_FAILED);
         }
@@ -57,7 +57,7 @@ public class Skyview2AuthServiceImpl extends AuthServiceImpl {
         String userId =  currentResult.getStringVal("userId");
 
         JSONObject admin = convertUserInfo(userName, realName, userId, caasToken, isAdmin, password);
-        log.info("用户信息：", admin);
+        log.info("用户信息：{}", admin);
         String token = generateToken(admin);
         response.setHeader(SET_TOKEN, token);
         convertResult(userName, isAdmin, token);
