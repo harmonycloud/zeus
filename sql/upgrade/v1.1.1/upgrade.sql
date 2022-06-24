@@ -76,4 +76,4 @@ INSERT INTO `resource_menu` VALUES (21,'operationAudit','操作审计','systemMa
 INSERT INTO `role_authority` VALUES (null,1,'postgresql','1111');
 INSERT INTO `role_authority` VALUES (null,2,'postgresql','1111');
 INSERT INTO `role_authority` VALUES (null,3,'postgresql','1111');
-INSERT INTO `role_authority` VALUES (null,4,'postgresql','1111');
+INSERT INTO `role_authority` VALUES (null,4,'postgresql','1000');
