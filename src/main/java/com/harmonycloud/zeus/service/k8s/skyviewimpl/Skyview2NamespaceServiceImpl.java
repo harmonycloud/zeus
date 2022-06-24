@@ -77,7 +77,7 @@ public class Skyview2NamespaceServiceImpl extends NamespaceServiceImpl {
 
     @Override
     public List<Namespace> list(String clusterId) {
-        return Collections.emptyList();
+        return listClusterNamespaces(clusterId);
     }
 
 }

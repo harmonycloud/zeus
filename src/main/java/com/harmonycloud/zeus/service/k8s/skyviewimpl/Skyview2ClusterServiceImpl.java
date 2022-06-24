@@ -12,6 +12,7 @@ import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.service.k8s.ClusterServiceImpl;
 import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
+import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.skyviewservice.Skyview2ClusterServiceClient;
 import com.harmonycloud.zeus.skyviewservice.Skyview2UserServiceClient;
 import com.harmonycloud.zeus.util.YamlUtil;
@@ -63,6 +64,8 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
     @Autowired
     private Skyview2ClusterServiceClient clusterServiceClient;
     @Autowired
+    private NamespaceService namespaceService;
+    @Autowired
     private MiddlewareClusterService middlewareClusterService;
 
     /**
@@ -105,6 +108,15 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
     @Override
     public List<MiddlewareCR> filterByNamespace(String clusterId, List<MiddlewareCR> mwCrdList) {
         return mwCrdList;
+    }
+
+    @Override
+    public List<Namespace> getRegisteredNamespaceNum(List<MiddlewareClusterDTO> clusterDTOList) {
+        List<Namespace> namespaces = new ArrayList<>();
+        clusterDTOList.forEach(clusterDTO -> {
+            namespaces.addAll(namespaceService.list(clusterDTO.getId()));
+        });
+        return namespaces;
     }
 
     /**
