@@ -84,7 +84,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 backupRecord.setPosition(position);
                 if (!ObjectUtils.isEmpty(backupStatus)) {
                     backupRecord.setPhrase(backupStatus.getPhase());
-                    backupRecord.setReason(backupStatus.getReason());
+                    if ("Failed".equals(backupStatus.getPhase())) {
+                        backupRecord.setReason(backupStatus.getReason());
+                    }
                 } else {
                     backupRecord.setPhrase("Unknown");
                 }
@@ -149,7 +151,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         for (int i = 0; i < recordList.size(); i++) {
             StringBuffer buffer = new StringBuffer();
             buffer.append(recordList.get(i).getAddressName()).append("-").append("记录").append(i + 1);
-            recordList.get(i).setBackupName(buffer.toString());
+            recordList.get(i).setRecordName(buffer.toString());
         }
         if (StringUtils.isNotBlank(keyword)) {
             return recordList.stream().filter(record -> {
@@ -215,8 +217,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      */
     @Override
     public void createBackupSchedule(MiddlewareBackupDTO backupDTO) {
-        Map<String, String> labels =
-            getMiddlewareBackupLabels(backupDTO.getMiddlewareName(), null, backupDTO.getPods());
         Minio minio = mysqlAdapterService.getMinio(backupDTO.getAddressName());
         MiddlewareBackupScheduleCR crd = new MiddlewareBackupScheduleCR();
         ObjectMeta meta = getMiddlewareBackupMeta(backupDTO.getNamespace(), backupDTO.getMiddlewareName(),
@@ -227,7 +227,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         destination.setDestinationType("minio").setParameters(
             new MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination.MiddlewareBackupParameters(
                 minio.getBucketName(), minio.getEndpoint(), "/" + backupDTO.getType(), minio.getAccessKeyId(), minio.getSecretAccessKey(),
-                null));
+                "MTIzNDU2Cg=="));
         List<String> args = new ArrayList();
         args.add("--backupSize=10");
         List<Map<String, List<String>>> customBackups = new ArrayList<>();
@@ -259,7 +259,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         Minio minio = mysqlAdapterService.getMinio(backupDTO.getAddressName());
         MiddlewareBackupSpec.MiddlewareBackupDestination destination = new MiddlewareBackupSpec.MiddlewareBackupDestination();
         destination.setDestinationType("minio").setParameters(new MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters(minio.getBucketName(),
-                minio.getEndpoint(), "/" + backupDTO.getType(), minio.getAccessKeyId(), minio.getSecretAccessKey(), null));
+                minio.getEndpoint(), "/" + backupDTO.getType(), minio.getAccessKeyId(), minio.getSecretAccessKey(), "MTIzNDU2Cg=="));
         List<String> args = new ArrayList();
         args.add("--backupSize=10");
         List<Map<String, List<String>>> customBackups = new ArrayList<>();
