@@ -887,8 +887,12 @@ public class OverviewServiceImpl implements OverviewService {
             List<MiddlewareInfoDTO> infoDTOList = middlewareInfoService.list(cluster.getId()).stream().
                     filter(mw -> !mw.getStatus().equals(2)).collect(Collectors.toList());
             middlewareInfoDtoSet.addAll(infoDTOList);
-            // 获取中间件
-            middlewareList.addAll(middlewareCRService.list(cluster.getId(), null, null, false));
+            // 获取已注册分区下的中间件
+            List<Namespace> namespaceList = namespaceService.list(cluster.getId());
+            List<Middleware> list = middlewareCRService.list(cluster.getId(), null, null, false);
+            list = list.stream().filter(mw -> namespaceList.stream().anyMatch(ns -> ns.getName().equals(mw.getNamespace()))).collect(Collectors.toList());
+
+            middlewareList.addAll(list);
         }
 
         List<MiddlewareBriefInfoDTO> briefInfoDTOList = new ArrayList<>();

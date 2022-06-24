@@ -44,6 +44,8 @@ public class ForestUnauthrizedSuccessCondition implements SuccessWhen {
             throw new BusinessException(ErrorMessage.USER_NOT_AUTH);
         }else if(content.contains(String.valueOf(ErrorCodeMessage.AUTH_FAIL.value()))){
             throw new BusinessException(ErrorMessage.AUTH_FAILED);
+        }else if(content.contains(String.valueOf(ErrorCodeMessage.USER_DISABLED.value()))){
+            throw new BusinessException(ErrorMessage.USER_NOT_EXIT);
         }
         return res.noException();
     }
