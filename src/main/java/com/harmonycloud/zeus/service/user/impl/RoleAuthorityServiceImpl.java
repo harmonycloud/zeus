@@ -68,4 +68,11 @@ public class RoleAuthorityServiceImpl implements RoleAuthorityService {
             }
         }
     }
+
+    @Override
+    public Boolean checkExistByType(String type) {
+        QueryWrapper<BeanRoleAuthority> wrapper = new QueryWrapper<BeanRoleAuthority>().eq("type", type);
+        List<BeanRoleAuthority> beanRoleAuthorityList = beanRoleAuthorityMapper.selectList(wrapper);
+        return !CollectionUtils.isEmpty(beanRoleAuthorityList);
+    }
 }

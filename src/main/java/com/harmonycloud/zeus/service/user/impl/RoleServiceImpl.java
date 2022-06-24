@@ -163,6 +163,9 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public void initMiddlewareAuthority(String type) {
+        if (roleAuthorityService.checkExistByType(type)){
+            return;
+        }
         QueryWrapper<BeanRole> wrapper = new QueryWrapper<>();
         List<BeanRole> beanRoleList = beanRoleMapper.selectList(wrapper);
         for (BeanRole beanRole : beanRoleList) {
