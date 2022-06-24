@@ -884,7 +884,9 @@ public class OverviewServiceImpl implements OverviewService {
         List<Middleware> middlewareList = new ArrayList<>();
         for (MiddlewareClusterDTO cluster : clusterList){
             // 获取多集群中间件类型并集
-            middlewareInfoDtoSet.addAll(middlewareInfoService.list(cluster.getId()));
+            List<MiddlewareInfoDTO> infoDTOList = middlewareInfoService.list(cluster.getId()).stream().
+                    filter(mw -> !mw.getStatus().equals(2)).collect(Collectors.toList());
+            middlewareInfoDtoSet.addAll(infoDTOList);
             // 获取中间件
             middlewareList.addAll(middlewareCRService.list(cluster.getId(), null, null, false));
         }
