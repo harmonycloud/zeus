@@ -186,13 +186,14 @@ public class Skyview2UserServiceImpl extends UserServiceImpl {
         projects.forEach(project -> {
             String projectId = project.getProjectId();
             CaasResult<JSONArray> projectRoleResult = projectServiceClient.getUserProjectRole(ZeusCurrentUser.getCaasToken(), projectId);
-            Integer userRoleId = projectRoleResult.getJSONArrayIntegerVal(0, "id");
-            project.setUserRoleId(userRoleId);
+            if (projectRoleResult.getData() != null) {
+                Integer userRoleId = projectRoleResult.getJSONArrayIntegerVal(0, "id");
+                project.setUserRoleId(userRoleId);
+            }
         });
 
         // 3、保存项目分区绑定信息
         projects.forEach(project -> {
-            //3.1、获取项目成员
             projectService.bindNamespace(project.getNamespaces());
         });
 
@@ -215,6 +216,9 @@ public class Skyview2UserServiceImpl extends UserServiceImpl {
             userRoleService.delete(username, null, 1);
             // 5、判断用户在每个项目下的角色是否是租户管理员，若是，则判断是否已存储该用户每个项目项目管理员角色，没有则存储 => 所有项目项目管理员
             for (ProjectDTO project : projects) {
+                if (project.getUserRoleId() == null) {
+                    continue;
+                }
                 if (project.getUserRoleId().equals(2) || project.getUserRoleId().equals(3)) {
                     // 是租户管理员或项目管理员，存储为项目管理员 2
                     saveUserProjectRole(project.getProjectId(), 2, username);
