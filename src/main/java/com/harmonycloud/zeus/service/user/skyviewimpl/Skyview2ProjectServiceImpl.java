@@ -219,7 +219,7 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
     }
 
     @Override
-    public List<ProjectDto> list(String key) {
+    public List<ProjectDto> list(String keyword) {
         List<ProjectDTO> projectDTOS = listAllTenantProject(ZeusCurrentUser.getCaasToken());
         List<ProjectDto> projects = new ArrayList<>();
         projectDTOS.forEach(projectDTO -> {
@@ -234,21 +234,19 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
             project.setMemberCount(projectDTO.getMemberCount());
             project.setNamespaceCount(projectDTO.getNamespaceCount());
             BeanUserRole beanUserRole = userRoleService.get(ZeusCurrentUser.getUserName(), projectDTO.getProjectId());
-            if (beanUserRole != null) {
+            projectTenantCache.put(project.getProjectId(), projectDTO.getTenantId());
+            if (ZeusCurrentUser.isAdmin()) {
+                projects.add(project);
+            } else if (beanUserRole != null) {
                 RoleDto roleDto = roleService.get(beanUserRole.getRoleId());
                 project.setRoleId(beanUserRole.getRoleId());
                 project.setRoleName(roleDto.getName());
-            }
-            projectTenantCache.put(project.getProjectId(), projectDTO.getTenantId());
-            if (!StringUtils.isEmpty(key)) {
-                if (project.getName().contains(key) || project.getAliasName().contains(key)) {
-                    projects.add(project);
-                }
-            } else {
                 projects.add(project);
+            }else {
+                log.info("用户{}在项目{}下没有角色", ZeusCurrentUser.getUserName(), projectDTO.getProjectName());
             }
         });
-        return projects;
+        return projects.stream().filter(projectDto -> StringUtils.isEmpty(keyword) && projectDto.getName().contains(keyword)).collect(Collectors.toList());
     }
 
     @Override

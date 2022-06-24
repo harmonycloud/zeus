@@ -35,7 +35,7 @@ public interface ProjectService {
      * 查询项目列表
      * @return List<ProjectDto>
      */
-    List<ProjectDto> list(String key);
+    List<ProjectDto> list(String keyword);
 
     /**
      * 查询项目下分区

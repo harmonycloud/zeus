@@ -95,7 +95,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<ProjectDto> list(String key) {
+    public List<ProjectDto> list(String keyword) {
         QueryWrapper<BeanProject> wrapper = new QueryWrapper<>();
         List<BeanProject> beanProjectList = beanProjectMapper.selectList(wrapper);
         CurrentUser currentUser = CurrentUserRepository.getUserExistNull();
@@ -147,12 +147,12 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         // 根据key进行过滤
-        if (StringUtils.isNotEmpty(key)) {
+        if (StringUtils.isNotEmpty(keyword)) {
             projectDtoList = projectDtoList.stream()
                 .filter(projectDto -> (StringUtils.isNotEmpty(projectDto.getAliasName())
-                    && projectDto.getAliasName().contains(key))
+                    && projectDto.getAliasName().contains(keyword))
                     || (StringUtils.isNotEmpty(projectDto.getDescription())
-                        && projectDto.getDescription().contains(key)))
+                        && projectDto.getDescription().contains(keyword)))
                 .collect(Collectors.toList());
         }
 
