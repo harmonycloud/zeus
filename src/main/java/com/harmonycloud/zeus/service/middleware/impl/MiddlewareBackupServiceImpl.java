@@ -60,8 +60,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private MiddlewareService middlewareService;
     @Autowired
     private MiddlewareCrTypeService middlewareCrTypeService;
-    @Autowired
-    private MiddlewareBackupAddressService middlewareBackupAddressService;
 
     @Override
     public List<MiddlewareBackupRecord> listRecord(String clusterId, String namespace, String middlewareName, String type, String keyword) {
@@ -79,6 +77,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 MiddlewareBackupRecord backupRecord = new MiddlewareBackupRecord();
                 String backupTime = DateUtil.utc2Local(item.getMetadata().getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
                 backupRecord.setBackupTime(backupTime);
+                backupRecord.setNamespace(item.getMetadata().getNamespace());
                 backupRecord.setBackupName(item.getMetadata().getName());
                 MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters parameters = item.getSpec().getBackupDestination().getParameters();
                 String position = item.getSpec().getBackupDestination().getDestinationType() + "(" + parameters.getUrl() + "/" + parameters.getBucket() + ")";
@@ -204,7 +203,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             } else {
                 backupCRDService.delete(clusterId, namespace, backupName);
             }
-            middlewareBackupAddressService.calRelevanceNum(addressName, false);
         } catch (IOException e) {
             log.error("删除备份记录失败");
         }
@@ -215,6 +213,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * @param backupDTO
      * @return
      */
+    @Override
     public void createBackupSchedule(MiddlewareBackupDTO backupDTO) {
         Map<String, String> labels =
             getMiddlewareBackupLabels(backupDTO.getMiddlewareName(), null, backupDTO.getPods());
@@ -242,7 +241,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         crd.setSpec(spec);
         try {
             backupScheduleCRDService.create(backupDTO.getClusterId(), crd);
-            middlewareBackupAddressService.calRelevanceNum(backupDTO.getAddressName(), true);
         } catch (IOException e) {
             log.error("备份创建失败", e);
         }
@@ -252,6 +250,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * 创建通用备份
      * @param backupDTO
      */
+    @Override
     public void createNormalBackup(MiddlewareBackupDTO backupDTO) {
         MiddlewareBackupCR middlewareBackupCR = new MiddlewareBackupCR();
         ObjectMeta meta = getMiddlewareBackupMeta(backupDTO.getNamespace(), backupDTO.getMiddlewareName(),
@@ -271,7 +270,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         middlewareBackupCR.setSpec(spec);
         try {
             backupCRDService.create(backupDTO.getClusterId(), middlewareBackupCR);
-            middlewareBackupAddressService.calRelevanceNum(backupDTO.getAddressName(), true);
         } catch (IOException e) {
             log.error("立即备份失败", e);
         }
@@ -534,6 +532,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 MiddlewareBackupRecord backupRecord = new MiddlewareBackupRecord();
                 String backupTime = DateUtil.utc2Local(schedule.getMetadata().getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
                 backupRecord.setBackupTime(backupTime);
+                backupRecord.setNamespace(schedule.getMetadata().getNamespace());
                 backupRecord.setBackupName(schedule.getMetadata().getName());
                 MiddlewareBackupScheduleSpec spec = schedule.getSpec();
                 MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination.MiddlewareBackupParameters parameters =  spec.getBackupDestination().getParameters();
@@ -571,7 +570,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 mysqlAdapterService.deleteSchedule(clusterId, namespace, type, backupScheduleName, addressName);
             }
             backupScheduleCRDService.delete(clusterId, namespace, backupScheduleName);
-            middlewareBackupAddressService.calRelevanceNum(addressName, false);
         } catch (IOException e) {
             log.error("备份规则删除失败；{}", backupScheduleName, e);
         }

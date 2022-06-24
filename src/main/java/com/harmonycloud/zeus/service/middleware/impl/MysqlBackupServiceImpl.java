@@ -86,6 +86,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         List<MiddlewareBackupRecord> list = new ArrayList<>();
         for (MysqlBackupDto backup : backups) {
             MiddlewareBackupRecord record = new MiddlewareBackupRecord();
+            record.setNamespace(backup.getNamespace());
             record.setSourceName(backup.getName());
             record.setBackupType(BackupType.CLUSTER.getType());
             record.setBackupName(backup.getBackupName());
@@ -123,9 +124,9 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
             list.add(record);
         }
         //添加备份记录名称
-        for (int i=0; i<list.size();i++) {
+        for (int i = 0; i < list.size(); i++) {
             StringBuffer buffer = new StringBuffer();
-            buffer.append(list.get(i).getAddressName()).append("-").append("记录").append(i+1);
+            buffer.append(list.get(i).getAddressName()).append("-").append("记录").append(i + 1);
             list.get(i).setBackupName(buffer.toString());
         }
         if (StringUtils.isNotBlank(keyword)) {
@@ -200,7 +201,6 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         MysqlScheduleBackupCR mysqlScheduleBackupCR =
                 new MysqlScheduleBackupCR().setKind("MysqlBackupSchedule").setSpec(spec).setMetadata(metaData);
         mysqlScheduleBackupService.create(backupDTO.getClusterId(), mysqlScheduleBackupCR);
-        middlewareBackupAddressService.calRelevanceNum(backupDTO.getAddressName(), true);
     }
 
     /**
@@ -226,7 +226,6 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         metaData.setClusterName(backupDTO.getMiddlewareName());
         BackupCR backupCR = new BackupCR().setKind("MysqlBackup").setSpec(spec).setMetadata(metaData);
         backupService.create(backupDTO.getClusterId(), backupCR);
-        middlewareBackupAddressService.calRelevanceNum(backupDTO.getAddressName(), true);
     }
 
     @Override
@@ -391,6 +390,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
                 mysqlBackupDto.setStatus("Complete");
                 mysqlBackupDto.setBackupFileName(backup.getBackupFileName());
             }
+            mysqlBackupDto.setNamespace(backup.getNamespace());
             mysqlBackupDto.setBackupFileName(backup.getBackupFileName());
             mysqlBackupDto.setName(backup.getName());
             mysqlBackupDto.setBackupName(backup.getBackupName());

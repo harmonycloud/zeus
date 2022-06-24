@@ -104,6 +104,11 @@ public class MiddlewareBackupScheduleSpec {
          */
         private Integer limitRecord;
 
+        /**
+         * 备份保留时间
+         */
+        private String retentionTime;
+
         public Schedule() {
         }
 

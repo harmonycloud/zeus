@@ -425,21 +425,20 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         List<Middleware> middlewareList = new ArrayList<>();
         clusterList.forEach(cluster -> {
             List<Namespace> listRegisteredNamespace = clusterService.listRegisteredNamespace(cluster.getClusterId());
-            listRegisteredNamespace.forEach(namespace -> {
-                List<Middleware> middlewares = middlewareService.simpleList(cluster.getClusterId(), namespace.getName(), null, null);
-                if (StringUtils.isEmpty(keyword) && StringUtils.isEmpty(type)) {
-                    middlewareList.addAll(middlewares);
+            List<Middleware> middlewares = middlewareService.simpleList(cluster.getClusterId(), null, null, null);
+            middlewares = middlewares.stream().filter(middleware -> listRegisteredNamespace.stream().anyMatch(ns ->middleware.getNamespace().equals(ns.getName()))).collect(Collectors.toList());
+            if (StringUtils.isEmpty(keyword) && StringUtils.isEmpty(type)) {
+                middlewareList.addAll(middlewares);
+            } else {
+                if (StringUtils.isNotEmpty(keyword)) {
+                    middlewareList.addAll(middlewares.stream()
+                            .filter(middleware -> middleware.getType().equals(type) && middleware.getName().contains(keyword))
+                            .collect(Collectors.toList()));
                 } else {
-                    if (StringUtils.isNotEmpty(keyword)) {
-                        middlewareList.addAll(middlewares.stream()
-                                .filter(middleware -> middleware.getType().equals(type) && middleware.getName().contains(keyword))
-                                .collect(Collectors.toList()));
-                    } else {
-                        middlewareList.addAll(middlewares.stream().filter(middleware -> middleware.getType().equals(type))
-                                .collect(Collectors.toList()));
-                    }
+                    middlewareList.addAll(middlewares.stream().filter(middleware -> middleware.getType().equals(type))
+                            .collect(Collectors.toList()));
                 }
-            });
+            }
         });
         return middlewareList;
     }

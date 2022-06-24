@@ -80,6 +80,7 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
             MysqlScheduleBackupStatus backupStatus = schedule.getStatus();
             MiddlewareBackupRecord backupRecord = new MiddlewareBackupRecord();
             String backupTime = DateUtil.utc2Local(schedule.getMetadata().getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
+            backupRecord.setNamespace(schedule.getMetadata().getNamespace());
             backupRecord.setBackupTime(backupTime);
             backupRecord.setBackupName(schedule.getMetadata().getName());
             MysqlScheduleBackupSpec spec = schedule.getSpec();
