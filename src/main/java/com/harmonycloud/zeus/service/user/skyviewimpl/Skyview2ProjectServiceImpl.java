@@ -246,7 +246,10 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
                 log.info("用户{}在项目{}下没有角色", ZeusCurrentUser.getUserName(), projectDTO.getProjectName());
             }
         });
-        return projects.stream().filter(projectDto -> StringUtils.isEmpty(keyword) && projectDto.getName().contains(keyword)).collect(Collectors.toList());
+        if (!StringUtils.isEmpty(keyword)) {
+            return projects.stream().filter(projectDto -> projectDto.getName().contains(keyword)).collect(Collectors.toList());
+        }
+        return projects;
     }
 
     @Override
