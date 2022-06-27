@@ -33,7 +33,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
 
     @Override
     public boolean support(Middleware middleware) {
-        return MiddlewareTypeEnum.POSTGRESQL == MiddlewareTypeEnum.findByType(middleware.getType());
+        return false;
     }
 
     @Override
