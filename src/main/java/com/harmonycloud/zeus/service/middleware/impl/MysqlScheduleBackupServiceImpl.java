@@ -1,16 +1,21 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.DateType;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupNameDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
 import com.harmonycloud.caas.common.model.middleware.ScheduleBackup;
+import com.harmonycloud.zeus.bean.BeanMiddlewareBackupName;
+import com.harmonycloud.zeus.dao.BeanMiddlewareBackupNameMapper;
 import com.harmonycloud.zeus.integration.cluster.MysqlScheduleBackupWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.service.middleware.MysqlScheduleBackupService;
 import com.harmonycloud.zeus.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -31,6 +36,8 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
 
     @Autowired
     private MysqlScheduleBackupWrapper mysqlScheduleBackupWrapper;
+    @Autowired
+    private BeanMiddlewareBackupNameMapper middlewareBackupNameMapper;
 
     /**
      * 查询备份列表
@@ -94,11 +101,14 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
             } else {
                 backupRecord.setPhrase("Unknown");
             }
-            backupRecord.setSourceType(schedule.getMetadata().getAnnotations().get("type"));
+            backupRecord.setSourceType(schedule.getMetadata().getLabels().get("type"));
             backupRecord.setSourceName(schedule.getSpec().getBackupTemplate().getClusterName());
-            backupRecord.setTaskName(schedule.getMetadata().getAnnotations().get("taskName"));
-            backupRecord.setAddressName(schedule.getMetadata().getAnnotations().get("addressName"));
+            String backupId = schedule.getMetadata().getLabels().get("backupId");
+            backupRecord.setBackupId(backupId);
+            backupRecord.setTaskName(getBackupName(clusterId, backupId).getBackupName());
+            backupRecord.setAddressName(schedule.getMetadata().getLabels().get("addressId"));
             backupRecord.setCron(schedule.getSpec().getSchedule());
+            backupRecord.setBackupMode("single");
             recordList.add(backupRecord);
         });
         return recordList;
@@ -153,6 +163,16 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
     @Override
     public MysqlScheduleBackupCR get(String clusterId, String namespace, String backupScheduleName) {
         return mysqlScheduleBackupWrapper.get(clusterId, namespace, backupScheduleName);
+    }
+
+    public MiddlewareBackupNameDTO getBackupName(String clusterId, String backupId) {
+        QueryWrapper<BeanMiddlewareBackupName> wrapper = new QueryWrapper<BeanMiddlewareBackupName>().eq("cluster_id", clusterId).eq("backup_id", backupId);
+        BeanMiddlewareBackupName backupName = middlewareBackupNameMapper.selectOne(wrapper);
+        MiddlewareBackupNameDTO backupNameDTO = new MiddlewareBackupNameDTO();
+        if (!ObjectUtils.isEmpty(backupName)) {
+            BeanUtils.copyProperties(backupName, backupNameDTO);
+        }
+        return backupNameDTO;
     }
 
 }

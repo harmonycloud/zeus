@@ -42,14 +42,14 @@ public class MiddlewareBackupScheduleSpec {
     public MiddlewareBackupScheduleSpec() {
     }
 
-    public MiddlewareBackupScheduleSpec(MiddlewareBackupScheduleDestination backupDestination, List<Map<String, List<String>>> customBackups, String name, String type, String pause, String cron, Integer limitRecord) {
+    public MiddlewareBackupScheduleSpec(MiddlewareBackupScheduleDestination backupDestination, List<Map<String, List<String>>> customBackups, String name, String type, String pause, String cron, Integer limitRecord, Integer retentionTime) {
         this.backupDestination = backupDestination;
         this.customBackups = customBackups;
         this.name = name;
         this.type = type;
         this.pause = pause;
         if (StringUtils.isNotBlank(cron)) {
-            this.schedule = new Schedule(cron, limitRecord);
+            this.schedule = new Schedule(cron, limitRecord, retentionTime);
         }
     }
 
@@ -107,14 +107,15 @@ public class MiddlewareBackupScheduleSpec {
         /**
          * 备份保留时间
          */
-        private String retentionTime;
+        private Integer retentionTime;
 
         public Schedule() {
         }
 
-        public Schedule(String cron, Integer limitRecord) {
+        public Schedule(String cron, Integer limitRecord, Integer retentionTime) {
             this.cron = cron;
             this.limitRecord = limitRecord;
+            this.retentionTime = retentionTime;
         }
     }
 

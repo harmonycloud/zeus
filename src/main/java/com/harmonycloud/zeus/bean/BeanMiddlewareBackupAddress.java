@@ -26,6 +26,12 @@ public class BeanMiddlewareBackupAddress {
     private Integer id;
 
     /**
+     * 标识
+     */
+    @TableField(value = "address_id")
+    private String addressId;
+
+    /**
      * 中文名称
      */
     @TableField(value = "name")
@@ -36,18 +42,6 @@ public class BeanMiddlewareBackupAddress {
      */
     @TableField(value = "type")
     private String type;
-
-    /**
-     * id
-     */
-    @TableField(value = "relevance_num")
-    private Integer relevanceNum;
-
-    /**
-     * 关联任务数
-     */
-    @TableField(value = "status")
-    private Integer status;
 
     //S3相关
     /**
@@ -67,12 +61,6 @@ public class BeanMiddlewareBackupAddress {
      */
     @TableField(value = "secret_access_key")
     private String secretAccessKey;
-
-    /**
-     * 容量
-     */
-    @TableField(value = "capacity")
-    private String capacity;
 
     /**
      * 地址

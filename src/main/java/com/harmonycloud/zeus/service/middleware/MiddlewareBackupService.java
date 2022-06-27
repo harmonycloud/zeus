@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.service.middleware;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
 import com.harmonycloud.caas.common.model.MiddlewareBackupScheduleConfig;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupNameDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
 
 import java.util.List;
@@ -185,11 +186,12 @@ public interface MiddlewareBackupService {
      * @param namespace
      * @param type
      * @param backupName
+     * @param backupId
      * @param backupFileName
      * @param addressName
      * @param cron
      */
-    void deleteBackUpTask(String clusterId, String namespace, String type, String backupName, String backupFileName, String addressName, String cron);
+    void deleteBackUpTask(String clusterId, String namespace, String type, String backupName, String backupId, String backupFileName, String addressName, String cron);
 
     /**
      * 删除备份记录
@@ -199,8 +201,31 @@ public interface MiddlewareBackupService {
      * @param backupName
      * @param backupFileName
      * @param addressName
+     * @param backupId
      */
-    void deleteBackUpRecord(String clusterId, String namespace, String type, String backupName, String backupFileName, String addressName);
+    void deleteBackUpRecord(String clusterId, String namespace, String type, String backupName, String backupFileName, String addressName, String backupId);
 
+    /**
+     * 创建备份任务名称映射信息
+     * @param clusterId
+     * @param taskName
+     * @param backupId
+     */
+    void createBackupName(String clusterId, String taskName, String backupId, String backupType);
 
+    /**
+     * 查询备份任务名称映射信息
+     * @param clusterId
+     * @param backupId
+     * @return
+     */
+    MiddlewareBackupNameDTO getBackupName(String clusterId, String backupId);
+
+    /**
+     * 删除备份任务名称映射信息
+     * @param clusterId
+     * @param taskName
+     * @param backupType
+     */
+    void deleteBackupName(String clusterId, String taskName, String backupType);
 }

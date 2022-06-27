@@ -6,6 +6,7 @@ import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterBackupAddressDTO;
+import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.bean.BeanMiddlewareBackupAddress;
 import com.harmonycloud.zeus.bean.BeanMiddlewareBackupToCluster;
 import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
@@ -53,19 +54,15 @@ public class MiddlewareBackupAddressServiceImpl implements MiddlewareBackupAddre
 
     @Override
     public void createBackupAddress(MiddlewareClusterBackupAddressDTO middlewareClusterBackupAddressDTO) {
-        QueryWrapper<BeanMiddlewareBackupAddress> wrapper = new QueryWrapper<>();
+        QueryWrapper<BeanMiddlewareBackupAddress> wrapper = new QueryWrapper<BeanMiddlewareBackupAddress>().eq("name", middlewareClusterBackupAddressDTO.getName());
         List<BeanMiddlewareBackupAddress> backupAddressList = middlewareBackupAddressMapper.selectList(wrapper);
         if (!CollectionUtils.isEmpty(backupAddressList)) {
-            backupAddressList.forEach(beanMiddlewareBackupAddress -> {
-                if (middlewareClusterBackupAddressDTO.getName().equals(beanMiddlewareBackupAddress.getName())) {
-                    throw new BusinessException(ErrorMessage.CHINESE_NAME_REPETITION);
-                }
-            });
+             throw new BusinessException(ErrorMessage.CHINESE_NAME_REPETITION);
         }
         BeanMiddlewareBackupAddress backup = new BeanMiddlewareBackupAddress();
         BeanUtils.copyProperties(middlewareClusterBackupAddressDTO, backup);
-        backup.setRelevanceNum(CommonConstant.NUM_ZERO);
         backup.setCreateTime(new Date());
+        backup.setAddressId(UUIDUtils.get16UUID());
         middlewareBackupAddressMapper.insert(backup);
         middlewareClusterBackupAddressDTO.getClusterIds().forEach(cluster -> {
             BeanMiddlewareBackupToCluster backupToCluster = new BeanMiddlewareBackupToCluster();
@@ -91,10 +88,10 @@ public class MiddlewareBackupAddressServiceImpl implements MiddlewareBackupAddre
     }
 
     @Override
-    public List<MiddlewareClusterBackupAddressDTO> listBackupAddress(String name, String keyWord) {
+    public List<MiddlewareClusterBackupAddressDTO> listBackupAddress(String addressId, String keyWord) {
         QueryWrapper<BeanMiddlewareBackupAddress> wrapper = new QueryWrapper<>();
-        if (StringUtils.isNotEmpty(name)) {
-            wrapper.eq("name", name);
+        if (StringUtils.isNotEmpty(addressId)) {
+            wrapper.eq("address_id", addressId);
         }
         List<BeanMiddlewareBackupAddress> backups = middlewareBackupAddressMapper.selectList(wrapper);
         List<MiddlewareClusterBackupAddressDTO> backupAddressDTOS = backups.stream().map(backup -> {
@@ -164,19 +161,6 @@ public class MiddlewareBackupAddressServiceImpl implements MiddlewareBackupAddre
         Minio minio = new Minio();
         BeanUtils.copyProperties(middlewareClusterBackupAddressDTO, minio);
         minioWrapper.checkMinio(minio);
-    }
-
-    @Override
-    public void calRelevanceNum(String name, boolean flag) {
-        MyLambdaUpdateWrapper<BeanMiddlewareBackupAddress> wrapper =
-            new MyLambdaUpdateWrapper<>(BeanMiddlewareBackupAddress.class);
-        if (flag) {
-            wrapper.incrField(BeanMiddlewareBackupAddress::getRelevanceNum, 1);
-        } else {
-            wrapper.descField(BeanMiddlewareBackupAddress::getRelevanceNum, 1);
-        }
-        wrapper.eq(BeanMiddlewareBackupAddress::getName, name);
-        middlewareBackupAddressMapper.update(null, wrapper);
     }
 
     /**
