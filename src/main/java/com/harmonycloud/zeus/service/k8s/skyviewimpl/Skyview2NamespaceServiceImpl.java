@@ -72,6 +72,9 @@ public class Skyview2NamespaceServiceImpl extends NamespaceServiceImpl {
         if (withMiddleware) {
             super.listNamespaceWithMiddleware(namespaceList, clusterId);
         }
+        if (StringUtils.isNotEmpty(keyword)) {
+            return namespaceList.stream().filter(namespace -> namespace.getName().contains(keyword)).collect(Collectors.toList());
+        }
         return namespaceList;
     }
 
