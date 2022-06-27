@@ -35,10 +35,28 @@ spec:
             spec:
               description: MiddlewareBackupSpec defines the desired state of MiddlewareBackup
               properties:
-                name:
+                backendStorage:
                   type: string
-                type:
-                  type: string
+                backupDestination:
+                  properties:
+                    destinationType:
+                      type: string
+                    parameters:
+                      properties:
+                        backupPassword:
+                          type: string
+                        bucket:
+                          type: string
+                        bucketSubPath:
+                          type: string
+                        url:
+                          type: string
+                        userId:
+                          type: string
+                        userKey:
+                          type: string
+                      type: object
+                  type: object
                 backupObjects:
                   items:
                     properties:
@@ -50,6 +68,57 @@ spec:
                         type: array
                     type: object
                   type: array
+                customBackups:
+                  items:
+                    properties:
+                      args:
+                        items:
+                          type: string
+                        type: array
+                      backupObject:
+                        properties:
+                          pod:
+                            type: string
+                          pvcs:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      commonPathBackupObjects:
+                        items:
+                          properties:
+                            pod:
+                              type: string
+                            pvcObjects:
+                              items:
+                                properties:
+                                  excludeFiles:
+                                    type: string
+                                  paths:
+                                    type: string
+                                  pvc:
+                                    type: string
+                                type: object
+                              type: array
+                          type: object
+                        type: array
+                      env:
+                        items:
+                          properties:
+                            name:
+                              type: string
+                            value:
+                              type: string
+                          type: object
+                        type: array
+                      image:
+                        type: string
+                    type: object
+                  type: array
+                name:
+                  type: string
+                pause:
+                  type: string
                 prefixHooks:
                   items:
                     properties:
@@ -62,14 +131,7 @@ spec:
                         type: object
                       httpGet:
                         properties:
-                          path:
-                            type: string
-                          port:
-                            format: int32
-                            type: integer
                           host:
-                            type: string
-                          scheme:
                             type: string
                           httpHeaders:
                             items:
@@ -80,17 +142,42 @@ spec:
                                   type: string
                               type: object
                             type: array
-                        type: object
-                      tcpSocket:
-                        properties:
+                          path:
+                            type: string
                           port:
                             format: int32
                             type: integer
+                          scheme:
+                            type: string
+                        type: object
+                      tcpSocket:
+                        properties:
                           host:
                             type: string
+                          port:
+                            format: int32
+                            type: integer
                         type: object
                     type: object
                   type: array
+                schedule:
+                  description: MiddlewareBackupSchedule defines the desired state of
+                    MiddlewareBackupSpec
+                  properties:
+                    cron:
+                      description: The Cron format, see https://en.wikipedia.org/wiki/Cron.
+                      type: string
+                    limitRecord:
+                      description: Defaults to 3.
+                      format: int32
+                      type: integer
+                    retentionTime:
+                      format: int32
+                      type: integer
+                    startTime:
+                      format: date-time
+                      type: string
+                  type: object
                 suffixHooks:
                   items:
                     properties:
@@ -103,14 +190,7 @@ spec:
                         type: object
                       httpGet:
                         properties:
-                          path:
-                            type: string
-                          port:
-                            format: int32
-                            type: integer
                           host:
-                            type: string
-                          scheme:
                             type: string
                           httpHeaders:
                             items:
@@ -121,34 +201,25 @@ spec:
                                   type: string
                               type: object
                             type: array
-                        type: object
-                      tcpSocket:
-                        properties:
+                          path:
+                            type: string
                           port:
                             format: int32
                             type: integer
+                          scheme:
+                            type: string
+                        type: object
+                      tcpSocket:
+                        properties:
                           host:
                             type: string
+                          port:
+                            format: int32
+                            type: integer
                         type: object
                     type: object
                   type: array
-                backendStorage:
-                  type: string
-                schedule:
-                  description: MiddlewareBackupSchedule defines the desired state of MiddlewareBackupSpec
-                  properties:
-                    cron:
-                      description: The Cron format, see https://en.wikipedia.org/wiki/Cron.
-                      type: string
-                    limitRecord:
-                      description: Defaults to 3.
-                      format: int32
-                      type: integer
-                    startTime:
-                      format: date-time
-                      type: string
-                  type: object
-                pause:
+                type:
                   type: string
               type: object
             status:

@@ -30,11 +30,11 @@ public interface MiddlewareBackupAddressService {
     /**
      * 查询备份位置
      *
-     * @param name      中文名称
-     * @param keyWord 关键词
+     * @param addressId 标识
+     * @param keyWord   关键词
      * @return
      */
-    List<MiddlewareClusterBackupAddressDTO> listBackupAddress(String name, String keyWord);
+    List<MiddlewareClusterBackupAddressDTO> listBackupAddress(String addressId, String keyWord);
 
     /**
      * 查询备份位置详情
@@ -58,13 +58,5 @@ public interface MiddlewareBackupAddressService {
      * @param middlewareClusterBackupAddressDTO 备份位置信息
      */
     void checkMinio(MiddlewareClusterBackupAddressDTO middlewareClusterBackupAddressDTO);
-
-    /**
-     * 计算任务关联数
-     *
-     * @param name      中文名称
-     * @param flag      标识
-     */
-    void calRelevanceNum(String name, boolean flag);
 
 }

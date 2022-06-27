@@ -208,13 +208,12 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
 
     /**
      * 查询当前用户所有分区
-     * @param key
      * @return
      */
-    public List<Namespace> listUserNamespace(String key) {
-        List<ProjectDto> list = list(null);
+    public List<Namespace> listUserNamespace() {
+        List<ProjectDto> projectDtoList = list(null);
         List<Namespace> namespaceList = new ArrayList<>();
-        list.forEach(projectDto -> namespaceList.addAll(getNamespace(projectDto.getProjectId())));
+        projectDtoList.forEach(projectDto -> namespaceList.addAll(getNamespace(projectDto.getProjectId())));
         return namespaceList;
     }
 
@@ -246,7 +245,10 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
                 log.info("用户{}在项目{}下没有角色", ZeusCurrentUser.getUserName(), projectDTO.getProjectName());
             }
         });
-        return projects.stream().filter(projectDto -> StringUtils.isEmpty(keyword) && projectDto.getName().contains(keyword)).collect(Collectors.toList());
+        if (!StringUtils.isEmpty(keyword)) {
+            return projects.stream().filter(projectDto -> projectDto.getName().contains(keyword)).collect(Collectors.toList());
+        }
+        return projects;
     }
 
     @Override
@@ -283,7 +285,7 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
         if (org.apache.commons.lang3.StringUtils.isNotEmpty(projectId)) {
             namespaceList = getNamespace(projectId);
         } else {
-            namespaceList = listUserNamespace(null);
+            namespaceList = listUserNamespace();
         }
         // 分区为空
         if (CollectionUtils.isEmpty(namespaceList)) {

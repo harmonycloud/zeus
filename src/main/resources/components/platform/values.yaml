@@ -13,7 +13,7 @@ global:
     nodeSelector: {}
   middlewarebackup_controller:
     image: middlewarebackup-controller
-    tag: v1.0.4
+    tag: v1.1.0
     resources:
       limits:
         cpu: 200m
@@ -26,5 +26,9 @@ global:
       jobNamespace: middleware-job
       jobServiceAccount: job-creator
       image: backup-job-creator
-      tag: v1.0.0
-
+      tag: v1.0.1
+    common_path_backup:
+      backupJobImage: middleware-backup-operator:v1.0.0-backup
+    job_pgsql_backup:
+      image: middleware-backup-operator
+      tag: v1.0.0-pgsql

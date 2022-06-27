@@ -70,9 +70,9 @@ public class BackupServiceImpl implements BackupService {
                     .setMiddlewareCluster(backupCRD.getSpec().getClusterName())
                     .setBucketName(backupCRD.getSpec().getStorageProvider().getMinio().getBucketName())
                     .setEndPoint(backupCRD.getSpec().getStorageProvider().getMinio().getEndpoint())
-                    .setAddressName(backupCRD.getMetadata().getAnnotations().get("addressName"))
-                    .setTaskName(backupCRD.getMetadata().getAnnotations().get("taskName"))
-                    .setType(backupCRD.getMetadata().getAnnotations().get("type"));
+                    .setAddressName(backupCRD.getMetadata().getLabels().get("addressId"))
+                    .setTaskName(backupCRD.getMetadata().getLabels().get("backupId"))
+                    .setType(backupCRD.getMetadata().getLabels().get("type"));
             if (!ObjectUtils.isEmpty(backupCRD.getStatus())) {
                 backup.setBackupFileName(backupCRD.getStatus().getBackupFileName())
                         .setBackupTime(backupCRD.getStatus().getBackupTime()).setPhase(backupCRD.getStatus().getPhase());
