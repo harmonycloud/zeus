@@ -65,8 +65,9 @@ data:
       skyview:
         username: admin
         password: Ab123456
-        ip: 10.10.103.188
-        port: 80
+        host: caas-gateway-svc.caas-system
+        port: 8081
+        prefix: /
 
     overview:
       overall:

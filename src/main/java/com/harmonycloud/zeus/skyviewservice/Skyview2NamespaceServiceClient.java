@@ -14,7 +14,7 @@ import com.harmonycloud.zeus.config.SkyviewAddressSource;
 @Address(source = SkyviewAddressSource.class)
 public interface Skyview2NamespaceServiceClient {
 
-    @Get(url = "/caas/dashboard/clusters/{clusterId}/namespaces", headers = {"Authorization: ${token}"})
+    @Get(url = "/#{system.skyview.prefix}/caas/dashboard/clusters/{clusterId}/namespaces", headers = {"Authorization: ${token}"})
     CaasResult<JSONArray> clusterNamespaces(@Var("token") String token, @Var("clusterId") String clusterId);
 
 }
