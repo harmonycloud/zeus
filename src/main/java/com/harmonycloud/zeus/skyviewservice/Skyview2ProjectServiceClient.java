@@ -16,7 +16,7 @@ public interface Skyview2ProjectServiceClient {
      * @param tenantId 租户id
      * @return
      */
-    @Get(url = "/#{system.skyview.prefix}/caas/tenants/{tenantId}/switchTenant", headers = {"Authorization: ${token}"})
+    @Get(url = "#{system.skyview.prefix}/caas/tenants/{tenantId}/switchTenant", headers = {"Authorization: ${token}"})
     CaasResult<JSONObject> getProjectList(@Var("token") String token, @Var("tenantId") String tenantId);
 
     /**
@@ -25,7 +25,7 @@ public interface Skyview2ProjectServiceClient {
      * @param projectId 项目id
      * @return
      */
-    @Get(url = "/#{system.skyview.prefix}/user/switchProject", headers = {"Authorization: ${token}"})
+    @Get(url = "#{system.skyview.prefix}/user/switchProject", headers = {"Authorization: ${token}"})
     CaasResult<JSONArray> getUserProjectRole(@Var("token") String token, @Query("projectId") String projectId);
 
     /**
@@ -34,7 +34,7 @@ public interface Skyview2ProjectServiceClient {
      * @param tenantId
      * @return
      */
-    @Get(url = "/#{system.skyview.prefix}/caas/tenants/{tenantId}/projects", headers = {"Authorization: ${token}"})
+    @Get(url = "#{system.skyview.prefix}/caas/tenants/{tenantId}/projects", headers = {"Authorization: ${token}"})
     CaasResult<JSONArray> getTenantProject(@Var("token")String token,@Var("tenantId")String tenantId);
 
     /**
@@ -44,7 +44,7 @@ public interface Skyview2ProjectServiceClient {
      * @param projectId 项目id
      * @return
      */
-    @Get(url = "/#{system.skyview.prefix}/caas/tenants/{tenantId}/projects/{projectId}", headers = {"Authorization: ${token}"})
+    @Get(url = "#{system.skyview.prefix}/caas/tenants/{tenantId}/projects/{projectId}", headers = {"Authorization: ${token}"})
     CaasResult<JSONObject> getProjectMember(@Var("token")String token,@Var("tenantId")String tenantId,@Var("projectId")String projectId);
 
     /**
@@ -54,7 +54,7 @@ public interface Skyview2ProjectServiceClient {
      * @param projectId
      * @return
      */
-    @Get(url = "/#{system.skyview.prefix}/caas/tenants/{tenantId}/federations/namespaces?withQuota=false", headers = {"Authorization: ${token}"})
+    @Get(url = "#{system.skyview.prefix}/caas/tenants/{tenantId}/federations/namespaces?withQuota=false", headers = {"Authorization: ${token}"})
     CaasResult<JSONArray> getFederationProjectNamespace(@Var("token")String token,@Var("tenantId")String tenantId,@Query("projectId")String projectId);
 
     /**
@@ -64,7 +64,7 @@ public interface Skyview2ProjectServiceClient {
      * @param projectId
      * @return
      */
-    @Get(url = "/#{system.skyview.prefix}/caas/tenants/{tenantId}/projects/{projectId}/namespaces", headers = {"Authorization: ${token}"})
+    @Get(url = "#{system.skyview.prefix}/caas/tenants/{tenantId}/projects/{projectId}/namespaces", headers = {"Authorization: ${token}"})
     CaasResult<JSONArray> getProjectNamespace(@Var("token") String token, @Var("tenantId") String tenantId, @Query("projectId") String projectId);
 
 }
