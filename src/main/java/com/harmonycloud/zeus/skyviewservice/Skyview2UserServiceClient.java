@@ -12,17 +12,17 @@ import com.harmonycloud.zeus.config.SkyviewAddressSource;
 public interface Skyview2UserServiceClient {
 
     @Success(condition = ForestUnauthrizedSuccessCondition.class)
-    @Post("/user/auth/login")
+    @Post("/#{system.skyview.prefix}/user/auth/login")
     CaasResult<JSONObject> login(@Query("username") String username, @Query("password") String password, @Query(value = "language", defaultValue = "ch") String anguage);
 
-    @Get(url = "/caas/users/current", headers = {"Authorization: ${token}"})
+    @Get(url = "/#{system.skyview.prefix}/caas/users/current", headers = {"Authorization: ${token}"})
     CaasResult<JSONObject> current(@Var("token") String token, @Query(value = "isLogin", defaultValue = "true") Boolean isLogin);
 
     @Success(condition = ForestSuccessCondition.class)
-    @Get(url = "/caas/users/current", headers = {"Authorization: ${token}"})
+    @Get(url = "/#{system.skyview.prefix}/caas/users/current", headers = {"Authorization: ${token}"})
     void currentWithHandleException(@Var("token") String token, @Query(value = "isLogin", defaultValue = "true") Boolean isLogin);
 
-    @Get(url = "/user/users/details", headers = {"Authorization: ${token}"})
+    @Get(url = "/#{system.skyview.prefix}/user/users/details", headers = {"Authorization: ${token}"})
     CaasResult<JSONArray> listUser(@Var("token") String token, @Query(value = "param") String param);
 
 }
