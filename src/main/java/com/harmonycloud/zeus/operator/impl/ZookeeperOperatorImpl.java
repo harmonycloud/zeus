@@ -1,21 +1,24 @@
 package com.harmonycloud.zeus.operator.impl;
 
-import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.middleware.*;
-import com.harmonycloud.tool.uuid.UUIDUtils;
-import com.harmonycloud.zeus.annotation.Operator;
-import com.harmonycloud.zeus.operator.api.ZookeeperOperator;
-import com.harmonycloud.zeus.operator.miiddleware.AbstractZookeeperOperator;
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.util.ObjectUtils;
+import static com.harmonycloud.caas.common.constants.NameConstant.PERSISTENCE;
+import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
+import static com.harmonycloud.caas.common.enums.DictEnum.POD;
 
 import java.util.List;
 import java.util.Map;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
+import org.apache.commons.lang3.StringUtils;
+
+import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.caas.common.model.middleware.CustomConfig;
+import com.harmonycloud.caas.common.model.middleware.Middleware;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareQuota;
+import com.harmonycloud.zeus.annotation.Operator;
+import com.harmonycloud.zeus.operator.api.ZookeeperOperator;
+import com.harmonycloud.zeus.operator.miiddleware.AbstractZookeeperOperator;
+
+import io.fabric8.kubernetes.api.model.ConfigMap;
 
 /**
  * @author liyinlong
@@ -25,22 +28,16 @@ import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
 public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements ZookeeperOperator {
 
     @Override
-    public void create(Middleware middleware, MiddlewareClusterDTO cluster) {
-        super.create(middleware, cluster);
-    }
-
-    @Override
     protected void replaceValues(Middleware middleware, MiddlewareClusterDTO cluster, JSONObject values) {
         // 替换通用的值
         replaceCommonValues(middleware, cluster, values);
 
         // 资源配额
         MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
-        JSONObject jsonObject = (values.getJSONObject("pod")).getJSONObject(RESOURCES);
-        replaceCommonResources(quota, jsonObject);
-        replaceCommonStorages(quota, values);
+        JSONObject resources = values.getJSONObject(POD.getEnPhrase()).getJSONObject(RESOURCES);
+        replaceCommonResources(quota, resources);
+        replaceCommonStorages(quota, values.getJSONObject(PERSISTENCE));
         values.put("replicas", quota.getNum());
-
     }
 
     @Override
@@ -49,18 +46,6 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
         convertCommonByHelmChart(middleware, values);
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
         convertRegistry(middleware, cluster);
-
-        // 处理kafka的特有参数
-        if (values != null && values.getJSONObject("zookeeper") != null) {
-            JSONObject args = values.getJSONObject("zookeeper");
-            KafkaDTO kafkaDTO = new KafkaDTO();
-            kafkaDTO.setZkAddress(args.getString("address"));
-            kafkaDTO.setPath(args.getString("path"));
-            String[] ports = args.getString("port").split("/");
-            kafkaDTO.setZkPort(ports[0]);
-            middleware.setKafkaDTO(kafkaDTO);
-        }
-        middleware.setManagePlatform(true);
         return middleware;
     }
 
@@ -100,6 +85,12 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
         sb.deleteCharAt(sb.length() - 1);
         // 更新helm
         helmChartService.upgrade(middleware, sb.toString(), cluster);
+    }
+
+    @Override
+    protected void replaceCommonStorages(MiddlewareQuota quota, JSONObject persistence) {
+        persistence.put("storageClassName", quota.getStorageClassName());
+        persistence.put("volumeSize", quota.getStorageClassQuota() + "Gi");
     }
 
     @Override
