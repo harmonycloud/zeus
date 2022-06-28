@@ -10,6 +10,7 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 
 import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.caas.common.model.StorageDto;
 import com.harmonycloud.caas.common.model.middleware.CustomConfig;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
@@ -19,12 +20,14 @@ import com.harmonycloud.zeus.operator.api.ZookeeperOperator;
 import com.harmonycloud.zeus.operator.miiddleware.AbstractZookeeperOperator;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author liyinlong
  * @since 2021/10/22 3:20 下午
  */
 @Operator(paramTypes4One = Middleware.class)
+@Slf4j
 public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements ZookeeperOperator {
 
     @Override
@@ -44,6 +47,8 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
     public Middleware convertByHelmChart(Middleware middleware, MiddlewareClusterDTO cluster) {
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
         convertCommonByHelmChart(middleware, values);
+        convertResourcesByHelmChart(middleware, middleware.getType(),
+            values.getJSONObject(POD.getEnPhrase()).getJSONObject(RESOURCES));
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
         convertRegistry(middleware, cluster);
         return middleware;
@@ -61,13 +66,13 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
             // 实例规格扩容
             // cpu
             if (StringUtils.isNotBlank(quota.getCpu())) {
-                sb.append("resources.requests.cpu=").append(quota.getCpu()).append(",resources.limits.cpu=")
-                        .append(quota.getLimitCpu()).append(",");
+                sb.append("pod.resources.requests.cpu=").append(quota.getCpu()).append(",pod.resources.limits.cpu=")
+                    .append(quota.getLimitCpu()).append(",");
             }
             // memory
             if (StringUtils.isNotBlank(quota.getMemory())) {
-                sb.append("resources.requests.memory=").append(quota.getMemory()).append("resources.limits.memory=")
-                        .append(quota.getLimitMemory()).append(",");
+                sb.append("pod.resources.requests.memory=").append(quota.getMemory())
+                    .append("pod.resources.limits.memory=").append(quota.getLimitMemory()).append(",");
             }
             // 实例模式扩容
             if (quota.getNum() != null) {
@@ -91,6 +96,28 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
     protected void replaceCommonStorages(MiddlewareQuota quota, JSONObject persistence) {
         persistence.put("storageClassName", quota.getStorageClassName());
         persistence.put("volumeSize", quota.getStorageClassQuota() + "Gi");
+    }
+
+    @Override
+    protected void convertStoragesByHelmChart(Middleware middleware, String quotaKey, JSONObject values) {
+        if (StringUtils.isBlank(quotaKey) || values == null) {
+            return;
+        }
+        MiddlewareQuota quota = checkMiddlewareQuota(middleware, quotaKey);
+        JSONObject persistence = values.getJSONObject(PERSISTENCE);
+        quota.setStorageClassName(persistence.getString("storageClassName"))
+            .setStorageClassQuota(persistence.getString("volumeSize"));
+        quota.setIsLvmStorage(storageClassService.checkLVMStorage(middleware.getClusterId(), middleware.getNamespace(),
+            values.getString("storageClassName")));
+
+        // 获取存储中文名
+        try {
+            StorageDto storageDto =
+                storageService.get(middleware.getClusterId(), values.getString("storageClassName"), false);
+            quota.setStorageClassAliasName(storageDto.getAliasName());
+        } catch (Exception e) {
+            log.error("中间件{}, 获取存储中文名失败", middleware.getName());
+        }
     }
 
     @Override
