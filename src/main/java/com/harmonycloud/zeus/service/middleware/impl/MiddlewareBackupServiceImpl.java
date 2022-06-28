@@ -276,16 +276,22 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
     }
 
-    private int calRetentionTime(MiddlewareBackupDTO backupDTO) {
+    private Integer calRetentionTime(MiddlewareBackupDTO backupDTO) {
+        if (StringUtils.isEmpty(backupDTO.getDateUnit())) {
+            return null;
+        }
         int retentionTime = 0;
         switch (backupDTO.getDateUnit()) {
-            case "年":
+            case "year":
                 retentionTime = multi(backupDTO.getRetentionTime(), 365);
                 break;
-            case "月":
+            case "month":
                 retentionTime = multi(backupDTO.getRetentionTime(), 30);
                 break;
-            case "日":
+            case "week":
+                retentionTime = multi(backupDTO.getRetentionTime(), 7);
+                break;
+            case "day":
                 retentionTime = backupDTO.getRetentionTime();
                 break;
         }
