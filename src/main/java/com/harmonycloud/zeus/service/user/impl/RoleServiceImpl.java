@@ -145,6 +145,7 @@ public class RoleServiceImpl implements RoleService {
         List<Integer> ids;
         if (Boolean.TRUE.equals(!userDto.getIsAdmin()) && StringUtils.isNotEmpty(projectId)) {
             ids = Arrays.asList(3, 4);
+            // 判断是否非普通用户
             UserRole userRole = userDto.getUserRoleList().stream().filter(ur -> ur.getProjectId().equals(projectId))
                 .collect(Collectors.toList()).get(0);
             for (String key : userRole.getPower().keySet()) {

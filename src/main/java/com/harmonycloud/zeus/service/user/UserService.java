@@ -118,6 +118,14 @@ public interface UserService {
     List<ResourceMenuDto> menu(String clusterId) ;
 
     /**
+     * 获取服务列表
+     * @param clusterId 集群id
+     * @param projectId 项目id
+     * @return List<ResourceMenuDto>
+     */
+    List<ResourceMenuDto> listMiddlewareMenu(String clusterId, String projectId) ;
+
+    /**
      * 个性化配置
      */
     void insertPersonalConfig(PersonalizedConfiguration configuration,String status) throws Exception;

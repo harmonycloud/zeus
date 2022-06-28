@@ -109,13 +109,6 @@ public interface MiddlewareService {
     MonitorDto monitor(String clusterId, String namespace, String name, String type, String chartVersion);
 
     /**
-     * 查询所有中间件并作为服务列表的子菜单
-     * @param clusterId 集群id
-     * @return List<ResourceMenuDto>
-     */
-    List<ResourceMenuDto> listAllMiddlewareAsMenu(String clusterId);
-
-    /**
      * 查询服务版本
      * @param clusterId 集群ID
      * @param namespace 分区

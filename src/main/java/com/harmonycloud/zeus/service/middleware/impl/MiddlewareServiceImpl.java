@@ -356,33 +356,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public List<ResourceMenuDto> listAllMiddlewareAsMenu(String clusterId) {
-        List<ResourceMenuDto> subMenuList = new ArrayList<>();
-        try {
-            List<BeanClusterMiddlewareInfo> middlewareInfos = clusterMiddlewareInfoService.list(clusterId, false);
-            if (CollectionUtils.isEmpty(middlewareInfos)) {
-                return subMenuList;
-            }
-            AtomicInteger weight = new AtomicInteger(1);
-            for (BeanClusterMiddlewareInfo middlewareInfoDTO : middlewareInfos) {
-                if (middlewareInfoDTO.getStatus() == 2) {
-                    continue;
-                }
-                ResourceMenuDto resourceMenuDto = new ResourceMenuDto();
-                resourceMenuDto.setName(middlewareInfoDTO.getChartName());
-                resourceMenuDto.setAliasName(middlewareInfoDTO.getChartName());
-                resourceMenuDto.setAvailable(true);
-                resourceMenuDto.setWeight(weight.get());
-                weight.getAndIncrement();
-                subMenuList.add(resourceMenuDto);
-            }
-        } catch (Exception e) {
-            log.error("查询服务列表错误", e);
-        }
-        return subMenuList;
-    }
-
-    @Override
     public List<MiddlewareBriefInfoDTO> list(String clusterId, String namespace, String type, String keyword, String projectId)
         throws Exception {
         // 获取中间件chart包信息
