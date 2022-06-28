@@ -536,7 +536,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         middlewareAlertInfo.setCreateTime(date);
         middlewareAlertInfo.setName(clusterId);
         middlewareAlertInfo.setAlert(alert);
-        if (MiddlewareTypeEnum.ZOOKEEPER.getType().equals(middlewareAlertsDTO.getType()) || MiddlewareTypeEnum.POSTGRESQL.getType().equals(middlewareAlertsDTO.getType())) {
+        if (MiddlewareTypeEnum.ZOOKEEPER.getType().equals(middlewareAlertsDTO.getType())) {
             middlewareAlertInfo.setDescription(middlewareAlertsDTO.getAlert());
         }
         String expr = middlewareAlertInfo.getDescription() + middlewareAlertsDTO.getSymbol()
