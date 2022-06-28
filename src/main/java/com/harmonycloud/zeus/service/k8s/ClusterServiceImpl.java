@@ -945,6 +945,7 @@ public class ClusterServiceImpl implements ClusterService{
         return BaseResult.ok("集群添加成功");
     }
 
+    @Override
     public List<Namespace> listRegisteredNamespace(String clusterId) {
         if (StringUtils.isEmpty(clusterId)) {
             return Collections.emptyList();
@@ -954,7 +955,17 @@ public class ClusterServiceImpl implements ClusterService{
     }
 
     @Override
-    public String convertClusterId(String skyviewClusterId) {
+    public String convertSkyviewClusterId(String skyviewClusterId) {
+        return null;
+    }
+
+    @Override
+    public String convertZeusClusterId(String zeusClusterId) {
+        return null;
+    }
+
+    @Override
+    public ClusterDTO findBySkyviewClusterId(String skyviewClusterId) {
         return null;
     }
 

@@ -2,9 +2,9 @@ package com.harmonycloud.zeus.service.user.skyviewimpl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.base.CaasResult;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
+import com.harmonycloud.caas.common.model.ClusterDTO;
 import com.harmonycloud.caas.common.model.ProjectDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
@@ -13,9 +13,7 @@ import com.harmonycloud.caas.common.model.middleware.ProjectMiddlewareResourceIn
 import com.harmonycloud.caas.common.model.user.ProjectDto;
 import com.harmonycloud.caas.common.model.user.RoleDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
-import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
-import com.harmonycloud.zeus.bean.user.BeanProjectNamespace;
 import com.harmonycloud.zeus.bean.user.BeanUserRole;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
@@ -33,6 +31,9 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -71,13 +72,27 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
         JSONArray tenants = currentResult.getJSONArray("tenants");
         // 2、获取所有租户所有项目
         List<ProjectDTO> projects = new ArrayList<>();
+        long start = System.currentTimeMillis();
+        ExecutorService executorService = Executors.newFixedThreadPool(tenants.size());
+        CountDownLatch latch = new CountDownLatch(tenants.size());
         for (Object tenant : tenants) {
-            JSONObject jsonTenant = (JSONObject) tenant;
-            CaasResult<JSONArray> projectResult = projectServiceClient.getTenantProject(caastoken, jsonTenant.getString("tenantId"));
-            if (Boolean.TRUE.equals(projectResult.getSuccess())) {
-                JSONArray projectList = projectResult.getData();
-                projects.addAll(convertProject(projectList, jsonTenant.getString("tenantName"), jsonTenant.getString("aliasName"), caastoken));
-            }
+            executorService.submit(()->{
+                JSONObject jsonTenant = (JSONObject) tenant;
+                CaasResult<JSONArray> projectResult = projectServiceClient.getTenantProject(caastoken, jsonTenant.getString("tenantId"));
+                if (Boolean.TRUE.equals(projectResult.getSuccess())) {
+                    JSONArray projectList = projectResult.getData();
+                    projects.addAll(convertProject(projectList, jsonTenant.getString("tenantName"), jsonTenant.getString("aliasName"), caastoken));
+                }
+                latch.countDown();
+            });
+        }
+        long end  = System.currentTimeMillis();
+        try {
+            latch.await();
+            System.out.println("用时：" + (end-start) / 1000);
+            executorService.shutdown();
+        } catch (InterruptedException e) {
+            log.error("查询用户所有项目出错了", e);
         }
         return projects;
     }
@@ -90,6 +105,8 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
      */
     private  List<ProjectDTO> convertProject(JSONArray projects, String tenantName, String tenantAliasName, String caastoken) {
         List<ProjectDTO> projectDTOList = new ArrayList<>();
+        ExecutorService executorService = Executors.newFixedThreadPool(projects.size());
+        CountDownLatch latch = new CountDownLatch(projects.size());
         projects.forEach(project -> {
             JSONObject jsonProject = (JSONObject) project;
             ProjectDTO projectDTO = new ProjectDTO();
@@ -104,17 +121,27 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
             projectDTO.setNamespaces(convertProjectNamespace(jsonProject.getJSONArray("namespaceList"), projectDTO.getProjectId()));
             projectDTO.setNamespaceCount(projectDTO.getNamespaces().size());
             // 查询项目成员
-            CaasResult<JSONObject> projectMemberResult = projectServiceClient.getProjectMember(caastoken, projectDTO.getTenantId(), projectDTO.getProjectId());
-            JSONArray userDataList = projectMemberResult.getJSONArray("userDataList");
-            if (userDataList != null) {
-                projectDTO.setUserDtos(convertProjectMember(userDataList, projectDTO.getProjectId()));
-                projectDTO.setMemberCount(projectDTO.getUserDtos().size());
-            } else {
-                projectDTO.setMemberCount(0);
-            }
-            projectTenantCache.put(projectDTO.getProjectId(), projectDTO.getTenantId());
-            projectDTOList.add(projectDTO);
+            executorService.submit(()->{
+                CaasResult<JSONObject> projectMemberResult = projectServiceClient.getProjectMember(caastoken, projectDTO.getTenantId(), projectDTO.getProjectId());
+                JSONArray userDataList = projectMemberResult.getJSONArray("userDataList");
+                if (userDataList != null) {
+                    projectDTO.setUserDtos(convertProjectMember(userDataList, projectDTO.getProjectId()));
+                    projectDTO.setMemberCount(projectDTO.getUserDtos().size());
+                } else {
+                    projectDTO.setMemberCount(0);
+                }
+                projectTenantCache.put(projectDTO.getProjectId(), projectDTO.getTenantId());
+                projectDTOList.add(projectDTO);
+                latch.countDown();
+            });
         });
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            log.error("查询项目列表出错了",e);
+        }finally {
+            executorService.shutdown();
+        }
         return projectDTOList;
     }
 
@@ -136,9 +163,9 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
                 JSONArray clusters = jsonNamespace.getJSONArray("clusters");
                 if (clusters != null && !clusters.isEmpty()) {
                     JSONObject jsonCluster = (JSONObject) clusters.get(0);
-                    ns.setClusterId(clusterService.convertClusterId(jsonCluster.getString("id")));
+                    ns.setClusterId(clusterService.convertSkyviewClusterId(jsonCluster.getString("id")));
                 } else {
-                    ns.setClusterId(clusterService.convertClusterId(jsonNamespace.getString("clusterId")));
+                    ns.setClusterId(clusterService.convertSkyviewClusterId(jsonNamespace.getString("clusterId")));
                 }
                 namespaces.add(ns);
             });
@@ -260,10 +287,11 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
         }
         JSONArray projectNamespace = listProjectNamespace(tenantId, projectId);
         List<Namespace> namespaces = convertProjectNamespace(projectNamespace, projectId);
-        Map<String, String> clusterMap = clusterService.listClusters().stream().
-                collect(Collectors.toMap(MiddlewareClusterDTO::getId, MiddlewareClusterDTO::getNickname));
         namespaces.forEach(namespace -> {
-            namespace.setClusterAliasName(clusterMap.get(namespace.getClusterId()));
+            MiddlewareClusterDTO clusterDTO = clusterService.findById(namespace.getClusterId());
+            if (clusterDTO != null) {
+                namespace.setClusterAliasName(clusterDTO.getNickname());
+            }
         });
         return namespaces;
     }

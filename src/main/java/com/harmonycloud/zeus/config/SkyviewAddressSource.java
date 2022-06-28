@@ -23,7 +23,6 @@ public class SkyviewAddressSource implements AddressSource {
 
     @Override
     public ForestAddress getAddress(ForestRequest request) {
-        log.info("观云台接口地址：{}:{}", ip, port);
         return new ForestAddress(ip, port);
     }
 }
