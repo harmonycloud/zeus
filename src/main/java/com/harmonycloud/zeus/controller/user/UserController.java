@@ -126,6 +126,17 @@ public class UserController {
         return BaseResult.ok(userService.menu(clusterId));
     }
 
+    @ApiOperation(value = "获取服务列表", notes = "获取服务列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("/menu/middlewares")
+    public BaseResult<List<ResourceMenuDto>> listMiddlewareMenu(@RequestParam("clusterId") String clusterId,
+                                                                @RequestParam("projectId") String projectId) {
+        return BaseResult.ok(userService.listMiddlewareMenu(clusterId, projectId));
+    }
+
     @ApiImplicitParams({
             @ApiImplicitParam(name = "personalizedConfiguration", value = "个性化配置信息", paramType = "query", dataTypeClass = PersonalizedConfiguration.class),
             @ApiImplicitParam(name = "status", value = "恢复初始化设置",paramType = "path", dataTypeClass = String.class),

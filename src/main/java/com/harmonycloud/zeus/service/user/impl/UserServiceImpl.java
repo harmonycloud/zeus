@@ -1,58 +1,61 @@
 package com.harmonycloud.zeus.service.user.impl;
 
-import java.io.*;
+import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_TWO;
+import static com.harmonycloud.caas.common.constants.user.UserConstant.ADMIN;
+import static com.harmonycloud.caas.common.constants.user.UserConstant.USERNAME;
+import static com.harmonycloud.caas.filters.base.GlobalKey.NUM_ROLE_ADMIN;
+import static com.harmonycloud.caas.filters.base.GlobalKey.USER_TOKEN;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.constants.LdapConfigConstant;
-import com.harmonycloud.caas.common.model.MailUserDTO;
-import com.harmonycloud.caas.common.model.UploadImageFileDto;
-import com.harmonycloud.zeus.bean.MailToUser;
-import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
-import com.harmonycloud.zeus.bean.user.BeanRole;
-import com.harmonycloud.zeus.dao.MailToUserMapper;
-import com.harmonycloud.zeus.dao.user.BeanRoleMapper;
-import com.harmonycloud.zeus.dao.user.PersonalMapper;
+import javax.servlet.http.HttpServletResponse;
 
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
-import com.harmonycloud.zeus.service.middleware.MiddlewareService;
-import com.harmonycloud.zeus.service.user.*;
-import com.harmonycloud.zeus.util.ApplicationUtil;
-import com.harmonycloud.zeus.util.RequestUtil;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.MailUserDTO;
+import com.harmonycloud.caas.common.model.UploadImageFileDto;
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.caas.common.model.user.UserRole;
 import com.harmonycloud.caas.filters.token.JwtTokenComponent;
 import com.harmonycloud.caas.filters.user.CurrentUser;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
-import com.harmonycloud.zeus.bean.user.BeanUser;
-import com.harmonycloud.zeus.dao.user.BeanUserMapper;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.tool.encrypt.RSAUtils;
-import org.springframework.web.multipart.MultipartFile;
+import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
+import com.harmonycloud.zeus.bean.MailToUser;
+import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
+import com.harmonycloud.zeus.bean.user.BeanUser;
+import com.harmonycloud.zeus.dao.MailToUserMapper;
+import com.harmonycloud.zeus.dao.user.BeanUserMapper;
+import com.harmonycloud.zeus.dao.user.PersonalMapper;
+import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareService;
+import com.harmonycloud.zeus.service.user.ProjectService;
+import com.harmonycloud.zeus.service.user.RoleService;
+import com.harmonycloud.zeus.service.user.UserRoleService;
+import com.harmonycloud.zeus.service.user.UserService;
+import com.harmonycloud.zeus.util.ApplicationUtil;
+import com.harmonycloud.zeus.util.RequestUtil;
 
-import javax.servlet.http.HttpServletResponse;
-
-import static com.harmonycloud.caas.common.constants.user.UserConstant.ADMIN;
-import static com.harmonycloud.caas.common.constants.user.UserConstant.USERNAME;
-import static com.harmonycloud.caas.filters.base.GlobalKey.NUM_ROLE_ADMIN;
-import static com.harmonycloud.caas.filters.base.GlobalKey.USER_TOKEN;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -79,6 +82,8 @@ public class UserServiceImpl implements UserService {
     private MailToUserMapper mailToUserMapper;
     @Autowired
     private ProjectService projectService;
+    @Autowired
+    private ClusterMiddlewareInfoService clusterMiddlewareInfoService;
 
     public String getUsername() {
         CurrentUser currentUser = CurrentUserRepository.getUser();
@@ -259,7 +264,6 @@ public class UserServiceImpl implements UserService {
         CurrentUser currentUser = CurrentUserRepository.getUser();
         String username = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString(USERNAME);
         UserDto userDto = getUserDto(username);
-        String projectId = RequestUtil.getProjectId();
         List<ResourceMenuDto> resourceMenuDtoList = roleService.listMenuByRoleId(userDto);
 
         Map<Integer, List<ResourceMenuDto>> resourceMenuDtoMap =
@@ -273,23 +277,52 @@ public class UserServiceImpl implements UserService {
             firstMenu.setSubMenu(resourceMenuDtoMap.get(firstMenu.getId()));
             Collections.sort(firstMenu.getSubMenu());
         });
-        if (StringUtils.isNotBlank(clusterId)) {
-            Map<String, String> power = new HashMap<>();
-            if (!userDto.getIsAdmin() && StringUtils.isNotEmpty(projectId)) {
-                power.putAll(
-                        userDto.getUserRoleList().stream().filter(userRole -> userRole.getProjectId().equals(projectId))
-                                .collect(Collectors.toList()).get(0).getPower());
-            }
-            setServiceMenuSubMenu(firstMenuList, clusterId, power);
-        }
         Collections.sort(firstMenuList);
         return firstMenuList;
+    }
+
+    @Override
+    public List<ResourceMenuDto> listMiddlewareMenu(String clusterId, String projectId) {
+        // 获取集群下所有中间件
+        List<BeanClusterMiddlewareInfo> middlewareInfos = clusterMiddlewareInfoService.list(clusterId, false);
+        // 过滤状态为未安装的中间件
+        middlewareInfos = middlewareInfos.stream().filter(mwInfo -> !mwInfo.getStatus().equals(NUM_TWO)).collect(Collectors.toList());
+
+        // 查询用户角色项目权限
+        String username =
+                JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue().getString(USERNAME);
+        UserDto userDto = getUserDto(username);
+        Map<String, String> power = new HashMap<>();
+        if (!userDto.getIsAdmin() && userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getProjectId().equals(projectId))){
+            power.putAll(userDto.getUserRoleList().stream().filter(userRole -> userRole.getProjectId().equals(projectId))
+                    .collect(Collectors.toList()).get(0).getPower());
+        }
+        
+        // 过滤获取拥有权限的中间件
+        if (!CollectionUtils.isEmpty(power)) {
+            middlewareInfos = middlewareInfos.stream()
+                .filter(mwInfo -> power.keySet().stream()
+                    .anyMatch(key -> !"0000".equals(power.get(key)) && mwInfo.getChartName().equals(key)))
+                .collect(Collectors.toList());
+        }
+
+        // 封装数据
+        List<ResourceMenuDto> subMenuList = new ArrayList<>();
+        for (BeanClusterMiddlewareInfo middlewareInfoDTO : middlewareInfos) {
+            ResourceMenuDto resourceMenuDto = new ResourceMenuDto();
+            resourceMenuDto.setName(middlewareInfoDTO.getChartName());
+            resourceMenuDto.setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(middlewareInfoDTO.getChartName()));
+            resourceMenuDto.setAvailable(true);
+            resourceMenuDto.setUrl("serviceList/" + resourceMenuDto.getName() + "/" + resourceMenuDto.getAliasName());
+            subMenuList.add(resourceMenuDto);
+        }
+        return subMenuList;
     }
 
     /**
      * 参数校验
      */
-    public void checkParams(UserDto userDto) throws Exception {
+    public void checkParams(UserDto userDto) {
         // 校验参数是否完全
         if (StringUtils.isAnyBlank(userDto.getUserName(), userDto.getAliasName())) {
             throw new IllegalArgumentException("username/aliasName should not be null");
@@ -501,32 +534,6 @@ public class UserServiceImpl implements UserService {
         } else {
             userRoleService.delete(userDto.getUserName(), null, NUM_ROLE_ADMIN);
         }
-    }
-
-    /**
-     * @description 将中间件设为服务列表菜单的子菜单
-     * @author liyinlong
-     * @since 2021/11/2 4:09 下午
-     */
-    public void setServiceMenuSubMenu(List<ResourceMenuDto> menuDtoList, String clusterId, Map<String, String> power) {
-        menuDtoList.forEach(parentMenu -> {
-            if ("serviceList".equals(parentMenu.getName())) {
-                List<ResourceMenuDto> resourceMenuDtos = middlewareService.listAllMiddlewareAsMenu(clusterId);
-                if (!CollectionUtils.isEmpty(power)) {
-                    resourceMenuDtos = resourceMenuDtos.stream()
-                            .filter(resourceMenuDto -> power.keySet().stream()
-                                    .anyMatch(key -> !"0000".equals(power.get(key)) && key.equals(resourceMenuDto.getName())))
-                            .collect(Collectors.toList());
-                }
-                resourceMenuDtos.forEach(resourceMenuDto -> {
-                    resourceMenuDto
-                            .setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(resourceMenuDto.getAliasName()));
-                    resourceMenuDto.setUrl(
-                            parentMenu.getUrl() + "/" + resourceMenuDto.getName() + "/" + resourceMenuDto.getAliasName());
-                });
-                parentMenu.setSubMenu(resourceMenuDtos);
-            }
-        });
     }
 
     /**
