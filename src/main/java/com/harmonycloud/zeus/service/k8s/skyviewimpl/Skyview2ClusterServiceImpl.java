@@ -102,24 +102,12 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
         return namespaces;
     }
 
-    /**
-     * 将中间件平台集群id转为观云台集群id
-     * @param zeusClusterId
-     * @return
-     */
     @Override
-    public String convertZeusClusterId(String zeusClusterId) {
-        StringBuilder skyviewClusterId = new StringBuilder();
-        if (!clusterIdMap.containsValue(zeusClusterId)) {
+    public String convertToZeusClusterId(String skyviewClusterId) {
+        if (clusterIdMap.get(skyviewClusterId) == null) {
             this.syncCluster();
         }
-        clusterIdMap.forEach((k, v) -> {
-            if (zeusClusterId.equals(v)) {
-                skyviewClusterId.append(k);
-                return;
-            }
-        });
-        return skyviewClusterId.toString();
+        return clusterIdMap.get(skyviewClusterId);
     }
 
     @Override
@@ -131,11 +119,18 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
     }
 
     @Override
-    public String convertSkyviewClusterId(String skyviewClusterId) {
-        if (clusterIdMap.get(skyviewClusterId) == null) {
+    public String convertToSkyviewClusterId(String zeusClusterId) {
+        StringBuilder skyviewClusterId = new StringBuilder();
+        if (!clusterIdMap.containsValue(zeusClusterId)) {
             this.syncCluster();
         }
-        return clusterIdMap.get(skyviewClusterId);
+        clusterIdMap.forEach((k, v) -> {
+            if (zeusClusterId.equals(v)) {
+                skyviewClusterId.append(k);
+                return;
+            }
+        });
+        return skyviewClusterId.toString();
     }
 
     /**

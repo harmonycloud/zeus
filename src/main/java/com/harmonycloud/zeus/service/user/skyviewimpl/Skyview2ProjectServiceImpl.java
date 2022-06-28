@@ -6,7 +6,6 @@ import com.harmonycloud.caas.common.base.CaasResult;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.harmonycloud.caas.common.model.ClusterDTO;
 import com.harmonycloud.caas.common.model.ProjectDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
@@ -163,9 +162,9 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
                 JSONArray clusters = jsonNamespace.getJSONArray("clusters");
                 if (clusters != null && !clusters.isEmpty()) {
                     JSONObject jsonCluster = (JSONObject) clusters.get(0);
-                    ns.setClusterId(clusterService.convertSkyviewClusterId(jsonCluster.getString("id")));
+                    ns.setClusterId(clusterService.convertToZeusClusterId(jsonCluster.getString("id")));
                 } else {
-                    ns.setClusterId(clusterService.convertSkyviewClusterId(jsonNamespace.getString("clusterId")));
+                    ns.setClusterId(clusterService.convertToZeusClusterId(jsonNamespace.getString("clusterId")));
                 }
                 namespaces.add(ns);
             });
@@ -288,9 +287,9 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
         JSONArray projectNamespace = listProjectNamespace(tenantId, projectId);
         List<Namespace> namespaces = convertProjectNamespace(projectNamespace, projectId);
         namespaces.forEach(namespace -> {
-            MiddlewareClusterDTO clusterDTO = clusterService.findById(namespace.getClusterId());
+            ClusterDTO clusterDTO = clusterService.findBySkyviewClusterId(clusterService.convertToSkyviewClusterId(namespace.getClusterId()));
             if (clusterDTO != null) {
-                namespace.setClusterAliasName(clusterDTO.getNickname());
+                namespace.setClusterAliasName(clusterDTO.getAliasName());
             }
         });
         return namespaces;

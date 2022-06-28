@@ -188,17 +188,17 @@ public interface ClusterService {
      * @param skyviewClusterId
      * @return
      */
-    String convertSkyviewClusterId(String skyviewClusterId);
+    String convertToSkyviewClusterId(String skyviewClusterId);
 
     /**
      * 将中间件平台clusterid转为观云台clusterid
      * @param zeusClusterId
      * @return
      */
-    String convertZeusClusterId(String zeusClusterId);
+    String convertToZeusClusterId(String zeusClusterId);
 
     /**
-     * 根据观云台集群id查找集群信息
+     * 根据观云台集群id查找观云台集群信息
      * @param skyviewClusterId
      * @return
      */

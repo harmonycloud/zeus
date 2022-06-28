@@ -955,12 +955,12 @@ public class ClusterServiceImpl implements ClusterService{
     }
 
     @Override
-    public String convertSkyviewClusterId(String skyviewClusterId) {
+    public String convertToSkyviewClusterId(String skyviewClusterId) {
         return null;
     }
 
     @Override
-    public String convertZeusClusterId(String zeusClusterId) {
+    public String convertToZeusClusterId(String zeusClusterId) {
         return null;
     }
 
