@@ -897,7 +897,7 @@ public class ClusterServiceImpl implements ClusterService{
         }
         String curlCommand = "curl -X POST --url %s?" + param
                 + " --header Content-Type:multipart/form-data --header userToken:%s -F adminConf=@/etc/kubernetes/admin.conf";
-        return String.format(curlCommand, clusterJoinUrl, clusterName, userToken);
+        return String.format(curlCommand, clusterJoinUrl, userToken);
     }
 
     @Override
