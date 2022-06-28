@@ -94,6 +94,9 @@ public class MiddlewareBackupAddressServiceImpl implements MiddlewareBackupAddre
             wrapper.eq("address_id", addressId);
         }
         List<BeanMiddlewareBackupAddress> backups = middlewareBackupAddressMapper.selectList(wrapper);
+        if (CollectionUtils.isEmpty(backups)) {
+            return new ArrayList<MiddlewareClusterBackupAddressDTO>();
+        }
         List<MiddlewareClusterBackupAddressDTO> backupAddressDTOS = backups.stream().map(backup -> {
             MiddlewareClusterBackupAddressDTO backupDTO = new MiddlewareClusterBackupAddressDTO();
             BeanUtils.copyProperties(backup, backupDTO);
