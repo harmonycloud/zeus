@@ -58,10 +58,9 @@ public class CronUtils {
     }
 
     public static String parseUtcCron(String cron) {
-        String newCron = cron.replaceAll("[?]", "*");
-        String[] items = newCron.split(" ");
-        items[1] = getUtcHour(items[1]);
-        return getCron(items);
+        String[] newCron = cron.split(" ");
+        newCron[1] = getUtcHour(newCron[1]);
+        return getCron(newCron);
     }
 
     public static String parseMysqlUtcCron(String cron) {
@@ -71,10 +70,9 @@ public class CronUtils {
     }
 
     public static String parseLocalCron(String cron) {
-        String newCron = cron.replaceAll("[*]", "?");
-        String[] items = newCron.split(" ");
-        items[1] = getLocalHour(items[1]);
-        return getCron(items);
+        String[] newCron = cron.split(" ");
+        newCron[1] = getLocalHour(newCron[1]);
+        return getCron(newCron);
     }
 
     private static String getCron(String[] items) {
@@ -111,5 +109,28 @@ public class CronUtils {
             res = temp;
         }
         return String.valueOf(res);
+    }
+
+    public static void main(String[] args) {
+        String cron = "6 0 ? ? 1";
+        String[] newCron = cron.split(" ");
+        int h = Integer.parseInt(newCron[1]);
+        int temp = h - 8;
+        int res = 0;
+        if (temp < 0) {
+            res = 24 + temp;
+        } else {
+            res = temp;
+        }
+        newCron[1] = String.valueOf(res);
+        StringBuffer sbf = new StringBuffer();
+        for (int i = 0; i < newCron.length; i++) {
+            if (i != newCron.length - 1) {
+                sbf.append(newCron[i] + " ");
+            } else {
+                sbf.append(newCron[i]);
+            }
+        }
+        System.out.println(sbf.toString());
     }
 }

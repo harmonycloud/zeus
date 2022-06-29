@@ -186,7 +186,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
                 .setStorageProvider(new BackupStorageProvider().setMinio(minio));
 
         MysqlScheduleBackupSpec spec =
-                new MysqlScheduleBackupSpec().setSchedule(backupDTO.getCron()).setBackupTemplate(backupTemplate).setKeepBackups(backupDTO.getLimitRecord());
+                new MysqlScheduleBackupSpec().setSchedule(CronUtils.parseUtcCron(backupDTO.getCron())).setBackupTemplate(backupTemplate).setKeepBackups(backupDTO.getLimitRecord());
         ObjectMeta metaData = new ObjectMeta();
         metaData.setName(backupDTO.getMiddlewareName() + UUIDUtils.get8UUID());
         Map<String, String> labels = new HashMap<>();
