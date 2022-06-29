@@ -38,7 +38,7 @@ public class ForestUnauthrizedSuccessCondition implements SuccessWhen {
         // req 为Forest请求对象，即 ForestRequest 类实例
         // res 为Forest响应对象，即 ForestResponse 类实例
         // 返回值为 ture 则表示请求成功，false 表示请求失败
-        log.info("请求失败:{}", res.getStatusCode());
+        log.info("请求完成:{},{}", req.getUrl(), res.getStatusCode());
         String content = res.getContent();
         if(content.contains(String.valueOf(ErrorCodeMessage.USER_NOT_AUTH.value()))){
             throw new BusinessException(ErrorMessage.USER_NOT_AUTH);

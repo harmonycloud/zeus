@@ -18,10 +18,7 @@ import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
-import com.harmonycloud.zeus.service.middleware.ImageRepositoryService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareService;
+import com.harmonycloud.zeus.service.middleware.*;
 import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.service.registry.RegistryService;
@@ -107,6 +104,8 @@ public class ClusterServiceImpl implements ClusterService{
     private ProjectService projectService;
     @Autowired
     private MiddlewareCrTypeService middlewareCrTypeService;
+    @Autowired
+    private MiddlewareAlertsService middlewareAlertsService;
 
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
@@ -506,6 +505,7 @@ public class ClusterServiceImpl implements ClusterService{
                 if (f.getAbsolutePath().contains(".tgz")) {
                     HelmChartFile chartFile = helmChartService.getHelmChartFromFile(null, null, f);
                     middlewareInfoService.insert(chartFile, f);
+                    middlewareAlertsService.updateAlerts2Mysql(chartFile);
                 }
             });
         }
@@ -897,7 +897,7 @@ public class ClusterServiceImpl implements ClusterService{
         }
         String curlCommand = "curl -X POST --url %s?" + param
                 + " --header Content-Type:multipart/form-data --header userToken:%s -F adminConf=@/etc/kubernetes/admin.conf";
-        return String.format(curlCommand, clusterJoinUrl, clusterName, userToken);
+        return String.format(curlCommand, clusterJoinUrl, userToken);
     }
 
     @Override
@@ -945,6 +945,7 @@ public class ClusterServiceImpl implements ClusterService{
         return BaseResult.ok("集群添加成功");
     }
 
+    @Override
     public List<Namespace> listRegisteredNamespace(String clusterId) {
         if (StringUtils.isEmpty(clusterId)) {
             return Collections.emptyList();
@@ -954,7 +955,17 @@ public class ClusterServiceImpl implements ClusterService{
     }
 
     @Override
-    public String convertClusterId(String skyviewClusterId) {
+    public String convertToSkyviewClusterId(String skyviewClusterId) {
+        return null;
+    }
+
+    @Override
+    public String convertToZeusClusterId(String zeusClusterId) {
+        return null;
+    }
+
+    @Override
+    public ClusterDTO findBySkyviewClusterId(String skyviewClusterId) {
         return null;
     }
 

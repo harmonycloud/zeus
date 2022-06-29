@@ -75,34 +75,17 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
     private static Map<String, String> clusterIdMap = new HashMap<>();
 
     /**
-     * 将中间件平台集群id转为观云台集群id
-     * @param zeusClusterId
-     * @return
+     * 观云台集群别名缓存
+     * 格式 观云台clusterid:观云台集群
      */
-    public static String convertSkyviewClusterId(String zeusClusterId) {
-        StringBuilder skyviewClusterId = new StringBuilder();
-        clusterIdMap.forEach((k, v) -> {
-            if (zeusClusterId.equals(v)) {
-                skyviewClusterId.append(k);
-                return;
-            }
-        });
-        return skyviewClusterId.toString();
-    }
+    private static Map<String, ClusterDTO> skyviewClustersCache = new HashMap<>();
 
     @Override
     public List<MiddlewareClusterDTO> listClusters() {
         // 同步集群
+        log.info("开始同步集群信息");
         syncCluster();
         return super.listClusters(false, null, null);
-    }
-
-    @Override
-    public String convertClusterId(String skyviewClusterId) {
-        if (clusterIdMap.get(skyviewClusterId) == null) {
-            this.syncCluster();
-        }
-        return clusterIdMap.get(skyviewClusterId);
     }
 
     @Override
@@ -117,6 +100,37 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
             namespaces.addAll(namespaceService.list(clusterDTO.getId()));
         });
         return namespaces;
+    }
+
+    @Override
+    public String convertToZeusClusterId(String skyviewClusterId) {
+        if (clusterIdMap.get(skyviewClusterId) == null) {
+            this.syncCluster();
+        }
+        return clusterIdMap.get(skyviewClusterId);
+    }
+
+    @Override
+    public ClusterDTO findBySkyviewClusterId(String skyviewClusterId) {
+        if (!skyviewClustersCache.containsKey(skyviewClusterId)) {
+            this.syncCluster();
+        }
+        return skyviewClustersCache.get(skyviewClusterId);
+    }
+
+    @Override
+    public String convertToSkyviewClusterId(String zeusClusterId) {
+        StringBuilder skyviewClusterId = new StringBuilder();
+        if (!clusterIdMap.containsValue(zeusClusterId)) {
+            this.syncCluster();
+        }
+        clusterIdMap.forEach((k, v) -> {
+            if (zeusClusterId.equals(v)) {
+                skyviewClusterId.append(k);
+                return;
+            }
+        });
+        return skyviewClusterId.toString();
     }
 
     /**
@@ -181,12 +195,13 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
     private void syncCluster(){
         CaasResult<JSONObject> caasResult = userServiceClient.login(skyviewAdminName, skyviewAdminPassword, "ch");
         String caastoken = caasResult.getStringVal("token");
-        Map<String, String> skyviewClusterMap;
+
         // 1、同步集群信息
         CaasResult<JSONArray> clusterResult = clusterServiceClient.clusters(caastoken);
         List<ClusterDTO> clusterList = convertCluster(clusterResult.getData(), caastoken).stream().
                 filter(item -> !"top".equals(item.getName())).collect(Collectors.toList());
-        skyviewClusterMap = clusterList.stream().collect(Collectors.toMap(ClusterDTO::getHost, ClusterDTO::getId));
+        Map<String, String> skyviewClusterMap = clusterList.stream().collect(Collectors.toMap(ClusterDTO::getHost, ClusterDTO::getId));
+        skyviewClustersCache = clusterList.stream().collect(Collectors.toMap(ClusterDTO::getId, clusterDTO -> clusterDTO));
         List<MiddlewareClusterDTO> clusterDTOS = new ArrayList<>();
         // 查询平台存储的全部集群
         List<BeanMiddlewareCluster> clusters = middlewareClusterService.listClustersByClusterId(null);

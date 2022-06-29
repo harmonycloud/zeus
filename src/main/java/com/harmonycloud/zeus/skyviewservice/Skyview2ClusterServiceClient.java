@@ -22,7 +22,7 @@ public interface Skyview2ClusterServiceClient {
      * @param token
      * @return
      */
-    @Get(url = "/caas/clusters?includeDisable=true&includePlatformCluster=true&includeAllocatedResource=true", headers = {"Authorization: ${token}"})
+    @Get(url = "#{system.skyview.prefix}/caas/clusters?includeDisable=true&includePlatformCluster=true&includeAllocatedResource=true", headers = {"Authorization: ${token}"})
     CaasResult<JSONArray> clusters(@Var("token") String token);
 
     /**
@@ -31,7 +31,7 @@ public interface Skyview2ClusterServiceClient {
      * @param clusterId
      * @return
      */
-    @Get(url = "/caas/clusters/{clusterId}", headers = {"Authorization: ${token}"})
+    @Get(url = "#{system.skyview.prefix}/caas/clusters/{clusterId}", headers = {"Authorization: ${token}"})
     CaasResult<JSONObject> clusterDetail(@Var("token")String token, @Var("clusterId") String clusterId);
 
 }

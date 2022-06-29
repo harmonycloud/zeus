@@ -16,14 +16,13 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class SkyviewAddressSource implements AddressSource {
 
-    @Value("${system.skyview.ip}")
-    private String ip;
+    @Value("${system.skyview.host}")
+    private String host;
     @Value("${system.skyview.port}")
     private int port;
 
     @Override
     public ForestAddress getAddress(ForestRequest request) {
-        log.info("观云台接口地址：{}:{}", ip, port);
-        return new ForestAddress(ip, port);
+        return new ForestAddress(host, port);
     }
 }

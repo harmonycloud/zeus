@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.base.CaasResult;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
-import com.harmonycloud.zeus.service.k8s.AbstractNamespaceService;
+import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.impl.NamespaceServiceImpl;
 import com.harmonycloud.zeus.service.user.ProjectService;
 import com.harmonycloud.zeus.skyviewservice.Skyview2NamespaceServiceClient;
@@ -14,12 +14,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -35,10 +32,12 @@ public class Skyview2NamespaceServiceImpl extends NamespaceServiceImpl {
     private Skyview2NamespaceServiceClient  namespaceServiceClient;
     @Autowired
     private ProjectService projectService;
+    @Autowired
+    private ClusterService clusterService;
 
     private List<Namespace> listClusterNamespaces(String clusterId){
         CaasResult<JSONArray> namespaceResult = namespaceServiceClient.clusterNamespaces(ZeusCurrentUser.getCaasToken(),
-                Skyview2ClusterServiceImpl.convertSkyviewClusterId(clusterId));
+                clusterService.convertToSkyviewClusterId(clusterId));
         List<Namespace> namespaces = new ArrayList<>();
         if(namespaceResult.getData() != null && !namespaceResult.getData().isEmpty()){
             for (Object ns : namespaceResult.getData()) {

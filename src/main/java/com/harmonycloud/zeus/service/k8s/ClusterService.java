@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.k8s;
 
 import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.model.ClusterDTO;
 import com.harmonycloud.caas.common.model.ClusterNamespaceResourceDto;
 import com.harmonycloud.caas.common.model.ClusterNodeResourceDto;
 import com.harmonycloud.caas.common.model.Node;
@@ -183,10 +184,24 @@ public interface ClusterService {
     List<Namespace> listRegisteredNamespace(String clusterId);
 
     /**
-     * 将观云台集群id转化为中间件平台集群id
+     * 将观云台clusterid转换为中间件平台clusterid
      * @param skyviewClusterId
      * @return
      */
-    String convertClusterId(String skyviewClusterId);
+    String convertToSkyviewClusterId(String skyviewClusterId);
+
+    /**
+     * 将中间件平台clusterid转为观云台clusterid
+     * @param zeusClusterId
+     * @return
+     */
+    String convertToZeusClusterId(String zeusClusterId);
+
+    /**
+     * 根据观云台集群id查找观云台集群信息
+     * @param skyviewClusterId
+     * @return
+     */
+    ClusterDTO findBySkyviewClusterId(String skyviewClusterId);
 
 }
