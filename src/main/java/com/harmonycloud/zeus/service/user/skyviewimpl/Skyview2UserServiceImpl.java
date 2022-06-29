@@ -23,6 +23,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -182,15 +185,32 @@ public class Skyview2UserServiceImpl extends UserServiceImpl {
         String username = ZeusCurrentUser.getUserName();
         List<ProjectDTO>  projects =  skyview2ProjectService.listAllTenantProject(ZeusCurrentUser.getCaasToken());
 
+        ExecutorService executorService = Executors.newFixedThreadPool(projects.size());
+        CountDownLatch latch = new CountDownLatch(projects.size());
         // 2、获取用户在每个项目下的角色
         projects.forEach(project -> {
-            String projectId = project.getProjectId();
-            CaasResult<JSONArray> projectRoleResult = projectServiceClient.getUserProjectRole(ZeusCurrentUser.getCaasToken(), projectId);
-            if (projectRoleResult.getData() != null) {
-                Integer userRoleId = projectRoleResult.getJSONArrayIntegerVal(0, "id");
-                project.setUserRoleId(userRoleId);
-            }
+            executorService.submit(()->{
+                try {
+                    String projectId = project.getProjectId();
+                    CaasResult<JSONArray> projectRoleResult = projectServiceClient.getUserProjectRole(ZeusCurrentUser.getCaasToken(), projectId);
+                    if (projectRoleResult.getData() != null) {
+                        Integer userRoleId = projectRoleResult.getJSONArrayIntegerVal(0, "id");
+                        project.setUserRoleId(userRoleId);
+                    }
+                } catch (Exception e) {
+                    log.error("查询用户项目角色失败了", e);
+                } finally {
+                    latch.countDown();
+                }
+            });
         });
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            log.error("查询用户项目角色出错了", e);
+        } finally {
+            executorService.shutdown();
+        }
 
         // 3、保存项目分区绑定信息
         projects.forEach(project -> {
