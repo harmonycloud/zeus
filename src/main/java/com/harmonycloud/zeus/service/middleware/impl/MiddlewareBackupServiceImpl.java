@@ -102,10 +102,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 String backupId = item.getMetadata().getLabels().get("backupId");
                 backupRecord.setBackupId(backupId);
                 backupRecord.setTaskName(getBackupName(clusterId, backupId).getBackupName());
+                backupRecord.setAddressName(item.getMetadata().getLabels().get("addressId"));
                 backupRecord.setSourceName(item.getSpec().getName());
                 backupRecord.setCron(null);
                 backupRecord.setRetentionTime(null);
                 backupRecord.setBackupMode("single");
+                backupRecord.setOwner(item.getMetadata().getLabels().get("owner"));
                 recordList.add(backupRecord);
             });
         }
