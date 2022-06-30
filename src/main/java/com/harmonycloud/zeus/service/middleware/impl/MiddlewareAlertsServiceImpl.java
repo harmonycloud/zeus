@@ -213,12 +213,10 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         String group = middlewareAlertsDTO.getAnnotations().get("group");
 
         // 特殊处理pg
-        if ("postgresql".equals(info.getType())){
-            middlewareName = "harmonycloud-" + middlewareName;
-        }
+        String prometheusRulesName = "postgresql".equals(info.getType()) ? "harmonycloud-" + middlewareName : middlewareName;
 
         //获取cr
-        PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, namespace, middlewareName);
+        PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, namespace, prometheusRulesName);
         //不启用该规则时，判断该规则是否已写入prometheusRule
         if ("0".equals(middlewareAlertsDTO.getEnable()) && "1".equals(info.getEnable())) {
             //从prometheusRule删除规则
