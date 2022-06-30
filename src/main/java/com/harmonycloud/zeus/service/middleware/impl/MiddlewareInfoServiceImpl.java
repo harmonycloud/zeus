@@ -427,6 +427,9 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
             List<Namespace> listRegisteredNamespace = clusterService.listRegisteredNamespace(cluster.getClusterId());
             List<Middleware> middlewares = middlewareService.simpleList(cluster.getClusterId(), null, null, null);
             middlewares = middlewares.stream().filter(middleware -> listRegisteredNamespace.stream().anyMatch(ns ->middleware.getNamespace().equals(ns.getName()))).collect(Collectors.toList());
+            if (!middlewares.isEmpty()) {
+                middlewares = checkIsLvm(middlewares);
+            }
             if (middlewares.isEmpty()) {
                 return;
             }
@@ -483,6 +486,39 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
             list.add(middlewareInfoDTO);
         }
         return list;
+    }
+
+
+    /**
+     * 校验存储类型是否为LVM
+     */
+    private List<Middleware> checkIsLvm(List<Middleware> middlewareList) {
+        List<Middleware> middlewares = new LinkedList<>();
+        for (Middleware middleware : middlewareList) {
+            switch (middleware.getType()) {
+                case "redis":
+                    if (middleware.getQuota().get("redis").getIsLvmStorage()) {
+                        middlewares.add(middleware);
+                    }
+                    break;
+                case "mysql":
+                    if (middleware.getQuota().get("mysql").getIsLvmStorage()) {
+                        middlewares.add(middleware);
+                    }
+                    break;
+                case "rocketmq":
+                    if (middleware.getQuota().get("rocketmq").getIsLvmStorage()) {
+                        middlewares.add(middleware);
+                    }
+                    break;
+                case "elasticsearch":
+                    if (middleware.getQuota().get("master").getIsLvmStorage()) {
+                        middlewares.add(middleware);
+                    }
+                    break;
+            }
+        }
+        return middlewares;
     }
 
     /**

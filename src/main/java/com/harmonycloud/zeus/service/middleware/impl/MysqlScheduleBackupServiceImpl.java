@@ -123,7 +123,11 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
             backupRecord.setTaskName(getBackupName(clusterId, backupId).getBackupName());
             backupRecord.setAddressName(schedule.getMetadata().getLabels().get("addressId"));
             backupRecord.setCron(CronUtils.parseLocalCron(schedule.getSpec().getSchedule()));
-            backupRecord.setBackupMode("single");
+            if (schedule.getSpec().getKeepBackups() == null) {
+                backupRecord.setBackupMode("single");
+            } else {
+                backupRecord.setBackupMode("period");
+            }
             recordList.add(backupRecord);
         });
         return recordList;
