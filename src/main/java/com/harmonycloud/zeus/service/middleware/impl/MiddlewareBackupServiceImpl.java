@@ -660,13 +660,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         List<MiddlewareBackupRecord> backupRecords = listRecord(clusterId, namespace, middlewareName, type, keyword);
         List<MiddlewareBackupRecord> backupSchedules = listBackupSchedule(clusterId, namespace, type, middlewareName, keyword);
         //过滤backupSchedule所产生的backup
-        backupSchedules.forEach(schedule -> {
-            backupRecords.stream().filter(record -> record.getBackupName().equals(schedule.getBackupName()) || record.getOwner().equals(schedule.getBackupName())).collect(Collectors.toList());
-        });
+        for (MiddlewareBackupRecord schedule : backupSchedules){
+            backupRecords = backupRecords.stream().filter(record -> record.getBackupName().equals(schedule.getBackupName()) || record.getOwner().equals(schedule.getBackupName())).collect(Collectors.toList());
+        }
         recordList.addAll(backupRecords);
         recordList.addAll(backupSchedules);
         if (StringUtils.isNotEmpty(middlewareName)) {
-            recordList.stream().filter(record -> middlewareName.equals(record.getSourceName())).collect(Collectors.toList());
+            recordList = recordList.stream().filter(record -> middlewareName.equals(record.getSourceName())).collect(Collectors.toList());
         }
         return recordList;
     }

@@ -98,6 +98,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
             record.setBackupName(backup.getBackupName());
             record.setBackupFileName(backup.getBackupFileName());
             record.setSourceType(MiddlewareTypeEnum.MYSQL.getType());
+            record.setOwner(backup.getOwner());
             if (backup.getDate() != null) {
                 String backupTime = DateUtil.utc2Local(backup.getDate(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
                 record.setBackupTime(backupTime);
@@ -417,6 +418,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
             mysqlBackupDto.setAddressName(backup.getAddressName());
             mysqlBackupDto.setType(backup.getType());
             mysqlBackupDto.setTaskName(backup.getTaskName());
+            mysqlBackupDto.setOwner(backup.getOwner());
             mysqlBackupDtoList.add(mysqlBackupDto);
         });
         // 根据时间降序

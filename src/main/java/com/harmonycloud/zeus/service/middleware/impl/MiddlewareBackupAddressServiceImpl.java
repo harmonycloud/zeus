@@ -122,8 +122,8 @@ public class MiddlewareBackupAddressServiceImpl implements MiddlewareBackupAddre
     private int calRelevanceNum(String addressName) {
         int relevanceNum = 0;
         List<BeanMiddlewareCluster> clusterList = middlewareClusterService.listClustersByClusterId(null);
-        for (int i = 0; i< clusterList.size(); i++) {
-            List<MiddlewareBackupRecord> backups = middlewareBackupService.backupTaskList(clusterList.get(i).getClusterId(), "*", null, null, null);
+        for (BeanMiddlewareCluster cluster : clusterList) {
+            List<MiddlewareBackupRecord> backups = middlewareBackupService.backupTaskList(cluster.getClusterId(), "*", null, null, null);
             backups.stream().filter(backup -> addressName.equals(backup.getAddressName())).collect(Collectors.toList());
             relevanceNum = relevanceNum + backups.size();
         }
