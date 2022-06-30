@@ -12,10 +12,12 @@ import com.harmonycloud.caas.common.model.middleware.ProjectMiddlewareResourceIn
 import com.harmonycloud.caas.common.model.user.ProjectDto;
 import com.harmonycloud.caas.common.model.user.RoleDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
+import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.bean.user.BeanUserRole;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
+import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
 import com.harmonycloud.zeus.service.user.RoleService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
 import com.harmonycloud.zeus.service.user.impl.ProjectServiceImpl;
@@ -54,7 +56,8 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
     private UserRoleService userRoleService;
     @Autowired
     private RoleService roleService;
-
+    @Autowired
+    private ClusterMiddlewareInfoService clusterMiddlewareInfoService;
     /**
      * 项目租户id缓存 key:项目id value:租户id
      */
@@ -352,13 +355,16 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
     public List<ProjectMiddlewareResourceInfo> middlewareResource(String projectId) throws Exception {
         List<Namespace> namespaceList = getNamespace(projectId);
         // 获取集群
-        Set<String> cluster = new HashSet<>();
+        Set<String> clusterIdSet = new HashSet<>();
         namespaceList.forEach(beanProjectNamespace -> {
-            cluster.add(beanProjectNamespace.getClusterId());
+            clusterIdSet.add(beanProjectNamespace.getClusterId());
         });
+        // 获取集群下已安装中间件并集
+        Set<BeanClusterMiddlewareInfo> mwInfoSet = new HashSet<>();
+        clusterIdSet.forEach(clusterId -> mwInfoSet.addAll(clusterMiddlewareInfoService.list(clusterId, false)));
         // 查询数据
         List<MiddlewareResourceInfo> all = new ArrayList<>();
-        for (String clusterId : cluster) {
+        for (String clusterId : clusterIdSet) {
             all.addAll(clusterService.getMwResource(clusterId));
         }
         // 根据分区过滤
@@ -377,11 +383,11 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
         Map<String, List<MiddlewareResourceInfo>> map =
                 all.stream().collect(Collectors.groupingBy(MiddlewareResourceInfo::getType));
         List<ProjectMiddlewareResourceInfo> infoList = new ArrayList<>();
-        for (String key : map.keySet()) {
+        for (BeanClusterMiddlewareInfo mwInfo : mwInfoSet){
             ProjectMiddlewareResourceInfo projectMiddlewareResourceInfo = new ProjectMiddlewareResourceInfo()
-                    .setType(key).setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(key))
-                    .setMiddlewareResourceInfoList(map.get(key))
-                    .setImagePath(middlewareImagePathMap.getOrDefault(key, null));
+                    .setType(mwInfo.getChartName()).setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(mwInfo.getChartName()))
+                    .setMiddlewareResourceInfoList(map.getOrDefault(mwInfo.getChartName(), null))
+                    .setImagePath(middlewareImagePathMap.getOrDefault(mwInfo.getChartName(), null));
             infoList.add(projectMiddlewareResourceInfo);
         }
         return infoList;
