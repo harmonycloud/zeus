@@ -94,13 +94,13 @@ public class MailServiceImpl implements MailService {
         if (ObjectUtils.isEmpty(mailInfo) || ObjectUtils.isEmpty(alertInfoDto)) {
             return;
         }
-        if ("qq.com".equals(mailInfo.getMailPath().split("@")[1]) || "163.com".equals(mailInfo.getMailPath().split("@")[1])) {
+        if ("qq.com".equals(mailInfo.getMailServer().split("@")[1]) || "163.com".equals(mailInfo.getMailServer().split("@")[1])) {
             JavaMailSenderImpl mailSender = createMailSender(mailInfo);
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             // 设置utf-8或GBK编码，否则邮件会有乱码
             MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
-            String[] path = mailInfo.getMailPath().split("@");
-            messageHelper.setFrom(mailInfo.getMailPath(), path[0]);
+            String[] path = mailInfo.getMailServer().split("@");
+            messageHelper.setFrom(mailInfo.getMailServer(), path[0]);
             messageHelper.setSubject("【中间件平台】"+alertInfoDto.getClusterId()+alertInfoDto.getDescription()+"告警");
             messageHelper.setText(buildContent(alertInfoDto,beanUser.getAliasName()), true);
             messageHelper.setTo(beanUser.getEmail());
@@ -163,7 +163,7 @@ public class MailServiceImpl implements MailService {
         Authenticator authenticator = new Authenticator() {
             @Override
             public PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(mailInfo.getMailPath(), mailInfo.getPassword());
+                return new PasswordAuthentication(mailInfo.getMailServer(), mailInfo.getPassword());
             }
         };
         //1 获得连接
@@ -171,7 +171,7 @@ public class MailServiceImpl implements MailService {
         //2 创建消息
         Message message = new MimeMessage(session);
         // 2.1 发件人
-        message.setFrom(new InternetAddress(mailInfo.getMailPath()));
+        message.setFrom(new InternetAddress(mailInfo.getMailServer()));
         // 2.2 收件人
         message.setRecipient(Message.RecipientType.TO, new InternetAddress(beanUser.getEmail()));
         // 2.3 主题（标题）

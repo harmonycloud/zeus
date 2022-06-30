@@ -668,7 +668,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
         recordList.forEach(record -> {
             try {
-                List<MiddlewareBriefInfoDTO>  middlewares = middlewareService.list(clusterId, namespace, record.getSourceType(), record.getSourceName(), null);
+                List<MiddlewareBriefInfoDTO>  middlewares = middlewareService.list(clusterId, record.getNamespace(), record.getSourceType(), record.getSourceName(), null);
                 if (!middlewares.isEmpty()) {
                     record.setStatus(middlewares.get(0).getServiceList().get(0).getStatus());
                 }
