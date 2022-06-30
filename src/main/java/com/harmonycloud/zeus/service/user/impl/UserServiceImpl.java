@@ -256,15 +256,15 @@ public class UserServiceImpl implements UserService {
     /**
      * 查询菜单信息
      *
-     * @param clusterId
+     * @param projectId
      * @return
      */
     @Override
-    public List<ResourceMenuDto> menu(String clusterId) {
+    public List<ResourceMenuDto> menu(String projectId) {
         CurrentUser currentUser = CurrentUserRepository.getUser();
         String username = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString(USERNAME);
         UserDto userDto = getUserDto(username);
-        List<ResourceMenuDto> resourceMenuDtoList = roleService.listMenuByRoleId(userDto);
+        List<ResourceMenuDto> resourceMenuDtoList = roleService.listMenuByRoleId(userDto, projectId);
 
         Map<Integer, List<ResourceMenuDto>> resourceMenuDtoMap =
                 resourceMenuDtoList.stream().collect(Collectors.groupingBy(ResourceMenuDto::getParentId));

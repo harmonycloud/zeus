@@ -53,10 +53,11 @@ public interface RoleService {
     /**
      * 获取角色
      * @param userDto 用户
+     * @param projectId 项目id
      *
      * @return List<ResourceMenuDto>
      */
-    List<ResourceMenuDto> listMenuByRoleId(UserDto userDto);
+    List<ResourceMenuDto> listMenuByRoleId(UserDto userDto, String projectId);
 
 
     /**

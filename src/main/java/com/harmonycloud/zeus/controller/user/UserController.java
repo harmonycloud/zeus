@@ -119,11 +119,11 @@ public class UserController {
     @ApiOperation(value = "获取菜单列表", notes = "获取菜单列表")
     @GetMapping("/menu")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
     })
-    public BaseResult<List<ResourceMenuDto>> menu(@RequestParam(value = "clusterId", required = false) String clusterId) throws Exception {
-        log.info("获取菜单列表：{}", clusterId);
-        return BaseResult.ok(userService.menu(clusterId));
+    public BaseResult<List<ResourceMenuDto>> menu(@RequestParam(value = "projectId", required = false) String projectId) throws Exception {
+        log.info("获取菜单列表：{}", projectId);
+        return BaseResult.ok(userService.menu(projectId));
     }
 
     @ApiOperation(value = "获取服务列表", notes = "获取服务列表")
