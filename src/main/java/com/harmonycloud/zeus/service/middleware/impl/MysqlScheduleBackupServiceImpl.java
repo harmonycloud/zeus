@@ -12,6 +12,7 @@ import com.harmonycloud.zeus.dao.BeanMiddlewareBackupNameMapper;
 import com.harmonycloud.zeus.integration.cluster.MysqlScheduleBackupWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.service.middleware.MysqlScheduleBackupService;
+import com.harmonycloud.zeus.util.CronUtils;
 import com.harmonycloud.zeus.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -107,7 +108,7 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
             backupRecord.setBackupId(backupId);
             backupRecord.setTaskName(getBackupName(clusterId, backupId).getBackupName());
             backupRecord.setAddressName(schedule.getMetadata().getLabels().get("addressId"));
-            backupRecord.setCron(schedule.getSpec().getSchedule());
+            backupRecord.setCron(CronUtils.parseLocalCron(schedule.getSpec().getSchedule()));
             backupRecord.setBackupMode("single");
             recordList.add(backupRecord);
         });

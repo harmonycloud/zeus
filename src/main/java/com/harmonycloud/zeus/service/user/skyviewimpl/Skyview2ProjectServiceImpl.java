@@ -74,24 +74,26 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
         JSONArray tenants = currentResult.getJSONArray("tenants");
         // 2、获取所有租户所有项目
         List<ProjectDTO> projects = new ArrayList<>();
-        long start = System.currentTimeMillis();
         ExecutorService executorService = Executors.newFixedThreadPool(tenants.size());
         CountDownLatch latch = new CountDownLatch(tenants.size());
         for (Object tenant : tenants) {
             executorService.submit(()->{
-                JSONObject jsonTenant = (JSONObject) tenant;
-                CaasResult<JSONArray> projectResult = projectServiceClient.getTenantProject(caastoken, jsonTenant.getString("tenantId"));
-                if (Boolean.TRUE.equals(projectResult.getSuccess())) {
-                    JSONArray projectList = projectResult.getData();
-                    projects.addAll(convertProject(projectList, jsonTenant.getString("tenantName"), jsonTenant.getString("aliasName"), caastoken));
+                try {
+                    JSONObject jsonTenant = (JSONObject) tenant;
+                    CaasResult<JSONArray> projectResult = projectServiceClient.getTenantProject(caastoken, jsonTenant.getString("tenantId"));
+                    if (Boolean.TRUE.equals(projectResult.getSuccess())) {
+                        JSONArray projectList = projectResult.getData();
+                        projects.addAll(convertProject(projectList, jsonTenant.getString("tenantName"), jsonTenant.getString("aliasName"), caastoken));
+                    }
+                } catch (Exception e) {
+                    log.error("查询租户项目出错了", e);
+                } finally {
+                    latch.countDown();
                 }
-                latch.countDown();
             });
         }
-        long end  = System.currentTimeMillis();
         try {
             latch.await();
-            System.out.println("用时：" + (end-start) / 1000);
             executorService.shutdown();
         } catch (InterruptedException e) {
             log.error("查询用户所有项目出错了", e);

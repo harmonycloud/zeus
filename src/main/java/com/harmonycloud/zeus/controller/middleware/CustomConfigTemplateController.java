@@ -20,7 +20,7 @@ import io.swagger.annotations.ApiOperation;
  * @author xutianhong
  * @Date 2021/4/25 10:28 上午
  */
-@Api(tags = "CustomConfigTemplate", value = "自定义配置模板", description = "自定义配置模板")
+@Api(tags = {"服务列表", "参数设置"}, value = "自定义配置模板", description = "自定义配置模板")
 @RestController
 @RequestMapping("/middlewares/{type}/template")
 public class CustomConfigTemplateController {
