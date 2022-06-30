@@ -17,6 +17,7 @@ import com.harmonycloud.caas.filters.token.JwtTokenComponent;
 import com.harmonycloud.caas.filters.user.CurrentUser;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.uuid.UUIDUtils;
+import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.bean.user.BeanProject;
 import com.harmonycloud.zeus.bean.user.BeanProjectNamespace;
@@ -25,6 +26,7 @@ import com.harmonycloud.zeus.dao.user.BeanProjectNamespaceMapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
+import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.user.ProjectService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
@@ -67,6 +69,8 @@ public class ProjectServiceImpl implements ProjectService {
     public MiddlewareCRService middlewareCRService;
     @Autowired
     public MiddlewareInfoService middlewareInfoService;
+    @Autowired
+    private ClusterMiddlewareInfoService clusterMiddlewareInfoService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -281,13 +285,16 @@ public class ProjectServiceImpl implements ProjectService {
             new QueryWrapper<BeanProjectNamespace>().eq("project_id", projectId);
         List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
         // 获取集群
-        Set<String> cluster = new HashSet<>();
+        Set<String> clusterIdSet = new HashSet<>();
         beanProjectNamespaceList.forEach(beanProjectNamespace -> {
-            cluster.add(beanProjectNamespace.getClusterId());
+            clusterIdSet.add(beanProjectNamespace.getClusterId());
         });
+        // 获取集群下已安装中间件并集
+        Set<BeanClusterMiddlewareInfo> mwInfoSet = new HashSet<>();
+        clusterIdSet.forEach(clusterId -> mwInfoSet.addAll(clusterMiddlewareInfoService.list(clusterId, false)));
         // 查询数据
         List<MiddlewareResourceInfo> all = new ArrayList<>();
-        for (String clusterId : cluster) {
+        for (String clusterId : clusterIdSet) {
             all.addAll(clusterService.getMwResource(clusterId));
         }
         // 根据分区过滤
@@ -306,11 +313,11 @@ public class ProjectServiceImpl implements ProjectService {
         Map<String, List<MiddlewareResourceInfo>> map =
             all.stream().collect(Collectors.groupingBy(MiddlewareResourceInfo::getType));
         List<ProjectMiddlewareResourceInfo> infoList = new ArrayList<>();
-        for (String key : map.keySet()) {
+        for (BeanClusterMiddlewareInfo mwInfo : mwInfoSet){
             ProjectMiddlewareResourceInfo projectMiddlewareResourceInfo = new ProjectMiddlewareResourceInfo()
-                .setType(key).setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(key))
-                .setMiddlewareResourceInfoList(map.get(key))
-                .setImagePath(middlewareImagePathMap.getOrDefault(key, null));
+                    .setType(mwInfo.getChartName()).setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(mwInfo.getChartName()))
+                    .setMiddlewareResourceInfoList(map.getOrDefault(mwInfo.getChartName(), null))
+                    .setImagePath(middlewareImagePathMap.getOrDefault(mwInfo.getChartName(), null));
             infoList.add(projectMiddlewareResourceInfo);
         }
         return infoList;

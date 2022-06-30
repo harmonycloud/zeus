@@ -140,8 +140,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public List<ResourceMenuDto> listMenuByRoleId(UserDto userDto) {
-        String projectId = RequestUtil.getProjectId();
+    public List<ResourceMenuDto> listMenuByRoleId(UserDto userDto, String projectId) {
         List<Integer> ids;
         if (Boolean.TRUE.equals(!userDto.getIsAdmin()) && StringUtils.isNotEmpty(projectId)) {
             ids = Arrays.asList(3, 4);
