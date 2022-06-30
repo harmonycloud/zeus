@@ -182,6 +182,13 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
 
     @Override
     public void deleteRules(String clusterId, String namespace, String middlewareName, String alert, String alertRuleId) {
+        QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
+        wrapper.eq("alert_id", analysisID(alertRuleId));
+        MiddlewareAlertInfo info = middlewareAlertInfoMapper.selectOne(wrapper);
+        // 特殊处理pg
+        if ("postgresql".equals(info.getType())){
+            middlewareName = "harmonycloud-" + middlewareName;
+        }
         // 获取cr
         PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, namespace, middlewareName);
         prometheusRule.getSpec().getGroups().forEach(prometheusRuleGroups -> {
@@ -189,9 +196,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                     && prometheusRules.getAlert().equals(alert));
         });
         prometheusRuleService.update(clusterId, prometheusRule);
-        QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
-        wrapper.eq("alert",alert);
-        middlewareAlertInfoMapper.delete(wrapper);
+        QueryWrapper<MiddlewareAlertInfo> deleteWrapper = new QueryWrapper<>();
+        deleteWrapper.eq("alert",alert);
+        middlewareAlertInfoMapper.delete(deleteWrapper);
         removeMail(alertRuleId);
     }
 
@@ -204,6 +211,11 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         wrapper.eq("alert_id", analysisID(middlewareAlertsDTO.getAlertId()));
         MiddlewareAlertInfo info = middlewareAlertInfoMapper.selectOne(wrapper);
         String group = middlewareAlertsDTO.getAnnotations().get("group");
+
+        // 特殊处理pg
+        if ("postgresql".equals(info.getType())){
+            middlewareName = "harmonycloud-" + middlewareName;
+        }
 
         //获取cr
         PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, namespace, middlewareName);
