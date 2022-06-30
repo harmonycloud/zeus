@@ -113,7 +113,7 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
         // 获取存储中文名
         try {
             StorageDto storageDto =
-                storageService.get(middleware.getClusterId(), values.getString("storageClassName"), false);
+                storageService.get(middleware.getClusterId(), persistence.getString("storageClassName"), false);
             quota.setStorageClassAliasName(storageDto.getAliasName());
         } catch (Exception e) {
             log.error("中间件{}, 获取存储中文名失败", middleware.getName());
