@@ -427,6 +427,9 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
             List<Namespace> listRegisteredNamespace = clusterService.listRegisteredNamespace(cluster.getClusterId());
             List<Middleware> middlewares = middlewareService.simpleList(cluster.getClusterId(), null, null, null);
             middlewares = middlewares.stream().filter(middleware -> listRegisteredNamespace.stream().anyMatch(ns ->middleware.getNamespace().equals(ns.getName()))).collect(Collectors.toList());
+            if (middlewares.isEmpty()) {
+                return;
+            }
             if (StringUtils.isEmpty(keyword) && StringUtils.isEmpty(type)) {
                 middlewareList.addAll(middlewares);
             } else {
