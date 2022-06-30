@@ -11,10 +11,7 @@ import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
 import com.harmonycloud.caas.common.model.MiddlewareBackupScheduleConfig;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupNameDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
-import com.harmonycloud.caas.common.model.middleware.PodInfo;
+import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.annotation.MiddlewareBackup;
 import com.harmonycloud.zeus.bean.BeanMiddlewareBackupName;
@@ -669,6 +666,16 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (StringUtils.isNotEmpty(middlewareName)) {
             recordList = recordList.stream().filter(record -> middlewareName.equals(record.getSourceName())).collect(Collectors.toList());
         }
+        recordList.forEach(record -> {
+            try {
+                List<MiddlewareBriefInfoDTO>  middlewares = middlewareService.list(clusterId, namespace, record.getSourceType(), record.getSourceName(), null);
+                if (!middlewares.isEmpty()) {
+                    record.setStatus(middlewares.get(0).getServiceList().get(0).getStatus());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
         return recordList;
     }
 
