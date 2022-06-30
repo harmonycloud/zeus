@@ -359,11 +359,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     private void checkBackupJobName(MiddlewareBackupDTO backupDTO) {
-        QueryWrapper<BeanMiddlewareBackupName> wrapper = new QueryWrapper<BeanMiddlewareBackupName>().eq("backup_name", backupDTO.getTaskName()).eq("cluster_id", backupDTO.getClusterId());
-        List<BeanMiddlewareBackupName> backupNames = middlewareBackupNameMapper.selectList(wrapper);
-        if (!CollectionUtils.isEmpty(backupNames)) {
-            throw new BusinessException(ErrorMessage.BACKUP_JOB_NAME_ALREADY_EXISTS);
-        }
+        List<MiddlewareBackupRecord> records = backupTaskList(backupDTO.getClusterId(), backupDTO.getNamespace(), null, null, null);
+        records.forEach(record -> {
+            if (backupDTO.getTaskName().equals(record.getTaskName())) {
+                throw new BusinessException(ErrorMessage.BACKUP_JOB_NAME_ALREADY_EXISTS);
+            }
+        });
     }
 
     /**
