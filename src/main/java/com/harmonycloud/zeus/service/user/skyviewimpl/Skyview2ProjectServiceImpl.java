@@ -12,6 +12,8 @@ import com.harmonycloud.caas.common.model.middleware.ProjectMiddlewareResourceIn
 import com.harmonycloud.caas.common.model.user.ProjectDto;
 import com.harmonycloud.caas.common.model.user.RoleDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
+import com.harmonycloud.caas.filters.token.JwtTokenComponent;
+import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.bean.user.BeanUserRole;
@@ -36,6 +38,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
+
+import static com.harmonycloud.caas.common.constants.user.UserConstant.USERNAME;
 
 /**
  * @author liyinlong
@@ -363,7 +367,25 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
         });
         // 获取集群下已安装中间件并集
         Set<BeanClusterMiddlewareInfo> mwInfoSet = new HashSet<>();
-        clusterIdSet.forEach(clusterId -> mwInfoSet.addAll(clusterMiddlewareInfoService.list(clusterId, false)));
+        for (String clusterId : clusterIdSet){
+            mwInfoSet.addAll(clusterMiddlewareInfoService.list(clusterId, false));
+        }
+        // 查询用户角色项目权限
+        String username =
+                JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue().getString(USERNAME);
+        UserDto userDto = userService.getUserDto(username);
+        Map<String, String> power = new HashMap<>();
+        if (!userDto.getIsAdmin() && userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getProjectId().equals(projectId))){
+            power.putAll(userDto.getUserRoleList().stream().filter(userRole -> userRole.getProjectId().equals(projectId))
+                    .collect(Collectors.toList()).get(0).getPower());
+        }
+        // 过滤获取拥有权限的中间件
+        if (!CollectionUtils.isEmpty(power)) {
+            mwInfoSet = mwInfoSet.stream()
+                    .filter(mwInfo -> power.keySet().stream()
+                            .anyMatch(key -> !"0000".equals(power.get(key)) && mwInfo.getChartName().equals(key)))
+                    .collect(Collectors.toSet());
+        }
         // 查询数据
         List<MiddlewareResourceInfo> all = new ArrayList<>();
         for (String clusterId : clusterIdSet) {
