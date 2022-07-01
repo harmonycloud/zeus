@@ -197,7 +197,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         }
         StringBuilder sb = new StringBuilder();
 
-        // 实例扩容
+        // redis实例扩容
         if (middleware.getQuota() != null && middleware.getQuota().get(middleware.getType()) != null) {
             MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
             // 设置limit的resources
@@ -216,12 +216,34 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
                 String mem = calculateMem(quota.getLimitMemory(), "0.8", "mb");
                 sb.append("redisMaxMemory=").append(mem).append(",");
             }
-
             // 实例模式扩容
             if (quota.getNum() != null) {
                 sb.append("redis.replicas=").append(quota.getNum()).append(",");
             }
         }
+
+        // sentinel实例扩容
+        if (middleware.getQuota() != null && middleware.getQuota().get(SENTINEL) != null) {
+            MiddlewareQuota sentinelQuota = middleware.getQuota().get(SENTINEL);
+            // 设置limit的resources
+            setLimitResources(sentinelQuota);
+            // 实例规格扩容
+            // cpu
+            if (StringUtils.isNotBlank(sentinelQuota.getCpu())) {
+                sb.append("sentinel.resources.requests.cpu=").append(sentinelQuota.getCpu()).append(",sentinel.resources.limits.cpu=")
+                        .append(sentinelQuota.getLimitCpu()).append(",");
+            }
+            // memory
+            if (StringUtils.isNotBlank(sentinelQuota.getMemory())) {
+                sb.append("sentinel.resources.requests.memory=").append(sentinelQuota.getMemory())
+                        .append(",sentinel.resources.limits.memory=").append(sentinelQuota.getLimitMemory()).append(",");
+            }
+            // 实例模式扩容
+            if (sentinelQuota.getNum() != null) {
+                sb.append("sentinel.replicas=").append(sentinelQuota.getNum()).append(",");
+            }
+        }
+
 
         // 密码
         if (StringUtils.isNotBlank(middleware.getPassword())) {
