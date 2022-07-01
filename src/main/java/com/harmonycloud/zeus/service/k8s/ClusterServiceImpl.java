@@ -153,7 +153,7 @@ public class ClusterServiceImpl implements ClusterService{
         }
         // 返回命名空间信息
         if (detail && clusters.size() > 0) {
-            clusters.parallelStream().forEach(cluster -> {
+            clusters.forEach(cluster -> {
                 // 初始化集群信息
                 initClusterAttributes(cluster);
                 try {
