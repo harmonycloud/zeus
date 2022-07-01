@@ -98,6 +98,20 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
             String position = "minio" + "(" + minio.getEndpoint() + "/" + minio.getBucketName() + ")";
             backupRecord.setPosition(position);
             if (!ObjectUtils.isEmpty(backupStatus)) {
+                switch (backupStatus.getLastBackupPhase()) {
+                    case "Creating":
+                    case "Running":
+                        backupRecord.setPhrase("Running");
+                        break;
+                    case "Complete":
+                        backupRecord.setPhrase("Success");
+                        break;
+                    case "Failed":
+                        backupRecord.setPhrase("Failed");
+                        break;
+                    default:
+                        backupRecord.setPhrase("Unknown");
+                }
                 backupRecord.setPhrase(backupStatus.getLastBackupPhase());
             } else {
                 backupRecord.setPhrase("Unknown");
@@ -109,7 +123,11 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
             backupRecord.setTaskName(getBackupName(clusterId, backupId).getBackupName());
             backupRecord.setAddressName(schedule.getMetadata().getLabels().get("addressId"));
             backupRecord.setCron(CronUtils.parseLocalCron(schedule.getSpec().getSchedule()));
-            backupRecord.setBackupMode("single");
+            if (schedule.getSpec().getKeepBackups() == null) {
+                backupRecord.setBackupMode("single");
+            } else {
+                backupRecord.setBackupMode("period");
+            }
             recordList.add(backupRecord);
         });
         return recordList;

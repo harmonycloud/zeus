@@ -8,6 +8,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.models.auth.In;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -38,6 +39,7 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "dateUnit", value = "时间单位", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "taskName", value = "任务名称", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "addressName", value = "备份地址", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "limitRecord", value = "保留个数", paramType = "query", dataTypeClass = Integer.class),
     })
     @PostMapping
     public BaseResult create(@PathVariable("clusterId") String clusterId,
@@ -49,8 +51,9 @@ public class MiddlewareBackupController {
                              @RequestParam(value = "dateUnit", required = false) String dateUnit,
                              @RequestParam(value = "taskName") String taskName,
                              @RequestParam(value = "addressName") String addressName,
-                             @RequestParam(value = "pod", required = false) String pod) {
-        middlewareBackupService.createBackup(new MiddlewareBackupDTO(clusterId, namespace, middlewareName, type, cron, retentionTime, dateUnit, taskName, addressName, pod, null, null));
+                             @RequestParam(value = "pod", required = false) String pod,
+                             @RequestParam(value = "limitRecord", required = false) Integer limitRecord) {
+        middlewareBackupService.createBackup(new MiddlewareBackupDTO(clusterId, namespace, middlewareName, type, cron, retentionTime, dateUnit, taskName, addressName, pod, null, null, limitRecord));
         return BaseResult.ok();
     }
 

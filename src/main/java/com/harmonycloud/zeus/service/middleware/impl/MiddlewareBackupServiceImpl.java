@@ -11,10 +11,7 @@ import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
 import com.harmonycloud.caas.common.model.MiddlewareBackupScheduleConfig;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupNameDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
-import com.harmonycloud.caas.common.model.middleware.PodInfo;
+import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.annotation.MiddlewareBackup;
 import com.harmonycloud.zeus.bean.BeanMiddlewareBackupName;
@@ -359,11 +356,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     private void checkBackupJobName(MiddlewareBackupDTO backupDTO) {
-        QueryWrapper<BeanMiddlewareBackupName> wrapper = new QueryWrapper<BeanMiddlewareBackupName>().eq("backup_name", backupDTO.getTaskName()).eq("cluster_id", backupDTO.getClusterId());
-        List<BeanMiddlewareBackupName> backupNames = middlewareBackupNameMapper.selectList(wrapper);
-        if (!CollectionUtils.isEmpty(backupNames)) {
-            throw new BusinessException(ErrorMessage.BACKUP_JOB_NAME_ALREADY_EXISTS);
-        }
+        List<MiddlewareBackupRecord> records = backupTaskList(backupDTO.getClusterId(), backupDTO.getNamespace(), null, null, null);
+        records.forEach(record -> {
+            if (backupDTO.getTaskName().equals(record.getTaskName())) {
+                throw new BusinessException(ErrorMessage.BACKUP_JOB_NAME_ALREADY_EXISTS);
+            }
+        });
     }
 
     /**
@@ -660,14 +658,24 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         List<MiddlewareBackupRecord> backupRecords = listRecord(clusterId, namespace, middlewareName, type, keyword);
         List<MiddlewareBackupRecord> backupSchedules = listBackupSchedule(clusterId, namespace, type, middlewareName, keyword);
         //过滤backupSchedule所产生的backup
-        backupSchedules.forEach(schedule -> {
-            backupRecords.stream().filter(record -> record.getBackupName().equals(schedule.getBackupName()) || record.getOwner().equals(schedule.getBackupName())).collect(Collectors.toList());
-        });
+        for (MiddlewareBackupRecord schedule : backupSchedules){
+            backupRecords = backupRecords.stream().filter(record -> !record.getBackupName().equals(schedule.getBackupName()) && !record.getOwner().equals(schedule.getBackupName())).collect(Collectors.toList());
+        }
         recordList.addAll(backupRecords);
         recordList.addAll(backupSchedules);
         if (StringUtils.isNotEmpty(middlewareName)) {
-            recordList.stream().filter(record -> middlewareName.equals(record.getSourceName())).collect(Collectors.toList());
+            recordList = recordList.stream().filter(record -> middlewareName.equals(record.getSourceName())).collect(Collectors.toList());
         }
+        recordList.forEach(record -> {
+            try {
+                List<MiddlewareBriefInfoDTO>  middlewares = middlewareService.list(clusterId, record.getNamespace(), record.getSourceType(), record.getSourceName(), null);
+                if (!middlewares.isEmpty()) {
+                    record.setStatus(middlewares.get(0).getServiceList().get(0).getStatus());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
         return recordList;
     }
 

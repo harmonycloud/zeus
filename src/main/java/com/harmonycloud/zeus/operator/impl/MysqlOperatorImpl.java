@@ -300,6 +300,9 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         // 更新helm
         helmChartService.upgrade(middleware, sb.toString(), cluster);
         if (mysqlDTO != null && mysqlDTO.getOpenDisasterRecoveryMode() != null && mysqlDTO.getOpenDisasterRecoveryMode() && mysqlDTO.getIsSource()) {
+            Middleware disasterRecoverMiddleware = middleware.getRelationMiddleware();
+            disasterRecoverMiddleware.setChartName(middleware.getChartName());
+            disasterRecoverMiddleware.setChartVersion(middleware.getChartVersion());
             this.createDisasterRecoveryMiddleware(middleware);
         }
     }

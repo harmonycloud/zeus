@@ -1052,8 +1052,12 @@ public class IngressServiceImpl implements IngressService {
         // tcp routing list
         ConfigMap configMap = configMapWrapper.get(cluster.getId(), ingressTcpNamespace, ingressTcpCmName);
         Map<String, String> data = configMap.getData();
-        int port = 31000;
+        Random random = new Random();
+        int port = 31000 + random.nextInt(100);
         for (; ; ) {
+            if (data == null) {
+                return port;
+            }
             if (null == data.get(String.valueOf(port))) {
                 return port;
             }
