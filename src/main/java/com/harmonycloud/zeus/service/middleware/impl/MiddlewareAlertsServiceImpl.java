@@ -19,9 +19,11 @@ import com.harmonycloud.zeus.bean.user.BeanUser;
 import com.harmonycloud.zeus.dao.MailToUserMapper;
 import com.harmonycloud.zeus.dao.MiddlewareAlertInfoMapper;
 import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCluster;
 import com.harmonycloud.zeus.integration.cluster.bean.prometheus.PrometheusRule;
 import com.harmonycloud.zeus.integration.cluster.bean.prometheus.PrometheusRuleGroups;
 import com.harmonycloud.zeus.integration.cluster.bean.prometheus.PrometheusRules;
+import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import com.harmonycloud.zeus.service.k8s.PrometheusRuleService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareAlertsService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
@@ -31,6 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.yaml.snakeyaml.Yaml;
 
 import com.alibaba.fastjson.JSONObject;
@@ -77,6 +80,8 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     private MailToUserMapper mailToUserMapper;
     @Autowired
     private DingRobotService dingRobotService;
+    @Autowired
+    private MiddlewareClusterService clusterService;
 
     @Override
     public PageInfo<MiddlewareAlertsDTO> listUsedRules(String clusterId, String namespace, String middlewareName,
@@ -116,12 +121,21 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             middlewareAlertsDTO.setLabels(labels);
             middlewareAlertsDTO.setAnnotations(annotations);
             middlewareAlertsDTO.setAlertId(calculateID(alertInfo.getAlertId()));
+            middlewareAlertsDTO.setNickname(convertCluster(alertInfo.getClusterId()));
             return middlewareAlertsDTO;
         }).collect(Collectors.toList()));
         alertsDTOPageInfo.getList().sort(
                 (o1, o2) -> o1.getCreateTime() == null ? -1 : o2.getCreateTime() == null ? -1 : o2.getCreateTime().compareTo(o1.getCreateTime()));
 
         return alertsDTOPageInfo;
+    }
+
+    private String convertCluster(String clusterId) {
+        List<MiddlewareCluster> clusters = clusterService.listClusters(clusterId);
+        if (!CollectionUtils.isEmpty(clusters)) {
+            return clusters.get(0).getMetadata().getAnnotations().get(NameConstant.NAME);
+        }
+        return null;
     }
 
     @Override

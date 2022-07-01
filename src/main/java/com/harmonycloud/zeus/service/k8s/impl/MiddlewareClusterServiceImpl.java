@@ -63,6 +63,24 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
     }
 
     @Override
+    public List<MiddlewareCluster> listClusters(String clusterId) {
+        QueryWrapper<BeanMiddlewareCluster> wrapper = new QueryWrapper<>();
+        if (StringUtils.isNotEmpty(clusterId)) {
+            wrapper.eq("cluster_id", clusterId);
+        }
+        List<BeanMiddlewareCluster> beanMiddlewareClusters = middlewareClusterMapper.selectList(wrapper);
+        if (CollectionUtils.isEmpty(beanMiddlewareClusters)){
+            beanMiddlewareClusters = initMiddlewareCluster();
+        }
+        List<MiddlewareCluster> middlewareClusters = new ArrayList<>();
+        beanMiddlewareClusters.forEach(beanMiddlewareCluster -> {
+            MiddlewareCluster middlewareCluster = JSONObject.parseObject(JSONObject.toJSONString(JSON.parse(beanMiddlewareCluster.getMiddlewareCluster())), MiddlewareCluster.class);
+            middlewareClusters.add(middlewareCluster);
+        });
+        return middlewareClusters;
+    }
+
+    @Override
     public void update(String clusterId, MiddlewareCluster middlewareCluster) {
         QueryWrapper<BeanMiddlewareCluster> wrapper = new QueryWrapper<>();
         wrapper.eq("cluster_id", clusterId);

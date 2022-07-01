@@ -21,15 +21,9 @@ import com.harmonycloud.zeus.dao.BeanAlertRecordMapper;
 import com.harmonycloud.zeus.dao.MiddlewareAlertInfoMapper;
 import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
 import com.harmonycloud.zeus.integration.cluster.ResourceQuotaWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareSpec;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareStatus;
+import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
-import com.harmonycloud.zeus.service.k8s.ClusterService;
-import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
-import com.harmonycloud.zeus.service.k8s.NamespaceService;
-import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
+import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
@@ -95,6 +89,8 @@ public class OverviewServiceImpl implements OverviewService {
     private MiddlewareAlertsServiceImpl middlewareAlertsService;
     @Autowired
     private MiddlewareCrTypeService middlewareCrTypeService;
+    @Autowired
+    private MiddlewareClusterService middlewareClusterService;
 
     @Value("${system.platform.version:v0.1.0}")
     private String version;
@@ -412,11 +408,20 @@ public class OverviewServiceImpl implements OverviewService {
             }
           //返回大写类型
            changeType(record,alertDTO);
+           alertDTO.setNickname(convertCluster(record.getClusterId()));
            return alertDTO;
         }).collect(Collectors.toList()));
         alertDTOPage.getList().sort(
             (o1, o2) -> o1.getTime() == null ? -1 : o2.getTime() == null ? -1 : o2.getTime().compareTo(o1.getTime()));
         return alertDTOPage;
+    }
+
+    private String convertCluster(String clusterId) {
+        List<MiddlewareCluster> clusters = middlewareClusterService.listClusters(clusterId);
+        if (!CollectionUtils.isEmpty(clusters)) {
+            return clusters.get(0).getMetadata().getAnnotations().get(NameConstant.NAME);
+        }
+        return null;
     }
 
     /**
