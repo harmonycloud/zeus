@@ -80,10 +80,3 @@ INSERT INTO `resource_menu` VALUES (18,'projectManagement','项目管理','syste
 INSERT INTO `resource_menu` VALUES (19,'roleManagement','角色管理','systemManagement/roleManagement',104,NULL,10,NULL);
 INSERT INTO `resource_menu` VALUES (20,'systemAlarm','系统告警','systemManagement/systemAlarm',105,NULL,10,NULL);
 INSERT INTO `resource_menu` VALUES (21,'operationAudit','操作审计','systemManagement/operationAudit',106,NULL,10,NULL);
-
--- 2020.6.22 xutianhong
--- 初始化postgresql角色权限
-INSERT INTO `role_authority` VALUES (null,1,'postgresql','1111');
-INSERT INTO `role_authority` VALUES (null,2,'postgresql','1111');
-INSERT INTO `role_authority` VALUES (null,3,'postgresql','1111');
-INSERT INTO `role_authority` VALUES (null,4,'postgresql','1000');

@@ -65,6 +65,11 @@ system:
     host: caas-gateway-svc.caas-system
     port: 8081
     prefix: /
+  registry:
+    address: 10.10.101.22
+    port: 8443
+    username: admin
+    password: Harbor12345
 
 overview:
   overall:

@@ -72,7 +72,7 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
             // memory
             if (StringUtils.isNotBlank(quota.getMemory())) {
                 sb.append("pod.resources.requests.memory=").append(quota.getMemory())
-                    .append("pod.resources.limits.memory=").append(quota.getLimitMemory()).append(",");
+                    .append(",pod.resources.limits.memory=").append(quota.getLimitMemory()).append(",");
             }
             // 实例模式扩容
             if (quota.getNum() != null) {

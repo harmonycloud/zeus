@@ -193,7 +193,7 @@ public class IngressServiceImpl implements IngressService {
         // 特殊处理kafka和rocketmq(仅更新端口时)
         if ((ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.ROCKET_MQ.getType())
             || ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.KAFKA.getType()))
-            && ingressDTO.getServiceList().size() == 1) {
+            && ingressDTO.getServiceList() != null && ingressDTO.getServiceList().size() == 1) {
             upgradeValues(clusterId, namespace, middlewareName, ingressDTO);
         }
     }
@@ -1052,8 +1052,12 @@ public class IngressServiceImpl implements IngressService {
         // tcp routing list
         ConfigMap configMap = configMapWrapper.get(cluster.getId(), ingressTcpNamespace, ingressTcpCmName);
         Map<String, String> data = configMap.getData();
-        int port = 31000;
+        Random random = new Random();
+        int port = 31000 + random.nextInt(100);
         for (; ; ) {
+            if (data == null) {
+                return port;
+            }
             if (null == data.get(String.valueOf(port))) {
                 return port;
             }

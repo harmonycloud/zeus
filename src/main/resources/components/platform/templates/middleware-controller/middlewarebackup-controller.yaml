@@ -116,7 +116,7 @@ spec:
         - --job-namespace={{ .Values.global.middlewarebackup_controller.job_creator.jobNamespace }}
         - --job-service-account={{ .Values.global.middlewarebackup_controller.job_creator.jobServiceAccount }}
         - --job-creator-image={{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.job_creator.image }}:{{ .Values.global.middlewarebackup_controller.job_creator.tag }}
-        - --backupJobImage={{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.common_path_backup.backupJobImage }}
+        - --backupJobImage={{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.common_path_backup.image }}:{{ .Values.global.middlewarebackup_controller.common_path_backup.tag }}
         - --job-pgsql-backup-image={{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.job_pgsql_backup.image }}:{{ .Values.global.middlewarebackup_controller.job_pgsql_backup.tag }}
         command:
         - /manager

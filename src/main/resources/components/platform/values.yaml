@@ -13,7 +13,7 @@ global:
     nodeSelector: {}
   middlewarebackup_controller:
     image: middlewarebackup-controller
-    tag: v1.1.0
+    tag: v1.1.2
     resources:
       limits:
         cpu: 200m
@@ -28,7 +28,21 @@ global:
       image: backup-job-creator
       tag: v1.0.1
     common_path_backup:
-      backupJobImage: middleware-backup-operator:v1.0.0-backup
+      image: middleware-backup-operator
+      tag: v1.0.0-common
     job_pgsql_backup:
       image: middleware-backup-operator
       tag: v1.0.0-pgsql
+  kubectl:
+    installCRDs: true
+    tag: 1.21
+    resources:
+      limits:
+        cpu: 200m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
