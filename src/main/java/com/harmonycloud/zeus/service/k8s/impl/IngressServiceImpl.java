@@ -1106,6 +1106,9 @@ public class IngressServiceImpl implements IngressService {
         JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
         // 开启对外访问
         JSONObject external = values.getJSONObject(EXTERNAL);
+        if (!external.containsKey(SVC_NAME_TAG)){
+            return;
+        }
         // 获取暴露ip地址
         String exposeIp = getExposeIp(cluster, ingressDTO);
         // 指定分隔符号
