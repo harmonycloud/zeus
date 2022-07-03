@@ -40,6 +40,7 @@ public class MiddlewareCrTypeServiceImpl implements MiddlewareCrTypeService {
     private MiddlewareInfoService middlewareInfoService;
 
     @PostConstruct
+    @Override
     public void init() {
         // 非空  无需初始化
         if (!CollectionUtils.isEmpty(MIDDLEWARE_CR_TYPE)){
@@ -122,5 +123,9 @@ public class MiddlewareCrTypeServiceImpl implements MiddlewareCrTypeService {
             }
         }
         return crType;
+    }
+
+    public void tryInit(){
+
     }
 }

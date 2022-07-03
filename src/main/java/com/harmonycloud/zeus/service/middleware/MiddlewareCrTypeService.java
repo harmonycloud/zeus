@@ -7,6 +7,12 @@ package com.harmonycloud.zeus.service.middleware;
 public interface MiddlewareCrTypeService {
 
     /**
+     * 初始化
+     *
+     */
+    void init();
+
+    /**
      * 添加中间件cr类型映射
      *
      * @param type 中间件类型
