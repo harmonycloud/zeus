@@ -106,8 +106,7 @@ public class ClusterServiceImpl implements ClusterService{
     private MiddlewareCrTypeService middlewareCrTypeService;
     @Autowired
     private MiddlewareAlertsService middlewareAlertsService;
-    @Autowired
-    private MiddlewareCrTypeService middlewareCrTypeService;
+
 
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
