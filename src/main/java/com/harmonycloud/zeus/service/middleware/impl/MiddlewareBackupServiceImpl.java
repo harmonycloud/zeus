@@ -113,7 +113,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             });
         }
         if (StringUtils.isNotBlank(keyword)) {
-            return recordList.stream().filter(record -> record.getTaskName().contains(keyword)).collect(Collectors.toList());
+            return recordList.stream()
+                .filter(
+                    record -> StringUtils.isNotEmpty(record.getTaskName()) && record.getTaskName().contains(keyword))
+                .collect(Collectors.toList());
         }
         return recordList;
     }

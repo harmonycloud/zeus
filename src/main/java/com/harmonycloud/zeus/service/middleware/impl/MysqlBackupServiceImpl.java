@@ -139,7 +139,10 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
             list.get(i).setRecordName(buffer.toString());
         }
         if (StringUtils.isNotBlank(keyword)) {
-            return list.stream().filter(record -> record.getTaskName().contains(keyword)).collect(Collectors.toList());
+            return list.stream()
+                .filter(
+                    record -> StringUtils.isNotEmpty(record.getTaskName()) && record.getTaskName().contains(keyword))
+                .collect(Collectors.toList());
         }
         return list;
     }
