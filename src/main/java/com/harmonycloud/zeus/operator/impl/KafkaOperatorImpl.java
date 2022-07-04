@@ -95,7 +95,7 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
             }
             // memory
             if (StringUtils.isNotBlank(quota.getMemory())) {
-                sb.append("resources.requests.memory=").append(quota.getMemory()).append("resources.limits.memory=")
+                sb.append("resources.requests.memory=").append(quota.getMemory()).append(",resources.limits.memory=")
                     .append(quota.getLimitMemory()).append(",");
             }
             // 实例模式扩容
