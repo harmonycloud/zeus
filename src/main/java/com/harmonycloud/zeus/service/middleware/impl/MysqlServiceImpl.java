@@ -26,11 +26,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_NODEPORT;
 
@@ -169,15 +171,22 @@ public class MysqlServiceImpl implements MysqlService {
         if (middleware == null) {
             middleware = middlewareService.detail(clusterId, namespace, middlewareName, MiddlewareTypeEnum.MYSQL.getType());
         }
-        List<IngressDTO> ingressDTOS = ingressService.get(clusterId, namespace, MiddlewareTypeEnum.MYSQL.name(), middlewareName);
-        ingressDTOS = ingressDTOS.stream().filter(ingressDTO -> (
+        List<IngressDTO> serviceDTOS = ingressService.get(clusterId, namespace, MiddlewareTypeEnum.MYSQL.name(), middlewareName);
+        serviceDTOS = serviceDTOS.stream().filter(ingressDTO -> (
                 !ingressDTO.getName().contains("readonly"))
         ).collect(Collectors.toList());
 
         MysqlAccessInfo mysqlAccessInfo = new MysqlAccessInfo();
-        if (!CollectionUtils.isEmpty(ingressDTOS)) {
+        if (!CollectionUtils.isEmpty(serviceDTOS)) {
             // 优先使用ingress或NodePort暴露的服务
-            IngressDTO ingressDTO = ingressDTOS.get(0);
+            List<IngressDTO> ingressDTOS = serviceDTOS.stream().filter(ingressDTO ->
+                    !StringUtils.isEmpty(ingressDTO.getIngressClassName())).collect(Collectors.toList());
+            IngressDTO ingressDTO;
+            if (!CollectionUtils.isEmpty(ingressDTOS)) {
+                ingressDTO = ingressDTOS.get(0);
+            } else {
+                ingressDTO = serviceDTOS.get(0);
+            }
             String exposeIP = ingressDTO.getExposeIP();
             List<ServiceDTO> serviceList = ingressDTO.getServiceList();
             if (!CollectionUtils.isEmpty(serviceList)) {
