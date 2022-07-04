@@ -160,7 +160,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     public void updateBackupSchedule(MiddlewareBackupDTO backupDTO) {
         MysqlScheduleBackupCR backupCRD = mysqlScheduleBackupService.get(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getBackupScheduleName());
         MysqlScheduleBackupSpec spec = backupCRD.getSpec();
-        spec.setSchedule(backupDTO.getCron());
+        spec.setSchedule(CronUtils.parseUtcCron(backupDTO.getCron()));
         mysqlScheduleBackupService.update(backupDTO.getClusterId(), backupCRD);
     }
 

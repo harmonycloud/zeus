@@ -198,7 +198,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                     backupDTO.getNamespace(), backupDTO.getBackupScheduleName());
             try {
                 MiddlewareBackupScheduleSpec spec = middlewareBackupScheduleCR.getSpec();
-                spec.getSchedule().setCron(backupDTO.getCron());
+                spec.getSchedule().setCron(CronUtils.parseUtcCron(backupDTO.getCron()));
                 backupScheduleCRDService.update(backupDTO.getClusterId(), middlewareBackupScheduleCR);
             } catch (IOException e) {
                 log.error("中间件{}备份设置更新失败", backupDTO.getMiddlewareName());
