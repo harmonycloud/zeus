@@ -653,22 +653,28 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * 查询所有的备份任务
      */
     @Override
-    public List<MiddlewareBackupRecord> backupTaskList(String clusterId, String namespace, String middlewareName, String type, String keyword) {
+    public List<MiddlewareBackupRecord> backupTaskList(String clusterId, String namespace, String middlewareName,
+        String type, String keyword) {
         List<MiddlewareBackupRecord> recordList = new ArrayList<>();
         List<MiddlewareBackupRecord> backupRecords = listRecord(clusterId, namespace, middlewareName, type, keyword);
-        List<MiddlewareBackupRecord> backupSchedules = listBackupSchedule(clusterId, namespace, type, middlewareName, keyword);
-        //过滤backupSchedule所产生的backup
-        for (MiddlewareBackupRecord schedule : backupSchedules){
-            backupRecords = backupRecords.stream().filter(record -> !record.getBackupName().equals(schedule.getBackupName()) && !record.getOwner().equals(schedule.getBackupName())).collect(Collectors.toList());
+        List<MiddlewareBackupRecord> backupSchedules =
+            listBackupSchedule(clusterId, namespace, type, middlewareName, keyword);
+        // 过滤backupSchedule所产生的backup
+        for (MiddlewareBackupRecord schedule : backupSchedules) {
+            backupRecords =
+                backupRecords.stream().filter(record -> !record.getBackupName().equals(schedule.getBackupName())
+                    && !record.getOwner().equals(schedule.getBackupName())).collect(Collectors.toList());
         }
         recordList.addAll(backupRecords);
         recordList.addAll(backupSchedules);
         if (StringUtils.isNotEmpty(middlewareName)) {
-            recordList = recordList.stream().filter(record -> middlewareName.equals(record.getSourceName())).collect(Collectors.toList());
+            recordList = recordList.stream().filter(record -> middlewareName.equals(record.getSourceName()))
+                .collect(Collectors.toList());
         }
         recordList.forEach(record -> {
             try {
-                List<MiddlewareBriefInfoDTO>  middlewares = middlewareService.list(clusterId, record.getNamespace(), record.getSourceType(), record.getSourceName(), null);
+                List<MiddlewareBriefInfoDTO> middlewares = middlewareService.list(clusterId, record.getNamespace(),
+                    record.getSourceType(), record.getSourceName(), null);
                 if (!middlewares.isEmpty()) {
                     record.setStatus(middlewares.get(0).getServiceList().get(0).getStatus());
                 }

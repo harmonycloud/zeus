@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.tool.date.DateUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -51,12 +53,13 @@ public class IngressComponentServiceImpl implements IngressComponentService {
     @Override
     public void install(IngressComponentDto ingressComponentDto) {
         MiddlewareClusterDTO cluster = clusterService.findById(ingressComponentDto.getClusterId());
-        if (!CollectionUtils.isEmpty(cluster.getIngressList())) {
+        // todo check exist
+        /*if (!CollectionUtils.isEmpty(cluster.getIngressList())) {
             if (cluster.getIngressList().stream()
                 .anyMatch(ingress -> ingress.getIngressClassName().equals(ingressComponentDto.getIngressClassName()))) {
                 throw new BusinessException(ErrorMessage.INGRESS_CLASS_EXISTED);
             }
-        }
+        }*/
         String repository = cluster.getRegistry().getRegistryAddress() + "/" + cluster.getRegistry().getChartRepo();
         // setValues
         String setValues = "image.ingressRepository=" + repository +
@@ -73,7 +76,7 @@ public class IngressComponentServiceImpl implements IngressComponentService {
         helmChartService.installComponents(ingressComponentDto.getIngressClassName(), "middleware-operator", setValues,
             componentsPath + File.separator + "ingress-nginx/charts/ingress-nginx", cluster);
         // update cluster
-        MiddlewareClusterIngress ingress = new MiddlewareClusterIngress().setAddress(cluster.getHost())
+        /*MiddlewareClusterIngress ingress = new MiddlewareClusterIngress().setAddress(cluster.getHost())
             .setIngressClassName(ingressComponentDto.getIngressClassName());
         MiddlewareClusterIngress.IngressConfig config = new MiddlewareClusterIngress.IngressConfig();
         config.setEnabled(true).setNamespace("middleware-operator")
@@ -83,9 +86,12 @@ public class IngressComponentServiceImpl implements IngressComponentService {
             cluster.setIngressList(new ArrayList<>());
         }
         cluster.getIngressList().add(ingress);
-        clusterService.update(cluster);
+        clusterService.update(cluster);*/
         // save to mysql
-        insert(cluster.getId(), ingressComponentDto.getIngressClassName(), 2);
+        ingressComponentDto.setNamespace("middleware-operator");
+        ingressComponentDto.setConfigMapName(ingressComponentDto.getIngressClassName() + "-system-expose-nginx-config-tcp");
+        ingressComponentDto.setAddress(cluster.getHost());
+        insert(cluster.getId(), ingressComponentDto, 2);
         // 检查是否安装成功
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
@@ -99,7 +105,7 @@ public class IngressComponentServiceImpl implements IngressComponentService {
 
     @Override
     public void integrate(IngressComponentDto ingressComponentDto) {
-        MiddlewareClusterDTO existCluster = clusterService.findById(ingressComponentDto.getClusterId());
+        /*MiddlewareClusterDTO existCluster = clusterService.findById(ingressComponentDto.getClusterId());
         if (CollectionUtils.isEmpty(existCluster.getIngressList())) {
             existCluster.setIngressList(new ArrayList<>());
         }
@@ -114,9 +120,9 @@ public class IngressComponentServiceImpl implements IngressComponentService {
             .setConfigMapName(ingressComponentDto.getConfigMapName()).setEnabled(true);
 
         existCluster.getIngressList().add(ingress);
-        clusterService.update(existCluster);
+        clusterService.update(existCluster);*/
         // save to mysql
-        insert(ingressComponentDto.getClusterId(), ingressComponentDto.getIngressClassName(), 1);
+        insert(ingressComponentDto.getClusterId(), ingressComponentDto, 1);
     }
 
     @Override
@@ -203,11 +209,13 @@ public class IngressComponentServiceImpl implements IngressComponentService {
         beanIngressComponentsMapper.delete(wrapper);
     }
 
-    public void insert(String clusterId, String name, Integer status) {
+    /**
+     * 封装dao对象
+     */
+    public void insert(String clusterId, IngressComponentDto ingressComponentDto, Integer status) {
         BeanIngressComponents beanIngressComponents = new BeanIngressComponents();
         beanIngressComponents.setClusterId(clusterId);
-        beanIngressComponents.setIngressClassName(name);
-        beanIngressComponents.setName(name);
+        BeanUtils.copyProperties(ingressComponentDto, beanIngressComponents);
         beanIngressComponents.setStatus(status);
         beanIngressComponents.setCreateTime(new Date());
         beanIngressComponentsMapper.insert(beanIngressComponents);
