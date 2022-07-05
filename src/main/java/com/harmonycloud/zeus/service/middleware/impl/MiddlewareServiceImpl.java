@@ -414,6 +414,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 BeanUtils.copyProperties(beanCacheMiddleware, middleware);
                 middleware.setStatus("Deleted");
                 // 先移除可能因为异步导致残留的原中间件信息
+                finalMiddlewareList.removeIf(mw -> mw.getName().equals(beanCacheMiddleware.getName())
+                    && mw.getNamespace().equals(beanCacheMiddleware.getNamespace()));
                 finalMiddlewareList.add(middleware);
             }
         }
