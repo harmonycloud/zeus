@@ -125,6 +125,10 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
             }
             record.setPosition(backup.getPosition());
             record.setAddressName(backup.getAddressName());
+            if (StringUtils.isEmpty(backup.getTaskName()) && StringUtils.isNotEmpty(backup.getBackupName())){
+                MysqlScheduleBackupCR msbCr = mysqlScheduleBackupService.get(clusterId, backup.getNamespace(), backup.getBackupName());
+                backup.setTaskName(msbCr.getMetadata().getLabels().get("backupId"));
+            }
             record.setBackupId(backup.getTaskName());
             record.setTaskName(getBackupName(clusterId, backup.getTaskName()).getBackupName());
             record.setCron(null);
@@ -133,11 +137,11 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
             list.add(record);
         }
         //添加备份记录名称
-        for (int i = 0; i < list.size(); i++) {
-            StringBuffer buffer = new StringBuffer();
-            buffer.append(list.get(i).getTaskName()).append("-").append("记录").append(i + 1);
-            list.get(i).setRecordName(buffer.toString());
-        }
+        list.stream().collect(Collectors.groupingBy(MiddlewareBackupRecord::getTaskName)).forEach((k, v) -> {
+            for (int i = 0; i < v.size(); i++) {
+                v.get(i).setRecordName(v.get(i).getTaskName() + "-" + "记录" + (i + 1));
+            }
+        });
         if (StringUtils.isNotBlank(keyword)) {
             return list.stream()
                 .filter(
@@ -459,6 +463,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
             mysqlBackupDto.setType("all");
             mysqlBackupDto.setTaskName(backup.getTaskName());
             mysqlBackupDto.setName(backup.getName());
+            mysqlBackupDto.setNamespace(backup.getNamespace());
             mysqlBackupDto.setBackupFileName(backup.getBackupFileName());
             mysqlBackupDtoList.add(mysqlBackupDto);
         });
