@@ -107,7 +107,13 @@ public class MiddlewareBackupAddressServiceImpl implements MiddlewareBackupAddre
                 clusterIds.add(backupToCluster.getClusterId());
             });
             backupDTO.setClusterIds(clusterIds);
-            backupDTO.setRelevanceNum(calRelevanceNum(backupDTO.getName()));
+            int num = 0;
+            try {
+                num = calRelevanceNum(backupDTO.getName());
+            } catch (Exception e){
+                log.error("查询备份使用数量失败", e);
+            }
+            backupDTO.setRelevanceNum(num);
             return backupDTO;
         }).collect(Collectors.toList());
         if (StringUtils.isNotEmpty(keyWord)) {
