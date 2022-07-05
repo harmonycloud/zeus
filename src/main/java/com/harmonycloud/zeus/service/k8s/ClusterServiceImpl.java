@@ -895,11 +895,12 @@ public class ClusterServiceImpl implements ClusterService{
         if (registry != null) {
             param = param + "&protocol=%s&address=%s&port=%s&user=%s&&password=%s";
             param = String.format(param, registry.getProtocol(), registry.getAddress(), registry.getPort(),
-                    registry.getUser(), registry.getPassword());
+                registry.getUser(), registry.getPassword());
         }
-        String curlCommand = "curl -X POST --url %s?" + param
-                + " --header Content-Type:multipart/form-data --header userToken:%s -F adminConf=@/etc/kubernetes/admin.conf";
-        return String.format(curlCommand, clusterJoinUrl, userToken);
+        String curlCommand =
+            "curl -X POST --header 'Content-Type: multipart/form-data' --header 'userToken: %s' --header 'authType: 1' --form adminConf=@/etc/kubernetes/admin.conf \"%s?"
+                + param + "\"";
+        return String.format(curlCommand, userToken, clusterJoinUrl);
     }
 
     @Override
