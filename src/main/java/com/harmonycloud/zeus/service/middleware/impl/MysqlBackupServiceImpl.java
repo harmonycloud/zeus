@@ -126,8 +126,14 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
             record.setPosition(backup.getPosition());
             record.setAddressName(backup.getAddressName());
             if (StringUtils.isEmpty(backup.getTaskName()) && StringUtils.isNotEmpty(backup.getBackupName())){
-                MysqlScheduleBackupCR msbCr = mysqlScheduleBackupService.get(clusterId, backup.getNamespace(), backup.getBackupName());
-                backup.setTaskName(msbCr.getMetadata().getLabels().get("backupId"));
+                try {
+                    MysqlScheduleBackupCR msbCr = mysqlScheduleBackupService.get(clusterId, backup.getNamespace(), backup.getBackupName());
+                    backup.setTaskName(msbCr.getMetadata().getLabels().get("backupId"));
+                } catch (Exception e){
+                    log.error("查询定时文件资源失败", e);
+                    continue;
+                }
+
             }
             record.setBackupId(backup.getTaskName());
             record.setTaskName(getBackupName(clusterId, backup.getTaskName()).getBackupName());
