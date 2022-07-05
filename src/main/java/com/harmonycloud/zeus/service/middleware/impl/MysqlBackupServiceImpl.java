@@ -131,8 +131,6 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
             }
             record.setBackupId(backup.getTaskName());
             record.setTaskName(getBackupName(clusterId, backup.getTaskName()).getBackupName());
-            record.setCron(null);
-            record.setUsage(null);
             record.setBackupMode("single");
             list.add(record);
         }
