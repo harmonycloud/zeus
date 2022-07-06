@@ -192,7 +192,7 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
         return clusterDTOS;
     }
 
-    private void syncCluster(){
+    private synchronized void syncCluster(){
         CaasResult<JSONObject> caasResult = userServiceClient.login(skyviewAdminName, skyviewAdminPassword, "ch");
         String caastoken = caasResult.getStringVal("token");
 
