@@ -853,7 +853,7 @@ public class OverviewServiceImpl implements OverviewService {
                     alertDTO.setChartVersion(null);
                 }
             }
-            record.setCapitalType(MiddlewareOfficialNameEnum.findByMiddlewareName(record.getType()));
+            alertDTO.setCapitalType(MiddlewareOfficialNameEnum.findByMiddlewareName(record.getType()));
             return alertDTO;
         }).collect(Collectors.toList()));
 

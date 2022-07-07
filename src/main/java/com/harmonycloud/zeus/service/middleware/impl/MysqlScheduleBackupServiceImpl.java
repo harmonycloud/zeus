@@ -112,7 +112,6 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
                     default:
                         backupRecord.setPhrase("Unknown");
                 }
-                backupRecord.setPhrase(backupStatus.getLastBackupPhase());
             } else {
                 backupRecord.setPhrase("Unknown");
             }

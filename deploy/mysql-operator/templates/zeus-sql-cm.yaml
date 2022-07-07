@@ -977,11 +977,11 @@ data:
     /*!40000 ALTER TABLE `resource_menu` DISABLE KEYS */;
     INSERT INTO `resource_menu` VALUES (1,'dataOverview','数据总览','dataOverview',1,'icon-shujuzonglan',0,NULL);
     INSERT INTO `resource_menu` VALUES (2,'middlewareRepository','中间件市场','middlewareRepository',2,'icon-cangku',0,NULL);
-    INSERT INTO `resource_menu` VALUES (3,'myProject','我的项目','myProject',3,'icon-cangku',0,NULL);
+    INSERT INTO `resource_menu` VALUES (3,'myProject','我的项目','myProject',3,'icon-wodexiangmu',0,NULL);
     INSERT INTO `resource_menu` VALUES (4,'serviceList','服务列表','serviceList',4,'icon-fuwuliebiao',0,NULL);
     INSERT INTO `resource_menu` VALUES (5,'serviceAvailable','服务暴露','serviceAvailable',5,'icon-fuwutiaokuan',0,NULL);
-    INSERT INTO `resource_menu` VALUES (6,'storageManagement','存储管理','storageManagement',6,'icon-rongzaibeifen',0,NULL);
-    INSERT INTO `resource_menu` VALUES (7,'backupService','备份服务','backupService',7,'icon-fuwutiaokuan',0,NULL);
+    INSERT INTO `resource_menu` VALUES (6,'storageManagement','存储管理','storageManagement',6,'icon-cunchuguanli',0,NULL);
+    INSERT INTO `resource_menu` VALUES (7,'backupService','备份服务','backupService',7,'icon-beifenfuwu',0,NULL);
     INSERT INTO `resource_menu` VALUES (8,'monitorAlarm','监控告警','monitorAlarm',8,'icon-gaojingshijian',0,NULL);
     INSERT INTO `resource_menu` VALUES (9,'disasterBackup','灾备中心','disasterBackup',9,'icon-rongzaibeifen',0,NULL);
     INSERT INTO `resource_menu` VALUES (10,'systemManagement','系统管理','systemManagement',10,'icon-shezhi01',0,NULL);
