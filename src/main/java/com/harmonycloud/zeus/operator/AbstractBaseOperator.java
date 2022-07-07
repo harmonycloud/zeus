@@ -19,6 +19,7 @@ import com.harmonycloud.caas.common.enums.Protocol;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
+import com.harmonycloud.caas.common.model.StorageDto;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.bean.BeanAlertRule;
@@ -120,6 +121,10 @@ public abstract class AbstractBaseOperator {
     private MiddlewareAlertsServiceImpl middlewareAlertsService;
     @Autowired
     private ServiceWrapper serviceWrapper;
+    @Autowired
+    protected StorageService storageService;
+    @Autowired
+    protected NamespaceService namespaceService;
 
     /**
      * 是否支持该中间件
@@ -143,6 +148,7 @@ public abstract class AbstractBaseOperator {
         if (mw == null) {
             throw new BusinessException(DictEnum.MIDDLEWARE, middleware.getName(), ErrorMessage.NOT_EXIST);
         }
+        mw.setNamespaceAliasName(namespaceService.get(mw.getClusterId(), mw.getNamespace()).getAliasName());
         return convertByHelmChart(mw, cluster);
     }
 
@@ -293,7 +299,7 @@ public abstract class AbstractBaseOperator {
      */
     protected void updateCommonValues(StringBuilder sb, Middleware middleware){
         // 备注
-        if (StringUtils.isNotBlank(middleware.getDescription())) {
+        if (middleware.getDescription() != null) {
             sb.append("middleware-desc=").append(middleware.getDescription()).append(",");
         }
 
@@ -384,6 +390,7 @@ public abstract class AbstractBaseOperator {
         }
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
         convertCommonByHelmChart(middleware, values);
+        convertStoragesByHelmChart(middleware, middleware.getType(), values);
         return middleware;
     }
 
@@ -478,7 +485,16 @@ public abstract class AbstractBaseOperator {
         MiddlewareQuota quota = checkMiddlewareQuota(middleware, quotaKey);
         quota.setStorageClassName(values.getString("storageClassName"))
             .setStorageClassQuota(values.getString("storageSize"));
-        quota.setIsLvmStorage(storageClassService.checkLVMStorage(middleware.getClusterId(), middleware.getNamespace(), values.getString("storageClassName")));
+        quota.setIsLvmStorage(storageClassService.checkLVMStorage(middleware.getClusterId(), middleware.getNamespace(),
+            values.getString("storageClassName")));
+
+        // 获取存储中文名
+        try {
+            StorageDto storageDto = storageService.get(middleware.getClusterId(), values.getString("storageClassName"), false);
+            quota.setStorageClassAliasName(storageDto.getAliasName());
+        } catch (Exception e){
+            log.error("中间件{}, 获取存储中文名失败", middleware.getName());
+        }
     }
 
 
@@ -689,9 +705,11 @@ public abstract class AbstractBaseOperator {
         }
         // image
         JSONObject image = values.getJSONObject("image");
-        Registry registry = cluster.getRegistry();
-        image.put("repository", registry.getRegistryAddress() + "/"
+        if (image != null) {
+            Registry registry = cluster.getRegistry();
+            image.put("repository", registry.getRegistryAddress() + "/"
                 + (StringUtils.isBlank(registry.getImageRepo()) ? registry.getChartRepo() : registry.getImageRepo()));
+        }
     }
 
     /**

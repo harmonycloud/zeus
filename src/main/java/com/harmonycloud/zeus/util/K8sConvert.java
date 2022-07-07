@@ -222,17 +222,24 @@ public class K8sConvert {
     }
 
     public static Toleration convertToleration(String tolerationStr) {
+        if(!tolerationStr.contains("=")){
+            return null;
+        }
         Toleration toleration = new Toleration();
-        String[] tolerationAry = tolerationStr.split(":");
-        String[] pair = tolerationAry[0].split("=");
+        String[] pair;
+        if (tolerationStr.contains(":")) {
+            String[] tolerationAry = tolerationStr.split(":");
+            pair = tolerationAry[0].split("=");
+            toleration.setEffect(tolerationAry[1]);
+        } else {
+            pair = tolerationStr.split("=");
+        }
         toleration.setKey(pair[0]);
         if (tolerationStr.contains("Exists")) {
             toleration.setOperator("Exists");
-            toleration.setEffect(tolerationAry[2]);
         } else {
             toleration.setOperator("Equal");
             toleration.setValue(pair[1]);
-            toleration.setEffect(tolerationAry[1]);
         }
         return toleration;
     }
@@ -261,8 +268,10 @@ public class K8sConvert {
         JSONArray jsonArray = new JSONArray();
         tolerationList.forEach(tolerationStr ->{
             Toleration toleration = convertToleration(tolerationStr);
-            JSONObject jsonObject = convertObject2Json(toleration);
-            jsonArray.add(jsonObject);
+            if (toleration != null) {
+                JSONObject jsonObject = convertObject2Json(toleration);
+                jsonArray.add(jsonObject);
+            }
         });
         return jsonArray;
     }

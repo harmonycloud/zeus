@@ -13,7 +13,9 @@ import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import com.harmonycloud.zeus.service.middleware.ImageRepositoryService;
 import com.harmonycloud.zeus.util.K8sClient;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -61,6 +63,24 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
     }
 
     @Override
+    public List<MiddlewareCluster> listClusters(String clusterId) {
+        QueryWrapper<BeanMiddlewareCluster> wrapper = new QueryWrapper<>();
+        if (StringUtils.isNotEmpty(clusterId)) {
+            wrapper.eq("cluster_id", clusterId);
+        }
+        List<BeanMiddlewareCluster> beanMiddlewareClusters = middlewareClusterMapper.selectList(wrapper);
+        if (CollectionUtils.isEmpty(beanMiddlewareClusters)){
+            beanMiddlewareClusters = initMiddlewareCluster();
+        }
+        List<MiddlewareCluster> middlewareClusters = new ArrayList<>();
+        beanMiddlewareClusters.forEach(beanMiddlewareCluster -> {
+            MiddlewareCluster middlewareCluster = JSONObject.parseObject(JSONObject.toJSONString(JSON.parse(beanMiddlewareCluster.getMiddlewareCluster())), MiddlewareCluster.class);
+            middlewareClusters.add(middlewareCluster);
+        });
+        return middlewareClusters;
+    }
+
+    @Override
     public void update(String clusterId, MiddlewareCluster middlewareCluster) {
         QueryWrapper<BeanMiddlewareCluster> wrapper = new QueryWrapper<>();
         wrapper.eq("cluster_id", clusterId);
@@ -80,7 +100,9 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
     @Override
     public List<BeanMiddlewareCluster> listClustersByClusterId(String clusterId) {
         QueryWrapper<BeanMiddlewareCluster> wrapper = new QueryWrapper<>();
-        wrapper.eq("cluster_id", clusterId);
+        if (StringUtils.isNotEmpty(clusterId)) {
+            wrapper.eq("cluster_id", clusterId);
+        }
         return middlewareClusterMapper.selectList(wrapper);
     }
 

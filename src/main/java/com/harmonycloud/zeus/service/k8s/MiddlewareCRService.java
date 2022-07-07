@@ -91,18 +91,6 @@ public interface MiddlewareCRService {
      */
     Middleware simpleConvert(MiddlewareCR mw);
 
-
-    /**
-     * 获取cr名称
-     *
-     * @param type           中间件类型
-     * @param middlewareName 中间件名称
-     * @return
-     */
-    static String getCrName(String type, String middlewareName) {
-        return MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType() + "-" + middlewareName;
-    }
-
     /**
      * 检查中间件是否存在
      * @param clusterId  集群ID

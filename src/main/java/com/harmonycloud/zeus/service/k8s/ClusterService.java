@@ -1,10 +1,12 @@
 package com.harmonycloud.zeus.service.k8s;
 
 import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.model.ClusterDTO;
 import com.harmonycloud.caas.common.model.ClusterNamespaceResourceDto;
 import com.harmonycloud.caas.common.model.ClusterNodeResourceDto;
 import com.harmonycloud.caas.common.model.Node;
 import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,6 +20,7 @@ public interface ClusterService {
 
     /**
      * 获取所有集群
+     *
      * @return
      */
     List<MiddlewareClusterDTO> listClusters();
@@ -130,6 +133,14 @@ public interface ClusterService {
     List<MiddlewareResourceInfo> getMwResource(String clusterId) throws Exception;
 
     /**
+     * 过滤不需要展示的mw，未注册分区下的中间件不做统计
+     * @param clusterId
+     * @param mwCrdList
+     * @return
+     */
+    List<MiddlewareCR> filterByNamespace(String clusterId, List<MiddlewareCR> mwCrdList);
+
+    /**
      * 获取集群主机资源列表
      *
      * @param clusterId 集群id
@@ -147,25 +158,50 @@ public interface ClusterService {
 
     /**
      * 获取快捷添加集群curl指令
+     *
      * @param clusterName 集群名称
-     * @param apiAddress 接口前缀
+     * @param apiAddress  接口前缀
      * @param userToken
      * @return
      */
-    String getClusterJoinCommand(String clusterName, String apiAddress, String userToken);
+    String getClusterJoinCommand(String clusterName, String apiAddress, String userToken, Registry registry);
 
     /**
      * curl指令快捷添加集群
+     *
      * @param adminConf
-     * @param name 集群名称
+     * @param name      集群名称
      * @return
      */
-    BaseResult quickAdd(MultipartFile adminConf, String name);
+    BaseResult quickAdd(MultipartFile adminConf, String name, Registry registry);
 
     /**
      * 获取集群已注册分区
+     *
      * @param clusterId 集群id
      * @return
      */
     List<Namespace> listRegisteredNamespace(String clusterId);
+
+    /**
+     * 将观云台clusterid转换为中间件平台clusterid
+     * @param skyviewClusterId
+     * @return
+     */
+    String convertToSkyviewClusterId(String skyviewClusterId);
+
+    /**
+     * 将中间件平台clusterid转为观云台clusterid
+     * @param zeusClusterId
+     * @return
+     */
+    String convertToZeusClusterId(String zeusClusterId);
+
+    /**
+     * 根据观云台集群id查找观云台集群信息
+     * @param skyviewClusterId
+     * @return
+     */
+    ClusterDTO findBySkyviewClusterId(String skyviewClusterId);
+
 }

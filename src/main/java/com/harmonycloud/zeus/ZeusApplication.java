@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus;
 
+import com.dtflys.forest.springboot.annotation.ForestScan;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -17,6 +18,7 @@ import springfox.documentation.oas.annotations.EnableOpenApi;
 @EnableFeignClients
 @EnableTransactionManagement
 @MapperScan("com.harmonycloud.zeus.dao")
+@ForestScan(basePackages = "com.harmonycloud.zeus.skyviewservice")
 @SpringBootApplication(scanBasePackages = "com.harmonycloud", exclude = {LdapAutoConfiguration.class, RedisAutoConfiguration.class})
 public class ZeusApplication {
 

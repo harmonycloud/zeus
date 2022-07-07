@@ -1,14 +1,20 @@
 package com.harmonycloud.zeus.filter;
 
 import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.caas.common.base.CaasResult;
 import com.harmonycloud.caas.filters.base.BaseResult;
 import com.harmonycloud.caas.filters.exception.AuthRuntimeException;
 import com.harmonycloud.caas.filters.token.JwtTokenComponent;
 import com.harmonycloud.caas.filters.user.CurrentUser;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
+import com.harmonycloud.zeus.skyviewservice.Skyview2UserServiceClient;
+import com.harmonycloud.zeus.util.ApplicationContextGetBeanHelper;
 import com.harmonycloud.zeus.util.ApplicationUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.servlet.*;
@@ -16,7 +22,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.harmonycloud.caas.filters.base.GlobalKey.USER_TOKEN;
 
@@ -114,19 +123,37 @@ public class TokenFilter implements Filter {
         } else {
             log.debug("Token 认证通过：{}", token);
             JSONObject userMap = resultEnum.getValue();
+            Map<String,String> attributes = new HashMap<>();
             if (userMap.get("attributes") == null) {
                 userMap.remove("attributes");
+            } else {
+                JSONObject caasJson = (JSONObject) userMap.get("attributes");
+                attributes.put("caastoken", caasJson.getString("caastoken"));
+                attributes.put("isAdmin", caasJson.getString("isAdmin"));
+                attributes.put("password", caasJson.getString("password"));
             }
             long currentTime = System.currentTimeMillis();
             httpResponse.setHeader(USER_TOKEN, JwtTokenComponent.generateToken("userInfo", userMap,
                 new Date(currentTime + (long)(ApplicationUtil.getExpire() * 3600000L)), new Date(currentTime - 300000L)));
             CurrentUser currentUser = (new CurrentUser()).setUsername(userMap.getString("username"))
-                .setNickname(userMap.getString("realName")).setToken(token);
+                .setNickname(userMap.getString("realName")).setToken(token).setAttributes(attributes);
             CurrentUserRepository.setUser(currentUser);
+            if (userMap.get("attributes") != null) {
+                checkRefreshCaasToken(attributes);
+            }
         }
     }
 
     @Override
     public void destroy() {}
+    /**
+     * 校验观云台token是否过期，如果过期则更新token
+     * @param attributes
+     */
+    private void checkRefreshCaasToken(Map<String, String> attributes) {
+        String caastoken = attributes.get("caastoken");
+        Skyview2UserServiceClient userServiceClient = ApplicationContextGetBeanHelper.getBean(Skyview2UserServiceClient.class);
+        userServiceClient.currentWithHandleException(caastoken, true);
+    }
 
 }

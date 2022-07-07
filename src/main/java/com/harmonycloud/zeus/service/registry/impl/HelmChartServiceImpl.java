@@ -189,14 +189,15 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         Map<String, Object> infoMap = HelmChartUtil.getInfoMap(tarFilePath);
         String description = infoMap.get("description") == null ? null : infoMap.get("description").toString();
         String iconPath = infoMap.get(ICON) == null ? null : infoMap.get(ICON).toString();
-        String type = infoMap.get("type") == null ? null : infoMap.get("type").toString();
         String appVersion = infoMap.get("appVersion") == null ? null : infoMap.get("appVersion").toString();
         String official = "";
+        String type = "";
         Object object = infoMap.getOrDefault("annotations", "");
         String compatibleVersions = null;
         if (!ObjectUtils.isEmpty(object)) {
             JSONObject annotations = JSONObject.parseObject(JSONObject.toJSONString(object));
-            official = annotations.getOrDefault("owner", "").toString();
+            official = annotations.getOrDefault("owner", "other").toString();
+            type = annotations.getOrDefault("type", "").toString();
             compatibleVersions = annotations.get("compatibleVersions") == null ? null : annotations.get("compatibleVersions").toString();
         }
         List<Map<String, String>> dependencies = infoMap.containsKey("dependencies")
@@ -206,6 +207,10 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
 
         Map<String, String> yamlFileMap = HelmChartUtil.getYamlFileMap(tarFilePath);
         yamlFileMap.putAll(HelmChartUtil.getParameters(tarFilePath));
+        if (!CollectionUtils.isEmpty(dependencies)){
+            String operatorName = dependencies.get(0).get("alias");
+            yamlFileMap.putAll(HelmChartUtil.getCrds(tarFilePath, operatorName));
+        }
         yamlFileMap.put(CHART_YAML_NAME, JSONObject.toJSONString(infoMap));
 
         return new HelmChartFile().setDescription(description).setIconPath(iconPath).setType(type)

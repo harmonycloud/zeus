@@ -33,7 +33,12 @@ public class BackupWrapper {
      * 获取备份
      */
     public List<BackupCR> list(String clusterId, String namespace){
-        Map<String, Object> map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace);
+        Map<String, Object> map =null;
+        if ("*".equals(namespace)) {
+            map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(null);
+        } else {
+            map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace);
+        }
         BackupList backupList = JSONObject.parseObject(JSONObject.toJSONString(map), BackupList.class);
         if (backupList == null || CollectionUtils.isEmpty(backupList.getItems())){
             return new ArrayList<>();

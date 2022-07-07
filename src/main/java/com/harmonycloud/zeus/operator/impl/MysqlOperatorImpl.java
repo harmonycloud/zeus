@@ -136,7 +136,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             MysqlDTO mysqlDTO = middleware.getMysqlDTO();
             if (mysqlDTO.getReplicaCount() != null && mysqlDTO.getReplicaCount() > 0) {
                 int replicaCount = mysqlDTO.getReplicaCount();
-                values.put(MysqlConstant.REPLICA_COUNT, replicaCount);
+                values.put(MysqlConstant.REPLICA_COUNT, replicaCount + 1);
             }
             if (mysqlDTO.getOpenDisasterRecoveryMode() != null && mysqlDTO.getOpenDisasterRecoveryMode()) {
                 mysqlArgs.put(MysqlConstant.IS_SOURCE, mysqlDTO.getIsSource());
@@ -300,6 +300,9 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         // 更新helm
         helmChartService.upgrade(middleware, sb.toString(), cluster);
         if (mysqlDTO != null && mysqlDTO.getOpenDisasterRecoveryMode() != null && mysqlDTO.getOpenDisasterRecoveryMode() && mysqlDTO.getIsSource()) {
+            Middleware disasterRecoverMiddleware = middleware.getRelationMiddleware();
+            disasterRecoverMiddleware.setChartName(middleware.getChartName());
+            disasterRecoverMiddleware.setChartVersion(middleware.getChartVersion());
             this.createDisasterRecoveryMiddleware(middleware);
         }
     }

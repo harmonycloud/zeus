@@ -20,12 +20,12 @@ import java.util.List;
 public interface MysqlDbService {
 
     /**
-     * @param db
+     * @param dbDTO
      * @description 平台层保存创建的数据库
      * @author liyinlong
      * @since 2022/3/25 2:59 下午
      */
-    BaseResult create(MysqlDbDTO dbDTO);
+    void create(MysqlDbDTO dbDTO);
 
     /**
      * @param dbDTO
@@ -34,9 +34,9 @@ public interface MysqlDbService {
      * @author liyinlong
      * @since 2022/3/25 3:46 下午
      */
-    BaseResult update(MysqlDbDTO dbDTO);
+    void update(MysqlDbDTO dbDTO);
 
-    BaseResult delete(String clusterId, String namespace, String middlewareName, String db);
+    boolean delete(String clusterId, String namespace, String middlewareName, String db);
 
     void delete(String clusterId, String namespace, String middlewareName);
 

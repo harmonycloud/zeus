@@ -101,6 +101,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private UserRoleService userRoleService;
     @Autowired
     private RoleAuthorityService roleAuthorityService;
+    @Autowired
+    private MiddlewareCrTypeService middlewareCrTypeService;
 
     @Override
     public List<Middleware> simpleList(String clusterId, String namespace, String type, String keyword) {
@@ -112,7 +114,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         if (StringUtils.isNotEmpty(type)){
             if (MiddlewareTypeEnum.isType(type)){
                 label = new HashMap<>(1);
-                label.put("type", MiddlewareTypeEnum.findByType(type).getMiddlewareCrdType());
+                label.put("type", middlewareCrTypeService.findByType(type));
             }
             else {
                 nameList = getNameList(clusterId, namespace, type);
@@ -139,7 +141,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         Map<String, BaseOperator> operatorMap = new HashMap<>();
         boolean filter = StringUtils.isNotBlank(keyword);
         return mwList.stream().filter(mw -> !filter || mw.getMetadata().getName().contains(keyword)).map(mw -> {
-            String middlewareType = MiddlewareTypeEnum.findTypeByCrdType(mw.getSpec().getType());
+            String middlewareType = middlewareCrTypeService.findTypeByCrType(mw.getSpec().getType());
             if (!operatorMap.containsKey(middlewareType)) {
                 middleware.setType(middlewareType);
                 operatorMap.put(middlewareType, getOperator(BaseOperator.class, BaseOperator.class, middleware));
@@ -354,61 +356,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public List<MiddlewareBriefInfoDTO> getMiddlewareBriefInfoList(List<MiddlewareClusterDTO> clusterDTOList) {
-        // 从数据库查询集群已安装的所有中间件版本、图片路径等基础信息
-        List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.listInstalledByClusters(clusterDTOList);
-        List<MiddlewareBriefInfoDTO> middlewareBriefInfoDTOList = new ArrayList<>();
-        // 查询集群内创建的所有中间件CR信息
-        List<Middleware> middlewares = queryAllClusterService(clusterDTOList);
-        middlewareInfoList.forEach(middlewareInfo -> {
-            AtomicInteger serviceNum = new AtomicInteger();
-            AtomicInteger errServiceNum = new AtomicInteger();
-            MiddlewareBriefInfoDTO middlewareBriefInfoDTO = new MiddlewareBriefInfoDTO();
-            countServiceNum(middlewareInfo.getClusterId(), middlewares, middlewareInfo.getChartName(), serviceNum, errServiceNum);
-            middlewareBriefInfoDTO.setName(middlewareInfo.getName());
-            middlewareBriefInfoDTO.setChartName(middlewareInfo.getChartName());
-            middlewareBriefInfoDTO.setImagePath(middlewareInfo.getImagePath());
-            middlewareBriefInfoDTO.setServiceNum(serviceNum.get());
-            middlewareBriefInfoDTO.setErrServiceNum(errServiceNum.get());
-            middlewareBriefInfoDTO.setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(middlewareInfo.getChartName()));
-            middlewareBriefInfoDTOList.add(middlewareBriefInfoDTO);
-        });
-        try {
-            Collections.sort(middlewareBriefInfoDTOList, new MiddlewareBriefInfoDTOComparator());
-        } catch (Exception e) {
-            log.error("对服务排序出错了", e);
-        }
-        return middlewareBriefInfoDTOList;
-    }
-
-    @Override
-    public List<ResourceMenuDto> listAllMiddlewareAsMenu(String clusterId) {
-        List<ResourceMenuDto> subMenuList = new ArrayList<>();
-        try {
-            List<BeanClusterMiddlewareInfo> middlewareInfos = clusterMiddlewareInfoService.list(clusterId, false);
-            if (CollectionUtils.isEmpty(middlewareInfos)) {
-                return subMenuList;
-            }
-            AtomicInteger weight = new AtomicInteger(1);
-            for (BeanClusterMiddlewareInfo middlewareInfoDTO : middlewareInfos) {
-                if (middlewareInfoDTO.getStatus() == 2) {
-                    continue;
-                }
-                ResourceMenuDto resourceMenuDto = new ResourceMenuDto();
-                resourceMenuDto.setName(middlewareInfoDTO.getChartName());
-                resourceMenuDto.setAliasName(middlewareInfoDTO.getChartName());
-                resourceMenuDto.setAvailable(true);
-                resourceMenuDto.setWeight(weight.get());
-                weight.getAndIncrement();
-                subMenuList.add(resourceMenuDto);
-            }
-        } catch (Exception e) {
-            log.error("查询服务列表错误", e);
-        }
-        return subMenuList;
-    }
-
-    @Override
     public List<MiddlewareBriefInfoDTO> list(String clusterId, String namespace, String type, String keyword, String projectId)
         throws Exception {
         // 获取中间件chart包信息
@@ -419,19 +366,15 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         List<HelmListInfo> helmListInfoList = helmChartService.listHelm(namespace, null, cluster).stream()
             .filter(info -> beanMiddlewareInfoList.stream()
                 .anyMatch(mwInfo -> info.getChart().equals(mwInfo.getChartName() + "-" + mwInfo.getChartVersion())))
+                .filter(info -> StringUtils.isEmpty(type) || info.getChart().contains(type))
             .collect(Collectors.toList());
-        // 过滤获取指定类型
-        if (StringUtils.isNotEmpty(type)) {
-            helmListInfoList =
-                helmListInfoList.stream().filter(info -> info.getChart().contains(type)).collect(Collectors.toList());
-        }
         // list middleware cr
         List<Middleware> middlewareList = middlewareCRService.list(clusterId, namespace, type, false);
 
         List<HelmListInfo> finalHelmListInfoList = helmListInfoList;
         // 过滤掉helm中没有的middleware 并设置chart-version
         middlewareList = middlewareList.stream().filter(mw -> finalHelmListInfoList.stream().anyMatch(info -> {
-            if (info.getName().equals(mw.getName())) {
+            if (info.getName().equals(mw.getName()) && info.getNamespace().equals(mw.getNamespace())) {
                 mw.setChartVersion(info.getChart().replace(info.getChart().split("-")[0] + "-", ""));
                 return true;
             } else {
@@ -471,6 +414,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 BeanUtils.copyProperties(beanCacheMiddleware, middleware);
                 middleware.setStatus("Deleted");
                 // 先移除可能因为异步导致残留的原中间件信息
+                finalMiddlewareList.removeIf(mw -> mw.getName().equals(beanCacheMiddleware.getName())
+                    && mw.getNamespace().equals(beanCacheMiddleware.getNamespace()));
                 finalMiddlewareList.add(middleware);
             }
         }
@@ -665,24 +610,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 log.error("统计服务数量出错了,chartName={},type={}", chartName, e);
             }
         }
-    }
-
-    /**
-     * 查询集群所有已发布的中间件
-     * @param clusterDTOList 集群列表
-     * @return
-     */
-    @Override
-    public List<Middleware> queryAllClusterService(List<MiddlewareClusterDTO> clusterDTOList) {
-        List<Namespace> namespaceList = new ArrayList<>();
-        clusterDTOList.forEach(cluster -> {
-            namespaceList.addAll(namespaceService.list(cluster.getId(), false, null));
-        });
-        List<Middleware> middlewareServiceList = new ArrayList<>();
-        namespaceList.forEach(namespace -> {
-            middlewareServiceList.addAll(simpleList(namespace.getClusterId(), namespace.getName(), null, ""));
-        });
-        return middlewareServiceList;
     }
 
     @Override

@@ -26,6 +26,7 @@ import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.IngressService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
@@ -96,6 +97,8 @@ public class IngressServiceImpl implements IngressService {
     private UserService userService;
     @Autowired
     private NamespaceService namespaceService;
+    @Autowired
+    private MiddlewareCrTypeService middlewareCrTypeService;
 
     @Value("${k8s.ingress.default.name:nginx-ingress-controller}")
     private String defaultIngressName;
@@ -190,7 +193,7 @@ public class IngressServiceImpl implements IngressService {
         // 特殊处理kafka和rocketmq(仅更新端口时)
         if ((ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.ROCKET_MQ.getType())
             || ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.KAFKA.getType()))
-            && ingressDTO.getServiceList().size() == 1) {
+            && ingressDTO.getServiceList() != null && ingressDTO.getServiceList().size() == 1) {
             upgradeValues(clusterId, namespace, middlewareName, ingressDTO);
         }
     }
@@ -757,7 +760,7 @@ public class IngressServiceImpl implements IngressService {
             for (MiddlewareInfo middlewareInfo : middlewareInfoList) {
                 Map<String, String> map = new HashMap<>(2);
                 map.put("name", middleware.getSpec().getName());
-                map.put("type", MiddlewareTypeEnum.findTypeByCrdType(middleware.getSpec().getType()));
+                map.put("type", middlewareCrTypeService.findTypeByCrType(middleware.getSpec().getType()));
                 mapHashMap.put(middlewareInfo.getName(), map);
             }
         }
@@ -1049,8 +1052,12 @@ public class IngressServiceImpl implements IngressService {
         // tcp routing list
         ConfigMap configMap = configMapWrapper.get(cluster.getId(), ingressTcpNamespace, ingressTcpCmName);
         Map<String, String> data = configMap.getData();
-        int port = 31000;
+        Random random = new Random();
+        int port = 31000 + random.nextInt(100);
         for (; ; ) {
+            if (data == null) {
+                return port;
+            }
             if (null == data.get(String.valueOf(port))) {
                 return port;
             }
@@ -1099,6 +1106,9 @@ public class IngressServiceImpl implements IngressService {
         JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
         // 开启对外访问
         JSONObject external = values.getJSONObject(EXTERNAL);
+        if (!external.containsKey(SVC_NAME_TAG)){
+            return;
+        }
         // 获取暴露ip地址
         String exposeIp = getExposeIp(cluster, ingressDTO);
         // 指定分隔符号

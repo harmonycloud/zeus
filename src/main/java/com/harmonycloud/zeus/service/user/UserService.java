@@ -111,11 +111,18 @@ public interface UserService {
 
     /**
      * 获取菜单栏
-     * @param clusterId
-     * @return
-     * @throws Exception
+     * @param projectId 项目id
+     * @return List<ResourceMenuDto>
      */
-    List<ResourceMenuDto> menu(String clusterId) throws Exception;
+    List<ResourceMenuDto> menu(String projectId) ;
+
+    /**
+     * 获取服务列表
+     * @param clusterId 集群id
+     * @param projectId 项目id
+     * @return List<ResourceMenuDto>
+     */
+    List<ResourceMenuDto> listMiddlewareMenu(String clusterId, String projectId) ;
 
     /**
      * 个性化配置

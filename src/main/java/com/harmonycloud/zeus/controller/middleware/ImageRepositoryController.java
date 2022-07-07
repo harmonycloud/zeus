@@ -16,7 +16,7 @@ import java.util.List;
  * @author yushuaikang
  * @date 2022/3/11 上午10:44
  */
-@Api(tags = {"资源池"}, value = "镜像仓库", description = "镜像仓库")
+@Api(tags = {"系统管理", "集群管理"}, value = "镜像仓库", description = "镜像仓库")
 @RestController
 @RequestMapping(value = {"/clusters/{clusterId}/mirror"})
 public class ImageRepositoryController {

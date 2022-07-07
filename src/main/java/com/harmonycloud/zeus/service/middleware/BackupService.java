@@ -47,4 +47,13 @@ public interface BackupService {
      * @return BackupStorageProvider
      */
     BackupStorageProvider getStorageProvider(Middleware middleware);
+
+    /**
+     * 获取定时任务产生的backup
+     * @param clusterId
+     * @param namespace
+     * @return
+     */
+    List<Backup> listScheduleBackup(String clusterId, String namespace);
+
 }

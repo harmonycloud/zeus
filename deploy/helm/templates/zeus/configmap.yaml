@@ -58,9 +58,21 @@ data:
       images:
         path: /usr/local/zeus-pv/images/middleware
       platform:
-        version: v1.0.5
+        version: v1.1.1
       user:
         expire: 1
+      usercenter: zeus
+      skyview:
+        username: admin
+        password: Ab123456
+        host: caas-gateway-svc.caas-system
+        port: 8081
+        prefix: /
+      registry:
+        address: 10.10.101.22
+        port: 8443
+        username: admin
+        password: Harbor12345
 
     overview:
       overall:

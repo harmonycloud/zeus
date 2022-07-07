@@ -7,6 +7,7 @@ import com.harmonycloud.zeus.service.user.RoleAuthorityService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -51,8 +52,27 @@ public class RoleAuthorityServiceImpl implements RoleAuthorityService {
         QueryWrapper<BeanRoleAuthority> wrapper = new QueryWrapper<BeanRoleAuthority>().eq("role_id", roleId);
         List<BeanRoleAuthority> beanRoleAuthorityList = beanRoleAuthorityMapper.selectList(wrapper);
         beanRoleAuthorityList.forEach(beanRoleAuthority -> {
-            beanRoleAuthority.setPower(power.get(beanRoleAuthority.getType()));
-            beanRoleAuthorityMapper.updateById(beanRoleAuthority);
+            if (power.containsKey(beanRoleAuthority.getType())){
+                beanRoleAuthority.setPower(power.get(beanRoleAuthority.getType()));
+                beanRoleAuthorityMapper.updateById(beanRoleAuthority);
+                power.remove(beanRoleAuthority.getType());
+            }
         });
+        if (!CollectionUtils.isEmpty(power)){
+            for (String key : power.keySet()){
+                BeanRoleAuthority beanRoleAuthority = new BeanRoleAuthority();
+                beanRoleAuthority.setRoleId(roleId);
+                beanRoleAuthority.setType(key);
+                beanRoleAuthority.setPower(power.get(key));
+                beanRoleAuthorityMapper.insert(beanRoleAuthority);
+            }
+        }
+    }
+
+    @Override
+    public Boolean checkExistByType(String type) {
+        QueryWrapper<BeanRoleAuthority> wrapper = new QueryWrapper<BeanRoleAuthority>().eq("type", type);
+        List<BeanRoleAuthority> beanRoleAuthorityList = beanRoleAuthorityMapper.selectList(wrapper);
+        return !CollectionUtils.isEmpty(beanRoleAuthorityList);
     }
 }

@@ -52,11 +52,20 @@ public interface RoleService {
 
     /**
      * 获取角色
-     * @param username 用户名
+     * @param userDto 用户
+     * @param projectId 项目id
      *
      * @return List<ResourceMenuDto>
      */
-    List<ResourceMenuDto> listMenuByRoleId(UserDto userDto);
+    List<ResourceMenuDto> listMenuByRoleId(UserDto userDto, String projectId);
+
+
+    /**
+     * 初始化中间件权限
+     *
+     * @param type       类型
+     */
+    void initMiddlewareAuthority(String type);
 
 
 }

@@ -21,15 +21,10 @@ import com.harmonycloud.zeus.dao.BeanAlertRecordMapper;
 import com.harmonycloud.zeus.dao.MiddlewareAlertInfoMapper;
 import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
 import com.harmonycloud.zeus.integration.cluster.ResourceQuotaWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareSpec;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareStatus;
+import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
-import com.harmonycloud.zeus.service.k8s.ClusterService;
-import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
-import com.harmonycloud.zeus.service.k8s.NamespaceService;
-import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
+import com.harmonycloud.zeus.service.k8s.*;
+import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.middleware.OverviewService;
@@ -87,15 +82,15 @@ public class OverviewServiceImpl implements OverviewService {
     @Autowired
     private BeanAlertRecordMapper beanAlertRecordMapper;
     @Autowired
-    private ResourceQuotaWrapper resourceQuotaWrapper;
-    @Autowired
     private MiddlewareService middlewareService;
     @Autowired
     private OperationAuditService operationAuditService;
     @Autowired
-    private MiddlewareAlertInfoMapper middlewareAlertInfoMapper;
-    @Autowired
     private MiddlewareAlertsServiceImpl middlewareAlertsService;
+    @Autowired
+    private MiddlewareCrTypeService middlewareCrTypeService;
+    @Autowired
+    private MiddlewareClusterService middlewareClusterService;
 
     @Value("${system.platform.version:v0.1.0}")
     private String version;
@@ -413,11 +408,20 @@ public class OverviewServiceImpl implements OverviewService {
             }
           //返回大写类型
            changeType(record,alertDTO);
+           alertDTO.setNickname(convertCluster(record.getClusterId()));
            return alertDTO;
         }).collect(Collectors.toList()));
         alertDTOPage.getList().sort(
             (o1, o2) -> o1.getTime() == null ? -1 : o2.getTime() == null ? -1 : o2.getTime().compareTo(o1.getTime()));
         return alertDTOPage;
+    }
+
+    private String convertCluster(String clusterId) {
+        List<MiddlewareCluster> clusters = middlewareClusterService.listClusters(clusterId);
+        if (!CollectionUtils.isEmpty(clusters)) {
+            return clusters.get(0).getMetadata().getAnnotations().get(NameConstant.NAME);
+        }
+        return null;
     }
 
     /**
@@ -723,7 +727,7 @@ public class OverviewServiceImpl implements OverviewService {
 
                     MiddlewareSpec spec = middlewareCR.getSpec();
                     if (spec != null) {
-                        middlewareDTO.setType(MiddlewareTypeEnum.findTypeByCrdType(spec.getType()));
+                        middlewareDTO.setType(middlewareCrTypeService.findByType(spec.getType()));
                         Middleware detail = middlewareService.detail(clusterDTO.getId(), namespace.getName(), spec.getName(), middlewareDTO.getType());
                         Map<String, MiddlewareQuota> quota = detail.getQuota();
                         if (quota != null && quota.get(middlewareDTO.getType()) != null) {
@@ -734,7 +738,7 @@ public class OverviewServiceImpl implements OverviewService {
                         middlewareDTO.setChartVersion(detail.getChartVersion());
                         middlewareDTO.setName(spec.getName());
                         //mysql实例判断是否是备实例
-                        if (MiddlewareTypeEnum.MYSQL.getType().equals(MiddlewareTypeEnum.findTypeByCrdType(spec.getType()))) {
+                        if (MiddlewareTypeEnum.MYSQL.getType().equals(middlewareCrTypeService.findTypeByCrType(spec.getType()))) {
                             MysqlDTO mysqlDTO = detail.getMysqlDTO();
                             if (mysqlDTO != null && mysqlDTO.getIsSource() != null) {
                                 middlewareDTO.setSource(mysqlDTO.getIsSource());
@@ -849,7 +853,7 @@ public class OverviewServiceImpl implements OverviewService {
                     alertDTO.setChartVersion(null);
                 }
             }
-            record.setCapitalType(MiddlewareOfficialNameEnum.findByMiddlewareName(record.getType()));
+            alertDTO.setCapitalType(MiddlewareOfficialNameEnum.findByMiddlewareName(record.getType()));
             return alertDTO;
         }).collect(Collectors.toList()));
 
@@ -874,35 +878,51 @@ public class OverviewServiceImpl implements OverviewService {
 
     @Override
     public List<MiddlewareBriefInfoDTO> getClusterMiddlewareInfo(String clusterId) {
-        List<MiddlewareClusterDTO> clusterList = null;
-        try {
-            clusterList = clusterService.listClusters(true, null);
-        } catch (BusinessException e) {
-            log.error("集群列表查询失败", e);
+        List<MiddlewareClusterDTO> clusterList = new ArrayList<>();
+        if (StringUtils.isNotEmpty(clusterId)) {
+            clusterList.add(clusterService.findById(clusterId));
+        } else {
+            clusterList.addAll(clusterService.listClusters());
         }
-        if (CollectionUtils.isEmpty(clusterList)) {
-            return new ArrayList<>();
+
+        Set<MiddlewareInfoDTO> middlewareInfoDtoSet = new HashSet<>();
+        List<Middleware> middlewareList = new ArrayList<>();
+        for (MiddlewareClusterDTO cluster : clusterList){
+            // 获取多集群中间件类型并集
+            List<MiddlewareInfoDTO> infoDTOList = middlewareInfoService.list(cluster.getId()).stream().
+                    filter(mw -> !mw.getStatus().equals(2)).collect(Collectors.toList());
+            middlewareInfoDtoSet.addAll(infoDTOList);
+            // 获取已注册分区下的中间件
+            List<Namespace> namespaceList = namespaceService.list(cluster.getId());
+            List<Middleware> list = middlewareCRService.list(cluster.getId(), null, null, false);
+            list = list.stream().filter(mw -> namespaceList.stream().anyMatch(ns -> ns.getName().equals(mw.getNamespace()))).collect(Collectors.toList());
+
+            middlewareList.addAll(list);
         }
-        if (StringUtils.isNotBlank(clusterId)) {
-            clusterList = clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
-        }
-        List<MiddlewareBriefInfoDTO> middlewareBriefInfoList = middlewareService.getMiddlewareBriefInfoList(clusterList);
-        // 多集群时，合并相同中间件数量信息
-        if (StringUtils.isBlank(clusterId) && clusterList.size() > 1) {
-            Map<String, MiddlewareBriefInfoDTO> resMap = new HashMap<>();
-            middlewareBriefInfoList.forEach(mwInfo -> {
-                MiddlewareBriefInfoDTO briefInfoDTO = resMap.get(mwInfo.getName());
-                if (briefInfoDTO != null) {
-                    briefInfoDTO.setServiceNum(briefInfoDTO.getServiceNum() + mwInfo.getServiceNum());
-                    briefInfoDTO.setErrServiceNum(briefInfoDTO.getErrServiceNum() + mwInfo.getErrServiceNum());
-                } else {
-                    resMap.put(mwInfo.getName(), mwInfo);
+
+        List<MiddlewareBriefInfoDTO> briefInfoDTOList = new ArrayList<>();
+        Map<String, List<Middleware>> middlewareListMap = middlewareList.stream().collect(Collectors.groupingBy(Middleware::getType));
+        for (MiddlewareInfoDTO mwInfo : middlewareInfoDtoSet){
+            MiddlewareBriefInfoDTO middlewareBriefInfoDTO = new MiddlewareBriefInfoDTO();
+            BeanUtils.copyProperties(mwInfo, middlewareBriefInfoDTO);
+            middlewareBriefInfoDTO.setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(mwInfo.getChartName()));
+            int svcCount = 0;
+            int errCount = 0;
+            if (middlewareListMap.containsKey(mwInfo.getChartName())){
+                svcCount = middlewareListMap.get(mwInfo.getChartName()).size();
+                for (Middleware mw : middlewareListMap.get(mwInfo.getChartName())){
+                    if (StringUtils.isEmpty(mw.getStatus()) || !NameConstant.RUNNING.equalsIgnoreCase(mw.getStatus())){
+                        errCount = errCount + 1;
+                    }
                 }
-            });
-            middlewareBriefInfoList.clear();
-            middlewareBriefInfoList.addAll(resMap.values());
+            }
+            middlewareBriefInfoDTO.setServiceNum(svcCount);
+            middlewareBriefInfoDTO.setErrServiceNum(errCount);
+
+            briefInfoDTOList.add(middlewareBriefInfoDTO);
         }
-        return middlewareBriefInfoList;
+        briefInfoDTOList.sort(Comparator.comparingInt(MiddlewareBriefInfoDTO::getServiceNum).reversed());
+        return briefInfoDTOList;
     }
 
     @Override

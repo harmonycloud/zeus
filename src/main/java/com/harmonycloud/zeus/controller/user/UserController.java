@@ -9,6 +9,7 @@ import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
 import com.harmonycloud.zeus.service.user.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import com.harmonycloud.caas.common.base.BaseResult;
@@ -20,6 +21,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 
 /**
@@ -34,6 +36,8 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    @Value("${system.usercenter:zeus}")
+    private String userCenter;
 
     @ApiOperation(value = "获取用户信息", notes = "获取用户信息")
     @ApiImplicitParams({
@@ -115,11 +119,22 @@ public class UserController {
     @ApiOperation(value = "获取菜单列表", notes = "获取菜单列表")
     @GetMapping("/menu")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
     })
-    public BaseResult<List<ResourceMenuDto>> menu(@RequestParam(value = "clusterId", required = false) String clusterId) throws Exception {
-        log.info("获取菜单列表：{}", clusterId);
-        return BaseResult.ok(userService.menu(clusterId));
+    public BaseResult<List<ResourceMenuDto>> menu(@RequestParam(value = "projectId", required = false) String projectId) throws Exception {
+        log.info("获取菜单列表：{}", projectId);
+        return BaseResult.ok(userService.menu(projectId));
+    }
+
+    @ApiOperation(value = "获取服务列表", notes = "获取服务列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("/menu/middlewares")
+    public BaseResult<List<ResourceMenuDto>> listMiddlewareMenu(@RequestParam("clusterId") String clusterId,
+                                                                @RequestParam("projectId") String projectId) {
+        return BaseResult.ok(userService.listMiddlewareMenu(clusterId, projectId));
     }
 
     @ApiImplicitParams({
@@ -168,4 +183,11 @@ public class UserController {
         userService.switchProject(projectId, response);
         return BaseResult.ok();
     }
+
+    @ApiOperation(value = "查询是否接入观云台", notes = "查询是否接入观云台")
+    @GetMapping("/useOpenUserCenter")
+    public BaseResult<Boolean> userCenter() {
+        return BaseResult.ok(userCenter.contains("skyview2"));
+    }
+
 }

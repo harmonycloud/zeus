@@ -5,6 +5,7 @@ import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.zeus.util.K8sClient;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaimList;
+import io.fabric8.kubernetes.api.model.storage.StorageClass;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -27,6 +28,15 @@ public class PvcWrapper {
     public List<PersistentVolumeClaim> list(String clusterId, String namespace) {
         PersistentVolumeClaimList list =
             K8sClient.getClient(clusterId).persistentVolumeClaims().inNamespace(namespace).list();
+        if (list == null || CollectionUtils.isEmpty(list.getItems())) {
+            return new ArrayList<>(0);
+        }
+        return list.getItems();
+    }
+
+    public List<PersistentVolumeClaim> listWithFields(String clusterId, String namespace, Map<String, String> fields){
+        PersistentVolumeClaimList list =
+                K8sClient.getClient(clusterId).persistentVolumeClaims().inNamespace(namespace).withFields(fields).list();
         if (list == null || CollectionUtils.isEmpty(list.getItems())) {
             return new ArrayList<>(0);
         }

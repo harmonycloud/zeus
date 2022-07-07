@@ -42,4 +42,12 @@ public interface RoleAuthorityService {
      */
     void update(Integer roleId, Map<String, String> power);
 
+    /**
+     * 通过类型校验该权限是否已初始化
+     *
+     * @param type       类型
+     * @return Boolean
+     */
+    Boolean checkExistByType(String type);
+
 }

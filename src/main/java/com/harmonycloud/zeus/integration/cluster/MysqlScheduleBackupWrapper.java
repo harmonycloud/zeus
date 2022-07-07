@@ -36,7 +36,11 @@ public class MysqlScheduleBackupWrapper {
     public List<MysqlScheduleBackupCR> list(String clusterId, String namespace){
         Map<String, Object> map = null;
         try {
-            map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace);
+            if ("*".equals(namespace)) {
+                map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(null);
+            } else {
+                map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace);
+            }
         } catch (Exception e) {
             return null;
         }

@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.middleware;
 
+import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
 import com.harmonycloud.caas.common.model.middleware.ScheduleBackup;
 import com.harmonycloud.zeus.integration.cluster.bean.MysqlScheduleBackupCR;
 
@@ -20,6 +21,16 @@ public interface MysqlScheduleBackupService {
      * @return List<BackupDto>
      */
     List<ScheduleBackup> listScheduleBackup(String clusterId, String namespace, String name);
+
+    /**
+     *
+     *
+     * @param clusterId 集群id
+     * @param namespace 命名空间
+     * @param name      中间件名称
+     * @return List<BackupDto>
+     */
+    List<MiddlewareBackupRecord> listScheduleBackupRecord(String clusterId, String namespace, String name);
 
     /**
      * 创建定时备份

@@ -40,6 +40,14 @@ public interface MiddlewareBackupCRService {
     MiddlewareBackupList list(String clusterId, String namespace, Map<String,String> labels);
 
     /**
+     * 查询备份列表
+     * @param clusterId
+     * @param namespace
+     * @return
+     */
+    MiddlewareBackupList list(String clusterId, String namespace);
+
+    /**
      * 根据备份名称查询备份
      * @param clusterId
      * @param namespace

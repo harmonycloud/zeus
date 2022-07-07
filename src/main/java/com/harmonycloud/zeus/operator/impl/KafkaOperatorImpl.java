@@ -50,13 +50,17 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
         zookeeper.put("path", kafkaDTO.getPath() + UUIDUtils.get8UUID());
         values.put("zookeeper", zookeeper);
 
-        convertExternal(values, middleware, cluster);
+        // 对外服务
+        if (middleware.getHostNetwork()){
+            convertExternal(values, middleware, cluster);
+        }
     }
 
     @Override
     public Middleware convertByHelmChart(Middleware middleware, MiddlewareClusterDTO cluster) {
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
         convertCommonByHelmChart(middleware, values);
+        convertResourcesByHelmChart(middleware, middleware.getType(), values.getJSONObject(RESOURCES));
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
         convertRegistry(middleware, cluster);
 
@@ -91,7 +95,7 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
             }
             // memory
             if (StringUtils.isNotBlank(quota.getMemory())) {
-                sb.append("resources.requests.memory=").append(quota.getMemory()).append("resources.limits.memory=")
+                sb.append("resources.requests.memory=").append(quota.getMemory()).append(",resources.limits.memory=")
                     .append(quota.getLimitMemory()).append(",");
             }
             // 实例模式扩容
