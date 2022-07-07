@@ -1057,7 +1057,7 @@ public abstract class AbstractBaseOperator {
         }
         for (IngressDTO ingressDTO : middleware.getIngresses()){
             // 获取暴露ip地址
-            String exposeIp = getExposeIp(cluster, ingressDTO);
+            String exposeIp = ingressService.getExposeIp(cluster, ingressDTO);
             // 指定分隔符号
             String splitTag = ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.ROCKET_MQ.getType()) ? ";" : ",";
             // 初始化
@@ -1076,20 +1076,6 @@ public abstract class AbstractBaseOperator {
             external.put(EXTERNAL_IP_ADDRESS, ipSb.toString());
             external.put(SVC_NAME_TAG, svcSb.toString());
         }
-    }
-
-    public String getExposeIp(MiddlewareClusterDTO cluster, IngressDTO ingressDTO) {
-        if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_NODEPORT)) {
-            return cluster.getHost();
-        } else if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_INGRESS)
-            && ingressDTO.getProtocol().equals(Protocol.TCP.getValue())) {
-            IngressComponentDto ingressComponentDto =
-                ingressComponentService.get(cluster.getId(), ingressDTO.getIngressClassName());
-            if (ingressComponentDto != null) {
-                return ingressComponentDto.getAddress();
-            }
-        }
-        return cluster.getHost();
     }
     
     public void checkSvcCreated(Middleware middleware) {

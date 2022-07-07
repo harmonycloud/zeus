@@ -136,6 +136,7 @@ public class ClusterServiceImpl implements ClusterService{
             MiddlewareClusterInfo info = c.getSpec().getInfo();
             MiddlewareClusterDTO cluster = new MiddlewareClusterDTO();
             BeanUtils.copyProperties(info, cluster);
+            // todo remove ingress
             cluster.setId(K8sClient.getClusterId(c.getMetadata())).setHost(info.getAddress())
                     .setName(c.getMetadata().getName()).setDcId(c.getMetadata().getNamespace())
                     .setIngressList(info.getIngressList()).setAnnotations(c.getMetadata().getAnnotations());
@@ -343,7 +344,6 @@ public class ClusterServiceImpl implements ClusterService{
         // 只修改昵称，证书，ingress，制品服务，es
         oldCluster.setNickname(cluster.getNickname());
         oldCluster.setCert(cluster.getCert());
-        oldCluster.setIngressList(cluster.getIngressList());
         oldCluster.setRegistry(cluster.getRegistry());
         oldCluster.setLogging(cluster.getLogging());
 

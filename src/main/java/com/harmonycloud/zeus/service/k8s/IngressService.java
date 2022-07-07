@@ -116,19 +116,19 @@ public interface IngressService {
     List listAllIngress(String clusterId, String namespace, String keyword);
 
     /**
-     * 根据ingressClassName获取ingress
-     * @param cluster
-     * @param ingressClassName
-     * @return
-     */
-    MiddlewareClusterIngress getMiddlewareClusterIngress(MiddlewareClusterDTO cluster, String ingressClassName);
-
-    /**
      * 获取一个未被占用的ingress端口
      * @param clusterId
      * @param ingressClassName
      * @return
      */
     int getAvailablePort(String clusterId, String ingressClassName);
+
+    /**
+     * 获取暴露用ip
+     * @param cluster 集群
+     * @param ingressDTO  ingress
+     * @return String
+     */
+    String getExposeIp(MiddlewareClusterDTO cluster, IngressDTO ingressDTO);
 
 }
