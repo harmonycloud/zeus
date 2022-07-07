@@ -142,7 +142,10 @@ public class MysqlController {
     @PostMapping("/createUser")
     @Authority(power = 1)
     public BaseResult createUser(@RequestBody MysqlUserDTO mysqlUserDTO) {
-        return mysqlUserService.create(mysqlUserDTO);
+        if (mysqlUserService.create(mysqlUserDTO)) {
+            return BaseResult.ok();
+        }
+        return BaseResult.error();
     }
 
     @ApiOperation(value = "删除用户", notes = "删除用户")
@@ -157,7 +160,10 @@ public class MysqlController {
                                  @RequestParam("namespace") String namespace,
                                  @RequestParam("middlewareName") String middlewareName,
                                  @RequestParam("user") String user) {
-        return mysqlUserService.delete(clusterId, namespace, middlewareName, user);
+        if (mysqlUserService.delete(clusterId, namespace, middlewareName, user)) {
+            BaseResult.ok();
+        }
+        return BaseResult.error();
     }
 
     @ApiOperation(value = "查询用户列表", notes = "查询用户列表")
@@ -188,7 +194,8 @@ public class MysqlController {
     @PutMapping("/updateDb")
     @Authority(power = 1)
     public BaseResult updateDb(@RequestBody MysqlDbDTO mysqlDbDTO) {
-        return mysqlDbService.update(mysqlDbDTO);
+        mysqlDbService.update(mysqlDbDTO);
+        return BaseResult.ok();
     }
 
     @ApiOperation(value = "查询数据库列表", notes = "查询数据库列表")
@@ -218,14 +225,18 @@ public class MysqlController {
                                @RequestParam("namespace") String namespace,
                                @RequestParam("middlewareName") String middlewareName,
                                @RequestParam("db") String db) {
-        return mysqlDbService.delete(clusterId, namespace, middlewareName, db);
+        if (mysqlDbService.delete(clusterId, namespace, middlewareName, db)) {
+            return BaseResult.ok();
+        }
+        return BaseResult.error();
     }
 
     @ApiOperation(value = "授权数据库", notes = "授权数据库")
     @PostMapping("/grantUser")
     @Authority(power = 1)
     public BaseResult grantUser(@RequestBody MysqlUserDTO mysqlUserDTO) {
-        return mysqlUserService.grantUser(mysqlUserDTO);
+        mysqlUserService.grantUser(mysqlUserDTO);
+        return BaseResult.ok();
     }
 
     @ApiOperation(value = "修改密码", notes = "修改密码")

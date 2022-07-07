@@ -71,7 +71,29 @@ public class MiddlewareBackupWrapper {
     public MiddlewareBackupList list(String clusterId, String namespace, Map<String,String> labels){
         Map<String, Object> map = null;
         try {
-            map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace, labels);
+            if ("*".equals(namespace)) {
+                map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(null);
+            } else {
+                map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace, labels);
+            }
+        } catch (Exception e) {
+            log.error("查询MiddlewareBackupList出错了", e);
+            return null;
+        }
+        if (CollectionUtils.isEmpty(map)) {
+            return null;
+        }
+        return JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareBackupList.class);
+    }
+
+    public MiddlewareBackupList list(String clusterId, String namespace){
+        Map<String, Object> map = null;
+        try {
+            if ("*".equals(namespace)) {
+                map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(null);
+            } else {
+                map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace);
+            }
         } catch (Exception e) {
             log.error("查询MiddlewareBackupList出错了", e);
             return null;

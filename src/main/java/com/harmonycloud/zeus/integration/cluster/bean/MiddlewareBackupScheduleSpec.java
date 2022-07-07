@@ -5,10 +5,16 @@ import lombok.experimental.Accessors;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Accessors(chain = true)
 public class MiddlewareBackupScheduleSpec {
+
+    /**
+     * 地址信息
+     */
+    private MiddlewareBackupScheduleDestination backupDestination;
 
     /**
      * 备份名称
@@ -20,15 +26,6 @@ public class MiddlewareBackupScheduleSpec {
      */
     private String type;
 
-    /**
-     * 备份信息
-     */
-    private List<BackupObject> backupObjects;
-
-    /**
-     * 备份存储
-     */
-    private String backendStorage;
 
     /**
      * 是否开启备份
@@ -40,15 +37,57 @@ public class MiddlewareBackupScheduleSpec {
      */
     private Schedule schedule;
 
+    private List<Map<String, List<String>>> customBackups;
+
     public MiddlewareBackupScheduleSpec() {
     }
 
-    public MiddlewareBackupScheduleSpec(String name, String type,String cron, Integer limitRecord, List<BackupObject> backupObjects) {
+    public MiddlewareBackupScheduleSpec(MiddlewareBackupScheduleDestination backupDestination, List<Map<String, List<String>>> customBackups, String name, String type, String pause, String cron, Integer limitRecord, Integer retentionTime) {
+        this.backupDestination = backupDestination;
+        this.customBackups = customBackups;
         this.name = name;
         this.type = type;
-        this.backupObjects = backupObjects;
+        this.pause = pause;
         if (StringUtils.isNotBlank(cron)) {
-            this.schedule = new Schedule(cron, limitRecord);
+            this.schedule = new Schedule(cron, limitRecord, retentionTime);
+        }
+    }
+
+    @Data
+    public static class MiddlewareBackupScheduleDestination {
+
+        private String destinationType;
+
+        private MiddlewareBackupParameters parameters;
+
+        public MiddlewareBackupScheduleDestination() {
+
+        }
+
+        @Data
+        public static class MiddlewareBackupParameters {
+
+            private String bucket;
+
+            private String url;
+
+            private String bucketSubPath;
+
+            private String userId;
+
+            private String userKey;
+
+            private String backupPassword;
+
+            public MiddlewareBackupParameters(String bucket, String url, String bucketSubPath, String userId, String userKey, String backupPassword) {
+                this.bucket = bucket;
+                this.url = url;
+                this.bucketSubPath = bucketSubPath;
+                this.userId = userId;
+                this.userKey = userKey;
+                this.backupPassword = backupPassword;
+            }
+
         }
     }
 
@@ -66,16 +105,17 @@ public class MiddlewareBackupScheduleSpec {
         private Integer limitRecord;
 
         /**
-         * 开始时间
+         * 备份保留时间
          */
-        private String startTime;
+        private Integer retentionTime;
 
         public Schedule() {
         }
 
-        public Schedule(String cron, Integer limitRecord) {
+        public Schedule(String cron, Integer limitRecord, Integer retentionTime) {
             this.cron = cron;
             this.limitRecord = limitRecord;
+            this.retentionTime = retentionTime;
         }
     }
 

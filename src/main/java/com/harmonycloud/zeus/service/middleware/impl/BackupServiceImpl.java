@@ -46,18 +46,42 @@ public class BackupServiceImpl implements BackupService {
         if (CollectionUtils.isEmpty(backupCRList)) {
             return new ArrayList<>(0);
         }
+        return convertBackupCR(backupCRList);
+    }
 
+    public List<Backup> listScheduleBackup(String clusterId, String namespace) {
+        List<BackupCR> backupCRList = backupWrapper.list(clusterId, namespace);
+//        backupCRList.stream().filter(backupCR -> backupCR.getMetadata().getLabels().containsKey("backup-schedule")).collect(Collectors.toList());
+//        backupCRList.stream().filter(backupCR -> backupName.equals(backupCR.getMetadata().getLabels().get("backup-schedule"))).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(backupCRList)) {
+            return new ArrayList<>(0);
+        }
+        return convertBackupCR(backupCRList);
+    }
+
+
+    private List<Backup> convertBackupCR(List<BackupCR> backupCRList) {
         List<Backup> backupList = new ArrayList<>();
         backupCRList.forEach(backupCRD -> {
-            Backup backup = new Backup().setName(backupCRD.getMetadata().getName())
-                .setNamespace(backupCRD.getMetadata().getNamespace())
-                .setControllerName(backupCRD.getMetadata().getLabels().get("controllername"))
-                .setMiddlewareCluster(backupCRD.getSpec().getClusterName())
-                .setBucketName(backupCRD.getSpec().getStorageProvider().getMinio().getBucketName())
-                .setEndPoint(backupCRD.getSpec().getStorageProvider().getMinio().getEndpoint());
+            Backup backup = new Backup().setName(backupCRD.getSpec().getClusterName())
+                    .setNamespace(backupCRD.getMetadata().getNamespace())
+                    .setControllerName(backupCRD.getMetadata().getLabels().get("controllername"))
+                    .setMiddlewareCluster(backupCRD.getSpec().getClusterName())
+                    .setBucketName(backupCRD.getSpec().getStorageProvider().getMinio().getBucketName())
+                    .setEndPoint(backupCRD.getSpec().getStorageProvider().getMinio().getEndpoint())
+                    .setAddressName(backupCRD.getMetadata().getLabels().get("addressId"))
+                    .setTaskName(backupCRD.getMetadata().getLabels().get("backupId"))
+                    .setType(backupCRD.getMetadata().getLabels().get("type"));
+            if (backupCRD.getMetadata().getLabels().containsKey("backup-schedule")) {
+                backup.setOwner(backupCRD.getMetadata().getLabels().get("backup-schedule"));
+                backup.setBackupName(backupCRD.getMetadata().getLabels().get("backup-schedule"));
+            } else {
+                backup.setBackupName(backupCRD.getMetadata().getName());
+                backup.setOwner(backupCRD.getMetadata().getName());
+            }
             if (!ObjectUtils.isEmpty(backupCRD.getStatus())) {
                 backup.setBackupFileName(backupCRD.getStatus().getBackupFileName())
-                    .setBackupTime(backupCRD.getStatus().getBackupTime()).setPhase(backupCRD.getStatus().getPhase());
+                        .setBackupTime(backupCRD.getStatus().getBackupTime()).setPhase(backupCRD.getStatus().getPhase());
             }
             backupList.add(backup);
         });

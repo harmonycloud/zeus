@@ -15,6 +15,15 @@ public interface NamespaceService {
      * 查询命名空间列表
      *
      * @param clusterId 集群id
+     * @param namespace 分区
+     * @return Namespace
+     */
+    Namespace get(String clusterId, String namespace);
+
+    /**
+     * 查询命名空间列表
+     *
+     * @param clusterId 集群id
      * @return
      */
     List<Namespace> list(String clusterId);
@@ -41,6 +50,22 @@ public interface NamespaceService {
      * @return
      */
     List<Namespace> list(String clusterId, boolean all, boolean withQuota, boolean withMiddleware, String keyword, String projectId);
+
+    /**
+     * 查询分区的配额
+     * @param namespaces
+     * @param clusterId
+     * @return
+     */
+    List<Namespace> listNamespaceWithQuota(List<Namespace> namespaces, String clusterId);
+
+    /**
+     * 查询分区下的中间件
+     * @param namespaces
+     * @param clusterId
+     * @return
+     */
+    List<Namespace> listNamespaceWithMiddleware(List<Namespace> namespaces, String clusterId);
 
     /**
      * 查询命名空间列表

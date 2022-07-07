@@ -51,8 +51,7 @@ public interface MiddlewareBackupScheduleCRDService {
      *
      * @param clusterId
      * @param namespace
-     * @param labels
      * @return
      */
-    MiddlewareBackupScheduleList list(String clusterId, String namespace, Map<String,String> labels);
+    MiddlewareBackupScheduleList list(String clusterId, String namespace);
 }

@@ -20,8 +20,11 @@ import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
+import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.ChartVersionUtil;
 import org.apache.commons.io.FileUtils;
@@ -68,6 +71,10 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     private HelmChartService helmChartService;
     @Autowired
     private ClusterService clusterService;
+    @Autowired
+    private MiddlewareClusterService middlewareClusterService;
+    @Autowired
+    private MiddlewareService middlewareService;
 
     @Override
     public List<BeanMiddlewareInfo> list(Boolean all) {
@@ -413,6 +420,49 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     }
 
     @Override
+    public List<Middleware> middlewareList(String type, String keyword) {
+        List<BeanMiddlewareCluster> clusterList = middlewareClusterService.listClustersByClusterId(null);
+        List<Middleware> middlewareList = new ArrayList<>();
+        clusterList.forEach(cluster -> {
+            List<Namespace> listRegisteredNamespace = clusterService.listRegisteredNamespace(cluster.getClusterId());
+            List<Middleware> middlewares = middlewareService.simpleList(cluster.getClusterId(), null, null, null);
+            middlewares = middlewares.stream().filter(middleware -> listRegisteredNamespace.stream().anyMatch(ns ->middleware.getNamespace().equals(ns.getName()))).collect(Collectors.toList());
+            if (!middlewares.isEmpty()) {
+                middlewares = checkIsLvm(middlewares);
+            }
+            if (middlewares.isEmpty()) {
+                return;
+            }
+            if (StringUtils.isEmpty(keyword) && StringUtils.isEmpty(type)) {
+                middlewareList.addAll(middlewares);
+            } else {
+                if (StringUtils.isNotEmpty(keyword)) {
+                    middlewareList.addAll(middlewares.stream()
+                            .filter(middleware -> middleware.getType().equals(type) && middleware.getName().contains(keyword))
+                            .collect(Collectors.toList()));
+                } else {
+                    middlewareList.addAll(middlewares.stream().filter(middleware -> middleware.getType().equals(type))
+                            .collect(Collectors.toList()));
+                }
+            }
+        });
+        return middlewareList;
+    }
+
+    @Override
+    public List<MiddlewareInfoDTO> clusterList() {
+        List<BeanMiddlewareCluster> clusterList = middlewareClusterService.listClustersByClusterId(null);
+        List<MiddlewareInfoDTO> middlewareInfoDTOS = new ArrayList<>();
+        clusterList.forEach(cluster -> {
+            middlewareInfoDTOS.addAll(list(cluster.getClusterId()));
+        });
+        HashSet set = new HashSet(middlewareInfoDTOS);
+        middlewareInfoDTOS.clear();
+        middlewareInfoDTOS.addAll(set);
+        return middlewareInfoDTOS;
+    }
+
+    @Override
     public List<BeanMiddlewareInfo> listInstalledByClusters(List<MiddlewareClusterDTO> clusterList) {
         return middlewareInfoMapper.listInstalledWithMiddlewareDetail(clusterList);
     }
@@ -436,6 +486,39 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
             list.add(middlewareInfoDTO);
         }
         return list;
+    }
+
+
+    /**
+     * 校验存储类型是否为LVM
+     */
+    private List<Middleware> checkIsLvm(List<Middleware> middlewareList) {
+        List<Middleware> middlewares = new LinkedList<>();
+        for (Middleware middleware : middlewareList) {
+            switch (middleware.getType()) {
+                case "redis":
+                    if (middleware.getQuota().get("redis").getIsLvmStorage()) {
+                        middlewares.add(middleware);
+                    }
+                    break;
+                case "mysql":
+                    if (middleware.getQuota().get("mysql").getIsLvmStorage()) {
+                        middlewares.add(middleware);
+                    }
+                    break;
+                case "rocketmq":
+                    if (middleware.getQuota().get("rocketmq").getIsLvmStorage()) {
+                        middlewares.add(middleware);
+                    }
+                    break;
+                case "elasticsearch":
+                    if (middleware.getQuota().get("master").getIsLvmStorage()) {
+                        middlewares.add(middleware);
+                    }
+                    break;
+            }
+        }
+        return middlewares;
     }
 
     /**

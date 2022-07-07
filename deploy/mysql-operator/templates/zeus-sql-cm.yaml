@@ -122,6 +122,56 @@ data:
     UNLOCK TABLES;
 
     --
+    -- Table structure for table `backup_address_cluster`
+    --
+
+    DROP TABLE IF EXISTS `backup_address_cluster`;
+    /*!40101 SET @saved_cs_client     = @@character_set_client */;
+    /*!50503 SET character_set_client = utf8mb4 */;
+    CREATE TABLE `backup_address_cluster` (
+      `id` int NOT NULL AUTO_INCREMENT,
+      `backup_address_id` int DEFAULT NULL COMMENT '备份地址ID',
+      `cluster_id` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '集群ID',
+      PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+    /*!40101 SET character_set_client = @saved_cs_client */;
+
+    --
+    -- Dumping data for table `backup_address_cluster`
+    --
+
+    LOCK TABLES `backup_address_cluster` WRITE;
+    /*!40000 ALTER TABLE `backup_address_cluster` DISABLE KEYS */;
+    /*!40000 ALTER TABLE `backup_address_cluster` ENABLE KEYS */;
+    UNLOCK TABLES;
+
+    --
+    -- Table structure for table `backup_name`
+    --
+
+    DROP TABLE IF EXISTS `backup_name`;
+    /*!40101 SET @saved_cs_client     = @@character_set_client */;
+    /*!50503 SET character_set_client = utf8mb4 */;
+    CREATE TABLE `backup_name` (
+      `id` int NOT NULL AUTO_INCREMENT,
+      `backup_id` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '备份任务标识',
+      `backup_name` varchar(32) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '备份任务名称',
+      `cluster_id` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '集群ID',
+      `backup_type` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '备份类型',
+      PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+    /*!40101 SET character_set_client = @saved_cs_client */;
+
+    --
+    -- Dumping data for table `backup_name`
+    --
+
+    LOCK TABLES `backup_name` WRITE;
+    /*!40000 ALTER TABLE `backup_name` DISABLE KEYS */;
+    /*!40000 ALTER TABLE `backup_name` ENABLE KEYS */;
+    UNLOCK TABLES;
+
+    --
     -- Table structure for table `cache_middleware`
     --
 
@@ -329,7 +379,7 @@ data:
       `type` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '中间件类型',
       `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '模板描述',
       `config` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '配置内容',
-      `create_time` timestamp DEFAULT NULL COMMENT '创建时间',
+      `create_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
       PRIMARY KEY (`id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='自定义配置模板表';
     /*!40101 SET character_set_client = @saved_cs_client */;
@@ -382,7 +432,7 @@ data:
       `protocol` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '协议',
       `address` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT 'harbor地址',
       `host_address` varchar(32) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT 'harbor主机地址',
-      `port` int(11) DEFAULT NULL COMMENT '端口',
+      `port` int DEFAULT NULL COMMENT '端口',
       `project` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT 'harbor项目',
       `username` varchar(32) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '用户名',
       `password` varchar(32) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '密码',
@@ -533,6 +583,44 @@ data:
     UNLOCK TABLES;
 
     --
+    -- Table structure for table `middleware_backup_address`
+    --
+
+    DROP TABLE IF EXISTS `middleware_backup_address`;
+    /*!40101 SET @saved_cs_client     = @@character_set_client */;
+    /*!50503 SET character_set_client = utf8mb4 */;
+    CREATE TABLE `middleware_backup_address` (
+      `id` int NOT NULL AUTO_INCREMENT,
+      `address_id` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '标识',
+      `name` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '中文名称',
+      `type` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '类型',
+      `bucket_name` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT 'bucket名称',
+      `access_key_id` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '用户ID',
+      `secret_access_key` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '密码',
+      `endpoint` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '地址',
+      `ftp_host` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT 'FTP主机服务器',
+      `ftp_user` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT 'FTP登录用户名',
+      `ftp_password` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT 'FTP登录密码',
+      `ftp_port` int DEFAULT NULL COMMENT 'FTP端口',
+      `server_host` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '服务器地址',
+      `server_user` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '服务器用户名',
+      `server_password` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '服务器密码',
+      `server_port` int DEFAULT NULL COMMENT '服务器端口',
+      `create_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
+      PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+    /*!40101 SET character_set_client = @saved_cs_client */;
+
+    --
+    -- Dumping data for table `middleware_backup_address`
+    --
+
+    LOCK TABLES `middleware_backup_address` WRITE;
+    /*!40000 ALTER TABLE `middleware_backup_address` DISABLE KEYS */;
+    /*!40000 ALTER TABLE `middleware_backup_address` ENABLE KEYS */;
+    UNLOCK TABLES;
+
+    --
     -- Table structure for table `middleware_cluster`
     --
 
@@ -554,6 +642,30 @@ data:
     LOCK TABLES `middleware_cluster` WRITE;
     /*!40000 ALTER TABLE `middleware_cluster` DISABLE KEYS */;
     /*!40000 ALTER TABLE `middleware_cluster` ENABLE KEYS */;
+    UNLOCK TABLES;
+
+    --
+    -- Table structure for table `middleware_cr_type`
+    --
+
+    DROP TABLE IF EXISTS `middleware_cr_type`;
+    /*!40101 SET @saved_cs_client     = @@character_set_client */;
+    /*!50503 SET character_set_client = utf8mb4 */;
+    CREATE TABLE `middleware_cr_type` (
+      `id` int NOT NULL AUTO_INCREMENT COMMENT '自增id',
+      `chart_name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'chart包名称',
+      `cr_type` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'cr类型',
+      PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='中间件类型映照表';
+    /*!40101 SET character_set_client = @saved_cs_client */;
+
+    --
+    -- Dumping data for table `middleware_cr_type`
+    --
+
+    LOCK TABLES `middleware_cr_type` WRITE;
+    /*!40000 ALTER TABLE `middleware_cr_type` DISABLE KEYS */;
+    /*!40000 ALTER TABLE `middleware_cr_type` ENABLE KEYS */;
     UNLOCK TABLES;
 
     --
@@ -593,6 +705,32 @@ data:
     LOCK TABLES `middleware_info` WRITE;
     /*!40000 ALTER TABLE `middleware_info` DISABLE KEYS */;
     /*!40000 ALTER TABLE `middleware_info` ENABLE KEYS */;
+    UNLOCK TABLES;
+
+    --
+    -- Table structure for table `middleware_param_top`
+    --
+
+    DROP TABLE IF EXISTS `middleware_param_top`;
+    /*!40101 SET @saved_cs_client     = @@character_set_client */;
+    /*!50503 SET character_set_client = utf8mb4 */;
+    CREATE TABLE `middleware_param_top` (
+      `id` int NOT NULL AUTO_INCREMENT COMMENT '自增id',
+      `cluster_id` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '集群id',
+      `namespace` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '分区',
+      `name` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '名称',
+      `param` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '参数名',
+      PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+    /*!40101 SET character_set_client = @saved_cs_client */;
+
+    --
+    -- Dumping data for table `middleware_param_top`
+    --
+
+    LOCK TABLES `middleware_param_top` WRITE;
+    /*!40000 ALTER TABLE `middleware_param_top` DISABLE KEYS */;
+    /*!40000 ALTER TABLE `middleware_param_top` ENABLE KEYS */;
     UNLOCK TABLES;
 
     --
@@ -757,16 +895,6 @@ data:
     /*!40000 ALTER TABLE `personal_config` ENABLE KEYS */;
     UNLOCK TABLES;
 
-    DROP TABLE IF EXISTS `middleware_param_top`;
-    CREATE TABLE `middleware_param_top`  (
-      `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增id',
-      `cluster_id` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '集群id',
-      `namespace` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '分区',
-      `name` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '名称',
-      `param` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '参数名',
-      PRIMARY KEY (`id`)
-    );
-
     --
     -- Table structure for table `project`
     --
@@ -838,7 +966,7 @@ data:
       `parent_id` int DEFAULT NULL COMMENT '父菜单id',
       `module` varchar(0) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '模块',
       PRIMARY KEY (`id`)
-    ) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='菜单资源表';
+    ) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='菜单资源表';
     /*!40101 SET character_set_client = @saved_cs_client */;
 
     --
@@ -847,7 +975,27 @@ data:
 
     LOCK TABLES `resource_menu` WRITE;
     /*!40000 ALTER TABLE `resource_menu` DISABLE KEYS */;
-    INSERT INTO `resource_menu` VALUES (1,'dataOverview','数据总览','dataOverview',1,'icon-shujuzonglan',0,NULL),(2,'middlewareRepository','中间件市场','middlewareRepository',2,'icon-cangku',0,NULL),(3,'myProject','我的项目','myProject',3,'icon-cangku',0,NULL),(4,'serviceList','服务列表','serviceList',4,'icon-fuwuliebiao',0,NULL),(5,'serviceAvailable','服务暴露','serviceAvailable',5,'icon-fuwutiaokuan',0,NULL),(6,'monitorAlarm','监控告警','monitorAlarm',6,'icon-gaojingshijian',0,NULL),(7,'disasterBackup','容灾备份','disasterBackup',7,'icon-rongzaibeifen',0,NULL),(8,'systemManagement','系统管理','systemManagement',8,'icon-shezhi01',0,NULL),(9,'dataMonitor','数据监控','monitorAlarm/dataMonitor',61,NULL,6,NULL),(10,'logDetail','日志详情','monitorAlarm/logDetail',62,NULL,6,NULL),(11,'alarmCenter','服务告警','monitorAlarm/alarmCenter',63,NULL,6,NULL),(12,'disasterCenter','灾备中心','disasterBackup/disasterCenter',71,NULL,7,NULL),(13,'dataSecurity','数据安全','disasterBackup/dataSecurity',72,NULL,7,NULL),(14,'resourcePoolManagement','集群管理','systemManagement/resourcePoolManagement',81,NULL,8,NULL),(15,'userManagement','用户管理','systemManagement/userManagement',82,NULL,8,NULL),(16,'projectManagement','项目管理','systemManagement/projectManagement',83,NULL,8,NULL),(17,'roleManagement','角色管理','systemManagement/roleManagement',84,NULL,8,NULL),(18,'systemAlarm','系统告警','systemManagement/systemAlarm',85,NULL,8,NULL),(19,'operationAudit','操作审计','systemManagement/operationAudit',86,NULL,8,NULL);
+    INSERT INTO `resource_menu` VALUES (1,'dataOverview','数据总览','dataOverview',1,'icon-shujuzonglan',0,NULL);
+    INSERT INTO `resource_menu` VALUES (2,'middlewareRepository','中间件市场','middlewareRepository',2,'icon-cangku',0,NULL);
+    INSERT INTO `resource_menu` VALUES (3,'myProject','我的项目','myProject',3,'icon-wodexiangmu',0,NULL);
+    INSERT INTO `resource_menu` VALUES (4,'serviceList','服务列表','serviceList',4,'icon-fuwuliebiao',0,NULL);
+    INSERT INTO `resource_menu` VALUES (5,'serviceAvailable','服务暴露','serviceAvailable',5,'icon-fuwutiaokuan',0,NULL);
+    INSERT INTO `resource_menu` VALUES (6,'storageManagement','存储管理','storageManagement',6,'icon-cunchuguanli',0,NULL);
+    INSERT INTO `resource_menu` VALUES (7,'backupService','备份服务','backupService',7,'icon-beifenfuwu',0,NULL);
+    INSERT INTO `resource_menu` VALUES (8,'monitorAlarm','监控告警','monitorAlarm',8,'icon-gaojingshijian',0,NULL);
+    INSERT INTO `resource_menu` VALUES (9,'disasterBackup','灾备中心','disasterBackup',9,'icon-rongzaibeifen',0,NULL);
+    INSERT INTO `resource_menu` VALUES (10,'systemManagement','系统管理','systemManagement',10,'icon-shezhi01',0,NULL);
+    INSERT INTO `resource_menu` VALUES (11,'backupTask','备份任务','backupService/backupTask',71,'icon-fuwutiaokuan',7,NULL);
+    INSERT INTO `resource_menu` VALUES (12,'backupPosition','备份位置','backupService/backupPosition',72,'icon-fuwutiaokuan',7,NULL);
+    INSERT INTO `resource_menu` VALUES (13,'dataMonitor','数据监控','monitorAlarm/dataMonitor',81,NULL,8,NULL);
+    INSERT INTO `resource_menu` VALUES (14,'logDetail','日志详情','monitorAlarm/logDetail',82,NULL,8,NULL);
+    INSERT INTO `resource_menu` VALUES (15,'alarmCenter','服务告警','monitorAlarm/alarmCenter',83,NULL,8,NULL);
+    INSERT INTO `resource_menu` VALUES (16,'resourcePoolManagement','集群管理','systemManagement/resourcePoolManagement',101,NULL,10,NULL);
+    INSERT INTO `resource_menu` VALUES (17,'userManagement','用户管理','systemManagement/userManagement',102,NULL,10,NULL);
+    INSERT INTO `resource_menu` VALUES (18,'projectManagement','项目管理','systemManagement/projectManagement',103,NULL,10,NULL);
+    INSERT INTO `resource_menu` VALUES (19,'roleManagement','角色管理','systemManagement/roleManagement',104,NULL,10,NULL);
+    INSERT INTO `resource_menu` VALUES (20,'systemAlarm','系统告警','systemManagement/systemAlarm',105,NULL,10,NULL);
+    INSERT INTO `resource_menu` VALUES (21,'operationAudit','操作审计','systemManagement/operationAudit',106,NULL,10,NULL);
     /*!40000 ALTER TABLE `resource_menu` ENABLE KEYS */;
     UNLOCK TABLES;
 
@@ -873,7 +1021,23 @@ data:
 
     LOCK TABLES `resource_menu_role` WRITE;
     /*!40000 ALTER TABLE `resource_menu_role` DISABLE KEYS */;
-    INSERT INTO `resource_menu_role` VALUES (1,1,1,1),(2,1,2,1),(3,1,3,1),(4,1,4,1),(5,1,5,1),(6,1,6,1),(7,1,7,1),(8,1,8,1),(9,1,9,1),(10,1,10,1),(11,1,11,1),(12,1,12,1),(13,1,13,1),(14,1,14,1),(15,1,15,1),(16,1,16,1),(17,1,17,1);
+    INSERT INTO `resource_menu_role` VALUES (1,1,1,1);
+    INSERT INTO `resource_menu_role` VALUES (2,1,2,1);
+    INSERT INTO `resource_menu_role` VALUES (3,1,3,1);
+    INSERT INTO `resource_menu_role` VALUES (4,1,4,1);
+    INSERT INTO `resource_menu_role` VALUES (5,1,5,1);
+    INSERT INTO `resource_menu_role` VALUES (6,1,6,1);
+    INSERT INTO `resource_menu_role` VALUES (7,1,7,1);
+    INSERT INTO `resource_menu_role` VALUES (8,1,8,1);
+    INSERT INTO `resource_menu_role` VALUES (9,1,9,1);
+    INSERT INTO `resource_menu_role` VALUES (10,1,10,1);
+    INSERT INTO `resource_menu_role` VALUES (11,1,11,1);
+    INSERT INTO `resource_menu_role` VALUES (12,1,12,1);
+    INSERT INTO `resource_menu_role` VALUES (13,1,13,1);
+    INSERT INTO `resource_menu_role` VALUES (14,1,14,1);
+    INSERT INTO `resource_menu_role` VALUES (15,1,15,1);
+    INSERT INTO `resource_menu_role` VALUES (16,1,16,1);
+    INSERT INTO `resource_menu_role` VALUES (17,1,17,1);
     /*!40000 ALTER TABLE `resource_menu_role` ENABLE KEYS */;
     UNLOCK TABLES;
 
@@ -901,7 +1065,10 @@ data:
 
     LOCK TABLES `role` WRITE;
     /*!40000 ALTER TABLE `role` DISABLE KEYS */;
-    INSERT INTO `role` VALUES (1,'超级管理员','拥有所有最高权限',NULL,NULL,NULL),(2,'项目管理员','拥有项目管理权限',NULL,NULL,NULL),(3,'运维人员','拥有中间件运维权限',NULL,NULL,NULL),(4,'普通用户','拥有平台查看权限',NULL,NULL,NULL);
+    INSERT INTO `role` VALUES (1,'超级管理员','拥有所有最高权限',NULL,NULL,NULL);
+    INSERT INTO `role` VALUES (2,'项目管理员','拥有项目管理权限',NULL,NULL,NULL);
+    INSERT INTO `role` VALUES (3,'运维人员','拥有中间件运维权限',NULL,NULL,NULL);
+    INSERT INTO `role` VALUES (4,'普通用户','拥有平台查看权限',NULL,NULL,NULL);
     /*!40000 ALTER TABLE `role` ENABLE KEYS */;
     UNLOCK TABLES;
 
@@ -927,7 +1094,30 @@ data:
 
     LOCK TABLES `role_authority` WRITE;
     /*!40000 ALTER TABLE `role_authority` DISABLE KEYS */;
-    INSERT INTO `role_authority` VALUES (1,1,'mysql','1111'),(2,1,'redis','1111'),(3,1,'elasticsearch','1111'),(4,1,'rocketmq','1111'),(5,1,'zookeeper','1111'),(6,1,'kafka','1111'),(7,2,'mysql','1111'),(8,2,'redis','1111'),(9,2,'elasticsearch','1111'),(10,2,'rocketmq','1111'),(11,2,'zookeeper','1111'),(12,2,'kafka','1111'),(13,3,'mysql','1111'),(14,3,'redis','1111'),(15,3,'elasticsearch','1111'),(16,3,'rocketmq','1111'),(17,3,'zookeeper','1111'),(18,3,'kafka','1111'),(19,4,'mysql','1000'),(20,4,'redis','1000'),(21,4,'elasticsearch','1000'),(22,4,'rocketmq','1000'),(23,4,'zookeeper','1000'),(24,4,'kafka','1000');
+    INSERT INTO `role_authority` VALUES (1,1,'mysql','1111');
+    INSERT INTO `role_authority` VALUES (2,1,'redis','1111');
+    INSERT INTO `role_authority` VALUES (3,1,'elasticsearch','1111');
+    INSERT INTO `role_authority` VALUES (4,1,'rocketmq','1111');
+    INSERT INTO `role_authority` VALUES (5,1,'zookeeper','1111');
+    INSERT INTO `role_authority` VALUES (6,1,'kafka','1111');
+    INSERT INTO `role_authority` VALUES (7,2,'mysql','1111');
+    INSERT INTO `role_authority` VALUES (8,2,'redis','1111');
+    INSERT INTO `role_authority` VALUES (9,2,'elasticsearch','1111');
+    INSERT INTO `role_authority` VALUES (10,2,'rocketmq','1111');
+    INSERT INTO `role_authority` VALUES (11,2,'zookeeper','1111');
+    INSERT INTO `role_authority` VALUES (12,2,'kafka','1111');
+    INSERT INTO `role_authority` VALUES (13,3,'mysql','1111');
+    INSERT INTO `role_authority` VALUES (14,3,'redis','1111');
+    INSERT INTO `role_authority` VALUES (15,3,'elasticsearch','1111');
+    INSERT INTO `role_authority` VALUES (16,3,'rocketmq','1111');
+    INSERT INTO `role_authority` VALUES (17,3,'zookeeper','1111');
+    INSERT INTO `role_authority` VALUES (18,3,'kafka','1111');
+    INSERT INTO `role_authority` VALUES (19,4,'mysql','1000');
+    INSERT INTO `role_authority` VALUES (20,4,'redis','1000');
+    INSERT INTO `role_authority` VALUES (21,4,'elasticsearch','1000');
+    INSERT INTO `role_authority` VALUES (22,4,'rocketmq','1000');
+    INSERT INTO `role_authority` VALUES (23,4,'zookeeper','1000');
+    INSERT INTO `role_authority` VALUES (24,4,'kafka','1000');
     /*!40000 ALTER TABLE `role_authority` ENABLE KEYS */;
     UNLOCK TABLES;
 
@@ -953,7 +1143,7 @@ data:
 
     LOCK TABLES `role_user` WRITE;
     /*!40000 ALTER TABLE `role_user` DISABLE KEYS */;
-    INSERT INTO `role_user` VALUES (1, NULL,'admin',1);
+    INSERT INTO `role_user` VALUES (1,NULL,'admin',1);
     /*!40000 ALTER TABLE `role_user` ENABLE KEYS */;
     UNLOCK TABLES;
 
@@ -987,8 +1177,19 @@ data:
     INSERT INTO `user` VALUES (1,'admin','超级管理员','6DA05F9A0ED31ABEEFD41C768B2E7233',NULL,NULL,NULL,NULL,NULL);
     /*!40000 ALTER TABLE `user` ENABLE KEYS */;
     UNLOCK TABLES;
+    /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
-    -- Dump completed on 2022-04-05 16:01:06
+    /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+    /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+    /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+    /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+    /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+    /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+    /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+    -- Dump completed on 2022-07-01 14:27:26
+
+
 
 
 kind: ConfigMap

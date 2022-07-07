@@ -1,56 +1,61 @@
 package com.harmonycloud.zeus.service.user.impl;
 
-import java.io.*;
+import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_TWO;
+import static com.harmonycloud.caas.common.constants.user.UserConstant.ADMIN;
+import static com.harmonycloud.caas.common.constants.user.UserConstant.USERNAME;
+import static com.harmonycloud.caas.filters.base.GlobalKey.NUM_ROLE_ADMIN;
+import static com.harmonycloud.caas.filters.base.GlobalKey.USER_TOKEN;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.constants.LdapConfigConstant;
-import com.harmonycloud.caas.common.model.MailUserDTO;
-import com.harmonycloud.caas.common.model.UploadImageFileDto;
-import com.harmonycloud.zeus.bean.MailToUser;
-import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
-import com.harmonycloud.zeus.bean.user.BeanRole;
-import com.harmonycloud.zeus.dao.MailToUserMapper;
-import com.harmonycloud.zeus.dao.user.BeanRoleMapper;
-import com.harmonycloud.zeus.dao.user.PersonalMapper;
+import javax.servlet.http.HttpServletResponse;
 
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
-import com.harmonycloud.zeus.service.middleware.MiddlewareService;
-import com.harmonycloud.zeus.service.user.*;
-import com.harmonycloud.zeus.util.ApplicationUtil;
-import com.harmonycloud.zeus.util.RequestUtil;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.MailUserDTO;
+import com.harmonycloud.caas.common.model.UploadImageFileDto;
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.caas.common.model.user.UserRole;
 import com.harmonycloud.caas.filters.token.JwtTokenComponent;
 import com.harmonycloud.caas.filters.user.CurrentUser;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
-import com.harmonycloud.zeus.bean.user.BeanUser;
-import com.harmonycloud.zeus.dao.user.BeanUserMapper;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.tool.encrypt.RSAUtils;
-import org.springframework.web.multipart.MultipartFile;
+import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
+import com.harmonycloud.zeus.bean.MailToUser;
+import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
+import com.harmonycloud.zeus.bean.user.BeanUser;
+import com.harmonycloud.zeus.dao.MailToUserMapper;
+import com.harmonycloud.zeus.dao.user.BeanUserMapper;
+import com.harmonycloud.zeus.dao.user.PersonalMapper;
+import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareService;
+import com.harmonycloud.zeus.service.user.ProjectService;
+import com.harmonycloud.zeus.service.user.RoleService;
+import com.harmonycloud.zeus.service.user.UserRoleService;
+import com.harmonycloud.zeus.service.user.UserService;
+import com.harmonycloud.zeus.util.ApplicationUtil;
+import com.harmonycloud.zeus.util.RequestUtil;
 
-import javax.servlet.http.HttpServletResponse;
-
-import static com.harmonycloud.caas.common.constants.user.UserConstant.ADMIN;
-import static com.harmonycloud.caas.common.constants.user.UserConstant.USERNAME;
-import static com.harmonycloud.caas.filters.base.GlobalKey.NUM_ROLE_ADMIN;
-import static com.harmonycloud.caas.filters.base.GlobalKey.USER_TOKEN;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -60,9 +65,9 @@ import static com.harmonycloud.caas.filters.base.GlobalKey.USER_TOKEN;
 @Service
 @Component
 @Slf4j
+@ConditionalOnProperty(value="system.usercenter",havingValue = "zeus")
 public class UserServiceImpl implements UserService {
 
-    private static final Map<String, Object> IMAGE_MAP = new HashMap<>();
     @Autowired
     private BeanUserMapper beanUserMapper;
     @Autowired
@@ -75,12 +80,20 @@ public class UserServiceImpl implements UserService {
     private PersonalMapper personalMapper;
     @Autowired
     private MailToUserMapper mailToUserMapper;
+    @Autowired
+    private ProjectService projectService;
+    @Autowired
+    private ClusterMiddlewareInfoService clusterMiddlewareInfoService;
+
+    public String getUsername() {
+        CurrentUser currentUser = CurrentUserRepository.getUser();
+        return currentUser.getUsername();
+    }
 
     @Override
     public UserDto getUserDto(String userName, String projectId) {
         if (StringUtils.isEmpty(userName)) {
-            CurrentUser currentUser = CurrentUserRepository.getUser();
-            userName = currentUser.getUsername();
+            userName = getUsername();
         }
         return getUserDto(userName);
     }
@@ -106,10 +119,9 @@ public class UserServiceImpl implements UserService {
         }
         UserDto userDto = new UserDto();
         BeanUtils.copyProperties(beanUser, userDto);
-        List<UserRole> userRoleList = userRoleService.get(userName);
-        if (!CollectionUtils.isEmpty(userRoleList)) {
-            userDto.setUserRoleList(userRoleList);
-            userDto.setIsAdmin(userRoleList.stream().anyMatch(userRole -> userRole.getRoleId() == 1));
+        setUserRoleList(userName, userDto);
+        if (!CollectionUtils.isEmpty(userDto.getUserRoleList())) {
+            userDto.setIsAdmin(userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getRoleId() == 1));
         }
         return userDto;
     }
@@ -122,12 +134,12 @@ public class UserServiceImpl implements UserService {
         // 获取角色
         List<UserRole> userRoleList = userRoleService.list();
         Map<String, List<UserRole>> userRoleMap =
-            userRoleList.stream().collect(Collectors.groupingBy(UserRole::getUserName));
+                userRoleList.stream().collect(Collectors.groupingBy(UserRole::getUserName));
         // 封装数据
         List<UserDto> userDtoList = beanUserList.stream().map(beanUser -> {
             UserDto userDto = new UserDto();
             BeanUtils.copyProperties(beanUser, userDto, "password");
-            userDto.setUserRoleList(userRoleMap.get(beanUser.getUserName()));
+            userDto.setUserRoleList(userRoleMap.getOrDefault(beanUser.getUserName(), new ArrayList<>()));
             return userDto;
         }).collect(Collectors.toList());
         // 过滤
@@ -154,7 +166,7 @@ public class UserServiceImpl implements UserService {
         // 写入用户表
         insertUser(userDto);
         // 分配超级管理员角色
-        if (userDto.getIsAdmin() != null){
+        if (userDto.getIsAdmin() != null) {
             bindAdmin(userDto);
         }
     }
@@ -172,7 +184,7 @@ public class UserServiceImpl implements UserService {
         beanUser.setPhone(userDto.getPhone());
         beanUserMapper.update(beanUser, wrapper);
         // 分配或删除超级管理员角色
-        if (userDto.getIsAdmin() != null){
+        if (userDto.getIsAdmin() != null) {
             bindAdmin(userDto);
         }
     }
@@ -193,6 +205,8 @@ public class UserServiceImpl implements UserService {
         beanUserMapper.delete(wrapper);
         // 删除用户角色关系
         userRoleService.delete(userName, null, null);
+        // 从项目中移除
+        projectService.unbindUser(null, userName);
         return true;
     }
 
@@ -239,16 +253,21 @@ public class UserServiceImpl implements UserService {
         beanUserMapper.updateById(beanUser);
     }
 
+    /**
+     * 查询菜单信息
+     *
+     * @param projectId
+     * @return
+     */
     @Override
-    public List<ResourceMenuDto> menu(String clusterId) {
+    public List<ResourceMenuDto> menu(String projectId) {
         CurrentUser currentUser = CurrentUserRepository.getUser();
         String username = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString(USERNAME);
-        UserDto userDto = this.getUserDto(username);
-        String projectId = RequestUtil.getProjectId();
-        List<ResourceMenuDto> resourceMenuDtoList = roleService.listMenuByRoleId(userDto);
+        UserDto userDto = getUserDto(username);
+        List<ResourceMenuDto> resourceMenuDtoList = roleService.listMenuByRoleId(userDto, projectId);
 
         Map<Integer, List<ResourceMenuDto>> resourceMenuDtoMap =
-            resourceMenuDtoList.stream().collect(Collectors.groupingBy(ResourceMenuDto::getParentId));
+                resourceMenuDtoList.stream().collect(Collectors.groupingBy(ResourceMenuDto::getParentId));
         List<ResourceMenuDto> firstMenuList = resourceMenuDtoMap.get(0);
         resourceMenuDtoMap.remove(0);
         firstMenuList.forEach(firstMenu -> {
@@ -258,23 +277,52 @@ public class UserServiceImpl implements UserService {
             firstMenu.setSubMenu(resourceMenuDtoMap.get(firstMenu.getId()));
             Collections.sort(firstMenu.getSubMenu());
         });
-        if (StringUtils.isNotBlank(clusterId)) {
-            Map<String, String> power = new HashMap<>();
-            if (!userDto.getIsAdmin() && StringUtils.isNotEmpty(projectId)) {
-                power.putAll(
-                    userDto.getUserRoleList().stream().filter(userRole -> userRole.getProjectId().equals(projectId))
-                        .collect(Collectors.toList()).get(0).getPower());
-            }
-            setServiceMenuSubMenu(firstMenuList, clusterId, power);
-        }
         Collections.sort(firstMenuList);
         return firstMenuList;
+    }
+
+    @Override
+    public List<ResourceMenuDto> listMiddlewareMenu(String clusterId, String projectId) {
+        // 获取集群下所有中间件
+        List<BeanClusterMiddlewareInfo> middlewareInfos = clusterMiddlewareInfoService.list(clusterId, false);
+        // 过滤状态为未安装的中间件
+        middlewareInfos = middlewareInfos.stream().filter(mwInfo -> !mwInfo.getStatus().equals(NUM_TWO)).collect(Collectors.toList());
+
+        // 查询用户角色项目权限
+        String username =
+                JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue().getString(USERNAME);
+        UserDto userDto = getUserDto(username);
+        Map<String, String> power = new HashMap<>();
+        if (!userDto.getIsAdmin() && userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getProjectId().equals(projectId))){
+            power.putAll(userDto.getUserRoleList().stream().filter(userRole -> userRole.getProjectId().equals(projectId))
+                    .collect(Collectors.toList()).get(0).getPower());
+        }
+        
+        // 过滤获取拥有权限的中间件
+        if (!CollectionUtils.isEmpty(power)) {
+            middlewareInfos = middlewareInfos.stream()
+                .filter(mwInfo -> power.keySet().stream()
+                    .anyMatch(key -> !"0000".equals(power.get(key)) && mwInfo.getChartName().equals(key)))
+                .collect(Collectors.toList());
+        }
+
+        // 封装数据
+        List<ResourceMenuDto> subMenuList = new ArrayList<>();
+        for (BeanClusterMiddlewareInfo middlewareInfoDTO : middlewareInfos) {
+            ResourceMenuDto resourceMenuDto = new ResourceMenuDto();
+            resourceMenuDto.setName(middlewareInfoDTO.getChartName());
+            resourceMenuDto.setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(middlewareInfoDTO.getChartName()));
+            resourceMenuDto.setAvailable(true);
+            resourceMenuDto.setUrl("serviceList/" + resourceMenuDto.getName() + "/" + resourceMenuDto.getAliasName());
+            subMenuList.add(resourceMenuDto);
+        }
+        return subMenuList;
     }
 
     /**
      * 参数校验
      */
-    public void checkParams(UserDto userDto) throws Exception {
+    public void checkParams(UserDto userDto) {
         // 校验参数是否完全
         if (StringUtils.isAnyBlank(userDto.getUserName(), userDto.getAliasName())) {
             throw new IllegalArgumentException("username/aliasName should not be null");
@@ -310,15 +358,16 @@ public class UserServiceImpl implements UserService {
 
     /**
      * 添加个性化配置相关信息
+     *
      * @param configuration
      * @param status
      * @throws Exception
      */
     @Override
-    public void insertPersonalConfig(PersonalizedConfiguration configuration,String status) throws Exception {
+    public void insertPersonalConfig(PersonalizedConfiguration configuration, String status) throws Exception {
         //判断是否要初始化
         if ("init".equals(status)) {
-            QueryWrapper<PersonalizedConfiguration> query = new QueryWrapper<PersonalizedConfiguration>().eq("status","1");
+            QueryWrapper<PersonalizedConfiguration> query = new QueryWrapper<PersonalizedConfiguration>().eq("status", "1");
             personalMapper.delete(query);
             return;
         }
@@ -328,6 +377,7 @@ public class UserServiceImpl implements UserService {
 
     /**
      * 个性化配置相关图片上传
+     *
      * @param file
      * @throws IOException
      */
@@ -352,14 +402,14 @@ public class UserServiceImpl implements UserService {
         List<UserDto> userDtoList = new ArrayList<>();
         if (StringUtils.isNotBlank(alertRuleId)) {
             QueryWrapper<MailToUser> mailToUserQueryWrapper = new QueryWrapper<>();
-            Integer alertId = Integer.parseInt(alertRuleId.replace("GJ",""));
-            mailToUserQueryWrapper.eq("alert_rule_id",alertId);
+            Integer alertId = Integer.parseInt(alertRuleId.replace("GJ", ""));
+            mailToUserQueryWrapper.eq("alert_rule_id", alertId);
             List<MailToUser> mailToUsers = mailToUserMapper.selectList(mailToUserQueryWrapper);
             userDtoList = mailToUsers.stream().map(mailToUser -> {
-                BeanUser beanUser = beanUserMapper.selectOne(new QueryWrapper<BeanUser>().eq("id",mailToUser.getUserId()));
+                BeanUser beanUser = beanUserMapper.selectOne(new QueryWrapper<BeanUser>().eq("id", mailToUser.getUserId()));
                 List<UserRole> userRoleList = userRoleService.get(beanUser.getUserName());
                 UserDto userDto = new UserDto();
-                BeanUtils.copyProperties(beanUser,userDto);
+                BeanUtils.copyProperties(beanUser, userDto);
                 userDto.setUserRoleList(userRoleList);
                 return userDto;
             }).collect(Collectors.toList());
@@ -374,7 +424,7 @@ public class UserServiceImpl implements UserService {
         userMap.put("projectId", projectId);
         long currentTime = System.currentTimeMillis();
         response.setHeader(USER_TOKEN, JwtTokenComponent.generateToken("userInfo", userMap,
-            new Date(currentTime + (long)(ApplicationUtil.getExpire() * 3600000L)), new Date(currentTime - 300000L)));
+                new Date(currentTime + (long) (ApplicationUtil.getExpire() * 3600000L)), new Date(currentTime - 300000L)));
     }
 
     @Override
@@ -384,8 +434,8 @@ public class UserServiceImpl implements UserService {
             JSONObject userMap = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue();
             List<UserRole> userRoleList = userRoleService.get(userMap.getString("username"));
             userRoleList = userRoleList.stream()
-                .filter(userRole -> userRole.getRoleId() == 1 || userRole.getProjectId().equals(projectId))
-                .collect(Collectors.toList());
+                    .filter(userRole -> userRole.getRoleId() == 1 || userRole.getProjectId().equals(projectId))
+                    .collect(Collectors.toList());
             if (!CollectionUtils.isEmpty(userRoleList)) {
                 return userRoleList.get(0).getPower();
             }
@@ -395,6 +445,7 @@ public class UserServiceImpl implements UserService {
 
     /**
      * 获取个性化配置信息
+     *
      * @return
      * @throws IOException
      */
@@ -403,7 +454,7 @@ public class UserServiceImpl implements UserService {
         QueryWrapper<PersonalizedConfiguration> queryWrapper = new QueryWrapper<PersonalizedConfiguration>();
         List<PersonalizedConfiguration> personals = personalMapper.selectList(queryWrapper);
         if (personals.size() > 1) {
-            queryWrapper.eq("status","1");
+            queryWrapper.eq("status", "1");
             List<PersonalizedConfiguration> personalList = personalMapper.selectList(queryWrapper);
             for (PersonalizedConfiguration personalizedConfiguration : personalList) {
                 return personalizedConfiguration;
@@ -417,6 +468,7 @@ public class UserServiceImpl implements UserService {
 
     /**
      * 将文件转为二进制数组
+     *
      * @param file
      * @return
      * @throws IOException
@@ -438,59 +490,34 @@ public class UserServiceImpl implements UserService {
                     }
                     bus = bos.toByteArray();
                 }
-            }catch (IOException e){
+            } catch (IOException e) {
                 e.printStackTrace();
-            }finally {
+            } finally {
                 inPut.close();
             }
         }
-        String voiceBase64= Base64.getEncoder().encodeToString(bus);
+        String voiceBase64 = Base64.getEncoder().encodeToString(bus);
         return Base64.getDecoder().decode(voiceBase64);
     }
 
     /**
      * 校验数据库数据
+     *
      * @param configuration
      */
     private void checkout(PersonalizedConfiguration configuration) {
         QueryWrapper<PersonalizedConfiguration> queryWrapper = new QueryWrapper<PersonalizedConfiguration>();
-        queryWrapper.eq("status","1");
+        queryWrapper.eq("status", "1");
         List<PersonalizedConfiguration> personals = personalMapper.selectList(queryWrapper);
         Date date = new Date();
         if (personals.size() == 0) {
             configuration.setCreateTime(date);
             personalMapper.insert(configuration);
-        }else {
+        } else {
             configuration.setUpdateTime(date);
-            queryWrapper.eq("status","1");
-            personalMapper.update(configuration,queryWrapper);
+            queryWrapper.eq("status", "1");
+            personalMapper.update(configuration, queryWrapper);
         }
-    }
-
-    /**
-     * @description 将中间件设为服务列表菜单的子菜单
-     * @author  liyinlong
-     * @since 2021/11/2 4:09 下午
-     */
-    public void setServiceMenuSubMenu(List<ResourceMenuDto> menuDtoList, String clusterId, Map<String, String> power) {
-        menuDtoList.forEach(parentMenu -> {
-            if ("serviceList".equals(parentMenu.getName())) {
-                List<ResourceMenuDto> resourceMenuDtos = middlewareService.listAllMiddlewareAsMenu(clusterId);
-                if (!CollectionUtils.isEmpty(power)) {
-                    resourceMenuDtos = resourceMenuDtos.stream()
-                        .filter(resourceMenuDto -> power.keySet().stream()
-                            .anyMatch(key -> !"0000".equals(power.get(key)) && key.equals(resourceMenuDto.getName())))
-                        .collect(Collectors.toList());
-                }
-                resourceMenuDtos.forEach(resourceMenuDto -> {
-                    resourceMenuDto
-                        .setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(resourceMenuDto.getAliasName()));
-                    resourceMenuDto.setUrl(
-                        parentMenu.getUrl() + "/" + resourceMenuDto.getName() + "/" + resourceMenuDto.getAliasName());
-                });
-                parentMenu.setSubMenu(resourceMenuDtos);
-            }
-        });
     }
 
     /**
@@ -498,7 +525,7 @@ public class UserServiceImpl implements UserService {
      */
     public void bindAdmin(UserDto userDto) {
         String username =
-            JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue().getString(USERNAME);
+                JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue().getString(USERNAME);
         if (!ADMIN.equals(username)) {
             throw new BusinessException(ErrorMessage.NO_AUTHORITY);
         }
@@ -508,4 +535,19 @@ public class UserServiceImpl implements UserService {
             userRoleService.delete(userDto.getUserName(), null, NUM_ROLE_ADMIN);
         }
     }
+
+    /**
+     * 设置用户的角色列表
+     *
+     * @param userName 用户名
+     * @param userDto
+     */
+    public void setUserRoleList(String userName, UserDto userDto) {
+        List<UserRole> userRoleList = userRoleService.get(userName);
+        if (!CollectionUtils.isEmpty(userRoleList)) {
+            userDto.setUserRoleList(userRoleList);
+            userDto.setIsAdmin(userRoleList.stream().anyMatch(userRole -> userRole.getRoleId() == 1));
+        }
+    }
+
 }

@@ -6,8 +6,6 @@ import java.util.stream.Collectors;
 import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.bean.user.BeanRoleAuthority;
-import com.harmonycloud.zeus.bean.user.BeanUser;
-import com.harmonycloud.zeus.dao.user.BeanRoleAuthorityMapper;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.user.*;
 import com.harmonycloud.zeus.util.RequestUtil;
@@ -33,7 +31,7 @@ import com.harmonycloud.zeus.dao.user.BeanRoleMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_ONE;
+import static com.harmonycloud.caas.common.constants.CommonConstant.*;
 
 /**
  * @author xutianhong
@@ -142,26 +140,46 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public List<ResourceMenuDto> listMenuByRoleId(UserDto userDto) {
-        String projectId = RequestUtil.getProjectId();
+    public List<ResourceMenuDto> listMenuByRoleId(UserDto userDto, String projectId) {
         List<Integer> ids;
-        if (!userDto.getIsAdmin() && StringUtils.isNotEmpty(projectId)) {
+        if (Boolean.TRUE.equals(!userDto.getIsAdmin()) && StringUtils.isNotEmpty(projectId)) {
             ids = Arrays.asList(3, 4);
+            // 判断是否非普通用户
             UserRole userRole = userDto.getUserRoleList().stream().filter(ur -> ur.getProjectId().equals(projectId))
                 .collect(Collectors.toList()).get(0);
             for (String key : userRole.getPower().keySet()) {
                 if (Integer.parseInt(userRole.getPower().get(key).split("")[1]) == 1) {
-                    ids = Arrays.asList(3, 4, 5, 6, 7, 9, 10, 11, 12, 13);
+                    ids = Arrays.asList(3, 4, 5, 7, 8, 9, 11, 13, 14, 15);
                     break;
                 }
             }
         } else {
-            ids = Arrays.asList(1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19);
+            ids = Arrays.asList(1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21);
         }
         // 获取菜单信息
         List<ResourceMenuDto> resourceMenuDtoList = resourceMenuService.list(ids);
         return resourceMenuDtoList.stream().filter(ResourceMenuDto::getOwn).collect(Collectors.toList());
     }
+
+    @Override
+    public void initMiddlewareAuthority(String type) {
+        if (roleAuthorityService.checkExistByType(type)){
+            return;
+        }
+        QueryWrapper<BeanRole> wrapper = new QueryWrapper<>();
+        List<BeanRole> beanRoleList = beanRoleMapper.selectList(wrapper);
+        for (BeanRole beanRole : beanRoleList) {
+            if (beanRole.getId().equals(NUM_ONE) || beanRole.getId().equals(NUM_TWO)
+                || beanRole.getId().equals(NUM_THREE)) {
+                roleAuthorityService.insert(beanRole.getId(), type, "1111");
+            } else if (beanRole.getId().equals(NUM_FOUR)) {
+                roleAuthorityService.insert(beanRole.getId(), type, "1000");
+            } else {
+                roleAuthorityService.insert(beanRole.getId(), type, "0000");
+            }
+        }
+    }
+
 
     /**
      * 校验角色名是否存在

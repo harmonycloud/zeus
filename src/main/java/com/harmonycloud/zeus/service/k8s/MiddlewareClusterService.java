@@ -22,6 +22,13 @@ public interface MiddlewareClusterService {
     List<MiddlewareCluster> listClusters();
 
     /**
+     * 查询集群列表
+     * @param clusterId
+     * @return
+     */
+    List<MiddlewareCluster> listClusters(String clusterId);
+
+    /**
      * 修改集群
      */
     void update(String clusterId, MiddlewareCluster middlewareCluster);

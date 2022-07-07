@@ -39,7 +39,9 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         check(imageRepositoryDTO);
         BeanImageRepository beanImageRepository = new BeanImageRepository();
         BeanUtils.copyProperties(imageRepositoryDTO, beanImageRepository);
-        String address = imageRepositoryDTO.getHostAddress() + ":" + imageRepositoryDTO.getPort() + "/" + imageRepositoryDTO.getProject();
+        String address = imageRepositoryDTO.getHostAddress()
+            + (imageRepositoryDTO.getPort() == null ? "" : ":" + imageRepositoryDTO.getPort()) + "/"
+            + imageRepositoryDTO.getProject();
         beanImageRepository.setClusterId(clusterId);
         beanImageRepository.setAddress(address);
         beanImageRepository.setCreateTime(new Date());
@@ -125,6 +127,7 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
      */
     public void check(ImageRepositoryDTO imageRepositoryDTO){
         Registry registry = new Registry()
+                .setVersion(imageRepositoryDTO.getVersion())
                 .setAddress(imageRepositoryDTO.getHostAddress())
                 .setProtocol(imageRepositoryDTO.getProtocol())
                 .setPort(imageRepositoryDTO.getPort())

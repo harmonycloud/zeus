@@ -38,12 +38,20 @@ public interface UserRoleService {
     Boolean checkAdmin(String username);
 
     /**
-     * 获取绑定制定角色的用户
+     * 获取绑定指定角色的用户
      *
      * @param roleId 角色id
      * @return BeanSysRole
      */
     List<UserRole> findByRoleId(Integer roleId);
+
+    /**
+     * 获取指定项目下的用户角色
+     *
+     * @param projectId 项目id
+     * @return BeanSysRole
+     */
+    List<UserRole> findByProjectId(String projectId);
 
     /**
      * 获取用户角色关联关系
@@ -75,4 +83,18 @@ public interface UserRoleService {
      */
     void update(UserDto userDto, String projectId);
 
+    /**
+     * 查询用户是否存在普通角色（即非超级管理员、非项目管理员）
+     * @param userName
+     * @return
+     */
+    boolean checkExistsNormalRole(String userName);
+
+    /**
+     * 查询用户项目角色
+     * @param userName
+     * @param projectId
+     * @return
+     */
+    BeanUserRole get(String userName,String projectId);
 }

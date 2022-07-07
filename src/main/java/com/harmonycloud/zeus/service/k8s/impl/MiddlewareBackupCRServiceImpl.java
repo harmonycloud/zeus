@@ -37,6 +37,11 @@ public class MiddlewareBackupCRServiceImpl implements MiddlewareBackupCRService 
     }
 
     @Override
+    public MiddlewareBackupList list(String clusterId, String namespace) {
+        return middlewareBackupWrapper.list(clusterId, namespace);
+    }
+
+    @Override
     public MiddlewareBackupCR get(String clusterId, String namespace, String name) throws IOException {
         return middlewareBackupWrapper.get(clusterId, namespace, name);
     }

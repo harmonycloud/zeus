@@ -6,6 +6,8 @@ import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.user.ProjectDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
+import com.harmonycloud.zeus.bean.user.BeanProject;
+import com.harmonycloud.zeus.bean.user.BeanProjectNamespace;
 
 import java.util.List;
 import java.util.Map;
@@ -24,10 +26,16 @@ public interface ProjectService {
     void add(ProjectDto projectDto);
 
     /**
+     * 保存项目信息
+     * @param beanProject
+     */
+    void add(BeanProject beanProject);
+
+    /**
      * 查询项目列表
      * @return List<ProjectDto>
      */
-    List<ProjectDto> list(String key);
+    List<ProjectDto> list(String keyword);
 
     /**
      * 查询项目下分区
@@ -84,11 +92,22 @@ public interface ProjectService {
     void update(ProjectDto projectDto);
 
     /**
+     * 更新项目
+     * @param beanProject
+     */
+    void update(BeanProject beanProject);
+
+    /**
      * 项目绑定分区
      * @param namespace  分区对象
      */
     void bindNamespace(Namespace namespace);
 
+    /**
+     * 项目绑定分区
+     * @param namespaceList
+     */
+    void bindNamespace(List<Namespace> namespaceList);
     /**
      * 项目解绑分区
      * @param projectId 项目id
@@ -113,5 +132,21 @@ public interface ProjectService {
      * @return List<ProjectDto>
      */
     List<ProjectDto> getMiddlewareCount(String projectId);
+
+
+    /**
+     * 通过分区查询项目
+     * @param namespace 分区
+     *
+     * @return ProjectDto
+     */
+    ProjectDto findProjectByNamespace(String namespace);
+
+    /**
+     * 查询项目
+     * @param projectId
+     * @return
+     */
+    BeanProject get(String projectId);
 
 }

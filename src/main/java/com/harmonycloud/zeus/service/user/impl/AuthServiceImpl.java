@@ -1,47 +1,44 @@
 package com.harmonycloud.zeus.service.user.impl;
 
-import static com.harmonycloud.caas.filters.base.GlobalKey.SET_TOKEN;
-import static com.harmonycloud.caas.filters.base.GlobalKey.USER_TOKEN;
-
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import com.harmonycloud.caas.common.model.LdapConfigDto;
-import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
-import com.harmonycloud.tool.date.DateUtils;
-import com.harmonycloud.tool.encrypt.RSAUtils;
-import com.harmonycloud.zeus.service.user.*;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.LdapConfigDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.caas.filters.token.JwtTokenComponent;
+import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
+import com.harmonycloud.tool.encrypt.RSAUtils;
+import com.harmonycloud.zeus.service.user.AuthManager4Ldap;
+import com.harmonycloud.zeus.service.user.AuthService;
+import com.harmonycloud.zeus.service.user.LdapService;
+import com.harmonycloud.zeus.service.user.UserService;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Date;
+
+import static com.harmonycloud.caas.filters.base.GlobalKey.SET_TOKEN;
+import static com.harmonycloud.caas.filters.base.GlobalKey.USER_TOKEN;
 
 /**
  * @author dengyulong
  * @date 2021/04/02
  */
 @Service
+@ConditionalOnProperty(value="system.usercenter",havingValue = "zeus")
 public class AuthServiceImpl implements AuthService {
 
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private RoleService roleService;
     @Value("${system.user.expire:0.5}")
     private Double expireTime;
-
+    @Autowired
+    private UserService userService;
     @Autowired
     private AuthManager4Ldap authManager4Ldap;
     @Autowired
@@ -76,15 +73,11 @@ public class AuthServiceImpl implements AuthService {
         if (!md5Password.equals(userDto.getPassword())) {
             throw new BusinessException(ErrorMessage.AUTH_FAILED);
         }
+
         JSONObject admin = convertUserInfo(userDto);
-        long currentTime = System.currentTimeMillis();
-        String token = JwtTokenComponent.generateToken("userInfo", admin,
-            new Date(currentTime + (long)(expireTime * 3600000L)), new Date(currentTime - 300000L));
+        String token = generateToken(admin);
         response.setHeader(SET_TOKEN, token);
-        JSONObject res = new JSONObject();
-        res.put("userName", userName);
-        res.put("token", token);
-        res.put("isAdmin", isAdmin);
+        JSONObject res = convertResult(userName, isAdmin, token);
         //校验密码日期
         if (userDto.getPasswordTime() != null) {
             long passwordTime = DateUtils.getIntervalDays(new Date(), userDto.getPasswordTime()) / 3600 / 24 / 1000;
@@ -133,5 +126,31 @@ public class AuthServiceImpl implements AuthService {
             return true;
         }
         return false;
+    }
+
+    /**
+     * 生成token
+     * @param admin
+     * @return
+     */
+    public String generateToken(JSONObject admin){
+        long currentTime = System.currentTimeMillis();
+        return JwtTokenComponent.generateToken("userInfo", admin,
+                new Date(currentTime + (long)(expireTime * 3600000L)), new Date(currentTime - 300000L));
+    }
+
+    /**
+     * 组装返回结果
+     * @param userName
+     * @param isAdmin
+     * @param token
+     * @return
+     */
+    public JSONObject convertResult(String userName,boolean isAdmin,String token){
+        JSONObject res = new JSONObject();
+        res.put("userName", userName);
+        res.put("token", token);
+        res.put("isAdmin", isAdmin);
+        return res;
     }
 }

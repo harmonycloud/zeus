@@ -118,6 +118,20 @@ public class UserRoleServiceImpl implements UserRoleService {
     }
 
     @Override
+    public List<UserRole> findByProjectId(String projectId) {
+        QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("project_id", projectId);
+        List<BeanUserRole> beanUserRoleList = beanUserRoleMapper.selectList(wrapper);
+        if (CollectionUtils.isEmpty(beanUserRoleList)){
+            return new ArrayList<>();
+        }
+        return beanUserRoleList.stream().map(beanUserRole -> {
+            UserRole userRole = new UserRole();
+            BeanUtils.copyProperties(beanUserRole, userRole);
+            return userRole;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
     public void insert(String projectId, String username, Integer roleId) {
         QueryWrapper<BeanUserRole> wrapper =
             new QueryWrapper<BeanUserRole>().eq("username", username);
@@ -169,4 +183,18 @@ public class UserRoleServiceImpl implements UserRoleService {
             beanUserRoleMapper.update(beanUserRole, wrapper);
         }
     }
+
+    @Override
+    public boolean checkExistsNormalRole(String userName) {
+        QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("username", userName).gt("role_id", 2);
+        List<BeanUserRole> beanUserRoleList = beanUserRoleMapper.selectList(wrapper);
+        return !CollectionUtils.isEmpty(beanUserRoleList);
+    }
+
+    @Override
+    public BeanUserRole get(String userName, String projectId) {
+        QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("username", userName).eq("project_id", projectId);
+        return beanUserRoleMapper.selectOne(wrapper);
+    }
+
 }
