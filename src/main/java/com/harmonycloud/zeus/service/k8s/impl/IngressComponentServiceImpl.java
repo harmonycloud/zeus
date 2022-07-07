@@ -130,13 +130,12 @@ public class IngressComponentServiceImpl implements IngressComponentService {
         MiddlewareClusterDTO cluster = clusterService.findById(ingressComponentDto.getClusterId());
         QueryWrapper<BeanIngressComponents> wrapper = new QueryWrapper<BeanIngressComponents>().eq("id", ingressComponentDto.getId());
         BeanIngressComponents beanIngressComponents = beanIngressComponentsMapper.selectOne(wrapper);
-        // 校验是否存在
-        if (cluster.getIngressList().stream()
-            .noneMatch(ingress -> ingress.getIngressClassName().equals(beanIngressComponents.getIngressClassName()))) {
+        // 校验存在
+        if (beanIngressComponents == null) {
             throw new BusinessException(ErrorMessage.INGRESS_CLASS_NOT_EXISTED);
         }
         // 更新集群信息
-        cluster.getIngressList().forEach(ingress -> {
+        /*cluster.getIngressList().forEach(ingress -> {
             if (ingress.getIngressClassName().equals(beanIngressComponents.getIngressClassName())) {
                 ingress.setAddress(ingressComponentDto.getAddress())
                     .setIngressClassName(ingressComponentDto.getIngressClassName());
@@ -144,9 +143,9 @@ public class IngressComponentServiceImpl implements IngressComponentService {
                     .setNamespace(ingressComponentDto.getNamespace());
             }
         });
-        clusterService.update(cluster);
-        // 更新数据库
-        beanIngressComponents.setIngressClassName(ingressComponentDto.getIngressClassName());
+        clusterService.update(cluster);*/
+        // todo 更新数据库
+        BeanUtils.copyProperties(ingressComponentDto, beanIngressComponents);
         beanIngressComponentsMapper.updateById(beanIngressComponents);
     }
 
@@ -158,30 +157,39 @@ public class IngressComponentServiceImpl implements IngressComponentService {
         List<BeanIngressComponents> ingressComponentsList = beanIngressComponentsMapper.selectList(wrapper);
 
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        if (CollectionUtils.isEmpty(cluster.getIngressList())){
+        /*if (CollectionUtils.isEmpty(cluster.getIngressList())){
             return new ArrayList<>();
-        }
+        }*/
         //数据同步
-        if (cluster.getIngressList().size() > ingressComponentsList.size()) {
+        /*if (cluster.getIngressList().size() > ingressComponentsList.size()) {
             synchronization(cluster, ingressComponentsList);
-        }
+        }*/
         // 更新状态
         updateStatus(clusterId, ingressComponentsList);
-        Map<String, BeanIngressComponents> ingressComponentsMap = ingressComponentsList.stream().collect(Collectors
-            .toMap(BeanIngressComponents::getIngressClassName, beanIngressComponents -> beanIngressComponents));
+        /*Map<String, BeanIngressComponents> ingressComponentsMap = ingressComponentsList.stream().collect(Collectors
+            .toMap(BeanIngressComponents::getIngressClassName, beanIngressComponents -> beanIngressComponents));*/
         // 封装数据
-        return cluster.getIngressList().stream().map(ingress -> {
-            IngressComponentDto ic = new IngressComponentDto().setAddress(ingress.getAddress())
-                .setIngressClassName(ingress.getIngressClassName()).setNamespace(ingress.getTcp().getNamespace())
-                .setConfigMapName(ingress.getTcp().getConfigMapName()).setClusterId(clusterId)
-                .setStatus(ingressComponentsMap.get(ingress.getIngressClassName()).getStatus())
-                .setId(ingressComponentsMap.get(ingress.getIngressClassName()).getId())
-                .setCreateTime(ingressComponentsMap.get(ingress.getIngressClassName()).getCreateTime());
+        return ingressComponentsList.stream().map(ingress -> {
+            IngressComponentDto ic = new IngressComponentDto();
+            BeanUtils.copyProperties(ingress, ic);
             if (ic.getStatus() == NUM_TWO) {
                 ic.setSeconds(DateUtils.getIntervalDays(new Date(), ic.getCreateTime()));
             }
             return ic;
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    public IngressComponentDto get(String clusterId, String ingressClassName) {
+        QueryWrapper<BeanIngressComponents> wrapper = new QueryWrapper<BeanIngressComponents>()
+            .eq("cluster_id", clusterId).eq("ingress_class_name", ingressClassName);
+        BeanIngressComponents beanIngressComponents = beanIngressComponentsMapper.selectOne(wrapper);
+        if (beanIngressComponents == null) {
+            return null;
+        }
+        IngressComponentDto ingressComponentDto = new IngressComponentDto();
+        BeanUtils.copyProperties(beanIngressComponents, ingressComponentDto);
+        return ingressComponentDto;
     }
 
     @Override
@@ -194,11 +202,11 @@ public class IngressComponentServiceImpl implements IngressComponentService {
             helmChartService.uninstall(cluster, "middleware-operator", existIngress.getName());
         }
         // update cluster
-        MiddlewareClusterIngress exist =
+        /*MiddlewareClusterIngress exist =
             cluster.getIngressList().stream().filter(ingress -> ingress.getIngressClassName().equals(ingressClassName))
                 .collect(Collectors.toList()).get(0);
         cluster.getIngressList().remove(exist);
-        clusterService.update(cluster);
+        clusterService.update(cluster);*/
         // remove from mysql
         beanIngressComponentsMapper.deleteById(existIngress.getId());
     }
@@ -251,7 +259,7 @@ public class IngressComponentServiceImpl implements IngressComponentService {
         });
     }
 
-    public void synchronization(MiddlewareClusterDTO cluster, List<BeanIngressComponents> ingressComponentsList){
+    /*public void synchronization(MiddlewareClusterDTO cluster, List<BeanIngressComponents> ingressComponentsList){
         //过滤获取未在数据库记录的ingress
         List<
             MiddlewareClusterIngress> ingressList =
@@ -269,7 +277,7 @@ public class IngressComponentServiceImpl implements IngressComponentService {
                 ingressComponentsList.add(bean);
             });
         }
-    }
+    }*/
 
     public void installSuccessCheck(MiddlewareClusterDTO cluster, IngressComponentDto ingressComponentDto) {
         QueryWrapper<BeanIngressComponents> wrapper = new QueryWrapper<BeanIngressComponents>()

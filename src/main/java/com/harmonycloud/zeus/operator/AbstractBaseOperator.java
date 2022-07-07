@@ -18,6 +18,7 @@ import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.enums.Protocol;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
+import com.harmonycloud.caas.common.model.IngressComponentDto;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.StorageDto;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
@@ -125,6 +126,8 @@ public abstract class AbstractBaseOperator {
     protected StorageService storageService;
     @Autowired
     protected NamespaceService namespaceService;
+    @Autowired
+    private IngressComponentService ingressComponentService;
 
     /**
      * 是否支持该中间件
@@ -1075,16 +1078,15 @@ public abstract class AbstractBaseOperator {
         }
     }
 
-    public String getExposeIp(MiddlewareClusterDTO cluster, IngressDTO ingressDTO){
-        if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_NODEPORT)){
+    public String getExposeIp(MiddlewareClusterDTO cluster, IngressDTO ingressDTO) {
+        if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_NODEPORT)) {
             return cluster.getHost();
         } else if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_INGRESS)
-                && ingressDTO.getProtocol().equals(Protocol.TCP.getValue())){
-            List<MiddlewareClusterIngress> middlewareClusterIngressList = cluster.getIngressList().stream()
-                    .filter(ingress -> ingress.getIngressClassName().equals(ingressDTO.getIngressClassName()))
-                    .collect(Collectors.toList());
-            if (!CollectionUtils.isEmpty(middlewareClusterIngressList)){
-                return middlewareClusterIngressList.get(0).getAddress();
+            && ingressDTO.getProtocol().equals(Protocol.TCP.getValue())) {
+            IngressComponentDto ingressComponentDto =
+                ingressComponentService.get(cluster.getId(), ingressDTO.getIngressClassName());
+            if (ingressComponentDto != null) {
+                return ingressComponentDto.getAddress();
             }
         }
         return cluster.getHost();
