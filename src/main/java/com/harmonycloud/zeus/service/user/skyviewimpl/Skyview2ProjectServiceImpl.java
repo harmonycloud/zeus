@@ -259,7 +259,8 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
         projectDTOS.forEach(projectDTO -> {
             ProjectDto project = new ProjectDto();
             project.setName(projectDTO.getProjectName());
-            project.setAliasName(projectDTO.getProjectAliasName() + "（所属租户:" + projectDTO.getTenantAliasName() + "）");
+            project.setAliasName(projectDTO.getProjectAliasName());
+            project.setTenantAliasName(projectDTO.getTenantAliasName());
             project.setNamespaceCount(projectDTO.getNamespaceCount());
             project.setUserDtoList(projectDTO.getUserDtos());
             project.setProjectId(projectDTO.getProjectId());
