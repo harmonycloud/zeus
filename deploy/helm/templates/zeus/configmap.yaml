@@ -67,7 +67,7 @@ data:
         password: Ab123456
         host: caas-gateway-svc.caas-system
         port: 8081
-        prefix: /
+        prefix:
       registry:
         address: 10.10.101.22
         port: 8443
