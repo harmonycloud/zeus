@@ -11,7 +11,6 @@ import com.harmonycloud.zeus.bean.user.BeanUser;
 import com.harmonycloud.zeus.dao.DingRobotMapper;
 import com.harmonycloud.zeus.dao.MailToUserMapper;
 import com.harmonycloud.zeus.dao.user.BeanUserMapper;
-import com.harmonycloud.zeus.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,9 +25,9 @@ import com.harmonycloud.caas.common.enums.DateUnitEnum;
 import com.harmonycloud.caas.common.model.middleware.AlertInfoDto;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.bean.BeanAlertRecord;
-import com.harmonycloud.zeus.bean.MiddlewareAlertInfo;
+import com.harmonycloud.zeus.bean.AlertRuleId;
 import com.harmonycloud.zeus.dao.BeanAlertRecordMapper;
-import com.harmonycloud.zeus.dao.MiddlewareAlertInfoMapper;
+import com.harmonycloud.zeus.dao.AlertRuleIdMapper;
 import com.harmonycloud.zeus.integration.cluster.AlertManagerWrapper;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareAlertsServiceImpl;
 import com.harmonycloud.zeus.service.prometheus.PrometheusWebhookService;
@@ -56,7 +55,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
     @Autowired
     private MailService mailService;
     @Autowired
-    private MiddlewareAlertInfoMapper middlewareAlertInfoMapper;
+    private AlertRuleIdMapper alertRuleIdMapper;
     @Autowired
     private MiddlewareAlertsServiceImpl middlewareAlertsServiceImpl;
     @Autowired
@@ -92,13 +91,13 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             beanAlertRecord.setMessage(annotations.getString("message"));
             Date startDateTime = convertToUtcDate(alert.getString("startsAt"));
             beanAlertRecord.setTime(startDateTime);
-            QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
+            QueryWrapper<AlertRuleId> wrapper = new QueryWrapper<>();
             wrapper.eq("alert",labels.getString("alertname"))
                     .eq("namespace",labels.getString("namespace"))
                     .eq("middleware_name",labels.getString("service"))
                     .eq("cluster_id",clusterId);
-            MiddlewareAlertInfo alertInfo = new MiddlewareAlertInfo();
-            List<MiddlewareAlertInfo> alertInfos = middlewareAlertInfoMapper.selectList(wrapper);
+            AlertRuleId alertInfo = new AlertRuleId();
+            List<AlertRuleId> alertInfos = alertRuleIdMapper.selectList(wrapper);
             if (!CollectionUtils.isEmpty(alertInfos)) {
                 alertInfo = alertInfos.get(0);
                 beanAlertRecord.setLay(alertInfo.getLay());

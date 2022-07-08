@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.harmonycloud.zeus.bean.MiddlewareAlertInfo;
+import com.harmonycloud.zeus.bean.AlertRuleId;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -9,5 +9,5 @@ import org.springframework.stereotype.Repository;
  * @date 2021/11/17 下午2:16
  */
 @Repository
-public interface MiddlewareAlertInfoMapper extends BaseMapper<MiddlewareAlertInfo> {
+public interface AlertRuleIdMapper extends BaseMapper<AlertRuleId> {
 }

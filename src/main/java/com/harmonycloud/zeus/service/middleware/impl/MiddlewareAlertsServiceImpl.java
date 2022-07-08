@@ -14,10 +14,10 @@ import com.harmonycloud.caas.common.model.AlertUserDTO;
 import com.harmonycloud.caas.common.model.AlertsUserDTO;
 import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.zeus.bean.MailToUser;
-import com.harmonycloud.zeus.bean.MiddlewareAlertInfo;
+import com.harmonycloud.zeus.bean.AlertRuleId;
 import com.harmonycloud.zeus.bean.user.BeanUser;
 import com.harmonycloud.zeus.dao.MailToUserMapper;
-import com.harmonycloud.zeus.dao.MiddlewareAlertInfoMapper;
+import com.harmonycloud.zeus.dao.AlertRuleIdMapper;
 import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCluster;
 import com.harmonycloud.zeus.integration.cluster.bean.prometheus.PrometheusRule;
@@ -75,7 +75,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     @Autowired
     private MiddlewareService middlewareService;
     @Autowired
-    private MiddlewareAlertInfoMapper middlewareAlertInfoMapper;
+    private AlertRuleIdMapper alertRuleIdMapper;
     @Autowired
     private MailToUserMapper mailToUserMapper;
     @Autowired
@@ -86,7 +86,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     @Override
     public PageInfo<MiddlewareAlertsDTO> listUsedRules(String clusterId, String namespace, String middlewareName,
                                                        String lay, String keyword) {
-        QueryWrapper<MiddlewareAlertInfo> queryWrapper = new QueryWrapper<>();
+        QueryWrapper<AlertRuleId> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("lay",lay);
         if(!"system".equals(lay)) {
             if (StringUtils.isNotEmpty(namespace) && StringUtils.isNotEmpty(middlewareName)) {
@@ -110,7 +110,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                 );
             }
         }
-        List<MiddlewareAlertInfo> alertInfos = middlewareAlertInfoMapper.selectList(queryWrapper);
+        List<AlertRuleId> alertInfos = alertRuleIdMapper.selectList(queryWrapper);
         PageInfo<MiddlewareAlertsDTO> alertsDTOPageInfo = new PageInfo<>();
         BeanUtils.copyProperties(new PageInfo<>(alertInfos),alertsDTOPageInfo);
         alertsDTOPageInfo.setList(alertInfos.stream().map(alertInfo -> {
@@ -196,9 +196,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
 
     @Override
     public void deleteRules(String clusterId, String namespace, String middlewareName, String alert, String alertRuleId) {
-        QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
+        QueryWrapper<AlertRuleId> wrapper = new QueryWrapper<>();
         wrapper.eq("alert_id", analysisID(alertRuleId));
-        MiddlewareAlertInfo info = middlewareAlertInfoMapper.selectOne(wrapper);
+        AlertRuleId info = alertRuleIdMapper.selectOne(wrapper);
         // 特殊处理pg
         if ("postgresql".equals(info.getType())){
             middlewareName = "harmonycloud-" + middlewareName;
@@ -210,9 +210,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                     && prometheusRules.getAlert().equals(alert));
         });
         prometheusRuleService.update(clusterId, prometheusRule);
-        QueryWrapper<MiddlewareAlertInfo> deleteWrapper = new QueryWrapper<>();
+        QueryWrapper<AlertRuleId> deleteWrapper = new QueryWrapper<>();
         deleteWrapper.eq("alert",alert);
-        middlewareAlertInfoMapper.delete(deleteWrapper);
+        alertRuleIdMapper.delete(deleteWrapper);
         removeMail(alertRuleId);
     }
 
@@ -221,9 +221,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                             String ding, String alertRuleId,
                             AlertUserDTO alertUserDTO) {
         MiddlewareAlertsDTO middlewareAlertsDTO = alertUserDTO.getMiddlewareAlertsDTO();
-        QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
+        QueryWrapper<AlertRuleId> wrapper = new QueryWrapper<>();
         wrapper.eq("alert_id", analysisID(middlewareAlertsDTO.getAlertId()));
-        MiddlewareAlertInfo info = middlewareAlertInfoMapper.selectOne(wrapper);
+        AlertRuleId info = alertRuleIdMapper.selectOne(wrapper);
         String group = middlewareAlertsDTO.getAnnotations().get("group");
 
         // 特殊处理pg
@@ -288,9 +288,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     @Override
     public void deleteSystemRules(String clusterId, String alert, String alertRuleId) {
         deletePrometheusRules(clusterId,alert);
-        QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
+        QueryWrapper<AlertRuleId> wrapper = new QueryWrapper<>();
         wrapper.eq("alert",alert);
-        middlewareAlertInfoMapper.delete(wrapper);
+        alertRuleIdMapper.delete(wrapper);
         removeMail(alertRuleId);
     }
 
@@ -321,9 +321,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     @Override
     public void updateSystemRules(String clusterId, String ding, String alertRuleId, AlertUserDTO alertUserDTO) {
         MiddlewareAlertsDTO middlewareAlertsDTO = alertUserDTO.getMiddlewareAlertsDTO();
-        QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
+        QueryWrapper<AlertRuleId> wrapper = new QueryWrapper<>();
         wrapper.eq("alert_id", analysisID(middlewareAlertsDTO.getAlertId()));
-        MiddlewareAlertInfo info = middlewareAlertInfoMapper.selectOne(wrapper);
+        AlertRuleId info = alertRuleIdMapper.selectOne(wrapper);
         //获取cr
         PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, NameConstant.MONITORING, NameConstant.PROMETHEUS_K8S_RULES);
         //不启用该规则时，判断该规则是否已写入prometheusRule
@@ -373,9 +373,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
 
     @Override
     public MiddlewareAlertsDTO alertRuleDetail(String alertRuleId) {
-        QueryWrapper<MiddlewareAlertInfo> queryWrapper = new QueryWrapper<>();
+        QueryWrapper<AlertRuleId> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("alert_id",analysisID(alertRuleId));
-        MiddlewareAlertInfo middlewareAlertInfo = middlewareAlertInfoMapper.selectById(analysisID(alertRuleId));
+        AlertRuleId middlewareAlertInfo = alertRuleIdMapper.selectById(analysisID(alertRuleId));
         MiddlewareAlertsDTO middlewareAlertsDTO = new MiddlewareAlertsDTO();
         BeanUtils.copyProperties(middlewareAlertInfo,middlewareAlertsDTO);
         Map<String, String > labels = JSON.parseObject(middlewareAlertInfo.getLabels(), HashMap.class);
@@ -388,21 +388,21 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     }
 
     public void updateAlerts2Mysql(String clusterId, String namespace, String middlewareName, MiddlewareAlertsDTO middlewareAlertsDTO) {
-        MiddlewareAlertInfo middlewareAlertInfo = new MiddlewareAlertInfo();
-        BeanUtils.copyProperties(middlewareAlertsDTO,middlewareAlertInfo);
+        AlertRuleId alertRuleId = new AlertRuleId();
+        BeanUtils.copyProperties(middlewareAlertsDTO, alertRuleId);
         int alertId = analysisID(middlewareAlertsDTO.getAlertId());
-        middlewareAlertInfo.setAlertId(alertId);
-        middlewareAlertInfo.setClusterId(clusterId);
-        middlewareAlertInfo.setNamespace(namespace);
-        middlewareAlertInfo.setMiddlewareName(middlewareName);
-        middlewareAlertInfo.setAnnotations(JSONUtil.toJsonStr(middlewareAlertsDTO.getAnnotations()));
-        middlewareAlertInfo.setLabels(JSONUtil.toJsonStr(middlewareAlertsDTO.getLabels()));
-        middlewareAlertInfo.setName(clusterId);
+        alertRuleId.setAlertId(alertId);
+        alertRuleId.setClusterId(clusterId);
+        alertRuleId.setNamespace(namespace);
+        alertRuleId.setMiddlewareName(middlewareName);
+        alertRuleId.setAnnotations(JSONUtil.toJsonStr(middlewareAlertsDTO.getAnnotations()));
+        alertRuleId.setLabels(JSONUtil.toJsonStr(middlewareAlertsDTO.getLabels()));
+        alertRuleId.setName(clusterId);
         String expr = middlewareAlertsDTO.getDescription() +middlewareAlertsDTO.getSymbol()
                + middlewareAlertsDTO.getThreshold() + "%"  + "且" + middlewareAlertsDTO.getAlertTime()
                 + "分钟内触发" + middlewareAlertsDTO.getAlertTimes() + "次";
-        middlewareAlertInfo.setAlertExpr(expr);
-        middlewareAlertInfoMapper.updateById(middlewareAlertInfo);
+        alertRuleId.setAlertExpr(expr);
+        alertRuleIdMapper.updateById(alertRuleId);
     }
     /**
      * 构建执行规则
@@ -542,7 +542,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     public void addAlerts2Sql(String clusterId, String namespace, String middlewareName,
                               MiddlewareAlertsDTO middlewareAlertsDTO, String ding, List<UserDto> userDtos) {
         Date date = new Date();
-        MiddlewareAlertInfo middlewareAlertInfo = new MiddlewareAlertInfo();
+        AlertRuleId alertRuleId = new AlertRuleId();
         String alert = middlewareAlertsDTO.getAlert() + "-" + UUIDUtils.get8UUID();
         if ("system".equals(middlewareAlertsDTO.getLay())) {
             middlewareAlertsDTO.getLabels().put("alertname", alert);
@@ -551,30 +551,30 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             middlewareAlertsDTO.getLabels().put("service", middlewareName);
             middlewareAlertsDTO.getLabels().put("middleware", middlewareAlertsDTO.getType());
         }
-        BeanUtils.copyProperties(middlewareAlertsDTO, middlewareAlertInfo);
-        middlewareAlertInfo.setAnnotations(JSONUtil.toJsonStr(middlewareAlertsDTO.getAnnotations()));
-        middlewareAlertInfo.setLabels(JSONUtil.toJsonStr(middlewareAlertsDTO.getLabels()));
-        middlewareAlertInfo.setClusterId(clusterId);
-        middlewareAlertInfo.setNamespace(namespace);
-        middlewareAlertInfo.setMiddlewareName(middlewareName);
-        middlewareAlertInfo.setCreateTime(date);
-        middlewareAlertInfo.setName(clusterId);
-        middlewareAlertInfo.setAlert(alert);
+        BeanUtils.copyProperties(middlewareAlertsDTO, alertRuleId);
+        alertRuleId.setAnnotations(JSONUtil.toJsonStr(middlewareAlertsDTO.getAnnotations()));
+        alertRuleId.setLabels(JSONUtil.toJsonStr(middlewareAlertsDTO.getLabels()));
+        alertRuleId.setClusterId(clusterId);
+        alertRuleId.setNamespace(namespace);
+        alertRuleId.setMiddlewareName(middlewareName);
+        alertRuleId.setCreateTime(date);
+        alertRuleId.setName(clusterId);
+        alertRuleId.setAlert(alert);
         if (MiddlewareTypeEnum.ZOOKEEPER.getType().equals(middlewareAlertsDTO.getType())) {
-            middlewareAlertInfo.setDescription(middlewareAlertsDTO.getAlert());
+            alertRuleId.setDescription(middlewareAlertsDTO.getAlert());
         }
-        String expr = middlewareAlertInfo.getDescription() + middlewareAlertsDTO.getSymbol()
+        String expr = alertRuleId.getDescription() + middlewareAlertsDTO.getSymbol()
                 + middlewareAlertsDTO.getThreshold() + "%" + "且" + middlewareAlertsDTO.getAlertTime()
                 + "分钟内触发" + middlewareAlertsDTO.getAlertTimes() + "次";
-        middlewareAlertInfo.setAlertExpr(expr);
+        alertRuleId.setAlertExpr(expr);
 
-        middlewareAlertInfoMapper.insert(middlewareAlertInfo);
+        alertRuleIdMapper.insert(alertRuleId);
         List<BeanUser> beanUsers = userDtos.stream().map(userDto -> {
             BeanUser beanUser = new BeanUser();
             BeanUtils.copyProperties(userDto, beanUser);
             return beanUser;
         }).collect(Collectors.toList());
-        addMail2Sql(beanUsers, ding, middlewareAlertInfo.getAlertId());
+        addMail2Sql(beanUsers, ding, alertRuleId.getAlertId());
     }
 
     /**

@@ -15,18 +15,16 @@ import java.util.stream.Collectors;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.constants.CommonConstant;
-import com.harmonycloud.caas.common.enums.Protocol;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
-import com.harmonycloud.caas.common.model.IngressComponentDto;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.StorageDto;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.bean.BeanAlertRule;
-import com.harmonycloud.zeus.bean.MiddlewareAlertInfo;
+import com.harmonycloud.zeus.bean.AlertRuleId;
 import com.harmonycloud.zeus.dao.BeanAlertRuleMapper;
-import com.harmonycloud.zeus.dao.MiddlewareAlertInfoMapper;
+import com.harmonycloud.zeus.dao.AlertRuleIdMapper;
 import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.prometheus.PrometheusRuleGroups;
 import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
@@ -117,7 +115,7 @@ public abstract class AbstractBaseOperator {
     @Autowired
     private BeanAlertRuleMapper beanAlertRuleMapper;
     @Autowired
-    private MiddlewareAlertInfoMapper middlewareAlertInfoMapper;
+    private AlertRuleIdMapper alertRuleIdMapper;
     @Autowired
     private MiddlewareAlertsServiceImpl middlewareAlertsService;
     @Autowired
@@ -998,29 +996,29 @@ public abstract class AbstractBaseOperator {
                 }
                 prometheusRuleGroups.getRules().stream().forEach(rule -> {
                     if (StringUtils.isNotEmpty(rule.getAlert())) {
-                        MiddlewareAlertInfo middlewareAlertInfo = new MiddlewareAlertInfo();
-                        middlewareAlertInfo.setAlert(rule.getAlert());
-                        middlewareAlertInfo.setExpr(rule.getExpr());
-                        middlewareAlertInfo.setSymbol(middlewareAlertsService.getSymbol(rule.getExpr()));
-                        middlewareAlertInfo.setThreshold(middlewareAlertsService.getThreshold(rule.getExpr()));
-                        middlewareAlertInfo.setTime(rule.getTime());
+                        AlertRuleId alertRuleId = new AlertRuleId();
+                        alertRuleId.setAlert(rule.getAlert());
+                        alertRuleId.setExpr(rule.getExpr());
+                        alertRuleId.setSymbol(middlewareAlertsService.getSymbol(rule.getExpr()));
+                        alertRuleId.setThreshold(middlewareAlertsService.getThreshold(rule.getExpr()));
+                        alertRuleId.setTime(rule.getTime());
                         rule.getLabels().put("middleware",middleware.getType());
-                        middlewareAlertInfo.setLabels(JSONUtil.toJsonStr(rule.getLabels()));
-                        middlewareAlertInfo.setAnnotations(JSONUtil.toJsonStr(rule.getAnnotations()));
-                        middlewareAlertInfo.setEnable("1");
-                        middlewareAlertInfo.setLay("service");
-                        middlewareAlertInfo.setClusterId(middleware.getClusterId());
-                        middlewareAlertInfo.setNamespace(middleware.getNamespace());
-                        middlewareAlertInfo.setMiddlewareName(middleware.getName());
-                        middlewareAlertInfo.setName(middleware.getClusterId());
-                        middlewareAlertInfo.setCreateTime(new Date());
-                        middlewareAlertInfo.setType(middleware.getType());
-                        middlewareAlertInfo.setDescription(rule.getAlert());
+                        alertRuleId.setLabels(JSONUtil.toJsonStr(rule.getLabels()));
+                        alertRuleId.setAnnotations(JSONUtil.toJsonStr(rule.getAnnotations()));
+                        alertRuleId.setEnable("1");
+                        alertRuleId.setLay("service");
+                        alertRuleId.setClusterId(middleware.getClusterId());
+                        alertRuleId.setNamespace(middleware.getNamespace());
+                        alertRuleId.setMiddlewareName(middleware.getName());
+                        alertRuleId.setName(middleware.getClusterId());
+                        alertRuleId.setCreateTime(new Date());
+                        alertRuleId.setType(middleware.getType());
+                        alertRuleId.setDescription(rule.getAlert());
                         String expr = rule.getAlert() + middlewareAlertsService.getSymbol(rule.getExpr())
-                                + middlewareAlertsService.getThreshold(rule.getExpr()) + "%"  + "且" + middlewareAlertInfo.getAlertTime()
-                                + "分钟内触发" + middlewareAlertInfo.getAlertTimes() + "次";
-                        middlewareAlertInfo.setAlertExpr(expr);
-                        middlewareAlertInfoMapper.insert(middlewareAlertInfo);
+                                + middlewareAlertsService.getThreshold(rule.getExpr()) + "%"  + "且" + alertRuleId.getAlertTime()
+                                + "分钟内触发" + alertRuleId.getAlertTimes() + "次";
+                        alertRuleId.setAlertExpr(expr);
+                        alertRuleIdMapper.insert(alertRuleId);
                     }
                 });
             }
@@ -1032,9 +1030,9 @@ public abstract class AbstractBaseOperator {
      * @param middleware
      */
     public void removeSql(Middleware middleware) {
-        QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
+        QueryWrapper<AlertRuleId> wrapper = new QueryWrapper<>();
         wrapper.eq("cluster_id",middleware.getClusterId()).eq("namespace",middleware.getNamespace()).eq("middleware_name",middleware.getName());
-        middlewareAlertInfoMapper.delete(wrapper);
+        alertRuleIdMapper.delete(wrapper);
     }
 
     /**
