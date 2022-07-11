@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  * @Date 2022/6/7 3:19 下午
  */
 @Slf4j
+@Operator(paramTypes4One = Middleware.class)
 public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implements PostgresqlOperator {
 
     @Override
