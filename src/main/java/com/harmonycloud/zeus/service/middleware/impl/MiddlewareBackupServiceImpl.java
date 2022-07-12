@@ -602,6 +602,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 }
                 backupRecord.setSourceName(schedule.getSpec().getName());
                 backupRecord.setSourceType(schedule.getMetadata().getLabels().get("type"));
+                backupRecord.setDateUnit(schedule.getMetadata().getLabels().get("util"));
                 String backupId = schedule.getMetadata().getLabels().get("backupId");
                 backupRecord.setBackupId(backupId);
                 backupRecord.setTaskName(getBackupName(clusterId, backupId).getBackupName());
@@ -609,7 +610,21 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 backupRecord.setCron(CronUtils.parseLocalCron(schedule.getSpec().getSchedule().getCron()));
                 if (!ObjectUtils.isEmpty(schedule.getSpec().getSchedule().getRetentionTime())) {
                     backupRecord.setBackupMode("period");
-                    backupRecord.setRetentionTime(schedule.getSpec().getSchedule().getRetentionTime());
+                    Integer day = schedule.getSpec().getSchedule().getRetentionTime();
+                    switch (backupRecord.getDateUnit()){
+                        case "year":
+                            backupRecord.setRetentionTime(day / 365);
+                            break;
+                        case "month":
+                            backupRecord.setRetentionTime(day / 30);
+                            break;
+                        case "week":
+                            backupRecord.setRetentionTime(day / 7);
+                            break;
+                        default:
+                            backupRecord.setRetentionTime(day);
+                            break;
+                    }
                 } else {
                     backupRecord.setBackupMode("single");
                 }
@@ -827,6 +842,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         backupLabel.put("backupId", backupId);
         backupLabel.put("addressId", backupDTO.getAddressName());
         backupLabel.put("type", backupDTO.getType());
+        backupLabel.put("unit", backupDTO.getDateUnit());
         backupDTO.setLabels(backupLabel);
         backupDTO.setMiddlewareRealName(middlewareRealName);
         backupDTO.setCrdType(middlewareCrdType);
