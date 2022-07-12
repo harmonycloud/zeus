@@ -36,6 +36,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static com.harmonycloud.caas.common.constants.NameConstant.OWNER;
+
 /**
  * 中间件通用备份
  *
@@ -106,7 +108,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 backupRecord.setAddressName(item.getMetadata().getLabels().get("addressId"));
                 backupRecord.setSourceName(item.getSpec().getName());
                 backupRecord.setBackupMode("single");
-                backupRecord.setOwner(item.getMetadata().getLabels().get("owner"));
+                backupRecord.setOwner(item.getMetadata().getLabels().get(OWNER));
                 recordList.add(backupRecord);
             }
         }
@@ -131,10 +133,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             backupRecordList.forEach(item -> {
                 MiddlewareBackupStatus backupStatus = item.getStatus();
                 MiddlewareBackupRecord backupRecord = new MiddlewareBackupRecord();
+                Map<String, String> labels = item.getMetadata().getLabels();
                 String backupTime = DateUtil.utc2Local(item.getMetadata().getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
                 backupRecord.setNamespace(item.getMetadata().getNamespace());
                 backupRecord.setBackupTime(backupTime);
-                backupRecord.setBackupName(item.getMetadata().getName());
+                backupRecord.setBackupName(labels.containsKey(OWNER) ? labels.get(OWNER) : item.getMetadata().getName());
                 MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters parameters =  item.getSpec().getBackupDestination().getParameters();
                 String position = item.getSpec().getBackupDestination().getDestinationType() + "(" + parameters.getUrl() + "/" + parameters.getBucket() + ")";
                 backupRecord.setPosition(position);
@@ -148,6 +151,16 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 backupRecord.setSourceName(item.getSpec().getName());
                 backupRecord.setSourceType(item.getMetadata().getLabels().get("type"));
                 String backupId = item.getMetadata().getLabels().get("backupId");
+                // 通过schedule获取backupId
+                if(StringUtils.isEmpty(backupId) && labels.containsKey(OWNER)){
+                    try {
+                        MiddlewareBackupScheduleCR middlewareBackupScheduleCr = backupScheduleCRDService.get(clusterId, namespace, labels.get(OWNER));
+                        backupId = middlewareBackupScheduleCr.getMetadata().getLabels().get("backupId");
+                    } catch (Exception e){
+                        log.error("查询定时文件资源失败", e);
+                        return;
+                    }
+                }
                 backupRecord.setBackupId(backupId);
                 backupRecord.setTaskName(getBackupName(clusterId, backupId).getBackupName());
                 backupRecord.setAddressName(item.getMetadata().getLabels().get("addressId"));
