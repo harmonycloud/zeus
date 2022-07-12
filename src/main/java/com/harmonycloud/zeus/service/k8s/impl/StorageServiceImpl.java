@@ -83,6 +83,15 @@ public class StorageServiceImpl implements StorageService {
     }
 
     @Override
+    public List<StorageDto> list(String clusterId, Boolean all) {
+        List<StorageClass> storageClassList = storageClassWrapper.list(clusterId);
+        return storageClassList.stream()
+            .filter(storageClass -> all || (!CollectionUtils.isEmpty(storageClass.getMetadata().getAnnotations())
+                && storageClass.getMetadata().getAnnotations().containsKey(MIDDLEWARE)))
+            .map(storageClass -> convert(clusterId, storageClass)).collect(Collectors.toList());
+    }
+
+    @Override
     public List<StorageDto> list(String clusterId, String key, String type, Boolean all) {
         List<MiddlewareClusterDTO> clusterList = new ArrayList<>();
         if (clusterId.equals(ASTERISK)) {

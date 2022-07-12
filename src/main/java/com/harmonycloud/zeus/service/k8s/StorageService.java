@@ -33,9 +33,18 @@ public interface StorageService {
      * 查询存储列表
      *
      * @param clusterId 集群id
+     * @param all       是否全部
+     * @return List<StorageDto>
+     */
+    List<StorageDto> list(String clusterId, Boolean all);
+
+    /**
+     * 查询存储列表
+     *
+     * @param clusterId 集群id
      * @param key       关键词检索
      * @param type      存储类型
-     * @param all       是否全部
+     * @param all       是否全部(true会过滤掉已添加的存储)
      * @return List<StorageDto>
      */
     List<StorageDto> list(String clusterId, String key, String type, Boolean all);

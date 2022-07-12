@@ -156,7 +156,7 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
                     default:
                 }
                 // 获取存储中文名
-                List<StorageDto> storageDtoList = storageService.list(cluster.getId(), null, null, true);
+                List<StorageDto> storageDtoList = storageService.list(cluster.getId(), false);
                 Map<String, String> storageNameMap =
                     storageDtoList.stream().collect(Collectors.toMap(StorageDto::getName, StorageDto::getAliasName));
                 for (String key : middleware.getQuota().keySet()) {
