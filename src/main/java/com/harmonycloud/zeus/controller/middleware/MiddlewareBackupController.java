@@ -64,14 +64,18 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "backupName", value = "备份名称", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "cron", value = "cron表达式", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "keepAlive", value = "保留个数｜天数", paramType = "query", dataTypeClass = Integer.class),
     })
     @PutMapping
     public BaseResult update(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
                              @RequestParam("type") String type,
                              @RequestParam("backupName") String backupName,
-                             @RequestParam(value = "cron", required = false) String cron) {
-        middlewareBackupService.updateBackupSchedule(new MiddlewareBackupDTO(clusterId, namespace, type, backupName, cron));
+                             @RequestParam(value = "cron", required = false) String cron,
+                             @RequestParam(value = "keepAlive", required = false) Integer keepAlive) {
+        MiddlewareBackupDTO middlewareBackupDTO = new MiddlewareBackupDTO(clusterId, namespace, type, backupName, cron);
+        middlewareBackupDTO.setRetentionTime(keepAlive).setLimitRecord(keepAlive);
+        middlewareBackupService.updateBackupSchedule(middlewareBackupDTO);
         return BaseResult.ok();
     }
 

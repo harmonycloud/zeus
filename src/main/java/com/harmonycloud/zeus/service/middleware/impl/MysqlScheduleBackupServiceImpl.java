@@ -94,6 +94,7 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
             MysqlScheduleBackupSpec spec = schedule.getSpec();
             String time = schedule.getSpec().getSchedule();
             backupRecord.setCron(time);
+            backupRecord.setLimitRecord(spec.getKeepBackups());
             Minio minio = spec.getBackupTemplate().getStorageProvider().getMinio();
             String position = "minio" + "(" + minio.getEndpoint() + "/" + minio.getBucketName() + ")";
             backupRecord.setPosition(position);

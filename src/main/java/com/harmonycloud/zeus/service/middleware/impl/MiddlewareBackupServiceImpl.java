@@ -210,6 +210,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             try {
                 MiddlewareBackupScheduleSpec spec = middlewareBackupScheduleCR.getSpec();
                 spec.getSchedule().setCron(CronUtils.parseUtcCron(backupDTO.getCron()));
+                spec.getSchedule().setRetentionTime(backupDTO.getRetentionTime());
                 backupScheduleCRDService.update(backupDTO.getClusterId(), middlewareBackupScheduleCR);
             } catch (IOException e) {
                 log.error("中间件{}备份设置更新失败", backupDTO.getMiddlewareName());
@@ -608,6 +609,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 backupRecord.setCron(CronUtils.parseLocalCron(schedule.getSpec().getSchedule().getCron()));
                 if (!ObjectUtils.isEmpty(schedule.getSpec().getSchedule().getRetentionTime())) {
                     backupRecord.setBackupMode("period");
+                    backupRecord.setRetentionTime(schedule.getSpec().getSchedule().getRetentionTime());
                 } else {
                     backupRecord.setBackupMode("single");
                 }
