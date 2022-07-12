@@ -210,7 +210,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             try {
                 MiddlewareBackupScheduleSpec spec = middlewareBackupScheduleCR.getSpec();
                 spec.getSchedule().setCron(CronUtils.parseUtcCron(backupDTO.getCron()));
-                spec.getSchedule().setRetentionTime(backupDTO.getRetentionTime());
+                if (backupDTO.getRetentionTime() != null && StringUtils.isNotEmpty(backupDTO.getDateUnit())){
+                    spec.getSchedule().setRetentionTime(calRetentionTime(backupDTO));
+                    middlewareBackupScheduleCR.getMetadata().getLabels().put("util", backupDTO.getDateUnit());
+                }
                 backupScheduleCRDService.update(backupDTO.getClusterId(), middlewareBackupScheduleCR);
             } catch (IOException e) {
                 log.error("中间件{}备份设置更新失败", backupDTO.getMiddlewareName());
@@ -296,7 +299,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     private Integer calRetentionTime(MiddlewareBackupDTO backupDTO) {
         if (StringUtils.isEmpty(backupDTO.getDateUnit())) {
-            return null;
+            return backupDTO.getRetentionTime();
         }
         int retentionTime = 0;
         switch (backupDTO.getDateUnit()) {
