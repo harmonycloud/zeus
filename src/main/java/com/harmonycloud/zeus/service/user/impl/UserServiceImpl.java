@@ -311,7 +311,7 @@ public class UserServiceImpl implements UserService {
         for (BeanClusterMiddlewareInfo middlewareInfoDTO : middlewareInfos) {
             ResourceMenuDto resourceMenuDto = new ResourceMenuDto();
             resourceMenuDto.setName(middlewareInfoDTO.getChartName());
-            resourceMenuDto.setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(middlewareInfoDTO.getChartName()));
+            resourceMenuDto.setAliasName(MiddlewareOfficialNameEnum.findByChartName(middlewareInfoDTO.getChartName()));
             resourceMenuDto.setAvailable(true);
             resourceMenuDto.setUrl("serviceList/" + resourceMenuDto.getName() + "/" + resourceMenuDto.getAliasName());
             subMenuList.add(resourceMenuDto);

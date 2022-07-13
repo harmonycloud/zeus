@@ -482,7 +482,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         List<MiddlewareInfoDTO> list = new ArrayList<>();
         for (String key : mwInfoMap.keySet()) {
             MiddlewareInfoDTO middlewareInfoDTO = new MiddlewareInfoDTO().setChartName(key)
-                    .setName(MiddlewareOfficialNameEnum.findByMiddlewareName(key));
+                    .setName(MiddlewareOfficialNameEnum.findByChartName(key));
             list.add(middlewareInfoDTO);
         }
         return list;
