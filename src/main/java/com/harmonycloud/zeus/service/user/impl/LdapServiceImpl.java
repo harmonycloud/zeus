@@ -5,8 +5,8 @@ import com.harmonycloud.caas.common.constants.LdapConfigConstant;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.LdapConfigDto;
-import com.harmonycloud.zeus.bean.BeanLdapConfig;
-import com.harmonycloud.zeus.dao.BeanLdapConfigMapper;
+import com.harmonycloud.zeus.bean.BeanSystemConfig;
+import com.harmonycloud.zeus.dao.BeanSystemConfigMapper;
 import com.harmonycloud.zeus.service.user.LdapService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -19,7 +19,6 @@ import org.springframework.ldap.filter.EqualsFilter;
 import org.springframework.ldap.filter.LikeFilter;
 import org.springframework.stereotype.Service;
 
-import javax.naming.NamingException;
 import java.util.List;
 import java.util.Map;
 
@@ -32,26 +31,26 @@ import java.util.Map;
 public class LdapServiceImpl implements LdapService {
 
     @Autowired
-    BeanLdapConfigMapper ldapConfigMapper;
+    BeanSystemConfigMapper ldapConfigMapper;
 
     @Override
-    public void save(BeanLdapConfig ldapConfig) {
+    public void save(BeanSystemConfig ldapConfig) {
         ldapConfigMapper.insert(ldapConfig);
     }
 
     @Override
-    public BeanLdapConfig findByConfigName(String configName) {
-        QueryWrapper<BeanLdapConfig> wrapper = new QueryWrapper<>();
+    public BeanSystemConfig findByConfigName(String configName) {
+        QueryWrapper<BeanSystemConfig> wrapper = new QueryWrapper<>();
         wrapper.eq("config_name", configName);
         return ldapConfigMapper.selectOne(wrapper);
     }
 
     @Override
     public void saveSingle(String config_name, String config_value) {
-        BeanLdapConfig ldapConfig = new BeanLdapConfig();
+        BeanSystemConfig ldapConfig = new BeanSystemConfig();
         ldapConfig.setConfigName(config_name);
         ldapConfig.setConfigValue(config_value);
-        BeanLdapConfig config = findByConfigName(config_name);
+        BeanSystemConfig config = findByConfigName(config_name);
         if(config == null){
             ldapConfigMapper.insert(ldapConfig);
             return;
@@ -75,13 +74,13 @@ public class LdapServiceImpl implements LdapService {
     }
 
     @Override
-    public void update(BeanLdapConfig ldapConfig) {
+    public void update(BeanSystemConfig ldapConfig) {
         ldapConfigMapper.updateById(ldapConfig);
     }
 
     @Override
     public void disable() {
-        BeanLdapConfig isOnConfig = findByConfigName(LdapConfigConstant.IS_ON);
+        BeanSystemConfig isOnConfig = findByConfigName(LdapConfigConstant.IS_ON);
         if (isOnConfig != null) {
             isOnConfig.setConfigValue(LdapConfigConstant.LDAP_DISABLE);
             update(isOnConfig);
@@ -90,8 +89,8 @@ public class LdapServiceImpl implements LdapService {
 
     @Override
     public LdapConfigDto queryLdapDetail() {
-        QueryWrapper<BeanLdapConfig> wrapper = new QueryWrapper<>();
-        List<BeanLdapConfig> ldapConfigs = ldapConfigMapper.selectList(wrapper);
+        QueryWrapper<BeanSystemConfig> wrapper = new QueryWrapper<>();
+        List<BeanSystemConfig> ldapConfigs = ldapConfigMapper.selectList(wrapper);
         LdapConfigDto ldapConfigDto = new LdapConfigDto();
         ldapConfigs.forEach(config -> {
             switch (config.getConfigName()) {

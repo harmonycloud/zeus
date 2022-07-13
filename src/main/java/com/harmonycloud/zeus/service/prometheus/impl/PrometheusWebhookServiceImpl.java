@@ -5,12 +5,14 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import com.harmonycloud.caas.common.constants.AlertConstant;
+import com.harmonycloud.caas.common.model.AlertSettingDTO;
 import com.harmonycloud.zeus.bean.DingRobotInfo;
-import com.harmonycloud.zeus.bean.MailToUser;
+import com.harmonycloud.zeus.bean.BeanMailToUser;
 import com.harmonycloud.zeus.bean.user.BeanUser;
-import com.harmonycloud.zeus.dao.DingRobotMapper;
-import com.harmonycloud.zeus.dao.MailToUserMapper;
+import com.harmonycloud.zeus.dao.*;
 import com.harmonycloud.zeus.dao.user.BeanUserMapper;
+import com.harmonycloud.zeus.service.middleware.MiddlewareAlertsService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,8 +28,6 @@ import com.harmonycloud.caas.common.model.middleware.AlertInfoDto;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.bean.BeanAlertRecord;
 import com.harmonycloud.zeus.bean.AlertRuleId;
-import com.harmonycloud.zeus.dao.BeanAlertRecordMapper;
-import com.harmonycloud.zeus.dao.AlertRuleIdMapper;
 import com.harmonycloud.zeus.integration.cluster.AlertManagerWrapper;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareAlertsServiceImpl;
 import com.harmonycloud.zeus.service.prometheus.PrometheusWebhookService;
@@ -61,11 +61,13 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
     @Autowired
     private AlertManagerWrapper alertManagerWrapper;
     @Autowired
-    private MailToUserMapper mailToUserMapper;
+    private BeanMailToUserMapper beanMailToUserMapper;
     @Autowired
     private DingRobotMapper dingRobotMapper;
     @Autowired
     private BeanUserMapper beanUserMapper;
+    @Autowired
+    private MiddlewareAlertsService middlewareAlertsService;
 
     @Override
     public void alert(String json) throws Exception {
@@ -79,11 +81,15 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             JSONObject labels = alert.getJSONObject("labels");
             JSONObject annotations = alert.getJSONObject("annotations");
 
+            String clusterId = labels.getOrDefault("clusterId", "").toString();
+            String namespace = labels.getString("namespace");
+            String middlewareName = labels.getString("service");
+
             BeanAlertRecord beanAlertRecord = new BeanAlertRecord();
             beanAlertRecord.setName(labels.getString("service"));
             beanAlertRecord.setNamespace(labels.getString("namespace"));
             beanAlertRecord.setType(labels.getString("middleware"));
-            String clusterId = labels.getOrDefault("clusterId", "").toString();
+
             beanAlertRecord.setClusterId(clusterId);
             beanAlertRecord.setAlert(labels.getString("alertname"));
             beanAlertRecord.setLevel(labels.getString("severity"));
@@ -92,20 +98,23 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             Date startDateTime = convertToUtcDate(alert.getString("startsAt"));
             beanAlertRecord.setTime(startDateTime);
             QueryWrapper<AlertRuleId> wrapper = new QueryWrapper<>();
-            wrapper.eq("alert",labels.getString("alertname"))
-                    .eq("namespace",labels.getString("namespace"))
-                    .eq("middleware_name",labels.getString("service"))
-                    .eq("cluster_id",clusterId);
+            wrapper.eq("alert", labels.getString("alertname"))
+                    .eq("namespace", labels.getString("namespace"))
+                    .eq("middleware_name", labels.getString("service"))
+                    .eq("cluster_id", clusterId);
             AlertRuleId alertInfo = new AlertRuleId();
             List<AlertRuleId> alertInfos = alertRuleIdMapper.selectList(wrapper);
+            String lay;
             if (!CollectionUtils.isEmpty(alertInfos)) {
                 alertInfo = alertInfos.get(0);
                 beanAlertRecord.setLay(alertInfo.getLay());
                 beanAlertRecord.setAlertId(alertInfo.getAlertId());
-                beanAlertRecord.setExpr(alertInfo.getDescription()+alertInfo.getSymbol()+alertInfo.getThreshold()+"%");
+                beanAlertRecord.setExpr(alertInfo.getDescription() + alertInfo.getSymbol() + alertInfo.getThreshold() + "%");
                 beanAlertRecord.setContent(alertInfo.getContent());
+                lay = AlertConstant.LAY_SYSTEM;
             } else {
                 beanAlertRecord.setLay("service");
+                lay = AlertConstant.LAY_SERVICE;
             }
             beanAlertRecordMapper.insert(beanAlertRecord);
             // 设置通道沉默时间
@@ -129,7 +138,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             //告警等级
             alertInfoDto.setLevel((String) alertLabels.get("severity"));
             //规则描述
-            alertInfoDto.setDescription(alertInfo.getDescription()+alertInfo.getSymbol()+alertInfo.getThreshold()+"%");
+            alertInfoDto.setDescription(alertInfo.getDescription() + alertInfo.getSymbol() + alertInfo.getThreshold() + "%");
             //告警内容
             alertInfoDto.setContent(alertInfo.getContent());
             //实际监测
@@ -143,29 +152,38 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             alertInfoDto.setRuleID(ruleId);
             //ip
             alertInfoDto.setIp(alertInfo.getIp());
+            // 发送告警信息
+            sendAlertMessage(lay, clusterId, namespace, middlewareName, alertInfo, alertInfoDto);
+        }
+    }
+
+    private void sendAlertMessage(String lay, String clusterId, String namespace, String middlewareaName, AlertRuleId alertInfo, AlertInfoDto alertInfoDto) {
+        AlertSettingDTO alertSettingDTO;
+        if (AlertConstant.LAY_SYSTEM.equals(lay)) {
+            alertSettingDTO = middlewareAlertsService.queryAlertSetting();
+        } else {
+            alertSettingDTO = middlewareAlertsService.queryAlertSetting(clusterId, namespace, middlewareaName);
+        }
+
+        if (Boolean.TRUE.equals(alertSettingDTO.getEnableDingAlert())) {
             //钉钉发送
             List<DingRobotInfo> dings = dingRobotMapper.selectList(new QueryWrapper<DingRobotInfo>());
-            if ("ding".equals(alertInfo.getDing())) {
-                dings.forEach(dingRobotInfo -> {
-                    dingRobotService.send(alertInfoDto,dingRobotInfo);
-                });
-            }
+            dings.forEach(dingRobotInfo -> {
+                dingRobotService.send(alertInfoDto, dingRobotInfo);
+            });
+        }
+        if (Boolean.TRUE.equals(alertSettingDTO.getEnableMailAlert())) {
             //邮箱发送
-            QueryWrapper<MailToUser> mailToUserQueryWrapper = new QueryWrapper<>();
-            mailToUserQueryWrapper.eq("alert_rule_id",alertInfo.getAlertId());
-            List<MailToUser> users = mailToUserMapper.selectList(mailToUserQueryWrapper);
-            if ("mail".equals(alertInfo.getMail())) {
-                users.forEach(mailToUser -> {
-                    QueryWrapper<BeanUser> userQueryWrapper = new QueryWrapper<>();
-                    userQueryWrapper.eq("id",mailToUser.getUserId());
-                    BeanUser beanUser = beanUserMapper.selectOne(userQueryWrapper);
-                    try {
-                        mailService.sendHtmlMail(alertInfoDto,beanUser);
-                    } catch (IOException | MessagingException e) {
-                        e.printStackTrace();
-                    }
-                });
-            }
+            alertSettingDTO.getUserList().forEach(mailToUser -> {
+                QueryWrapper<BeanUser> userQueryWrapper = new QueryWrapper<>();
+                userQueryWrapper.eq("id", mailToUser.getId());
+                BeanUser beanUser = beanUserMapper.selectOne(userQueryWrapper);
+                try {
+                    mailService.sendHtmlMail(alertInfoDto, beanUser);
+                } catch (IOException | MessagingException e) {
+                    e.printStackTrace();
+                }
+            });
         }
     }
 

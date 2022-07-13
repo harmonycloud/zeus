@@ -40,10 +40,10 @@ import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.tool.encrypt.RSAUtils;
 import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
-import com.harmonycloud.zeus.bean.MailToUser;
+import com.harmonycloud.zeus.bean.BeanMailToUser;
 import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
 import com.harmonycloud.zeus.bean.user.BeanUser;
-import com.harmonycloud.zeus.dao.MailToUserMapper;
+import com.harmonycloud.zeus.dao.BeanMailToUserMapper;
 import com.harmonycloud.zeus.dao.user.BeanUserMapper;
 import com.harmonycloud.zeus.dao.user.PersonalMapper;
 import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
@@ -79,7 +79,7 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private PersonalMapper personalMapper;
     @Autowired
-    private MailToUserMapper mailToUserMapper;
+    private BeanMailToUserMapper beanMailToUserMapper;
     @Autowired
     private ProjectService projectService;
     @Autowired
@@ -401,11 +401,11 @@ public class UserServiceImpl implements UserService {
         }
         List<UserDto> userDtoList = new ArrayList<>();
         if (StringUtils.isNotBlank(alertRuleId)) {
-            QueryWrapper<MailToUser> mailToUserQueryWrapper = new QueryWrapper<>();
+            QueryWrapper<BeanMailToUser> mailToUserQueryWrapper = new QueryWrapper<>();
             Integer alertId = Integer.parseInt(alertRuleId.replace("GJ", ""));
             mailToUserQueryWrapper.eq("alert_rule_id", alertId);
-            List<MailToUser> mailToUsers = mailToUserMapper.selectList(mailToUserQueryWrapper);
-            userDtoList = mailToUsers.stream().map(mailToUser -> {
+            List<BeanMailToUser> beanMailToUsers = beanMailToUserMapper.selectList(mailToUserQueryWrapper);
+            userDtoList = beanMailToUsers.stream().map(mailToUser -> {
                 BeanUser beanUser = beanUserMapper.selectOne(new QueryWrapper<BeanUser>().eq("id", mailToUser.getUserId()));
                 List<UserRole> userRoleList = userRoleService.get(beanUser.getUserName());
                 UserDto userDto = new UserDto();
