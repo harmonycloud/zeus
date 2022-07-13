@@ -530,6 +530,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         QueryWrapper<BeanMailToUser> mailToUserQuery = new QueryWrapper<>();
         mailToUserQuery.eq("alert_setting_id", alertSettingId);
         List<BeanMailToUser> userIds = beanMailToUserMapper.selectList(mailToUserQuery);
+        if (CollectionUtils.isEmpty(userIds)) {
+            return Collections.emptyList();
+        }
         return userMapper.selectUserList(userIds);
     }
 
