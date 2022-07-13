@@ -410,7 +410,7 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
         List<ProjectMiddlewareResourceInfo> infoList = new ArrayList<>();
         for (BeanClusterMiddlewareInfo mwInfo : mwInfoSet){
             ProjectMiddlewareResourceInfo projectMiddlewareResourceInfo = new ProjectMiddlewareResourceInfo()
-                    .setType(mwInfo.getChartName()).setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(mwInfo.getChartName()))
+                    .setType(mwInfo.getChartName()).setAliasName(MiddlewareOfficialNameEnum.findByChartName(mwInfo.getChartName()))
                     .setMiddlewareResourceInfoList(map.getOrDefault(mwInfo.getChartName(), null))
                     .setImagePath(middlewareImagePathMap.getOrDefault(mwInfo.getChartName(), null));
             infoList.add(projectMiddlewareResourceInfo);

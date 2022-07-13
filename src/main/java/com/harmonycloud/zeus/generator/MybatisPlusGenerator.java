@@ -94,7 +94,7 @@ public class MybatisPlusGenerator {
         strategy.setEntityLombokModel(true);
         strategy.setRestControllerStyle(false);
         // 当对某张表有所改动但只想重新生成这张表，可以这样设置
-//         strategy.setInclude("middleware_info");
+         strategy.setInclude("alert_setting");
         // 排除通用字段
         strategy.setSuperEntityColumns();
         strategy.setControllerMappingHyphenStyle(true);

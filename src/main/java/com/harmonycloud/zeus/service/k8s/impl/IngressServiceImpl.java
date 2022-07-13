@@ -5,6 +5,7 @@ import com.harmonycloud.caas.common.enums.DateType;
 import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.Protocol;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
@@ -136,12 +137,14 @@ public class IngressServiceImpl implements IngressService {
 
         // package assembly
         for (IngressDTO ingressDTO : ingressDtoList) {
+            if (StringUtils.isBlank(namespace)) {
+                namespace = ingressDTO.getNamespace();
+            }
             JSONObject values =  helmChartService.getInstalledValues(ingressDTO.getMiddlewareName(), namespace, cluster);
             if (values == null){
                 continue;
             }
-            ingressDTO.setMiddlewareName(ingressDTO.getMiddlewareName());
-            ingressDTO.setMiddlewareType(ingressDTO.getMiddlewareType());
+            ingressDTO.setMiddlewareMode(values.getOrDefault("mode", "").toString());
             ingressDTO.setMiddlewareNickName(values.getOrDefault("aliasName", "").toString());
         }
 
@@ -986,43 +989,26 @@ public class IngressServiceImpl implements IngressService {
 
     @Override
     public List listAllIngress(String clusterId, String namespace, String keyword) {
-        List<Map<String, Object>> result = new ArrayList<>();
         // 获取所有ingress
         List<IngressDTO> ingressDTOLists = list(clusterId, namespace, null);
         // 关键词过滤
         if (StringUtils.isNotEmpty(keyword)) {
             ingressDTOLists = filterByKeyword(ingressDTOLists, keyword);
         }
-        // 数据整理
-        Map<String, List<IngressDTO>> ingressDtoListMap =
-            ingressDTOLists.stream().filter(ingressDTO -> StringUtils.isNotEmpty(ingressDTO.getMiddlewareType()))
-                .collect(Collectors.groupingBy(IngressDTO::getMiddlewareType));
-        Map<String, BeanMiddlewareInfo> middlewareInfoMap = middlewareInfoService.list(false).stream()
-            .collect(Collectors.toMap(BeanMiddlewareInfo::getChartName, mw -> mw));
-        // 封装数据
-        for (String key : ingressDtoListMap.keySet()) {
-            if (middlewareInfoMap.containsKey(key)) {
-                Map<String, Object> middlewareMap = new HashMap<>();
-                BeanMiddlewareInfo mwInfo = middlewareInfoMap.get(key);
-                middlewareMap.put("name", mwInfo.getChartName());
-                middlewareMap.put("imagePath", mwInfo.getImagePath());
-                middlewareMap.put("chartName", mwInfo.getChartName());
-                middlewareMap.put("ingressList", ingressDtoListMap.get(key));
-                middlewareMap.put("serviceNum", ingressDtoListMap.get(key).size());
-                result.add(middlewareMap);
-            }
-        }
         // 过滤数据
         Map<String, String> power = userService.getPower();
         if (!CollectionUtils.isEmpty(power)) {
             Set<String> typeSet = power.keySet().stream()
-                .filter(key -> power.get(key).split("")[1].equals(String.valueOf(NUM_ONE))).collect(Collectors.toSet());
-            result = result.stream()
-                .filter(ingress -> typeSet.stream().anyMatch(key -> ingress.get("chartName").equals(key)))
-                .collect(Collectors.toList());
+                    .filter(key -> power.get(key).split("")[1].equals(String.valueOf(NUM_ONE))).collect(Collectors.toSet());
+            ingressDTOLists = ingressDTOLists.stream()
+                    .filter(ingress -> typeSet.stream().anyMatch(key -> ingress.getMiddlewareType().equals(key)))
+                    .collect(Collectors.toList());
         }
-        Collections.sort(result, new MiddlewareServiceImpl.ServiceMapComparator());
-        return result;
+        ingressDTOLists.forEach(ingressDTO -> {
+            ingressDTO.setMiddlewareOfficialName(MiddlewareOfficialNameEnum.findByChartName(ingressDTO.getMiddlewareType()));
+            // TODO 设置暴露服务类型 只读、读写或其他
+        });
+        return ingressDTOLists;
     }
 
     @Override

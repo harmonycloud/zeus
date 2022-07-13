@@ -1,22 +1,20 @@
 package com.harmonycloud.zeus.controller.middleware;
 
-import java.util.List;
-
+import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.model.AlertSettingDTO;
 import com.harmonycloud.caas.common.model.AlertUserDTO;
 import com.harmonycloud.caas.common.model.AlertsUserDTO;
-import com.harmonycloud.zeus.annotation.Authority;
-import com.harmonycloud.zeus.bean.user.BeanUser;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
-import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareAlertsDTO;
+import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.middleware.MiddlewareAlertsService;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * @author xutianhong
@@ -69,17 +67,16 @@ public class MiddlewareAlertsController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "ding", value = "是否选择钉钉通知", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "alertsUserDTO", value = "中间件告警规则和用户", paramType = "query", dataTypeClass = AlertsUserDTO.class)
+            @ApiImplicitParam(name = "alertsUserDTO", value = "中间件告警规则", paramType = "query", dataTypeClass = List.class)
             })
     @PostMapping
     @Authority(power = 1)
     public BaseResult createRules(@PathVariable("clusterId") String clusterId,
                                   @PathVariable(value = "namespace", required = false) String namespace,
                                   @PathVariable(value = "middlewareName", required = false) String middlewareName,
-                                  @RequestParam("ding") String ding,
-                                  @RequestBody AlertsUserDTO alertsUserDTO) throws Exception {
-        middlewareAlertsService.createRules(clusterId, namespace, middlewareName,ding, alertsUserDTO);
+                                  @RequestBody List<MiddlewareAlertsDTO> middlewareAlertsDTOList) throws Exception {
+        middlewareAlertsService.createRules(clusterId, namespace, middlewareName,
+                middlewareAlertsDTOList);
         return BaseResult.ok();
     }
 
@@ -177,5 +174,55 @@ public class MiddlewareAlertsController {
     public BaseResult<MiddlewareAlertsDTO> alertRuleDetail(@RequestParam("alertRuleId") String alertRuleId) {
         return BaseResult.ok(middlewareAlertsService.alertRuleDetail(alertRuleId));
     }
+
+    @ApiOperation(value = "保存服务告警设置", notes = "保存服务告警设置")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "alertSettingDTO", value = "告警设置信息", paramType = "query", dataTypeClass = AlertSettingDTO.class),
+    })
+    @PostMapping("/alertSetting")
+    public BaseResult saveAlertSetting(
+            @PathVariable("clusterId") String clusterId,
+            @PathVariable("namespace") String namespace,
+            @PathVariable("middlewareName") String middlewareName,
+            @RequestBody AlertSettingDTO alertSettingDTO) {
+        alertSettingDTO.setClusterId(clusterId);
+        alertSettingDTO.setNamespace(namespace);
+        alertSettingDTO.setMiddlewareName(middlewareName);
+        middlewareAlertsService.saveServiceAlertSetting(alertSettingDTO);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "保存系统告警设置", notes = "保存系统告警设置")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "alertSettingDTO", value = "告警设置信息", paramType = "query", dataTypeClass = AlertSettingDTO.class)
+    })
+    @PostMapping("/systemAlertSetting")
+    public BaseResult saveSystemAlertSetting(@RequestBody AlertSettingDTO alertSettingDTO) {
+        middlewareAlertsService.saveSystemAlertSetting(alertSettingDTO);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "查询服务告警设置", notes = "查询系统告警设置")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class)
+    })
+    @GetMapping("/alertSetting")
+    public BaseResult queryServiceAlertSetting(@PathVariable("clusterId") String clusterId,
+                                        @PathVariable("namespace") String namespace,
+                                        @PathVariable("middlewareName") String middlewareName) {
+        return BaseResult.ok(middlewareAlertsService.queryAlertSetting(clusterId, namespace, middlewareName));
+    }
+
+    @ApiOperation(value = "查询系统告警设置", notes = "查询系统告警设置")
+    @GetMapping("/systemAlertSetting")
+    public BaseResult querySystemAlertSetting() {
+        return BaseResult.ok(middlewareAlertsService.queryAlertSetting());
+    }
+
 }
 
