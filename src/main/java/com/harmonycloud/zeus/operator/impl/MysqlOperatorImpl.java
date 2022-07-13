@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.operator.impl;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
+import static com.harmonycloud.caas.common.constants.NameConstant.*;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
 
 import java.io.IOException;
@@ -574,6 +574,25 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             }
         }
     }
+
+    @Override
+    public void replaceReadWriteProxyValues(ReadWriteProxy readWriteProxy, JSONObject values){
+        JSONObject proxy = values.getJSONObject("proxy");
+        proxy.put("enable", readWriteProxy.getEnabled());
+
+        JSONObject requests = new JSONObject();
+        JSONObject limits = new JSONObject();
+
+        requests.put(CPU, "500m");
+        requests.put(MEMORY, "1024Mi");
+        limits.put(CPU, "500m");
+        limits.put(MEMORY, "1024Mi");
+
+        JSONObject resources = proxy.getJSONObject("resources");
+        resources.put("requests", requests);
+        resources.put("limits", limits);
+    }
+
 
     public void createDisasterRecoveryMiddleware(Middleware middleware) {
         MysqlDTO mysqlDTO = middleware.getMysqlDTO();

@@ -711,6 +711,17 @@ public abstract class AbstractBaseOperator {
             image.put("repository", registry.getRegistryAddress() + "/"
                 + (StringUtils.isBlank(registry.getImageRepo()) ? registry.getChartRepo() : registry.getImageRepo()));
         }
+        // 读写分离
+        if (middleware.getReadWriteProxy() != null && middleware.getReadWriteProxy().getEnabled()){
+            replaceReadWriteProxyValues(middleware.getReadWriteProxy(), values);
+        }
+    }
+
+    /**
+     * 处理读写分离
+     */
+    protected void replaceReadWriteProxyValues(ReadWriteProxy readWriteProxy, JSONObject values){
+
     }
 
     /**
