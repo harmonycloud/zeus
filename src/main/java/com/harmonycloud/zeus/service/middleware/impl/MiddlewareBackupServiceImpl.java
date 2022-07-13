@@ -212,7 +212,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 spec.getSchedule().setCron(CronUtils.parseUtcCron(backupDTO.getCron()));
                 if (backupDTO.getRetentionTime() != null && StringUtils.isNotEmpty(backupDTO.getDateUnit())){
                     spec.getSchedule().setRetentionTime(calRetentionTime(backupDTO));
-                    middlewareBackupScheduleCR.getMetadata().getLabels().put("util", backupDTO.getDateUnit());
+                    middlewareBackupScheduleCR.getMetadata().getLabels().put("unit", backupDTO.getDateUnit());
                 }
                 backupScheduleCRDService.update(backupDTO.getClusterId(), middlewareBackupScheduleCR);
             } catch (IOException e) {
