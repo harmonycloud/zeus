@@ -223,6 +223,12 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                     }
                 }
             }
+            // 读写分离
+            if (values.containsKey("proxy")){
+                ReadWriteProxy readWriteProxy = new ReadWriteProxy();
+                readWriteProxy.setEnabled(values.getJSONObject("proxy").getBoolean("enable"));
+                middleware.setReadWriteProxy(readWriteProxy);
+            }
         }
         return middleware;
     }
