@@ -605,7 +605,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 }
                 backupRecord.setSourceName(schedule.getSpec().getName());
                 backupRecord.setSourceType(schedule.getMetadata().getLabels().get("type"));
-                backupRecord.setDateUnit(schedule.getMetadata().getLabels().get("util"));
+                backupRecord.setDateUnit(schedule.getMetadata().getLabels().get("unit"));
                 String backupId = schedule.getMetadata().getLabels().get("backupId");
                 backupRecord.setBackupId(backupId);
                 backupRecord.setTaskName(getBackupName(clusterId, backupId).getBackupName());
