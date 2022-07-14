@@ -183,7 +183,7 @@ public abstract class AbstractBaseOperator {
 
         // 4. 创建对外访问
         ThreadPoolExecutorFactory.executor.execute(() -> {
-            if (middleware.getHostNetwork() && !CollectionUtils.isEmpty(middleware.getIngresses())) {
+            if (!CollectionUtils.isEmpty(middleware.getIngresses())) {
                 try {
                     // 校验svc是否已创建
                     checkSvcCreated(middleware);
@@ -637,7 +637,19 @@ public abstract class AbstractBaseOperator {
         values.put("middleware-label", middleware.getLabels());
         values.put("chart-version", middleware.getChartVersion());
 
-        // label
+        //labels
+        replaceLabels(middleware, values);
+        // node affinity
+        replaceNodeAffinity(middleware, values);
+        // log
+        replaceLog(middleware, values);
+        //toleration
+        replaceToleration(middleware, values);
+        // annotations
+        replaceAnnotations(middleware, values);
+    }
+
+    protected void replaceLabels(Middleware middleware, JSONObject values){
         if (StringUtils.isNotBlank(middleware.getLabels())) {
             String[] labelAry = middleware.getLabels().split(CommonConstant.COMMA);
             JSONObject labelJson = new JSONObject();
@@ -647,8 +659,9 @@ public abstract class AbstractBaseOperator {
             }
             values.put("labels", labelJson);
         }
+    }
 
-        // node affinity
+    protected void replaceNodeAffinity(Middleware middleware, JSONObject values){
         if (!CollectionUtils.isEmpty(middleware.getNodeAffinity())) {
             // convert to k8s model
             JSONObject nodeAffinity = K8sConvert.convertNodeAffinity2Json(middleware.getNodeAffinity());
@@ -658,8 +671,9 @@ public abstract class AbstractBaseOperator {
         } else {
             values.put("nodeAffinity", new JSONObject());
         }
+    }
 
-        // log
+    protected void replaceLog(Middleware middleware, JSONObject values){
         JSONObject logging = new JSONObject();
         JSONObject collection = new JSONObject();
 
@@ -672,8 +686,9 @@ public abstract class AbstractBaseOperator {
         collection.put("stdout", stdout);
         logging.put("collection", collection);
         values.put("logging", logging);
+    }
 
-        //toleration
+    protected void replaceToleration(Middleware middleware, JSONObject values){
         if (!CollectionUtils.isEmpty(middleware.getTolerations())) {
             JSONArray jsonArray = K8sConvert.convertToleration2Json(middleware.getTolerations());
             values.put("tolerations", jsonArray);
@@ -683,8 +698,9 @@ public abstract class AbstractBaseOperator {
             }
             values.put("tolerationAry", sbf.substring(0, sbf.length()));
         }
+    }
 
-        // annotations
+    protected void replaceAnnotations(Middleware middleware, JSONObject values){
         if (StringUtils.isNotEmpty(middleware.getAnnotations())) {
             JSONObject ann = new JSONObject();
             String[] annotations = middleware.getAnnotations().split(",");
