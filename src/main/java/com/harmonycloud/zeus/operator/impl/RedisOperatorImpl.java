@@ -143,7 +143,11 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
                     sentinel.put(REPLICAS, sentinelQuota.getNum());
                 }
             }
-            redis.put(REPLICAS, redisQuota.getNum() / 2);
+            Integer num = redisQuota.getNum();
+            if (middleware.getReadWriteProxy() != null && middleware.getReadWriteProxy().getEnabled()){
+                num = num / 2;
+            }
+            redis.put(REPLICAS, num);
             values.put(TYPE, SENTINEL);
         } else {
             redis.put(REPLICAS, redisQuota.getNum());
@@ -181,6 +185,11 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
                 JSONObject sentinelQuota = values.getJSONObject(SENTINEL);
                 convertResourcesByHelmChart(middleware, SENTINEL, sentinelQuota.getJSONObject("resources"));
                 middleware.getQuota().get(SENTINEL).setNum(sentinelQuota.getInteger(REPLICAS));
+                Integer num = redisQuota.getInteger(REPLICAS);
+                if (middleware.getReadWriteProxy() != null && middleware.getReadWriteProxy().getEnabled()) {
+                    num = num / 2;
+                }
+                middleware.getQuota().get(middleware.getType()).setNum(num);
             }
         }
 
