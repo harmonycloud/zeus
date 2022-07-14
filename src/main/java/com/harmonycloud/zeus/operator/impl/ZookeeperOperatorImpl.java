@@ -7,6 +7,9 @@ import static com.harmonycloud.caas.common.enums.DictEnum.POD;
 import java.util.List;
 import java.util.Map;
 
+import com.alibaba.fastjson.JSONArray;
+import com.harmonycloud.caas.common.constants.CommonConstant;
+import com.harmonycloud.zeus.util.K8sConvert;
 import org.apache.commons.lang3.StringUtils;
 
 import com.alibaba.fastjson.JSONObject;
@@ -21,6 +24,7 @@ import com.harmonycloud.zeus.operator.miiddleware.AbstractZookeeperOperator;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author liyinlong
@@ -41,6 +45,17 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
         replaceCommonResources(quota, resources);
         replaceCommonStorages(quota, values.getJSONObject(PERSISTENCE));
         values.put("replicas", quota.getNum());
+
+        // 配置annotations
+        if (StringUtils.isNotEmpty(middleware.getAnnotations())) {
+            JSONObject ann = new JSONObject();
+            String[] annotations = middleware.getAnnotations().split(",");
+            for (String annotation : annotations) {
+                String[] temp = annotation.split("=");
+                ann.put(temp[0], temp[1]);
+            }
+            values.put("annotations", ann);
+        }
     }
 
     @Override
@@ -117,6 +132,58 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
             quota.setStorageClassAliasName(storageDto.getAliasName());
         } catch (Exception e) {
             log.error("中间件{}, 获取存储中文名失败", middleware.getName());
+        }
+    }
+
+    @Override
+    public void replaceLabels(Middleware middleware, JSONObject values){
+        if (StringUtils.isNotBlank(middleware.getLabels())) {
+            String[] labelAry = middleware.getLabels().split(CommonConstant.COMMA);
+            JSONObject labelJson = new JSONObject();
+            for (String label : labelAry) {
+                String[] pair = label.split(CommonConstant.EQUAL);
+                labelJson.put(pair[0], pair[1]);
+            }
+            values.getJSONObject("pod").put("labels", labelJson);
+        }
+    }
+
+    @Override
+    public void replaceNodeAffinity(Middleware middleware, JSONObject values){
+        if (!CollectionUtils.isEmpty(middleware.getNodeAffinity())) {
+            // convert to k8s model
+            JSONObject nodeAffinity = K8sConvert.convertNodeAffinity2Json(middleware.getNodeAffinity());
+            if (nodeAffinity != null) {
+                JSONObject affinity  = new JSONObject();
+                affinity.put("nodeAffinity", nodeAffinity);
+                values.getJSONObject("pod").put("affinity", affinity);
+            }
+        }
+    }
+
+    @Override
+    public void replaceToleration(Middleware middleware, JSONObject values){
+        if (!CollectionUtils.isEmpty(middleware.getTolerations())) {
+            JSONArray jsonArray = K8sConvert.convertToleration2Json(middleware.getTolerations());
+            values.getJSONObject("pod").put("tolerations", jsonArray);
+            StringBuffer sbf = new StringBuffer();
+            for (String toleration : middleware.getTolerations()) {
+                sbf.append(toleration).append(",");
+            }
+            values.put("tolerationAry", sbf.substring(0, sbf.length()));
+        }
+    }
+
+    @Override
+    public void replaceAnnotations(Middleware middleware, JSONObject values){
+        if (StringUtils.isNotEmpty(middleware.getAnnotations())) {
+            JSONObject ann = new JSONObject();
+            String[] annotations = middleware.getAnnotations().split(",");
+            for (String annotation : annotations) {
+                String[] temp = annotation.split("=");
+                ann.put(temp[0], temp[1]);
+            }
+            values.getJSONObject("pod").put("annotations", ann);
         }
     }
 
