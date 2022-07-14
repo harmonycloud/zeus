@@ -1,11 +1,7 @@
 package com.harmonycloud.zeus.operator.impl;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.CLUSTER;
-import static com.harmonycloud.caas.common.constants.NameConstant.REDIS;
-import static com.harmonycloud.caas.common.constants.NameConstant.REPLICAS;
-import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
-import static com.harmonycloud.caas.common.constants.NameConstant.SENTINEL;
-import static com.harmonycloud.caas.common.constants.NameConstant.TYPE;
+import static com.harmonycloud.caas.common.constants.NameConstant.*;
+import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_INGRESS;
 
 
@@ -138,7 +134,6 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         JSONObject redis = values.getJSONObject(REDIS);
         replaceCommonResources(redisQuota, redis.getJSONObject(RESOURCES));
         replaceCommonStorages(redisQuota, values);
-        redis.put(REPLICAS, redisQuota.getNum());
         if (SENTINEL.equals(middleware.getMode())) {
             JSONObject sentinel = values.getJSONObject(SENTINEL);
             MiddlewareQuota sentinelQuota = middleware.getQuota().get(SENTINEL);
@@ -148,8 +143,10 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
                     sentinel.put(REPLICAS, sentinelQuota.getNum());
                 }
             }
+            redis.put(REPLICAS, redisQuota.getNum() / 2);
             values.put(TYPE, SENTINEL);
         } else {
+            redis.put(REPLICAS, redisQuota.getNum());
             values.put(TYPE, CLUSTER);
         }
         // 计算pod最大内存
@@ -322,5 +319,24 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             }
         }
         configMap.getData().put("redis.conf", temp.toString());
+    }
+
+    @Override
+    public void replaceReadWriteProxyValues(ReadWriteProxy readWriteProxy, JSONObject values){
+        JSONObject predixy = values.getJSONObject("predixy");
+        predixy.put("enableProxy", readWriteProxy.getEnabled());
+
+        JSONObject requests = new JSONObject();
+        JSONObject limits = new JSONObject();
+
+        requests.put(CPU, "200m");
+        requests.put(MEMORY, "512Mi");
+        limits.put(CPU, "200m");
+        limits.put(MEMORY, "512Mi");
+        predixy.put("replicas", 3);
+
+        JSONObject resources = predixy.getJSONObject("resources");
+        resources.put("requests", requests);
+        resources.put("limits", limits);
     }
 }
