@@ -88,4 +88,13 @@ public class IngressComponentController {
         return BaseResult.ok();
     }
 
+    @ApiOperation(value = "获取ingress组件列表", notes = "获取ingress组件列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class)
+    })
+    @GetMapping("/vip")
+    public BaseResult<List<String>> vipList(@PathVariable("clusterId") String clusterId) {
+        return BaseResult.ok(ingressComponentService.vipList(clusterId));
+    }
+
 }

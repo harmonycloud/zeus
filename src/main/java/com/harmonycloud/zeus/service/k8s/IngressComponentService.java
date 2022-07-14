@@ -62,4 +62,11 @@ public interface IngressComponentService {
      */
     void delete(String clusterId);
 
+    /**
+     * 查询vip列表
+     *
+     * @param clusterId 集群id
+     */
+    List<String> vipList(String clusterId);
+
 }

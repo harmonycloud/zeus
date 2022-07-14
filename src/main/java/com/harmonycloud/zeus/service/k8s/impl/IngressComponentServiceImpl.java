@@ -199,6 +199,15 @@ public class IngressComponentServiceImpl implements IngressComponentService {
         beanIngressComponentsMapper.delete(wrapper);
     }
 
+    @Override
+    public List<String> vipList(String clusterId) {
+        QueryWrapper<BeanIngressComponents> wrapper =
+            new QueryWrapper<BeanIngressComponents>().eq("cluster_id", clusterId);
+        List<BeanIngressComponents> beanIngressComponentsList = beanIngressComponentsMapper.selectList(wrapper);
+        return beanIngressComponentsList.stream().map(BeanIngressComponents::getAddress).filter(StringUtils::isNotEmpty)
+            .collect(Collectors.toList());
+    }
+
     /**
      * 封装dao对象
      */
