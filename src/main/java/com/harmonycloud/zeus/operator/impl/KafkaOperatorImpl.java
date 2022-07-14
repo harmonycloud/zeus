@@ -49,11 +49,6 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
         zookeeper.put("port", kafkaDTO.getZkPort());
         zookeeper.put("path", kafkaDTO.getPath());
         values.put("zookeeper", zookeeper);
-
-        // 对外服务
-        if (middleware.getHostNetwork()){
-            convertExternal(values, middleware, cluster);
-        }
     }
 
     @Override
