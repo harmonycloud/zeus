@@ -222,25 +222,19 @@ public class K8sConvert {
     }
 
     public static Toleration convertToleration(String tolerationStr) {
-        if(!tolerationStr.contains("=")){
-            return null;
-        }
         Toleration toleration = new Toleration();
-        String[] pair;
-        if (tolerationStr.contains(":")) {
-            String[] tolerationAry = tolerationStr.split(":");
-            pair = tolerationAry[0].split("=");
-            toleration.setEffect(tolerationAry[1]);
-        } else {
-            pair = tolerationStr.split("=");
-        }
-        toleration.setKey(pair[0]);
-        if (tolerationStr.contains("Exists")) {
-            toleration.setOperator("Exists");
-        } else {
+        String[] tolerationAry = tolerationStr.split(":");
+        String[] kvPair;
+        if (tolerationStr.contains("=")) {
+            kvPair = tolerationAry[0].split("=");
+            toleration.setKey(kvPair[0]);
+            toleration.setValue(kvPair[1]);
             toleration.setOperator("Equal");
-            toleration.setValue(pair[1]);
+        } else {
+            toleration.setKey(tolerationAry[0]);
+            toleration.setOperator("Exists");
         }
+        toleration.setEffect(tolerationAry[1]);
         return toleration;
     }
 
