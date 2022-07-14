@@ -88,7 +88,7 @@ public class IngressComponentController {
         return BaseResult.ok();
     }
 
-    @ApiOperation(value = "获取ingress组件列表", notes = "获取ingress组件列表")
+    @ApiOperation(value = "查询vip列表", notes = "查询vip列表")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class)
     })
