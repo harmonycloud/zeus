@@ -8,6 +8,7 @@ import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareStatus;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.ServiceService;
+import com.harmonycloud.zeus.util.MiddlewareServicePurposeUtil;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServiceSpec;
 import org.apache.commons.lang3.StringUtils;
@@ -77,6 +78,7 @@ public class ServiceServiceImpl implements ServiceService {
             if (!CollectionUtils.isEmpty(portDetailDTOList)) {
                 servicePortDTO.setPortDetailDtoList(portDetailDTOList);
             }
+            servicePortDTO.setServicePurpose(MiddlewareServicePurposeUtil.convertChinesePurpose(type, servicePortDTO.getServiceName()));
             servicePortDTOList.add(servicePortDTO);
         }
         return servicePortDTOList.stream().filter(servicePortDTO -> !servicePortDTO.getServiceName().contains(EXPORTER)
