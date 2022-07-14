@@ -107,8 +107,8 @@ public class NodeServiceImpl implements NodeService {
                 node.getTaints().forEach(taint -> {
                     StringBuffer sbf = new StringBuffer();
                     sbf.append(taint.getKey());
-                    sbf.append("=");
                     if (taint.getValue() != null) {
+                        sbf.append("=");
                         sbf.append(taint.getValue());
                     }
                     sbf.append(":").append(taint.getEffect());
