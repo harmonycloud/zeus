@@ -187,7 +187,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
                 middleware.getQuota().get(SENTINEL).setNum(sentinelQuota.getInteger(REPLICAS));
                 Integer num = redisQuota.getInteger(REPLICAS);
                 if (middleware.getReadWriteProxy() != null && middleware.getReadWriteProxy().getEnabled()) {
-                    num = num / 2;
+                    num = num * 2;
                 }
                 middleware.getQuota().get(middleware.getType()).setNum(num);
             }
