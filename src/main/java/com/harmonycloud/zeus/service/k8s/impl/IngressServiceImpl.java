@@ -33,6 +33,7 @@ import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
 import com.harmonycloud.zeus.service.user.UserService;
 import com.harmonycloud.zeus.util.DateUtil;
+import com.harmonycloud.zeus.util.MiddlewareServicePurposeUtil;
 import com.harmonycloud.zeus.util.RequestUtil;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.*;
@@ -77,14 +78,10 @@ public class IngressServiceImpl implements IngressService {
 
     @Autowired
     private ClusterService clusterService;
-
     @Autowired
     private MiddlewareCRService middlewareCRService;
-
     @Autowired
     private ServiceWrapper serviceWrapper;
-    @Autowired
-    private MiddlewareInfoService middlewareInfoService;
     @Autowired
     private HelmChartService helmChartService;
     @Autowired
@@ -164,6 +161,9 @@ public class IngressServiceImpl implements IngressService {
         if (StringUtils.isBlank(ingressDTO.getMiddlewareName())) {
             ingressDTO.setMiddlewareName(middlewareName);
         }
+        // 为rocketmq和kafka设置服务端口号
+        checkAndAllocateServicePort(clusterId, ingressDTO);
+
         if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_INGRESS)) {
             try {
                 if (ingressDTO.getProtocol().equals(Protocol.HTTP.getValue())) {
@@ -360,7 +360,14 @@ public class IngressServiceImpl implements IngressService {
                 }
             }
         }
-
+        List<IngressComponentDto> componentDtoList = ingressComponentService.list(clusterId);
+        // 设置服务用途
+        resList.forEach(ingressDTO -> {
+            if (StringUtils.isNotEmpty(ingressDTO.getIngressClassName())) {
+                ingressDTO.setIngressComponentDtoList(componentDtoList);
+            }
+            ingressDTO.setServicePurpose(MiddlewareServicePurposeUtil.convertChinesePurpose(type, ingressDTO.getName()));
+        });
         return resList;
     }
 
@@ -416,6 +423,23 @@ public class IngressServiceImpl implements IngressService {
             resList.add(dto);
         });
         return resList;
+    }
+
+    /**
+     * 当为kafka或rockeymq暴露服务时，若用户未设置服务端口号，则为服务随机分配端口号
+     * @param clusterId
+     * @param ingressDTO
+     */
+    private void checkAndAllocateServicePort(String clusterId, IngressDTO ingressDTO) {
+        if ("rocketmq".equals(ingressDTO.getMiddlewareType()) || "kafka".equals(ingressDTO.getMiddlewareType())) {
+            List<ServiceDTO> serviceList = ingressDTO.getServiceList();
+            serviceList.forEach(serviceDTO -> {
+                if (StringUtils.isBlank(serviceDTO.getExposePort()) && "Ingress".equals(ingressDTO.getExposeType())) {
+                    int availablePort = getAvailablePort(clusterId, ingressDTO.getIngressClassName());
+                    serviceDTO.setExposePort(String.valueOf(availablePort));
+                }
+            });
+        }
     }
 
     private List<io.fabric8.kubernetes.api.model.Service> covertNodePortService(String clusterId, String namespace, String middlewareName, IngressDTO ingressDTO) {
@@ -1006,7 +1030,8 @@ public class IngressServiceImpl implements IngressService {
         }
         ingressDTOLists.forEach(ingressDTO -> {
             ingressDTO.setMiddlewareOfficialName(MiddlewareOfficialNameEnum.findByChartName(ingressDTO.getMiddlewareType()));
-            // TODO 设置暴露服务类型 只读、读写或其他
+            // 设置服务用途
+            ingressDTO.setServicePurpose(MiddlewareServicePurposeUtil.convertChinesePurpose(ingressDTO.getMiddlewareType(), ingressDTO.getName()));
         });
         return ingressDTOLists;
     }
