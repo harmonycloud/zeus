@@ -10,6 +10,7 @@ import com.harmonycloud.zeus.operator.api.KafkaOperator;
 import com.harmonycloud.zeus.operator.miiddleware.AbstractKafkaOperator;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.units.qual.K;
 import org.springframework.util.ObjectUtils;
 
 import java.util.*;
@@ -62,7 +63,10 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
         // 处理kafka的特有参数
         if (values != null && values.getJSONObject("zookeeper") != null) {
             JSONObject args = values.getJSONObject("zookeeper");
-            KafkaDTO kafkaDTO = new KafkaDTO();
+            KafkaDTO kafkaDTO = middleware.getKafkaDTO();
+            if (kafkaDTO == null) {
+                kafkaDTO = new KafkaDTO();
+            }
             kafkaDTO.setZkAddress(args.getString("address"));
             kafkaDTO.setPath(args.getString("path"));
             String[] ports = args.getString("port").split("/");
