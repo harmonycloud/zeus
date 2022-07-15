@@ -13,9 +13,6 @@ import com.harmonycloud.caas.common.exception.CaasRuntimeException;
 import com.harmonycloud.caas.common.model.IngressComponentDto;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
-import com.harmonycloud.caas.common.model.user.UserRole;
-import com.harmonycloud.caas.filters.token.JwtTokenComponent;
-import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.dao.BeanMiddlewareInfoMapper;
@@ -27,16 +24,11 @@ import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareStatus;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
-import com.harmonycloud.zeus.service.middleware.impl.MiddlewareServiceImpl;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
-import com.harmonycloud.zeus.service.user.UserRoleService;
 import com.harmonycloud.zeus.service.user.UserService;
 import com.harmonycloud.zeus.util.DateUtil;
 import com.harmonycloud.zeus.util.MiddlewareServicePurposeUtil;
-import com.harmonycloud.zeus.util.RequestUtil;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.*;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -52,7 +44,6 @@ import java.util.stream.Collectors;
 
 import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_ONE;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
-import static com.harmonycloud.caas.common.constants.CommonConstant.*;
 import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.HELM_RELEASE_ANNOTATION_KEY;
 import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.HELM_RELEASE_LABEL_KEY;
 import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.HELM_RELEASE_LABEL_VALUE;
@@ -377,7 +368,7 @@ public class IngressServiceImpl implements IngressService {
             }
         }
         // 添加ingress pod信息
-        addIngressPodInfo(clusterId, resList);
+        addIngressExtralInfo(clusterId, resList);
         return resList;
     }
 
@@ -450,7 +441,7 @@ public class IngressServiceImpl implements IngressService {
      * @param clusterId
      * @param ingressDTOS
      */
-    public void addIngressPodInfo(String clusterId, List<IngressDTO> ingressDTOS) {
+    public void addIngressExtralInfo(String clusterId, List<IngressDTO> ingressDTOS) {
         ingressDTOS.forEach(ingressDTO -> {
             if (StringUtils.isNotEmpty(ingressDTO.getIngressClassName())) {
                 IngressComponentDto ingressComponentDto = ingressComponentService.get(clusterId, ingressDTO.getIngressClassName());
@@ -458,9 +449,29 @@ public class IngressServiceImpl implements IngressService {
                 // 设置ingress
                 ingressDTO.setIngresPodList(podInfoList);
             }
+            // 设置服务暴露的网络模型 4层或7层
+            setServiceNetworkModel(ingressDTO);
             // 设置服务用途
             ingressDTO.setServicePurpose(MiddlewareServicePurposeUtil.convertChinesePurpose(ingressDTO.getMiddlewareType(), ingressDTO.getName()));
         });
+    }
+
+    /**
+     * 设置ingress额外信息
+     * @param ingressDTO
+     */
+    public void setServiceNetworkModel(IngressDTO ingressDTO) {
+        if (MIDDLEWARE_EXPOSE_INGRESS.equals(ingressDTO.getExposeType())) {
+            if (ingressDTO.getProtocol().equals(Protocol.HTTP.getValue())) {
+                ingressDTO.setNetworkModel(7);
+            } else if (ingressDTO.getProtocol().equals(Protocol.TCP.getValue())) {
+                ingressDTO.setNetworkModel(4);
+            }
+        } else if (MIDDLEWARE_EXPOSE_NODEPORT.equals(ingressDTO.getExposeType())) {
+            ingressDTO.setNetworkModel(4);
+        } else {
+            ingressDTO.setNetworkModel(0);
+        }
     }
 
     public List<PodInfo> listIngressPod(String clusterId, String namespace, String ingressClassName) {
@@ -1071,7 +1082,7 @@ public class IngressServiceImpl implements IngressService {
                     .collect(Collectors.toList());
         }
         // 添加ingress pod信息
-        addIngressPodInfo(clusterId, ingressDTOLists);
+        addIngressExtralInfo(clusterId, ingressDTOLists);
         return ingressDTOLists;
     }
 
