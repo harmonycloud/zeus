@@ -284,9 +284,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         MiddlewareBackupSpec.MiddlewareBackupDestination destination = new MiddlewareBackupSpec.MiddlewareBackupDestination();
         destination.setDestinationType("minio").setParameters(new MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters(minio.getBucketName(),
                 minio.getEndpoint(), "/" + backupDTO.getType(), minio.getAccessKeyId(), minio.getSecretAccessKey(), "MTIzNDU2Cg=="));
-        List<Map<String, List<String>>> customBackups = new ArrayList<>();
+        List<Map<String, Object>> customBackups = new ArrayList<>();
         if (!backupDTO.getType().equals(MiddlewareTypeEnum.POSTGRESQL.getType())){
-            Map<String, List<String>> map = new HashMap<>();
+            Map<String, Object> map = new HashMap<>();
             List<String> args = new ArrayList();
             args.add("--backupSize=10");
             map.put("args", args);

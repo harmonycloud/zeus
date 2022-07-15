@@ -495,27 +495,10 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     private List<Middleware> checkIsLvm(List<Middleware> middlewareList) {
         List<Middleware> middlewares = new LinkedList<>();
         for (Middleware middleware : middlewareList) {
-            switch (middleware.getType()) {
-                case "redis":
-                    if (middleware.getQuota().get("redis").getIsLvmStorage()) {
-                        middlewares.add(middleware);
-                    }
-                    break;
-                case "mysql":
-                    if (middleware.getQuota().get("mysql").getIsLvmStorage()) {
-                        middlewares.add(middleware);
-                    }
-                    break;
-                case "rocketmq":
-                    if (middleware.getQuota().get("rocketmq").getIsLvmStorage()) {
-                        middlewares.add(middleware);
-                    }
-                    break;
-                case "elasticsearch":
-                    if (middleware.getQuota().get("master").getIsLvmStorage()) {
-                        middlewares.add(middleware);
-                    }
-                    break;
+            for (String key : middleware.getQuota().keySet()){
+                if (middleware.getQuota().get(key).getIsLvmStorage()){
+                    middlewares.add(middleware);
+                }
             }
         }
         return middlewares;
