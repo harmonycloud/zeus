@@ -252,12 +252,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 new MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination.MiddlewareBackupParameters(
                         minio.getBucketName(), minio.getEndpoint(), "/" + backupDTO.getType(), minio.getAccessKeyId(), minio.getSecretAccessKey(),
                         "MTIzNDU2Cg=="));
-        List<String> args = new ArrayList();
-        args.add("--backupSize=10");
         List<Map<String, List<String>>> customBackups = new ArrayList<>();
-        Map<String, List<String>> map = new HashMap<>();
-        map.put("args", args);
-        customBackups.add(map);
+        if (!backupDTO.getType().equals(MiddlewareTypeEnum.POSTGRESQL.getType())){
+            Map<String, List<String>> map = new HashMap<>();
+            List<String> args = new ArrayList();
+            args.add("--backupSize=10");
+            map.put("args", args);
+            customBackups.add(map);
+        }
         MiddlewareBackupScheduleSpec spec = new MiddlewareBackupScheduleSpec(destination, customBackups, backupDTO.getMiddlewareName(),
                 backupDTO.getCrdType(), "off", CronUtils.parseUtcCron(backupDTO.getCron()), backupDTO.getLimitRecord(), calRetentionTime(backupDTO));
         crd.setSpec(spec);
@@ -282,12 +284,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         MiddlewareBackupSpec.MiddlewareBackupDestination destination = new MiddlewareBackupSpec.MiddlewareBackupDestination();
         destination.setDestinationType("minio").setParameters(new MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters(minio.getBucketName(),
                 minio.getEndpoint(), "/" + backupDTO.getType(), minio.getAccessKeyId(), minio.getSecretAccessKey(), "MTIzNDU2Cg=="));
-        List<String> args = new ArrayList();
-        args.add("--backupSize=10");
         List<Map<String, List<String>>> customBackups = new ArrayList<>();
-        Map<String, List<String>> map = new HashMap<>();
-        map.put("args", args);
-        customBackups.add(map);
+        if (!backupDTO.getType().equals(MiddlewareTypeEnum.POSTGRESQL.getType())){
+            Map<String, List<String>> map = new HashMap<>();
+            List<String> args = new ArrayList();
+            args.add("--backupSize=10");
+            map.put("args", args);
+            customBackups.add(map);
+        }
         MiddlewareBackupSpec spec = new MiddlewareBackupSpec(destination, backupDTO.getMiddlewareName(), backupDTO.getCrdType(), customBackups);
         middlewareBackupCR.setSpec(spec);
         try {
@@ -501,8 +505,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             if (MiddlewareTypeEnum.MYSQL.getType().equals(type)) {
                 mysqlAdapterService.createRestore(clusterId, namespace, middlewareName, type, backupName, backupFileName, pods, addressName);
             }
-            MiddlewareCR cr = middlewareCRService.getCR(clusterId, namespace, type, middlewareName);
-            createMiddlewareRestore(clusterId, namespace, type, middlewareName, backupName, cr.getStatus(), pods, addressName);
+            else {
+                MiddlewareCR cr = middlewareCRService.getCR(clusterId, namespace, type, middlewareName);
+                createMiddlewareRestore(clusterId, namespace, type, middlewareName, backupName, cr.getStatus(), pods, addressName);
+            }
         } catch (Exception e) {
             log.error("备份服务创建失败", e);
         }
