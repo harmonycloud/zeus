@@ -195,7 +195,7 @@ public class IngressServiceImpl implements IngressService {
     }
 
     @Override
-    public void checkIngressTcpPort(MiddlewareClusterDTO cluster, String namespace, List<ServiceDTO> serviceList) {
+    public void checkIngressTcpPort(MiddlewareClusterDTO cluster, List<ServiceDTO> serviceList) {
         if (CollectionUtils.isEmpty(serviceList)) {
             return;
         }
@@ -235,7 +235,7 @@ public class IngressServiceImpl implements IngressService {
             return;
         }
         if (checkPort) {
-            checkIngressTcpPort(cluster, namespace, serviceList);
+            checkIngressTcpPort(cluster, serviceList);
         }
         // 转换Ingress TCP配置文件
         IngressDTO ingressDTO = new IngressDTO();
@@ -360,12 +360,16 @@ public class IngressServiceImpl implements IngressService {
                 }
             }
         }
+
         List<IngressComponentDto> componentDtoList = ingressComponentService.list(clusterId);
-        // 设置服务用途
         resList.forEach(ingressDTO -> {
             if (StringUtils.isNotEmpty(ingressDTO.getIngressClassName())) {
+                IngressComponentDto ingressComponentDto = ingressComponentService.get(clusterId, ingressDTO.getIngressClassName());
+                // 设置ingress
+
                 ingressDTO.setIngressComponentDtoList(componentDtoList);
             }
+            // 设置服务用途
             ingressDTO.setServicePurpose(MiddlewareServicePurposeUtil.convertChinesePurpose(type, ingressDTO.getName()));
         });
         return resList;
@@ -423,6 +427,16 @@ public class IngressServiceImpl implements IngressService {
             resList.add(dto);
         });
         return resList;
+    }
+
+    @Override
+    public void verifyServicePort(String clusterId, Integer port) {
+        MiddlewareClusterDTO clusterDTO = clusterService.findById(clusterId);
+        ServiceDTO serviceDTO = new ServiceDTO();
+        serviceDTO.setExposePort(String.valueOf(port));
+        List<ServiceDTO> serviceDTOList = new ArrayList<>();
+        serviceDTOList.add(serviceDTO);
+        checkIngressTcpPort(clusterDTO, serviceDTOList);
     }
 
     /**

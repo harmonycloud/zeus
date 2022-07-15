@@ -1,6 +1,8 @@
 package com.harmonycloud.zeus.service.k8s;
 
 import com.harmonycloud.caas.common.model.middleware.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -33,10 +35,9 @@ public interface IngressService {
      * 校验中间件对外访问端口
      *
      * @param cluster     集群
-     * @param namespace   命名空间
      * @param serviceList 服务列表
      */
-    void checkIngressTcpPort(MiddlewareClusterDTO cluster, String namespace, List<ServiceDTO> serviceList);
+    void checkIngressTcpPort(MiddlewareClusterDTO cluster, List<ServiceDTO> serviceList);
 
     /**
      * 创建中间件对外访问
@@ -130,5 +131,13 @@ public interface IngressService {
      * @return String
      */
     String getExposeIp(MiddlewareClusterDTO cluster, IngressDTO ingressDTO);
+
+    /**
+     * 校验服务端口是否可用
+     *
+     * @param clusterId
+     * @param port
+     */
+    void verifyServicePort(String clusterId, Integer port);
 
 }
