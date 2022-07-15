@@ -138,6 +138,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 backupRecord.setNamespace(item.getMetadata().getNamespace());
                 backupRecord.setBackupTime(backupTime);
                 backupRecord.setBackupName(labels.containsKey(OWNER) ? labels.get(OWNER) : item.getMetadata().getName());
+                backupRecord.setBackupFileName(item.getMetadata().getName());
                 MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters parameters =  item.getSpec().getBackupDestination().getParameters();
                 String position = item.getSpec().getBackupDestination().getDestinationType() + "(" + parameters.getUrl() + "/" + parameters.getBucket() + ")";
                 backupRecord.setPosition(position);
@@ -410,7 +411,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * @return
      */
     public Map<String, String> getMiddlewareBackupLabels(String middlewareName, Map<String, String> labels, List<String> pods) {
-        Map<String, String> backupLabel = getBackupLabel(middlewareName);
+        Map<String, String> backupLabel = new HashMap<>();
         if (labels != null) {
             backupLabel.putAll(labels);
         }
@@ -701,9 +702,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             listBackupSchedule(clusterId, namespace, type, middlewareName, keyword);
         // 过滤backupSchedule所产生的backup
         for (MiddlewareBackupRecord schedule : backupSchedules) {
-            backupRecords =
-                backupRecords.stream().filter(record -> !record.getBackupName().equals(schedule.getBackupName())
-                    && !record.getOwner().equals(schedule.getBackupName())).collect(Collectors.toList());
+            backupRecords = backupRecords.stream()
+                .filter(record -> !record.getBackupName().equals(schedule.getBackupName())
+                    && (StringUtils.isEmpty(record.getOwner()) || !record.getOwner().equals(schedule.getBackupName())))
+                .collect(Collectors.toList());
         }
         recordList.addAll(backupRecords);
         recordList.addAll(backupSchedules);

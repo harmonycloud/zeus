@@ -103,7 +103,7 @@ public abstract class AbstractBaseOperator {
     @Autowired
     private ServiceService serviceService;
     @Autowired
-    private MiddlewareBackupServiceImpl middlewareBackupService;
+    protected MiddlewareBackupServiceImpl middlewareBackupService;
     @Autowired
     private AspectService aspectService;
     @Autowired
