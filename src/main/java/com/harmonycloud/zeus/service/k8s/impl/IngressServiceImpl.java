@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.DateType;
 import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
@@ -17,6 +18,7 @@ import com.harmonycloud.caas.filters.token.JwtTokenComponent;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
+import com.harmonycloud.zeus.dao.BeanMiddlewareInfoMapper;
 import com.harmonycloud.zeus.integration.cluster.ConfigMapWrapper;
 import com.harmonycloud.zeus.integration.cluster.IngressWrapper;
 import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
@@ -90,6 +92,8 @@ public class IngressServiceImpl implements IngressService {
     private MiddlewareCrTypeService middlewareCrTypeService;
     @Autowired
     private IngressComponentService ingressComponentService;
+    @Autowired
+    private BeanMiddlewareInfoMapper middlewareInfoMapper;
 
     @Value("${k8s.ingress.default.name:nginx-ingress-controller}")
     private String defaultIngressName;
@@ -137,12 +141,22 @@ public class IngressServiceImpl implements IngressService {
             if (StringUtils.isBlank(namespace)) {
                 namespace = ingressDTO.getNamespace();
             }
-            JSONObject values =  helmChartService.getInstalledValues(ingressDTO.getMiddlewareName(), namespace, cluster);
-            if (values == null){
+            JSONObject values = helmChartService.getInstalledValues(ingressDTO.getMiddlewareName(), namespace, cluster);
+            if (values == null) {
                 continue;
             }
+            ingressDTO.setChartVersion(values.getOrDefault("chart-version", "").toString());
             ingressDTO.setMiddlewareMode(values.getOrDefault("mode", "").toString());
             ingressDTO.setMiddlewareNickName(values.getOrDefault("aliasName", "").toString());
+            ingressDTO.setMiddlewareOfficialName(MiddlewareOfficialNameEnum.findByChartName(ingressDTO.getMiddlewareType()));
+
+            QueryWrapper<BeanMiddlewareInfo> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("chart_version", values.getOrDefault("chart-version", ""));
+            queryWrapper.eq("chart_name", ingressDTO.getMiddlewareType());
+            BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoMapper.selectOne(queryWrapper);
+            if (beanMiddlewareInfo != null) {
+                ingressDTO.setImagePath(beanMiddlewareInfo.getImagePath());
+            }
         }
 
         boolean filter = StringUtils.isNotBlank(keyword);
@@ -1043,7 +1057,6 @@ public class IngressServiceImpl implements IngressService {
                     .collect(Collectors.toList());
         }
         ingressDTOLists.forEach(ingressDTO -> {
-            ingressDTO.setMiddlewareOfficialName(MiddlewareOfficialNameEnum.findByChartName(ingressDTO.getMiddlewareType()));
             // 设置服务用途
             ingressDTO.setServicePurpose(MiddlewareServicePurposeUtil.convertChinesePurpose(ingressDTO.getMiddlewareType(), ingressDTO.getName()));
         });
