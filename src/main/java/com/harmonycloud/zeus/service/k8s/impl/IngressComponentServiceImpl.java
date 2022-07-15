@@ -131,6 +131,13 @@ public class IngressComponentServiceImpl implements IngressComponentService {
 
     @Override
     public void integrate(IngressComponentDto ingressComponentDto) {
+        // check exist
+        QueryWrapper<BeanIngressComponents> wrapper = new QueryWrapper<BeanIngressComponents>().eq("ingress_class_name",
+                ingressComponentDto.getIngressClassName());
+        BeanIngressComponents beanIngressComponents = beanIngressComponentsMapper.selectOne(wrapper);
+        if (beanIngressComponents != null) {
+            throw new BusinessException(ErrorMessage.INGRESS_CLASS_EXISTED);
+        }
         // save to mysql
         insert(ingressComponentDto.getClusterId(), ingressComponentDto, 1);
     }
