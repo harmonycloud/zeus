@@ -94,6 +94,8 @@ public class IngressServiceImpl implements IngressService {
     private IngressComponentService ingressComponentService;
     @Autowired
     private BeanMiddlewareInfoMapper middlewareInfoMapper;
+    @Autowired
+    private PodService podService;
 
     @Value("${k8s.ingress.default.name:nginx-ingress-controller}")
     private String defaultIngressName;
@@ -374,18 +376,8 @@ public class IngressServiceImpl implements IngressService {
                 }
             }
         }
-
-        List<IngressComponentDto> componentDtoList = ingressComponentService.list(clusterId);
-        resList.forEach(ingressDTO -> {
-            if (StringUtils.isNotEmpty(ingressDTO.getIngressClassName())) {
-                IngressComponentDto ingressComponentDto = ingressComponentService.get(clusterId, ingressDTO.getIngressClassName());
-                // 设置ingress
-
-                ingressDTO.setIngressComponentDtoList(componentDtoList);
-            }
-            // 设置服务用途
-            ingressDTO.setServicePurpose(MiddlewareServicePurposeUtil.convertChinesePurpose(type, ingressDTO.getName()));
-        });
+        // 添加ingress pod信息
+        addIngressPodInfo(clusterId, resList);
         return resList;
     }
 
@@ -451,6 +443,28 @@ public class IngressServiceImpl implements IngressService {
         List<ServiceDTO> serviceDTOList = new ArrayList<>();
         serviceDTOList.add(serviceDTO);
         checkIngressTcpPort(clusterDTO, serviceDTOList);
+    }
+
+    /**
+     * 添加ingress pod信息
+     * @param clusterId
+     * @param ingressDTOS
+     */
+    public void addIngressPodInfo(String clusterId, List<IngressDTO> ingressDTOS) {
+        ingressDTOS.forEach(ingressDTO -> {
+            if (StringUtils.isNotEmpty(ingressDTO.getIngressClassName())) {
+                IngressComponentDto ingressComponentDto = ingressComponentService.get(clusterId, ingressDTO.getIngressClassName());
+                List<PodInfo> podInfoList = listIngressPod(clusterId, ingressComponentDto.getNamespace(), ingressComponentDto.getIngressClassName());
+                // 设置ingress
+                ingressDTO.setIngresPodList(podInfoList);
+            }
+            // 设置服务用途
+            ingressDTO.setServicePurpose(MiddlewareServicePurposeUtil.convertChinesePurpose(ingressDTO.getMiddlewareType(), ingressDTO.getName()));
+        });
+    }
+
+    public List<PodInfo> listIngressPod(String clusterId, String namespace, String ingressClassName) {
+        return podService.list(clusterId, namespace, ingressClassName);
     }
 
     /**
@@ -1056,10 +1070,8 @@ public class IngressServiceImpl implements IngressService {
                     .filter(ingress -> typeSet.stream().anyMatch(key -> ingress.getMiddlewareType().equals(key)))
                     .collect(Collectors.toList());
         }
-        ingressDTOLists.forEach(ingressDTO -> {
-            // 设置服务用途
-            ingressDTO.setServicePurpose(MiddlewareServicePurposeUtil.convertChinesePurpose(ingressDTO.getMiddlewareType(), ingressDTO.getName()));
-        });
+        // 添加ingress pod信息
+        addIngressPodInfo(clusterId, ingressDTOLists);
         return ingressDTOLists;
     }
 
