@@ -106,4 +106,19 @@ public class ServiceServiceImpl implements ServiceService {
         servicePortDTO.setPortDetailDtoList(portDetailDtoList);
         return servicePortDTO;
     }
+
+    @Override
+    public List<ServicePortDTO> listInternalService(String clusterId, String namespace, String name, String type) {
+        List<ServicePortDTO> servicePortDTOList = list(clusterId, namespace, name, type);
+        servicePortDTOList.forEach(service -> {
+            service.setServicePurpose(MiddlewareServicePurposeUtil.convertChinesePurpose(type, service.getServiceName()));
+            List<PortDetailDTO> portDetailDtoList = service.getPortDetailDtoList();
+            if (!CollectionUtils.isEmpty(portDetailDtoList)) {
+                PortDetailDTO portDetailDTO = portDetailDtoList.get(0);
+                service.setInternalAddress(service.getServiceName() + "." + namespace + ":" + portDetailDTO.getPort());
+            }
+        });
+        return servicePortDTOList;
+    }
+
 }
