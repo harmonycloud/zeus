@@ -547,9 +547,17 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             oldUserWrapper.eq("alert_setting_id", alertSettingId);
             Set<Integer> oldUsers = beanMailToUserMapper.selectList(oldUserWrapper).stream().map(BeanMailToUser::getUserId).collect(Collectors.toSet());
             Set<Integer> oldUsersCopy = new HashSet<>(oldUsers);
+            // oldUsers移除所有接受人，剩下需要删除的
             oldUsers.removeAll(userIds);
+            // oldUsersCopy移除所有需要删除的，剩下不需要删除的
+            oldUsersCopy.remove(oldUsers);
             // 将移除的用户从数据库删除
-            oldUsers.forEach(userId -> beanMailToUserMapper.deleteById(userId));
+            oldUsers.forEach(userId -> {
+                QueryWrapper<BeanMailToUser> queryWrapper = new QueryWrapper<>();
+                queryWrapper.eq("alert_setting_id", alertSettingId);
+                queryWrapper.eq("user_id", userId);
+                beanMailToUserMapper.delete(queryWrapper);
+            });
             // 添加用户
             userIds.forEach(userId -> {
                 if (!oldUsersCopy.contains(userId)) {
