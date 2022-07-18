@@ -1,13 +1,19 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
+import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.model.middleware.PortDetailDTO;
 import com.harmonycloud.caas.common.model.middleware.ServicePortDTO;
+import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
+import com.harmonycloud.zeus.dao.BeanMiddlewareInfoMapper;
 import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareStatus;
+import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.ServiceService;
+import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.MiddlewareServicePurposeUtil;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServiceSpec;
@@ -37,6 +43,15 @@ public class ServiceServiceImpl implements ServiceService {
     @Autowired
     private ServiceWrapper serviceWrapper;
 
+    @Autowired
+    private HelmChartService helmChartService;
+
+    @Autowired
+    private ClusterService clusterService;
+
+    @Autowired
+    private BeanMiddlewareInfoMapper middlewareInfoMapper;
+
     @Override
     public List<ServicePortDTO> list(String clusterId, String namespace, String name, String type) {
         MiddlewareCR middleware = middlewareCRService.getCR(clusterId, namespace, type, name);
@@ -50,6 +65,12 @@ public class ServiceServiceImpl implements ServiceService {
         }
         List<MiddlewareInfo> middlewareInfoList = stringListMap.get("services");
         List<ServicePortDTO> servicePortDTOList = new ArrayList<>(10);
+        JSONObject values = helmChartService.getInstalledValues(name, namespace, clusterService.findById(clusterId));
+        QueryWrapper<BeanMiddlewareInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("chart_version", values.getOrDefault("chart-version", ""));
+        queryWrapper.eq("chart_name", values.getString("chart-name"));
+        BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoMapper.selectOne(queryWrapper);
+
         for (MiddlewareInfo middlewareInfo : middlewareInfoList) {
             if (StringUtils.isBlank(middlewareInfo.getName())) {
                 continue;
@@ -79,6 +100,10 @@ public class ServiceServiceImpl implements ServiceService {
                 servicePortDTO.setPortDetailDtoList(portDetailDTOList);
             }
             servicePortDTO.setServicePurpose(MiddlewareServicePurposeUtil.convertChinesePurpose(type, servicePortDTO.getServiceName()));
+
+            if (beanMiddlewareInfo != null) {
+                servicePortDTO.setImagePath(beanMiddlewareInfo.getImagePath());
+            }
             servicePortDTOList.add(servicePortDTO);
         }
         return servicePortDTOList.stream().filter(servicePortDTO -> !servicePortDTO.getServiceName().contains(EXPORTER)

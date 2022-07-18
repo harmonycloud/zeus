@@ -7,6 +7,9 @@ package com.harmonycloud.zeus.util;
 public class MiddlewareServicePurposeUtil {
 
     public static String convertChinesePurpose(String middlewareType, String serviceName) {
+        if (middlewareType == null) {
+            return "";
+        }
         switch (middlewareType) {
             case "mysql":
                 return convertMysql(serviceName);
