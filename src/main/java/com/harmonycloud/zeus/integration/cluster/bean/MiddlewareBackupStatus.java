@@ -46,17 +46,21 @@ public class MiddlewareBackupStatus {
     @Data
     public static class StorageProvider{
 
-        private Minio minio;
+        private Parameters parameters;
 
         @Data
-        public static class Minio{
+        public static class Parameters{
             private String bucket;
 
-            private String url;
+            private String backupPassword;
 
-            private String prefix;
+            private String type;
 
-            public Minio() {
+            private String userId;
+
+            private String userKey;
+
+            public Parameters() {
             }
         }
     }
