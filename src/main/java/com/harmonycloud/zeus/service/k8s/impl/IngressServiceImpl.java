@@ -369,6 +369,17 @@ public class IngressServiceImpl implements IngressService {
         }
         // 添加ingress pod信息
         addIngressExtralInfo(clusterId, resList);
+        // 设置图片
+        JSONObject installedValues = helmChartService.getInstalledValues(middlewareName, namespace, clusterService.findById(clusterId));
+        QueryWrapper<BeanMiddlewareInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("chart_version", installedValues.getString("chart-version"));
+        queryWrapper.eq("chart_name", type);
+        BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoMapper.selectOne(queryWrapper);
+        if (beanMiddlewareInfo != null) {
+            resList.forEach(ingressDTO -> {
+                ingressDTO.setImagePath(beanMiddlewareInfo.getImagePath());
+            });
+        }
         return resList;
     }
 
