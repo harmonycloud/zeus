@@ -456,8 +456,16 @@ public class IngressServiceImpl implements IngressService {
         ingressDTOS.forEach(ingressDTO -> {
             if (StringUtils.isNotEmpty(ingressDTO.getIngressClassName())) {
                 IngressComponentDto ingressComponentDto = ingressComponentService.get(clusterId, ingressDTO.getIngressClassName());
-                List<PodInfo> podInfoList = listIngressPod(clusterId, ingressComponentDto.getNamespace(), ingressComponentDto.getIngressClassName());
-                // 设置ingress
+                List<PodInfo> podInfoList;
+                if (StringUtils.isNotBlank(ingressComponentDto.getAddress())) {
+                    podInfoList = new ArrayList<>();
+                    PodInfo podInfo = new PodInfo();
+                    podInfo.setHostIp(ingressComponentDto.getAddress());
+                    podInfoList.add(podInfo);
+                } else {
+                    podInfoList = listIngressPod(clusterId, ingressComponentDto.getNamespace(), ingressComponentDto.getIngressClassName());
+                }
+                // 设置ingress pod
                 ingressDTO.setIngresPodList(podInfoList);
             }
             // 设置服务暴露的网络模型 4层或7层
