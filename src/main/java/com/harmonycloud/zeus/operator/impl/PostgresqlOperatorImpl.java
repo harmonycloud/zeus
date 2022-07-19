@@ -79,8 +79,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
 
                 JSONObject clone = new JSONObject();
                 clone.put("cluster", middlewareBackupCR.getSpec().getName());
-                String timestamp = res.get("creationTimestamp").toString();
-                clone.put("timestamp", timestamp.substring(0, timestamp.length() - 1) + "+08:00");
+                clone.put("timestamp", res.get("backupTimestamp"));
                 clone.put("s3_wal_path", res.get("repository"));
                 clone.put("s3_endpoint", mp.getUrl());
                 clone.put("s3_access_key_id", mp.getUserId());
