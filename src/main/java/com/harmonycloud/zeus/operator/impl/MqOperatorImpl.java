@@ -97,8 +97,14 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
 
             JSONObject clusterInfo = values.getJSONObject(CLUSTER);
             middleware.setMode(clusterInfo.getString(MODE));
+            // 设置是否开启集群外访问
+            JSONObject external = values.getJSONObject("external");
+            if (external != null && external.get("enable") != null) {
+                RocketMQParam rocketMQParam = new RocketMQParam();
+                rocketMQParam.setEnableExternal(external.getBooleanValue("enable"));
+                middleware.setRocketMQParam(rocketMQParam);
+            }
         }
-
         middleware.setManagePlatform(true);
         return middleware;
     }
