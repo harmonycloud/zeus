@@ -100,7 +100,7 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
             // 设置是否开启集群外访问
             JSONObject external = values.getJSONObject("external");
             if (external != null && external.get("enable") != null) {
-                RocketMQParam rocketMQParam = new RocketMQParam();
+                RocketMQParam rocketMQParam = middleware.getRocketMQParam();
                 rocketMQParam.setEnableExternal(external.getBooleanValue("enable"));
                 middleware.setRocketMQParam(rocketMQParam);
             }
