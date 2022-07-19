@@ -1086,7 +1086,10 @@ public class IngressServiceImpl implements IngressService {
             Set<String> typeSet = power.keySet().stream()
                     .filter(key -> power.get(key).split("")[1].equals(String.valueOf(NUM_ONE))).collect(Collectors.toSet());
             ingressDTOLists = ingressDTOLists.stream()
-                    .filter(ingress -> typeSet.stream().anyMatch(key -> ingress.getMiddlewareType().equals(key)))
+                    .filter(ingress -> typeSet.stream().anyMatch(key -> {
+                        log.info("ingress信息：{}", ingress);
+                        return ingress.getMiddlewareType().equals(key);
+                    }))
                     .collect(Collectors.toList());
         }
         // 添加ingress pod信息
