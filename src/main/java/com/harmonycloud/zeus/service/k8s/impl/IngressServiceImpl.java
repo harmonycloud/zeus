@@ -161,7 +161,7 @@ public class IngressServiceImpl implements IngressService {
             ingressDTO.setMiddlewareName(middlewareName);
         }
         // 为rocketmq和kafka设置服务端口号
-        checkAndAllocateServicePort(clusterId, ingressDTO);
+        checkAndAllocateServicePort(clusterId, namespace, ingressDTO);
 
         if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_INGRESS)) {
             try {
@@ -188,7 +188,7 @@ public class IngressServiceImpl implements IngressService {
         // 特殊处理kafka和rocketmq(仅更新端口时)
         if ((ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.ROCKET_MQ.getType())
             || ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.KAFKA.getType()))
-            && ingressDTO.getServiceList() != null && ingressDTO.getServiceList().size() == 1) {
+            && ingressDTO.getServiceList() != null) {
             upgradeValues(clusterId, namespace, middlewareName, ingressDTO);
         }
     }
@@ -491,15 +491,31 @@ public class IngressServiceImpl implements IngressService {
      * @param clusterId
      * @param ingressDTO
      */
-    private void checkAndAllocateServicePort(String clusterId, IngressDTO ingressDTO) {
+    private void checkAndAllocateServicePort(String clusterId, String namespace, IngressDTO ingressDTO) {
         if ("rocketmq".equals(ingressDTO.getMiddlewareType()) || "kafka".equals(ingressDTO.getMiddlewareType())) {
             List<ServiceDTO> serviceList = ingressDTO.getServiceList();
             serviceList.forEach(serviceDTO -> {
                 if (StringUtils.isBlank(serviceDTO.getExposePort()) && "Ingress".equals(ingressDTO.getExposeType())) {
                     int availablePort = getAvailablePort(clusterId, ingressDTO.getIngressClassName());
+                    setServicePort(serviceDTO, ingressDTO.getMiddlewareType());
                     serviceDTO.setExposePort(String.valueOf(availablePort));
                 }
             });
+        }
+    }
+
+    private void setServicePort(ServiceDTO serviceDTO, String middlewareType) {
+        String serviceName = serviceDTO.getServiceName();
+        if ("rocketmq".equals(middlewareType)) {
+            if (serviceName.endsWith("nameserver-proxy-svc")) {
+                serviceDTO.setServicePort("9876");
+                serviceDTO.setTargetPort("9876");
+            } else {
+                serviceDTO.setServicePort("10911");
+                serviceDTO.setTargetPort("10911");
+            }
+        } else if ("kafka".equals(middlewareType)) {
+
         }
     }
 
@@ -1157,6 +1173,21 @@ public class IngressServiceImpl implements IngressService {
             }
         }).collect(Collectors.toList());
         return ingressDTOList;
+    }
+
+
+    public void upgradeRocketMQValues(String clusterId, String namespace, String middlewareName, IngressDTO ingressDTO) {
+        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+        JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
+        // 开启对外访问
+        JSONObject external = values.getJSONObject(EXTERNAL);
+        // 获取暴露ip地址
+        String exposeIp = getExposeIp(cluster, ingressDTO);
+
+        // upgrade
+        Middleware middleware = new Middleware().setChartName(ingressDTO.getMiddlewareType()).setName(middlewareName)
+                .setChartVersion(values.getString("chart-version")).setNamespace(namespace);
+        helmChartService.upgrade(middleware, values, values, cluster);
     }
 
     public void upgradeValues(String clusterId, String namespace, String middlewareName, IngressDTO ingressDTO) {

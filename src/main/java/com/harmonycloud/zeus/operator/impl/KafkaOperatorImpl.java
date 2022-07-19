@@ -71,6 +71,10 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
             kafkaDTO.setPath(args.getString("path"));
             String[] ports = args.getString("port").split("/");
             kafkaDTO.setZkPort(ports[0]);
+            JSONObject external = values.getJSONObject("external");
+            if (external != null && external.get("enable") != null) {
+                kafkaDTO.setEnableExternal(external.getBooleanValue("enable"));
+            }
             middleware.setKafkaDTO(kafkaDTO);
         }
         middleware.setManagePlatform(true);
