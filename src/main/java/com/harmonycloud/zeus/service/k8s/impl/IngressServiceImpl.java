@@ -142,14 +142,6 @@ public class IngressServiceImpl implements IngressService {
             ingressDTO.setMiddlewareMode(values.getOrDefault("mode", "").toString());
             ingressDTO.setMiddlewareNickName(values.getOrDefault("aliasName", "").toString());
             ingressDTO.setMiddlewareOfficialName(MiddlewareOfficialNameEnum.findByChartName(ingressDTO.getMiddlewareType()));
-
-            QueryWrapper<BeanMiddlewareInfo> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("chart_version", values.getOrDefault("chart-version", ""));
-            queryWrapper.eq("chart_name", ingressDTO.getMiddlewareType());
-            BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoMapper.selectOne(queryWrapper);
-            if (beanMiddlewareInfo != null) {
-                ingressDTO.setImagePath(beanMiddlewareInfo.getImagePath());
-            }
         }
 
         boolean filter = StringUtils.isNotBlank(keyword);
@@ -368,7 +360,7 @@ public class IngressServiceImpl implements IngressService {
             }
         }
         // 添加ingress pod信息
-        addIngressExtralInfo(clusterId, resList);
+        addIngressExternalInfo(clusterId, resList);
         // 设置图片
         JSONObject installedValues = helmChartService.getInstalledValues(middlewareName, namespace, clusterService.findById(clusterId));
         QueryWrapper<BeanMiddlewareInfo> queryWrapper = new QueryWrapper<>();
@@ -452,7 +444,7 @@ public class IngressServiceImpl implements IngressService {
      * @param clusterId
      * @param ingressDTOS
      */
-    public void addIngressExtralInfo(String clusterId, List<IngressDTO> ingressDTOS) {
+    public void addIngressExternalInfo(String clusterId, List<IngressDTO> ingressDTOS) {
         ingressDTOS.forEach(ingressDTO -> {
             if (StringUtils.isNotEmpty(ingressDTO.getIngressClassName())) {
                 IngressComponentDto ingressComponentDto = ingressComponentService.get(clusterId, ingressDTO.getIngressClassName());
@@ -1094,11 +1086,14 @@ public class IngressServiceImpl implements IngressService {
             Set<String> typeSet = power.keySet().stream()
                     .filter(key -> power.get(key).split("")[1].equals(String.valueOf(NUM_ONE))).collect(Collectors.toSet());
             ingressDTOLists = ingressDTOLists.stream()
-                    .filter(ingress -> typeSet.stream().anyMatch(key -> ingress.getMiddlewareType().equals(key)))
+                    .filter(ingress -> typeSet.stream().anyMatch(key -> {
+                        log.info("ingress信息：{}", ingress);
+                        return ingress.getMiddlewareType().equals(key);
+                    }))
                     .collect(Collectors.toList());
         }
         // 添加ingress pod信息
-        addIngressExtralInfo(clusterId, ingressDTOLists);
+        addIngressExternalInfo(clusterId, ingressDTOLists);
         return ingressDTOLists;
     }
 

@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.Query;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
@@ -25,6 +26,7 @@ import com.harmonycloud.zeus.bean.BeanAlertRule;
 import com.harmonycloud.zeus.bean.AlertRuleId;
 import com.harmonycloud.zeus.dao.BeanAlertRuleMapper;
 import com.harmonycloud.zeus.dao.AlertRuleIdMapper;
+import com.harmonycloud.zeus.dao.BeanMiddlewareInfoMapper;
 import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.prometheus.PrometheusRuleGroups;
 import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
@@ -126,7 +128,8 @@ public abstract class AbstractBaseOperator {
     protected NamespaceService namespaceService;
     @Autowired
     private IngressComponentService ingressComponentService;
-
+    @Autowired
+    private BeanMiddlewareInfoMapper middlewareInfoMapper;
     /**
      * 是否支持该中间件
      */
@@ -392,7 +395,23 @@ public abstract class AbstractBaseOperator {
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
         convertCommonByHelmChart(middleware, values);
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
+        setImagePath(middleware, values);
         return middleware;
+    }
+
+    /**
+     * 设置中间件图片
+     * @param middleware
+     * @param values
+     */
+    private void setImagePath(Middleware middleware, JSONObject values) {
+        String chartVersion = values.getString("chart-version");
+        String middlewareType = middleware.getType();
+        QueryWrapper<BeanMiddlewareInfo> wrapper = new QueryWrapper<>();
+        wrapper.eq("chart_name", middlewareType);
+        wrapper.eq("chart_version", chartVersion);
+        BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoMapper.selectOne(wrapper);
+        middleware.setImagePath(beanMiddlewareInfo.getImagePath());
     }
 
     /**
@@ -462,6 +481,9 @@ public abstract class AbstractBaseOperator {
 
             // 设置服务备份状态
             middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(middleware.getClusterId(),middleware.getNamespace(),middleware.getType(),middleware.getName()));
+
+            // 设置中间件图片
+            setImagePath(middleware, values);
         } else {
             middleware.setAliasName(middleware.getName());
         }
