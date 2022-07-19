@@ -10,11 +10,11 @@ spec:
     port: 30088
     protocol: TCP
     targetPort: 30088
-  - name: port-30043
-    port: 30043
+  - name: port-30488
+    port: 30488
     protocol: TCP
-    targetPort: 30043
-    nodePort: 31043
+    targetPort: 30488
+    nodePort: 31488
   selector:
     app: zeus-ui
   sessionAffinity: None
