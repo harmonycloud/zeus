@@ -498,8 +498,8 @@ public class IngressServiceImpl implements IngressService {
             List<Integer> availablePortList = getAvailablePort(clusterId, serviceList.size());
             for (int i = 0; i < serviceList.size(); i++) {
                 ServiceDTO serviceDTO = serviceList.get(i);
+                setServicePort(serviceDTO, ingressDTO.getMiddlewareType());
                 if (StringUtils.isBlank(serviceDTO.getExposePort())) {
-                    setServicePort(serviceDTO, ingressDTO.getMiddlewareType());
                     serviceDTO.setExposePort(String.valueOf(availablePortList.get(i)));
                 }
             }
