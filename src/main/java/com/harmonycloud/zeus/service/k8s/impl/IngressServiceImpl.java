@@ -1242,11 +1242,8 @@ public class IngressServiceImpl implements IngressService {
         JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
         // 开启对外访问
         JSONObject external = values.getJSONObject(EXTERNAL);
-        String externalTag;
-        if ("rocketmq".equals(ingressDTO.getMiddlewareType())) {
-            externalTag = "externalAddress";
-        } else {
-            externalTag = "externalIPAddress";
+        String externalTag = "externalIPAddress";
+        if ("kafka".equals(ingressDTO.getMiddlewareType())) {
             external.put(USE_NODE_PORT, false);
         }
         // 获取暴露ip地址
