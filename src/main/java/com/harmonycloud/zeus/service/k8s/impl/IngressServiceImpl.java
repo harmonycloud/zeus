@@ -498,12 +498,11 @@ public class IngressServiceImpl implements IngressService {
         }
         if ("rocketmq".equals(ingressDTO.getMiddlewareType()) || "kafka".equals(ingressDTO.getMiddlewareType())) {
             List<ServiceDTO> serviceList = ingressDTO.getServiceList();
-            List<Integer> availablePortList = getAvailablePort(clusterId, serviceList.size() - 1);
             for (int i = 0; i < serviceList.size(); i++) {
                 ServiceDTO serviceDTO = serviceList.get(i);
                 setServicePort(serviceDTO, ingressDTO.getMiddlewareType());
                 if (StringUtils.isBlank(serviceDTO.getExposePort()) && !serviceDTO.getServiceName().contains("proxy")) {
-                    serviceDTO.setExposePort(String.valueOf(availablePortList.get(i)));
+                    serviceDTO.setExposePort(String.valueOf(getAvailablePort(clusterId)));
                 }
             }
         }
@@ -1243,12 +1242,8 @@ public class IngressServiceImpl implements IngressService {
         JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
         // 开启对外访问
         JSONObject external = values.getJSONObject(EXTERNAL);
-        String externalTag;
-        if (MiddlewareTypeEnum.ROCKET_MQ.getType().equals(ingressDTO.getMiddlewareType())) {
-            externalTag = "externalAddress";
-        } else {
-            externalTag = "externalIPAddress";
-            external.put(ENABLE, true);
+        String externalTag = "externalIPAddress";
+        if ("kafka".equals(ingressDTO.getMiddlewareType())) {
             external.put(USE_NODE_PORT, false);
         }
         // 获取暴露ip地址
@@ -1265,6 +1260,7 @@ public class IngressServiceImpl implements IngressService {
         }
         String brokerAddress = sbf.substring(0, sbf.length() - 1);
         external.put(externalTag, brokerAddress);
+        external.put(ENABLE, true);
         // upgrade
         Middleware middleware = new Middleware().setChartName(ingressDTO.getMiddlewareType()).setName(middlewareName)
                 .setChartVersion(values.getString("chart-version")).setNamespace(namespace);
