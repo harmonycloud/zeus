@@ -498,11 +498,11 @@ public class IngressServiceImpl implements IngressService {
         }
         if ("rocketmq".equals(ingressDTO.getMiddlewareType()) || "kafka".equals(ingressDTO.getMiddlewareType())) {
             List<ServiceDTO> serviceList = ingressDTO.getServiceList();
-            List<Integer> availablePortList = getAvailablePort(clusterId, serviceList.size());
+            List<Integer> availablePortList = getAvailablePort(clusterId, serviceList.size() - 1);
             for (int i = 0; i < serviceList.size(); i++) {
                 ServiceDTO serviceDTO = serviceList.get(i);
                 setServicePort(serviceDTO, ingressDTO.getMiddlewareType());
-                if (StringUtils.isBlank(serviceDTO.getExposePort())) {
+                if (StringUtils.isBlank(serviceDTO.getExposePort()) && !serviceDTO.getServiceName().contains("proxy")) {
                     serviceDTO.setExposePort(String.valueOf(availablePortList.get(i)));
                 }
             }
