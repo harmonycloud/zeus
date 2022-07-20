@@ -161,7 +161,7 @@ public class IngressServiceImpl implements IngressService {
             ingressDTO.setMiddlewareName(middlewareName);
         }
         // 为rocketmq和kafka设置服务端口号
-        checkAndAllocateServicePort(clusterId, namespace, ingressDTO);
+        checkAndAllocateServicePort(clusterId, ingressDTO);
 
         if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_INGRESS)) {
             try {
@@ -187,8 +187,8 @@ public class IngressServiceImpl implements IngressService {
         }
         // 特殊处理kafka和rocketmq(仅更新端口时)
         if ((ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.ROCKET_MQ.getType())
-            || ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.KAFKA.getType()))
-            && ingressDTO.getServiceList() != null) {
+                || ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.KAFKA.getType()))
+                && ingressDTO.getServiceList() != null && checkExternalService(ingressDTO)) {
             upgradeValues(clusterId, namespace, middlewareName, ingressDTO);
         }
     }
@@ -372,6 +372,7 @@ public class IngressServiceImpl implements IngressService {
                 ingressDTO.setImagePath(beanMiddlewareInfo.getImagePath());
             });
         }
+
         return resList;
     }
 
@@ -491,19 +492,77 @@ public class IngressServiceImpl implements IngressService {
      * @param clusterId
      * @param ingressDTO
      */
-    private void checkAndAllocateServicePort(String clusterId, String namespace, IngressDTO ingressDTO) {
+    private void checkAndAllocateServicePort(String clusterId, IngressDTO ingressDTO) {
+        if (!checkExternalService(ingressDTO)) {
+            return;
+        }
         if ("rocketmq".equals(ingressDTO.getMiddlewareType()) || "kafka".equals(ingressDTO.getMiddlewareType())) {
             List<ServiceDTO> serviceList = ingressDTO.getServiceList();
-            serviceList.forEach(serviceDTO -> {
-                if (StringUtils.isBlank(serviceDTO.getExposePort()) && "Ingress".equals(ingressDTO.getExposeType())) {
-                    int availablePort = getAvailablePort(clusterId, ingressDTO.getIngressClassName());
-                    setServicePort(serviceDTO, ingressDTO.getMiddlewareType());
-                    serviceDTO.setExposePort(String.valueOf(availablePort));
+            List<Integer> availablePortList = getAvailablePort(clusterId, serviceList.size());
+            for (int i = 0; i < serviceList.size(); i++) {
+                ServiceDTO serviceDTO = serviceList.get(i);
+                setServicePort(serviceDTO, ingressDTO.getMiddlewareType());
+                if (StringUtils.isBlank(serviceDTO.getExposePort())) {
+                    serviceDTO.setExposePort(String.valueOf(availablePortList.get(i)));
                 }
-            });
+            }
         }
     }
 
+    /**
+     * 检查是否是集群外访问相关服务
+     * @param ingressDTO
+     * @return
+     */
+    private boolean checkExternalService(IngressDTO ingressDTO) {
+        if (CollectionUtils.isEmpty(ingressDTO.getServiceList())) {
+            return false;
+        }
+        for (ServiceDTO serviceDTO : ingressDTO.getServiceList()) {
+            if (serviceDTO.getServiceName().contains("console") || serviceDTO.getServiceName().contains("kibana")) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 获取一组可用的端口号
+     * @param clusterId
+     * @param portNum
+     * @return
+     */
+    private List<Integer> getAvailablePort(String clusterId, int portNum) {
+        int startPort = 30000 + new Random().nextInt(100);
+        List<Integer> portList = new ArrayList<>();
+        for (int i = 0; i < portNum; i++) {
+            try {
+                verifyServicePort(clusterId, startPort);
+                portList.add(startPort);
+                startPort++;
+            } catch (Exception e) {
+                startPort++;
+                i = 0;
+                portList.clear();
+            }
+        }
+        return portList;
+    }
+
+    /**
+     * 获取1个可用的端口号
+     * @param clusterId
+     * @return
+     */
+    private Integer getAvailablePort(String clusterId) {
+        return getAvailablePort(clusterId, 1).get(0);
+    }
+
+    /**
+     * 设置服务端口
+     * @param serviceDTO
+     * @param middlewareType
+     */
     private void setServicePort(ServiceDTO serviceDTO, String middlewareType) {
         String serviceName = serviceDTO.getServiceName();
         if ("rocketmq".equals(middlewareType)) {
@@ -515,7 +574,8 @@ public class IngressServiceImpl implements IngressService {
                 serviceDTO.setTargetPort("10911");
             }
         } else if ("kafka".equals(middlewareType)) {
-
+            serviceDTO.setServicePort("9094");
+            serviceDTO.setTargetPort("9094");
         }
     }
 
@@ -1175,54 +1235,40 @@ public class IngressServiceImpl implements IngressService {
         return ingressDTOList;
     }
 
-
-    public void upgradeRocketMQValues(String clusterId, String namespace, String middlewareName, IngressDTO ingressDTO) {
-        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
-        // 开启对外访问
-        JSONObject external = values.getJSONObject(EXTERNAL);
-        // 获取暴露ip地址
-        String exposeIp = getExposeIp(cluster, ingressDTO);
-
-        // upgrade
-        Middleware middleware = new Middleware().setChartName(ingressDTO.getMiddlewareType()).setName(middlewareName)
-                .setChartVersion(values.getString("chart-version")).setNamespace(namespace);
-        helmChartService.upgrade(middleware, values, values, cluster);
-    }
-
     public void upgradeValues(String clusterId, String namespace, String middlewareName, IngressDTO ingressDTO) {
+        for (ServiceDTO serviceDTO : ingressDTO.getServiceList()) {
+            if (serviceDTO.getServiceName().contains("console") || serviceDTO.getServiceName().contains("kibana")) {
+                return;
+            }
+        }
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
         // 开启对外访问
         JSONObject external = values.getJSONObject(EXTERNAL);
-        if (!external.containsKey(SVC_NAME_TAG)){
-            return;
+        String externalTag;
+        if (MiddlewareTypeEnum.ROCKET_MQ.getType().equals(ingressDTO.getMiddlewareType())) {
+            externalTag = "externalIPAddress";
+        } else {
+            externalTag = "externalAddress";
         }
         // 获取暴露ip地址
         String exposeIp = getExposeIp(cluster, ingressDTO);
         // 指定分隔符号
         String splitTag = ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.ROCKET_MQ.getType()) ? ";" : ",";
         // 修改端口
+        StringBuilder sbf = new StringBuilder();
         for (ServiceDTO serviceDTO : ingressDTO.getServiceList()) {
-            List<String> svsNameTagList = Arrays.asList(external.getString(SVC_NAME_TAG).split(splitTag));
-            int num;
-            String svcName = serviceDTO.getServiceName();
-            // 去除nodePort后缀
-            if (svcName.contains("-nodeport-")){
-                svcName = svcName.substring(0, svcName.substring(0, svcName.lastIndexOf("-")).lastIndexOf("-"));
-            }
-            if (svsNameTagList.contains(svcName)) {
-                num = svsNameTagList.indexOf(svcName);
-            } else {
+            if (serviceDTO.getServiceName().endsWith("nameserver-proxy-svc")) {
                 continue;
             }
-            String iPort = external.getString(EXTERNAL_IP_ADDRESS).split(splitTag)[num];
-            external.put(EXTERNAL_IP_ADDRESS,
-                external.getString(EXTERNAL_IP_ADDRESS).replace(iPort, exposeIp + ":" + serviceDTO.getExposePort()));
+            sbf.append(exposeIp).append(":").append(serviceDTO.getExposePort()).append(splitTag);
         }
+        String brokerAddress = sbf.substring(0, sbf.length() - 1);
+        external.put(externalTag, brokerAddress);
+        external.put(ENABLE, true);
         // upgrade
         Middleware middleware = new Middleware().setChartName(ingressDTO.getMiddlewareType()).setName(middlewareName)
-            .setChartVersion(values.getString("chart-version")).setNamespace(namespace);
+                .setChartVersion(values.getString("chart-version")).setNamespace(namespace);
         helmChartService.upgrade(middleware, values, values, cluster);
     }
 
