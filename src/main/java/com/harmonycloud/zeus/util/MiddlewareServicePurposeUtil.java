@@ -71,6 +71,8 @@ public class MiddlewareServicePurposeUtil {
     public static String convertRocketMQ(String serviceName) {
         if (serviceName.contains("console-svc")) {
             return "管理页面";
+        } else if (serviceName.contains("proxy")) {
+            return "服务代理";
         } else {
             return "服务连接";
         }
