@@ -1244,11 +1244,10 @@ public class IngressServiceImpl implements IngressService {
         // 开启对外访问
         JSONObject external = values.getJSONObject(EXTERNAL);
         String externalTag;
-        if (MiddlewareTypeEnum.ROCKET_MQ.getType().equals(ingressDTO.getMiddlewareType())) {
+        if ("rocketmq".equals(ingressDTO.getMiddlewareType())) {
             externalTag = "externalAddress";
         } else {
             externalTag = "externalIPAddress";
-            external.put(ENABLE, true);
             external.put(USE_NODE_PORT, false);
         }
         // 获取暴露ip地址
@@ -1265,6 +1264,7 @@ public class IngressServiceImpl implements IngressService {
         }
         String brokerAddress = sbf.substring(0, sbf.length() - 1);
         external.put(externalTag, brokerAddress);
+        external.put(ENABLE, true);
         // upgrade
         Middleware middleware = new Middleware().setChartName(ingressDTO.getMiddlewareType()).setName(middlewareName)
                 .setChartVersion(values.getString("chart-version")).setNamespace(namespace);
