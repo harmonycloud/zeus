@@ -191,8 +191,14 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
                 }
                 middleware.getQuota().get(middleware.getType()).setNum(num);
             }
-        }
 
+            // 读写分离
+            if (values.containsKey("predixy")){
+                ReadWriteProxy readWriteProxy = new ReadWriteProxy();
+                readWriteProxy.setEnabled(values.getJSONObject("predixy").getBoolean("enableProxy"));
+                middleware.setReadWriteProxy(readWriteProxy);
+            }
+        }
         return middleware;
     }
 
