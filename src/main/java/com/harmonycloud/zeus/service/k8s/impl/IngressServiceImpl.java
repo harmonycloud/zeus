@@ -493,6 +493,21 @@ public class IngressServiceImpl implements IngressService {
     }
 
     /**
+     * 获取一个ingress node ip
+     * @param clusterId
+     * @param namespace
+     * @param ingressClassName
+     * @return
+     */
+    public String getIngressNodeIp(String clusterId, String namespace, String ingressClassName) {
+        List<PodInfo> podInfos = podService.list(clusterId, namespace, ingressClassName);
+        if (!CollectionUtils.isEmpty(podInfos)) {
+            return podInfos.get(0).getHostIp();
+        }
+        return "";
+    }
+
+    /**
      * 当为kafka或rockeymq暴露服务时，若用户未设置服务端口号，则为服务随机分配端口号
      * @param clusterId
      * @param ingressDTO
@@ -1267,8 +1282,11 @@ public class IngressServiceImpl implements IngressService {
                 && ingressDTO.getProtocol().equals(Protocol.TCP.getValue())) {
             IngressComponentDto ingressComponentDto =
                     ingressComponentService.get(cluster.getId(), ingressDTO.getIngressClassName());
-            if (ingressComponentDto != null) {
+            if (ingressComponentDto != null && StringUtils.isNotBlank(ingressComponentDto.getAddress())) {
                 return ingressComponentDto.getAddress();
+            } else {
+                return getIngressNodeIp(cluster.getId(), ingressComponentDto.getNamespace(),
+                        ingressComponentDto.getIngressClassName());
             }
         }
         return cluster.getHost();
