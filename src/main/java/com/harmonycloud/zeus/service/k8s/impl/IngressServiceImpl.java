@@ -40,6 +40,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_ONE;
@@ -365,19 +366,13 @@ public class IngressServiceImpl implements IngressService {
             }
         }
         // 添加ingress pod信息
-        addIngressExternalInfo(clusterId, resList);
+        setIngressExternalInfo(clusterId, resList);
         // 设置图片
-        JSONObject installedValues = helmChartService.getInstalledValues(middlewareName, namespace, clusterService.findById(clusterId));
-        QueryWrapper<BeanMiddlewareInfo> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("chart_version", installedValues.getString("chart-version"));
-        queryWrapper.eq("chart_name", type);
-        BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoMapper.selectOne(queryWrapper);
-        if (beanMiddlewareInfo != null) {
-            resList.forEach(ingressDTO -> {
-                ingressDTO.setImagePath(beanMiddlewareInfo.getImagePath());
-            });
+        setMiddlewareImage(clusterId, namespace, type, middlewareName, resList);
+        // 特殊处理rocketmq和kafka
+        if ("rocketmq".equals(type) || "kafka".equals(type)) {
+            setExternalServiceExposeStatus(type, resList);
         }
-
         return resList;
     }
 
@@ -450,7 +445,7 @@ public class IngressServiceImpl implements IngressService {
      * @param clusterId
      * @param ingressDTOS
      */
-    public void addIngressExternalInfo(String clusterId, List<IngressDTO> ingressDTOS) {
+    public void setIngressExternalInfo(String clusterId, List<IngressDTO> ingressDTOS) {
         ingressDTOS.forEach(ingressDTO -> {
             if (StringUtils.isNotEmpty(ingressDTO.getIngressClassName())) {
                 IngressComponentDto ingressComponentDto = ingressComponentService.get(clusterId, ingressDTO.getIngressClassName());
@@ -485,6 +480,56 @@ public class IngressServiceImpl implements IngressService {
             ingressDTO.setNetworkModel(4);
         } else {
             ingressDTO.setNetworkModel(0);
+        }
+    }
+
+    /**
+     * 设置中间件图片
+     * @param clusterId
+     * @param namespace
+     * @param middlewareName
+     * @param type
+     * @param ingressDTOS
+     */
+    private void setMiddlewareImage(String clusterId, String namespace, String type, String middlewareName, List<IngressDTO> ingressDTOS) {
+        JSONObject installedValues = helmChartService.getInstalledValues(middlewareName, namespace, clusterService.findById(clusterId));
+        QueryWrapper<BeanMiddlewareInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("chart_version", installedValues.getString("chart-version"));
+        queryWrapper.eq("chart_name", type);
+        BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoMapper.selectOne(queryWrapper);
+        if (beanMiddlewareInfo != null) {
+            ingressDTOS.forEach(ingressDTO -> {
+                ingressDTO.setImagePath(beanMiddlewareInfo.getImagePath());
+            });
+        }
+    }
+
+    /**
+     * 设置集群外服务暴露状态
+     * @param type
+     * @param ingressDTOS
+     */
+    private void setExternalServiceExposeStatus(String type, List<IngressDTO> ingressDTOS) {
+        AtomicBoolean enableExternal = new AtomicBoolean(false);
+        ingressDTOS.forEach(ingressDTO -> {
+            switch (type) {
+                case "rocketmq":
+                    if (ingressDTO.getName().contains("nameserver-proxy-svc")) {
+                        enableExternal.set(true);
+                    }
+                    break;
+                case "kafka":
+                    if (ingressDTO.getName().contains("external")) {
+                        enableExternal.set(true);
+                    }
+                    break;
+                default:
+            }
+        });
+        if (enableExternal.get()) {
+            ingressDTOS.forEach(ingressDTO -> {
+                ingressDTO.setExternalEnable(true);
+            });
         }
     }
 
@@ -1172,7 +1217,7 @@ public class IngressServiceImpl implements IngressService {
         // 获取所有ingress
         List<IngressDTO> ingressDTOLists = list(clusterId, namespace, null);
         // 添加ingress pod信息
-        addIngressExternalInfo(clusterId, ingressDTOLists);
+        setIngressExternalInfo(clusterId, ingressDTOLists);
         // 关键词过滤
         if (StringUtils.isNotEmpty(keyword)) {
             ingressDTOLists = filterByKeyword(ingressDTOLists, keyword);
