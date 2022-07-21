@@ -1170,7 +1170,10 @@ public class IngressServiceImpl implements IngressService {
             ingressDTOLists = ingressDTOLists.stream()
                     .filter(ingress -> typeSet.stream().anyMatch(key -> {
                         log.info("ingress信息：{}", ingress);
-                        return ingress.getMiddlewareType().equals(key);
+                        if (ingress.getMiddlewareType() != null) {
+                            return ingress.getMiddlewareType().equals(key);
+                        }
+                        return false;
                     }))
                     .collect(Collectors.toList());
         }
