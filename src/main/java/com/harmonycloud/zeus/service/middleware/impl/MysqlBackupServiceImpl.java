@@ -128,15 +128,19 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
             if (StringUtils.isEmpty(backup.getTaskName()) && StringUtils.isNotEmpty(backup.getBackupName())){
                 try {
                     MysqlScheduleBackupCR msbCr = mysqlScheduleBackupService.get(clusterId, backup.getNamespace(), backup.getBackupName());
-                    backup.setTaskName(msbCr.getMetadata().getLabels().get("backupId"));
+                    String taskName = msbCr.getMetadata().getLabels().get("backupId");
+                    backup.setTaskName(StringUtils.isEmpty(taskName) ? msbCr.getMetadata().getName() : taskName);
                 } catch (Exception e){
                     log.error("查询定时文件资源失败", e);
                     continue;
                 }
-
             }
             record.setBackupId(backup.getTaskName());
-            record.setTaskName(getBackupName(clusterId, backup.getTaskName()).getBackupName());
+            String backupName = getBackupName(clusterId, backup.getTaskName()).getBackupName();
+            record.setTaskName(StringUtils.isEmpty(backupName) ? backup.getTaskName() : backupName);
+            if (StringUtils.isEmpty(record.getTaskName())){
+                continue;
+            }
             record.setBackupMode("single");
             list.add(record);
         }
