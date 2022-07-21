@@ -141,6 +141,11 @@ public class IngressServiceImpl implements IngressService {
             ingressDTO.setChartVersion(values.getOrDefault("chart-version", "").toString());
             ingressDTO.setMiddlewareMode(values.getOrDefault("mode", "").toString());
             ingressDTO.setMiddlewareNickName(values.getOrDefault("aliasName", "").toString());
+            QueryWrapper<BeanMiddlewareInfo> wrapper = new QueryWrapper<>();
+            wrapper.eq("chart_version", ingressDTO.getChartVersion());
+            wrapper.eq("chart_name", ingressDTO.getMiddlewareType());
+            BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoMapper.selectOne(wrapper);
+            ingressDTO.setImagePath(beanMiddlewareInfo.getImagePath());
             ingressDTO.setMiddlewareOfficialName(MiddlewareOfficialNameEnum.findByChartName(ingressDTO.getMiddlewareType()));
         }
 
