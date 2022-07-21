@@ -181,6 +181,13 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             JSONObject redisQuota = values.getJSONObject(REDIS);
             convertResourcesByHelmChart(middleware, middleware.getType(), redisQuota.getJSONObject(RESOURCES));
             middleware.getQuota().get(middleware.getType()).setNum(redisQuota.getInteger(REPLICAS));
+            // 读写分离
+            if (values.containsKey("predixy")){
+                ReadWriteProxy readWriteProxy = new ReadWriteProxy();
+                readWriteProxy.setEnabled(values.getJSONObject("predixy").getBoolean("enableProxy"));
+                middleware.setReadWriteProxy(readWriteProxy);
+            }
+            // 哨兵
             if (SENTINEL.equals(middleware.getMode())) {
                 JSONObject sentinelQuota = values.getJSONObject(SENTINEL);
                 convertResourcesByHelmChart(middleware, SENTINEL, sentinelQuota.getJSONObject("resources"));
@@ -190,13 +197,6 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
                     num = num * 2;
                 }
                 middleware.getQuota().get(middleware.getType()).setNum(num);
-            }
-
-            // 读写分离
-            if (values.containsKey("predixy")){
-                ReadWriteProxy readWriteProxy = new ReadWriteProxy();
-                readWriteProxy.setEnabled(values.getJSONObject("predixy").getBoolean("enableProxy"));
-                middleware.setReadWriteProxy(readWriteProxy);
             }
         }
         return middleware;
