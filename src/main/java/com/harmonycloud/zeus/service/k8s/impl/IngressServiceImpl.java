@@ -141,6 +141,11 @@ public class IngressServiceImpl implements IngressService {
             ingressDTO.setChartVersion(values.getOrDefault("chart-version", "").toString());
             ingressDTO.setMiddlewareMode(values.getOrDefault("mode", "").toString());
             ingressDTO.setMiddlewareNickName(values.getOrDefault("aliasName", "").toString());
+            QueryWrapper<BeanMiddlewareInfo> wrapper = new QueryWrapper<>();
+            wrapper.eq("chart_version", ingressDTO.getChartVersion());
+            wrapper.eq("chart_name", ingressDTO.getMiddlewareType());
+            BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoMapper.selectOne(wrapper);
+            ingressDTO.setImagePath(beanMiddlewareInfo.getImagePath());
             ingressDTO.setMiddlewareOfficialName(MiddlewareOfficialNameEnum.findByChartName(ingressDTO.getMiddlewareType()));
         }
 
@@ -1151,6 +1156,8 @@ public class IngressServiceImpl implements IngressService {
     public List listAllIngress(String clusterId, String namespace, String keyword) {
         // 获取所有ingress
         List<IngressDTO> ingressDTOLists = list(clusterId, namespace, null);
+        // 添加ingress pod信息
+        addIngressExternalInfo(clusterId, ingressDTOLists);
         // 关键词过滤
         if (StringUtils.isNotEmpty(keyword)) {
             ingressDTOLists = filterByKeyword(ingressDTOLists, keyword);
@@ -1167,8 +1174,6 @@ public class IngressServiceImpl implements IngressService {
                     }))
                     .collect(Collectors.toList());
         }
-        // 添加ingress pod信息
-        addIngressExternalInfo(clusterId, ingressDTOLists);
         return ingressDTOLists;
     }
 
@@ -1223,6 +1228,9 @@ public class IngressServiceImpl implements IngressService {
                     }
                 }
             }
+            if (ingressDTO.getServicePurpose() != null && ingressDTO.getServicePurpose().contains(keyword)) {
+                return true;
+            }
             // 根据服务暴露名称、服务名称、服务中文名称过滤
             if (StringUtils.isNotBlank(ingressDTO.getMiddlewareNickName())) {
                 return ingressDTO.getName().contains(keyword) || ingressDTO.getMiddlewareName().contains(keyword)
@@ -1230,6 +1238,7 @@ public class IngressServiceImpl implements IngressService {
             } else {
                 return ingressDTO.getName().contains(keyword) || ingressDTO.getMiddlewareName().contains(keyword);
             }
+
         }).collect(Collectors.toList());
         return ingressDTOList;
     }
