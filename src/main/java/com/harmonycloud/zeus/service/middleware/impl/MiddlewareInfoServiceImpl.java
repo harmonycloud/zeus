@@ -181,6 +181,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         return mwInfoList.stream().map(info -> {
             MiddlewareInfoDTO dto = new MiddlewareInfoDTO();
             BeanUtils.copyProperties(info, dto);
+            dto.setName(MiddlewareOfficialNameEnum.findByChartName(dto.getName()));
             dto.setStatus(clusterMwInfoDtoMap.get(info.getChartName() + "-" + info.getChartVersion()).getStatus());
             dto.setReplicas(clusterMwInfoDtoMap.get(info.getChartName() + "-" + info.getChartVersion()).getReplicas());
             return dto;
