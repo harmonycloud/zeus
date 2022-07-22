@@ -166,6 +166,11 @@ public class IngressServiceImpl implements IngressService {
         if (StringUtils.isBlank(ingressDTO.getMiddlewareName())) {
             ingressDTO.setMiddlewareName(middlewareName);
         }
+        // 判断端口是否已被使用
+        ingressDTO.getServiceList().forEach(ingress -> {
+            verifyServicePort(clusterId, Integer.parseInt(ingress.getExposePort()));
+        });
+
         // 为rocketmq和kafka设置服务端口号
         checkAndAllocateServicePort(clusterId, ingressDTO);
 
@@ -658,7 +663,6 @@ public class IngressServiceImpl implements IngressService {
                 continue;
             }
 
-
             io.fabric8.kubernetes.api.model.Service serviceR = map.get(serviceName);
             if (serviceR != null) {
                 if (covertServicePort(serviceDTO) != null) {
@@ -690,7 +694,6 @@ public class IngressServiceImpl implements IngressService {
             service.setMetadata(objectMeta);
 
             ServiceSpec spec = new ServiceSpec();
-
 
             List<ServicePort> servicePortList = new ArrayList<>(10);
             if (covertServicePort(serviceDTO) == null) {
