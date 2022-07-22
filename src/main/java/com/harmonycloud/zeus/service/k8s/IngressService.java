@@ -37,7 +37,7 @@ public interface IngressService {
      * @param cluster     集群
      * @param serviceList 服务列表
      */
-    void checkIngressTcpPort(MiddlewareClusterDTO cluster, List<ServiceDTO> serviceList);
+    void checkServiceTcpPort(MiddlewareClusterDTO cluster, List<ServiceDTO> serviceList);
 
     /**
      * 创建中间件对外访问

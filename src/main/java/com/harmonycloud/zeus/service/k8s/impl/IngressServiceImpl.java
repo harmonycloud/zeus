@@ -205,17 +205,27 @@ public class IngressServiceImpl implements IngressService {
     }
 
     @Override
-    public void checkIngressTcpPort(MiddlewareClusterDTO cluster, List<ServiceDTO> serviceList) {
+    public void checkServiceTcpPort(MiddlewareClusterDTO cluster, List<ServiceDTO> serviceList) {
         if (CollectionUtils.isEmpty(serviceList)) {
             return;
         }
         // 校验NodePort端口是否已存在
         List<io.fabric8.kubernetes.api.model.Service> svcList = serviceWrapper.list(cluster.getId(), null);
-        if (!CollectionUtils.isEmpty(svcList) && svcList.stream()
-            .anyMatch(svc -> MIDDLEWARE_EXPOSE_NODEPORT.equals(svc.getKind()) && serviceList.stream().anyMatch(
-                dto -> dto.getExposePort().equals(String.valueOf(svc.getSpec().getPorts().get(0).getNodePort()))))) {
-            throw new BusinessException(ErrorMessage.INGRESS_NODEPORT_PORT_EXIST);
+        HashSet<Integer> nodePorts = new HashSet<>();
+        if (!CollectionUtils.isEmpty(svcList)) {
+            svcList.forEach(service -> {
+                if (MIDDLEWARE_EXPOSE_NODEPORT.equals(service.getSpec().getType())) {
+                    service.getSpec().getPorts().forEach(nodePortSvc -> {
+                        nodePorts.add(nodePortSvc.getNodePort());
+                    });
+                }
+            });
         }
+        serviceList.forEach(serviceDTO -> {
+            if(nodePorts.contains(Integer.parseInt(serviceDTO.getExposePort()))){
+                throw new BusinessException(ErrorMessage.INGRESS_NODEPORT_PORT_EXIST);
+            }
+        });
 
         // 校验Ingress TCP配置文件
         List<IngressComponentDto> ingressComponentDtoList = ingressComponentService.list(cluster.getId());
@@ -245,7 +255,7 @@ public class IngressServiceImpl implements IngressService {
             return;
         }
         if (checkPort) {
-            checkIngressTcpPort(cluster, serviceList);
+            checkServiceTcpPort(cluster, serviceList);
         }
         // 转换Ingress TCP配置文件
         IngressDTO ingressDTO = new IngressDTO();
@@ -442,7 +452,7 @@ public class IngressServiceImpl implements IngressService {
         serviceDTO.setExposePort(String.valueOf(port));
         List<ServiceDTO> serviceDTOList = new ArrayList<>();
         serviceDTOList.add(serviceDTO);
-        checkIngressTcpPort(clusterDTO, serviceDTOList);
+        checkServiceTcpPort(clusterDTO, serviceDTOList);
     }
 
     /**
