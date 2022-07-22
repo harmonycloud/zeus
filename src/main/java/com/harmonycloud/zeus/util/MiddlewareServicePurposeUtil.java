@@ -1,15 +1,42 @@
 package com.harmonycloud.zeus.util;
 
+import com.harmonycloud.caas.common.model.middleware.IngressDTO;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.CollectionUtils;
+
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author liyinlong
  * @since 2022/7/14 2:14 下午
  */
 public class MiddlewareServicePurposeUtil {
 
-    public static String convertChinesePurpose(String middlewareType, String serviceName) {
+    public static String convertChinesePurpose(IngressDTO ingressDTO) {
+        String middlewareType = ingressDTO.getMiddlewareType();
+        String serviceName = ingressDTO.getName();
         if (middlewareType == null) {
             return "";
         }
+        List<String> serviceNameList = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(ingressDTO.getRules())) {
+            ingressDTO.getRules().forEach(ingressRuleDTO -> {
+                ingressRuleDTO.getIngressHttpPaths().forEach(ingressHttpPath -> {
+                    serviceNameList.add(ingressHttpPath.getServiceName());
+                });
+            });
+        } else {
+            serviceNameList.add(serviceName);
+        }
+        StringBuffer sbf = new StringBuffer();
+        serviceNameList.forEach(svcName -> {
+            sbf.append(getPurpose(middlewareType, svcName)).append(",");
+        });
+        return sbf.substring(0, sbf.length() - 1);
+    }
+
+    private static String getPurpose(String middlewareType, String serviceName) {
         switch (middlewareType) {
             case "mysql":
                 return convertMysql(serviceName);
@@ -28,6 +55,13 @@ public class MiddlewareServicePurposeUtil {
             default:
                 return "/";
         }
+    }
+
+    public static String convertChinesePurpose(String type, String serviceName) {
+        IngressDTO ingressDTO = new IngressDTO();
+        ingressDTO.setMiddlewareType(type);
+        ingressDTO.setName(serviceName);
+        return convertChinesePurpose(ingressDTO);
     }
 
     public static String convertMysql(String serviceName) {

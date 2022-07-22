@@ -116,11 +116,9 @@ public class IngressServiceImpl implements IngressService {
             }
         }
 
-
         // nodePort routing list
         List<io.fabric8.kubernetes.api.model.Service> serviceList = serviceWrapper.list(clusterId, namespace, MIDDLEWARE_NAME);
         dealNodePortRoutineList(clusterId, namespace, serviceList, ingressDtoList);
-
         if (CollectionUtils.isEmpty(ingressDtoList)) {
             return ingressDtoList;
         }
@@ -167,13 +165,13 @@ public class IngressServiceImpl implements IngressService {
             ingressDTO.setMiddlewareName(middlewareName);
         }
         // 判断端口是否已被使用
-        ingressDTO.getServiceList().forEach(ingress -> {
-            verifyServicePort(clusterId, Integer.parseInt(ingress.getExposePort()));
-        });
-
+        if (!CollectionUtils.isEmpty(ingressDTO.getServiceList())) {
+            ingressDTO.getServiceList().forEach(ingress -> {
+                verifyServicePort(clusterId, Integer.parseInt(ingress.getExposePort()));
+            });
+        }
         // 为rocketmq和kafka设置服务端口号
         checkAndAllocateServicePort(clusterId, ingressDTO);
-
         if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_INGRESS)) {
             try {
                 if (ingressDTO.getProtocol().equals(Protocol.HTTP.getValue())) {
@@ -381,7 +379,7 @@ public class IngressServiceImpl implements IngressService {
             }
         }
         // 添加ingress pod信息
-        setIngressExternalInfo(clusterId, resList);
+        setIngressExtralInfo(clusterId, resList);
         // 设置图片
         setMiddlewareImage(clusterId, namespace, type, middlewareName, resList);
         // 特殊处理rocketmq和kafka
@@ -456,11 +454,11 @@ public class IngressServiceImpl implements IngressService {
     }
 
     /**
-     * 添加ingress pod信息
+     * 添加ingress 其他信息
      * @param clusterId
      * @param ingressDTOS
      */
-    public void setIngressExternalInfo(String clusterId, List<IngressDTO> ingressDTOS) {
+    public void setIngressExtralInfo(String clusterId, List<IngressDTO> ingressDTOS) {
         ingressDTOS.forEach(ingressDTO -> {
             if (StringUtils.isNotEmpty(ingressDTO.getIngressClassName())) {
                 IngressComponentDto ingressComponentDto = ingressComponentService.get(clusterId, ingressDTO.getIngressClassName());
@@ -476,7 +474,7 @@ public class IngressServiceImpl implements IngressService {
             // 设置服务暴露的网络模型 4层或7层
             setServiceNetworkModel(ingressDTO);
             // 设置服务用途
-            ingressDTO.setServicePurpose(MiddlewareServicePurposeUtil.convertChinesePurpose(ingressDTO.getMiddlewareType(), ingressDTO.getName()));
+            ingressDTO.setServicePurpose(MiddlewareServicePurposeUtil.convertChinesePurpose(ingressDTO));
         });
     }
 
@@ -1233,7 +1231,7 @@ public class IngressServiceImpl implements IngressService {
         // 获取所有ingress
         List<IngressDTO> ingressDTOLists = list(clusterId, namespace, null);
         // 添加ingress pod信息
-        setIngressExternalInfo(clusterId, ingressDTOLists);
+        setIngressExtralInfo(clusterId, ingressDTOLists);
         // 关键词过滤
         if (StringUtils.isNotEmpty(keyword)) {
             ingressDTOLists = filterByKeyword(ingressDTOLists, keyword);
