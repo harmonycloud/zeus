@@ -1305,7 +1305,8 @@ public class IngressServiceImpl implements IngressService {
         // 修改端口
         StringBuilder sbf = new StringBuilder();
         for (ServiceDTO serviceDTO : ingressDTO.getServiceList()) {
-            if (serviceDTO.getServiceName().endsWith("nameserver-proxy-svc")) {
+            if (serviceDTO.getServiceName().contains("nameserver") || serviceDTO.getServiceName().contains("manager")
+                    || serviceDTO.getServiceName().contains("console")) {
                 continue;
             }
             sbf.append(exposeIp).append(":").append(serviceDTO.getExposePort()).append(splitTag);
