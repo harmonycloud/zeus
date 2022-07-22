@@ -629,6 +629,9 @@ public class IngressServiceImpl implements IngressService {
      */
     private void setServicePort(ServiceDTO serviceDTO, String middlewareType) {
         String serviceName = serviceDTO.getServiceName();
+        if (StringUtils.isNotBlank(serviceDTO.getServicePort())) {
+            return;
+        }
         if ("rocketmq".equals(middlewareType)) {
             if (serviceName.endsWith("nameserver-proxy-svc")) {
                 serviceDTO.setServicePort("9876");
