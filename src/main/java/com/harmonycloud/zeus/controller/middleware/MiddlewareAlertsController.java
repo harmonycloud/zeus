@@ -74,9 +74,9 @@ public class MiddlewareAlertsController {
     public BaseResult createRules(@PathVariable("clusterId") String clusterId,
                                   @PathVariable(value = "namespace", required = false) String namespace,
                                   @PathVariable(value = "middlewareName", required = false) String middlewareName,
-                                  @RequestBody List<MiddlewareAlertsDTO> middlewareAlertsDTOList) throws Exception {
+                                  @RequestBody AlertsUserDTO alertsUserDTO) throws Exception {
         middlewareAlertsService.createRules(clusterId, namespace, middlewareName,
-                middlewareAlertsDTOList);
+                alertsUserDTO.getMiddlewareAlertsDTOList());
         return BaseResult.ok();
     }
 
