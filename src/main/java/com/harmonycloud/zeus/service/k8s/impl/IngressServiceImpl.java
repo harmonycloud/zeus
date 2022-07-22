@@ -223,7 +223,7 @@ public class IngressServiceImpl implements IngressService {
         }
         serviceList.forEach(serviceDTO -> {
             if(nodePorts.contains(Integer.parseInt(serviceDTO.getExposePort()))){
-                throw new BusinessException(ErrorMessage.INGRESS_TCP_PORT_EXIST);
+                throw new BusinessException(ErrorMessage.TCP_PORT_ALREADY_USED);
             }
         });
 
