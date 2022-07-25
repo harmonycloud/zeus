@@ -167,7 +167,9 @@ public class IngressServiceImpl implements IngressService {
         // 判断端口是否已被使用
         if (!CollectionUtils.isEmpty(ingressDTO.getServiceList())) {
             ingressDTO.getServiceList().forEach(ingress -> {
-                verifyServicePort(clusterId, Integer.parseInt(ingress.getExposePort()));
+                if (StringUtils.isNotBlank(ingress.getExposePort())) {
+                    verifyServicePort(clusterId, Integer.parseInt(ingress.getExposePort()));
+                }
             });
         }
         // 为rocketmq和kafka设置服务端口号
@@ -467,8 +469,14 @@ public class IngressServiceImpl implements IngressService {
                     ingressDTO.setAddress(ingressComponentDto.getAddress());
                 } else {
                     podInfoList = listIngressPod(clusterId, ingressComponentDto.getNamespace(), ingressComponentDto.getIngressClassName());
+                    podInfoList = podInfoList.stream().filter(podInfo -> "Running".equals(podInfo.getStatus())
+                            && StringUtils.isNotBlank(podInfo.getHostIp())).collect(Collectors.toList());
+                    Set<String> ingressPodIpSet = new HashSet<>();
+                    podInfoList.forEach(podInfo -> {
+                        ingressPodIpSet.add(podInfo.getHostIp());
+                    });
                     // 设置ingress pod
-                    ingressDTO.setIngressPodList(podInfoList);
+                    ingressDTO.setIngressIpSet(ingressPodIpSet);
                 }
             }
             // 设置服务暴露的网络模型 4层或7层
