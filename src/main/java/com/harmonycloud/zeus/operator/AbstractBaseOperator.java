@@ -395,7 +395,7 @@ public abstract class AbstractBaseOperator {
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
         convertCommonByHelmChart(middleware, values);
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
-        setImagePath(middleware, values);
+        //setImagePath(middleware, values);
         return middleware;
     }
 
@@ -483,7 +483,7 @@ public abstract class AbstractBaseOperator {
             middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(middleware.getClusterId(),middleware.getNamespace(),middleware.getType(),middleware.getName()));
 
             // 设置中间件图片
-            setImagePath(middleware, values);
+            //setImagePath(middleware, values);
         } else {
             middleware.setAliasName(middleware.getName());
         }
