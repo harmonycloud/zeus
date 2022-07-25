@@ -167,7 +167,9 @@ public class IngressServiceImpl implements IngressService {
         // 判断端口是否已被使用
         if (!CollectionUtils.isEmpty(ingressDTO.getServiceList())) {
             ingressDTO.getServiceList().forEach(ingress -> {
-                verifyServicePort(clusterId, Integer.parseInt(ingress.getExposePort()));
+                if (StringUtils.isNotBlank(ingress.getExposePort())) {
+                    verifyServicePort(clusterId, Integer.parseInt(ingress.getExposePort()));
+                }
             });
         }
         // 为rocketmq和kafka设置服务端口号
