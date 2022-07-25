@@ -142,7 +142,11 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
             JSONObject labelJson = new JSONObject();
             for (String label : labelAry) {
                 String[] pair = label.split(CommonConstant.EQUAL);
-                labelJson.put(pair[0], pair[1]);
+                if (pair.length == 1) {
+                    labelJson.put(pair[0], "");
+                } else {
+                    labelJson.put(pair[0], pair[1]);
+                }
             }
             values.getJSONObject("pod").put("labels", labelJson);
         }

@@ -671,13 +671,17 @@ public abstract class AbstractBaseOperator {
         replaceAnnotations(middleware, values);
     }
 
-    protected void replaceLabels(Middleware middleware, JSONObject values){
+    protected void replaceLabels(Middleware middleware, JSONObject values) {
         if (StringUtils.isNotBlank(middleware.getLabels())) {
             String[] labelAry = middleware.getLabels().split(CommonConstant.COMMA);
             JSONObject labelJson = new JSONObject();
             for (String label : labelAry) {
                 String[] pair = label.split(CommonConstant.EQUAL);
-                labelJson.put(pair[0], pair[1]);
+                if (pair.length == 1) {
+                    labelJson.put(pair[0], "");
+                } else {
+                    labelJson.put(pair[0], pair[1]);
+                }
             }
             values.put("labels", labelJson);
         }
