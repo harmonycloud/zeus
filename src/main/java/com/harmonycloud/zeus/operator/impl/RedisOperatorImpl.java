@@ -338,12 +338,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
 
     @Override
     public void replaceReadWriteProxyValues(ReadWriteProxy readWriteProxy, JSONObject values){
-        JSONObject predixy;
-        if (values.containsKey("predixy")){
-            predixy = values.getJSONObject("predixy");
-        }else {
-            predixy = new JSONObject();
-        }
+        JSONObject predixy = new JSONObject();
         predixy.put("enableProxy", readWriteProxy.getEnabled());
 
         JSONObject requests = new JSONObject();
@@ -355,8 +350,11 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         limits.put(MEMORY, "512Mi");
         predixy.put("replicas", 3);
 
-        JSONObject resources = predixy.getJSONObject("resources");
+        JSONObject resources = new JSONObject();
         resources.put("requests", requests);
         resources.put("limits", limits);
+
+        predixy.put("resources", resources);
+        values.put("predixy", predixy);
     }
 }

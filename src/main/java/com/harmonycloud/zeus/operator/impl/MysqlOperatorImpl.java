@@ -583,12 +583,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
 
     @Override
     public void replaceReadWriteProxyValues(ReadWriteProxy readWriteProxy, JSONObject values){
-        JSONObject proxy;
-        if (values.containsKey("proxy")){
-            proxy = values.getJSONObject("proxy");
-        }else {
-            proxy = new JSONObject();
-        }
+        JSONObject proxy = new JSONObject();;
         proxy.put("enable", readWriteProxy.getEnabled());
 
         JSONObject requests = new JSONObject();
@@ -599,9 +594,12 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         limits.put(CPU, "500m");
         limits.put(MEMORY, "1024Mi");
 
-        JSONObject resources = proxy.getJSONObject("resources");
+        JSONObject resources = new JSONObject();
         resources.put("requests", requests);
         resources.put("limits", limits);
+
+        proxy.put("resources", resources);
+        values.put("proxy", proxy);
     }
 
 
