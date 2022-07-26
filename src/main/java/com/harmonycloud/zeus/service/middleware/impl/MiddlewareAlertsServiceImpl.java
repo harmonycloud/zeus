@@ -811,18 +811,4 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         }
         return yaml.substring(yaml.indexOf("apiVersion"),yaml.indexOf("{{- end }}"));
     }
-    public static void main(String[] args){
-        String a = "1";
-        String b = "2";
-        String c = "3";
-        String d = null;
-        String f = null;
-        List<String> test = new ArrayList<>();
-        test.add(b);
-        test.add(d);
-        test.add(f);
-        test.add(c);
-        test.add(a);
-        test.sort((o1,o2) -> o1 == null ? 1 : o2 == null ? -1 : o2.compareTo(o1));
-    }
 }
