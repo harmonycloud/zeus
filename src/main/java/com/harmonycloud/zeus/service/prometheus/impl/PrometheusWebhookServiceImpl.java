@@ -80,6 +80,9 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             }
             JSONObject labels = alert.getJSONObject("labels");
             JSONObject annotations = alert.getJSONObject("annotations");
+            if ("Pod_all_cpu_usage".equals(labels.getString("alertname"))){
+                continue;
+            }
 
             String clusterId = labels.getOrDefault("clusterId", "").toString();
             String namespace = labels.getString("namespace");
