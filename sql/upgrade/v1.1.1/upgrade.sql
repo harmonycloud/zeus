@@ -32,7 +32,7 @@ CREATE TABLE `middleware_backup_address` (
   `server_port` int(11) DEFAULT NULL COMMENT '服务器端口',
   `create_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COLLATE=utf8_bin
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- 2022.6.25 yushuaikang
 -- 备份任务映射表
@@ -44,7 +44,7 @@ CREATE TABLE `backup_name` (
   `cluster_id` varchar(64) COLLATE utf8_bin DEFAULT NULL COMMENT '集群ID',
   `backup_type` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '备份类型',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8 COLLATE=utf8_bin
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- 2022.6.15 yushuaikang
 -- 备份位置集群映射表
@@ -54,7 +54,7 @@ CREATE TABLE `backup_address_cluster` (
   `backup_address_id` int(11) DEFAULT NULL COMMENT '备份地址ID',
   `cluster_id` varchar(64) COLLATE utf8_bin DEFAULT NULL COMMENT '集群ID',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8 COLLATE=utf8_bin
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- 2020.6.20 xutianhong
 -- 菜单更新
