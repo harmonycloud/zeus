@@ -247,11 +247,15 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         ObjectMeta meta = getMiddlewareBackupMeta(backupDTO.getNamespace(), backupDTO.getMiddlewareName(),
                 backupDTO.getLabels(), backupDTO.getPods());
         crd.setMetadata(meta);
+
+        // 将minio账号密码转换为base64
+        String base64AccessKeyId = new String(Base64.getDecoder().decode(minio.getAccessKeyId()));
+        String base64SecretAccessKey = new String(Base64.getDecoder().decode(minio.getSecretAccessKey()));
         MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination destination =
                 new MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination();
         destination.setDestinationType("minio").setParameters(
                 new MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination.MiddlewareBackupParameters(
-                        minio.getBucketName(), minio.getEndpoint(), "/" + backupDTO.getType(), minio.getAccessKeyId(), minio.getSecretAccessKey(),
+                        minio.getBucketName(), minio.getEndpoint(), backupDTO.getType(), base64AccessKeyId, base64SecretAccessKey,
                         "MTIzNDU2Cg=="));
         List<Map<String, List<String>>> customBackups = new ArrayList<>();
         if (!backupDTO.getType().equals(MiddlewareTypeEnum.POSTGRESQL.getType())){
@@ -282,9 +286,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 backupDTO.getLabels(), backupDTO.getPods());
         middlewareBackupCR.setMetadata(meta);
         Minio minio = mysqlAdapterService.getMinio(backupDTO.getAddressName());
+        // 将minio账号密码转换为base64
+        String base64AccessKeyId = new String(Base64.getDecoder().decode(minio.getAccessKeyId()));
+        String base64SecretAccessKey = new String(Base64.getDecoder().decode(minio.getSecretAccessKey()));
         MiddlewareBackupSpec.MiddlewareBackupDestination destination = new MiddlewareBackupSpec.MiddlewareBackupDestination();
         destination.setDestinationType("minio").setParameters(new MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters(minio.getBucketName(),
-                minio.getEndpoint(), "/" + backupDTO.getType(), minio.getAccessKeyId(), minio.getSecretAccessKey(), "MTIzNDU2Cg=="));
+                minio.getEndpoint(), backupDTO.getType(), base64AccessKeyId, base64SecretAccessKey, "MTIzNDU2Cg=="));
+
         List<Map<String, Object>> customBackups = new ArrayList<>();
         if (!backupDTO.getType().equals(MiddlewareTypeEnum.POSTGRESQL.getType())){
             Map<String, Object> map = new HashMap<>();
