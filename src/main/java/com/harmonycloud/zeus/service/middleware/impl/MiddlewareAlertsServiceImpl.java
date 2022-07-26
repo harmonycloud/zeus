@@ -365,12 +365,11 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             prometheusRuleService.update(clusterId, prometheusRule);
             // 重新构建一条规则
             String expr = buildExpr(middlewareAlertsDTO);
-            String alert = middlewareAlertsDTO.getAlert() + "-" + UUIDUtils.get8UUID();
-            middlewareAlertsDTO.setAlert(alert);
+            middlewareAlertsDTO.setAlert(alertRuleId.getAlert());
             middlewareAlertsDTO.setExpr(expr);
             middlewareAlertsDTO.getLabels().put("namespace", NameConstant.MONITORING);
             middlewareAlertsDTO.getLabels().put("service", NameConstant.PROMETHEUS_K8S_RULES);
-            middlewareAlertsDTO.getLabels().put("alertname", alert);
+            middlewareAlertsDTO.getLabels().put("alertname", alertRuleId.getAlert());
         }
         assemblePrometheusrule(clusterId, NameConstant.PROMETHEUS_K8S_RULES, middlewareAlertsDTO, prometheusRule);
         prometheusRuleService.update(clusterId, prometheusRule);
