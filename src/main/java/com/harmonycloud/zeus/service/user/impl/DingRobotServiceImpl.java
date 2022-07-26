@@ -265,7 +265,6 @@ public class DingRobotServiceImpl implements DingRobotService {
         }
         String time = DateFormatUtils.format(alertInfoDto.getAlertTime(), "yyyy-MM-dd HH:mm:ss");
         StringBuffer sb = new StringBuffer();
-        sb.append("告警ID: ").append(alertInfoDto.getRuleID()).append(NEWLINE);
         sb.append("告警等级: ").append(level).append(NEWLINE);
         sb.append("告警内容: ").append(alertInfoDto.getContent()).append(NEWLINE);
         sb.append("告警对象: ").append(alertInfoDto.getClusterId()).append(NEWLINE);
