@@ -115,6 +115,8 @@ public class MiddlewareServicePurposeUtil {
             return "管理页面";
         } else if (serviceName.contains("proxy")) {
             return "服务代理";
+        } else if (serviceName.contains("namesrv")) {
+            return "服务连接";
         } else {
             return null;
         }
