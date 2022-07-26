@@ -171,14 +171,14 @@ public class DingRobotServiceImpl implements DingRobotService {
         if (list.size() == 0) {
             dingRobotInfos.forEach(dingRobotInfo -> {
                 dingRobotInfo.setTime(new Date());
-                dingRobotInfo.setEnable("0");
+                dingRobotInfo.setEnable("1");
                 dingRobotMapper.insert(dingRobotInfo);
             });
         }else {
             dingRobotMapper.delete(wrapper);
             dingRobotInfos.forEach(dingRobotInfo -> {
                 dingRobotInfo.setTime(new Date());
-                dingRobotInfo.setEnable("0");
+                dingRobotInfo.setEnable("1");
                 dingRobotMapper.insert(dingRobotInfo);
             });
         }
