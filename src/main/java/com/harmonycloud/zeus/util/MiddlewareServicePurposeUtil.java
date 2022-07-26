@@ -6,6 +6,8 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author liyinlong
@@ -19,6 +21,9 @@ public class MiddlewareServicePurposeUtil {
         String serviceName = ingressDTO.getName();
         if (middlewareType == null) {
             return "";
+        }
+        if (serviceName.contains("tcp")) {
+            serviceName = ingressDTO.getServiceList().get(0).getServiceName();
         }
         List<String> serviceNameList = new ArrayList<>();
         if (!CollectionUtils.isEmpty(ingressDTO.getRules())) {
@@ -139,5 +144,20 @@ public class MiddlewareServicePurposeUtil {
             return null;
         }
     }
+
+    public static String cutString(String str, String start, String end) {
+        if (StringUtils.isBlank(str)) {
+            return str;
+        }
+        String reg = start + "(.*)" + end;
+        Pattern pattern = Pattern.compile(reg);
+        Matcher matcher = pattern.matcher(str);
+        while (matcher.find()) {
+            str = matcher.group(1);
+        }
+        return str;
+    }
+
+
 
 }

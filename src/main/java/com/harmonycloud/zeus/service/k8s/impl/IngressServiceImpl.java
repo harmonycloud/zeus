@@ -388,7 +388,10 @@ public class IngressServiceImpl implements IngressService {
         if ("rocketmq".equals(type) || "kafka".equals(type)) {
             setExternalServiceExposeStatus(type, resList);
         }
-        return resList;
+        List<IngressDTO> ingressDTOList = resList.stream().
+                filter(ingressDTO -> ingressDTO.getServicePurpose() != null && !"null".equals(ingressDTO.getServicePurpose())).
+                collect(Collectors.toList());
+        return ingressDTOList;
     }
 
     @Override
