@@ -15,6 +15,7 @@ public class MiddlewareServicePurposeUtil {
 
     public static String convertChinesePurpose(IngressDTO ingressDTO) {
         String middlewareType = ingressDTO.getMiddlewareType();
+        String middlewareName = ingressDTO.getMiddlewareName();
         String serviceName = ingressDTO.getName();
         if (middlewareType == null) {
             return "";
@@ -31,100 +32,109 @@ public class MiddlewareServicePurposeUtil {
         }
         StringBuffer sbf = new StringBuffer();
         serviceNameList.forEach(svcName -> {
-            sbf.append(getPurpose(middlewareType, svcName)).append(",");
+            sbf.append(getPurpose(middlewareName, middlewareType, svcName)).append(",");
         });
         return sbf.substring(0, sbf.length() - 1);
     }
 
-    private static String getPurpose(String middlewareType, String serviceName) {
+    private static String getPurpose(String middlewareName, String middlewareType, String serviceName) {
         switch (middlewareType) {
             case "mysql":
-                return convertMysql(serviceName);
+                return convertMysql(middlewareName, serviceName);
             case "redis":
-                return convertRedis(serviceName);
+                return convertRedis(middlewareName, serviceName);
             case "elasticsearch":
-                return convertEs(serviceName);
+                return convertEs(middlewareName, serviceName);
             case "postgresql":
-                return convertPgSQL(serviceName);
+                return convertPgSQL(middlewareName, serviceName);
             case "rocketmq":
-                return convertRocketMQ(serviceName);
+                return convertRocketMQ(middlewareName, serviceName);
             case "kafka":
-                return convertKafka(serviceName);
+                return convertKafka(middlewareName, serviceName);
             case "zookeeper":
-                return convertZookeeper(serviceName);
+                return convertZookeeper(middlewareName, serviceName);
             default:
                 return "/";
         }
     }
 
-    public static String convertChinesePurpose(String type, String serviceName) {
+    public static String convertChinesePurpose(String middlewareName, String type, String serviceName) {
         IngressDTO ingressDTO = new IngressDTO();
         ingressDTO.setMiddlewareType(type);
         ingressDTO.setName(serviceName);
+        ingressDTO.setMiddlewareName(middlewareName);
         return convertChinesePurpose(ingressDTO);
     }
 
-    public static String convertMysql(String serviceName) {
+    public static String convertMysql(String middlewareName, String serviceName) {
         if (serviceName.contains("readonly")) {
             return "只读";
         } else if (serviceName.contains("proxy")) {
             return "读写分离";
-        } else {
+        } else if (serviceName.equals(middlewareName)) {
             return "读写";
+        } else {
+            return null;
         }
     }
 
-    public static String convertRedis(String serviceName) {
+    public static String convertRedis(String middlewareName, String serviceName) {
         if (serviceName.contains("readonly")) {
             return "只读";
         } else if (serviceName.contains("predixy")) {
             return "读写";
-        } else {
+        } else if (serviceName.equals(middlewareName)) {
             return "读写";
+        } else {
+            return null;
         }
     }
 
-    public static String convertEs(String serviceName) {
+    public static String convertEs(String middlewareName, String serviceName) {
         if (serviceName.contains("master") || serviceName.contains("data") || serviceName.contains("client")) {
             return "读写";
         } else if (serviceName.contains("kibana")) {
             return "管理页面";
         } else {
-            return "/";
+            return null;
         }
     }
 
-    public static String convertPgSQL(String serviceName) {
+    public static String convertPgSQL(String middlewareName, String serviceName) {
         if (serviceName.contains("repl")) {
             return "只读";
-        } else {
+        } else if (serviceName.equals(middlewareName)) {
             return "读写";
+        } else {
+            return null;
         }
     }
 
-    public static String convertRocketMQ(String serviceName) {
+    public static String convertRocketMQ(String middlewareName, String serviceName) {
         if (serviceName.contains("console-svc")) {
             return "管理页面";
         } else if (serviceName.contains("proxy")) {
             return "服务代理";
         } else {
-            return "服务连接";
+            return null;
         }
     }
 
-    public static String convertKafka(String serviceName) {
+    public static String convertKafka(String middlewareName, String serviceName) {
         if (serviceName.contains("manager-svc")) {
             return "管理页面";
-        } else {
+        } else if (serviceName.contains("broker")) {
             return "服务连接";
+        } else {
+            return null;
         }
     }
 
-    public static String convertZookeeper(String serviceName) {
+    public static String convertZookeeper(String middlewareName, String serviceName) {
         if (serviceName.contains("client")) {
             return "服务连接";
         } else {
-            return "/";
+            return null;
         }
     }
 
