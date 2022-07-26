@@ -606,7 +606,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     public void createDisasterRecoveryMiddleware(Middleware middleware) {
         MysqlDTO mysqlDTO = middleware.getMysqlDTO();
         //1.为实例创建只读对外服务(NodePort)
-        createOpenService(middleware, true);
+        createOpenService(middleware, true, true);
         //2.设置灾备实例信息，创建灾备实例
         //2.1 设置灾备实例信息
         Middleware relationMiddleware = middleware.getRelationMiddleware();
@@ -693,15 +693,15 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
     }
 
-    public void createOpenService(Middleware middleware, boolean isReadOnlyService) {
+    public void createOpenService(Middleware middleware, boolean isReadOnlyService, boolean useNodePort) {
         log.info("为实例：{} 创建对外服务");
-        executeCreateOpenService(middleware, isReadOnlyService);
+        executeCreateOpenService(middleware, isReadOnlyService, useNodePort);
     }
 
-    private void executeCreateOpenService(Middleware middleware, boolean isReadOnlyService) {
+    private void executeCreateOpenService(Middleware middleware, boolean isReadOnlyService, boolean useNodePort) {
         List<IngressComponentDto> ingressComponentList = ingressComponentService.list(middleware.getClusterId());
         log.info("开始为{}创建对外服务，参数：{}", middleware.getName(), middleware);
-        if (CollectionUtils.isEmpty(ingressComponentList)) {
+        if (CollectionUtils.isEmpty(ingressComponentList) || useNodePort) {
             log.info("不存在ingress，使用NodePort暴露服务");
             MiddlewareServiceNameIndex middlewareServiceNameIndex = ServiceNameConvertUtil.convertMysql(middleware.getName(), isReadOnlyService);
             super.createOpenService(middleware, middlewareServiceNameIndex);
