@@ -991,7 +991,11 @@ public abstract class AbstractBaseOperator {
                     middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
             try {
                 IngressDTO ingressDTO = new IngressDTO();
-                ingressDTO.setName(middleware.getName() + "-nodeport-" +UUIDUtils.get8UUID().substring(0, 4));
+                if (middlewareServiceNameIndex != null && middlewareServiceNameIndex.getMiddlewareServiceNameSuffix() != null && middlewareServiceNameIndex.getMiddlewareServiceNameSuffix().contains("readonly")) {
+                    ingressDTO.setName(middleware.getName() + "-readonly-nodeport-" + UUIDUtils.get8UUID().substring(0, 4));
+                } else {
+                    ingressDTO.setName(middleware.getName() + "-nodeport-" + UUIDUtils.get8UUID().substring(0, 4));
+                }
                 List<ServiceDTO> serviceDTOList = new ArrayList<>();
                 ServiceDTO serviceDTO = new ServiceDTO();
                 serviceDTO.setTargetPort(portDetailDTO.getTargetPort());
