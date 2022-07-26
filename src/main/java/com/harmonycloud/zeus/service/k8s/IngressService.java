@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author dengyulong
@@ -139,5 +140,13 @@ public interface IngressService {
      * @param port
      */
     void verifyServicePort(String clusterId, Integer port);
+
+    /**
+     * 查询ingress ip
+     * @param clusterId
+     * @param ingressClassName
+     * @return
+     */
+    Set<String> listIngressIp(String clusterId, String ingressClassName);
 
 }

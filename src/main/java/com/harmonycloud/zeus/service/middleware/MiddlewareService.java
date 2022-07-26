@@ -187,4 +187,13 @@ public interface MiddlewareService {
      * @return String
      */
     Integer middlewareCount(String clusterId, String namespace, String name, String type);
+
+    /**
+     * 查询中间件图片
+     * @param type
+     * @param version
+     * @return
+     */
+    String middlewareImage(String type, String version);
+
 }
