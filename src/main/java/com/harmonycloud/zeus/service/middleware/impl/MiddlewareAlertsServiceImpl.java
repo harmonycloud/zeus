@@ -250,6 +250,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             middlewareAlertsDTO.getLabels().put("clusterId", clusterId);
             middlewareAlertsDTO.getLabels().put("namespace",NameConstant.MONITORING);
             middlewareAlertsDTO.getLabels().put("service",NameConstant.PROMETHEUS_K8S_RULES);
+            middlewareAlertsDTO.setLay(NameConstant.SYSTEM);
 
             String time = middlewareAlertsDTO.getAlertTime().divide(middlewareAlertsDTO.getAlertTimes(),0, BigDecimal.ROUND_UP).toString();
             middlewareAlertsDTO.setTime(time);
