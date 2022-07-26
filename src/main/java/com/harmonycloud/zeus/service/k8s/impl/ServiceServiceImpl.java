@@ -143,7 +143,10 @@ public class ServiceServiceImpl implements ServiceService {
                 service.setInternalAddress(service.getServiceName() + "." + namespace + ":" + portDetailDTO.getPort());
             }
         });
-        return servicePortDTOList.stream().filter(servicePortDTO -> servicePortDTO.getServicePurpose() != null).collect(Collectors.toList());
+        List<ServicePortDTO> servicePortDTOS = servicePortDTOList.stream().
+                filter(servicePortDTO -> servicePortDTO.getServicePurpose() != null && !"null".equals(servicePortDTO.getServicePurpose())).
+                collect(Collectors.toList());
+        return servicePortDTOS;
     }
 
 }
