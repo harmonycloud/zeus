@@ -113,7 +113,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
                 beanAlertRecord.setLay(alertInfo.getLay());
                 beanAlertRecord.setAlertId(alertInfo.getAlertId());
                 beanAlertRecord.setExpr(alertInfo.getDescription() + alertInfo.getSymbol() + alertInfo.getThreshold() + "%");
-                beanAlertRecord.setContent(alertInfo.getContent());
+                beanAlertRecord.setContent(alertInfo.getContent() == null ? "" : alertInfo.getContent());
                 lay = AlertConstant.LAY_SYSTEM;
             } else {
                 beanAlertRecord.setLay("service");
@@ -145,16 +145,16 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             //告警内容
             alertInfoDto.setContent(alertInfo.getContent());
             //实际监测
-            String ruleId = "";
             alertInfoDto.setMessage(annotations.getString("summary"));
-            if (alertInfo.getAlertId() != null && beanAlertRecord.getId() != null) {
-                ruleId = middlewareAlertsServiceImpl.calculateID(alertInfo.getAlertId()) + "-"
-                        + middlewareAlertsServiceImpl.createId(beanAlertRecord.getId());
-            }
-            //告警ID
-            alertInfoDto.setRuleID(ruleId);
+            //设置中间件名称
+            alertInfoDto.setMiddlewareName(alertInfo.getMiddlewareName());
             //ip
-            alertInfoDto.setIp(alertInfo.getIp());
+            QueryWrapper<AlertRuleId> queryWrapper = new QueryWrapper<>();
+            queryWrapper.isNotNull("ip");
+            List<AlertRuleId> alertRuleIds = alertRuleIdMapper.selectList(queryWrapper);
+            if (CollectionUtils.isEmpty(alertRuleIds)) {
+                alertInfo.setIp(alertRuleIds.get(0).getIp());
+            }
             // 发送告警信息
             sendAlertMessage(lay, clusterId, namespace, middlewareName, alertInfo, alertInfoDto);
         }
