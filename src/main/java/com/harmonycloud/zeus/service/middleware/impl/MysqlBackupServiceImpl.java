@@ -388,6 +388,9 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         if (!CollectionUtils.isEmpty(backupAddressDTOS)) {
             BeanUtils.copyProperties(backupAddressDTOS.get(0), minio);
         }
+        if (minio.getBucketName().indexOf("/") == 0){
+            minio.setBucketName(minio.getBucketName().substring(1));
+        }
         return minio;
     }
 
