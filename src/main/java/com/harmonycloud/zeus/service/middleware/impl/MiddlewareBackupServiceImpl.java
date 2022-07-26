@@ -32,6 +32,7 @@ import org.springframework.util.ObjectUtils;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -249,14 +250,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         crd.setMetadata(meta);
 
         // 将minio账号密码转换为base64
-        String base64AccessKeyId = new String(Base64.getDecoder().decode(minio.getAccessKeyId()));
-        String base64SecretAccessKey = new String(Base64.getDecoder().decode(minio.getSecretAccessKey()));
+        String base64AccessKeyId = Base64.getEncoder().encodeToString(minio.getAccessKeyId().getBytes(StandardCharsets.UTF_8));
+        String base64SecretAccessKey = Base64.getEncoder().encodeToString(minio.getSecretAccessKey().getBytes(StandardCharsets.UTF_8));
         MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination destination =
-                new MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination();
+            new MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination();
         destination.setDestinationType("minio").setParameters(
-                new MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination.MiddlewareBackupParameters(
-                        minio.getBucketName(), minio.getEndpoint(), backupDTO.getType(), base64AccessKeyId, base64SecretAccessKey,
-                        "MTIzNDU2Cg=="));
+            new MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination.MiddlewareBackupParameters(
+                minio.getBucketName(), minio.getEndpoint(), backupDTO.getType(), base64AccessKeyId,
+                base64SecretAccessKey, "MTIzNDU2Cg=="));
         List<Map<String, List<String>>> customBackups = new ArrayList<>();
         if (!backupDTO.getType().equals(MiddlewareTypeEnum.POSTGRESQL.getType())){
             Map<String, List<String>> map = new HashMap<>();
@@ -287,14 +288,17 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         middlewareBackupCR.setMetadata(meta);
         Minio minio = mysqlAdapterService.getMinio(backupDTO.getAddressName());
         // 将minio账号密码转换为base64
-        String base64AccessKeyId = new String(Base64.getDecoder().decode(minio.getAccessKeyId()));
-        String base64SecretAccessKey = new String(Base64.getDecoder().decode(minio.getSecretAccessKey()));
-        MiddlewareBackupSpec.MiddlewareBackupDestination destination = new MiddlewareBackupSpec.MiddlewareBackupDestination();
-        destination.setDestinationType("minio").setParameters(new MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters(minio.getBucketName(),
-                minio.getEndpoint(), backupDTO.getType(), base64AccessKeyId, base64SecretAccessKey, "MTIzNDU2Cg=="));
+        String base64AccessKeyId = Base64.getEncoder().encodeToString(minio.getAccessKeyId().getBytes(StandardCharsets.UTF_8));
+        String base64SecretAccessKey = Base64.getEncoder().encodeToString(minio.getSecretAccessKey().getBytes(StandardCharsets.UTF_8));
+        MiddlewareBackupSpec.MiddlewareBackupDestination destination =
+            new MiddlewareBackupSpec.MiddlewareBackupDestination();
+        destination.setDestinationType("minio")
+            .setParameters(new MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters(
+                minio.getBucketName(), minio.getEndpoint(), backupDTO.getType(), base64AccessKeyId,
+                base64SecretAccessKey, "MTIzNDU2Cg=="));
 
         List<Map<String, Object>> customBackups = new ArrayList<>();
-        if (!backupDTO.getType().equals(MiddlewareTypeEnum.POSTGRESQL.getType())){
+        if (!backupDTO.getType().equals(MiddlewareTypeEnum.POSTGRESQL.getType())) {
             Map<String, Object> map = new HashMap<>();
             List<String> args = new ArrayList();
             args.add("--backupSize=10");
