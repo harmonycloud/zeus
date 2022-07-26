@@ -455,6 +455,24 @@ public class IngressServiceImpl implements IngressService {
         checkServiceTcpPort(clusterDTO, serviceDTOList);
     }
 
+    @Override
+    public Set<String> listIngressIp(String clusterId, String ingressClassName) {
+        IngressComponentDto ingressComponentDto = ingressComponentService.get(clusterId, ingressClassName);
+        List<PodInfo> podInfoList;
+        Set<String> ingressPodIpSet = new HashSet<>();
+        if (StringUtils.isNotBlank(ingressComponentDto.getAddress())) {
+            ingressPodIpSet.add(ingressComponentDto.getAddress());
+        } else {
+            podInfoList = listIngressPod(clusterId, ingressComponentDto.getNamespace(), ingressComponentDto.getIngressClassName());
+            podInfoList = podInfoList.stream().filter(podInfo -> "Running".equals(podInfo.getStatus())
+                    && StringUtils.isNotBlank(podInfo.getHostIp())).collect(Collectors.toList());
+            podInfoList.forEach(podInfo -> {
+                ingressPodIpSet.add(podInfo.getHostIp());
+            });
+        }
+        return ingressPodIpSet;
+    }
+
     /**
      * 添加ingress 其他信息
      * @param clusterId
@@ -463,21 +481,8 @@ public class IngressServiceImpl implements IngressService {
     public void setIngressExtralInfo(String clusterId, List<IngressDTO> ingressDTOS) {
         ingressDTOS.forEach(ingressDTO -> {
             if (StringUtils.isNotEmpty(ingressDTO.getIngressClassName())) {
-                IngressComponentDto ingressComponentDto = ingressComponentService.get(clusterId, ingressDTO.getIngressClassName());
-                List<PodInfo> podInfoList;
-                if (StringUtils.isNotBlank(ingressComponentDto.getAddress())) {
-                    ingressDTO.setAddress(ingressComponentDto.getAddress());
-                } else {
-                    podInfoList = listIngressPod(clusterId, ingressComponentDto.getNamespace(), ingressComponentDto.getIngressClassName());
-                    podInfoList = podInfoList.stream().filter(podInfo -> "Running".equals(podInfo.getStatus())
-                            && StringUtils.isNotBlank(podInfo.getHostIp())).collect(Collectors.toList());
-                    Set<String> ingressPodIpSet = new HashSet<>();
-                    podInfoList.forEach(podInfo -> {
-                        ingressPodIpSet.add(podInfo.getHostIp());
-                    });
-                    // 设置ingress pod
-                    ingressDTO.setIngressIpSet(ingressPodIpSet);
-                }
+                // 设置ingress pod
+                ingressDTO.setIngressIpSet(listIngressIp(clusterId, ingressDTO.getIngressClassName()));
             }
             // 设置服务暴露的网络模型 4层或7层
             setServiceNetworkModel(ingressDTO);
