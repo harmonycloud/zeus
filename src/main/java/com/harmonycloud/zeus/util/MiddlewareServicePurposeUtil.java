@@ -25,6 +25,9 @@ public class MiddlewareServicePurposeUtil {
         if (serviceName.contains("tcp")) {
             serviceName = ingressDTO.getServiceList().get(0).getServiceName();
         }
+        if (serviceName.contains("nodeport")) {
+            serviceName = serviceName.split("-")[0];
+        }
         List<String> serviceNameList = new ArrayList<>();
         if (!CollectionUtils.isEmpty(ingressDTO.getRules())) {
             ingressDTO.getRules().forEach(ingressRuleDTO -> {
