@@ -175,7 +175,8 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             MiddlewareAlertsDTO middlewareAlertsDTO = new MiddlewareAlertsDTO();
             BeanUtils.copyProperties(rule, middlewareAlertsDTO);
             middlewareAlertsDTO.setDescription(rule.getAnnotations().containsKey("description")
-                    ? rule.getAnnotations().get("description") : rule.getAlert());
+                && !type.equals(MiddlewareTypeEnum.POSTGRESQL.getType()) ? rule.getAnnotations().get("description")
+                    : rule.getAlert());
             middlewareAlertsDTO.setUnit(rule.getAnnotations().getOrDefault("unit", ""));
             middlewareAlertsDTO.setType(type);
             middlewareAlertsDTOList.add(middlewareAlertsDTO);
@@ -188,8 +189,8 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                             List<MiddlewareAlertsDTO> middlewareAlertsDTOList) {
         //告警规则入库
         middlewareAlertsDTOList.stream().forEach(middlewareAlertsDTO -> {
-            String prometheusRulesName = "postgresql".equals(middlewareAlertsDTO.getType()) ? "harmonycloud-" + middlewareName : middlewareName;
-            updateServiceAlerts2Prometheus(clusterId, namespace, middlewareName, prometheusRulesName, middlewareAlertsDTO);
+            //String prometheusRulesName = "postgresql".equals(middlewareAlertsDTO.getType()) ? "harmonycloud-" + middlewareName : middlewareName;
+            updateServiceAlerts2Prometheus(clusterId, namespace, middlewareName, middlewareName, middlewareAlertsDTO);
             addAlerts2Sql(clusterId, namespace, middlewareName, middlewareAlertsDTO);
         });
     }
