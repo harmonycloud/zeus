@@ -367,7 +367,12 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
         if (!CollectionUtils.isEmpty(ingressDTOS)) {
             // 优先使用ingress或NodePort暴露的服务
             IngressDTO ingressDTO = ingressDTOS.get(0);
-            String exposeIP = ingressDTO.getExposeIP();
+            Set<String> ingressIpSet = ingressService.listIngressIp(clusterId, ingressDTO.getIngressClassName());
+            String exposeIP = "";
+            for (String ip : ingressIpSet) {
+                exposeIP = ip;
+                break;
+            }
             List<ServiceDTO> serviceList = ingressDTO.getServiceList();
             if (!CollectionUtils.isEmpty(serviceList)) {
                 ServiceDTO serviceDTO = serviceList.get(0);
