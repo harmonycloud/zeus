@@ -345,6 +345,12 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
             middleware.setName(middlewareName);
             middleware.setType(MiddlewareTypeEnum.REDIS.getType());
             redisOperator.createOpenService(middleware);
+            // ingress服务偶尔会有延迟，等待5秒
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             return queryBasicAccessInfo(clusterId, namespace, middlewareName, null);
         }
     }
