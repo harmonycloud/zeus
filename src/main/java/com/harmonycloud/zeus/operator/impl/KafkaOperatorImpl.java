@@ -48,7 +48,7 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
         }
         zookeeper.put("address", kafkaDTO.getZkAddress());
         zookeeper.put("port", kafkaDTO.getZkPort());
-        zookeeper.put("path", kafkaDTO.getPath());
+        zookeeper.put("path", kafkaDTO.getPath().replace("/",""));
         values.put("zookeeper", zookeeper);
     }
 
@@ -68,7 +68,7 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
                 kafkaDTO = new KafkaDTO();
             }
             kafkaDTO.setZkAddress(args.getString("address"));
-            kafkaDTO.setPath(args.getString("path"));
+            kafkaDTO.setPath("/" + args.getString("path"));
             String[] ports = args.getString("port").split("/");
             kafkaDTO.setZkPort(ports[0]);
             JSONObject external = values.getJSONObject("external");

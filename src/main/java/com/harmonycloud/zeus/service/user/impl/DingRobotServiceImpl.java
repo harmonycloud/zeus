@@ -267,7 +267,7 @@ public class DingRobotServiceImpl implements DingRobotService {
         StringBuffer sb = new StringBuffer();
         sb.append("告警等级: ").append(level).append(NEWLINE);
         sb.append("告警内容: ").append(alertInfoDto.getContent()).append(NEWLINE);
-        sb.append("告警对象: ").append(alertInfoDto.getClusterId()).append(NEWLINE);
+        sb.append("告警对象: ").append(alertInfoDto.getMiddlewareName()).append(NEWLINE);
         sb.append("规则描述: ").append(alertInfoDto.getDescription()).append(NEWLINE);
         sb.append("实际监测: ").append(alertInfoDto.getMessage()).append(NEWLINE);
         sb.append("告警时间: ").append(time);

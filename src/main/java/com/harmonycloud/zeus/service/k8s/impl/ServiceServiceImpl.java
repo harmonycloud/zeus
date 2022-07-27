@@ -99,7 +99,7 @@ public class ServiceServiceImpl implements ServiceService {
             if (!CollectionUtils.isEmpty(portDetailDTOList)) {
                 servicePortDTO.setPortDetailDtoList(portDetailDTOList);
             }
-            servicePortDTO.setServicePurpose(MiddlewareServicePurposeUtil.convertChinesePurpose(type, servicePortDTO.getServiceName()));
+            servicePortDTO.setServicePurpose(MiddlewareServicePurposeUtil.convertChinesePurpose(name, type, servicePortDTO.getServiceName()));
 
             if (beanMiddlewareInfo != null) {
                 servicePortDTO.setImagePath(beanMiddlewareInfo.getImagePath());
@@ -136,14 +136,17 @@ public class ServiceServiceImpl implements ServiceService {
     public List<ServicePortDTO> listInternalService(String clusterId, String namespace, String name, String type) {
         List<ServicePortDTO> servicePortDTOList = list(clusterId, namespace, name, type);
         servicePortDTOList.forEach(service -> {
-            service.setServicePurpose(MiddlewareServicePurposeUtil.convertChinesePurpose(type, service.getServiceName()));
+            service.setServicePurpose(MiddlewareServicePurposeUtil.convertChinesePurpose(name, type, service.getServiceName()));
             List<PortDetailDTO> portDetailDtoList = service.getPortDetailDtoList();
             if (!CollectionUtils.isEmpty(portDetailDtoList)) {
                 PortDetailDTO portDetailDTO = portDetailDtoList.get(0);
                 service.setInternalAddress(service.getServiceName() + "." + namespace + ":" + portDetailDTO.getPort());
             }
         });
-        return servicePortDTOList;
+        List<ServicePortDTO> servicePortDTOS = servicePortDTOList.stream().
+                filter(servicePortDTO -> servicePortDTO.getServicePurpose() != null && !"null".equals(servicePortDTO.getServicePurpose())).
+                collect(Collectors.toList());
+        return servicePortDTOS;
     }
 
 }
