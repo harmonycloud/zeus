@@ -89,9 +89,7 @@ public class MiddlewareServicePurposeUtil {
     public static String convertRedis(String middlewareName, String serviceName) {
         if (serviceName.contains("readonly")) {
             return "只读";
-        } else if (serviceName.contains("predixy")) {
-            return "读写";
-        } else if (serviceName.equals(middlewareName)) {
+        } else if (serviceName.contains("predixy") || serviceName.equals(middlewareName) || serviceName.equals(middlewareName + "-sentinel")) {
             return "读写";
         } else {
             return null;

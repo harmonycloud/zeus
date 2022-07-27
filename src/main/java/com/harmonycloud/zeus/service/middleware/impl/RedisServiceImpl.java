@@ -345,6 +345,12 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
             middleware.setName(middlewareName);
             middleware.setType(MiddlewareTypeEnum.REDIS.getType());
             redisOperator.createOpenService(middleware);
+            // ingress服务偶尔会有延迟，等待5秒
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             return queryBasicAccessInfo(clusterId, namespace, middlewareName, null);
         }
     }
@@ -359,7 +365,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
                 middlewareService.detail(clusterId, namespace, middlewareName, MiddlewareTypeEnum.REDIS.getType());
         }
         List<IngressDTO> ingressDTOS =
-            ingressService.get(clusterId, namespace, MiddlewareTypeEnum.REDIS.name(), middlewareName);
+            ingressService.get(clusterId, namespace, MiddlewareTypeEnum.REDIS.getType(), middlewareName);
         ingressDTOS = ingressDTOS.stream().filter(ingressDTO -> (!ingressDTO.getName().contains("readonly")))
             .collect(Collectors.toList());
 
@@ -390,7 +396,6 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
                     + servicePortDTO.getPortDetailDtoList().get(0).getTargetPort() + "(集群内部)");
                 redisAccessInfo.setHost(servicePortDTO.getClusterIP());
                 redisAccessInfo.setPort(servicePortDTO.getPortDetailDtoList().get(0).getTargetPort());
-                Map<String, Integer> map = new HashMap<>();
             } else {
                 redisAccessInfo.setAddress("无");
             }
