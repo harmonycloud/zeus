@@ -143,7 +143,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             //规则描述
             alertInfoDto.setDescription(alertInfo.getDescription() + alertInfo.getSymbol() + alertInfo.getThreshold() + "%");
             //告警内容
-            alertInfoDto.setContent(alertInfo.getContent());
+            alertInfoDto.setContent(StringUtils.isBlank(alertInfo.getContent()) ? "/" : alertInfo.getContent());
             //实际监测
             alertInfoDto.setMessage(annotations.getString("summary"));
             //设置中间件名称
