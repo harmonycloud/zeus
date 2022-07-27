@@ -157,10 +157,10 @@ public class ServiceServiceImpl implements ServiceService {
         String svc1 = middlewareName + "namesrv-proxy-1." + "tmqnamesrv-proxy-headless-svc:9876";
         ServicePortDTO servicePortDTO0 = new ServicePortDTO();
         servicePortDTO0.setServicePurpose("读写");
-        servicePortDTO0.setServiceName(svc0);
+        servicePortDTO0.setInternalAddress(svc0);
         ServicePortDTO servicePortDTO1 = new ServicePortDTO();
         servicePortDTO1.setServicePurpose("读写");
-        servicePortDTO1.setServiceName(svc1);
+        servicePortDTO1.setInternalAddress(svc1);
         List<ServicePortDTO> list = new ArrayList<>();
         list.add(servicePortDTO0);
         list.add(servicePortDTO1);
