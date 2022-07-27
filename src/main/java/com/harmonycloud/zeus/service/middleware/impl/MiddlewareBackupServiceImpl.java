@@ -139,6 +139,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 String backupTime = DateUtil.utc2Local(item.getMetadata().getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
                 backupRecord.setNamespace(item.getMetadata().getNamespace());
                 backupRecord.setBackupTime(backupTime);
+                backupRecord.setCrName(item.getMetadata().getName());
                 backupRecord.setBackupName(labels.containsKey(OWNER) ? labels.get(OWNER) : item.getMetadata().getName());
                 backupRecord.setBackupFileName(item.getMetadata().getName());
                 MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters parameters =  item.getSpec().getBackupDestination().getParameters();
@@ -225,10 +226,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void deleteRecord(String clusterId, String namespace, String middlewareName, String type, String backupName, String backupFileName, String addressName) {
+    public void deleteRecord(String clusterId, String namespace, String type, String backupName) {
         try {
             if (MiddlewareTypeEnum.MYSQL.getType().equals(type)) {
-                mysqlAdapterService.deleteRecord(clusterId, namespace, middlewareName, type, backupName, backupFileName, addressName);
+                mysqlAdapterService.deleteRecord(clusterId, namespace, type, backupName);
             } else {
                 backupCRDService.delete(clusterId, namespace, backupName);
             }
@@ -529,6 +530,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Deprecated
+    @Override
     public void tryCreateMiddlewareRestore(String clusterId, String namespace, String type, String middlewareName, String backupName, String restoreName) {
         for (int i = 0; i < 600; i++) {
             log.info("第 {} 次为实例：{}创建恢复实例:{}", i, middlewareName, restoreName);
@@ -754,7 +756,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public void deleteBackUpTask(String clusterId, String namespace, String type, String backupName, String backupId, String backupFileName, String addressName, String cron) {
         if (StringUtils.isEmpty(cron)) {
-            deleteRecord(clusterId, namespace, null, type, backupName, backupFileName, addressName);
+            deleteRecord(clusterId, namespace, type, backupName);
         } else {
             deleteSchedule(clusterId, namespace, type, backupName, addressName);
         }
@@ -762,8 +764,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void deleteBackUpRecord(String clusterId, String namespace, String type, String backupName, String backupFileName, String addressName, String backupId) {
-        deleteRecord(clusterId, namespace, null, type, backupName, backupFileName, addressName);
+    public void deleteBackUpRecord(String clusterId, String namespace, String type, String crName, String backupId) {
+        deleteRecord(clusterId, namespace, type, crName);
         deleteBackupName(clusterId, backupId, "normal");
     }
 

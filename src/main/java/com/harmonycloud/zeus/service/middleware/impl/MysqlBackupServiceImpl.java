@@ -96,6 +96,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
             record.setSourceName(backup.getName());
             record.setBackupType(BackupType.CLUSTER.getType());
             record.setBackupName(backup.getBackupName());
+            record.setCrName(backup.getCrName());
             record.setBackupFileName(backup.getBackupFileName());
             record.setSourceType(MiddlewareTypeEnum.MYSQL.getType());
             record.setOwner(backup.getOwner());
@@ -178,11 +179,10 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void deleteRecord(String clusterId, String namespace, String middlewareName, String type,
-        String backupName, String backupFileName, String chineseName) {
+    public void deleteRecord(String clusterId, String namespace, String type, String backupName) {
         try {
             backupService.delete(clusterId, namespace, backupName);
-            minioWrapper.removeObject(getMinio(chineseName), backupName);
+            //minioWrapper.removeObject(getMinio(chineseName), backupName);
         } catch (Exception e) {
             log.error("删除备份失败", e);
         }
@@ -283,7 +283,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
                 return;
             }
             try {
-                deleteRecord(clusterId, namespace, middlewareName, type, backup.getName(), backup.getBackupFileName(), backup.getAddressName());
+                deleteRecord(clusterId, namespace, type, backup.getName());
             } catch (Exception e) {
                 log.error("集群：{}，命名空间：{}，mysql中间件：{}，删除mysql备份异常", e);
             }
@@ -338,7 +338,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void deleteBackUpRecord(String clusterId, String namespace, String type, String backupName, String backupFileName, String addressName, String backupId) {
+    public void deleteBackUpRecord(String clusterId, String namespace, String type, String crName, String backupId) {
 
     }
 
@@ -475,6 +475,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
             mysqlBackupDto.setType("all");
             mysqlBackupDto.setTaskName(backup.getTaskName());
             mysqlBackupDto.setName(backup.getName());
+            mysqlBackupDto.setCrName(backup.getCrName());
             mysqlBackupDto.setNamespace(backup.getNamespace());
             mysqlBackupDto.setBackupFileName(backup.getBackupFileName());
             mysqlBackupDtoList.add(mysqlBackupDto);
