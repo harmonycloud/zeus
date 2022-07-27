@@ -121,7 +121,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             middlewareAlertsDTO.setAlertId(calculateID(alertInfo.getAlertId()));
             middlewareAlertsDTO.setNickname(convertCluster(alertInfo.getClusterId()));
             return middlewareAlertsDTO;
-        }).collect(Collectors.toList()));
+        }).filter(alertInfo -> !filterExpr(alertInfo.getExpr())).collect(Collectors.toList()));
         alertsDTOPageInfo.getList().sort(
                 (o1, o2) -> o1.getCreateTime() == null ? -1 : o2.getCreateTime() == null ? -1 : o2.getCreateTime().compareTo(o1.getCreateTime()));
 
