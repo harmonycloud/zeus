@@ -133,7 +133,9 @@ public class MiddlewareServicePurposeUtil {
     public static String convertKafka(String middlewareName, String serviceName) {
         if (serviceName.contains("manager-svc")) {
             return "管理页面";
-        } else if (serviceName.contains("broker")) {
+        } else if (serviceName.contains("external")) {
+            return "服务连接";
+        } else if (serviceName.equals(middlewareName + "-svc")) {
             return "服务连接";
         } else {
             return null;
