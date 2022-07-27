@@ -161,7 +161,7 @@ public class ServiceServiceImpl implements ServiceService {
         servicePortDTO0.setInternalAddress(svc0);
         ServicePortDTO servicePortDTO1 = new ServicePortDTO();
         servicePortDTO1.setServicePurpose("读写");
-        servicePortDTO0.setServiceName("namesrv-proxy-headless-svc1");
+        servicePortDTO1.setServiceName("namesrv-proxy-headless-svc1");
         servicePortDTO1.setInternalAddress(svc1);
         List<ServicePortDTO> list = new ArrayList<>();
         list.add(servicePortDTO0);
