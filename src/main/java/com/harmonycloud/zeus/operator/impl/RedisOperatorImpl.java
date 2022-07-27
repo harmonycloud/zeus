@@ -57,7 +57,9 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         ingressDTO.setExposeType(MIDDLEWARE_EXPOSE_INGRESS);
         ingressDTO.setProtocol(Protocol.TCP.getValue());
         ingressDTO.setMiddlewareType(middleware.getType());
-        List<ServicePortDTO> servicePortDTOList = serviceService.list(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
+        List<ServicePortDTO> servicePortDTOList = serviceService.list(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType()).stream().filter(servicePortDTO -> {
+            return !(servicePortDTO.getServiceName().contains("readonly") || servicePortDTO.getServiceName().contains("sentinel"));
+        }).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(servicePortDTOList)) {
             return;
         }
