@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.service.middleware.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.conditions.query.QueryChainWrapper;
 import com.harmonycloud.caas.common.constants.BackupConstant;
+import com.harmonycloud.caas.common.constants.NameConstant;
 import com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant;
 import com.harmonycloud.caas.common.enums.BackupType;
 import com.harmonycloud.caas.common.enums.DateType;
@@ -151,8 +152,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                     backupRecord.setPhrase(backupStatus.getPhase());
                 }
                 backupRecord.setSourceName(item.getSpec().getName());
-                backupRecord.setSourceType(item.getMetadata().getLabels().get("type"));
-                String backupId = item.getMetadata().getLabels().get("backupId");
+                backupRecord.setSourceType(labels.getOrDefault(NameConstant.TYPE, type));
+                String backupId = labels.get("backupId");
                 // 通过schedule获取backupId
                 if(StringUtils.isEmpty(backupId) && labels.containsKey(OWNER)){
                     try {
