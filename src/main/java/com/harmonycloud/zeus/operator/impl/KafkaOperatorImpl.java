@@ -40,6 +40,8 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
         replaceCommonResources(quota, values.getJSONObject(RESOURCES));
         replaceCommonStorages(quota, values);
         values.put("replicas", quota.getNum());
+        // 设置版本
+        values.put("version", Double.parseDouble(middleware.getVersion()));
         // 设置zookeeper信息
         JSONObject zookeeper = new JSONObject();
         KafkaDTO kafkaDTO = middleware.getKafkaDTO();
