@@ -625,7 +625,8 @@ public class IngressServiceImpl implements IngressService {
             return false;
         }
         for (ServiceDTO serviceDTO : ingressDTO.getServiceList()) {
-            if (serviceDTO.getServiceName().contains("console") || serviceDTO.getServiceName().contains("kibana")) {
+            if (serviceDTO.getServiceName().contains("console") || serviceDTO.getServiceName().contains("kibana")
+                    || serviceDTO.getServiceName().contains("proxy")) {
                 return false;
             }
         }
@@ -1355,7 +1356,6 @@ public class IngressServiceImpl implements IngressService {
             sbf.append(exposeIp).append(":").append(serviceDTO.getExposePort()).append(splitTag);
         }
         String brokerAddress = sbf.substring(0, sbf.length() - 1);
-        Boolean openExternal = external.getBoolean(ENABLE);
         external.put(externalTag, brokerAddress);
         external.put(ENABLE, true);
         // upgrade
