@@ -1,6 +1,6 @@
 apiVersion: v2
-name: mysql-operator
+appVersion: 1.8.3
 description: mysql operator chart
+name: mysql-operator
 type: application
 version: 1.8.3-1
-appVersion: 1.8.3
