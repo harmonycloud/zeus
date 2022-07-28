@@ -153,19 +153,14 @@ public class ServiceServiceImpl implements ServiceService {
     }
 
     private List<ServicePortDTO> getMQInternalService(String middlewareName) {
-        String svc0 = middlewareName + "namesrv-proxy-0." + middlewareName + "namesrv-proxy-headless-svc:9876";
-        String svc1 = middlewareName + "namesrv-proxy-1." + middlewareName + "namesrv-proxy-headless-svc:9876";
+        String svc0 = middlewareName + "namesrv-0." + middlewareName + "namesrv-headless-svc:9876";
+        String svc1 = middlewareName + "namesrv-1." + middlewareName + "namesrv-headless-svc:9876";
         ServicePortDTO servicePortDTO0 = new ServicePortDTO();
         servicePortDTO0.setServicePurpose("读写");
-        servicePortDTO0.setServiceName("namesrv-proxy-headless-svc0");
-        servicePortDTO0.setInternalAddress(svc0);
-        ServicePortDTO servicePortDTO1 = new ServicePortDTO();
-        servicePortDTO1.setServicePurpose("读写");
-        servicePortDTO1.setServiceName("namesrv-proxy-headless-svc1");
-        servicePortDTO1.setInternalAddress(svc1);
+        servicePortDTO0.setServiceName("namesrv-headless-svc");
+        servicePortDTO0.setInternalAddress(svc0 + ";" + svc1);
         List<ServicePortDTO> list = new ArrayList<>();
         list.add(servicePortDTO0);
-        list.add(servicePortDTO1);
         return list;
     }
 
