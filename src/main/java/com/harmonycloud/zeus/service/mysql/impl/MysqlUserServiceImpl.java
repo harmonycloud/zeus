@@ -238,7 +238,7 @@ public class MysqlUserServiceImpl implements MysqlUserService {
             qr.execute(con, sql);
             return true;
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("删除数据库用户出错了", e);
         }
         return false;
     }

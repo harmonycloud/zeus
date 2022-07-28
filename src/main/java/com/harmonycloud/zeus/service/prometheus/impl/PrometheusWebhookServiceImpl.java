@@ -152,7 +152,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             QueryWrapper<AlertRuleId> queryWrapper = new QueryWrapper<>();
             queryWrapper.isNotNull("ip");
             List<AlertRuleId> alertRuleIds = alertRuleIdMapper.selectList(queryWrapper);
-            if (CollectionUtils.isEmpty(alertRuleIds)) {
+            if (!CollectionUtils.isEmpty(alertRuleIds)) {
                 alertInfo.setIp(alertRuleIds.get(0).getIp());
             }
             // 发送告警信息

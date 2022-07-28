@@ -134,6 +134,9 @@ public class ServiceServiceImpl implements ServiceService {
 
     @Override
     public List<ServicePortDTO> listInternalService(String clusterId, String namespace, String name, String type) {
+        if ("rocketmq".equals(type)) {
+            return getMQInternalService(name);
+        }
         List<ServicePortDTO> servicePortDTOList = list(clusterId, namespace, name, type);
         servicePortDTOList.forEach(service -> {
             service.setServicePurpose(MiddlewareServicePurposeUtil.convertChinesePurpose(name, type, service.getServiceName()));
@@ -147,6 +150,23 @@ public class ServiceServiceImpl implements ServiceService {
                 filter(servicePortDTO -> servicePortDTO.getServicePurpose() != null && !"null".equals(servicePortDTO.getServicePurpose())).
                 collect(Collectors.toList());
         return servicePortDTOS;
+    }
+
+    private List<ServicePortDTO> getMQInternalService(String middlewareName) {
+        String svc0 = middlewareName + "namesrv-proxy-0." + middlewareName + "namesrv-proxy-headless-svc:9876";
+        String svc1 = middlewareName + "namesrv-proxy-1." + middlewareName + "namesrv-proxy-headless-svc:9876";
+        ServicePortDTO servicePortDTO0 = new ServicePortDTO();
+        servicePortDTO0.setServicePurpose("读写");
+        servicePortDTO0.setServiceName("namesrv-proxy-headless-svc0");
+        servicePortDTO0.setInternalAddress(svc0);
+        ServicePortDTO servicePortDTO1 = new ServicePortDTO();
+        servicePortDTO1.setServicePurpose("读写");
+        servicePortDTO1.setServiceName("namesrv-proxy-headless-svc1");
+        servicePortDTO1.setInternalAddress(svc1);
+        List<ServicePortDTO> list = new ArrayList<>();
+        list.add(servicePortDTO0);
+        list.add(servicePortDTO1);
+        return list;
     }
 
 }

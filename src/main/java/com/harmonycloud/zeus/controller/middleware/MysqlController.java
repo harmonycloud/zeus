@@ -160,10 +160,8 @@ public class MysqlController {
                                  @RequestParam("namespace") String namespace,
                                  @RequestParam("middlewareName") String middlewareName,
                                  @RequestParam("user") String user) {
-        if (mysqlUserService.delete(clusterId, namespace, middlewareName, user)) {
-            BaseResult.ok();
-        }
-        return BaseResult.error();
+        mysqlUserService.delete(clusterId, namespace, middlewareName, user);
+        return BaseResult.ok();
     }
 
     @ApiOperation(value = "查询用户列表", notes = "查询用户列表")
