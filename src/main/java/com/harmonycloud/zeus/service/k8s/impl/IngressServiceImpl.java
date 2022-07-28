@@ -634,9 +634,9 @@ public class IngressServiceImpl implements IngressService {
                 portList.add(startPort);
                 startPort++;
             } catch (Exception e) {
+                log.error("出错了", e);
                 startPort++;
-                i = 0;
-                portList.clear();
+                i--;
             }
         }
         return portList;
