@@ -576,6 +576,10 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                     beanMailToUserMapper.insert(mailToUser);
                 }
             });
+        } else {
+            QueryWrapper<BeanMailToUser> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("alert_setting_id", alertSettingId);
+            beanMailToUserMapper.delete(queryWrapper);
         }
     }
 
