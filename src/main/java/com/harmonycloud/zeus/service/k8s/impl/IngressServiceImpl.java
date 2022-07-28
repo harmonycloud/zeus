@@ -587,19 +587,32 @@ public class IngressServiceImpl implements IngressService {
      * @param ingressDTO
      */
     private void checkAndAllocateServicePort(String clusterId, IngressDTO ingressDTO) {
-        if (!checkExternalService(ingressDTO)) {
-            return;
-        }
         if ("rocketmq".equals(ingressDTO.getMiddlewareType()) || "kafka".equals(ingressDTO.getMiddlewareType())) {
             List<ServiceDTO> serviceList = ingressDTO.getServiceList();
             for (int i = 0; i < serviceList.size(); i++) {
                 ServiceDTO serviceDTO = serviceList.get(i);
+                if (!checkExternalService(serviceDTO)) {
+                    continue;
+                }
                 setServicePort(serviceDTO, ingressDTO.getMiddlewareType());
                 if (StringUtils.isBlank(serviceDTO.getExposePort()) && !serviceDTO.getServiceName().contains("proxy")) {
                     serviceDTO.setExposePort(String.valueOf(getAvailablePort(clusterId)));
                 }
             }
         }
+    }
+
+    /**
+     * 检查是否是集群外访问相关服务
+     * @param serviceDTO
+     * @return
+     */
+    private boolean checkExternalService(ServiceDTO serviceDTO) {
+        if (serviceDTO.getServiceName().contains("console") || serviceDTO.getServiceName().contains("kibana")
+                || serviceDTO.getServiceName().contains("proxy") || serviceDTO.getServiceName().contains("namesrv")) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -612,8 +625,7 @@ public class IngressServiceImpl implements IngressService {
             return false;
         }
         for (ServiceDTO serviceDTO : ingressDTO.getServiceList()) {
-            if (serviceDTO.getServiceName().contains("console") || serviceDTO.getServiceName().contains("kibana")
-                    || serviceDTO.getServiceName().contains("proxy") || serviceDTO.getServiceName().contains("namesrv")) {
+            if (serviceDTO.getServiceName().contains("console") || serviceDTO.getServiceName().contains("kibana")) {
                 return false;
             }
         }
