@@ -591,10 +591,10 @@ public class IngressServiceImpl implements IngressService {
             List<ServiceDTO> serviceList = ingressDTO.getServiceList();
             for (int i = 0; i < serviceList.size(); i++) {
                 ServiceDTO serviceDTO = serviceList.get(i);
+                setServicePort(serviceDTO, ingressDTO.getMiddlewareType());
                 if (!checkExternalService(serviceDTO)) {
                     continue;
                 }
-                setServicePort(serviceDTO, ingressDTO.getMiddlewareType());
                 if (StringUtils.isBlank(serviceDTO.getExposePort()) && !serviceDTO.getServiceName().contains("proxy")) {
                     serviceDTO.setExposePort(String.valueOf(getAvailablePort(clusterId)));
                 }
