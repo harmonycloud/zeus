@@ -4,6 +4,7 @@ import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_ZERO;
 import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ARGS;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -82,8 +83,8 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
                 clone.put("timestamp", res.get("backupTimestamp"));
                 clone.put("s3_wal_path", res.get("repository"));
                 clone.put("s3_endpoint", mp.getUrl());
-                clone.put("s3_access_key_id", mp.getUserId());
-                clone.put("s3_secret_access_key", mp.getUserKey());
+                clone.put("s3_access_key_id", Base64.getDecoder().decode(mp.getUserId()));
+                clone.put("s3_secret_access_key", Base64.getDecoder().decode(mp.getUserKey()));
                 clone.put("s3_force_path_style", true);
 
                 values.put("clone", clone);
