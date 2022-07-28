@@ -625,12 +625,12 @@ public class IngressServiceImpl implements IngressService {
             return false;
         }
         for (ServiceDTO serviceDTO : ingressDTO.getServiceList()) {
-            if (serviceDTO.getServiceName().contains("console") || serviceDTO.getServiceName().contains("kibana")
-                    || serviceDTO.getServiceName().contains("proxy")) {
-                return false;
+            if (serviceDTO.getServiceName().contains("master") || serviceDTO.getServiceName().contains("slave")
+                    || serviceDTO.getServiceName().contains("broker")) {
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
     /**
