@@ -54,5 +54,5 @@ public interface MiddlewareBackupCRService {
      * @param name
      * @return
      */
-    MiddlewareBackupCR get(String clusterId, String namespace, String name) throws IOException;
+    MiddlewareBackupCR get(String clusterId, String namespace, String name);
 }

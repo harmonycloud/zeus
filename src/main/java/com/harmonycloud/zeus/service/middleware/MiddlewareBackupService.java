@@ -74,14 +74,10 @@ public interface MiddlewareBackupService {
      *
      * @param clusterId      集群id
      * @param namespace      分区
-     * @param middlewareName 中间件名称
      * @param type           中间件类型
      * @param backupName     备份记录名称
-     * @param backupFileName 备份文件名称(mysql特有)
-     * @param chineseName    备份位置中文名称
-     * @return
      */
-    void deleteRecord(String clusterId, String namespace, String middlewareName, String type, String backupName, String backupFileName, String chineseName);
+    void deleteRecord(String clusterId, String namespace, String type, String backupName);
 
     /**
      * 查询备份任务列表
@@ -198,12 +194,10 @@ public interface MiddlewareBackupService {
      * @param clusterId
      * @param namespace
      * @param type
-     * @param backupName
-     * @param backupFileName
-     * @param addressName
+     * @param crName
      * @param backupId
      */
-    void deleteBackUpRecord(String clusterId, String namespace, String type, String backupName, String backupFileName, String addressName, String backupId);
+    void deleteBackUpRecord(String clusterId, String namespace, String type, String crName, String backupId);
 
     /**
      * 创建备份任务名称映射信息

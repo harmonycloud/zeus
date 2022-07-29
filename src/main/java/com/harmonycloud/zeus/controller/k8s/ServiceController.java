@@ -39,4 +39,19 @@ public class ServiceController {
         return BaseResult.ok(serviceService.list(clusterId, namespace, middlewareName, middlewareType));
     }
 
+    @ApiOperation(value = "查询中间件集群内访问列表", notes = "查询中间件集群内访问列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareType", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("/{middlewareName}/internalServices")
+    public BaseResult<List<ServicePortDTO>> listInternalService(@PathVariable("clusterId") String clusterId,
+                                                 @PathVariable(value = "namespace") String namespace,
+                                                 @PathVariable(value = "middlewareName") String middlewareName,
+                                                 @RequestParam(value = "middlewareType") String middlewareType) {
+        return BaseResult.ok(serviceService.listInternalService(clusterId, namespace, middlewareName, middlewareType));
+    }
+
 }

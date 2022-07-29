@@ -34,12 +34,12 @@ public class MiddlewareBackupSpec {
     /**
      * 通用备份
      */
-    private List<Map<String, List<String>>> customBackups;
+    private List<Map<String, Object>> customBackups;
 
     public MiddlewareBackupSpec() {
     }
 
-    public MiddlewareBackupSpec(MiddlewareBackupDestination backupDestination, String name, String type, List<Map<String, List<String>>> customBackups) {
+    public MiddlewareBackupSpec(MiddlewareBackupDestination backupDestination, String name, String type, List<Map<String, Object>> customBackups) {
         this.backupDestination = backupDestination;
         this.name = name;
         this.type = type;

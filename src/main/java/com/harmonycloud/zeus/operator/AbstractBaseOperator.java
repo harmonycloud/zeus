@@ -13,9 +13,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.Query;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.constants.CommonConstant;
-import com.harmonycloud.caas.common.enums.Protocol;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
@@ -23,9 +23,10 @@ import com.harmonycloud.caas.common.model.StorageDto;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.bean.BeanAlertRule;
-import com.harmonycloud.zeus.bean.MiddlewareAlertInfo;
+import com.harmonycloud.zeus.bean.AlertRuleId;
 import com.harmonycloud.zeus.dao.BeanAlertRuleMapper;
-import com.harmonycloud.zeus.dao.MiddlewareAlertInfoMapper;
+import com.harmonycloud.zeus.dao.AlertRuleIdMapper;
+import com.harmonycloud.zeus.dao.BeanMiddlewareInfoMapper;
 import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.prometheus.PrometheusRuleGroups;
 import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
@@ -104,7 +105,7 @@ public abstract class AbstractBaseOperator {
     @Autowired
     private ServiceService serviceService;
     @Autowired
-    private MiddlewareBackupServiceImpl middlewareBackupService;
+    protected MiddlewareBackupServiceImpl middlewareBackupService;
     @Autowired
     private AspectService aspectService;
     @Autowired
@@ -116,7 +117,7 @@ public abstract class AbstractBaseOperator {
     @Autowired
     private BeanAlertRuleMapper beanAlertRuleMapper;
     @Autowired
-    private MiddlewareAlertInfoMapper middlewareAlertInfoMapper;
+    private AlertRuleIdMapper alertRuleIdMapper;
     @Autowired
     private MiddlewareAlertsServiceImpl middlewareAlertsService;
     @Autowired
@@ -125,7 +126,10 @@ public abstract class AbstractBaseOperator {
     protected StorageService storageService;
     @Autowired
     protected NamespaceService namespaceService;
-
+    @Autowired
+    private IngressComponentService ingressComponentService;
+    @Autowired
+    private BeanMiddlewareInfoMapper middlewareInfoMapper;
     /**
      * 是否支持该中间件
      */
@@ -182,7 +186,7 @@ public abstract class AbstractBaseOperator {
 
         // 4. 创建对外访问
         ThreadPoolExecutorFactory.executor.execute(() -> {
-            if (middleware.getHostNetwork() && !CollectionUtils.isEmpty(middleware.getIngresses())) {
+            if (!CollectionUtils.isEmpty(middleware.getIngresses())) {
                 try {
                     // 校验svc是否已创建
                     checkSvcCreated(middleware);
@@ -391,7 +395,23 @@ public abstract class AbstractBaseOperator {
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
         convertCommonByHelmChart(middleware, values);
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
+        //setImagePath(middleware, values);
         return middleware;
+    }
+
+    /**
+     * 设置中间件图片
+     * @param middleware
+     * @param values
+     */
+    private void setImagePath(Middleware middleware, JSONObject values) {
+        String chartVersion = values.getString("chart-version");
+        String middlewareType = middleware.getType();
+        QueryWrapper<BeanMiddlewareInfo> wrapper = new QueryWrapper<>();
+        wrapper.eq("chart_name", middlewareType);
+        wrapper.eq("chart_version", chartVersion);
+        BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoMapper.selectOne(wrapper);
+        middleware.setImagePath(beanMiddlewareInfo.getImagePath());
     }
 
     /**
@@ -461,6 +481,9 @@ public abstract class AbstractBaseOperator {
 
             // 设置服务备份状态
             middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(middleware.getClusterId(),middleware.getNamespace(),middleware.getType(),middleware.getName()));
+
+            // 设置中间件图片
+            //setImagePath(middleware, values);
         } else {
             middleware.setAliasName(middleware.getName());
         }
@@ -636,18 +659,35 @@ public abstract class AbstractBaseOperator {
         values.put("middleware-label", middleware.getLabels());
         values.put("chart-version", middleware.getChartVersion());
 
-        // label
+        //labels
+        replaceLabels(middleware, values);
+        // node affinity
+        replaceNodeAffinity(middleware, values);
+        // log
+        replaceLog(middleware, values);
+        //toleration
+        replaceToleration(middleware, values);
+        // annotations
+        replaceAnnotations(middleware, values);
+    }
+
+    protected void replaceLabels(Middleware middleware, JSONObject values) {
         if (StringUtils.isNotBlank(middleware.getLabels())) {
             String[] labelAry = middleware.getLabels().split(CommonConstant.COMMA);
             JSONObject labelJson = new JSONObject();
             for (String label : labelAry) {
                 String[] pair = label.split(CommonConstant.EQUAL);
-                labelJson.put(pair[0], pair[1]);
+                if (pair.length == 1) {
+                    labelJson.put(pair[0], "");
+                } else {
+                    labelJson.put(pair[0], pair[1]);
+                }
             }
             values.put("labels", labelJson);
         }
+    }
 
-        // node affinity
+    protected void replaceNodeAffinity(Middleware middleware, JSONObject values){
         if (!CollectionUtils.isEmpty(middleware.getNodeAffinity())) {
             // convert to k8s model
             JSONObject nodeAffinity = K8sConvert.convertNodeAffinity2Json(middleware.getNodeAffinity());
@@ -657,8 +697,9 @@ public abstract class AbstractBaseOperator {
         } else {
             values.put("nodeAffinity", new JSONObject());
         }
+    }
 
-        // log
+    protected void replaceLog(Middleware middleware, JSONObject values){
         JSONObject logging = new JSONObject();
         JSONObject collection = new JSONObject();
 
@@ -671,8 +712,9 @@ public abstract class AbstractBaseOperator {
         collection.put("stdout", stdout);
         logging.put("collection", collection);
         values.put("logging", logging);
+    }
 
-        //toleration
+    protected void replaceToleration(Middleware middleware, JSONObject values){
         if (!CollectionUtils.isEmpty(middleware.getTolerations())) {
             JSONArray jsonArray = K8sConvert.convertToleration2Json(middleware.getTolerations());
             values.put("tolerations", jsonArray);
@@ -682,8 +724,9 @@ public abstract class AbstractBaseOperator {
             }
             values.put("tolerationAry", sbf.substring(0, sbf.length()));
         }
+    }
 
-        // annotations
+    protected void replaceAnnotations(Middleware middleware, JSONObject values){
         if (StringUtils.isNotEmpty(middleware.getAnnotations())) {
             JSONObject ann = new JSONObject();
             String[] annotations = middleware.getAnnotations().split(",");
@@ -710,6 +753,17 @@ public abstract class AbstractBaseOperator {
             image.put("repository", registry.getRegistryAddress() + "/"
                 + (StringUtils.isBlank(registry.getImageRepo()) ? registry.getChartRepo() : registry.getImageRepo()));
         }
+        // 读写分离
+        if (middleware.getReadWriteProxy() != null && middleware.getReadWriteProxy().getEnabled()){
+            replaceReadWriteProxyValues(middleware.getReadWriteProxy(), values);
+        }
+    }
+
+    /**
+     * 处理读写分离
+     */
+    protected void replaceReadWriteProxyValues(ReadWriteProxy readWriteProxy, JSONObject values){
+
     }
 
     /**
@@ -937,7 +991,11 @@ public abstract class AbstractBaseOperator {
                     middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
             try {
                 IngressDTO ingressDTO = new IngressDTO();
-                ingressDTO.setName(middleware.getName() + "-nodeport-" +UUIDUtils.get8UUID().substring(0, 4));
+                if (middlewareServiceNameIndex != null && middlewareServiceNameIndex.getMiddlewareServiceNameSuffix() != null && middlewareServiceNameIndex.getMiddlewareServiceNameSuffix().contains("readonly")) {
+                    ingressDTO.setName(middleware.getName() + "-readonly-nodeport-" + UUIDUtils.get8UUID().substring(0, 4));
+                } else {
+                    ingressDTO.setName(middleware.getName() + "-nodeport-" + UUIDUtils.get8UUID().substring(0, 4));
+                }
                 List<ServiceDTO> serviceDTOList = new ArrayList<>();
                 ServiceDTO serviceDTO = new ServiceDTO();
                 serviceDTO.setTargetPort(portDetailDTO.getTargetPort());
@@ -995,29 +1053,29 @@ public abstract class AbstractBaseOperator {
                 }
                 prometheusRuleGroups.getRules().stream().forEach(rule -> {
                     if (StringUtils.isNotEmpty(rule.getAlert())) {
-                        MiddlewareAlertInfo middlewareAlertInfo = new MiddlewareAlertInfo();
-                        middlewareAlertInfo.setAlert(rule.getAlert());
-                        middlewareAlertInfo.setExpr(rule.getExpr());
-                        middlewareAlertInfo.setSymbol(middlewareAlertsService.getSymbol(rule.getExpr()));
-                        middlewareAlertInfo.setThreshold(middlewareAlertsService.getThreshold(rule.getExpr()));
-                        middlewareAlertInfo.setTime(rule.getTime());
+                        AlertRuleId alertRuleId = new AlertRuleId();
+                        alertRuleId.setAlert(rule.getAlert());
+                        alertRuleId.setExpr(rule.getExpr());
+                        alertRuleId.setSymbol(middlewareAlertsService.getSymbol(rule.getExpr()));
+                        alertRuleId.setThreshold(middlewareAlertsService.getThreshold(rule.getExpr()));
+                        alertRuleId.setTime(rule.getTime());
                         rule.getLabels().put("middleware",middleware.getType());
-                        middlewareAlertInfo.setLabels(JSONUtil.toJsonStr(rule.getLabels()));
-                        middlewareAlertInfo.setAnnotations(JSONUtil.toJsonStr(rule.getAnnotations()));
-                        middlewareAlertInfo.setEnable("1");
-                        middlewareAlertInfo.setLay("service");
-                        middlewareAlertInfo.setClusterId(middleware.getClusterId());
-                        middlewareAlertInfo.setNamespace(middleware.getNamespace());
-                        middlewareAlertInfo.setMiddlewareName(middleware.getName());
-                        middlewareAlertInfo.setName(middleware.getClusterId());
-                        middlewareAlertInfo.setCreateTime(new Date());
-                        middlewareAlertInfo.setType(middleware.getType());
-                        middlewareAlertInfo.setDescription(rule.getAlert());
+                        alertRuleId.setLabels(JSONUtil.toJsonStr(rule.getLabels()));
+                        alertRuleId.setAnnotations(JSONUtil.toJsonStr(rule.getAnnotations()));
+                        alertRuleId.setEnable("1");
+                        alertRuleId.setLay("service");
+                        alertRuleId.setClusterId(middleware.getClusterId());
+                        alertRuleId.setNamespace(middleware.getNamespace());
+                        alertRuleId.setMiddlewareName(middleware.getName());
+                        alertRuleId.setName(middleware.getClusterId());
+                        alertRuleId.setCreateTime(new Date());
+                        alertRuleId.setType(middleware.getType());
+                        alertRuleId.setDescription(rule.getAlert());
                         String expr = rule.getAlert() + middlewareAlertsService.getSymbol(rule.getExpr())
-                                + middlewareAlertsService.getThreshold(rule.getExpr()) + "%"  + "且" + middlewareAlertInfo.getAlertTime()
-                                + "分钟内触发" + middlewareAlertInfo.getAlertTimes() + "次";
-                        middlewareAlertInfo.setAlertExpr(expr);
-                        middlewareAlertInfoMapper.insert(middlewareAlertInfo);
+                                + middlewareAlertsService.getThreshold(rule.getExpr()) + "%"  + "且" + alertRuleId.getAlertTime()
+                                + "分钟内触发" + alertRuleId.getAlertTimes() + "次";
+                        alertRuleId.setAlertExpr(expr);
+                        alertRuleIdMapper.insert(alertRuleId);
                     }
                 });
             }
@@ -1029,9 +1087,9 @@ public abstract class AbstractBaseOperator {
      * @param middleware
      */
     public void removeSql(Middleware middleware) {
-        QueryWrapper<MiddlewareAlertInfo> wrapper = new QueryWrapper<>();
+        QueryWrapper<AlertRuleId> wrapper = new QueryWrapper<>();
         wrapper.eq("cluster_id",middleware.getClusterId()).eq("namespace",middleware.getNamespace()).eq("middleware_name",middleware.getName());
-        middlewareAlertInfoMapper.delete(wrapper);
+        alertRuleIdMapper.delete(wrapper);
     }
 
     /**
@@ -1054,7 +1112,7 @@ public abstract class AbstractBaseOperator {
         }
         for (IngressDTO ingressDTO : middleware.getIngresses()){
             // 获取暴露ip地址
-            String exposeIp = getExposeIp(cluster, ingressDTO);
+            String exposeIp = ingressService.getExposeIp(cluster, ingressDTO);
             // 指定分隔符号
             String splitTag = ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.ROCKET_MQ.getType()) ? ";" : ",";
             // 初始化
@@ -1073,21 +1131,6 @@ public abstract class AbstractBaseOperator {
             external.put(EXTERNAL_IP_ADDRESS, ipSb.toString());
             external.put(SVC_NAME_TAG, svcSb.toString());
         }
-    }
-
-    public String getExposeIp(MiddlewareClusterDTO cluster, IngressDTO ingressDTO){
-        if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_NODEPORT)){
-            return cluster.getHost();
-        } else if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_INGRESS)
-                && ingressDTO.getProtocol().equals(Protocol.TCP.getValue())){
-            List<MiddlewareClusterIngress> middlewareClusterIngressList = cluster.getIngressList().stream()
-                    .filter(ingress -> ingress.getIngressClassName().equals(ingressDTO.getIngressClassName()))
-                    .collect(Collectors.toList());
-            if (!CollectionUtils.isEmpty(middlewareClusterIngressList)){
-                return middlewareClusterIngressList.get(0).getAddress();
-            }
-        }
-        return cluster.getHost();
     }
     
     public void checkSvcCreated(Middleware middleware) {

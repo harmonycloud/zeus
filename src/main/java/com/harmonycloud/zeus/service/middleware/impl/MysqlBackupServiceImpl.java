@@ -96,6 +96,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
             record.setSourceName(backup.getName());
             record.setBackupType(BackupType.CLUSTER.getType());
             record.setBackupName(backup.getBackupName());
+            record.setCrName(backup.getCrName());
             record.setBackupFileName(backup.getBackupFileName());
             record.setSourceType(MiddlewareTypeEnum.MYSQL.getType());
             record.setOwner(backup.getOwner());
@@ -128,15 +129,19 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
             if (StringUtils.isEmpty(backup.getTaskName()) && StringUtils.isNotEmpty(backup.getBackupName())){
                 try {
                     MysqlScheduleBackupCR msbCr = mysqlScheduleBackupService.get(clusterId, backup.getNamespace(), backup.getBackupName());
-                    backup.setTaskName(msbCr.getMetadata().getLabels().get("backupId"));
+                    String taskName = msbCr.getMetadata().getLabels().get("backupId");
+                    backup.setTaskName(StringUtils.isEmpty(taskName) ? msbCr.getMetadata().getName() : taskName);
                 } catch (Exception e){
                     log.error("查询定时文件资源失败", e);
                     continue;
                 }
-
             }
             record.setBackupId(backup.getTaskName());
-            record.setTaskName(getBackupName(clusterId, backup.getTaskName()).getBackupName());
+            String backupName = getBackupName(clusterId, backup.getTaskName()).getBackupName();
+            record.setTaskName(StringUtils.isEmpty(backupName) ? backup.getTaskName() : backupName);
+            if (StringUtils.isEmpty(record.getTaskName())){
+                continue;
+            }
             record.setBackupMode("single");
             list.add(record);
         }
@@ -169,15 +174,15 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         MysqlScheduleBackupCR backupCRD = mysqlScheduleBackupService.get(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getBackupScheduleName());
         MysqlScheduleBackupSpec spec = backupCRD.getSpec();
         spec.setSchedule(CronUtils.parseUtcCron(backupDTO.getCron()));
+        spec.setKeepBackups(backupDTO.getLimitRecord());
         mysqlScheduleBackupService.update(backupDTO.getClusterId(), backupCRD);
     }
 
     @Override
-    public void deleteRecord(String clusterId, String namespace, String middlewareName, String type,
-        String backupName, String backupFileName, String chineseName) {
+    public void deleteRecord(String clusterId, String namespace, String type, String backupName) {
         try {
             backupService.delete(clusterId, namespace, backupName);
-            minioWrapper.removeObject(getMinio(chineseName), backupName);
+            //minioWrapper.removeObject(getMinio(chineseName), backupName);
         } catch (Exception e) {
             log.error("删除备份失败", e);
         }
@@ -278,7 +283,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
                 return;
             }
             try {
-                deleteRecord(clusterId, namespace, middlewareName, type, backup.getName(), backup.getBackupFileName(), backup.getAddressName());
+                deleteRecord(clusterId, namespace, type, backup.getName());
             } catch (Exception e) {
                 log.error("集群：{}，命名空间：{}，mysql中间件：{}，删除mysql备份异常", e);
             }
@@ -333,7 +338,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void deleteBackUpRecord(String clusterId, String namespace, String type, String backupName, String backupFileName, String addressName, String backupId) {
+    public void deleteBackUpRecord(String clusterId, String namespace, String type, String crName, String backupId) {
 
     }
 
@@ -382,6 +387,9 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         Minio minio = new Minio();
         if (!CollectionUtils.isEmpty(backupAddressDTOS)) {
             BeanUtils.copyProperties(backupAddressDTOS.get(0), minio);
+        }
+        if (minio.getBucketName().indexOf("/") == 0){
+            minio.setBucketName(minio.getBucketName().substring(1));
         }
         return minio;
     }
@@ -467,6 +475,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
             mysqlBackupDto.setType("all");
             mysqlBackupDto.setTaskName(backup.getTaskName());
             mysqlBackupDto.setName(backup.getName());
+            mysqlBackupDto.setCrName(backup.getCrName());
             mysqlBackupDto.setNamespace(backup.getNamespace());
             mysqlBackupDto.setBackupFileName(backup.getBackupFileName());
             mysqlBackupDtoList.add(mysqlBackupDto);

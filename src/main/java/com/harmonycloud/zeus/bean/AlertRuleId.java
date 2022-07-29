@@ -17,7 +17,7 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("alert_rule_id")
-public class MiddlewareAlertInfo {
+public class AlertRuleId {
 
     @TableId(value = "alert_id", type = IdType.AUTO)
     private Integer alertId;

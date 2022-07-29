@@ -173,7 +173,8 @@ public class PodServiceImpl implements PodService {
                 .setPodIp(pod.getStatus().getPodIP())
                 .setNodeName(pod.getSpec().getNodeName())
                 .setCreateTime(pod.getMetadata().getCreationTimestamp())
-                .setRestartCount(0);
+                .setRestartCount(0)
+                .setHostIp(pod.getStatus().getHostIP());
         // set pod status
         pi.setStatus(getPodRealState(pod));
 

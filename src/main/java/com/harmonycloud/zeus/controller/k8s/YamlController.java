@@ -17,7 +17,7 @@ import java.util.List;
  * @author xutianhong
  * @Date 2021/12/23 3:22 下午
  */
-@Api(tags = "平台工具箱", value = "yaml文件", description = "yaml文件")
+@Api(tags = {"平台工具箱", "格式校验"}, value = "yaml文件", description = "yaml文件")
 @RestController
 @RequestMapping("/yaml")
 public class YamlController {

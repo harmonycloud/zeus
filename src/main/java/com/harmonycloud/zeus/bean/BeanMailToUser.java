@@ -16,7 +16,7 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("mail_to_user")
-public class MailToUser {
+public class BeanMailToUser {
 
     /**
      * 自增id
@@ -29,9 +29,9 @@ public class MailToUser {
     @TableField("user_id")
     private Integer userId;
     /**
-     * 规则ID
+     * 告警设置ID
      */
-    @TableField("alert_rule_id")
-    private Integer alertRuleId;
+    @TableField("alert_setting_id")
+    private Integer alertSettingId;
 
 }

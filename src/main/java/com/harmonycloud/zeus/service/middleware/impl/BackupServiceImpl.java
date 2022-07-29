@@ -49,10 +49,9 @@ public class BackupServiceImpl implements BackupService {
         return convertBackupCR(backupCRList);
     }
 
+    @Override
     public List<Backup> listScheduleBackup(String clusterId, String namespace) {
         List<BackupCR> backupCRList = backupWrapper.list(clusterId, namespace);
-//        backupCRList.stream().filter(backupCR -> backupCR.getMetadata().getLabels().containsKey("backup-schedule")).collect(Collectors.toList());
-//        backupCRList.stream().filter(backupCR -> backupName.equals(backupCR.getMetadata().getLabels().get("backup-schedule"))).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(backupCRList)) {
             return new ArrayList<>(0);
         }
@@ -64,6 +63,7 @@ public class BackupServiceImpl implements BackupService {
         List<Backup> backupList = new ArrayList<>();
         backupCRList.forEach(backupCRD -> {
             Backup backup = new Backup().setName(backupCRD.getSpec().getClusterName())
+                    .setCrName(backupCRD.getMetadata().getName())
                     .setNamespace(backupCRD.getMetadata().getNamespace())
                     .setControllerName(backupCRD.getMetadata().getLabels().get("controllername"))
                     .setMiddlewareCluster(backupCRD.getSpec().getClusterName())
@@ -78,6 +78,9 @@ public class BackupServiceImpl implements BackupService {
             } else {
                 backup.setBackupName(backupCRD.getMetadata().getName());
                 backup.setOwner(backupCRD.getMetadata().getName());
+                if (StringUtils.isEmpty(backup.getTaskName())){
+                    backup.setTaskName(backupCRD.getMetadata().getName());
+                }
             }
             if (!ObjectUtils.isEmpty(backupCRD.getStatus())) {
                 backup.setBackupFileName(backupCRD.getStatus().getBackupFileName())

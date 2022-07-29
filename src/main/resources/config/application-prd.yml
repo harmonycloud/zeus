@@ -56,11 +56,18 @@ system:
   platform:
     #平台版本
     version: v0.2.1
-  usercenter: skyview2
-  skyview:
-    username: admin
-    password: Ab123456
-    ip: 10.10.103.188
+    usercenter: zeus
+    skyview:
+      username: admin
+      password: Ab123456
+      host: caas-gateway-svc.caas-system
+      port: 8081
+      prefix:
+    registry:
+      address: 10.10.101.22
+      port: 8443
+      username: admin
+      password: Harbor12345
 
   # 总览参数配置
   overview:

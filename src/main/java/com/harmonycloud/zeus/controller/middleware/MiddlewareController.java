@@ -308,4 +308,16 @@ public class MiddlewareController {
         return BaseResult.ok(middlewareService.platform(clusterId, namespace, name, type));
     }
 
+    @ApiOperation(value = "查询中间件地址", notes = "查询中间件地址")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "version", value = "中间件版本", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("/middlewareImage")
+    @Authority(power = 1)
+    public BaseResult<String> middlewareImage(@RequestParam("type") String type,
+                                              @RequestParam("version") String version) {
+        return BaseResult.ok(middlewareService.middlewareImage(type, version));
+    }
+
 }

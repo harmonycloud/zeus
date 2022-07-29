@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.dao;
 
-import com.harmonycloud.zeus.bean.BeanLdapConfig;
+import com.harmonycloud.zeus.bean.BeanSystemConfig;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.springframework.stereotype.Repository;
 
@@ -13,6 +13,6 @@ import org.springframework.stereotype.Repository;
  * @since 2022-03-10
  */
 @Repository
-public interface BeanLdapConfigMapper extends BaseMapper<BeanLdapConfig> {
+public interface BeanSystemConfigMapper extends BaseMapper<BeanSystemConfig> {
 
 }

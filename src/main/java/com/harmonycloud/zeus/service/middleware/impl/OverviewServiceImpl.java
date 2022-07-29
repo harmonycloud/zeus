@@ -18,9 +18,7 @@ import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.bean.*;
 import com.harmonycloud.zeus.dao.BeanAlertRecordMapper;
-import com.harmonycloud.zeus.dao.MiddlewareAlertInfoMapper;
 import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
-import com.harmonycloud.zeus.integration.cluster.ResourceQuotaWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.service.k8s.*;
@@ -853,7 +851,7 @@ public class OverviewServiceImpl implements OverviewService {
                     alertDTO.setChartVersion(null);
                 }
             }
-            alertDTO.setCapitalType(MiddlewareOfficialNameEnum.findByMiddlewareName(record.getType()));
+            alertDTO.setCapitalType(MiddlewareOfficialNameEnum.findByChartName(record.getType()));
             return alertDTO;
         }).collect(Collectors.toList()));
 
@@ -905,7 +903,7 @@ public class OverviewServiceImpl implements OverviewService {
         for (MiddlewareInfoDTO mwInfo : middlewareInfoDtoSet){
             MiddlewareBriefInfoDTO middlewareBriefInfoDTO = new MiddlewareBriefInfoDTO();
             BeanUtils.copyProperties(mwInfo, middlewareBriefInfoDTO);
-            middlewareBriefInfoDTO.setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(mwInfo.getChartName()));
+            middlewareBriefInfoDTO.setAliasName(MiddlewareOfficialNameEnum.findByChartName(mwInfo.getChartName()));
             int svcCount = 0;
             int errCount = 0;
             if (middlewareListMap.containsKey(mwInfo.getChartName())){

@@ -40,6 +40,14 @@ public interface IngressComponentService {
     List<IngressComponentDto> list(String clusterId);
 
     /**
+     * 获取集群ingress信息
+     *
+     * @param clusterId 集群id
+     * @param ingressClassName  ingress名称
+     */
+    IngressComponentDto get(String clusterId, String ingressClassName);
+
+    /**
      * 删除集群ingress组件
      *
      * @param clusterId 集群id
@@ -53,5 +61,12 @@ public interface IngressComponentService {
      * @param clusterId 集群id
      */
     void delete(String clusterId);
+
+    /**
+     * 查询vip列表
+     *
+     * @param clusterId 集群id
+     */
+    List<String> vipList(String clusterId);
 
 }

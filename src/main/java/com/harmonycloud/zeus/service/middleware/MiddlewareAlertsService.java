@@ -3,11 +3,15 @@ package com.harmonycloud.zeus.service.middleware;
 import java.util.List;
 
 import com.github.pagehelper.PageInfo;
+import com.harmonycloud.caas.common.model.AlertSettingDTO;
 import com.harmonycloud.caas.common.model.AlertUserDTO;
 import com.harmonycloud.caas.common.model.AlertsUserDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareAlertsDTO;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
+import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.zeus.bean.user.BeanUser;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * @author xutianhong
@@ -43,12 +47,10 @@ public interface MiddlewareAlertsService {
      * @param clusterId      集群id
      * @param namespace      命名空间
      * @param middlewareName 中间件名称
-     * @param alertsUserDTO 中间件告警规则和用户
      * @return List<BeanPrometheusRules>
      */
-    void createRules(String clusterId, String namespace,
-                     String middlewareName, String ding,
-                     AlertsUserDTO alertsUserDTO) throws Exception;
+    void createRules(String clusterId, String namespace, String middlewareName,
+                     List<MiddlewareAlertsDTO> middlewareAlertsDTOList) throws Exception;
 
     /**
      * 删除告警规则
@@ -122,5 +124,24 @@ public interface MiddlewareAlertsService {
      * @param alertRuleId
      */
     MiddlewareAlertsDTO alertRuleDetail(String alertRuleId);
+
+    /**
+     * 保存服务告警设置
+     * @param alertSettingDTO
+     */
+    void saveServiceAlertSetting(AlertSettingDTO alertSettingDTO);
+
+    /**
+     * 保存系统告警规则设置
+     * @param alertSettingDTO
+     */
+    void saveSystemAlertSetting(AlertSettingDTO alertSettingDTO);
+
+    /**
+     * 查询服务告警设置
+     * @param args 可变数组，长度为0时查询系统告警设置，长度为3时查询服务告警设置(参数依次为clusterId,namespace,middlewareName)
+     * @return
+     */
+    AlertSettingDTO queryAlertSetting(String... args);
 
 }

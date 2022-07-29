@@ -1,11 +1,7 @@
 package com.harmonycloud.zeus.operator.impl;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.CLUSTER;
-import static com.harmonycloud.caas.common.constants.NameConstant.REDIS;
-import static com.harmonycloud.caas.common.constants.NameConstant.REPLICAS;
-import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
-import static com.harmonycloud.caas.common.constants.NameConstant.SENTINEL;
-import static com.harmonycloud.caas.common.constants.NameConstant.TYPE;
+import static com.harmonycloud.caas.common.constants.NameConstant.*;
+import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_INGRESS;
 
 
@@ -61,7 +57,9 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         ingressDTO.setExposeType(MIDDLEWARE_EXPOSE_INGRESS);
         ingressDTO.setProtocol(Protocol.TCP.getValue());
         ingressDTO.setMiddlewareType(middleware.getType());
-        List<ServicePortDTO> servicePortDTOList = serviceService.list(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
+        List<ServicePortDTO> servicePortDTOList = serviceService.list(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType()).stream().filter(servicePortDTO -> {
+            return !(servicePortDTO.getServiceName().contains("readonly") || servicePortDTO.getServiceName().contains("sentinel"));
+        }).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(servicePortDTOList)) {
             return;
         }
@@ -138,7 +136,6 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         JSONObject redis = values.getJSONObject(REDIS);
         replaceCommonResources(redisQuota, redis.getJSONObject(RESOURCES));
         replaceCommonStorages(redisQuota, values);
-        redis.put(REPLICAS, redisQuota.getNum());
         if (SENTINEL.equals(middleware.getMode())) {
             JSONObject sentinel = values.getJSONObject(SENTINEL);
             MiddlewareQuota sentinelQuota = middleware.getQuota().get(SENTINEL);
@@ -148,8 +145,14 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
                     sentinel.put(REPLICAS, sentinelQuota.getNum());
                 }
             }
+            Integer num = redisQuota.getNum();
+            if (middleware.getReadWriteProxy() != null && middleware.getReadWriteProxy().getEnabled()){
+                num = num / 2;
+            }
+            redis.put(REPLICAS, num);
             values.put(TYPE, SENTINEL);
         } else {
+            redis.put(REPLICAS, redisQuota.getNum());
             values.put(TYPE, CLUSTER);
         }
         // 计算pod最大内存
@@ -180,13 +183,24 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             JSONObject redisQuota = values.getJSONObject(REDIS);
             convertResourcesByHelmChart(middleware, middleware.getType(), redisQuota.getJSONObject(RESOURCES));
             middleware.getQuota().get(middleware.getType()).setNum(redisQuota.getInteger(REPLICAS));
+            // 读写分离
+            if (values.containsKey("predixy")){
+                ReadWriteProxy readWriteProxy = new ReadWriteProxy();
+                readWriteProxy.setEnabled(values.getJSONObject("predixy").getBoolean("enableProxy"));
+                middleware.setReadWriteProxy(readWriteProxy);
+            }
+            // 哨兵
             if (SENTINEL.equals(middleware.getMode())) {
                 JSONObject sentinelQuota = values.getJSONObject(SENTINEL);
                 convertResourcesByHelmChart(middleware, SENTINEL, sentinelQuota.getJSONObject("resources"));
                 middleware.getQuota().get(SENTINEL).setNum(sentinelQuota.getInteger(REPLICAS));
+                Integer num = redisQuota.getInteger(REPLICAS);
+                if (middleware.getReadWriteProxy() != null && middleware.getReadWriteProxy().getEnabled()) {
+                    num = num * 2;
+                }
+                middleware.getQuota().get(middleware.getType()).setNum(num);
             }
         }
-
         return middleware;
     }
 
@@ -322,5 +336,27 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             }
         }
         configMap.getData().put("redis.conf", temp.toString());
+    }
+
+    @Override
+    public void replaceReadWriteProxyValues(ReadWriteProxy readWriteProxy, JSONObject values){
+        JSONObject predixy = new JSONObject();
+        predixy.put("enableProxy", readWriteProxy.getEnabled());
+
+        JSONObject requests = new JSONObject();
+        JSONObject limits = new JSONObject();
+
+        requests.put(CPU, "200m");
+        requests.put(MEMORY, "512Mi");
+        limits.put(CPU, "200m");
+        limits.put(MEMORY, "512Mi");
+        predixy.put("replicas", 3);
+
+        JSONObject resources = new JSONObject();
+        resources.put("requests", requests);
+        resources.put("limits", limits);
+
+        predixy.put("resources", resources);
+        values.put("predixy", predixy);
     }
 }

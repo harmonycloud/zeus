@@ -181,6 +181,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         return mwInfoList.stream().map(info -> {
             MiddlewareInfoDTO dto = new MiddlewareInfoDTO();
             BeanUtils.copyProperties(info, dto);
+            dto.setName(MiddlewareOfficialNameEnum.findByChartName(dto.getName()));
             dto.setStatus(clusterMwInfoDtoMap.get(info.getChartName() + "-" + info.getChartVersion()).getStatus());
             dto.setReplicas(clusterMwInfoDtoMap.get(info.getChartName() + "-" + info.getChartVersion()).getReplicas());
             return dto;
@@ -482,7 +483,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         List<MiddlewareInfoDTO> list = new ArrayList<>();
         for (String key : mwInfoMap.keySet()) {
             MiddlewareInfoDTO middlewareInfoDTO = new MiddlewareInfoDTO().setChartName(key)
-                    .setName(MiddlewareOfficialNameEnum.findByMiddlewareName(key));
+                    .setName(MiddlewareOfficialNameEnum.findByChartName(key));
             list.add(middlewareInfoDTO);
         }
         return list;
@@ -513,6 +514,11 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
                     break;
                 case "elasticsearch":
                     if (middleware.getQuota().get("master").getIsLvmStorage()) {
+                        middlewares.add(middleware);
+                    }
+                    break;
+                case "postgresql":
+                    if (middleware.getQuota().get("postgresql").getIsLvmStorage()) {
                         middlewares.add(middleware);
                     }
                     break;

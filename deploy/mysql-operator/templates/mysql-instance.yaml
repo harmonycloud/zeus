@@ -5,6 +5,16 @@ metadata:
   labels:
     operatorname: mysql-operator
 spec:
+  {{- with .Values.proxy}}
+  proxy:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- if .Values.proxy }}
+    image:
+      repository: {{ .Values.image.repository }}/proxysql
+      tag: {{ .Values.image.proxyImageTag}}
+      pullPolicy: {{ .Values.image.pullPolicy}}
+  {{- end }}
   {{- with .Values.statefulSetConfiguration }}
   _statefulset:
     spec:

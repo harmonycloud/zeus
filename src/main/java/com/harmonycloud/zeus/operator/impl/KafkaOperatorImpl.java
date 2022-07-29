@@ -10,6 +10,7 @@ import com.harmonycloud.zeus.operator.api.KafkaOperator;
 import com.harmonycloud.zeus.operator.miiddleware.AbstractKafkaOperator;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.units.qual.K;
 import org.springframework.util.ObjectUtils;
 
 import java.util.*;
@@ -39,6 +40,8 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
         replaceCommonResources(quota, values.getJSONObject(RESOURCES));
         replaceCommonStorages(quota, values);
         values.put("replicas", quota.getNum());
+        // 设置版本
+        values.put("version", Double.parseDouble(middleware.getVersion()));
         // 设置zookeeper信息
         JSONObject zookeeper = new JSONObject();
         KafkaDTO kafkaDTO = middleware.getKafkaDTO();
@@ -47,13 +50,8 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
         }
         zookeeper.put("address", kafkaDTO.getZkAddress());
         zookeeper.put("port", kafkaDTO.getZkPort());
-        zookeeper.put("path", kafkaDTO.getPath() + UUIDUtils.get8UUID());
+        zookeeper.put("path", kafkaDTO.getPath().replace("/",""));
         values.put("zookeeper", zookeeper);
-
-        // 对外服务
-        if (middleware.getHostNetwork()){
-            convertExternal(values, middleware, cluster);
-        }
     }
 
     @Override
@@ -67,11 +65,18 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
         // 处理kafka的特有参数
         if (values != null && values.getJSONObject("zookeeper") != null) {
             JSONObject args = values.getJSONObject("zookeeper");
-            KafkaDTO kafkaDTO = new KafkaDTO();
+            KafkaDTO kafkaDTO = middleware.getKafkaDTO();
+            if (kafkaDTO == null) {
+                kafkaDTO = new KafkaDTO();
+            }
             kafkaDTO.setZkAddress(args.getString("address"));
-            kafkaDTO.setPath(args.getString("path"));
+            kafkaDTO.setPath("/" + args.getString("path"));
             String[] ports = args.getString("port").split("/");
             kafkaDTO.setZkPort(ports[0]);
+            JSONObject external = values.getJSONObject("external");
+            if (external != null && external.get("enable") != null) {
+                kafkaDTO.setEnableExternal(external.getBooleanValue("enable"));
+            }
             middleware.setKafkaDTO(kafkaDTO);
         }
         middleware.setManagePlatform(true);

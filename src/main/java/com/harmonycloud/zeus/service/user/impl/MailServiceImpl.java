@@ -3,13 +3,10 @@ package com.harmonycloud.zeus.service.user.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.AlertDTO;
 import com.harmonycloud.caas.common.model.middleware.AlertInfoDto;
 import com.harmonycloud.zeus.bean.MailInfo;
 import com.harmonycloud.zeus.bean.user.BeanUser;
 import com.harmonycloud.zeus.dao.MailMapper;
-import com.harmonycloud.zeus.dao.MailToUserMapper;
-import com.harmonycloud.zeus.service.user.DingRobotService;
 import com.harmonycloud.zeus.service.user.MailService;
 import com.harmonycloud.zeus.util.RobotClientUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -23,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import org.yaml.snakeyaml.Yaml;
 
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
@@ -31,9 +27,6 @@ import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
 import java.lang.reflect.Field;
-import java.net.InetAddress;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.List;
@@ -229,11 +222,11 @@ public class MailServiceImpl implements MailService {
 
         String contentText = username + ", 以下是告警信息请查收!";
         //邮件表格header
-        String header = "<td>告警id</td><td>告警等级</td><td>告警内容</td><td>告警对象</td><td>规则描述</td><td>实际监控</td><td>告警时间<td>";
+        String header = "<td>告警等级</td><td>告警内容</td><td>告警对象</td><td>规则描述</td><td>实际监控</td><td>告警时间<td>";
         StringBuilder linesBuffer = new StringBuilder();
         String date = DateFormatUtils.format(alertInfoDto.getAlertTime(), "yyyy-MM-dd HH:mm:ss");
-        linesBuffer.append("<tr><td>" + alertInfoDto.getRuleID() + "</td><td>" + emailTextColor + "</td><td>" + alertInfoDto.getContent() + "</td>" +
-                "<td>" + alertInfoDto.getClusterId() + "</td><td>" + alertInfoDto.getDescription() + "</td><td>" + alertInfoDto.getMessage() + "</td><td>" + date + "</td></tr>");
+        linesBuffer.append("<tr><td>" + emailTextColor + "</td><td>" + alertInfoDto.getContent() + "</td>" +
+                "<td>" + alertInfoDto.getMiddlewareName() + "</td><td>" + alertInfoDto.getDescription() + "</td><td>" + alertInfoDto.getMessage() + "</td><td>" + date + "</td></tr>");
 
         String href = "";
         String ip = "";

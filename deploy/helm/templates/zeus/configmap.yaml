@@ -67,7 +67,7 @@ data:
         password: Ab123456
         host: caas-gateway-svc.caas-system
         port: 8081
-        prefix: /
+        prefix:
       registry:
         address: 10.10.101.22
         port: 8443
@@ -89,6 +89,10 @@ data:
         key-alias: zeushttps
         key-store-password: Ab123456
         key-store: /cfg/zeus.jks
+    forest:
+      timeout: 30000
+      connect-timeout: 30000
+      read-timeout: 30000
 kind: ConfigMap
 metadata:
   name: zeus-config
