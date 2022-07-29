@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.operator.impl;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
+import static com.harmonycloud.caas.common.constants.NameConstant.*;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
 
 import java.io.IOException;
@@ -222,6 +222,12 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                         mysqlDTO.setLastUpdateTime(DateUtil.utc2Local(lastUpdateTime, DateType.YYYY_MM_DD_HH_MM_SS.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue()));
                     }
                 }
+            }
+            // 读写分离
+            if (values.containsKey("proxy")){
+                ReadWriteProxy readWriteProxy = new ReadWriteProxy();
+                readWriteProxy.setEnabled(values.getJSONObject("proxy").getBoolean("enable"));
+                middleware.setReadWriteProxy(readWriteProxy);
             }
         }
         return middleware;
@@ -575,10 +581,32 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
     }
 
+    @Override
+    public void replaceReadWriteProxyValues(ReadWriteProxy readWriteProxy, JSONObject values){
+        JSONObject proxy = new JSONObject();;
+        proxy.put("enable", readWriteProxy.getEnabled());
+
+        JSONObject requests = new JSONObject();
+        JSONObject limits = new JSONObject();
+
+        requests.put(CPU, "500m");
+        requests.put(MEMORY, "1024Mi");
+        limits.put(CPU, "500m");
+        limits.put(MEMORY, "1024Mi");
+
+        JSONObject resources = new JSONObject();
+        resources.put("requests", requests);
+        resources.put("limits", limits);
+
+        proxy.put("resources", resources);
+        values.put("proxy", proxy);
+    }
+
+
     public void createDisasterRecoveryMiddleware(Middleware middleware) {
         MysqlDTO mysqlDTO = middleware.getMysqlDTO();
         //1.为实例创建只读对外服务(NodePort)
-        createOpenService(middleware, true);
+        createOpenService(middleware, true, true);
         //2.设置灾备实例信息，创建灾备实例
         //2.1 设置灾备实例信息
         Middleware relationMiddleware = middleware.getRelationMiddleware();
@@ -665,15 +693,15 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
     }
 
-    public void createOpenService(Middleware middleware, boolean isReadOnlyService) {
+    public void createOpenService(Middleware middleware, boolean isReadOnlyService, boolean useNodePort) {
         log.info("为实例：{} 创建对外服务");
-        executeCreateOpenService(middleware, isReadOnlyService);
+        executeCreateOpenService(middleware, isReadOnlyService, useNodePort);
     }
 
-    private void executeCreateOpenService(Middleware middleware, boolean isReadOnlyService) {
+    private void executeCreateOpenService(Middleware middleware, boolean isReadOnlyService, boolean useNodePort) {
         List<IngressComponentDto> ingressComponentList = ingressComponentService.list(middleware.getClusterId());
         log.info("开始为{}创建对外服务，参数：{}", middleware.getName(), middleware);
-        if (CollectionUtils.isEmpty(ingressComponentList)) {
+        if (CollectionUtils.isEmpty(ingressComponentList) || useNodePort) {
             log.info("不存在ingress，使用NodePort暴露服务");
             MiddlewareServiceNameIndex middlewareServiceNameIndex = ServiceNameConvertUtil.convertMysql(middleware.getName(), isReadOnlyService);
             super.createOpenService(middleware, middlewareServiceNameIndex);

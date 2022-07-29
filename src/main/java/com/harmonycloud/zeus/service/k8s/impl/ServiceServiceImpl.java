@@ -1,13 +1,20 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
+import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.model.middleware.PortDetailDTO;
 import com.harmonycloud.caas.common.model.middleware.ServicePortDTO;
+import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
+import com.harmonycloud.zeus.dao.BeanMiddlewareInfoMapper;
 import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareStatus;
+import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.ServiceService;
+import com.harmonycloud.zeus.service.registry.HelmChartService;
+import com.harmonycloud.zeus.util.MiddlewareServicePurposeUtil;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServiceSpec;
 import org.apache.commons.lang3.StringUtils;
@@ -36,6 +43,15 @@ public class ServiceServiceImpl implements ServiceService {
     @Autowired
     private ServiceWrapper serviceWrapper;
 
+    @Autowired
+    private HelmChartService helmChartService;
+
+    @Autowired
+    private ClusterService clusterService;
+
+    @Autowired
+    private BeanMiddlewareInfoMapper middlewareInfoMapper;
+
     @Override
     public List<ServicePortDTO> list(String clusterId, String namespace, String name, String type) {
         MiddlewareCR middleware = middlewareCRService.getCR(clusterId, namespace, type, name);
@@ -49,6 +65,12 @@ public class ServiceServiceImpl implements ServiceService {
         }
         List<MiddlewareInfo> middlewareInfoList = stringListMap.get("services");
         List<ServicePortDTO> servicePortDTOList = new ArrayList<>(10);
+        JSONObject values = helmChartService.getInstalledValues(name, namespace, clusterService.findById(clusterId));
+        QueryWrapper<BeanMiddlewareInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("chart_version", values.getOrDefault("chart-version", ""));
+        queryWrapper.eq("chart_name", values.getString("chart-name"));
+        BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoMapper.selectOne(queryWrapper);
+
         for (MiddlewareInfo middlewareInfo : middlewareInfoList) {
             if (StringUtils.isBlank(middlewareInfo.getName())) {
                 continue;
@@ -77,6 +99,11 @@ public class ServiceServiceImpl implements ServiceService {
             if (!CollectionUtils.isEmpty(portDetailDTOList)) {
                 servicePortDTO.setPortDetailDtoList(portDetailDTOList);
             }
+            servicePortDTO.setServicePurpose(MiddlewareServicePurposeUtil.convertChinesePurpose(name, type, servicePortDTO.getServiceName()));
+
+            if (beanMiddlewareInfo != null) {
+                servicePortDTO.setImagePath(beanMiddlewareInfo.getImagePath());
+            }
             servicePortDTOList.add(servicePortDTO);
         }
         return servicePortDTOList.stream().filter(servicePortDTO -> !servicePortDTO.getServiceName().contains(EXPORTER)
@@ -104,4 +131,37 @@ public class ServiceServiceImpl implements ServiceService {
         servicePortDTO.setPortDetailDtoList(portDetailDtoList);
         return servicePortDTO;
     }
+
+    @Override
+    public List<ServicePortDTO> listInternalService(String clusterId, String namespace, String name, String type) {
+        if ("rocketmq".equals(type)) {
+            return getMQInternalService(name);
+        }
+        List<ServicePortDTO> servicePortDTOList = list(clusterId, namespace, name, type);
+        servicePortDTOList.forEach(service -> {
+            service.setServicePurpose(MiddlewareServicePurposeUtil.convertChinesePurpose(name, type, service.getServiceName()));
+            List<PortDetailDTO> portDetailDtoList = service.getPortDetailDtoList();
+            if (!CollectionUtils.isEmpty(portDetailDtoList)) {
+                PortDetailDTO portDetailDTO = portDetailDtoList.get(0);
+                service.setInternalAddress(service.getServiceName() + "." + namespace + ":" + portDetailDTO.getPort());
+            }
+        });
+        List<ServicePortDTO> servicePortDTOS = servicePortDTOList.stream().
+                filter(servicePortDTO -> servicePortDTO.getServicePurpose() != null && !"null".equals(servicePortDTO.getServicePurpose())).
+                collect(Collectors.toList());
+        return servicePortDTOS;
+    }
+
+    private List<ServicePortDTO> getMQInternalService(String middlewareName) {
+        String svc0 = middlewareName + "namesrv-0." + middlewareName + "namesrv-headless-svc:9876";
+        String svc1 = middlewareName + "namesrv-1." + middlewareName + "namesrv-headless-svc:9876";
+        ServicePortDTO servicePortDTO0 = new ServicePortDTO();
+        servicePortDTO0.setServicePurpose("读写");
+        servicePortDTO0.setServiceName("namesrv-headless-svc");
+        servicePortDTO0.setInternalAddress(svc0 + ";" + svc1);
+        List<ServicePortDTO> list = new ArrayList<>();
+        list.add(servicePortDTO0);
+        return list;
+    }
+
 }

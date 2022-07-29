@@ -13,7 +13,7 @@ global:
     nodeSelector: {}
   middlewarebackup_controller:
     image: middlewarebackup-controller
-    tag: v1.1.2
+    tag: v1.1.6
     resources:
       limits:
         cpu: 200m
@@ -25,14 +25,16 @@ global:
     job_creator:
       jobNamespace: middleware-job
       jobServiceAccount: job-creator
+      # jobSecondsAfterFinished: 60
+      # jobActiveDeadlineSeconds: 86400
       image: backup-job-creator
       tag: v1.0.1
     common_path_backup:
       image: middleware-backup-operator
-      tag: v1.0.0-common
+      tag: v1.0.2-common
     job_pgsql_backup:
       image: middleware-backup-operator
-      tag: v1.0.0-pgsql
+      tag: v1.0.1-pgsql
   kubectl:
     installCRDs: true
     tag: 1.21

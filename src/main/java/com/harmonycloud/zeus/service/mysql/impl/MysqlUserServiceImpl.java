@@ -233,12 +233,12 @@ public class MysqlUserServiceImpl implements MysqlUserService {
     @Override
     public boolean nativeDelete(Connection con, String user) {
         QueryRunner qr = new QueryRunner();
-        String sql = String.format("drop user %s@'%s'", user, "%");
+        String sql = String.format("drop user `%s`@`%s`", user, "%");
         try {
             qr.execute(con, sql);
             return true;
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("删除数据库用户出错了", e);
         }
         return false;
     }

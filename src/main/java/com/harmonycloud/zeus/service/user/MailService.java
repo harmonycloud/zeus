@@ -1,15 +1,11 @@
 package com.harmonycloud.zeus.service.user;
 
 import com.harmonycloud.caas.common.model.middleware.AlertInfoDto;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareAlertsDTO;
 import com.harmonycloud.zeus.bean.MailInfo;
-import com.harmonycloud.zeus.bean.MailToUser;
 import com.harmonycloud.zeus.bean.user.BeanUser;
 
 import javax.mail.MessagingException;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.List;
 
 /**
  * @author yushuaikang

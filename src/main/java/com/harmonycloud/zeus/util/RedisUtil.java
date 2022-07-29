@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.util;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.RedisAccessInfo;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.DefaultStringRedisConnection;
@@ -17,6 +18,7 @@ import java.util.Set;
  * @author yushuaikang
  * @date 2022/3/30 下午3:11
  */
+@Slf4j
 public class RedisUtil {
 
     @Autowired
@@ -119,6 +121,7 @@ public class RedisUtil {
             }
             return jedis;
         } catch (Exception e) {
+            log.error("redis连接失败", e);
             throw new BusinessException(ErrorMessage.REDIS_SERVER_CONNECT_FAILED);
         }
     }

@@ -19,8 +19,8 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("ldap_config")
-public class BeanLdapConfig implements Serializable {
+@TableName("system_config")
+public class BeanSystemConfig implements Serializable {
 
     private static final long serialVersionUID = 1L;
 

@@ -64,14 +64,20 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "backupName", value = "备份名称", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "cron", value = "cron表达式", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "keepAlive", value = "保留个数｜天数", paramType = "query", dataTypeClass = Integer.class),
+            @ApiImplicitParam(name = "dateUnit", value = "时间单位", paramType = "query", dataTypeClass = String.class),
     })
     @PutMapping
     public BaseResult update(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
                              @RequestParam("type") String type,
                              @RequestParam("backupName") String backupName,
-                             @RequestParam(value = "cron", required = false) String cron) {
-        middlewareBackupService.updateBackupSchedule(new MiddlewareBackupDTO(clusterId, namespace, type, backupName, cron));
+                             @RequestParam(value = "cron", required = false) String cron,
+                             @RequestParam(value = "keepAlive", required = false) Integer keepAlive,
+                             @RequestParam(value = "dateUnit", required = false) String dateUnit) {
+        MiddlewareBackupDTO middlewareBackupDTO = new MiddlewareBackupDTO(clusterId, namespace, type, backupName, cron);
+        middlewareBackupDTO.setRetentionTime(keepAlive).setLimitRecord(keepAlive).setDateUnit(dateUnit);
+        middlewareBackupService.updateBackupSchedule(middlewareBackupDTO);
         return BaseResult.ok();
     }
 
@@ -123,9 +129,7 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "backupName", value = "备份规则名称", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "backupFileName", value = "备份文件名称", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "addressName", value = "备份地址名称", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "crName", value = "cr名称", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "backupId", value = "备份任务ID", paramType = "query", dataTypeClass = String.class),
     })
     @DeleteMapping("/record")
@@ -133,11 +137,9 @@ public class MiddlewareBackupController {
     public BaseResult delete(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
                              @RequestParam("type") String type,
-                             @RequestParam("backupName") String backupName,
-                             @RequestParam("backupFileName") String backupFileName,
-                             @RequestParam("addressName") String addressName,
+                             @RequestParam("crName") String crName,
                              @RequestParam("backupId") String backupId) {
-        middlewareBackupService.deleteBackUpRecord(clusterId, namespace, type, backupName, backupFileName, addressName, backupId);
+        middlewareBackupService.deleteBackUpRecord(clusterId, namespace, type, crName, backupId);
         return BaseResult.ok();
     }
 

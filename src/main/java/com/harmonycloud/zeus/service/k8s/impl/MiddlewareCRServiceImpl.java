@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.integration.cluster.MiddlewareWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
@@ -22,9 +24,6 @@ import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareQuota;
-import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.tool.date.DateUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -103,6 +102,7 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
         MiddlewareCR cr = getCR(clusterId, namespace, type, name);
         Middleware pods = podService.listPods(cr, clusterId, namespace, name, type);
         Middleware middleware = simpleConvert(cr);
+        setBrokerNum(middleware, type, pods);
         middleware.setIsAllLvmStorage(pods.getIsAllLvmStorage()).setClusterId(clusterId);
         return middleware;
     }
@@ -134,6 +134,35 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
             throw new BusinessException(ErrorMessage.MIDDLEWARE_CLUSTER_IS_NOT_RUNNING);
         }
         return mw;
+    }
+
+    /**
+     * 设置broker数量
+     * @param middleware
+     * @param type
+     * @param pods
+     */
+    private void setBrokerNum(Middleware middleware, String type, Middleware pods) {
+        AtomicInteger brokerNum = new AtomicInteger(0);
+        if ("kafka".equals(type)) {
+            pods.getPods().forEach(podInfo -> {
+                if (podInfo.getPodName().contains("broker")) {
+                    brokerNum.getAndIncrement();
+                }
+            });
+            KafkaDTO kafkaDTO = new KafkaDTO();
+            kafkaDTO.setBrokerNum(brokerNum.get());
+            middleware.setKafkaDTO(kafkaDTO);
+        } else if ("rocketmq".equals(type)) {
+            pods.getPods().forEach(podInfo -> {
+                if (podInfo.getPodName().contains("broker")) {
+                    brokerNum.getAndIncrement();
+                }
+            });
+            RocketMQParam rocketMQParam = new RocketMQParam();
+            rocketMQParam.setBrokerNum(brokerNum.get());
+            middleware.setRocketMQParam(rocketMQParam);
+        }
     }
 
     /**

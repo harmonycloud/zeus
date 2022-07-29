@@ -42,7 +42,7 @@ public interface MysqlOperator extends BaseOperator {
     /**
      * @param middleware
      */
-    void createOpenService(Middleware middleware, boolean createReadOnlyService);
+    void createOpenService(Middleware middleware, boolean createReadOnlyService, boolean useNodePort);
 
     /**
      * 为mysql创建一个ingress service

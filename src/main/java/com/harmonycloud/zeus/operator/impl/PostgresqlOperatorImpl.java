@@ -4,9 +4,16 @@ import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_ZERO;
 import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ARGS;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupCR;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupSpec;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupStatus;
+import com.harmonycloud.zeus.service.k8s.MiddlewareBackupCRService;
 import org.apache.commons.lang3.StringUtils;
 
 import com.alibaba.fastjson.JSONObject;
@@ -22,17 +29,22 @@ import com.harmonycloud.zeus.operator.miiddleware.AbstractPostgresqlOperator;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xutianhong
  * @Date 2022/6/7 3:19 下午
  */
 @Slf4j
+@Operator(paramTypes4One = Middleware.class)
 public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implements PostgresqlOperator {
+
+    @Autowired
+    private MiddlewareBackupCRService middlewareBackupCRService;
 
     @Override
     public boolean support(Middleware middleware) {
-        return false;
+        return MiddlewareTypeEnum.POSTGRESQL == MiddlewareTypeEnum.findByType(middleware.getType());
     }
 
     @Override
@@ -58,6 +70,29 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         values.put("userPasswords", userPasswords);
         // 替换版本
         values.put("pgsqlVersion", middleware.getVersion());
+
+        // 备份恢复
+        if (StringUtils.isNotEmpty(middleware.getBackupFileName())){
+            try {
+                MiddlewareBackupCR middlewareBackupCR = middlewareBackupCRService.get(cluster.getId(), middleware.getNamespace(), middleware.getBackupFileName());
+                Map<String, Object> res = middlewareBackupCR.getStatus().getBackupResults().get(0);
+                MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters mp = middlewareBackupCR.getSpec().getBackupDestination().getParameters();
+
+                JSONObject clone = new JSONObject();
+                clone.put("cluster", middlewareBackupCR.getSpec().getName());
+                clone.put("timestamp", res.get("backupTimestamp"));
+                clone.put("s3_wal_path", res.get("repository"));
+                clone.put("s3_endpoint", mp.getUrl());
+                clone.put("s3_access_key_id", Base64.getDecoder().decode(mp.getUserId()));
+                clone.put("s3_secret_access_key", Base64.getDecoder().decode(mp.getUserKey()));
+                clone.put("s3_force_path_style", true);
+
+                values.put("clone", clone);
+            } catch (Exception e){
+                log.info("克隆postgresql实例失败", e);
+                throw new BusinessException(ErrorMessage.BACKUP_RESTORE_FAILED);
+            }
+        }
     }
 
     @Override
@@ -122,5 +157,9 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
 
     }
 
+    public void buildClone(Middleware middleware, JSONObject values){
+        middlewareBackupCRService.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getBackupFileName());
+    }
 
 }
+

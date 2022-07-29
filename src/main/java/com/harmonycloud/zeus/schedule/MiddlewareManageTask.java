@@ -73,7 +73,7 @@ public class MiddlewareManageTask {
      */
     @Async("singleThreadExecutor")
     public void asyncCreateMysqlOpenService(MysqlOperatorImpl mysqlOperator, Middleware middleware) {
-        mysqlOperator.createOpenService(middleware, false);
+        mysqlOperator.createOpenService(middleware, false, false);
     }
 
 }

@@ -345,6 +345,12 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
             middleware.setName(middlewareName);
             middleware.setType(MiddlewareTypeEnum.REDIS.getType());
             redisOperator.createOpenService(middleware);
+            // ingress服务偶尔会有延迟，等待5秒
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             return queryBasicAccessInfo(clusterId, namespace, middlewareName, null);
         }
     }
@@ -359,7 +365,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
                 middlewareService.detail(clusterId, namespace, middlewareName, MiddlewareTypeEnum.REDIS.getType());
         }
         List<IngressDTO> ingressDTOS =
-            ingressService.get(clusterId, namespace, MiddlewareTypeEnum.REDIS.name(), middlewareName);
+            ingressService.get(clusterId, namespace, MiddlewareTypeEnum.REDIS.getType(), middlewareName);
         ingressDTOS = ingressDTOS.stream().filter(ingressDTO -> (!ingressDTO.getName().contains("readonly")))
             .collect(Collectors.toList());
 
@@ -367,7 +373,12 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
         if (!CollectionUtils.isEmpty(ingressDTOS)) {
             // 优先使用ingress或NodePort暴露的服务
             IngressDTO ingressDTO = ingressDTOS.get(0);
-            String exposeIP = ingressDTO.getExposeIP();
+            Set<String> ingressIpSet = ingressService.listIngressIp(clusterId, ingressDTO.getIngressClassName());
+            String exposeIP = "";
+            for (String ip : ingressIpSet) {
+                exposeIP = ip;
+                break;
+            }
             List<ServiceDTO> serviceList = ingressDTO.getServiceList();
             if (!CollectionUtils.isEmpty(serviceList)) {
                 ServiceDTO serviceDTO = serviceList.get(0);
@@ -385,7 +396,6 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
                     + servicePortDTO.getPortDetailDtoList().get(0).getTargetPort() + "(集群内部)");
                 redisAccessInfo.setHost(servicePortDTO.getClusterIP());
                 redisAccessInfo.setPort(servicePortDTO.getPortDetailDtoList().get(0).getTargetPort());
-                Map<String, Integer> map = new HashMap<>();
             } else {
                 redisAccessInfo.setAddress("无");
             }

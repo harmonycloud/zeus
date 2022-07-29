@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.service.user;
 
 import com.harmonycloud.caas.common.model.LdapConfigDto;
-import com.harmonycloud.zeus.bean.BeanLdapConfig;
+import com.harmonycloud.zeus.bean.BeanSystemConfig;
 
 /**
  * @author liyinlong
@@ -13,14 +13,14 @@ public interface LdapService {
      * 添加一条ldap配置
      * @param ldapConfig
      */
-    void save(BeanLdapConfig ldapConfig);
+    void save(BeanSystemConfig ldapConfig);
 
     /**
      * 根据name查询配置记录
      * @param configName
      * @return
      */
-    BeanLdapConfig findByConfigName(String configName);
+    BeanSystemConfig findByConfigName(String configName);
 
     /**
      * 保存单条配置
@@ -39,7 +39,7 @@ public interface LdapService {
      * 修改ldap配置
      * @param ldapConfig
      */
-    void update(BeanLdapConfig ldapConfig);
+    void update(BeanSystemConfig ldapConfig);
 
     /**
      * 关闭ldap

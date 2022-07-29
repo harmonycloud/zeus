@@ -259,7 +259,8 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
         projectDTOS.forEach(projectDTO -> {
             ProjectDto project = new ProjectDto();
             project.setName(projectDTO.getProjectName());
-            project.setAliasName(projectDTO.getProjectAliasName() + "（所属租户:" + projectDTO.getTenantAliasName() + "）");
+            project.setAliasName(projectDTO.getProjectAliasName());
+            project.setTenantAliasName(projectDTO.getTenantAliasName());
             project.setNamespaceCount(projectDTO.getNamespaceCount());
             project.setUserDtoList(projectDTO.getUserDtos());
             project.setProjectId(projectDTO.getProjectId());
@@ -409,7 +410,7 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
         List<ProjectMiddlewareResourceInfo> infoList = new ArrayList<>();
         for (BeanClusterMiddlewareInfo mwInfo : mwInfoSet){
             ProjectMiddlewareResourceInfo projectMiddlewareResourceInfo = new ProjectMiddlewareResourceInfo()
-                    .setType(mwInfo.getChartName()).setAliasName(MiddlewareOfficialNameEnum.findByMiddlewareName(mwInfo.getChartName()))
+                    .setType(mwInfo.getChartName()).setAliasName(MiddlewareOfficialNameEnum.findByChartName(mwInfo.getChartName()))
                     .setMiddlewareResourceInfoList(map.getOrDefault(mwInfo.getChartName(), null))
                     .setImagePath(middlewareImagePathMap.getOrDefault(mwInfo.getChartName(), null));
             infoList.add(projectMiddlewareResourceInfo);

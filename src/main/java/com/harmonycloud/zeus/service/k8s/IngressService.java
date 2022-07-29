@@ -1,8 +1,11 @@
 package com.harmonycloud.zeus.service.k8s;
 
 import com.harmonycloud.caas.common.model.middleware.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author dengyulong
@@ -33,10 +36,9 @@ public interface IngressService {
      * 校验中间件对外访问端口
      *
      * @param cluster     集群
-     * @param namespace   命名空间
      * @param serviceList 服务列表
      */
-    void checkIngressTcpPort(MiddlewareClusterDTO cluster, String namespace, List<ServiceDTO> serviceList);
+    void checkServiceTcpPort(MiddlewareClusterDTO cluster, List<ServiceDTO> serviceList);
 
     /**
      * 创建中间件对外访问
@@ -116,19 +118,35 @@ public interface IngressService {
     List listAllIngress(String clusterId, String namespace, String keyword);
 
     /**
-     * 根据ingressClassName获取ingress
-     * @param cluster
-     * @param ingressClassName
-     * @return
-     */
-    MiddlewareClusterIngress getMiddlewareClusterIngress(MiddlewareClusterDTO cluster, String ingressClassName);
-
-    /**
      * 获取一个未被占用的ingress端口
      * @param clusterId
      * @param ingressClassName
      * @return
      */
     int getAvailablePort(String clusterId, String ingressClassName);
+
+    /**
+     * 获取暴露用ip
+     * @param cluster 集群
+     * @param ingressDTO  ingress
+     * @return String
+     */
+    String getExposeIp(MiddlewareClusterDTO cluster, IngressDTO ingressDTO);
+
+    /**
+     * 校验服务端口是否可用
+     *
+     * @param clusterId
+     * @param port
+     */
+    void verifyServicePort(String clusterId, Integer port);
+
+    /**
+     * 查询ingress ip
+     * @param clusterId
+     * @param ingressClassName
+     * @return
+     */
+    Set<String> listIngressIp(String clusterId, String ingressClassName);
 
 }

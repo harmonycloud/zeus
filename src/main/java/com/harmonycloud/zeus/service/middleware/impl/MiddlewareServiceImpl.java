@@ -1,33 +1,43 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-
+import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
+import com.harmonycloud.caas.common.constants.NameConstant;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.MonitorResourceQuota;
 import com.harmonycloud.caas.common.model.MonitorResourceQuotaBase;
 import com.harmonycloud.caas.common.model.PrometheusResponse;
-import com.harmonycloud.caas.common.model.user.UserDto;
+import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
+import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
+import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.bean.user.BeanRoleAuthority;
+import com.harmonycloud.zeus.dao.BeanMiddlewareInfoMapper;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
+import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
+import com.harmonycloud.zeus.operator.BaseOperator;
+import com.harmonycloud.zeus.service.AbstractBaseService;
+import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.*;
 import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
+import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.service.user.ProjectService;
 import com.harmonycloud.zeus.service.user.RoleAuthorityService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
 import com.harmonycloud.zeus.util.ChartVersionUtil;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
+import com.harmonycloud.zeus.util.YamlUtil;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -37,28 +47,15 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.yaml.snakeyaml.Yaml;
 
-import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.constants.NameConstant;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.middleware.*;
-import com.harmonycloud.caas.common.model.registry.HelmChartFile;
-import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
-import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
-import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
-import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
-import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
-import com.harmonycloud.zeus.operator.BaseOperator;
-import com.harmonycloud.zeus.service.AbstractBaseService;
-import com.harmonycloud.zeus.service.k8s.*;
-import com.harmonycloud.zeus.service.registry.HelmChartService;
-import com.harmonycloud.zeus.util.YamlUtil;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import lombok.extern.slf4j.Slf4j;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
 /**
  * @author dengyulong
@@ -73,8 +70,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private MiddlewareCRService middlewareCRService;
     @Autowired
     private ClusterService clusterService;
-    @Autowired
-    private NamespaceService namespaceService;
     @Autowired
     private HelmChartService helmChartService;
     @Autowired
@@ -103,6 +98,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private RoleAuthorityService roleAuthorityService;
     @Autowired
     private MiddlewareCrTypeService middlewareCrTypeService;
+    @Autowired
+    private BeanMiddlewareInfoMapper middlewareInfoMapper;
 
     @Override
     public List<Middleware> simpleList(String clusterId, String namespace, String type, String keyword) {
@@ -422,10 +419,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
         List<Middleware> result = finalMiddlewareList;
         // 关键词过滤
-        result = result.stream()
-            .filter(mw -> mw.getName().contains(keyword)
-                || (StringUtils.isNotEmpty(mw.getAliasName()) && mw.getAliasName().contains(keyword)))
-            .collect(Collectors.toList());
+        if (StringUtils.isNotEmpty(keyword)) {
+            result = result.stream()
+                    .filter(mw -> mw.getName().contains(keyword)
+                            || (StringUtils.isNotEmpty(mw.getAliasName()) && mw.getAliasName().contains(keyword)))
+                    .collect(Collectors.toList());
+        }
         if (StringUtils.isNotEmpty(projectId)) {
             // 根据项目分区进行过滤
             List<Namespace> projectNamespaceList = projectService.getNamespace(projectId);
@@ -868,6 +867,18 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     public Integer middlewareCount(String clusterId, String namespace, String name, String type) {
         
         return null;
+    }
+
+    @Override
+    public String middlewareImage(String type, String version) {
+        QueryWrapper<BeanMiddlewareInfo> wrapper = new QueryWrapper<>();
+        wrapper.eq("chart_name", type);
+        wrapper.eq("chart_version", version);
+        BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoMapper.selectOne(wrapper);
+        if (beanMiddlewareInfo == null) {
+            return "";
+        }
+        return beanMiddlewareInfo.getImagePath();
     }
 
     /**

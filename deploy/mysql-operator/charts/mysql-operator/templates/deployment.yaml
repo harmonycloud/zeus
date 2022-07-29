@@ -35,10 +35,10 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}/mysql-operator:{{ .Values.image.tag | default .Chart.AppVersion }}"
           command:
-          - ./mysql-operator
+          - /manager
           - --v=5
-          - --leader-elect=true
-          - --port=10880
+          - --enable-leader-election=true
+          - --health-addr=:10880
           - --operatorpwd=abcd!@#$
           - --replicapwd=abcd!@#$
           - --sshpwd=abcd!@#$

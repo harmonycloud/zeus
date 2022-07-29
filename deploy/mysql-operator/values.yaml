@@ -52,6 +52,7 @@ image:
   pullPolicy: IfNotPresent
   testImageTag: v0.3
   logrotateImageTag: 1.3
+  proxyImageTag: 2.3.2
 
 nameOverride: ""
 fullnameOverride: ""
@@ -61,8 +62,8 @@ resources:
     cpu: "1"
     memory: 2Gi
   requests:
-    cpu: "1"
-    memory: 2Gi
+    cpu: "200m"
+    memory: 512Mi
 
 
 storageProvider: {}
@@ -101,6 +102,15 @@ recycle:
 annotations: {}
 
 labels: {}
+proxy:
+  enable: false
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2048Mi
+    requests:
+      cpu: 500m
+      memory: 1024Mi
 
 features:
   threadpool:

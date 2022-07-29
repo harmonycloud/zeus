@@ -104,7 +104,7 @@ public class MiddlewareBackupWrapper {
         return JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareBackupList.class);
     }
 
-    public MiddlewareBackupCR get(String clusterId, String namespace, String name) throws IOException {
+    public MiddlewareBackupCR get(String clusterId, String namespace, String name){
         Map<String, Object> map = null;
         try {
             map = K8sClient.getClient(clusterId).customResource(CONTEXT).get(namespace, name);

@@ -171,14 +171,14 @@ public class DingRobotServiceImpl implements DingRobotService {
         if (list.size() == 0) {
             dingRobotInfos.forEach(dingRobotInfo -> {
                 dingRobotInfo.setTime(new Date());
-                dingRobotInfo.setEnable("0");
+                dingRobotInfo.setEnable("1");
                 dingRobotMapper.insert(dingRobotInfo);
             });
         }else {
             dingRobotMapper.delete(wrapper);
             dingRobotInfos.forEach(dingRobotInfo -> {
                 dingRobotInfo.setTime(new Date());
-                dingRobotInfo.setEnable("0");
+                dingRobotInfo.setEnable("1");
                 dingRobotMapper.insert(dingRobotInfo);
             });
         }
@@ -265,10 +265,9 @@ public class DingRobotServiceImpl implements DingRobotService {
         }
         String time = DateFormatUtils.format(alertInfoDto.getAlertTime(), "yyyy-MM-dd HH:mm:ss");
         StringBuffer sb = new StringBuffer();
-        sb.append("告警ID: ").append(alertInfoDto.getRuleID()).append(NEWLINE);
         sb.append("告警等级: ").append(level).append(NEWLINE);
         sb.append("告警内容: ").append(alertInfoDto.getContent()).append(NEWLINE);
-        sb.append("告警对象: ").append(alertInfoDto.getClusterId()).append(NEWLINE);
+        sb.append("告警对象: ").append(alertInfoDto.getMiddlewareName()).append(NEWLINE);
         sb.append("规则描述: ").append(alertInfoDto.getDescription()).append(NEWLINE);
         sb.append("实际监测: ").append(alertInfoDto.getMessage()).append(NEWLINE);
         sb.append("告警时间: ").append(time);

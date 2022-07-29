@@ -107,13 +107,11 @@ public class NodeServiceImpl implements NodeService {
                 node.getTaints().forEach(taint -> {
                     StringBuffer sbf = new StringBuffer();
                     sbf.append(taint.getKey());
-                    sbf.append("=");
                     if (taint.getValue() != null) {
+                        sbf.append("=");
                         sbf.append(taint.getValue());
-                    }else{
-                        sbf.append(":Exists");
                     }
-                    sbf.append(":" + taint.getEffect());
+                    sbf.append(":").append(taint.getEffect());
                     log.info("node {} taints {}", node.getIp(), sbf);
                     taintsSet.add(sbf.toString());
                 });
