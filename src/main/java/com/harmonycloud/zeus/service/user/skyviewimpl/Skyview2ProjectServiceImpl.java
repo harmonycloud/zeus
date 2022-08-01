@@ -194,6 +194,7 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
         for (Object o : jsonArray) {
             JSONObject jsonUser = (JSONObject) o;
             UserDto userDto = new UserDto();
+            userDto.setId(jsonUser.getInteger("id"));
             userDto.setUserName(jsonUser.getString("username"));
             userDto.setAliasName(jsonUser.getString("nickName"));
             userDto.setEmail(jsonUser.getString("email"));

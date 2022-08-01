@@ -56,7 +56,7 @@ http://<your ip>:31088
 |---|---|---|
 |Mysql| 5.7 / 8.0 |主从|
 |Redis|5.0|哨兵、集群(三主三从、五主五从)|
-|Elasticsearch| 6.8 / 7.16 |主从、主从协调|
+|Elasticsearch| 6.8 / 7.16 |N主、N主N数据、N主N数据N协调、N主N数据N冷、N主N数据N冷N协调|
 |RocketMQ|4.8|双主、双主双从、三主三从、多副本|
 |Kafka|2.6| 集群 |
 |Zookeeper|3.6| 集群 |
