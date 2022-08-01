@@ -76,6 +76,8 @@ storageProvider: {}
 
 nodeAffinity: {}
 
+updateStrategy: RollingUpdate
+
 # 支持扩展Spec
 statefulSetConfiguration: {}
   # tolerations:
