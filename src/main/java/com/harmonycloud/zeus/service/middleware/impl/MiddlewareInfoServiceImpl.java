@@ -496,6 +496,9 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     private List<Middleware> checkIsLvm(List<Middleware> middlewareList) {
         List<Middleware> middlewares = new LinkedList<>();
         for (Middleware middleware : middlewareList) {
+            if (middleware.getQuota() == null){
+                continue;
+            }
             switch (middleware.getType()) {
                 case "redis":
                     if (middleware.getQuota().get("redis").getIsLvmStorage()) {
