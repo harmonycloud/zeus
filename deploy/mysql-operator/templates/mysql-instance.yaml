@@ -144,7 +144,7 @@ spec:
     resources:
       {{- toYaml .Values.resources | nindent 6 }}
     updateStrategy:
-      type: RollingUpdate
+      type: {{ .Values.updateStrategy}}
   type: {{ .Values.type}}
   syncMode: {{ .Values.syncMode}}
   version: "{{ .Values.version}}"
