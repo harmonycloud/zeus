@@ -42,7 +42,7 @@
         <harmonycloud.tools.version>1.0.1-middleware</harmonycloud.tools.version>
         <auth0.jwt.version>3.8.3</auth0.jwt.version>
 
-        <elasticsearch.version>6.8.2</elasticsearch.version>
+        <elasticsearch.version>7.17.1</elasticsearch.version>
     </properties>
 
     <dependencyManagement>
@@ -75,11 +75,17 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>com.harmonycloud</groupId>-->
-<!--            <artifactId>aspect</artifactId>-->
-<!--            <version>0.0.1</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.3.2</version>
+        </dependency>
 
         <!-- websocket -->
         <dependency>
