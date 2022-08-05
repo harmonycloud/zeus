@@ -41,32 +41,32 @@ public class Skyview2NamespaceServiceImpl extends NamespaceServiceImpl {
     private NamespaceWrapper namespaceWrapper;
 
     private List<Namespace> listClusterNamespaces(String clusterId){
-        List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId);
-        List<Namespace> namespaces = new ArrayList<>();
-        for (io.fabric8.kubernetes.api.model.Namespace ns : nsList) {
-            Namespace namespace = new Namespace();
-            namespace.setName(ns.getMetadata().getName());
-            namespace.setAliasName(ns.getMetadata().getAnnotations() != null ? ns.getMetadata().getAnnotations().getOrDefault("name", "") : "");
-            namespace.setCreateTime(DateUtil.parse(ns.getMetadata().getCreationTimestamp()));
-            namespace.setPhase(ns.getStatus() != null ? ns.getStatus().getPhase() : "");
-            namespace.setRegistered(true);
-            namespaces.add(namespace);
-        }
-//        CaasResult<JSONArray> namespaceResult = namespaceServiceClient.clusterNamespaces(ZeusCurrentUser.getCaasToken(),
-//                clusterService.convertToSkyviewClusterId(clusterId));
+//        List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId);
 //        List<Namespace> namespaces = new ArrayList<>();
-//        if(namespaceResult.getData() != null && !namespaceResult.getData().isEmpty()){
-//            for (Object ns : namespaceResult.getData()) {
-//                JSONObject  jsonNamespace = (JSONObject) ns;
-//                Namespace namespace = new Namespace();
-//                namespace.setName(jsonNamespace.getString("name"));
-//                namespace.setAliasName(jsonNamespace.getString("aliasName"));
-//                namespace.setCreateTime(jsonNamespace.getDate("createTime"));
-//                namespace.setPhase(jsonNamespace.getString("phase"));
-//                namespace.setRegistered(true);
-//                namespaces.add(namespace);
-//            }
+//        for (io.fabric8.kubernetes.api.model.Namespace ns : nsList) {
+//            Namespace namespace = new Namespace();
+//            namespace.setName(ns.getMetadata().getName());
+//            namespace.setAliasName(ns.getMetadata().getAnnotations() != null ? ns.getMetadata().getAnnotations().getOrDefault("name", "") : "");
+//            namespace.setCreateTime(DateUtil.parse(ns.getMetadata().getCreationTimestamp()));
+//            namespace.setPhase(ns.getStatus() != null ? ns.getStatus().getPhase() : "");
+//            namespace.setRegistered(true);
+//            namespaces.add(namespace);
 //        }
+        CaasResult<JSONArray> namespaceResult = namespaceServiceClient.clusterNamespaces(ZeusCurrentUser.getCaasToken(),
+                clusterService.convertToSkyviewClusterId(clusterId));
+        List<Namespace> namespaces = new ArrayList<>();
+        if(namespaceResult.getData() != null && !namespaceResult.getData().isEmpty()){
+            for (Object ns : namespaceResult.getData()) {
+                JSONObject  jsonNamespace = (JSONObject) ns;
+                Namespace namespace = new Namespace();
+                namespace.setName(jsonNamespace.getString("name"));
+                namespace.setAliasName(jsonNamespace.getString("aliasName"));
+                namespace.setCreateTime(jsonNamespace.getDate("createTime"));
+                namespace.setPhase(jsonNamespace.getString("phase"));
+                namespace.setRegistered(true);
+                namespaces.add(namespace);
+            }
+        }
         return namespaces;
     }
 
