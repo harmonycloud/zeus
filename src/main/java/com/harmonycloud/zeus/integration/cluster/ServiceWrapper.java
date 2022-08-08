@@ -29,7 +29,11 @@ public class ServiceWrapper {
     public List<Service> list(String clusterId, String namespace, String labelKey) {
         ServiceList serviceList;
         if (StringUtils.isEmpty(namespace)) {
-            serviceList = K8sClient.getClient(clusterId).services().list();
+            if (StringUtils.isEmpty(labelKey)) {
+                serviceList = K8sClient.getClient(clusterId).services().list();
+            } else {
+                serviceList = K8sClient.getClient(clusterId).services().withLabel(labelKey).list();
+            }
         } else if (StringUtils.isEmpty(labelKey)) {
             serviceList = K8sClient.getClient(clusterId).services().inNamespace(namespace).list();
         } else {

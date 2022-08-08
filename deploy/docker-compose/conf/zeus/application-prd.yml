@@ -70,6 +70,9 @@ system:
     port: 8443
     username: admin
     password: Harbor12345
+  backup:
+    storageTypeCheck: true
+    storages: localplugin.csi.alibabacloud.com
 
 overview:
   overall:

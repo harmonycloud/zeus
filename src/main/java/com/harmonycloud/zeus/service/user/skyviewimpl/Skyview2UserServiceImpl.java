@@ -183,7 +183,8 @@ public class Skyview2UserServiceImpl extends UserServiceImpl {
      */
     public void syncCurrentUserInfo(){
         String username = ZeusCurrentUser.getUserName();
-        List<ProjectDTO>  projects =  skyview2ProjectService.listAllTenantProject(ZeusCurrentUser.getCaasToken());
+        String caasToken = ZeusCurrentUser.getCaasToken();
+        List<ProjectDTO>  projects =  skyview2ProjectService.listAllTenantProject(caasToken);
 
         ExecutorService executorService = Executors.newFixedThreadPool(projects.size());
         CountDownLatch latch = new CountDownLatch(projects.size());
@@ -192,7 +193,7 @@ public class Skyview2UserServiceImpl extends UserServiceImpl {
             executorService.submit(()->{
                 try {
                     String projectId = project.getProjectId();
-                    CaasResult<JSONArray> projectRoleResult = projectServiceClient.getUserProjectRole(ZeusCurrentUser.getCaasToken(), projectId);
+                    CaasResult<JSONArray> projectRoleResult = projectServiceClient.getUserProjectRole(caasToken, projectId);
                     if (projectRoleResult.getData() != null) {
                         Integer userRoleId = projectRoleResult.getJSONArrayIntegerVal(0, "id");
                         project.setUserRoleId(userRoleId);
