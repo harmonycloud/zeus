@@ -52,12 +52,11 @@ public class MiddlewareCrTypeServiceImpl implements MiddlewareCrTypeService {
             for (BeanMiddlewareCrType beanMiddlewareCrType : beanMiddlewareCrTypeList){
                 MIDDLEWARE_CR_TYPE.put(beanMiddlewareCrType.getChartName(), beanMiddlewareCrType.getCrType());
             }
-            return;
         }
         // 通过chart包初始化
         List<BeanMiddlewareInfo> beanMwInfoList = middlewareInfoService.list(false);
         // 过滤数据库中已存在的type
-        beanMwInfoList = beanMwInfoList.stream().filter(mwInfo -> beanMiddlewareCrTypeList.stream().noneMatch(mwCrType -> mwCrType.getCrType().equals(mwInfo.getChartName()))).collect(Collectors.toList());
+        beanMwInfoList = beanMwInfoList.stream().filter(mwInfo -> beanMiddlewareCrTypeList.stream().noneMatch(mwCrType -> mwCrType.getChartName().equals(mwInfo.getChartName()))).collect(Collectors.toList());
         for (BeanMiddlewareInfo mwInfo : beanMwInfoList) {
             // 解析chart包 获取crType
             String crType = getCrTypeByChart(mwInfo.getChartName(), mwInfo.getChartVersion());
