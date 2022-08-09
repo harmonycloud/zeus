@@ -149,8 +149,10 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             if (StringUtils.isNotBlank(mysqlDTO.getType())) {
                 values.put(MysqlConstant.SPEC_TYPE, mysqlDTO.getType());
             }
-            //设置SQL审计开关
-            checkAndSetAuditSqlStatus(features, mysqlDTO);
+            if (StringUtils.isNotBlank(middleware.getVersion()) && !("8.0".equals(middleware.getVersion()))) {
+                //设置SQL审计开关
+                checkAndSetAuditSqlStatus(features, mysqlDTO);
+            }
         }
         //配置mysql环境变量
         if (!CollectionUtils.isEmpty(middleware.getEnvironment())) {
