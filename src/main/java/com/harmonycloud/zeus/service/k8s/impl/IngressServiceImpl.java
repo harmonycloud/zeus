@@ -620,6 +620,9 @@ public class IngressServiceImpl implements IngressService {
     private void checkAndAllocateServicePort(String clusterId, IngressDTO ingressDTO) {
         if ("rocketmq".equals(ingressDTO.getMiddlewareType()) || "kafka".equals(ingressDTO.getMiddlewareType())) {
             List<ServiceDTO> serviceList = ingressDTO.getServiceList();
+            if (CollectionUtils.isEmpty(serviceList)) {
+                return;
+            }
             for (int i = 0; i < serviceList.size(); i++) {
                 ServiceDTO serviceDTO = serviceList.get(i);
                 setServicePort(serviceDTO, ingressDTO.getMiddlewareType());
@@ -659,7 +662,7 @@ public class IngressServiceImpl implements IngressService {
         }
         for (ServiceDTO serviceDTO : ingressDTO.getServiceList()) {
             if (serviceDTO.getServiceName().contains("master") || serviceDTO.getServiceName().contains("slave")
-                    || serviceDTO.getServiceName().contains("broker")) {
+                    || serviceDTO.getServiceName().contains("broker") || serviceDTO.getServiceName().contains("external-svc")) {
                 return true;
             }
         }
