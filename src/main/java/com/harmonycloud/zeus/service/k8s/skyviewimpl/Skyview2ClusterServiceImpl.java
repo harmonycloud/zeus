@@ -153,14 +153,6 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
         cluster.setName(clusterDTO.getName());
         cluster.setNickname(clusterDTO.getAliasName());
         Registry registry = new Registry();
-        registry.setProtocol(protocol);
-        registry.setAddress(address);
-        registry.setPort(port);
-        registry.setUser(username);
-        registry.setPassword(password);
-        registry.setType(type);
-        registry.setChartRepo(chartRepo);
-        registry.setVersion(version);
         cluster.setRegistry(registry);
         try {
             addCluster(cluster);
@@ -212,7 +204,7 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
         Set<String> clusterHostSet = clusterDTOS.stream().map(MiddlewareClusterDTO::getHost).collect(Collectors.toSet());
         // 保存集群信息
         clusterList.forEach(clusterDTO -> {
-            if (!clusterHostSet.contains(clusterDTO.getHost())) {
+            if (clusterDTO.getIsEnable() != null && clusterDTO.getIsEnable() && !clusterHostSet.contains(clusterDTO.getHost())) {
                 saveCluster(clusterDTO);
             }
         });
