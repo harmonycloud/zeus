@@ -48,6 +48,8 @@ spec:
           env:
           - name: TZ
             value: CST-8
+          - name: CRD_GROUP
+            value: {{ .Values.crdGroup | default "harmonycloud" }}
           ports:
             - name: http
               containerPort: 80
