@@ -190,6 +190,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         //告警规则入库
         middlewareAlertsDTOList.stream().forEach(middlewareAlertsDTO -> {
             //String prometheusRulesName = "postgresql".equals(middlewareAlertsDTO.getType()) ? "harmonycloud-" + middlewareName : middlewareName;
+            middlewareAlertsDTO.setAlert(middlewareAlertsDTO.getAlert() + "-" + UUIDUtils.get8UUID());
             updateServiceAlerts2Prometheus(clusterId, namespace, middlewareName, middlewareName, middlewareAlertsDTO);
             addAlerts2Sql(clusterId, namespace, middlewareName, middlewareAlertsDTO);
         });
