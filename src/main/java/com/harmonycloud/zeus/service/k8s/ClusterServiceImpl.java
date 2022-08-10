@@ -254,7 +254,9 @@ public class ClusterServiceImpl implements ClusterService{
         clusterCertService.setCertByAdminConf(cluster.getCert());
 
         // 校验registry
-        registryService.validate(cluster.getRegistry());
+        if (cluster.getRegistry() != null && cluster.getRegistry().getAddress() != null){
+            registryService.validate(cluster.getRegistry());
+        }
 
         try {
             // 先添加fabric8客户端，否则无法用fabric8调用APIServer
@@ -332,7 +334,9 @@ public class ClusterServiceImpl implements ClusterService{
         k8sClient.updateK8sClient(cluster);
 
         // 校验registry
-        registryService.validate(cluster.getRegistry());
+        if (cluster.getRegistry() != null && cluster.getRegistry().getAddress() != null){
+            registryService.validate(cluster.getRegistry());
+        }
 
         // 校验es（包含重置es客户端）
         /*if (StringUtils.isNotBlank(cluster.getLogging().getElasticSearch().getHost())
@@ -349,7 +353,7 @@ public class ClusterServiceImpl implements ClusterService{
 
         update(oldCluster);
         // 修改镜像仓库信息
-        updateMysqlImageRepository(cluster);
+        //updateMysqlImageRepository(cluster);
     }
 
     @Override
@@ -375,8 +379,8 @@ public class ClusterServiceImpl implements ClusterService{
         if (registry == null || StringUtils.isAnyEmpty(registry.getProtocol(), registry.getAddress(),
                 registry.getChartRepo(), registry.getUser(), registry.getPassword())) {
             registry = new Registry();
-            registry.setAddress("middleware.harmonycloud.cn").setProtocol("http").setPort(38080).setUser("admin")
-                    .setPassword("Hc@Cloud01").setType("harbor").setChartRepo("middleware");
+/*            registry.setAddress("middleware.harmonycloud.cn").setProtocol("http").setPort(38080).setUser("admin")
+                    .setPassword("Hc@Cloud01").setType("harbor").setChartRepo("middleware");*/
             cluster.setRegistry(registry);
         }
         // 设置默认参数

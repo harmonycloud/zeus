@@ -1,14 +1,17 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.api.R;
 import com.github.pagehelper.PageInfo;
 import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.middleware.ImageRepositoryDTO;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.Registry;
 import com.harmonycloud.zeus.bean.BeanImageRepository;
 import com.harmonycloud.zeus.dao.BeanImageRepositoryMapper;
+import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.middleware.ImageRepositoryService;
 import com.harmonycloud.zeus.service.registry.RegistryService;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +36,8 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
     private BeanImageRepositoryMapper beanImageRepositoryMapper;
     @Autowired
     private RegistryService registryService;
+    @Autowired
+    private ClusterService clusterService;
 
     @Override
     public void insert(String clusterId, ImageRepositoryDTO imageRepositoryDTO) {
@@ -46,6 +51,16 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         beanImageRepository.setAddress(address);
         beanImageRepository.setCreateTime(new Date());
         beanImageRepositoryMapper.insert(beanImageRepository);
+        // 更新集群默认镜像仓库
+        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+        if (cluster.getRegistry() == null || StringUtils.isEmpty(cluster.getRegistry().getAddress())) {
+            Registry registry = new Registry();
+            BeanUtils.copyProperties(imageRepositoryDTO, registry);
+            registry.setUser(imageRepositoryDTO.getUsername()).setAddress(imageRepositoryDTO.getHostAddress())
+                .setType("harbor").setChartRepo(imageRepositoryDTO.getProject()).setId(beanImageRepository.getId());
+            cluster.setRegistry(registry);
+            clusterService.updateCluster(cluster);
+        }
     }
 
     @Override
@@ -69,18 +84,47 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         check(imageRepositoryDTO);
         BeanImageRepository beanImageRepository = new BeanImageRepository();
         BeanUtils.copyProperties(imageRepositoryDTO, beanImageRepository);
-        String address = imageRepositoryDTO.getHostAddress() + ":" + imageRepositoryDTO.getPort() + "/" + imageRepositoryDTO.getProject();
+        String address = imageRepositoryDTO.getHostAddress() + ":" + imageRepositoryDTO.getPort() + "/"
+            + imageRepositoryDTO.getProject();
         beanImageRepository.setClusterId(clusterId);
         beanImageRepository.setAddress(address);
         beanImageRepository.setUpdateTime(new Date());
         beanImageRepositoryMapper.updateById(beanImageRepository);
+        // 更新集群默认镜像仓库
+        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+        if (cluster.getRegistry() != null && cluster.getRegistry().getId().equals(imageRepositoryDTO.getId())) {
+            Registry registry = cluster.getRegistry();
+            BeanUtils.copyProperties(imageRepositoryDTO, registry);
+            registry.setUser(imageRepositoryDTO.getUsername()).setAddress(imageRepositoryDTO.getHostAddress())
+                .setChartRepo(imageRepositoryDTO.getProject()).setId(beanImageRepository.getId());
+            cluster.setRegistry(registry);
+            clusterService.updateCluster(cluster);
+        }
     }
 
     @Override
     public void delete(String clusterId, String id) {
         QueryWrapper<BeanImageRepository> wrapper = new QueryWrapper<>();
-        wrapper.eq("cluster_id",clusterId).eq("id",id);
+        wrapper.eq("cluster_id", clusterId).eq("id", id);
         beanImageRepositoryMapper.delete(wrapper);
+        // 更新集群默认镜像仓库
+        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+        if (cluster.getRegistry() != null && cluster.getRegistry().getId().equals(Integer.parseInt(id))) {
+            QueryWrapper<BeanImageRepository> existWrapper =
+                new QueryWrapper<BeanImageRepository>().eq("cluster_id", clusterId);
+            List<BeanImageRepository> beanImageRepositoryList = beanImageRepositoryMapper.selectList(existWrapper);
+            if (beanImageRepositoryList.size() == 0) {
+                cluster.setRegistry(new Registry());
+            }else {
+                BeanImageRepository beanImageRepository = beanImageRepositoryList.get(0);
+                Registry registry = cluster.getRegistry();
+                BeanUtils.copyProperties(beanImageRepository, registry);
+                registry.setUser(beanImageRepository.getUsername()).setAddress(beanImageRepository.getHostAddress())
+                        .setChartRepo(beanImageRepository.getProject()).setId(beanImageRepository.getId());
+                cluster.setRegistry(registry);
+            }
+            clusterService.updateCluster(cluster);
+        }
     }
 
     @Override
