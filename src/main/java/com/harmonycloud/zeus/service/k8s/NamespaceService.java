@@ -111,4 +111,11 @@ public interface NamespaceService {
      */
     void registry(String clusterId, String name, Boolean registered);
 
+    /**
+     * 创建middleware-operator分区
+     *
+     * @param clusterId 集群id
+     */
+    void createMiddlewareOperator(String clusterId);
+
 }

@@ -193,6 +193,19 @@ public class NamespaceServiceImpl implements NamespaceService {
         }
     }
 
+    @Override
+    public void createMiddlewareOperator(String clusterId) {
+        synchronized (this) {
+            List<Namespace> namespaceList = list(clusterId, false, "middleware-operator");
+            // 检验分区是否存在
+            if (CollectionUtils.isEmpty(namespaceList)) {
+                Map<String, String> label = new HashMap<>();
+                label.put("middleware", "middleware");
+                save(clusterId, "middleware-operator", label, null);
+            }
+        }
+    }
+
     public boolean checkExist(String clusterId, String name) {
         List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId);
         return nsList.stream().anyMatch(ns -> ns.getMetadata().getName().equals(name));
