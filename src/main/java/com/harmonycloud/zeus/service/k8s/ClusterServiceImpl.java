@@ -299,7 +299,9 @@ public class ClusterServiceImpl implements ClusterService{
             throw new BusinessException(DictEnum.CLUSTER, cluster.getNickname(), ErrorMessage.ADD_FAIL);
         }
         // 将镜像仓库信息存进数据库
-        insertMysqlImageRepository(cluster);
+        if (cluster.getRegistry() != null && cluster.getRegistry().getAddress() != null){
+            insertMysqlImageRepository(cluster);
+        }
         // 将chart包存进数据库
         insertMysqlChart(cluster.getId());
         // 判断middleware-operator分区是否存在，不存在则创建
