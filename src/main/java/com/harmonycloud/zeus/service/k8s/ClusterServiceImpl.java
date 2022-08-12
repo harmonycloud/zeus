@@ -488,6 +488,10 @@ public class ClusterServiceImpl implements ClusterService{
         ObjectMeta meta = new ObjectMeta();
         meta.setName(cluster.getName());
         meta.setNamespace(cluster.getDcId());
+        if (cluster.getAttributes() != null && cluster.getAttributes().containsKey(CREATE_TIME)
+            && cluster.getAttributes().get(CREATE_TIME) != null) {
+            meta.setCreationTimestamp(cluster.getAttributes().get(CREATE_TIME).toString());
+        }
         Map<String, String> annotations = new HashMap<>();
         annotations.put(NAME, cluster.getNickname());
         meta.setAnnotations(annotations);
@@ -508,7 +512,9 @@ public class ClusterServiceImpl implements ClusterService{
             cluster.setNickname(middlewareCluster.getMetadata().getAnnotations().get(NAME));
         }
         JSONObject attributes = new JSONObject();
-        attributes.put(CREATE_TIME, DateUtils.parseUTCDate(middlewareCluster.getMetadata().getCreationTimestamp()));
+        Date date = DateUtils.parseUTCDate(middlewareCluster.getMetadata().getCreationTimestamp());
+        attributes.put(CREATE_TIME, date == null ? middlewareCluster.getMetadata().getCreationTimestamp()
+                : DateUtils.DateToString(date, "yyyy-MM-dd HH:mm:ss"));
         cluster.setAttributes(attributes);
         return SerializationUtils.clone(cluster);
     }
