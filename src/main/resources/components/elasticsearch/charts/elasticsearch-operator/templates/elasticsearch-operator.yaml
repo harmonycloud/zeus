@@ -45,6 +45,8 @@ spec:
           env:
             - name: TZ
               value: Asia/Shanghai
+            - name: CRD_GROUP
+              value: {{ .Values.crdGroup }}
           ports:
             - name: http
               containerPort: 80
