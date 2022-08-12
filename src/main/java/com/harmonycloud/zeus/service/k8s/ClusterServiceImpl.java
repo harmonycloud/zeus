@@ -166,10 +166,6 @@ public class ClusterServiceImpl implements ClusterService{
                     cluster.getAttributes().put(NS_COUNT, 0);
                     log.error("集群：{}，查询命名空间列表异常", cluster.getId(), e);
                 }
-                //计算集群cpu和memory
-                if (cluster.getMonitor() != null && cluster.getMonitor().getPrometheus() != null){
-                    clusterResource(cluster);
-                }
                 //判断集群是否可删除
                 cluster.setRemovable(checkDelete(cluster.getId()));
             });
@@ -592,7 +588,7 @@ public class ClusterServiceImpl implements ClusterService{
     public ClusterQuotaDTO getClusterQuota(List<MiddlewareClusterDTO> clusterDTOList) {
         ClusterQuotaDTO clusterQuotaSum = new ClusterQuotaDTO();
         clusterDTOList.forEach(clusterDTO -> {
-            ClusterQuotaDTO clusterQuota = getClusterQuota(clusterDTO);
+            ClusterQuotaDTO clusterQuota = monitoring(clusterDTO.getId());
             if (clusterQuota != null) {
                 clusterQuotaSum.setTotalCpu(clusterQuotaSum.getTotalCpu() + clusterQuota.getTotalCpu());
                 clusterQuotaSum.setUsedCpu(clusterQuotaSum.getUsedCpu() + clusterQuota.getUsedCpu());
@@ -978,6 +974,16 @@ public class ClusterServiceImpl implements ClusterService{
         return null;
     }
 
+    @Override
+    public ClusterQuotaDTO monitoring(String clusterId) {
+        //计算集群cpu和memory
+        MiddlewareClusterDTO cluster = findById(clusterId);
+        if (cluster.getMonitor() != null && cluster.getMonitor().getPrometheus() != null){
+            clusterResource(cluster);
+        }
+        return cluster.getClusterQuotaDTO();
+    }
+
     public Map<Map<String, String>, List<String>> getResultMap(PrometheusResponse response){
         return response.getData().getResult().stream().collect(Collectors.toMap(PrometheusResult::getMetric, PrometheusResult::getValue));
     }
@@ -1041,16 +1047,6 @@ public class ClusterServiceImpl implements ClusterService{
         }
         List<Namespace> namespaces = namespaceService.list(clusterDTO.getId(), false, false, false, null, null);
         return namespaces.stream().filter(namespace -> namespace.isRegistered()).collect(Collectors.toList());
-    }
-
-    /**
-     * 获取集群资源配额及使用量
-     *
-     * @param clusterDTO 集群dto
-     * @return
-     */
-    public ClusterQuotaDTO getClusterQuota(MiddlewareClusterDTO clusterDTO) {
-        return clusterDTO.getClusterQuotaDTO();
     }
 
     private void createMiddlewareCrd(MiddlewareClusterDTO middlewareClusterDTO){
