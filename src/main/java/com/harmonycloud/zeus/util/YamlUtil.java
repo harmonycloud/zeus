@@ -190,15 +190,6 @@ public class YamlUtil {
         return yaml.dumpAsMap(kubeConfig);
     }
 
-    public static void main(String[] args) throws IOException {
-        String source = "/Users/liyinlong/elasticsearch/values.yaml";
-        JSONObject srcObject = loadAsNormalJsonObject(source);
-        String add = "/Users/liyinlong/elasticsearch/add.yaml";
-        JSONObject addObject = loadAsNormalJsonObject(add);
-
-        JSONObject jsonObject = jsonMerge(addObject, srcObject);
-
-        System.out.println(jsonObject);
     /**
      * 将values的json对象字段类型转为标准字段类型,空的tolerations应为[]，而底座chart包中是{}
      *
@@ -213,4 +204,14 @@ public class YamlUtil {
         }
     }
 
+    public static void main(String[] args) throws IOException {
+        String source = "/Users/liyinlong/elasticsearch/values.yaml";
+        JSONObject srcObject = loadAsNormalJsonObject(source);
+        String add = "/Users/liyinlong/elasticsearch/add.yaml";
+        JSONObject addObject = loadAsNormalJsonObject(add);
+
+        JSONObject jsonObject = jsonMerge(addObject, srcObject);
+
+        System.out.println(jsonObject);
+    }
 }

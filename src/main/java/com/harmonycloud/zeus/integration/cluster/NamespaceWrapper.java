@@ -1,16 +1,16 @@
 package com.harmonycloud.zeus.integration.cluster;
 
-import com.harmonycloud.zeus.util.K8sClient;
-import io.fabric8.kubernetes.api.model.DoneableNamespace;
-import io.fabric8.kubernetes.api.model.Namespace;
-import io.fabric8.kubernetes.api.model.NamespaceList;
-import io.fabric8.kubernetes.client.dsl.Resource;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.harmonycloud.zeus.util.K8sClient;
+
+import io.fabric8.kubernetes.api.model.Namespace;
+import io.fabric8.kubernetes.api.model.NamespaceList;
 
 /**
  * @author dengyulong
@@ -42,7 +42,7 @@ public class NamespaceWrapper {
         return list.getItems();
     }
 
-    public Namespace get(String clusterId, String namespace){
+    public Namespace get(String clusterId, String namespace) {
         return K8sClient.getClient(clusterId).namespaces().withName(namespace).get();
     }
 
@@ -52,10 +52,6 @@ public class NamespaceWrapper {
 
     public void delete(String clusterId, Namespace ns) {
         K8sClient.getClient(clusterId).namespaces().delete(ns);
-    }
-
-    public Namespace get(String clusterId,String name){
-        return K8sClient.getClient(clusterId).namespaces().withName(name).get();
     }
 
 }

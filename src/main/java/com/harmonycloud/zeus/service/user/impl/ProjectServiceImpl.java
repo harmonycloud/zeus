@@ -1,5 +1,18 @@
 package com.harmonycloud.zeus.service.user.impl;
 
+import static com.harmonycloud.caas.common.constants.user.UserConstant.USERNAME;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
+
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.DictEnum;
@@ -32,20 +45,8 @@ import com.harmonycloud.zeus.service.user.ProjectService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
 import com.harmonycloud.zeus.service.user.UserService;
 import com.harmonycloud.zeus.util.AssertUtil;
+
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
-import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
-
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static com.harmonycloud.caas.common.constants.user.UserConstant.USERNAME;
 
 /**
  * @author xutianhong
@@ -53,7 +54,7 @@ import static com.harmonycloud.caas.common.constants.user.UserConstant.USERNAME;
  */
 @Service
 @Slf4j
-@ConditionalOnProperty(value="system.usercenter",havingValue = "zeus")
+@ConditionalOnProperty(value = "system.usercenter", havingValue = "zeus")
 public class ProjectServiceImpl implements ProjectService {
 
     @Autowired
@@ -72,9 +73,6 @@ public class ProjectServiceImpl implements ProjectService {
     public MiddlewareInfoService middlewareInfoService;
     @Autowired
     private ClusterMiddlewareInfoService clusterMiddlewareInfoService;
-    private MiddlewareInfoService middlewareInfoService;
-    @Autowired
-    private NamespaceService namespaceService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -168,22 +166,6 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<Namespace> getNamespace(String projectId) {
-        QueryWrapper<BeanProjectNamespace> wrapper =
-            new QueryWrapper<BeanProjectNamespace>().eq("project_id", projectId);
-        List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
-
-        return beanProjectNamespaceList.stream().map(beanProjectNamespace -> {
-            Namespace namespace = new Namespace();
-            BeanUtils.copyProperties(beanProjectNamespace, namespace);
-            namespace.setClusterAliasName(clusterService.findById(namespace.getClusterId()).getNickname());
-            namespace.setName(beanProjectNamespace.getNamespace());
-            namespaceService.setAvailableDomain(namespace.getClusterId(), namespace.getName(), null, namespace);
-            return namespace;
-        }).collect(Collectors.toList());
-    }
-
-    @Override
     public List<MiddlewareClusterDTO> getAllocatableNamespace() {
         List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(true, null);
         QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<>();
@@ -207,11 +189,11 @@ public class ProjectServiceImpl implements ProjectService {
         if (allocatable) {
             // 获取可分配的
             userDtoList = userDtoList.stream()
-                .filter(userDto -> CollectionUtils.isEmpty(userDto.getUserRoleList())
-                    || userDto.getUserRoleList().stream()
+                .filter(
+                    userDto -> CollectionUtils.isEmpty(userDto.getUserRoleList()) || userDto.getUserRoleList().stream()
                         .noneMatch(userRole -> StringUtils.isNotEmpty(userRole.getProjectId())
                             && userRole.getProjectId().equals(projectId))
-                    && userDto.getUserRoleList().stream().noneMatch(userRole -> userRole.getRoleId() == 1))
+                        && userDto.getUserRoleList().stream().noneMatch(userRole -> userRole.getRoleId() == 1))
                 .collect(Collectors.toList());
         } else {
             // 获取已分配的
@@ -311,24 +293,26 @@ public class ProjectServiceImpl implements ProjectService {
         });
         // 获取集群下已安装中间件并集
         Set<BeanClusterMiddlewareInfo> mwInfoSet = new HashSet<>();
-        for (String clusterId : clusterIdSet){
+        for (String clusterId : clusterIdSet) {
             mwInfoSet.addAll(clusterMiddlewareInfoService.list(clusterId, false));
         }
         // 查询用户角色项目权限
         String username =
-                JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue().getString(USERNAME);
+            JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue().getString(USERNAME);
         UserDto userDto = userService.getUserDto(username);
         Map<String, String> power = new HashMap<>();
-        if (!userDto.getIsAdmin() && userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getProjectId().equals(projectId))){
-            power.putAll(userDto.getUserRoleList().stream().filter(userRole -> userRole.getProjectId().equals(projectId))
+        if (!userDto.getIsAdmin()
+            && userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getProjectId().equals(projectId))) {
+            power
+                .putAll(userDto.getUserRoleList().stream().filter(userRole -> userRole.getProjectId().equals(projectId))
                     .collect(Collectors.toList()).get(0).getPower());
         }
         // 过滤获取拥有权限的中间件
         if (!CollectionUtils.isEmpty(power)) {
             mwInfoSet = mwInfoSet.stream()
-                    .filter(mwInfo -> power.keySet().stream()
-                            .anyMatch(key -> !"0000".equals(power.get(key)) && mwInfo.getChartName().equals(key)))
-                    .collect(Collectors.toSet());
+                .filter(mwInfo -> power.keySet().stream()
+                    .anyMatch(key -> !"0000".equals(power.get(key)) && mwInfo.getChartName().equals(key)))
+                .collect(Collectors.toSet());
         }
         // 查询数据
         List<MiddlewareResourceInfo> all = new ArrayList<>();
@@ -351,9 +335,10 @@ public class ProjectServiceImpl implements ProjectService {
         Map<String, List<MiddlewareResourceInfo>> map =
             all.stream().collect(Collectors.groupingBy(MiddlewareResourceInfo::getType));
         List<ProjectMiddlewareResourceInfo> infoList = new ArrayList<>();
-        for (BeanClusterMiddlewareInfo mwInfo : mwInfoSet){
-            ProjectMiddlewareResourceInfo projectMiddlewareResourceInfo = new ProjectMiddlewareResourceInfo()
-                    .setType(mwInfo.getChartName()).setAliasName(MiddlewareOfficialNameEnum.findByChartName(mwInfo.getChartName()))
+        for (BeanClusterMiddlewareInfo mwInfo : mwInfoSet) {
+            ProjectMiddlewareResourceInfo projectMiddlewareResourceInfo =
+                new ProjectMiddlewareResourceInfo().setType(mwInfo.getChartName())
+                    .setAliasName(MiddlewareOfficialNameEnum.findByChartName(mwInfo.getChartName()))
                     .setMiddlewareResourceInfoList(map.getOrDefault(mwInfo.getChartName(), null))
                     .setImagePath(middlewareImagePathMap.getOrDefault(mwInfo.getChartName(), null));
             infoList.add(projectMiddlewareResourceInfo);
@@ -451,8 +436,8 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public void bindNamespace(Namespace namespace) {
-        QueryWrapper<BeanProjectNamespace> wrapper =
-                new QueryWrapper<BeanProjectNamespace>().eq("namespace", namespace.getName()).eq("cluster_id", namespace.getClusterId());
+        QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<BeanProjectNamespace>()
+            .eq("namespace", namespace.getName()).eq("cluster_id", namespace.getClusterId());
         List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
         if (!CollectionUtils.isEmpty(beanProjectNamespaceList)) {
             throw new BusinessException(ErrorMessage.PROJECT_NAMESPACE_ALREADY_BIND);
@@ -490,7 +475,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public List<Namespace> getNamespace(String projectId) {
         QueryWrapper<BeanProjectNamespace> wrapper =
-                new QueryWrapper<BeanProjectNamespace>().eq("project_id", projectId);
+            new QueryWrapper<BeanProjectNamespace>().eq("project_id", projectId);
         List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
 
         return beanProjectNamespaceList.stream().map(beanProjectNamespace -> {
