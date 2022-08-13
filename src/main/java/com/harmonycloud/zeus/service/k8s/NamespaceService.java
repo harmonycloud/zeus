@@ -112,6 +112,31 @@ public interface NamespaceService {
     void registry(String clusterId, String name, Boolean registered);
 
     /**
+     * 修改分区可用域启用状态
+     * @param clusterId  集群id
+     * @param name 分区名称
+     * @param availableDomain 是否开启可用域
+     */
+    void updateAvailableDomain(String clusterId,String name,boolean availableDomain);
+
+    /**
+     * 设置分区可用域状态
+     * @param clusterId 集群id
+     * @param name 分区名称
+     * @param originalNamespace 原生分区
+     * @param namespace 平台封装的分区
+     */
+    void setAvailableDomain(String clusterId, String name, io.fabric8.kubernetes.api.model.Namespace originalNamespace, Namespace namespace);
+
+    /**
+     * 检查是否开启可用域
+     * @param clusterId 集群id
+     * @param name 分区名称
+     * @return
+     */
+    boolean checkAvailableDomain(String clusterId, String name);
+
+    /**
      * 创建middleware-operator分区
      *
      * @param clusterId 集群id

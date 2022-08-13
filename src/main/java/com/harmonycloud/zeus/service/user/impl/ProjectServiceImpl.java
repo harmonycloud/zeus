@@ -40,6 +40,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -71,6 +72,9 @@ public class ProjectServiceImpl implements ProjectService {
     public MiddlewareInfoService middlewareInfoService;
     @Autowired
     private ClusterMiddlewareInfoService clusterMiddlewareInfoService;
+    private MiddlewareInfoService middlewareInfoService;
+    @Autowired
+    private NamespaceService namespaceService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -161,6 +165,22 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         return projectDtoList;
+    }
+
+    @Override
+    public List<Namespace> getNamespace(String projectId) {
+        QueryWrapper<BeanProjectNamespace> wrapper =
+            new QueryWrapper<BeanProjectNamespace>().eq("project_id", projectId);
+        List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
+
+        return beanProjectNamespaceList.stream().map(beanProjectNamespace -> {
+            Namespace namespace = new Namespace();
+            BeanUtils.copyProperties(beanProjectNamespace, namespace);
+            namespace.setClusterAliasName(clusterService.findById(namespace.getClusterId()).getNickname());
+            namespace.setName(beanProjectNamespace.getNamespace());
+            namespaceService.setAvailableDomain(namespace.getClusterId(), namespace.getName(), null, namespace);
+            return namespace;
+        }).collect(Collectors.toList());
     }
 
     @Override

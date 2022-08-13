@@ -45,6 +45,8 @@ public class MiddlewareClusterInfo {
     private MiddlewareClusterLogging logging;
     @ApiModelProperty("资源对象")
     private ClusterQuotaDTO clusterQuotaDTO;
+    @ApiModelProperty("是否双活")
+    private Boolean activeActive;
 
     public String getMasterUrl() {
         return this.protocol + "://" + this.address + (this.port == null ? "" : ":" + this.port);

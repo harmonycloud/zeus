@@ -10,16 +10,18 @@ import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSON;
 import com.harmonycloud.caas.common.enums.Protocol;
+import com.harmonycloud.caas.common.model.AffinityDTO;
 import com.harmonycloud.caas.common.model.IngressComponentDto;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
-import com.harmonycloud.caas.common.model.MysqlDbDTO;
 import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
 import com.harmonycloud.zeus.bean.BeanMysqlUser;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.mysql.MysqlDbPrivService;
 import com.harmonycloud.zeus.service.mysql.MysqlDbService;
 import com.harmonycloud.zeus.service.mysql.MysqlUserService;
+import com.harmonycloud.zeus.util.K8sConvert;
 import com.harmonycloud.zeus.util.MysqlConnectionUtil;
+import io.fabric8.kubernetes.api.model.NodeAffinity;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -78,8 +80,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     @Autowired
     private BaseOperatorImpl baseOperator;
     @Autowired
-    private StorageClassService storageClassService;
-    @Autowired
     private MysqlBackupServiceImpl mysqlBackupService;
     @Autowired
     private IngressComponentService ingressComponentService;
@@ -93,6 +93,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     private MysqlDbPrivService mysqlDbPrivService;
     @Autowired
     private IngressService ingressService;
+    @Autowired
+    private NamespaceService namespaceService;
 
     @Override
     public boolean support(Middleware middleware) {
@@ -163,6 +165,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             BackupStorageProvider backupStorageProvider = backupService.getStorageProvider(middleware);
             values.put("storageProvider", JSONObject.toJSON(backupStorageProvider));
         }
+        // 添加双活配置
+        checkAndSetActiveActive(values, middleware);
     }
 
     @Override
@@ -225,6 +229,9 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                     }
                 }
             }
+            // 是否自动切换
+            MysqlCluster mysqlCluster = mysqlClusterWrapper.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
+            middleware.setAutoSwitch(mysqlCluster.getSpec().getPassiveSwitched() == null || !mysqlCluster.getSpec().getPassiveSwitched());
             // 读写分离
             if (values.containsKey("proxy")){
                 ReadWriteProxy readWriteProxy = new ReadWriteProxy();
@@ -337,17 +344,39 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
     }
 
-    /*@Override
-    public void delete(Middleware middleware) {
-        this.deleteDisasterRecoveryInfo(middleware);
-        super.delete(middleware);
-        if (middleware.getDeleteBackupInfo() == null || middleware.getDeleteBackupInfo()) {
-            // 删除备份相关
-            mysqlBackupService.deleteMiddlewareBackupInfo(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
-            // 删除定时备份任务
-            mysqlScheduleBackupService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
+    /**
+     * 检查是否是双活分区并设置双活配置字段
+     * @param values
+     * @param middleware
+     */
+    private void checkAndSetActiveActive(JSONObject values, Middleware middleware) {
+        if (namespaceService.checkAvailableDomain(middleware.getClusterId(), middleware.getNamespace())) {
+            values.put("podAntiAffinityTopologKey", "zone");
+            values.put("podAntiAffinity", "soft");
+            AffinityDTO affinityDTO = new AffinityDTO();
+            affinityDTO.setLabel("zone=zoneC");
+            affinityDTO.setRequired(true);
+            JSONObject nodeAffinity = K8sConvert.convertNodeAffinity2Json(affinityDTO, "NotIn");
+            if (nodeAffinity != null) {
+                values.put("nodeAffinity", nodeAffinity);
+            }
+            middleware.getTolerations();
+            String activeActiveToleration = "harm.cn/type=active-active:NoSchedule";
+            if (!CollectionUtils.isEmpty(middleware.getTolerations()) && !middleware.getTolerations().contains(activeActiveToleration)) {
+                middleware.getTolerations().add(activeActiveToleration);
+            } else {
+                middleware.setTolerations(new ArrayList<>());
+                middleware.getTolerations().add(activeActiveToleration);
+            }
+            JSONArray jsonArray = K8sConvert.convertToleration2Json(middleware.getTolerations());
+            values.put("tolerations", jsonArray);
+            StringBuilder sbf = new StringBuilder();
+            for (String toleration : middleware.getTolerations()) {
+                sbf.append(toleration).append(",");
+            }
+            values.put("tolerationAry", sbf.substring(0, sbf.length()));
         }
-    }*/
+    }
 
     @Override
     public void deleteStorage(Middleware middleware) {

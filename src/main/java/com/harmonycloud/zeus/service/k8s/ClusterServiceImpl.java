@@ -1,3 +1,34 @@
+package com.harmonycloud.zeus.service.k8s.impl;
+
+import static com.harmonycloud.caas.common.constants.NameConstant.*;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.MessageFormat;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
+
+import com.harmonycloud.caas.common.constants.CommonConstant;
+import com.harmonycloud.caas.common.enums.registry.RegistryType;
+import com.harmonycloud.zeus.service.middleware.ImageRepositoryService;
+import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
+import com.harmonycloud.zeus.service.user.ProjectService;
+import org.apache.commons.lang3.SerializationUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import org.springframework.web.multipart.MultipartFile;
 package com.harmonycloud.zeus.service.k8s;
 
 import com.alibaba.fastjson.JSONObject;
@@ -57,8 +88,8 @@ import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConsta
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
 /**
- * @author liyinlong
- * @since 2022/6/17 10:57 上午
+ * @author dengyulong
+ * @date 2021/03/25
  */
 @Slf4j
 @Service
@@ -104,6 +135,8 @@ public class ClusterServiceImpl implements ClusterService{
     private ImageRepositoryService imageRepositoryService;
     @Autowired
     private ProjectService projectService;
+    @Autowired
+    private ActiveAreaService activeAreaService;
     @Autowired
     private MiddlewareCrTypeService middlewareCrTypeService;
     @Autowired
@@ -345,6 +378,7 @@ public class ClusterServiceImpl implements ClusterService{
         oldCluster.setCert(cluster.getCert());
         oldCluster.setRegistry(cluster.getRegistry());
         oldCluster.setLogging(cluster.getLogging());
+        oldCluster.setActiveActive(cluster.getActiveActive());
 
         update(oldCluster);
         // 修改镜像仓库信息
@@ -421,6 +455,8 @@ public class ClusterServiceImpl implements ClusterService{
         bindResourceDelete(cluster);
         // 移除镜像仓库信息
         imageRepositoryService.removeImageRepository(clusterId);
+        // 删除可用区初始化状态信息
+        activeAreaService.delete(clusterId);
     }
 
     public void bindResourceDelete(MiddlewareClusterDTO cluster){
@@ -779,41 +815,9 @@ public class ClusterServiceImpl implements ClusterService{
     }
 
     @Override
-    public List<ClusterNodeResourceDto> getNodeResource(String clusterId) throws Exception {
+    public List<ClusterNodeResourceDto> getNodeResource(String clusterId) {
         List<Node> nodeList = nodeService.list(clusterId);
-        // 查询cpu使用量
-        String nodeCpuQuery = "sum(irate(node_cpu_seconds_total{mode!=\"idle\"}[5m])) by (kubernetes_pod_node_name)";
-        Map<String, Double> nodeCpuUsed = nodeQuery(clusterId, nodeCpuQuery);
-        // 查询memory使用量
-        String nodeMemoryQuery = "((node_memory_MemTotal_bytes - node_memory_MemFree_bytes - node_memory_Cached_bytes - node_memory_Buffers_bytes - node_memory_Slab_bytes)/1024/1024/1024)";
-        Map<String, Double> nodeMemoryUsed = nodeQuery(clusterId, nodeMemoryQuery);
-        // 查询memory总量
-        String nodeMemoryTotalQuery = "(node_memory_MemTotal_bytes/1024/1024/1024)";
-        Map<String, Double> nodeMemoryTotal = nodeQuery(clusterId, nodeMemoryTotalQuery);
-        return nodeList.stream().map(node -> {
-            ClusterNodeResourceDto nodeRs = new ClusterNodeResourceDto();
-            nodeRs.setClusterId(clusterId);
-            nodeRs.setIp(node.getIp());
-            nodeRs.setStatus(node.getStatus());
-            nodeRs.setCreateTime(node.getCreateTime());
-            // 设置cpu
-            nodeRs.setCpuUsed(nodeCpuUsed.getOrDefault(node.getName(), null));
-            nodeRs.setCpuTotal(Double.parseDouble(node.getCpu().getTotal()));
-            if (nodeRs.getCpuUsed() != null) {
-                nodeRs.setCpuRate(ResourceCalculationUtil.roundNumber(
-                        BigDecimal.valueOf(nodeRs.getCpuUsed() / nodeRs.getCpuTotal() * 100), 2, RoundingMode.CEILING));
-            }
-            // 设置memory
-            nodeRs.setMemoryUsed(nodeMemoryUsed.getOrDefault(node.getName(), null));
-            nodeRs.setMemoryTotal(nodeMemoryTotal.getOrDefault(node.getName(), null));
-            if (nodeRs.getMemoryUsed() != null){
-                nodeRs.setMemoryRate(ResourceCalculationUtil.roundNumber(
-                        BigDecimal.valueOf(nodeRs.getMemoryUsed() / nodeRs.getMemoryTotal() * 100), 2, RoundingMode.CEILING));
-            }
-            return nodeRs;
-        }).sorted((o1, o2) -> o1.getCreateTime() == null ? -1
-                : o2.getCreateTime() == null ? -1 : o2.getCreateTime().compareTo(o1.getCreateTime()))
-                .collect(Collectors.toList());
+        return nodeService.getNodeResource(clusterId, nodeList, true);
     }
 
     @Override
@@ -1033,26 +1037,6 @@ public class ClusterServiceImpl implements ClusterService{
         return pvcs;
     }
 
-    public Map<String, Double> nodeQuery(String clusterId, String query){
-        Map<String, Double> resultMap = new HashMap<>();
-        Map<String, String> queryMap = new HashMap<>();
-        // 查询cpu使用量
-        try {
-            queryMap.put("query", query);
-            PrometheusResponse nodeMemoryRequest =
-                    prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
-            if (!CollectionUtils.isEmpty(nodeMemoryRequest.getData().getResult())) {
-                nodeMemoryRequest.getData().getResult().forEach(result -> {
-                    resultMap.put(result.getMetric().get("kubernetes_pod_node_name"), ResourceCalculationUtil.roundNumber(
-                            BigDecimal.valueOf(Double.parseDouble(result.getValue().get(1))), 2, RoundingMode.CEILING));
-                });
-            }
-        }catch (Exception e){
-            log.error("node列表，查询cpu失败");
-        }
-        return resultMap;
-    }
-
 
     /**
      * 获取集群注册的分区
@@ -1119,6 +1103,24 @@ public class ClusterServiceImpl implements ClusterService{
         cluster.setProtocol(serverInfos[0]);
         cluster.setHost(host);
         cluster.setPort(Integer.parseInt(serverInfos[2]));
+    }
+
+    /**
+     * 设置集群制品仓库信息
+     * @param cluster
+     */
+    private void setClusterRegistry(MiddlewareClusterDTO cluster) {
+        Registry registry = new Registry();
+        registry.setType(registryType);
+        registry.setProtocol(registryProtocol);
+        registry.setAddress(registryAddress);
+        registry.setPort(registryPort);
+        registry.setUser(registryUser);
+        registry.setPassword(registryPassword);
+        registry.setImageRepo(registryImageRepo);
+        registry.setChartRepo(registryChartRepo);
+        registry.setVersion(registryVersion);
+        cluster.setRegistry(registry);
     }
 
     public void refresh(String clusterId) {
