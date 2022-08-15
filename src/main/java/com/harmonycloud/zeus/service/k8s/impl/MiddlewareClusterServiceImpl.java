@@ -4,16 +4,20 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.model.middleware.ImageRepositoryDTO;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
 import com.harmonycloud.zeus.dao.BeanMiddlewareClusterMapper;
 import com.harmonycloud.zeus.integration.cluster.ClusterWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCluster;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareClusterInfo;
 import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import com.harmonycloud.zeus.service.middleware.ImageRepositoryService;
 import com.harmonycloud.zeus.util.K8sClient;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -21,6 +25,10 @@ import org.springframework.util.CollectionUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.harmonycloud.caas.common.constants.NameConstant.CREATE_TIME;
+import static com.harmonycloud.caas.common.constants.NameConstant.NAME;
 
 /**
  * @author yushuaikang
@@ -47,13 +55,30 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
     }
 
     @Override
+    public List<MiddlewareClusterDTO> listClusterDtos() {
+        List<MiddlewareCluster> middlewareClusters = listClusters();
+        return middlewareClusters.stream().map(c -> {
+            MiddlewareClusterInfo info = c.getSpec().getInfo();
+            MiddlewareClusterDTO cluster = new MiddlewareClusterDTO();
+            BeanUtils.copyProperties(info, cluster);
+            cluster.setId(K8sClient.getClusterId(c.getMetadata())).setHost(info.getAddress())
+                    .setName(c.getMetadata().getName()).setDcId(c.getMetadata().getNamespace())
+                    .setAnnotations(c.getMetadata().getAnnotations());
+            if (!CollectionUtils.isEmpty(c.getMetadata().getAnnotations())) {
+                cluster.setNickname(c.getMetadata().getAnnotations().get(NAME));
+            }
+            JSONObject attributes = new JSONObject();
+            attributes.put(CREATE_TIME, DateUtils.parseUTCDate(c.getMetadata().getCreationTimestamp()));
+            cluster.setAttributes(attributes);
+            return SerializationUtils.clone(cluster);
+        }).collect(Collectors.toList());
+    }
+
+    @Override
     public List<MiddlewareCluster> listClusters() {
         QueryWrapper<BeanMiddlewareCluster> wrapper = new QueryWrapper<>();
         wrapper.isNotNull("cluster_id").isNotNull("middleware_cluster");
         List<BeanMiddlewareCluster> beanMiddlewareClusters = middlewareClusterMapper.selectList(wrapper);
-        if (CollectionUtils.isEmpty(beanMiddlewareClusters)){
-            beanMiddlewareClusters = initMiddlewareCluster();
-        }
         List<MiddlewareCluster> middlewareClusters = new ArrayList<>();
         beanMiddlewareClusters.forEach(beanMiddlewareCluster -> {
             MiddlewareCluster middlewareCluster = JSONObject.parseObject(JSONObject.toJSONString(JSON.parse(beanMiddlewareCluster.getMiddlewareCluster())), MiddlewareCluster.class);

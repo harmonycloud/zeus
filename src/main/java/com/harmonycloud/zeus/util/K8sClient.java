@@ -8,6 +8,7 @@ import com.harmonycloud.zeus.bean.BeanK8sDefaultCluster;
 import com.harmonycloud.zeus.service.k8s.ClusterCertService;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.K8sDefaultClusterService;
+import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import com.harmonycloud.zeus.service.middleware.EsService;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.client.ConfigBuilder;
@@ -47,7 +48,7 @@ public class K8sClient {
     @Autowired
     private K8sDefaultClusterService k8SDefaultClusterService;
     @Autowired
-    private EsService esService;
+    private MiddlewareClusterService middlewareClusterService;
 
     public static String getClusterId(MiddlewareClusterDTO cluster) {
         return cluster.getDcId() + "--" + cluster.getName();
@@ -86,10 +87,7 @@ public class K8sClient {
      * 初始化
      */
     public void initClients() {
-        if (!K8S_CLIENT_MAP.containsKey(K8sClient.DEFAULT_CLIENT)){
-            initDefaultClient();
-        }
-        List<MiddlewareClusterDTO> middlewareClusters = clusterService.listClusters();
+        List<MiddlewareClusterDTO> middlewareClusters = middlewareClusterService.listClusterDtos();
         if (middlewareClusters.size() > 0) {
             addK8sClients(middlewareClusters);
             clusterService.initClusterAttributes(middlewareClusters);
@@ -142,14 +140,6 @@ public class K8sClient {
                     .withTrustCerts(true).withOauthToken(c.getAccessToken()).build());
             }
             K8S_CLIENT_MAP.put(c.getId(), client);
-
-            //创建es模板
-            try {
-                esService.initEsIndexTemplate();
-                log.info("集群:{}索引模板初始化成功", c.getName());
-            } catch (Exception e) {
-                log.error("集群:{}索引模板初始化失败", c.getName(), e);
-            }
 
             // 保存证书
             try {

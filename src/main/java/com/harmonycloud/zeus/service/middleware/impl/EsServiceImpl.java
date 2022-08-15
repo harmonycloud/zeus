@@ -15,6 +15,7 @@ import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.json.JsonUtil;
 import com.harmonycloud.tool.page.PageObject;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
+import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import com.harmonycloud.zeus.service.middleware.AbstractMiddlewareService;
 import com.harmonycloud.zeus.service.middleware.EsService;
 import lombok.extern.slf4j.Slf4j;
@@ -71,6 +72,8 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
 
     private Map<String, RestHighLevelClient> esClients = new ConcurrentHashMap<>();
 
+    @Autowired
+    private MiddlewareClusterService middlewareClusterService;
     @Autowired
     private ClusterService clusterService;
 
@@ -410,7 +413,7 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
 
     @Override
     public boolean initEsIndexTemplate(String clusterId) {
-        List<MiddlewareClusterDTO> clusters = clusterService.listClusters();
+        List<MiddlewareClusterDTO> clusters = middlewareClusterService.listClusterDtos();
         if (StringUtils.isNotBlank(clusterId)) {
             clusters = clusters.stream().filter(middlewareClusterDTO -> clusterId.equals(middlewareClusterDTO.getId())).collect(Collectors.toList());
         }

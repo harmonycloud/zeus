@@ -16,6 +16,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.zeus.bean.BeanActiveArea;
+import com.harmonycloud.zeus.dao.BeanActiveAreaMapper;
+import com.harmonycloud.zeus.integration.cluster.NodeWrapper;
+import io.fabric8.kubernetes.api.model.NodeCondition;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -113,6 +118,10 @@ public class ClusterServiceImpl implements ClusterService {
     private MiddlewareCrTypeService middlewareCrTypeService;
     @Autowired
     private MiddlewareAlertsService middlewareAlertsService;
+    @Autowired
+    private NodeWrapper nodeWrapper;
+    @Autowired
+    private BeanActiveAreaMapper activeAreaMapper;
 
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
@@ -131,21 +140,26 @@ public class ClusterServiceImpl implements ClusterService {
 
     @Override
     public List<MiddlewareClusterDTO> listClusters(boolean detail, String key, String projectId) {
-        List<MiddlewareClusterDTO> clusters;
-        List<MiddlewareCluster> clusterList = middlewareClusterService.listClusters();
-        if (clusterList.size() <= 0) {
+        List<MiddlewareClusterDTO> clusters = middlewareClusterService.listClusterDtos();
+        if (clusters.size() <= 0) {
             return new ArrayList<>(0);
         }
+        // 设置集群状态及可用区
+        clusters.forEach(clusterDTO -> {
+            setActiveActiveInfo(clusterDTO);
+            setClusterStatusCode(clusterDTO);
+        });
         // 封装数据
-        clusters = clusterList.stream().map(this::convertMiddlewareClusterToDto)
+        clusters = clusters.stream()
             .filter(clusterDTO -> StringUtils.isEmpty(key) || clusterDTO.getNickname().contains(key))
             .collect(Collectors.toList());
         // 返回命名空间信息
         if (detail && clusters.size() > 0) {
             final CountDownLatch clusterCountDownLatch = new CountDownLatch(clusters.size());
             CurrentUser currentUser = CurrentUserRepository.getUser();
+            List<MiddlewareClusterDTO> finalClusters = clusters;
             ThreadPoolExecutorFactory.executor.execute(() -> {
-                for (MiddlewareClusterDTO cluster : clusters) {
+                for (MiddlewareClusterDTO cluster : finalClusters) {
                     try {
                         CurrentUserRepository.setUser(currentUser);
                         initClusterAttributes(cluster);
@@ -1111,6 +1125,38 @@ public class ClusterServiceImpl implements ClusterService {
                 }
             });
         }
+    }
+    /**
+     * 设置集群状态，当所有节点都ready时，集群状态即为正常
+     * @param clusterDTO
+     * @return
+     */
+    private void setClusterStatusCode(MiddlewareClusterDTO clusterDTO) {
+        List<io.fabric8.kubernetes.api.model.Node> nodes = nodeWrapper.list(clusterDTO.getId());
+        for (io.fabric8.kubernetes.api.model.Node node : nodes) {
+            if (node.getStatus() == null || CollectionUtils.isEmpty(node.getStatus().getConditions())) {
+                clusterDTO.setStatusCode(0);
+            }
+            List<NodeCondition> conditions = node.getStatus().getConditions();
+            NodeCondition nodeCondition = conditions.get(conditions.size() - 1);
+            if (!"Ready".equalsIgnoreCase(nodeCondition.getType())) {
+                clusterDTO.setStatusCode(0);
+            }
+        }
+        clusterDTO.setStatusCode(1);
+    }
+
+    /**
+     * 获取集群是否已开启可用区
+     * @param clusterDTO
+     * @return
+     */
+    private void setActiveActiveInfo(MiddlewareClusterDTO clusterDTO) {
+        QueryWrapper<BeanActiveArea> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("cluster_id", clusterDTO.getId());
+        List<BeanActiveArea> areaList = activeAreaMapper.selectList(queryWrapper);
+        clusterDTO.setActiveActive(!CollectionUtils.isEmpty(areaList));
+        clusterDTO.setActiveAreaNum(areaList.size());
     }
 
 }
