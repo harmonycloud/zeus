@@ -64,7 +64,7 @@ public interface Skyview2ProjectServiceClient {
      * @param projectId
      * @return
      */
-    @Get(url = "#{system.skyview.prefix}/caas/tenants/{tenantId}/projects/{projectId}/namespaces", headers = {"Authorization: ${token}"})
+    @Get(url = "#{system.skyview.prefix}/caas/tenants/{tenantId}/projects/{projectId}/namespaces?withAllDataCenter=true", headers = {"Authorization: ${token}"})
     CaasResult<JSONArray> getProjectNamespace(@Var("token") String token, @Var("tenantId") String tenantId, @Query("projectId") String projectId);
 
 }
