@@ -108,7 +108,7 @@ public class OverviewServiceImpl implements OverviewService {
 
         // 封装middleware
         List<Middleware> middlewares = middlewareCRService.list(clusterId, namespace, null, true);
-        if (CollectionUtils.isEmpty(middlewares)) {
+        if (!CollectionUtils.isEmpty(middlewares)) {
             return null;
         }
         Map<String, List<Middleware>> middlewareMap =
