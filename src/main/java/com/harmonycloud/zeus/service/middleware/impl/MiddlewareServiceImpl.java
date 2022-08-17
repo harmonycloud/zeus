@@ -853,6 +853,20 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         List<IngressDTO> ingressDTOS = ingressService.get(clusterId, namespace, type, name);
         String servicePort = ServiceNameConvertUtil.getManagePlatformServicePort(type);
         for (IngressDTO ingressDTO : ingressDTOS) {
+            if (!CollectionUtils.isEmpty(ingressDTO.getRules())) {
+                List<IngressRuleDTO> rules = ingressDTO.getRules();
+                for (IngressRuleDTO rule : rules) {
+                    String domain = rule.getDomain();
+                    List<IngressHttpPath> ingressHttpPaths = rule.getIngressHttpPaths();
+                    if (!CollectionUtils.isEmpty(ingressHttpPaths)) {
+                        for (IngressHttpPath ingressHttpPath : ingressHttpPaths) {
+                            if (servicePort.equals(ingressHttpPath.getServicePort())) {
+                                return domain + ingressHttpPath.getPath();
+                            }
+                        }
+                    }
+                }
+            }
             List<ServiceDTO> serviceList = ingressDTO.getServiceList();
             if (!CollectionUtils.isEmpty(serviceList)) {
                 for (ServiceDTO serviceDTO : serviceList) {

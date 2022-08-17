@@ -272,6 +272,10 @@ public class NamespaceServiceImpl implements NamespaceService {
                 DateUtils.parseDate(ns.getMetadata().getCreationTimestamp(), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
         // 状态
         namespace.setPhase(ns.getStatus().getPhase());
+        // 如果没有中文名称，则设置英文名称为中文名称
+        if (StringUtils.isBlank(namespace.getAliasName())) {
+            namespace.setAliasName(namespace.getName());
+        }
         this.setAvailableDomain(clusterId, namespace.getName(), ns, namespace);
         return namespace;
     }
