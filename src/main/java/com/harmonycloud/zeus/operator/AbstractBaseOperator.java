@@ -1153,4 +1153,61 @@ public abstract class AbstractBaseOperator {
             }
         }));
     }
+
+    /**
+     * 设置容忍双活污点
+     * @param middleware
+     * @param values
+     */
+    public void setActiveActiveToleration(Middleware middleware, JSONObject values){
+        middleware.getTolerations();
+        String activeActiveToleration = "harm.cn/type=active-active:NoSchedule";
+        if (!CollectionUtils.isEmpty(middleware.getTolerations()) && !middleware.getTolerations().contains(activeActiveToleration)) {
+            middleware.getTolerations().add(activeActiveToleration);
+        } else {
+            middleware.setTolerations(new ArrayList<>());
+            middleware.getTolerations().add(activeActiveToleration);
+        }
+        JSONArray jsonArray = K8sConvert.convertToleration2Json(middleware.getTolerations());
+        values.put("tolerations", jsonArray);
+        StringBuilder sbf = new StringBuilder();
+        for (String toleration : middleware.getTolerations()) {
+            sbf.append(toleration).append(",");
+        }
+        values.put("tolerationAry", sbf.substring(0, sbf.length()));
+    }
+
+    /**
+     * 设置values.yaml双活参数
+     * @param values
+     * @param middleware
+     */
+    public void checkAndSetActiveActive(JSONObject values, Middleware middleware) {
+    }
+
+    /**
+     * 设置双活参数
+     * @param values
+     * @param activeActiveKey
+     */
+    public void setActiveActiveConfig(String activeActiveKey, JSONObject values) {
+        values.put("podAntiAffinityTopologKey", "zone");
+        values.put("podAntiAffinity", "soft");
+        AffinityDTO affinityDTO = new AffinityDTO();
+        affinityDTO.setLabel("zone=zoneC");
+        affinityDTO.setRequired(true);
+        JSONObject nodeAffinity = K8sConvert.convertNodeAffinity2Json(affinityDTO, "NotIn");
+        values.put("nodeAffinity", nodeAffinity);
+        if (nodeAffinity != null) {
+            values.put(activeActiveKey, nodeAffinity);
+        }
+        if (!StringUtils.isEmpty(activeActiveKey)) {
+
+        } else {
+            if (nodeAffinity != null) {
+                values.put("nodeAffinity", nodeAffinity);
+            }
+        }
+    }
+
 }
