@@ -237,7 +237,7 @@ public class NodeServiceImpl implements NodeService {
                 });
             }
         }catch (Exception e){
-            log.error("node列表，查询cpu失败");
+            log.error("node列表，查询cpu失败", e);
         }
         return resultMap;
     }

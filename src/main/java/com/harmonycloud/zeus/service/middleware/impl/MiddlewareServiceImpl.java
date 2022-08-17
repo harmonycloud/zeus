@@ -42,6 +42,7 @@ import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -261,11 +262,11 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         Middleware middleware = new Middleware(clusterId, namespace, name, type).setChartVersion(chartVersion);
         MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
         List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.list(true);
-        BeanMiddlewareInfo mwInfo = middlewareInfoList.stream()
-                .collect(Collectors.toMap(
-                        beanMiddlewareInfo -> beanMiddlewareInfo.getChartName() + ":" + beanMiddlewareInfo.getChartVersion(),
-                        middlewareInfo -> middlewareInfo))
-                .get(middleware.getType() + ":" + middleware.getChartVersion());
+        Map<String, BeanMiddlewareInfo> middlewareInfoMap  = new HashMap<>();
+        for (BeanMiddlewareInfo beanMiddlewareInfo : middlewareInfoList) {
+            middlewareInfoMap.put(beanMiddlewareInfo.getChartName() + ":" + beanMiddlewareInfo.getChartVersion(), beanMiddlewareInfo);
+        }
+        BeanMiddlewareInfo mwInfo = middlewareInfoMap.get(middleware.getType() + ":" + middleware.getChartVersion());
         if (mwInfo == null) {
             throw new BusinessException(ErrorMessage.MIDDLEWARE_NOT_EXIST);
         }

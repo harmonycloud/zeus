@@ -311,6 +311,9 @@ public class NamespaceServiceImpl implements NamespaceService {
     public boolean checkAliasNameExist(String clusterId, String aliasName) {
         List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId);
         for (io.fabric8.kubernetes.api.model.Namespace ns : nsList) {
+            if (ns.getMetadata().getName().equalsIgnoreCase(aliasName)) {
+                return true;
+            }
             if (ns.getMetadata().getAnnotations() != null && ns.getMetadata().getAnnotations().containsKey("alias_name")
                     && aliasName.equals(ns.getMetadata().getAnnotations().get("alias_name"))) {
                 return true;

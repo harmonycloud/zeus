@@ -29,8 +29,8 @@ public class ActiveAreaClusterServiceImpl implements ActiveAreaClusterService {
                     .setClusterId(cluster.getId())
                     .setClusterAliasName(cluster.getNickname())
                     .setActiveActive(cluster.getActiveActive())
-                    .setActiveAreaNum(3)
-                    .setStatusCode(1);
+                    .setActiveAreaNum(cluster.getActiveAreaNum())
+                    .setStatusCode(cluster.getStatusCode());
             return activeAreaClusterDto;
         }).collect(Collectors.toList());
     }
