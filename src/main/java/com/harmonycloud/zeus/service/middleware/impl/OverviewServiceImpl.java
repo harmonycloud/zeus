@@ -890,8 +890,8 @@ public class OverviewServiceImpl implements OverviewService {
         List<Middleware> middlewareList = new ArrayList<>();
         for (MiddlewareClusterDTO cluster : clusterList){
             // 获取集群中间件管理组件安装状态，若未安装，则不统计该集群服务信息
-            if (checkInstallMiddlewareController(cluster)) {
-                break;
+            if (!checkInstallMiddlewareController(cluster)) {
+                continue;
             }
             // 获取多集群中间件类型并集
             List<MiddlewareInfoDTO> infoDTOList = middlewareInfoService.list(cluster.getId()).stream().
