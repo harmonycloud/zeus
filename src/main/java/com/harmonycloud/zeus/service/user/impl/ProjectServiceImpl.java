@@ -170,6 +170,11 @@ public class ProjectServiceImpl implements ProjectService {
         List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(true, null);
         QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<>();
         List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
+        beanProjectNamespaceList.forEach(ns -> {
+            if (StringUtils.isEmpty(ns.getAliasName())) {
+                ns.setAliasName(ns.getNamespace());
+            }
+        });
         Map<String, List<BeanProjectNamespace>> nsMap =
             beanProjectNamespaceList.stream().collect(Collectors.groupingBy(BeanProjectNamespace::getClusterId));
         clusterList.forEach(cluster -> {
