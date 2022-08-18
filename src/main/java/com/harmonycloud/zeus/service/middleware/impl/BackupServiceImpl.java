@@ -49,15 +49,6 @@ public class BackupServiceImpl implements BackupService {
         return convertBackupCR(backupCRList);
     }
 
-    @Override
-    public List<Backup> listScheduleBackup(String clusterId, String namespace) {
-        List<BackupCR> backupCRList = backupWrapper.list(clusterId, namespace);
-        if (CollectionUtils.isEmpty(backupCRList)) {
-            return new ArrayList<>(0);
-        }
-        return convertBackupCR(backupCRList);
-    }
-
 
     private List<Backup> convertBackupCR(List<BackupCR> backupCRList) {
         List<Backup> backupList = new ArrayList<>();
@@ -69,19 +60,20 @@ public class BackupServiceImpl implements BackupService {
                     .setMiddlewareCluster(backupCRD.getSpec().getClusterName())
                     .setBucketName(backupCRD.getSpec().getStorageProvider().getMinio().getBucketName())
                     .setEndPoint(backupCRD.getSpec().getStorageProvider().getMinio().getEndpoint())
-                    .setAddressName(backupCRD.getMetadata().getLabels().get("addressId"))
-                    .setTaskName(backupCRD.getMetadata().getLabels().get("backupId"))
+                    .setAddressId(backupCRD.getMetadata().getLabels().get("addressId"))
+                    .setBackupId(backupCRD.getMetadata().getLabels().get("backupId"))
                     .setType(backupCRD.getMetadata().getLabels().get("type"));
+
             if (backupCRD.getMetadata().getLabels().containsKey("backup-schedule")) {
                 backup.setOwner(backupCRD.getMetadata().getLabels().get("backup-schedule"));
-                backup.setBackupName(backupCRD.getMetadata().getLabels().get("backup-schedule"));
-            } else {
+                //backup.setBackupName(backupCRD.getMetadata().getLabels().get("backup-schedule"));
+            } /*else {
                 backup.setBackupName(backupCRD.getMetadata().getName());
                 backup.setOwner(backupCRD.getMetadata().getName());
                 if (StringUtils.isEmpty(backup.getTaskName())){
                     backup.setTaskName(backupCRD.getMetadata().getName());
                 }
-            }
+            }*/
             if (!ObjectUtils.isEmpty(backupCRD.getStatus())) {
                 backup.setBackupFileName(backupCRD.getStatus().getBackupFileName())
                         .setBackupTime(backupCRD.getStatus().getBackupTime()).setPhase(backupCRD.getStatus().getPhase());

@@ -26,11 +26,15 @@ public class MiddlewareBackupScheduleSpec {
      */
     private String type;
 
-
     /**
      * 是否开启备份
      */
     private String pause;
+
+    /**
+     * full(默认)/inc
+     */
+    private String mode;
 
     /**
      * 定时备份设置
