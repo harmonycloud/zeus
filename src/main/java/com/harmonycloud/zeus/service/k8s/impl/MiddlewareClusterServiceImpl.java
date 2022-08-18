@@ -68,8 +68,11 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
                 cluster.setNickname(c.getMetadata().getAnnotations().get(NAME));
             }
             JSONObject attributes = new JSONObject();
-            attributes.put(CREATE_TIME, DateUtils.parseUTCDate(c.getMetadata().getCreationTimestamp()));
-            cluster.setAttributes(attributes);
+            if (c.getMetadata().getCreationTimestamp() != null) {
+                attributes.put(CREATE_TIME, c.getMetadata().getCreationTimestamp().contains("T")
+                        ? DateUtils.parseUTCDate(c.getMetadata().getCreationTimestamp()) : c.getMetadata().getCreationTimestamp());
+                cluster.setAttributes(attributes);
+            }
             return SerializationUtils.clone(cluster);
         }).collect(Collectors.toList());
     }

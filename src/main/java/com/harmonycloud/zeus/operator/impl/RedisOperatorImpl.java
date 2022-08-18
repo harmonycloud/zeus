@@ -6,13 +6,16 @@ import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConsta
 
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.harmonycloud.caas.common.enums.Protocol;
+import com.harmonycloud.caas.common.model.AffinityDTO;
 import com.harmonycloud.caas.common.model.IngressComponentDto;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.service.k8s.IngressComponentService;
 import com.harmonycloud.zeus.service.k8s.ServiceService;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareServiceImpl;
+import com.harmonycloud.zeus.util.K8sConvert;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import lombok.extern.slf4j.Slf4j;
@@ -168,6 +171,8 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         if (middleware.getPort() != null) {
             values.put("redisServicePort", middleware.getPort());
         }
+        // 设置双活参数
+        checkAndSetActiveActive(values, middleware);
     }
 
     @Override
@@ -359,4 +364,13 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         predixy.put("resources", resources);
         values.put("predixy", predixy);
     }
+
+    @Override
+    public void checkAndSetActiveActive(JSONObject values, Middleware middleware) {
+        if (namespaceService.checkAvailableDomain(middleware.getClusterId(), middleware.getNamespace())) {
+            super.setActiveActiveConfig( "redis.nodeAffinity", values);
+            super.setActiveActiveToleration(middleware, values);
+        }
+    }
+
 }

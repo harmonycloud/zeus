@@ -349,32 +349,11 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
      * @param values
      * @param middleware
      */
-    private void checkAndSetActiveActive(JSONObject values, Middleware middleware) {
+    @Override
+    public void checkAndSetActiveActive(JSONObject values, Middleware middleware) {
         if (namespaceService.checkAvailableDomain(middleware.getClusterId(), middleware.getNamespace())) {
-            values.put("podAntiAffinityTopologKey", "zone");
-            values.put("podAntiAffinity", "soft");
-            AffinityDTO affinityDTO = new AffinityDTO();
-            affinityDTO.setLabel("zone=zoneC");
-            affinityDTO.setRequired(true);
-            JSONObject nodeAffinity = K8sConvert.convertNodeAffinity2Json(affinityDTO, "NotIn");
-            if (nodeAffinity != null) {
-                values.put("nodeAffinity", nodeAffinity);
-            }
-            middleware.getTolerations();
-            String activeActiveToleration = "harm.cn/type=active-active:NoSchedule";
-            if (!CollectionUtils.isEmpty(middleware.getTolerations()) && !middleware.getTolerations().contains(activeActiveToleration)) {
-                middleware.getTolerations().add(activeActiveToleration);
-            } else {
-                middleware.setTolerations(new ArrayList<>());
-                middleware.getTolerations().add(activeActiveToleration);
-            }
-            JSONArray jsonArray = K8sConvert.convertToleration2Json(middleware.getTolerations());
-            values.put("tolerations", jsonArray);
-            StringBuilder sbf = new StringBuilder();
-            for (String toleration : middleware.getTolerations()) {
-                sbf.append(toleration).append(",");
-            }
-            values.put("tolerationAry", sbf.substring(0, sbf.length()));
+            super.setActiveActiveConfig(null, values);
+            super.setActiveActiveToleration(middleware, values);
         }
     }
 

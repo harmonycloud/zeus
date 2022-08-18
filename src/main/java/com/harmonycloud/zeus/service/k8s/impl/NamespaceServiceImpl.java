@@ -272,6 +272,10 @@ public class NamespaceServiceImpl implements NamespaceService {
                 DateUtils.parseDate(ns.getMetadata().getCreationTimestamp(), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
         // 状态
         namespace.setPhase(ns.getStatus().getPhase());
+        // 如果没有中文名称，则设置英文名称为中文名称
+        if (StringUtils.isBlank(namespace.getAliasName())) {
+            namespace.setAliasName(namespace.getName());
+        }
         this.setAvailableDomain(clusterId, namespace.getName(), ns, namespace);
         return namespace;
     }
@@ -311,6 +315,9 @@ public class NamespaceServiceImpl implements NamespaceService {
     public boolean checkAliasNameExist(String clusterId, String aliasName) {
         List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId);
         for (io.fabric8.kubernetes.api.model.Namespace ns : nsList) {
+            if (ns.getMetadata().getName().equalsIgnoreCase(aliasName)) {
+                return true;
+            }
             if (ns.getMetadata().getAnnotations() != null && ns.getMetadata().getAnnotations().containsKey("alias_name")
                     && aliasName.equals(ns.getMetadata().getAnnotations().get("alias_name"))) {
                 return true;

@@ -42,6 +42,7 @@ import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -261,11 +262,11 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         Middleware middleware = new Middleware(clusterId, namespace, name, type).setChartVersion(chartVersion);
         MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
         List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.list(true);
-        BeanMiddlewareInfo mwInfo = middlewareInfoList.stream()
-                .collect(Collectors.toMap(
-                        beanMiddlewareInfo -> beanMiddlewareInfo.getChartName() + ":" + beanMiddlewareInfo.getChartVersion(),
-                        middlewareInfo -> middlewareInfo))
-                .get(middleware.getType() + ":" + middleware.getChartVersion());
+        Map<String, BeanMiddlewareInfo> middlewareInfoMap  = new HashMap<>();
+        for (BeanMiddlewareInfo beanMiddlewareInfo : middlewareInfoList) {
+            middlewareInfoMap.put(beanMiddlewareInfo.getChartName() + ":" + beanMiddlewareInfo.getChartVersion(), beanMiddlewareInfo);
+        }
+        BeanMiddlewareInfo mwInfo = middlewareInfoMap.get(middleware.getType() + ":" + middleware.getChartVersion());
         if (mwInfo == null) {
             throw new BusinessException(ErrorMessage.MIDDLEWARE_NOT_EXIST);
         }
@@ -845,18 +846,39 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Override
     public String platform(String clusterId, String namespace, String name, String type) {
         if (!type.equals(MiddlewareTypeEnum.ELASTIC_SEARCH.getType())
-            && !type.equals(MiddlewareTypeEnum.KAFKA.getType())
-            && !type.equals(MiddlewareTypeEnum.ROCKET_MQ.getType())) {
+                && !type.equals(MiddlewareTypeEnum.KAFKA.getType())
+                && !type.equals(MiddlewareTypeEnum.ROCKET_MQ.getType())) {
             throw new BusinessException(ErrorMessage.MIDDLEWARE_MANAGER_PLATFORM_NOT_SUPPORT);
         }
         List<IngressDTO> ingressDTOS = ingressService.get(clusterId, namespace, type, name);
         String servicePort = ServiceNameConvertUtil.getManagePlatformServicePort(type);
         for (IngressDTO ingressDTO : ingressDTOS) {
+            if (!CollectionUtils.isEmpty(ingressDTO.getRules())) {
+                List<IngressRuleDTO> rules = ingressDTO.getRules();
+                for (IngressRuleDTO rule : rules) {
+                    String domain = rule.getDomain();
+                    List<IngressHttpPath> ingressHttpPaths = rule.getIngressHttpPaths();
+                    if (!CollectionUtils.isEmpty(ingressHttpPaths)) {
+                        for (IngressHttpPath ingressHttpPath : ingressHttpPaths) {
+                            assert servicePort != null;
+                            if (servicePort.equals(ingressHttpPath.getServicePort())) {
+                                return domain + ingressHttpPath.getPath();
+                            }
+                        }
+                    }
+                }
+            }
             List<ServiceDTO> serviceList = ingressDTO.getServiceList();
+            Set<String> ipSet = ingressService.listIngressIp(clusterId, ingressDTO.getIngressClassName());
+            String exposeIp = "";
+            for (String ip : ipSet) {
+                exposeIp = ip;
+                break;
+            }
             if (!CollectionUtils.isEmpty(serviceList)) {
                 for (ServiceDTO serviceDTO : serviceList) {
                     if (serviceDTO.getServicePort().equals(servicePort)) {
-                        return ingressDTO.getExposeIP() + ":" + serviceDTO.getExposePort();
+                        return (StringUtils.isBlank(ingressDTO.getExposeIP()) ? exposeIp : ingressDTO.getExposeIP()) + ":" + serviceDTO.getExposePort();
                     }
                 }
             }
