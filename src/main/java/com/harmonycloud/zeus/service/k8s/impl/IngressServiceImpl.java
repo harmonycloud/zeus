@@ -592,7 +592,9 @@ public class IngressServiceImpl implements IngressService {
     }
 
     public List<PodInfo> listIngressPod(String clusterId, String namespace, String ingressClassName) {
-        return podService.list(clusterId, namespace, ingressClassName);
+        Map<String, String> labels = new HashMap<>();
+        labels.put("app.kubernetes.io/instance", ingressClassName);
+        return podService.list(clusterId, namespace, labels);
     }
 
     /**
