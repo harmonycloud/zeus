@@ -5,6 +5,7 @@ import static com.harmonycloud.caas.common.constants.user.UserConstant.USERNAME;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -473,23 +474,40 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public List<String> getClusters(String projectId) {
-        List<Namespace> namespaceList = this.getNamespace(projectId);
+        List<Namespace> namespaceList = this.getNamespace(projectId, null);
         return namespaceList.stream().map(Namespace::getClusterId).collect(Collectors.toList());
     }
+    @Autowired
+    private NamespaceService namespaceService;
 
     @Override
     public List<Namespace> getNamespace(String projectId) {
-        QueryWrapper<BeanProjectNamespace> wrapper =
-            new QueryWrapper<BeanProjectNamespace>().eq("project_id", projectId);
-        List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
+        return getNamespace(projectId, null);
+    }
 
-        return beanProjectNamespaceList.stream().map(beanProjectNamespace -> {
+    @Override
+    public List<Namespace> getNamespace(String projectId, String clusterId) {
+        QueryWrapper<BeanProjectNamespace> wrapper =
+                new QueryWrapper<BeanProjectNamespace>().eq("project_id", projectId);
+        if (!StringUtils.isEmpty(clusterId)) {
+            wrapper.eq("cluster_id", clusterId);
+        }
+        List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
+        List<Namespace> namespaces = beanProjectNamespaceList.stream().map(beanProjectNamespace -> {
             Namespace namespace = new Namespace();
             BeanUtils.copyProperties(beanProjectNamespace, namespace);
             namespace.setClusterAliasName(clusterService.findById(namespace.getClusterId()).getNickname());
             namespace.setName(beanProjectNamespace.getNamespace());
+            if (StringUtils.isEmpty(namespace.getAliasName())) {
+                namespace.setAliasName(beanProjectNamespace.getNamespace());
+            }
             return namespace;
         }).collect(Collectors.toList());
+
+        if (StringUtils.isEmpty(clusterId)) {
+            return namespaces;
+        }
+        return setAvailableDomainStatus(namespaces, clusterId);
     }
 
     /**
@@ -502,6 +520,24 @@ public class ProjectServiceImpl implements ProjectService {
             throw new BusinessException(ErrorMessage.PROJECT_NOT_EXIST);
         }
         return beanProjectList.get(0);
+    }
+
+    /**
+     * 设置双活分区状态
+     * @param namespaces
+     * @param clusterId
+     * @return
+     */
+    public List<Namespace> setAvailableDomainStatus(List<Namespace> namespaces, String clusterId) {
+        List<Namespace> nsList = namespaceService.list(clusterId, true, null);
+        Map<String, Boolean> nsMap = new HashMap<>();
+        nsList.forEach(ns -> {
+            nsMap.put(ns.getName(), ns.isAvailableDomain());
+        });
+        namespaces.forEach(ns -> {
+            ns.setAvailableDomain(nsMap.get(ns.getName()));
+        });
+        return namespaces;
     }
 
 }
