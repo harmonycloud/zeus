@@ -1197,14 +1197,11 @@ public abstract class AbstractBaseOperator {
         affinityDTO.setLabel("zone=zoneC");
         affinityDTO.setRequired(true);
         JSONObject nodeAffinity = K8sConvert.convertNodeAffinity2Json(affinityDTO, "NotIn");
-        values.put("nodeAffinity", nodeAffinity);
         if (nodeAffinity != null) {
-            values.put(activeActiveKey, nodeAffinity);
-        }
-        if (!StringUtils.isEmpty(activeActiveKey)) {
-
-        } else {
-            if (nodeAffinity != null) {
+            if (!StringUtils.isEmpty(activeActiveKey)) {
+                JSONObject activeKey = values.getJSONObject(activeActiveKey);
+                activeKey.put("nodeAffinity", nodeAffinity);
+            } else {
                 values.put("nodeAffinity", nodeAffinity);
             }
         }

@@ -368,7 +368,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
     @Override
     public void checkAndSetActiveActive(JSONObject values, Middleware middleware) {
         if (namespaceService.checkAvailableDomain(middleware.getClusterId(), middleware.getNamespace())) {
-            super.setActiveActiveConfig( "redis.nodeAffinity", values);
+            super.setActiveActiveConfig( "redis", values);
             super.setActiveActiveToleration(middleware, values);
         }
     }
