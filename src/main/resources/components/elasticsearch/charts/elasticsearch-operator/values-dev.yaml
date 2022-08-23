@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: harmonyware.harbor.cn/middleware
+  repository: harbor.middleware.com/middleware
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: dev-elasticsearch

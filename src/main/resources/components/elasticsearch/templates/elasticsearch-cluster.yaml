@@ -41,15 +41,15 @@ spec:
   pod:
   - env:
   {{- if ((((.Values.logging).collection).stdout).enabled)}}
-    - name: aliyun_logs_stdout
+    - name: aliyun_logs_middlewarestdout
       value: stdout
-    - name: aliyun_logs_stdout_tags
+    - name: aliyun_logs_middlewarestdout_tags
       value: middleware_name={{ include "elasticsearch.fullname" . }}
   {{- end}}
   {{- if ((((.Values.logging).collection).filelog).enabled)}}
-    - name: aliyun_logs_logstash
+    - name: aliyun_logs_middlewarelogstash
       value: /data/elastic/{{ include "elasticsearch.fullname" . }}/**/log/*.log
-    - name: aliyun_logs_logstash_tags
+    - name: aliyun_logs_middlewarelogstash_tags
       value: middleware_name={{ include "elasticsearch.fullname" . }}
   {{- end}}
     - name: PathRepo

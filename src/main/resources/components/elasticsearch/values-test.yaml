@@ -12,7 +12,7 @@ image:
   exporterImageTag: 1.1.0rc1
 
 testImage:
-  repository:  harmonyware.harbor.cn/middleware/operator-test-framework
+  repository:  harbor.middleware.com/middleware/operator-test-framework
   pullPolicy: IfNotPresent
   tag: v0.3
 
