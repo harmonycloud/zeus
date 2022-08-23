@@ -627,7 +627,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         String type) {
         List<MiddlewareBackupRecord> recordList;
         // 获取所有立即备份记录 并过滤获取由指定定时备份任务产生的备份记录
-        recordList = listBackup(clusterId, namespace, null, type).stream()
+        recordList = listBackup(clusterId, namespace, null, null).stream()
             .filter(record -> StringUtils.isNotEmpty(record.getOwner()) && record.getOwner().equals(backupName))
             .collect(Collectors.toList());
         // 根据时间降序

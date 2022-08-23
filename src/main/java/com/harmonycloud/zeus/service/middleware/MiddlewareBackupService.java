@@ -156,7 +156,7 @@ public interface MiddlewareBackupService {
      * @param type
      * @return
      */
-    List<MiddlewareBackupRecord> backupRecords(String clusterId, String namespace, String middlewareName, String type);
+    List<MiddlewareBackupRecord> backupRecords(String clusterId, String namespace, String backupName, String type);
 
     /**
      * 删除备份任务
