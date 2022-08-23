@@ -37,4 +37,4 @@ tolerations: []
 
 affinity: {}
 
-crdGroup: "ctyun"
+crdGroup: "harmonycloud"

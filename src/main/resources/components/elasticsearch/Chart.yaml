@@ -1,9 +1,9 @@
 apiVersion: v2
 appVersion: 6.8.22
-description: Elasticsearch by Ctyun
+description: Elasticsearch by Harmonycloud
 name: elasticsearch
 type: application
 version: 1.7.8-2
 annotations:
-  owner: ctyun
+  owner: harmonycloud
   type: db
