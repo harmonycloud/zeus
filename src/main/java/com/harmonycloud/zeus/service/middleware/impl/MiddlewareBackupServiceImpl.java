@@ -243,7 +243,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             log.error("备份创建失败", e);
         }
         // 创建增量备份
-        createIncBackup(backupDTO.getClusterId(), backupDTO.getNamespace(), meta.getName(), backupDTO.getTime());
+        if (backupDTO.getIncrement() != null && StringUtils.isNotEmpty(backupDTO.getTime()) && backupDTO.getIncrement()){
+            createIncBackup(backupDTO.getClusterId(), backupDTO.getNamespace(), meta.getName(), backupDTO.getTime());
+        }
     }
 
     /**
