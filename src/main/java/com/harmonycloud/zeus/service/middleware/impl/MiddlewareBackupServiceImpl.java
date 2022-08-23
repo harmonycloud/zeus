@@ -455,7 +455,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         Map<String, String> incBackup = new HashMap<>();
         for (MiddlewareBackupScheduleCR schedule : scheduleList.getItems()) {
             // 处理增量备份数据
-            if (schedule.getSpec().getMode().equals(INC)){
+            if (StringUtils.isNotEmpty(schedule.getSpec().getMode()) && schedule.getSpec().getMode().equals(INC)){
                 incBackup.put(schedule.getMetadata().getName(), schedule.getSpec().getSchedule().getCron());
                 continue;
             }
