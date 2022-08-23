@@ -523,6 +523,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             JSONObject resImage = YamlUtil.jsonMerge(upgradeImage, currentImage);
             resValues.put("image", resImage);
         }
+        resValues.put("chart-version", upgradeChartVersion);
         // 执行升级
         Middleware middleware = detail(clusterId, namespace, name, type);
         middleware.setChartName(chartName);
