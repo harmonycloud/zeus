@@ -60,6 +60,7 @@ system:
     expire: 1
   usercenter: zeus
   skyview:
+    encryptPassword: true
     username: admin
     password: Ab123456
     host: caas-gateway-svc.caas-system
