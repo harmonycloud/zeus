@@ -45,11 +45,12 @@ public class Skyview2AuthServiceImpl extends AuthServiceImpl {
         } catch (Exception e) {
             throw new BusinessException(ErrorMessage.RSA_DECRYPT_FAILED);
         }
+        String tempPassword =  decryptPassword;
         if (encryptPassword) {
-            decryptPassword = CryptoUtils.encrypt(decryptPassword);
+            tempPassword = CryptoUtils.encrypt(decryptPassword);
         }
         // 连接观云台，登录
-        CaasResult<JSONObject> loginResult = skyview2UserService.login(userName, decryptPassword, "ch");
+        CaasResult<JSONObject> loginResult = skyview2UserService.login(userName, tempPassword, "ch");
 
         if (CaasResponseUtil.fitError(loginResult, CaasErrorMessage.AUTH_FAIL)) {
             throw new BusinessException(ErrorMessage.AUTH_FAILED);

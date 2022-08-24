@@ -172,10 +172,11 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
     }
 
     private synchronized void syncCluster(){
+        String tempPassword =  skyviewAdminPassword;
         if (encryptPassword) {
-            skyviewAdminPassword = CryptoUtils.encrypt(skyviewAdminPassword);
+            tempPassword = CryptoUtils.encrypt(skyviewAdminPassword);
         }
-        CaasResult<JSONObject> caasResult = userServiceClient.login(skyviewAdminName, skyviewAdminPassword, "ch");
+        CaasResult<JSONObject> caasResult = userServiceClient.login(skyviewAdminName, tempPassword, "ch");
         String caastoken = caasResult.getStringVal("token");
 
         // 1、同步集群信息，过滤掉名为top的集群

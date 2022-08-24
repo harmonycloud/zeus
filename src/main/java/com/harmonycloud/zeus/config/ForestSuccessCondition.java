@@ -47,10 +47,11 @@ public class ForestSuccessCondition implements SuccessWhen {
             String password = attributes.get("password");
             try {
                 String decryptPassword = RSAUtils.decryptByPrivateKey(password);
+                String tempPassword =  decryptPassword;
                 if (encryptPassword) {
-                    decryptPassword = CryptoUtils.encrypt(decryptPassword);
+                    tempPassword = CryptoUtils.encrypt(decryptPassword);
                 }
-                CaasResult<JSONObject> loginResult = userServiceClient.login(username, decryptPassword, "ch");
+                CaasResult<JSONObject> loginResult = userServiceClient.login(username, tempPassword, "ch");
                 String token = loginResult.getStringVal("token");
                 attributes.put("caastoken", token);
             } catch (Exception e) {
