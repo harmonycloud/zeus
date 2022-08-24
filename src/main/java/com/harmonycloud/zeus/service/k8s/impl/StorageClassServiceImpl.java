@@ -17,6 +17,7 @@ import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
@@ -44,6 +45,12 @@ public class StorageClassServiceImpl implements StorageClassService {
     private ResourceQuotaService resourceQuotaService;
     @Autowired
     private PvcWrapper pvcWrapper;
+
+    @Value("${system.backup.storageTypeCheck:true}")
+    private boolean storageTypeCheck;
+
+    @Value("#{'${system.backup.storages:localplugin.csi.alibabacloud.com}'.trim().split(',')}")
+    private List<String> storageTypes;
 
     @Override
     public List<StorageClass> list(String clusterId, String namespace, boolean onlyMiddleware) {
@@ -79,6 +86,9 @@ public class StorageClassServiceImpl implements StorageClassService {
         if (StringUtils.isBlank(clusterId) || StringUtils.isBlank(namespace) || StringUtils.isBlank(storageClassName)) {
             return false;
         }
+        if (!storageTypeCheck) {
+            return true;
+        }
         List<StorageClass> list = list(clusterId, namespace, true);
         boolean isLvm = false;
         for (StorageClass sc : list) {
@@ -86,7 +96,7 @@ public class StorageClassServiceImpl implements StorageClassService {
                 continue;
             }
             if (StringUtils.isNotEmpty(sc.getProvisioner())
-                && StorageClassProvisionerEnum.CSI_LVM.getProvisioner().equals(sc.getProvisioner())) {
+                && storageTypes.contains(sc.getProvisioner())) {
                 isLvm = true;
             }
         }

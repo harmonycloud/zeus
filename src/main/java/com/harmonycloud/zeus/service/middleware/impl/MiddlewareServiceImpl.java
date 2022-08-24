@@ -515,13 +515,14 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
         JSONObject upgradeImage = SerializationUtils.clone(upgradeValues.getJSONObject("image"));
         JSONObject currentImage = SerializationUtils.clone(currentValues.getJSONObject("image"));
-        if (currentImage.getString("repository") != null) {
-            upgradeImage.put("repository", currentImage.getString("repository"));
-        }
-        JSONObject resImage = YamlUtil.jsonMerge(upgradeImage, currentImage);
-
         JSONObject resValues = YamlUtil.jsonMerge(currentValues, upgradeValues);
-        resValues.put("image", resImage);
+        if (currentImage != null) {
+            if (currentImage.getString("repository") != null) {
+                upgradeImage.put("repository", currentImage.getString("repository"));
+            }
+            JSONObject resImage = YamlUtil.jsonMerge(upgradeImage, currentImage);
+            resValues.put("image", resImage);
+        }
         resValues.put("chart-version", upgradeChartVersion);
         // 执行升级
         Middleware middleware = detail(clusterId, namespace, name, type);
@@ -844,18 +845,39 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Override
     public String platform(String clusterId, String namespace, String name, String type) {
         if (!type.equals(MiddlewareTypeEnum.ELASTIC_SEARCH.getType())
-            && !type.equals(MiddlewareTypeEnum.KAFKA.getType())
-            && !type.equals(MiddlewareTypeEnum.ROCKET_MQ.getType())) {
+                && !type.equals(MiddlewareTypeEnum.KAFKA.getType())
+                && !type.equals(MiddlewareTypeEnum.ROCKET_MQ.getType())) {
             throw new BusinessException(ErrorMessage.MIDDLEWARE_MANAGER_PLATFORM_NOT_SUPPORT);
         }
         List<IngressDTO> ingressDTOS = ingressService.get(clusterId, namespace, type, name);
         String servicePort = ServiceNameConvertUtil.getManagePlatformServicePort(type);
         for (IngressDTO ingressDTO : ingressDTOS) {
+            if (!CollectionUtils.isEmpty(ingressDTO.getRules())) {
+                List<IngressRuleDTO> rules = ingressDTO.getRules();
+                for (IngressRuleDTO rule : rules) {
+                    String domain = rule.getDomain();
+                    List<IngressHttpPath> ingressHttpPaths = rule.getIngressHttpPaths();
+                    if (!CollectionUtils.isEmpty(ingressHttpPaths)) {
+                        for (IngressHttpPath ingressHttpPath : ingressHttpPaths) {
+                            assert servicePort != null;
+                            if (servicePort.equals(ingressHttpPath.getServicePort())) {
+                                return domain + ingressHttpPath.getPath();
+                            }
+                        }
+                    }
+                }
+            }
             List<ServiceDTO> serviceList = ingressDTO.getServiceList();
+            Set<String> ipSet = ingressService.listIngressIp(clusterId, ingressDTO.getIngressClassName());
+            String exposeIp = "";
+            for (String ip : ipSet) {
+                exposeIp = ip;
+                break;
+            }
             if (!CollectionUtils.isEmpty(serviceList)) {
                 for (ServiceDTO serviceDTO : serviceList) {
                     if (serviceDTO.getServicePort().equals(servicePort)) {
-                        return ingressDTO.getExposeIP() + ":" + serviceDTO.getExposePort();
+                        return (StringUtils.isBlank(ingressDTO.getExposeIP()) ? exposeIp : ingressDTO.getExposeIP()) + ":" + serviceDTO.getExposePort();
                     }
                 }
             }

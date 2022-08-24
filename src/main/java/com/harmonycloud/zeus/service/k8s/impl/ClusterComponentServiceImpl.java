@@ -10,6 +10,7 @@ import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.bean.BeanClusterComponents;
 import com.harmonycloud.zeus.dao.BeanClusterComponentsMapper;
+import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareManagerService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -50,6 +51,8 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
     private BeanClusterComponentsMapper beanClusterComponentsMapper;
     @Autowired
     private MiddlewareManagerService middlewareManagerService;
+    @Autowired
+    private NamespaceService namespaceService;
 
     @Override
     public void deploy(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
@@ -58,6 +61,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         // 获取service
         BaseComponentsService service =
                 getOperator(BaseComponentsService.class, BaseComponentsService.class, clusterComponentsDto.getComponent());
+        checkNamespace(clusterComponentsDto);
         // 部署组件
         service.deploy(cluster, clusterComponentsDto);
         //记录数据库
@@ -246,6 +250,16 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         if (clusterComponents.getStatus() == 2){
             clusterComponents.setStatus(6);
             beanClusterComponentsMapper.updateById(clusterComponents);
+        }
+    }
+
+    /**
+     * 创建middleware-operator分区
+     */
+    public void checkNamespace(ClusterComponentsDto clusterComponentsDto){
+        String name = clusterComponentsDto.getComponent();
+        if (ComponentsEnum.LOCAL_PATH.getName().equals(name) || ComponentsEnum.MIDDLEWARE_CONTROLLER.getName().equals(name) || ComponentsEnum.LVM.getName().equals(name)){
+            namespaceService.createMiddlewareOperator(clusterComponentsDto.getClusterId());
         }
     }
 

@@ -25,7 +25,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.core.TimeValue;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -109,8 +109,7 @@ public class LogServiceImpl implements LogService {
                 throw new CaasRuntimeException(String.valueOf(ErrorCodeMessage.QUERY_FAIL));
             }
         }
-        Long totalHit = scrollResp.getHits().getTotalHits();
-
+        long totalHit = scrollResp.getHits().getTotalHits().value;
         Date now = DateUtils.getCurrentUtcTime();
         String datetime = DateUtils.DateToString(now, DateType.YYMMDDHHMMSS.getValue());
 

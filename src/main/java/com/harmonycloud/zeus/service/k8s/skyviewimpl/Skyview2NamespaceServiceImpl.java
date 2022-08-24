@@ -1,10 +1,13 @@
 package com.harmonycloud.zeus.service.k8s.skyviewimpl;
 
+import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.base.CaasResult;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
+import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
+import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.k8s.impl.NamespaceServiceImpl;
 import com.harmonycloud.zeus.service.user.ProjectService;
 import com.harmonycloud.zeus.skyviewservice.Skyview2NamespaceServiceClient;
@@ -34,8 +37,21 @@ public class Skyview2NamespaceServiceImpl extends NamespaceServiceImpl {
     private ProjectService projectService;
     @Autowired
     private ClusterService clusterService;
+    @Autowired
+    private NamespaceWrapper namespaceWrapper;
 
     private List<Namespace> listClusterNamespaces(String clusterId){
+//        List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId);
+//        List<Namespace> namespaces = new ArrayList<>();
+//        for (io.fabric8.kubernetes.api.model.Namespace ns : nsList) {
+//            Namespace namespace = new Namespace();
+//            namespace.setName(ns.getMetadata().getName());
+//            namespace.setAliasName(ns.getMetadata().getAnnotations() != null ? ns.getMetadata().getAnnotations().getOrDefault("name", "") : "");
+//            namespace.setCreateTime(DateUtil.parse(ns.getMetadata().getCreationTimestamp()));
+//            namespace.setPhase(ns.getStatus() != null ? ns.getStatus().getPhase() : "");
+//            namespace.setRegistered(true);
+//            namespaces.add(namespace);
+//        }
         CaasResult<JSONArray> namespaceResult = namespaceServiceClient.clusterNamespaces(ZeusCurrentUser.getCaasToken(),
                 clusterService.convertToSkyviewClusterId(clusterId));
         List<Namespace> namespaces = new ArrayList<>();

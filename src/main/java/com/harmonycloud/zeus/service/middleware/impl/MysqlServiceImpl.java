@@ -7,6 +7,7 @@ import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.model.MysqlAccessInfo;
 import com.harmonycloud.caas.common.model.MysqlDbDTO;
 import com.harmonycloud.caas.common.model.MysqlUserDTO;
+import com.harmonycloud.caas.common.model.Node;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.excel.ExcelUtil;
@@ -15,6 +16,7 @@ import com.harmonycloud.zeus.bean.BeanMysqlUser;
 import com.harmonycloud.zeus.operator.api.MysqlOperator;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.IngressService;
+import com.harmonycloud.zeus.service.k8s.NodeService;
 import com.harmonycloud.zeus.service.k8s.impl.ServiceServiceImpl;
 import com.harmonycloud.zeus.service.log.EsComponentService;
 import com.harmonycloud.zeus.service.middleware.MysqlService;
@@ -58,6 +60,8 @@ public class MysqlServiceImpl implements MysqlService {
     private EsComponentService esComponentService;
     @Autowired
     private MysqlUserService mysqlUserService;
+    @Autowired
+    private NodeService nodeService;
 
     private final static Map<String, String> titleMap = new HashMap<String, String>(7) {
         {
@@ -178,23 +182,27 @@ public class MysqlServiceImpl implements MysqlService {
 
         MysqlAccessInfo mysqlAccessInfo = new MysqlAccessInfo();
         if (!CollectionUtils.isEmpty(serviceDTOS)) {
-            // 优先使用ingress或NodePort暴露的服务
+            // 优先使用ingress暴露的服务
             List<IngressDTO> ingressDTOS = serviceDTOS.stream().filter(ingressDTO ->
                     !StringUtils.isEmpty(ingressDTO.getIngressClassName())).collect(Collectors.toList());
             IngressDTO ingressDTO;
+            String exposeIP = "";
             if (!CollectionUtils.isEmpty(ingressDTOS)) {
                 ingressDTO = ingressDTOS.get(0);
-            } else {
-                ingressDTO = serviceDTOS.get(0);
-            }
-            Set<String> ipSet = ingressService.listIngressIp(clusterId, ingressDTO.getIngressClassName());
-            List<ServiceDTO> serviceList = ingressDTO.getServiceList();
-            if (!CollectionUtils.isEmpty(serviceList)) {
-                String exposeIP = "";
+                Set<String> ipSet = ingressService.listIngressIp(clusterId, ingressDTO.getIngressClassName());
                 for (String ip : ipSet) {
                     exposeIP = ip;
                     break;
                 }
+            } else {
+                ingressDTO = serviceDTOS.get(0);
+                List<Node> nodeList = nodeService.list(clusterId);
+                if(!CollectionUtils.isEmpty(nodeList)){
+                    exposeIP = nodeList.get(0).getIp();
+                }
+            }
+            List<ServiceDTO> serviceList = ingressDTO.getServiceList();
+            if (!CollectionUtils.isEmpty(serviceList)) {
                 ServiceDTO serviceDTO = serviceList.get(0);
                 String exposePort = serviceDTO.getExposePort();
                 mysqlAccessInfo.setAddress(exposeIP + ":" + exposePort + " (集群外部)");

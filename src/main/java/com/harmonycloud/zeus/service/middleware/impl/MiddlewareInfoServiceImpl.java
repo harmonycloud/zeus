@@ -426,7 +426,13 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         List<Middleware> middlewareList = new ArrayList<>();
         clusterList.forEach(cluster -> {
             List<Namespace> listRegisteredNamespace = clusterService.listRegisteredNamespace(cluster.getClusterId());
-            List<Middleware> middlewares = middlewareService.simpleList(cluster.getClusterId(), null, null, null);
+            List<Middleware> middlewares;
+            try{
+                middlewares = middlewareService.simpleList(cluster.getClusterId(), null, null, null);
+            }catch (Exception e){
+                log.error("集群{}, 查询middleware失败", cluster.getClusterId());
+                return;
+            }
             middlewares = middlewares.stream().filter(middleware -> listRegisteredNamespace.stream().anyMatch(ns ->middleware.getNamespace().equals(ns.getName()))).collect(Collectors.toList());
             if (!middlewares.isEmpty()) {
                 middlewares = checkIsLvm(middlewares);
@@ -496,6 +502,9 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     private List<Middleware> checkIsLvm(List<Middleware> middlewareList) {
         List<Middleware> middlewares = new LinkedList<>();
         for (Middleware middleware : middlewareList) {
+            if (middleware.getQuota() == null){
+                continue;
+            }
             switch (middleware.getType()) {
                 case "redis":
                     if (middleware.getQuota().get("redis").getIsLvmStorage()) {

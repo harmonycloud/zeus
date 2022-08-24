@@ -33,7 +33,11 @@ public class IngressWrapper {
     public List<Ingress> list(String clusterId, String namespace, String labelKey, String labelValue) {
         IngressList ingressList;
         if (StringUtils.isEmpty(namespace)){
-            ingressList = K8sClient.getClient(clusterId).extensions().ingresses().inAnyNamespace().list();
+            if (StringUtils.isEmpty(labelKey)) {
+                ingressList = K8sClient.getClient(clusterId).extensions().ingresses().inAnyNamespace().list();
+            } else {
+                ingressList = K8sClient.getClient(clusterId).extensions().ingresses().inAnyNamespace().withLabel(labelKey).list();
+            }
         }else if (StringUtils.isEmpty(labelKey)) {
             ingressList = K8sClient.getClient(clusterId).extensions().ingresses().inNamespace(namespace).list();
         } else if (StringUtils.isEmpty(labelValue)) {

@@ -55,7 +55,7 @@ system:
   images:
     path: /usr/local/zeus-pv/images/middleware
   platform:
-    version: v1.1.2
+    version: v1.1.4
   user:
     expire: 1
   usercenter: zeus
@@ -70,6 +70,9 @@ system:
     port: 8443
     username: admin
     password: Harbor12345
+  backup:
+    storageTypeCheck: true
+    storages: localplugin.csi.alibabacloud.com
 
 overview:
   overall:

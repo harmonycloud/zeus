@@ -1,41 +1,28 @@
 package com.harmonycloud.zeus.controller.k8s;
 
-import java.io.InputStream;
 import java.util.List;
 
-import com.harmonycloud.caas.common.model.ClusterCert;
-import com.harmonycloud.caas.common.model.ClusterNamespaceResourceDto;
-import com.harmonycloud.caas.common.model.ClusterNodeResourceDto;
-import com.harmonycloud.caas.common.model.Node;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
-import com.harmonycloud.caas.common.model.middleware.Registry;
-import com.harmonycloud.zeus.service.k8s.ClusterCertService;
-import com.harmonycloud.zeus.service.k8s.ClusterService;
-import com.harmonycloud.zeus.service.k8s.impl.ClusterCertServiceImpl;
-import lombok.extern.slf4j.Slf4j;
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.model.ClusterNamespaceResourceDto;
+import com.harmonycloud.caas.common.model.ClusterNodeResourceDto;
+import com.harmonycloud.caas.common.model.middleware.ClusterQuotaDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
+import com.harmonycloud.caas.common.model.middleware.Registry;
+import com.harmonycloud.zeus.service.k8s.ClusterService;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.web.multipart.MultipartFile;
-
-import javax.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author dengyulong
@@ -199,6 +186,15 @@ public class ClusterController {
             registry.setPassword(password);
         }
         return clusterService.quickAdd(adminConf, name, registry);
+    }
+
+    @ApiOperation(value = "查询集群资源使用情况", notes = "查询集群资源使用情况")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class)
+    })
+    @GetMapping("/{clusterId}/monitoring")
+    public BaseResult<ClusterQuotaDTO> monitoring(@PathVariable(value = "clusterId") String clusterId) {
+        return BaseResult.ok(clusterService.monitoring(clusterId));
     }
 
     /**

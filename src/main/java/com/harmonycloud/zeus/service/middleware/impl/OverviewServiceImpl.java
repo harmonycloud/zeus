@@ -18,6 +18,7 @@ import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.bean.*;
 import com.harmonycloud.zeus.dao.BeanAlertRecordMapper;
+import com.harmonycloud.zeus.dao.BeanClusterComponentsMapper;
 import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
@@ -89,6 +90,8 @@ public class OverviewServiceImpl implements OverviewService {
     private MiddlewareCrTypeService middlewareCrTypeService;
     @Autowired
     private MiddlewareClusterService middlewareClusterService;
+    @Autowired
+    private BeanClusterComponentsMapper beanClusterComponentsMapper;
 
     @Value("${system.platform.version:v0.1.0}")
     private String version;
@@ -886,6 +889,10 @@ public class OverviewServiceImpl implements OverviewService {
         Set<MiddlewareInfoDTO> middlewareInfoDtoSet = new HashSet<>();
         List<Middleware> middlewareList = new ArrayList<>();
         for (MiddlewareClusterDTO cluster : clusterList){
+            // 获取集群中间件管理组件安装状态，若未安装，则不统计该集群服务信息
+            if (!checkInstallMiddlewareController(cluster)) {
+                continue;
+            }
             // 获取多集群中间件类型并集
             List<MiddlewareInfoDTO> infoDTOList = middlewareInfoService.list(cluster.getId()).stream().
                     filter(mw -> !mw.getStatus().equals(2)).collect(Collectors.toList());
@@ -941,6 +948,14 @@ public class OverviewServiceImpl implements OverviewService {
             clusterList = clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
         }
         return clusterList;
+    }
+
+    private boolean checkInstallMiddlewareController(MiddlewareClusterDTO cluster) {
+        QueryWrapper<BeanClusterComponents> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("cluster_id", cluster.getId());
+        queryWrapper.eq("component", "middleware-controller");
+        BeanClusterComponents beanClusterComponents = beanClusterComponentsMapper.selectOne(queryWrapper);
+        return beanClusterComponents != null && beanClusterComponents.getStatus() >= 1 && beanClusterComponents.getStatus() <= 4;
     }
 
 }

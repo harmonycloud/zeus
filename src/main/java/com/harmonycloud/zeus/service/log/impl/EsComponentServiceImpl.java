@@ -33,7 +33,7 @@ import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.*;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
-import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
@@ -410,7 +410,7 @@ public class EsComponentServiceImpl implements EsComponentService {
             mysqlSlowSqlDTO.toDTO(doc);
             searchResults.add(mysqlSlowSqlDTO);
         }
-        long totalHits = response.getHits().totalHits;
+        long totalHits = response.getHits().getTotalHits().value;
         PageObject<MysqlLogDTO> objectPageObject = new PageObject(searchResults, new Long(totalHits).intValue());
         return objectPageObject;
     }

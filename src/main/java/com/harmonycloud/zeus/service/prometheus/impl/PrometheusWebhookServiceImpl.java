@@ -167,6 +167,10 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
         } else {
             alertSettingDTO = middlewareAlertsService.queryAlertSetting(clusterId, namespace, middlewareaName);
         }
+        if (alertSettingDTO == null){
+            log.error("集群{} 未查到相关告警设置", clusterId);
+            return;
+        }
 
         if (Boolean.TRUE.equals(alertSettingDTO.getEnableDingAlert())) {
             //钉钉发送
