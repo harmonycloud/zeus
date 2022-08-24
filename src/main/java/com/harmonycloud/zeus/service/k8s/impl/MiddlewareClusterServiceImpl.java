@@ -107,10 +107,9 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
     }
 
     public String convertDateToUTC() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Calendar calendar = Calendar.getInstance();
         Date now = calendar.getTime();
-        now = DateUtils.addInteger(now, Calendar.HOUR_OF_DAY, -8);
         return sdf.format(now);
     }
 

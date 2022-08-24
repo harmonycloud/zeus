@@ -14,6 +14,8 @@ import com.harmonycloud.caas.common.model.*;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
+import com.harmonycloud.caas.filters.user.CurrentUser;
+import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
@@ -132,56 +134,48 @@ public class ClusterServiceImpl implements ClusterService{
             return new ArrayList<>(0);
         }
         // 封装数据
-        clusters = clusterList.stream().map(c -> {
-            MiddlewareClusterInfo info = c.getSpec().getInfo();
-            MiddlewareClusterDTO cluster = new MiddlewareClusterDTO();
-            BeanUtils.copyProperties(info, cluster);
-            // todo remove ingress
-            cluster.setId(K8sClient.getClusterId(c.getMetadata())).setHost(info.getAddress())
-                    .setName(c.getMetadata().getName()).setDcId(c.getMetadata().getNamespace())
-                    .setAnnotations(c.getMetadata().getAnnotations());
-            if (!CollectionUtils.isEmpty(c.getMetadata().getAnnotations())) {
-                cluster.setNickname(c.getMetadata().getAnnotations().get(NAME));
-            }
-            JSONObject attributes = new JSONObject();
-            attributes.put(CREATE_TIME, DateUtils.parseUTCDate(c.getMetadata().getCreationTimestamp()));
-            cluster.setAttributes(attributes);
-
-            return SerializationUtils.clone(cluster);
-        }).collect(Collectors.toList());
-        if (StringUtils.isNotEmpty(key)){
-            clusters = clusters.stream().filter(clusterDTO -> clusterDTO.getNickname().contains(key))
-                    .collect(Collectors.toList());
-        }
+        clusters = clusterList.stream().map(this::convertMiddlewareClusterToDto)
+                .filter(clusterDTO -> StringUtils.isEmpty(key) || clusterDTO.getNickname().contains(key))
+                .collect(Collectors.toList());
         // 返回命名空间信息
         if (detail && clusters.size() > 0) {
-            clusters.forEach(cluster -> {
-                // 初始化集群信息
-                initClusterAttributes(cluster);
-                try {
-                    List<Namespace> list = namespaceService.list(cluster.getId(), false, false, false, null, projectId);
-                    cluster.getAttributes().put(NS_COUNT, list.size());
-                    cluster.setNamespaceList(list);
-                } catch (Exception e) {
-                    cluster.getAttributes().put(NS_COUNT, 0);
-                    log.error("集群：{}，查询命名空间列表异常", cluster.getId(), e);
+            final CountDownLatch clusterCountDownLatch = new CountDownLatch(clusters.size());
+            CurrentUser currentUser = CurrentUserRepository.getUser();
+            ThreadPoolExecutorFactory.executor.execute(() -> {
+                for (MiddlewareClusterDTO cluster : clusters) {
+                    try {
+                        CurrentUserRepository.setUser(currentUser);
+                        initClusterAttributes(cluster);
+                        try {
+                            List<Namespace> list = namespaceService.list(cluster.getId(), false, false, false, null, projectId);
+                            cluster.getAttributes().put(NS_COUNT, list.size());
+                            cluster.setNamespaceList(list);
+                        } catch (Exception e) {
+                            cluster.getAttributes().put(NS_COUNT, 0);
+                            log.error("集群：{}，查询命名空间列表异常", cluster.getId(), e);
+                        }
+                        //判断集群是否可删除
+                        cluster.setRemovable(checkDelete(cluster.getId()));
+                    } catch (Exception ignored) {
+                    } finally {
+                        clusterCountDownLatch.countDown();
+                    }
                 }
-                //计算集群cpu和memory
-                if (cluster.getMonitor() != null && cluster.getMonitor().getPrometheus() != null){
-                    clusterResource(cluster);
-                }
-                //判断集群是否可删除
-                cluster.setRemovable(checkDelete(cluster.getId()));
             });
+            try {
+                clusterCountDownLatch.await();
+            } catch (Exception ignored) {
+            }
         }
+        List<MiddlewareClusterDTO> res = clusters;
         // 根据项目进行过滤
         if (StringUtils.isNotEmpty(projectId)) {
             List<String> availableClusterList = projectService.getClusters(projectId);
-            clusters = clusters.stream()
+            res = clusters.stream()
                     .filter(cluster -> availableClusterList.stream().anyMatch(ac -> ac.equals(cluster.getId())))
                     .collect(Collectors.toList());
         }
-        return clusters;
+        return res;
     }
 
     @Override
@@ -222,12 +216,11 @@ public class ClusterServiceImpl implements ClusterService{
 
     @Override
     public MiddlewareClusterDTO detail(String clusterId) {
-        List<MiddlewareClusterDTO> clusterList = listClusters(true, null).stream()
-                .filter(clusterDTO -> clusterDTO.getId().equals(clusterId)).collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(clusterList)) {
-            throw new CaasRuntimeException(ErrorMessage.CLUSTER_NOT_FOUND);
+        List<MiddlewareCluster> middlewareClusterList = middlewareClusterService.listClusters(clusterId);
+        if (CollectionUtils.isEmpty(middlewareClusterList)){
+            throw new BusinessException(ErrorMessage.CLUSTER_NOT_FOUND);
         }
-        return clusterList.get(0);
+        return convertMiddlewareClusterToDto(middlewareClusterList.get(0));
     }
 
     @Override
@@ -254,7 +247,9 @@ public class ClusterServiceImpl implements ClusterService{
         clusterCertService.setCertByAdminConf(cluster.getCert());
 
         // 校验registry
-        registryService.validate(cluster.getRegistry());
+        if (cluster.getRegistry() != null && cluster.getRegistry().getAddress() != null){
+            registryService.validate(cluster.getRegistry());
+        }
 
         try {
             // 先添加fabric8客户端，否则无法用fabric8调用APIServer
@@ -297,7 +292,9 @@ public class ClusterServiceImpl implements ClusterService{
             throw new BusinessException(DictEnum.CLUSTER, cluster.getNickname(), ErrorMessage.ADD_FAIL);
         }
         // 将镜像仓库信息存进数据库
-        insertMysqlImageRepository(cluster);
+        if (cluster.getRegistry() != null && cluster.getRegistry().getAddress() != null){
+            insertMysqlImageRepository(cluster);
+        }
         // 将chart包存进数据库
         insertMysqlChart(cluster.getId());
         // 判断middleware-operator分区是否存在，不存在则创建
@@ -332,7 +329,9 @@ public class ClusterServiceImpl implements ClusterService{
         k8sClient.updateK8sClient(cluster);
 
         // 校验registry
-        registryService.validate(cluster.getRegistry());
+        if (cluster.getRegistry() != null && cluster.getRegistry().getAddress() != null){
+            registryService.validate(cluster.getRegistry());
+        }
 
         // 校验es（包含重置es客户端）
         /*if (StringUtils.isNotBlank(cluster.getLogging().getElasticSearch().getHost())
@@ -349,7 +348,7 @@ public class ClusterServiceImpl implements ClusterService{
 
         update(oldCluster);
         // 修改镜像仓库信息
-        updateMysqlImageRepository(cluster);
+        //updateMysqlImageRepository(cluster);
     }
 
     @Override
@@ -375,8 +374,8 @@ public class ClusterServiceImpl implements ClusterService{
         if (registry == null || StringUtils.isAnyEmpty(registry.getProtocol(), registry.getAddress(),
                 registry.getChartRepo(), registry.getUser(), registry.getPassword())) {
             registry = new Registry();
-            registry.setAddress("middleware.harmonycloud.cn").setProtocol("http").setPort(38080).setUser("admin")
-                    .setPassword("Hc@Cloud01").setType("harbor").setChartRepo("middleware");
+/*            registry.setAddress("middleware.harmonycloud.cn").setProtocol("http").setPort(38080).setUser("admin")
+                    .setPassword("Hc@Cloud01").setType("harbor").setChartRepo("middleware");*/
             cluster.setRegistry(registry);
         }
         // 设置默认参数
@@ -489,6 +488,10 @@ public class ClusterServiceImpl implements ClusterService{
         ObjectMeta meta = new ObjectMeta();
         meta.setName(cluster.getName());
         meta.setNamespace(cluster.getDcId());
+        if (cluster.getAttributes() != null && cluster.getAttributes().containsKey(CREATE_TIME)
+            && cluster.getAttributes().get(CREATE_TIME) != null) {
+            meta.setCreationTimestamp(cluster.getAttributes().get(CREATE_TIME).toString());
+        }
         Map<String, String> annotations = new HashMap<>();
         annotations.put(NAME, cluster.getNickname());
         meta.setAnnotations(annotations);
@@ -496,6 +499,24 @@ public class ClusterServiceImpl implements ClusterService{
         BeanUtils.copyProperties(cluster, clusterInfo);
         clusterInfo.setAddress(cluster.getHost());
         return new MiddlewareCluster().setMetadata(meta).setSpec(new MiddlewareClusterSpec().setInfo(clusterInfo));
+    }
+
+    public MiddlewareClusterDTO convertMiddlewareClusterToDto(MiddlewareCluster middlewareCluster) {
+        MiddlewareClusterInfo info = middlewareCluster.getSpec().getInfo();
+        MiddlewareClusterDTO cluster = new MiddlewareClusterDTO();
+        BeanUtils.copyProperties(info, cluster);
+        cluster.setId(K8sClient.getClusterId(middlewareCluster.getMetadata())).setHost(info.getAddress())
+                .setName(middlewareCluster.getMetadata().getName()).setDcId(middlewareCluster.getMetadata().getNamespace())
+                .setAnnotations(middlewareCluster.getMetadata().getAnnotations());
+        if (!CollectionUtils.isEmpty(middlewareCluster.getMetadata().getAnnotations())) {
+            cluster.setNickname(middlewareCluster.getMetadata().getAnnotations().get(NAME));
+        }
+        JSONObject attributes = new JSONObject();
+        Date date = DateUtils.parseUTCDate(middlewareCluster.getMetadata().getCreationTimestamp());
+        attributes.put(CREATE_TIME, date == null ? middlewareCluster.getMetadata().getCreationTimestamp()
+                : DateUtils.DateToString(date, "yyyy-MM-dd HH:mm:ss"));
+        cluster.setAttributes(attributes);
+        return SerializationUtils.clone(cluster);
     }
 
     public void insertMysqlChart(String clusterId) {
@@ -586,7 +607,7 @@ public class ClusterServiceImpl implements ClusterService{
     public ClusterQuotaDTO getClusterQuota(List<MiddlewareClusterDTO> clusterDTOList) {
         ClusterQuotaDTO clusterQuotaSum = new ClusterQuotaDTO();
         clusterDTOList.forEach(clusterDTO -> {
-            ClusterQuotaDTO clusterQuota = getClusterQuota(clusterDTO);
+            ClusterQuotaDTO clusterQuota = monitoring(clusterDTO.getId());
             if (clusterQuota != null) {
                 clusterQuotaSum.setTotalCpu(clusterQuotaSum.getTotalCpu() + clusterQuota.getTotalCpu());
                 clusterQuotaSum.setUsedCpu(clusterQuotaSum.getUsedCpu() + clusterQuota.getUsedCpu());
@@ -972,6 +993,16 @@ public class ClusterServiceImpl implements ClusterService{
         return null;
     }
 
+    @Override
+    public ClusterQuotaDTO monitoring(String clusterId) {
+        //计算集群cpu和memory
+        MiddlewareClusterDTO cluster = findById(clusterId);
+        if (cluster.getMonitor() != null && cluster.getMonitor().getPrometheus() != null){
+            clusterResource(cluster);
+        }
+        return cluster.getClusterQuotaDTO();
+    }
+
     public Map<Map<String, String>, List<String>> getResultMap(PrometheusResponse response){
         return response.getData().getResult().stream().collect(Collectors.toMap(PrometheusResult::getMetric, PrometheusResult::getValue));
     }
@@ -1035,16 +1066,6 @@ public class ClusterServiceImpl implements ClusterService{
         }
         List<Namespace> namespaces = namespaceService.list(clusterDTO.getId(), false, false, false, null, null);
         return namespaces.stream().filter(namespace -> namespace.isRegistered()).collect(Collectors.toList());
-    }
-
-    /**
-     * 获取集群资源配额及使用量
-     *
-     * @param clusterDTO 集群dto
-     * @return
-     */
-    public ClusterQuotaDTO getClusterQuota(MiddlewareClusterDTO clusterDTO) {
-        return clusterDTO.getClusterQuotaDTO();
     }
 
     private void createMiddlewareCrd(MiddlewareClusterDTO middlewareClusterDTO){

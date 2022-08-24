@@ -204,4 +204,12 @@ public interface ClusterService {
      */
     ClusterDTO findBySkyviewClusterId(String skyviewClusterId);
 
+    /**
+     * 根据集群id查询集群监控资源
+     *
+     * @param clusterId 集群id
+     * @return
+     */
+    ClusterQuotaDTO monitoring(String clusterId);
+
 }

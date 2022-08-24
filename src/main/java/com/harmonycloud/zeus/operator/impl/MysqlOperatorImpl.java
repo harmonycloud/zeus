@@ -134,7 +134,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
         if (middleware.getMysqlDTO() != null) {
             MysqlDTO mysqlDTO = middleware.getMysqlDTO();
-            if (mysqlDTO.getReplicaCount() != null && mysqlDTO.getReplicaCount() > 0) {
+            if (mysqlDTO.getReplicaCount() != null) {
                 int replicaCount = mysqlDTO.getReplicaCount();
                 values.put(MysqlConstant.REPLICA_COUNT, replicaCount + 1);
             }
@@ -149,8 +149,10 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             if (StringUtils.isNotBlank(mysqlDTO.getType())) {
                 values.put(MysqlConstant.SPEC_TYPE, mysqlDTO.getType());
             }
-            //设置SQL审计开关
-            checkAndSetAuditSqlStatus(features, mysqlDTO);
+            if (StringUtils.isNotBlank(middleware.getVersion()) && !("8.0".equals(middleware.getVersion()))) {
+                //设置SQL审计开关
+                checkAndSetAuditSqlStatus(features, mysqlDTO);
+            }
         }
         //配置mysql环境变量
         if (!CollectionUtils.isEmpty(middleware.getEnvironment())) {

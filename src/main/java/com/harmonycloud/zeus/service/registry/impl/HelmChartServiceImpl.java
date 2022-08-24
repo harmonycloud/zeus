@@ -568,16 +568,8 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     public void createOperator(String tempDirPath, String clusterId, HelmChartFile helmChartFile, String type) {
         try {
             MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-            // 检查operator是否已创建
-            synchronized (this) {
-                List<Namespace> namespaceList = namespaceService.list(clusterId, false, "middleware-operator");
-                // 检验分区是否存在
-                if (CollectionUtils.isEmpty(namespaceList)) {
-                    Map<String, String> label = new HashMap<>();
-                    label.put("middleware", "middleware");
-                    namespaceService.save(clusterId, "middleware-operator", label, null);
-                }
-            }
+            // 创建middleware-operator
+            namespaceService.createMiddlewareOperator(clusterId);
             // 检验operator是否已创建
             List<HelmListInfo> helmListInfoList =
                 this.listHelm("", helmChartFile.getDependency().get("alias"), cluster);

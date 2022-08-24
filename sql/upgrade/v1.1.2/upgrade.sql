@@ -20,4 +20,6 @@ CREATE TABLE `alert_setting`
 ALTER TABLE `ldap_config` RENAME `system_config`;
 -- 添加告警设置id字段
 ALTER TABLE `mail_to_user` ADD COLUMN `alert_setting_id` INT(11) COMMENT '告警设置id';
+-- 修改middleware_cluster表，添加唯一主键
+ALTER TABLE `middleware_cluster` ADD UNIQUE KEY `cluster_id_UNIQUE` (`cluster_id`);
 

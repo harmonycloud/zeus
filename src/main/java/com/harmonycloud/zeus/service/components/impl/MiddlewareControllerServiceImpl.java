@@ -12,6 +12,7 @@ import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
 
 import java.io.File;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author xutianhong
@@ -61,7 +62,8 @@ public class MiddlewareControllerServiceImpl extends AbstractBaseOperator implem
 
     @Override
     protected List<PodInfo> getPodInfoList(String clusterId) {
-        return podService.list(clusterId, "middleware-operator", ComponentsEnum.MIDDLEWARE_CONTROLLER.getName());
+        return podService.list(clusterId, "middleware-operator", ComponentsEnum.MIDDLEWARE_CONTROLLER.getName())
+            .stream().filter(pod -> !pod.getPodName().contains("install-crds")).collect(Collectors.toList());
     }
     
 }
