@@ -9,8 +9,10 @@ import com.harmonycloud.caas.filters.user.CurrentUser;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.encrypt.RSAUtils;
 import com.harmonycloud.zeus.skyviewservice.Skyview2UserServiceClient;
+import com.harmonycloud.zeus.util.CryptoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.Map;
@@ -24,6 +26,8 @@ public class ForestSuccessCondition implements SuccessWhen {
     @Autowired
     private Skyview2UserServiceClient userServiceClient;
 
+    @Value("${system.skyview.encryptPassword:false}")
+    private boolean encryptPassword;
     /**
      * 请求成功条件
      * @param req Forest请求对象
@@ -43,6 +47,9 @@ public class ForestSuccessCondition implements SuccessWhen {
             String password = attributes.get("password");
             try {
                 String decryptPassword = RSAUtils.decryptByPrivateKey(password);
+                if (encryptPassword) {
+                    decryptPassword = CryptoUtils.encrypt(decryptPassword);
+                }
                 CaasResult<JSONObject> loginResult = userServiceClient.login(username, decryptPassword, "ch");
                 String token = loginResult.getStringVal("token");
                 attributes.put("caastoken", token);

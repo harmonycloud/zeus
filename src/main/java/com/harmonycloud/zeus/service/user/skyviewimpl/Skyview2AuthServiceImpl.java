@@ -9,8 +9,10 @@ import com.harmonycloud.tool.encrypt.RSAUtils;
 import com.harmonycloud.zeus.service.user.impl.AuthServiceImpl;
 import com.harmonycloud.zeus.skyviewservice.Skyview2UserServiceClient;
 import com.harmonycloud.zeus.util.CaasResponseUtil;
+import com.harmonycloud.zeus.util.CryptoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +33,9 @@ public class Skyview2AuthServiceImpl extends AuthServiceImpl {
     @Autowired
     private Skyview2UserServiceClient skyview2UserService;
 
+    @Value("${system.skyview.encryptPassword:false}")
+    private boolean encryptPassword;
+
     @Override
     public JSONObject login(String userName, String password, HttpServletResponse response) throws Exception {
         //解密密码
@@ -40,7 +45,9 @@ public class Skyview2AuthServiceImpl extends AuthServiceImpl {
         } catch (Exception e) {
             throw new BusinessException(ErrorMessage.RSA_DECRYPT_FAILED);
         }
-
+        if (encryptPassword) {
+            decryptPassword = CryptoUtils.encrypt(decryptPassword);
+        }
         // 连接观云台，登录
         CaasResult<JSONObject> loginResult = skyview2UserService.login(userName, decryptPassword, "ch");
 
