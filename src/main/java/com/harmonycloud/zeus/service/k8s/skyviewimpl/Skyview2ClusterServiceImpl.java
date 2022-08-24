@@ -15,6 +15,7 @@ import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.k8s.impl.ClusterServiceImpl;
 import com.harmonycloud.zeus.skyviewservice.Skyview2ClusterServiceClient;
 import com.harmonycloud.zeus.skyviewservice.Skyview2UserServiceClient;
+import com.harmonycloud.zeus.util.CryptoUtils;
 import com.harmonycloud.zeus.util.YamlUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
@@ -42,23 +43,6 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
     @Value("${system.skyview.password:Hc@Cloud01}")
     private String skyviewAdminPassword;
 
-    @Value("${system.registry.protocol:https}")
-    private String protocol;
-    @Value("${system.registry.address}")
-    private String address;
-    @Value("${system.registry.port}")
-    private int port;
-    @Value("${system.registry.username}")
-    private String username;
-    @Value("${system.registry.password}")
-    private String password;
-    @Value("${system.registry.type:harbor}")
-    private String type;
-    @Value("${system.registry.chartRepo:middleware}")
-    private String chartRepo;
-    @Value("${system.registry.version:v2}")
-    private String version;
-
     @Autowired
     private Skyview2UserServiceClient userServiceClient;
     @Autowired
@@ -67,6 +51,9 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
     private NamespaceService namespaceService;
     @Autowired
     private MiddlewareClusterService middlewareClusterService;
+
+    @Value("${system.skyview.encryptPassword:false}")
+    private boolean encryptPassword;
     /**
      * 中间件平台和观云台的clusterid缓存
      * 格式  观云台clusterid:中间件平台clusterid
@@ -184,6 +171,9 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
     }
 
     private synchronized void syncCluster(){
+        if (encryptPassword) {
+            skyviewAdminPassword = CryptoUtils.encrypt(skyviewAdminPassword);
+        }
         CaasResult<JSONObject> caasResult = userServiceClient.login(skyviewAdminName, skyviewAdminPassword, "ch");
         String caastoken = caasResult.getStringVal("token");
 
