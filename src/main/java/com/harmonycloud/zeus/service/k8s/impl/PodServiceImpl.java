@@ -187,6 +187,7 @@ public class PodServiceImpl implements PodService {
                 .setNodeName(pod.getSpec().getNodeName())
                 .setCreateTime(pod.getMetadata().getCreationTimestamp())
                 .setRestartCount(0)
+                .setNamespace(pod.getMetadata().getNamespace())
                 .setHostIp(pod.getStatus().getHostIP());
         // set pod status
         pi.setStatus(getPodRealState(pod));
@@ -274,6 +275,12 @@ public class PodServiceImpl implements PodService {
     }
 
     @Override
+    public void restart(String clusterId, String namespace, String podName) {
+        checkExist(clusterId, namespace, podName);
+        podWrapper.delete(clusterId, namespace, podName);
+    }
+
+    @Override
     public String yaml(String clusterId, String namespace, String middlewareName, String type, String podName) {
         checkExist(clusterId, namespace, middlewareName, type, podName);
         Yaml yaml = new Yaml();
@@ -291,6 +298,19 @@ public class PodServiceImpl implements PodService {
         List<MiddlewareInfo> pods = mw.getStatus().getInclude().get(PODS);
         if (CollectionUtils.isEmpty(pods) || pods.stream().noneMatch(po -> podName.equals(po.getName()))) {
             throw new BusinessException(ErrorMessage.FIND_POD_IN_MIDDLEWARE_FAIL);
+        }
+    }
+
+    @Override
+    public String yaml(String clusterId, String namespace, String podName) {
+        Yaml yaml = new Yaml();
+        return yaml.dumpAsMap(podWrapper.get(clusterId, namespace, podName));
+    }
+
+    public void checkExist(String clusterId, String namespace, String podName) {
+        Pod pod = podWrapper.get(clusterId, namespace, podName);
+        if (pod == null) {
+            throw new BusinessException(ErrorMessage.POD_NOT_EXIST);
         }
     }
 

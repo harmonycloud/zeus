@@ -3,7 +3,8 @@ package com.harmonycloud.zeus.controller.k8s;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.IngressComponentDto;
 import com.harmonycloud.caas.common.model.middleware.IngressDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareValues;
+import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.service.k8s.IngressComponentService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -56,13 +57,13 @@ public class IngressComponentController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "ingressComponentDto", value = "ingress信息", paramType = "query", dataTypeClass = IngressComponentDto.class),
-            @ApiImplicitParam(name = "ingressName", value = "ingress名称", paramType = "path", dataTypeClass = IngressComponentDto.class),
+            @ApiImplicitParam(name = "ingressClassName", value = "ingress名称", paramType = "path", dataTypeClass = IngressComponentDto.class),
     })
-    @PutMapping("/{ingressName}")
+    @PutMapping("/{ingressClassName}")
     public BaseResult update(@PathVariable("clusterId") String clusterId,
                              @RequestBody IngressComponentDto ingressComponentDto,
-                             @PathVariable("ingressName") String ingressName) {
-        ingressComponentDto.setIngressClassName(ingressName).setClusterId(clusterId);
+                             @PathVariable("ingressClassName") String ingressClassName) {
+        ingressComponentDto.setIngressClassName(ingressClassName).setClusterId(clusterId);
         ingressComponentService.update(ingressComponentDto);
         return BaseResult.ok();
     }
@@ -79,12 +80,12 @@ public class IngressComponentController {
     @ApiOperation(value = "删除指定ingress组件", notes = "删除指定ingress组件")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "ingressName", value = "ingress名称", paramType = "path", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "ingressClassName", value = "ingress名称", paramType = "path", dataTypeClass = String.class)
     })
-    @DeleteMapping("/{ingressName}")
+    @DeleteMapping("/{ingressClassName}")
     public BaseResult delete(@PathVariable("clusterId") String clusterId,
-                             @PathVariable("ingressName") String ingressName) {
-        ingressComponentService.delete(clusterId, ingressName);
+                             @PathVariable("ingressClassName") String ingressClassName) {
+        ingressComponentService.delete(clusterId, ingressClassName);
         return BaseResult.ok();
     }
 
@@ -95,6 +96,104 @@ public class IngressComponentController {
     @GetMapping("/vip")
     public BaseResult<List<String>> vipList(@PathVariable("clusterId") String clusterId) {
         return BaseResult.ok(ingressComponentService.vipList(clusterId));
+    }
+
+    @ApiOperation(value = "查询ingress详情", notes = "查询ingress详情")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "ingressName", value = "ingress名称", paramType = "path", dataTypeClass = String.class)
+    })
+    @GetMapping("/{ingressClassName}/detail")
+    public BaseResult<IngressComponentDto> detail(@PathVariable("clusterId") String clusterId,
+                                                  @PathVariable("ingressClassName") String ingressClassName) {
+        return BaseResult.ok(ingressComponentService.detail(clusterId, ingressClassName));
+    }
+
+    @ApiOperation(value = "查询ingress pod列表", notes = "查询ingress pod列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "ingressName", value = "ingress名称", paramType = "path", dataTypeClass = String.class)
+    })
+    @GetMapping("/{ingressClassName}/pods")
+    public BaseResult<List<PodInfo>> pods(@PathVariable("clusterId") String clusterId,
+                                          @PathVariable("ingressClassName") String ingressClassName) {
+        return BaseResult.ok(ingressComponentService.pods(clusterId, ingressClassName));
+    }
+
+    @ApiOperation(value = "查询ingress port使用列表", notes = "查询ingress port使用列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "ingressName", value = "ingress名称", paramType = "path", dataTypeClass = String.class)
+    })
+    @GetMapping("/{ingressClassName}/ports")
+    public BaseResult<List<IngressDTO>> ports(@PathVariable("clusterId") String clusterId,
+                            @PathVariable("ingressClassName") String ingressClassName){
+        return BaseResult.ok(ingressComponentService.ports(clusterId, ingressClassName));
+    }
+
+    @ApiOperation(value = "重启pod", notes = "重启pod")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "ingressClassName", value = "ingressClassName", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "podName", value = "pod名称", paramType = "path", dataTypeClass = String.class)
+    })
+    @DeleteMapping("/{ingressClassName}/pods/{podName}")
+    public BaseResult restart(@PathVariable("clusterId") String clusterId,
+                              @PathVariable("ingressClassName") String ingressClassName,
+                              @PathVariable("podName") String podName) {
+        ingressComponentService.restartPod(clusterId, ingressClassName, podName);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "查看pod yaml", notes = "查看pod yaml")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "ingressClassName", value = "ingressClassName", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "podName", value = "pod名称", paramType = "path", dataTypeClass = String.class)
+    })
+    @GetMapping("/{ingressClassName}/pods/{podName}/yaml")
+    public BaseResult<String> podYaml(@PathVariable("clusterId") String clusterId,
+                                      @PathVariable("ingressClassName") String ingressClassName,
+                                      @PathVariable("podName") String podName) {
+        return BaseResult.ok(ingressComponentService.podYaml(clusterId, ingressClassName, podName));
+    }
+
+    @ApiOperation(value = "查看ingress yaml", notes = "查看ingress yaml")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "ingressClassName", value = "ingressClassName", paramType = "path", dataTypeClass = String.class)
+    })
+    @GetMapping("/{ingressClassName}/values")
+    public BaseResult<String> values(@PathVariable("clusterId") String clusterId,
+                                     @PathVariable("ingressClassName") String ingressClassName) {
+        return BaseResult.ok(ingressComponentService.values(clusterId, ingressClassName));
+    }
+
+    @ApiOperation(value = "保存ingress yaml", notes = "保存ingress yaml")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "ingressClassName", value = "ingressClassName", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareValues", value = "中间件values", paramType = "query", dataTypeClass = MiddlewareValues.class),
+    })
+    @PutMapping("/{ingressClassName}/values")
+    public BaseResult upgrade(@PathVariable("clusterId") String clusterId,
+                              @PathVariable("ingressClassName") String ingressClassName,
+                              @RequestBody MiddlewareValues middlewareValues) {
+        middlewareValues.setClusterId(clusterId);
+        middlewareValues.setName(ingressClassName);
+        ingressComponentService.upgrade(middlewareValues);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "端口校验", notes = "端口校验")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "startPort", value = "startPort", paramType = "query", dataTypeClass = String.class)
+    })
+    @GetMapping("/check")
+    public BaseResult<List<String>> portCheck(@RequestParam("startPort") String startPort,
+                                              @PathVariable("clusterId") String clusterId) {
+        return BaseResult.ok(ingressComponentService.portCheck(clusterId, startPort));
     }
 
 }
