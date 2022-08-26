@@ -40,7 +40,7 @@ public class MiddlewareBackupScheduleWrapper {
      * @throws IOException
      */
     public void create(String clusterId, MiddlewareBackupScheduleCR middlewareBackupScheduleCR) throws IOException {
-        K8sClient.getClient(clusterId).customResource(CONTEXT).createOrReplace(
+        K8sClient.getClient(clusterId).customResource(CONTEXT).create(
             middlewareBackupScheduleCR.getMetadata().getNamespace(),
             JSONObject.parseObject(JSONObject.toJSONString(middlewareBackupScheduleCR)));
     }

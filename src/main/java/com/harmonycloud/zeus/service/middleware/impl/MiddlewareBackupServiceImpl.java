@@ -111,6 +111,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public void createIncBackup(String clusterId, String namespace, String backupName, String time) {
         MiddlewareBackupScheduleCR cr = backupScheduleCRDService.get(clusterId, namespace, backupName);
+        ObjectMeta meta = new ObjectMeta();
+        meta.setName(backupName + "-incr");
+        meta.setNamespace(namespace);
+        cr.setMetadata(meta);
+        cr.setStatus(null);
         // 设置名称
         cr.getMetadata().setName(backupName + "-incr");
         // 设置增量备份
@@ -128,7 +133,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         try {
             backupScheduleCRDService.create(clusterId, cr);
         } catch (Exception e){
-            log.error("集群{}分区{}创建增量备份{}失败", clusterId, namespace, backupName + "incr", e);
+            log.error("集群{}分区{}创建增量备份{}失败", clusterId, namespace, backupName + "-incr", e);
             throw new BusinessException(ErrorMessage.CREATE_INCREMENT_BACKUP_FAILED);
         }
     }
@@ -227,7 +232,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         Map<String, String> map = new HashMap<>();
         map.put(NAME, OPERATION_TYPE);
         map.put(VALUE, BACKUP);
-        env.put(ENV, Collections.singletonList(map));
+        List<Map<String, String>> envList = new ArrayList<>();
+        envList.add(map);
+        env.put(ENV, envList);
         customBackups.add(env);
 
         MiddlewareBackupScheduleSpec spec = new MiddlewareBackupScheduleSpec(destination, customBackups,
@@ -574,10 +581,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public MiddlewareIncBackupDto getIncBackupInfo(String clusterId, String namespace, String backupName) {
-        MiddlewareBackupScheduleCR cr = backupScheduleCRDService.get(clusterId, namespace, backupName + "inc");
+        MiddlewareBackupScheduleCR cr = backupScheduleCRDService.get(clusterId, namespace, backupName + "-incr");
         MiddlewareIncBackupDto middlewareIncBackupDto = new MiddlewareIncBackupDto();
         if (cr == null) {
-            middlewareIncBackupDto.setBackupName(backupName + "inc").setStartTime("off");
+            middlewareIncBackupDto.setBackupName(backupName + "-incr").setStartTime("off");
             return middlewareIncBackupDto;
         }
         // 获取时间
