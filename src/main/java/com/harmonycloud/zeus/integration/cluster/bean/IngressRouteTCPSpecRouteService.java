@@ -15,7 +15,7 @@ public class IngressRouteTCPSpecRouteService {
 
     private String namespace;
 
-    private String port;
+    private Integer port;
 
     private Object proxyProtocol;
 
@@ -23,7 +23,7 @@ public class IngressRouteTCPSpecRouteService {
 
     private Integer weight;
 
-    public IngressRouteTCPSpecRouteService(String name, String port) {
+    public IngressRouteTCPSpecRouteService(String name, Integer port) {
         this.name = name;
         this.port = port;
     }
