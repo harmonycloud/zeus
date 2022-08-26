@@ -92,6 +92,21 @@ public class MiddlewareBackupController {
         return BaseResult.ok(middlewareBackupService.backupTaskList(clusterId, namespace, middlewareName, type, keyword));
     }
 
+    @ApiOperation(value = "查询备份任务列表", notes = "查询备份任务列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupName", value = "备份名称", paramType = "path", dataTypeClass = String.class),
+    })
+    @GetMapping("/{backupName}")
+    @Authority(power = 1)
+    public BaseResult getRecord(@PathVariable("clusterId") String clusterId,
+                                @PathVariable("namespace") String namespace,
+                                @PathVariable("backupName") String backupName,
+                                @RequestParam("schedule") Boolean schedule) {
+        return BaseResult.ok(middlewareBackupService.getBackupTask(clusterId, namespace, backupName));
+    }
+
     @ApiOperation(value = "删除备份任务", notes = "删除备份任务")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
@@ -156,9 +171,6 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "type", value = "服务类型", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "服务名称", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "backupName", value = "备份记录名称", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "backupFileName", value = "备份文件名称", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "addressName", value = "备份地址名称", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "pods", value = "pod名称", paramType = "query", dataTypeClass = List.class)
     })
     @PostMapping("/restore")
     @Authority(power = 1)

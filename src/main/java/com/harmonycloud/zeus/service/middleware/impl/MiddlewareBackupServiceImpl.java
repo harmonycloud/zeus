@@ -1,12 +1,15 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.INC;
+import static com.harmonycloud.caas.common.constants.BackupConstant.*;
 import static com.harmonycloud.caas.common.constants.CommonConstant.INCR;
 import static com.harmonycloud.caas.common.constants.NameConstant.OWNER;
+import static com.harmonycloud.caas.common.constants.NameConstant.VALUE;
+import static com.harmonycloud.caas.common.constants.NameConstant.NAME;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -105,6 +108,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 backupRecord.setAddressId(item.getMetadata().getLabels().get("addressId"));
                 backupRecord.setSourceName(item.getSpec().getName());
                 backupRecord.setBackupMode("single");
+                backupRecord.setSchedule(false);
                 backupRecord.setOwner(item.getMetadata().getLabels().get(OWNER));
                 recordList.add(backupRecord);
             }
@@ -135,8 +139,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public void createIncBackup(String clusterId, String namespace, String backupName, String time) {
         MiddlewareBackupScheduleCR cr = backupScheduleCRDService.get(clusterId, namespace, backupName);
+        // todo
         cr.getMetadata().setName(backupName + "-incr");
-        cr.getSpec().setMode("inc");
         cr.getSpec().getSchedule().setCron(CronUtils.convertTimeToCron(time));
         try {
             backupScheduleCRDService.create(clusterId, cr);
@@ -225,16 +229,17 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             new MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination.MiddlewareBackupParameters(
                 minio.getBucketName(), minio.getEndpoint(), backupDTO.getType(), base64AccessKeyId,
                 base64SecretAccessKey, "MTIzNDU2Cg=="));
-        List<Map<String, List<String>>> customBackups = new ArrayList<>();
-        if (!backupDTO.getType().equals(MiddlewareTypeEnum.POSTGRESQL.getType())) {
-            Map<String, List<String>> map = new HashMap<>();
-            List<String> args = new ArrayList();
-            args.add("--backupSize=10");
-            map.put("args", args);
-            customBackups.add(map);
-        }
+        // 设置备份类型(全量备份)
+        List<Map<String, List<Map<String, String>>>> customBackups = new ArrayList<>();
+        Map<String, List<Map<String, String>>> env = new HashMap<>();
+        Map<String, String> map = new HashMap<>();
+        map.put(NAME, OPERATION_TYPE);
+        map.put(VALUE, BACKUP);
+        env.put(ENV, Collections.singletonList(map));
+        customBackups.add(env);
+
         MiddlewareBackupScheduleSpec spec = new MiddlewareBackupScheduleSpec(destination, customBackups,
-            backupDTO.getMiddlewareName(), backupDTO.getCrdType(), "off", CronUtils.parseUtcCron(backupDTO.getCron()),
+            backupDTO.getMiddlewareName(), backupDTO.getCrdType(), CronUtils.parseUtcCron(backupDTO.getCron()),
             backupDTO.getLimitRecord(), calRetentionTime(backupDTO));
         crd.setSpec(spec);
         try {
@@ -457,7 +462,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         Map<String, String> incBackup = new HashMap<>();
         for (MiddlewareBackupScheduleCR schedule : scheduleList.getItems()) {
             // 处理增量备份数据
-            if (StringUtils.isNotEmpty(schedule.getSpec().getMode()) && schedule.getSpec().getMode().equals(INC)){
+            if (isIncBackup(schedule)){
                 incBackup.put(schedule.getMetadata().getName(), schedule.getSpec().getSchedule().getCron());
                 continue;
             }
@@ -469,6 +474,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             backupRecord.setBackupTime(backupTime);
             backupRecord.setNamespace(schedule.getMetadata().getNamespace());
             backupRecord.setBackupName(schedule.getMetadata().getName());
+            backupRecord.setSchedule(true);
             // 获取备份位置
             MiddlewareBackupScheduleSpec spec = schedule.getSpec();
             MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination.MiddlewareBackupParameters parameters =
@@ -483,13 +489,22 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 backupRecord.setPhrase("Unknown");
             }
             backupRecord.setSourceName(schedule.getSpec().getName());
-            backupRecord.setSourceType(schedule.getMetadata().getLabels().get("type"));
-            backupRecord.setDateUnit(schedule.getMetadata().getLabels().get("unit"));
 
-            String backupId = schedule.getMetadata().getLabels().get("backupId");
-            backupRecord.setBackupId(backupId);
-            backupRecord.setAddressId(schedule.getMetadata().getLabels().get("addressId"));
-            backupRecord.setCron(CronUtils.parseLocalCron(schedule.getSpec().getSchedule().getCron()));
+            // 获取labels参数
+            Map<String, String> labels = schedule.getMetadata().getLabels();
+            if (!CollectionUtils.isEmpty(labels)){
+                backupRecord.setSourceType(labels.get("type"));
+                backupRecord.setDateUnit(labels.get("unit"));
+                backupRecord.setAddressId(labels.get("addressId"));
+                backupRecord.setBackupId(labels.get("backupId"));
+            }
+            // 转换cron表达式
+            try {
+                backupRecord.setCron(CronUtils.parseLocalCron(schedule.getSpec().getSchedule().getCron()));
+            }catch (Exception e){
+                log.error("集群{} 分区{} 定时备份{} 转换cron表达式失败", clusterId, namespace, backupRecord.getBackupName());
+                continue;
+            }
             // 根据单位转换备份保留时间
             if (!ObjectUtils.isEmpty(schedule.getSpec().getSchedule().getRetentionTime())) {
                 backupRecord.setBackupMode("period");
@@ -620,6 +635,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         recordList.sort((o1, o2) -> o1.getBackupTime() == null ? -1
             : o2.getBackupTime() == null ? -1 : o2.getBackupTime().compareTo(o1.getBackupTime()));
         return recordList;
+    }
+
+    @Override
+    public MiddlewareBackupRecord getBackupTask(String clusterId, String namespace, String backupName) {
+
+        return null;
     }
 
     @Override
@@ -788,6 +809,23 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private Middleware convertBackupToMiddleware(MiddlewareBackupDTO backupDTO) {
         return new Middleware().setClusterId(backupDTO.getClusterId()).setNamespace(backupDTO.getNamespace())
             .setType(backupDTO.getType()).setName(backupDTO.getMiddlewareName());
+    }
+
+    /**
+     * 校验是否为增量备份
+     */
+    public boolean isIncBackup(MiddlewareBackupScheduleCR middlewareBackupScheduleCR){
+        AtomicBoolean isIncBackup = new AtomicBoolean(false);
+        middlewareBackupScheduleCR.getSpec().getCustomBackups().forEach(cus -> {
+            if (cus.containsKey(ENV)){
+                cus.get(ENV).forEach(env -> {
+                    if (env.containsKey(VALUE) && env.get(VALUE).equals(BACKUP_INC)){
+                        isIncBackup.set(true);
+                    }
+                });
+            }
+        });
+        return isIncBackup.get();
     }
 
 }

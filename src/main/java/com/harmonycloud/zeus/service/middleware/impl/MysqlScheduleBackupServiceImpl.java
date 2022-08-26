@@ -96,6 +96,7 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
             backupRecord.setNamespace(schedule.getMetadata().getNamespace());
             backupRecord.setBackupTime(backupTime);
             backupRecord.setBackupName(schedule.getMetadata().getName());
+            backupRecord.setSchedule(true);
             MysqlScheduleBackupSpec spec = schedule.getSpec();
             String time = schedule.getSpec().getSchedule();
             backupRecord.setCron(time);

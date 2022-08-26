@@ -75,10 +75,12 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
             record.setSourceName(backup.getName());
             record.setBackupType(BackupType.CLUSTER.getType());
             record.setBackupName(backup.getBackupName());
+            record.setBackupId(backup.getBackupId());
             record.setCrName(backup.getCrName());
             record.setBackupFileName(backup.getBackupFileName());
             record.setSourceType(MiddlewareTypeEnum.MYSQL.getType());
             record.setOwner(backup.getOwner());
+            record.setSchedule(false);
             // 获取备份时间
             if (backup.getBackupTime() != null) {
                 String backupTime = DateUtil.utc2Local(DateUtils.parseUTCDate(backup.getBackupTime()),
@@ -267,6 +269,11 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public List<MiddlewareBackupRecord> backupTaskList(String clusterId, String namespace, String middlewareName,
         String type, String keyword) {
+        return null;
+    }
+
+    @Override
+    public MiddlewareBackupRecord getBackupTask(String clusterId, String namespace, String backupName) {
         return null;
     }
 

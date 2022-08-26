@@ -54,6 +54,7 @@ public class BackupServiceImpl implements BackupService {
         List<Backup> backupList = new ArrayList<>();
         backupCRList.forEach(backupCRD -> {
             Backup backup = new Backup().setName(backupCRD.getSpec().getClusterName())
+                    .setBackupName(backupCRD.getMetadata().getName())
                     .setCrName(backupCRD.getMetadata().getName())
                     .setNamespace(backupCRD.getMetadata().getNamespace())
                     .setControllerName(backupCRD.getMetadata().getLabels().get("controllername"))

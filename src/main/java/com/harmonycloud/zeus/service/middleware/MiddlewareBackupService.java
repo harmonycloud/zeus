@@ -149,6 +149,15 @@ public interface MiddlewareBackupService {
     List<MiddlewareBackupRecord> backupTaskList(String clusterId, String namespace, String middlewareName, String type, String keyword);
 
     /**
+     * 备份任务详情
+     * @param clusterId
+     * @param namespace
+     * @param backupName
+     * @return
+     */
+    MiddlewareBackupRecord getBackupTask(String clusterId, String namespace, String backupName);
+
+    /**
      * 备份记录
      * @param clusterId
      * @param namespace
