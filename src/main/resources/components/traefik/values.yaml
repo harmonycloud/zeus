@@ -305,10 +305,10 @@ ports:
     # The port protocol (TCP/UDP)
     protocol: TCP
   web:
-    port: 80
+    port: 8000
     # hostPort: 8000
     expose: true
-    exposedPort: 80
+    exposedPort: 8000
     # The port protocol (TCP/UDP)
     protocol: TCP
     # Use nodeport if set. This is useful if you have configured Traefik in a
@@ -319,10 +319,10 @@ ports:
     # https://docs.traefik.io/routing/entrypoints/#redirection
     # redirectTo: websecure
   websecure:
-    port: 443
+    port: 8443
     # hostPort: 8443
     expose: true
-    exposedPort: 443
+    exposedPort: 8443
     # The port protocol (TCP/UDP)
     protocol: TCP
     # nodePort: 32443
