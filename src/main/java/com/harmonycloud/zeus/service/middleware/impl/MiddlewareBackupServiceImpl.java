@@ -12,6 +12,9 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.caas.common.model.MiddlewareIncBackupDto;
+import com.harmonycloud.tool.date.DateUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -77,39 +80,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         List<MiddlewareBackupCR> backupRecordList = getBackupRecordList(clusterId, namespace, middlewareName, type);
         if (!CollectionUtils.isEmpty(backupRecordList)) {
             for (MiddlewareBackupCR item : backupRecordList) {
-                MiddlewareBackupStatus backupStatus = item.getStatus();
                 MiddlewareBackupRecord backupRecord = new MiddlewareBackupRecord();
-                backupRecord.setBackupId(item.getMetadata().getLabels().get("backupId"));
-
-                // 获取备份时间
-                String backupTime = DateUtil.utc2Local(item.getMetadata().getCreationTimestamp(),
-                    DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
-                backupRecord.setBackupTime(backupTime);
-                backupRecord.setNamespace(item.getMetadata().getNamespace());
-                backupRecord.setBackupName(item.getMetadata().getName());
-
-                // 获取备份位置
-                MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters parameters =
-                    item.getSpec().getBackupDestination().getParameters();
-                String position = item.getSpec().getBackupDestination().getDestinationType() + "(" + parameters.getUrl()
-                    + "/" + parameters.getBucket() + ")";
-                backupRecord.setPosition(position);
-
-                // 获取备份状态
-                if (!ObjectUtils.isEmpty(backupStatus)) {
-                    backupRecord.setPhrase(backupStatus.getPhase());
-                    if ("Failed".equals(backupStatus.getPhase())) {
-                        backupRecord.setReason(backupStatus.getReason());
-                    }
-                } else {
-                    backupRecord.setPhrase("Unknown");
-                }
-                backupRecord.setSourceType(item.getMetadata().getLabels().get("type"));
-                backupRecord.setAddressId(item.getMetadata().getLabels().get("addressId"));
-                backupRecord.setSourceName(item.getSpec().getName());
-                backupRecord.setBackupMode("single");
-                backupRecord.setSchedule(false);
-                backupRecord.setOwner(item.getMetadata().getLabels().get(OWNER));
+                convertBackupToRecord(item, backupRecord);
                 recordList.add(backupRecord);
             }
         }
@@ -121,7 +93,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public void createBackup(MiddlewareBackupDTO backupDTO) {
         middlewareCRService.getCRAndCheckRunning(convertBackupToMiddleware(backupDTO));
-        // todo check name exist
+        // check name exist
         checkBackupJobName(backupDTO);
         convertMiddlewareBackup(backupDTO);
         String backupType;
@@ -139,8 +111,19 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public void createIncBackup(String clusterId, String namespace, String backupName, String time) {
         MiddlewareBackupScheduleCR cr = backupScheduleCRDService.get(clusterId, namespace, backupName);
-        // todo
+        // 设置名称
         cr.getMetadata().setName(backupName + "-incr");
+        // 设置增量备份
+        cr.getSpec().getCustomBackups().forEach(cus -> {
+            if (cus.containsKey(ENV)){
+                cus.get(ENV).forEach(env -> {
+                    if (env.containsKey(VALUE) && env.get(VALUE).equals(BACKUP)){
+                        env.put(VALUE, BACKUP_INC);
+                    }
+                });
+            }
+        });
+        // 转换时间单位
         cr.getSpec().getSchedule().setCron(CronUtils.convertTimeToCron(time));
         try {
             backupScheduleCRDService.create(clusterId, cr);
@@ -239,7 +222,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         customBackups.add(env);
 
         MiddlewareBackupScheduleSpec spec = new MiddlewareBackupScheduleSpec(destination, customBackups,
-            backupDTO.getMiddlewareName(), backupDTO.getCrdType(), CronUtils.parseUtcCron(backupDTO.getCron()),
+            backupDTO.getMiddlewareName(), backupDTO.getCrdType(), "off", CronUtils.parseUtcCron(backupDTO.getCron()),
             backupDTO.getLimitRecord(), calRetentionTime(backupDTO));
         crd.setSpec(spec);
         try {
@@ -345,7 +328,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         List<MiddlewareBackupRecord> records =
             backupTaskList(backupDTO.getClusterId(), backupDTO.getNamespace(), null, null, null);
         records.forEach(record -> {
-            if (backupDTO.getTaskName().equals(record.getTaskName())) {
+            if (StringUtils.isNotEmpty(backupDTO.getTaskName()) && backupDTO.getTaskName().equals(record.getTaskName())) {
                 throw new BusinessException(ErrorMessage.BACKUP_JOB_NAME_ALREADY_EXISTS);
             }
         });
@@ -466,66 +449,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 incBackup.put(schedule.getMetadata().getName(), schedule.getSpec().getSchedule().getCron());
                 continue;
             }
-            MiddlewareBackupScheduleStatus backupStatus = schedule.getStatus();
-            MiddlewareBackupRecord backupRecord = new MiddlewareBackupRecord();
-            // 获取备份时间
-            String backupTime = DateUtil.utc2Local(schedule.getMetadata().getCreationTimestamp(),
-                    DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
-            backupRecord.setBackupTime(backupTime);
-            backupRecord.setNamespace(schedule.getMetadata().getNamespace());
-            backupRecord.setBackupName(schedule.getMetadata().getName());
-            backupRecord.setSchedule(true);
-            // 获取备份位置
-            MiddlewareBackupScheduleSpec spec = schedule.getSpec();
-            MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination.MiddlewareBackupParameters parameters =
-                    spec.getBackupDestination().getParameters();
-            String position = spec.getBackupDestination().getDestinationType() + "(" + parameters.getUrl() + "/"
-                    + parameters.getBucket() + ")";
-            backupRecord.setPosition(position);
-            // 获取备份状态
-            if (!ObjectUtils.isEmpty(backupStatus)) {
-                backupRecord.setPhrase(backupStatus.getPhase());
-            } else {
-                backupRecord.setPhrase("Unknown");
-            }
-            backupRecord.setSourceName(schedule.getSpec().getName());
 
-            // 获取labels参数
-            Map<String, String> labels = schedule.getMetadata().getLabels();
-            if (!CollectionUtils.isEmpty(labels)){
-                backupRecord.setSourceType(labels.get("type"));
-                backupRecord.setDateUnit(labels.get("unit"));
-                backupRecord.setAddressId(labels.get("addressId"));
-                backupRecord.setBackupId(labels.get("backupId"));
-            }
-            // 转换cron表达式
-            try {
-                backupRecord.setCron(CronUtils.parseLocalCron(schedule.getSpec().getSchedule().getCron()));
-            }catch (Exception e){
-                log.error("集群{} 分区{} 定时备份{} 转换cron表达式失败", clusterId, namespace, backupRecord.getBackupName());
-                continue;
-            }
-            // 根据单位转换备份保留时间
-            if (!ObjectUtils.isEmpty(schedule.getSpec().getSchedule().getRetentionTime())) {
-                backupRecord.setBackupMode("period");
-                Integer day = schedule.getSpec().getSchedule().getRetentionTime();
-                switch (backupRecord.getDateUnit()) {
-                    case "year":
-                        backupRecord.setRetentionTime(day / 365);
-                        break;
-                    case "month":
-                        backupRecord.setRetentionTime(day / 30);
-                        break;
-                    case "week":
-                        backupRecord.setRetentionTime(day / 7);
-                        break;
-                    default:
-                        backupRecord.setRetentionTime(day);
-                        break;
-                }
-            } else {
-                backupRecord.setBackupMode("single");
-            }
+            MiddlewareBackupRecord backupRecord = new MiddlewareBackupRecord();
+            convertBackupScheduleToRecord(schedule, backupRecord);
             recordList.add(backupRecord);
         }
         // 设置增量备份
@@ -638,9 +564,23 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public MiddlewareBackupRecord getBackupTask(String clusterId, String namespace, String backupName) {
+    public MiddlewareIncBackupDto getIncBackupInfo(String clusterId, String namespace, String backupName) {
+        MiddlewareBackupScheduleCR cr = backupScheduleCRDService.get(clusterId, namespace, backupName + "inc");
+        MiddlewareIncBackupDto middlewareIncBackupDto = new MiddlewareIncBackupDto();
+        if (cr == null) {
+            middlewareIncBackupDto.setBackupName(backupName + "inc").setStartTime("off");
+            return middlewareIncBackupDto;
+        }
+        // 获取时间
+        JSONObject storageProvider = cr.getStatus().getStorageProvider();
+        String type = middlewareCrTypeService.findTypeByCrType(cr.getSpec().getType());
+        JSONObject time = storageProvider.getJSONObject(type);
 
-        return null;
+        // 封装数据
+        middlewareIncBackupDto.setStatus(cr.getSpec().getPause()).setStartTime(time.getString("startTime"))
+            .setEndTime(time.getString("endTime"))
+            .setTime(CronUtils.convertCronToTime(cr.getSpec().getSchedule().getCron()));
+        return middlewareIncBackupDto;
     }
 
     @Override
@@ -649,7 +589,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         List<MiddlewareBackupRecord> recordList;
         // 获取所有立即备份记录 并过滤获取由指定定时备份任务产生的备份记录
         recordList = listBackup(clusterId, namespace, null, null).stream()
-            .filter(record -> StringUtils.isNotEmpty(record.getOwner()) && record.getOwner().equals(backupName))
+            .filter(record -> (StringUtils.isNotEmpty(record.getOwner()) && record.getOwner().equals(backupName))
+                || (StringUtils.isNotEmpty(record.getBackupName()) && record.getBackupName().equals(backupName)))
             .collect(Collectors.toList());
         // 根据时间降序
         recordList.sort((o1, o2) -> o1.getBackupTime() == null ? -1
@@ -826,6 +767,110 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             }
         });
         return isIncBackup.get();
+    }
+
+    /**
+     * 对象封装: MiddlewareBackupScheduleCR -> MiddlewareBackupRecord
+     */
+    public void convertBackupScheduleToRecord(MiddlewareBackupScheduleCR schedule, MiddlewareBackupRecord backupRecord){
+        MiddlewareBackupScheduleStatus backupStatus = schedule.getStatus();
+        // 获取备份时间
+        String backupTime = DateUtil.utc2Local(schedule.getMetadata().getCreationTimestamp(),
+                DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
+        backupRecord.setBackupTime(backupTime);
+        backupRecord.setNamespace(schedule.getMetadata().getNamespace());
+        backupRecord.setBackupName(schedule.getMetadata().getName());
+        backupRecord.setSchedule(true);
+        // 获取备份位置
+        MiddlewareBackupScheduleSpec spec = schedule.getSpec();
+        MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination.MiddlewareBackupParameters parameters =
+                spec.getBackupDestination().getParameters();
+        String position = spec.getBackupDestination().getDestinationType() + "(" + parameters.getUrl() + "/"
+                + parameters.getBucket() + ")";
+        backupRecord.setPosition(position);
+        // 获取备份状态
+        if (!ObjectUtils.isEmpty(backupStatus)) {
+            backupRecord.setPhrase(backupStatus.getPhase());
+        } else {
+            backupRecord.setPhrase("Unknown");
+        }
+        backupRecord.setSourceName(schedule.getSpec().getName());
+
+        // 获取labels参数
+        Map<String, String> labels = schedule.getMetadata().getLabels();
+        if (!CollectionUtils.isEmpty(labels)){
+            backupRecord.setSourceType(labels.get("type"));
+            backupRecord.setDateUnit(labels.get("unit"));
+            backupRecord.setAddressId(labels.get("addressId"));
+            backupRecord.setBackupId(labels.get("backupId"));
+        }
+        // 转换cron表达式
+        try {
+            backupRecord.setCron(CronUtils.parseLocalCron(schedule.getSpec().getSchedule().getCron()));
+        }catch (Exception e){
+            log.error("定时备份{} 转换cron表达式失败", backupRecord.getBackupName());
+            return;
+        }
+        // 根据单位转换备份保留时间
+        if (!ObjectUtils.isEmpty(schedule.getSpec().getSchedule().getRetentionTime())) {
+            backupRecord.setBackupMode("period");
+            Integer day = schedule.getSpec().getSchedule().getRetentionTime();
+            switch (backupRecord.getDateUnit()) {
+                case "year":
+                    backupRecord.setRetentionTime(day / 365);
+                    break;
+                case "month":
+                    backupRecord.setRetentionTime(day / 30);
+                    break;
+                case "week":
+                    backupRecord.setRetentionTime(day / 7);
+                    break;
+                default:
+                    backupRecord.setRetentionTime(day);
+                    break;
+            }
+        } else {
+            backupRecord.setBackupMode("single");
+        }
+    }
+
+    /**
+     * 对象封装: MiddlewareBackupCR -> MiddlewareBackupRecord
+     */
+    public void convertBackupToRecord(MiddlewareBackupCR backup, MiddlewareBackupRecord backupRecord) {
+
+        MiddlewareBackupStatus backupStatus = backup.getStatus();
+        backupRecord.setBackupId(backup.getMetadata().getLabels().get("backupId"));
+
+        // 获取备份时间
+        String backupTime = DateUtil.utc2Local(backup.getMetadata().getCreationTimestamp(),
+            DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
+        backupRecord.setBackupTime(backupTime);
+        backupRecord.setNamespace(backup.getMetadata().getNamespace());
+        backupRecord.setBackupName(backup.getMetadata().getName());
+
+        // 获取备份位置
+        MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters parameters =
+            backup.getSpec().getBackupDestination().getParameters();
+        String position = backup.getSpec().getBackupDestination().getDestinationType() + "(" + parameters.getUrl() + "/"
+            + parameters.getBucket() + ")";
+        backupRecord.setPosition(position);
+
+        // 获取备份状态
+        if (!ObjectUtils.isEmpty(backupStatus)) {
+            backupRecord.setPhrase(backupStatus.getPhase());
+            if ("Failed".equals(backupStatus.getPhase())) {
+                backupRecord.setReason(backupStatus.getReason());
+            }
+        } else {
+            backupRecord.setPhrase("Unknown");
+        }
+        backupRecord.setSourceType(backup.getMetadata().getLabels().get("type"));
+        backupRecord.setAddressId(backup.getMetadata().getLabels().get("addressId"));
+        backupRecord.setSourceName(backup.getSpec().getName());
+        backupRecord.setBackupMode("single");
+        backupRecord.setSchedule(false);
+        backupRecord.setOwner(backup.getMetadata().getLabels().get(OWNER));
     }
 
 }

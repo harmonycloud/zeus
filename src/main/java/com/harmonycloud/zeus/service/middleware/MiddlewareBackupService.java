@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.service.middleware;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
 import com.harmonycloud.caas.common.model.MiddlewareBackupScheduleConfig;
+import com.harmonycloud.caas.common.model.MiddlewareIncBackupDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupNameDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
 
@@ -155,7 +156,7 @@ public interface MiddlewareBackupService {
      * @param backupName
      * @return
      */
-    MiddlewareBackupRecord getBackupTask(String clusterId, String namespace, String backupName);
+    MiddlewareIncBackupDto getIncBackupInfo(String clusterId, String namespace, String backupName);
 
     /**
      * 备份记录

@@ -92,19 +92,18 @@ public class MiddlewareBackupController {
         return BaseResult.ok(middlewareBackupService.backupTaskList(clusterId, namespace, middlewareName, type, keyword));
     }
 
-    @ApiOperation(value = "查询备份任务列表", notes = "查询备份任务列表")
+    @ApiOperation(value = "查询增量备份信息", notes = "查询增量备份信息")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "backupName", value = "备份名称", paramType = "path", dataTypeClass = String.class),
     })
-    @GetMapping("/{backupName}")
+    @GetMapping("/{backupName}/inc")
     @Authority(power = 1)
-    public BaseResult getRecord(@PathVariable("clusterId") String clusterId,
-                                @PathVariable("namespace") String namespace,
-                                @PathVariable("backupName") String backupName,
-                                @RequestParam("schedule") Boolean schedule) {
-        return BaseResult.ok(middlewareBackupService.getBackupTask(clusterId, namespace, backupName));
+    public BaseResult getIncBackupInfo(@PathVariable("clusterId") String clusterId,
+                                       @PathVariable("namespace") String namespace,
+                                       @PathVariable("backupName") String backupName) {
+        return BaseResult.ok(middlewareBackupService.getIncBackupInfo(clusterId, namespace, backupName));
     }
 
     @ApiOperation(value = "删除备份任务", notes = "删除备份任务")

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.model.MiddlewareIncBackupDto;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -273,7 +274,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public MiddlewareBackupRecord getBackupTask(String clusterId, String namespace, String backupName) {
+    public MiddlewareIncBackupDto getIncBackupInfo(String clusterId, String namespace, String backupName) {
         return null;
     }
 
