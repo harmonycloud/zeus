@@ -198,6 +198,7 @@ public class IngressServiceImpl implements IngressService {
                     }
                 }
             } catch (KubernetesClientException e) {
+                log.error("创建服务暴露出错了", e);
                 throw new CaasRuntimeException(ErrorMessage.INGRESS_DOMAIN_NAME_FORMAT_NOT_SUPPORT);
             }
         } else if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_NODEPORT)) {
