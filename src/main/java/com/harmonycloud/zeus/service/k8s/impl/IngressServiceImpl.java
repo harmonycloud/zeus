@@ -440,7 +440,7 @@ public class IngressServiceImpl implements IngressService {
                     }
                 });
             }
-            // tcp
+            // nginx tcp
             List<IngressComponentDto> ingressComponentDtoList = ingressComponentService.list(clusterId);
             if (!CollectionUtils.isEmpty(ingressComponentDtoList)) {
                 for (IngressComponentDto ingress : ingressComponentDtoList) {
@@ -458,6 +458,8 @@ public class IngressServiceImpl implements IngressService {
                     }
                 }
             }
+            // traefik tcp
+
         }
         // 添加ingress pod信息
         setIngressExtralInfo(clusterId, resList);
@@ -1103,8 +1105,8 @@ public class IngressServiceImpl implements IngressService {
             throw new CaasRuntimeException(ErrorMessage.INGRESS_TCP_NOT_NULL);
         }
         ServiceDTO serviceDTO = ingressDTO.getServiceList().get(0);
-        return new IngressRouteTCPCR(serviceDTO.getServiceName() + UUIDUtils.get8UUID(), ingressDTO.getNamespace(),
-                ingressName + "-p" + serviceDTO.getServicePort(), serviceDTO.getServiceName(), serviceDTO.getServicePort());
+        return new IngressRouteTCPCR(serviceDTO.getServiceName() + "-" + UUIDUtils.get8UUID(), ingressDTO.getNamespace(),
+                ingressName + "-p" + serviceDTO.getExposePort(), serviceDTO.getServiceName(), Integer.parseInt(serviceDTO.getServicePort()));
     }
 
     /**

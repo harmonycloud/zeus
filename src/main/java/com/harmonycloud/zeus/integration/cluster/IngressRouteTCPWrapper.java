@@ -28,7 +28,7 @@ public class IngressRouteTCPWrapper {
      */
     private static final CustomResourceDefinitionContext CONTEXT = new CustomResourceDefinitionContext.Builder()
             .withGroup("traefik.containo.us")
-            .withVersion("traefik.containo.us/v1alpha1")
+            .withVersion("v1alpha1")
             .withScope(NAMESPACED)
             .withPlural("ingressroutetcps")
             .build();

@@ -19,7 +19,7 @@ public class IngressRouteTCPCR {
 
     private IngressRouteTCPSpec spec;
 
-    public IngressRouteTCPCR(String name, String namespace, String entryPoint, String serviceName, String servicePort) {
+    public IngressRouteTCPCR(String name, String namespace, String entryPoint, String serviceName, Integer servicePort) {
         this.metadata = new ObjectMeta();
         this.metadata.setName(name);
         this.metadata.setNamespace(namespace);

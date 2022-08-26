@@ -20,7 +20,7 @@ public class IngressRouteTCPSpecRoute {
 
     private List<IngressRouteTCPSpecRouteService> services;
 
-    public IngressRouteTCPSpecRoute(String serviceName, String servicePort) {
+    public IngressRouteTCPSpecRoute(String serviceName, Integer servicePort) {
         this.match = "HostSNI(`*`)";
         services = new ArrayList<>();
         services.add(new IngressRouteTCPSpecRouteService(serviceName, servicePort));
