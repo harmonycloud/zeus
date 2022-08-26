@@ -73,8 +73,6 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
     private Map<String, RestHighLevelClient> esClients = new ConcurrentHashMap<>();
 
     @Autowired
-    private MiddlewareClusterService middlewareClusterService;
-    @Autowired
     private ClusterService clusterService;
 
     @Override
@@ -413,7 +411,7 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
 
     @Override
     public boolean initEsIndexTemplate(String clusterId) {
-        List<MiddlewareClusterDTO> clusters = middlewareClusterService.listClusterDtos();
+        List<MiddlewareClusterDTO> clusters = clusterService.listClusters();
         if (StringUtils.isNotBlank(clusterId)) {
             clusters = clusters.stream().filter(middlewareClusterDTO -> clusterId.equals(middlewareClusterDTO.getId())).collect(Collectors.toList());
         }
@@ -456,7 +454,7 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
             setCommonTemplate(request, codeJson);
             esClient.indices().putTemplate(request, RequestOptions.DEFAULT);
             log.info("mysql慢日志索引模板初始化成功");
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("mysql慢日志索引模板初始化失败", e);
         }
     }
@@ -500,7 +498,7 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
 
             esClient.indices().putTemplate(request, RequestOptions.DEFAULT);
             log.info("标准输出日志索引模板初始化成功");
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("标准输出日志索引模板初始化失败", e);
         }
     }
@@ -521,7 +519,7 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
             request.mapping(mappings.toString(), XContentType.JSON);
             esClient.indices().putTemplate(request, RequestOptions.DEFAULT);
             log.info("文件日志索引模板logstash初始化成功");
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("文件日志索引模板logstash初始化失败", e);
         }
     }
@@ -537,7 +535,7 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
             setCommonTemplate(request, codeJson);
             esClient.indices().putTemplate(request, RequestOptions.DEFAULT);
             log.info("SQL审计索引模板mysqlaudit初始化成功");
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("SQL审计索引模板mysqlaudit初始化失败", e);
             e.printStackTrace();
         }

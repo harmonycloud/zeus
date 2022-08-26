@@ -75,6 +75,14 @@ public interface PodService {
     void restart(String clusterId, String namespace, String middlewareName, String type, String podName);
 
     /**
+     * 重启pod
+     * @param clusterId
+     * @param namespace
+     * @param podName
+     */
+    void restart(String clusterId, String namespace, String podName);
+
+    /**
      * 查询中间件pod列表
      *
      * @param mw             中间件cr
@@ -95,5 +103,14 @@ public interface PodService {
      * @param podName        pod名称
      */
     String yaml(String clusterId, String namespace, String middlewareName, String type, String podName);
+
+    /**
+     * 查询pod yaml
+     * @param clusterId
+     * @param namespace
+     * @param podName
+     * @return
+     */
+    String yaml(String clusterId, String namespace, String podName);
 
 }
