@@ -143,7 +143,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 .get(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getBackupScheduleName());
             MiddlewareBackupScheduleSpec spec = middlewareBackupScheduleCR.getSpec();
             // 更新cron表达式
-            spec.getSchedule().setCron(CronUtils.parseUtcCron(backupDTO.getCron()));
+            if (StringUtils.isNotEmpty(backupDTO.getCron())){
+                spec.getSchedule().setCron(CronUtils.parseUtcCron(backupDTO.getCron()));
+            }
             // 更新备份保留时间
             if (backupDTO.getRetentionTime() != null && StringUtils.isNotEmpty(backupDTO.getDateUnit())) {
                 spec.getSchedule().setRetentionTime(calRetentionTime(backupDTO));
@@ -162,7 +164,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 if (incBackupScheduleCr == null) {
                     throw new BusinessException(ErrorMessage.BACKUP_FILE_NOT_EXIST);
                 }
-                incBackupScheduleCr.getSpec().getSchedule().setCron(CronUtils.convertTimeToCron(backupDTO.getTime()));
+                // 更新开启/关闭
+                if (backupDTO.getTurnOff() != null && backupDTO.getTurnOff()){
+                    incBackupScheduleCr.getSpec().setPause("on");
+                }
+                // 更新时间
+                if (StringUtils.isNotEmpty(backupDTO.getTime())){
+                    incBackupScheduleCr.getSpec().getSchedule().setCron(CronUtils.convertTimeToCron(backupDTO.getTime()));
+                }
                 try {
                     backupScheduleCRDService.update(backupDTO.getClusterId(), middlewareBackupScheduleCR);
                 } catch (IOException e) {
