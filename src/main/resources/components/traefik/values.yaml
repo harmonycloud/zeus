@@ -1,5 +1,5 @@
 image:
-  name: 10.10.101.22：8443/middleware/traefik
+  name: 10.10.101.22:8443/middleware/traefik
   # defaults to appVersion
   tag: "2.8.0"
   pullPolicy: IfNotPresent

@@ -20,6 +20,16 @@ public class IngressRouteTCPSpecRoute {
 
     private List<IngressRouteTCPSpecRouteService> services;
 
+    public IngressRouteTCPSpecRoute() {
+    }
+
+    public IngressRouteTCPSpecRoute(String match, List<Object> middlewares, Integer priority, List<IngressRouteTCPSpecRouteService> services) {
+        this.match = match;
+        this.middlewares = middlewares;
+        this.priority = priority;
+        this.services = services;
+    }
+
     public IngressRouteTCPSpecRoute(String serviceName, Integer servicePort) {
         this.match = "HostSNI(`*`)";
         services = new ArrayList<>();

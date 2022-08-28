@@ -23,5 +23,7 @@ public class IngressRouteTCPList {
 
     private List<IngressRouteTCPCR> items;
 
+    public IngressRouteTCPList() {
+    }
 
 }

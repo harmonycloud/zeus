@@ -23,6 +23,9 @@ public class IngressRouteTCPSpecRouteService {
 
     private Integer weight;
 
+    public IngressRouteTCPSpecRouteService() {
+    }
+
     public IngressRouteTCPSpecRouteService(String name, Integer port) {
         this.name = name;
         this.port = port;
