@@ -233,54 +233,8 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
     }
 
     @Override
-    public void upgrade(MiddlewareValues middlewareValues,String ingressName) {
-        String path = componentsPath + File.separator + "traefik";
-        Yaml yaml = new Yaml();
-        JSONObject newValues;
-        try {
-            newValues = yaml.loadAs(middlewareValues.getValues(), JSONObject.class);
-        } catch (Exception e) {
-            throw new BusinessException(ErrorMessage.PARSE_VALUES_FAILED);
-        }
-        JSONObject oldValues = helmChartService.getInstalledValues(ingressName,
-                middlewareValues.getNamespace(), clusterService.findById(middlewareValues.getClusterId()));
-
-        String helmPath  = uploadPath + File.separator + "traefik";
-        try {
-            FileUtils.copyDirectory(new File(path), new File(helmPath));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        String tempValuesYamlDir = uploadPath + SUB_DIR;
-
-        String tempValuesYamlName =
-                "temp" + "-" + System.currentTimeMillis() + ".yaml";
-        String targetValuesYamlName =
-                "target" + "-" + System.currentTimeMillis() + ".yaml";
-
-        String tempValuesYamlPath = tempValuesYamlDir + File.separator + tempValuesYamlName;
-        String targetValuesYamlPath = tempValuesYamlDir + File.separator + targetValuesYamlName;
-
-        String tempValuesYaml = yaml.dumpAsMap(newValues);
-        String targetValuesYaml = yaml.dumpAsMap(oldValues);
-        try {
-            FileUtil.writeToLocal(tempValuesYamlDir, tempValuesYamlName, tempValuesYaml);
-            FileUtil.writeToLocal(tempValuesYamlDir, targetValuesYamlName, targetValuesYaml);
-        } catch (IOException e) {
-            log.error("写出values.yaml文件异常", e);
-            throw new BusinessException(ErrorMessage.HELM_CHART_WRITE_ERROR);
-        }
-
-        MiddlewareClusterDTO clusterDTO = clusterService.findById(middlewareValues.getClusterId());
-        String cmd = String.format("helm upgrade --install %s %s -f %s -f %s -n %s --kube-apiserver %s --kubeconfig %s ",
-                ingressName, helmPath, tempValuesYamlPath, targetValuesYamlPath, middlewareValues.getNamespace(),
-                clusterDTO.getAddress(), clusterCertService.getKubeConfigFilePath(middlewareValues.getClusterId()));
-        try {
-            execCmd(cmd, null);
-        } finally {
-            // 删除文件
-            FileUtil.deleteFile(tempValuesYamlPath, targetValuesYamlPath,helmPath);
-        }
+    public void upgrade(MiddlewareValues middlewareValues, String ingressName) {
+        super.upgrade(middlewareValues, ingressName, "traefik");
     }
 
     private List<String> execCmd(String cmd, Function<String, String> dealWithErrMsg) {

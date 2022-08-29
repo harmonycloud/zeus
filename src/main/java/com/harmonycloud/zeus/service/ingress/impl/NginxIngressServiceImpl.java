@@ -289,6 +289,7 @@ public class NginxIngressServiceImpl extends AbstractBaseOperator implements Ngi
 
     @Override
     public void upgrade(MiddlewareValues middlewareValues, String ingressName) {
-
+        super.upgrade(middlewareValues, ingressName, "ingress-nginx/charts/ingress-nginx");
     }
+
 }
