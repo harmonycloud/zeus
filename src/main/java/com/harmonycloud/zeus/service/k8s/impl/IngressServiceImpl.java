@@ -460,7 +460,7 @@ public class IngressServiceImpl implements IngressService {
                             });
                         }
                     } else if (IngressEnum.TRAEFIK.getName().equals(ingress.getType())) {
-                        IngressRouteTCPList routeTCPList = ingressRouteTCPWrapper.list(clusterId, namespace, getIngressTCPLabels(middlewareName, ingress.getType()));
+                        IngressRouteTCPList routeTCPList = ingressRouteTCPWrapper.list(clusterId, namespace, getIngressTCPLabels(middlewareName, type));
                         resList.addAll(convertIngressDTOList(ingress, routeTCPList, type, null));
                     }
                 }
@@ -1348,7 +1348,7 @@ public class IngressServiceImpl implements IngressService {
                 serviceList.add(serviceDTO);
                 ingress.setServiceList(serviceList);
                 ingress.setExposeIP(finalAddress);
-                ingress.setMiddlewareName(ingressRouteTCPCR.getMetadata().getLabels().get("middleware"));
+                ingress.setMiddlewareName(ingressRouteTCPCR.getMetadata().getLabels().get("middlewareName"));
                 ingress.setMiddlewareType(type);
                 ingress.setMiddlewareNickName(aliasName);
                 ingress.setName(serviceDTO.getServiceName());
