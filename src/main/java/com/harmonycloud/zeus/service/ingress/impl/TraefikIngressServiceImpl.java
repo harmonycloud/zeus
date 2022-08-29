@@ -31,6 +31,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.yaml.snakeyaml.Yaml;
@@ -40,6 +41,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 
 import static com.harmonycloud.caas.common.constants.CommonConstant.RESOURCE_ALREADY_EXISTED;
@@ -53,6 +55,12 @@ import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConsta
 @Service
 @Operator(paramTypes4One = String.class)
 public class TraefikIngressServiceImpl extends AbstractBaseOperator implements TraefikIngressService {
+
+    @Value("${system.traefikPortNum:100}")
+    private Integer traefikPortNum;
+    @Autowired
+    private IngressService ingressService;
+
     @Override
     public boolean support(String name) {
         return IngressEnum.TRAEFIK.getName().equals(name);
@@ -64,7 +72,6 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
         // check exist
         super.checkIfExists(ingressComponentDto);
         String repository = cluster.getRegistry().getRegistryAddress() + "/" + cluster.getRegistry().getChartRepo();
-        repository = "10.10.102.213:8443/middleware";
         // setValues
         String path = componentsPath + File.separator + "traefik";
         Yaml yaml = new Yaml();
@@ -73,7 +80,7 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
         image.put("name", repository + "/traefik");
 
         JSONArray additionalArguments = values.getJSONArray("additionalArguments");
-        List<String> portList = getPortList(ingressComponentDto.getStartPort(), ingressComponentDto.getIngressClassName(), 100);
+        List<String> portList = getPortList(cluster, ingressComponentDto.getStartPort(), ingressComponentDto.getIngressClassName(), traefikPortNum);
         additionalArguments.addAll(portList);
         values.put("startPort", portList.get(0).split(":")[1]);
         values.put("endPort", portList.get(portList.size() - 1).split(":")[1]);
@@ -318,11 +325,18 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
         };
     }
 
-    private List<String> getPortList(String startPort, String ingressName, int num) {
+    private List<String> getPortList(MiddlewareClusterDTO cluster, String startPort, String ingressName, int num) {
         List<String> ports = new ArrayList<>();
-        for (int i = 0; i < num; i++) {
+        Set<Integer> usedPortSet = ingressService.getUsedPortSet(cluster);
+        for (int i = 0, sum = 0; ; i++) {
             int port = Integer.parseInt(startPort) + i;
-            ports.add("--entrypoints." + ingressName + "-p" + port + ".Address=:" + port);
+            if (!usedPortSet.contains(port)) {
+                ports.add("--entrypoints." + ingressName + "-p" + port + ".Address=:" + port);
+                sum++;
+            }
+            if (sum == num) {
+                break;
+            }
         }
         return ports;
     }
