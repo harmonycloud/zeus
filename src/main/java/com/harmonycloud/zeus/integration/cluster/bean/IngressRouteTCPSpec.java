@@ -24,6 +24,12 @@ public class IngressRouteTCPSpec {
     public IngressRouteTCPSpec() {
     }
 
+    public IngressRouteTCPSpec(List<String> entryPoints, List<IngressRouteTCPSpecRoute> routes, Object tls) {
+        this.entryPoints = entryPoints;
+        this.routes = routes;
+        this.tls = tls;
+    }
+
     public IngressRouteTCPSpec(String entryPoint, String serviceName, Integer servicePort) {
         List<String> entryPointList = new ArrayList<>();
         entryPointList.add(entryPoint);

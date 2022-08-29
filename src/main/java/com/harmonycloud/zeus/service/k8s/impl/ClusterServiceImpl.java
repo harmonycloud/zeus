@@ -17,6 +17,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.enums.*;
 import com.harmonycloud.zeus.bean.BeanActiveArea;
 import com.harmonycloud.zeus.dao.BeanActiveAreaMapper;
 import com.harmonycloud.zeus.integration.cluster.NodeWrapper;
@@ -35,9 +36,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.constants.NameConstant;
-import com.harmonycloud.caas.common.enums.DictEnum;
-import com.harmonycloud.caas.common.enums.ErrorCodeMessage;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
@@ -648,6 +646,9 @@ public class ClusterServiceImpl implements ClusterService {
 
     @Override
     public List<MiddlewareResourceInfo> getMwResource(String clusterId) throws Exception {
+        if (!clusterComponentService.checkInstalled(clusterId, ComponentsEnum.MIDDLEWARE_CONTROLLER.getName())) {
+            return Collections.emptyList();
+        }
         // 获取集群下所有中间件信息
         List<MiddlewareCR> mwCrdList = middlewareCRService.listCR(clusterId, null, null);
         mwCrdList = filterByNamespace(clusterId, mwCrdList);

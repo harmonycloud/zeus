@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.k8s.impl;
 
 import com.harmonycloud.caas.common.model.ActiveAreaClusterDto;
 import com.harmonycloud.zeus.service.k8s.ActiveAreaClusterService;
+import com.harmonycloud.zeus.service.k8s.ActiveAreaService;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,8 @@ public class ActiveAreaClusterServiceImpl implements ActiveAreaClusterService {
 
     @Autowired
     private ClusterService clusterService;
+    @Autowired
+    private ActiveAreaService activeAreaService;
 
     @Override
     public List<ActiveAreaClusterDto> list() {
@@ -37,6 +40,6 @@ public class ActiveAreaClusterServiceImpl implements ActiveAreaClusterService {
 
     @Override
     public void update(String clusterId, Boolean active) {
-
+        activeAreaService.initBeanActiveArea(clusterId);
     }
 }

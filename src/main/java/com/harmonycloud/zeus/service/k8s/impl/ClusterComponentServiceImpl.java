@@ -191,6 +191,22 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         beanClusterComponentsMapper.delete(wrapper);
     }
 
+    @Override
+    public boolean checkInstalled(String clusterId, String componentName) {
+        try {
+            List<ClusterComponentsDto> componentsDtos = list(clusterId);
+            componentsDtos = componentsDtos.stream().filter(item -> ComponentsEnum.MIDDLEWARE_CONTROLLER.getName().equals(item.getComponent())).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(componentsDtos)) {
+                return false;
+            }
+            ClusterComponentsDto clusterComponentsDto = componentsDtos.get(0);
+            return clusterComponentsDto.getStatus() != 0 && clusterComponentsDto.getStatus() != 5;
+        } catch (Exception e) {
+            log.error("查询集群组件失败了");
+        }
+        return false;
+    }
+
     /**
      * 回滚helm release
      */

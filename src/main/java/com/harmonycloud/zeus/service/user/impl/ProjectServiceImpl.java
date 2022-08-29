@@ -5,6 +5,8 @@ import static com.harmonycloud.caas.common.constants.user.UserConstant.USERNAME;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.enums.ComponentsEnum;
+import com.harmonycloud.zeus.service.k8s.ClusterComponentService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -74,6 +76,8 @@ public class ProjectServiceImpl implements ProjectService {
     public MiddlewareInfoService middlewareInfoService;
     @Autowired
     private ClusterMiddlewareInfoService clusterMiddlewareInfoService;
+    @Autowired
+    private ClusterComponentService clusterComponentService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -382,6 +386,9 @@ public class ProjectServiceImpl implements ProjectService {
             beanProjectNamespaceList.stream().map(BeanProjectNamespace::getClusterId).collect(Collectors.toSet());
         Map<String, List<MiddlewareCR>> middlewareCRListMap = new HashMap<>();
         for (String clusterId : clusterIdList) {
+            if (!clusterComponentService.checkInstalled(clusterId, ComponentsEnum.MIDDLEWARE_CONTROLLER.getName())) {
+                continue;
+            }
             List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(clusterId, null, null);
             middlewareCRListMap.put(clusterId, middlewareCRList);
         }
