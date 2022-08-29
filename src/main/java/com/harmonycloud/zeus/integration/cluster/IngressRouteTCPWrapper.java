@@ -54,8 +54,12 @@ public class IngressRouteTCPWrapper {
      * @param name
      * @throws IOException
      */
-    public void delete(String clusterId, String namespace, String name) throws IOException {
-        K8sClient.getClient(clusterId).customResource(CONTEXT).delete(namespace, name);
+    public void delete(String clusterId, String namespace, String name) {
+        try {
+            K8sClient.getClient(clusterId).customResource(CONTEXT).delete(namespace, name);
+        } catch (IOException e) {
+            log.error("删除ingressroutetcp错误", name);
+        }
     }
 
     /**

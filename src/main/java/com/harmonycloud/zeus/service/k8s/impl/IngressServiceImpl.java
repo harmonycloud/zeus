@@ -356,15 +356,19 @@ public class IngressServiceImpl implements IngressService {
                 IngressComponentDto ingressComponentDto =
                         ingressComponentService.get(clusterId, ingressDTO.getIngressClassName());
                 if (ingressComponentDto != null) {
-                    if (StringUtils.isEmpty(ingressComponentDto.getConfigMapName())) {
-                        return;
+                    if(IngressEnum.NGINX.getName().equals(ingressComponentDto.getType())){
+                        if (StringUtils.isEmpty(ingressComponentDto.getConfigMapName())) {
+                            return;
+                        }
+                        ConfigMap configMap = configMapWrapper.get(clusterId,
+                                getIngressTcpNamespace(cluster, ingressDTO.getIngressClassName()),
+                                ingressComponentDto.getConfigMapName());
+                        removeTcpPort(configMap, ingressDTO.getServiceList());
+                        configMapWrapper.update(clusterId,
+                                getIngressTcpNamespace(cluster, ingressDTO.getIngressClassName()), configMap);
+                    }else if(IngressEnum.TRAEFIK.getName().equals(ingressComponentDto.getType())){
+                        ingressRouteTCPWrapper.delete(clusterId, namespace, ingressDTO.getName());
                     }
-                    ConfigMap configMap = configMapWrapper.get(clusterId,
-                            getIngressTcpNamespace(cluster, ingressDTO.getIngressClassName()),
-                            ingressComponentDto.getConfigMapName());
-                    removeTcpPort(configMap, ingressDTO.getServiceList());
-                    configMapWrapper.update(clusterId,
-                            getIngressTcpNamespace(cluster, ingressDTO.getIngressClassName()), configMap);
                 }
             }
         } else if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_NODEPORT)) {
@@ -1122,8 +1126,12 @@ public class IngressServiceImpl implements IngressService {
             throw new CaasRuntimeException(ErrorMessage.INGRESS_TCP_NOT_NULL);
         }
         ServiceDTO serviceDTO = ingressDTO.getServiceList().get(0);
+        String ingressRouteTCPName = serviceDTO.getServiceName() + "-tcp-" + UUIDUtils.get8UUID();
+        if (StringUtils.isNotBlank(ingressDTO.getName())) {
+            ingressRouteTCPName = ingressDTO.getName();
+        }
         Map<String, String> labels = getIngressTCPLabels(ingressDTO.getMiddlewareName(), ingressDTO.getMiddlewareType());
-        return new IngressRouteTCPCR(serviceDTO.getServiceName() + "-" + UUIDUtils.get8UUID(), ingressDTO.getNamespace(),
+        return new IngressRouteTCPCR(ingressRouteTCPName, ingressDTO.getNamespace(),
                 ingressName + "-p" + serviceDTO.getExposePort(), serviceDTO.getServiceName(), Integer.parseInt(serviceDTO.getServicePort()), labels);
     }
 
@@ -1351,7 +1359,7 @@ public class IngressServiceImpl implements IngressService {
                 ingress.setMiddlewareName(ingressRouteTCPCR.getMetadata().getLabels().get("middlewareName"));
                 ingress.setMiddlewareType(type);
                 ingress.setMiddlewareNickName(aliasName);
-                ingress.setName(serviceDTO.getServiceName());
+                ingress.setName(ingressRouteTCPCR.getMetadata().getName());
                 ingress.setNamespace(ingress.getNamespace());
                 ingress.setClusterId(ingress.getClusterId());
                 ingress.setProtocol(Protocol.TCP.getValue());
