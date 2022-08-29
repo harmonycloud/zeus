@@ -94,4 +94,10 @@ public interface ActiveAreaService {
      */
     void delete(String clusterId);
 
+    /**
+     * 开启可用区
+     * @param clusterId
+     * @return
+     */
+    List<BeanActiveArea> initBeanActiveArea(String clusterId);
 }
