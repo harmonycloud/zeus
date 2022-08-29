@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.enums.ComponentsEnum;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.integration.cluster.PodWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
-import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
-import com.harmonycloud.zeus.service.k8s.PodService;
+import com.harmonycloud.zeus.service.k8s.*;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,8 +33,6 @@ import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.bean.BeanActiveArea;
 import com.harmonycloud.zeus.dao.BeanActiveAreaMapper;
 import com.harmonycloud.zeus.integration.cluster.NodeWrapper;
-import com.harmonycloud.zeus.service.k8s.ActiveAreaService;
-import com.harmonycloud.zeus.service.k8s.NodeService;
 
 import io.fabric8.kubernetes.api.model.Taint;
 import lombok.extern.slf4j.Slf4j;
@@ -60,6 +58,8 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
     private PodWrapper podWrapper;
     @Autowired
     private MiddlewareCRService middlewareCRService;
+    @Autowired
+    private ClusterComponentService clusterComponentService;
 
     @Override
     public void dividePool(String clusterId, ActivePoolDto activePoolDto) {
@@ -153,14 +153,16 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
         fields.put("spec.nodeName", nodeName);
         List<Pod> podList = podWrapper.listByFields(clusterId, null, fields);
 
-        List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(clusterId, null, null);
-        podList =
-            podList.stream()
-                .filter(pod -> middlewareCRList.stream().anyMatch(middlewareCR -> pod.getMetadata().getName()
-                    .substring(0, pod.getMetadata().getName().length() - 2).equals(middlewareCR.getSpec().getName())))
-                .collect(Collectors.toList());
-        if (!CollectionUtils.isEmpty(podList)) {
-            throw new BusinessException(ErrorMessage.NODE_CONTAINS_MIDDLEWARE_PODS);
+        if (clusterComponentService.checkInstalled(clusterId, ComponentsEnum.MIDDLEWARE_CONTROLLER.getName())) {
+            List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(clusterId, null, null);
+            podList =
+                    podList.stream()
+                            .filter(pod -> middlewareCRList.stream().anyMatch(middlewareCR -> pod.getMetadata().getName()
+                                    .substring(0, pod.getMetadata().getName().length() - 2).equals(middlewareCR.getSpec().getName())))
+                            .collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(podList)) {
+                throw new BusinessException(ErrorMessage.NODE_CONTAINS_MIDDLEWARE_PODS);
+            }
         }
 
         // 移除labels
