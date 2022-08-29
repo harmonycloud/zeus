@@ -215,6 +215,8 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
         ingressComponentDto.setHttpsPort(ports.getJSONObject("websecure").getString("port"));
         ingressComponentDto.setDashboardPort(ports.getJSONObject("traefik").getString("port"));
         ingressComponentDto.setMonitorPort(ports.getJSONObject("metrics").getString("port"));
+        ingressComponentDto.setStartPort(values.getString("startPort"));
+        ingressComponentDto.setEndPort(values.getString("endPort"));
         // node affinity
         if (JsonUtils.isJsonObject(values.getString("affinity"))) {
             JSONObject nodeAffinity = values.getJSONObject("affinity");
