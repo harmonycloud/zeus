@@ -367,7 +367,7 @@ public class IngressServiceImpl implements IngressService {
                         configMapWrapper.update(clusterId,
                                 getIngressTcpNamespace(cluster, ingressDTO.getIngressClassName()), configMap);
                     }else if(IngressEnum.TRAEFIK.getName().equals(ingressComponentDto.getType())){
-                        ingressRouteTCPWrapper.delete(clusterId, namespace, ingressDTO.getName());
+                        ingressRouteTCPWrapper.delete(clusterId, namespace, name);
                     }
                 }
             }
