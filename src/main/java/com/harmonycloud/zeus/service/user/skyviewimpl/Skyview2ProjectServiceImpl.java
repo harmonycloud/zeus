@@ -368,9 +368,10 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
             clusterIdSet.add(beanProjectNamespace.getClusterId());
         });
         // 获取集群下已安装中间件并集
-        Set<BeanClusterMiddlewareInfo> mwInfoSet = new HashSet<>();
-        for (String clusterId : clusterIdSet){
-            mwInfoSet.addAll(clusterMiddlewareInfoService.list(clusterId, false));
+        Set<String> mwTypeSet = new HashSet<>();
+        for (String clusterId : clusterIdSet) {
+            mwTypeSet.addAll(clusterMiddlewareInfoService.list(clusterId, true).stream()
+                    .map(BeanClusterMiddlewareInfo::getChartName).collect(Collectors.toList()));
         }
         // 查询用户角色项目权限
         String username =
@@ -383,9 +384,8 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
         }
         // 过滤获取拥有权限的中间件
         if (!CollectionUtils.isEmpty(power)) {
-            mwInfoSet = mwInfoSet.stream()
-                    .filter(mwInfo -> power.keySet().stream()
-                            .anyMatch(key -> !"0000".equals(power.get(key)) && mwInfo.getChartName().equals(key)))
+            mwTypeSet = mwTypeSet.stream().filter(
+                    mwType -> power.keySet().stream().anyMatch(key -> !"0000".equals(power.get(key)) && mwType.equals(key)))
                     .collect(Collectors.toSet());
         }
         // 查询数据
@@ -409,11 +409,11 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
         Map<String, List<MiddlewareResourceInfo>> map =
                 all.stream().collect(Collectors.groupingBy(MiddlewareResourceInfo::getType));
         List<ProjectMiddlewareResourceInfo> infoList = new ArrayList<>();
-        for (BeanClusterMiddlewareInfo mwInfo : mwInfoSet){
+        for (String mwType : mwTypeSet) {
             ProjectMiddlewareResourceInfo projectMiddlewareResourceInfo = new ProjectMiddlewareResourceInfo()
-                    .setType(mwInfo.getChartName()).setAliasName(MiddlewareOfficialNameEnum.findByChartName(mwInfo.getChartName()))
-                    .setMiddlewareResourceInfoList(map.getOrDefault(mwInfo.getChartName(), null))
-                    .setImagePath(middlewareImagePathMap.getOrDefault(mwInfo.getChartName(), null));
+                    .setType(mwType).setAliasName(MiddlewareOfficialNameEnum.findByChartName(mwType))
+                    .setMiddlewareResourceInfoList(map.getOrDefault(mwType, null))
+                    .setImagePath(middlewareImagePathMap.getOrDefault(mwType, null));
             infoList.add(projectMiddlewareResourceInfo);
         }
         return infoList;

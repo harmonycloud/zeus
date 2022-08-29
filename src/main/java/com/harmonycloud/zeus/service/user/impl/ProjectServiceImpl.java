@@ -300,7 +300,7 @@ public class ProjectServiceImpl implements ProjectService {
         // 获取集群下已安装中间件并集
         Set<String> mwTypeSet = new HashSet<>();
         for (String clusterId : clusterIdSet) {
-            mwTypeSet.addAll(clusterMiddlewareInfoService.list(clusterId, false).stream()
+            mwTypeSet.addAll(clusterMiddlewareInfoService.list(clusterId, true).stream()
                 .map(BeanClusterMiddlewareInfo::getChartName).collect(Collectors.toList()));
         }
         // 查询用户角色项目权限
@@ -329,9 +329,6 @@ public class ProjectServiceImpl implements ProjectService {
         all = all.stream().filter(middlewareResourceInfo -> beanProjectNamespaceList.stream().anyMatch(
             beanProjectNamespace -> beanProjectNamespace.getNamespace().equals(middlewareResourceInfo.getNamespace())))
             .collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(all)) {
-            return new ArrayList<>();
-        }
         // 获取image.path
         Map<String,
             String> middlewareImagePathMap = middlewareInfoService.list(false).stream()
