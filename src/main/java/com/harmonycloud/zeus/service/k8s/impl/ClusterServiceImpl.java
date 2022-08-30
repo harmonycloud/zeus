@@ -126,6 +126,10 @@ public class ClusterServiceImpl implements ClusterService {
     @Value("${k8s.component.crd:/usr/local/zeus-pv/components/platform/crds/middlewarecluster-crd.yaml}")
     private String middlewareCrdYamlPath;
 
+    public static void refreshCache(){
+        CLUSTER_MAP.clear();
+    }
+
     @Override
     public List<MiddlewareClusterDTO> listClusters() {
         return listClusters(false, null);
