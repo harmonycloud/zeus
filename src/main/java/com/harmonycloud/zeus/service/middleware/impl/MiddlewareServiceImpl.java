@@ -517,13 +517,14 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
         JSONObject upgradeImage = SerializationUtils.clone(upgradeValues.getJSONObject("image"));
         JSONObject currentImage = SerializationUtils.clone(currentValues.getJSONObject("image"));
-        if (currentImage.getString("repository") != null) {
-            upgradeImage.put("repository", currentImage.getString("repository"));
-        }
-        JSONObject resImage = YamlUtil.jsonMerge(upgradeImage, currentImage);
-
         JSONObject resValues = YamlUtil.jsonMerge(currentValues, upgradeValues);
-        resValues.put("image", resImage);
+        if (currentImage != null) {
+            if (currentImage.getString("repository") != null) {
+                upgradeImage.put("repository", currentImage.getString("repository"));
+            }
+            JSONObject resImage = YamlUtil.jsonMerge(upgradeImage, currentImage);
+            resValues.put("image", resImage);
+        }
         resValues.put("chart-version", upgradeChartVersion);
         // 执行升级
         Middleware middleware = detail(clusterId, namespace, name, type);
