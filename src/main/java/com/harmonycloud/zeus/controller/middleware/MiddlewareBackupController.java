@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.controller.middleware;
 
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
+import com.harmonycloud.caas.common.model.MiddlewareIncBackupDto;
 import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import io.swagger.annotations.Api;
@@ -100,9 +101,9 @@ public class MiddlewareBackupController {
     })
     @GetMapping("/{backupName}/inc")
     @Authority(power = 1)
-    public BaseResult getIncBackupInfo(@PathVariable("clusterId") String clusterId,
-                                       @PathVariable("namespace") String namespace,
-                                       @PathVariable("backupName") String backupName) {
+    public BaseResult<MiddlewareIncBackupDto> getIncBackupInfo(@PathVariable("clusterId") String clusterId,
+                                                               @PathVariable("namespace") String namespace,
+                                                               @PathVariable("backupName") String backupName) {
         return BaseResult.ok(middlewareBackupService.getIncBackupInfo(clusterId, namespace, backupName));
     }
 
@@ -177,8 +178,9 @@ public class MiddlewareBackupController {
                                     @PathVariable("namespace") String namespace,
                                     @RequestParam("type") String type,
                                     @RequestParam("middlewareName") String middlewareName,
-                                    @RequestParam("backupName") String backupName) {
-        middlewareBackupService.createRestore(clusterId, namespace, middlewareName, type, backupName);
+                                    @RequestParam(value = "backupName", required = false) String backupName,
+                                    @RequestParam(value = "restoreTime", required = false) String restoreTime) {
+        middlewareBackupService.createRestore(clusterId, namespace, middlewareName, type, backupName, restoreTime);
         return BaseResult.ok();
     }
 

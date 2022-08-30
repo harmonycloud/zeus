@@ -216,7 +216,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName) {
+    public void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String restoreTime) {
     }
 
     @Override

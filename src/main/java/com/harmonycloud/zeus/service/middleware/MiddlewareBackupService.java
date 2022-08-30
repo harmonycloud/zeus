@@ -105,9 +105,10 @@ public interface MiddlewareBackupService {
      * @param middlewareName 服务名称
      * @param type           服务类型
      * @param backupName     备份记录名称
+     * @param restoreTime    恢复时间
      * @return
      */
-    void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName);
+    void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String restoreTime);
 
     /**
      * 删除中间件备份相关信息，包括定时备份、立即备份、备份恢复

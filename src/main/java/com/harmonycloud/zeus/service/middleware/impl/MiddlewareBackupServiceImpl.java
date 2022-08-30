@@ -402,8 +402,48 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName) {
-        createMiddlewareRestore(clusterId, namespace, type, middlewareName, backupName);
+    public void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String restoreTime) {
+        MiddlewareRestoreCR crd = new MiddlewareRestoreCR();
+        ObjectMeta meta = new ObjectMeta();
+        meta.setNamespace(namespace);
+        meta.setName(getRestoreName(type, middlewareName));
+        // 设置对应label
+        Map<String, String> backupLabel = getBackupLabel(middlewareName, type);
+        Map<String, String> middlewareLabel = getBackupLabel(middlewareName, type);
+        backupLabel.putAll(middlewareLabel);
+        meta.setLabels(backupLabel);
+        crd.setMetadata(meta);
+
+        MiddlewareRestoreSpec spec = new MiddlewareRestoreSpec();
+        List<String> args = new ArrayList<>();
+        List<Map<String, String>> envList = new ArrayList<>();
+        Map<String, Object> map = new HashMap<>();
+        args.add("--backupResultName=" + backupName);
+        args.add("--backupNamespace=" + namespace);
+        if (StringUtils.isEmpty(restoreTime)){
+            args.add("--mode=full");
+        }else {
+            args.add("--mode=inc");
+            Map<String, String> envMap = new HashMap<>();
+            envMap.put(NAME, RESTORE_TIME);
+            envMap.put(VALUE, restoreTime);
+            envList.add(envMap);
+            map.put(ENV, envList);
+        }
+        List<Map<String, Object>> customRestores = new ArrayList<>();
+        map.put("args", args);
+        customRestores.add(map);
+
+        spec.setName(middlewareName);
+        spec.setType(middlewareCrTypeService.findByType(type));
+        spec.setCustomRestores(customRestores);
+        crd.setSpec(spec);
+        try {
+            restoreCRDService.create(clusterId, crd);
+        } catch (Exception e){
+            log.error("集群{} 中间件{} 克隆实例失败", clusterId, middlewareName, e);
+            throw new BusinessException(ErrorMessage.BACKUP_RESTORE_FAILED);
+        }
     }
 
     @Override
@@ -546,7 +586,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         recordList.addAll(backupRecords);
         recordList.addAll(backupSchedules);
         // 获取任务对应的中文名称
-        setTaskName(recordList, clusterId);
+        setTaskName(recordList, clusterId, null);
         // 根据关键词进行过滤
         if (StringUtils.isNotEmpty(keyword)) {
             recordList = recordList.stream().filter(record -> record.getTaskName().contains(keyword))
@@ -608,11 +648,17 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             .filter(record -> (StringUtils.isNotEmpty(record.getOwner()) && record.getOwner().equals(backupName))
                 || (StringUtils.isNotEmpty(record.getBackupName()) && record.getBackupName().equals(backupName)))
             .collect(Collectors.toList());
+        // 获取backupId
+        MiddlewareBackupScheduleCR cr = backupScheduleCRDService.get(clusterId, namespace, backupName);
+        String backupId = null;
+        if (!CollectionUtils.isEmpty(cr.getMetadata().getLabels()) && cr.getMetadata().getLabels().containsKey(BACKUP_ID)){
+            backupId = cr.getMetadata().getLabels().get(BACKUP_ID);
+        }
         // 根据时间降序
         recordList.sort((o1, o2) -> o1.getBackupTime() == null ? -1
             : o2.getBackupTime() == null ? -1 : o2.getBackupTime().compareTo(o1.getBackupTime()));
         // 获取任务对应的中文名称
-        setTaskName(recordList, clusterId);
+        setTaskName(recordList, clusterId, backupId);
         // 设置备份记录名称
         for (int i = 0; i < recordList.size(); i++) {
             recordList.get(i).setRecordName(recordList.get(i).getTaskName() + "-" + "记录" + (i + 1));
@@ -662,7 +708,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     /**
      * 查询数据库记录的备份任务名称
      */
-    public void setTaskName(List<MiddlewareBackupRecord> recordList, String clusterId) {
+    public void setTaskName(List<MiddlewareBackupRecord> recordList, String clusterId, String backupId) {
         // 查询任务对应的中文名称
         QueryWrapper<BeanMiddlewareBackupName> wrapper =
             new QueryWrapper<BeanMiddlewareBackupName>().eq("cluster_id", clusterId);
@@ -671,55 +717,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             .collect(Collectors.toMap(BeanMiddlewareBackupName::getBackupId, BeanMiddlewareBackupName::getBackupName));
         // 设置备份任务名称
         recordList = recordList.stream().peek(record -> {
-            if (backupNameMap.containsKey(record.getBackupId())) {
+            if (StringUtils.isNotEmpty(record.getBackupId()) && backupNameMap.containsKey(record.getBackupId())) {
                 record.setTaskName(backupNameMap.get(record.getBackupId()));
+            } else if (StringUtils.isNotEmpty(backupId) && backupNameMap.containsKey(backupId)) {
+                record.setTaskName(backupNameMap.get(backupId));
             } else {
                 record.setTaskName(record.getBackupName());
             }
         }).collect(Collectors.toList());
-    }
-
-    /**
-     * 创建中间件恢复
-     *
-     * @param clusterId 集群id
-     * @param namespace 分区
-     * @param type 中间件类型
-     * @param middlewareName 源中间件名称
-     * @param backupName 备份名称
-     */
-    public void createMiddlewareRestore(String clusterId, String namespace, String type, String middlewareName,
-        String backupName) {
-        MiddlewareRestoreCR crd = new MiddlewareRestoreCR();
-        ObjectMeta meta = new ObjectMeta();
-        meta.setNamespace(namespace);
-        meta.setName(getRestoreName(type, middlewareName));
-        // 设置对应label
-        Map<String, String> backupLabel = getBackupLabel(middlewareName, type);
-        Map<String, String> middlewareLabel = getBackupLabel(middlewareName, type);
-        backupLabel.putAll(middlewareLabel);
-        meta.setLabels(backupLabel);
-        crd.setMetadata(meta);
-
-        MiddlewareRestoreSpec spec = new MiddlewareRestoreSpec();
-        List<String> args = new ArrayList<>();
-        args.add("--backupResultName=" + backupName);
-        args.add("--backupNamespace=" + namespace);
-        List<Map<String, List<String>>> customRestores = new ArrayList<>();
-        Map<String, List<String>> map = new HashMap<>();
-        map.put("args", args);
-        customRestores.add(map);
-
-        spec.setName(middlewareName);
-        spec.setType(middlewareCrTypeService.findByType(type));
-        spec.setCustomRestores(customRestores);
-        crd.setSpec(spec);
-        try {
-            restoreCRDService.create(clusterId, crd);
-        } catch (Exception e){
-            log.error("集群{} 中间件{} 克隆实例失败", clusterId, middlewareName, e);
-            throw new BusinessException(ErrorMessage.BACKUP_RESTORE_FAILED);
-        }
     }
 
     /**
