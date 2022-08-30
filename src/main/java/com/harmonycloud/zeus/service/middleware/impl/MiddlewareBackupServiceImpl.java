@@ -141,14 +141,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public void updateBackupSchedule(MiddlewareBackupDTO backupDTO) {
         // 是否为mysqlBackup
-        if (backupDTO.getMysqlBackup()) {
+        if (backupDTO.getMysqlBackup() != null && backupDTO.getMysqlBackup()) {
             mysqlAdapterService.updateBackupSchedule(backupDTO);
         } else {
             MiddlewareBackupScheduleCR middlewareBackupScheduleCR = backupScheduleCRDService
-                .get(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getBackupScheduleName());
+                .get(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getBackupName());
             MiddlewareBackupScheduleSpec spec = middlewareBackupScheduleCR.getSpec();
             // 更新cron表达式
-            if (StringUtils.isNotEmpty(backupDTO.getCron())){
+            if (StringUtils.isNotEmpty(backupDTO.getCron())) {
                 spec.getSchedule().setCron(CronUtils.parseUtcCron(backupDTO.getCron()));
             }
             // 更新备份保留时间
@@ -163,22 +163,24 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 throw new BusinessException(ErrorMessage.MIDDLEWARE_BACKUP_UPDATE_FAILED);
             }
             // 增量备份更新
-            if (backupDTO.getIncrement() && StringUtils.isNotEmpty(backupDTO.getTime())) {
+            if (backupDTO.getIncrement() != null && backupDTO.getIncrement()
+                && StringUtils.isNotEmpty(backupDTO.getTime())) {
                 MiddlewareBackupScheduleCR incBackupScheduleCr = backupScheduleCRDService.get(backupDTO.getClusterId(),
-                    backupDTO.getNamespace(), backupDTO.getBackupScheduleName() + "-" + INCR);
+                    backupDTO.getNamespace(), backupDTO.getBackupName() + "-" + INCR);
                 if (incBackupScheduleCr == null) {
                     throw new BusinessException(ErrorMessage.BACKUP_FILE_NOT_EXIST);
                 }
                 // 更新开启/关闭
-                if (backupDTO.getTurnOff() != null && backupDTO.getTurnOff()){
+                if (backupDTO.getTurnOff() != null && backupDTO.getTurnOff()) {
                     incBackupScheduleCr.getSpec().setPause("on");
                 }
                 // 更新时间
-                if (StringUtils.isNotEmpty(backupDTO.getTime())){
-                    incBackupScheduleCr.getSpec().getSchedule().setCron(CronUtils.convertTimeToCron(backupDTO.getTime()));
+                if (StringUtils.isNotEmpty(backupDTO.getTime())) {
+                    incBackupScheduleCr.getSpec().getSchedule()
+                        .setCron(CronUtils.convertTimeToCron(backupDTO.getTime()));
                 }
                 try {
-                    backupScheduleCRDService.update(backupDTO.getClusterId(), middlewareBackupScheduleCR);
+                    backupScheduleCRDService.update(backupDTO.getClusterId(), incBackupScheduleCr);
                 } catch (IOException e) {
                     log.error("中间件{}增量备份设置更新失败", backupDTO.getMiddlewareName());
                     throw new BusinessException(ErrorMessage.MIDDLEWARE_BACKUP_UPDATE_FAILED);
