@@ -112,7 +112,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     public void createIncBackup(String clusterId, String namespace, String backupName, String time) {
         MiddlewareBackupScheduleCR cr = backupScheduleCRDService.get(clusterId, namespace, backupName);
         ObjectMeta meta = new ObjectMeta();
-        meta.setName(backupName + "-incr");
+        meta.setName(backupName + "-" + INCR);
         meta.setNamespace(namespace);
         cr.setMetadata(meta);
         cr.setStatus(null);
@@ -163,8 +163,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 throw new BusinessException(ErrorMessage.MIDDLEWARE_BACKUP_UPDATE_FAILED);
             }
             // 增量备份更新
-            if (backupDTO.getIncrement() != null && backupDTO.getIncrement()
-                && StringUtils.isNotEmpty(backupDTO.getTime())) {
+            if (backupDTO.getIncrement() != null && backupDTO.getIncrement()) {
                 MiddlewareBackupScheduleCR incBackupScheduleCr = backupScheduleCRDService.get(backupDTO.getClusterId(),
                     backupDTO.getNamespace(), backupDTO.getBackupName() + "-" + INCR);
                 if (incBackupScheduleCr == null) {
@@ -630,12 +629,15 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             return middlewareIncBackupDto;
         }
         // 获取时间
+        if (cr.getStatus() == null || cr.getStatus().getStorageProvider() == null){
+            throw new BusinessException(ErrorMessage.INC_BACKUP_SCHEDULE_ERROR);
+        }
         JSONObject storageProvider = cr.getStatus().getStorageProvider();
         String type = middlewareCrTypeService.findTypeByCrType(cr.getSpec().getType());
         JSONObject time = storageProvider.getJSONObject(type);
 
         // 封装数据
-        middlewareIncBackupDto.setStatus(cr.getSpec().getPause()).setStartTime(time.getString("startTime"))
+        middlewareIncBackupDto.setPause(cr.getSpec().getPause()).setStartTime(time.getString("startTime"))
             .setEndTime(time.getString("endTime"))
             .setTime(CronUtils.convertCronToTime(cr.getSpec().getSchedule().getCron()));
         return middlewareIncBackupDto;
