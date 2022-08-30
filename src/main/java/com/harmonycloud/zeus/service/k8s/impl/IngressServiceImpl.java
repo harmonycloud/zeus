@@ -319,8 +319,11 @@ public class IngressServiceImpl implements IngressService {
         }
         // 查询traefik 端口
         List<IngressComponentDto> traefikComponentDtoList = ingressComponentService.list(cluster.getId(), IngressEnum.TRAEFIK.getName());
-        traefikComponentDtoList.forEach(ingress -> {
+        for (IngressComponentDto ingress : traefikComponentDtoList) {
             JSONObject installedValues = helmChartService.getInstalledValues(ingress.getIngressClassName(), ingress.getNamespace(), clusterService.findById(ingress.getClusterId()));
+            if(installedValues == null){
+                continue;
+            }
             JSONArray additionalArguments = installedValues.getJSONArray("additionalArguments");
             additionalArguments.forEach(arg -> {
                 String[] strs = arg.toString().split(":");
@@ -328,7 +331,7 @@ public class IngressServiceImpl implements IngressService {
                     portSet.add(Integer.parseInt(strs[1]));
                 }
             });
-        });
+        }
         return portSet;
     }
 
