@@ -210,6 +210,9 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
                 ingressComponents.getNamespace(), clusterService.findById(ingressComponents.getClusterId()));
         IngressComponentDto ingressComponentDto = new IngressComponentDto();
         BeanUtils.copyProperties(ingressComponents, ingressComponentDto);
+        if (values == null) {
+            return ingressComponentDto;
+        }
         JSONObject ports = values.getJSONObject("ports");
         ingressComponentDto.setHttpPort(ports.getJSONObject("web").getString("port"));
         ingressComponentDto.setHttpsPort(ports.getJSONObject("websecure").getString("port"));

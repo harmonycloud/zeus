@@ -242,6 +242,7 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
         beanIngressComponents.setName(ingressComponentDto.getIngressClassName());
         beanIngressComponents.setStatus(status);
         beanIngressComponents.setCreateTime(new Date());
+        beanIngressComponents.setType(ingressComponentDto.getType());
         beanIngressComponentsMapper.insert(beanIngressComponents);
     }
 

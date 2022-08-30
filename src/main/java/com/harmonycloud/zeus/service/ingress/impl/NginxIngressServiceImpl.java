@@ -259,11 +259,13 @@ public class NginxIngressServiceImpl extends AbstractBaseOperator implements Ngi
                 ingressComponents.getNamespace(), clusterService.findById(ingressComponents.getClusterId()));
         IngressComponentDto ingressComponentDto = new IngressComponentDto();
         BeanUtils.copyProperties(ingressComponents, ingressComponentDto);
+        if (values == null) {
+            return ingressComponentDto;
+        }
         ingressComponentDto.setHttpPort(values.getString("httpPort"));
         ingressComponentDto.setHttpsPort(values.getString("httpsPort"));
         ingressComponentDto.setHealthzPort(values.getString("healthzPort"));
         ingressComponentDto.setDefaultServerPort(values.getString("defaultServerPort"));
-
         return ingressComponentDto;
     }
 
