@@ -265,8 +265,11 @@ public class IngressServiceImpl implements IngressService {
         // 校验traefik additionalArguments配置
         Set<String> portSet = new HashSet<>();
         List<IngressComponentDto> traefikComponentDtoList = ingressComponentService.list(cluster.getId(), IngressEnum.TRAEFIK.getName());
-        traefikComponentDtoList.forEach(ingress -> {
+        for (IngressComponentDto ingress : traefikComponentDtoList) {
             JSONObject installedValues = helmChartService.getInstalledValues(ingress.getIngressClassName(), ingress.getNamespace(), clusterService.findById(ingress.getClusterId()));
+            if (installedValues == null) {
+                continue;
+            }
             JSONArray additionalArguments = installedValues.getJSONArray("additionalArguments");
             additionalArguments.forEach(arg -> {
                 String[] strs = arg.toString().split(":");
@@ -274,7 +277,7 @@ public class IngressServiceImpl implements IngressService {
                     portSet.add(strs[1]);
                 }
             });
-        });
+        }
         if (!CollectionUtils.isEmpty(portSet)) {
             serviceList.forEach(serviceDTO -> {
                 if (portSet.contains(Integer.parseInt(serviceDTO.getExposePort()))) {
