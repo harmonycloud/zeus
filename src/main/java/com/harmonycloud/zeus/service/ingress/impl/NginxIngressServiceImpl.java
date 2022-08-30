@@ -7,6 +7,7 @@ import com.harmonycloud.caas.common.enums.ComponentsEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.IngressEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.AffinityDTO;
 import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.IngressComponentDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
@@ -14,6 +15,7 @@ import com.harmonycloud.caas.common.model.middleware.MiddlewareValues;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.tool.cmd.HelmChartUtil;
+import com.harmonycloud.tool.collection.JsonUtils;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.bean.BeanIngressComponents;
@@ -25,6 +27,7 @@ import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.PodService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.K8sConvert;
+import io.fabric8.kubernetes.api.model.NodeAffinity;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -35,10 +38,7 @@ import org.springframework.util.CollectionUtils;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_TWO;
@@ -114,8 +114,13 @@ public class NginxIngressServiceImpl extends AbstractBaseOperator implements Ngi
         }
         // toleration
         if (!CollectionUtils.isEmpty(ingressComponentDto.getTolerations())) {
-            JSONArray toleration = K8sConvert.convertToleration2Json(ingressComponentDto.getTolerations());
-            values.put("tolerations", toleration);
+            JSONArray tolerationAry = K8sConvert.convertToleration2Json(ingressComponentDto.getTolerations());
+            values.put("tolerations", tolerationAry);
+            StringBuffer sbf = new StringBuffer();
+            for (String toleration : ingressComponentDto.getTolerations()) {
+                sbf.append(toleration).append(",");
+            }
+            values.put("tolerationAry", sbf.substring(0, sbf.length()));
         }
         // install
         helmChartService.installComponents(ingressComponentDto.getIngressClassName(), MIDDLEWARE_OPERATOR, path, values,
@@ -266,6 +271,20 @@ public class NginxIngressServiceImpl extends AbstractBaseOperator implements Ngi
         ingressComponentDto.setHttpsPort(values.getString("httpsPort"));
         ingressComponentDto.setHealthzPort(values.getString("healthzPort"));
         ingressComponentDto.setDefaultServerPort(values.getString("defaultServerPort"));
+        // node affinity
+        if (JsonUtils.isJsonObject(values.getString("affinity"))) {
+            JSONObject nodeAffinity = values.getJSONObject("affinity");
+            if (!CollectionUtils.isEmpty(nodeAffinity)) {
+                List<AffinityDTO> dto = K8sConvert.convertNodeAffinity(
+                        JSONObject.parseObject(nodeAffinity.toJSONString(), NodeAffinity.class), AffinityDTO.class);
+                ingressComponentDto.setNodeAffinity(dto);
+            }
+        }
+        // toleration
+        if (values.getString("tolerationAry") != null) {
+            String tolerationAry = values.getString("tolerationAry");
+            ingressComponentDto.setTolerations(new ArrayList<>(Arrays.asList(tolerationAry.split(","))));
+        }
         return ingressComponentDto;
     }
 
