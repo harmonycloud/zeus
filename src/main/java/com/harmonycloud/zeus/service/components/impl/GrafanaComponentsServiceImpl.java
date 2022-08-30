@@ -11,6 +11,7 @@ import com.harmonycloud.tool.cmd.HelmChartUtil;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.GrafanaService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
 import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
@@ -137,6 +138,16 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
     @Override
     protected List<PodInfo> getPodInfoList(String clusterId) {
         return podService.list(clusterId, "monitoring", ComponentsEnum.GRAFANA.getName());
+    }
+
+    @Override
+    public void setStatus(ClusterComponentsDto clusterComponentsDto, MiddlewareClusterDTO cluster){
+        if (cluster.getMonitor() == null || cluster.getMonitor().getGrafana() == null
+                || StringUtils.isAnyEmpty(cluster.getMonitor().getGrafana().getPort(),
+                cluster.getMonitor().getGrafana().getHost(),
+                cluster.getMonitor().getGrafana().getProtocol())) {
+            clusterComponentsDto.setStatus(7);
+        }
     }
 
 

@@ -40,7 +40,7 @@ public class BeanClusterComponents implements Serializable {
     private String component;
 
     /**
-     * 组件状态：0-未安装接入 1-已接入 2-安装中 3-运行正常 4-运行异常 5-卸载中 6-安装失败
+     * * 组件状态：0-未安装接入 1-已接入 2-安装中 3-运行正常 4-运行异常 5-卸载中 6-安装失败 7-信息不完整
      */
     @TableField("status")
     private Integer status;

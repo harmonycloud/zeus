@@ -49,4 +49,13 @@ public interface BaseComponentsService {
      */
     void updateStatus(MiddlewareClusterDTO cluster, BeanClusterComponents beanClusterComponents);
 
+    /**
+     * 处理特殊状态
+     *
+     * @param clusterComponentsDto 集群组件对象
+     * @param cluster 集群对象
+     * @return List<ClusterComponentsDto>
+     */
+    void setStatus(ClusterComponentsDto clusterComponentsDto, MiddlewareClusterDTO cluster);
+
 }

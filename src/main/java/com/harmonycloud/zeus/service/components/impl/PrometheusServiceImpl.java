@@ -9,6 +9,7 @@ import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitor;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitorInfo;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
@@ -118,6 +119,16 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
         if (cluster.getMonitor().getPrometheus() != null
             || helmListInfos.stream().anyMatch(helm -> "prometheus".equals(helm.getName()))) {
             throw new BusinessException(ErrorMessage.EXIST);
+        }
+    }
+
+    @Override
+    public void setStatus(ClusterComponentsDto clusterComponentsDto, MiddlewareClusterDTO cluster){
+        if (cluster.getMonitor() == null || cluster.getMonitor().getPrometheus() == null
+                || StringUtils.isAnyEmpty(cluster.getMonitor().getPrometheus().getPort(),
+                cluster.getMonitor().getPrometheus().getHost(),
+                cluster.getMonitor().getPrometheus().getProtocol())) {
+            clusterComponentsDto.setStatus(7);
         }
     }
 }

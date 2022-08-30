@@ -78,6 +78,10 @@ public abstract class AbstractBaseOperator {
         beanClusterComponentsMapper.updateById(beanClusterComponents);
     }
 
+    public void setStatus(ClusterComponentsDto clusterComponentsDto, MiddlewareClusterDTO cluster){
+
+    }
+
     /**
      * 获取仓库地址
      */
