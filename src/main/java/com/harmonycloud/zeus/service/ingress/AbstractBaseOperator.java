@@ -189,18 +189,19 @@ public abstract class AbstractBaseOperator {
     protected abstract List<PodInfo> getPodInfoList(String clusterId);
 
     protected void upgrade(MiddlewareValues middlewareValues, String ingressName,String chartPath){
-        String path = componentsPath + File.separator + "traefik";
+        String path = componentsPath + File.separator + chartPath;
         Yaml yaml = new Yaml();
         JSONObject newValues;
         try {
             newValues = yaml.loadAs(middlewareValues.getValues(), JSONObject.class);
         } catch (Exception e) {
+            log.error("更新ingress yaml出错了", e);
             throw new BusinessException(ErrorMessage.PARSE_VALUES_FAILED);
         }
         JSONObject oldValues = helmChartService.getInstalledValues(ingressName,
                 middlewareValues.getNamespace(), clusterService.findById(middlewareValues.getClusterId()));
 
-        String helmPath  = uploadPath + File.separator + "traefik";
+        String helmPath  = uploadPath + File.separator + chartPath;
         try {
             FileUtils.copyDirectory(new File(path), new File(helmPath));
         } catch (IOException e) {

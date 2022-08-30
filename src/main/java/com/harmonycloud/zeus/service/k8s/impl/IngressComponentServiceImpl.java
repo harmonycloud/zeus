@@ -203,6 +203,7 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
     @Override
     public void upgrade(MiddlewareValues middlewareValues) {
         BeanIngressComponents ingressComponents = getAndCheckExists(middlewareValues.getClusterId(), middlewareValues.getName());
+        middlewareValues.setNamespace(ingressComponents.getNamespace());
         BaseIngressService service =
                 getOperator(BaseIngressService.class, BaseIngressService.class, ingressComponents.getType());
         service.upgrade(middlewareValues, ingressComponents.getName());
