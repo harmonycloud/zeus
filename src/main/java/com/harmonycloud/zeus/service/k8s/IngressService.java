@@ -122,7 +122,7 @@ public interface IngressService {
      * @param keyword
      * @return
      */
-    List listAllIngress(String clusterId, String namespace, String keyword);
+    List<IngressDTO> listAllIngress(String clusterId, String namespace, String keyword);
 
     /**
      * 获取一个未被占用的ingress端口

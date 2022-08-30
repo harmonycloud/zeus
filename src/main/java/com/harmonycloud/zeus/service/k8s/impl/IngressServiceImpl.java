@@ -120,7 +120,7 @@ public class IngressServiceImpl implements IngressService {
                     }
                 }else{
                     IngressRouteTCPList routeTCPList = ingressRouteTCPWrapper.list(clusterId, namespace, null);
-                    ingressDtoList.addAll(convertIngressDTOList(ingress, routeTCPList, null, null));
+                    ingressDtoList.addAll(convertIngressDTOList(ingress, routeTCPList, null));
                 }
             }
         }
@@ -467,8 +467,9 @@ public class IngressServiceImpl implements IngressService {
                             });
                         }
                     } else if (IngressEnum.TRAEFIK.getName().equals(ingress.getType())) {
-                        IngressRouteTCPList routeTCPList = ingressRouteTCPWrapper.list(clusterId, namespace, getIngressTCPLabels(middlewareName, type));
-                        resList.addAll(convertIngressDTOList(ingress, routeTCPList, type, null));
+                        IngressRouteTCPList routeTCPList = ingressRouteTCPWrapper.list(clusterId, namespace,
+                                getIngressTCPLabels(middlewareName, type, ingress.getName()));
+                        resList.addAll(convertIngressDTOList(ingress, routeTCPList,null));
                     }
                 }
             }
@@ -577,10 +578,11 @@ public class IngressServiceImpl implements IngressService {
      * @param middlewareName
      * @return
      */
-    private Map<String, String> getIngressTCPLabels(String middlewareName, String type) {
+    private Map<String, String> getIngressTCPLabels(String middlewareName, String type, String ingressName) {
         Map<String, String> labels = new HashMap<>(1);
         labels.put("middlewareName", middlewareName);
         labels.put("middlewareType", type);
+        labels.put("ingressName", ingressName);
         return labels;
     }
 
@@ -1133,7 +1135,7 @@ public class IngressServiceImpl implements IngressService {
         if (StringUtils.isNotBlank(ingressDTO.getName())) {
             ingressRouteTCPName = ingressDTO.getName();
         }
-        Map<String, String> labels = getIngressTCPLabels(ingressDTO.getMiddlewareName(), ingressDTO.getMiddlewareType());
+        Map<String, String> labels = getIngressTCPLabels(ingressDTO.getMiddlewareName(), ingressDTO.getMiddlewareType(), ingressName);
         return new IngressRouteTCPCR(ingressRouteTCPName, ingressDTO.getNamespace(),
                 ingressName + "-p" + serviceDTO.getExposePort(), serviceDTO.getServiceName(), Integer.parseInt(serviceDTO.getServicePort()), labels);
     }
@@ -1334,7 +1336,7 @@ public class IngressServiceImpl implements IngressService {
         return resList;
     }
 
-    private List<IngressDTO> convertIngressDTOList(IngressComponentDto ingressDTO, IngressRouteTCPList ingressRouteTCPList, String type, String aliasName) {
+    private List<IngressDTO> convertIngressDTOList(IngressComponentDto ingressDTO, IngressRouteTCPList ingressRouteTCPList, String aliasName) {
         List<IngressDTO> ingressDTOList = new ArrayList<>();
         String address ;
         if (StringUtils.isNotBlank(ingressDTO.getAddress())) {
@@ -1360,10 +1362,10 @@ public class IngressServiceImpl implements IngressService {
                 ingress.setServiceList(serviceList);
                 ingress.setExposeIP(finalAddress);
                 ingress.setMiddlewareName(ingressRouteTCPCR.getMetadata().getLabels().get("middlewareName"));
-                ingress.setMiddlewareType(type);
+                ingress.setMiddlewareType(ingressRouteTCPCR.getMetadata().getLabels().get("middlewareType"));
                 ingress.setMiddlewareNickName(aliasName);
                 ingress.setName(ingressRouteTCPCR.getMetadata().getName());
-                ingress.setNamespace(ingress.getNamespace());
+                ingress.setNamespace(ingressRouteTCPCR.getMetadata().getNamespace());
                 ingress.setClusterId(ingress.getClusterId());
                 ingress.setProtocol(Protocol.TCP.getValue());
                 ingress.setIngressClassName(ingressDTO.getIngressClassName());
@@ -1461,7 +1463,7 @@ public class IngressServiceImpl implements IngressService {
     }
 
     @Override
-    public List listAllIngress(String clusterId, String namespace, String keyword) {
+    public List<IngressDTO> listAllIngress(String clusterId, String namespace, String keyword) {
         // 获取所有ingress
         List<IngressDTO> ingressDTOLists = list(clusterId, namespace, null);
         // 添加ingress pod信息

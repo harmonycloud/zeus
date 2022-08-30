@@ -177,7 +177,9 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
     @Override
     public List<IngressDTO> ports(String clusterId, String ingressClassName) {
         BeanIngressComponents ingressComponents = getAndCheckExists(clusterId, ingressClassName);
-        return ingressService.listAllIngress(clusterId, null, null);
+        List<IngressDTO> ingressDTOList = ingressService.listAllIngress(clusterId, null, null);
+        return ingressDTOList.stream().filter(ingressDTO ->
+                ingressDTO.getIngressClassName().equals(ingressComponents.getIngressClassName())).collect(Collectors.toList());
     }
 
     @Override
