@@ -302,7 +302,7 @@ public class K8sConvert {
             case "NotIn":
                 return "!=";
             case "In":
-                return " In ";
+                return "=";
             default:
                 return "";
         }
