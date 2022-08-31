@@ -87,8 +87,18 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
     }
 
     @Override
+    public List<IngressComponentDto> list(String clusterId) {
+        return list(clusterId, false);
+    }
+
+    @Override
     public List<IngressComponentDto> list(String clusterId,boolean filterUnavailable) {
         return list(clusterId, null, filterUnavailable);
+    }
+
+    @Override
+    public List<IngressComponentDto> list(String clusterId, String type) {
+        return list(clusterId, type, false);
     }
 
     @Override
@@ -117,9 +127,6 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
             //查询traefik起始端口
             if (IngressEnum.TRAEFIK.getName().equals(ic.getType())) {
                 setTraefikStartPort(ic);
-                if (StringUtils.isBlank(ic.getStartPort()) || StringUtils.isBlank(ic.getEndPort())) {
-                    return null;
-                }
             }
             if (ic.getStatus() == NUM_TWO) {
                 ic.setSeconds(DateUtils.getIntervalDays(new Date(), ic.getCreateTime()));

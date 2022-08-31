@@ -40,7 +40,22 @@ public interface IngressComponentService {
      *
      * @param clusterId 集群id
      */
+    List<IngressComponentDto> list(String clusterId);
+
+    /**
+     * 获取集群ingress组件列表
+     *
+     * @param clusterId 集群id
+     */
     List<IngressComponentDto> list(String clusterId, boolean filterUnavailable);
+
+    /**
+     * 获取集群指定类型的ingress组件列表
+     * @param clusterId
+     * @param type
+     * @return
+     */
+    List<IngressComponentDto> list(String clusterId, String type);
 
     /**
      * 获取集群指定类型的ingress组件列表
