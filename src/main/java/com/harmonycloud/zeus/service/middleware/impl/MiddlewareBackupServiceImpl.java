@@ -486,11 +486,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
         // 封装数据
         List<MiddlewareBackupRecord> recordList = new ArrayList<>();
-        Map<String, String> incBackup = new HashMap<>();
+        Map<String, MiddlewareBackupScheduleCR> incBackup = new HashMap<>();
         for (MiddlewareBackupScheduleCR schedule : scheduleList.getItems()) {
             // 处理增量备份数据
             if (isIncBackup(schedule)){
-                incBackup.put(schedule.getMetadata().getName(), schedule.getSpec().getSchedule().getCron());
+                incBackup.put(schedule.getMetadata().getName(), schedule);
                 continue;
             }
 
@@ -500,9 +500,15 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
         // 设置增量备份
         recordList.forEach(record -> {
-            if (incBackup.containsKey(record.getBackupName() + "-" + INCR)){
+            if (incBackup.containsKey(record.getBackupName() + "-" + INCR)) {
                 record.setIncrement(true);
-                record.setTime(CronUtils.convertTimeToCron(incBackup.get(record.getBackupName() + "-" + INCR)));
+                MiddlewareBackupScheduleCR incSchedule = incBackup.get(record.getBackupName() + "-" + INCR);
+                record.setTime(CronUtils.convertCronToTime(incSchedule.getSpec().getSchedule().getCron()));
+                String backupTime = checkTimeExist(incSchedule);
+                if (StringUtils.isEmpty(record.getBackupTime())
+                    || (StringUtils.isNotEmpty(backupTime) && record.getBackupTime().compareTo(backupTime) < 0)) {
+                    record.setBackupTime(backupTime);
+                }
             }
         });
         // 查询遗留mysqlBackup内容
@@ -883,6 +889,16 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         backupRecord.setBackupMode("single");
         backupRecord.setSchedule(false);
         backupRecord.setOwner(backup.getMetadata().getLabels().get(OWNER));
+    }
+
+    public String checkTimeExist(MiddlewareBackupScheduleCR schedule){
+        String backupTime = null;
+        String type = middlewareCrTypeService.findTypeByCrType(schedule.getSpec().getType());
+        if (schedule.getStatus() != null && schedule.getStatus().getStorageProvider() != null && schedule.getStatus().getStorageProvider().containsKey(type)){
+            JSONObject time = schedule.getStatus().getStorageProvider().getJSONObject(type);
+            return time.getString("endTime");
+        }
+        return backupTime;
     }
 
 }
