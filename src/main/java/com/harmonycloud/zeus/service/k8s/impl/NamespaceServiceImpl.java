@@ -225,6 +225,9 @@ public class NamespaceServiceImpl implements NamespaceService {
     @Override
     public void updateAvailableDomain(String clusterId, String name, boolean availableDomain) {
         io.fabric8.kubernetes.api.model.Namespace namespace = namespaceWrapper.get(clusterId, name);
+        if (namespace.getMetadata().getLabels() == null) {
+            namespace.getMetadata().setLabels(new HashMap<>());
+        }
         Map<String, String> labels = namespace.getMetadata().getLabels();
         labels.put(NamespaceConstant.KEY_AVAILABLE_DOMAIN, String.valueOf(availableDomain));
         namespaceWrapper.save(clusterId, namespace);
