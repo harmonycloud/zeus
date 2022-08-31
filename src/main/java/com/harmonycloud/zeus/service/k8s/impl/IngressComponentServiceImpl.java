@@ -87,12 +87,12 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
     }
 
     @Override
-    public List<IngressComponentDto> list(String clusterId) {
-        return list(clusterId, null);
+    public List<IngressComponentDto> list(String clusterId,boolean filterUnavailable) {
+        return list(clusterId, null, filterUnavailable);
     }
 
     @Override
-    public List<IngressComponentDto> list(String clusterId, String type) {
+    public List<IngressComponentDto> list(String clusterId, String type, boolean filterUnavailable) {
         // 获取数据库状态记录
         QueryWrapper<BeanIngressComponents> wrapper =
                 new QueryWrapper<BeanIngressComponents>().eq("cluster_id", clusterId);
@@ -102,14 +102,18 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
         List<BeanIngressComponents> ingressComponentsList = beanIngressComponentsMapper.selectList(wrapper);
         // 更新状态
         updateStatus(clusterId, ingressComponentsList);
+        // 过滤掉不存在helm的ingress
+        if (filterUnavailable) {
+            ingressComponentsList = ingressComponentsList.stream().filter(ingress -> {
+                JSONObject values = helmChartService.getInstalledValues(ingress.getName(), ingress.getNamespace(), clusterService.findById(ingress.getClusterId()));
+                return values != null;
+            }).collect(Collectors.toList());
+        }
+
         // 封装数据
         return ingressComponentsList.stream().map(ingress -> {
             IngressComponentDto ic = new IngressComponentDto();
             BeanUtils.copyProperties(ingress, ic);
-            JSONObject values = helmChartService.getInstalledValues(ingress.getName(), ingress.getNamespace(), clusterService.findById(ingress.getClusterId()));
-            if (values == null) {
-                return null;
-            }
             //查询traefik起始端口
             if (IngressEnum.TRAEFIK.getName().equals(ic.getType())) {
                 setTraefikStartPort(ic);

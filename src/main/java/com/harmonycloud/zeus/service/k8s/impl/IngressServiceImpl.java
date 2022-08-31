@@ -266,7 +266,13 @@ public class IngressServiceImpl implements IngressService {
         Set<String> portSet = new HashSet<>();
         List<IngressComponentDto> traefikComponentDtoList = ingressComponentService.list(cluster.getId(), IngressEnum.TRAEFIK.getName());
         for (IngressComponentDto ingress : traefikComponentDtoList) {
-            JSONObject installedValues = helmChartService.getInstalledValues(ingress.getIngressClassName(), ingress.getNamespace(), clusterService.findById(ingress.getClusterId()));
+            JSONObject installedValues = null;
+            try {
+                installedValues = helmChartService.getInstalledValues(ingress.getIngressClassName(), ingress.getNamespace(), clusterService.findById(ingress.getClusterId()));
+            } catch (Exception e) {
+                log.error("查询traefik values失败了", e);
+                continue;
+            }
             if (installedValues == null) {
                 continue;
             }

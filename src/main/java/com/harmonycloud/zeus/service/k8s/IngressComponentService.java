@@ -40,7 +40,7 @@ public interface IngressComponentService {
      *
      * @param clusterId 集群id
      */
-    List<IngressComponentDto> list(String clusterId);
+    List<IngressComponentDto> list(String clusterId, boolean filterUnavailable);
 
     /**
      * 获取集群指定类型的ingress组件列表
@@ -48,7 +48,7 @@ public interface IngressComponentService {
      * @param type
      * @return
      */
-    List<IngressComponentDto> list(String clusterId, String type);
+    List<IngressComponentDto> list(String clusterId, String type, boolean filterUnavailable);
 
     /**
      * 获取集群ingress信息
