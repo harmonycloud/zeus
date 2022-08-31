@@ -391,27 +391,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         return middlewareCrTypeService.findByType(type) + "-" + middlewareName;
     }
 
-    /**
-     * 获取中间件恢复名称
-     *
-     * @param type
-     * @param middlewareName
-     * @return
-     */
-    public String getRestoreName(String type, String middlewareName) {
-        return middlewareCrTypeService.findByType(type) + "-" + middlewareName + "-restore" + UUIDUtils.get8UUID();
-    }
-
     @Override
     public void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String restoreTime) {
         MiddlewareRestoreCR crd = new MiddlewareRestoreCR();
         ObjectMeta meta = new ObjectMeta();
         meta.setNamespace(namespace);
-        meta.setName(getRestoreName(type, middlewareName));
+        meta.setName(middlewareName + "-restore");
         // 设置对应label
         Map<String, String> backupLabel = getBackupLabel(middlewareName, type);
-        Map<String, String> middlewareLabel = getBackupLabel(middlewareName, type);
-        backupLabel.putAll(middlewareLabel);
         meta.setLabels(backupLabel);
         crd.setMetadata(meta);
 
