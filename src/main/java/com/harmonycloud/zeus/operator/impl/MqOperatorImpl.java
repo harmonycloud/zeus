@@ -71,7 +71,7 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
             case DLEDGER:
                 clusterInfo.put("allMaster", false);
                 clusterInfo.put("membersPerGroup", middleware.getRocketMQParam().getReplicas());
-                clusterInfo.put("groupReplica", 1);
+                clusterInfo.put("groupReplica", middleware.getRocketMQParam().getGroup());
                 break;
             default:
         }
