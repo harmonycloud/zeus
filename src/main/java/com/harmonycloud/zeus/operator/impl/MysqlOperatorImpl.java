@@ -232,6 +232,9 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             // 是否自动切换
             MysqlCluster mysqlCluster = mysqlClusterWrapper.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
             middleware.setAutoSwitch(mysqlCluster.getSpec().getPassiveSwitched() == null || !mysqlCluster.getSpec().getPassiveSwitched());
+            if (mysqlCluster.getStatus() != null && mysqlCluster.getStatus().getLastChangeMaster() != null){
+                middleware.setLastAutoSwitchTime(DateUtils.parseUTCDate(mysqlCluster.getStatus().getLastChangeMaster()));
+            }
             // 读写分离
             if (values.containsKey("proxy")){
                 ReadWriteProxy readWriteProxy = new ReadWriteProxy();
