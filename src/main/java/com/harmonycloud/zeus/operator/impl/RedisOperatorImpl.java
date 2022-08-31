@@ -181,7 +181,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         convertCommonByHelmChart(middleware, values);
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
         convertRegistry(middleware,cluster);
-        // 双活服务过滤掉
+        // 双活服务过滤掉主机容忍和主机亲和
         if(namespaceService.checkAvailableDomain(middleware.getClusterId(), middleware.getNamespace())){
             super.filterActiveActiveToleration(middleware);
         }
