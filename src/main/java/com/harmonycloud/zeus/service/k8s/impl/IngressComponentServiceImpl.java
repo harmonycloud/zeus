@@ -106,9 +106,16 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
         return ingressComponentsList.stream().map(ingress -> {
             IngressComponentDto ic = new IngressComponentDto();
             BeanUtils.copyProperties(ingress, ic);
+            JSONObject values = helmChartService.getInstalledValues(ingress.getName(), ingress.getNamespace(), clusterService.findById(ingress.getClusterId()));
+            if (values == null) {
+                return null;
+            }
             //查询traefik起始端口
             if (IngressEnum.TRAEFIK.getName().equals(ic.getType())) {
                 setTraefikStartPort(ic);
+                if (StringUtils.isBlank(ic.getStartPort()) || StringUtils.isBlank(ic.getEndPort())) {
+                    return null;
+                }
             }
             if (ic.getStatus() == NUM_TWO) {
                 ic.setSeconds(DateUtils.getIntervalDays(new Date(), ic.getCreateTime()));
