@@ -197,7 +197,7 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
         BeanIngressComponents ingressComponents = getAndCheckExists(clusterId, ingressClassName);
         List<IngressDTO> ingressDTOList = ingressService.listAllIngress(clusterId, null, null);
         return ingressDTOList.stream().filter(ingressDTO ->
-                ingressDTO.getIngressClassName().equals(ingressComponents.getIngressClassName())).collect(Collectors.toList());
+                ingressComponents.getIngressClassName().equals(ingressDTO.getIngressClassName())).collect(Collectors.toList());
     }
 
     @Override

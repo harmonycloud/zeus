@@ -111,15 +111,17 @@ public class IngressServiceImpl implements IngressService {
         List<IngressComponentDto> ingressComponentDtoList = ingressComponentService.list(clusterId);
         if (!CollectionUtils.isEmpty(ingressComponentDtoList)) {
             for (IngressComponentDto ingress : ingressComponentDtoList) {
-                if(IngressEnum.NGINX.getName().equals(ingress.getType())){
+                if (IngressEnum.NGINX.getName().equals(ingress.getType())) {
                     if (StringUtils.isNotEmpty(ingress.getConfigMapName())) {
                         // tcp routing list
                         ConfigMap configMap =
                                 configMapWrapper.get(clusterId, ingress.getNamespace(), ingress.getConfigMapName());
                         dealTcpRoutine(clusterId, namespace, configMap, ingressDtoList, ingress);
                     }
-                }else{
-                    IngressRouteTCPList routeTCPList = ingressRouteTCPWrapper.list(clusterId, namespace, null);
+                } else {
+                    Map<String, String> labels = new HashMap<>();
+                    labels.put("ingressName", ingress.getName());
+                    IngressRouteTCPList routeTCPList = ingressRouteTCPWrapper.list(clusterId, namespace, labels);
                     ingressDtoList.addAll(convertIngressDTOList(ingress, routeTCPList, null));
                 }
             }
@@ -183,8 +185,8 @@ public class IngressServiceImpl implements IngressService {
         checkAndAllocateServicePort(clusterId, ingressDTO);
         if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_INGRESS)) {
             try {
-                QueryWrapper<BeanIngressComponents> queryWrapper =  new QueryWrapper<>();
-                queryWrapper.eq("cluster_id",  ingressDTO.getClusterId());
+                QueryWrapper<BeanIngressComponents> queryWrapper = new QueryWrapper<>();
+                queryWrapper.eq("cluster_id", ingressDTO.getClusterId());
                 queryWrapper.eq("ingress_class_name", ingressDTO.getIngressClassName());
                 BeanIngressComponents ingressComponents = beanIngressComponentsMapper.selectOne(queryWrapper);
                 if (ingressDTO.getProtocol().equals(Protocol.HTTP.getValue())) {
@@ -327,7 +329,7 @@ public class IngressServiceImpl implements IngressService {
         List<IngressComponentDto> traefikComponentDtoList = ingressComponentService.list(cluster.getId(), IngressEnum.TRAEFIK.getName());
         for (IngressComponentDto ingress : traefikComponentDtoList) {
             JSONObject installedValues = helmChartService.getInstalledValues(ingress.getIngressClassName(), ingress.getNamespace(), clusterService.findById(ingress.getClusterId()));
-            if(installedValues == null){
+            if (installedValues == null) {
                 continue;
             }
             JSONArray additionalArguments = installedValues.getJSONArray("additionalArguments");
@@ -368,7 +370,7 @@ public class IngressServiceImpl implements IngressService {
                 IngressComponentDto ingressComponentDto =
                         ingressComponentService.get(clusterId, ingressDTO.getIngressClassName());
                 if (ingressComponentDto != null) {
-                    if(IngressEnum.NGINX.getName().equals(ingressComponentDto.getType())){
+                    if (IngressEnum.NGINX.getName().equals(ingressComponentDto.getType())) {
                         if (StringUtils.isEmpty(ingressComponentDto.getConfigMapName())) {
                             return;
                         }
@@ -378,7 +380,7 @@ public class IngressServiceImpl implements IngressService {
                         removeTcpPort(configMap, ingressDTO.getServiceList());
                         configMapWrapper.update(clusterId,
                                 getIngressTcpNamespace(cluster, ingressDTO.getIngressClassName()), configMap);
-                    }else if(IngressEnum.TRAEFIK.getName().equals(ingressComponentDto.getType())){
+                    } else if (IngressEnum.TRAEFIK.getName().equals(ingressComponentDto.getType())) {
                         ingressRouteTCPWrapper.delete(clusterId, namespace, name);
                     }
                 }
@@ -462,7 +464,7 @@ public class IngressServiceImpl implements IngressService {
             List<IngressComponentDto> ingressComponentDtoList = ingressComponentService.list(clusterId);
             if (!CollectionUtils.isEmpty(ingressComponentDtoList)) {
                 for (IngressComponentDto ingress : ingressComponentDtoList) {
-                    if(IngressEnum.NGINX.getName().equals(ingress.getType())){
+                    if (IngressEnum.NGINX.getName().equals(ingress.getType())) {
                         if (StringUtils.isNotEmpty(ingress.getConfigMapName())) {
                             JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
                             String middlewareAliasName = values.getOrDefault("aliasName", "").toString();
@@ -478,7 +480,7 @@ public class IngressServiceImpl implements IngressService {
                     } else if (IngressEnum.TRAEFIK.getName().equals(ingress.getType())) {
                         IngressRouteTCPList routeTCPList = ingressRouteTCPWrapper.list(clusterId, namespace,
                                 getIngressTCPLabels(middlewareName, type, ingress.getName()));
-                        resList.addAll(convertIngressDTOList(ingress, routeTCPList,null));
+                        resList.addAll(convertIngressDTOList(ingress, routeTCPList, null));
                     }
                 }
             }
@@ -584,6 +586,7 @@ public class IngressServiceImpl implements IngressService {
 
     /**
      * 获取中间件ingressroutetcp label
+     *
      * @param middlewareName
      * @return
      */
@@ -1347,7 +1350,7 @@ public class IngressServiceImpl implements IngressService {
 
     private List<IngressDTO> convertIngressDTOList(IngressComponentDto ingressDTO, IngressRouteTCPList ingressRouteTCPList, String aliasName) {
         List<IngressDTO> ingressDTOList = new ArrayList<>();
-        String address ;
+        String address;
         if (StringUtils.isNotBlank(ingressDTO.getAddress())) {
             address = ingressDTO.getAddress();
         } else {
