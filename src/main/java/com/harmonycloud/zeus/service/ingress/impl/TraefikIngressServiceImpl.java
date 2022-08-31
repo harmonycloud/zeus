@@ -222,7 +222,7 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
         ingressComponentDto.setEndPort(values.getString("endPort"));
         // node affinity
         if (JsonUtils.isJsonObject(values.getString("affinity"))) {
-            JSONObject nodeAffinity = values.getJSONObject("affinity");
+            JSONObject nodeAffinity = values.getJSONObject("affinity").getJSONObject("nodeAffinity");
             if (!CollectionUtils.isEmpty(nodeAffinity)) {
                 List<AffinityDTO> dto = K8sConvert.convertNodeAffinity(
                         JSONObject.parseObject(nodeAffinity.toJSONString(), NodeAffinity.class), AffinityDTO.class);

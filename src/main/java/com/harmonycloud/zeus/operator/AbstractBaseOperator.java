@@ -1170,6 +1170,10 @@ public abstract class AbstractBaseOperator {
         }
         JSONArray jsonArray = K8sConvert.convertToleration2Json(middleware.getTolerations());
         values.put("tolerations", jsonArray);
+        if (values.getJSONObject("proxy") != null && MiddlewareTypeEnum.MYSQL.getType().equals(middleware.getType())) {
+            JSONObject proxy = values.getJSONObject("proxy");
+            proxy.put("tolerations", jsonArray);
+        }
         StringBuilder sbf = new StringBuilder();
         for (String toleration : middleware.getTolerations()) {
             sbf.append(toleration).append(",");

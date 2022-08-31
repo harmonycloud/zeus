@@ -273,7 +273,7 @@ public class NginxIngressServiceImpl extends AbstractBaseOperator implements Ngi
         ingressComponentDto.setDefaultServerPort(values.getString("defaultServerPort"));
         // node affinity
         if (JsonUtils.isJsonObject(values.getString("affinity"))) {
-            JSONObject nodeAffinity = values.getJSONObject("affinity");
+            JSONObject nodeAffinity = values.getJSONObject("affinity").getJSONObject("nodeAffinity");;
             if (!CollectionUtils.isEmpty(nodeAffinity)) {
                 List<AffinityDTO> dto = K8sConvert.convertNodeAffinity(
                         JSONObject.parseObject(nodeAffinity.toJSONString(), NodeAffinity.class), AffinityDTO.class);
