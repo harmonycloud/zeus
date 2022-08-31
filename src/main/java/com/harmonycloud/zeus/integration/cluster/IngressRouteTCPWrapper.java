@@ -40,7 +40,7 @@ public class IngressRouteTCPWrapper {
      */
     public void create(String clusterId, IngressRouteTCPCR ingressRouteTCPCR) {
         try {
-            K8sClient.getClient(clusterId).customResource(CONTEXT).create(ingressRouteTCPCR.getMetadata().getNamespace(),
+            K8sClient.getClient(clusterId).customResource(CONTEXT).createOrReplace(ingressRouteTCPCR.getMetadata().getNamespace(),
                     JSONObject.parseObject(JSONObject.toJSONString(ingressRouteTCPCR)));
         } catch (Exception e) {
             log.error("创建IngressRouteTCP出错了", e);

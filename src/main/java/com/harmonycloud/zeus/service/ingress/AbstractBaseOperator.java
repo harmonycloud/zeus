@@ -214,11 +214,11 @@ public abstract class AbstractBaseOperator {
         String targetValuesYamlName =
                 "target" + "-" + System.currentTimeMillis() + ".yaml";
 
-        String tempValuesYamlPath = tempValuesYamlDir + File.separator + tempValuesYamlName;
-        String targetValuesYamlPath = tempValuesYamlDir + File.separator + targetValuesYamlName;
+        String tempValuesYamlPath = tempValuesYamlDir + tempValuesYamlName;
+        String targetValuesYamlPath = tempValuesYamlDir + targetValuesYamlName;
 
-        String tempValuesYaml = yaml.dumpAsMap(newValues);
-        String targetValuesYaml = yaml.dumpAsMap(oldValues);
+        String tempValuesYaml = yaml.dumpAsMap(oldValues);
+        String targetValuesYaml = yaml.dumpAsMap(newValues);
         try {
             FileUtil.writeToLocal(tempValuesYamlDir, tempValuesYamlName, tempValuesYaml);
             FileUtil.writeToLocal(tempValuesYamlDir, targetValuesYamlName, targetValuesYaml);
