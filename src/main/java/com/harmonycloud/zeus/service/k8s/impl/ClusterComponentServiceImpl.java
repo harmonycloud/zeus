@@ -32,8 +32,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_FIVE;
-import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_TWO;
+import static com.harmonycloud.caas.common.constants.CommonConstant.*;
 
 /**
  * @author dengyulong
@@ -181,7 +180,9 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
             if (cm.getStatus() == NUM_TWO){
                 dto.setSeconds(DateUtils.getIntervalDays(new Date(), dto.getCreateTime()));
             }
-            getOperator(BaseComponentsService.class, BaseComponentsService.class, dto.getComponent()).setStatus(dto, cluster);
+            if (cm.getStatus() == NUM_ONE || cm.getStatus() == NUM_THREE || cm.getStatus() == NUM_FOUR){
+                getOperator(BaseComponentsService.class, BaseComponentsService.class, dto.getComponent()).setStatus(dto, cluster);
+            }
             return dto;
         }).collect(Collectors.toList());
     }
