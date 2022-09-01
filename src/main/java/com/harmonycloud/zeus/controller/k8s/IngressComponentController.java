@@ -6,10 +6,12 @@ import com.harmonycloud.caas.common.model.middleware.IngressDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareValues;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.service.k8s.IngressComponentService;
+import com.harmonycloud.zeus.service.k8s.NodeService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +28,8 @@ public class IngressComponentController {
     
     @Autowired
     private IngressComponentService ingressComponentService;
+    @Autowired
+    private NodeService nodeService;
 
     @ApiOperation(value = "添加集群ingress", notes = "添加集群ingress")
     @ApiImplicitParams({

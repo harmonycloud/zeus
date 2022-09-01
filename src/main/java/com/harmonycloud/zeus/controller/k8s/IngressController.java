@@ -4,6 +4,7 @@ import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.middleware.IngressDTO;
 import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.k8s.IngressService;
+import com.harmonycloud.zeus.service.k8s.NodeService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -26,6 +27,8 @@ public class IngressController {
 
     @Autowired
     private IngressService ingressService;
+    @Autowired
+    private NodeService nodeService;
 
     @ApiOperation(value = "查询中间件对外访问列表", notes = "查询中间件对外访问列表")
     @ApiImplicitParams({

@@ -227,7 +227,7 @@ public class NodeServiceImpl implements NodeService {
     @Override
     public String getNodeIp(String clusterId) {
         List<io.fabric8.kubernetes.api.model.Node> nodes = nodeWrapper.list(clusterId);
-        if (CollectionUtils.isEmpty(nodes)) {
+        if (!CollectionUtils.isEmpty(nodes)) {
             List<NodeAddress> addresses = nodes.get(0).getStatus().getAddresses();
             List<NodeAddress> nodeAddresses = addresses.stream().filter(nodeAddress -> "InternalIP".equals(nodeAddress.getType())).collect(Collectors.toList());
             return nodeAddresses.get(0).getAddress();
