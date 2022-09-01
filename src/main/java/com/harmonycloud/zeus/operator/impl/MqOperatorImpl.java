@@ -97,6 +97,14 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
 
             JSONObject clusterInfo = values.getJSONObject(CLUSTER);
             middleware.setMode(clusterInfo.getString(MODE));
+
+            RocketMQParam rocketMQParam = middleware.getRocketMQParam();
+            if (rocketMQParam == null){
+                rocketMQParam = new RocketMQParam();
+            }
+            rocketMQParam.setReplicas(clusterInfo.getInteger("membersPerGroup"));
+            rocketMQParam.setGroup(clusterInfo.getInteger("groupReplica"));
+            middleware.setRocketMQParam(rocketMQParam);
         }
         middleware.setManagePlatform(true);
         return middleware;
@@ -360,4 +368,5 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
     public void create(Middleware middleware, MiddlewareClusterDTO cluster) {
         super.create(middleware, cluster);
     }
+
 }
