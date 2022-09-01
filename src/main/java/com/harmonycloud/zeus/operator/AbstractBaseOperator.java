@@ -1182,6 +1182,21 @@ public abstract class AbstractBaseOperator {
     }
 
     /**
+     * @description 过滤掉双活主机容忍和主机亲和
+     * @author  liyinlong
+     * @since 2022/8/31 3:13 下午
+     * @param middleware
+     */
+    public void filterActiveActiveToleration(Middleware middleware) {
+        if (!CollectionUtils.isEmpty(middleware.getTolerations())) {
+            List<String> tolerations = middleware.getTolerations().stream().filter(item -> !item.contains("active-active")).collect(Collectors.toList());
+            middleware.setTolerations(tolerations);
+            List<AffinityDTO> affinityDTOList = middleware.getNodeAffinity().stream().filter(item -> !item.getLabel().contains("zone!=zoneC")).collect(Collectors.toList());
+            middleware.setNodeAffinity(affinityDTOList);
+        }
+    }
+
+    /**
      * 设置values.yaml双活参数
      * @param values
      * @param middleware

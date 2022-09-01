@@ -73,8 +73,8 @@ public class IngressComponentController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class)
     })
     @GetMapping
-    public BaseResult<List<IngressComponentDto>> list(@PathVariable("clusterId") String clusterId) {
-        return BaseResult.ok(ingressComponentService.list(clusterId));
+    public BaseResult<List<IngressComponentDto>> list(@PathVariable("clusterId") String clusterId, @RequestParam(value = "filterUnavailable", defaultValue = "false") boolean filterUnavailable) {
+        return BaseResult.ok(ingressComponentService.list(clusterId, filterUnavailable));
     }
 
     @ApiOperation(value = "删除指定ingress组件", notes = "删除指定ingress组件")
