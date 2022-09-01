@@ -77,4 +77,12 @@ public interface NodeService {
      * @return clusterNodeResourceDto
      */
     ClusterNodeResourceDto getSumNodeResource(String clusterId, List<Node> nodes, Boolean all);
+
+    /**
+     * 获取一个node ip
+     * @param clusterId
+     * @return
+     */
+    String getNodeIp(String clusterId);
+
 }

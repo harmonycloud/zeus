@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
@@ -42,6 +43,21 @@ public class IngressRouteTCPWrapper {
         try {
             K8sClient.getClient(clusterId).customResource(CONTEXT).createOrReplace(ingressRouteTCPCR.getMetadata().getNamespace(),
                     JSONObject.parseObject(JSONObject.toJSONString(ingressRouteTCPCR)));
+        } catch (Exception e) {
+            log.error("创建IngressRouteTCP出错了", e);
+        }
+    }
+
+    /**
+     *
+     * @param clusterId
+     * @param ingressRouteTCPCRList
+     */
+    public void benchCreate(String clusterId, List<IngressRouteTCPCR> ingressRouteTCPCRList) {
+        try {
+            for (IngressRouteTCPCR ingressRouteTCPCR : ingressRouteTCPCRList) {
+                create(clusterId, ingressRouteTCPCR);
+            }
         } catch (Exception e) {
             log.error("创建IngressRouteTCP出错了", e);
         }
