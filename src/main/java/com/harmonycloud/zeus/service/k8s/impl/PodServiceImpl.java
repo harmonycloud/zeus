@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
+import com.harmonycloud.caas.common.constants.DateStyle;
 import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
@@ -18,6 +19,7 @@ import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
+import com.harmonycloud.zeus.util.DateUtil;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -95,7 +97,11 @@ public class PodServiceImpl implements PodService {
         if (CollectionUtils.isEmpty(list)) {
             return new ArrayList<>(0);
         }
-        return list.stream().map(this::convertPodInfo).collect(Collectors.toList());
+        List<PodInfo> podInfoList = list.stream().map(this::convertPodInfo).collect(Collectors.toList());
+        podInfoList.forEach(podInfo -> {
+            podInfo.setCreateTime(DateUtil.utc2Local(podInfo.getCreateTime(), "yyyy-MM-dd HH:mm:ss", DateStyle.YYYY_MM_DD_HH_MM_SS));
+        });
+        return podInfoList;
     }
 
     @Override
