@@ -246,7 +246,7 @@ public class MysqlUserServiceImpl implements MysqlUserService {
     @Override
     public boolean nativeUpdatePassword(Connection con, String user, String newPassword) {
         QueryRunner qr = new QueryRunner();
-        String sql = String.format("SET PASSWORD FOR '%s'@'%s' = PASSWORD ('%s'); ", user, "%", newPassword);
+        String sql = String.format("ALTER USER '%s'@'%s' IDENTIFIED WITH MYSQL_NATIVE_PASSWORD BY '%s';",user, "%", newPassword);
         try {
             qr.execute(con, sql);
             return true;

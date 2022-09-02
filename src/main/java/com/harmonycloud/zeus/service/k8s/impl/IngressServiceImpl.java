@@ -587,7 +587,7 @@ public class IngressServiceImpl implements IngressService {
         if (StringUtils.isNotBlank(ingressComponentDto.getAddress())) {
             ingressPodIpSet.add(ingressComponentDto.getAddress());
         } else {
-            podInfoList = listIngressPod(clusterId, ingressComponentDto.getNamespace(), ingressComponentDto.getIngressClassName());
+            podInfoList = listIngressPod(clusterId, ingressComponentDto.getNamespace(), ingressComponentDto.getName());
             podInfoList = podInfoList.stream().filter(podInfo -> "Running".equals(podInfo.getStatus())
                     && StringUtils.isNotBlank(podInfo.getHostIp())).collect(Collectors.toList());
             podInfoList.forEach(podInfo -> {
