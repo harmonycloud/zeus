@@ -646,9 +646,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 || (StringUtils.isNotEmpty(record.getBackupName()) && record.getBackupName().equals(backupName)))
             .collect(Collectors.toList());
         // 获取backupId
-        MiddlewareBackupScheduleCR cr = backupScheduleCRDService.get(clusterId, namespace, backupName);
         String backupId = null;
-        if (!CollectionUtils.isEmpty(cr.getMetadata().getLabels()) && cr.getMetadata().getLabels().containsKey(BACKUP_ID)){
+        MiddlewareBackupScheduleCR cr = backupScheduleCRDService.get(clusterId, namespace, backupName);
+        if (cr != null && !CollectionUtils.isEmpty(cr.getMetadata().getLabels()) && cr.getMetadata().getLabels().containsKey(BACKUP_ID)){
             backupId = cr.getMetadata().getLabels().get(BACKUP_ID);
         }
         // 根据时间降序
