@@ -618,20 +618,21 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         MiddlewareBackupScheduleCR cr = backupScheduleCRDService.get(clusterId, namespace, backupName + "-incr");
         MiddlewareIncBackupDto middlewareIncBackupDto = new MiddlewareIncBackupDto();
         if (cr == null) {
-            middlewareIncBackupDto.setBackupName(backupName + "-incr").setStartTime("off");
+            middlewareIncBackupDto.setBackupName(backupName + "-incr");
             return middlewareIncBackupDto;
         }
         // 获取时间
-        if (cr.getStatus() == null || cr.getStatus().getStorageProvider() == null){
+        if (cr.getStatus() == null || cr.getStatus().getStorageProvider() == null) {
             throw new BusinessException(ErrorMessage.INC_BACKUP_SCHEDULE_ERROR);
         }
         JSONObject storageProvider = cr.getStatus().getStorageProvider();
         String type = middlewareCrTypeService.findTypeByCrType(cr.getSpec().getType());
         JSONObject time = storageProvider.getJSONObject(type);
 
+        Date startTime = DateUtils.parseUTCDate(time.getString("startTime"));
+        Date endTime = DateUtils.parseUTCDate(time.getString("endTime"));
         // 封装数据
-        middlewareIncBackupDto.setPause(cr.getSpec().getPause()).setStartTime(time.getString("startTime"))
-            .setEndTime(time.getString("endTime"))
+        middlewareIncBackupDto.setPause(cr.getSpec().getPause()).setStartTime(startTime).setEndTime(endTime)
             .setTime(CronUtils.convertCronToTime(cr.getSpec().getSchedule().getCron()));
         return middlewareIncBackupDto;
     }
