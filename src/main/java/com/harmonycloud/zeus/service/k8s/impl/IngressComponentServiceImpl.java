@@ -20,6 +20,7 @@ import com.harmonycloud.zeus.service.k8s.IngressComponentService;
 import com.harmonycloud.zeus.service.k8s.IngressService;
 import com.harmonycloud.zeus.service.k8s.PodService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
+import com.harmonycloud.zeus.util.MathUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -230,7 +231,7 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
     }
 
     @Override
-    public List<Integer> portCheck(String clusterId, String startPort) {
+    public String portCheck(String clusterId, String startPort) {
         List<Integer> conflictPortList = new ArrayList<>();
         Set<Integer> usedPortSet = ingressService.getUsedPortSet(clusterService.findById(clusterId));
         for (int i = 0; i < 100; i++) {
@@ -239,7 +240,9 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
                 conflictPortList.add(port);
             }
         }
-        return conflictPortList;
+        conflictPortList.sort(Comparator.comparing(Integer::intValue));
+
+        return MathUtil.convert(conflictPortList);
     }
 
     private void setTraefikStartPort(IngressComponentDto ingressComponentDto) {
