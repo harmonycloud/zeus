@@ -508,6 +508,8 @@ dashboardsConfigMaps: {}
 ## ref: http://docs.grafana.org/installation/configuration/
 ##
 grafana.ini:
+  users:
+    default_theme: light
   paths:
     data: /var/lib/grafana/data
     logs: /var/log/grafana
