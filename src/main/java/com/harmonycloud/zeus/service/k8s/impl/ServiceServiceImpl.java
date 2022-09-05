@@ -160,7 +160,8 @@ public class ServiceServiceImpl implements ServiceService {
                 return servicePortDTOS.stream().filter(servicePortDTO ->
                         servicePortDTO.getServiceName().contains("predixy")).collect(Collectors.toList());
             } else {
-                return servicePortDTOS;
+                return servicePortDTOS.stream().filter(servicePortDTO ->
+                        !servicePortDTO.getServiceName().contains("sentinel")).collect(Collectors.toList());
             }
         } else if ("kafka".equals(type)) {
             return servicePortDTOS.stream().filter(servicePortDTO ->
