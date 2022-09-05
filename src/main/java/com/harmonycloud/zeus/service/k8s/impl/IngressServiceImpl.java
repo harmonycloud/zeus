@@ -1610,6 +1610,8 @@ public class IngressServiceImpl implements IngressService {
                     }))
                     .collect(Collectors.toList());
         }
+        // 设置服务网络类型和服务名称
+        setIngressExtralInfo(clusterId, ingressDTOLists);
         return ingressDTOLists;
     }
 
