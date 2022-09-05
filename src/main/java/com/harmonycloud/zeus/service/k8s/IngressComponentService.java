@@ -155,6 +155,6 @@ public interface IngressComponentService {
      * @param startPort
      * @return
      */
-    List<Integer> portCheck(String clusterId, String startPort);
+    String portCheck(String clusterId, String startPort);
 
 }
