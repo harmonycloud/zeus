@@ -89,8 +89,10 @@ public class MiddlewareServicePurposeUtil {
     public static String convertRedis(String middlewareName, String serviceName) {
         if (serviceName.contains("readonly")) {
             return "只读";
-        } else if (serviceName.contains("predixy") || serviceName.equals(middlewareName) || serviceName.equals(middlewareName + "-sentinel")) {
+        } else if (serviceName.equals(middlewareName) || serviceName.equals(middlewareName + "-sentinel")) {
             return "读写";
+        } else if (serviceName.contains("predixy")) {
+            return "读写分离";
         } else {
             return null;
         }
@@ -134,9 +136,9 @@ public class MiddlewareServicePurposeUtil {
         if (serviceName.contains("manager-svc")) {
             return "管理页面";
         } else if (serviceName.contains("external")) {
-            return "服务连接";
+            return "集群内访问";
         } else if (serviceName.equals(middlewareName + "-svc")) {
-            return "服务连接";
+            return "集群内访问";
         } else {
             return null;
         }
