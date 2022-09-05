@@ -123,6 +123,8 @@ public class MiddlewareServicePurposeUtil {
             return "服务代理";
         } else if (serviceName.contains("namesrv")) {
             return "服务连接";
+        } else if (serviceName.contains("master") || serviceName.contains("slave")) {
+            return "集群外访问";
         } else {
             return null;
         }

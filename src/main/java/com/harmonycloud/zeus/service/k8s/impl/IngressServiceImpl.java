@@ -1610,6 +1610,12 @@ public class IngressServiceImpl implements IngressService {
                     }))
                     .collect(Collectors.toList());
         }
+        // 设置服务网络类型(4层或7层)和服务暴露名称
+        setIngressExtralInfo(clusterId, ingressDTOLists);
+        // 设置中间件图片
+        for (IngressDTO ingressDTO : ingressDTOLists) {
+            setMiddlewareImage(ingressDTO);
+        }
         return ingressDTOLists;
     }
 
