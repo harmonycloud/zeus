@@ -64,7 +64,7 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
     public void integrate(IngressComponentDto ingressComponentDto) {
         // check exist
         QueryWrapper<BeanIngressComponents> wrapper = new QueryWrapper<BeanIngressComponents>().eq("ingress_class_name",
-                ingressComponentDto.getIngressClassName());
+                ingressComponentDto.getIngressClassName()).eq("cluster_id", ingressComponentDto.getClusterId());
         BeanIngressComponents beanIngressComponents = beanIngressComponentsMapper.selectOne(wrapper);
         if (beanIngressComponents != null) {
             throw new BusinessException(ErrorMessage.INGRESS_CLASS_EXISTED);
