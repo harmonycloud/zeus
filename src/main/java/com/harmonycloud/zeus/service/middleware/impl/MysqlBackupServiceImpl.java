@@ -82,13 +82,10 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
             record.setSourceType(MiddlewareTypeEnum.MYSQL.getType());
             record.setOwner(backup.getOwner());
             record.setSchedule(false);
+            record.setCreationTime(DateUtils.parseUTCDate(backup.getCreationTime()));
             // 获取备份时间
             if (backup.getBackupTime() != null) {
-                String backupTime = DateUtil.utc2Local(DateUtils.parseUTCDate(backup.getBackupTime()),
-                    DateType.YYYY_MM_DD_HH_MM_SS.getValue());
-                record.setBackupTime(backupTime);
-            } else {
-                record.setBackupTime("/");
+                record.setBackupTime(DateUtils.parseUTCDate(backup.getBackupTime()));
             }
             if (backup.getPhase() != null) {
                 switch (backup.getPhase()) {

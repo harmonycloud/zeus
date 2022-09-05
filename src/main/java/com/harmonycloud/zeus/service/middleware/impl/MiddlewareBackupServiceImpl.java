@@ -504,11 +504,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 record.setIncrement(true);
                 MiddlewareBackupScheduleCR incSchedule = incBackup.get(record.getBackupName() + "-" + INCR);
                 record.setTime(CronUtils.convertCronToTime(incSchedule.getSpec().getSchedule().getCron()));
-                String backupTime = checkTimeExist(incSchedule);
-                if (StringUtils.isEmpty(record.getBackupTime())
-                    || (StringUtils.isNotEmpty(backupTime) && record.getBackupTime().compareTo(backupTime) < 0)) {
-                    record.setBackupTime(backupTime);
-                }
             }
         });
         // 查询遗留mysqlBackup内容
@@ -573,6 +568,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         List<MiddlewareBackupRecord> backupRecords = listBackup(clusterId, namespace, middlewareName, type);
         // 获取定时备份任务
         List<MiddlewareBackupRecord> backupSchedules = listBackupSchedule(clusterId, namespace, type, middlewareName);
+        // 获取备份任务的最近备份时间
+        setBackupScheduleBackupTime(backupSchedules, backupRecords);
         // 过滤backupSchedule所产生的backup
         backupRecords = backupRecords.stream().filter(backupRecord -> StringUtils.isEmpty(backupRecord.getOwner()))
             .collect(Collectors.toList());
@@ -793,10 +790,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      */
     public void convertBackupScheduleToRecord(MiddlewareBackupScheduleCR schedule, MiddlewareBackupRecord backupRecord){
         MiddlewareBackupScheduleStatus backupStatus = schedule.getStatus();
-        // 获取备份时间
-        String backupTime = DateUtil.utc2Local(schedule.getMetadata().getCreationTimestamp(),
-                DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
-        backupRecord.setBackupTime(backupTime);
+        // 获取备份创建时间
+        Date creationTime = DateUtils.parseUTCDate(schedule.getMetadata().getCreationTimestamp());
+        backupRecord.setCreationTime(creationTime);
+        // 获取最近一次备份时间
         backupRecord.setNamespace(schedule.getMetadata().getNamespace());
         backupRecord.setBackupName(schedule.getMetadata().getName());
         backupRecord.setSchedule(true);
@@ -862,9 +859,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         backupRecord.setBackupId(backup.getMetadata().getLabels().get("backupId"));
 
         // 获取备份时间
-        String backupTime = DateUtil.utc2Local(backup.getMetadata().getCreationTimestamp(),
-            DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
-        backupRecord.setBackupTime(backupTime);
+        Date creationTime = DateUtils.parseUTCDate(backup.getMetadata().getCreationTimestamp());
+        backupRecord.setCreationTime(creationTime);
+        // 立即备份 备份时间使用创建时间
+        backupRecord.setBackupTime(creationTime);
         backupRecord.setNamespace(backup.getMetadata().getNamespace());
         backupRecord.setBackupName(backup.getMetadata().getName());
 
@@ -892,14 +890,24 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         backupRecord.setOwner(backup.getMetadata().getLabels().get(OWNER));
     }
 
-    public String checkTimeExist(MiddlewareBackupScheduleCR schedule){
-        String backupTime = null;
-        String type = middlewareCrTypeService.findTypeByCrType(schedule.getSpec().getType());
-        if (schedule.getStatus() != null && schedule.getStatus().getStorageProvider() != null && schedule.getStatus().getStorageProvider().containsKey(type)){
-            JSONObject time = schedule.getStatus().getStorageProvider().getJSONObject(type);
-            return time.getString("endTime");
+    /**
+     * 获取备份时间
+     */
+    public void setBackupScheduleBackupTime(List<MiddlewareBackupRecord> backupSchedules, List<MiddlewareBackupRecord> backupRecords){
+        // 获取由定时备份任务创建出来的备份任务
+        List<MiddlewareBackupRecord> backupWithOwner = backupRecords.stream().filter(record -> StringUtils.isNotEmpty(record.getOwner())).collect(Collectors.toList());
+        // 转换为map
+        Map<String, List<MiddlewareBackupRecord>> backupWithOwnerMap = backupWithOwner.stream().collect(Collectors.groupingBy(MiddlewareBackupRecord::getOwner));
+        // 根据是否存在备份记录，设置备份时间
+        for (MiddlewareBackupRecord record : backupSchedules){
+            if (backupWithOwnerMap.containsKey(record.getBackupName())){
+                List<MiddlewareBackupRecord> recordList = backupWithOwnerMap.get(record.getBackupName());
+                // 根据时间降序
+                recordList.sort((o1, o2) -> o1.getBackupTime() == null ? -1
+                        : o2.getBackupTime() == null ? -1 : o2.getBackupTime().compareTo(o1.getBackupTime()));
+                record.setBackupTime(recordList.get(0).getBackupTime());
+            }
         }
-        return backupTime;
     }
 
 }

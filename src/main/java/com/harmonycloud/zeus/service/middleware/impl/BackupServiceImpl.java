@@ -63,7 +63,8 @@ public class BackupServiceImpl implements BackupService {
                     .setEndPoint(backupCRD.getSpec().getStorageProvider().getMinio().getEndpoint())
                     .setAddressId(backupCRD.getMetadata().getLabels().get("addressId"))
                     .setBackupId(backupCRD.getMetadata().getLabels().get("backupId"))
-                    .setType(backupCRD.getMetadata().getLabels().get("type"));
+                    .setType(backupCRD.getMetadata().getLabels().get("type"))
+                    .setCreationTime(backupCRD.getMetadata().getCreationTimestamp());
 
             if (backupCRD.getMetadata().getLabels().containsKey("backup-schedule")) {
                 backup.setOwner(backupCRD.getMetadata().getLabels().get("backup-schedule"));

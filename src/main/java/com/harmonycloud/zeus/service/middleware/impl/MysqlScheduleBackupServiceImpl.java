@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.tool.date.DateUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -92,9 +93,9 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
         mysqlScheduleBackupCRList.forEach(schedule -> {
             MysqlScheduleBackupStatus backupStatus = schedule.getStatus();
             MiddlewareBackupRecord backupRecord = new MiddlewareBackupRecord();
-            String backupTime = DateUtil.utc2Local(schedule.getMetadata().getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
             backupRecord.setNamespace(schedule.getMetadata().getNamespace());
-            backupRecord.setBackupTime(backupTime);
+            backupRecord.setCreationTime(DateUtils.parseUTCDate(schedule.getMetadata().getCreationTimestamp()));
+            //backupRecord.setBackupTime(DateUtils.parseUTCDate(schedule.getMetadata().getCreationTimestamp()));
             backupRecord.setBackupName(schedule.getMetadata().getName());
             backupRecord.setSchedule(true);
             MysqlScheduleBackupSpec spec = schedule.getSpec();
