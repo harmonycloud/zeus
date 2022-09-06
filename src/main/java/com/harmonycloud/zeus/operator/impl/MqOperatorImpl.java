@@ -79,8 +79,10 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
         // jvm堆内存
         String mem = calculateMem(mqQuota.getLimitMemory(), "0.5", "m");
         JSONObject javaOpts = values.getJSONObject("javaOpts");
-        javaOpts.put("xms", mem);
-        javaOpts.put("xmx", mem);
+        if (javaOpts != null){
+            javaOpts.put("xms", mem);
+            javaOpts.put("xmx", mem);
+        }
     }
 
     @Override
