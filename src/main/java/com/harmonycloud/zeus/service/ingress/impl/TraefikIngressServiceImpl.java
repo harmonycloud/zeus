@@ -71,7 +71,7 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
         MiddlewareClusterDTO cluster = clusterService.findById(ingressComponentDto.getClusterId());
         // check exist
         super.checkIfExists(ingressComponentDto);
-        String repository = cluster.getRegistry().getRegistryAddress() + "/" + cluster.getRegistry().getChartRepo();
+        String repository = getRepository(cluster);
         // setValues
         String path = componentsPath + File.separator + "traefik";
         Yaml yaml = new Yaml();

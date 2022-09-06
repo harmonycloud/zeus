@@ -96,7 +96,7 @@ public abstract class AbstractBaseOperator {
         if (CollectionUtils.isEmpty(imageRepositoryDTOList)){
             throw new BusinessException(ErrorMessage.CLUSTER_NOT_ADD_REPOSITORY);
         }
-        return imageRepositoryDTOList.get(0).getAddress();
+        return imageRepositoryDTOList.get(0).getRegistryAddress() + "/" + imageRepositoryDTOList.get(0).getProject();
     }
 
     /**

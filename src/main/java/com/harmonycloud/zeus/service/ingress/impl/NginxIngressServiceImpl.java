@@ -74,7 +74,7 @@ public class NginxIngressServiceImpl extends AbstractBaseOperator implements Ngi
         MiddlewareClusterDTO cluster = clusterService.findById(ingressComponentDto.getClusterId());
         // check exist
         super.checkIfExists(ingressComponentDto);
-        String repository = cluster.getRegistry().getRegistryAddress() + "/" + cluster.getRegistry().getChartRepo();
+        String repository = getRepository(cluster);
         // setValues
         String path = componentsPath + File.separator + "ingress-nginx/charts/ingress-nginx";
         Yaml yaml = new Yaml();
