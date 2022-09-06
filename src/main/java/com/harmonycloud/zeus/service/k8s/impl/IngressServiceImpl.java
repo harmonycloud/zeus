@@ -1460,6 +1460,9 @@ public class IngressServiceImpl implements IngressService {
     }
 
     private List<IngressDTO> convertIngressDTOList(IngressComponentDto ingressDTO, IngressRouteTCPList ingressRouteTCPList, String aliasName) {
+        if (ingressRouteTCPList == null || CollectionUtils.isEmpty(ingressRouteTCPList.getItems())) {
+            return Collections.emptyList();
+        }
         List<IngressDTO> ingressDTOList = new ArrayList<>();
         String address;
         if (StringUtils.isNotBlank(ingressDTO.getAddress())) {
