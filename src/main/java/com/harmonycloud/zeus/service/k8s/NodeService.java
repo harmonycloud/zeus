@@ -32,4 +32,12 @@ public interface NodeService {
      * @return
      */
     List<String> listTaints(String clusterId);
+
+    /**
+     * 获取一个nodeip
+     * @param clusterId
+     * @return
+     */
+    String getNodeIp(String clusterId);
+
 }
