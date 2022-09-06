@@ -9,8 +9,10 @@ image:
   repository: harbor.middleware.com/middleware
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: v1.8.8
+  tag: v1.8.11
   kubectlTag: 1.21
+
+updateStrategy: "OnDelete"
 
 kubectl:
   installCRDs: true
