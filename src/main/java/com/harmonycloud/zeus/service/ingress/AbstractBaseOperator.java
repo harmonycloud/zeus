@@ -6,6 +6,7 @@ import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.IngressComponentDto;
+import com.harmonycloud.caas.common.model.middleware.ImageRepositoryDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareValues;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
@@ -17,6 +18,7 @@ import com.harmonycloud.zeus.dao.BeanClusterComponentsMapper;
 import com.harmonycloud.zeus.dao.BeanIngressComponentsMapper;
 import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
 import com.harmonycloud.zeus.service.k8s.*;
+import com.harmonycloud.zeus.service.middleware.ImageRepositoryService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -68,6 +70,8 @@ public abstract class AbstractBaseOperator {
     protected BeanIngressComponentsMapper beanIngressComponentsMapper;
     @Autowired
     protected ClusterCertService clusterCertService;
+    @Autowired
+    private ImageRepositoryService imageRepositoryService;
 
     public void deploy(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto){
         //获取仓库地址
@@ -107,7 +111,11 @@ public abstract class AbstractBaseOperator {
      * 获取仓库地址
      */
     protected String getRepository(MiddlewareClusterDTO cluster){
-        return cluster.getRegistry().getRegistryAddress() + "/" + cluster.getRegistry().getChartRepo();
+        List<ImageRepositoryDTO> imageRepositoryDTOList = imageRepositoryService.list(cluster.getId());
+        if (CollectionUtils.isEmpty(imageRepositoryDTOList)){
+            throw new BusinessException(ErrorMessage.CLUSTER_NOT_ADD_REPOSITORY);
+        }
+        return imageRepositoryDTOList.get(0).getAddress();
     }
 
     /**

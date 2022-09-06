@@ -1,7 +1,10 @@
 package com.harmonycloud.zeus.service.components;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.ClusterComponentsDto;
+import com.harmonycloud.caas.common.model.middleware.ImageRepositoryDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.bean.BeanClusterComponents;
@@ -11,6 +14,7 @@ import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.IngressService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.k8s.PodService;
+import com.harmonycloud.zeus.service.middleware.ImageRepositoryService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,6 +47,8 @@ public abstract class AbstractBaseOperator {
     protected BeanClusterComponentsMapper beanClusterComponentsMapper;
     @Autowired
     protected PvcWrapper pvcWrapper;
+    @Autowired
+    private ImageRepositoryService imageRepositoryService;
 
     public void deploy(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto){
         //获取仓库地址
@@ -86,7 +92,11 @@ public abstract class AbstractBaseOperator {
      * 获取仓库地址
      */
     protected String getRepository(MiddlewareClusterDTO cluster){
-        return cluster.getRegistry().getRegistryAddress() + "/" + cluster.getRegistry().getChartRepo();
+        List<ImageRepositoryDTO> imageRepositoryDTOList = imageRepositoryService.list(cluster.getId());
+        if (CollectionUtils.isEmpty(imageRepositoryDTOList)){
+            throw new BusinessException(ErrorMessage.CLUSTER_NOT_ADD_REPOSITORY);
+        }
+        return imageRepositoryDTOList.get(0).getAddress();
     }
 
     /**
