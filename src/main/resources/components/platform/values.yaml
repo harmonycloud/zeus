@@ -14,7 +14,7 @@ global:
     nodeSelector: {}
   middlewarebackup_controller:
     image: middlewarebackup-controller
-    tag: v1.2.0
+    tag: v1.2.1
     resources:
       limits:
         cpu: 200m
@@ -38,7 +38,7 @@ global:
       tag: v1.0.3-pgsql
     job_mysql_backup:
       image: middleware-backup-operator
-      tag: v1.0.0-mysql
+      tag: v1.0.1-mysql
   kubectl:
     installCRDs: true
     tag: 1.21
