@@ -632,6 +632,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                 DateUtils.dateToString(new Date(), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
         // 写入集群
         prometheusRules.getLabels().put("clusterId", clusterId);
+        prometheusRules.getLabels().put("alertname", middlewareAlertsDTO.getAlert());
         // 构造expr
         String expr = "";
         if ("kafka".equals(middlewareAlertsDTO.getType())) {
@@ -656,7 +657,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                               MiddlewareAlertsDTO middlewareAlertsDTO) {
         Date date = new Date();
         AlertRuleId alertRuleId = new AlertRuleId();
-        String alert = middlewareAlertsDTO.getAlert() + "-" + UUIDUtils.get8UUID();
+        String alert = middlewareAlertsDTO.getAlert();
         if ("system".equals(middlewareAlertsDTO.getLay())) {
             middlewareAlertsDTO.getLabels().put("alertname", alert);
         } else {

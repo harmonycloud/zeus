@@ -65,6 +65,16 @@ public class CacheMiddlewareServiceImpl implements CacheMiddlewareService {
     }
 
     @Override
+    public void insertIfNotPresent(BeanCacheMiddleware beanCacheMiddleware) {
+        QueryWrapper<BeanCacheMiddleware> wrapper = new QueryWrapper<BeanCacheMiddleware>().eq("cluster_id", beanCacheMiddleware.getClusterId())
+                .eq("namespace", beanCacheMiddleware.getNamespace()).eq("type", beanCacheMiddleware.getType()).eq("name", beanCacheMiddleware.getName());
+        BeanCacheMiddleware cacheMiddleware = beanCacheMiddlewareMapper.selectOne(wrapper);
+        if (cacheMiddleware == null) {
+            this.insert(beanCacheMiddleware);
+        }
+    }
+
+    @Override
     public void delete(String clusterId, String namespace, String type, String name) {
         QueryWrapper<BeanCacheMiddleware> wrapper = new QueryWrapper<BeanCacheMiddleware>().eq("cluster_id", clusterId)
             .eq("namespace", namespace).eq("type", type).eq("name", name);
