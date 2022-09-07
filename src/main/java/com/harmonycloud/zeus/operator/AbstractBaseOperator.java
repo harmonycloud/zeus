@@ -13,7 +13,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import cn.hutool.json.JSONUtil;
-import com.baomidou.mybatisplus.core.conditions.query.Query;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
@@ -244,7 +243,7 @@ public abstract class AbstractBaseOperator {
         }
         
         beanCacheMiddleware.setValuesYaml(JSONObject.toJSONString(values));
-        cacheMiddlewareService.insert(beanCacheMiddleware);
+        cacheMiddlewareService.insertIfNotPresent(beanCacheMiddleware);
         // helm卸载需要放到最后，要不然一些资源的查询会404
         helmChartService.uninstall(middleware, cluster);
     }
