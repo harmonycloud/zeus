@@ -7,8 +7,11 @@ import com.harmonycloud.zeus.service.k8s.MiddlewareBackupScheduleCRDService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -45,5 +48,16 @@ public class MiddlewareBackupScheduleCRDServiceImpl implements MiddlewareBackupS
     @Override
     public MiddlewareBackupScheduleList list(String clusterId, String namespace) {
         return middlewareBackupScheduleWrapper.list(clusterId, namespace);
+    }
+
+    @Override
+    public List<MiddlewareBackupScheduleCR> listByLabels(String clusterId, String namespace,
+        Map<String, String> labels) {
+        MiddlewareBackupScheduleList middlewareBackupScheduleList =
+            middlewareBackupScheduleWrapper.list(clusterId, namespace, labels);
+        if (middlewareBackupScheduleList != null && !CollectionUtils.isEmpty(middlewareBackupScheduleList.getItems())) {
+            return middlewareBackupScheduleList.getItems();
+        }
+        return new ArrayList<>();
     }
 }

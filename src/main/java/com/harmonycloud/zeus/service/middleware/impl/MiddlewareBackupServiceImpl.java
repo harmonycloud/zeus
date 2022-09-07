@@ -443,16 +443,15 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     public void deleteMiddlewareBackupInfo(String clusterId, String namespace, String type, String middlewareName) {
         Map<String, String> labels = getBackupLabel(middlewareName, type);
         // 删除定时备份
-        MiddlewareBackupScheduleList backupScheduleList = backupScheduleCRDService.list(clusterId, namespace);
-        if (backupScheduleList != null && !CollectionUtils.isEmpty(backupScheduleList.getItems())) {
-            backupScheduleList.getItems().forEach(item -> {
-                try {
-                    backupScheduleCRDService.delete(clusterId, namespace, item.getMetadata().getName());
-                } catch (IOException e) {
-                    log.error("删除定时备份失败");
-                }
-            });
-        }
+        List<MiddlewareBackupScheduleCR> middlewareBackupScheduleCRList =
+            backupScheduleCRDService.listByLabels(clusterId, namespace, labels);
+        middlewareBackupScheduleCRList.forEach(item -> {
+            try {
+                backupScheduleCRDService.delete(clusterId, namespace, item.getMetadata().getName());
+            } catch (IOException e) {
+                log.error("删除定时备份失败");
+            }
+        });
         // 删除立即备份
         MiddlewareBackupList backupList = backupCRDService.list(clusterId, namespace, labels);
         if (backupList != null && !CollectionUtils.isEmpty(backupList.getItems())) {

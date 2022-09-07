@@ -4,6 +4,7 @@ import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupScheduleCR
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupScheduleList;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -54,4 +55,14 @@ public interface MiddlewareBackupScheduleCRDService {
      * @return
      */
     MiddlewareBackupScheduleList list(String clusterId, String namespace);
+
+    /**
+     * 根据标签查询定时备份任务
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param labels    标签
+     * @return MiddlewareBackupScheduleList
+     */
+    List<MiddlewareBackupScheduleCR> listByLabels(String clusterId, String namespace, Map<String, String> labels);
 }
