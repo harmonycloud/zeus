@@ -97,7 +97,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         checkBackupJobName(backupDTO);
         convertMiddlewareBackup(backupDTO);
         String backupType;
-        if (StringUtils.isBlank(backupDTO.getCron())) {
+        if (StringUtils.isEmpty(backupDTO.getCron())) {
             createNormalBackup(backupDTO);
             backupType = "normal";
         } else {
@@ -173,10 +173,15 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 if (backupDTO.getTurnOff() != null && backupDTO.getTurnOff()) {
                     incBackupScheduleCr.getSpec().setPause("on");
                 }
-                // 更新时间
+                // 更新时间(cron)
                 if (StringUtils.isNotEmpty(backupDTO.getTime())) {
                     incBackupScheduleCr.getSpec().getSchedule()
                         .setCron(CronUtils.convertTimeToCron(backupDTO.getTime()));
+                }
+                // 更新备份保留时间
+                if (backupDTO.getRetentionTime() != null && StringUtils.isNotEmpty(backupDTO.getDateUnit())) {
+                    incBackupScheduleCr.getSpec().getSchedule().setRetentionTime(calRetentionTime(backupDTO));
+                    incBackupScheduleCr.getMetadata().getLabels().put("unit", backupDTO.getDateUnit());
                 }
                 try {
                     backupScheduleCRDService.update(backupDTO.getClusterId(), incBackupScheduleCr);
@@ -818,11 +823,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             backupRecord.setPhrase("Unknown");
         }
         backupRecord.setSourceName(schedule.getSpec().getName());
-
+        backupRecord.setSourceType(middlewareCrTypeService.findTypeByCrType(spec.getType()));
         // 获取labels参数
         Map<String, String> labels = schedule.getMetadata().getLabels();
         if (!CollectionUtils.isEmpty(labels)){
-            backupRecord.setSourceType(labels.get("type"));
             backupRecord.setDateUnit(labels.get("unit"));
             backupRecord.setAddressId(labels.get("addressId"));
             backupRecord.setBackupId(labels.get("backupId"));
@@ -889,7 +893,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         } else {
             backupRecord.setPhrase("Unknown");
         }
-        backupRecord.setSourceType(backup.getMetadata().getLabels().get("type"));
+        backupRecord.setSourceType(middlewareCrTypeService.findTypeByCrType(backup.getSpec().getType()));
         backupRecord.setAddressId(backup.getMetadata().getLabels().get("addressId"));
         backupRecord.setSourceName(backup.getSpec().getName());
         backupRecord.setBackupMode("single");
