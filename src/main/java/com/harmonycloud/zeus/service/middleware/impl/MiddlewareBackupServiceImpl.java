@@ -685,9 +685,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void deleteBackUpRecord(String clusterId, String namespace, String type, String crName, String backupId) {
+    public void deleteBackUpRecord(String clusterId, String namespace, String type, String backupName, String backupId) {
         // 删除备份cr
-        deleteRecord(clusterId, namespace, type, crName);
+        deleteRecord(clusterId, namespace, type, backupName);
         // 删除对应数据库记录
         deleteBackupName(clusterId, backupId, "normal");
     }

@@ -133,7 +133,7 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "crName", value = "cr名称", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupName", value = "备份名称", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "backupId", value = "备份任务ID", paramType = "query", dataTypeClass = String.class),
     })
     @DeleteMapping("/record")
@@ -141,9 +141,9 @@ public class MiddlewareBackupController {
     public BaseResult delete(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
                              @RequestParam("type") String type,
-                             @RequestParam("crName") String crName,
+                             @RequestParam("backupName") String backupName,
                              @RequestParam("backupId") String backupId) {
-        middlewareBackupService.deleteBackUpRecord(clusterId, namespace, type, crName, backupId);
+        middlewareBackupService.deleteBackUpRecord(clusterId, namespace, type, backupName, backupId);
         return BaseResult.ok();
     }
 

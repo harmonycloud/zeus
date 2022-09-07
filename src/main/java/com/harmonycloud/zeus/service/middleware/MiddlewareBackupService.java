@@ -185,10 +185,10 @@ public interface MiddlewareBackupService {
      * @param clusterId
      * @param namespace
      * @param type
-     * @param crName
+     * @param backupName
      * @param backupId
      */
-    void deleteBackUpRecord(String clusterId, String namespace, String type, String crName, String backupId);
+    void deleteBackUpRecord(String clusterId, String namespace, String type, String backupName, String backupId);
 
     /**
      * 创建备份任务名称映射信息
