@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.controller.user;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
@@ -23,6 +24,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
+
+import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_NINE;
+import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_TEN;
 
 /**
  * @author xutianhong
@@ -53,10 +57,24 @@ public class UserController {
     @ApiOperation(value = "获取用户列表", notes = "获取用户列表")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "keyword", value = "过滤字", required = false, paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "current", value = "当前页", required = false, paramType = "query", dataTypeClass = Long.class),
+            @ApiImplicitParam(name = "size", value = "每页记录数", required = false, paramType = "query", dataTypeClass = Long.class),
     })
     @GetMapping("/list")
-    public BaseResult<List<UserDto>> list(@RequestParam(value = "keyword", required = false) String keyword) {
-        return BaseResult.ok(userService.list(keyword));
+    public BaseResult<List<UserDto>> list(@RequestParam(value = "keyword", required = false) String keyword,
+                                          @RequestParam(value = "current", required = false) Integer current,
+                                          @RequestParam(value = "size", required = false) Integer size) {
+        List<UserDto> userDtoList = userService.list(keyword);
+        // 分页
+        List<UserDto> res = new ArrayList<>();
+        if (current != null && size != null) {
+            for (int i = current * NUM_TEN - NUM_NINE; i < userDtoList.size() && i <= current * NUM_TEN; ++i) {
+                res.add(userDtoList.get(i));
+            }
+        } else {
+            res.addAll(userDtoList);
+        }
+        return BaseResult.ok(res);
     }
 
     @ApiOperation(value = "创建用户", notes = "创建用户")
