@@ -187,9 +187,7 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
 
         // 1、同步集群信息，过滤掉名为top的集群
         CaasResult<JSONArray> clusterResult = clusterServiceClient.clusters(caasToken);
-        List<ClusterDTO> clusterList = convertCluster(clusterResult.getData(), caasToken).stream().
-                filter(item -> !"top".equals(item.getName())).collect(Collectors.toList());
-        List<ClusterDTO> clusterList = filterTopCluster(convertCluster(clusterResult.getData(), caastoken));
+        List<ClusterDTO> clusterList = filterTopCluster(convertCluster(clusterResult.getData(), caasToken));
         Map<String, String> skyviewClusterMap = clusterList.stream().collect(Collectors.toMap(ClusterDTO::getHost, ClusterDTO::getId));
         skyviewClustersCache = clusterList.stream().collect(Collectors.toMap(ClusterDTO::getId, clusterDTO -> clusterDTO));
 
