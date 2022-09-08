@@ -181,7 +181,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 // 更新备份保留时间
                 if (backupDTO.getRetentionTime() != null && StringUtils.isNotEmpty(backupDTO.getDateUnit())) {
                     incBackupScheduleCr.getSpec().getSchedule().setRetentionTime(calRetentionTime(backupDTO));
-                    incBackupScheduleCr.getMetadata().getLabels().put("unit", backupDTO.getDateUnit());
                 }
                 try {
                     backupScheduleCRDService.update(backupDTO.getClusterId(), incBackupScheduleCr);
