@@ -149,7 +149,7 @@ public class RoleServiceImpl implements RoleService {
                 .collect(Collectors.toList()).get(0);
             for (String key : userRole.getPower().keySet()) {
                 if (Integer.parseInt(userRole.getPower().get(key).split("")[1]) == 1) {
-                    ids = Arrays.asList(3, 4, 5, 7, 8, 9, 11, 13, 14, 15);
+                    ids = Arrays.asList(3, 4, 5, 7, 8, 9, 10, 12, 13, 14, 15, 16);
                     break;
                 }
             }
