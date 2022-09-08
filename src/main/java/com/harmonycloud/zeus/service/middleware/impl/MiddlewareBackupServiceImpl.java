@@ -688,7 +688,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         // 删除备份cr
         deleteRecord(clusterId, namespace, type, backupName);
         // 删除对应数据库记录
-        deleteBackupName(clusterId, backupId, "normal");
+        if (StringUtils.isNotEmpty(backupId)){
+            deleteBackupName(clusterId, backupId, "normal");
+        }
     }
 
     @Override

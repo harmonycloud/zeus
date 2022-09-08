@@ -142,7 +142,7 @@ public class MiddlewareBackupController {
                              @PathVariable("namespace") String namespace,
                              @RequestParam("type") String type,
                              @RequestParam("backupName") String backupName,
-                             @RequestParam("backupId") String backupId) {
+                             @RequestParam(value = "backupId", required = false) String backupId) {
         middlewareBackupService.deleteBackUpRecord(clusterId, namespace, type, backupName, backupId);
         return BaseResult.ok();
     }
