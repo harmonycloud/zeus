@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
@@ -188,6 +189,7 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
         CaasResult<JSONArray> clusterResult = clusterServiceClient.clusters(caasToken);
         List<ClusterDTO> clusterList = convertCluster(clusterResult.getData(), caasToken).stream().
                 filter(item -> !"top".equals(item.getName())).collect(Collectors.toList());
+        List<ClusterDTO> clusterList = filterTopCluster(convertCluster(clusterResult.getData(), caastoken));
         Map<String, String> skyviewClusterMap = clusterList.stream().collect(Collectors.toMap(ClusterDTO::getHost, ClusterDTO::getId));
         skyviewClustersCache = clusterList.stream().collect(Collectors.toMap(ClusterDTO::getId, clusterDTO -> clusterDTO));
 
@@ -216,6 +218,33 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
 
         }
         //clusterComponentService.integrate();
+    }
+
+    /**
+     * 如果top集群被用作业务集群，则过滤掉top集群
+     * @param clusterList
+     */
+    private List<ClusterDTO> filterTopCluster(List<ClusterDTO> clusterList) {
+        String topClusterApiServerHost = "";
+        for (ClusterDTO clusterDTO : clusterList) {
+            if ("top".equals(clusterDTO.getName())) {
+                topClusterApiServerHost = clusterDTO.getHost();
+                break;
+            }
+        }
+        if (StringUtils.isEmpty(topClusterApiServerHost)) {
+            return clusterList;
+        }
+        int num = 0;
+        for (ClusterDTO clusterDTO : clusterList) {
+            if (topClusterApiServerHost.equals(clusterDTO.getHost())) {
+                num++;
+            }
+        }
+        if (num != 1) {
+            return clusterList.stream().filter(clusterDTO -> !"top".equals(clusterDTO.getName())).collect(Collectors.toList());
+        }
+        return clusterList;
     }
 
 }
