@@ -1,4 +1,4 @@
-FROM 10.10.102.213:8443/middleware/zeus-base:1.0.1
+FROM zeus-base:1.0.0
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo "Asia/Shanghai" > /etc/timezone
 COPY target/*.jar /zeus.jar
 COPY target/classes/components /usr/local/zeus-pv/components
