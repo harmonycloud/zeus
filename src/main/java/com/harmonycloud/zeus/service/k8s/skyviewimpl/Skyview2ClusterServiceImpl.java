@@ -3,6 +3,8 @@ package com.harmonycloud.zeus.service.k8s.skyviewimpl;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.base.CaasResult;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.ClusterCert;
 import com.harmonycloud.caas.common.model.ClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
@@ -176,16 +178,20 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
             tempPassword = CryptoUtils.encrypt(skyviewAdminPassword);
         }
         CaasResult<JSONObject> caasResult = userServiceClient.login(skyviewAdminName, tempPassword, "ch");
-        String caastoken = caasResult.getStringVal("token");
+        if (!caasResult.getSuccess()){
+            log.error("集群同步时，用户{} 登录观云台失败，原因：{}", skyviewAdminName, caasResult.getData());
+            throw new BusinessException(ErrorMessage.LOGIN_CAAS_API_FAILED);
+        }
+        String caasToken = caasResult.getStringVal("token");
 
         // 1、同步集群信息，过滤掉名为top的集群
-        CaasResult<JSONArray> clusterResult = clusterServiceClient.clusters(caastoken);
-        List<ClusterDTO> clusterList = convertCluster(clusterResult.getData(), caastoken).stream().
+        CaasResult<JSONArray> clusterResult = clusterServiceClient.clusters(caasToken);
+        List<ClusterDTO> clusterList = convertCluster(clusterResult.getData(), caasToken).stream().
                 filter(item -> !"top".equals(item.getName())).collect(Collectors.toList());
         Map<String, String> skyviewClusterMap = clusterList.stream().collect(Collectors.toMap(ClusterDTO::getHost, ClusterDTO::getId));
         skyviewClustersCache = clusterList.stream().collect(Collectors.toMap(ClusterDTO::getId, clusterDTO -> clusterDTO));
-        List<MiddlewareClusterDTO> clusterDTOS = new ArrayList<>();
 
+        List<MiddlewareClusterDTO> clusterDTOS = new ArrayList<>();
         // 查询平台存储的全部集群
         List<BeanMiddlewareCluster> clusters = middlewareClusterService.listClustersByClusterId(null);
         if (!CollectionUtils.isEmpty(clusters)) {
@@ -198,6 +204,7 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
                 saveCluster(clusterDTO);
             }
         });
+        // 映射相同host下观云台和中间件平台的不同的clusterId
         Map<String, String> zeusClusterMap = clusterDTOS.stream().collect(Collectors.toMap(MiddlewareClusterDTO::getHost, MiddlewareClusterDTO::getId));
         skyviewClusterMap.forEach((k, v) -> clusterIdMap.put(v, zeusClusterMap.get(k) != null ? zeusClusterMap.get(k) : k));
     }
