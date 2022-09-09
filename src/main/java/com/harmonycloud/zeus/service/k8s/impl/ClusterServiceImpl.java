@@ -147,10 +147,7 @@ public class ClusterServiceImpl implements ClusterService {
             return new ArrayList<>(0);
         }
         // 设置集群状态及可用区
-        clusters.forEach(clusterDTO -> {
-            setActiveActiveInfo(clusterDTO);
-            setClusterStatusCode(clusterDTO);
-        });
+        clusters.forEach(this::setActiveActiveInfo);
         // 封装数据
         clusters = clusters.stream()
             .filter(clusterDTO -> StringUtils.isEmpty(key) || clusterDTO.getNickname().contains(key))
@@ -1136,20 +1133,20 @@ public class ClusterServiceImpl implements ClusterService {
      * @param clusterDTO
      * @return
      */
-    private void setClusterStatusCode(MiddlewareClusterDTO clusterDTO) {
-        List<io.fabric8.kubernetes.api.model.Node> nodes = nodeWrapper.list(clusterDTO.getId());
-        for (io.fabric8.kubernetes.api.model.Node node : nodes) {
-            if (node.getStatus() == null || CollectionUtils.isEmpty(node.getStatus().getConditions())) {
-                clusterDTO.setStatusCode(0);
-            }
-            List<NodeCondition> conditions = node.getStatus().getConditions();
-            NodeCondition nodeCondition = conditions.get(conditions.size() - 1);
-            if (!"Ready".equalsIgnoreCase(nodeCondition.getType())) {
-                clusterDTO.setStatusCode(0);
-            }
-        }
-        clusterDTO.setStatusCode(1);
-    }
+//    private void setClusterStatusCode(MiddlewareClusterDTO clusterDTO) {
+//        List<io.fabric8.kubernetes.api.model.Node> nodes = nodeWrapper.list(clusterDTO.getId());
+//        for (io.fabric8.kubernetes.api.model.Node node : nodes) {
+//            if (node.getStatus() == null || CollectionUtils.isEmpty(node.getStatus().getConditions())) {
+//                clusterDTO.setStatusCode(0);
+//            }
+//            List<NodeCondition> conditions = node.getStatus().getConditions();
+//            NodeCondition nodeCondition = conditions.get(conditions.size() - 1);
+//            if (!"Ready".equalsIgnoreCase(nodeCondition.getType())) {
+//                clusterDTO.setStatusCode(0);
+//            }
+//        }
+//        clusterDTO.setStatusCode(1);
+//    }
 
     /**
      * 获取集群是否已开启可用区

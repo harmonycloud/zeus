@@ -84,6 +84,7 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
             executorService.submit(()->{
                 try {
                     JSONObject jsonTenant = (JSONObject) tenant;
+                    log.info("提交查询租户信息:{}", jsonTenant.getString("tenantId"));
                     CaasResult<JSONArray> projectResult = projectServiceClient.getTenantProject(caastoken, jsonTenant.getString("tenantId"));
                     if (Boolean.TRUE.equals(projectResult.getSuccess())) {
                         JSONArray projectList = projectResult.getData();
@@ -92,6 +93,7 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
                 } catch (Exception e) {
                     log.error("查询租户项目出错了", e);
                 } finally {
+                    log.info("租户查询完成");
                     latch.countDown();
                 }
             });
@@ -129,18 +131,25 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
             projectDTO.setNamespaces(convertProjectNamespace(jsonProject.getJSONArray("namespaceList"), projectDTO.getProjectId()));
             projectDTO.setNamespaceCount(projectDTO.getNamespaces().size());
             // 查询项目成员
-            executorService.submit(()->{
-                CaasResult<JSONObject> projectMemberResult = projectServiceClient.getProjectMember(caastoken, projectDTO.getTenantId(), projectDTO.getProjectId());
-                JSONArray userDataList = projectMemberResult.getJSONArray("userDataList");
-                if (userDataList != null) {
-                    projectDTO.setUserDtos(convertProjectMember(userDataList, projectDTO.getProjectId()));
-                    projectDTO.setMemberCount(projectDTO.getUserDtos().size());
-                } else {
-                    projectDTO.setMemberCount(0);
+            executorService.submit(() -> {
+                try {
+                    log.debug("开始查询项目{}的成员", projectDTO.getProjectName());
+                    CaasResult<JSONObject> projectMemberResult = projectServiceClient.getProjectMember(caastoken, projectDTO.getTenantId(), projectDTO.getProjectId());
+                    JSONArray userDataList = projectMemberResult.getJSONArray("userDataList");
+                    if (userDataList != null) {
+                        projectDTO.setUserDtos(convertProjectMember(userDataList, projectDTO.getProjectId()));
+                        projectDTO.setMemberCount(projectDTO.getUserDtos().size());
+                    } else {
+                        projectDTO.setMemberCount(0);
+                    }
+                    projectTenantCache.put(projectDTO.getProjectId(), projectDTO.getTenantId());
+                    projectDTOList.add(projectDTO);
+                } catch (Exception e) {
+                    log.error("查询项目{}成员出错了", projectDTO.getProjectName(), e);
+                } finally {
+                    log.info("项目{}成员查询完成", projectDTO.getProjectName());
+                    latch.countDown();
                 }
-                projectTenantCache.put(projectDTO.getProjectId(), projectDTO.getTenantId());
-                projectDTOList.add(projectDTO);
-                latch.countDown();
             });
         });
         try {

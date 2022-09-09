@@ -18,6 +18,7 @@ import com.harmonycloud.zeus.service.k8s.NodeService;
 import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
 import com.harmonycloud.zeus.util.K8sConvert;
 import io.fabric8.kubernetes.api.model.NodeAddress;
+import io.fabric8.kubernetes.api.model.NodeCondition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -66,6 +67,8 @@ public class NodeServiceImpl implements NodeService {
     public void setClusterVersion(MiddlewareClusterDTO cluster) {
         try {
             List<io.fabric8.kubernetes.api.model.Node> nodeList = nodeWrapper.list(cluster.getId());
+            // 设置集群状态信息
+            setClusterStatusCode(cluster, nodeList);
             if (CollectionUtils.isEmpty(nodeList)) {
                 return;
             }
@@ -254,7 +257,21 @@ public class NodeServiceImpl implements NodeService {
         }
         return resultMap;
     }
-    
+
+    private void setClusterStatusCode(MiddlewareClusterDTO clusterDTO, List<io.fabric8.kubernetes.api.model.Node> nodes) {
+        for (io.fabric8.kubernetes.api.model.Node node : nodes) {
+            if (node.getStatus() == null || CollectionUtils.isEmpty(node.getStatus().getConditions())) {
+                clusterDTO.setStatusCode(0);
+            }
+            List<NodeCondition> conditions = node.getStatus().getConditions();
+            NodeCondition nodeCondition = conditions.get(conditions.size() - 1);
+            if (!"Ready".equalsIgnoreCase(nodeCondition.getType())) {
+                clusterDTO.setStatusCode(0);
+            }
+        }
+        clusterDTO.setStatusCode(1);
+    }
+
     public String getTempQuery(List<Node> nodes, Boolean all) {
         if (all) {
             return "";
