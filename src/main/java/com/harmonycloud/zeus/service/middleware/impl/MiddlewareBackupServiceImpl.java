@@ -418,7 +418,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             args.add("--mode=inc");
             Map<String, String> envMap = new HashMap<>();
             envMap.put(NAME, RESTORE_TIME);
-            envMap.put(VALUE, restoreTime);
+            // 时间格式转换
+            Date date = DateUtils.parseDate(restoreTime, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
+            envMap.put(VALUE, DateUtils.dateToString(DateUtils.addInteger(date, Calendar.HOUR_OF_DAY, -8),
+                DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
             envList.add(envMap);
             map.put(ENV, envList);
         }
