@@ -410,12 +410,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         List<String> args = new ArrayList<>();
         List<Map<String, String>> envList = new ArrayList<>();
         Map<String, Object> map = new HashMap<>();
-        args.add("--backupResultName=" + backupName);
         args.add("--backupNamespace=" + namespace);
         if (StringUtils.isEmpty(restoreTime)){
             args.add("--mode=full");
+            args.add("--backupResultName=" + backupName);
         }else {
-            args.add("--mode=incr");
+            args.add("--mode=inc");
+            args.add("--backupResultName=" + backupName + "-incr");
             Map<String, String> envMap = new HashMap<>();
             envMap.put(NAME, RESTORE_TIME);
             // 时间格式转换
