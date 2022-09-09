@@ -342,8 +342,13 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
                 namespaceList.stream().map(Namespace::getClusterId).collect(Collectors.toSet());
         Map<String, List<MiddlewareCR>> middlewareCRListMap = new HashMap<>();
         for (String clusterId : clusterIdList) {
-            List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(clusterId, null, null);
-            middlewareCRListMap.put(clusterId, middlewareCRList);
+            List<MiddlewareCR> middlewareCRList = null;
+            try {
+                middlewareCRList = middlewareCRService.listCR(clusterId, null, null);
+                middlewareCRListMap.put(clusterId, middlewareCRList);
+            } catch (Exception e) {
+                log.error("统计集群{}的服务数量出错了", clusterId, e);
+            }
         }
         Map<String, List<Namespace>> beanProjectNamespaceListMap =
                 namespaceList.stream().collect(Collectors.groupingBy(Namespace::getProjectId));

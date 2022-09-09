@@ -23,9 +23,9 @@ public class InitElasticsearchTemplate {
         //创建es模板
         try {
             esService.initEsIndexTemplate();
-            log.info("集群:{}索引模板初始化成功");
+            log.info("集群索引模板初始化成功");
         } catch (Exception e) {
-            log.error("集群:{}索引模板初始化失败", e);
+            log.error("集群索引模板初始化失败", e);
         }
     }
 
