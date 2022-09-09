@@ -415,7 +415,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (StringUtils.isEmpty(restoreTime)){
             args.add("--mode=full");
         }else {
-            args.add("--mode=inc");
+            args.add("--mode=incr");
             Map<String, String> envMap = new HashMap<>();
             envMap.put(NAME, RESTORE_TIME);
             // 时间格式转换
