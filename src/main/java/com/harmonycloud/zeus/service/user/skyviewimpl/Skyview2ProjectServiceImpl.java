@@ -217,14 +217,8 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
                     userDto.setRoleId(2);
                     userDto.setRoleName("项目管理员");
                 } else if (id > 3) {
-                    BeanUserRole beanUserRole = userRoleService.get(userDto.getUserName(), projectId);
-                    if (beanUserRole == null) {
-                        userRoleService.insert(projectId, userDto.getUserName(), 4);
-                        beanUserRole = userRoleService.get(userDto.getUserName(), projectId);
-                    }
-                    RoleDto roleDto = roleService.get(beanUserRole.getRoleId());
-                    userDto.setRoleId(beanUserRole.getRoleId());
-                    userDto.setRoleName(roleDto.getName());
+                    userDto.setRoleId(4);
+                    userDto.setRoleName("普通用户");
                 } else {
                     continue;
                 }
