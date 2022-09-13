@@ -2,9 +2,7 @@ package com.harmonycloud.zeus.service.middleware.impl;
 
 import static com.harmonycloud.caas.common.constants.BackupConstant.*;
 import static com.harmonycloud.caas.common.constants.CommonConstant.INCR;
-import static com.harmonycloud.caas.common.constants.NameConstant.OWNER;
-import static com.harmonycloud.caas.common.constants.NameConstant.VALUE;
-import static com.harmonycloud.caas.common.constants.NameConstant.NAME;
+import static com.harmonycloud.caas.common.constants.NameConstant.*;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -397,6 +395,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String restoreTime) {
+        if (MiddlewareTypeEnum.ROCKET_MQ.getType().equals(type) || MiddlewareTypeEnum.ELASTIC_SEARCH.getType().equals(type)){
+            waitingMiddleware(clusterId, namespace, middlewareName, type);
+        }
         MiddlewareRestoreCR crd = new MiddlewareRestoreCR();
         ObjectMeta meta = new ObjectMeta();
         meta.setNamespace(namespace);
@@ -943,6 +944,28 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                         || scheduleRecord.getBackupTime().compareTo(backupTime) < 0) {
                         scheduleRecord.setBackupTime(backupTime);
                     }
+                }
+            }
+        }
+    }
+
+    /**
+     * 创建备份恢复等待中间件创建完毕
+     */
+    public void waitingMiddleware(String clusterId, String namespace, String name, String type) {
+        for (int i = 0; i < 10; ++i) {
+            try {
+                MiddlewareCR middlewareCR = middlewareCRService.getCR(clusterId, namespace, type, name);
+                if (middlewareCR != null && middlewareCR.getStatus() != null
+                    && middlewareCR.getStatus().getPhase().equals(RUNNING)) {
+                    break;
+                }
+            } catch (Exception e) {
+                log.error("备份恢复 集群{} 分区{} 中间件{} 查询cr状态失败,30s后重试", clusterId, namespace, name);
+            } finally {
+                try {
+                    Thread.sleep(30000);
+                } catch (Exception ignore) {
                 }
             }
         }
