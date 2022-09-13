@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.controller.middleware;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
 import com.harmonycloud.caas.common.model.MiddlewareIncBackupDto;
+import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import io.swagger.annotations.Api;
@@ -180,7 +181,8 @@ public class MiddlewareBackupController {
                                     @RequestParam("middlewareName") String middlewareName,
                                     @RequestParam(value = "backupName", required = false) String backupName,
                                     @RequestParam(value = "restoreTime", required = false) String restoreTime) {
-        middlewareBackupService.createRestore(clusterId, namespace, middlewareName, type, backupName, restoreTime);
+        ThreadPoolExecutorFactory.executor.execute(() -> middlewareBackupService.createRestore(clusterId, namespace,
+            middlewareName, type, backupName, restoreTime));
         return BaseResult.ok();
     }
 
