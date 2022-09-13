@@ -185,7 +185,9 @@ public class Skyview2UserServiceImpl extends UserServiceImpl {
         String username = ZeusCurrentUser.getUserName();
         String caasToken = ZeusCurrentUser.getCaasToken();
         List<ProjectDTO>  projects =  skyview2ProjectService.listAllTenantProject(caasToken);
-
+        if (CollectionUtils.isEmpty(projects)) {
+            return;
+        }
         ExecutorService executorService = Executors.newFixedThreadPool(projects.size());
         CountDownLatch latch = new CountDownLatch(projects.size());
         // 2、获取用户在每个项目下的角色
