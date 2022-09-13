@@ -10,12 +10,12 @@ import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.common.model.middleware.Registry;
 import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
-import com.harmonycloud.zeus.service.k8s.ClusterComponentService;
 import com.harmonycloud.zeus.service.k8s.ClusterServiceImpl;
 import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
-import com.harmonycloud.zeus.skyviewservice.Skyview2ClusterServiceClient;
-import com.harmonycloud.zeus.skyviewservice.Skyview2UserServiceClient;
+import com.harmonycloud.zeus.skyviewservice.Skyview2UserService;
+import com.harmonycloud.zeus.skyviewservice.client.Skyview2ClusterServiceClient;
+import com.harmonycloud.zeus.skyviewservice.client.Skyview2UserServiceClient;
 import com.harmonycloud.zeus.util.CryptoUtils;
 import com.harmonycloud.zeus.util.YamlUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +50,8 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
 
     @Autowired
     private Skyview2UserServiceClient userServiceClient;
+    @Autowired
+    private Skyview2UserService skyview2UserService;
     @Autowired
     private Skyview2ClusterServiceClient clusterServiceClient;
     @Autowired
@@ -177,7 +179,7 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
         if (encryptPassword) {
             tempPassword = CryptoUtils.encrypt(skyviewAdminPassword);
         }
-        CaasResult<JSONObject> caasResult = userServiceClient.login(skyviewAdminName, tempPassword, "ch");
+        CaasResult<JSONObject> caasResult = skyview2UserService.login(skyviewAdminName, tempPassword, "ch");
         String caastoken = caasResult.getStringVal("token");
 
         // 1、同步集群信息

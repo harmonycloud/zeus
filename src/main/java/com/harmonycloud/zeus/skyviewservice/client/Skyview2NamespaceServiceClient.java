@@ -1,4 +1,4 @@
-package com.harmonycloud.zeus.skyviewservice;
+package com.harmonycloud.zeus.skyviewservice.client;
 
 import com.alibaba.fastjson.JSONArray;
 import com.dtflys.forest.annotation.Address;
