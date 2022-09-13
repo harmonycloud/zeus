@@ -22,6 +22,7 @@ import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
 import com.harmonycloud.zeus.service.user.RoleService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
+import com.harmonycloud.zeus.service.user.UserService;
 import com.harmonycloud.zeus.service.user.impl.ProjectServiceImpl;
 import com.harmonycloud.zeus.skyviewservice.Skyview2ProjectServiceClient;
 import com.harmonycloud.zeus.skyviewservice.Skyview2UserServiceClient;
@@ -62,6 +63,8 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
     private RoleService roleService;
     @Autowired
     private ClusterMiddlewareInfoService clusterMiddlewareInfoService;
+    @Autowired
+    private UserService userService;
     /**
      * 项目租户id缓存 key:项目id value:租户id
      */
@@ -214,14 +217,8 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
                     userDto.setRoleId(2);
                     userDto.setRoleName("项目管理员");
                 } else if (id > 3) {
-                    BeanUserRole beanUserRole = userRoleService.get(userDto.getUserName(), projectId);
-                    if (beanUserRole == null) {
-                        userRoleService.insert(projectId, userDto.getUserName(), 4);
-                        beanUserRole = userRoleService.get(userDto.getUserName(), projectId);
-                    }
-                    RoleDto roleDto = roleService.get(beanUserRole.getRoleId());
-                    userDto.setRoleId(beanUserRole.getRoleId());
-                    userDto.setRoleName(roleDto.getName());
+                    userDto.setRoleId(4);
+                    userDto.setRoleName("普通用户");
                 } else {
                     continue;
                 }
@@ -264,6 +261,7 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
 
     @Override
     public List<ProjectDto> list(String keyword) {
+        userService.getUserDto(ZeusCurrentUser.getUserName(), null);
         List<ProjectDTO> projectDTOS = listAllTenantProject(ZeusCurrentUser.getCaasToken());
         List<ProjectDto> projects = new ArrayList<>();
         projectDTOS.forEach(projectDTO -> {
