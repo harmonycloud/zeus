@@ -79,6 +79,9 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
         // 1、获取当前用户所有租户
         CaasResult<JSONObject> currentResult = userServiceClient.current(caastoken, true);
         JSONArray tenants = currentResult.getJSONArray("tenants");
+        if (CollectionUtils.isEmpty(tenants)) {
+            return Collections.emptyList();
+        }
         // 2、获取所有租户所有项目
         List<ProjectDTO> projects = new ArrayList<>();
         ExecutorService executorService = Executors.newFixedThreadPool(tenants.size());
