@@ -413,7 +413,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         Map<String, Object> map = new HashMap<>();
         args.add("--backupNamespace=" + namespace);
         if (StringUtils.isEmpty(restoreTime)){
-            args.add("--mode=full");
+            if (MiddlewareTypeEnum.POSTGRESQL.getType().equals(type) || MiddlewareTypeEnum.MYSQL.getType().equals(type)){
+                args.add("--mode=full");
+            }
             args.add("--backupResultName=" + backupName);
         }else {
             args.add("--mode=inc");
