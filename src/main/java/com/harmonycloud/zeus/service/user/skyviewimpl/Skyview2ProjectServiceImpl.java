@@ -22,6 +22,7 @@ import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
 import com.harmonycloud.zeus.service.user.RoleService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
+import com.harmonycloud.zeus.service.user.UserService;
 import com.harmonycloud.zeus.service.user.impl.ProjectServiceImpl;
 import com.harmonycloud.zeus.skyviewservice.client.Skyview2ProjectServiceClient;
 import com.harmonycloud.zeus.skyviewservice.client.Skyview2UserServiceClient;
@@ -62,6 +63,8 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
     private RoleService roleService;
     @Autowired
     private ClusterMiddlewareInfoService clusterMiddlewareInfoService;
+    @Autowired
+    private UserService userService;
     /**
      * 项目租户id缓存 key:项目id value:租户id
      */
@@ -255,6 +258,7 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
 
     @Override
     public List<ProjectDto> list(String keyword) {
+        userService.getUserDto(ZeusCurrentUser.getUserName(), null);
         List<ProjectDTO> projectDTOS = listAllTenantProject(ZeusCurrentUser.getCaasToken());
         List<ProjectDto> projects = new ArrayList<>();
         projectDTOS.forEach(projectDTO -> {
