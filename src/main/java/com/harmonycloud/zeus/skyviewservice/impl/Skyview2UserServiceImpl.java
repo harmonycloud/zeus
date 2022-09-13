@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
  */
 @Service("skyview2UserService")
 @Slf4j
-@ConditionalOnProperty(value="system.usercenter",havingValue = "skyview2")
 public class Skyview2UserServiceImpl implements Skyview2UserService {
 
     @Value("${system.skyview.verifyCode:false}")
