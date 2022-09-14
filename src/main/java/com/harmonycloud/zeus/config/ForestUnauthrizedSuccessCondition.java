@@ -1,22 +1,13 @@
 package com.harmonycloud.zeus.config;
 
-import com.alibaba.fastjson.JSONObject;
 import com.dtflys.forest.callback.SuccessWhen;
 import com.dtflys.forest.http.ForestRequest;
 import com.dtflys.forest.http.ForestResponse;
-import com.harmonycloud.caas.common.base.CaasResult;
 import com.harmonycloud.caas.common.enums.ErrorCodeMessage;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.filters.user.CurrentUser;
-import com.harmonycloud.caas.filters.user.CurrentUserRepository;
-import com.harmonycloud.tool.encrypt.RSAUtils;
-import com.harmonycloud.zeus.skyviewservice.Skyview2UserServiceClient;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.Map;
 
 /**
  * @description 未登录成功时的拦截器

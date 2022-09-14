@@ -1,5 +1,11 @@
 package com.harmonycloud.zeus.config;
 
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+
 import com.alibaba.fastjson.JSONObject;
 import com.dtflys.forest.callback.SuccessWhen;
 import com.dtflys.forest.http.ForestRequest;
@@ -8,6 +14,9 @@ import com.harmonycloud.caas.common.base.CaasResult;
 import com.harmonycloud.caas.filters.user.CurrentUser;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.encrypt.RSAUtils;
+import com.harmonycloud.zeus.skyviewservice.Skyview2UserService;
+import com.harmonycloud.zeus.util.CryptoUtils;
+
 import com.harmonycloud.zeus.skyviewservice.Skyview2UserServiceClient;
 import com.harmonycloud.zeus.util.CryptoUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +33,8 @@ import java.util.Map;
 public class ForestSuccessCondition implements SuccessWhen {
 
     @Autowired
-    private Skyview2UserServiceClient userServiceClient;
+    private Skyview2UserService skyview2UserService;
+
     @Value("${system.skyview.encryptPassword:false}")
     private boolean encryptPassword;
     /**
@@ -50,7 +60,7 @@ public class ForestSuccessCondition implements SuccessWhen {
                 if (encryptPassword) {
                     tempPassword = CryptoUtils.encrypt(decryptPassword);
                 }
-                CaasResult<JSONObject> loginResult = userServiceClient.login(username, tempPassword, "ch");
+                CaasResult<JSONObject> loginResult = skyview2UserService.login(username, tempPassword, "ch");
                 String token = loginResult.getStringVal("token");
                 attributes.put("caastoken", token);
             } catch (Exception e) {
