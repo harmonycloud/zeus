@@ -17,14 +17,7 @@ import com.harmonycloud.tool.encrypt.RSAUtils;
 import com.harmonycloud.zeus.skyviewservice.Skyview2UserService;
 import com.harmonycloud.zeus.util.CryptoUtils;
 
-import com.harmonycloud.zeus.skyviewservice.Skyview2UserServiceClient;
-import com.harmonycloud.zeus.util.CryptoUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
-
-import java.util.Map;
 
 // 自定义成功/失败条件实现类
 // 需要实现 SuccessWhen 接口

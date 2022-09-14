@@ -39,9 +39,6 @@ public class Skyview2AuthServiceImpl extends AuthServiceImpl {
     @Value("${system.skyview.encryptPassword:false}")
     private boolean encryptPassword;
 
-    @Value("${system.skyview.encryptPassword:false}")
-    private boolean encryptPassword;
-
     @Override
     public JSONObject login(String userName, String password, HttpServletResponse response) throws Exception {
         //解密密码
