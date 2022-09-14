@@ -10,12 +10,13 @@ import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.common.model.middleware.Registry;
 import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
-import com.harmonycloud.zeus.service.k8s.ClusterComponentService;
 import com.harmonycloud.zeus.service.k8s.ClusterServiceImpl;
 import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
-import com.harmonycloud.zeus.skyviewservice.Skyview2ClusterServiceClient;
-import com.harmonycloud.zeus.skyviewservice.Skyview2UserServiceClient;
+import com.harmonycloud.zeus.skyviewservice.Skyview2UserService;
+import com.harmonycloud.zeus.skyviewservice.client.Skyview2ClusterServiceClient;
+import com.harmonycloud.zeus.skyviewservice.client.Skyview2UserServiceClient;
+import com.harmonycloud.zeus.util.CryptoUtils;
 import com.harmonycloud.zeus.util.YamlUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
@@ -24,6 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
@@ -43,25 +45,13 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
     @Value("${system.skyview.password:Hc@Cloud01}")
     private String skyviewAdminPassword;
 
-    @Value("${system.registry.protocol:https}")
-    private String protocol;
-    @Value("${system.registry.address}")
-    private String address;
-    @Value("${system.registry.port}")
-    private int port;
-    @Value("${system.registry.username}")
-    private String username;
-    @Value("${system.registry.password}")
-    private String password;
-    @Value("${system.registry.type:harbor}")
-    private String type;
-    @Value("${system.registry.chartRepo:middleware}")
-    private String chartRepo;
-    @Value("${system.registry.version:v2}")
-    private String version;
+    @Value("${system.skyview.encryptPassword:false}")
+    private boolean encryptPassword;
 
     @Autowired
     private Skyview2UserServiceClient userServiceClient;
+    @Autowired
+    private Skyview2UserService skyview2UserService;
     @Autowired
     private Skyview2ClusterServiceClient clusterServiceClient;
     @Autowired
@@ -185,13 +175,19 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
     }
 
     private synchronized void syncCluster(){
-        CaasResult<JSONObject> caasResult = userServiceClient.login(skyviewAdminName, skyviewAdminPassword, "ch");
+        String tempPassword =  skyviewAdminPassword;
+        if (encryptPassword) {
+            tempPassword = CryptoUtils.encrypt(skyviewAdminPassword);
+        }
+        CaasResult<JSONObject> caasResult = skyview2UserService.login(skyviewAdminName, tempPassword, "ch");
         String caastoken = caasResult.getStringVal("token");
 
-        // 1、同步集群信息，过滤掉名为top的集群
+        // 1、同步集群信息
         CaasResult<JSONArray> clusterResult = clusterServiceClient.clusters(caastoken);
-        List<ClusterDTO> clusterList = convertCluster(clusterResult.getData(), caastoken).stream().
-                filter(item -> !"top".equals(item.getName())).collect(Collectors.toList());
+        List<ClusterDTO> clusterList = convertCluster(clusterResult.getData(), caastoken);
+        // 如果top集群被用作业务集群，则过滤掉top集群
+        clusterList = filterTopCluster(clusterList);
+
         Map<String, String> skyviewClusterMap = clusterList.stream().collect(Collectors.toMap(ClusterDTO::getHost, ClusterDTO::getId));
         skyviewClustersCache = clusterList.stream().collect(Collectors.toMap(ClusterDTO::getId, clusterDTO -> clusterDTO));
         List<MiddlewareClusterDTO> clusterDTOS = new ArrayList<>();
@@ -219,6 +215,33 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
 
         }
         //clusterComponentService.integrate();
+    }
+
+    /**
+     * 如果top集群被用作业务集群，则过滤掉top集群
+     * @param clusterList
+     */
+    private List<ClusterDTO> filterTopCluster(List<ClusterDTO> clusterList) {
+        String topClusterApiServerHost = "";
+        for (ClusterDTO clusterDTO : clusterList) {
+            if ("top".equals(clusterDTO.getName())) {
+                topClusterApiServerHost = clusterDTO.getHost();
+                break;
+            }
+        }
+        if (StringUtils.isEmpty(topClusterApiServerHost)) {
+            return clusterList;
+        }
+        int num = 0;
+        for (ClusterDTO clusterDTO : clusterList) {
+            if (topClusterApiServerHost.equals(clusterDTO.getHost())) {
+                num++;
+            }
+        }
+        if (num != 1) {
+            return clusterList.stream().filter(clusterDTO -> !"top".equals(clusterDTO.getName())).collect(Collectors.toList());
+        }
+        return clusterList;
     }
 
 }

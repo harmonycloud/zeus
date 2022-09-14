@@ -12,8 +12,8 @@ import com.harmonycloud.zeus.service.user.ProjectService;
 import com.harmonycloud.zeus.service.user.RoleService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
 import com.harmonycloud.zeus.service.user.impl.UserServiceImpl;
-import com.harmonycloud.zeus.skyviewservice.Skyview2ProjectServiceClient;
-import com.harmonycloud.zeus.skyviewservice.Skyview2UserServiceClient;
+import com.harmonycloud.zeus.skyviewservice.client.Skyview2ProjectServiceClient;
+import com.harmonycloud.zeus.skyviewservice.client.Skyview2UserServiceClient;
 import com.harmonycloud.zeus.util.ZeusCurrentUser;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -185,7 +185,9 @@ public class Skyview2UserServiceImpl extends UserServiceImpl {
         String username = ZeusCurrentUser.getUserName();
         String caasToken = ZeusCurrentUser.getCaasToken();
         List<ProjectDTO>  projects =  skyview2ProjectService.listAllTenantProject(caasToken);
-
+        if (CollectionUtils.isEmpty(projects)) {
+            return;
+        }
         ExecutorService executorService = Executors.newFixedThreadPool(projects.size());
         CountDownLatch latch = new CountDownLatch(projects.size());
         // 2、获取用户在每个项目下的角色

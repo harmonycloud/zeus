@@ -7,10 +7,13 @@ import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.tool.encrypt.RSAUtils;
 import com.harmonycloud.zeus.service.user.impl.AuthServiceImpl;
-import com.harmonycloud.zeus.skyviewservice.Skyview2UserServiceClient;
+import com.harmonycloud.zeus.skyviewservice.Skyview2UserService;
+import com.harmonycloud.zeus.skyviewservice.client.Skyview2UserServiceClient;
 import com.harmonycloud.zeus.util.CaasResponseUtil;
+import com.harmonycloud.zeus.util.CryptoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +32,12 @@ import static com.harmonycloud.caas.filters.base.GlobalKey.SET_TOKEN;
 public class Skyview2AuthServiceImpl extends AuthServiceImpl {
 
     @Autowired
-    private Skyview2UserServiceClient skyview2UserService;
+    private Skyview2UserServiceClient skyview2UserServiceClient;
+    @Autowired
+    private Skyview2UserService skyview2UserService;
+
+    @Value("${system.skyview.encryptPassword:false}")
+    private boolean encryptPassword;
 
     @Override
     public JSONObject login(String userName, String password, HttpServletResponse response) throws Exception {
@@ -40,9 +48,12 @@ public class Skyview2AuthServiceImpl extends AuthServiceImpl {
         } catch (Exception e) {
             throw new BusinessException(ErrorMessage.RSA_DECRYPT_FAILED);
         }
-
+        String tempPassword =  decryptPassword;
+        if (encryptPassword) {
+            tempPassword = CryptoUtils.encrypt(decryptPassword);
+        }
         // 连接观云台，登录
-        CaasResult<JSONObject> loginResult = skyview2UserService.login(userName, decryptPassword, "ch");
+        CaasResult<JSONObject> loginResult = skyview2UserService.login(userName, tempPassword, "ch");
 
         if (CaasResponseUtil.fitError(loginResult, CaasErrorMessage.AUTH_FAIL)) {
             throw new BusinessException(ErrorMessage.AUTH_FAILED);
@@ -50,7 +61,7 @@ public class Skyview2AuthServiceImpl extends AuthServiceImpl {
 
         String caasToken = loginResult.getStringVal("token");
 
-        CaasResult<JSONObject> currentResult = skyview2UserService.current(caasToken, true);
+        CaasResult<JSONObject> currentResult = skyview2UserServiceClient.current(caasToken, true);
 
         Boolean isAdmin = currentResult.getBooleanVal("isAdmin");
         String realName = currentResult.getStringVal("realName");

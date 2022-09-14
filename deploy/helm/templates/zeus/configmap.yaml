@@ -58,11 +58,12 @@ data:
       images:
         path: /usr/local/zeus-pv/images/middleware
       platform:
-        version: v1.1.4
+        version: v1.1.5
       user:
         expire: 1
       usercenter: zeus
       skyview:
+        encryptPassword: true
         username: admin
         password: Ab123456
         host: caas-gateway-svc.caas-system

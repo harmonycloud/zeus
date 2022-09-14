@@ -494,7 +494,7 @@ data:
     CREATE TABLE `k8s_default_cluster` (
       `id` int NOT NULL AUTO_INCREMENT COMMENT '自增id',
       `cluster_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '集群id',
-      `url` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '路径',
+      `url` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '路径',
       `token` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT 'service account',
       PRIMARY KEY (`id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;

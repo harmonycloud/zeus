@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.service.k8s.NodeService;
 import com.harmonycloud.zeus.util.K8sConvert;
+import io.fabric8.kubernetes.api.model.NodeAddress;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -118,6 +119,17 @@ public class NodeServiceImpl implements NodeService {
             }
         });
         return new ArrayList<>(taintsSet);
+    }
+
+    @Override
+    public String getNodeIp(String clusterId) {
+        List<io.fabric8.kubernetes.api.model.Node> nodes = nodeWrapper.list(clusterId);
+        if (!CollectionUtils.isEmpty(nodes)) {
+            List<NodeAddress> addresses = nodes.get(0).getStatus().getAddresses();
+            List<NodeAddress> nodeAddresses = addresses.stream().filter(nodeAddress -> "InternalIP".equals(nodeAddress.getType())).collect(Collectors.toList());
+            return nodeAddresses.get(0).getAddress();
+        }
+        return "";
     }
 
 
