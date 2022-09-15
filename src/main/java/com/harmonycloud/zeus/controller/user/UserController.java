@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.github.pagehelper.PageInfo;
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
 import com.harmonycloud.zeus.service.user.UserService;
@@ -25,8 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_NINE;
-import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_TEN;
+import static com.harmonycloud.caas.common.constants.CommonConstant.*;
 
 /**
  * @author xutianhong
@@ -61,20 +61,11 @@ public class UserController {
             @ApiImplicitParam(name = "size", value = "每页记录数", required = false, paramType = "query", dataTypeClass = Long.class),
     })
     @GetMapping("/list")
-    public BaseResult<List<UserDto>> list(@RequestParam(value = "keyword", required = false) String keyword,
-                                          @RequestParam(value = "current", required = false) Integer current,
-                                          @RequestParam(value = "size", required = false) Integer size) {
+    public BaseResult<PageInfo<UserDto>> list(@RequestParam(value = "keyword", required = false) String keyword,
+                                          @RequestParam(value = "current", required = false, defaultValue = "1") Integer current,
+                                          @RequestParam(value = "size", required = false, defaultValue = "10") Integer size) {
         List<UserDto> userDtoList = userService.list(keyword);
-        // 分页
-        List<UserDto> res = new ArrayList<>();
-        if (current != null && size != null) {
-            for (int i = current * NUM_TEN - NUM_NINE; i < userDtoList.size() && i <= current * NUM_TEN; ++i) {
-                res.add(userDtoList.get(i));
-            }
-        } else {
-            res.addAll(userDtoList);
-        }
-        return BaseResult.ok(res);
+        return BaseResult.ok(convertPage(userDtoList, current, size));
     }
 
     @ApiOperation(value = "创建用户", notes = "创建用户")
@@ -206,6 +197,31 @@ public class UserController {
     @GetMapping("/useOpenUserCenter")
     public BaseResult<Boolean> userCenter() {
         return BaseResult.ok(userCenter.contains("skyview2"));
+    }
+
+    /**
+     * 用户列表分页
+     */
+    public PageInfo<UserDto> convertPage(List<UserDto> userDtoList, Integer current, Integer size){
+        List<UserDto> res = new ArrayList<>();
+        for (int i = (current - 1) * size ; i < userDtoList.size() && i < current * size; ++i) {
+            res.add(userDtoList.get(i));
+        }
+        PageInfo<UserDto> userDtoPageInfo = new PageInfo<>(res);
+        userDtoPageInfo.setPageNum(current);
+        userDtoPageInfo.setTotal(userDtoList.size());
+        userDtoPageInfo.setSize(res.size());
+        userDtoPageInfo.setPageSize(size);
+        userDtoPageInfo.setPrePage(current - 1);
+        userDtoPageInfo.setNextPage(userDtoPageInfo.getList().size() == size ?  current + 1 : 0);
+        double endPageNum = Math.ceil((double) userDtoList.size() / size);
+        int[] pageNum = new int[(int)endPageNum];
+        for (int i = 1; i <= endPageNum; ++i){
+            pageNum[i - 1] = i;
+        }
+        userDtoPageInfo.setNavigatepageNums(pageNum);
+
+        return userDtoPageInfo;
     }
 
 }
