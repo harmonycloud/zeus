@@ -106,6 +106,8 @@ annotations: {}
 labels: {}
 proxy:
   enable: false
+  podAntiAffinity: "soft"
+  replicaCount: 3
   resources:
     limits:
       cpu: 1000m
@@ -116,7 +118,7 @@ proxy:
 
 features:
   threadpool:
-    enabled: false 
+    enabled: false
   recycle:
     enabled: false
   bufferpoolControl:

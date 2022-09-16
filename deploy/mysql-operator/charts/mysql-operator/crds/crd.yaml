@@ -14,6 +14,16 @@ spec:
         openAPIV3Schema:
           type: object
           x-kubernetes-preserve-unknown-fields: true
+      additionalPrinterColumns:
+      - name: phase
+        type: string
+        jsonPath: .status.phase
+      - name: phaseMysql
+        type: string
+        jsonPath: .status.phaseMysql
+      - name: phaseProxy
+        type: string
+        jsonPath: .status.phaseProxy
   names:
     kind: MysqlCluster
     listKind: MysqlClusterList
