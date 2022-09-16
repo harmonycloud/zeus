@@ -10,6 +10,7 @@ import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
 import com.harmonycloud.zeus.service.user.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +28,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 
 import static com.harmonycloud.caas.common.constants.CommonConstant.*;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ASCEND;
 
 /**
  * @author xutianhong
@@ -62,9 +64,12 @@ public class UserController {
     })
     @GetMapping("/list")
     public BaseResult<PageInfo<UserDto>> list(@RequestParam(value = "keyword", required = false) String keyword,
-                                          @RequestParam(value = "current", required = false) Integer current,
-                                          @RequestParam(value = "size", required = false) Integer size) {
+                                              @RequestParam(value = "current", required = false) Integer current,
+                                              @RequestParam(value = "size", required = false) Integer size,
+                                              @RequestParam(value = "order", required = false) String order) {
         List<UserDto> userDtoList = userService.list(keyword);
+        // 排序
+        sort(userDtoList, order);
         if (current != null && size != null){
             return BaseResult.ok(convertPage(userDtoList, current, size));
         }
@@ -200,6 +205,19 @@ public class UserController {
     @GetMapping("/useOpenUserCenter")
     public BaseResult<Boolean> userCenter() {
         return BaseResult.ok(userCenter.contains("skyview2"));
+    }
+
+    /**
+     * 用户列表排序
+     */
+    public void sort(List<UserDto> userDtoList, String order) {
+        if (StringUtils.isNotEmpty(order)) {
+            userDtoList.sort((o1, o2) -> o1.getCreateTime() == null && o2.getCreateTime() == null ? 0
+                : o1.getCreateTime() == null ? 1
+                    : o2.getCreateTime() == null ? -1
+                        : ASCEND.equals(order) ? o1.getCreateTime().compareTo(o2.getCreateTime())
+                            : o2.getCreateTime().compareTo(o1.getCreateTime()));
+        }
     }
 
     /**
