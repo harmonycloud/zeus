@@ -62,10 +62,13 @@ public class UserController {
     })
     @GetMapping("/list")
     public BaseResult<PageInfo<UserDto>> list(@RequestParam(value = "keyword", required = false) String keyword,
-                                          @RequestParam(value = "current", required = false, defaultValue = "1") Integer current,
-                                          @RequestParam(value = "size", required = false, defaultValue = "10") Integer size) {
+                                          @RequestParam(value = "current", required = false) Integer current,
+                                          @RequestParam(value = "size", required = false) Integer size) {
         List<UserDto> userDtoList = userService.list(keyword);
-        return BaseResult.ok(convertPage(userDtoList, current, size));
+        if (current != null && size != null){
+            return BaseResult.ok(convertPage(userDtoList, current, size));
+        }
+        return BaseResult.ok(userDtoList);
     }
 
     @ApiOperation(value = "创建用户", notes = "创建用户")
