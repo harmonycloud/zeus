@@ -1,32 +1,36 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.enums.DateType;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.exception.CaasRuntimeException;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupNameDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
-import com.harmonycloud.caas.common.model.middleware.ScheduleBackup;
-import com.harmonycloud.zeus.bean.BeanMiddlewareBackupName;
-import com.harmonycloud.zeus.dao.BeanMiddlewareBackupNameMapper;
-import com.harmonycloud.zeus.integration.cluster.MysqlScheduleBackupWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.*;
-import com.harmonycloud.zeus.service.middleware.MysqlScheduleBackupService;
-import com.harmonycloud.zeus.util.CronUtils;
-import com.harmonycloud.zeus.util.DateUtil;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.harmonycloud.tool.date.DateUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.enums.DateType;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.harmonycloud.caas.common.exception.CaasRuntimeException;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
+import com.harmonycloud.caas.common.model.middleware.ScheduleBackup;
+import com.harmonycloud.zeus.bean.BeanMiddlewareBackupName;
+import com.harmonycloud.zeus.dao.BeanMiddlewareBackupNameMapper;
+import com.harmonycloud.zeus.integration.cluster.MysqlScheduleBackupWrapper;
+import com.harmonycloud.zeus.integration.cluster.bean.Minio;
+import com.harmonycloud.zeus.integration.cluster.bean.MysqlScheduleBackupCR;
+import com.harmonycloud.zeus.integration.cluster.bean.MysqlScheduleBackupSpec;
+import com.harmonycloud.zeus.integration.cluster.bean.MysqlScheduleBackupStatus;
+import com.harmonycloud.zeus.service.middleware.MysqlScheduleBackupService;
+import com.harmonycloud.zeus.util.CronUtils;
+import com.harmonycloud.zeus.util.DateUtil;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author xutianhong
@@ -89,10 +93,11 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
         mysqlScheduleBackupCRList.forEach(schedule -> {
             MysqlScheduleBackupStatus backupStatus = schedule.getStatus();
             MiddlewareBackupRecord backupRecord = new MiddlewareBackupRecord();
-            String backupTime = DateUtil.utc2Local(schedule.getMetadata().getCreationTimestamp(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue(), DateType.YYYY_MM_DD_HH_MM_SS.getValue());
             backupRecord.setNamespace(schedule.getMetadata().getNamespace());
-            backupRecord.setBackupTime(backupTime);
+            backupRecord.setCreationTime(DateUtils.parseUTCDate(schedule.getMetadata().getCreationTimestamp()));
+            //backupRecord.setBackupTime(DateUtils.parseUTCDate(schedule.getMetadata().getCreationTimestamp()));
             backupRecord.setBackupName(schedule.getMetadata().getName());
+            backupRecord.setSchedule(true);
             MysqlScheduleBackupSpec spec = schedule.getSpec();
             String time = schedule.getSpec().getSchedule();
             backupRecord.setCron(time);
@@ -122,15 +127,16 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
             backupRecord.setSourceName(schedule.getSpec().getBackupTemplate().getClusterName());
             String backupId = schedule.getMetadata().getLabels().get("backupId");
             backupRecord.setBackupId(backupId);
-            String taskName = getBackupName(clusterId, backupId);
-            backupRecord.setTaskName(StringUtils.isEmpty(taskName) ? schedule.getMetadata().getName() : taskName);
-            backupRecord.setAddressName(schedule.getMetadata().getLabels().get("addressId"));
+            backupRecord.setTaskName(getBackupAliasName(clusterId, backupId));
+            backupRecord.setAddressId(schedule.getMetadata().getLabels().get("addressId"));
             backupRecord.setCron(CronUtils.parseLocalCron(schedule.getSpec().getSchedule()));
             if (schedule.getSpec().getKeepBackups() == null) {
                 backupRecord.setBackupMode("single");
             } else {
                 backupRecord.setBackupMode("period");
             }
+            // 标记使用mysqlBackup
+            backupRecord.setMysqlBackup(true);
             recordList.add(backupRecord);
         });
         return recordList;
@@ -187,13 +193,11 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
         return mysqlScheduleBackupWrapper.get(clusterId, namespace, backupScheduleName);
     }
 
-    public String getBackupName(String clusterId, String backupId) {
-        QueryWrapper<BeanMiddlewareBackupName> wrapper = new QueryWrapper<BeanMiddlewareBackupName>().eq("cluster_id", clusterId).eq("backup_id", backupId);
-        BeanMiddlewareBackupName backupName = middlewareBackupNameMapper.selectOne(wrapper);
-        if (backupName != null && StringUtils.isNotEmpty(backupName.getBackupName())){
-            return backupName.getBackupName();
-        }
-        return null;
+    public String getBackupAliasName(String clusterId, String backupId) {
+        QueryWrapper<BeanMiddlewareBackupName> wrapper =
+                new QueryWrapper<BeanMiddlewareBackupName>().eq("cluster_id", clusterId).eq("backup_id", backupId);
+        BeanMiddlewareBackupName beanMiddlewareBackupName = middlewareBackupNameMapper.selectOne(wrapper);
+        return beanMiddlewareBackupName != null ? beanMiddlewareBackupName.getBackupName() : null;
     }
 
 }

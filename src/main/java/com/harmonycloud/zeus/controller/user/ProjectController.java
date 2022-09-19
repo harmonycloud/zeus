@@ -77,10 +77,11 @@ public class ProjectController {
     @ApiOperation(value = "获取项目下分区", notes = "获取项目下分区")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/{projectId}/namespace")
-    public BaseResult<List<Namespace>> getNamespace(@PathVariable("projectId") String projectId) {
-        return BaseResult.ok(projectService.getNamespace(projectId));
+    public BaseResult<List<Namespace>> getNamespace(@PathVariable("projectId") String projectId, @RequestParam(value = "clusterId", required = false) String clusterId) {
+        return BaseResult.ok(projectService.getNamespace(projectId, clusterId));
     }
 
     @ApiOperation(value = "获取项目下可分配分区", notes = "获取项目下可分配分区")

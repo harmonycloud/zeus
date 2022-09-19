@@ -71,7 +71,7 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
             case DLEDGER:
                 clusterInfo.put("allMaster", false);
                 clusterInfo.put("membersPerGroup", middleware.getRocketMQParam().getReplicas());
-                clusterInfo.put("groupReplica", 1);
+                clusterInfo.put("groupReplica", middleware.getRocketMQParam().getGroup());
                 break;
             default:
         }
@@ -79,8 +79,10 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
         // jvm堆内存
         String mem = calculateMem(mqQuota.getLimitMemory(), "0.5", "m");
         JSONObject javaOpts = values.getJSONObject("javaOpts");
-        javaOpts.put("xms", mem);
-        javaOpts.put("xmx", mem);
+        if (javaOpts != null){
+            javaOpts.put("xms", mem);
+            javaOpts.put("xmx", mem);
+        }
     }
 
     @Override
@@ -97,6 +99,14 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
 
             JSONObject clusterInfo = values.getJSONObject(CLUSTER);
             middleware.setMode(clusterInfo.getString(MODE));
+
+            RocketMQParam rocketMQParam = middleware.getRocketMQParam();
+            if (rocketMQParam == null){
+                rocketMQParam = new RocketMQParam();
+            }
+            rocketMQParam.setReplicas(clusterInfo.getInteger("membersPerGroup"));
+            rocketMQParam.setGroup(clusterInfo.getInteger("groupReplica"));
+            middleware.setRocketMQParam(rocketMQParam);
         }
         middleware.setManagePlatform(true);
         return middleware;
@@ -360,4 +370,5 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
     public void create(Middleware middleware, MiddlewareClusterDTO cluster) {
         super.create(middleware, cluster);
     }
+
 }

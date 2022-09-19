@@ -115,4 +115,14 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
         return podService.list(clusterId, "monitoring", labels);
     }
 
+    @Override
+    public void setStatus(ClusterComponentsDto clusterComponentsDto, MiddlewareClusterDTO cluster){
+        if (cluster.getMonitor() == null || cluster.getMonitor().getAlertManager() == null
+                || StringUtils.isAnyEmpty(cluster.getMonitor().getAlertManager().getPort(),
+                cluster.getMonitor().getAlertManager().getHost(),
+                cluster.getMonitor().getAlertManager().getProtocol())) {
+            clusterComponentsDto.setStatus(7);
+        }
+    }
+
 }

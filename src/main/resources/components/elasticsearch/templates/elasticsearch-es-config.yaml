@@ -235,6 +235,9 @@ data:
     logger.index_indexing_slowlog.level = trace
     logger.index_indexing_slowlog.appenderRef.index_indexing_slowlog_rolling.ref = index_indexing_slowlog_rolling
     logger.index_indexing_slowlog.additivity = false
+    {{- if eq .Values.version "7.16" }}
+    ingest.geoip.downloader.enabled: false
+    {{- end }}
 kind: ConfigMap
 metadata:
   labels:

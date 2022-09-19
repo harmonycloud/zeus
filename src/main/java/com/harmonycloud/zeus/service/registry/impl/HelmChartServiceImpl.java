@@ -18,6 +18,7 @@ import com.harmonycloud.zeus.integration.registry.HelmChartWrapper;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.V1HelmChartVersion;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
+import com.harmonycloud.zeus.service.middleware.ImageRepositoryService;
 import com.harmonycloud.zeus.service.registry.AbstractRegistryService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.YamlUtil;
@@ -73,6 +74,8 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     private MiddlewareInfoService middlewareInfoService;
     @Autowired
     private NamespaceService namespaceService;
+    @Autowired
+    private ImageRepositoryService imageRepositoryService;
 
     @Value("${system.upload.path:/usr/local/zeus-pv/upload}")
     private String uploadPath;
@@ -545,10 +548,13 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     public void editOperatorChart(String clusterId, String operatorChartPath, String type) {
         Yaml yaml = new Yaml();
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        Registry registry = cluster.getRegistry();
+        List<ImageRepositoryDTO> imageRepositoryDTOList = imageRepositoryService.list(cluster.getId());
+        if (CollectionUtils.isEmpty(imageRepositoryDTOList)) {
+            throw new BusinessException(ErrorMessage.CLUSTER_NOT_ADD_REPOSITORY);
+        }
         JSONObject values = yaml.loadAs(HelmChartUtil.getValueYaml(operatorChartPath), JSONObject.class);
-        values.getJSONObject("image").put("repository", registry.getRegistryAddress() + "/"
-                + (StringUtils.isBlank(registry.getImageRepo()) ? registry.getChartRepo() : registry.getImageRepo()));
+        values.getJSONObject("image").put("repository",
+            imageRepositoryDTOList.get(0).getRegistryAddress() + "/" + imageRepositoryDTOList.get(0).getProject());
         //高可用或单实例
         if (SIMPLE.equals(type)) {
             values.put("replicaCount",1);

@@ -198,6 +198,9 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         beanMiddlewareInfoList = beanMiddlewareInfoList.stream()
             .filter(mwInfo -> mwInfo.getChartVersion().equals(beanClusterMiddlewareInfo.getChartVersion()))
             .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(beanMiddlewareInfoList)) {
+            return null;
+        }
         MiddlewareInfoDTO middlewareInfoDTO = new MiddlewareInfoDTO();
         BeanUtils.copyProperties(beanMiddlewareInfoList.get(0), middlewareInfoDTO);
         return middlewareInfoDTO;

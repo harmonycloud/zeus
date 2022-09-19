@@ -1,1 +1,1 @@
-docker build -f Dockerfile-zeus-base -t zeus-base:1.0.0 .
+docker build -f Dockerfile-zeus-base -t zeus-base:1.1.0 .

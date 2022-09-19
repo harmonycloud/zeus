@@ -44,12 +44,17 @@ spec:
           - --sshpwd=abcd!@#$
           - --mysqlUserHost=%
           - --operatorname=mysql-operator
+          - --updateStrategy={{ .Values.updateStrategy }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
           - name: TZ
             value: CST-8
           - name: CRD_GROUP
             value: {{ .Values.crdGroup | default "harmonycloud" }}
+          - name: aliyun_logs_middlewarestdout
+            value: stdout
+          - name: aliyun_logs_middlewarestdout_tags
+            value: middleware_name={{ include "mysql-operator.fullname" . }}
           ports:
             - name: http
               containerPort: 80
@@ -60,17 +65,7 @@ spec:
               path: /healthz
               port: 10880
               scheme: HTTP
-            initialDelaySeconds: 5
-            periodSeconds: 5
-            successThreshold: 1
-            timeoutSeconds: 5
-          readinessProbe:
-            failureThreshold: 3
-            httpGet:
-              path: /healthz
-              port: 10880
-              scheme: HTTP
-            initialDelaySeconds: 5
+            initialDelaySeconds: 120
             periodSeconds: 5
             successThreshold: 1
             timeoutSeconds: 5

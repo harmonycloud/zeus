@@ -90,6 +90,7 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
             executorService.submit(()->{
                 try {
                     JSONObject jsonTenant = (JSONObject) tenant;
+                    log.info("提交查询租户信息:{}", jsonTenant.getString("tenantId"));
                     CaasResult<JSONArray> projectResult = projectServiceClient.getTenantProject(caastoken, jsonTenant.getString("tenantId"));
                     if (Boolean.TRUE.equals(projectResult.getSuccess())) {
                         JSONArray projectList = projectResult.getData();
@@ -98,6 +99,7 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
                 } catch (Exception e) {
                     log.error("查询租户项目出错了", e);
                 } finally {
+                    log.info("租户查询完成");
                     latch.countDown();
                 }
             });
@@ -135,18 +137,25 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
             projectDTO.setNamespaces(convertProjectNamespace(jsonProject.getJSONArray("namespaceList"), projectDTO.getProjectId()));
             projectDTO.setNamespaceCount(projectDTO.getNamespaces().size());
             // 查询项目成员
-            executorService.submit(()->{
-                CaasResult<JSONObject> projectMemberResult = projectServiceClient.getProjectMember(caastoken, projectDTO.getTenantId(), projectDTO.getProjectId());
-                JSONArray userDataList = projectMemberResult.getJSONArray("userDataList");
-                if (userDataList != null) {
-                    projectDTO.setUserDtos(convertProjectMember(userDataList, projectDTO.getProjectId()));
-                    projectDTO.setMemberCount(projectDTO.getUserDtos().size());
-                } else {
-                    projectDTO.setMemberCount(0);
+            executorService.submit(() -> {
+                try {
+                    log.debug("开始查询项目{}的成员", projectDTO.getProjectName());
+                    CaasResult<JSONObject> projectMemberResult = projectServiceClient.getProjectMember(caastoken, projectDTO.getTenantId(), projectDTO.getProjectId());
+                    JSONArray userDataList = projectMemberResult.getJSONArray("userDataList");
+                    if (userDataList != null) {
+                        projectDTO.setUserDtos(convertProjectMember(userDataList, projectDTO.getProjectId()));
+                        projectDTO.setMemberCount(projectDTO.getUserDtos().size());
+                    } else {
+                        projectDTO.setMemberCount(0);
+                    }
+                    projectTenantCache.put(projectDTO.getProjectId(), projectDTO.getTenantId());
+                    projectDTOList.add(projectDTO);
+                } catch (Exception e) {
+                    log.error("查询项目{}成员出错了", projectDTO.getProjectName(), e);
+                } finally {
+                    log.info("项目{}成员查询完成", projectDTO.getProjectName());
+                    latch.countDown();
                 }
-                projectTenantCache.put(projectDTO.getProjectId(), projectDTO.getTenantId());
-                projectDTOList.add(projectDTO);
-                latch.countDown();
             });
         });
         try {
@@ -334,8 +343,13 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
                 namespaceList.stream().map(Namespace::getClusterId).collect(Collectors.toSet());
         Map<String, List<MiddlewareCR>> middlewareCRListMap = new HashMap<>();
         for (String clusterId : clusterIdList) {
-            List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(clusterId, null, null);
-            middlewareCRListMap.put(clusterId, middlewareCRList);
+            List<MiddlewareCR> middlewareCRList = null;
+            try {
+                middlewareCRList = middlewareCRService.listCR(clusterId, null, null);
+                middlewareCRListMap.put(clusterId, middlewareCRList);
+            } catch (Exception e) {
+                log.error("统计集群{}的服务数量出错了", clusterId, e);
+            }
         }
         Map<String, List<Namespace>> beanProjectNamespaceListMap =
                 namespaceList.stream().collect(Collectors.groupingBy(Namespace::getProjectId));
@@ -369,9 +383,10 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
             clusterIdSet.add(beanProjectNamespace.getClusterId());
         });
         // 获取集群下已安装中间件并集
-        Set<BeanClusterMiddlewareInfo> mwInfoSet = new HashSet<>();
-        for (String clusterId : clusterIdSet){
-            mwInfoSet.addAll(clusterMiddlewareInfoService.list(clusterId, false));
+        Set<String> mwTypeSet = new HashSet<>();
+        for (String clusterId : clusterIdSet) {
+            mwTypeSet.addAll(clusterMiddlewareInfoService.list(clusterId, true).stream()
+                    .map(BeanClusterMiddlewareInfo::getChartName).collect(Collectors.toList()));
         }
         // 查询用户角色项目权限
         String username =
@@ -384,9 +399,8 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
         }
         // 过滤获取拥有权限的中间件
         if (!CollectionUtils.isEmpty(power)) {
-            mwInfoSet = mwInfoSet.stream()
-                    .filter(mwInfo -> power.keySet().stream()
-                            .anyMatch(key -> !"0000".equals(power.get(key)) && mwInfo.getChartName().equals(key)))
+            mwTypeSet = mwTypeSet.stream().filter(
+                    mwType -> power.keySet().stream().anyMatch(key -> !"0000".equals(power.get(key)) && mwType.equals(key)))
                     .collect(Collectors.toSet());
         }
         // 查询数据
@@ -410,11 +424,11 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
         Map<String, List<MiddlewareResourceInfo>> map =
                 all.stream().collect(Collectors.groupingBy(MiddlewareResourceInfo::getType));
         List<ProjectMiddlewareResourceInfo> infoList = new ArrayList<>();
-        for (BeanClusterMiddlewareInfo mwInfo : mwInfoSet){
+        for (String mwType : mwTypeSet) {
             ProjectMiddlewareResourceInfo projectMiddlewareResourceInfo = new ProjectMiddlewareResourceInfo()
-                    .setType(mwInfo.getChartName()).setAliasName(MiddlewareOfficialNameEnum.findByChartName(mwInfo.getChartName()))
-                    .setMiddlewareResourceInfoList(map.getOrDefault(mwInfo.getChartName(), null))
-                    .setImagePath(middlewareImagePathMap.getOrDefault(mwInfo.getChartName(), null));
+                    .setType(mwType).setAliasName(MiddlewareOfficialNameEnum.findByChartName(mwType))
+                    .setMiddlewareResourceInfoList(map.getOrDefault(mwType, null))
+                    .setImagePath(middlewareImagePathMap.getOrDefault(mwType, null));
             infoList.add(projectMiddlewareResourceInfo);
         }
         return infoList;

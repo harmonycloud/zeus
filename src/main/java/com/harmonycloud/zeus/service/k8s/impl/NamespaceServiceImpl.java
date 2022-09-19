@@ -1,6 +1,16 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.constants.NamespaceConstant;
+import com.harmonycloud.zeus.bean.user.BeanProjectNamespace;
+import com.harmonycloud.zeus.dao.user.BeanProjectNamespaceMapper;
+import com.harmonycloud.zeus.service.user.ProjectService;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
@@ -23,9 +33,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import com.harmonycloud.caas.common.constants.NamespaceConstant;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import org.springframework.util.ObjectUtils;
 
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
 
@@ -118,6 +130,10 @@ public class NamespaceServiceImpl implements NamespaceService {
         if (exist && checkExist(namespace.getClusterId(), namespace.getName())) {
             throw new BusinessException(ErrorMessage.NAMESPACE_EXIST);
         }
+        // 判断中文名是否重复
+        if (exist && checkAliasNameExist(namespace.getClusterId(), namespace.getAliasName())){
+            throw new BusinessException(ErrorMessage.NAMESPACE_ALIAS_NAME_EXIST);
+        }
         Map<String, String> annotations = new HashMap<>();
         if (StringUtils.isNotEmpty(namespace.getAliasName())) {
             annotations.put("alias_name", namespace.getAliasName());
@@ -206,6 +222,39 @@ public class NamespaceServiceImpl implements NamespaceService {
         }
     }
 
+    @Override
+    public void updateAvailableDomain(String clusterId, String name, boolean availableDomain) {
+        io.fabric8.kubernetes.api.model.Namespace namespace = namespaceWrapper.get(clusterId, name);
+        if (namespace.getMetadata().getLabels() == null) {
+            namespace.getMetadata().setLabels(new HashMap<>());
+        }
+        Map<String, String> labels = namespace.getMetadata().getLabels();
+        labels.put(NamespaceConstant.KEY_AVAILABLE_DOMAIN, String.valueOf(availableDomain));
+        namespaceWrapper.save(clusterId, namespace);
+    }
+
+    @Override
+    public void setAvailableDomain(String clusterId, String name, io.fabric8.kubernetes.api.model.Namespace originalNamespace, Namespace namespace) {
+        if (originalNamespace == null) {
+            originalNamespace = namespaceWrapper.get(clusterId, name);
+        }
+        if (originalNamespace != null && originalNamespace.getMetadata() != null && originalNamespace.getMetadata().getLabels() != null
+                && originalNamespace.getMetadata().getLabels().containsKey(NamespaceConstant.KEY_AVAILABLE_DOMAIN)) {
+            namespace.setAvailableDomain(Boolean.parseBoolean(originalNamespace.getMetadata().getLabels().get(NamespaceConstant.KEY_AVAILABLE_DOMAIN)));
+        } else {
+            namespace.setAvailableDomain(false);
+        }
+    }
+
+    @Override
+    public boolean checkAvailableDomain(String clusterId, String name) {
+        io.fabric8.kubernetes.api.model.Namespace namespace = namespaceWrapper.get(clusterId, name);
+        if (namespace == null || namespace.getMetadata().getLabels() == null || (!namespace.getMetadata().getLabels().containsKey(NamespaceConstant.KEY_AVAILABLE_DOMAIN))) {
+            return false;
+        }
+        return Boolean.parseBoolean(namespace.getMetadata().getLabels().get(NamespaceConstant.KEY_AVAILABLE_DOMAIN));
+    }
+
     public boolean checkExist(String clusterId, String name) {
         List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId);
         return nsList.stream().anyMatch(ns -> ns.getMetadata().getName().equals(name));
@@ -226,6 +275,11 @@ public class NamespaceServiceImpl implements NamespaceService {
                 DateUtils.parseDate(ns.getMetadata().getCreationTimestamp(), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
         // 状态
         namespace.setPhase(ns.getStatus().getPhase());
+        // 如果没有中文名称，则设置英文名称为中文名称
+        if (StringUtils.isBlank(namespace.getAliasName())) {
+            namespace.setAliasName(namespace.getName());
+        }
+        this.setAvailableDomain(clusterId, namespace.getName(), ns, namespace);
         return namespace;
     }
 
@@ -258,6 +312,21 @@ public class NamespaceServiceImpl implements NamespaceService {
             }
         }
         return namespaces;
+    }
+
+
+    public boolean checkAliasNameExist(String clusterId, String aliasName) {
+        List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId);
+        for (io.fabric8.kubernetes.api.model.Namespace ns : nsList) {
+            if (ns.getMetadata().getName().equalsIgnoreCase(aliasName)) {
+                return true;
+            }
+            if (ns.getMetadata().getAnnotations() != null && ns.getMetadata().getAnnotations().containsKey("alias_name")
+                    && aliasName.equals(ns.getMetadata().getAnnotations().get("alias_name"))) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

@@ -81,6 +81,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     @Autowired
     private BeanUserMapper  userMapper;
 
+    private final String SYSTEM_ALERT = "system_alert";
     @Override
     public PageInfo<MiddlewareAlertsDTO> listUsedRules(String clusterId, String namespace, String middlewareName,
                                                        String lay, String keyword) {
@@ -244,8 +245,8 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             middlewareAlertsDTO.getAnnotations().put("createTime",
                     DateUtils.dateToString(new Date(), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
             middlewareAlertsDTO.getAnnotations().put("product", "harmonycloud");
-            middlewareAlertsDTO.getAnnotations().put("group", "memory-used");
-            middlewareAlertsDTO.getAnnotations().put("name", "memory-used");
+            middlewareAlertsDTO.getAnnotations().put("group", SYSTEM_ALERT);
+            middlewareAlertsDTO.getAnnotations().put("name", SYSTEM_ALERT);
             middlewareAlertsDTO.getAnnotations().put("message",middlewareAlertsDTO.getContent());
             middlewareAlertsDTO.getAnnotations().put("summary",buildSummary(middlewareAlertsDTO));
             // 写入集群
@@ -285,13 +286,13 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         for (PrometheusRuleGroups prometheusRuleGroups : prometheusRule.getSpec().getGroups()) {
             prometheusRuleGroups.getRules().removeIf(prometheusRules -> !StringUtils.isEmpty(prometheusRules.getAlert())
                     && prometheusRules.getAlert().equals(alert));
-            if ("memory-used".equals(prometheusRuleGroups.getName()) && prometheusRuleGroups.getRules().size() == 0) {
+            if (SYSTEM_ALERT.equals(prometheusRuleGroups.getName()) && prometheusRuleGroups.getRules().size() == 0) {
                 status = true;
             }
         }
         if (status) {
             prometheusRule.getSpec().getGroups().removeIf(prometheusRuleGroups ->
-                    "memory-used".equals(prometheusRuleGroups.getName())
+                    SYSTEM_ALERT.equals(prometheusRuleGroups.getName())
             );
         }
         prometheusRuleService.update(clusterId, prometheusRule);
@@ -355,13 +356,13 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             for (PrometheusRuleGroups prometheusRuleGroups : prometheusRule.getSpec().getGroups()) {
                 prometheusRuleGroups.getRules().removeIf(prometheusRules -> !StringUtils.isEmpty(prometheusRules.getAlert())
                         && prometheusRules.getAlert().equals(alertRuleId.getAlert()));
-                if ("memory-used".equals(prometheusRuleGroups.getName()) && prometheusRuleGroups.getRules().size() == 0) {
+                if (SYSTEM_ALERT.equals(prometheusRuleGroups.getName()) && prometheusRuleGroups.getRules().size() == 0) {
                     status = true;
                 }
             }
             if (status) {
                 prometheusRule.getSpec().getGroups().removeIf(prometheusRuleGroups ->
-                        "memory-used".equals(prometheusRuleGroups.getName())
+                        SYSTEM_ALERT.equals(prometheusRuleGroups.getName())
                 );
             }
             prometheusRuleService.update(clusterId, prometheusRule);
@@ -631,6 +632,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                 DateUtils.dateToString(new Date(), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
         // 写入集群
         prometheusRules.getLabels().put("clusterId", clusterId);
+        prometheusRules.getLabels().put("alertname", middlewareAlertsDTO.getAlert());
         // 构造expr
         String expr = "";
         if ("kafka".equals(middlewareAlertsDTO.getType())) {
@@ -655,7 +657,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                               MiddlewareAlertsDTO middlewareAlertsDTO) {
         Date date = new Date();
         AlertRuleId alertRuleId = new AlertRuleId();
-        String alert = middlewareAlertsDTO.getAlert() + "-" + UUIDUtils.get8UUID();
+        String alert = middlewareAlertsDTO.getAlert();
         if ("system".equals(middlewareAlertsDTO.getLay())) {
             middlewareAlertsDTO.getLabels().put("alertname", alert);
         } else {

@@ -1,5 +1,21 @@
 package com.harmonycloud.zeus.service.user.impl;
 
+import static com.harmonycloud.caas.common.constants.user.UserConstant.USERNAME;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import com.harmonycloud.caas.common.enums.ComponentsEnum;
+import com.harmonycloud.zeus.service.k8s.ClusterComponentService;
+import com.harmonycloud.zeus.service.k8s.NamespaceService;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
+
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.DictEnum;
@@ -32,19 +48,8 @@ import com.harmonycloud.zeus.service.user.ProjectService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
 import com.harmonycloud.zeus.service.user.UserService;
 import com.harmonycloud.zeus.util.AssertUtil;
+
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
-
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static com.harmonycloud.caas.common.constants.user.UserConstant.USERNAME;
 
 /**
  * @author xutianhong
@@ -52,7 +57,7 @@ import static com.harmonycloud.caas.common.constants.user.UserConstant.USERNAME;
  */
 @Service
 @Slf4j
-@ConditionalOnProperty(value="system.usercenter",havingValue = "zeus")
+@ConditionalOnProperty(value = "system.usercenter", havingValue = "zeus")
 public class ProjectServiceImpl implements ProjectService {
 
     @Autowired
@@ -71,6 +76,8 @@ public class ProjectServiceImpl implements ProjectService {
     public MiddlewareInfoService middlewareInfoService;
     @Autowired
     private ClusterMiddlewareInfoService clusterMiddlewareInfoService;
+    @Autowired
+    private ClusterComponentService clusterComponentService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -168,6 +175,11 @@ public class ProjectServiceImpl implements ProjectService {
         List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(true, null);
         QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<>();
         List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
+        beanProjectNamespaceList.forEach(ns -> {
+            if (StringUtils.isEmpty(ns.getAliasName())) {
+                ns.setAliasName(ns.getNamespace());
+            }
+        });
         Map<String, List<BeanProjectNamespace>> nsMap =
             beanProjectNamespaceList.stream().collect(Collectors.groupingBy(BeanProjectNamespace::getClusterId));
         clusterList.forEach(cluster -> {
@@ -187,11 +199,11 @@ public class ProjectServiceImpl implements ProjectService {
         if (allocatable) {
             // 获取可分配的
             userDtoList = userDtoList.stream()
-                .filter(userDto -> CollectionUtils.isEmpty(userDto.getUserRoleList())
-                    || userDto.getUserRoleList().stream()
+                .filter(
+                    userDto -> CollectionUtils.isEmpty(userDto.getUserRoleList()) || userDto.getUserRoleList().stream()
                         .noneMatch(userRole -> StringUtils.isNotEmpty(userRole.getProjectId())
                             && userRole.getProjectId().equals(projectId))
-                    && userDto.getUserRoleList().stream().noneMatch(userRole -> userRole.getRoleId() == 1))
+                        && userDto.getUserRoleList().stream().noneMatch(userRole -> userRole.getRoleId() == 1))
                 .collect(Collectors.toList());
         } else {
             // 获取已分配的
@@ -290,25 +302,27 @@ public class ProjectServiceImpl implements ProjectService {
             clusterIdSet.add(beanProjectNamespace.getClusterId());
         });
         // 获取集群下已安装中间件并集
-        Set<BeanClusterMiddlewareInfo> mwInfoSet = new HashSet<>();
-        for (String clusterId : clusterIdSet){
-            mwInfoSet.addAll(clusterMiddlewareInfoService.list(clusterId, false));
+        Set<String> mwTypeSet = new HashSet<>();
+        for (String clusterId : clusterIdSet) {
+            mwTypeSet.addAll(clusterMiddlewareInfoService.list(clusterId, true).stream()
+                .map(BeanClusterMiddlewareInfo::getChartName).collect(Collectors.toList()));
         }
         // 查询用户角色项目权限
         String username =
-                JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue().getString(USERNAME);
+            JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue().getString(USERNAME);
         UserDto userDto = userService.getUserDto(username);
         Map<String, String> power = new HashMap<>();
-        if (!userDto.getIsAdmin() && userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getProjectId().equals(projectId))){
-            power.putAll(userDto.getUserRoleList().stream().filter(userRole -> userRole.getProjectId().equals(projectId))
+        if (!userDto.getIsAdmin()
+            && userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getProjectId().equals(projectId))) {
+            power
+                .putAll(userDto.getUserRoleList().stream().filter(userRole -> userRole.getProjectId().equals(projectId))
                     .collect(Collectors.toList()).get(0).getPower());
         }
         // 过滤获取拥有权限的中间件
         if (!CollectionUtils.isEmpty(power)) {
-            mwInfoSet = mwInfoSet.stream()
-                    .filter(mwInfo -> power.keySet().stream()
-                            .anyMatch(key -> !"0000".equals(power.get(key)) && mwInfo.getChartName().equals(key)))
-                    .collect(Collectors.toSet());
+            mwTypeSet = mwTypeSet.stream().filter(
+                mwType -> power.keySet().stream().anyMatch(key -> !"0000".equals(power.get(key)) && mwType.equals(key)))
+                .collect(Collectors.toSet());
         }
         // 查询数据
         List<MiddlewareResourceInfo> all = new ArrayList<>();
@@ -319,9 +333,6 @@ public class ProjectServiceImpl implements ProjectService {
         all = all.stream().filter(middlewareResourceInfo -> beanProjectNamespaceList.stream().anyMatch(
             beanProjectNamespace -> beanProjectNamespace.getNamespace().equals(middlewareResourceInfo.getNamespace())))
             .collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(all)) {
-            return new ArrayList<>();
-        }
         // 获取image.path
         Map<String,
             String> middlewareImagePathMap = middlewareInfoService.list(false).stream()
@@ -331,11 +342,11 @@ public class ProjectServiceImpl implements ProjectService {
         Map<String, List<MiddlewareResourceInfo>> map =
             all.stream().collect(Collectors.groupingBy(MiddlewareResourceInfo::getType));
         List<ProjectMiddlewareResourceInfo> infoList = new ArrayList<>();
-        for (BeanClusterMiddlewareInfo mwInfo : mwInfoSet){
+        for (String mwType : mwTypeSet) {
             ProjectMiddlewareResourceInfo projectMiddlewareResourceInfo = new ProjectMiddlewareResourceInfo()
-                    .setType(mwInfo.getChartName()).setAliasName(MiddlewareOfficialNameEnum.findByChartName(mwInfo.getChartName()))
-                    .setMiddlewareResourceInfoList(map.getOrDefault(mwInfo.getChartName(), null))
-                    .setImagePath(middlewareImagePathMap.getOrDefault(mwInfo.getChartName(), null));
+                .setType(mwType).setAliasName(MiddlewareOfficialNameEnum.findByChartName(mwType))
+                .setMiddlewareResourceInfoList(map.getOrDefault(mwType, null))
+                .setImagePath(middlewareImagePathMap.getOrDefault(mwType, null));
             infoList.add(projectMiddlewareResourceInfo);
         }
         return infoList;
@@ -375,6 +386,9 @@ public class ProjectServiceImpl implements ProjectService {
             beanProjectNamespaceList.stream().map(BeanProjectNamespace::getClusterId).collect(Collectors.toSet());
         Map<String, List<MiddlewareCR>> middlewareCRListMap = new HashMap<>();
         for (String clusterId : clusterIdList) {
+            if (!clusterComponentService.checkInstalled(clusterId, ComponentsEnum.MIDDLEWARE_CONTROLLER.getName())) {
+                continue;
+            }
             List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(clusterId, null, null);
             middlewareCRListMap.put(clusterId, middlewareCRList);
         }
@@ -431,8 +445,8 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public void bindNamespace(Namespace namespace) {
-        QueryWrapper<BeanProjectNamespace> wrapper =
-                new QueryWrapper<BeanProjectNamespace>().eq("namespace", namespace.getName()).eq("cluster_id", namespace.getClusterId());
+        QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<BeanProjectNamespace>()
+            .eq("namespace", namespace.getName()).eq("cluster_id", namespace.getClusterId());
         List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
         if (!CollectionUtils.isEmpty(beanProjectNamespaceList)) {
             throw new BusinessException(ErrorMessage.PROJECT_NAMESPACE_ALREADY_BIND);
@@ -463,23 +477,40 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public List<String> getClusters(String projectId) {
-        List<Namespace> namespaceList = this.getNamespace(projectId);
+        List<Namespace> namespaceList = this.getNamespace(projectId, null);
         return namespaceList.stream().map(Namespace::getClusterId).collect(Collectors.toList());
     }
+    @Autowired
+    private NamespaceService namespaceService;
 
     @Override
     public List<Namespace> getNamespace(String projectId) {
+        return getNamespace(projectId, null);
+    }
+
+    @Override
+    public List<Namespace> getNamespace(String projectId, String clusterId) {
         QueryWrapper<BeanProjectNamespace> wrapper =
                 new QueryWrapper<BeanProjectNamespace>().eq("project_id", projectId);
+        if (!StringUtils.isEmpty(clusterId)) {
+            wrapper.eq("cluster_id", clusterId);
+        }
         List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
-
-        return beanProjectNamespaceList.stream().map(beanProjectNamespace -> {
+        List<Namespace> namespaces = beanProjectNamespaceList.stream().map(beanProjectNamespace -> {
             Namespace namespace = new Namespace();
             BeanUtils.copyProperties(beanProjectNamespace, namespace);
             namespace.setClusterAliasName(clusterService.findById(namespace.getClusterId()).getNickname());
             namespace.setName(beanProjectNamespace.getNamespace());
+            if (StringUtils.isEmpty(namespace.getAliasName())) {
+                namespace.setAliasName(beanProjectNamespace.getNamespace());
+            }
             return namespace;
         }).collect(Collectors.toList());
+
+        if (StringUtils.isEmpty(clusterId)) {
+            return namespaces;
+        }
+        return setAvailableDomainStatus(namespaces, clusterId);
     }
 
     /**
@@ -492,6 +523,24 @@ public class ProjectServiceImpl implements ProjectService {
             throw new BusinessException(ErrorMessage.PROJECT_NOT_EXIST);
         }
         return beanProjectList.get(0);
+    }
+
+    /**
+     * 设置双活分区状态
+     * @param namespaces
+     * @param clusterId
+     * @return
+     */
+    public List<Namespace> setAvailableDomainStatus(List<Namespace> namespaces, String clusterId) {
+        List<Namespace> nsList = namespaceService.list(clusterId, true, null);
+        Map<String, Boolean> nsMap = new HashMap<>();
+        nsList.forEach(ns -> {
+            nsMap.put(ns.getName(), ns.isAvailableDomain());
+        });
+        namespaces.forEach(ns -> {
+            ns.setAvailableDomain(nsMap.get(ns.getName()));
+        });
+        return namespaces;
     }
 
 }

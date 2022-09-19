@@ -111,6 +111,9 @@ spec:
       containers:
       - args:
         - --leader-elect
+        env:
+        - name: CRD_GROUP
+          value: {{ .Values.global.crdGroup }}
         command:
         - /manager
         image: "{{ .Values.global.repository }}/{{ .Values.global.middleware_controller.image }}:{{ .Values.global.middleware_controller.tag }}"

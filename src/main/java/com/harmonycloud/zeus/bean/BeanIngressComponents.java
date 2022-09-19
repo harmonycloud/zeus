@@ -66,4 +66,11 @@ public class BeanIngressComponents implements Serializable {
      */
     @TableField("create_time")
     private Date createTime;
+
+    /**
+     * ingress类型，nginx或traefik
+     */
+    @TableField("type")
+    private String type;
+
 }

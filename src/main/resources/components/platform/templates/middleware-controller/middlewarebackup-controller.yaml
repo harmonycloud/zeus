@@ -36,6 +36,9 @@ rules:
   - middlewarebackupresults
   verbs:
   - delete
+  - get
+  - create
+  - update
 - apiGroups:
   - harmonycloud.cn
   resources:
@@ -44,12 +47,16 @@ rules:
   - middlewarerestores/status
   verbs:
   - update
+  - watch
+  - create
+  - update
 - apiGroups:
   - ""
   resources:
   - persistentvolumeclaims
   - persistentvolumes
   - pods
+  - configmaps
   verbs:
   - delete
 - apiGroups:
@@ -66,6 +73,12 @@ rules:
   - "volumesnapshotcontents/status"
   verbs:
   - update
+- apiGroups: [ "mysql.middleware.harmonycloud.cn" ]
+  resources: [ "mysqlclusters"]
+  verbs: [ "update","patch","get" ]
+- apiGroups: [ "apps" ]
+  resources: [ "statefulsets" ]
+  verbs: [ "get", "update" ]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -124,6 +137,10 @@ spec:
         - --job-creator-image={{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.job_creator.image }}:{{ .Values.global.middlewarebackup_controller.job_creator.tag }}
         - --backupJobImage={{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.common_path_backup.image }}:{{ .Values.global.middlewarebackup_controller.common_path_backup.tag }}
         - --job-pgsql-backup-image={{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.job_pgsql_backup.image }}:{{ .Values.global.middlewarebackup_controller.job_pgsql_backup.tag }}
+        - --job-mysql-backup-image={{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.job_mysql_backup.image }}:{{ .Values.global.middlewarebackup_controller.job_mysql_backup.tag }}
+        env:
+        - name: CRD_GROUP
+          value: "{{ .Values.global.crdGroup }}.cn"
         command:
         - /manager
         image: "{{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.image }}:{{ .Values.global.middlewarebackup_controller.tag }}"

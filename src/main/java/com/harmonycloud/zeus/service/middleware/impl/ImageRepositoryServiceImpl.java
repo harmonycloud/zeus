@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @author yushuaikang
@@ -61,6 +62,17 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
             cluster.setRegistry(registry);
             clusterService.updateCluster(cluster);
         }
+    }
+
+    @Override
+    public List<ImageRepositoryDTO> list(String clusterId) {
+        QueryWrapper<BeanImageRepository> wrapper = new QueryWrapper<BeanImageRepository>().eq("cluster_id", clusterId);
+        List<BeanImageRepository> beanImageRepositoryList = beanImageRepositoryMapper.selectList(wrapper);
+        return beanImageRepositoryList.stream().map(beanImageRepository -> {
+            ImageRepositoryDTO imageRepositoryDTO = new ImageRepositoryDTO();
+            BeanUtils.copyProperties(beanImageRepository, imageRepositoryDTO);
+            return imageRepositoryDTO;
+        }).collect(Collectors.toList());
     }
 
     @Override

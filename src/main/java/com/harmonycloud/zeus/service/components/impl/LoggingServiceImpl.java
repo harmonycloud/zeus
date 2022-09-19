@@ -17,6 +17,7 @@ import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.EsService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareManagerService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -205,5 +206,15 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
 
     public boolean createEsTemplate(MiddlewareClusterDTO cluster) {
         return esService.initEsIndexTemplate(cluster.getId());
+    }
+
+    @Override
+    public void setStatus(ClusterComponentsDto clusterComponentsDto, MiddlewareClusterDTO cluster){
+        if (cluster.getLogging() == null || cluster.getLogging().getElasticSearch() == null
+                || StringUtils.isAnyEmpty(cluster.getLogging().getElasticSearch().getPort(),
+                cluster.getLogging().getElasticSearch().getHost(),
+                cluster.getLogging().getElasticSearch().getProtocol())) {
+            clusterComponentsDto.setStatus(7);
+        }
     }
 }

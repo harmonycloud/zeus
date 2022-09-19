@@ -34,8 +34,17 @@ public class NodeController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class)
     })
     @GetMapping
-    public BaseResult<List<Node>> restart(@PathVariable("clusterId") String clusterId) {
+    public BaseResult<List<Node>> list(@PathVariable("clusterId") String clusterId) {
         return BaseResult.ok(nodeService.list(clusterId));
+    }
+
+    @ApiOperation(value = "获取可分配可用区的节点", notes = "获取可分配可用区的节点")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class)
+    })
+    @GetMapping("/allocatable")
+    public BaseResult<List<Node>> listAllocatableNode(@PathVariable("clusterId") String clusterId) {
+        return BaseResult.ok(nodeService.listAllocatableNode(clusterId));
     }
 
     @ApiOperation(value = "查询节点污点", notes = "查询节点污点")
