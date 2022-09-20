@@ -1159,7 +1159,6 @@ public abstract class AbstractBaseOperator {
      * @param values
      */
     public void setActiveActiveToleration(Middleware middleware, JSONObject values){
-        middleware.getTolerations();
         String activeActiveToleration = "harm.cn/type=active-active:NoSchedule";
         if (!CollectionUtils.isEmpty(middleware.getTolerations()) && !middleware.getTolerations().contains(activeActiveToleration)) {
             middleware.getTolerations().add(activeActiveToleration);

@@ -93,6 +93,8 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
                 throw new BusinessException(ErrorMessage.BACKUP_RESTORE_FAILED);
             }
         }
+        // 添加双活配置
+        checkAndSetActiveActive(values, middleware);
     }
 
     @Override
@@ -135,6 +137,17 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         sb.deleteCharAt(sb.length() - 1);
         // 更新helm
         helmChartService.upgrade(middleware, sb.toString(), cluster);
+    }
+
+    /**
+     * 检查是否是双活分区并设置双活配置字段
+     */
+    @Override
+    public void checkAndSetActiveActive(JSONObject values, Middleware middleware) {
+        if (namespaceService.checkAvailableDomain(middleware.getClusterId(), middleware.getNamespace())) {
+            super.setActiveActiveConfig(null, values);
+            super.setActiveActiveToleration(middleware, values);
+        }
     }
 
     @Override
