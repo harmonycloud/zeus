@@ -120,7 +120,7 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         wrapper.eq("cluster_id", clusterId).eq("id", id);
         beanImageRepositoryMapper.delete(wrapper);
         // 更新集群默认镜像仓库
-        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+        /*MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         if (cluster.getRegistry() != null && cluster.getRegistry().getId().equals(Integer.parseInt(id))) {
             QueryWrapper<BeanImageRepository> existWrapper =
                 new QueryWrapper<BeanImageRepository>().eq("cluster_id", clusterId);
@@ -136,7 +136,7 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
                 cluster.setRegistry(registry);
             }
             clusterService.updateCluster(cluster);
-        }
+        }*/
     }
 
     @Override

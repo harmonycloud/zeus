@@ -1190,6 +1190,8 @@ public abstract class AbstractBaseOperator {
         if (!CollectionUtils.isEmpty(middleware.getTolerations())) {
             List<String> tolerations = middleware.getTolerations().stream().filter(item -> !item.contains("active-active")).collect(Collectors.toList());
             middleware.setTolerations(tolerations);
+        }
+        if (!CollectionUtils.isEmpty(middleware.getNodeAffinity())) {
             List<AffinityDTO> affinityDTOList = middleware.getNodeAffinity().stream().filter(item -> !item.getLabel().contains("zone!=zoneC")).collect(Collectors.toList());
             middleware.setNodeAffinity(affinityDTOList);
         }
