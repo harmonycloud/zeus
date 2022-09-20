@@ -48,13 +48,12 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.harmonycloud.caas.common.constants.AlertConstant.SERVICE;
 import static com.harmonycloud.caas.common.constants.CommonConstant.LINE;
 import static com.harmonycloud.caas.common.constants.NameConstant.CPU;
 import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
-
-import static com.harmonycloud.caas.common.constants.AlertConstant.*;
 
 /**
  * @author xutianhong
@@ -92,7 +91,6 @@ public class OverviewServiceImpl implements OverviewService {
     private MiddlewareClusterService middlewareClusterService;
     @Autowired
     private BeanClusterComponentsMapper beanClusterComponentsMapper;
-
     @Value("${system.platform.version:v0.1.0}")
     private String version;
 
@@ -110,7 +108,7 @@ public class OverviewServiceImpl implements OverviewService {
 
         // 封装middleware
         List<Middleware> middlewares = middlewareCRService.list(clusterId, namespace, null, true);
-        if (CollectionUtils.isEmpty(middlewares)) {
+        if (!CollectionUtils.isEmpty(middlewares)) {
             return null;
         }
         Map<String, List<Middleware>> middlewareMap =
@@ -767,7 +765,7 @@ public class OverviewServiceImpl implements OverviewService {
 
     @Override
     public PlatformOverviewDTO getClusterPlatformOverview(String clusterId) {
-        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(true, null);
+        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(false, null);
         if (StringUtils.isNotBlank(clusterId)) {
             clusterList = clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
         }
@@ -943,7 +941,7 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
     private List<MiddlewareClusterDTO> getClusterList(String clusterId) {
-        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(true, null);
+        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters(false, null);
         if (StringUtils.isNotBlank(clusterId)) {
             clusterList = clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
         }

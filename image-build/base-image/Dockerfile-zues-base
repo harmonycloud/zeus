@@ -1,4 +1,4 @@
-FROM openjdk11-alpine3.11:hc
+FROM openjdk11-alpine3.12:hc
 
 # install tools
 RUN apk add curl --no-cache &&\

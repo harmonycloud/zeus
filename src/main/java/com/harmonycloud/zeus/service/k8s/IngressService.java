@@ -41,6 +41,13 @@ public interface IngressService {
     void checkServiceTcpPort(MiddlewareClusterDTO cluster, List<ServiceDTO> serviceList);
 
     /**
+     * 获取集群已被使用的端口列表
+     * @param cluster
+     * @return
+     */
+    Set<Integer>  getUsedPortSet(MiddlewareClusterDTO cluster);
+
+    /**
      * 创建中间件对外访问
      *
      * @param cluster     集群
@@ -115,7 +122,7 @@ public interface IngressService {
      * @param keyword
      * @return
      */
-    List listAllIngress(String clusterId, String namespace, String keyword);
+    List<IngressDTO> listAllIngress(String clusterId, String namespace, String keyword);
 
     /**
      * 获取一个未被占用的ingress端口

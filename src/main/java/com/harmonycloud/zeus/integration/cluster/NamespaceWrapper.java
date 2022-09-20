@@ -1,14 +1,16 @@
 package com.harmonycloud.zeus.integration.cluster;
 
-import com.harmonycloud.zeus.util.K8sClient;
-import io.fabric8.kubernetes.api.model.Namespace;
-import io.fabric8.kubernetes.api.model.NamespaceList;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.harmonycloud.zeus.util.K8sClient;
+
+import io.fabric8.kubernetes.api.model.Namespace;
+import io.fabric8.kubernetes.api.model.NamespaceList;
 
 /**
  * @author dengyulong
@@ -40,7 +42,7 @@ public class NamespaceWrapper {
         return list.getItems();
     }
 
-    public Namespace get(String clusterId, String namespace){
+    public Namespace get(String clusterId, String namespace) {
         return K8sClient.getClient(clusterId).namespaces().withName(namespace).get();
     }
 

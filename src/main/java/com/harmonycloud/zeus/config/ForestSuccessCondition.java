@@ -1,5 +1,11 @@
 package com.harmonycloud.zeus.config;
 
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+
 import com.alibaba.fastjson.JSONObject;
 import com.dtflys.forest.callback.SuccessWhen;
 import com.dtflys.forest.http.ForestRequest;
@@ -8,12 +14,10 @@ import com.harmonycloud.caas.common.base.CaasResult;
 import com.harmonycloud.caas.filters.user.CurrentUser;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.encrypt.RSAUtils;
-import com.harmonycloud.zeus.skyviewservice.Skyview2UserServiceClient;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
+import com.harmonycloud.zeus.skyviewservice.Skyview2UserService;
+import com.harmonycloud.zeus.util.CryptoUtils;
 
-import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 // 自定义成功/失败条件实现类
 // 需要实现 SuccessWhen 接口
@@ -22,8 +26,10 @@ import java.util.Map;
 public class ForestSuccessCondition implements SuccessWhen {
 
     @Autowired
-    private Skyview2UserServiceClient userServiceClient;
+    private Skyview2UserService skyview2UserService;
 
+    @Value("${system.skyview.encryptPassword:false}")
+    private boolean encryptPassword;
     /**
      * 请求成功条件
      * @param req Forest请求对象
@@ -43,7 +49,11 @@ public class ForestSuccessCondition implements SuccessWhen {
             String password = attributes.get("password");
             try {
                 String decryptPassword = RSAUtils.decryptByPrivateKey(password);
-                CaasResult<JSONObject> loginResult = userServiceClient.login(username, decryptPassword, "ch");
+                String tempPassword =  decryptPassword;
+                if (encryptPassword) {
+                    tempPassword = CryptoUtils.encrypt(decryptPassword);
+                }
+                CaasResult<JSONObject> loginResult = skyview2UserService.login(username, tempPassword, "ch");
                 String token = loginResult.getStringVal("token");
                 attributes.put("caastoken", token);
             } catch (Exception e) {

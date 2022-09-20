@@ -32,8 +32,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_FIVE;
-import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_TWO;
+import static com.harmonycloud.caas.common.constants.CommonConstant.*;
 
 /**
  * @author dengyulong
@@ -181,6 +180,9 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
             if (cm.getStatus() == NUM_TWO){
                 dto.setSeconds(DateUtils.getIntervalDays(new Date(), dto.getCreateTime()));
             }
+            if (cm.getStatus() == NUM_ONE || cm.getStatus() == NUM_THREE || cm.getStatus() == NUM_FOUR){
+                getOperator(BaseComponentsService.class, BaseComponentsService.class, dto.getComponent()).setStatus(dto, cluster);
+            }
             return dto;
         }).collect(Collectors.toList());
     }
@@ -189,6 +191,22 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
     public void delete(String clusterId) {
         QueryWrapper<BeanClusterComponents> wrapper = new QueryWrapper<BeanClusterComponents>().eq("cluster_id", clusterId);
         beanClusterComponentsMapper.delete(wrapper);
+    }
+
+    @Override
+    public boolean checkInstalled(String clusterId, String componentName) {
+        try {
+            List<ClusterComponentsDto> componentsDtos = list(clusterId);
+            componentsDtos = componentsDtos.stream().filter(item -> ComponentsEnum.MIDDLEWARE_CONTROLLER.getName().equals(item.getComponent())).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(componentsDtos)) {
+                return false;
+            }
+            ClusterComponentsDto clusterComponentsDto = componentsDtos.get(0);
+            return clusterComponentsDto.getStatus() != 0 && clusterComponentsDto.getStatus() != 5;
+        } catch (Exception e) {
+            log.error("查询集群组件失败了");
+        }
+        return false;
     }
 
     /**

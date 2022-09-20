@@ -17,6 +17,7 @@ public class Status {
     private List<Condition> conditions;
     private Integer replicas;
     private String phase;
+    private String lastChangeMaster;
 
     @Accessors(chain = true)
     @Data

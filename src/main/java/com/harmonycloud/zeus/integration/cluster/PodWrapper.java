@@ -38,6 +38,17 @@ public class PodWrapper {
         return list.getItems();
     }
 
+    public List<Pod> listByFields(String clusterId, String namespace, Map<String, String> fields) {
+        if (CollectionUtils.isEmpty(fields)){
+            fields = new HashMap<>(0);
+        }
+        PodList list = K8sClient.getClient(clusterId).pods().inNamespace(namespace).withFields(fields).list();
+        if (list == null || CollectionUtils.isEmpty(list.getItems())) {
+            return new ArrayList<>(0);
+        }
+        return list.getItems();
+    }
+
     public Pod get(String clusterId, String namespace, String name) {
         return K8sClient.getClient(clusterId).pods().inNamespace(namespace).withName(name).get();
     }

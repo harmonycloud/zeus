@@ -1,23 +1,25 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
+import com.harmonycloud.caas.common.constants.DateStyle;
 import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.ContainerWithStatus;
+import com.harmonycloud.caas.common.model.Node;
 import com.harmonycloud.caas.common.model.StorageClassDTO;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareQuota;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.caas.common.model.middleware.PodInfoGroup;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.harmonycloud.zeus.bean.BeanActiveArea;
 import com.harmonycloud.zeus.integration.cluster.PodWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
-import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
-import com.harmonycloud.zeus.service.k8s.PodService;
-import com.harmonycloud.zeus.service.k8s.StorageClassService;
+import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
+import com.harmonycloud.zeus.util.DateUtil;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -57,6 +59,10 @@ public class PodServiceImpl implements PodService {
     private StorageClassService storageClassService;
     @Autowired
     private MiddlewareBackupServiceImpl middlewareBackupService;
+    @Autowired
+    private NodeService nodeService;
+    @Autowired
+    private ActiveAreaService activeAreaService;
 
     @Override
     public Middleware list(String clusterId, String namespace, String middlewareName, String type) {
@@ -88,6 +94,19 @@ public class PodServiceImpl implements PodService {
     @Override
     public List<PodInfo> list(String clusterId, String namespace, Map<String, String> labels) {
         List<Pod> list = podWrapper.list(clusterId, namespace, labels);
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>(0);
+        }
+        List<PodInfo> podInfoList = list.stream().map(this::convertPodInfo).collect(Collectors.toList());
+        podInfoList.forEach(podInfo -> {
+            podInfo.setCreateTime(DateUtil.utc2Local(podInfo.getCreateTime(), "yyyy-MM-dd HH:mm:ss", DateStyle.YYYY_MM_DD_HH_MM_SS));
+        });
+        return podInfoList;
+    }
+
+    @Override
+    public List<PodInfo> listByFields(String clusterId, String namespace, Map<String, String> fields) {
+        List<Pod> list = podWrapper.listByFields(clusterId, namespace, fields);
         if (CollectionUtils.isEmpty(list)) {
             return new ArrayList<>(0);
         }
@@ -174,6 +193,7 @@ public class PodServiceImpl implements PodService {
                 .setNodeName(pod.getSpec().getNodeName())
                 .setCreateTime(pod.getMetadata().getCreationTimestamp())
                 .setRestartCount(0)
+                .setNamespace(pod.getMetadata().getNamespace())
                 .setHostIp(pod.getStatus().getHostIP());
         // set pod status
         pi.setStatus(getPodRealState(pod));
@@ -261,6 +281,12 @@ public class PodServiceImpl implements PodService {
     }
 
     @Override
+    public void restart(String clusterId, String namespace, String podName) {
+        checkExist(clusterId, namespace, podName);
+        podWrapper.delete(clusterId, namespace, podName);
+    }
+
+    @Override
     public String yaml(String clusterId, String namespace, String middlewareName, String type, String podName) {
         checkExist(clusterId, namespace, middlewareName, type, podName);
         Yaml yaml = new Yaml();
@@ -278,6 +304,19 @@ public class PodServiceImpl implements PodService {
         List<MiddlewareInfo> pods = mw.getStatus().getInclude().get(PODS);
         if (CollectionUtils.isEmpty(pods) || pods.stream().noneMatch(po -> podName.equals(po.getName()))) {
             throw new BusinessException(ErrorMessage.FIND_POD_IN_MIDDLEWARE_FAIL);
+        }
+    }
+
+    @Override
+    public String yaml(String clusterId, String namespace, String podName) {
+        Yaml yaml = new Yaml();
+        return yaml.dumpAsMap(podWrapper.get(clusterId, namespace, podName));
+    }
+
+    public void checkExist(String clusterId, String namespace, String podName) {
+        Pod pod = podWrapper.get(clusterId, namespace, podName);
+        if (pod == null) {
+            throw new BusinessException(ErrorMessage.POD_NOT_EXIST);
         }
     }
 
@@ -307,6 +346,30 @@ public class PodServiceImpl implements PodService {
      */
     private void setPodBackupStatus(String clusterId, String namespace, String type, String middlewareName, PodInfo podInfo) {
         podInfo.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(clusterId, namespace, type, middlewareName, podInfo.getPodName()));
+    }
+
+    /**
+     * 设置pod所在的可用区
+     * @param clusterId 集群id
+     * @param podInfoList pod集合
+     */
+    private void setPodArea(String clusterId, List<PodInfo> podInfoList) {
+        List<Node> nodeList = nodeService.list(clusterId);
+        Map<String, Node> nodeMap = nodeList.stream().collect(Collectors.toMap(Node::getName, Node -> Node));
+        podInfoList.forEach(podInfo -> {
+            Node node = nodeMap.get(podInfo.getNodeName());
+            if (node != null && node.getLabels() != null && node.getLabels().containsKey("zone")) {
+                String areaName = node.getLabels().get("zone");
+                BeanActiveArea beanActiveArea = activeAreaService.get(clusterId, areaName);
+                if (beanActiveArea == null) {
+                    podInfo.setNodeZone(areaName);
+                } else {
+                    podInfo.setNodeZone(beanActiveArea.getAliasName());
+                }
+            } else {
+                podInfo.setNodeZone("");
+            }
+        });
     }
 
     @Override
@@ -349,6 +412,8 @@ public class PodServiceImpl implements PodService {
             setPodBackupStatus(clusterId, namespace, type, middlewareName, pi);
             podInfoList.add(pi);
         }
+        // 设置pod所在可用区
+        this.setPodArea(clusterId, podInfoList);
         middleware.setIsAllLvmStorage(isAllLvmStorage.get());
         middleware.setPodInfoGroup(convertListToGroup(podInfoList));
         middleware.setPods(podInfoList);

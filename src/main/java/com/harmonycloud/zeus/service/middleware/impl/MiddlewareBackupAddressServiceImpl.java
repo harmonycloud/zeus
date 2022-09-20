@@ -93,36 +93,34 @@ public class MiddlewareBackupAddressServiceImpl implements MiddlewareBackupAddre
         if (StringUtils.isNotEmpty(addressId)) {
             wrapper.eq("address_id", addressId);
         }
-        List<BeanMiddlewareBackupAddress> backups = middlewareBackupAddressMapper.selectList(wrapper);
-        if (CollectionUtils.isEmpty(backups)) {
-            return new ArrayList<MiddlewareClusterBackupAddressDTO>();
+        List<BeanMiddlewareBackupAddress> beanMiddlewareBackupAddresses = middlewareBackupAddressMapper.selectList(wrapper);
+        if (CollectionUtils.isEmpty(beanMiddlewareBackupAddresses)) {
+            return new ArrayList<>();
         }
-        List<MiddlewareClusterBackupAddressDTO> backupAddressDTOS = backups.stream().map(backup -> {
-            MiddlewareClusterBackupAddressDTO backupDTO = new MiddlewareClusterBackupAddressDTO();
-            BeanUtils.copyProperties(backup, backupDTO);
+        List<MiddlewareClusterBackupAddressDTO> backupAddressDtos = beanMiddlewareBackupAddresses.stream().map(backupAddress -> {
+            MiddlewareClusterBackupAddressDTO backupAddressDTO = new MiddlewareClusterBackupAddressDTO();
+            BeanUtils.copyProperties(backupAddress, backupAddressDTO);
             List<String> clusterIds = new LinkedList<>();
             List<BeanMiddlewareBackupToCluster> backupToClusters = backupAddressClusterMapper
-                    .selectList(new QueryWrapper<BeanMiddlewareBackupToCluster>().eq("backup_address_id", backup.getId()));
-            backupToClusters.forEach(backupToCluster -> {
-                clusterIds.add(backupToCluster.getClusterId());
-            });
-            backupDTO.setClusterIds(clusterIds);
+                    .selectList(new QueryWrapper<BeanMiddlewareBackupToCluster>().eq("backup_address_id", backupAddress.getId()));
+            backupToClusters.forEach(backupToCluster -> clusterIds.add(backupToCluster.getClusterId()));
+            backupAddressDTO.setClusterIds(clusterIds);
             int num = 0;
             try {
-                num = calRelevanceNum(backupDTO.getName());
+                num = calRelevanceNum(backupAddressDTO.getAddressId());
             } catch (Exception e){
                 log.error("查询备份使用数量失败", e);
             }
-            backupDTO.setRelevanceNum(num);
-            return backupDTO;
+            backupAddressDTO.setRelevanceNum(num);
+            return backupAddressDTO;
         }).collect(Collectors.toList());
         if (StringUtils.isNotEmpty(keyWord)) {
-            return backupAddressDTOS.stream()
+            return backupAddressDtos.stream()
                     .filter(
                             middlewareClusterBackupAddressDTO -> middlewareClusterBackupAddressDTO.getName().contains(keyWord))
                     .collect(Collectors.toList());
         }
-        return backupAddressDTOS;
+        return backupAddressDtos;
     }
 
     private int calRelevanceNum(String addressName) {
@@ -130,7 +128,7 @@ public class MiddlewareBackupAddressServiceImpl implements MiddlewareBackupAddre
         List<BeanMiddlewareCluster> clusterList = middlewareClusterService.listClustersByClusterId(null);
         for (BeanMiddlewareCluster cluster : clusterList) {
             List<MiddlewareBackupRecord> backups = middlewareBackupService.backupTaskList(cluster.getClusterId(), "*", null, null, null);
-            backups.stream().filter(backup -> addressName.equals(backup.getAddressName())).collect(Collectors.toList());
+            backups = backups.stream().filter(backup -> addressName.equals(backup.getAddressId())).collect(Collectors.toList());
             relevanceNum = relevanceNum + backups.size();
         }
        return relevanceNum;

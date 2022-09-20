@@ -2,12 +2,15 @@ package com.harmonycloud.zeus.controller.user;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
+import com.github.pagehelper.PageInfo;
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
 import com.harmonycloud.zeus.service.user.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +26,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
+
+import static com.harmonycloud.caas.common.constants.CommonConstant.*;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ASCEND;
 
 /**
  * @author xutianhong
@@ -53,10 +59,21 @@ public class UserController {
     @ApiOperation(value = "获取用户列表", notes = "获取用户列表")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "keyword", value = "过滤字", required = false, paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "current", value = "当前页", required = false, paramType = "query", dataTypeClass = Long.class),
+            @ApiImplicitParam(name = "size", value = "每页记录数", required = false, paramType = "query", dataTypeClass = Long.class),
     })
     @GetMapping("/list")
-    public BaseResult<List<UserDto>> list(@RequestParam(value = "keyword", required = false) String keyword) {
-        return BaseResult.ok(userService.list(keyword));
+    public BaseResult<PageInfo<UserDto>> list(@RequestParam(value = "keyword", required = false) String keyword,
+                                              @RequestParam(value = "current", required = false) Integer current,
+                                              @RequestParam(value = "size", required = false) Integer size,
+                                              @RequestParam(value = "order", required = false) String order) {
+        List<UserDto> userDtoList = userService.list(keyword);
+        // 排序
+        sort(userDtoList, order);
+        if (current != null && size != null){
+            return BaseResult.ok(convertPage(userDtoList, current, size));
+        }
+        return BaseResult.ok(userDtoList);
     }
 
     @ApiOperation(value = "创建用户", notes = "创建用户")
@@ -188,6 +205,44 @@ public class UserController {
     @GetMapping("/useOpenUserCenter")
     public BaseResult<Boolean> userCenter() {
         return BaseResult.ok(userCenter.contains("skyview2"));
+    }
+
+    /**
+     * 用户列表排序
+     */
+    public void sort(List<UserDto> userDtoList, String order) {
+        if (StringUtils.isNotEmpty(order)) {
+            userDtoList.sort((o1, o2) -> o1.getCreateTime() == null && o2.getCreateTime() == null ? 0
+                : o1.getCreateTime() == null ? 1
+                    : o2.getCreateTime() == null ? -1
+                        : ASCEND.equals(order) ? o1.getCreateTime().compareTo(o2.getCreateTime())
+                            : o2.getCreateTime().compareTo(o1.getCreateTime()));
+        }
+    }
+
+    /**
+     * 用户列表分页
+     */
+    public PageInfo<UserDto> convertPage(List<UserDto> userDtoList, Integer current, Integer size){
+        List<UserDto> res = new ArrayList<>();
+        for (int i = (current - 1) * size ; i < userDtoList.size() && i < current * size; ++i) {
+            res.add(userDtoList.get(i));
+        }
+        PageInfo<UserDto> userDtoPageInfo = new PageInfo<>(res);
+        userDtoPageInfo.setPageNum(current);
+        userDtoPageInfo.setTotal(userDtoList.size());
+        userDtoPageInfo.setSize(res.size());
+        userDtoPageInfo.setPageSize(size);
+        userDtoPageInfo.setPrePage(current - 1);
+        userDtoPageInfo.setNextPage(userDtoPageInfo.getList().size() == size ?  current + 1 : 0);
+        double endPageNum = Math.ceil((double) userDtoList.size() / size);
+        int[] pageNum = new int[(int)endPageNum];
+        for (int i = 1; i <= endPageNum; ++i){
+            pageNum[i - 1] = i;
+        }
+        userDtoPageInfo.setNavigatepageNums(pageNum);
+
+        return userDtoPageInfo;
     }
 
 }

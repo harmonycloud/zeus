@@ -149,7 +149,26 @@ public class ServiceServiceImpl implements ServiceService {
         List<ServicePortDTO> servicePortDTOS = servicePortDTOList.stream().
                 filter(servicePortDTO -> servicePortDTO.getServicePurpose() != null && !"null".equals(servicePortDTO.getServicePurpose())).
                 collect(Collectors.toList());
-        return servicePortDTOS;
+        return filterByMiddlewareType(clusterId, namespace, name, type, servicePortDTOS);
+    }
+
+    private List<ServicePortDTO> filterByMiddlewareType(String clusterId, String namespace, String name, String type, List<ServicePortDTO> servicePortDTOS) {
+        if ("redis".equals(type)) {
+            JSONObject values = helmChartService.getInstalledValues(name, namespace, clusterService.findById(clusterId));
+            JSONObject jsonObject = values.getJSONObject("predixy");
+            if (jsonObject != null && jsonObject.containsKey("enableProxy") && jsonObject.getBoolean("enableProxy")) {
+                return servicePortDTOS.stream().filter(servicePortDTO ->
+                        servicePortDTO.getServiceName().contains("predixy")).collect(Collectors.toList());
+            } else {
+                return servicePortDTOS.stream().filter(servicePortDTO ->
+                        !servicePortDTO.getServiceName().contains("sentinel")).collect(Collectors.toList());
+            }
+        } else if ("kafka".equals(type)) {
+            return servicePortDTOS.stream().filter(servicePortDTO ->
+                    !servicePortDTO.getServiceName().contains("manager")).collect(Collectors.toList());
+        } else {
+            return servicePortDTOS;
+        }
     }
 
     private List<ServicePortDTO> getMQInternalService(String middlewareName) {

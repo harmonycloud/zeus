@@ -13,7 +13,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import cn.hutool.json.JSONUtil;
-import com.baomidou.mybatisplus.core.conditions.query.Query;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
@@ -244,7 +243,7 @@ public abstract class AbstractBaseOperator {
         }
         
         beanCacheMiddleware.setValuesYaml(JSONObject.toJSONString(values));
-        cacheMiddlewareService.insert(beanCacheMiddleware);
+        cacheMiddlewareService.insertIfNotPresent(beanCacheMiddleware);
         // helm卸载需要放到最后，要不然一些资源的查询会404
         helmChartService.uninstall(middleware, cluster);
     }
@@ -1153,4 +1152,79 @@ public abstract class AbstractBaseOperator {
             }
         }));
     }
+
+    /**
+     * 设置容忍双活污点
+     * @param middleware
+     * @param values
+     */
+    public void setActiveActiveToleration(Middleware middleware, JSONObject values){
+        middleware.getTolerations();
+        String activeActiveToleration = "harm.cn/type=active-active:NoSchedule";
+        if (!CollectionUtils.isEmpty(middleware.getTolerations()) && !middleware.getTolerations().contains(activeActiveToleration)) {
+            middleware.getTolerations().add(activeActiveToleration);
+        } else {
+            middleware.setTolerations(new ArrayList<>());
+            middleware.getTolerations().add(activeActiveToleration);
+        }
+        JSONArray jsonArray = K8sConvert.convertToleration2Json(middleware.getTolerations());
+        values.put("tolerations", jsonArray);
+        if (values.getJSONObject("proxy") != null && MiddlewareTypeEnum.MYSQL.getType().equals(middleware.getType())) {
+            JSONObject proxy = values.getJSONObject("proxy");
+            proxy.put("tolerations", jsonArray);
+        }
+        StringBuilder sbf = new StringBuilder();
+        for (String toleration : middleware.getTolerations()) {
+            sbf.append(toleration).append(",");
+        }
+        values.put("tolerationAry", sbf.substring(0, sbf.length()));
+    }
+
+    /**
+     * @description 过滤掉双活主机容忍和主机亲和
+     * @author  liyinlong
+     * @since 2022/8/31 3:13 下午
+     * @param middleware
+     */
+    public void filterActiveActiveToleration(Middleware middleware) {
+        if (!CollectionUtils.isEmpty(middleware.getTolerations())) {
+            List<String> tolerations = middleware.getTolerations().stream().filter(item -> !item.contains("active-active")).collect(Collectors.toList());
+            middleware.setTolerations(tolerations);
+        }
+        if (!CollectionUtils.isEmpty(middleware.getNodeAffinity())) {
+            List<AffinityDTO> affinityDTOList = middleware.getNodeAffinity().stream().filter(item -> !item.getLabel().contains("zone!=zoneC")).collect(Collectors.toList());
+            middleware.setNodeAffinity(affinityDTOList);
+        }
+    }
+
+    /**
+     * 设置values.yaml双活参数
+     * @param values
+     * @param middleware
+     */
+    public void checkAndSetActiveActive(JSONObject values, Middleware middleware) {
+    }
+
+    /**
+     * 设置双活参数
+     * @param values
+     * @param activeActiveKey
+     */
+    public void setActiveActiveConfig(String activeActiveKey, JSONObject values) {
+        values.put("podAntiAffinityTopologKey", "zone");
+        values.put("podAntiAffinity", "soft");
+        AffinityDTO affinityDTO = new AffinityDTO();
+        affinityDTO.setLabel("zone=zoneC");
+        affinityDTO.setRequired(true);
+        JSONObject nodeAffinity = K8sConvert.convertNodeAffinity2Json(affinityDTO, "NotIn");
+        if (nodeAffinity != null) {
+            if (!StringUtils.isEmpty(activeActiveKey)) {
+                JSONObject activeKey = values.getJSONObject(activeActiveKey);
+                activeKey.put("nodeAffinity", nodeAffinity);
+            } else {
+                values.put("nodeAffinity", nodeAffinity);
+            }
+        }
+    }
+
 }

@@ -4,6 +4,7 @@ import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.middleware.IngressDTO;
 import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.k8s.IngressService;
+import com.harmonycloud.zeus.service.k8s.NodeService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -26,6 +27,8 @@ public class IngressController {
 
     @Autowired
     private IngressService ingressService;
+    @Autowired
+    private NodeService nodeService;
 
     @ApiOperation(value = "查询中间件对外访问列表", notes = "查询中间件对外访问列表")
     @ApiImplicitParams({
@@ -67,17 +70,17 @@ public class IngressController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "name", value = "对外访问名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "ingressName", value = "对外访问名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "ingress", value = "对外访问信息", paramType = "query", dataTypeClass = IngressDTO.class)
     })
-    @DeleteMapping("/{middlewareName}/ingress/{name}")
+    @DeleteMapping("/{middlewareName}/ingress/{ingressName}")
     @Authority(power = 1)
     public BaseResult delete(@PathVariable("clusterId") String clusterId,
                              @PathVariable(value = "namespace") String namespace,
                              @PathVariable("middlewareName") String middlewareName,
-                             @PathVariable("name") String name,
+                             @PathVariable("ingressName") String ingressName,
                              @RequestBody IngressDTO ingress) {
-        ingressService.delete(clusterId, namespace, middlewareName, name, ingress);
+        ingressService.delete(clusterId, namespace, middlewareName, ingressName, ingress);
         return BaseResult.ok();
     }
 

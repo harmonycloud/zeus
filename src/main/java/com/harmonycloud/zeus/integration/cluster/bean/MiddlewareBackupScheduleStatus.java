@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.integration.cluster.bean;
 
+import com.alibaba.fastjson.JSONObject;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -19,6 +20,8 @@ public class MiddlewareBackupScheduleStatus {
     private String phase;
 
     private String reason;
+
+    private JSONObject storageProvider;
 
     /**
      * 备份记录

@@ -4,6 +4,8 @@ import com.github.pagehelper.PageInfo;
 import com.harmonycloud.caas.common.model.middleware.ImageRepositoryDTO;
 import com.harmonycloud.caas.common.model.middleware.Registry;
 
+import java.util.List;
+
 /**
  * @author yushuaikang
  * @date 2022/3/10 下午2:41
@@ -16,6 +18,13 @@ public interface ImageRepositoryService {
      * @param imageRepositoryDTO 镜像仓库信息
      */
     void insert(String clusterId, ImageRepositoryDTO imageRepositoryDTO);
+
+    /**
+     * 获取镜像仓库列表
+     * @param clusterId 集群ID
+     * @return
+     */
+    List<ImageRepositoryDTO> list(String clusterId);
 
     /**
      * 获取镜像仓库列表

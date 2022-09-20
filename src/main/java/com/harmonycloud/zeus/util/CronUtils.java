@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author liyinlong
@@ -55,6 +57,32 @@ public class CronUtils {
             log.error("定时备份{} ,计算下次备份时间失败", e);
             return null;
         }
+    }
+    /**
+     * 将时间间隔转换为cron表达式
+     */
+    public static String convertTimeToCron(String time){
+        String cron = "*/5 * * * *";
+        if (time.contains("m")){
+            cron = "*/" + time.split("m")[0] + " * * * *";
+        } else if (time.contains("h")){
+            cron = "* */" + time.split("m")[0] + " * * *";
+        }
+        return cron;
+    }
+
+    public static String convertCronToTime(String cron){
+        String time = "5m";
+        String[] crons = cron.split(" ");
+        String[] unit = {"m", "h", "d", "M", "y"};
+        Pattern pattern = Pattern.compile("^\\*/[1-9][0-9]?$");
+        for (int i = 0; i < crons.length; ++i){
+            if (pattern.matcher(crons[i]).matches()){
+                time = crons[i].split("/")[1] + unit[i];
+                break;
+            }
+        }
+        return time;
     }
 
     public static String parseUtcCron(String cron) {
@@ -109,28 +137,5 @@ public class CronUtils {
             res = temp;
         }
         return String.valueOf(res);
-    }
-
-    public static void main(String[] args) {
-        String cron = "6 0 ? ? 1";
-        String[] newCron = cron.split(" ");
-        int h = Integer.parseInt(newCron[1]);
-        int temp = h - 8;
-        int res = 0;
-        if (temp < 0) {
-            res = 24 + temp;
-        } else {
-            res = temp;
-        }
-        newCron[1] = String.valueOf(res);
-        StringBuffer sbf = new StringBuffer();
-        for (int i = 0; i < newCron.length; i++) {
-            if (i != newCron.length - 1) {
-                sbf.append(newCron[i] + " ");
-            } else {
-                sbf.append(newCron[i]);
-            }
-        }
-        System.out.println(sbf.toString());
     }
 }

@@ -81,12 +81,6 @@ public class ClusterCertServiceImpl implements ClusterCertService {
             generateTokenByCert(cluster);
         }
 
-        // 创建cm
-        Map<String, String> data = new HashMap<>(1);
-        data.put("admin.conf", adminConfYaml);
-        String certCmName = ClusterCertService.getCertCmName(cluster.getId());
-        configMapWrapper.create(K8sClient.DEFAULT_CLIENT, cluster.getDcId(), certCmName, data);
-
         // 记录文件到数据库
         QueryWrapper<BeanKubeConfig> wrapper = new QueryWrapper<BeanKubeConfig>().eq("cluster_id", cluster.getId());
         List<BeanKubeConfig> exist = beanKubeConfigMapper.selectList(wrapper);

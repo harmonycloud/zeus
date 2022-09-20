@@ -26,9 +26,8 @@ public class MiddlewareBackupScheduleSpec {
      */
     private String type;
 
-
     /**
-     * 是否开启备份
+     * 开启/关闭备份
      */
     private String pause;
 
@@ -37,12 +36,12 @@ public class MiddlewareBackupScheduleSpec {
      */
     private Schedule schedule;
 
-    private List<Map<String, List<String>>> customBackups;
+    private List<Map<String, List<Map<String, String>>>> customBackups;
 
     public MiddlewareBackupScheduleSpec() {
     }
 
-    public MiddlewareBackupScheduleSpec(MiddlewareBackupScheduleDestination backupDestination, List<Map<String, List<String>>> customBackups, String name, String type, String pause, String cron, Integer limitRecord, Integer retentionTime) {
+    public MiddlewareBackupScheduleSpec(MiddlewareBackupScheduleDestination backupDestination, List<Map<String, List<Map<String, String>>>> customBackups, String name, String type, String pause, String cron, Integer limitRecord, Integer retentionTime) {
         this.backupDestination = backupDestination;
         this.customBackups = customBackups;
         this.name = name;

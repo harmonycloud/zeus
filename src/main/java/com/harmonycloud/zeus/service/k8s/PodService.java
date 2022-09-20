@@ -54,6 +54,16 @@ public interface PodService {
     List<PodInfo> list(String clusterId, String namespace, Map<String, String> labels);
 
     /**
+     * 查询pod列表
+     *
+     * @param clusterId      集群id
+     * @param namespace      命名空间
+     * @param fields         标签
+     * @return
+     */
+    List<PodInfo> listByFields(String clusterId, String namespace, Map<String, String> fields);
+
+    /**
      * 重启pod
      *
      * @param clusterId      集群id
@@ -63,6 +73,14 @@ public interface PodService {
      * @param podName        pod名称
      */
     void restart(String clusterId, String namespace, String middlewareName, String type, String podName);
+
+    /**
+     * 重启pod
+     * @param clusterId
+     * @param namespace
+     * @param podName
+     */
+    void restart(String clusterId, String namespace, String podName);
 
     /**
      * 查询中间件pod列表
@@ -85,5 +103,14 @@ public interface PodService {
      * @param podName        pod名称
      */
     String yaml(String clusterId, String namespace, String middlewareName, String type, String podName);
+
+    /**
+     * 查询pod yaml
+     * @param clusterId
+     * @param namespace
+     * @param podName
+     * @return
+     */
+    String yaml(String clusterId, String namespace, String podName);
 
 }

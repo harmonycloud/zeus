@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.k8s;
 
+import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCluster;
 
@@ -15,6 +16,12 @@ public interface MiddlewareClusterService {
      * 创建集群
      */
     void create(String clusterId, MiddlewareCluster middlewareCluster);
+
+    /**
+     * 查询集群列表
+     * @return
+     */
+    List<MiddlewareClusterDTO> listClusterDtos();
 
     /**
      * 查询集群列表

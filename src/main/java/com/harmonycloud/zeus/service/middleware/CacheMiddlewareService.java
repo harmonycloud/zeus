@@ -47,6 +47,11 @@ public interface CacheMiddlewareService {
      */
     void insert(BeanCacheMiddleware beanCacheMiddleware);
 
+    /**
+     * 判断并保存中间件缓存信息
+     * @param beanCacheMiddleware
+     */
+    void insertIfNotPresent(BeanCacheMiddleware beanCacheMiddleware);
 
     /**
      * 删除已删除中间件缓存信息

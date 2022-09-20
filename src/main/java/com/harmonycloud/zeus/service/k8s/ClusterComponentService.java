@@ -61,4 +61,13 @@ public interface ClusterComponentService {
      */
     List<ClusterComponentsDto> list(String clusterId) throws Exception;
 
+    /**
+     *
+     * 检查组件是否已安装
+     * @param clusterId
+     * @param componentName
+     * @return
+     */
+    boolean checkInstalled(String clusterId, String componentName);
+
 }

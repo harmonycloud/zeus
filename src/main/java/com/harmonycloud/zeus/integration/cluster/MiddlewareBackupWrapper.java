@@ -69,7 +69,7 @@ public class MiddlewareBackupWrapper {
      * @return
      */
     public MiddlewareBackupList list(String clusterId, String namespace, Map<String,String> labels){
-        Map<String, Object> map = null;
+        Map<String, Object> map;
         try {
             if ("*".equals(namespace)) {
                 map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(null);

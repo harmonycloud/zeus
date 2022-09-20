@@ -1,11 +1,9 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.enums.DateType;
-import com.harmonycloud.caas.common.enums.DictEnum;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.Protocol;
+import com.harmonycloud.caas.common.enums.*;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
@@ -14,14 +12,15 @@ import com.harmonycloud.caas.common.model.IngressComponentDto;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.tool.uuid.UUIDUtils;
+import com.harmonycloud.zeus.bean.BeanIngressComponents;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
+import com.harmonycloud.zeus.dao.BeanIngressComponentsMapper;
 import com.harmonycloud.zeus.dao.BeanMiddlewareInfoMapper;
 import com.harmonycloud.zeus.integration.cluster.ConfigMapWrapper;
+import com.harmonycloud.zeus.integration.cluster.IngressRouteTCPWrapper;
 import com.harmonycloud.zeus.integration.cluster.IngressWrapper;
 import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareStatus;
+import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
@@ -88,6 +87,12 @@ public class IngressServiceImpl implements IngressService {
     private BeanMiddlewareInfoMapper middlewareInfoMapper;
     @Autowired
     private PodService podService;
+    @Autowired
+    private BeanIngressComponentsMapper beanIngressComponentsMapper;
+    @Autowired
+    private IngressRouteTCPWrapper ingressRouteTCPWrapper;
+    @Autowired
+    private NodeService nodeService;
 
     @Value("${k8s.ingress.default.name:nginx-ingress-controller}")
     private String defaultIngressName;
@@ -108,11 +113,18 @@ public class IngressServiceImpl implements IngressService {
         List<IngressComponentDto> ingressComponentDtoList = ingressComponentService.list(clusterId);
         if (!CollectionUtils.isEmpty(ingressComponentDtoList)) {
             for (IngressComponentDto ingress : ingressComponentDtoList) {
-                if (StringUtils.isNotEmpty(ingress.getConfigMapName())) {
-                    // tcp routing list
-                    ConfigMap configMap =
-                            configMapWrapper.get(clusterId, ingress.getNamespace(), ingress.getConfigMapName());
-                    dealTcpRoutine(clusterId, namespace, configMap, ingressDtoList, ingress);
+                if (IngressEnum.NGINX.getName().equals(ingress.getType())) {
+                    if (StringUtils.isNotEmpty(ingress.getConfigMapName())) {
+                        // tcp routing list
+                        ConfigMap configMap =
+                                configMapWrapper.get(clusterId, ingress.getNamespace(), ingress.getConfigMapName());
+                        dealTcpRoutine(clusterId, namespace, configMap, ingressDtoList, ingress);
+                    }
+                } else {
+                    Map<String, String> labels = new HashMap<>();
+                    labels.put("ingressName", ingress.getName());
+                    IngressRouteTCPList routeTCPList = ingressRouteTCPWrapper.list(clusterId, namespace, labels);
+                    ingressDtoList.addAll(convertIngressDTOList(ingress, routeTCPList, null));
                 }
             }
         }
@@ -175,19 +187,41 @@ public class IngressServiceImpl implements IngressService {
         checkAndAllocateServicePort(clusterId, ingressDTO);
         if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_INGRESS)) {
             try {
+                QueryWrapper<BeanIngressComponents> queryWrapper = new QueryWrapper<>();
+                queryWrapper.eq("cluster_id", ingressDTO.getClusterId());
+                queryWrapper.eq("ingress_class_name", ingressDTO.getIngressClassName());
+                BeanIngressComponents ingressComponents = beanIngressComponentsMapper.selectOne(queryWrapper);
                 if (ingressDTO.getProtocol().equals(Protocol.HTTP.getValue())) {
                     Ingress ingress = convertK8sIngress(namespace, ingressDTO);
                     ingressWrapper.create(clusterId, namespace, ingress);
                 } else if (ingressDTO.getProtocol().equals(Protocol.TCP.getValue())) {
-                    MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-                    ConfigMap configMap = covertTcpConfig(cluster, namespace, ingressDTO);
-                    configMapWrapper.update(clusterId, getIngressTcpNamespace(cluster, ingressDTO.getIngressClassName()), configMap);
+                    if (IngressEnum.TRAEFIK.getName().equals(ingressComponents.getType())) {
+                        ingressRouteTCPWrapper.benchCreate(clusterId, convertIngressRouteTCP(ingressDTO, ingressComponents.getName()));
+                    } else {
+                        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+                        ConfigMap configMap = covertTcpConfig(cluster, namespace, ingressDTO);
+                        configMapWrapper.update(clusterId, getIngressTcpNamespace(cluster, ingressDTO.getIngressClassName()), configMap);
+                    }
                 }
             } catch (KubernetesClientException e) {
+                log.error("创建服务暴露出错了", e);
                 throw new CaasRuntimeException(ErrorMessage.INGRESS_DOMAIN_NAME_FORMAT_NOT_SUPPORT);
             }
         } else if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_NODEPORT)) {
-            List<io.fabric8.kubernetes.api.model.Service> serviceList = covertNodePortService(clusterId, namespace, middlewareName, ingressDTO);
+            List<io.fabric8.kubernetes.api.model.Service> serviceList;
+            if (mqCheck(ingressDTO)) {
+                List<ServiceDTO> dtoList = ingressDTO.getServiceList().stream().filter(item -> {
+                    String serviceName = item.getServiceName();
+                    return serviceName.contains("proxy") || serviceName.contains("kafka-external-svc");
+                }).collect(Collectors.toList());
+                if (!CollectionUtils.isEmpty(dtoList)) {
+                    serviceList = covertMQNodePortService(namespace, middlewareName, ingressDTO);
+                } else {
+                    serviceList = covertNodePortService(clusterId, namespace, middlewareName, ingressDTO);
+                }
+            } else {
+                serviceList = covertNodePortService(clusterId, namespace, middlewareName, ingressDTO);
+            }
             if (CollectionUtils.isEmpty(serviceList)) {
                 throw new CaasRuntimeException(ErrorMessage.INGRESS_NODEPORT_NOT_NULL);
             }
@@ -196,9 +230,7 @@ public class IngressServiceImpl implements IngressService {
             throw new CaasRuntimeException(ErrorMessage.UNSUPPORT_EXPOSE_TYPE);
         }
         // 特殊处理kafka和rocketmq(仅更新端口时)
-        if ((ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.ROCKET_MQ.getType())
-                || ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.KAFKA.getType()))
-                && ingressDTO.getServiceList() != null && checkExternalService(ingressDTO)) {
+        if (mqCheck(ingressDTO) && ingressDTO.getServiceList() != null && checkExternalService(ingressDTO)) {
             upgradeValues(clusterId, namespace, middlewareName, ingressDTO);
         }
     }
@@ -226,9 +258,9 @@ public class IngressServiceImpl implements IngressService {
             }
         });
 
-        // 校验Ingress TCP配置文件
-        List<IngressComponentDto> ingressComponentDtoList = ingressComponentService.list(cluster.getId());
-        ingressComponentDtoList.forEach(ingress -> {
+        // 校验Nginx TCP配置文件
+        List<IngressComponentDto> nginxComponentDtoList = ingressComponentService.list(cluster.getId(), IngressEnum.NGINX.getName());
+        nginxComponentDtoList.forEach(ingress -> {
             String ingressTcpCmName = ingress.getConfigMapName();
             ConfigMap configMap = configMapWrapper.get(cluster.getId(),
                     getIngressTcpNamespace(cluster, ingress.getIngressClassName()), ingressTcpCmName);
@@ -245,6 +277,83 @@ public class IngressServiceImpl implements IngressService {
                 }
             }
         });
+        // 校验traefik additionalArguments配置
+        Set<String> portSet = new HashSet<>();
+        List<IngressComponentDto> traefikComponentDtoList = ingressComponentService.list(cluster.getId(), IngressEnum.TRAEFIK.getName());
+        for (IngressComponentDto ingress : traefikComponentDtoList) {
+            JSONObject installedValues = null;
+            try {
+                installedValues = helmChartService.getInstalledValues(ingress.getIngressClassName(), ingress.getNamespace(), clusterService.findById(ingress.getClusterId()));
+            } catch (Exception e) {
+                log.error("查询traefik values失败了", e);
+                continue;
+            }
+            if (installedValues == null) {
+                continue;
+            }
+            JSONArray additionalArguments = installedValues.getJSONArray("additionalArguments");
+            additionalArguments.forEach(arg -> {
+                String[] strs = arg.toString().split(":");
+                if (strs.length == 2) {
+                    portSet.add(strs[1]);
+                }
+            });
+        }
+        if (!CollectionUtils.isEmpty(portSet)) {
+            serviceList.forEach(serviceDTO -> {
+                if (portSet.contains(Integer.parseInt(serviceDTO.getExposePort()))) {
+                    throw new BusinessException(ErrorMessage.TCP_PORT_ALREADY_USED);
+                }
+            });
+        }
+    }
+
+    @Override
+    public Set<Integer> getUsedPortSet(MiddlewareClusterDTO cluster) {
+        Set<Integer> portSet = new HashSet<>();
+        // 查询NodePort端口
+        List<io.fabric8.kubernetes.api.model.Service> svcList = serviceWrapper.list(cluster.getId(), null);
+        HashSet<Integer> nodePorts = new HashSet<>();
+        if (!CollectionUtils.isEmpty(svcList)) {
+            svcList.forEach(service -> {
+                if (MIDDLEWARE_EXPOSE_NODEPORT.equals(service.getSpec().getType())) {
+                    service.getSpec().getPorts().forEach(nodePortSvc -> {
+                        nodePorts.add(nodePortSvc.getNodePort());
+                    });
+                }
+            });
+        }
+        portSet.addAll(nodePorts);
+
+        // 查询Nginx TCP已配置端口
+        List<IngressComponentDto> nginxComponentDtoList = ingressComponentService.list(cluster.getId(), IngressEnum.NGINX.getName());
+        for (IngressComponentDto ingress : nginxComponentDtoList) {
+            String ingressTcpCmName = ingress.getConfigMapName();
+            ConfigMap configMap = configMapWrapper.get(cluster.getId(),
+                    getIngressTcpNamespace(cluster, ingress.getIngressClassName()), ingressTcpCmName);
+            if (configMap == null || CollectionUtils.isEmpty(configMap.getData())) {
+                continue;
+            }
+            configMap.getData().keySet().forEach(port -> {
+                portSet.add(Integer.parseInt(port));
+            });
+        }
+        // 查询traefik 端口
+        List<IngressComponentDto> traefikComponentDtoList = ingressComponentService.list(cluster.getId(), IngressEnum.TRAEFIK.getName());
+        for (IngressComponentDto ingress : traefikComponentDtoList) {
+            JSONObject installedValues = helmChartService.getInstalledValues(ingress.getIngressClassName(), ingress.getNamespace(), clusterService.findById(ingress.getClusterId()));
+            if (installedValues == null) {
+                continue;
+            }
+            JSONArray additionalArguments = installedValues.getJSONArray("additionalArguments");
+            additionalArguments.forEach(arg -> {
+                String[] strs = arg.toString().split(":");
+                if (strs.length == 2) {
+                    portSet.add(Integer.parseInt(strs[1]));
+                }
+            });
+        }
+        return portSet;
     }
 
     @Override
@@ -274,15 +383,19 @@ public class IngressServiceImpl implements IngressService {
                 IngressComponentDto ingressComponentDto =
                         ingressComponentService.get(clusterId, ingressDTO.getIngressClassName());
                 if (ingressComponentDto != null) {
-                    if (StringUtils.isEmpty(ingressComponentDto.getConfigMapName())) {
-                        return;
+                    if (IngressEnum.NGINX.getName().equals(ingressComponentDto.getType())) {
+                        if (StringUtils.isEmpty(ingressComponentDto.getConfigMapName())) {
+                            return;
+                        }
+                        ConfigMap configMap = configMapWrapper.get(clusterId,
+                                getIngressTcpNamespace(cluster, ingressDTO.getIngressClassName()),
+                                ingressComponentDto.getConfigMapName());
+                        removeTcpPort(configMap, ingressDTO.getServiceList());
+                        configMapWrapper.update(clusterId,
+                                getIngressTcpNamespace(cluster, ingressDTO.getIngressClassName()), configMap);
+                    } else if (IngressEnum.TRAEFIK.getName().equals(ingressComponentDto.getType())) {
+                        ingressRouteTCPWrapper.delete(clusterId, namespace, name);
                     }
-                    ConfigMap configMap = configMapWrapper.get(clusterId,
-                            getIngressTcpNamespace(cluster, ingressDTO.getIngressClassName()),
-                            ingressComponentDto.getConfigMapName());
-                    removeTcpPort(configMap, ingressDTO.getServiceList());
-                    configMapWrapper.update(clusterId,
-                            getIngressTcpNamespace(cluster, ingressDTO.getIngressClassName()), configMap);
                 }
             }
         } else if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_NODEPORT)) {
@@ -360,21 +473,27 @@ public class IngressServiceImpl implements IngressService {
                     }
                 });
             }
-            // tcp
+            // ingress tcp
             List<IngressComponentDto> ingressComponentDtoList = ingressComponentService.list(clusterId);
             if (!CollectionUtils.isEmpty(ingressComponentDtoList)) {
                 for (IngressComponentDto ingress : ingressComponentDtoList) {
-                    if (StringUtils.isNotEmpty(ingress.getConfigMapName())) {
-                        JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
-                        String middlewareAliasName = values.getOrDefault("aliasName", "").toString();
-                        ConfigMap configMap = configMapWrapper.get(clusterId,
-                                getIngressTcpNamespace(cluster, ingress.getIngressClassName()),
-                                ingress.getConfigMapName());
-                        Map<String, List<ServiceDTO>> tcpRoutineMap = getTcpRoutineMap(configMap);
-                        svcNameList.forEach(svcName -> {
-                            List<IngressDTO> tcpDtos = getTcpRoutineDetail(clusterId, namespace, crd, svcName, tcpRoutineMap);
-                            resList.addAll(convertIngressDTOList(tcpDtos, ingress, type, middlewareAliasName));
-                        });
+                    if (IngressEnum.NGINX.getName().equals(ingress.getType())) {
+                        if (StringUtils.isNotEmpty(ingress.getConfigMapName())) {
+                            JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
+                            String middlewareAliasName = values.getOrDefault("aliasName", "").toString();
+                            ConfigMap configMap = configMapWrapper.get(clusterId,
+                                    getIngressTcpNamespace(cluster, ingress.getIngressClassName()),
+                                    ingress.getConfigMapName());
+                            Map<String, List<ServiceDTO>> tcpRoutineMap = getTcpRoutineMap(configMap);
+                            svcNameList.forEach(svcName -> {
+                                List<IngressDTO> tcpDtos = getTcpRoutineDetail(clusterId, namespace, crd, svcName, tcpRoutineMap);
+                                resList.addAll(convertIngressDTOList(tcpDtos, ingress, type, middlewareAliasName));
+                            });
+                        }
+                    } else if (IngressEnum.TRAEFIK.getName().equals(ingress.getType())) {
+                        IngressRouteTCPList routeTCPList = ingressRouteTCPWrapper.list(clusterId, namespace,
+                                getIngressTCPLabels(middlewareName, type, ingress.getName()));
+                        resList.addAll(convertIngressDTOList(ingress, routeTCPList, null));
                     }
                 }
             }
@@ -468,7 +587,7 @@ public class IngressServiceImpl implements IngressService {
         if (StringUtils.isNotBlank(ingressComponentDto.getAddress())) {
             ingressPodIpSet.add(ingressComponentDto.getAddress());
         } else {
-            podInfoList = listIngressPod(clusterId, ingressComponentDto.getNamespace(), ingressComponentDto.getIngressClassName());
+            podInfoList = listIngressPod(clusterId, ingressComponentDto.getNamespace(), ingressComponentDto.getName());
             podInfoList = podInfoList.stream().filter(podInfo -> "Running".equals(podInfo.getStatus())
                     && StringUtils.isNotBlank(podInfo.getHostIp())).collect(Collectors.toList());
             podInfoList.forEach(podInfo -> {
@@ -476,6 +595,30 @@ public class IngressServiceImpl implements IngressService {
             });
         }
         return ingressPodIpSet;
+    }
+
+    /**
+     * 检查是否是消息队列
+     * @param ingressDTO
+     * @return
+     */
+    private boolean mqCheck(IngressDTO ingressDTO) {
+        return ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.ROCKET_MQ.getType())
+                || ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.KAFKA.getType());
+    }
+
+    /**
+     * 获取中间件ingressroutetcp label
+     *
+     * @param middlewareName
+     * @return
+     */
+    private Map<String, String> getIngressTCPLabels(String middlewareName, String type, String ingressName) {
+        Map<String, String> labels = new HashMap<>(1);
+        labels.put("middlewareName", middlewareName);
+        labels.put("middlewareType", type);
+        labels.put("ingressName", ingressName);
+        return labels;
     }
 
     /**
@@ -798,6 +941,74 @@ public class IngressServiceImpl implements IngressService {
         return serviceList;
     }
 
+    private List<io.fabric8.kubernetes.api.model.Service> covertMQNodePortService(String namespace, String middlewareName,IngressDTO ingressDTO) {
+        List<ServiceDTO> serviceDTOList = ingressDTO.getServiceList();
+        if (CollectionUtils.isEmpty(serviceDTOList)) {
+            return null;
+        }
+        List<io.fabric8.kubernetes.api.model.Service> serviceList = new ArrayList<>(10);
+
+        if ("rocketmq".equals(ingressDTO.getMiddlewareType())) {
+            serviceDTOList = serviceDTOList.stream().filter(serviceDTO ->
+                    serviceDTO.getServiceName().contains("nameserver-proxy-svc")).collect(Collectors.toList());
+        } else if ("kafka".equals(ingressDTO.getMiddlewareType())) {
+            serviceDTOList = serviceDTOList.stream().filter(serviceDTO ->
+                    serviceDTO.getServiceName().contains("kafka-external-svc")).collect(Collectors.toList());
+        }
+        for (ServiceDTO serviceDTO : serviceDTOList) {
+            String serviceName = serviceDTO.getServiceName();
+            if (StringUtils.isBlank(serviceName)) {
+                continue;
+            }
+
+            io.fabric8.kubernetes.api.model.Service service = new io.fabric8.kubernetes.api.model.Service();
+            ObjectMeta objectMeta = new ObjectMeta();
+            objectMeta.setName(getNodePortSvcName(serviceName, ingressDTO.getName()));
+            objectMeta.setNamespace(namespace);
+            //取原services labels
+            Map<String, String> labels = getMQServiceLabels(middlewareName, ingressDTO.getMiddlewareType(), serviceName);
+            labels.put(MIDDLEWARE_NAME, middlewareName);
+            labels.put(MIDDLEWARE_TYPE, ingressDTO.getMiddlewareType());
+            objectMeta.setLabels(labels);
+            service.setMetadata(objectMeta);
+            ServiceSpec spec = new ServiceSpec();
+
+            List<ServicePort> servicePortList = new ArrayList<>();
+            servicePortList.add(covertMQServicePort(serviceDTO, ingressDTO.getMiddlewareType()));
+            spec.setPorts(servicePortList);
+            spec.setSelector(getMQSelector(middlewareName, ingressDTO.getMiddlewareType(), serviceName));
+            spec.setType(MIDDLEWARE_EXPOSE_NODEPORT);
+            service.setSpec(spec);
+            serviceList.add(service);
+        }
+        return serviceList;
+    }
+
+    private Map<String, String> getMQServiceLabels(String middlewareName, String type, String serviceName) {
+        Map<String, String> labels = new HashMap<>();
+        if ("rocketmq".equals(type)) {
+            String value = middlewareName + "namesrv-proxy-svc-" + serviceName.substring(serviceName.lastIndexOf("-") + 1);
+            labels.put("app", value);
+        } else if ("kafka".equals(type)) {
+            String value = middlewareName + "-kafka-external-svc";
+            labels.put("app", value);
+        }
+        return labels;
+    }
+
+    private Map<String, String> getMQSelector(String middlewareName, String type, String serviceName) {
+        Map<String, String> selector = new HashMap<>();
+        if ("rocketmq".equals(type)) {
+            String value = middlewareName + "namesrv-proxy-" + serviceName.substring(serviceName.lastIndexOf("-") + 1);
+            selector.put("statefulset.kubernetes.io/pod-name", value);
+        } else if ("kafka".equals(type)) {
+            String value = "kafka-" + serviceName.substring(serviceName.lastIndexOf("-") + 1);
+            selector.put("podIndex", value);
+            selector.put("app", middlewareName);
+        }
+        return selector;
+    }
+
     private String getNodePortSvcName(String serviceName) {
         return serviceName + "-" + NODE_PORT + "-" + UUIDUtils.get8UUID().substring(0, 6);
     }
@@ -822,6 +1033,22 @@ public class IngressServiceImpl implements IngressService {
         intOrString.setIntVal(Integer.parseInt(serviceDTO.getTargetPort()));
         servicePort.setTargetPort(intOrString);
 
+        return servicePort;
+    }
+
+    private ServicePort covertMQServicePort(ServiceDTO serviceDTO, String type) {
+        ServicePort servicePort = new ServicePort();
+        if (StringUtils.isNotEmpty(serviceDTO.getExposePort())) {
+            servicePort.setNodePort(Integer.parseInt(serviceDTO.getExposePort()));
+        }
+        servicePort.setProtocol(Protocol.TCP.getValue());
+        if ("rocketmq".equals(type)) {
+            servicePort.setPort(9876);
+            servicePort.setTargetPort(new IntOrString(9876));
+        } else {
+            servicePort.setPort(9094);
+            servicePort.setTargetPort(new IntOrString(9094));
+        }
         return servicePort;
     }
 
@@ -1015,6 +1242,25 @@ public class IngressServiceImpl implements IngressService {
         }
         configMap.setData(data);
         return configMap;
+    }
+
+
+    private List<IngressRouteTCPCR> convertIngressRouteTCP(IngressDTO ingressDTO, String ingressName) {
+        if (CollectionUtils.isEmpty(ingressDTO.getServiceList())) {
+            throw new CaasRuntimeException(ErrorMessage.INGRESS_TCP_NOT_NULL);
+        }
+        List<IngressRouteTCPCR> routeTCPCRList = new ArrayList<>();
+        for (ServiceDTO serviceDTO : ingressDTO.getServiceList()) {
+            String ingressRouteTCPName = serviceDTO.getServiceName() + "-tcp-" + UUIDUtils.get8UUID();
+            if (StringUtils.isNotBlank(ingressDTO.getName())) {
+                ingressRouteTCPName = ingressDTO.getName();
+            }
+            Map<String, String> labels = getIngressTCPLabels(ingressDTO.getMiddlewareName(), ingressDTO.getMiddlewareType(), ingressName);
+            IngressRouteTCPCR ingressRouteTCPCR = new IngressRouteTCPCR(ingressRouteTCPName, ingressDTO.getNamespace(),
+                    ingressName + "-p" + serviceDTO.getExposePort(), serviceDTO.getServiceName(), Integer.parseInt(serviceDTO.getServicePort()), labels);
+            routeTCPCRList.add(ingressRouteTCPCR);
+        }
+        return routeTCPCRList;
     }
 
     /**
@@ -1213,6 +1459,49 @@ public class IngressServiceImpl implements IngressService {
         return resList;
     }
 
+    private List<IngressDTO> convertIngressDTOList(IngressComponentDto ingressDTO, IngressRouteTCPList ingressRouteTCPList, String aliasName) {
+        if (ingressRouteTCPList == null || CollectionUtils.isEmpty(ingressRouteTCPList.getItems())) {
+            return Collections.emptyList();
+        }
+        List<IngressDTO> ingressDTOList = new ArrayList<>();
+        String address;
+        if (StringUtils.isNotBlank(ingressDTO.getAddress())) {
+            address = ingressDTO.getAddress();
+        } else {
+            address = null;
+        }
+        String finalAddress = address;
+        ingressRouteTCPList.getItems().forEach(ingressRouteTCPCR -> {
+            List<String> entryPoints = ingressRouteTCPCR.getSpec().getEntryPoints();
+            if (!CollectionUtils.isEmpty(entryPoints) && !CollectionUtils.isEmpty(ingressRouteTCPCR.getSpec().getRoutes()) && !CollectionUtils.isEmpty(ingressRouteTCPCR.getSpec().getRoutes().get(0).getServices())) {
+                String entryPoint = entryPoints.get(0);
+                IngressRouteTCPSpecRoute ingressRouteTCPSpecRoute = ingressRouteTCPCR.getSpec().getRoutes().get(0);
+                IngressRouteTCPSpecRouteService ingressRouteTCPSpecRouteService = ingressRouteTCPSpecRoute.getServices().get(0);
+                String port = entryPoint.substring(entryPoint.lastIndexOf("p") + 1);
+                IngressDTO ingress = new IngressDTO();
+                List<ServiceDTO> serviceList = new ArrayList<>();
+                ServiceDTO serviceDTO = new ServiceDTO();
+                serviceDTO.setExposePort(port);
+                serviceDTO.setServiceName(ingressRouteTCPSpecRouteService.getName());
+                serviceDTO.setServicePort(ingressRouteTCPSpecRouteService.getPort().toString());
+                serviceList.add(serviceDTO);
+                ingress.setServiceList(serviceList);
+                ingress.setExposeIP(finalAddress);
+                ingress.setMiddlewareName(ingressRouteTCPCR.getMetadata().getLabels().get("middlewareName"));
+                ingress.setMiddlewareType(ingressRouteTCPCR.getMetadata().getLabels().get("middlewareType"));
+                ingress.setMiddlewareNickName(aliasName);
+                ingress.setName(ingressRouteTCPCR.getMetadata().getName());
+                ingress.setNamespace(ingressRouteTCPCR.getMetadata().getNamespace());
+                ingress.setClusterId(ingress.getClusterId());
+                ingress.setProtocol(Protocol.TCP.getValue());
+                ingress.setIngressClassName(ingressDTO.getIngressClassName());
+                ingress.setExposeType(MIDDLEWARE_EXPOSE_INGRESS);
+                ingressDTOList.add(ingress);
+            }
+        });
+        return ingressDTOList;
+    }
+
     private String getBaseIngressName(String middlewareName, String middlewareType, String protocol) {
         return middlewareName + "-" + middlewareType + "-" + protocol;
     }
@@ -1300,7 +1589,7 @@ public class IngressServiceImpl implements IngressService {
     }
 
     @Override
-    public List listAllIngress(String clusterId, String namespace, String keyword) {
+    public List<IngressDTO> listAllIngress(String clusterId, String namespace, String keyword) {
         // 获取所有ingress
         List<IngressDTO> ingressDTOLists = list(clusterId, namespace, null);
         // 添加ingress pod信息
@@ -1323,6 +1612,12 @@ public class IngressServiceImpl implements IngressService {
                         return false;
                     }))
                     .collect(Collectors.toList());
+        }
+        // 设置服务网络类型(4层或7层)和服务暴露名称
+        setIngressExtralInfo(clusterId, ingressDTOLists);
+        // 设置中间件图片
+        for (IngressDTO ingressDTO : ingressDTOLists) {
+            setMiddlewareImage(ingressDTO);
         }
         return ingressDTOLists;
     }
@@ -1410,9 +1705,8 @@ public class IngressServiceImpl implements IngressService {
     @Override
     public String getExposeIp(MiddlewareClusterDTO cluster, IngressDTO ingressDTO) {
         if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_NODEPORT)) {
-            return cluster.getHost();
-        } else if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_INGRESS)
-                && ingressDTO.getProtocol().equals(Protocol.TCP.getValue())) {
+            return nodeService.getNodeIp(cluster.getId());
+        } else if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_INGRESS) && ingressDTO.getProtocol().equals(Protocol.TCP.getValue())) {
             IngressComponentDto ingressComponentDto =
                     ingressComponentService.get(cluster.getId(), ingressDTO.getIngressClassName());
             if (ingressComponentDto != null && StringUtils.isNotBlank(ingressComponentDto.getAddress())) {
@@ -1422,7 +1716,7 @@ public class IngressServiceImpl implements IngressService {
                         ingressComponentDto.getIngressClassName());
             }
         }
-        return cluster.getHost();
+        return null;
     }
 
 }

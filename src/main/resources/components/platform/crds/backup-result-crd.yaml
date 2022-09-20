@@ -100,6 +100,12 @@ spec:
             status:
               description: MiddlewareBackupResultStatus defines the observed state of MiddlewareBackupResult
               properties:
+                startTime:
+                  type: string
+                  format: date-time
+                endTime:
+                   type: string
+                   format: date-time
                 creationTimestamp:
                   format: date-time
                   type: string

@@ -5,23 +5,30 @@ metadata:
   labels:
     operatorname: mysql-operator
 spec:
-  {{- with .Values.proxy}}
+  {{- if .Values.proxy.enable }}
   proxy:
-  {{- toYaml . | nindent 4 }}
-  {{- end }}
-  {{- if .Values.proxy }}
+    enable: {{ .Values.proxy.enable }}
+    replicaCount: {{ .Values.proxy.replicaCount }}
+    {{- with .Values.proxy.resources }}
+    resources:
+    {{- toYaml . | nindent 6 }}
+    {{- end }}
     image:
       repository: {{ .Values.image.repository }}/proxysql
       tag: {{ .Values.image.proxyImageTag}}
       pullPolicy: {{ .Values.image.pullPolicy}}
+  {{- /*拓扑策略*/ -}}
+  {{- include "middlware.proxy.topologyDistribution" . | indent 4 -}}
   {{- end }}
-  {{- with .Values.statefulSetConfiguration }}
   _statefulset:
     spec:
       template:
         spec:
-{{- toYaml . | nindent 10 }}
-  {{- end }}
+        {{- /*拓扑策略*/ -}}
+        {{- include "middlware.topologyDistribution" . | indent 11 -}}
+        {{- with .Values.statefulSetConfiguration }}
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
 {{- if .Values.init_at_setup.enabled }}
   initScriptCMName: zeus-init-sql-file
 {{- end }}
@@ -39,9 +46,11 @@ spec:
   repository: {{ .Values.image.repository }}/mysql-cluster
   secretName: mysql-secret
   statefulset:
+    {{- /*------先保留, 新版本不采用------*/ -}}
+    {{- if eq (semverCompare ">= 1.19-0" .Capabilities.KubeVersion.Version) false }}
     {{- with .Values.tolerations }}
     tolerations:
-        {{- toYaml . | nindent 6 }}
+        {{- toYaml . | nindent 8 }}
     {{- end}}
     affinity:
     {{- if eq .Values.podAntiAffinity "hard"}}
@@ -71,6 +80,7 @@ spec:
       nodeAffinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+    {{- end }}
     configmap: {{ include "mysql.fullname" . }}-config
     env:
     - name: DBNAME

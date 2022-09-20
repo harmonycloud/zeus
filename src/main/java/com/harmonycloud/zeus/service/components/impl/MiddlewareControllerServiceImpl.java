@@ -34,8 +34,7 @@ public class MiddlewareControllerServiceImpl extends AbstractBaseOperator implem
     
     @Override
     protected String getValues(String repository, MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
-        String setValues = "global.repository=" + cluster.getRegistry().getRegistryAddress() + "/"
-            + cluster.getRegistry().getChartRepo();
+        String setValues = "global.repository=" + repository;
         if (SIMPLE.equals(clusterComponentsDto.getType())) {
             setValues = setValues + ",global.middleware_controller.replicas=1";
         } else {

@@ -39,6 +39,8 @@ spec:
         - mountPath: /etc/adapter
           name: config
           readOnly: false
+      tolerations:
+      - operator: Exists
       serviceAccountName: prometheus-adapter
       dnsPolicy: ClusterFirst
       hostNetwork: false

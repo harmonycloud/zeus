@@ -508,6 +508,8 @@ dashboardsConfigMaps: {}
 ## ref: http://docs.grafana.org/installation/configuration/
 ##
 grafana.ini:
+  users:
+    default_theme: light
   paths:
     data: /var/lib/grafana/data
     logs: /var/log/grafana
@@ -622,7 +624,7 @@ sidecar:
       # orgid as configured in grafana
       orgid: 1
       # folder in which the dashboards should be imported in grafana
-      folder: ''
+      folder: /tmp/dashboards
       # type of the provider
       type: file
       # disableDelete to activate a import-only behaviour

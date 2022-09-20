@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.middleware.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.YamlCheck;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
@@ -38,11 +39,20 @@ public class MiddlewareConfigYamlServiceImpl implements MiddlewareConfigYamlServ
 
     @Override
     public List<String> nameList(String clusterId, String namespace, String name, String type, String chartVersion) {
-        List<ConfigMap> configMapList = configMapWrapper.list(clusterId, namespace).stream()
-            .filter(configMap -> !CollectionUtils.isEmpty(configMap.getMetadata().getAnnotations())
-                && configMap.getMetadata().getAnnotations().containsKey("meta.helm.sh/release-name")
-                && configMap.getMetadata().getAnnotations().get("meta.helm.sh/release-name").equals(name))
-            .collect(Collectors.toList());
+        List<ConfigMap> configMapList = configMapWrapper.list(clusterId, namespace);
+        if (type.equals(MiddlewareTypeEnum.POSTGRESQL.getType())) {
+            configMapList = configMapList.stream()
+                    .filter(configMap -> !CollectionUtils.isEmpty(configMap.getMetadata().getLabels())
+                            && configMap.getMetadata().getLabels().containsKey("cluster-name")
+                            && configMap.getMetadata().getLabels().get("cluster-name").equals(name))
+                    .collect(Collectors.toList());
+        } else {
+            configMapList = configMapList.stream()
+                    .filter(configMap -> !CollectionUtils.isEmpty(configMap.getMetadata().getAnnotations())
+                            && configMap.getMetadata().getAnnotations().containsKey("meta.helm.sh/release-name")
+                            && configMap.getMetadata().getAnnotations().get("meta.helm.sh/release-name").equals(name))
+                    .collect(Collectors.toList());
+        }
         if (CollectionUtils.isEmpty(configMapList)) {
             return new ArrayList<>();
         }

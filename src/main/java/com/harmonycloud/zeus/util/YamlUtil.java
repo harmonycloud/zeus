@@ -190,6 +190,20 @@ public class YamlUtil {
         return yaml.dumpAsMap(kubeConfig);
     }
 
+    /**
+     * 将values的json对象字段类型转为标准字段类型,空的tolerations应为[]，而底座chart包中是{}
+     *
+     * @param upgradeValues
+     */
+    public static void convertToStandardJsonObject(JSONObject upgradeValues) {
+        Object tolerations = upgradeValues.get("tolerations");
+        if (tolerations instanceof JSONObject) {
+            JSONArray tolerationsArray = new JSONArray();
+            tolerationsArray.add(tolerations);
+            upgradeValues.put("tolerations", tolerationsArray);
+        }
+    }
+
     public static void main(String[] args) throws IOException {
         String source = "/Users/liyinlong/elasticsearch/values.yaml";
         JSONObject srcObject = loadAsNormalJsonObject(source);
@@ -200,5 +214,4 @@ public class YamlUtil {
 
         System.out.println(jsonObject);
     }
-
 }

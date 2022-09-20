@@ -38,9 +38,17 @@ public interface ProjectService {
     List<ProjectDto> list(String keyword);
 
     /**
-     * 查询项目下分区
+     * 查询指定集群项目下分区
      * @param projectId 项目id
+     * @param clusterId 集群id
      * @return List<Namespace>
+     */
+    List<Namespace> getNamespace(String projectId, String clusterId);
+
+    /**
+     * 查询项目下分区
+     * @param projectId
+     * @return
      */
     List<Namespace> getNamespace(String projectId);
 

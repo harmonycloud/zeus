@@ -28,7 +28,7 @@ public class PrometheusWebhookController {
     private PrometheusWebhookService prometheusWebhookService;
 
     @ExcludeAuditMethod
-    @ApiOperation(value = "查询告警规则", notes = "查询告警规则")
+    @ApiOperation(value = "保存告警记录", notes = "保存告警记录")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "json", value = "告警内容", paramType = "query", dataTypeClass = String.class)
     })
