@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -40,9 +41,14 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
     @Autowired
     private ClusterService clusterService;
 
+    @Value("${system.checkRegistry:false}")
+    private boolean checkRegistry;
+
     @Override
     public void insert(String clusterId, ImageRepositoryDTO imageRepositoryDTO) {
-        check(imageRepositoryDTO);
+        if (checkRegistry) {
+            check(imageRepositoryDTO);
+        }
         BeanImageRepository beanImageRepository = new BeanImageRepository();
         BeanUtils.copyProperties(imageRepositoryDTO, beanImageRepository);
         String address = imageRepositoryDTO.getHostAddress()
@@ -93,7 +99,9 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
 
     @Override
     public void update(String clusterId, ImageRepositoryDTO imageRepositoryDTO) {
-        check(imageRepositoryDTO);
+        if (checkRegistry) {
+            check(imageRepositoryDTO);
+        }
         BeanImageRepository beanImageRepository = new BeanImageRepository();
         BeanUtils.copyProperties(imageRepositoryDTO, beanImageRepository);
         String address = imageRepositoryDTO.getHostAddress() + ":" + imageRepositoryDTO.getPort() + "/"
