@@ -8,6 +8,7 @@ import com.harmonycloud.caas.common.model.ClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.common.model.middleware.Registry;
+import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.service.k8s.ClusterServiceImpl;
@@ -140,7 +141,7 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
         cluster.setProtocol(clusterDTO.getProtocol());
         cluster.setHost(clusterDTO.getHost());
         cluster.setPort(clusterDTO.getPort());
-        cluster.setName(clusterDTO.getName());
+        cluster.setName(clusterDTO.getName() + "-" + UUIDUtils.get8UUID());
         cluster.setNickname(clusterDTO.getAliasName());
         Registry registry = new Registry();
         cluster.setRegistry(registry);
