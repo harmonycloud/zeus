@@ -375,7 +375,12 @@ public class ProjectServiceImpl implements ProjectService {
             beanProjectNamespaceList.stream().map(BeanProjectNamespace::getClusterId).collect(Collectors.toSet());
         Map<String, List<MiddlewareCR>> middlewareCRListMap = new HashMap<>();
         for (String clusterId : clusterIdList) {
-            List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(clusterId, null, null);
+            List<MiddlewareCR> middlewareCRList;
+            try {
+                middlewareCRList = new ArrayList<>(middlewareCRService.listCR(clusterId, null, null));
+            } catch (Exception ignore){
+                continue;
+            }
             middlewareCRListMap.put(clusterId, middlewareCRList);
         }
         Map<String, List<BeanProjectNamespace>> beanProjectNamespaceListMap =
