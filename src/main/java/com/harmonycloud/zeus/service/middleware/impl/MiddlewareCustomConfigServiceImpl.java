@@ -408,11 +408,13 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             throw new BusinessException(ErrorMessage.FIND_POD_IN_MIDDLEWARE_FAIL);
         }
         middlewareCr.getStatus().getInclude().get("pods").forEach(pods -> {
-            String execCommand = MessageFormat.format(
-                "kubectl exec {0} -n {1} -c mysql --server={2} --token={3} --insecure-skip-tls-verify=true -- mysql -uroot -p{4} -S /data/mysql/db_{5}/conf/mysql.sock -e \"{6}\"",
-                pods.getName(), config.getNamespace(), cluster.getAddress(), cluster.getAccessToken(), password,
-                config.getName(), sb.toString());
-            k8sExecService.exec(execCommand);
+            if ("Master".equals(pods.getType()) || "Slave".equals(pods.getType())) {
+                String execCommand = MessageFormat.format(
+                    "kubectl exec {0} -n {1} -c mysql --server={2} --token={3} --insecure-skip-tls-verify=true -- mysql -uroot -p{4} -S /data/mysql/db_{5}/conf/mysql.sock -e \"{6}\"",
+                    pods.getName(), config.getNamespace(), cluster.getAddress(), cluster.getAccessToken(), password,
+                    config.getName(), sb.toString());
+                k8sExecService.exec(execCommand);
+            }
         });
     }
 
