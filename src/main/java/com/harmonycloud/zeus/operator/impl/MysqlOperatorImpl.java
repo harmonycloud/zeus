@@ -212,7 +212,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 mysqlDTO.setRelationNamespace(relationNamespace);
                 mysqlDTO.setRelationName(relationName);
                 mysqlDTO.setRelationAliasName(relationAliasName);
-                mysqlDTO.setRelationExist(baseOperator.checkIfExist(relationNamespace, relationName, cluster));
+                mysqlDTO.setRelationExist(baseOperator.checkIfExist(relationNamespace, relationName, clusterService.findById(relationClusterId)));
                 middleware.setChartName(chartName);
 
                 MysqlReplicateCR mysqlReplicate;
