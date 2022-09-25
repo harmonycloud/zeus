@@ -882,6 +882,7 @@ data:
       `platform_name` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '平台名称',
       `slogan` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '标语',
       `copyright_notice` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '版权声明',
+      `platform_alias_name` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '首页平台名称',
       `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '浏览器标题',
       `create_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
       `update_time` timestamp NULL DEFAULT NULL COMMENT '修改时间',
