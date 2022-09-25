@@ -404,7 +404,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         });
         // 主从节点执行命令
         if (middlewareCr.getStatus() == null || middlewareCr.getStatus().getInclude() == null
-            || middlewareCr.getStatus().getInclude().containsKey("pods")) {
+            || !middlewareCr.getStatus().getInclude().containsKey("pods")) {
             throw new BusinessException(ErrorMessage.FIND_POD_IN_MIDDLEWARE_FAIL);
         }
         middlewareCr.getStatus().getInclude().get("pods").forEach(pods -> {
