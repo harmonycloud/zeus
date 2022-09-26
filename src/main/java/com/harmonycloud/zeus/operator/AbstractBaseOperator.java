@@ -1212,7 +1212,7 @@ public abstract class AbstractBaseOperator {
      * @param activeActiveKey
      */
     public void setActiveActiveConfig(String activeActiveKey, JSONObject values) {
-        values.put("podAntiAffinityTopologyKey", "zone");
+        values.put("podAntiAffinityTopologKey", "zone");
         values.put("podAntiAffinity", "soft");
         AffinityDTO affinityDTO = new AffinityDTO();
         affinityDTO.setLabel("zone=zoneC");
