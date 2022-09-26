@@ -8,6 +8,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
+import com.harmonycloud.zeus.service.k8s.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,10 +34,6 @@ import com.harmonycloud.zeus.bean.BeanMiddlewareParamTop;
 import com.harmonycloud.zeus.dao.BeanCustomConfigMapper;
 import com.harmonycloud.zeus.dao.BeanMiddlewareParamTopMapper;
 import com.harmonycloud.zeus.service.AbstractBaseService;
-import com.harmonycloud.zeus.service.k8s.ClusterService;
-import com.harmonycloud.zeus.service.k8s.ConfigMapService;
-import com.harmonycloud.zeus.service.k8s.K8sExecService;
-import com.harmonycloud.zeus.service.k8s.PodService;
 import com.harmonycloud.zeus.service.middleware.CustomConfigHistoryService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareCustomConfigService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
@@ -69,6 +67,8 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
     private CustomConfigHistoryService customConfigHistoryService;
     @Autowired
     private BeanMiddlewareParamTopMapper beanMiddlewareParamTopMapper;
+    @Autowired
+    private MiddlewareCRService middlewareCRService;
 
     @Override
     public List<CustomConfig> listCustomConfig(String clusterId, String namespace, String middlewareName, String type, String order)
@@ -390,8 +390,8 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         JSONObject values = helmChartService.getInstalledValues(config.getName(), config.getNamespace(), cluster);
         String password = values.getJSONObject("args").getString("root_password");
         // 获取pod列表
-        Middleware middleware =
-            podService.list(config.getClusterId(), config.getNamespace(), config.getName(), config.getType());
+        MiddlewareCR middlewareCr = middlewareCRService.getCR(cluster.getId(), config.getNamespace(),
+            MiddlewareTypeEnum.MYSQL.getType(), config.getName());
         // 拼接数据库语句
         StringBuilder sb = new StringBuilder();
         config.getCustomConfigList().forEach(customConfig -> {
@@ -403,12 +403,18 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             }
         });
         // 主从节点执行命令
-        middleware.getPods().forEach(podInfo -> {
-            String execCommand = MessageFormat.format(
-                "kubectl exec {0} -n {1} -c mysql --server={2} --token={3} --insecure-skip-tls-verify=true -- mysql -uroot -p{4} -S /data/mysql/db_{5}/conf/mysql.sock -e \"{6}\"",
-                podInfo.getPodName(), config.getNamespace(), cluster.getAddress(), cluster.getAccessToken(), password,
-                config.getName(), sb.toString());
-            k8sExecService.exec(execCommand);
+        if (middlewareCr.getStatus() == null || middlewareCr.getStatus().getInclude() == null
+            || !middlewareCr.getStatus().getInclude().containsKey("pods")) {
+            throw new BusinessException(ErrorMessage.FIND_POD_IN_MIDDLEWARE_FAIL);
+        }
+        middlewareCr.getStatus().getInclude().get("pods").forEach(pods -> {
+            if ("Master".equals(pods.getType()) || "Slave".equals(pods.getType())) {
+                String execCommand = MessageFormat.format(
+                    "kubectl exec {0} -n {1} -c mysql --server={2} --token={3} --insecure-skip-tls-verify=true -- mysql -uroot -p{4} -S /data/mysql/db_{5}/conf/mysql.sock -e \"{6}\"",
+                    pods.getName(), config.getNamespace(), cluster.getAddress(), cluster.getAccessToken(), password,
+                    config.getName(), sb.toString());
+                k8sExecService.exec(execCommand);
+            }
         });
     }
 
