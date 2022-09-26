@@ -601,6 +601,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     public void replaceReadWriteProxyValues(ReadWriteProxy readWriteProxy, JSONObject values){
         JSONObject proxy = new JSONObject();;
         proxy.put("enable", readWriteProxy.getEnabled());
+        proxy.put("podAntiAffinity", "soft");
+        proxy.put("replicaCount", 3);
 
         JSONObject requests = new JSONObject();
         JSONObject limits = new JSONObject();
