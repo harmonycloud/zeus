@@ -48,7 +48,7 @@ http://<your ip>:31088
 密码：zeus123.com
 ```
 
-详细部署方式参考：[https://github.com/harmonycloud/zeus/blob/main/deploy/READEME.md](https://github.com/harmonycloud/zeus/blob/main/deploy/READEME.md)
+详细部署方式参考：[https://github.com/harmonycloud/zeus/blob/main/deploy/README.md](https://github.com/harmonycloud/zeus/blob/main/deploy/README.md)
 
 ## 支持组件版本
 
