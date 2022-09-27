@@ -12,7 +12,7 @@ storage:
 hostNetwork: false
 
 # 默认使用es6.8版本; 如需使用7.16版本，则值改为7.16
-version: "6.8"
+version: "7.16"
 
 image:
   repository: harbor.middleware.com/middleware
