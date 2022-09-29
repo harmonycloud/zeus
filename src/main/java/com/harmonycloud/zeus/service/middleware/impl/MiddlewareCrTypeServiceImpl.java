@@ -74,7 +74,7 @@ public class MiddlewareCrTypeServiceImpl implements MiddlewareCrTypeService {
     public void put(String type, String crType) {
         MIDDLEWARE_CR_TYPE.put(type, crType);
         // 更新数据库
-        QueryWrapper<BeanMiddlewareCrType> wrapper = new QueryWrapper<BeanMiddlewareCrType>().eq("chartName", type);
+        QueryWrapper<BeanMiddlewareCrType> wrapper = new QueryWrapper<BeanMiddlewareCrType>().eq("chart_name", type);
         if (beanMiddlewareCrTypeMapper.selectOne(wrapper) == null){
             BeanMiddlewareCrType beanMiddlewareCrType = new BeanMiddlewareCrType();
             beanMiddlewareCrType.setChartName(type);
