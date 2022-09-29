@@ -5,10 +5,7 @@ import com.harmonycloud.caas.common.model.LdapConfigDto;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @author xutianhong
@@ -30,14 +27,14 @@ public class TcpPortController {
 
 
     @ApiOperation(value = "启用ldap", notes = "启用ldap")
-    @PostMapping("/ingressTcp")
+    @GetMapping("/ingressTcp")
     public BaseResult<String> ingressTcp() {
         String port = String.format("%s-%s", ingressTcpStart, ingressTcpEnd);
         return BaseResult.ok(port);
     }
 
     @ApiOperation(value = "启用ldap", notes = "启用ldap")
-    @PostMapping("/nodePort")
+    @GetMapping("/nodePort")
     public BaseResult<String> nodePort() {
         String port = String.format("%s-%s", nodePortStart, nodePortEnd);
         return BaseResult.ok(port);
