@@ -195,23 +195,23 @@ public class ClusterCertServiceImpl implements ClusterCertService {
             Config config = KubeConfigUtils.parseConfigFromString(cert.getCertificate());
 
             if (config == null) {
-                throw new BusinessException(DictEnum.CERTIFICATE, ErrorMessage.AUTH_FAILED);
+                throw new BusinessException(DictEnum.CERTIFICATE, ErrorMessage.CERTIFICATE_AUTH_FAILED);
             }
             Context currentContext = KubeConfigUtils.getCurrentContext(config);
             if (currentContext == null) {
-                throw new BusinessException(DictEnum.CERTIFICATE, ErrorMessage.AUTH_FAILED);
+                throw new BusinessException(DictEnum.CERTIFICATE, ErrorMessage.CERTIFICATE_AUTH_FAILED);
             }
             Cluster c = KubeConfigUtils.getCluster(config, currentContext);
             if (c == null || StringUtils.isEmpty(c.getCertificateAuthorityData())
                 && StringUtils.isEmpty(c.getCertificateAuthority())) {
-                throw new BusinessException(DictEnum.CERTIFICATE, ErrorMessage.AUTH_FAILED);
+                throw new BusinessException(DictEnum.CERTIFICATE, ErrorMessage.CERTIFICATE_AUTH_FAILED);
             }
             AuthInfo user = KubeConfigUtils.getUserAuthInfo(config, currentContext);
             if (user == null
                 || StringUtils.isEmpty(user.getClientCertificateData())
                     && StringUtils.isEmpty(user.getClientCertificate())
                 || StringUtils.isEmpty(user.getClientKeyData()) && StringUtils.isEmpty(user.getClientKey())) {
-                throw new BusinessException(DictEnum.CERTIFICATE, ErrorMessage.AUTH_FAILED);
+                throw new BusinessException(DictEnum.CERTIFICATE, ErrorMessage.CERTIFICATE_AUTH_FAILED);
             }
 
             // 设置证书信息
