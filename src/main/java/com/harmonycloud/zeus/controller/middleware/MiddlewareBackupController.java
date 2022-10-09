@@ -123,7 +123,7 @@ public class MiddlewareBackupController {
                                      @PathVariable("namespace") String namespace,
                                      @RequestParam("type") String type,
                                      @RequestParam("backupName") String backupName,
-                                     @RequestParam("backupId") String backupId,
+                                     @RequestParam(value = "backupId", required = false) String backupId,
                                      @RequestParam("schedule") Boolean schedule){
         middlewareBackupService.deleteBackUpTask(clusterId, namespace, type, backupName, backupId, schedule);
         return BaseResult.ok();

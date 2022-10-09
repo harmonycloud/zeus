@@ -71,7 +71,7 @@ public class AuthServiceImpl implements AuthService {
         Boolean isAdmin = checkAuth(userDto);
         //校验密码
         if (!md5Password.equals(userDto.getPassword())) {
-            throw new BusinessException(ErrorMessage.AUTH_FAILED);
+            throw new BusinessException(ErrorMessage.LOGIN_FAILED);
         }
 
         JSONObject admin = convertUserInfo(userDto);

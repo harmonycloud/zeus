@@ -113,4 +113,11 @@ public class PersonalizedConfiguration {
      */
     @TableField (value = "status")
     private String status;
+
+    /**
+     * 平台别称
+     */
+    @TableField (value = "platform_alias_name")
+    private String platformAliasName;
+
 }

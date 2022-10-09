@@ -56,7 +56,9 @@ public class Skyview2UserServiceImpl extends UserServiceImpl {
             userName = getUsername();
         }
         // 如果用户名和项目id都为空，则查询角色列表
-        syncCurrentUserInfo();
+        synchronized (this){
+            syncCurrentUserInfo();
+        }
         // 如果用户名不为空，则查询当前登录用户的信息(即：用户在每个项目下的角色)
         UserDto userDto = new UserDto();
         userDto.setIsAdmin(ZeusCurrentUser.isAdmin());

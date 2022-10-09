@@ -126,6 +126,9 @@ public class ClusterServiceImpl implements ClusterService {
     @Value("${k8s.component.crd:/usr/local/zeus-pv/components/platform/crds/middlewarecluster-crd.yaml}")
     private String middlewareCrdYamlPath;
 
+    @Value("${system.checkRegistry:false}")
+    private boolean checkRegistry;
+
     public static void refreshCache(){
         CLUSTER_MAP.clear();
     }
@@ -346,7 +349,9 @@ public class ClusterServiceImpl implements ClusterService {
 
         // 校验registry
         if (cluster.getRegistry() != null && cluster.getRegistry().getAddress() != null) {
-            registryService.validate(cluster.getRegistry());
+            if (checkRegistry) {
+                registryService.validate(cluster.getRegistry());
+            }
         }
 
         // 校验es（包含重置es客户端）

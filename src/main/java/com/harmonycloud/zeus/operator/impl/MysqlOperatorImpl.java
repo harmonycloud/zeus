@@ -212,7 +212,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 mysqlDTO.setRelationNamespace(relationNamespace);
                 mysqlDTO.setRelationName(relationName);
                 mysqlDTO.setRelationAliasName(relationAliasName);
-                mysqlDTO.setRelationExist(baseOperator.checkIfExist(relationNamespace, relationName, cluster));
+                mysqlDTO.setRelationExist(baseOperator.checkIfExist(relationNamespace, relationName, clusterService.findById(relationClusterId)));
                 middleware.setChartName(chartName);
 
                 MysqlReplicateCR mysqlReplicate;
@@ -253,9 +253,9 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         super.create(middleware, cluster);
         MysqlDTO mysqlDTO = middleware.getMysqlDTO();
         if (mysqlDTO.getOpenDisasterRecoveryMode() != null && mysqlDTO.getOpenDisasterRecoveryMode() && mysqlDTO.getIsSource()) {
-            String jsonStr = JSON.toJSONString(middleware);
-            Middleware relationMiddleware = JSON.parseObject(jsonStr, Middleware.class);
-            middleware.setRelationMiddleware(relationMiddleware);
+            //String jsonStr = JSON.toJSONString(middleware);
+            //Middleware relationMiddleware = JSON.parseObject(jsonStr, Middleware.class);
+            //middleware.setRelationMiddleware(relationMiddleware);
             middlewareManageTask.asyncCreateDisasterRecoveryMiddleware(this, middleware);
         }
         // 创建对外服务
@@ -601,6 +601,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     public void replaceReadWriteProxyValues(ReadWriteProxy readWriteProxy, JSONObject values){
         JSONObject proxy = new JSONObject();;
         proxy.put("enable", readWriteProxy.getEnabled());
+        proxy.put("podAntiAffinity", "soft");
+        proxy.put("replicaCount", 3);
 
         JSONObject requests = new JSONObject();
         JSONObject limits = new JSONObject();

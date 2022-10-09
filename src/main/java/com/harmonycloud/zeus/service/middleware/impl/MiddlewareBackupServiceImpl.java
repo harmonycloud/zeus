@@ -686,7 +686,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         } else {
             deleteRecord(clusterId, namespace, type, backupName);
         }
-        deleteBackupName(clusterId, backupId, null);
+        if (StringUtils.isNotEmpty(backupId)){
+            deleteBackupName(clusterId, backupId, null);
+        }
     }
 
     @Override
