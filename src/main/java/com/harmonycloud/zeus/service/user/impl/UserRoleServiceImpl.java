@@ -194,7 +194,11 @@ public class UserRoleServiceImpl implements UserRoleService {
     @Override
     public BeanUserRole get(String userName, String projectId) {
         QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("username", userName).eq("project_id", projectId);
-        return beanUserRoleMapper.selectOne(wrapper);
+        List<BeanUserRole> userRoleList = beanUserRoleMapper.selectList(wrapper);
+        if (CollectionUtils.isEmpty(userRoleList)) {
+            return null;
+        }
+        return userRoleList.get(0);
     }
 
 }

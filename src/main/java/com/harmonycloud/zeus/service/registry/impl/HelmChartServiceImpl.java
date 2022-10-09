@@ -379,6 +379,9 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             if (errorMsg.contains("CustomResourceDefinition is deprecated") || errorMsg.contains("apiextensions.k8s.io/v1beta1")){
                 return errorMsg;
             }
+            if (errorMsg.contains("PodSecurityPolicy is deprecated")){
+                return errorMsg;
+            }
             throw new RuntimeException(errorMsg);
         };
     }

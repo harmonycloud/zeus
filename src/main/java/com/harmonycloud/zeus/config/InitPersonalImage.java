@@ -69,6 +69,7 @@ public class InitPersonalImage {
         personal.setSlogan("让IT更美好");
         personal.setCopyrightNotice("Copyright © 2021 杭州谐云科技有限公司 All rights reserved.Copyright.");
         personal.setPlatformName("Zeus | 中间件管理一体化平台");
+        personal.setPlatformAliasName("中间件一体化管理平台");
         personal.setCreateTime(new Date());
         personal.setStatus("0");
         personalMapper.insert(personal);
