@@ -107,7 +107,7 @@ labels: {}
 proxy:
   enable: false
   podAntiAffinity: "soft"
-  replicaCount: 3
+  replicaCount: 4
   resources:
     limits:
       cpu: 1000m

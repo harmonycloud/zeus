@@ -3,7 +3,7 @@
 ALTER TABLE `alert_rule_id` MODIFY `namespace` VARCHAR(256);
 -- 添加ingress类型字段
 ALTER TABLE `cluster_ingress_components` ADD COLUMN `type` VARCHAR(32) DEFAULT NULL COMMENT "ingress类型 nginx或traefik";
-UPDATE `cluster_ingress_components` SET `type`="nginx" WHERE `type` != "traefik";
+UPDATE `cluster_ingress_components` SET `type`="nginx" WHERE `type` != "traefik" OR `type` IS NULL;
 
 -- 2022.09.14 liyinlong
 -- 添加可用区表
