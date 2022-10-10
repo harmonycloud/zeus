@@ -215,11 +215,9 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
     spec:
-    {{- if .Values.image.imagePullSecrets }}
+    {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
-      {{- range .Values.image.imagePullSecrets }}
-        - name: {{ . }}
-      {{- end }}
+        {{- toYaml . | nindent 8 }}
     {{- end }}
       serviceAccountName: {{ include "mysql-operator.fullname" . }}-install-crds
       containers:
