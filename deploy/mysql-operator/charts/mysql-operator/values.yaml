@@ -9,7 +9,7 @@ image:
   repository: harbor.middleware.com/middleware
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: v1.8.12
+  tag: v1.8.13
   kubectlTag: 1.21
 
 updateStrategy: "OnDelete"
@@ -25,9 +25,7 @@ kubectl:
       memory: 256Mi
   nodeSelector: {}
   tolerations:
-    - effect: NoSchedule
-      key: harm.cn/type
-      value: active-active
+    - operator: Exists
   affinity: {}
 
 imagePullSecrets: []
@@ -58,8 +56,6 @@ resources:
 nodeSelector: {}
 
 tolerations:
-  - effect: NoSchedule
-    key: harm.cn/type
-    value: active-active
+  - operator: Exists
 
 affinity: {}

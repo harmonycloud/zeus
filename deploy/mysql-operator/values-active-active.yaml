@@ -1,0 +1,21 @@
+podAntiAffinityTopologKey:  zone
+
+tolerations:
+  - operator: Exists
+
+nodeAffinity:
+  requiredDuringSchedulingIgnoredDuringExecution:
+    nodeSelectorTerms:
+      - matchExpressions:
+          - key: zone
+            operator: NotIn
+            values:
+              - zoneC
+  preferredDuringSchedulingIgnoredDuringExecution:
+    - preference:
+        matchExpressions:
+          - key: system
+            operator: In
+            values:
+              - "true"
+      weight: 100 
