@@ -27,6 +27,7 @@ import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.service.user.UserService;
 import com.harmonycloud.zeus.util.DateUtil;
+import com.harmonycloud.zeus.util.MathUtil;
 import com.harmonycloud.zeus.util.MiddlewareServicePurposeUtil;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.*;
@@ -96,6 +97,8 @@ public class IngressServiceImpl implements IngressService {
 
     @Value("${k8s.ingress.default.name:nginx-ingress-controller}")
     private String defaultIngressName;
+    @Value("${system.lb.traefikPortLength:5}")
+    private Integer traefikPortLength;
 
     @Override
     public List<IngressDTO> list(String clusterId, String namespace, String keyword) {
@@ -240,23 +243,6 @@ public class IngressServiceImpl implements IngressService {
         if (CollectionUtils.isEmpty(serviceList)) {
             return;
         }
-        // 校验NodePort端口是否已存在
-        List<io.fabric8.kubernetes.api.model.Service> svcList = serviceWrapper.list(cluster.getId(), null);
-        HashSet<Integer> nodePorts = new HashSet<>();
-        if (!CollectionUtils.isEmpty(svcList)) {
-            svcList.forEach(service -> {
-                if (MIDDLEWARE_EXPOSE_NODEPORT.equals(service.getSpec().getType())) {
-                    service.getSpec().getPorts().forEach(nodePortSvc -> {
-                        nodePorts.add(nodePortSvc.getNodePort());
-                    });
-                }
-            });
-        }
-        serviceList.forEach(serviceDTO -> {
-            if (nodePorts.contains(Integer.parseInt(serviceDTO.getExposePort()))) {
-                throw new BusinessException(ErrorMessage.TCP_PORT_ALREADY_USED);
-            }
-        });
 
         // 校验Nginx TCP配置文件
         List<IngressComponentDto> nginxComponentDtoList = ingressComponentService.list(cluster.getId(), IngressEnum.NGINX.getName());
@@ -277,31 +263,14 @@ public class IngressServiceImpl implements IngressService {
                 }
             }
         });
-        // 校验traefik additionalArguments配置
-        Set<String> portSet = new HashSet<>();
-        List<IngressComponentDto> traefikComponentDtoList = ingressComponentService.list(cluster.getId(), IngressEnum.TRAEFIK.getName());
-        for (IngressComponentDto ingress : traefikComponentDtoList) {
-            JSONObject installedValues = null;
-            try {
-                installedValues = helmChartService.getInstalledValues(ingress.getIngressClassName(), ingress.getNamespace(), clusterService.findById(ingress.getClusterId()));
-            } catch (Exception e) {
-                log.error("查询traefik values失败了", e);
-                continue;
-            }
-            if (installedValues == null) {
-                continue;
-            }
-            JSONArray additionalArguments = installedValues.getJSONArray("additionalArguments");
-            additionalArguments.forEach(arg -> {
-                String[] strs = arg.toString().split(":");
-                if (strs.length == 2) {
-                    portSet.add(strs[1]);
-                }
-            });
-        }
-        if (!CollectionUtils.isEmpty(portSet)) {
+        // 校验端口是否在traefik tcp、nodeport中使用
+        Set<Integer> usedPort = new HashSet<>();
+        usedPort.addAll(getTraefikUsedPort(cluster));
+        usedPort.addAll(getNodePortUsedPort(cluster));
+
+        if (!CollectionUtils.isEmpty(usedPort)) {
             serviceList.forEach(serviceDTO -> {
-                if (portSet.contains(Integer.parseInt(serviceDTO.getExposePort()))) {
+                if (usedPort.contains(Integer.parseInt(serviceDTO.getExposePort()))) {
                     throw new BusinessException(ErrorMessage.TCP_PORT_ALREADY_USED);
                 }
             });
@@ -605,6 +574,48 @@ public class IngressServiceImpl implements IngressService {
     private boolean mqCheck(IngressDTO ingressDTO) {
         return ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.ROCKET_MQ.getType())
                 || ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.KAFKA.getType());
+    }
+
+    /**
+     * 获取traefik已使用端口
+     * @return
+     */
+    private Set<Integer> getTraefikUsedPort(MiddlewareClusterDTO cluster) {
+        Set<Integer> traefikPortSet = new HashSet<>();
+        IngressRouteTCPList tcpList = ingressRouteTCPWrapper.list(cluster.getId(), null, null);
+        if (tcpList != null && !CollectionUtils.isEmpty(tcpList.getItems())) {
+            tcpList.getItems().forEach(tcpCR -> {
+                try {
+                    if (null != tcpCR && null != tcpCR.getSpec() && !CollectionUtils.isEmpty(tcpCR.getSpec().getEntryPoints())) {
+                        String entryPoint = tcpCR.getSpec().getEntryPoints().get(0);
+                        traefikPortSet.add(Integer.parseInt(entryPoint.substring(entryPoint.length() - traefikPortLength)));
+                    }
+                } catch (Exception e) {
+                    log.error("获取traefik tcp 端口失败", e);
+                }
+            });
+        }
+        return traefikPortSet;
+    }
+
+    /**
+     * 获取nodeport已使用端口
+     * @param cluster
+     * @return
+     */
+    private Set<Integer> getNodePortUsedPort(MiddlewareClusterDTO cluster) {
+        List<io.fabric8.kubernetes.api.model.Service> svcList = serviceWrapper.list(cluster.getId(), null);
+        HashSet<Integer> nodePorts = new HashSet<>();
+        if (!CollectionUtils.isEmpty(svcList)) {
+            svcList.forEach(service -> {
+                if (MIDDLEWARE_EXPOSE_NODEPORT.equals(service.getSpec().getType())) {
+                    service.getSpec().getPorts().forEach(nodePortSvc -> {
+                        nodePorts.add(nodePortSvc.getNodePort());
+                    });
+                }
+            });
+        }
+        return nodePorts;
     }
 
     /**
@@ -1630,6 +1641,14 @@ public class IngressServiceImpl implements IngressService {
         if (ingressComponentDto == null) {
             throw new BusinessException(ErrorMessage.NOT_EXIST);
         }
+        if (IngressEnum.TRAEFIK.getName().equals(ingressComponentDto.getType())) {
+            return getTraefikAvailableServicePort(cluster, ingressComponentDto);
+        } else {
+            return getNginxAvailableServicePort(cluster, ingressComponentDto);
+        }
+    }
+
+    private int getNginxAvailableServicePort(MiddlewareClusterDTO cluster, IngressComponentDto ingressComponentDto) {
         String ingressTcpCmName = ingressComponentDto.getConfigMapName();
         String ingressTcpNamespace = ingressComponentDto.getNamespace();
         // tcp routing list
@@ -1646,6 +1665,25 @@ public class IngressServiceImpl implements IngressService {
             }
             port++;
         }
+    }
+
+    private int getTraefikAvailableServicePort(MiddlewareClusterDTO cluster, IngressComponentDto ingressComponentDto) {
+        IngressComponentDto detail = ingressComponentService.detail(cluster.getId(), ingressComponentDto.getIngressClassName());
+        String startPortStr = detail.getStartPort();
+        String endPortStr = detail.getEndPort();
+        if (!MathUtil.isDigit(startPortStr) && !MathUtil.isDigit(endPortStr)) {
+            return 0;
+        }
+        int port = Integer.parseInt(startPortStr);
+        int endPort = Integer.parseInt(endPortStr);
+        Set<Integer> traefikUsedPort = getTraefikUsedPort(cluster);
+        for (; port <= endPort; ) {
+            if (!traefikUsedPort.contains(port)) {
+                return port;
+            }
+            port++;
+        }
+        return 0;
     }
 
     private List<IngressDTO> filterByKeyword(List<IngressDTO> ingressDTOList, String keyword) {
