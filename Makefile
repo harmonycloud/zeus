@@ -2,7 +2,7 @@ IMAGE_REPO ?= middleware.harmonycloud.cn:58080
 TYPE ?= docker-compose
 DEPLOY ?= online
 STORAGE_CLASS ?= default
-HA ?= false
+HA ?= single
 
 release:
 	build/release.sh build/image.conf $(IMAGE_REPO)
