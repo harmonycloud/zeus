@@ -50,3 +50,39 @@ spec:
             path: logstash.yml
           - key: jvm.options
             path: jvm.options
+      affinity:
+        {{- if eq .Values.podAntiAffinity "hard"}}
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: k8s-app
+                    operator: In
+                    values:
+                      - logstash
+              topologyKey: {{ .Values.podAntiAffinityTopologKey }}
+        {{- else if eq .Values.podAntiAffinity "soft"}}
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: {{ .Values.podAntiAffinityTopologKey }}
+                labelSelector:
+                  matchExpressions:
+                    - key: k8s-app
+                      operator: In
+                      values:
+                        - logstash
+        {{- end}}
+        {{- with .Values.nodeAffinity }}
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+          {{- end }}
+          {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+          {{- end }}
