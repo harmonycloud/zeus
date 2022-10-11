@@ -957,19 +957,19 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      */
     public void waitingMiddleware(String clusterId, String namespace, String name, String type) {
         for (int i = 0; i < 20; ++i) {
+            MiddlewareCR middlewareCR = null;
             try {
-                MiddlewareCR middlewareCR = middlewareCRService.getCR(clusterId, namespace, type, name);
-                if (middlewareCR != null && middlewareCR.getStatus() != null
-                    && middlewareCR.getStatus().getPhase().equals(RUNNING)) {
-                    break;
-                }
+                middlewareCR = middlewareCRService.getCR(clusterId, namespace, type, name);
             } catch (Exception e) {
                 log.error("备份恢复 集群{} 分区{} 中间件{} 查询cr状态失败,30s后重试", clusterId, namespace, name);
-            } finally {
-                try {
-                    Thread.sleep(30000);
-                } catch (Exception ignore) {
-                }
+            }
+            if (middlewareCR != null && middlewareCR.getStatus() != null
+                && middlewareCR.getStatus().getPhase().equals(RUNNING)) {
+                break;
+            }
+            try {
+                Thread.sleep(30000);
+            } catch (Exception ignore) {
             }
         }
     }
