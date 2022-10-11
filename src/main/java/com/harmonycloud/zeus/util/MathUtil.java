@@ -89,4 +89,21 @@ public class MathUtil {
         return sbf.toString();
     }
 
+    /**
+     * 判断一个字符串是否是数字
+     * @param s
+     * @return
+     */
+    public static boolean isDigit(String s) {
+        if (s == null) {
+            return false;
+        }
+        try {
+            Integer.parseInt(s);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
 }
