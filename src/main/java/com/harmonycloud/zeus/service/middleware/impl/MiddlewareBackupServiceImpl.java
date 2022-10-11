@@ -395,9 +395,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String restoreTime) {
-        if (MiddlewareTypeEnum.ROCKET_MQ.getType().equals(type) || MiddlewareTypeEnum.ELASTIC_SEARCH.getType().equals(type)){
-            waitingMiddleware(clusterId, namespace, middlewareName, type);
-        }
+        // 等待中间件状态正常
+        waitingMiddleware(clusterId, namespace, middlewareName, type);
         MiddlewareRestoreCR crd = new MiddlewareRestoreCR();
         ObjectMeta meta = new ObjectMeta();
         meta.setNamespace(namespace);
@@ -957,7 +956,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * 创建备份恢复等待中间件创建完毕
      */
     public void waitingMiddleware(String clusterId, String namespace, String name, String type) {
-        for (int i = 0; i < 10; ++i) {
+        for (int i = 0; i < 20; ++i) {
             try {
                 MiddlewareCR middlewareCR = middlewareCRService.getCR(clusterId, namespace, type, name);
                 if (middlewareCR != null && middlewareCR.getStatus() != null
