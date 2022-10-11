@@ -1,4 +1,3 @@
-podAntiAffinity: "soft"
 global:
   repository: harbor.middleware.com/middleware
   crdGroup: harmonycloud
@@ -53,3 +52,8 @@ global:
     nodeSelector: {}
     tolerations: []
     affinity: {}
+
+podAntiAffinityTopologKey: "kubernetes.io/hostname"
+
+#取值[hard|soft] hard:强制反亲和 soft:非强制反亲和
+podAntiAffinity: "soft"
