@@ -97,6 +97,8 @@ data:
       timeout: 30000
       connect-timeout: 30000
       read-timeout: 30000
+      # 日志总开关，打开/关闭Forest请求/响应日志
+      log-enabled: false
 kind: ConfigMap
 metadata:
   name: zeus-config
