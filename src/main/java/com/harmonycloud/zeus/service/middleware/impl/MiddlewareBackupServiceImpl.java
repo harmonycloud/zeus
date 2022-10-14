@@ -395,9 +395,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String restoreTime) {
-        if (MiddlewareTypeEnum.ROCKET_MQ.getType().equals(type) || MiddlewareTypeEnum.ELASTIC_SEARCH.getType().equals(type)){
-            waitingMiddleware(clusterId, namespace, middlewareName, type);
-        }
+        // 等待中间件状态正常
+        waitingMiddleware(clusterId, namespace, middlewareName, type);
         MiddlewareRestoreCR crd = new MiddlewareRestoreCR();
         ObjectMeta meta = new ObjectMeta();
         meta.setNamespace(namespace);
@@ -957,20 +956,21 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * 创建备份恢复等待中间件创建完毕
      */
     public void waitingMiddleware(String clusterId, String namespace, String name, String type) {
-        for (int i = 0; i < 10; ++i) {
+        for (int i = 0; i < 20; ++i) {
+            MiddlewareCR middlewareCR = null;
             try {
-                MiddlewareCR middlewareCR = middlewareCRService.getCR(clusterId, namespace, type, name);
-                if (middlewareCR != null && middlewareCR.getStatus() != null
-                    && middlewareCR.getStatus().getPhase().equals(RUNNING)) {
-                    break;
-                }
+                middlewareCR = middlewareCRService.getCR(clusterId, namespace, type, name);
             } catch (Exception e) {
                 log.error("备份恢复 集群{} 分区{} 中间件{} 查询cr状态失败,30s后重试", clusterId, namespace, name);
-            } finally {
-                try {
-                    Thread.sleep(30000);
-                } catch (Exception ignore) {
-                }
+            }
+            if (middlewareCR != null && middlewareCR.getStatus() != null
+                && StringUtils.isNotEmpty(middlewareCR.getStatus().getPhase())
+                && middlewareCR.getStatus().getPhase().equalsIgnoreCase(RUNNING)) {
+                break;
+            }
+            try {
+                Thread.sleep(30000);
+            } catch (Exception ignore) {
             }
         }
     }

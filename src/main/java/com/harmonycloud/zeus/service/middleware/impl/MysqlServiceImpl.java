@@ -175,7 +175,7 @@ public class MysqlServiceImpl implements MysqlService {
         if (middleware == null) {
             middleware = middlewareService.detail(clusterId, namespace, middlewareName, MiddlewareTypeEnum.MYSQL.getType());
         }
-        List<IngressDTO> serviceDTOS = ingressService.get(clusterId, namespace, MiddlewareTypeEnum.MYSQL.name(), middlewareName);
+        List<IngressDTO> serviceDTOS = ingressService.get(clusterId, namespace, MiddlewareTypeEnum.MYSQL.getType(), middlewareName);
         serviceDTOS = serviceDTOS.stream().filter(ingressDTO -> (
                 !ingressDTO.getName().contains("readonly"))
         ).collect(Collectors.toList());

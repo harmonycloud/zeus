@@ -14,7 +14,7 @@ global:
     nodeSelector: {}
   middlewarebackup_controller:
     image: middlewarebackup-controller
-    tag: v1.2.4
+    tag: v1.2.5
     resources:
       limits:
         cpu: 200m
@@ -52,3 +52,8 @@ global:
     nodeSelector: {}
     tolerations: []
     affinity: {}
+
+podAntiAffinityTopologKey: "kubernetes.io/hostname"
+
+#取值[hard|soft] hard:强制反亲和 soft:非强制反亲和
+podAntiAffinity: "soft"

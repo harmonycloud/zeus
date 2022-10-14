@@ -3,4 +3,4 @@ appVersion: 1.8.13
 description: mysql operator chart
 name: mysql-operator
 type: application
-version: 1.8.13-2
+version: 1.8.13-3

@@ -772,6 +772,9 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
 
         ingressDTO.setServiceList(serviceDTOS);
         int availablePort = ingressService.getAvailablePort(middleware.getClusterId(), ingressClassName);
+        if (availablePort == 0) {
+            throw new BusinessException(ErrorMessage.MYSQL_CONNECTION_FAILED);
+        }
         serviceDTO.setExposePort(String.valueOf(availablePort));
         try {
             ingressService.create(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), ingressDTO);

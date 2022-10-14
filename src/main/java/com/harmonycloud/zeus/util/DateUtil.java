@@ -1142,7 +1142,6 @@ public class DateUtil {
         try {
             gpsUTCDate = utcFormater.parse(utcTime);
         } catch (ParseException e) {
-            e.printStackTrace();
             return utcTime;
         }
         SimpleDateFormat localFormater = new SimpleDateFormat(localTimePatten);
