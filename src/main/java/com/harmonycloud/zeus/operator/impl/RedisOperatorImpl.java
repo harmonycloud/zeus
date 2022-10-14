@@ -80,20 +80,9 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         serviceDTOS.add(serviceDTO);
 
         ingressDTO.setServiceList(serviceDTOS);
-        boolean successCreateService = false;
-        int servicePort = 31000;
-        while (!successCreateService) {
-            serviceDTO.setExposePort(String.valueOf(servicePort));
-            log.info("使用端口{}暴露服务", servicePort);
-            try {
-                ingressService.create(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), ingressDTO);
-                successCreateService = true;
-            } catch (Exception e) {
-                log.error("使用ingress暴露服务出错了,端口：{}", servicePort, e);
-                servicePort++;
-                successCreateService = false;
-            }
-        }
+        int servicePort = ingressService.getAvailablePort(middleware.getClusterId(), ingressClassName);
+        serviceDTO.setExposePort(String.valueOf(servicePort));
+        ingressService.create(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), ingressDTO);
     }
 
 

@@ -98,10 +98,14 @@ public class IngressRouteTCPWrapper {
      * @param labels
      * @return
      */
-    public IngressRouteTCPList list(String clusterId, String namespace, Map<String,String> labels){
+    public IngressRouteTCPList list(String clusterId, String namespace, Map<String, String> labels) {
         Map<String, Object> map = null;
         try {
-            map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace, labels);
+            if (namespace == null) {
+                map = K8sClient.getClient(clusterId).customResource(CONTEXT).list();
+            } else {
+                map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace, labels);
+            }
         } catch (Exception e) {
             log.error("查询MiddlewareRestoreList出错了", e);
             return null;
