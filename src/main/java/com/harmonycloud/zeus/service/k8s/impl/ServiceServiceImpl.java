@@ -135,7 +135,7 @@ public class ServiceServiceImpl implements ServiceService {
     @Override
     public List<ServicePortDTO> listInternalService(String clusterId, String namespace, String name, String type) {
         if ("rocketmq".equals(type)) {
-            return getMQInternalService(name);
+            return getMQInternalService(name, namespace);
         }
         List<ServicePortDTO> servicePortDTOList = list(clusterId, namespace, name, type);
         servicePortDTOList.forEach(service -> {
@@ -171,9 +171,9 @@ public class ServiceServiceImpl implements ServiceService {
         }
     }
 
-    private List<ServicePortDTO> getMQInternalService(String middlewareName) {
-        String svc0 = middlewareName + "namesrv-0." + middlewareName + "namesrv-headless-svc:9876";
-        String svc1 = middlewareName + "namesrv-1." + middlewareName + "namesrv-headless-svc:9876";
+    private List<ServicePortDTO> getMQInternalService(String middlewareName,String namespace) {
+        String svc0 = middlewareName + "namesrv-0." + middlewareName + "namesrv-headless-svc." + namespace + ":9876";
+        String svc1 = middlewareName + "namesrv-1." + middlewareName + "namesrv-headless-svc." + namespace + ":9876";
         ServicePortDTO servicePortDTO0 = new ServicePortDTO();
         servicePortDTO0.setServicePurpose("读写");
         servicePortDTO0.setServiceName("namesrv-headless-svc");
