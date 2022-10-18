@@ -964,6 +964,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 log.error("备份恢复 集群{} 分区{} 中间件{} 查询cr状态失败,30s后重试", clusterId, namespace, name);
             }
             if (middlewareCR != null && middlewareCR.getStatus() != null
+                && StringUtils.isNotEmpty(middlewareCR.getStatus().getPhase())
                 && middlewareCR.getStatus().getPhase().equalsIgnoreCase(RUNNING)) {
                 break;
             }
