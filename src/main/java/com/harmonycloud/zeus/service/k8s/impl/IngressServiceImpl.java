@@ -871,7 +871,7 @@ public class IngressServiceImpl implements IngressService {
             return;
         }
         if ("rocketmq".equals(middlewareType)) {
-            if (serviceName.endsWith("nameserver-proxy-svc")) {
+            if (serviceName.contains("nameserver-proxy-svc")) {
                 serviceDTO.setServicePort("9876");
                 serviceDTO.setTargetPort("9876");
             } else {
