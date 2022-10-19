@@ -18,6 +18,6 @@ public interface MiddlewareDashboardAuthService {
      * @param type 中间件类型
      * @return JSONObject
      **/
-    JSONObject login(String username, String password, String type);
+    JSONObject login(String clusterId, String namespace, String middlewareName, String username, String password, String type);
 
 }

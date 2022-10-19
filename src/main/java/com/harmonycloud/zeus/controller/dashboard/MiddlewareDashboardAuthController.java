@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.controller.dashboard;
 
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.zeus.service.middleware.MiddlewareDashboardAuthService;
 import io.swagger.annotations.Api;
@@ -28,10 +29,13 @@ public class MiddlewareDashboardAuthController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class)
     })
     @PostMapping("/auth")
-    public BaseResult login(@RequestParam("username") String username,
-                            @RequestParam("password") String password,
-                            @RequestParam("type") String type) {
-        return BaseResult.ok(middlewareDashboardAuthService.login(username, password, type));
+    public BaseResult<JSONObject> login(@PathVariable("clusterId") String clusterId,
+                                        @PathVariable("namespace") String namespace,
+                                        @PathVariable("middlewareName") String middlewareName,
+                                        @RequestParam("username") String username,
+                                        @RequestParam("password") String password,
+                                        @RequestParam("type") String type) {
+        return BaseResult.ok(middlewareDashboardAuthService.login(clusterId, namespace, middlewareName, username, password, type));
     }
 
 }
