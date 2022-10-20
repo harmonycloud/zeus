@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.enums.PostgresqlPrivilegeEnum;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.zeus.annotation.Operator;
 import org.apache.commons.lang3.StringUtils;
@@ -71,6 +72,26 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     @Override
+    public DatabaseDto getDatabase(String clusterId, String namespace, String middlewareName, String databaseName) {
+        List<DatabaseDto> databaseDtoList = this.listDatabases(clusterId, namespace, middlewareName);
+        databaseDtoList = databaseDtoList.stream()
+            .filter(databaseDto -> databaseDto.getDatabaseName().equals(databaseName)).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(databaseDtoList)) {
+            throw new BusinessException(ErrorMessage.NOT_FOUND);
+        }
+        DatabaseDto databaseDto = databaseDtoList.get(0);
+        // 查询owner
+        List<MiddlewareUserDto> userDtoList = this.listUser(clusterId, namespace, middlewareName, null);
+        userDtoList = userDtoList.stream().filter(userDto -> userDto.getId().equals(databaseDto.getOwner()))
+            .collect(Collectors.toList());
+        // 查询comment
+        JSONObject getDatabaseNotes =
+            postgresqlClient.getDatabaseNotes(middlewareName, port, databaseName, databaseDto.getOid());
+        return databaseDto.setOwner(userDtoList.get(0).getUsername())
+            .setComment(convertColumn(getDatabaseNotes).get(0).get("shobj_description"));
+    }
+
+    @Override
     public void addDatabase(String clusterId, String namespace, String middlewareName, DatabaseDto databaseDto) {
         if (StringUtils.isNotEmpty(databaseDto.getEncoding())) {
             databaseDto.setEncoding("UTF8");
@@ -80,6 +101,16 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         }
         JSONObject addUser = postgresqlClient.createDatabase(middlewareName, port, databaseDto);
         JSONObject err = addUser.getJSONObject("err");
+        if (err != null) {
+            throw new BusinessException(ErrorMessage.CREATE_USER_FAILED, err.getString("Message"));
+        }
+    }
+
+    @Override
+    public void updateDatabase(String clusterId, String namespace, String middlewareName, String databaseName,
+        DatabaseDto databaseDto) {
+        JSONObject updateDatabase = postgresqlClient.updateDatabase(middlewareName, port, databaseName, databaseDto);
+        JSONObject err = updateDatabase.getJSONObject("err");
         if (err != null) {
             throw new BusinessException(ErrorMessage.CREATE_USER_FAILED, err.getString("Message"));
         }
@@ -143,9 +174,13 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     @Override
-    public void updateSchema(String clusterId, String namespace, String middlewareName, SchemaDto schemaDto) {
-        if (StringUtils.isNotEmpty(schemaDto.getSchemaName())) {
-            // todo
+    public void updateSchema(String clusterId, String namespace, String middlewareName, String databaseName,
+        String schemaName, SchemaDto schemaDto) {
+        JSONObject updateSchema = postgresqlClient.updateSchema(middlewareName, port, schemaDto.getDatabaseName(),
+            schemaDto.getSchemaName(), schemaDto);
+        JSONObject err = updateSchema.getJSONObject("err");
+        if (err != null) {
+            throw new BusinessException(ErrorMessage.CREATE_USER_FAILED, err.getString("Message"));
         }
     }
 
@@ -173,6 +208,16 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             tableDto.setSchemaName(schemaName);
             return tableDto;
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    public TableDto getTable(String clusterId, String namespace, String middlewareName, String databaseName,
+        String schemaName, String tableName) {
+        // 获取基本信息
+        // 名称 owner 表空间 填充率 comment
+        // 四个约束
+        // 继承信息
+        return null;
     }
 
     @Override
@@ -254,9 +299,10 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         sb.deleteCharAt(sb.length() - 1);
         // 继承
         StringBuilder inherit = new StringBuilder();
-        if (!CollectionUtils.isEmpty(tableDto.getInheritTableList())) {
-            for (TableDto inheritTable : tableDto.getInheritTableList()) {
-                inherit.append(inheritTable.getTableName()).append(",");
+        if (!CollectionUtils.isEmpty(tableDto.getTableInheritList())) {
+            for (TableInherit tableInherit : tableDto.getTableInheritList()) {
+                inherit.append(tableInherit.getSchemaName()).append(".").append(tableInherit.getTableName())
+                    .append(",");
             }
             if (inherit.length() != 0) {
                 inherit.deleteCharAt(sb.length() - 1);
@@ -397,7 +443,29 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
 
     @Override
     public void updateInherit(String clusterId, String namespace, String middlewareName, TableDto tableDto) {
-
+        if (CollectionUtils.isEmpty(tableDto.getTableInheritList())) {
+            return;
+        }
+        for (TableInherit key : tableDto.getTableInheritList()) {
+            // 添加继承关系
+            if ("add".equals(key.getOperator())) {
+                JSONObject createForeignKey =
+                    postgresqlClient.addInherit(middlewareName, port, tableDto.getDatabaseName(),
+                        tableDto.getSchemaName(), tableDto.getTableName(), key.getSchemaName(), key.getTableName());
+                if (createForeignKey.get("err") != null) {
+                    throw new BusinessException(ErrorMessage.CREATE_USER_FAILED,
+                        createForeignKey.getJSONObject("err").getString("Message"));
+                }
+            } else if ("delete".equals(key.getOperator())) {
+                // 取消继承关系
+                JSONObject dropInherit = postgresqlClient.dropInherit(middlewareName, port, tableDto.getDatabaseName(),
+                    tableDto.getSchemaName(), tableDto.getTableName(), key.getSchemaName(), key.getTableName());
+                if (dropInherit.get("err") != null) {
+                    throw new BusinessException(ErrorMessage.CREATE_USER_FAILED,
+                        dropInherit.getJSONObject("err").getString("Message"));
+                }
+            }
+        }
     }
 
     @Override
@@ -431,6 +499,87 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         JSONObject err = dropUser.getJSONObject("err");
         if (err != null) {
             throw new BusinessException(ErrorMessage.DROP_USER_FAILED, err.getString("Message"));
+        }
+    }
+
+    @Override
+    public void grantUser(String clusterId, String namespace, String middlewareName, String username,
+        MiddlewareUserAuthority middlewareUserAuthority) {
+        String grantOption = "";
+        if (middlewareUserAuthority.getGrantAble()) {
+            grantOption = "with grant option";
+        }
+        if (StringUtils.isNotEmpty(middlewareUserAuthority.getTable())) {
+            // 赋权table
+            String privileges =
+                PostgresqlPrivilegeEnum.findTablePrivilege(middlewareUserAuthority.getAuthority()).getPrivilege();
+            JSONObject grantUserTable =
+                postgresqlClient.grantUserTable(middlewareName, port, username, middlewareUserAuthority.getDatabase(),
+                    middlewareUserAuthority.getSchema(), middlewareUserAuthority.getTable(), privileges, grantOption);
+            JSONObject err = grantUserTable.getJSONObject("err");
+            if (err != null) {
+                throw new BusinessException(ErrorMessage.DROP_USER_FAILED, err.getString("Message"));
+            }
+        } else if (StringUtils.isNotEmpty(middlewareUserAuthority.getSchema())) {
+            // 赋权schema
+            String privileges =
+                PostgresqlPrivilegeEnum.findSchemaPrivilege(middlewareUserAuthority.getAuthority()).getPrivilege();
+            JSONObject grantUserSchema = postgresqlClient.grantUserSchema(middlewareName, port, username,
+                middlewareUserAuthority.getDatabase(), middlewareUserAuthority.getSchema(), privileges, grantOption);
+            JSONObject err = grantUserSchema.getJSONObject("err");
+            if (err != null) {
+                throw new BusinessException(ErrorMessage.DROP_USER_FAILED, err.getString("Message"));
+            }
+        } else if (StringUtils.isNotEmpty(middlewareUserAuthority.getDatabase())) {
+            // 赋权database
+            String privileges =
+                PostgresqlPrivilegeEnum.findDatabasePrivilege(middlewareUserAuthority.getAuthority()).getPrivilege();
+            JSONObject grantUserDatabase = postgresqlClient.grantUserDatabase(middlewareName, port, username,
+                middlewareUserAuthority.getDatabase(), privileges, grantOption);
+            JSONObject err = grantUserDatabase.getJSONObject("err");
+            if (err != null) {
+                throw new BusinessException(ErrorMessage.DROP_USER_FAILED, err.getString("Message"));
+            }
+        }
+    }
+
+    @Override
+    public void revokeUser(String clusterId, String namespace, String middlewareName,
+        MiddlewareUserDto middlewareUserDto) {
+        String username = middlewareUserDto.getUsername();
+        for (MiddlewareUserAuthority middlewareUserAuthority : middlewareUserDto.getAuthorityList()) {
+            if (StringUtils.isNotEmpty(middlewareUserAuthority.getTable())) {
+                // 赋权table
+                String privileges =
+                    PostgresqlPrivilegeEnum.findTablePrivilege(middlewareUserAuthority.getAuthority()).getPrivilege();
+                JSONObject revokeUserTable = postgresqlClient.revokeUserTable(middlewareName, port, username,
+                    middlewareUserAuthority.getDatabase(), middlewareUserAuthority.getSchema(),
+                    middlewareUserAuthority.getTable(), privileges);
+                JSONObject err = revokeUserTable.getJSONObject("err");
+                if (err != null) {
+                    throw new BusinessException(ErrorMessage.DROP_USER_FAILED, err.getString("Message"));
+                }
+            } else if (StringUtils.isNotEmpty(middlewareUserAuthority.getSchema())) {
+                // 赋权schema
+                String privileges =
+                    PostgresqlPrivilegeEnum.findSchemaPrivilege(middlewareUserAuthority.getAuthority()).getPrivilege();
+                JSONObject revokeUserSchema = postgresqlClient.revokeUserSchema(middlewareName, port, username,
+                    middlewareUserAuthority.getDatabase(), middlewareUserAuthority.getSchema(), privileges);
+                JSONObject err = revokeUserSchema.getJSONObject("err");
+                if (err != null) {
+                    throw new BusinessException(ErrorMessage.DROP_USER_FAILED, err.getString("Message"));
+                }
+            } else if (StringUtils.isNotEmpty(middlewareUserAuthority.getDatabase())) {
+                // 赋权database
+                String privileges = PostgresqlPrivilegeEnum
+                    .findDatabasePrivilege(middlewareUserAuthority.getAuthority()).getPrivilege();
+                JSONObject revokeUserDatabase = postgresqlClient.revokeUserDatabase(middlewareName, port, username,
+                    middlewareUserAuthority.getDatabase(), privileges);
+                JSONObject err = revokeUserDatabase.getJSONObject("err");
+                if (err != null) {
+                    throw new BusinessException(ErrorMessage.DROP_USER_FAILED, err.getString("Message"));
+                }
+            }
         }
     }
 

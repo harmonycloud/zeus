@@ -22,6 +22,17 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
     List<DatabaseDto> listDatabases(String clusterId, String namespace, String middlewareName);
 
     /**
+     * 获取database信息
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param databaseName  database名称
+     * @return  DatabaseDto
+     */
+    DatabaseDto getDatabase(String clusterId, String namespace, String middlewareName, String databaseName);
+
+    /**
      * 创建database
      *
      * @param clusterId 集群id
@@ -29,6 +40,15 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
      * @param middlewareName 中间件名称
      */
     void addDatabase(String clusterId, String namespace, String middlewareName, DatabaseDto databaseDto);
+
+    /**
+     * 创建database
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     */
+    void updateDatabase(String clusterId, String namespace, String middlewareName, String database, DatabaseDto databaseDto);
 
     /**
      * 删除database
@@ -81,7 +101,7 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
      * @param middlewareName 中间件名称
      * @param schemaDto 模式对象
      */
-    void updateSchema(String clusterId, String namespace, String middlewareName, SchemaDto schemaDto);
+    void updateSchema(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName, SchemaDto schemaDto);
 
     /**
      * 获取schema列表
@@ -104,6 +124,17 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
      * @param schemaName 模式名称
      */
     List<TableDto> listTables(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName);
+
+    /**
+     * 获取table列表
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param databaseName 数据库名称
+     * @param schemaName 模式名称
+     */
+    TableDto getTable(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName, String tableName);
 
     /**
      * 创建table
@@ -199,6 +230,19 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
      *
      */
     void dropUser(String clusterId, String namespace, String middlewareName, String username);
+
+    /**
+     * 赋权用户
+     *
+     */
+    void grantUser(String clusterId, String namespace, String middlewareName, String username,
+                   MiddlewareUserAuthority middlewareUserAuthority);
+
+    /**
+     * 赋权用户
+     *
+     */
+    void revokeUser(String clusterId, String namespace, String middlewareName, MiddlewareUserDto middlewareUserDto);
 
     /**
      * 获取用户权限

@@ -553,6 +553,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         List<ImageRepositoryDTO> imageRepositoryDTOList = imageRepositoryService.list(cluster.getId());
         if (CollectionUtils.isEmpty(imageRepositoryDTOList)) {
+            log.error("集群{} 未添加镜像仓库", clusterId);
             throw new BusinessException(ErrorMessage.CLUSTER_NOT_ADD_REPOSITORY);
         }
         JSONObject values = yaml.loadAs(HelmChartUtil.getValueYaml(operatorChartPath), JSONObject.class);

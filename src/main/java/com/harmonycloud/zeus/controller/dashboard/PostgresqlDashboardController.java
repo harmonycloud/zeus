@@ -1,18 +1,18 @@
 package com.harmonycloud.zeus.controller.dashboard;
 
-import com.dtflys.forest.annotation.Delete;
-import com.dtflys.forest.annotation.Put;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.dashboard.*;
 import com.harmonycloud.zeus.service.dashboard.PostgresqlDashboardService;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * @author xutianhong
@@ -28,7 +28,9 @@ public class PostgresqlDashboardController {
 
     @ApiOperation(value = "获取database列表", notes = "获取database列表")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
     })
     @GetMapping("/databases")
     public BaseResult<List<DatabaseDto>> listDatabase(@PathVariable("clusterId") String clusterId,
@@ -37,22 +39,61 @@ public class PostgresqlDashboardController {
         return BaseResult.ok(postgresqlDashboardService.listDatabases(clusterId, namespace, name));
     }
 
+    @ApiOperation(value = "获取database列表", notes = "获取database列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
+    })
+    @GetMapping("/databases/{databaseName}")
+    public BaseResult<List<DatabaseDto>> getDatabase(@PathVariable("clusterId") String clusterId,
+                                                     @PathVariable("namespace") String namespace,
+                                                     @PathVariable("name") String name,
+                                                     @RequestParam("databaseName") String databaseName) {
+        return BaseResult.ok(postgresqlDashboardService.getDatabase(clusterId, namespace, name, databaseName));
+    }
+
     @ApiOperation(value = "创建database", notes = "创建database")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseDto", value = "库对象", paramType = "query", dataTypeClass = DatabaseDto.class),
     })
     @PostMapping("/databases")
     public BaseResult addDatabase(@PathVariable("clusterId") String clusterId,
-                                                     @PathVariable("namespace") String namespace,
-                                                     @PathVariable("name") String name,
-                                                     @RequestBody DatabaseDto databaseDto) {
+                                  @PathVariable("namespace") String namespace,
+                                  @PathVariable("name") String name,
+                                  @RequestBody DatabaseDto databaseDto) {
         postgresqlDashboardService.addDatabase(clusterId, namespace, name, databaseDto);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "更新database", notes = "更新database")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseDto", value = "库对象", paramType = "query", dataTypeClass = DatabaseDto.class),
+    })
+    @PutMapping("/databases/{databaseName}")
+    public BaseResult updateDatabase(@PathVariable("clusterId") String clusterId,
+                                     @PathVariable("namespace") String namespace,
+                                     @PathVariable("name") String name,
+                                     @PathVariable("databaseName") String databaseName,
+                                     @RequestBody DatabaseDto databaseDto) {
+        postgresqlDashboardService.updateDatabase(clusterId, namespace, name, databaseName, databaseDto);
         return BaseResult.ok();
     }
 
     @ApiOperation(value = "删除database", notes = "删除database")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
     })
     @DeleteMapping("/databases/{databaseName}")
     public BaseResult<List<DatabaseDto>> deleteDatabase(@PathVariable("clusterId") String clusterId,
@@ -65,7 +106,10 @@ public class PostgresqlDashboardController {
 
     @ApiOperation(value = "获取schema列表", notes = "获取schema列表")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
     })
     @GetMapping("/database/{databaseName}/schemas")
     public BaseResult<List<SchemaDto>> listSchema(@PathVariable("clusterId") String clusterId,
@@ -77,20 +121,28 @@ public class PostgresqlDashboardController {
 
     @ApiOperation(value = "获取schema", notes = "获取schema")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
     })
-    @GetMapping("/database/{databaseName}/schemas/{schema}")
+    @GetMapping("/database/{databaseName}/schemas/{schemaName}")
     public BaseResult<SchemaDto> getSchema(@PathVariable("clusterId") String clusterId,
                                            @PathVariable("namespace") String namespace,
                                            @PathVariable("name") String name,
                                            @PathVariable("databaseName") String databaseName,
-                                           @PathVariable("schema") String schema) {
-        return BaseResult.ok(postgresqlDashboardService.getSchema(clusterId, namespace, name, databaseName, schema));
+                                           @PathVariable("schemaName") String schemaName) {
+        return BaseResult.ok(postgresqlDashboardService.getSchema(clusterId, namespace, name, databaseName, schemaName));
     }
 
     @ApiOperation(value = "创建schema", notes = "创建schema")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "schemaDto", value = "模式对象", paramType = "query", dataTypeClass = SchemaDto.class),
     })
     @PostMapping("/database/{databaseName}/schemas")
     public BaseResult addSchema(@PathVariable("clusterId") String clusterId,
@@ -105,24 +157,32 @@ public class PostgresqlDashboardController {
 
     @ApiOperation(value = "更新schema", notes = "更新schema")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "schemaDto", value = "模式对象", paramType = "query", dataTypeClass = SchemaDto.class),
+
     })
-    @PutMapping("/database/{databaseName}/schemas/{schema}")
+    @PutMapping("/database/{databaseName}/schemas/{schemaName}")
     public BaseResult updateSchema(@PathVariable("clusterId") String clusterId,
                                    @PathVariable("namespace") String namespace,
                                    @PathVariable("name") String name,
                                    @PathVariable("databaseName") String databaseName,
-                                   @PathVariable("schema") String schema,
+                                   @PathVariable("schemaName") String schemaName,
                                    @RequestBody SchemaDto schemaDto) {
-        schemaDto.setDatabaseName(databaseName);
-        schemaDto.setSchemaName(schema);
-        postgresqlDashboardService.updateSchema(clusterId, namespace, name, schemaDto);
+        postgresqlDashboardService.updateSchema(clusterId, namespace, name, databaseName, schemaName, schemaDto);
         return BaseResult.ok();
     }
 
     @ApiOperation(value = "删除schema", notes = "删除schema")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
     })
     @DeleteMapping("/database/{databaseName}/schemas/{schemaName}")
     public BaseResult deleteSchema(@PathVariable("clusterId") String clusterId,
@@ -136,81 +196,124 @@ public class PostgresqlDashboardController {
 
     @ApiOperation(value = "获取table列表", notes = "获取table列表")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
     })
-    @GetMapping("/database/{database}/schemas/{schema}/tables")
+    @GetMapping("/database/{databaseName}/schemas/{schemaName}/tables")
     public BaseResult listTables(@PathVariable("clusterId") String clusterId,
                                  @PathVariable("namespace") String namespace,
                                  @PathVariable("name") String name,
-                                 @PathVariable("database") String database,
-                                 @PathVariable("schema") String schema) {
-        return BaseResult.ok(postgresqlDashboardService.listTables(clusterId, namespace, name, database, schema));
+                                 @PathVariable("databaseName") String databaseName,
+                                 @PathVariable("schemaName") String schemaName) {
+        return BaseResult.ok(postgresqlDashboardService.listTables(clusterId, namespace, name, databaseName, schemaName));
     }
 
     @ApiOperation(value = "创建table", notes = "创建table")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "tableDto", value = "表对象", paramType = "path", dataTypeClass = TableDto.class),
     })
-    @PostMapping("/database/{database}/schemas/{schema}/tables")
+    @PostMapping("/database/{databaseName}/schemas/{schemaName}/tables")
     public BaseResult addTable(@PathVariable("clusterId") String clusterId,
                                @PathVariable("namespace") String namespace,
                                @PathVariable("name") String name,
-                               @PathVariable("database") String database,
-                               @PathVariable("schema") String schema,
+                               @PathVariable("databaseName") String databaseName,
+                               @PathVariable("schemaName") String schemaName,
                                @RequestBody TableDto tableDto) {
-        tableDto.setDatabaseName(database);
-        tableDto.setSchemaName(schema);
+        tableDto.setDatabaseName(databaseName);
+        tableDto.setSchemaName(schemaName);
         postgresqlDashboardService.addTable(clusterId, namespace, name, tableDto);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "更新table", notes = "更新table")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "tableDto", value = "表对象", paramType = "path", dataTypeClass = TableDto.class),
+    })
+    @PutMapping("/database/{databaseName}/schemas/{schemaName}/tables/{tableName}")
+    public BaseResult updateTable(@PathVariable("clusterId") String clusterId,
+                               @PathVariable("namespace") String namespace,
+                               @PathVariable("name") String name,
+                               @PathVariable("databaseName") String databaseName,
+                               @PathVariable("schemaName") String schemaName,
+                               @RequestBody TableDto tableDto) {
         return BaseResult.ok();
     }
 
     @ApiOperation(value = "删除table", notes = "删除table")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
     })
-    @DeleteMapping("/database/{database}/schemas/{schema}/tables/{table}")
+    @DeleteMapping("/database/{databaseName}/schemas/{schemaName}/tables/{tableName}")
     public BaseResult dropTable(@PathVariable("clusterId") String clusterId,
                                 @PathVariable("namespace") String namespace,
                                 @PathVariable("name") String name,
-                                @PathVariable("database") String database,
-                                @PathVariable("schema") String schema,
-                                @PathVariable("table") String table) {
-        postgresqlDashboardService.dropTable(clusterId, namespace, name, database, schema, table);
+                                @PathVariable("databaseName") String databaseName,
+                                @PathVariable("schemaName") String schemaName,
+                                @PathVariable("tableName") String tableName) {
+        postgresqlDashboardService.dropTable(clusterId, namespace, name, databaseName, schemaName, tableName);
         return BaseResult.ok();
     }
 
     @ApiOperation(value = "获取column列表", notes = "获取column列表")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
     })
-    @GetMapping("/database/{database}/schemas/{schema}/tables/{table}")
+    @GetMapping("/database/{databaseName}/schemas/{schemaName}/tables/{tableName}")
     public BaseResult listColumns(@PathVariable("clusterId") String clusterId,
                                   @PathVariable("namespace") String namespace,
                                   @PathVariable("name") String name,
-                                  @PathVariable("database") String database,
-                                  @PathVariable("schema") String schema,
-                                  @PathVariable("table") String table) {
-        return BaseResult.ok(postgresqlDashboardService.listColumns(clusterId, namespace, name, database, schema, table));
+                                  @PathVariable("databaseName") String databaseName,
+                                  @PathVariable("schemaName") String schemaName,
+                                  @PathVariable("tableName") String tableName) {
+        return BaseResult.ok(postgresqlDashboardService.listColumns(clusterId, namespace, name, databaseName, schemaName, tableName));
     }
-
-    //TODO update table
 
     // 约束增删
     @ApiOperation(value = "增删外键约束", notes = "增删外键约束")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "tableDto", value = "表对象", paramType = "path", dataTypeClass = TableDto.class),
     })
-    @PutMapping("/database/{database}/schemas/{schema}/tables/{table}/foreign")
+    @PutMapping("/database/{databaseName}/schemas/{schemaName}/tables/{tableName}/foreign")
     public BaseResult updateForeignKey(@PathVariable("clusterId") String clusterId,
-                                    @PathVariable("namespace") String namespace,
-                                    @PathVariable("name") String name,
-                                    @PathVariable("database") String database,
-                                    @PathVariable("schema") String schema,
-                                    @PathVariable("table") String table,
-                                    @RequestBody TableDto tableDto) {
-        tableDto.setDatabaseName(database);
-        tableDto.setSchemaName(schema);
-        tableDto.setTableName(table);
+                                       @PathVariable("namespace") String namespace,
+                                       @PathVariable("name") String name,
+                                       @PathVariable("databaseName") String databaseName,
+                                       @PathVariable("schemaName") String schemaName,
+                                       @PathVariable("tableName") String tableName,
+                                       @RequestBody TableDto tableDto) {
+        tableDto.setDatabaseName(databaseName);
+        tableDto.setSchemaName(schemaName);
+        tableDto.setTableName(tableName);
         postgresqlDashboardService.updateForeignKey(clusterId, namespace, name, tableDto);
         return BaseResult.ok();
     }
@@ -218,76 +321,100 @@ public class PostgresqlDashboardController {
     @ApiOperation(value = "增删排它约束", notes = "增删排它约束")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "tableDto", value = "表对象", paramType = "path", dataTypeClass = TableDto.class),
     })
-    @PutMapping("/database/{database}/schemas/{schema}/tables/{table}/exclusion")
+    @PutMapping("/database/{databaseName}/schemas/{schemaName}/tables/{tableName}/exclusion")
     public BaseResult updateExclusion(@PathVariable("clusterId") String clusterId,
-                                       @PathVariable("namespace") String namespace,
-                                       @PathVariable("name") String name,
-                                       @PathVariable("database") String database,
-                                       @PathVariable("schema") String schema,
-                                       @PathVariable("table") String table,
-                                       @RequestBody TableDto tableDto) {
-        tableDto.setDatabaseName(database);
-        tableDto.setSchemaName(schema);
-        tableDto.setTableName(table);
-        postgresqlDashboardService.updateForeignKey(clusterId, namespace, name, tableDto);
+                                      @PathVariable("namespace") String namespace,
+                                      @PathVariable("name") String name,
+                                      @PathVariable("databaseName") String databaseName,
+                                      @PathVariable("schemaName") String schemaName,
+                                      @PathVariable("tableName") String tableName,
+                                      @RequestBody TableDto tableDto) {
+        tableDto.setDatabaseName(databaseName);
+        tableDto.setSchemaName(schemaName);
+        tableDto.setTableName(tableName);
+        postgresqlDashboardService.updateExclusion(clusterId, namespace, name, tableDto);
         return BaseResult.ok();
     }
 
     @ApiOperation(value = "增删唯一约束", notes = "增删唯一约束")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "tableDto", value = "表对象", paramType = "path", dataTypeClass = TableDto.class),
     })
-    @PutMapping("/database/{database}/schemas/{schema}/tables/{table}/unique")
+    @PutMapping("/database/{databaseName}/schemas/{schemaName}/tables/{tableName}/unique")
     public BaseResult updateUnique(@PathVariable("clusterId") String clusterId,
-                                      @PathVariable("namespace") String namespace,
-                                      @PathVariable("name") String name,
-                                      @PathVariable("database") String database,
-                                      @PathVariable("schema") String schema,
-                                      @PathVariable("table") String table,
-                                      @RequestBody TableDto tableDto) {
-        tableDto.setDatabaseName(database);
-        tableDto.setSchemaName(schema);
-        tableDto.setTableName(table);
-        postgresqlDashboardService.updateForeignKey(clusterId, namespace, name, tableDto);
+                                   @PathVariable("namespace") String namespace,
+                                   @PathVariable("name") String name,
+                                   @PathVariable("databaseName") String databaseName,
+                                   @PathVariable("schemaName") String schemaName,
+                                   @PathVariable("tableName") String tableName,
+                                   @RequestBody TableDto tableDto) {
+        tableDto.setDatabaseName(databaseName);
+        tableDto.setSchemaName(schemaName);
+        tableDto.setTableName(tableName);
+        postgresqlDashboardService.updateUnique(clusterId, namespace, name, tableDto);
         return BaseResult.ok();
     }
 
     @ApiOperation(value = "增删检查约束", notes = "增删检查约束")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "tableDto", value = "表对象", paramType = "path", dataTypeClass = TableDto.class),
     })
-    @PutMapping("/database/{database}/schemas/{schema}/tables/{table}/check")
+    @PutMapping("/database/{databaseName}/schemas/{schemaName}/tables/{tableName}/check")
     public BaseResult updateCheck(@PathVariable("clusterId") String clusterId,
-                                   @PathVariable("namespace") String namespace,
-                                   @PathVariable("name") String name,
-                                   @PathVariable("database") String database,
-                                   @PathVariable("schema") String schema,
-                                   @PathVariable("table") String table,
-                                   @RequestBody TableDto tableDto) {
-        tableDto.setDatabaseName(database);
-        tableDto.setSchemaName(schema);
-        tableDto.setTableName(table);
-        postgresqlDashboardService.updateForeignKey(clusterId, namespace, name, tableDto);
+                                  @PathVariable("namespace") String namespace,
+                                  @PathVariable("name") String name,
+                                  @PathVariable("databaseName") String databaseName,
+                                  @PathVariable("schemaName") String schemaName,
+                                  @PathVariable("tableName") String tableName,
+                                  @RequestBody TableDto tableDto) {
+        tableDto.setDatabaseName(databaseName);
+        tableDto.setSchemaName(schemaName);
+        tableDto.setTableName(tableName);
+        postgresqlDashboardService.updateCheck(clusterId, namespace, name, tableDto);
         return BaseResult.ok();
     }
 
     @ApiOperation(value = "增删继承关系", notes = "增删继承关系")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "tableDto", value = "表对象", paramType = "path", dataTypeClass = TableDto.class),
     })
-    @PutMapping("/database/{database}/schemas/{schema}/tables/{table}/inherit")
+    @PutMapping("/database/{databaseName}/schemas/{schemaName}/tables/{tableName}/inherit")
     public BaseResult updateInherit(@PathVariable("clusterId") String clusterId,
-                                  @PathVariable("namespace") String namespace,
-                                  @PathVariable("name") String name,
-                                  @PathVariable("database") String database,
-                                  @PathVariable("schema") String schema,
-                                  @PathVariable("table") String table,
-                                  @RequestBody TableDto tableDto) {
-        tableDto.setDatabaseName(database);
-        tableDto.setSchemaName(schema);
-        tableDto.setTableName(table);
-        postgresqlDashboardService.updateForeignKey(clusterId, namespace, name, tableDto);
+                                    @PathVariable("namespace") String namespace,
+                                    @PathVariable("name") String name,
+                                    @PathVariable("databaseName") String databaseName,
+                                    @PathVariable("schemaName") String schemaName,
+                                    @PathVariable("tableName") String tableName,
+                                    @RequestBody TableDto tableDto) {
+        tableDto.setDatabaseName(databaseName);
+        tableDto.setSchemaName(schemaName);
+        tableDto.setTableName(tableName);
+        postgresqlDashboardService.updateInherit(clusterId, namespace, name, tableDto);
         return BaseResult.ok();
     }
 
