@@ -18,7 +18,7 @@ import io.swagger.annotations.ApiOperation;
  * @author xutianhong
  * @Date 2022/10/10 3:29 下午
  */
-@Api(tags = {"服务列表", "服务管理"}, value = "mysql中间件", description = "mysql中间件")
+@Api(tags = {"中间件面板", "postgresql面板"}, value = "postgresql面板", description = "postgresql面板")
 @RestController
 @RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/postgresql/{name}")
 public class PostgresqlDashboardController {
