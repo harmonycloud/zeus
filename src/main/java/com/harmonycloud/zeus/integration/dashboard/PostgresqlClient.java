@@ -13,14 +13,14 @@ import org.springframework.web.bind.annotation.DeleteMapping;
  * @Date 2022/10/11 3:08 下午
  */
 @Component
-@Address
+@Address(source = MiddlewareApiAddress.class)
 @BaseRequest(interceptor = MiddlewareApiInterceptor.class)
 public interface PostgresqlClient {
 
     /**
      * 登录
      */
-    @Get(url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/login")
+    @Get(url = "/postgresql/{name}/port/{port}/login")
     JSONObject login(@Var("name") String name,
                      @Var("port") String port,
                      @Body("username") String username,
@@ -29,14 +29,14 @@ public interface PostgresqlClient {
     /**
      * 查询database列表
      */
-    @Get(url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/databases")
+    @Get(url = "/postgresql/{name}/port/{port}/databases")
     JSONObject listDatabases(@Var("name") String name,
                              @Var("port") String port);
 
     /**
      * 创建database
      */
-    @Post(url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/databases")
+    @Post(url = "/postgresql/{name}/port/{port}/databases")
     JSONObject createDatabase(@Var("name") String name,
                               @Var("port") String port,
                               @JSONBody DatabaseDto database);
@@ -44,7 +44,7 @@ public interface PostgresqlClient {
     /**
      * 更新database
      */
-    @Put(url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/databases/{database}")
+    @Put(url = "/postgresql/{name}/port/{port}/databases/{database}")
     JSONObject updateDatabase(@Var("name") String name,
                               @Var("port") String port,
                               @Var("database") String database,
@@ -53,7 +53,7 @@ public interface PostgresqlClient {
     /**
      * 删除database
      */
-    @Delete(url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/databases/{database}")
+    @Delete(url = "/postgresql/{name}/port/{port}/databases/{database}")
     JSONObject dropDatabase(@Var("name") String name,
                             @Var("port") String port,
                             @Var("database") String database);
@@ -61,7 +61,7 @@ public interface PostgresqlClient {
     /**
      * 查询database备注
      */
-    @Get(url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/databases/{database}/notes?oid={oid}")
+    @Get(url = "/postgresql/{name}/port/{port}/databases/{database}/notes?oid={oid}")
     JSONObject getDatabaseNotes(@Var("name") String name,
                                 @Var("port") String port,
                                 @Var("database") String database,
@@ -70,7 +70,7 @@ public interface PostgresqlClient {
     /**
      * 查询schema列表
      */
-    @Get(url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/databases/{database}/schemas")
+    @Get(url = "/postgresql/{name}/port/{port}/databases/{database}/schemas")
     JSONObject listSchemas(@Var("name") String name,
                            @Var("port") String port,
                            @Var("database") String database);
@@ -78,7 +78,7 @@ public interface PostgresqlClient {
     /**
      * 创建schema
      */
-    @Post(url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/databases/{database}/schemas")
+    @Post(url = "/postgresql/{name}/port/{port}/databases/{database}/schemas")
     JSONObject createSchema(@Var("name") String name,
                             @Var("port") String port,
                             @Var("port") String database,
@@ -87,7 +87,7 @@ public interface PostgresqlClient {
     /**
      * 更新schema
      */
-    @Put(url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/databases/{database}/schemas/{schemaName}")
+    @Put(url = "/postgresql/{name}/port/{port}/databases/{database}/schemas/{schemaName}")
     JSONObject updateSchema(@Var("name") String name,
                             @Var("port") String port,
                             @Var("database") String database,
@@ -97,7 +97,7 @@ public interface PostgresqlClient {
     /**
      * 删除schema
      */
-    @Delete(url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}")
+    @Delete(url = "/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}")
     JSONObject dropSchemas(@Var("name") String name,
                            @Var("port") String port,
                            @Var("database") String database,
@@ -106,7 +106,7 @@ public interface PostgresqlClient {
     /**
      * 查询schema备注
      */
-    @Get(url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}/notes")
+    @Get(url = "/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}/notes")
     JSONObject getSchemaNotes(@Var("name") String name,
                               @Var("port") String port,
                               @Var("database") String database,
@@ -115,7 +115,7 @@ public interface PostgresqlClient {
     /**
      * 查询table列表
      */
-    @Get(url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}")
+    @Get(url = "/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}/tables")
     JSONObject listTables(@Var("name") String name,
                           @Var("port") String port,
                           @Var("database") String database,
@@ -124,7 +124,7 @@ public interface PostgresqlClient {
     /**
      * 创建table
      */
-    @Post(url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}")
+    @Post(url = "/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}/tables")
     JSONObject addTable(@Var("name") String name,
                         @Var("port") String port,
                         @Var("database") String database,
@@ -135,7 +135,7 @@ public interface PostgresqlClient {
      * 删除table
      */
     @Delete(
-        url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}")
+        url = "/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}")
     JSONObject dropTable(@Var("name") String name,
                          @Var("port") String port,
                          @Var("database") String database,
@@ -146,7 +146,7 @@ public interface PostgresqlClient {
      * 查询column列表
      */
     @Get(
-        url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}")
+        url = "/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}")
     JSONObject listColumns(@Var("name") String name,
                            @Var("port") String port,
                            @Var("database") String database,
@@ -157,7 +157,7 @@ public interface PostgresqlClient {
      * 创建外键约束
      */
     @Post(
-        url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/foreignKey")
+        url = "/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/foreignKey")
     JSONObject createForeignKey(@Var("name") String name,
                                 @Var("port") String port,
                                 @Var("database") String database,
@@ -169,7 +169,7 @@ public interface PostgresqlClient {
      * 创建排它约束
      */
     @Post(
-        url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/exclude")
+        url = "/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/exclude")
     JSONObject createExclusion(@Var("name") String name,
                                @Var("port") String port,
                                @Var("database") String database,
@@ -181,7 +181,7 @@ public interface PostgresqlClient {
      * 创建唯一约束
      */
     @Post(
-        url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/unique")
+        url = "/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/unique")
     JSONObject createUnique(@Var("name") String name,
                             @Var("port") String port,
                             @Var("database") String database,
@@ -193,7 +193,7 @@ public interface PostgresqlClient {
      * 创建检查约束
      */
     @Post(
-        url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/check")
+        url = "/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/check")
     JSONObject createCheck(@Var("name") String name,
                            @Var("port") String port,
                            @Var("database") String database,
@@ -205,7 +205,7 @@ public interface PostgresqlClient {
      * 添加继承关系
      */
     @Post(
-        url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/inherit")
+        url = "/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/inherit")
     JSONObject addInherit(@Var("name") String name,
                           @Var("port") String port,
                           @Var("database") String database,
@@ -218,7 +218,7 @@ public interface PostgresqlClient {
      * 添加继承关系
      */
     @Delete(
-        url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/inherit")
+        url = "/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/inherit")
     JSONObject dropInherit(@Var("name") String name,
                            @Var("port") String port,
                            @Var("database") String database,
@@ -231,7 +231,7 @@ public interface PostgresqlClient {
      * 删除约束
      */
     @Delete(
-        url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/foreignKey")
+        url = "/postgresql/{name}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/foreignKey")
     JSONObject deleteConstraint(@Var("name") String name,
                                 @Var("port") String port,
                                 @Var("database") String database,
@@ -242,14 +242,14 @@ public interface PostgresqlClient {
     /**
      * 查询user列表
      */
-    @Get(url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/user")
+    @Get(url = "/postgresql/{name}/port/{port}/user")
     JSONObject listUsers(@Var("name") String name,
                          @Var("port") String port);
 
     /**
      * 创建用户
      */
-    @Post(url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/user")
+    @Post(url = "/postgresql/{name}/port/{port}/user")
     JSONObject addUser(@Var("name") String name,
                        @Var("port") String port,
                        @Body("username") String username,
@@ -258,7 +258,7 @@ public interface PostgresqlClient {
     /**
      * 删除用户
      */
-    @Delete(url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/user/{username}")
+    @Delete(url = "/postgresql/{name}/port/{port}/user/{username}")
     JSONObject dropUser(@Var("name") String name,
                         @Var("port") String port,
                         @Var("username") String username);
@@ -266,7 +266,7 @@ public interface PostgresqlClient {
     /**
      * 赋权用户database
      */
-    @Post(url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/user/{username}/database/{database}")
+    @Post(url = "/postgresql/{name}/port/{port}/user/{username}/database/{database}")
     JSONObject grantUserDatabase(@Var("name") String name,
                                  @Var("port") String port,
                                  @Var("username") String username,
@@ -277,7 +277,7 @@ public interface PostgresqlClient {
     /**
      * 赋权用户schema
      */
-    @Post(url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/user/{username}/database/{database}/schema/{schema}")
+    @Post(url = "/postgresql/{name}/port/{port}/user/{username}/database/{database}/schema/{schema}")
     JSONObject grantUserSchema(@Var("name") String name,
                                @Var("port") String port,
                                @Var("username") String username,
@@ -290,7 +290,7 @@ public interface PostgresqlClient {
      * 赋权用户table
      */
     @Post(
-        url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/user/{username}/database/{database}/schema/{schema}/table/{table}")
+        url = "/postgresql/{name}/port/{port}/user/{username}/database/{database}/schema/{schema}/table/{table}")
     JSONObject grantUserTable(@Var("name") String name,
                               @Var("port") String port,
                               @Var("username") String username,
@@ -303,7 +303,7 @@ public interface PostgresqlClient {
     /**
      * 取消赋权用户database
      */
-    @Delete(url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/user/{username}/database/{database}")
+    @Delete(url = "/postgresql/{name}/port/{port}/user/{username}/database/{database}")
     JSONObject revokeUserDatabase(@Var("name") String name,
                                  @Var("port") String port,
                                  @Var("username") String username,
@@ -313,7 +313,7 @@ public interface PostgresqlClient {
     /**
      * 取消赋权用户schema
      */
-    @Delete(url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/user/{username}/database/{database}/schema/{schema}")
+    @Delete(url = "/postgresql/{name}/port/{port}/user/{username}/database/{database}/schema/{schema}")
     JSONObject revokeUserSchema(@Var("name") String name,
                                @Var("port") String port,
                                @Var("username") String username,
@@ -325,7 +325,7 @@ public interface PostgresqlClient {
      * 取消赋权用户table
      */
     @Delete(
-            url = "http://127.0.0.1:8081/postgresql/{name}/port/{port}/user/{username}/database/{database}/schema/{schema}/table/{table}")
+            url = "/postgresql/{name}/port/{port}/user/{username}/database/{database}/schema/{schema}/table/{table}")
     JSONObject revokeUserTable(@Var("name") String name,
                               @Var("port") String port,
                               @Var("username") String username,

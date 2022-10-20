@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.enums.PostgresqlPrivilegeEnum;
@@ -35,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Operator(paramTypes4One = String.class)
 public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardService {
 
-    @Value("${system.middleware-api.postgresql.port: 31503}")
+    @Value("${system.middleware-api.postgresql.port:31503}")
     private String port;
 
     @Autowired
@@ -201,11 +203,22 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         List<Map<String, String>> tableList = convertColumn(listTables);
         return tableList.stream().map(table -> {
             TableDto tableDto = new TableDto();
-            // todo oid
+            tableDto.setOid(table.get("oid"));
             tableDto.setTableName(table.get("tablename"));
             tableDto.setOwner(table.get("tableowner"));
+            tableDto.setTablespace(table.get("tablespace"));
+            tableDto.setDescription(table.get("description"));
             tableDto.setDatabaseName(databaseName);
             tableDto.setSchemaName(schemaName);
+            // 获取fillFactor 默认100
+            tableDto.setFillFactor("100");
+            String relOptions = table.get("reloptions");
+            if (relOptions.contains("fillfactor")){
+                Matcher matcher = Pattern.compile("fillfactor=\\d+").matcher(relOptions);
+                if (matcher.find()){
+                    tableDto.setFillFactor(matcher.group().split("=")[1]);
+                }
+            }
             return tableDto;
         }).collect(Collectors.toList());
     }
@@ -214,8 +227,13 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     public TableDto getTable(String clusterId, String namespace, String middlewareName, String databaseName,
         String schemaName, String tableName) {
         // 获取基本信息
-        // 名称 owner 表空间 填充率 comment
+        List<TableDto> tableDtoList = this.listTables(clusterId, namespace, middlewareName, databaseName, schemaName);
+        tableDtoList = tableDtoList.stream().filter(tableDto -> tableDto.getTableName().equals(tableName)).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(tableDtoList)){
+            throw new BusinessException(ErrorMessage.NOT_FOUND);
+        }
         // 四个约束
+
         // 继承信息
         return null;
     }
@@ -602,6 +620,11 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             userAuthorityList.add(userAuthority);
         });
         return userAuthorityList;
+    }
+
+    @Override
+    public void resetPassword(String clusterId, String namespace, String middlewareName, String username) {
+        // todo
     }
 
     public List<Map<String, String>> convertColumn(JSONObject jsonObject) {

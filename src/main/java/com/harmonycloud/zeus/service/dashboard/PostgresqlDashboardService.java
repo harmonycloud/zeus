@@ -250,4 +250,10 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
      */
     List<MiddlewareUserAuthority> userAuthority(String clusterId, String namespace, String middlewareName, String username);
 
+    /**
+     * 重置密码
+     *
+     */
+    void resetPassword(String clusterId, String namespace, String middlewareName, String username);
+
 }

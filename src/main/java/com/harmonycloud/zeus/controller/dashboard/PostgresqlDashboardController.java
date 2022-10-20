@@ -111,7 +111,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
     })
-    @GetMapping("/database/{databaseName}/schemas")
+    @GetMapping("/databases/{databaseName}/schemas")
     public BaseResult<List<SchemaDto>> listSchema(@PathVariable("clusterId") String clusterId,
                                  @PathVariable("namespace") String namespace,
                                  @PathVariable("name") String name,
@@ -127,7 +127,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
     })
-    @GetMapping("/database/{databaseName}/schemas/{schemaName}")
+    @GetMapping("/databases/{databaseName}/schemas/{schemaName}")
     public BaseResult<SchemaDto> getSchema(@PathVariable("clusterId") String clusterId,
                                            @PathVariable("namespace") String namespace,
                                            @PathVariable("name") String name,
@@ -144,7 +144,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "schemaDto", value = "模式对象", paramType = "query", dataTypeClass = SchemaDto.class),
     })
-    @PostMapping("/database/{databaseName}/schemas")
+    @PostMapping("/databases/{databaseName}/schemas")
     public BaseResult addSchema(@PathVariable("clusterId") String clusterId,
                                 @PathVariable("namespace") String namespace,
                                 @PathVariable("name") String name,
@@ -165,7 +165,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "schemaDto", value = "模式对象", paramType = "query", dataTypeClass = SchemaDto.class),
 
     })
-    @PutMapping("/database/{databaseName}/schemas/{schemaName}")
+    @PutMapping("/databases/{databaseName}/schemas/{schemaName}")
     public BaseResult updateSchema(@PathVariable("clusterId") String clusterId,
                                    @PathVariable("namespace") String namespace,
                                    @PathVariable("name") String name,
@@ -184,7 +184,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
     })
-    @DeleteMapping("/database/{databaseName}/schemas/{schemaName}")
+    @DeleteMapping("/databases/{databaseName}/schemas/{schemaName}")
     public BaseResult deleteSchema(@PathVariable("clusterId") String clusterId,
                                    @PathVariable("namespace") String namespace,
                                    @PathVariable("name") String name,
@@ -202,7 +202,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
     })
-    @GetMapping("/database/{databaseName}/schemas/{schemaName}/tables")
+    @GetMapping("/databases/{databaseName}/schemas/{schemaName}/tables")
     public BaseResult listTables(@PathVariable("clusterId") String clusterId,
                                  @PathVariable("namespace") String namespace,
                                  @PathVariable("name") String name,
@@ -220,7 +220,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "tableDto", value = "表对象", paramType = "path", dataTypeClass = TableDto.class),
     })
-    @PostMapping("/database/{databaseName}/schemas/{schemaName}/tables")
+    @PostMapping("/databases/{databaseName}/schemas/{schemaName}/tables")
     public BaseResult addTable(@PathVariable("clusterId") String clusterId,
                                @PathVariable("namespace") String namespace,
                                @PathVariable("name") String name,
@@ -243,7 +243,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "tableDto", value = "表对象", paramType = "path", dataTypeClass = TableDto.class),
     })
-    @PutMapping("/database/{databaseName}/schemas/{schemaName}/tables/{tableName}")
+    @PutMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}")
     public BaseResult updateTable(@PathVariable("clusterId") String clusterId,
                                @PathVariable("namespace") String namespace,
                                @PathVariable("name") String name,
@@ -262,7 +262,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
     })
-    @DeleteMapping("/database/{databaseName}/schemas/{schemaName}/tables/{tableName}")
+    @DeleteMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}")
     public BaseResult dropTable(@PathVariable("clusterId") String clusterId,
                                 @PathVariable("namespace") String namespace,
                                 @PathVariable("name") String name,
@@ -282,7 +282,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
     })
-    @GetMapping("/database/{databaseName}/schemas/{schemaName}/tables/{tableName}")
+    @GetMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}")
     public BaseResult listColumns(@PathVariable("clusterId") String clusterId,
                                   @PathVariable("namespace") String namespace,
                                   @PathVariable("name") String name,
@@ -303,7 +303,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "tableDto", value = "表对象", paramType = "path", dataTypeClass = TableDto.class),
     })
-    @PutMapping("/database/{databaseName}/schemas/{schemaName}/tables/{tableName}/foreign")
+    @PutMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/foreign")
     public BaseResult updateForeignKey(@PathVariable("clusterId") String clusterId,
                                        @PathVariable("namespace") String namespace,
                                        @PathVariable("name") String name,
@@ -328,7 +328,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "tableDto", value = "表对象", paramType = "path", dataTypeClass = TableDto.class),
     })
-    @PutMapping("/database/{databaseName}/schemas/{schemaName}/tables/{tableName}/exclusion")
+    @PutMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/exclusion")
     public BaseResult updateExclusion(@PathVariable("clusterId") String clusterId,
                                       @PathVariable("namespace") String namespace,
                                       @PathVariable("name") String name,
@@ -353,7 +353,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "tableDto", value = "表对象", paramType = "path", dataTypeClass = TableDto.class),
     })
-    @PutMapping("/database/{databaseName}/schemas/{schemaName}/tables/{tableName}/unique")
+    @PutMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/unique")
     public BaseResult updateUnique(@PathVariable("clusterId") String clusterId,
                                    @PathVariable("namespace") String namespace,
                                    @PathVariable("name") String name,
@@ -378,7 +378,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "tableDto", value = "表对象", paramType = "path", dataTypeClass = TableDto.class),
     })
-    @PutMapping("/database/{databaseName}/schemas/{schemaName}/tables/{tableName}/check")
+    @PutMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/check")
     public BaseResult updateCheck(@PathVariable("clusterId") String clusterId,
                                   @PathVariable("namespace") String namespace,
                                   @PathVariable("name") String name,
@@ -403,7 +403,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "tableDto", value = "表对象", paramType = "path", dataTypeClass = TableDto.class),
     })
-    @PutMapping("/database/{databaseName}/schemas/{schemaName}/tables/{tableName}/inherit")
+    @PutMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/inherit")
     public BaseResult updateInherit(@PathVariable("clusterId") String clusterId,
                                     @PathVariable("namespace") String namespace,
                                     @PathVariable("name") String name,
@@ -467,6 +467,43 @@ public class PostgresqlDashboardController {
         return BaseResult.ok();
     }
 
+    @ApiOperation(value = "添加用户权限", notes = "添加用户权限")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "username", value = "用户名", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareUserAuthority", value = "用户权限对象", paramType = "query", dataTypeClass = MiddlewareUserAuthority.class),
+    })
+    @PostMapping("/user/{username}/authority")
+    public BaseResult grantUser(@PathVariable("clusterId") String clusterId,
+                                @PathVariable("namespace") String namespace,
+                                @PathVariable("name") String name,
+                                @PathVariable("username") String username,
+                                @RequestBody MiddlewareUserAuthority middlewareUserAuthority) {
+        postgresqlDashboardService.grantUser(clusterId, namespace, name, username, middlewareUserAuthority);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "取消用户权限", notes = "取消用户权限")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "username", value = "用户名", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareUserDto", value = "用户权限对象", paramType = "query", dataTypeClass = MiddlewareUserDto.class),
+    })
+    @DeleteMapping("/user/{username}/authority")
+    public BaseResult revokeUser(@PathVariable("clusterId") String clusterId,
+                                @PathVariable("namespace") String namespace,
+                                @PathVariable("name") String name,
+                                @PathVariable("username") String username,
+                                @RequestBody MiddlewareUserDto middlewareUserDto) {
+        middlewareUserDto.setUsername(username);
+        postgresqlDashboardService.revokeUser(clusterId, namespace, name, middlewareUserDto);
+        return BaseResult.ok();
+    }
+
     @ApiOperation(value = "查询用户权限", notes = "查询用户权限")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
@@ -480,6 +517,22 @@ public class PostgresqlDashboardController {
                                                                    @PathVariable("name") String name,
                                                                    @PathVariable("username") String username) {
         return BaseResult.ok(postgresqlDashboardService.userAuthority(clusterId, namespace, name, username));
+    }
+
+    @ApiOperation(value = "重置密码", notes = "重置密码")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "username", value = "用户名称", paramType = "path", dataTypeClass = String.class),
+    })
+    @PostMapping("/user/{username}/reset")
+    public BaseResult resetPassword(@PathVariable("clusterId") String clusterId,
+                                    @PathVariable("namespace") String namespace,
+                                    @PathVariable("name") String name,
+                                    @PathVariable("username") String username) {
+        postgresqlDashboardService.resetPassword(clusterId, namespace, name, username);
+        return BaseResult.ok();
     }
 
 
