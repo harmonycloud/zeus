@@ -269,8 +269,26 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
 
     /**
      * 重置密码
-     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param username 用户名
      */
     void resetPassword(String clusterId, String namespace, String middlewareName, String username);
+
+    /**
+     * 启用/禁用用户
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param username 用户名
+     */
+    void enableUser(String clusterId, String namespace, String middlewareName, String username, Boolean enable);
+
+    /**
+     * 查询encoding
+     *
+     */
+    List<String> listEncoding();
 
 }

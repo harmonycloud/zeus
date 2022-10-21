@@ -347,4 +347,13 @@ public interface PostgresqlClient {
                               @Var("table") String table,
                               @Body("privileges") String privileges);
 
+    /**
+     * 启用/禁用用户
+     */
+    @Put(url = "/postgresql/{path}/port/{port}/user/{username}/login?enable={enable}")
+    JSONObject enableUser(@Var("path") String path,
+                          @Var("port") String port,
+                          @Var("username") String username,
+                          @Var("enable") Boolean enable);
+
 }

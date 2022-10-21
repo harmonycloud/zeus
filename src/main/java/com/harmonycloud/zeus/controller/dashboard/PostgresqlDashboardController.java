@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.controller.dashboard;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -302,13 +303,38 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
     })
     @GetMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/columns")
-    public BaseResult listColumns(@PathVariable("clusterId") String clusterId,
+    public BaseResult<List<ColumnDto>> listColumns(@PathVariable("clusterId") String clusterId,
                                   @PathVariable("namespace") String namespace,
                                   @PathVariable("name") String name,
                                   @PathVariable("databaseName") String databaseName,
                                   @PathVariable("schemaName") String schemaName,
                                   @PathVariable("tableName") String tableName) {
         return BaseResult.ok(postgresqlDashboardService.listColumns(clusterId, namespace, name, databaseName, schemaName, tableName));
+    }
+
+    @ApiOperation(value = "获取table数据", notes = "获取table数据")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "current", value = "当前页", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "size", value = "页大小", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "orderMap", value = "排序", paramType = "query", dataTypeClass = Map.class),
+    })
+    @GetMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/data")
+    public BaseResult<List<ColumnDto>> getTableData(@PathVariable("clusterId") String clusterId,
+                                                    @PathVariable("namespace") String namespace,
+                                                    @PathVariable("name") String name,
+                                                    @PathVariable("databaseName") String databaseName,
+                                                    @PathVariable("schemaName") String schemaName,
+                                                    @PathVariable("tableName") String tableName,
+                                                    @RequestParam("current") Integer current,
+                                                    @RequestParam("size") Integer size,
+                                                    @RequestParam("orderMap") Map<String, String> orderMap) {
+        return BaseResult.ok(postgresqlDashboardService.getTableData(clusterId, namespace, name, databaseName, schemaName, tableName, current, size, orderMap));
     }
 
     // 约束增删
@@ -554,6 +580,34 @@ public class PostgresqlDashboardController {
         return BaseResult.ok();
     }
 
+    @ApiOperation(value = "启用/禁用用户", notes = "启用/禁用用户")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "username", value = "用户名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "enable", value = "启用/禁用", paramType = "query", dataTypeClass = Boolean.class),
+    })
+    @PostMapping("/users/{username}/enable")
+    public BaseResult enableUser(@PathVariable("clusterId") String clusterId,
+                                    @PathVariable("namespace") String namespace,
+                                    @PathVariable("name") String name,
+                                    @PathVariable("username") String username,
+                                    @RequestParam("enable") Boolean enable) {
+        postgresqlDashboardService.enableUser(clusterId, namespace, name, username, enable);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "查询字符集列表", notes = "查询字符集列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+    })
+    @GetMapping("/encoding")
+    public BaseResult<List<String>> listEncoding() {
+        return BaseResult.ok(postgresqlDashboardService.listEncoding());
+    }
 
 
 }

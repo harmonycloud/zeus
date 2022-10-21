@@ -1,14 +1,12 @@
 package com.harmonycloud.zeus.service.dashboard.impl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.enums.EncodingEnum;
 import com.harmonycloud.caas.common.enums.PostgresqlPrivilegeEnum;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.model.middleware.ServicePortDTO;
@@ -714,6 +712,22 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     @Override
     public void resetPassword(String clusterId, String namespace, String middlewareName, String username) {
         // todo
+    }
+
+    @Override
+    public void enableUser(String clusterId, String namespace, String middlewareName, String username, Boolean enable) {
+        String path = getPath(middlewareName, namespace);
+        setPort(clusterId, namespace, middlewareName);
+        JSONObject enableUser = postgresqlClient.enableUser(path, port, username, enable);
+        JSONObject err = enableUser.getJSONObject("err");
+        if (err != null) {
+            throw new BusinessException(ErrorMessage.POSTGRESQL_DELETE_USER_FAILED, err.getString("Message"));
+        }
+    }
+
+    @Override
+    public List<String> listEncoding() {
+        return Arrays.stream(EncodingEnum.values()).map(EncodingEnum::getName).collect(Collectors.toList());
     }
 
     public List<Map<String, String>> convertColumn(JSONObject jsonObject) { JSONObject err = jsonObject.getJSONObject("err");
