@@ -43,7 +43,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
 
     public static final Map<String, String> POSTGRESQL_PORT_MAP = new ConcurrentHashMap<>();
 
-    @Value("${system.middleware-api.postgresql.port:31503}")
+    @Value("${system.middleware-api.postgresql.port:5432}")
     private String port;
 
     @Autowired
@@ -769,7 +769,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     public String getPath(String middlewareName, String namespace) {
-        //return middlewareName + "." + namespace;
-        return middlewareName;
+        return middlewareName + "." + namespace;
+        //return middlewareName;
     }
 }
