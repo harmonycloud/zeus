@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.model.dashboard.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author xutianhong
@@ -157,6 +158,22 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
      * @param tableName 表名称
      */
     void dropTable(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName, String tableName);
+
+    /**
+     * 删除table
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param databaseName 数据库名称
+     * @param schemaName 模式名称
+     * @param tableName 表名称
+     * @param current 当前页
+     * @param size 页大小
+     * @param order 排序
+     */
+    JSONObject getTableData(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName,
+                      String tableName, Integer current, Integer size, Map<String, String> order);
 
     /**
      * 获取table列表

@@ -203,7 +203,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
     })
     @GetMapping("/databases/{databaseName}/schemas/{schemaName}/tables")
-    public BaseResult listTables(@PathVariable("clusterId") String clusterId,
+    public BaseResult<List<TableDto>> listTables(@PathVariable("clusterId") String clusterId,
                                  @PathVariable("namespace") String namespace,
                                  @PathVariable("name") String name,
                                  @PathVariable("databaseName") String databaseName,
@@ -273,6 +273,25 @@ public class PostgresqlDashboardController {
         return BaseResult.ok();
     }
 
+    @ApiOperation(value = "查询表数据", notes = "查询表数据")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
+    })
+    @GetMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/data")
+    public BaseResult listTableData(@PathVariable("clusterId") String clusterId,
+                                  @PathVariable("namespace") String namespace,
+                                  @PathVariable("name") String name,
+                                  @PathVariable("databaseName") String databaseName,
+                                  @PathVariable("schemaName") String schemaName,
+                                  @PathVariable("tableName") String tableName) {
+        return BaseResult.ok(postgresqlDashboardService.listColumns(clusterId, namespace, name, databaseName, schemaName, tableName));
+    }
+
     @ApiOperation(value = "获取column列表", notes = "获取column列表")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
@@ -282,7 +301,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
     })
-    @GetMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}")
+    @GetMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/columns")
     public BaseResult listColumns(@PathVariable("clusterId") String clusterId,
                                   @PathVariable("namespace") String namespace,
                                   @PathVariable("name") String name,

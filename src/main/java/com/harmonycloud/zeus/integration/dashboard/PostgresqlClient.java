@@ -145,7 +145,7 @@ public interface PostgresqlClient {
      * 查询column列表
      */
     @Get(
-        url = "/postgresql/{path}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}")
+        url = "/postgresql/{path}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/columns")
     JSONObject listColumns(@Var("path") String path,
                            @Var("port") String port,
                            @Var("database") String database,

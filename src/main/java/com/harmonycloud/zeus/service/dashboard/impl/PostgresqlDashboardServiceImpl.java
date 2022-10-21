@@ -384,6 +384,12 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     @Override
+    public JSONObject getTableData(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName, String tableName, Integer current, Integer size, Map<String, String> order) {
+
+        return null;
+    }
+
+    @Override
     public List<ColumnDto> listColumns(String clusterId, String namespace, String middlewareName, String databaseName,
         String schemaName, String table) {
         String path = getPath(middlewareName, namespace);
@@ -697,7 +703,15 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     public List<Map<String, String>> convertColumn(JSONObject jsonObject) {
+        JSONObject err = jsonObject.getJSONObject("err");
+        if (err != null){
+            String errString = err.getJSONObject("Err").getString("Err");
+            throw new BusinessException(ErrorMessage.POSTGRESQL_SELECT_FAILED, errString);
+        }
         JSONArray data = jsonObject.getJSONArray("data");
+        if (data == null){
+            return new ArrayList<>();
+        }
         JSONArray column = jsonObject.getJSONArray("column");
 
         List<Map<String, String>> res = new ArrayList<>();
@@ -737,6 +751,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     public String getPath(String middlewareName, String namespace) {
-        return middlewareName + "." + namespace;
+       // return middlewareName + "." + namespace;
+        return middlewareName;
     }
 }
