@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.dtflys.forest.annotation.*;
 import com.harmonycloud.caas.common.model.dashboard.mysql.*;
 import com.harmonycloud.zeus.interceptor.DashboardInterceptor;
+import com.harmonycloud.zeus.interceptor.MiddlewareApiInterceptor;
 import org.springframework.stereotype.Component;
 
 /**
@@ -11,14 +12,14 @@ import org.springframework.stereotype.Component;
  * @Date 2022/10/09 3:08 下午
  */
 @Component
-@Address
-@BaseRequest(interceptor = {DashboardInterceptor.class})
+@Address(source = MiddlewareApiAddress.class)
+@BaseRequest(interceptor = {MiddlewareApiInterceptor.class, DashboardInterceptor.class})
 public interface MysqlClient {
 
     /**
      * 查询database列表
      */
-    @Get(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/databases")
+    @Get(url = "/mysql/{host}/port/{port}/databases")
     JSONObject listDatabases(@Var("host") String host, @Var("port") String port);
 
     /**
@@ -27,48 +28,48 @@ public interface MysqlClient {
      * databaseDto.character: 字符集
      * databaseDto.collate 排序规则
      */
-    @Post(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/databases")
+    @Post(url = "/mysql/{host}/port/{port}/databases")
     JSONObject createDatabase(@Var("host") String host, @Var("port") String port, @JSONBody DatabaseDto databaseDto);
 
     /**
      * 修改数据库
      */
-    @Put(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/databases")
+    @Put(url = "/mysql/{host}/port/{port}/databases")
     JSONObject alterDatabase(@Var("host") String host, @Var("port") String port, @JSONBody DatabaseDto databaseDto);
 
     /**
      * 删除数据库
      */
-    @Delete(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/databases/{database}")
+    @Delete(url = "/mysql/{host}/port/{port}/databases/{database}")
     JSONObject dropDatabase(@Var("host") String host, @Var("port") String port, @Var("database") String database);
 
     /**
      * 查询字符集
      */
-    @Get(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/charsets")
+    @Get(url = "/mysql/{host}/port/{port}/charsets")
     JSONObject listCharsets(@Var("host") String host, @Var("port") String port);
 
     /**
      * 查询字符集排序规则
      */
-    @Get(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/charsets/{charset}/collations")
+    @Get(url = "/mysql/{host}/port/{port}/charsets/{charset}/collations")
     JSONObject listCharsetCollations(@Var("host") String host, @Var("port") String port, @Var("charset") String charset);
 
     // tables
 
-    @Get(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/engines")
+    @Get(url = "/mysql/{host}/port/{port}/engines")
     JSONObject listEngines(@Var("host") String host, @Var("port") String port);
 
     /**
      * 查询指定数据库所有数据表
      */
-    @Get(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/databases/{database}/tables")
+    @Get(url = "/mysql/{host}/port/{port}/databases/{database}/tables")
     JSONObject listTables(@Var("host") String host, @Var("port") String port, @Var("database") String database);
 
     /**
      * 更新表基本信息
      */
-    @Put(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/databases/{database}/tables/{table}/options")
+    @Put(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/options")
     JSONObject updateTableOptions(@Var("host") String host,
                                   @Var("port") String port,
                                   @Var("database") String database,
@@ -78,7 +79,7 @@ public interface MysqlClient {
     /**
      * 删除表
      */
-    @Delete(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/databases/{database}/tables/{table}")
+    @Delete(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}")
     JSONObject dropTable(@Var("host") String host,
                          @Var("port") String port,
                          @Var("database") String database,
@@ -87,7 +88,7 @@ public interface MysqlClient {
     /**
      * 获取表基本信息
      */
-    @Get(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/databases/{database}/tables/{table}/options")
+    @Get(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/options")
     JSONObject showTableOptions(@Var("host") String host,
                                 @Var("port") String port,
                                 @Var("database") String database,
@@ -97,7 +98,7 @@ public interface MysqlClient {
     /**
      * 查询指定数据表所有列
      */
-    @Get(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/databases/{database}/tables/{table}/columns")
+    @Get(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/columns")
     JSONObject listTableColumns(@Var("host") String host,
                                 @Var("port") String port,
                                 @Var("database") String database,
@@ -107,7 +108,7 @@ public interface MysqlClient {
     /**
      * 查询数据表所有索引
      */
-    @Get(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/databases/{database}/tables/{table}/indices")
+    @Get(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/indices")
     JSONObject listTableIndices(@Var("host") String host,
                                 @Var("port") String port,
                                 @Var("database") String database,
@@ -117,7 +118,7 @@ public interface MysqlClient {
     /**
      * 查询数据表所有外键
      */
-    @Get(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/databases/{database}/tables/{table}/foreignKeys")
+    @Get(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/foreignKeys")
     JSONObject listTableForeignKeys(@Var("host") String host,
                                     @Var("port") String port,
                                     @Var("database") String database,
@@ -127,7 +128,7 @@ public interface MysqlClient {
     /**
      * 登录
      */
-    @Post(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/login")
+    @Post(url = "/mysql/{host}/port/{port}/login")
     JSONObject login(@Var("host") String host,
                      @Var("port") String port,
                      @Body("username") String username,
@@ -136,14 +137,14 @@ public interface MysqlClient {
     /**
      * 查询用户列表
      */
-    @Get(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/users")
+    @Get(url = "/mysql/{host}/port/{port}/users")
     JSONObject listUser(@Var("host") String host,
                         @Var("port") String port);
 
     /**
      * 查询用户详情
      */
-    @Get(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/users/{user}/detail")
+    @Get(url = "/mysql/{host}/port/{port}/users/{user}/detail")
     JSONObject showUserDetail(@Var("host") String host,
                               @Var("port") String port,
                               @Var("user") String user);
@@ -151,7 +152,7 @@ public interface MysqlClient {
     /**
      * 创建用户
      */
-    @Post(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/users")
+    @Post(url = "/mysql/{host}/port/{port}/users")
     JSONObject createUser(@Var("host") String host,
                           @Var("port") String port,
                           @JSONBody UserDto userDto);
@@ -159,7 +160,7 @@ public interface MysqlClient {
     /**
      * 删除用户
      */
-    @Delete(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/users/{user}")
+    @Delete(url = "/mysql/{host}/port/{port}/users/{user}")
     JSONObject dropUser(@Var("host") String host,
                         @Var("port") String port,
                         @Var("user") String user);
@@ -167,7 +168,7 @@ public interface MysqlClient {
     /**
      * 修改用户
      */
-    @Put(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/users/{user}")
+    @Put(url = "/mysql/{host}/port/{port}/users/{user}")
     JSONObject updateUsername(@Var("host") String host,
                               @Var("port") String port,
                               @JSONBody UserDto userDto);
@@ -175,7 +176,7 @@ public interface MysqlClient {
     /**
      * 锁定用户
      */
-    @Put(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/users/{user}/lock")
+    @Put(url = "/mysql/{host}/port/{port}/users/{user}/lock")
     JSONObject lockUser(@Var("host") String host,
                         @Var("port") String port,
                         @Var("user") String user);
@@ -183,7 +184,7 @@ public interface MysqlClient {
     /**
      * 解锁用户
      */
-    @Put(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/users/{user}/unlock")
+    @Put(url = "/mysql/{host}/port/{port}/users/{user}/unlock")
     JSONObject unlockUser(@Var("host") String host,
                           @Var("port") String port,
                           @Var("user") String user);
@@ -191,7 +192,7 @@ public interface MysqlClient {
     /**
      * 更新密码
      */
-    @Put(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/users/{user}/password")
+    @Put(url = "/mysql/{host}/port/{port}/users/{user}/password")
     JSONObject updatePassword(@Var("host") String host,
                               @Var("port") String port,
                               @Var("user") String user,
@@ -200,7 +201,7 @@ public interface MysqlClient {
     /**
      * 授权数据库权限
      */
-    @Put(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/databases/{database}/privilege")
+    @Put(url = "/mysql/{host}/port/{port}/databases/{database}/privilege")
     JSONObject grantDatabase(@Var("host") String host,
                              @Var("port") String port,
                              @Var("database") String database,
@@ -209,7 +210,7 @@ public interface MysqlClient {
     /**
      * 授权表权限
      */
-    @Put(url = "http://127.0.0.1:8088/mysql/{host}/port/{port}/databases/{database}/tables/{table}/privilege")
+    @Put(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/privilege")
     JSONObject grantTable(@Var("host") String host,
                           @Var("port") String port,
                           @Var("database") String database,
