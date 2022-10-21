@@ -427,7 +427,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "name", value = "名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "keyword", value = "关键词", paramType = "query", dataTypeClass = String.class),
     })
-    @GetMapping("/user")
+    @GetMapping("/users")
     public BaseResult<List<MiddlewareUserDto>> listUser(@PathVariable("clusterId") String clusterId,
                                                         @PathVariable("namespace") String namespace,
                                                         @PathVariable("name") String name,
@@ -442,7 +442,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "name", value = "名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareUserDto", value = "用户对象", paramType = "query", dataTypeClass = MiddlewareUserDto.class),
     })
-    @PostMapping("/user")
+    @PostMapping("/users")
     public BaseResult addUser(@PathVariable("clusterId") String clusterId,
                               @PathVariable("namespace") String namespace,
                               @PathVariable("name") String name,
@@ -458,7 +458,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "name", value = "名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "username", value = "用户名称", paramType = "path", dataTypeClass = String.class),
     })
-    @DeleteMapping("/user/{username}")
+    @DeleteMapping("/users/{username}")
     public BaseResult dropUser(@PathVariable("clusterId") String clusterId,
                                @PathVariable("namespace") String namespace,
                                @PathVariable("name") String name,
@@ -475,7 +475,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "username", value = "用户名", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareUserAuthority", value = "用户权限对象", paramType = "query", dataTypeClass = MiddlewareUserAuthority.class),
     })
-    @PostMapping("/user/{username}/authority")
+    @PostMapping("/users/{username}/authority")
     public BaseResult grantUser(@PathVariable("clusterId") String clusterId,
                                 @PathVariable("namespace") String namespace,
                                 @PathVariable("name") String name,
@@ -493,7 +493,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "username", value = "用户名", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareUserDto", value = "用户权限对象", paramType = "query", dataTypeClass = MiddlewareUserDto.class),
     })
-    @DeleteMapping("/user/{username}/authority")
+    @DeleteMapping("/users/{username}/authority")
     public BaseResult revokeUser(@PathVariable("clusterId") String clusterId,
                                 @PathVariable("namespace") String namespace,
                                 @PathVariable("name") String name,
@@ -511,7 +511,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "name", value = "名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "username", value = "用户名称", paramType = "path", dataTypeClass = String.class),
     })
-    @GetMapping("/user/{username}/authority")
+    @GetMapping("/users/{username}/authority")
     public BaseResult<List<MiddlewareUserAuthority>> userAuthority(@PathVariable("clusterId") String clusterId,
                                                                    @PathVariable("namespace") String namespace,
                                                                    @PathVariable("name") String name,
@@ -526,7 +526,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "name", value = "名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "username", value = "用户名称", paramType = "path", dataTypeClass = String.class),
     })
-    @PostMapping("/user/{username}/reset")
+    @PostMapping("/users/{username}/reset")
     public BaseResult resetPassword(@PathVariable("clusterId") String clusterId,
                                     @PathVariable("namespace") String namespace,
                                     @PathVariable("name") String name,
