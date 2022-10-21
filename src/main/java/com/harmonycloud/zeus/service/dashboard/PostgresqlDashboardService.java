@@ -170,10 +170,10 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
      * @param tableName 表名称
      * @param current 当前页
      * @param size 页大小
-     * @param order 排序
+     * @param orderMap 排序
      */
     JSONObject getTableData(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName,
-                      String tableName, Integer current, Integer size, Map<String, String> order);
+                      String tableName, Integer current, Integer size, Map<String, String> orderMap);
 
     /**
      * 获取table列表

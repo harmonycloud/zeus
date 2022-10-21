@@ -14,6 +14,7 @@ import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.model.middleware.ServicePortDTO;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.k8s.ServiceService;
+import io.swagger.models.auth.In;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -384,8 +385,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     @Override
-    public JSONObject getTableData(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName, String tableName, Integer current, Integer size, Map<String, String> order) {
-
+    public JSONObject getTableData(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName, String tableName, Integer current, Integer size, Map<String, String> orderMap) {
         return null;
     }
 
@@ -627,7 +627,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
                 middlewareUserAuthority.getDatabase(), privileges, grantOption);
             JSONObject err = grantUserDatabase.getJSONObject("err");
             if (err != null) {
-                throw new BusinessException(ErrorMessage.POSTGRESQL_GRANT_USER_DATABASE_FAILED, err.getString("Message"));
+                throw new BusinessException(ErrorMessage.POSTGRESQL_GRANT_USER_DATABASE_FAILED,
+                    err.getString("Message"));
             }
         }
     }
@@ -648,7 +649,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
                         middlewareUserAuthority.getSchema(), middlewareUserAuthority.getTable(), privileges);
                 JSONObject err = revokeUserTable.getJSONObject("err");
                 if (err != null) {
-                    throw new BusinessException(ErrorMessage.POSTGRESQL_REVOKE_USER_TABLE_FAILED, err.getString("Message"));
+                    throw new BusinessException(ErrorMessage.POSTGRESQL_REVOKE_USER_TABLE_FAILED,
+                        err.getString("Message"));
                 }
             } else if (StringUtils.isNotEmpty(middlewareUserAuthority.getSchema())) {
                 // 赋权schema
@@ -658,7 +660,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
                     middlewareUserAuthority.getDatabase(), middlewareUserAuthority.getSchema(), privileges);
                 JSONObject err = revokeUserSchema.getJSONObject("err");
                 if (err != null) {
-                    throw new BusinessException(ErrorMessage.POSTGRESQL_REVOKE_USER_SCHEMA_FAILED, err.getString("Message"));
+                    throw new BusinessException(ErrorMessage.POSTGRESQL_REVOKE_USER_SCHEMA_FAILED,
+                        err.getString("Message"));
                 }
             } else if (StringUtils.isNotEmpty(middlewareUserAuthority.getDatabase())) {
                 // 赋权database
@@ -668,7 +671,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
                     middlewareUserAuthority.getDatabase(), privileges);
                 JSONObject err = revokeUserDatabase.getJSONObject("err");
                 if (err != null) {
-                    throw new BusinessException(ErrorMessage.POSTGRESQL_REVOKE_USER_DATABASE_FAILED, err.getString("Message"));
+                    throw new BusinessException(ErrorMessage.POSTGRESQL_REVOKE_USER_DATABASE_FAILED,
+                        err.getString("Message"));
                 }
             }
         }
@@ -704,12 +708,12 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
 
     public List<Map<String, String>> convertColumn(JSONObject jsonObject) {
         JSONObject err = jsonObject.getJSONObject("err");
-        if (err != null){
+        if (err != null) {
             String errString = err.getJSONObject("Err").getString("Err");
             throw new BusinessException(ErrorMessage.POSTGRESQL_SELECT_FAILED, errString);
         }
         JSONArray data = jsonObject.getJSONArray("data");
-        if (data == null){
+        if (data == null) {
             return new ArrayList<>();
         }
         JSONArray column = jsonObject.getJSONArray("column");
@@ -751,7 +755,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     public String getPath(String middlewareName, String namespace) {
-       // return middlewareName + "." + namespace;
-        return middlewareName;
+        return middlewareName + "." + namespace;
+        //return middlewareName;
     }
 }
