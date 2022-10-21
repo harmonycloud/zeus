@@ -32,7 +32,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     @Autowired
     private MysqlClient mysqlClient;
     
-    @Value("${system.middleware-api.mysql.port:5432}")
+    @Value("${system.middleware-api.mysql.port:3306}")
     private String port;
 
     @Override
@@ -370,7 +370,8 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     private String getPath(String middlewareName, String namespace) {
-        return middlewareName + "." + namespace;
+//        return middlewareName + "." + namespace;
+        return "10.10.101.140";
     }
     
 }
