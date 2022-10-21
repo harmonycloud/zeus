@@ -80,7 +80,7 @@ public interface PostgresqlClient {
     @Post(url = "/postgresql/{path}/port/{port}/databases/{database}/schemas")
     JSONObject createSchema(@Var("path") String path,
                             @Var("port") String port,
-                            @Var("port") String database,
+                            @Var("database") String database,
                             @JSONBody SchemaDto schema);
 
     /**
@@ -151,6 +151,20 @@ public interface PostgresqlClient {
                            @Var("database") String database,
                            @Var("schema") String schema,
                            @Var("table") String table);
+
+    /**
+     * 查询column列表
+     */
+    @Get(
+            url = "/postgresql/{path}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/data?limit={limit}&offset={offset}&order={order}")
+    JSONObject getTableData(@Var("path") String path,
+                            @Var("port") String port,
+                            @Var("database") String database,
+                            @Var("schema") String schema,
+                            @Var("table") String table,
+                            @Var("limit") Integer limit,
+                            @Var("offset") Integer offset,
+                            @Var("order") String order);
 
     /**
      * 创建外键约束

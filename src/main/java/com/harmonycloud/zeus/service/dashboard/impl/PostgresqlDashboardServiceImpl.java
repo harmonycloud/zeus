@@ -43,7 +43,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
 
     public static final Map<String, String> POSTGRESQL_PORT_MAP = new ConcurrentHashMap<>();
 
-    @Value("${system.middleware-api.postgresql.port:5432}")
+    @Value("${system.middleware-api.postgresql.port:31503}")
     private String port;
 
     @Autowired
@@ -385,8 +385,18 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     @Override
-    public JSONObject getTableData(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName, String tableName, Integer current, Integer size, Map<String, String> orderMap) {
-        return null;
+    public JSONObject getTableData(String clusterId, String namespace, String middlewareName, String databaseName,
+        String schemaName, String tableName, Integer current, Integer size, Map<String, String> orderMap) {
+        Integer offset = (current - 1) * size;
+        StringBuilder sb = new StringBuilder();
+        if (!CollectionUtils.isEmpty(orderMap)){
+            sb.append("order by");
+            orderMap.forEach((k, v) -> sb.append(k).append(" ").append(v).append(","));
+            sb.deleteCharAt(sb.length() - 1);
+        }
+        String path = getPath(middlewareName, namespace);
+        setPort(clusterId, namespace, middlewareName);
+        return postgresqlClient.getTableData(path, port, databaseName, schemaName, tableName, size, offset, sb.toString());
     }
 
     @Override
@@ -706,10 +716,14 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         // todo
     }
 
-    public List<Map<String, String>> convertColumn(JSONObject jsonObject) {
-        JSONObject err = jsonObject.getJSONObject("err");
+    public List<Map<String, String>> convertColumn(JSONObject jsonObject) { JSONObject err = jsonObject.getJSONObject("err");
         if (err != null) {
-            String errString = err.getJSONObject("Err").getString("Err");
+            String errString = "";
+            if (err.containsKey("Message")) {
+                errString = err.getString("Message");
+            } else {
+                errString = err.getJSONObject("Err").getString("Err");
+            }
             throw new BusinessException(ErrorMessage.POSTGRESQL_SELECT_FAILED, errString);
         }
         JSONArray data = jsonObject.getJSONArray("data");
@@ -755,7 +769,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     public String getPath(String middlewareName, String namespace) {
-        return middlewareName + "." + namespace;
-        //return middlewareName;
+        //return middlewareName + "." + namespace;
+        return middlewareName;
     }
 }
