@@ -116,6 +116,7 @@ public class EsComponentServiceImpl implements EsComponentService {
         if (elasticSearch == null || StringUtils.isEmpty(elasticSearch.getHost())) {
             throw new BusinessException(ErrorMessage.CLUSTER_ES_SERVICE_ERROR);
         }
+        String protocol = elasticSearch.getProtocol();
         String userName = elasticSearch.getUser();
         String password = elasticSearch.getPassword();
         String esHost = elasticSearch.getHost();
@@ -126,7 +127,7 @@ public class EsComponentServiceImpl implements EsComponentService {
         }
         try {
             RestHighLevelClient highLevelClient =
-                    ElasticSearchClient.getHighLevelClient(esHost, userName, password, port);
+                    ElasticSearchClient.getHighLevelClient(protocol, esHost, userName, password, port);
             return highLevelClient;
         } catch (Exception e) {
             log.error("创建ElasticSearch Client 失败,cluster:{}", JSONObject.toJSONString(cluster), e);
