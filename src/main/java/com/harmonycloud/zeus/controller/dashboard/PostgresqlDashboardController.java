@@ -229,6 +229,25 @@ public class PostgresqlDashboardController {
         return BaseResult.ok(postgresqlDashboardService.listTables(clusterId, namespace, name, databaseName, schemaName));
     }
 
+    @ApiOperation(value = "获取table详情", notes = "获取table详情")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
+    })
+    @GetMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}")
+    public BaseResult<TableDto> getTable(@PathVariable("clusterId") String clusterId,
+                                         @PathVariable("namespace") String namespace,
+                                         @PathVariable("name") String name,
+                                         @PathVariable("databaseName") String databaseName,
+                                         @PathVariable("schemaName") String schemaName,
+                                         @PathVariable("tableName") String tableName) {
+        return BaseResult.ok(postgresqlDashboardService.getTable(clusterId, namespace, name, databaseName, schemaName, tableName));
+    }
+
     @ApiOperation(value = "创建table", notes = "创建table")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),

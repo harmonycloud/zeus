@@ -222,7 +222,9 @@ public interface PostgresqlClient {
                             @Var("database") String database,
                             @Var("schema") String schema,
                             @Var("table") String table,
-                            @JSONBody TableUnique unique);
+                            @Body String uniqueName,
+                            @Body String columnName,
+                            @Body String deferrablity);
 
     /**
      * 创建检查约束
@@ -234,7 +236,10 @@ public interface PostgresqlClient {
                            @Var("database") String database,
                            @Var("schema") String schema,
                            @Var("table") String table,
-                           @JSONBody TableCheck check);
+                           @Body String checkName,
+                           @Body String rule,
+                           @Body String inherit,
+                           @Body String vaild);
 
     /**
      * 添加继承关系
@@ -263,16 +268,40 @@ public interface PostgresqlClient {
                            @Body("parentTable") String parentTable);
 
     /**
+     * 获取约束
+     */
+    @Get(
+            url = "/postgresql/{path}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/constraint?oid={oid}")
+    JSONObject getConstraint(@Var("path") String path,
+                             @Var("port") String port,
+                             @Var("database") String database,
+                             @Var("schema") String schema,
+                             @Var("table") String table,
+                             @Var("oid") String oid);
+
+    /**
      * 删除约束
      */
     @Delete(
-        url = "/postgresql/{path}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/foreignKey")
+        url = "/postgresql/{path}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/constraint")
     JSONObject deleteConstraint(@Var("path") String path,
                                 @Var("port") String port,
                                 @Var("database") String database,
                                 @Var("schema") String schema,
                                 @Var("table") String table,
                                 @Body String constraintName);
+
+    /**
+     * 获取继承关系
+     */
+    @Get(
+            url = "/postgresql/{path}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/inherit?oid={oid}")
+    JSONObject getInherit(@Var("path") String path,
+                                @Var("port") String port,
+                                @Var("database") String database,
+                                @Var("schema") String schema,
+                                @Var("table") String table,
+                                @Var("oid") String oid);
 
     /**
      * 查询user列表

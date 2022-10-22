@@ -85,9 +85,9 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             executeSqlDto.setErr(sqlExecute.getJSONObject("err"));
             // 处理异常信息
             JSONObject err = sqlExecute.getJSONObject("err");
-            if (err.containsKey("Message")){
+            if (err.containsKey("Message")) {
                 executeSqlDto.setMessage(err.getString("Message"));
-            }else {
+            } else {
                 executeSqlDto.setMessage(dealWithErr(sqlExecute, false));
             }
         } else {
@@ -296,10 +296,108 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         if (CollectionUtils.isEmpty(tableDtoList)) {
             throw new BusinessException(ErrorMessage.POSTGRESQL_TABLE_NOT_FOUND);
         }
+        TableDto tableDto = tableDtoList.get(0);
         // 四个约束
+        String path = getPath(middlewareName, namespace);
+        JSONObject getConstraint = postgresqlClient.getConstraint(path, port, databaseName, schemaName, tableName, tableDto.getOid());
+        List<Map<String, String>> constraintList = convertColumn(getConstraint);
 
+        List<TableForeignKey> tableForeignKeyList = new ArrayList<>();
+        List<TableExclusion> tableExclusionList = new ArrayList<>();
+        List<TableUnique> tableUniqueList = new ArrayList<>();
+        List<TableCheck> tableCheckList = new ArrayList<>();
+
+        for (Map<String, String> constraint : constraintList){
+            if ("f".equals(constraint.get("contype"))){
+                String[] condef = constraint.get("condef").split(" ");
+                TableForeignKey foreignKey = new TableForeignKey();
+                for (int i = 0; i < condef.length; ++i){
+                    if ("FOREIGN".equals(condef[i]) && "KEY".equals(condef[i + 1])){
+                        foreignKey.setColumnName(condef[i + 2].replace("(", "").replace(")", ""));
+                    }
+                    if ("REFERENCES".equals(condef[i])){
+                        String target = condef[i + 1];
+                        if (!target.contains(".")){
+                            foreignKey.setTargetSchema("public");
+                        }else {
+                            String[] targetSchema = target.split("\\.");
+                            foreignKey.setTargetSchema(targetSchema[0]);
+                            target = target.replace(targetSchema[0] + ".", "");
+                        }
+                        String[] table = target.split("\\(");
+                        foreignKey.setTargetTable(table[0]);
+                        foreignKey.setTargetColumn(table[1].replace(")", ""));
+                    }
+                    // 更新时策略
+                    if ("ON".equals(condef[i]) && "UPDATE".equals(condef[i + 1])){
+                        foreignKey.setOnUpdate(condef[i + 2]);
+                    }
+                    // 删除时策略
+                    if ("ON".equals(condef[i]) && "DELETE".equals(condef[i + 1])){
+                        foreignKey.setOnDelete(condef[i + 2]);
+                    }
+                    // 设置是否可延迟
+                    foreignKey.setDeferrablity(getDeferrable(constraint));
+                }
+                foreignKey.setName(constraint.get("conname"));
+                tableForeignKeyList.add(foreignKey);
+            }else if ("x".equals(constraint.get("contype"))){
+                TableExclusion exclusion = new TableExclusion();
+                String[] condef = constraint.get("condef").split(" ");
+                for (int i = 0; i < condef.length; ++i){
+                    if ("EXCLUDE".equals(condef[i]) && "USING".equals(condef[i + 1])){
+                        exclusion.setIndexMethod(condef[i + 2]);
+                    }
+                    if ("WITH".equals(condef[i]) && condef[i - 1].contains("(")){
+                        exclusion.setColumnName(condef[i - 1].replace("(", ""));
+                        exclusion.setSymbol(condef[i + 1].replace(")", ""));
+                    }
+                }
+                exclusion.setName(constraint.get("conname"));
+                tableExclusionList.add(exclusion);
+            }else if ("u".equals(constraint.get("contype"))){
+                TableUnique unique = new TableUnique();
+                String[] condef = constraint.get("condef").split(" ");
+                for (int i = 0; i < condef.length; ++i){
+                    if ("UNIQUE".equals(condef[i])){
+                        unique.setColumnName(condef[i + 1].replace("(", "").replace(")", ""));
+                    }
+                }
+                unique.setDeferrablity(getDeferrable(constraint));
+                unique.setName(constraint.get("conname"));
+                tableUniqueList.add(unique);
+            }else if ("c".equals(constraint.get("contype"))){
+                TableCheck check = new TableCheck();
+                String condef = constraint.get("condef");
+                String text = condef.substring(condef.indexOf("(") + 1, condef.lastIndexOf(")"));
+                check.setText(text);
+                if (condef.contains("NO INHERIT")){
+                    check.setNoInherit(true);
+                }
+                if (condef.contains("NOT VALID")){
+                    check.setNotValid(true);
+                }
+                check.setName(constraint.get("conname"));
+                tableCheckList.add(check);
+            }
+            tableDto.setTableForeignKeyList(tableForeignKeyList);
+            tableDto.setTableExclusionList(tableExclusionList);
+            tableDto.setTableUniqueList(tableUniqueList);
+            tableDto.setTableCheckList(tableCheckList);
+        }
         // 继承信息
-        return null;
+        JSONObject getInherit = postgresqlClient.getInherit(path, port, databaseName, schemaName, tableName, tableDto.getOid());
+        List<Map<String, String>> inheritList = convertColumn(getInherit);
+        List<TableInherit> tableInheritList = new ArrayList<>();
+        inheritList.forEach(inherit -> {
+            TableInherit tableInherit = new TableInherit();
+            tableInherit.setOid(inherit.get("inhparent"));
+            tableInherit.setTableName(inherit.get("relname"));
+            tableInherit.setSchemaName(inherit.get("nspname"));
+            tableInheritList.add(tableInherit);
+        });
+        tableDto.setTableInheritList(tableInheritList);
+        return tableDto;
     }
 
     @Override
@@ -475,6 +573,9 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             columnDto.setNum(column.get("ordinal_position"));
             columnDto.setSize(column.get("character_maximum_length"));
             columnDto.setComment(column.get("col_description"));
+            if (column.get("indisprimary") != null && "true".equals(column.get("indisprimary"))) {
+                columnDto.setPrimaryKey(true);
+            }
             return columnDto;
         }).collect(Collectors.toList());
     }
@@ -537,8 +638,9 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         for (TableUnique key : tableDto.getTableUniqueList()) {
             // 创建唯一约束
             if ("add".equals(key.getOperator())) {
-                JSONObject createForeignKey = postgresqlClient.createUnique(path, port, tableDto.getDatabaseName(),
-                    tableDto.getSchemaName(), tableDto.getTableName(), key);
+                JSONObject createForeignKey =
+                    postgresqlClient.createUnique(path, port, tableDto.getDatabaseName(), tableDto.getSchemaName(),
+                        tableDto.getTableName(), key.getName(), key.getColumnName(), key.getDeferrablity());
                 if (createForeignKey.get("err") != null) {
                     throw new BusinessException(ErrorMessage.POSTGRESQL_CREATE_UNIQUE_FAILED,
                         createForeignKey.getJSONObject("err").getString("Message"));
@@ -561,11 +663,19 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         for (TableCheck key : tableDto.getTableCheckList()) {
             // 创建检查约束
             if ("add".equals(key.getOperator())) {
-                JSONObject createForeignKey = postgresqlClient.createCheck(path, port, tableDto.getDatabaseName(),
-                    tableDto.getSchemaName(), tableDto.getTableName(), key);
-                if (createForeignKey.get("err") != null) {
+                String inherit = "";
+                String vaild = "";
+                if (key.getNoInherit()) {
+                    inherit = "NO INHERIT";
+                }
+                if (key.getNotValid()) {
+                    vaild = "NOT VALID";
+                }
+                JSONObject createCheck = postgresqlClient.createCheck(path, port, tableDto.getDatabaseName(),
+                    tableDto.getSchemaName(), tableDto.getTableName(), key.getName(), key.getText(), inherit, vaild);
+                if (createCheck.get("err") != null) {
                     throw new BusinessException(ErrorMessage.POSTGRESQL_CREATE_CHECK_FAILED,
-                        createForeignKey.getJSONObject("err").getString("Message"));
+                        createCheck.getJSONObject("err").getString("Message"));
                 }
             } else if ("delete".equals(key.getOperator())) {
                 // 删除约束
@@ -849,8 +959,19 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         return errString;
     }
 
-    public String getPath(String middlewareName, String namespace) {
-        return middlewareName + "." + namespace;
-        //return middlewareName;
+    public String getDeferrable(Map<String, String> constraint) {
+        if (constraint.get("condef").contains("DEFERRABLE INITIALLY DEFERRED")) {
+            return "DEFERRABLE INITIALLY DEFERRED";
+        } else if (constraint.get("condef").contains("DEFERRABLE INITIALLY IMMEDIATE")) {
+            return "DEFERRABLE INITIALLY IMMEDIATE";
+        } else {
+            return "NOT DEFERRABLE";
+        }
     }
+
+    public String getPath(String middlewareName, String namespace) {
+        // return middlewareName + "." + namespace;
+        return middlewareName;
+    }
+
 }
