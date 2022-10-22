@@ -32,6 +32,23 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "executeSqlDto", value = "数据对象", paramType = "query", dataTypeClass = ExecuteSqlDto.class),
+    })
+    @PostMapping("/databases/{databaseName}/sql")
+    public BaseResult<ExecuteSqlDto> executeSql(@PathVariable("clusterId") String clusterId,
+                                                      @PathVariable("namespace") String namespace,
+                                                      @PathVariable("name") String name,
+                                                      @PathVariable("databaseName") String databaseName,
+                                                      @RequestBody ExecuteSqlDto executeSqlDto) {
+        return BaseResult.ok(postgresqlDashboardService.executeSql(clusterId, namespace, name, databaseName, executeSqlDto));
+    }
+
+    @ApiOperation(value = "获取database列表", notes = "获取database列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
     })
     @GetMapping("/databases")
     public BaseResult<List<DatabaseDto>> listDatabase(@PathVariable("clusterId") String clusterId,
@@ -291,6 +308,28 @@ public class PostgresqlDashboardController {
                                   @PathVariable("schemaName") String schemaName,
                                   @PathVariable("tableName") String tableName) {
         return BaseResult.ok(postgresqlDashboardService.listColumns(clusterId, namespace, name, databaseName, schemaName, tableName));
+    }
+
+    @ApiOperation(value = "获取table数据条数", notes = "获取table数据条数")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "current", value = "当前页", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "size", value = "页大小", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "orderMap", value = "排序", paramType = "query", dataTypeClass = Map.class),
+    })
+    @GetMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/count")
+    public BaseResult<List<ColumnDto>> getTableDataCount(@PathVariable("clusterId") String clusterId,
+                                                    @PathVariable("namespace") String namespace,
+                                                    @PathVariable("name") String name,
+                                                    @PathVariable("databaseName") String databaseName,
+                                                    @PathVariable("schemaName") String schemaName,
+                                                    @PathVariable("tableName") String tableName) {
+        return BaseResult.ok(postgresqlDashboardService.getTableDataCount(clusterId, namespace, name, databaseName, schemaName, tableName));
     }
 
     @ApiOperation(value = "获取table数据", notes = "获取table数据")

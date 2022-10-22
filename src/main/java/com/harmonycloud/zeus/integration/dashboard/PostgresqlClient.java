@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.integration.dashboard;
 
+import com.dtflys.forest.http.ForestResponse;
 import org.springframework.stereotype.Component;
 
 import com.alibaba.fastjson.JSONObject;
@@ -24,6 +25,16 @@ public interface PostgresqlClient {
                      @Var("port") String port,
                      @Body("username") String username,
                      @Body("password") String password);
+
+    /**
+     * 执行sql语句
+     */
+    @Post(url = "/postgresql/{path}/port/{port}/databases/{databaseName}/sql")
+    ForestResponse<JSONObject> sqlExecute(@Var("path") String path,
+                                          @Var("port") String port,
+                                          @Var("databaseName") String databaseName,
+                                          @Body("sql") String sql,
+                                          @Body("query") boolean query);
 
     /**
      * 查询database列表
@@ -153,7 +164,7 @@ public interface PostgresqlClient {
                            @Var("table") String table);
 
     /**
-     * 查询column列表
+     * 查询表数据
      */
     @Get(
             url = "/postgresql/{path}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/data?limit={limit}&offset={offset}&order={order}")
@@ -165,6 +176,17 @@ public interface PostgresqlClient {
                             @Var("limit") Integer limit,
                             @Var("offset") Integer offset,
                             @Var("order") String order);
+
+    /**
+     * 查询表数据条数
+     */
+    @Get(
+            url = "/postgresql/{path}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/count")
+    JSONObject getTableDataCount(@Var("path") String path,
+                                 @Var("port") String port,
+                                 @Var("database") String database,
+                                 @Var("schema") String schema,
+                                 @Var("table") String table);
 
     /**
      * 创建外键约束
@@ -267,6 +289,16 @@ public interface PostgresqlClient {
                        @Var("port") String port,
                        @Body("username") String username,
                        @Body("password") String password);
+
+    /**
+     * 更新密码
+     */
+    @Put(url = "/postgresql/{path}/port/{port}/user/{usernmae}/password")
+    JSONObject updatePassword(@Var("path") String path,
+                              @Var("port") String port,
+                              @Var("username") String username,
+                              @Body("password") String password);
+
 
     /**
      * 删除用户

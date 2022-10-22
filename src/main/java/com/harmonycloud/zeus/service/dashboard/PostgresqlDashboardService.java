@@ -18,6 +18,19 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
      * @param clusterId 集群id
      * @param namespace 分区
      * @param middlewareName 中间件名称
+     * @param databaseName 库名称
+     * @param executeSqlDto 执行sql对象
+     * @return  ExecuteSqlDto
+     */
+    ExecuteSqlDto executeSql(String clusterId, String namespace, String middlewareName, String databaseName,
+                                 ExecuteSqlDto executeSqlDto);
+
+    /**
+     * 获取database列表
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
      * @return  List<DatabaseDto>
      */
     List<DatabaseDto> listDatabases(String clusterId, String namespace, String middlewareName);
@@ -160,7 +173,19 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
     void dropTable(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName, String tableName);
 
     /**
-     * 删除table
+     * 查询表数据
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param databaseName 数据库名称
+     * @param schemaName 模式名称
+     * @param tableName 表名称
+     */
+    Integer getTableDataCount(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName, String tableName);
+
+    /**
+     * 查询表数据
      *
      * @param clusterId 集群id
      * @param namespace 分区
@@ -275,6 +300,16 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
      * @param username 用户名
      */
     void resetPassword(String clusterId, String namespace, String middlewareName, String username);
+
+    /**
+     * 修改密码
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param username 用户名
+     * @param password 密码
+     */
+    void updatePassword(String clusterId, String namespace, String middlewareName, String username, String password);
 
     /**
      * 启用/禁用用户

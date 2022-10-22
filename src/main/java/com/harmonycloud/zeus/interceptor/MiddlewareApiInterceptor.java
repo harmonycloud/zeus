@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.interceptor;
 import com.dtflys.forest.http.ForestRequest;
 import com.dtflys.forest.http.ForestResponse;
 import com.dtflys.forest.interceptor.Interceptor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -14,6 +15,7 @@ import java.util.Objects;
  * @author xutianhong
  * @Date 2022/10/12 3:37 下午
  */
+@Slf4j
 public class MiddlewareApiInterceptor implements Interceptor {
 
     @Override
@@ -30,6 +32,7 @@ public class MiddlewareApiInterceptor implements Interceptor {
     @Override
     public void onSuccess(Object data, ForestRequest request, ForestResponse response) {
         String mwToken = response.getHeaderValue("token");
+        log.info("打印接口执行时间: {}", response.getTimeAsMillisecond());
         HttpServletResponse servletResponse =
             ((ServletRequestAttributes)Objects.requireNonNull(RequestContextHolder.getRequestAttributes()))
                 .getResponse();
