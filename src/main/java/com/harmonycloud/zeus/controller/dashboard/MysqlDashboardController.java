@@ -420,12 +420,12 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "grantOptionDto", value = "授权信息", paramType = "query", dataTypeClass = String.class),
     })
     @PutMapping("/databases/{database}/privilege")
-    public BaseResult grantDatabase(@PathVariable("clusterId") String clusterId,
+    public BaseResult grantDatabasePrivilege(@PathVariable("clusterId") String clusterId,
                                     @PathVariable("namespace") String namespace,
                                     @PathVariable("middlewareName") String middlewareName,
                                     @PathVariable("database") String database,
                                     @RequestBody GrantOptionDto grantOptionDto) {
-        mysqlDashboardService.grantDatabase(clusterId, namespace, middlewareName, database, grantOptionDto);
+        mysqlDashboardService.grantDatabasePrivilege(clusterId, namespace, middlewareName, database, grantOptionDto);
         return BaseResult.ok();
     }
 
@@ -439,13 +439,31 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "grantOptionDto", value = "授权信息", paramType = "query", dataTypeClass = String.class),
     })
     @PutMapping("/databases/{database}/tables/{table}/privilege")
-    public BaseResult grantTable(@PathVariable("clusterId") String clusterId,
+    public BaseResult grantTablePrivilege(@PathVariable("clusterId") String clusterId,
                                  @PathVariable("namespace") String namespace,
                                  @PathVariable("middlewareName") String middlewareName,
                                  @PathVariable("database") String database,
                                  @PathVariable("table") String table,
                                  @RequestBody GrantOptionDto grantOptionDto) {
-        mysqlDashboardService.grantTable(clusterId, namespace, middlewareName, database, table, grantOptionDto);
+        mysqlDashboardService.grantTablePrivilege(clusterId, namespace, middlewareName, database, table, grantOptionDto);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "释放权限", notes = "释放权限")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "username", value = "用户名", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "grantOptionDtos", value = "授权信息", paramType = "query", dataTypeClass = List.class),
+    })
+    @DeleteMapping("/users/{username}/privilege")
+    public BaseResult revokePrivilege(@PathVariable("clusterId") String clusterId,
+                                      @PathVariable("namespace") String namespace,
+                                      @PathVariable("middlewareName") String middlewareName,
+                                      @PathVariable("username") String username,
+                                      @RequestBody List<GrantOptionDto> grantOptionDtos) {
+        mysqlDashboardService.revokePrivilege(clusterId, namespace, middlewareName, username, grantOptionDtos);
         return BaseResult.ok();
     }
 
