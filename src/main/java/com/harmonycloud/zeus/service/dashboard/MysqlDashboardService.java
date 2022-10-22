@@ -151,12 +151,12 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
     /**
      * 释放数据库权限
      */
-    void revokeDatabasePrivilege(String clusterId, String namespace, String middlewareName, String database, String username, GrantOptionDto grantOptionDto);
+    void revokeDatabasePrivilege(String clusterId, String namespace, String middlewareName, String database, GrantOptionDto grantOptionDto);
 
     /**
      * 释放数据表权限
      */
-    void revokeTablePrivilege(String clusterId, String namespace, String middlewareName, String database, String table, String username, GrantOptionDto grantOptionDto);
+    void revokeTablePrivilege(String clusterId, String namespace, String middlewareName, String database, String table, GrantOptionDto grantOptionDto);
 
     /**
      * 查询用户权限

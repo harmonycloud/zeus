@@ -69,6 +69,14 @@ public class MysqlUtil {
         return priv.equalsIgnoreCase("Y");
     }
 
+    /**
+     * mysql中使用YES或NO来表示是否可以传递权限，如果可以传递则为YES，反之为NO，
+     * 平台使用bool值来表示，这里将权限值转为bool值
+     */
+    public static boolean convertGrantAble(String grantAble) {
+        return grantAble.equalsIgnoreCase("YES");
+    }
+
     public static void main(String[] args) {
 
         convertColumnDataSize("varchar(125)");

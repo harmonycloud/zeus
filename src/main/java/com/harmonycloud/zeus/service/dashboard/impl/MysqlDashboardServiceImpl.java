@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.service.dashboard.impl;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.MysqlPrivilegeEnum;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.dashboard.mysql.*;
@@ -343,7 +344,8 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void grantDatabasePrivilege(String clusterId, String namespace, String middlewareName, String database, GrantOptionDto grantOptionDto) {
-        JSONObject res = mysqlClient.grantDatabase(getPath(middlewareName,namespace), port, database, grantOptionDto);
+        grantOptionDto.setPrivilege(MysqlPrivilegeEnum.findDbPrivilege(grantOptionDto.getPrivilegeType(), grantOptionDto.getGrantAble()));
+        JSONObject res = mysqlClient.grantDatabase(getPath(middlewareName, namespace), port, database, grantOptionDto);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.GRANT_DATABASE_FAILED, res.getString("message"));
         }
@@ -351,7 +353,8 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void grantTablePrivilege(String clusterId, String namespace, String middlewareName, String database, String table, GrantOptionDto grantOptionDto) {
-        JSONObject res = mysqlClient.grantTable(getPath(middlewareName,namespace), port, database, table, grantOptionDto);
+        grantOptionDto.setPrivilege(MysqlPrivilegeEnum.findTablePrivilege(grantOptionDto.getPrivilegeType(), grantOptionDto.getGrantAble()));
+        JSONObject res = mysqlClient.grantTable(getPath(middlewareName, namespace), port, database, table, grantOptionDto);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.GRANT_TABLE_FAILED, res.getString("message"));
         }
@@ -361,18 +364,29 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     public void revokePrivilege(String clusterId, String namespace, String middlewareName, String username, List<GrantOptionDto> grantOptionDtos) {
         grantOptionDtos.forEach(grantOptionDto -> {
             grantOptionDto.setUsername(username);
-
+            // 如果table为空，则执行释放数据库权限,否则执行释放数据表权限
+            if (StringUtils.isEmpty(grantOptionDto.getTable())) {
+                revokeDatabasePrivilege(clusterId, namespace, middlewareName, grantOptionDto.getDb(), grantOptionDto);
+            } else {
+                revokeTablePrivilege(clusterId, namespace, middlewareName, grantOptionDto.getDb(), grantOptionDto.getTable(), grantOptionDto);
+            }
         });
     }
 
     @Override
-    public void revokeDatabasePrivilege(String clusterId, String namespace, String middlewareName, String database, String username, GrantOptionDto grantOptionDto) {
-
+    public void revokeDatabasePrivilege(String clusterId, String namespace, String middlewareName, String database, GrantOptionDto grantOptionDto) {
+        JSONObject res = mysqlClient.revokeDatabasePrivilege(getPath(middlewareName, namespace), port, database, grantOptionDto);
+        if (!res.getBoolean("success")) {
+            throw new BusinessException(ErrorMessage.REVOKE_DATABASE_FAILED, res.getString("message"));
+        }
     }
 
     @Override
-    public void revokeTablePrivilege(String clusterId, String namespace, String middlewareName, String database, String table, String username, GrantOptionDto grantOptionDto) {
-
+    public void revokeTablePrivilege(String clusterId, String namespace, String middlewareName, String database, String table, GrantOptionDto grantOptionDto) {
+        JSONObject res = mysqlClient.revokeTablePrivilege(getPath(middlewareName, namespace), port, database, table, grantOptionDto);
+        if (!res.getBoolean("success")) {
+            throw new BusinessException(ErrorMessage.REVOKE_TABLE_FAILED, res.getString("message"));
+        }
     }
 
     @Override
@@ -393,6 +407,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
             grantOptionDto.setDb(obj.getString("TABLE_SCHEMA"));
             grantOptionDto.setTable(obj.getString("TABLE_NAME"));
             grantOptionDto.setPrivilege(obj.getString("PRIVILEGE"));
+            grantOptionDto.setGrantAble(MysqlUtil.convertGrantAble(obj.getString("IS_GRANTABLE")));
             // todo 此处需将权限字符串转为权限类型编号
             grantOptionDto.setPrivilegeType(1);
             return grantOptionDto;
