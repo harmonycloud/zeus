@@ -188,7 +188,7 @@ public class MysqlUserServiceImpl implements MysqlUserService {
     public boolean nativeGrantUser(Connection con, String user, int authority, String db) {
         QueryRunner qr = new QueryRunner();
         try {
-            String privilege = MysqlPrivilegeEnum.findPrivilege(authority).getPrivilege();
+            String privilege = MysqlPrivilegeEnum.findDbPrivilege(authority);
             String grantPrivilegeSql = String.format(" grant %s on `%s`.* to '%s' ", privilege, db, user);
             qr.execute(con, grantPrivilegeSql);
             return true;
