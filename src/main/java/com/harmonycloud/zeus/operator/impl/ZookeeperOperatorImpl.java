@@ -120,16 +120,27 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
         }
         MiddlewareQuota quota = checkMiddlewareQuota(middleware, quotaKey);
         JSONObject persistence = values.getJSONObject(PERSISTENCE);
-        quota.setStorageClassName(persistence.getString("storageClassName"))
+        String storageClass = persistence.getString("storageClassName");
+        quota.setStorageClassName(storageClass)
             .setStorageClassQuota(persistence.getString("volumeSize"));
         quota.setIsLvmStorage(storageClassService.checkLVMStorage(middleware.getClusterId(), middleware.getNamespace(),
-            values.getString("storageClassName")));
+                values.getString("storageClassName")));
 
         // 获取存储中文名
         try {
-            StorageDto storageDto =
-                storageService.get(middleware.getClusterId(), persistence.getString("storageClassName"), false);
-            quota.setStorageClassAliasName(storageDto.getAliasName());
+            if (storageClass.contains(",")){
+                String[] storageClasses = storageClass.split(",");
+                StringBuilder sb = new StringBuilder();
+                for (String aClass : storageClasses) {
+                    StorageDto storageDto = storageService.get(middleware.getClusterId(), aClass, false);
+                    sb.append(storageDto.getAliasName()).append(",");
+                }
+                sb.deleteCharAt(sb.length() - 1);
+                quota.setStorageClassAliasName(sb.toString());
+            }else {
+                StorageDto storageDto = storageService.get(middleware.getClusterId(), storageClass, false);
+                quota.setStorageClassAliasName(storageDto.getAliasName());
+            }
         } catch (Exception e) {
             log.error("中间件{}, 获取存储中文名失败", middleware.getName());
         }
