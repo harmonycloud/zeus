@@ -342,7 +342,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public void grantDatabase(String clusterId, String namespace, String middlewareName, String database, GrantOptionDto grantOptionDto) {
+    public void grantDatabasePrivilege(String clusterId, String namespace, String middlewareName, String database, GrantOptionDto grantOptionDto) {
         JSONObject res = mysqlClient.grantDatabase(getPath(middlewareName,namespace), port, database, grantOptionDto);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.GRANT_DATABASE_FAILED, res.getString("message"));
@@ -350,7 +350,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public void grantTable(String clusterId, String namespace, String middlewareName, String database, String table, GrantOptionDto grantOptionDto) {
+    public void grantTablePrivilege(String clusterId, String namespace, String middlewareName, String database, String table, GrantOptionDto grantOptionDto) {
         JSONObject res = mysqlClient.grantTable(getPath(middlewareName,namespace), port, database, table, grantOptionDto);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.GRANT_TABLE_FAILED, res.getString("message"));
@@ -358,9 +358,45 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public List<GrantOptionDto> listUserAuthority(String clusterId, String namespace, String middlewareName, String username) {
+    public void revokePrivilege(String clusterId, String namespace, String middlewareName, String username, List<GrantOptionDto> grantOptionDtos) {
+        grantOptionDtos.forEach(grantOptionDto -> {
+            grantOptionDto.setUsername(username);
 
-        return null;
+        });
+    }
+
+    @Override
+    public void revokeDatabasePrivilege(String clusterId, String namespace, String middlewareName, String database, String username, GrantOptionDto grantOptionDto) {
+
+    }
+
+    @Override
+    public void revokeTablePrivilege(String clusterId, String namespace, String middlewareName, String database, String table, String username, GrantOptionDto grantOptionDto) {
+
+    }
+
+    @Override
+    public List<GrantOptionDto> listUserAuthority(String clusterId, String namespace, String middlewareName, String username) {
+        JSONArray privilegeAry = new JSONArray();
+        JSONArray databasePrivilegeAry = mysqlClient.showDatabasePrivilege(getPath(middlewareName, namespace), port, username).getJSONArray("dataAry");
+        JSONArray tablePrivilegeAry = mysqlClient.showTablePrivilege(getPath(middlewareName, namespace), port, username).getJSONArray("dataAry");
+        if (!CollectionUtils.isEmpty(databasePrivilegeAry)) {
+            privilegeAry.addAll(databasePrivilegeAry);
+        }
+        if (!CollectionUtils.isEmpty(tablePrivilegeAry)) {
+            privilegeAry.addAll(tablePrivilegeAry);
+        }
+        // todo 返回的结果如何排序？新的授权记录排在后面怎么办？
+        return privilegeAry.stream().map(privilege -> {
+            JSONObject obj = (JSONObject) privilege;
+            GrantOptionDto grantOptionDto = new GrantOptionDto();
+            grantOptionDto.setDb(obj.getString("TABLE_SCHEMA"));
+            grantOptionDto.setTable(obj.getString("TABLE_NAME"));
+            grantOptionDto.setPrivilege(obj.getString("PRIVILEGE"));
+            // todo 此处需将权限字符串转为权限类型编号
+            grantOptionDto.setPrivilegeType(1);
+            return grantOptionDto;
+        }).collect(Collectors.toList());
     }
 
     @Override
@@ -370,7 +406,9 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     private String getPath(String middlewareName, String namespace) {
-        return middlewareName + "." + namespace;
+        // todo 提交时此处代码需删除
+//        return middlewareName + "." + namespace;
+        return "10.10.101.140";
     }
     
 }

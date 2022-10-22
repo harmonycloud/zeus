@@ -217,4 +217,34 @@ public interface MysqlClient {
                           @Var("table") String table,
                           @JSONBody GrantOptionDto grantOption);
 
+    @Get(url = "/mysql/{host}/port/{port}/users/{user}/databasePrivilege")
+    JSONObject showDatabasePrivilege(@Var("host") String host,
+                                     @Var("port") String port,
+                                     @Var("user") String user);
+
+    @Get(url = "/mysql/{host}/port/{port}/users/{user}/tablePrivilege")
+    JSONObject showTablePrivilege(@Var("host") String host,
+                                  @Var("port") String port,
+                                  @Var("user") String user);
+
+    /**
+     * 释放数据库权限
+     */
+    @Delete(url = "/mysql/{host}/port/{port}/databases/{database}/privilege")
+    JSONObject revokeDatabasePrivilege(@Var("host") String host,
+                                       @Var("port") String port,
+                                       @Var("database") String database,
+                                       @JSONBody GrantOptionDto grantOption);
+
+    /**
+     * 释放表权限
+     */
+    @Delete(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/privilege")
+    JSONObject revokeTablePrivilege(@Var("host") String host,
+                                    @Var("port") String port,
+                                    @Var("database") String database,
+                                    @Var("table") String table,
+                                    @JSONBody GrantOptionDto grantOption);
+
+
 }
