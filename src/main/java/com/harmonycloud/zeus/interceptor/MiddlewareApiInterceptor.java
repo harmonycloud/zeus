@@ -4,6 +4,7 @@ import com.dtflys.forest.http.ForestRequest;
 import com.dtflys.forest.http.ForestResponse;
 import com.dtflys.forest.interceptor.Interceptor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -25,7 +26,9 @@ public class MiddlewareApiInterceptor implements Interceptor {
             ((ServletRequestAttributes)Objects.requireNonNull(RequestContextHolder.getRequestAttributes()))
                 .getRequest();
         String mwToken = servletRequest.getHeader("mwToken");
-        request.addHeader("Authorization", mwToken);
+        if (StringUtils.isNotEmpty(mwToken)){
+            request.addHeader("Authorization", mwToken);
+        }
         return true;
     }
 

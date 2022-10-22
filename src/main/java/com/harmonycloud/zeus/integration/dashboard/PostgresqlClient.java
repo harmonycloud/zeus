@@ -20,7 +20,7 @@ public interface PostgresqlClient {
     /**
      * 登录
      */
-    @Get(url = "/postgresql/{path}/port/{port}/login")
+    @Post(url = "/postgresql/{path}/port/{port}/login")
     JSONObject login(@Var("path") String path,
                      @Var("port") String port,
                      @Body("username") String username,

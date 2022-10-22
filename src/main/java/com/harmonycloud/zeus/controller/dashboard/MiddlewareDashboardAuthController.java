@@ -24,9 +24,14 @@ public class MiddlewareDashboardAuthController {
     @Autowired
     private MiddlewareDashboardAuthService middlewareDashboardAuthService;
 
-    @ApiOperation(value = "获取database列表", notes = "获取database列表")
+    @ApiOperation(value = "中间件登录", notes = "中间件登录")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "username", value = "用户名", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "password", value = "密码", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "类型", paramType = "query", dataTypeClass = String.class),
     })
     @PostMapping("/auth")
     public BaseResult<JSONObject> login(@PathVariable("clusterId") String clusterId,
