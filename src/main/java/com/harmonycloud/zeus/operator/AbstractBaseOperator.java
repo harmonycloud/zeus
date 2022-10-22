@@ -504,16 +504,28 @@ public abstract class AbstractBaseOperator {
         if (StringUtils.isBlank(quotaKey) || values == null) {
             return;
         }
+        String storageClass = values.getString("storageClassName");
         MiddlewareQuota quota = checkMiddlewareQuota(middleware, quotaKey);
-        quota.setStorageClassName(values.getString("storageClassName"))
+        quota.setStorageClassName(storageClass)
             .setStorageClassQuota(values.getString("storageSize"));
         quota.setIsLvmStorage(storageClassService.checkLVMStorage(middleware.getClusterId(), middleware.getNamespace(),
             values.getString("storageClassName")));
 
         // 获取存储中文名
         try {
-            StorageDto storageDto = storageService.get(middleware.getClusterId(), values.getString("storageClassName"), false);
-            quota.setStorageClassAliasName(storageDto.getAliasName());
+            if (storageClass.contains(",")){
+                String[] storageClasses = storageClass.split(",");
+                StringBuilder sb = new StringBuilder();
+                for (String aClass : storageClasses) {
+                    StorageDto storageDto = storageService.get(middleware.getClusterId(), aClass, false);
+                    sb.append(storageDto.getAliasName()).append(",");
+                }
+                sb.deleteCharAt(sb.length() - 1);
+                quota.setStorageClassAliasName(sb.toString());
+            }else {
+                StorageDto storageDto = storageService.get(middleware.getClusterId(), values.getString("storageClassName"), false);
+                quota.setStorageClassAliasName(storageDto.getAliasName());
+            }
         } catch (Exception e){
             log.error("中间件{}, 获取存储中文名失败", middleware.getName());
         }
