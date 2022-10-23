@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
@@ -198,6 +199,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
             indexColumnDto.setColumnName(obj.getString("Column_name"));
             indexColumnDto.setIndexType(obj.getString("Index_type"));
             indexColumnDto.setSubPart(obj.getInteger("Sub_part"));
+            indexColumnDto.setIndexComment(obj.getString("Index_comment"));
             IndexDto indexDto = new IndexDto();
             indexDto.setIndex(indexColumnDto.getKeyName());
             if (indexList.contains(indexDto)) {
@@ -205,6 +207,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
                 tempIndexDto.getIndexColumns().add(indexColumnDto);
             } else {
                 indexDto.setType(indexColumnDto.getIndexType());
+                indexDto.setComment(indexColumnDto.getIndexComment());
                 List<IndexColumnDto> columnDtoList = new ArrayList<>();
                 columnDtoList.add(indexColumnDto);
                 indexDto.setIndexColumns(columnDtoList);
@@ -277,12 +280,21 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void addUser(String clusterId, String namespace, String middlewareName, UserDto userDto) {
-        if (checkUserExists(getPath(middlewareName,namespace), port, userDto.getUser())) {
+        if (checkUserExists(getPath(middlewareName, namespace), port, userDto.getUser())) {
             throw new BusinessException(ErrorMessage.MYSQL_USER_EXISTS);
         }
-        JSONObject res = mysqlClient.createUser(getPath(middlewareName,namespace), port, userDto);
+        JSONObject res = mysqlClient.createUser(getPath(middlewareName, namespace), port, userDto);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.CREATE_MYSQL_USER_FAILED, res.getString("message"));
+        } else {
+            if (userDto.isGrantAble()) {
+                GrantOptionDto grantOptionDto = new GrantOptionDto();
+                grantOptionDto.setPrivilegeType(MysqlPrivilegeEnum.GLOBAL_GRANT.getAuthority());
+                grantOptionDto.setGrantAble(false);
+                grantOptionDto.setUsername(userDto.getUser());
+                grantOptionDto.setDb("*");
+                grantDatabasePrivilege(clusterId, namespace, middlewareName, "*", grantOptionDto);
+            }
         }
     }
 
@@ -416,7 +428,10 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public boolean checkUserExists(String namespace, String middlewareName, String username) {
-        JSONArray dataAry = mysqlClient.showUserDetail(getPath(middlewareName,namespace), port, username).getJSONArray("dataAry");
+        if (StringUtils.isEmpty(username)) {
+            return false;
+        }
+        JSONArray dataAry = mysqlClient.showUserDetail(getPath(middlewareName, namespace), port, username).getJSONArray("dataAry");
         return !CollectionUtils.isEmpty(dataAry);
     }
 
