@@ -266,11 +266,11 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "table", value = "表名称", paramType = "path", dataTypeClass = String.class),
     })
     @GetMapping("/databases/{database}/tables/{table}/foreignKeys")
-    public BaseResult<List<IndexDto>> listTableForeignKeys(@PathVariable("clusterId") String clusterId,
-                                                       @PathVariable("namespace") String namespace,
-                                                       @PathVariable("middlewareName") String middlewareName,
-                                                       @PathVariable("database") String database,
-                                                       @PathVariable("table") String table) {
+    public BaseResult<List<ForeignKeyDto>> listTableForeignKeys(@PathVariable("clusterId") String clusterId,
+                                                                @PathVariable("namespace") String namespace,
+                                                                @PathVariable("middlewareName") String middlewareName,
+                                                                @PathVariable("database") String database,
+                                                                @PathVariable("table") String table) {
         return BaseResult.ok(mysqlDashboardService.listTableForeignKeys(clusterId, namespace, middlewareName, database, table));
     }
 
@@ -281,7 +281,7 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "table", value = "表名称", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "indexDtoList", value = "外键信息列表", paramType = "query", dataTypeClass = List.class),
+            @ApiImplicitParam(name = "foreignKeyDtos", value = "外键信息列表", paramType = "query", dataTypeClass = List.class),
     })
     @PutMapping("/databases/{database}/tables/{table}/foreignKeys")
     public BaseResult saveTableIndex(@PathVariable("clusterId") String clusterId,

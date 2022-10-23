@@ -100,7 +100,7 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
      * 创建用户
      *
      */
-    void addUser(String clusterId, String namespace, String middlewareName, UserDto middlewareUserDto);
+    void addUser(String clusterId, String namespace, String middlewareName, UserDto userDto);
 
     /**
      * 删除用户
@@ -111,12 +111,12 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
     /**
      * 修改用户
      */
-    void updateUser(String clusterId, String namespace, String middlewareName, String username, UserDto middlewareUserDto);
+    void updateUser(String clusterId, String namespace, String middlewareName, String username, UserDto userDto);
 
     /**
      * 更新用户名
      */
-    void updateUsername(String clusterId, String namespace, String middlewareName, UserDto middlewareUserDto);
+    void updateUsername(String clusterId, String namespace, String middlewareName, String username,UserDto userDto);
 
     /**
      * 更新密码

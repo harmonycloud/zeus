@@ -280,7 +280,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void addUser(String clusterId, String namespace, String middlewareName, UserDto userDto) {
-        if (checkUserExists(getPath(middlewareName, namespace), port, userDto.getUser())) {
+        if (checkUserExists(namespace, middlewareName, userDto.getUser())) {
             throw new BusinessException(ErrorMessage.MYSQL_USER_EXISTS);
         }
         JSONObject res = mysqlClient.createUser(getPath(middlewareName, namespace), port, userDto);
@@ -300,7 +300,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void dropUser(String clusterId, String namespace, String middlewareName, String username) {
-        if (!checkUserExists(getPath(middlewareName,namespace), port, username)) {
+        if (!checkUserExists(namespace, middlewareName, username)) {
             throw new BusinessException(ErrorMessage.MYSQL_USER_NOT_EXISTS);
         }
         JSONObject res = mysqlClient.dropUser(getPath(middlewareName,namespace), port, username);
@@ -311,27 +311,30 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void updateUser(String clusterId, String namespace, String middlewareName, String username, UserDto userDto) {
-        if (!checkUserExists(getPath(middlewareName,namespace), port, userDto.getUser())) {
+        if (!checkUserExists(namespace, middlewareName, username)) {
             throw new BusinessException(ErrorMessage.MYSQL_USER_NOT_EXISTS);
         }
-        if (!StringUtils.isEmpty(userDto.getPassword()) && !username.equals(userDto.getUser())) {
+        if (!StringUtils.isEmpty(userDto.getPassword())) {
             this.updatePassword(clusterId, namespace, middlewareName, username, userDto);
         }
-        if (!StringUtils.isEmpty(userDto.getUser())) {
-            this.updateUsername(clusterId, namespace, middlewareName, userDto);
+        if (!StringUtils.isEmpty(userDto.getNewUser())) {
+            this.updateUsername(clusterId, namespace, middlewareName, username, userDto);
         }
     }
 
     @Override
-    public void updateUsername(String clusterId, String namespace, String middlewareName, UserDto userDto) {
-        JSONObject res = mysqlClient.updateUsername(getPath(middlewareName,namespace), port, userDto);
+    public void updateUsername(String clusterId, String namespace, String middlewareName, String username, UserDto userDto) {
+        JSONObject res = mysqlClient.updateUsername(getPath(middlewareName, namespace), port, username, userDto);
         if (!res.getBoolean("success")) {
-            throw new BusinessException(ErrorMessage.CREATE_DATABASE_FAILED, res.getString("message"));
+            throw new BusinessException(ErrorMessage.FAILED_TO_UPDATE_USER, res.getString("message"));
         }
     }
 
     @Override
     public void updatePassword(String clusterId, String namespace, String middlewareName, String username, UserDto userDto) {
+        if (!checkUserExists(namespace, middlewareName, userDto.getUser())) {
+            throw new BusinessException(ErrorMessage.MYSQL_USER_NOT_EXISTS);
+        }
         JSONObject res = mysqlClient.updatePassword(getPath(middlewareName,namespace), port, username, userDto);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.FAILED_TO_UPDATE_USER_PASSWORD, res.getString("message"));
