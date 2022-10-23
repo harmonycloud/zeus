@@ -17,7 +17,6 @@ import com.harmonycloud.zeus.integration.cluster.ConfigMapWrapper;
 import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
 import com.harmonycloud.zeus.service.AbstractBaseService;
 import com.harmonycloud.zeus.service.ingress.BaseIngressService;
-import com.harmonycloud.zeus.service.ingress.api.TraefikIngressService;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.MathUtil;
@@ -54,10 +53,9 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
     private PodService podService;
     @Autowired
     private IngressService ingressService;
+
     @Autowired
     private ConfigMapWrapper configMapWrapper;
-    @Autowired
-    private TraefikIngressService traefikIngressService;
 
     @Override
     public void install(IngressComponentDto ingressComponentDto) {
@@ -256,7 +254,8 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
         JSONObject values = helmChartService.getInstalledValues(ingressComponents.getName(),
                 ingressComponents.getNamespace(), clusterService.findById(ingressComponents.getClusterId()));
         if (values != null) {
-            ingressComponentDto.setTraefikPortList(traefikIngressService.getTraefikPort(values));
+            ingressComponentDto.setStartPort(values.getString("startPort"));
+            ingressComponentDto.setEndPort(values.getString("endPort"));
         }
     }
 

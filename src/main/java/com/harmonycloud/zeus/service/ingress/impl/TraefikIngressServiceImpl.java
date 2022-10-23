@@ -10,7 +10,6 @@ import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.AffinityDTO;
 import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.IngressComponentDto;
-import com.harmonycloud.caas.common.model.TraefikPort;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareValues;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
@@ -81,7 +80,7 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
         image.put("name", repository + "/traefik");
 
         JSONArray additionalArguments = values.getJSONArray("additionalArguments");
-        List<String> portList = getPortList(cluster, ingressComponentDto.getTraefikPortList(), ingressComponentDto.getIngressClassName());
+        List<String> portList = getPortList(cluster, ingressComponentDto.getStartPort(), ingressComponentDto.getIngressClassName(), traefikPortNum);
         additionalArguments.addAll(portList);
         values.put("startPort", portList.get(0).split(":")[1]);
         values.put("endPort", portList.get(portList.size() - 1).split(":")[1]);
@@ -219,8 +218,8 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
         ingressComponentDto.setHttpsPort(ports.getJSONObject("websecure").getString("port"));
         ingressComponentDto.setDashboardPort(ports.getJSONObject("traefik").getString("port"));
         ingressComponentDto.setMonitorPort(ports.getJSONObject("metrics").getString("port"));
-        // 获取端口范围
-        ingressComponentDto.setTraefikPortList(getTraefikPort(values));
+        ingressComponentDto.setStartPort(values.getString("startPort"));
+        ingressComponentDto.setEndPort(values.getString("endPort"));
         // node affinity
         if (JsonUtils.isJsonObject(values.getString("affinity"))) {
             JSONObject nodeAffinity = values.getJSONObject("affinity").getJSONObject("nodeAffinity");
@@ -285,41 +284,20 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
         };
     }
 
-    private List<String> getPortList(MiddlewareClusterDTO cluster, List<TraefikPort> traefikPortList, String ingressName) {
+    private List<String> getPortList(MiddlewareClusterDTO cluster, String startPort, String ingressName, int num) {
         List<String> ports = new ArrayList<>();
         Set<Integer> usedPortSet = ingressService.getUsedPortSet(cluster);
-        for (TraefikPort traefikPort : traefikPortList){
-            for (int i = traefikPort.getStartPort(); i <= traefikPort.getEndPort(); ++i){
-                if (!usedPortSet.contains(i)) {
-                    ports.add("--entrypoints." + ingressName + "-p" + i + ".Address=:" + i);
-                }
+        for (int i = 0, sum = 0; ; i++) {
+            int port = Integer.parseInt(startPort) + i;
+            if (!usedPortSet.contains(port)) {
+                ports.add("--entrypoints." + ingressName + "-p" + port + ".Address=:" + port);
+                sum++;
+            }
+            if (sum == num) {
+                break;
             }
         }
         return ports;
     }
 
-    @Override
-    public List<TraefikPort> getTraefikPort(JSONObject values) {
-        List<TraefikPort> traefikPortList = new ArrayList<>();
-        JSONArray traefikPortArray = values.getJSONArray("traefikPort");
-        if (traefikPortArray != null){
-            for (int i = 0; i < traefikPortArray.size(); ++i){
-                String port = traefikPortArray.getString(i);
-
-                TraefikPort traefikPort = new TraefikPort();
-                traefikPort.setStartPort(Integer.valueOf(port.split("-")[0]));
-                traefikPort.setEndPort(Integer.valueOf(port.split("-")[1]));
-                traefikPortList.add(traefikPort);
-            }
-        }else if (values.containsKey("startPort") && values.containsKey("endPort")){
-            TraefikPort traefikPort = new TraefikPort();
-            traefikPort.setStartPort(Integer.valueOf(values.getString("startPort")));
-            traefikPort.setEndPort(Integer.valueOf(values.getString("endPort")));
-            traefikPortList.add(traefikPort);
-        }else {
-            TraefikPort traefikPort = new TraefikPort().setStartPort(30000).setEndPort(65535);
-            traefikPortList.add(traefikPort);
-        }
-        return traefikPortList;
-    }
 }

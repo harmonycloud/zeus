@@ -9,7 +9,6 @@ import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
 import com.harmonycloud.caas.common.model.IngressComponentDto;
-import com.harmonycloud.caas.common.model.TraefikPort;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.tool.uuid.UUIDUtils;
@@ -1669,17 +1668,20 @@ public class IngressServiceImpl implements IngressService {
     }
 
     private int getTraefikAvailableServicePort(MiddlewareClusterDTO cluster, IngressComponentDto ingressComponentDto) {
-        // 获取已使用端口
-        Set<Integer> traefikUsedPort = getTraefikUsedPort(cluster);
-        // 获取可配置端口范围
         IngressComponentDto detail = ingressComponentService.detail(cluster.getId(), ingressComponentDto.getIngressClassName());
-        List<TraefikPort> traefikPortList = detail.getTraefikPortList();
-        for (TraefikPort traefikPort : traefikPortList){
-            for (int i = traefikPort.getStartPort(); i < traefikPort.getEndPort(); ++i){
-                if (!traefikUsedPort.contains(i)){
-                    return i;
-                }
+        String startPortStr = detail.getStartPort();
+        String endPortStr = detail.getEndPort();
+        if (!MathUtil.isDigit(startPortStr) && !MathUtil.isDigit(endPortStr)) {
+            return 0;
+        }
+        int port = Integer.parseInt(startPortStr);
+        int endPort = Integer.parseInt(endPortStr);
+        Set<Integer> traefikUsedPort = getTraefikUsedPort(cluster);
+        for (; port <= endPort; ) {
+            if (!traefikUsedPort.contains(port)) {
+                return port;
             }
+            port++;
         }
         return 0;
     }
