@@ -236,15 +236,14 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
     }
 
     @Override
-    public String portCheck(String clusterId, String startPort) {
+    public String portCheck(String clusterId, Integer startPort, Integer endPort) {
         List<Integer> conflictPortList = new ArrayList<>();
         Set<Integer> usedPortSet = ingressService.getUsedPortSet(clusterService.findById(clusterId));
-        for (int i = 0; i < 100; i++) {
-            int port = Integer.parseInt(startPort) + i;
-            if (usedPortSet.contains(port)) {
-                conflictPortList.add(port);
+        usedPortSet.forEach(usedPort -> {
+            if (usedPort >= startPort && usedPort <= endPort){
+                conflictPortList.add(usedPort);
             }
-        }
+        });
         conflictPortList.sort(Comparator.comparing(Integer::intValue));
 
         return MathUtil.convert(conflictPortList);
