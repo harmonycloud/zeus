@@ -87,7 +87,7 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
         for (TraefikPort traefikPort : ingressComponentDto.getTraefikPortList()){
             portArray.add(traefikPort.getStartPort() + "-" + traefikPort.getEndPort());
         }
-        values.put("traefik", portArray);
+        values.put("traefikPort", portArray);
         JSONObject ports = values.getJSONObject("ports");
         JSONObject web = ports.getJSONObject("web");
         JSONObject websecure = ports.getJSONObject("websecure");
