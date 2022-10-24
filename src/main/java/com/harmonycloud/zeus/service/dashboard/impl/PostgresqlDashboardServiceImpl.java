@@ -6,28 +6,26 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.dtflys.forest.http.ForestResponse;
-import com.harmonycloud.caas.common.enums.EncodingEnum;
-import com.harmonycloud.caas.common.enums.PostgresqlPrivilegeEnum;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.model.middleware.ServicePortDTO;
-import com.harmonycloud.zeus.annotation.Operator;
-import com.harmonycloud.zeus.service.k8s.ServiceService;
-import io.swagger.models.auth.In;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.dtflys.forest.http.ForestResponse;
+import com.harmonycloud.caas.common.enums.EncodingEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.PostgresqlPrivilegeEnum;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.dashboard.*;
+import com.harmonycloud.caas.common.model.middleware.ServicePortDTO;
+import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.integration.dashboard.PostgresqlClient;
 import com.harmonycloud.zeus.service.dashboard.PostgresqlDashboardService;
+import com.harmonycloud.zeus.service.k8s.ServiceService;
 import com.harmonycloud.zeus.util.PostgresqlAuthorityUtil;
 
 import lombok.extern.slf4j.Slf4j;
@@ -299,7 +297,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         TableDto tableDto = tableDtoList.get(0);
         // 四个约束
         String path = getPath(middlewareName, namespace);
-        JSONObject getConstraint = postgresqlClient.getConstraint(path, port, databaseName, schemaName, tableName, tableDto.getOid());
+        JSONObject getConstraint =
+            postgresqlClient.getConstraint(path, port, databaseName, schemaName, tableName, tableDto.getOid());
         List<Map<String, String>> constraintList = convertColumn(getConstraint);
 
         List<TableForeignKey> tableForeignKeyList = new ArrayList<>();
@@ -307,19 +306,19 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         List<TableUnique> tableUniqueList = new ArrayList<>();
         List<TableCheck> tableCheckList = new ArrayList<>();
 
-        for (Map<String, String> constraint : constraintList){
-            if ("f".equals(constraint.get("contype"))){
+        for (Map<String, String> constraint : constraintList) {
+            if ("f".equals(constraint.get("contype"))) {
                 String[] condef = constraint.get("condef").split(" ");
                 TableForeignKey foreignKey = new TableForeignKey();
-                for (int i = 0; i < condef.length; ++i){
-                    if ("FOREIGN".equals(condef[i]) && "KEY".equals(condef[i + 1])){
+                for (int i = 0; i < condef.length; ++i) {
+                    if ("FOREIGN".equals(condef[i]) && "KEY".equals(condef[i + 1])) {
                         foreignKey.setColumnName(condef[i + 2].replace("(", "").replace(")", ""));
                     }
-                    if ("REFERENCES".equals(condef[i])){
+                    if ("REFERENCES".equals(condef[i])) {
                         String target = condef[i + 1];
-                        if (!target.contains(".")){
+                        if (!target.contains(".")) {
                             foreignKey.setTargetSchema("public");
-                        }else {
+                        } else {
                             String[] targetSchema = target.split("\\.");
                             foreignKey.setTargetSchema(targetSchema[0]);
                             target = target.replace(targetSchema[0] + ".", "");
@@ -329,11 +328,11 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
                         foreignKey.setTargetColumn(table[1].replace(")", ""));
                     }
                     // 更新时策略
-                    if ("ON".equals(condef[i]) && "UPDATE".equals(condef[i + 1])){
+                    if ("ON".equals(condef[i]) && "UPDATE".equals(condef[i + 1])) {
                         foreignKey.setOnUpdate(condef[i + 2]);
                     }
                     // 删除时策略
-                    if ("ON".equals(condef[i]) && "DELETE".equals(condef[i + 1])){
+                    if ("ON".equals(condef[i]) && "DELETE".equals(condef[i + 1])) {
                         foreignKey.setOnDelete(condef[i + 2]);
                     }
                     // 设置是否可延迟
@@ -341,40 +340,40 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
                 }
                 foreignKey.setName(constraint.get("conname"));
                 tableForeignKeyList.add(foreignKey);
-            }else if ("x".equals(constraint.get("contype"))){
+            } else if ("x".equals(constraint.get("contype"))) {
                 TableExclusion exclusion = new TableExclusion();
                 String[] condef = constraint.get("condef").split(" ");
-                for (int i = 0; i < condef.length; ++i){
-                    if ("EXCLUDE".equals(condef[i]) && "USING".equals(condef[i + 1])){
+                for (int i = 0; i < condef.length; ++i) {
+                    if ("EXCLUDE".equals(condef[i]) && "USING".equals(condef[i + 1])) {
                         exclusion.setIndexMethod(condef[i + 2]);
                     }
-                    if ("WITH".equals(condef[i]) && condef[i - 1].contains("(")){
+                    if ("WITH".equals(condef[i]) && condef[i - 1].contains("(")) {
                         exclusion.setColumnName(condef[i - 1].replace("(", ""));
                         exclusion.setSymbol(condef[i + 1].replace(")", ""));
                     }
                 }
                 exclusion.setName(constraint.get("conname"));
                 tableExclusionList.add(exclusion);
-            }else if ("u".equals(constraint.get("contype"))){
+            } else if ("u".equals(constraint.get("contype"))) {
                 TableUnique unique = new TableUnique();
                 String[] condef = constraint.get("condef").split(" ");
-                for (int i = 0; i < condef.length; ++i){
-                    if ("UNIQUE".equals(condef[i])){
+                for (int i = 0; i < condef.length; ++i) {
+                    if ("UNIQUE".equals(condef[i])) {
                         unique.setColumnName(condef[i + 1].replace("(", "").replace(")", ""));
                     }
                 }
                 unique.setDeferrablity(getDeferrable(constraint));
                 unique.setName(constraint.get("conname"));
                 tableUniqueList.add(unique);
-            }else if ("c".equals(constraint.get("contype"))){
+            } else if ("c".equals(constraint.get("contype"))) {
                 TableCheck check = new TableCheck();
                 String condef = constraint.get("condef");
                 String text = condef.substring(condef.indexOf("(") + 1, condef.lastIndexOf(")"));
                 check.setText(text);
-                if (condef.contains("NO INHERIT")){
+                if (condef.contains("NO INHERIT")) {
                     check.setNoInherit(true);
                 }
-                if (condef.contains("NOT VALID")){
+                if (condef.contains("NOT VALID")) {
                     check.setNotValid(true);
                 }
                 check.setName(constraint.get("conname"));
@@ -386,7 +385,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             tableDto.setTableCheckList(tableCheckList);
         }
         // 继承信息
-        JSONObject getInherit = postgresqlClient.getInherit(path, port, databaseName, schemaName, tableName, tableDto.getOid());
+        JSONObject getInherit =
+            postgresqlClient.getInherit(path, port, databaseName, schemaName, tableName, tableDto.getOid());
         List<Map<String, String>> inheritList = convertColumn(getInherit);
         List<TableInherit> tableInheritList = new ArrayList<>();
         inheritList.forEach(inherit -> {
@@ -413,29 +413,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             if (StringUtils.isNotEmpty(columnDto.getComment())) {
                 columnComment.put(columnDto.getColumn(), columnDto.getComment());
             }
-            sb.append(columnDto.getColumn()).append(" ");
-            if (columnDto.getInc() != null && columnDto.getInc()) {
-                sb.append("serial");
-            } else {
-                sb.append(columnDto.getDateType());
-            }
-            if (columnDto.getArray() != null && columnDto.getArray()) {
-                sb.append("[]");
-            }
-            if (StringUtils.isNotEmpty(columnDto.getSize())) {
-                sb.append("(").append(columnDto.getSize()).append(")");
-            }
-            sb.append(" ");
-            if (StringUtils.isNotEmpty(columnDto.getDefaultValue())) {
-                sb.append(columnDto.getDefaultValue());
-            }
-            if (columnDto.getNullable() != null && columnDto.getNullable()) {
-                sb.append("not null ");
-            }
-            if (StringUtils.isNotEmpty(columnDto.getCollate())) {
-                sb.append("COLLATE ").append(columnDto.getCollate());
-            }
-            sb.append(",");
+            sb.append(turnColumnToSql(columnDto)).append(",");
         }
         // 外键约束
         for (TableForeignKey foreign : tableDto.getTableForeignKeyList()) {
@@ -488,6 +466,11 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
                 inherit.deleteCharAt(sb.length() - 1);
             }
         }
+        // table comment
+        if (tableDto.getDescription() != null) {
+            columnComment.put(tableDto.getSchemaName() + "_" + tableDto.getTableName() + "_comment",
+                tableDto.getDescription());
+        }
         JSONObject table = new JSONObject();
         table.put("database", tableDto.getDatabaseName());
         table.put("schema", tableDto.getSchemaName());
@@ -503,6 +486,31 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         if (err != null) {
             throw new BusinessException(ErrorMessage.POSTGRESQL_CREATE_TABLE_FAILED, err.getString("Message"));
         }
+    }
+
+    @Override
+    public void updateTable(String clusterId, String namespace, String middlewareName, String schemaName,
+        String tableName, TableDto tableDto) {
+        String path = getPath(middlewareName, namespace);
+        setPort(clusterId, namespace, middlewareName);
+
+        // 修改表基本信息
+        JSONObject updateTable =
+            postgresqlClient.updateTable(path, port, tableDto.getDatabaseName(), schemaName, tableName, tableDto);
+        JSONObject err = updateTable.getJSONObject("err");
+        if (err != null) {
+            throw new BusinessException(ErrorMessage.POSTGRESQL_UPDATE_TABLE_FAILED, err.getString("Message"));
+        }
+        // 修正表信息
+        if (StringUtils.isNotEmpty(tableDto.getSchemaName())) {
+            schemaName = tableDto.getSchemaName();
+        }
+        if (StringUtils.isNotEmpty(tableDto.getTableName())) {
+            tableName = tableDto.getTableName();
+        }
+        // 查询列信息
+        updateColumn(clusterId, namespace, middlewareName, tableDto.getDatabaseName(), schemaName, tableName,
+            tableDto.getColumnDtoList());
     }
 
     @Override
@@ -554,6 +562,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             columnDto.setDatabaseName(databaseName);
             columnDto.setSchemaName(schemaName);
             columnDto.setTableName(table);
+            columnDto.setColumn(column.get("column_name"));
             String column_default = column.get("column_default");
             // 判断是否自增
             if (column_default.contains("nextval")) {
@@ -845,24 +854,85 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
 
     @Override
     public List<MiddlewareUserAuthority> userAuthority(String clusterId, String namespace, String middlewareName,
-        String username) {
+        String username, String oid) {
         String path = getPath(middlewareName, namespace);
         setPort(clusterId, namespace, middlewareName);
+        // 获取库权限
         JSONObject listDatabases = postgresqlClient.listDatabases(path, port);
         List<Map<String, String>> databaseList = convertColumn(listDatabases);
-
-        List<MiddlewareUserAuthority> userAuthorityList = new ArrayList<>();
+        List<MiddlewareUserAuthority> userDatabaseAuthorityList = new ArrayList<>();
         databaseList.forEach(database -> {
-            String datAcl = database.get("datacl");
-            if (StringUtils.isEmpty(datAcl) || !datAcl.contains(username + "=")) {
-                // todo 查询owner
-                return;
+            MiddlewareUserAuthority databaseAuthority = new MiddlewareUserAuthority();
+            databaseAuthority.setDatabase(database.get("datname"));
+            if (database.get("datdba").equals(oid)) {
+                databaseAuthority.setAuthority("owner");
+            } else {
+                String datAcl = database.get("datacl");
+                String authority = PostgresqlAuthorityUtil.checkAuthority(datAcl, username);
+                if (authority.contains("*")) {
+                    databaseAuthority.setGrantAble(true);
+                    authority = authority.replace("*", "");
+                }
+                databaseAuthority.setAuthority(authority);
             }
-            MiddlewareUserAuthority userAuthority = new MiddlewareUserAuthority();
-            userAuthority.setDatabase(database.get("datname"));
-            userAuthority.setAuthority(PostgresqlAuthorityUtil.checkAuthority(datAcl, username));
-            userAuthorityList.add(userAuthority);
+            userDatabaseAuthorityList.add(databaseAuthority);
         });
+        // 获取模式权限
+        List<MiddlewareUserAuthority> userSchemaAuthorityList = new ArrayList<>();
+        for (MiddlewareUserAuthority database : userDatabaseAuthorityList) {
+            JSONObject listSchemas = postgresqlClient.listSchemas(path, port, database.getDatabase());
+            List<Map<String, String>> schemaList = convertColumn(listSchemas);
+            schemaList.forEach(schema -> {
+                MiddlewareUserAuthority schemaAuthority = new MiddlewareUserAuthority();
+                schemaAuthority.setDatabase(database.getDatabase());
+                schemaAuthority.setSchema(schema.get("nspname"));
+                if (schema.get("nspowner").equals(oid)) {
+                    schemaAuthority.setAuthority("owner");
+                } else {
+                    String nspAcl = schema.get("nspacl");
+                    String authority = PostgresqlAuthorityUtil.checkAuthority(nspAcl, username);
+                    if (authority.contains("*")) {
+                        schemaAuthority.setGrantAble(true);
+                        authority = authority.replace("*", "");
+                    }
+                    schemaAuthority.setAuthority(authority);
+                }
+                userSchemaAuthorityList.add(schemaAuthority);
+            });
+        }
+        // 获取table权限
+        List<MiddlewareUserAuthority> userTableAuthorityList = new ArrayList<>();
+        for (MiddlewareUserAuthority databaseSchema : userDatabaseAuthorityList) {
+            JSONObject listTables = postgresqlClient.listAllTables(path, port, databaseSchema.getDatabase());
+            List<Map<String, String>> tableList = convertColumn(listTables);
+            tableList = tableList.stream()
+                .filter(table -> userSchemaAuthorityList.stream()
+                    .anyMatch(schemaAuthority -> table.get("nspname").equals(schemaAuthority.getSchema())
+                        && schemaAuthority.getDatabase().equals(databaseSchema.getAuthority())))
+                .collect(Collectors.toList());
+            tableList.forEach(table -> {
+                MiddlewareUserAuthority tableAuthority = new MiddlewareUserAuthority();
+                tableAuthority.setDatabase(databaseSchema.getDatabase());
+                tableAuthority.setSchema(table.get("nspname"));
+                if (table.get("relowner").equals(oid)) {
+                    tableAuthority.setAuthority("owner");
+                } else {
+                    String relAcl = table.get("relacl");
+                    String authority = PostgresqlAuthorityUtil.checkAuthority(relAcl, username);
+                    if (authority.contains("*")) {
+                        tableAuthority.setGrantAble(true);
+                        authority = authority.replace("*", "");
+                    }
+                    tableAuthority.setAuthority(authority);
+                }
+                userTableAuthorityList.add(tableAuthority);
+            });
+        }
+        // 汇总权限
+        List<MiddlewareUserAuthority> userAuthorityList = new ArrayList<>();
+        userAuthorityList.addAll(userDatabaseAuthorityList);
+        userAuthorityList.addAll(userSchemaAuthorityList);
+        userAuthorityList.addAll(userTableAuthorityList);
         return userAuthorityList;
     }
 
@@ -899,6 +969,82 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         return Arrays.stream(EncodingEnum.values()).map(EncodingEnum::getName).collect(Collectors.toList());
     }
 
+    public void updateColumn(String clusterId, String namespace, String middlewareName, String databaseName,
+        String schemaName, String tableName, List<ColumnDto> newColumnList) {
+        String path = getPath(middlewareName, namespace);
+
+        List<ColumnDto> columnDtoList =
+            listColumns(clusterId, namespace, middlewareName, databaseName, schemaName, tableName);
+        Map<String, ColumnDto> columnDtoMap =
+            columnDtoList.stream().collect(Collectors.toMap(ColumnDto::getNum, columnDto -> columnDto));
+        // 比较列信息 根据内容进行修改
+        Map<String, Map<String, String>> change = new HashMap<>();
+        // 获取新增或修改内容
+        for (int i = 0; i < newColumnList.size(); ++i) {
+            Map<String, String> anchor = new HashMap<>();
+            ColumnDto newColumn = newColumnList.get(i);
+            String num = newColumn.getNum();
+            if (!columnDtoMap.containsKey(num) || Integer.parseInt(num) > newColumnList.size()) {
+                // 新增列
+                Map<String, String> add = new HashMap<>();
+                add.put("add", turnColumnToSql(newColumn));
+                change.put(newColumn.getColumn(), add);
+                continue;
+            }
+            // 比较列不同
+            ColumnDto column = columnDtoMap.get(num);
+            // 比较列名称
+            if (!column.getColumn().equals(newColumn.getColumn())) {
+                anchor.put("column", column.getColumn());
+                anchor.put("newColumn", newColumn.getColumn());
+            }
+            // 比较是否开关数组/修改数据类型、修改数据长度
+            if (!column.getArray().equals(newColumn.getArray()) || !column.getDateType().equals(newColumn.getDateType())
+                || !column.getSize().equals(newColumn.getSize())) {
+                anchor.put("array", newColumn.getArray().toString());
+                anchor.put("dataType", newColumn.getDateType());
+                if (!"0".equals(newColumn.getSize())) {
+                    anchor.put("size", newColumn.getSize());
+                }
+            }
+            // 比较是否可空
+            if (!column.getNullable().equals(newColumn.getNullable())) {
+                anchor.put("nullAble", newColumn.getNullable().toString());
+            }
+            // 比较是否主键
+            if (!column.getPrimaryKey().equals(newColumn.getPrimaryKey())) {
+                anchor.put("primary", column.getPrimaryKey().toString());
+            }
+            // 比较默认值是否相同
+            if (!column.getDefaultValue().equals(newColumn.getDefaultValue())) {
+                anchor.put("default", newColumn.getDefaultValue());
+            }
+            // 比较备注
+            if (!column.getComment().equals(newColumn.getComment())) {
+                anchor.put("comment", newColumn.getComment());
+            }
+            change.put(column.getColumn(), anchor);
+            columnDtoMap.remove(num);
+        }
+        // 获取删除列
+        if (!CollectionUtils.isEmpty(columnDtoMap)) {
+            Map<String, String> delete = new HashMap<>();
+            columnDtoMap.forEach((k, v) -> {
+                delete.put(v.getColumn(), "delete");
+                change.put(v.getColumn(), delete);
+            });
+        }
+        // 更新列信息
+        JSONObject object = new JSONObject();
+        object.put("change", change);
+        JSONObject updateColumn =
+            postgresqlClient.updateColumn(path, port, databaseName, schemaName, tableName, object);
+        JSONObject err = updateColumn.getJSONObject("err");
+        if (err != null) {
+            throw new BusinessException(ErrorMessage.POSTGRESQL_UPDATE_TABLE_FAILED, err.getString("Message"));
+        }
+    }
+
     public List<Map<String, String>> convertColumn(JSONObject jsonObject) {
         dealWithErr(jsonObject, true);
         JSONArray data = jsonObject.getJSONArray("data");
@@ -918,6 +1064,33 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             res.add(map);
         }
         return res;
+    }
+
+    public String turnColumnToSql(ColumnDto columnDto) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(columnDto.getColumn()).append(" ");
+        if (columnDto.getInc() != null && columnDto.getInc()) {
+            sb.append("serial");
+        } else {
+            sb.append(columnDto.getDateType());
+        }
+        if (columnDto.getArray() != null && columnDto.getArray()) {
+            sb.append("[]");
+        }
+        if (StringUtils.isNotEmpty(columnDto.getSize())) {
+            sb.append("(").append(columnDto.getSize()).append(")");
+        }
+        sb.append(" ");
+        if (StringUtils.isNotEmpty(columnDto.getDefaultValue())) {
+            sb.append(columnDto.getDefaultValue());
+        }
+        if (columnDto.getNullable() != null && columnDto.getNullable()) {
+            sb.append("not null ");
+        }
+        if (StringUtils.isNotEmpty(columnDto.getCollate())) {
+            sb.append("COLLATE ").append(columnDto.getCollate());
+        }
+        return sb.toString();
     }
 
     public void dropConstraint(String path, String databaseName, String schemaName, String tableName,
@@ -970,8 +1143,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     public String getPath(String middlewareName, String namespace) {
-        return middlewareName + "." + namespace;
-        //return middlewareName;
+        // return middlewareName + "." + namespace;
+        return middlewareName;
     }
 
 }

@@ -8,6 +8,8 @@ import com.dtflys.forest.annotation.*;
 import com.harmonycloud.caas.common.model.dashboard.*;
 import com.harmonycloud.zeus.interceptor.MiddlewareApiInterceptor;
 
+import java.util.Map;
+
 /**
  * @author xutianhong
  * @Date 2022/10/11 3:08 下午
@@ -125,6 +127,14 @@ public interface PostgresqlClient {
     /**
      * 查询table列表
      */
+    @Get(url = "/postgresql/{path}/port/{port}/databases/{database}/schemas/tables")
+    JSONObject listAllTables(@Var("path") String path,
+                             @Var("port") String port,
+                             @Var("database") String database);
+
+    /**
+     * 查询table列表
+     */
     @Get(url = "/postgresql/{path}/port/{port}/databases/{database}/schemas/{schema}/tables")
     JSONObject listTables(@Var("path") String path,
                           @Var("port") String port,
@@ -140,6 +150,28 @@ public interface PostgresqlClient {
                         @Var("database") String database,
                         @Var("schema") String schema,
                         @JSONBody JSONObject table);
+
+    /**
+     * 更新table
+     */
+    @Post(url = "/postgresql/{path}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}")
+    JSONObject updateTable(@Var("path") String path,
+                           @Var("port") String port,
+                           @Var("database") String database,
+                           @Var("schema") String schema,
+                           @Var("table") String table,
+                           @JSONBody TableDto tableDto);
+
+    /**
+     * 更新table column
+     */
+    @Post(url = "/postgresql/{path}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/columns")
+    JSONObject updateColumn(@Var("path") String path,
+                            @Var("port") String port,
+                            @Var("database") String database,
+                            @Var("schema") String schema,
+                            @Var("table") String table,
+                            @JSONBody JSONObject object);
 
     /**
      * 删除table

@@ -161,6 +161,16 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
     void addTable(String clusterId, String namespace, String middlewareName, TableDto tableDto);
 
     /**
+     * 更新table
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param tableDto 表对象
+     */
+    void updateTable(String clusterId, String namespace, String middlewareName, String schemaName, String tableName, TableDto tableDto);
+
+    /**
      * 删除table
      *
      * @param clusterId 集群id
@@ -288,9 +298,14 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
 
     /**
      * 获取用户权限
-     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param username 用户名
+     * @param oid      oid
+     * @return List<MiddlewareUserAuthority>
      */
-    List<MiddlewareUserAuthority> userAuthority(String clusterId, String namespace, String middlewareName, String username);
+    List<MiddlewareUserAuthority> userAuthority(String clusterId, String namespace, String middlewareName, String username, String oid);
 
     /**
      * 重置密码

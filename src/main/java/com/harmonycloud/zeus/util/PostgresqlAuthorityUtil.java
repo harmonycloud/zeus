@@ -16,13 +16,17 @@ public class PostgresqlAuthorityUtil {
         acl = acl.replace("}", "");
         String[] acls = acl.split(",");
         String authority = "";
-        for (String s : acls) {
-            if (s.contains(username + "=")) {
-                authority = s.split("/")[0].replace(username + "=", "");
+        for (String a : acls) {
+            if (a.contains(username + "=")) {
+                authority = a.split("/")[0].replace(username + "=", "");
                 break;
             }
         }
-        // todo 根据*号确认是否可传递权限
+        StringBuilder sb =new StringBuilder();
+        // 根据*号判断是否可传递权限
+        if (authority.contains("*")){
+            sb.append("*");
+        }
         if (authority.contains(PostgresqlAuthorityEnum.INSERT.getAuthority())
             || authority.contains(PostgresqlAuthorityEnum.UPDATE.getAuthority())
             || authority.contains(PostgresqlAuthorityEnum.DELETE.getAuthority())
@@ -31,10 +35,11 @@ public class PostgresqlAuthorityUtil {
             || authority.contains(PostgresqlAuthorityEnum.TRIGGER.getAuthority())
             || authority.contains(PostgresqlAuthorityEnum.CREATE.getAuthority())
             || authority.contains(PostgresqlAuthorityEnum.TEMPORARY.getAuthority())) {
-            return "rw";
+            sb.append("readWrite");
         } else {
-            return "r";
+            sb.append("readOnly");
         }
+        return sb.toString();
     }
 
 }

@@ -27,7 +27,7 @@ public class PostgresqlDashboardController {
     @Autowired
     private PostgresqlDashboardService postgresqlDashboardService;
 
-    @ApiOperation(value = "获取database列表", notes = "获取database列表")
+    @ApiOperation(value = "执行sql语句", notes = "执行sql语句")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
@@ -282,11 +282,14 @@ public class PostgresqlDashboardController {
     })
     @PutMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}")
     public BaseResult updateTable(@PathVariable("clusterId") String clusterId,
-                               @PathVariable("namespace") String namespace,
-                               @PathVariable("name") String name,
-                               @PathVariable("databaseName") String databaseName,
-                               @PathVariable("schemaName") String schemaName,
-                               @RequestBody TableDto tableDto) {
+                                  @PathVariable("namespace") String namespace,
+                                  @PathVariable("name") String name,
+                                  @PathVariable("databaseName") String databaseName,
+                                  @PathVariable("schemaName") String schemaName,
+                                  @PathVariable("tableName") String tableName,
+                                  @RequestBody TableDto tableDto) {
+        tableDto.setDatabaseName(databaseName);
+        postgresqlDashboardService.updateTable(clusterId, namespace, name, schemaName, tableName, tableDto);
         return BaseResult.ok();
     }
 
@@ -373,6 +376,7 @@ public class PostgresqlDashboardController {
                                                     @RequestParam("current") Integer current,
                                                     @RequestParam("size") Integer size,
                                                     @RequestParam("orderMap") Map<String, String> orderMap) {
+        //todo map是否可行
         return BaseResult.ok(postgresqlDashboardService.getTableData(clusterId, namespace, name, databaseName, schemaName, tableName, current, size, orderMap));
     }
 
@@ -599,8 +603,9 @@ public class PostgresqlDashboardController {
     public BaseResult<List<MiddlewareUserAuthority>> userAuthority(@PathVariable("clusterId") String clusterId,
                                                                    @PathVariable("namespace") String namespace,
                                                                    @PathVariable("name") String name,
-                                                                   @PathVariable("username") String username) {
-        return BaseResult.ok(postgresqlDashboardService.userAuthority(clusterId, namespace, name, username));
+                                                                   @PathVariable("username") String username,
+                                                                   @RequestParam("oid") String oid) {
+        return BaseResult.ok(postgresqlDashboardService.userAuthority(clusterId, namespace, name, username, oid));
     }
 
     @ApiOperation(value = "重置密码", notes = "重置密码")
