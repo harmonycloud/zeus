@@ -129,7 +129,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
     })
-    @GetMapping("/databases/{databaseName}")
+    @GetMapping("/databases/{databaseName}/tablespace")
     public BaseResult<List<String>> getTablespace(@PathVariable("clusterId") String clusterId,
                                                        @PathVariable("namespace") String namespace,
                                                        @PathVariable("name") String name,
