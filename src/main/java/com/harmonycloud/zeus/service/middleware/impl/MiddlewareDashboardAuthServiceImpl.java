@@ -22,16 +22,16 @@ public class MiddlewareDashboardAuthServiceImpl extends AbstractBaseService impl
     public JSONObject login(String clusterId, String namespace, String middlewareName, String username, String password,
         String type) {
         // 解密密码
-        /*String decryptPassword;
+        String decryptPassword;
         try {
             decryptPassword = RSAUtils.decryptByPrivateKey(password);
         } catch (Exception e) {
             throw new BusinessException(ErrorMessage.RSA_DECRYPT_FAILED);
-        }*/
+        }
         // 根据类型前往不同的中间件尝试登录
         BaseMiddlewareApiService service =
             getOperator(BaseMiddlewareApiService.class, BaseMiddlewareApiService.class, type);
-        String token = service.login(clusterId, namespace, middlewareName, username, password);
+        String token = service.login(clusterId, namespace, middlewareName, username, decryptPassword);
 
         JSONObject res = new JSONObject();
         res.put("username", username);
