@@ -48,7 +48,7 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
     private static final String taintType = "harm.cn/type";
     private static final String taintValue = "active-active";
 
-    @Value("active-active.label.key:topology.kubernetes.io/zone")
+    @Value("${active-active.label.key:topology.kubernetes.io/zone}")
     private String zoneKey;
 
     @Autowired
