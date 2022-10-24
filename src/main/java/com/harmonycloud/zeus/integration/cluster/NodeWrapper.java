@@ -8,6 +8,7 @@ import java.util.Map;
 import com.harmonycloud.zeus.util.K8sClient;
 import io.fabric8.kubernetes.api.model.NodeList;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import io.fabric8.kubernetes.api.model.Node;
@@ -20,6 +21,9 @@ import org.springframework.util.CollectionUtils;
 @Component
 @Slf4j
 public class NodeWrapper {
+
+    @Value("${active-active.label.key:topology.kubernetes.io/zone}")
+    private String zoneKey;
 
     public List<Node> list(String clusterId) {
         NodeList list = K8sClient.getClient(clusterId).nodes().list();
@@ -42,7 +46,7 @@ public class NodeWrapper {
     }
 
     public List<Node> listAllocatableNode(String clusterId){
-        NodeList list = K8sClient.getClient(clusterId).nodes().withoutLabel("zone").list();
+        NodeList list = K8sClient.getClient(clusterId).nodes().withoutLabel(zoneKey).list();
         if (list == null || CollectionUtils.isEmpty(list.getItems())) {
             return new ArrayList<>(0);
         }
