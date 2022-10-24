@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.controller.dashboard;
 
+import com.alibaba.fastjson.JSONArray;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.dashboard.ExecuteSqlDto;
 import com.harmonycloud.caas.common.model.dashboard.mysql.*;
@@ -168,24 +169,23 @@ public class MysqlDashboardController {
         return BaseResult.ok();
     }
 
-    @ApiOperation(value = "获取tableS数据", notes = "获取table数据")
+    @ApiOperation(value = "获取table数据", notes = "获取table数据")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "table", value = "表名", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "pageInfo", value = "分页信息", paramType = "query", dataTypeClass = PageInfo.class),
+            @ApiImplicitParam(name = "queryInfo", value = "查询信息", paramType = "query", dataTypeClass = QueryInfo.class),
     })
-    @GetMapping("/databases/{database}/tables/{table}")
-    public BaseResult showTableData(@PathVariable("clusterId") String clusterId,
-                                    @PathVariable("namespace") String namespace,
-                                    @PathVariable("middlewareName") String middlewareName,
-                                    @PathVariable("database") String database,
-                                    @PathVariable("table") String table,
-                                    @RequestBody PageInfo pageInfo) {
-        mysqlDashboardService.showTableData(clusterId, namespace, middlewareName, database, table, pageInfo);
-        return BaseResult.ok();
+    @PostMapping("/databases/{database}/tables/{table}/data")
+    public BaseResult<JSONArray> showTableData(@PathVariable("clusterId") String clusterId,
+                                               @PathVariable("namespace") String namespace,
+                                               @PathVariable("middlewareName") String middlewareName,
+                                               @PathVariable("database") String database,
+                                               @PathVariable("table") String table,
+                                               @RequestBody QueryInfo queryInfo) {
+        return BaseResult.ok(mysqlDashboardService.showTableData(clusterId, namespace, middlewareName, database, table, queryInfo));
     }
 
     @ApiOperation(value = "创建table", notes = "创建table")

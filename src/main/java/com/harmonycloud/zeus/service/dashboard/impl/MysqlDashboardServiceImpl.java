@@ -170,8 +170,10 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public JSONArray showTableData(String clusterId, String namespace, String middlewareName, String database, String table,PageInfo pageInfo) {
-        return mysqlClient.showTableData(getPath(middlewareName,namespace), port, database, table,pageInfo).getJSONArray("dataAry");
+    public JSONArray showTableData(String clusterId, String namespace, String middlewareName, String database, String table,QueryInfo queryInfo) {
+        // todo 查询出的数据应该按数据表列的顺序排序
+        JSONArray dataAry = mysqlClient.showTableData(getPath(middlewareName, namespace), port, database, table, queryInfo).getJSONArray("dataAry");
+        return dataAry;
     }
 
     @Override

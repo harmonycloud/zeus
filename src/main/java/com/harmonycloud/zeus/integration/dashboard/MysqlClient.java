@@ -97,12 +97,12 @@ public interface MysqlClient {
     /**
      * 查询表数据
      */
-    @Get(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/data")
+    @Post(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/data")
     JSONObject showTableData(@Var("host") String host,
                              @Var("port") String port,
                              @Var("database") String database,
                              @Var("table") String table,
-                             @JSONBody PageInfo pageInfo);
+                             @JSONBody QueryInfo queryInfo);
 
     // column
     /**

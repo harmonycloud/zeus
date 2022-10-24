@@ -73,7 +73,7 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
     /**
      * 获取表数据
      */
-    JSONArray showTableData(String clusterId, String namespace, String middlewareName, String database, String table, PageInfo pageInfo);
+    JSONArray showTableData(String clusterId, String namespace, String middlewareName, String database, String table, QueryInfo queryInfo);
 
     /**
      * 查询指定数据表所有列
