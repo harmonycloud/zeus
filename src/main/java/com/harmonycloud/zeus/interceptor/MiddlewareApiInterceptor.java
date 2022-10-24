@@ -1,8 +1,11 @@
 package com.harmonycloud.zeus.interceptor;
 
+import com.dtflys.forest.exceptions.ForestRuntimeException;
 import com.dtflys.forest.http.ForestRequest;
 import com.dtflys.forest.http.ForestResponse;
 import com.dtflys.forest.interceptor.Interceptor;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -43,4 +46,10 @@ public class MiddlewareApiInterceptor implements Interceptor {
             servletResponse.addHeader("mwToken", mwToken);
         }
     }
+
+    @Override
+    public void onError(ForestRuntimeException ex, ForestRequest req, ForestResponse res) {
+        throw new BusinessException(ErrorMessage.MIDDLEWARE_API_REQUEST_ERROR, ex.getMessage());
+    }
+
 }
