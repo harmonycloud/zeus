@@ -174,14 +174,20 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
         beanIngressComponentsMapper.updateById(beanIngressComponents);
         // 更新端口
         if (!CollectionUtils.isEmpty(ingressComponentDto.getTraefikPortList())) {
+            String path = componentsPath + File.separator + "traefik";
             MiddlewareClusterDTO cluster = clusterService.findById(ingressComponentDto.getClusterId());
             // 获取values.yaml
             JSONObject values =
                 helmChartService.getInstalledValues(ingressComponentDto.getName(), MIDDLEWARE_OPERATOR, cluster);
+            JSONArray additionalArguments = new JSONArray();
+            values.put("additionalArguments", additionalArguments);
+            // 置空一次端口组
+            helmChartService.installComponents(ingressComponentDto.getName(), MIDDLEWARE_OPERATOR, path, values, values,
+                cluster);
+
             // 封装端口组
             List<String> portList = getPortList(cluster, ingressComponentDto.getTraefikPortList(),
                 ingressComponentDto.getIngressClassName());
-            JSONArray additionalArguments = new JSONArray();
             additionalArguments.addAll(portList);
             values.put("additionalArguments", additionalArguments);
 
@@ -190,7 +196,6 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
                 portArray.add(traefikPort.getStartPort() + "-" + traefikPort.getEndPort());
             }
             values.put("traefikPort", portArray);
-            String path = componentsPath + File.separator + "traefik";
             helmChartService.installComponents(ingressComponentDto.getName(), MIDDLEWARE_OPERATOR, path, values, values,
                 cluster);
         }
