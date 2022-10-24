@@ -104,6 +104,15 @@ public interface MysqlClient {
                              @Var("table") String table,
                              @JSONBody QueryInfo queryInfo);
 
+    /**
+     * 查询建表语句
+     */
+    @Get(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/script")
+    JSONObject showTableScript(@Var("host") String host,
+                               @Var("port") String port,
+                               @Var("database") String database,
+                               @Var("table") String table);
+
     // column
     /**
      * 查询指定数据表所有列

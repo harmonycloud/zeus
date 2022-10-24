@@ -10,6 +10,7 @@ import com.harmonycloud.caas.common.model.dashboard.mysql.*;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.integration.dashboard.MysqlClient;
 import com.harmonycloud.zeus.service.dashboard.MysqlDashboardService;
+import com.harmonycloud.zeus.util.FileDownloadUtil;
 import com.harmonycloud.zeus.util.MysqlUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +21,9 @@ import org.springframework.util.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -438,12 +441,26 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public String exportTableSql(String clusterId, String namespace, String middlewareName, String database, String table, HttpServletRequest request, HttpServletResponse response) {
-        return null;
+    public void exportTableSql(String clusterId, String namespace, String middlewareName, String database, String table, HttpServletRequest request, HttpServletResponse response) {
+        try {
+            JSONArray dataAry = mysqlClient.showTableScript(getPath(middlewareName, namespace), port, database, table).getJSONArray("dataAry");
+            if (CollectionUtils.isEmpty(dataAry)) {
+                throw new BusinessException(ErrorMessage.FAILED_TO_EXPORT_TABLE_SQL);
+            }
+            JSONObject obj = dataAry.getJSONObject(0);
+            String sql = obj.getString("Create Table");
+
+            String fileRealName = table + ".sql";
+            byte[] sqlBytes = sql.getBytes(StandardCharsets.UTF_8);
+            FileDownloadUtil.downloadFile(request, response, fileRealName, sqlBytes);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorMessage.FAILED_TO_EXPORT_TABLE_SQL);
+        }
     }
 
     @Override
     public String exportTableExcel(String clusterId, String namespace, String middlewareName, String database, String table, HttpServletRequest request, HttpServletResponse response) {
+
         return null;
     }
 
