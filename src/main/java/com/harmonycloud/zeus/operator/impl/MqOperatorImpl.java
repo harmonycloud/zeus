@@ -88,8 +88,8 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
     }
 
     protected void replaceArgs(Middleware middleware, JSONObject values){
-        JSONObject args = (JSONObject) values.getJSONObject("args");
-        args.put("autoCreateTopicEnable",middleware.getAutoCreateTopicEnable());
+        JSONObject args = values.getJSONObject("args");
+        args.put("autoCreateTopicEnable",middleware.getRocketMQParam().getAutoCreateTopicEnable());
     };
 
     @Override
