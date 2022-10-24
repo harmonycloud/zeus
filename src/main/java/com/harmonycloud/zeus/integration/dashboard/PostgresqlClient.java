@@ -71,6 +71,14 @@ public interface PostgresqlClient {
                             @Var("database") String database);
 
     /**
+     * 获取tablespace
+     */
+    @Get(url = "/postgresql/{path}/port/{port}/databases/{database}")
+    JSONObject getTablespace(@Var("path") String path,
+                             @Var("port") String port,
+                             @Var("database") String database);
+
+    /**
      * 查询database备注
      */
     @Get(url = "/postgresql/{path}/port/{port}/databases/{database}/notes?oid={oid}")

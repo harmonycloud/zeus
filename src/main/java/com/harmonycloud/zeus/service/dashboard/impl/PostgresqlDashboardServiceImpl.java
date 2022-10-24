@@ -179,6 +179,17 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     @Override
+    public List<String> getTablespace(String clusterId, String namespace, String middlewareName, String databaseName) {
+        String path = getPath(middlewareName, namespace);
+        setPort(clusterId, namespace, middlewareName);
+        JSONObject getTablespace = postgresqlClient.getTablespace(path, port, databaseName);
+        List<Map<String, String>> tablespaceList = convertColumn(getTablespace);
+        return tablespaceList.stream().map(tablespace -> {
+            return tablespace.get("spcname");
+        }).collect(Collectors.toList());
+    }
+
+    @Override
     public List<SchemaDto> listSchemas(String clusterId, String namespace, String middlewareName, String databaseName) {
         String path = getPath(middlewareName, namespace);
         setPort(clusterId, namespace, middlewareName);
@@ -471,6 +482,11 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             columnComment.put(tableDto.getSchemaName() + "_" + tableDto.getTableName() + "_comment",
                 tableDto.getDescription());
         }
+        // fillFactory
+        if (StringUtils.isEmpty(tableDto.getFillFactor())){
+            tableDto.setFillFactor("100");
+        }
+        // Tablespace
         JSONObject table = new JSONObject();
         table.put("database", tableDto.getDatabaseName());
         table.put("schema", tableDto.getSchemaName());
@@ -478,6 +494,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         table.put("inherit", inherit);
         table.put("owner", tableDto.getOwner());
         table.put("comment", columnComment);
+        table.put("tableSpace", tableDto.getTablespace());
+        table.put("fillFactory", tableDto.getFillFactor());
         String path = getPath(middlewareName, namespace);
         setPort(clusterId, namespace, middlewareName);
         JSONObject addTable =
@@ -993,16 +1011,11 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             }
             // 比较列不同
             ColumnDto column = columnDtoMap.get(num);
-            // 比较列名称
-            if (!column.getColumn().equals(newColumn.getColumn())) {
-                anchor.put("column", column.getColumn());
-                anchor.put("newColumn", newColumn.getColumn());
-            }
             // 比较是否开关数组/修改数据类型、修改数据长度
             if (!column.getArray().equals(newColumn.getArray()) || !column.getDateType().equals(newColumn.getDateType())
                 || !column.getSize().equals(newColumn.getSize())) {
-                anchor.put("array", newColumn.getArray().toString());
                 anchor.put("dataType", newColumn.getDateType());
+                anchor.put("array", newColumn.getArray().toString());
                 if (!"0".equals(newColumn.getSize())) {
                     anchor.put("size", newColumn.getSize());
                 }
@@ -1022,6 +1035,11 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             // 比较备注
             if (!column.getComment().equals(newColumn.getComment())) {
                 anchor.put("comment", newColumn.getComment());
+            }
+            // 比较列名称
+            if (!column.getColumn().equals(newColumn.getColumn())) {
+                anchor.put("name", column.getColumn());
+                anchor.put("newName", newColumn.getColumn());
             }
             change.put(column.getColumn(), anchor);
             columnDtoMap.remove(num);
@@ -1143,8 +1161,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     public String getPath(String middlewareName, String namespace) {
-        // return middlewareName + "." + namespace;
-        return middlewareName;
+        return middlewareName + "." + namespace;
+        //return middlewareName;
     }
 
 }

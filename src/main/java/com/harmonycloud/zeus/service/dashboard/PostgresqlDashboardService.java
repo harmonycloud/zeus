@@ -75,6 +75,16 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
     void deleteDatabase(String clusterId, String namespace, String middlewareName, String databaseName);
 
     /**
+     * 获取tablespace
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param databaseName 数据库名称
+     */
+    List<String> getTablespace(String clusterId, String namespace, String middlewareName, String databaseName);
+
+    /**
      * 获取schema列表
      *
      * @param clusterId 集群id

@@ -122,6 +122,21 @@ public class PostgresqlDashboardController {
         return BaseResult.ok();
     }
 
+    @ApiOperation(value = "获取tablespace", notes = "获取tablespace")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
+    })
+    @GetMapping("/databases/{databaseName}")
+    public BaseResult<List<String>> getTablespace(@PathVariable("clusterId") String clusterId,
+                                                       @PathVariable("namespace") String namespace,
+                                                       @PathVariable("name") String name,
+                                                       @PathVariable("databaseName") String databaseName) {
+        return BaseResult.ok(postgresqlDashboardService.getTablespace(clusterId, namespace, name, databaseName));
+    }
+
     @ApiOperation(value = "获取schema列表", notes = "获取schema列表")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
