@@ -171,6 +171,7 @@ public interface MysqlClient {
     @Put(url = "/mysql/{host}/port/{port}/users/{user}")
     JSONObject updateUsername(@Var("host") String host,
                               @Var("port") String port,
+                              @Var("user") String user,
                               @JSONBody UserDto userDto);
 
     /**

@@ -243,7 +243,7 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "table", value = "表名称", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "indexDtoList", value = "索引信息列表", paramType = "query", dataTypeClass = List.class),
+            @ApiImplicitParam(name = "indexDtoList", value = "索引信息列表", paramType = "query", dataTypeClass = IndexDto.class),
     })
     @PutMapping("/databases/{database}/tables/{table}/indices")
     public BaseResult saveTableForeignKeys(@PathVariable("clusterId") String clusterId,
@@ -266,11 +266,11 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "table", value = "表名称", paramType = "path", dataTypeClass = String.class),
     })
     @GetMapping("/databases/{database}/tables/{table}/foreignKeys")
-    public BaseResult<List<IndexDto>> listTableForeignKeys(@PathVariable("clusterId") String clusterId,
-                                                       @PathVariable("namespace") String namespace,
-                                                       @PathVariable("middlewareName") String middlewareName,
-                                                       @PathVariable("database") String database,
-                                                       @PathVariable("table") String table) {
+    public BaseResult<List<ForeignKeyDto>> listTableForeignKeys(@PathVariable("clusterId") String clusterId,
+                                                                @PathVariable("namespace") String namespace,
+                                                                @PathVariable("middlewareName") String middlewareName,
+                                                                @PathVariable("database") String database,
+                                                                @PathVariable("table") String table) {
         return BaseResult.ok(mysqlDashboardService.listTableForeignKeys(clusterId, namespace, middlewareName, database, table));
     }
 
@@ -281,7 +281,7 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "table", value = "表名称", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "indexDtoList", value = "外键信息列表", paramType = "query", dataTypeClass = List.class),
+            @ApiImplicitParam(name = "foreignKeyDtos", value = "外键信息列表", paramType = "query", dataTypeClass = List.class),
     })
     @PutMapping("/databases/{database}/tables/{table}/foreignKeys")
     public BaseResult saveTableIndex(@PathVariable("clusterId") String clusterId,
@@ -417,7 +417,7 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "database", value = "数据库名", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "grantOptionDto", value = "授权信息", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "grantOptionDto", value = "授权信息", paramType = "query", dataTypeClass = GrantOptionDto.class),
     })
     @PutMapping("/databases/{database}/privilege")
     public BaseResult grantDatabasePrivilege(@PathVariable("clusterId") String clusterId,
@@ -436,7 +436,7 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "middlewareName", value = "名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "database", value = "数据库名", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "table", value = "表名", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "grantOptionDto", value = "授权信息", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "grantOptionDto", value = "授权信息", paramType = "query", dataTypeClass = GrantOptionDto.class),
     })
     @PutMapping("/databases/{database}/tables/{table}/privilege")
     public BaseResult grantTablePrivilege(@PathVariable("clusterId") String clusterId,
@@ -455,7 +455,7 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "username", value = "用户名", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "grantOptionDtos", value = "授权信息", paramType = "query", dataTypeClass = List.class),
+            @ApiImplicitParam(name = "grantOptionDtos", value = "授权信息", paramType = "query", dataTypeClass = GrantOptionDto.class),
     })
     @DeleteMapping("/users/{username}/privilege")
     public BaseResult revokePrivilege(@PathVariable("clusterId") String clusterId,
