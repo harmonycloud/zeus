@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.operator.impl;
 import static com.harmonycloud.caas.common.constants.NameConstant.CLUSTER;
 import static com.harmonycloud.caas.common.constants.NameConstant.MODE;
 import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ARGS;
 
 import com.alibaba.fastjson.JSONArray;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
@@ -110,6 +111,10 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
             RocketMQParam rocketMQParam = middleware.getRocketMQParam();
             if (rocketMQParam == null){
                 rocketMQParam = new RocketMQParam();
+            }
+            JSONObject args = values.getJSONObject(ARGS);
+            if (args != null) {
+                rocketMQParam.setAutoCreateTopicEnable(args.getBoolean("autoCreateTopicEnable"));
             }
             rocketMQParam.setReplicas(clusterInfo.getInteger("membersPerGroup"));
             rocketMQParam.setGroup(clusterInfo.getInteger("groupReplica"));
