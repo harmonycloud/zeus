@@ -88,15 +88,9 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
 
     @Override
     public void update(IngressComponentDto ingressComponentDto) {
-        QueryWrapper<BeanIngressComponents> wrapper = new QueryWrapper<BeanIngressComponents>().eq("id", ingressComponentDto.getId());
-        BeanIngressComponents beanIngressComponents = beanIngressComponentsMapper.selectOne(wrapper);
-        // 校验存在
-        if (beanIngressComponents == null) {
-            throw new BusinessException(ErrorMessage.INGRESS_CLASS_NOT_EXISTED);
-        }
-        // 更新数据库
-        BeanUtils.copyProperties(ingressComponentDto, beanIngressComponents);
-        beanIngressComponentsMapper.updateById(beanIngressComponents);
+        BaseIngressService service =
+                getOperator(BaseIngressService.class, BaseIngressService.class, ingressComponentDto.getType());
+        service.update(ingressComponentDto);
     }
 
     @Override
