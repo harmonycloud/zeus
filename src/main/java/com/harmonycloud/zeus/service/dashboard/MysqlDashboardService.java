@@ -1,7 +1,11 @@
 package com.harmonycloud.zeus.service.dashboard;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.model.dashboard.mysql.*;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
@@ -65,6 +69,11 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
      * 获取表详情
      */
     TableDto showTableDetail(String clusterId,String namespace, String middlewareName,String database,String table);
+
+    /**
+     * 获取表数据
+     */
+    JSONArray showTableData(String clusterId, String namespace, String middlewareName, String database, String table, QueryInfo queryInfo);
 
     /**
      * 查询指定数据表所有列
@@ -167,5 +176,19 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
      * 判断用户是否存在，存在则返回true
      */
     boolean checkUserExists(String namespace, String middlewareName, String username);
+
+    /**
+     * 导出建表sql
+     */
+    String exportTableSql(String clusterId, String namespace, String middlewareName, String database, String table,
+                          HttpServletRequest request, HttpServletResponse response);
+
+    /**
+     * 导出表结构Excel
+     */
+    String exportTableExcel(String clusterId, String namespace, String middlewareName, String database, String table,
+                          HttpServletRequest request, HttpServletResponse response);
+
+
 
 }

@@ -1,6 +1,8 @@
 package com.harmonycloud.zeus.controller.dashboard;
 
+import com.alibaba.fastjson.JSONArray;
 import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.model.dashboard.ExecuteSqlDto;
 import com.harmonycloud.caas.common.model.dashboard.mysql.*;
 import com.harmonycloud.zeus.service.dashboard.MysqlDashboardService;
 import io.swagger.annotations.Api;
@@ -11,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
@@ -163,6 +167,25 @@ public class MysqlDashboardController {
                                       @PathVariable("table") String table) {
         mysqlDashboardService.showTableDetail(clusterId, namespace, middlewareName, database, table);
         return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "获取table数据", notes = "获取table数据")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "table", value = "表名", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "queryInfo", value = "查询信息", paramType = "query", dataTypeClass = QueryInfo.class),
+    })
+    @PostMapping("/databases/{database}/tables/{table}/data")
+    public BaseResult<JSONArray> showTableData(@PathVariable("clusterId") String clusterId,
+                                               @PathVariable("namespace") String namespace,
+                                               @PathVariable("middlewareName") String middlewareName,
+                                               @PathVariable("database") String database,
+                                               @PathVariable("table") String table,
+                                               @RequestBody QueryInfo queryInfo) {
+        return BaseResult.ok(mysqlDashboardService.showTableData(clusterId, namespace, middlewareName, database, table, queryInfo));
     }
 
     @ApiOperation(value = "创建table", notes = "创建table")
@@ -482,6 +505,62 @@ public class MysqlDashboardController {
         return BaseResult.ok(mysqlDashboardService.listUserAuthority(clusterId, namespace, middlewareName, username));
     }
 
+    @ApiOperation(value = "导出表sql", notes = "导出表sql")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "table", value = "表名称", paramType = "path", dataTypeClass = String.class),
+    })
+    @GetMapping("/databases/{database}/tables/{table}/script")
+    public BaseResult<String> exportTableSql(@PathVariable("clusterId") String clusterId,
+                                               @PathVariable("namespace") String namespace,
+                                               @PathVariable("middlewareName") String middlewareName,
+                                               @PathVariable("database") String database,
+                                               @PathVariable("table") String table,
+                                               HttpServletRequest request,
+                                               HttpServletResponse response) {
+        mysqlDashboardService.exportTableSql(clusterId, namespace, middlewareName, database, table, request, response);
+        return BaseResult.ok();
+    }
 
+    @ApiOperation(value = "导出表结构Excel", notes = "导出表结构Excel")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "table", value = "表名称", paramType = "path", dataTypeClass = String.class),
+    })
+    @GetMapping("/databases/{database}/tables/{table}/excel")
+    public BaseResult<String> exportTableExcel(@PathVariable("clusterId") String clusterId,
+                                               @PathVariable("namespace") String namespace,
+                                               @PathVariable("middlewareName") String middlewareName,
+                                               @PathVariable("database") String database,
+                                               @PathVariable("table") String table,
+                                               HttpServletRequest request,
+                                               HttpServletResponse response) {
+        mysqlDashboardService.exportTableExcel(clusterId, namespace, middlewareName, database, table, request, response);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "执行sql", notes = "执行sql")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "sql", value = "sql语句", paramType = "query", dataTypeClass = String.class),
+    })
+    @PostMapping("/databases/{database}/query")
+    public BaseResult<ExecuteSqlDto> execQuery(@PathVariable("clusterId") String clusterId,
+                                               @PathVariable("namespace") String namespace,
+                                               @PathVariable("middlewareName") String middlewareName,
+                                               @PathVariable("database") String database,
+                                               @RequestParam("sql") String sql) {
+
+        return BaseResult.ok();
+    }
 
 }

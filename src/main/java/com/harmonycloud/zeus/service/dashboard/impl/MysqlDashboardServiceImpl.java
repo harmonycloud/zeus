@@ -16,9 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -166,6 +167,13 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         tableDto.setIndices(listTableIndices(clusterId, namespace, middlewareName, database, table));
         tableDto.setForeignKeys(listTableForeignKeys(clusterId, namespace, middlewareName, database, table));
         return tableDto;
+    }
+
+    @Override
+    public JSONArray showTableData(String clusterId, String namespace, String middlewareName, String database, String table,QueryInfo queryInfo) {
+        // todo 查询出的数据应该按数据表列的顺序排序
+        JSONArray dataAry = mysqlClient.showTableData(getPath(middlewareName, namespace), port, database, table, queryInfo).getJSONArray("dataAry");
+        return dataAry;
     }
 
     @Override
@@ -427,6 +435,16 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
             grantOptionDto.setPrivilegeType(1);
             return grantOptionDto;
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    public String exportTableSql(String clusterId, String namespace, String middlewareName, String database, String table, HttpServletRequest request, HttpServletResponse response) {
+        return null;
+    }
+
+    @Override
+    public String exportTableExcel(String clusterId, String namespace, String middlewareName, String database, String table, HttpServletRequest request, HttpServletResponse response) {
+        return null;
     }
 
     @Override

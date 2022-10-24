@@ -94,6 +94,16 @@ public interface MysqlClient {
                                 @Var("database") String database,
                                 @Var("table") String table);
 
+    /**
+     * 查询表数据
+     */
+    @Post(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/data")
+    JSONObject showTableData(@Var("host") String host,
+                             @Var("port") String port,
+                             @Var("database") String database,
+                             @Var("table") String table,
+                             @JSONBody QueryInfo queryInfo);
+
     // column
     /**
      * 查询指定数据表所有列
