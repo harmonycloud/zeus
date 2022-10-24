@@ -193,7 +193,7 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
     void dropTable(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName, String tableName);
 
     /**
-     * 查询表数据
+     * 查询表行数
      *
      * @param clusterId 集群id
      * @param namespace 分区
@@ -202,7 +202,8 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
      * @param schemaName 模式名称
      * @param tableName 表名称
      */
-    Integer getTableDataCount(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName, String tableName);
+    Integer getTableDataCount(String clusterId, String namespace, String middlewareName, String databaseName,
+                              String schemaName, String tableName);
 
     /**
      * 查询表数据
@@ -219,6 +220,19 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
      */
     JSONObject getTableData(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName,
                       String tableName, Integer current, Integer size, Map<String, String> orderMap);
+
+    /**
+     * 查询建表语句
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param databaseName 数据库名称
+     * @param schemaName 模式名称
+     * @param tableName 表名称
+     */
+    String getTableCreateSql(String clusterId, String namespace, String middlewareName, String databaseName,
+                              String schemaName, String tableName);
 
     /**
      * 获取table列表

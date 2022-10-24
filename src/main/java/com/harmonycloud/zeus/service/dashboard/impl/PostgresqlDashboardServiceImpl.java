@@ -483,7 +483,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
                 tableDto.getDescription());
         }
         // fillFactory
-        if (StringUtils.isEmpty(tableDto.getFillFactor())){
+        if (StringUtils.isEmpty(tableDto.getFillFactor())) {
             tableDto.setFillFactor("100");
         }
         // Tablespace
@@ -566,6 +566,33 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         setPort(clusterId, namespace, middlewareName);
         return postgresqlClient.getTableData(path, port, databaseName, schemaName, tableName, size, offset,
             sb.toString());
+    }
+
+    @Override
+    public String getTableCreateSql(String clusterId, String namespace, String middlewareName, String databaseName,
+        String schemaName, String tableName) {
+        TableDto tableDto = this.getTable(clusterId, namespace, middlewareName, databaseName, schemaName, tableName);
+        StringBuilder sb = new StringBuilder();
+        sb.append("create table ").append(tableDto.getTableName()).append(" ( ");
+        for (ColumnDto columnDto : tableDto.getColumnDtoList()){
+            sb.append(columnDto.getColumn()).append(" ").append(columnDto.getDateType());
+            if (!"0".equals(columnDto.getSize())){
+                sb.append("(").append(columnDto.getSize()).append(")");
+            }
+            if (columnDto.getArray()){
+                sb.append("[] ");
+            }
+            if (!columnDto.getNullable()){
+                sb.append("not null ");
+            }
+            if (StringUtils.isNotEmpty(columnDto.getDefaultValue())){
+                sb.append("default ").append(columnDto.getDefaultValue());
+            }
+            sb.append(",");
+        }
+        sb.deleteCharAt(sb.length() - 1);
+        sb.append(";");
+        return sb.toString();
     }
 
     @Override
@@ -1162,7 +1189,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
 
     public String getPath(String middlewareName, String namespace) {
         return middlewareName + "." + namespace;
-        //return middlewareName;
+        // return middlewareName;
     }
 
 }
