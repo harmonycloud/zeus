@@ -3,6 +3,8 @@ package com.harmonycloud.zeus.service.dashboard;
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.model.dashboard.*;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 
@@ -222,7 +224,7 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
                       String tableName, Integer current, Integer size, Map<String, String> orderMap);
 
     /**
-     * 查询建表语句
+     * 查询建表语句文件
      *
      * @param clusterId 集群id
      * @param namespace 分区
@@ -231,8 +233,21 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
      * @param schemaName 模式名称
      * @param tableName 表名称
      */
-    String getTableCreateSql(String clusterId, String namespace, String middlewareName, String databaseName,
-                              String schemaName, String tableName);
+    void getTableCreateSql(String clusterId, String namespace, String middlewareName, String databaseName,
+                           String schemaName, String tableName, HttpServletRequest request, HttpServletResponse response);
+
+    /**
+     * 获取表结构文件
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param databaseName 数据库名称
+     * @param schemaName 模式名称
+     * @param tableName 表名称
+     */
+    void getTableExcel(String clusterId, String namespace, String middlewareName, String databaseName,
+                       String schemaName, String tableName, HttpServletRequest request, HttpServletResponse response);
 
     /**
      * 获取table列表

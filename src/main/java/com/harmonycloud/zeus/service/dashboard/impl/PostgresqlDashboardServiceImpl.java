@@ -1,11 +1,13 @@
 package com.harmonycloud.zeus.service.dashboard.impl;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.zeus.util.FileDownloadUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +31,9 @@ import com.harmonycloud.zeus.service.k8s.ServiceService;
 import com.harmonycloud.zeus.util.PostgresqlAuthorityUtil;
 
 import lombok.extern.slf4j.Slf4j;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author xutianhong
@@ -569,12 +574,13 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     @Override
-    public String getTableCreateSql(String clusterId, String namespace, String middlewareName, String databaseName,
-        String schemaName, String tableName) {
+    public void getTableCreateSql(String clusterId, String namespace, String middlewareName, String databaseName,
+        String schemaName, String tableName, HttpServletRequest request, HttpServletResponse response) {
         TableDto tableDto = this.getTable(clusterId, namespace, middlewareName, databaseName, schemaName, tableName);
         StringBuilder sb = new StringBuilder();
         sb.append("create table ").append(tableDto.getTableName()).append(" ( ");
-        for (ColumnDto columnDto : tableDto.getColumnDtoList()){
+        for (int i = 0; i < tableDto.getColumnDtoList().size(); ++i){
+            ColumnDto columnDto = tableDto.getColumnDtoList().get(i);
             sb.append(columnDto.getColumn()).append(" ").append(columnDto.getDateType());
             if (!"0".equals(columnDto.getSize())){
                 sb.append("(").append(columnDto.getSize()).append(")");
@@ -588,11 +594,21 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             if (StringUtils.isNotEmpty(columnDto.getDefaultValue())){
                 sb.append("default ").append(columnDto.getDefaultValue());
             }
-            sb.append(",");
+            if (i == tableDto.getColumnDtoList().size() - 1){
+                sb.append("\n");
+            } else {
+                sb.append(",").append("\n");
+            }
         }
-        sb.deleteCharAt(sb.length() - 1);
-        sb.append(";");
-        return sb.toString();
+        sb.append(");");
+        String fileRealName = tableName + ".sql";
+        byte[] sqlBytes = sb.toString().getBytes(StandardCharsets.UTF_8);
+        FileDownloadUtil.downloadFile(request, response, fileRealName, sqlBytes);
+    }
+
+    @Override
+    public void getTableExcel(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName, String tableName, HttpServletRequest request, HttpServletResponse response) {
+
     }
 
     @Override

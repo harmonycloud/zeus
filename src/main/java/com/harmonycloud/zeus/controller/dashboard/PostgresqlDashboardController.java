@@ -15,6 +15,9 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * @author xutianhong
  * @Date 2022/10/10 3:29 下午
@@ -405,13 +408,38 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
     })
     @GetMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/sql")
-    public BaseResult<List<ColumnDto>> getTableCreateSql(@PathVariable("clusterId") String clusterId,
+    public BaseResult getTableCreateSql(@PathVariable("clusterId") String clusterId,
                                                          @PathVariable("namespace") String namespace,
                                                          @PathVariable("name") String name,
                                                          @PathVariable("databaseName") String databaseName,
                                                          @PathVariable("schemaName") String schemaName,
-                                                         @PathVariable("tableName") String tableName) {
-        return BaseResult.ok(postgresqlDashboardService.getTableCreateSql(clusterId, namespace, name, databaseName, schemaName, tableName));
+                                                         @PathVariable("tableName") String tableName,
+                                                         HttpServletRequest request,
+                                                         HttpServletResponse response) {
+        postgresqlDashboardService.getTableCreateSql(clusterId, namespace, name, databaseName, schemaName, tableName, request, response);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "获取table excel", notes = "获取table excel")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
+    })
+    @GetMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/excel")
+    public BaseResult getTableExcel(@PathVariable("clusterId") String clusterId,
+                                    @PathVariable("namespace") String namespace,
+                                    @PathVariable("name") String name,
+                                    @PathVariable("databaseName") String databaseName,
+                                    @PathVariable("schemaName") String schemaName,
+                                    @PathVariable("tableName") String tableName,
+                                    HttpServletRequest request,
+                                    HttpServletResponse response) {
+        postgresqlDashboardService.getTableCreateSql(clusterId, namespace, name, databaseName, schemaName, tableName, request, response);
+        return BaseResult.ok();
     }
 
     // 约束增删
