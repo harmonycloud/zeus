@@ -180,7 +180,7 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
     /**
      * 导出建表sql
      */
-    String exportTableSql(String clusterId, String namespace, String middlewareName, String database, String table,
+    void exportTableSql(String clusterId, String namespace, String middlewareName, String database, String table,
                           HttpServletRequest request, HttpServletResponse response);
 
     /**

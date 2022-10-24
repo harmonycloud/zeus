@@ -513,7 +513,7 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "table", value = "表名称", paramType = "path", dataTypeClass = String.class),
     })
-    @GetMapping("/databases/{database}/tables/{table}/script")
+    @GetMapping("/databases/{database}/tables/{table}/scriptFile")
     public BaseResult<String> exportTableSql(@PathVariable("clusterId") String clusterId,
                                                @PathVariable("namespace") String namespace,
                                                @PathVariable("middlewareName") String middlewareName,
@@ -533,7 +533,7 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "table", value = "表名称", paramType = "path", dataTypeClass = String.class),
     })
-    @GetMapping("/databases/{database}/tables/{table}/excel")
+    @GetMapping("/databases/{database}/tables/{table}/excelFile")
     public BaseResult<String> exportTableExcel(@PathVariable("clusterId") String clusterId,
                                                @PathVariable("namespace") String namespace,
                                                @PathVariable("middlewareName") String middlewareName,
