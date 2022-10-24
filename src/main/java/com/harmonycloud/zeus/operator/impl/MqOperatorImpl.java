@@ -31,11 +31,13 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
 
     @Autowired
     private PodService podService;
-    
+
     @Override
     public void replaceValues(Middleware middleware, MiddlewareClusterDTO cluster, JSONObject values) {
         // 替换通用的值
         replaceCommonValues(middleware, cluster, values);
+        //修改arg的值
+        replaceArgs(middleware,values);
         // 把通用里设置的mode去掉，mq不用在第一级设置mode
         values.remove(MODE);
         MiddlewareQuota mqQuota = middleware.getQuota().get(middleware.getType());
@@ -84,6 +86,11 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
             javaOpts.put("xmx", mem);
         }
     }
+
+    protected void replaceArgs(Middleware middleware, JSONObject values){
+        JSONObject args = values.getJSONObject("args");
+        args.put("autoCreateTopicEnable",middleware.getRocketMQParam().getAutoCreateTopicEnable());
+    };
 
     @Override
     public Middleware convertByHelmChart(Middleware middleware, MiddlewareClusterDTO cluster) {
