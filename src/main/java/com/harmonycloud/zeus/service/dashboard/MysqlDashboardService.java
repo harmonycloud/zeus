@@ -186,7 +186,7 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
     /**
      * 导出表结构Excel
      */
-    String exportTableExcel(String clusterId, String namespace, String middlewareName, String database, String table,
+    void exportTableExcel(String clusterId, String namespace, String middlewareName, String database, String table,
                           HttpServletRequest request, HttpServletResponse response);
 
 

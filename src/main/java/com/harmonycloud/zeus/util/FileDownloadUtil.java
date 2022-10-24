@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URLEncoder;
@@ -48,5 +49,16 @@ public class FileDownloadUtil {
         }
     }
 
+    public static void downloadFile(HttpServletRequest request, HttpServletResponse response, String fileRealName, String filePath) {
+        try {
+            FileInputStream inputStream = new FileInputStream(filePath);
+            int available = inputStream.available();
+            byte[] bytes = new byte[available];
+            inputStream.read(bytes);
+            downloadFile(request, response, fileRealName, bytes);
+        } catch (IOException e) {
+            log.error("下载文件失败", e);
+        }
+    }
 
 }

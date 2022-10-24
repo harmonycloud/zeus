@@ -10,6 +10,7 @@ import com.harmonycloud.caas.common.model.dashboard.mysql.*;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.integration.dashboard.MysqlClient;
 import com.harmonycloud.zeus.service.dashboard.MysqlDashboardService;
+import com.harmonycloud.zeus.util.ExcelUtil;
 import com.harmonycloud.zeus.util.FileDownloadUtil;
 import com.harmonycloud.zeus.util.MysqlUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,8 @@ import org.springframework.util.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +43,9 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     
     @Value("${system.middleware-api.mysql.port:3306}")
     private String port;
+
+    @Value("${system.middleware-api.mysql.excelPath:/usr/local/zeus-pv/excel/}")
+    private String path;
 
     @Override
     public String login(String clusterId, String namespace, String middlewareName, String username, String password) {
@@ -459,9 +465,16 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public String exportTableExcel(String clusterId, String namespace, String middlewareName, String database, String table, HttpServletRequest request, HttpServletResponse response) {
-
-        return null;
+    public void exportTableExcel(String clusterId, String namespace, String middlewareName, String database, String table, HttpServletRequest request, HttpServletResponse response) {
+        try {
+            List<ColumnDto> columnDtos = listTableColumns(clusterId, namespace, middlewareName, database, table);
+            String excelFilePath = ExcelUtil.createTableExcel(path, table, columnDtos);
+            String fileRealName = table + ".xlsx";
+            FileDownloadUtil.downloadFile(request, response, fileRealName, excelFilePath);
+        } catch (Exception e) {
+            log.error("导出表结构Excel文件失败", e);
+            throw new BusinessException(ErrorMessage.FAILED_TO_EXPORT_TABLE_EXCEL);
+        }
     }
 
     @Override
