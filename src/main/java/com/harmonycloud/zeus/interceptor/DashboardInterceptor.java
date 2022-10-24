@@ -26,8 +26,10 @@ public class DashboardInterceptor implements Interceptor<JSONObject> {
             data.put("success", false);
             data.put("message", err.getString("Message"));
         }
-        JSONArray dataAry = convertResult(data);
-        data.put("dataAry", dataAry);
+        if ("GET".equalsIgnoreCase(req.getType().getName())) {
+            JSONArray dataAry = convertResult(data);
+            data.put("dataAry", dataAry);
+        }
     }
 
     @Override
