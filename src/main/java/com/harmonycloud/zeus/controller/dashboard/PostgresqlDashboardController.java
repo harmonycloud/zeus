@@ -713,5 +713,27 @@ public class PostgresqlDashboardController {
         return BaseResult.ok(postgresqlDashboardService.listEncoding());
     }
 
+    @ApiOperation(value = "查询数据类型", notes = "查询数据类型")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+    })
+    @GetMapping("/dataType")
+    public BaseResult<List<String>> listDataType() {
+        return BaseResult.ok(postgresqlDashboardService.listEncoding());
+    }
+
+    @ApiOperation(value = "查询校验规则", notes = "查询校验规则")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+    })
+    @GetMapping("/collate")
+    public BaseResult<List<String>> listCollate() {
+        return BaseResult.ok(postgresqlDashboardService.listEncoding());
+    }
+
 
 }

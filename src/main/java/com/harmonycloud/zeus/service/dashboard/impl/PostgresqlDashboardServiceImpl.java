@@ -7,6 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.enums.middleware.PostgresqlDataTypeEnum;
 import com.harmonycloud.caas.common.model.dashboard.mysql.QueryInfo;
 import com.harmonycloud.zeus.util.ExcelUtil;
 import com.harmonycloud.zeus.util.FileDownloadUtil;
@@ -416,6 +417,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             tableInheritList.add(tableInherit);
         });
         tableDto.setTableInheritList(tableInheritList);
+        // 获取列信息
+        tableDto.setColumnDtoList(this.listColumns(clusterId, namespace, middlewareName, databaseName, schemaName, tableName));
         return tableDto;
     }
 
@@ -1062,6 +1065,17 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         return Arrays.stream(EncodingEnum.values()).map(EncodingEnum::getName).collect(Collectors.toList());
     }
 
+    @Override
+    public List<String> listDataType() {
+        return Arrays.stream(PostgresqlDataTypeEnum.values()).map(PostgresqlDataTypeEnum::getName)
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<String> listCollate() {
+        return null;
+    }
+
     public void updateColumn(String clusterId, String namespace, String middlewareName, String databaseName,
         String schemaName, String tableName, List<ColumnDto> newColumnList) {
         String path = getPath(middlewareName, namespace);
@@ -1140,21 +1154,28 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
 
     public List<Map<String, String>> convertColumn(JSONObject jsonObject) {
         dealWithErr(jsonObject, true);
+
         JSONArray data = jsonObject.getJSONArray("data");
-        if (data == null) {
-            return new ArrayList<>();
-        }
         JSONArray column = jsonObject.getJSONArray("column");
 
         List<Map<String, String>> res = new ArrayList<>();
         List<String> columnList = column.toJavaList(String.class);
-        for (int i = 0; i < data.size(); ++i) {
-            List<String> dataList = data.getJSONArray(i).toJavaList(String.class);
+        if (data == null) {
+            // 处理data为空的情况
             Map<String, String> map = new HashMap<>();
-            for (int j = 0; j < dataList.size(); ++j) {
-                map.put(columnList.get(j), dataList.get(j));
+            for (String s : columnList) {
+                map.put(s, null);
             }
             res.add(map);
+        } else {
+            for (int i = 0; i < data.size(); ++i) {
+                List<String> dataList = data.getJSONArray(i).toJavaList(String.class);
+                Map<String, String> map = new HashMap<>();
+                for (int j = 0; j < dataList.size(); ++j) {
+                    map.put(columnList.get(j), dataList.get(j));
+                }
+                res.add(map);
+            }
         }
         return res;
     }
@@ -1236,8 +1257,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     public String getPath(String middlewareName, String namespace) {
-        return middlewareName + "." + namespace;
-        //return middlewareName;
+        // return middlewareName + "." + namespace;
+        return middlewareName;
     }
 
 }

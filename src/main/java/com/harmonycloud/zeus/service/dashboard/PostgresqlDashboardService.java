@@ -379,4 +379,16 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
      */
     List<String> listEncoding();
 
+    /**
+     * 查询encoding
+     *
+     */
+    List<String> listDataType();
+
+    /**
+     * 查询encoding
+     *
+     */
+    List<String> listCollate();
+
 }
