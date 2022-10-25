@@ -180,7 +180,7 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
     /**
      * 导出建表sql
      */
-    void exportTableSql(String clusterId, String namespace, String middlewareName, String database, String table,
+    byte[] exportTableSql(String clusterId, String namespace, String middlewareName, String database, String table,
                           HttpServletRequest request, HttpServletResponse response);
 
     /**
@@ -189,6 +189,16 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
     void exportTableExcel(String clusterId, String namespace, String middlewareName, String database, String table,
                           HttpServletRequest request, HttpServletResponse response);
 
+    /**
+     * 导出数据库所有表sql
+     */
+    void exportDatabaseSql(String clusterId, String namespace, String middlewareName, String database,
+                           HttpServletRequest request, HttpServletResponse response);
 
+    /**
+     * 导出数据库所有表结构Excel
+     */
+    void exportDatabaseExcel(String clusterId, String namespace, String middlewareName, String database,
+                          HttpServletRequest request, HttpServletResponse response);
 
 }

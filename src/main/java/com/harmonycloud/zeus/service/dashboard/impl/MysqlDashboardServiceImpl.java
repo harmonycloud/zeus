@@ -25,8 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -447,7 +446,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public void exportTableSql(String clusterId, String namespace, String middlewareName, String database, String table, HttpServletRequest request, HttpServletResponse response) {
+    public byte[] exportTableSql(String clusterId, String namespace, String middlewareName, String database, String table, HttpServletRequest request, HttpServletResponse response) {
         try {
             JSONArray dataAry = mysqlClient.showTableScript(getPath(middlewareName, namespace), port, database, table).getJSONArray("dataAry");
             if (CollectionUtils.isEmpty(dataAry)) {
@@ -458,7 +457,8 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
             String fileRealName = table + ".sql";
             byte[] sqlBytes = sql.getBytes(StandardCharsets.UTF_8);
-            FileDownloadUtil.downloadFile(request, response, fileRealName, sqlBytes);
+            return sqlBytes;
+//            FileDownloadUtil.downloadFile(request, response, fileRealName, sqlBytes);
         } catch (Exception e) {
             throw new BusinessException(ErrorMessage.FAILED_TO_EXPORT_TABLE_SQL);
         }
@@ -474,6 +474,46 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         } catch (Exception e) {
             log.error("导出表结构Excel文件失败", e);
             throw new BusinessException(ErrorMessage.FAILED_TO_EXPORT_TABLE_EXCEL);
+        }
+    }
+
+    @Override
+    public void exportDatabaseSql(String clusterId, String namespace, String middlewareName, String database, HttpServletRequest request, HttpServletResponse response) {
+        List<TableDto> tableDtoList = listTables(clusterId, namespace, middlewareName, database);
+        try {
+            StringBuilder dbSqlBuf = new StringBuilder();
+            for (TableDto tableDto : tableDtoList) {
+                JSONArray dataAry = mysqlClient.showTableScript(getPath(middlewareName, namespace), port, database, tableDto.getTableName()).getJSONArray("dataAry");
+                if (CollectionUtils.isEmpty(dataAry)) {
+                    throw new BusinessException(ErrorMessage.FAILED_TO_EXPORT_TABLE_SQL);
+                }
+                JSONObject obj = dataAry.getJSONObject(0);
+                dbSqlBuf.append(obj.getString("Create Table"));
+                dbSqlBuf.append(";");
+                dbSqlBuf.append("\n\n");
+            }
+            String fileRealName = database + ".sql";
+            byte[] sqlBytes = dbSqlBuf.toString().getBytes(StandardCharsets.UTF_8);
+            FileDownloadUtil.downloadFile(request, response, fileRealName, sqlBytes);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorMessage.FAILED_TO_EXPORT_TABLE_SQL);
+        }
+    }
+
+    @Override
+    public void exportDatabaseExcel(String clusterId, String namespace, String middlewareName, String database, HttpServletRequest request, HttpServletResponse response) {
+        List<TableDto> tableDtoList = listTables(clusterId, namespace, middlewareName, database);
+        try {
+            Map<String,List<ColumnDto>> tableMap = new LinkedHashMap<>();
+            for (TableDto tableDto : tableDtoList) {
+                List<ColumnDto> columnDtos = listTableColumns(clusterId, namespace, middlewareName, database, tableDto.getTableName());
+                tableMap.put(tableDto.getTableName(), columnDtos);
+            }
+            String excelFilePath = ExcelUtil.createDatabaseExcel(path, database, tableMap);
+            String fileRealName = database + ".xlsx";
+            FileDownloadUtil.downloadFile(request, response, fileRealName, excelFilePath);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorMessage.FAILED_TO_EXPORT_TABLE_SQL);
         }
     }
 
