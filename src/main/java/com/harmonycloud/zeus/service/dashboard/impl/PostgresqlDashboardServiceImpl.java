@@ -1236,8 +1236,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     public String getPath(String middlewareName, String namespace) {
-        // return middlewareName + "." + namespace;
-        return middlewareName;
+        return middlewareName + "." + namespace;
+        //return middlewareName;
     }
 
 }
