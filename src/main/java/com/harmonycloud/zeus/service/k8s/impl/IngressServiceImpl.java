@@ -748,7 +748,11 @@ public class IngressServiceImpl implements IngressService {
     public List<PodInfo> listIngressPod(String clusterId, String namespace, String ingressClassName) {
         Map<String, String> labels = new HashMap<>();
         labels.put("app.kubernetes.io/instance", ingressClassName);
-        return podService.list(clusterId, namespace, labels);
+        List<PodInfo> podInfoList = podService.list(clusterId, namespace, labels);
+        if (CollectionUtils.isEmpty(podInfoList)) {
+            podInfoList = getIngressPodSet(clusterId, namespace, ingressClassName);
+        }
+        return podInfoList;
     }
 
     /**
@@ -760,11 +764,24 @@ public class IngressServiceImpl implements IngressService {
      * @return
      */
     public String getIngressNodeIp(String clusterId, String namespace, String ingressClassName) {
-        List<PodInfo> podInfos = podService.list(clusterId, namespace, ingressClassName);
-        if (!CollectionUtils.isEmpty(podInfos)) {
-            return podInfos.get(0).getHostIp();
+        List<PodInfo> podInfoList = listIngressPod(clusterId, namespace, ingressClassName);
+        if (!CollectionUtils.isEmpty(podInfoList)) {
+            return podInfoList.get(0).getHostIp();
         }
         return "";
+    }
+
+    /**
+     * 根据ingressclassname查找ingress pod
+     * 当接入ingress时，如果ingress不是helm安装的，
+     * 则需要通过pod名称来查询ingress pod
+     * @param clusterId
+     * @param namespace
+     * @param ingressClassName
+     * @return
+     */
+    public List<PodInfo> getIngressPodSet(String clusterId, String namespace, String ingressClassName) {
+        return podService.list(clusterId, namespace, ingressClassName);
     }
 
     /**
