@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.controller.dashboard;
 import java.util.List;
 import java.util.Map;
 
+import com.harmonycloud.caas.common.model.dashboard.mysql.QueryInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -384,18 +385,15 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "size", value = "页大小", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "orderMap", value = "排序", paramType = "query", dataTypeClass = Map.class),
     })
-    @GetMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/data")
+    @PostMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/data")
     public BaseResult<List<ColumnDto>> getTableData(@PathVariable("clusterId") String clusterId,
                                                     @PathVariable("namespace") String namespace,
                                                     @PathVariable("name") String name,
                                                     @PathVariable("databaseName") String databaseName,
                                                     @PathVariable("schemaName") String schemaName,
                                                     @PathVariable("tableName") String tableName,
-                                                    @RequestParam(value = "current", required = false,defaultValue = "1") Integer current,
-                                                    @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
-                                                    @RequestParam(value = "orderMap",required = false) Map<String, String> orderMap) {
-        //todo map是否可行
-        return BaseResult.ok(postgresqlDashboardService.getTableData(clusterId, namespace, name, databaseName, schemaName, tableName, current, size, orderMap));
+                                                    @RequestBody QueryInfo queryInfo) {
+        return BaseResult.ok(postgresqlDashboardService.getTableData(clusterId, namespace, name, databaseName, schemaName, tableName, queryInfo));
     }
 
     @ApiOperation(value = "获取建表语句", notes = "获取建表语句")

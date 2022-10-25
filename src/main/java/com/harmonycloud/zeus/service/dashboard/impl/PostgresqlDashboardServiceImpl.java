@@ -7,6 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.model.dashboard.mysql.QueryInfo;
 import com.harmonycloud.zeus.util.ExcelUtil;
 import com.harmonycloud.zeus.util.FileDownloadUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -561,17 +562,27 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
 
     @Override
     public JSONObject getTableData(String clusterId, String namespace, String middlewareName, String databaseName,
-        String schemaName, String tableName, Integer current, Integer size, Map<String, String> orderMap) {
-        Integer offset = (current - 1) * size;
+        String schemaName, String tableName, QueryInfo queryInfo) {
+        Integer index = 1;
+        Integer pageSize = 10;
+        if (queryInfo.getIndex() != null) {
+            index = queryInfo.getIndex();
+        }
+        if (queryInfo.getPageSize() != null) {
+            pageSize = queryInfo.getPageSize();
+        }
+        Integer offset = (index - 1) * index;
         StringBuilder sb = new StringBuilder();
-        if (!CollectionUtils.isEmpty(orderMap)) {
-            sb.append("order by");
-            orderMap.forEach((k, v) -> sb.append(k).append(" ").append(v).append(","));
+        if (!CollectionUtils.isEmpty(queryInfo.getOrderDtoList())) {
+            sb.append("order+by+");
+            queryInfo.getOrderDtoList().forEach(
+                orderDto -> sb.append(orderDto.getColumn()).append("+").append(orderDto.getOrder()).append(","));
             sb.deleteCharAt(sb.length() - 1);
         }
         String path = getPath(middlewareName, namespace);
+        log.info(sb.toString());
         setPort(clusterId, namespace, middlewareName);
-        return postgresqlClient.getTableData(path, port, databaseName, schemaName, tableName, size, offset,
+        return postgresqlClient.getTableData(path, port, databaseName, schemaName, tableName, pageSize, offset,
             sb.toString());
     }
 
@@ -1225,8 +1236,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     public String getPath(String middlewareName, String namespace) {
-        //return middlewareName + "." + namespace;
-         return middlewareName;
+        // return middlewareName + "." + namespace;
+        return middlewareName;
     }
 
 }

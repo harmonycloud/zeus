@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.dashboard;
 
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.model.dashboard.*;
+import com.harmonycloud.caas.common.model.dashboard.mysql.QueryInfo;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -216,12 +217,10 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
      * @param databaseName 数据库名称
      * @param schemaName 模式名称
      * @param tableName 表名称
-     * @param current 当前页
-     * @param size 页大小
-     * @param orderMap 排序
+     * @param queryInfo 分页业务数据
      */
     JSONObject getTableData(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName,
-                      String tableName, Integer current, Integer size, Map<String, String> orderMap);
+                      String tableName, QueryInfo queryInfo);
 
     /**
      * 查询建表语句文件
