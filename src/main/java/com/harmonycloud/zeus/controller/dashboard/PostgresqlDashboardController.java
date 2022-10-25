@@ -391,9 +391,9 @@ public class PostgresqlDashboardController {
                                                     @PathVariable("databaseName") String databaseName,
                                                     @PathVariable("schemaName") String schemaName,
                                                     @PathVariable("tableName") String tableName,
-                                                    @RequestParam("current") Integer current,
-                                                    @RequestParam("size") Integer size,
-                                                    @RequestParam("orderMap") Map<String, String> orderMap) {
+                                                    @RequestParam(value = "current", required = false,defaultValue = "1") Integer current,
+                                                    @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
+                                                    @RequestParam(value = "orderMap",required = false) Map<String, String> orderMap) {
         //todo map是否可行
         return BaseResult.ok(postgresqlDashboardService.getTableData(clusterId, namespace, name, databaseName, schemaName, tableName, current, size, orderMap));
     }
@@ -407,15 +407,15 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
     })
-    @GetMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/sql")
+    @GetMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/sql/download")
     public BaseResult getTableCreateSql(@PathVariable("clusterId") String clusterId,
-                                                         @PathVariable("namespace") String namespace,
-                                                         @PathVariable("name") String name,
-                                                         @PathVariable("databaseName") String databaseName,
-                                                         @PathVariable("schemaName") String schemaName,
-                                                         @PathVariable("tableName") String tableName,
-                                                         HttpServletRequest request,
-                                                         HttpServletResponse response) {
+                                        @PathVariable("namespace") String namespace,
+                                        @PathVariable("name") String name,
+                                        @PathVariable("databaseName") String databaseName,
+                                        @PathVariable("schemaName") String schemaName,
+                                        @PathVariable("tableName") String tableName,
+                                        HttpServletRequest request,
+                                        HttpServletResponse response) {
         postgresqlDashboardService.getTableCreateSql(clusterId, namespace, name, databaseName, schemaName, tableName, request, response);
         return BaseResult.ok();
     }
@@ -429,7 +429,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
     })
-    @GetMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/excel")
+    @GetMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/excel/download")
     public BaseResult getTableExcel(@PathVariable("clusterId") String clusterId,
                                     @PathVariable("namespace") String namespace,
                                     @PathVariable("name") String name,
