@@ -45,7 +45,7 @@ public interface IngressService {
      * @param cluster
      * @return
      */
-    Set<Integer>  getUsedPortSet(MiddlewareClusterDTO cluster);
+    Set<Integer>  getUsedPortSet(MiddlewareClusterDTO cluster, Boolean filter);
 
     /**
      * 创建中间件对外访问

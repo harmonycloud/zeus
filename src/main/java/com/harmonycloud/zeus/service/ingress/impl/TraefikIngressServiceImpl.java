@@ -81,8 +81,8 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
         image.put("name", repository + "/traefik");
 
         JSONArray additionalArguments = values.getJSONArray("additionalArguments");
-        List<String> portList =
-            getPortList(cluster, ingressComponentDto.getTraefikPortList(), ingressComponentDto.getIngressClassName());
+        List<String> portList = getPortList(cluster, ingressComponentDto.getTraefikPortList(),
+            ingressComponentDto.getIngressClassName(), false);
         additionalArguments.addAll(portList);
         JSONArray portArray = new JSONArray();
         for (TraefikPort traefikPort : ingressComponentDto.getTraefikPortList()) {
@@ -180,14 +180,10 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
             JSONObject values =
                 helmChartService.getInstalledValues(ingressComponentDto.getName(), MIDDLEWARE_OPERATOR, cluster);
             JSONArray additionalArguments = new JSONArray();
-            values.put("additionalArguments", additionalArguments);
-            // 置空一次端口组
-            helmChartService.installComponents(ingressComponentDto.getName(), MIDDLEWARE_OPERATOR, path, values, values,
-                cluster);
 
             // 封装端口组
             List<String> portList = getPortList(cluster, ingressComponentDto.getTraefikPortList(),
-                ingressComponentDto.getIngressClassName());
+                ingressComponentDto.getIngressClassName(), true);
             additionalArguments.addAll(portList);
             values.put("additionalArguments", additionalArguments);
 
@@ -330,9 +326,9 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
     }
 
     private List<String> getPortList(MiddlewareClusterDTO cluster, List<TraefikPort> traefikPortList,
-        String ingressName) {
+        String ingressName, Boolean filter) {
         List<String> ports = new ArrayList<>();
-        Set<Integer> usedPortSet = ingressService.getUsedPortSet(cluster);
+        Set<Integer> usedPortSet = ingressService.getUsedPortSet(cluster, filter);
         for (TraefikPort traefikPort : traefikPortList) {
             for (int i = traefikPort.getStartPort(); i <= traefikPort.getEndPort(); ++i) {
                 if (!usedPortSet.contains(i)) {

@@ -232,7 +232,7 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
     @Override
     public String portCheck(String clusterId, Integer startPort, Integer endPort) {
         List<Integer> conflictPortList = new ArrayList<>();
-        Set<Integer> usedPortSet = ingressService.getUsedPortSet(clusterService.findById(clusterId));
+        Set<Integer> usedPortSet = ingressService.getUsedPortSet(clusterService.findById(clusterId), false);
         usedPortSet.forEach(usedPort -> {
             if (usedPort >= startPort && usedPort <= endPort){
                 conflictPortList.add(usedPort);

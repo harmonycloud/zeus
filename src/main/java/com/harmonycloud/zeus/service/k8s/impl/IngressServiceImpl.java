@@ -279,7 +279,7 @@ public class IngressServiceImpl implements IngressService {
     }
 
     @Override
-    public Set<Integer> getUsedPortSet(MiddlewareClusterDTO cluster) {
+    public Set<Integer> getUsedPortSet(MiddlewareClusterDTO cluster, Boolean filter) {
         Set<Integer> portSet = new HashSet<>();
         // 查询NodePort端口
         List<io.fabric8.kubernetes.api.model.Service> svcList = serviceWrapper.list(cluster.getId(), null);
@@ -309,19 +309,21 @@ public class IngressServiceImpl implements IngressService {
             });
         }
         // 查询traefik 端口
-        List<IngressComponentDto> traefikComponentDtoList = ingressComponentService.list(cluster.getId(), IngressEnum.TRAEFIK.getName());
-        for (IngressComponentDto ingress : traefikComponentDtoList) {
-            JSONObject installedValues = helmChartService.getInstalledValues(ingress.getIngressClassName(), ingress.getNamespace(), clusterService.findById(ingress.getClusterId()));
-            if (installedValues == null) {
-                continue;
-            }
-            JSONArray additionalArguments = installedValues.getJSONArray("additionalArguments");
-            additionalArguments.forEach(arg -> {
-                String[] strs = arg.toString().split(":");
-                if (strs.length == 2) {
-                    portSet.add(Integer.parseInt(strs[1]));
+        if (filter){
+            List<IngressComponentDto> traefikComponentDtoList = ingressComponentService.list(cluster.getId(), IngressEnum.TRAEFIK.getName());
+            for (IngressComponentDto ingress : traefikComponentDtoList) {
+                JSONObject installedValues = helmChartService.getInstalledValues(ingress.getIngressClassName(), ingress.getNamespace(), clusterService.findById(ingress.getClusterId()));
+                if (installedValues == null) {
+                    continue;
                 }
-            });
+                JSONArray additionalArguments = installedValues.getJSONArray("additionalArguments");
+                additionalArguments.forEach(arg -> {
+                    String[] strs = arg.toString().split(":");
+                    if (strs.length == 2) {
+                        portSet.add(Integer.parseInt(strs[1]));
+                    }
+                });
+            }
         }
         return portSet;
     }
