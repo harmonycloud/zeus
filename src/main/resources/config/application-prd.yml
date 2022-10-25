@@ -2,7 +2,7 @@ spring:
   datasource:
     username: root # change this
     password: root # change this
-    url: jdbc:mysql://zeus-mysql:20001/middleware?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC # change this
+    url: jdbc:mysql://127.0.0.1:3306/middleware_platform?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC # change this
     driver-class-name: com.mysql.cj.jdbc.Driver
   servlet:
     multipart:
@@ -55,19 +55,19 @@ system:
     expire: 8
   platform:
     #平台版本
-    version: v0.2.1
-    usercenter: zeus
-    skyview:
-      username: admin
-      password: Ab123456
-      host: caas-gateway-svc.caas-system
-      port: 8081
-      prefix:
-    registry:
-      address: 10.10.101.22
-      port: 8443
-      username: admin
-      password: Harbor12345
+    version: v1.2.1
+  usercenter: zeus
+  skyview:
+    username: admin
+    password: Ab123456
+    host: caas-gateway-svc.caas-system
+    port: 8081
+    prefix:
+  registry:
+    address: 10.10.101.22
+    port: 8443
+    username: admin
+    password: Harbor12345
 
   # 总览参数配置
   overview:
@@ -86,6 +86,8 @@ license:
 
 #ssl
 server:
+  http:
+    port: 8080
   ssl:
     key-alias: zeushttps
     key-store-password: Ab123456

@@ -1,6 +1,5 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.ZONE;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -18,6 +17,7 @@ import com.harmonycloud.zeus.service.k8s.*;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -47,6 +47,9 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
     
     private static final String taintType = "harm.cn/type";
     private static final String taintValue = "active-active";
+
+    @Value("${active-active.label.key:topology.kubernetes.io/zone}")
+    private String zoneKey;
 
     @Autowired
     private NodeWrapper nodeWrapper;
@@ -135,7 +138,7 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
             if (CollectionUtils.isEmpty(labels)) {
                 labels = new HashMap<>();
             }
-            labels.put(ZONE, activeAreaDto.getName());
+            labels.put(zoneKey, activeAreaDto.getName());
             node.getMetadata().setLabels(labels);
             // 更新节点
             nodeWrapper.update(node, clusterId);
@@ -167,8 +170,8 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
 
         // 移除labels
         Map<String, String> labels = node.getMetadata().getLabels();
-        if (!CollectionUtils.isEmpty(labels) && labels.containsKey(ZONE) && areaName.equals(labels.get(ZONE))) {
-            labels.remove(ZONE, areaName);
+        if (!CollectionUtils.isEmpty(labels) && labels.containsKey(zoneKey) && areaName.equals(labels.get(zoneKey))) {
+            labels.remove(zoneKey, areaName);
             node.getMetadata().setLabels(labels);
         }
         // 移除污点
@@ -202,7 +205,7 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
             activeAreaDto.setInit(map.get(activeAreaEnum.getName()).getInit());
             if (!activeAreaDto.getInit()) {
                 Map<String, String> labels = new HashMap<>();
-                labels.put(ZONE, activeAreaEnum.getName());
+                labels.put(zoneKey, activeAreaEnum.getName());
                 List<Node> nodes = nodeService.list(clusterId, labels);
                 if (!CollectionUtils.isEmpty(nodes)) {
                     beanActiveAreaMapper.updateById(map.get(activeAreaEnum.getName()).setInit(true));
@@ -234,7 +237,7 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
     @Override
     public ActiveAreaDto getAreaResource(String clusterId, String areaName) {
         Map<String, String> labels = new HashMap<>();
-        labels.put(ZONE, areaName);
+        labels.put(zoneKey, areaName);
         // 获取指定可用区节点
         List<Node> nodes = nodeService.list(clusterId, labels);
         // 计算可用节点数量
@@ -289,12 +292,13 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
     @Override
     public List<ClusterNodeResourceDto> getAreaNode(String clusterId, String areaName) {
         Map<String, String> labels = new HashMap<>();
-        labels.put(ZONE, areaName);
+        labels.put(zoneKey, areaName);
         // 获取指定可用区节点
         List<Node> nodes = nodeService.list(clusterId, labels);
         return nodeService.getNodeResource(clusterId, nodes, false);
     }
 
+    @Override
     public List<BeanActiveArea> initBeanActiveArea(String clusterId) {
         List<BeanActiveArea> beanActiveAreaList = new ArrayList<>();
         for (ActiveAreaEnum activeAreaEnum : ActiveAreaEnum.values()) {

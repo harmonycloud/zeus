@@ -13,14 +13,14 @@ import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.bean.BeanIngressComponents;
 import com.harmonycloud.zeus.dao.BeanIngressComponentsMapper;
+import com.harmonycloud.zeus.integration.cluster.ConfigMapWrapper;
+import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
 import com.harmonycloud.zeus.service.AbstractBaseService;
 import com.harmonycloud.zeus.service.ingress.BaseIngressService;
-import com.harmonycloud.zeus.service.k8s.ClusterService;
-import com.harmonycloud.zeus.service.k8s.IngressComponentService;
-import com.harmonycloud.zeus.service.k8s.IngressService;
-import com.harmonycloud.zeus.service.k8s.PodService;
+import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.MathUtil;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -54,6 +54,9 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
     @Autowired
     private IngressService ingressService;
 
+    @Autowired
+    private ConfigMapWrapper configMapWrapper;
+
     @Override
     public void install(IngressComponentDto ingressComponentDto) {
         BaseIngressService service =
@@ -69,6 +72,13 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
         BeanIngressComponents beanIngressComponents = beanIngressComponentsMapper.selectOne(wrapper);
         if (beanIngressComponents != null) {
             throw new BusinessException(ErrorMessage.INGRESS_CLASS_EXISTED);
+        }
+        // 如果接入ingress，判断ingress tcp文件是否存在
+        if (IngressEnum.NGINX.getName().equals(ingressComponentDto.getType())) {
+            ConfigMap configMap = configMapWrapper.get(ingressComponentDto.getClusterId(), ingressComponentDto.getNamespace(), ingressComponentDto.getConfigMapName());
+            if (configMap == null) {
+                throw new BusinessException(ErrorMessage.INGRESS_CONFIGMAP_NOT_EXIST);
+            }
         }
         // save to mysql
         insert(ingressComponentDto.getClusterId(), ingressComponentDto, 1);
@@ -113,13 +123,6 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
         List<BeanIngressComponents> ingressComponentsList = beanIngressComponentsMapper.selectList(wrapper);
         // 更新状态
         updateStatus(clusterId, ingressComponentsList);
-        // 过滤掉不存在helm的ingress
-        if (filterUnavailable) {
-            ingressComponentsList = ingressComponentsList.stream().filter(ingress -> {
-                JSONObject values = helmChartService.getInstalledValues(ingress.getName(), ingress.getNamespace(), clusterService.findById(ingress.getClusterId()));
-                return values != null;
-            }).collect(Collectors.toList());
-        }
 
         // 封装数据
         return ingressComponentsList.stream().map(ingress -> {
