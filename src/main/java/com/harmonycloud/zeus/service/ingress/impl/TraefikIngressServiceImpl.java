@@ -82,7 +82,7 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
 
         JSONArray additionalArguments = values.getJSONArray("additionalArguments");
         List<String> portList = getPortList(cluster, ingressComponentDto.getTraefikPortList(),
-            ingressComponentDto.getIngressClassName(), false);
+            ingressComponentDto.getIngressClassName(), true);
         additionalArguments.addAll(portList);
         JSONArray portArray = new JSONArray();
         for (TraefikPort traefikPort : ingressComponentDto.getTraefikPortList()) {
@@ -183,7 +183,7 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
 
             // 封装端口组
             List<String> portList = getPortList(cluster, ingressComponentDto.getTraefikPortList(),
-                ingressComponentDto.getIngressClassName(), true);
+                ingressComponentDto.getIngressClassName(), false);
             additionalArguments.addAll(portList);
             values.put("additionalArguments", additionalArguments);
 
