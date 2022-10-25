@@ -796,6 +796,7 @@ public class IngressServiceImpl implements IngressService {
             if (CollectionUtils.isEmpty(serviceList)) {
                 return;
             }
+            List<Integer> portList = getAvailablePort(clusterId, serviceList.size());
             for (int i = 0; i < serviceList.size(); i++) {
                 ServiceDTO serviceDTO = serviceList.get(i);
                 setServicePort(serviceDTO, ingressDTO.getMiddlewareType());
@@ -803,7 +804,7 @@ public class IngressServiceImpl implements IngressService {
                     continue;
                 }
                 if (StringUtils.isBlank(serviceDTO.getExposePort()) && !serviceDTO.getServiceName().contains("proxy")) {
-                    serviceDTO.setExposePort(String.valueOf(getAvailablePort(clusterId)));
+                    serviceDTO.setExposePort(String.valueOf(portList.get(i)));
                 }
             }
         }
@@ -852,15 +853,15 @@ public class IngressServiceImpl implements IngressService {
     private List<Integer> getAvailablePort(String clusterId, int portNum) {
         int startPort = 30000 + new Random().nextInt(100);
         List<Integer> portList = new ArrayList<>();
-        for (int i = 0; i < portNum; i++) {
+        for (int i = 0; i < portNum; ) {
             try {
                 verifyServicePort(clusterId, startPort);
                 portList.add(startPort);
                 startPort++;
+                i++;
             } catch (Exception e) {
                 log.error("出错了", e);
                 startPort++;
-                i--;
             }
         }
         return portList;
