@@ -7,8 +7,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.zeus.util.ExcelUtil;
 import com.harmonycloud.zeus.util.FileDownloadUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -579,22 +581,22 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         TableDto tableDto = this.getTable(clusterId, namespace, middlewareName, databaseName, schemaName, tableName);
         StringBuilder sb = new StringBuilder();
         sb.append("create table ").append(tableDto.getTableName()).append(" ( ");
-        for (int i = 0; i < tableDto.getColumnDtoList().size(); ++i){
+        for (int i = 0; i < tableDto.getColumnDtoList().size(); ++i) {
             ColumnDto columnDto = tableDto.getColumnDtoList().get(i);
             sb.append(columnDto.getColumn()).append(" ").append(columnDto.getDateType());
-            if (!"0".equals(columnDto.getSize())){
+            if (!"0".equals(columnDto.getSize())) {
                 sb.append("(").append(columnDto.getSize()).append(")");
             }
-            if (columnDto.getArray()){
+            if (columnDto.getArray()) {
                 sb.append("[] ");
             }
-            if (!columnDto.getNullable()){
+            if (!columnDto.getNullable()) {
                 sb.append("not null ");
             }
-            if (StringUtils.isNotEmpty(columnDto.getDefaultValue())){
+            if (StringUtils.isNotEmpty(columnDto.getDefaultValue())) {
                 sb.append("default ").append(columnDto.getDefaultValue());
             }
-            if (i == tableDto.getColumnDtoList().size() - 1){
+            if (i == tableDto.getColumnDtoList().size() - 1) {
                 sb.append("\n");
             } else {
                 sb.append(",").append("\n");
@@ -607,8 +609,27 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     @Override
-    public void getTableExcel(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName, String tableName, HttpServletRequest request, HttpServletResponse response) {
-
+    public void getTableExcel(String clusterId, String namespace, String middlewareName, String databaseName,
+        String schemaName, String tableName, HttpServletRequest request, HttpServletResponse response) {
+        try {
+            String path = getPath(middlewareName, namespace);
+            setPort(clusterId, namespace, middlewareName);
+            List<ColumnDto> columnDtoList =
+                listColumns(clusterId, namespace, middlewareName, databaseName, schemaName, tableName);
+            String excelFilePath = ExcelUtil.createTableExcel(path, tableName, columnDtoList.stream().map(columnDto -> {
+                com.harmonycloud.caas.common.model.dashboard.mysql.ColumnDto column =
+                    new com.harmonycloud.caas.common.model.dashboard.mysql.ColumnDto();
+                BeanUtils.copyProperties(columnDto, column);
+                column.setAutoIncrement(columnDto.getInc());
+                column.setColumnDefault(columnDto.getDefaultValue());
+                return column;
+            }).collect(Collectors.toList()));
+            String fileRealName = tableName + ".xlsx";
+            FileDownloadUtil.downloadFile(request, response, fileRealName, excelFilePath);
+        } catch (Exception e) {
+            log.error("导出表结构Excel文件失败", e);
+            throw new BusinessException(ErrorMessage.FAILED_TO_EXPORT_TABLE_EXCEL);
+        }
     }
 
     @Override
