@@ -31,11 +31,10 @@ public interface ClusterComponentService {
     /**
      * 接入/更新组件
      *
-     * @param cluster       集群
-     * @param componentName 组件名称
+     * @param clusterComponentsDto 组件对象
      * @param update 是否为更新
      */
-    void integrate(MiddlewareClusterDTO cluster, String componentName, Boolean update);
+    void integrate(ClusterComponentsDto clusterComponentsDto, Boolean update);
 
     /**
      * 卸载/取消接入 组件
@@ -60,6 +59,15 @@ public interface ClusterComponentService {
      * @return List<ClusterComponentsDto>
      */
     List<ClusterComponentsDto> list(String clusterId) throws Exception;
+
+    /**
+     * 获取指定组件
+     *
+     * @param clusterId 集群id
+     * @param component 组件
+     * @return ClusterComponentsDto
+     */
+    ClusterComponentsDto get(String clusterId, String component);
 
     /**
      *

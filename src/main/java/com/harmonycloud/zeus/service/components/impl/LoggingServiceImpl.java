@@ -83,13 +83,6 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
     }
 
     @Override
-    public void integrate(MiddlewareClusterDTO cluster) {
-        MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
-        existCluster.setLogging(cluster.getLogging());
-        clusterService.update(existCluster);
-    }
-
-    @Override
     protected String getValues(String repository, MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
         String setValues = "image.repository=" + repository +
                 ",aliasName=kubernetes-logging" +
@@ -131,17 +124,22 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
     }
 
     @Override
-    protected void updateCluster(MiddlewareClusterDTO cluster) {
-        MiddlewareClusterLoggingInfo es = new MiddlewareClusterLoggingInfo();
-        es.setHost(cluster.getHost());
-        es.setUser("elastic");
-        es.setPassword("Hc@Cloud01");
-        es.setProtocol("http");
-        es.setPort("30092");
-        MiddlewareClusterLogging logging = new MiddlewareClusterLogging();
-        logging.setElasticSearch(es);
-        cluster.setLogging(logging);
-        clusterService.update(cluster);
+    public void initAddress(ClusterComponentsDto clusterComponentsDto, MiddlewareClusterDTO cluster){
+        if (StringUtils.isEmpty(clusterComponentsDto.getProtocol())){
+            clusterComponentsDto.setProtocol("http");
+        }
+        if (StringUtils.isEmpty(clusterComponentsDto.getHost())){
+            clusterComponentsDto.setHost(cluster.getHost());
+        }
+        if (StringUtils.isEmpty(clusterComponentsDto.getPort())){
+            clusterComponentsDto.setPort("30092");
+        }
+        if (StringUtils.isEmpty(clusterComponentsDto.getUsername())){
+            clusterComponentsDto.setUsername("elastic");
+        }
+        if (StringUtils.isEmpty(clusterComponentsDto.getPassword())){
+            clusterComponentsDto.setPassword("Hc@Cloud01");
+        }
     }
 
     @Override

@@ -55,16 +55,16 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
 
     @Override
     public void deploy(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
-        //特殊处理grafana
+        // 特殊处理grafana
         grafana(cluster, clusterComponentsDto);
         // 获取service
         BaseComponentsService service =
-                getOperator(BaseComponentsService.class, BaseComponentsService.class, clusterComponentsDto.getComponent());
+            getOperator(BaseComponentsService.class, BaseComponentsService.class, clusterComponentsDto.getComponent());
         checkNamespace(clusterComponentsDto);
         // 部署组件
         service.deploy(cluster, clusterComponentsDto);
-        //记录数据库
-        record(cluster.getId(), clusterComponentsDto.getComponent(), 2);
+        // 记录数据库
+        record(cluster.getId(), clusterComponentsDto, 2);
         // 检查是否安装成功
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
@@ -89,10 +89,10 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         }
         // 优先部署prometheus
         if (componentsDtoList.stream().anyMatch(
-                clusterComponentsDto -> clusterComponentsDto.getComponent().equals(ComponentsEnum.PROMETHEUS.getName()))) {
+            clusterComponentsDto -> clusterComponentsDto.getComponent().equals(ComponentsEnum.PROMETHEUS.getName()))) {
             deploy(cluster, new ClusterComponentsDto().setComponent(ComponentsEnum.PROMETHEUS.getName()).setType(""));
             componentsDtoList = componentsDtoList.stream().filter(clusterComponentsDto -> !clusterComponentsDto
-                    .getComponent().equals(ComponentsEnum.PROMETHEUS.getName())).collect(Collectors.toList());
+                .getComponent().equals(ComponentsEnum.PROMETHEUS.getName())).collect(Collectors.toList());
         }
         // 部署operator
         final CountDownLatch operatorCount =
@@ -123,14 +123,10 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         componentsCount.await();
     }
 
-
     @Override
-    public void integrate(MiddlewareClusterDTO cluster, String componentName, Boolean update) {
-        BaseComponentsService service = getOperator(BaseComponentsService.class, BaseComponentsService.class, componentName);
-        service.integrate(cluster);
-        if (!update){
-            record(cluster.getId(), componentName, 1);
-        }
+    public void integrate(ClusterComponentsDto clusterComponentsDto, Boolean update) {
+        Integer status = update ? null : 1;
+        record(clusterComponentsDto.getClusterId(), clusterComponentsDto, status);
     }
 
     @Override
@@ -147,7 +143,6 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         beanClusterComponents.setComponent(componentName);
         beanClusterComponents.setStatus(status == 1 ? 0 : 5);
         beanClusterComponentsMapper.update(beanClusterComponents, wrapper);
-
     }
 
     @Override
@@ -159,15 +154,16 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
             clusterComponentsList = initClusterComponents(clusterId);
         }
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        //另起线程更新所有组件状态
+        // 另起线程更新所有组件状态
         final CountDownLatch count = new CountDownLatch(clusterComponentsList.size());
         clusterComponentsList.forEach(cc -> ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
                 // 接入组件不更新状态
-                if (cc.getStatus() == 1){
+                if (cc.getStatus() == 1) {
                     return;
                 }
-                BaseComponentsService service = getOperator(BaseComponentsService.class, BaseComponentsService.class, cc.getComponent());
+                BaseComponentsService service =
+                    getOperator(BaseComponentsService.class, BaseComponentsService.class, cc.getComponent());
                 service.updateStatus(cluster, cc);
             } finally {
                 count.countDown();
@@ -177,19 +173,34 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         return clusterComponentsList.stream().map(cm -> {
             ClusterComponentsDto dto = new ClusterComponentsDto();
             BeanUtils.copyProperties(cm, dto);
-            if (cm.getStatus() == NUM_TWO){
+            if (cm.getStatus() == NUM_TWO) {
                 dto.setSeconds(DateUtils.getIntervalDays(new Date(), dto.getCreateTime()));
             }
-            if (cm.getStatus() == NUM_ONE || cm.getStatus() == NUM_THREE || cm.getStatus() == NUM_FOUR){
-                getOperator(BaseComponentsService.class, BaseComponentsService.class, dto.getComponent()).setStatus(dto, cluster);
+            if (cm.getStatus() == NUM_ONE || cm.getStatus() == NUM_THREE || cm.getStatus() == NUM_FOUR) {
+                getOperator(BaseComponentsService.class, BaseComponentsService.class, dto.getComponent()).setStatus(dto,
+                    cluster);
             }
             return dto;
         }).collect(Collectors.toList());
     }
 
     @Override
+    public ClusterComponentsDto get(String clusterId, String component) {
+        QueryWrapper<BeanClusterComponents> wrapper =
+            new QueryWrapper<BeanClusterComponents>().eq("cluster_id", clusterId).eq("component", component);
+        BeanClusterComponents beanClusterComponents = beanClusterComponentsMapper.selectOne(wrapper);
+        if (beanClusterComponents == null) {
+            return null;
+        }
+        ClusterComponentsDto clusterComponentsDto = new ClusterComponentsDto();
+        BeanUtils.copyProperties(beanClusterComponents, clusterComponentsDto);
+        return clusterComponentsDto;
+    }
+
+    @Override
     public void delete(String clusterId) {
-        QueryWrapper<BeanClusterComponents> wrapper = new QueryWrapper<BeanClusterComponents>().eq("cluster_id", clusterId);
+        QueryWrapper<BeanClusterComponents> wrapper =
+            new QueryWrapper<BeanClusterComponents>().eq("cluster_id", clusterId);
         beanClusterComponentsMapper.delete(wrapper);
     }
 
@@ -197,7 +208,9 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
     public boolean checkInstalled(String clusterId, String componentName) {
         try {
             List<ClusterComponentsDto> componentsDtos = list(clusterId);
-            componentsDtos = componentsDtos.stream().filter(item -> ComponentsEnum.MIDDLEWARE_CONTROLLER.getName().equals(item.getComponent())).collect(Collectors.toList());
+            componentsDtos = componentsDtos.stream()
+                .filter(item -> ComponentsEnum.MIDDLEWARE_CONTROLLER.getName().equals(item.getComponent()))
+                .collect(Collectors.toList());
             if (CollectionUtils.isEmpty(componentsDtos)) {
                 return false;
             }
@@ -220,12 +233,16 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
     /**
      * 记入数据库
      */
-    private void record(String clusterId, String name, Integer status){
-        QueryWrapper<BeanClusterComponents> wrapper = new QueryWrapper<BeanClusterComponents>().eq("cluster_id", clusterId).eq("component", name);
+    private void record(String clusterId, ClusterComponentsDto componentsDto, Integer status) {
+        QueryWrapper<BeanClusterComponents> wrapper = new QueryWrapper<BeanClusterComponents>()
+            .eq("cluster_id", clusterId).eq("component", componentsDto.getComponent());
         BeanClusterComponents cm = new BeanClusterComponents();
         cm.setClusterId(clusterId);
-        cm.setComponent(name);
-        cm.setStatus(status);
+        cm.setComponent(componentsDto.getComponent());
+        if (status != null){
+            cm.setStatus(status);
+        }
+        BeanUtils.copyProperties(componentsDto, cm, "component", "status");
         cm.setCreateTime(new Date());
         beanClusterComponentsMapper.update(cm, wrapper);
     }
@@ -262,10 +279,11 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         }
     }
 
-    public void installSuccessCheck(MiddlewareClusterDTO cluster, String componentName){
-        QueryWrapper<BeanClusterComponents> wrapper = new QueryWrapper<BeanClusterComponents>().eq("cluster_id", cluster.getId()).eq("component", componentName);
+    public void installSuccessCheck(MiddlewareClusterDTO cluster, String componentName) {
+        QueryWrapper<BeanClusterComponents> wrapper =
+            new QueryWrapper<BeanClusterComponents>().eq("cluster_id", cluster.getId()).eq("component", componentName);
         BeanClusterComponents clusterComponents = beanClusterComponentsMapper.selectOne(wrapper);
-        if (clusterComponents.getStatus() == 2){
+        if (clusterComponents.getStatus() == 2) {
             clusterComponents.setStatus(6);
             beanClusterComponentsMapper.updateById(clusterComponents);
         }
@@ -274,9 +292,11 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
     /**
      * 创建middleware-operator分区
      */
-    public void checkNamespace(ClusterComponentsDto clusterComponentsDto){
+    public void checkNamespace(ClusterComponentsDto clusterComponentsDto) {
         String name = clusterComponentsDto.getComponent();
-        if (ComponentsEnum.LOCAL_PATH.getName().equals(name) || ComponentsEnum.MIDDLEWARE_CONTROLLER.getName().equals(name) || ComponentsEnum.LVM.getName().equals(name)){
+        if (ComponentsEnum.LOCAL_PATH.getName().equals(name)
+            || ComponentsEnum.MIDDLEWARE_CONTROLLER.getName().equals(name)
+            || ComponentsEnum.LVM.getName().equals(name)) {
             namespaceService.createMiddlewareOperator(clusterComponentsDto.getClusterId());
         }
     }

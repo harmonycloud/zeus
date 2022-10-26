@@ -7,6 +7,7 @@ import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.MinioService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -36,13 +37,6 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
         //发布minio
         super.deploy(cluster, clusterComponentsDto);
     }
-    
-    @Override
-    public void integrate(MiddlewareClusterDTO cluster) {
-        MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
-        existCluster.getStorage().setBackup(cluster.getStorage().getBackup());
-        clusterService.update(existCluster);
-    }
 
     @Override
     public void delete(MiddlewareClusterDTO cluster, Integer status) {
@@ -50,8 +44,6 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
             // uninstall
             helmChartService.uninstall(cluster, "minio", ComponentsEnum.MINIO.getName());
         }
-        cluster.getStorage().setBackup(null);
-        clusterService.update(cluster);
     }
 
     @Override
@@ -75,18 +67,16 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
     }
 
     @Override
-    protected void updateCluster(MiddlewareClusterDTO cluster) {
-        Map<String, String> storage = new HashMap<>();
-        storage.put("name", "minio");
-        storage.put("bucketName", "velero");
-        storage.put("accessKeyId", "minio");
-        storage.put("secretAccessKey", "minio123");
-        storage.put("endpoint", "http://" + cluster.getHost() + ":31909");
-        Map<String, Object> backup = new HashMap<>();
-        backup.put("type", "minio");
-        backup.put("storage", storage);
-        cluster.getStorage().setBackup(backup);
-        clusterService.update(cluster);
+    public void initAddress(ClusterComponentsDto clusterComponentsDto, MiddlewareClusterDTO cluster){
+        if (StringUtils.isEmpty(clusterComponentsDto.getProtocol())){
+            clusterComponentsDto.setProtocol("http");
+        }
+        if (StringUtils.isEmpty(clusterComponentsDto.getHost())){
+            clusterComponentsDto.setHost(cluster.getHost());
+        }
+        if (StringUtils.isEmpty(clusterComponentsDto.getPort())){
+            clusterComponentsDto.setPort("31909");
+        }
     }
 
     @Override

@@ -13,9 +13,11 @@ import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.LVMService;
+import com.harmonycloud.zeus.service.k8s.ClusterComponentService;
 import com.harmonycloud.zeus.util.AssertUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -40,33 +42,17 @@ public class LVMServiceImpl extends AbstractBaseOperator implements LVMService {
 
     private static final Map<String, String> size = new ConcurrentHashMap<>();
 
+    @Autowired
+    private ClusterComponentService clusterComponentService;
+
     @Override
     public boolean support(String name) {
         return ComponentsEnum.LVM.getName().equals(name);
     }
 
     @Override
-    public void integrate(MiddlewareClusterDTO cluster) {
-        MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
-        if (existCluster.getStorage().getSupport() == null) {
-            existCluster.getStorage().setSupport(new ArrayList<>());
-        }
-        List<MiddlewareClusterStorageSupport> existSupport = existCluster.getStorage().getSupport();
-        List<MiddlewareClusterStorageSupport> support = cluster.getStorage().getSupport();
-        existSupport = existSupport.stream().filter(st -> !ComponentsEnum.LVM.getName().equals(st.getType()))
-            .collect(Collectors.toList());
-        existSupport.addAll(support);
-        existCluster.getStorage().setSupport(existSupport);
-        clusterService.update(existCluster);
-    }
-
-    @Override
     public void delete(MiddlewareClusterDTO cluster, Integer status) {
         helmChartService.uninstall(cluster, "middleware-operator", ComponentsEnum.LVM.getName());
-        List<MiddlewareClusterStorageSupport> support = cluster.getStorage().getSupport();
-        support = support.stream().filter(st -> !"lvm".equals(st.getType())).collect(Collectors.toList());
-        cluster.getStorage().setSupport(support);
-        clusterService.update(cluster);
     }
 
     @Override
@@ -97,18 +83,8 @@ public class LVMServiceImpl extends AbstractBaseOperator implements LVMService {
     }
 
     @Override
-    protected void updateCluster(MiddlewareClusterDTO cluster) {
-        if (CollectionUtils.isEmpty(cluster.getStorage().getSupport())) {
-            cluster.getStorage().setSupport(new ArrayList<>());
-        }
-        MiddlewareClusterStorageSupport support = new MiddlewareClusterStorageSupport();
-        support.setName("lvm");
-        support.setType("lvm");
-        support.setNamespace("middleware-operator");
-        List<MiddlewareClusterStorageSupport> list = new ArrayList<>();
-        list.add(support);
-        cluster.getStorage().setSupport(list);
-        clusterService.update(cluster);
+    public void initAddress(ClusterComponentsDto clusterComponentsDto, MiddlewareClusterDTO cluster){
+
     }
 
     @Override
@@ -117,12 +93,12 @@ public class LVMServiceImpl extends AbstractBaseOperator implements LVMService {
     }
 
     public String getMinioUrl(MiddlewareClusterDTO cluster) {
-        JSONObject storage = JSONObject.parseObject(JSONObject.toJSONString(cluster.getStorage()));
-        if (storage.containsKey("backup") && storage.getJSONObject("backup").containsKey("storage")) {
-            return storage.getJSONObject("backup").getJSONObject("storage").getString("endpoint");
-        } else {
+        ClusterComponentsDto clusterComponentsDto = clusterComponentService.get(cluster.getId(), ComponentsEnum.MINIO.getName());
+        if (StringUtils.isEmpty(clusterComponentsDto.getHost())){
             log.error("未安装minio，使用默认minio地址");
             return "http://" + cluster.getHost() + ":31909";
+        }else {
+            return clusterComponentsDto.getAddress();
         }
     }
 

@@ -40,6 +40,36 @@ public class BeanClusterComponents implements Serializable {
     private String component;
 
     /**
+     * 协议
+     */
+    @TableField("protocol")
+    private String protocol;
+
+    /**
+     * 主机地址
+     */
+    @TableField("host")
+    private String host;
+
+    /**
+     * 端口
+     */
+    @TableField("port")
+    private String port;
+
+    /**
+     * 用户名
+     */
+    @TableField("username")
+    private String username;
+
+    /**
+     * 密码
+     */
+    @TableField("password")
+    private String password;
+
+    /**
      * * 组件状态：0-未安装接入 1-已接入 2-安装中 3-运行正常 4-运行异常 5-卸载中 6-安装失败 7-信息不完整
      */
     @TableField("status")
