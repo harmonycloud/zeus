@@ -46,6 +46,9 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     @Value("${system.middleware-api.mysql.excelPath:/usr/local/zeus-pv/excel/}")
     private String path;
 
+    @Value("${system.middleware-api.mysql.temppath:10.10.102.52}")
+    private String temppath;
+
     @Override
     public String login(String clusterId, String namespace, String middlewareName, String username, String password) {
         JSONObject res = mysqlClient.login(getPath(middlewareName,namespace), port, username, password);
@@ -529,7 +532,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     private String getPath(String middlewareName, String namespace) {
         // todo 提交时此处代码需删除
 //        return middlewareName + "." + namespace;
-        return "10.10.102.52";
+        return temppath;
     }
     
 }
