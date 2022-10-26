@@ -475,10 +475,14 @@ public class IngressServiceImpl implements IngressService {
         if ("rocketmq".equals(type) || "kafka".equals(type)) {
             setExternalServiceExposeStatus(type, resList);
         }
-        List<IngressDTO> ingressDTOList = resList.stream().
+        return resList;
+    }
+
+    @Override
+    public List<IngressDTO> getMiddlewareIngress(String clusterId, String namespace, String type, String middlewareName) {
+        return get(clusterId, namespace, type, middlewareName).stream().
                 filter(ingressDTO -> ingressDTO.getServicePurpose() != null && !"null".equals(ingressDTO.getServicePurpose())).
                 collect(Collectors.toList());
-        return ingressDTOList;
     }
 
     @Override
@@ -851,18 +855,15 @@ public class IngressServiceImpl implements IngressService {
      * @return
      */
     private List<Integer> getAvailablePort(String clusterId, int portNum) {
-        int startPort = 30000 + new Random().nextInt(100);
+        int startPort = 30002;
         List<Integer> portList = new ArrayList<>();
+        Set<Integer> usedPortSet = getUsedPortSet(clusterService.findById(clusterId));
         for (int i = 0; i < portNum; ) {
-            try {
-                verifyServicePort(clusterId, startPort);
+            if (!usedPortSet.contains(startPort)) {
                 portList.add(startPort);
-                startPort++;
                 i++;
-            } catch (Exception e) {
-                log.error("出错了", e);
-                startPort++;
             }
+            startPort++;
         }
         return portList;
     }

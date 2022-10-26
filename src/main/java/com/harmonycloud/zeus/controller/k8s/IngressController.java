@@ -97,7 +97,7 @@ public class IngressController {
                                       @PathVariable("namespace") String namespace,
                                       @PathVariable("middlewareName") String middlewareName,
                                       @RequestParam("type") String type) {
-        return BaseResult.ok(ingressService.get(clusterId, namespace, type, middlewareName));
+        return BaseResult.ok(ingressService.getMiddlewareIngress(clusterId, namespace, type, middlewareName));
     }
 
     @ApiOperation(value = "校验服务端口是否可用", notes = "校验服务端口是否可用")
