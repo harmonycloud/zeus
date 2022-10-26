@@ -564,7 +564,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     @Override
-    public JSONObject getTableData(String clusterId, String namespace, String middlewareName, String databaseName,
+    public List<Map<String, String>> getTableData(String clusterId, String namespace, String middlewareName, String databaseName,
         String schemaName, String tableName, QueryInfo queryInfo) {
         Integer index = 1;
         Integer pageSize = 10;
@@ -585,8 +585,9 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         String path = getPath(middlewareName, namespace);
         log.info(sb.toString());
         setPort(clusterId, namespace, middlewareName);
-        return postgresqlClient.getTableData(path, port, databaseName, schemaName, tableName, pageSize, offset,
-            sb.toString());
+        JSONObject getTableData = postgresqlClient.getTableData(path, port, databaseName, schemaName, tableName, pageSize, offset,
+                sb.toString());
+        return convertColumn(getTableData);
     }
 
     @Override
@@ -1164,7 +1165,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             // 处理data为空的情况
             Map<String, String> map = new HashMap<>();
             for (String s : columnList) {
-                map.put(s, null);
+                map.put(s, "");
             }
             res.add(map);
         } else {
@@ -1257,8 +1258,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     public String getPath(String middlewareName, String namespace) {
-        return middlewareName + "." + namespace;
-        //return middlewareName;
+        //return middlewareName + "." + namespace;
+        return middlewareName;
     }
 
 }

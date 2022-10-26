@@ -219,7 +219,7 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
      * @param tableName 表名称
      * @param queryInfo 分页业务数据
      */
-    JSONObject getTableData(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName,
+    List<Map<String, String>> getTableData(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName,
                       String tableName, QueryInfo queryInfo);
 
     /**

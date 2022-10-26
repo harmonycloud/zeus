@@ -386,7 +386,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "orderMap", value = "排序", paramType = "query", dataTypeClass = Map.class),
     })
     @PostMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/data")
-    public BaseResult<List<ColumnDto>> getTableData(@PathVariable("clusterId") String clusterId,
+    public BaseResult<List<Map<String, String>>> getTableData(@PathVariable("clusterId") String clusterId,
                                                     @PathVariable("namespace") String namespace,
                                                     @PathVariable("name") String name,
                                                     @PathVariable("databaseName") String databaseName,
