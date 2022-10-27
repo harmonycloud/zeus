@@ -12,3 +12,7 @@ CREATE TABLE `sql_execute_record` (
     `date` timestamp NULL DEFAULT NULL COMMENT '执行时间',
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='sql执行表';
+
+-- wangpenglei
+-- 2022.10.27  修改任务名称长度
+alter table backup_name modify backup_name varchar(128) null comment '备份任务名称';
