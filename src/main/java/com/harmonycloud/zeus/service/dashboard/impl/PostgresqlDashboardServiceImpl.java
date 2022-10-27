@@ -332,6 +332,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
                 String[] condef = constraint.get("condef").split(" ");
                 TableForeignKey foreignKey = new TableForeignKey();
                 for (int i = 0; i < condef.length; ++i) {
+                    // todo
                     if ("FOREIGN".equals(condef[i]) && "KEY".equals(condef[i + 1])) {
                         foreignKey.setColumnName(condef[i + 2].replace("(", "").replace(")", ""));
                     }
@@ -369,8 +370,9 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
                         exclusion.setIndexMethod(condef[i + 2]);
                     }
                     if ("WITH".equals(condef[i]) && condef[i - 1].contains("(")) {
-                        exclusion.setColumnName(condef[i - 1].replace("(", ""));
-                        exclusion.setSymbol(condef[i + 1].replace(")", ""));
+                        // todo
+                        /*exclusion.setColumnName(condef[i - 1].replace("(", ""));
+                        exclusion.setSymbol(condef[i + 1].replace(")", ""));*/
                     }
                 }
                 exclusion.setName(constraint.get("conname"));
@@ -441,6 +443,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         }
         // 外键约束
         for (TableForeignKey foreign : tableDto.getTableForeignKeyList()) {
+            // todo
             sb.append("CONSTRAINT ").append(foreign.getName()).append(" foreign key ").append(foreign.getColumnName())
                 .append("REFERENCES ").append(foreign.getTargetSchema()).append(".").append(foreign.getTargetTable())
                 .append("(").append(foreign.getTargetColumn()).append(")").append(" on update ")
@@ -450,9 +453,10 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         }
         // 排它约束
         for (TableExclusion exclusion : tableDto.getTableExclusionList()) {
-            sb.append("CONSTRAINT ").append(exclusion.getName()).append(" EXCLUDE using ").append(exclusion.getName())
+            // todo
+            /*sb.append("CONSTRAINT ").append(exclusion.getName()).append(" EXCLUDE using ").append(exclusion.getName())
                 .append(" ").append(exclusion.getColumnName()).append(" with ").append(exclusion.getOperator());
-            sb.append(",");
+            sb.append(",");*/
         }
         // 唯一约束
         for (TableUnique unique : tableDto.getTableUniqueList()) {
@@ -697,6 +701,18 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         for (TableForeignKey key : tableDto.getTableForeignKeyList()) {
             // 创建外键
             if ("add".equals(key.getOperator())) {
+                // 转化列和目标列为字符串
+                StringBuilder column = new StringBuilder();
+                StringBuilder target = new StringBuilder();
+                for (TableForeignKey.Content content : key.getContentList()) {
+                    column.append(content.getColumnName()).append(",");
+                    target.append(content.getTargetColumn()).append(",");
+                }
+                column.deleteCharAt(column.length() - 1);
+                target.deleteCharAt(target.length() - 1);
+                key.setColumnName(column.toString());
+                key.setTargetColumn(target.toString());
+                // 创建外键
                 JSONObject createForeignKey = postgresqlClient.createForeignKey(path, port, tableDto.getDatabaseName(),
                     tableDto.getSchemaName(), tableDto.getTableName(), key);
                 if (createForeignKey.get("err") != null) {
@@ -719,6 +735,14 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         String path = getPath(middlewareName, namespace);
         setPort(clusterId, namespace, middlewareName);
         for (TableExclusion key : tableDto.getTableExclusionList()) {
+            // 合成排它约束内容
+            StringBuilder sb = new StringBuilder();
+            for (TableExclusion.Content content : key.getContentList()) {
+                sb.append(content.getColumnName()).append(" ").append(content.getOrder()).append(" with ")
+                    .append(content.getSymbol()).append(",");
+            }
+            sb.deleteCharAt(sb.length() - 1);
+            key.setExclude(sb.toString());
             // 创建排它约束
             if ("add".equals(key.getOperator())) {
                 JSONObject createForeignKey = postgresqlClient.createExclusion(path, port, tableDto.getDatabaseName(),
