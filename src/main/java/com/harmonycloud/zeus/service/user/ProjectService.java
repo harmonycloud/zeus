@@ -116,9 +116,20 @@ public interface ProjectService {
      * @param namespaceList
      */
     void bindNamespace(List<Namespace> namespaceList);
+
     /**
      * 项目解绑分区
      * @param projectId 项目id
+     * @param clusterId 集群id
+     * @param namespace 分区名称
+     * @param checkExist 中间件存在校验
+     */
+    void unBindNamespace(String projectId, String clusterId, String namespace, Boolean checkExist);
+
+    /**
+     * 项目解绑分区
+     * @param projectId 项目id
+     * @param clusterId 集群id
      * @param namespace 分区名称
      */
     void unBindNamespace(String projectId, String clusterId, String namespace);

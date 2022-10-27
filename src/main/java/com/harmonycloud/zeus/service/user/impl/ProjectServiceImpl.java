@@ -274,6 +274,17 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    public void unBindNamespace(String projectId, String clusterId, String namespace, Boolean checkExist) {
+        if (checkExist) {
+            List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(clusterId, namespace, null);
+            if (!CollectionUtils.isEmpty(middlewareCRList)) {
+                throw new BusinessException(ErrorMessage.NAMESPACE_IS_NOT_EMPTY);
+            }
+        }
+        this.unBindNamespace(projectId, clusterId, namespace);
+    }
+
+    @Override
     public void unBindNamespace(String projectId, String clusterId, String namespace) {
         QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<BeanProjectNamespace>();
         if (StringUtils.isNotEmpty(projectId)) {
@@ -480,6 +491,7 @@ public class ProjectServiceImpl implements ProjectService {
         List<Namespace> namespaceList = this.getNamespace(projectId, null);
         return namespaceList.stream().map(Namespace::getClusterId).collect(Collectors.toList());
     }
+
     @Autowired
     private NamespaceService namespaceService;
 
@@ -491,7 +503,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public List<Namespace> getNamespace(String projectId, String clusterId) {
         QueryWrapper<BeanProjectNamespace> wrapper =
-                new QueryWrapper<BeanProjectNamespace>().eq("project_id", projectId);
+            new QueryWrapper<BeanProjectNamespace>().eq("project_id", projectId);
         if (!StringUtils.isEmpty(clusterId)) {
             wrapper.eq("cluster_id", clusterId);
         }
@@ -527,6 +539,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     /**
      * 设置双活分区状态
+     * 
      * @param namespaces
      * @param clusterId
      * @return
