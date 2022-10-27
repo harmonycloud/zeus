@@ -16,6 +16,10 @@ import java.util.List;
 @Component
 public class SecretWrapper {
 
+    public void create(String clusterId, String namespace, Secret secret) {
+        K8sClient.getClient(clusterId).secrets().inNamespace(namespace).create(secret);
+    }
+
     public List<Secret> list(String clusterId, String namespace) {
         SecretList list = K8sClient.getClient(clusterId).secrets().inNamespace(namespace).list();
         if (list == null || CollectionUtils.isEmpty(list.getItems())) {
