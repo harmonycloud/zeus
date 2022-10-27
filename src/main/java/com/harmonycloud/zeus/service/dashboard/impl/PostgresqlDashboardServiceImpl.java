@@ -7,6 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.enums.middleware.PostgresqlCollateEnum;
 import com.harmonycloud.caas.common.enums.middleware.PostgresqlDataTypeEnum;
 import com.harmonycloud.caas.common.model.dashboard.mysql.QueryInfo;
 import com.harmonycloud.zeus.util.ExcelUtil;
@@ -418,7 +419,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         });
         tableDto.setTableInheritList(tableInheritList);
         // 获取列信息
-        tableDto.setColumnDtoList(this.listColumns(clusterId, namespace, middlewareName, databaseName, schemaName, tableName));
+        tableDto.setColumnDtoList(
+            this.listColumns(clusterId, namespace, middlewareName, databaseName, schemaName, tableName));
         return tableDto;
     }
 
@@ -518,8 +520,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     @Override
-    public void updateTable(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName,
-        String tableName, TableDto tableDto) {
+    public void updateTable(String clusterId, String namespace, String middlewareName, String databaseName,
+        String schemaName, String tableName, TableDto tableDto) {
         String path = getPath(middlewareName, namespace);
         setPort(clusterId, namespace, middlewareName);
         // 修改表基本信息
@@ -563,8 +565,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     @Override
-    public List<Map<String, String>> getTableData(String clusterId, String namespace, String middlewareName, String databaseName,
-        String schemaName, String tableName, QueryInfo queryInfo) {
+    public List<Map<String, String>> getTableData(String clusterId, String namespace, String middlewareName,
+        String databaseName, String schemaName, String tableName, QueryInfo queryInfo) {
         Integer index = 1;
         Integer pageSize = 10;
         if (queryInfo.getIndex() != null) {
@@ -584,8 +586,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         String path = getPath(middlewareName, namespace);
         log.info(sb.toString());
         setPort(clusterId, namespace, middlewareName);
-        JSONObject getTableData = postgresqlClient.getTableData(path, port, databaseName, schemaName, tableName, pageSize, offset,
-                sb.toString());
+        JSONObject getTableData = postgresqlClient.getTableData(path, port, databaseName, schemaName, tableName,
+            pageSize, offset, sb.toString());
         return convertColumn(getTableData);
     }
 
@@ -1073,7 +1075,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
 
     @Override
     public List<String> listCollate() {
-        return null;
+        return Arrays.stream(PostgresqlCollateEnum.values()).map(PostgresqlCollateEnum::getName)
+            .collect(Collectors.toList());
     }
 
     public void updateColumn(String clusterId, String namespace, String middlewareName, String databaseName,
@@ -1258,7 +1261,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
 
     public String getPath(String middlewareName, String namespace) {
         return middlewareName + "." + namespace;
-        //return middlewareName;
+        // return middlewareName;
     }
 
 }
