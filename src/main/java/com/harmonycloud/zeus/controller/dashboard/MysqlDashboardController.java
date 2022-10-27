@@ -208,6 +208,26 @@ public class MysqlDashboardController {
         return BaseResult.ok();
     }
 
+    @ApiOperation(value = "修改表信息", notes = "修改表信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "table", value = "表名", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "tableDto", value = "表信息", paramType = "query", dataTypeClass = TableDto.class),
+    })
+    @PutMapping("/databases/{database}/tabes/{table}")
+    public BaseResult updateTableName(@PathVariable("clusterId") String clusterId,
+                                      @PathVariable("namespace") String namespace,
+                                      @PathVariable("middlewareName") String middlewareName,
+                                      @PathVariable("database") String database,
+                                      @PathVariable("table") String table,
+                                      @RequestBody TableDto tableDto) {
+
+        return BaseResult.ok();
+    }
+
     @ApiOperation(value = "删除table", notes = "删除table")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
@@ -241,6 +261,26 @@ public class MysqlDashboardController {
                                                         @PathVariable("database") String database,
                                                         @PathVariable("table") String table) {
         return BaseResult.ok(mysqlDashboardService.listTableColumns(clusterId, namespace, middlewareName, database, table));
+    }
+
+    @ApiOperation(value = "保存数据表所有列", notes = "保存数据表所有列")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "table", value = "表名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "indexDtoList", value = "列信息列表", paramType = "query", dataTypeClass = ColumnDto.class),
+    })
+    @PutMapping("/databases/{database}/tables/{table}/columns")
+    public BaseResult saveTableColumns(@PathVariable("clusterId") String clusterId,
+                                       @PathVariable("namespace") String namespace,
+                                       @PathVariable("middlewareName") String middlewareName,
+                                       @PathVariable("database") String database,
+                                       @PathVariable("table") String table,
+                                       @RequestBody List<ColumnDto> columnDtoList) {
+        mysqlDashboardService.saveTableColumn(clusterId, namespace, middlewareName, database, table, columnDtoList);
+        return BaseResult.ok();
     }
 
     // index

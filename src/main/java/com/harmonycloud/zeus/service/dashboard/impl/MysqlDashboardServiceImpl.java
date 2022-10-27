@@ -158,6 +158,11 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
+    public void updateTableName(String clusterId, String namespace, String middlewareName, String database, String table, TableDto databaseDto) {
+
+    }
+
+    @Override
     public TableDto showTableDetail(String clusterId, String namespace, String middlewareName, String database, String table) {
         JSONArray dataAry = mysqlClient.showTableOptions(getPath(middlewareName,namespace), port, database, table).getJSONArray("dataAry");
         TableDto tableDto = new TableDto();
@@ -205,6 +210,11 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
             columnDto.setCharset(MysqlUtil.extractCharset(columnDto.getCollate()));
             return columnDto;
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    public void saveTableColumn(String clusterId, String namespace, String middlewareName, String database, String table, List<ColumnDto> columnDtoList) {
+
     }
 
     @Override

@@ -63,7 +63,12 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
     /**
      * 删除数据表
      */
-    void dropTable(String clusterId,String namespace, String middlewareName,String database,String table);
+    void dropTable(String clusterId, String namespace, String middlewareName, String database, String table);
+
+    /**
+     * 修改表名
+     */
+    void updateTableName(String clusterId,String namespace, String middlewareName,String database,String table,TableDto databaseDto);
 
     /**
      * 获取表详情
@@ -79,6 +84,11 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
      * 查询指定数据表所有列
      */
     List<ColumnDto> listTableColumns(String clusterId, String namespace, String middlewareName, String database, String table);
+
+    /**
+     * 保存所有列
+     */
+    void saveTableColumn(String clusterId, String namespace, String middlewareName, String database, String table, List<ColumnDto> columnDtoList);
 
     /**
      * 查询指定数据表所有索引
