@@ -162,13 +162,12 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "table", value = "表名", paramType = "path", dataTypeClass = String.class),
     })
     @GetMapping("/databases/{database}/tables/{table}")
-    public BaseResult showTableDetail(@PathVariable("clusterId") String clusterId,
+    public BaseResult<TableDto> showTableDetail(@PathVariable("clusterId") String clusterId,
                                       @PathVariable("namespace") String namespace,
                                       @PathVariable("middlewareName") String middlewareName,
                                       @PathVariable("database") String database,
                                       @PathVariable("table") String table) {
-        mysqlDashboardService.showTableDetail(clusterId, namespace, middlewareName, database, table);
-        return BaseResult.ok();
+        return BaseResult.ok(mysqlDashboardService.showTableDetail(clusterId, namespace, middlewareName, database, table));
     }
 
     @ApiOperation(value = "获取table数据", notes = "获取table数据")
