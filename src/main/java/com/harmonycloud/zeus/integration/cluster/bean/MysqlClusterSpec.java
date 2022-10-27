@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.integration.cluster.bean;
 import java.util.List;
 import java.util.Map;
 
+import com.alibaba.fastjson.annotation.JSONField;
 import io.fabric8.kubernetes.api.model.Affinity;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.apps.StatefulSetUpdateStrategy;
@@ -26,14 +27,26 @@ public class MysqlClusterSpec {
     private String cmName;
     private DeployStrategy deployStrategy;
     private Map<String, Object> migratePolicy;
+    private Map<String, Object> _statefulset;
     private Integer replicas;
     private String repository;
     private String secretName;
     private StatefulSet statefulset;
     private Map<String, Object> storageProvider;
     private String type;
+    private String syncMode;
     private String version;
     private List<Map<String, Object>> volumeClaimTemplates;
+
+    @JSONField(name = "_statefulset")
+    public Map<String, Object> get_statefulset(){
+        return _statefulset;
+    }
+
+    @JSONField(name = "_statefulset")
+    public void set_statefulset(Map<String, Object> _statefulset){
+        this._statefulset = _statefulset;
+    }
 
     @Accessors(chain = true)
     @Data
