@@ -153,7 +153,7 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
     List<TableDto> listTables(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName);
 
     /**
-     * 获取table列表
+     * 获取table
      *
      * @param clusterId 集群id
      * @param namespace 分区
@@ -161,7 +161,8 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
      * @param databaseName 数据库名称
      * @param schemaName 模式名称
      */
-    TableDto getTable(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName, String tableName);
+    TableDto getTable(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName,
+                      String tableName);
 
     /**
      * 创建table
@@ -181,7 +182,8 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
      * @param middlewareName 中间件名称
      * @param tableDto 表对象
      */
-    void updateTable(String clusterId, String namespace, String middlewareName, String schemaName, String tableName, TableDto tableDto);
+    void updateTable(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName,
+                     String tableName, TableDto tableDto);
 
     /**
      * 删除table

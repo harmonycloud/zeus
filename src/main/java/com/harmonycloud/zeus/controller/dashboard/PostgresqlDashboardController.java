@@ -307,8 +307,7 @@ public class PostgresqlDashboardController {
                                   @PathVariable("schemaName") String schemaName,
                                   @PathVariable("tableName") String tableName,
                                   @RequestBody TableDto tableDto) {
-        tableDto.setDatabaseName(databaseName);
-        postgresqlDashboardService.updateTable(clusterId, namespace, name, schemaName, tableName, tableDto);
+        postgresqlDashboardService.updateTable(clusterId, namespace, name, databaseName, schemaName, tableName, tableDto);
         return BaseResult.ok();
     }
 
@@ -721,7 +720,7 @@ public class PostgresqlDashboardController {
     })
     @GetMapping("/dataType")
     public BaseResult<List<String>> listDataType() {
-        return BaseResult.ok(postgresqlDashboardService.listEncoding());
+        return BaseResult.ok(postgresqlDashboardService.listDataType());
     }
 
     @ApiOperation(value = "查询校验规则", notes = "查询校验规则")
@@ -732,7 +731,7 @@ public class PostgresqlDashboardController {
     })
     @GetMapping("/collate")
     public BaseResult<List<String>> listCollate() {
-        return BaseResult.ok(postgresqlDashboardService.listEncoding());
+        return BaseResult.ok(postgresqlDashboardService.listCollate());
     }
 
 

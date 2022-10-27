@@ -518,14 +518,13 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     @Override
-    public void updateTable(String clusterId, String namespace, String middlewareName, String schemaName,
+    public void updateTable(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName,
         String tableName, TableDto tableDto) {
         String path = getPath(middlewareName, namespace);
         setPort(clusterId, namespace, middlewareName);
-
         // 修改表基本信息
         JSONObject updateTable =
-            postgresqlClient.updateTable(path, port, tableDto.getDatabaseName(), schemaName, tableName, tableDto);
+            postgresqlClient.updateTable(path, port, databaseName, schemaName, tableName, tableDto);
         JSONObject err = updateTable.getJSONObject("err");
         if (err != null) {
             throw new BusinessException(ErrorMessage.POSTGRESQL_UPDATE_TABLE_FAILED, err.getString("Message"));
