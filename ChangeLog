@@ -1,0 +1,5 @@
+- traefik 组件支持端口动态修改
+- 中间件发布支持多storageClass
+- 双活节点label key值支持动态修改
+- middleware controller 对象字段添加
+- es动态配置protocol
