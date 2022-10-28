@@ -329,53 +329,71 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
 
         for (Map<String, String> constraint : constraintList) {
             if ("f".equals(constraint.get("contype"))) {
-                String[] condef = constraint.get("condef").split(" ");
+                String condef = constraint.get("condef");
                 TableForeignKey foreignKey = new TableForeignKey();
-                for (int i = 0; i < condef.length; ++i) {
-                    // todo
-                    if ("FOREIGN".equals(condef[i]) && "KEY".equals(condef[i + 1])) {
-                        foreignKey.setColumnName(condef[i + 2].replace("(", "").replace(")", ""));
+                String pattern =
+                    "FOREIGN KEY \\(([A-Za-z0-9_,\\s]+)\\) REFERENCES (\\w+\\.)?(\\w+)\\(([A-Za-z0-9_,\\s]+)\\)(.+)?";
+                Matcher matcher = Pattern.compile(pattern).matcher(condef);
+                if (matcher.find()) {
+                    // 获取列和目标列
+                    List<TableForeignKey.Content> contentList = new ArrayList<>();
+                    String[] column = matcher.group(1).split(", ");
+                    String[] target = matcher.group(4).split(", ");
+                    for (int i = 0; i < column.length; ++i) {
+                        TableForeignKey.Content content = new TableForeignKey.Content();
+                        content.setColumnName(column[i]);
+                        content.setTargetColumn(target[i]);
+                        contentList.add(content);
                     }
-                    if ("REFERENCES".equals(condef[i])) {
-                        String target = condef[i + 1];
-                        if (!target.contains(".")) {
-                            foreignKey.setTargetSchema("public");
-                        } else {
-                            String[] targetSchema = target.split("\\.");
-                            foreignKey.setTargetSchema(targetSchema[0]);
-                            target = target.replace(targetSchema[0] + ".", "");
+                    // 获取策略
+                    if (StringUtils.isNotEmpty(matcher.group(5))) {
+                        String[] config = matcher.group(5).split(" ");
+                        for (int i = 0; i < config.length; ++i) {
+                            if ("ON".equals(config[i]) && "UPDATE".equals(config[i + 1])) {
+                                foreignKey.setOnUpdate(config[i + 2]);
+                            }
+                            // 删除时策略
+                            if ("ON".equals(config[i]) && "DELETE".equals(config[i + 1])) {
+                                foreignKey.setOnDelete(config[i + 2]);
+                            }
                         }
-                        String[] table = target.split("\\(");
-                        foreignKey.setTargetTable(table[0]);
-                        foreignKey.setTargetColumn(table[1].replace(")", ""));
                     }
-                    // 更新时策略
-                    if ("ON".equals(condef[i]) && "UPDATE".equals(condef[i + 1])) {
-                        foreignKey.setOnUpdate(condef[i + 2]);
-                    }
-                    // 删除时策略
-                    if ("ON".equals(condef[i]) && "DELETE".equals(condef[i + 1])) {
-                        foreignKey.setOnDelete(condef[i + 2]);
-                    }
-                    // 设置是否可延迟
-                    foreignKey.setDeferrablity(getDeferrable(constraint));
+                    foreignKey.setContentList(contentList);
+                    foreignKey.setTargetSchema(
+                        StringUtils.isEmpty(matcher.group(2)) ? "public" : matcher.group(2).replace(",", ""));
+                    foreignKey.setTargetTable(matcher.group(3));
                 }
+                // 设置是否可延迟
+                foreignKey.setDeferrablity(getDeferrable(constraint));
                 foreignKey.setName(constraint.get("conname"));
                 tableForeignKeyList.add(foreignKey);
             } else if ("x".equals(constraint.get("contype"))) {
                 TableExclusion exclusion = new TableExclusion();
-                String[] condef = constraint.get("condef").split(" ");
-                for (int i = 0; i < condef.length; ++i) {
-                    if ("EXCLUDE".equals(condef[i]) && "USING".equals(condef[i + 1])) {
-                        exclusion.setIndexMethod(condef[i + 2]);
-                    }
-                    if ("WITH".equals(condef[i]) && condef[i - 1].contains("(")) {
-                        // todo
-                        /*exclusion.setColumnName(condef[i - 1].replace("(", ""));
-                        exclusion.setSymbol(condef[i + 1].replace(")", ""));*/
+                String[] condefs = constraint.get("condef").split(" ");
+                for (int i = 0; i < condefs.length; ++i) {
+                    if ("EXCLUDE".equals(condefs[i]) && "USING".equals(condefs[i + 1])) {
+                        exclusion.setIndexMethod(condefs[i + 2]);
                     }
                 }
+                String condef = constraint.get("condef");
+                String[] exclude = condef.substring(condef.indexOf("(") + 1, condef.indexOf(")")).split(", ");
+                List<TableExclusion.Content> contentList = new ArrayList<>();
+                for (String ex : exclude) {
+                    TableExclusion.Content content = new TableExclusion.Content();
+                    String[] temp = ex.split(" ");
+                    content.setColumnName(temp[0]);
+                    for (int j = 1; j < temp.length; ++j) {
+                        if ("desc".equals(temp[j]) || "asc".equals(temp[j])) {
+                            content.setOrder(temp[j]);
+                        }
+                        if ("with".equalsIgnoreCase(temp[j])) {
+                            content.setSymbol(temp[j + 1]);
+                        }
+                    }
+                    contentList.add(content);
+                }
                 exclusion.setName(constraint.get("conname"));
+                exclusion.setContentList(contentList);
                 tableExclusionList.add(exclusion);
             } else if ("u".equals(constraint.get("contype"))) {
                 TableUnique unique = new TableUnique();
@@ -443,20 +461,18 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         }
         // 外键约束
         for (TableForeignKey foreign : tableDto.getTableForeignKeyList()) {
-            // todo
-            sb.append("CONSTRAINT ").append(foreign.getName()).append(" foreign key ").append(foreign.getColumnName())
-                .append("REFERENCES ").append(foreign.getTargetSchema()).append(".").append(foreign.getTargetTable())
-                .append("(").append(foreign.getTargetColumn()).append(")").append(" on update ")
-                .append(foreign.getOnUpdate()).append(" on delete ").append(foreign.getOnDelete()).append(" ")
-                .append(foreign.getDeferrablity());
+            sb.append("CONSTRAINT ").append(foreign.getName()).append(" foreign key ( ").append(foreign.getColumn())
+                .append(") ").append("REFERENCES ").append(foreign.getTargetSchema()).append(".")
+                .append(foreign.getTargetTable()).append("(").append(foreign.getTarget()).append(")")
+                .append(" on update ").append(foreign.getOnUpdate()).append(" on delete ").append(foreign.getOnDelete())
+                .append(" ").append(foreign.getDeferrablity());
             sb.append(",");
         }
         // 排它约束
         for (TableExclusion exclusion : tableDto.getTableExclusionList()) {
-            // todo
-            /*sb.append("CONSTRAINT ").append(exclusion.getName()).append(" EXCLUDE using ").append(exclusion.getName())
-                .append(" ").append(exclusion.getColumnName()).append(" with ").append(exclusion.getOperator());
-            sb.append(",");*/
+            sb.append("CONSTRAINT ").append(exclusion.getName()).append(" EXCLUDE using ")
+                .append(exclusion.getIndexMethod()).append(" ( ").append(exclusion.getContent()).append(" )");
+            sb.append(",");
         }
         // 唯一约束
         for (TableUnique unique : tableDto.getTableUniqueList()) {
@@ -702,16 +718,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             // 创建外键
             if ("add".equals(key.getOperator())) {
                 // 转化列和目标列为字符串
-                StringBuilder column = new StringBuilder();
-                StringBuilder target = new StringBuilder();
-                for (TableForeignKey.Content content : key.getContentList()) {
-                    column.append(content.getColumnName()).append(",");
-                    target.append(content.getTargetColumn()).append(",");
-                }
-                column.deleteCharAt(column.length() - 1);
-                target.deleteCharAt(target.length() - 1);
-                key.setColumnName(column.toString());
-                key.setTargetColumn(target.toString());
+                key.setColumnName(key.getColumn());
+                key.setTargetColumn(key.getTarget());
                 // 创建外键
                 JSONObject createForeignKey = postgresqlClient.createForeignKey(path, port, tableDto.getDatabaseName(),
                     tableDto.getSchemaName(), tableDto.getTableName(), key);
@@ -736,13 +744,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         setPort(clusterId, namespace, middlewareName);
         for (TableExclusion key : tableDto.getTableExclusionList()) {
             // 合成排它约束内容
-            StringBuilder sb = new StringBuilder();
-            for (TableExclusion.Content content : key.getContentList()) {
-                sb.append(content.getColumnName()).append(" ").append(content.getOrder()).append(" with ")
-                    .append(content.getSymbol()).append(",");
-            }
-            sb.deleteCharAt(sb.length() - 1);
-            key.setExclude(sb.toString());
+            key.setExclude(key.getContent());
             // 创建排它约束
             if ("add".equals(key.getOperator())) {
                 JSONObject createForeignKey = postgresqlClient.createExclusion(path, port, tableDto.getDatabaseName(),
