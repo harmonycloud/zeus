@@ -515,7 +515,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
                     .append(",");
             }
             if (inherit.length() != 0) {
-                inherit.deleteCharAt(sb.length() - 1);
+                inherit.deleteCharAt(inherit.length() - 1);
             }
         }
         // table comment
