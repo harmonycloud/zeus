@@ -3,3 +3,6 @@
 - 双活节点label key值支持动态修改
 - middleware controller 对象字段添加
 - es动态配置protocol
+
+-- 2022.10.28 xutianhong
+- mysql redis proxy 资源逻辑修改

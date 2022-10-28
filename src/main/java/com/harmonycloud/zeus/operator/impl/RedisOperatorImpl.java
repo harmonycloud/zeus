@@ -337,18 +337,29 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
     }
 
     @Override
-    public void replaceReadWriteProxyValues(ReadWriteProxy readWriteProxy, JSONObject values){
+    public void replaceReadWriteProxyValues(Middleware middleware, JSONObject values){
+        ReadWriteProxy readWriteProxy = middleware.getReadWriteProxy();
         JSONObject predixy = new JSONObject();
         predixy.put("enableProxy", readWriteProxy.getEnabled());
 
         JSONObject requests = new JSONObject();
         JSONObject limits = new JSONObject();
 
-        requests.put(CPU, "200m");
-        requests.put(MEMORY, "512Mi");
-        limits.put(CPU, "200m");
-        limits.put(MEMORY, "512Mi");
-        predixy.put("replicas", 3);
+        MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
+        String cpu = calculateProxyResource(quota.getCpu());
+        String memory = calculateProxyResource(quota.getMemory().replace("Gi", ""));
+        if (Double.parseDouble(memory) < 0.256){
+            memory = String.valueOf(0.256);
+        }else if (Double.parseDouble(memory) > 2){
+            memory = String.valueOf(2);
+        }
+
+        requests.put(CPU, cpu);
+        requests.put(MEMORY, memory + "Gi");
+        limits.put(CPU, cpu);
+        limits.put(MEMORY, memory + "Gi");
+        Integer num = quota.getNum();
+        predixy.put("replicas", num / 2 == 1 ? num : num / 2);
 
         JSONObject resources = new JSONObject();
         resources.put("requests", requests);
