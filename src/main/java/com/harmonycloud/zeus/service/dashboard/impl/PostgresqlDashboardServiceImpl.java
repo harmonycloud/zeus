@@ -531,6 +531,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         JSONObject table = new JSONObject();
         table.put("database", tableDto.getDatabaseName());
         table.put("schema", tableDto.getSchemaName());
+        table.put("table", tableDto.getTableName());
         table.put("column", sb.toString());
         table.put("inherit", inherit);
         table.put("owner", tableDto.getOwner());
