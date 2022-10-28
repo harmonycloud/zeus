@@ -20,7 +20,7 @@ import java.util.List;
  * @author liyinlong
  * @since 2022/10/24 9:23 上午
  */
-@Api(tags = {"服务列表", "Mysql管理面板"}, value = "mysql中间件")
+@Api(tags = {"服务列表", "Redis管理面板"}, value = "redis中间件")
 @RestController
 @RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/redis/{middlewareName}")
 public class RedisDashboardController {
