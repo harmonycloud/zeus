@@ -460,37 +460,45 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             sb.append(turnColumnToSql(columnDto)).append(",");
         }
         // 外键约束
-        for (TableForeignKey foreign : tableDto.getTableForeignKeyList()) {
-            sb.append("CONSTRAINT ").append(foreign.getName()).append(" foreign key ( ").append(foreign.getColumn())
-                .append(") ").append("REFERENCES ").append(foreign.getTargetSchema()).append(".")
-                .append(foreign.getTargetTable()).append("(").append(foreign.getTarget()).append(")")
-                .append(" on update ").append(foreign.getOnUpdate()).append(" on delete ").append(foreign.getOnDelete())
-                .append(" ").append(foreign.getDeferrablity());
-            sb.append(",");
+        if (!CollectionUtils.isEmpty(tableDto.getTableForeignKeyList())){
+            for (TableForeignKey foreign : tableDto.getTableForeignKeyList()) {
+                sb.append("CONSTRAINT ").append(foreign.getName()).append(" foreign key ( ").append(foreign.getColumn())
+                        .append(") ").append("REFERENCES ").append(foreign.getTargetSchema()).append(".")
+                        .append(foreign.getTargetTable()).append("(").append(foreign.getTarget()).append(")")
+                        .append(" on update ").append(foreign.getOnUpdate()).append(" on delete ").append(foreign.getOnDelete())
+                        .append(" ").append(foreign.getDeferrablity());
+                sb.append(",");
+            }
         }
         // 排它约束
-        for (TableExclusion exclusion : tableDto.getTableExclusionList()) {
-            sb.append("CONSTRAINT ").append(exclusion.getName()).append(" EXCLUDE using ")
-                .append(exclusion.getIndexMethod()).append(" ( ").append(exclusion.getContent()).append(" )");
-            sb.append(",");
+        if (CollectionUtils.isEmpty(tableDto.getTableExclusionList())){
+            for (TableExclusion exclusion : tableDto.getTableExclusionList()) {
+                sb.append("CONSTRAINT ").append(exclusion.getName()).append(" EXCLUDE using ")
+                        .append(exclusion.getIndexMethod()).append(" ( ").append(exclusion.getContent()).append(" )");
+                sb.append(",");
+            }
         }
         // 唯一约束
-        for (TableUnique unique : tableDto.getTableUniqueList()) {
-            sb.append("CONSTRAINT ").append(unique.getName()).append(" unique ").append("(")
-                .append(unique.getColumnName()).append(")").append(unique.getDeferrablity());
-            sb.append(",");
+        if (CollectionUtils.isEmpty(tableDto.getTableUniqueList())) {
+            for (TableUnique unique : tableDto.getTableUniqueList()) {
+                sb.append("CONSTRAINT ").append(unique.getName()).append(" unique ").append("(")
+                        .append(unique.getColumnName()).append(")").append(unique.getDeferrablity());
+                sb.append(",");
+            }
         }
         // 检查约束
-        for (TableCheck check : tableDto.getTableCheckList()) {
-            sb.append("CONSTRAINT ").append(check.getName()).append(" check ").append("(").append(check.getText())
-                .append(") ");
-            if (check.getNoInherit() != null && check.getNoInherit()) {
-                sb.append("no inherit ");
+        if (CollectionUtils.isEmpty(tableDto.getTableCheckList())){
+            for (TableCheck check : tableDto.getTableCheckList()) {
+                sb.append("CONSTRAINT ").append(check.getName()).append(" check ").append("(").append(check.getText())
+                        .append(") ");
+                if (check.getNoInherit() != null && check.getNoInherit()) {
+                    sb.append("no inherit ");
+                }
+                if (check.getNotValid() != null && check.getNotValid()) {
+                    sb.append("not valid");
+                }
+                sb.append(",");
             }
-            if (check.getNotValid() != null && check.getNotValid()) {
-                sb.append("not valid");
-            }
-            sb.append(",");
         }
         // 主键约束
         if (StringUtils.isNotEmpty(pk.toString())) {
