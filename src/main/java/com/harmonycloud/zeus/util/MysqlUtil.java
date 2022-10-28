@@ -51,14 +51,14 @@ public class MysqlUtil {
      * 如果要获取某一列的数据长度，则需要根据数据类型提取
      * dataType：数据类型 例如：varchar(128)
      */
-    public static int convertColumnDataSize(String dataType) {
+    public static String convertColumnDataSize(String dataType) {
         String reg3 = "(?<=\\()[\\s\\S]*(?=\\))";
         Pattern p3 = Pattern.compile(reg3);
         Matcher m3 = p3.matcher(dataType);
         if (m3.find()) {
-            return Integer.parseInt(m3.group());
+            return m3.group();
         }
-        return 0;
+        return "";
     }
 
     /**

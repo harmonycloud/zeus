@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.controller.dashboard;
 
 import com.alibaba.fastjson.JSONArray;
 import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.enums.middleware.MysqlDataTypeEnum;
 import com.harmonycloud.caas.common.model.dashboard.ExecuteSqlDto;
 import com.harmonycloud.caas.common.model.dashboard.mysql.*;
 import com.harmonycloud.zeus.service.dashboard.MysqlDashboardService;
@@ -25,7 +26,7 @@ import java.util.List;
  */
 @Api(tags = {"服务列表", "Mysql管理面板"}, value = "mysql中间件")
 @RestController
-@RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/mysql/{middlewareName}")
+@RequestMapping(path = {"/clusters/{clusterId}/namespaces/{namespace}/mysql/{middlewareName}", "/dashboard/mysql"})
 public class MysqlDashboardController {
 
     @Autowired
@@ -33,6 +34,12 @@ public class MysqlDashboardController {
 
     @Value("${system.mysql.defaultPassword:zeus123.com}")
     private String defaultPassword;
+
+    @ApiOperation(value = "获取数据类型列表", notes = "获取数据类型列表")
+    @GetMapping("/datatype")
+    public BaseResult<List<MysqlDataType>> listDataType() {
+        return BaseResult.ok(mysqlDashboardService.listDataType());
+    }
 
     @ApiOperation(value = "获取字符集列表", notes = "获取字符集列表")
     @ApiImplicitParams({

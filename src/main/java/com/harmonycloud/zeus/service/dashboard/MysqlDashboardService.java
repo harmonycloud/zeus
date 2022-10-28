@@ -16,6 +16,11 @@ import java.util.List;
 public interface MysqlDashboardService extends BaseMiddlewareApiService {
 
     /**
+     * 获取全部数据类型
+     */
+    List<MysqlDataType> listDataType();
+
+    /**
      * 获取database列表
      */
     List<DatabaseDto> listDatabases(String clusterId, String namespace, String middlewareName);

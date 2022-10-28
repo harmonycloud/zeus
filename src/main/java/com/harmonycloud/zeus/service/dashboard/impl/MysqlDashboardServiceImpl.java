@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.MysqlPrivilegeEnum;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.harmonycloud.caas.common.enums.middleware.MysqlDataTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.dashboard.mysql.*;
 import com.harmonycloud.zeus.annotation.Operator;
@@ -62,6 +63,11 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     @Override
     public boolean support(String type) {
         return MiddlewareTypeEnum.MYSQL.getType().equals(type);
+    }
+
+    @Override
+    public List<MysqlDataType> listDataType() {
+        return MysqlDataTypeEnum.dataTypeList;
     }
 
     @Override
