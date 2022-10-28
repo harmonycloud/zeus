@@ -471,7 +471,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             }
         }
         // 排它约束
-        if (CollectionUtils.isEmpty(tableDto.getTableExclusionList())){
+        if (!CollectionUtils.isEmpty(tableDto.getTableExclusionList())){
             for (TableExclusion exclusion : tableDto.getTableExclusionList()) {
                 sb.append("CONSTRAINT ").append(exclusion.getName()).append(" EXCLUDE using ")
                         .append(exclusion.getIndexMethod()).append(" ( ").append(exclusion.getContent()).append(" )");
@@ -479,7 +479,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             }
         }
         // 唯一约束
-        if (CollectionUtils.isEmpty(tableDto.getTableUniqueList())) {
+        if (!CollectionUtils.isEmpty(tableDto.getTableUniqueList())) {
             for (TableUnique unique : tableDto.getTableUniqueList()) {
                 sb.append("CONSTRAINT ").append(unique.getName()).append(" unique ").append("(")
                         .append(unique.getColumnName()).append(")").append(unique.getDeferrablity());
@@ -487,7 +487,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             }
         }
         // 检查约束
-        if (CollectionUtils.isEmpty(tableDto.getTableCheckList())){
+        if (!CollectionUtils.isEmpty(tableDto.getTableCheckList())){
             for (TableCheck check : tableDto.getTableCheckList()) {
                 sb.append("CONSTRAINT ").append(check.getName()).append(" check ").append("(").append(check.getText())
                         .append(") ");
