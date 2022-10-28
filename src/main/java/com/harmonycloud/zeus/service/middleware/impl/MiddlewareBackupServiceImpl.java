@@ -112,10 +112,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         ObjectMeta meta = new ObjectMeta();
         meta.setName(backupName + "-" + INCR);
         meta.setNamespace(namespace);
+        // 获取labels
+        Map<String, String> backupLabel = new HashMap<>();
+        backupLabel.put("middleware", cr.getSpec().getType() + "-" + cr.getSpec().getName());
+        meta.setLabels(backupLabel);
+
         cr.setMetadata(meta);
         cr.setStatus(null);
-        // 设置名称
-        cr.getMetadata().setName(backupName + "-incr");
         // 设置增量备份
         cr.getSpec().getCustomBackups().forEach(cus -> {
             if (cus.containsKey(ENV)){
