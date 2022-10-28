@@ -97,7 +97,7 @@ public class RedisDashboardController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = Integer.class),
             @ApiImplicitParam(name = "key", value = "key", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "key", value = "key", paramType = "query", dataTypeClass = KeyValueDto.class),
+            @ApiImplicitParam(name = "keyValueDto", value = "redis参数", paramType = "query", dataTypeClass = KeyValueDto.class),
     })
     @PostMapping("/databases/{database}/keys/{key}")
     public BaseResult setValue(@PathVariable("clusterId") String clusterId,
@@ -136,7 +136,7 @@ public class RedisDashboardController {
             @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = Integer.class),
             @ApiImplicitParam(name = "key", value = "key", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "newName", value = "新名称", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "newName", value = "新名称", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "keyValueDto", value = "redis参数", paramType = "query", dataTypeClass = String.class),
     })
     @PutMapping("/databases/{database}/keys/{key}")
     public BaseResult updateKey(@PathVariable("clusterId") String clusterId,
@@ -156,7 +156,7 @@ public class RedisDashboardController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = Integer.class),
             @ApiImplicitParam(name = "key", value = "key", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "value值", value = "value值", paramType = "query", dataTypeClass = KeyValueDto.class),
+            @ApiImplicitParam(name = "value值", value = "redis参数", paramType = "query", dataTypeClass = KeyValueDto.class),
     })
     @DeleteMapping("/databases/{database}/keys/{key}/value")
     public BaseResult deleteValue(@PathVariable("clusterId") String clusterId,
