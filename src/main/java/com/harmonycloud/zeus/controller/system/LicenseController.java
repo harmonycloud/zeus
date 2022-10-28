@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.controller.system;
 
 import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.model.LicenseInfoDto;
 import com.harmonycloud.zeus.service.system.LicenseService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -31,7 +32,15 @@ public class LicenseController {
         return BaseResult.ok();
     }
 
-    @ApiOperation(value = "license认证", notes = "license认证")
+    @ApiOperation(value = "查询license使用信息", notes = "查询license使用信息")
+    @ApiImplicitParams({
+    })
+    @GetMapping
+    public BaseResult<LicenseInfoDto> info() {
+        return BaseResult.ok(licenseService.info());
+    }
+
+    @ApiOperation(value = "发布中间件能力校验", notes = "发布中间件能力校验")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "license", value = "license", paramType = "query", dataTypeClass = String.class),
     })

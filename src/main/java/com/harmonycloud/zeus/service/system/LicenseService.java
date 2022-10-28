@@ -1,5 +1,7 @@
 package com.harmonycloud.zeus.service.system;
 
+import com.harmonycloud.caas.common.model.LicenseInfoDto;
+
 /**
  * @author xutianhong
  * @Date 2022/10/27 11:43 上午
@@ -14,10 +16,18 @@ public interface LicenseService {
     void license(String license);
 
     /**
+     * 查询license使用信息
+     *
+     */
+    LicenseInfoDto info();
+
+    /**
      * 平台可用额度校验
      *
      * @return Boolean
      */
     Boolean check();
+
+
 
 }

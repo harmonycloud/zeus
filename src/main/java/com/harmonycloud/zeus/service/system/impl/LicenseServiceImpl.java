@@ -1,10 +1,24 @@
 package com.harmonycloud.zeus.service.system.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.caas.common.model.LicenseInfoDto;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.caas.common.model.middleware.Namespace;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCluster;
+import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
+import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
+import com.harmonycloud.zeus.service.k8s.NamespaceService;
+import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.service.system.LicenseService;
+import com.harmonycloud.zeus.util.K8sClient;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author xutianhong
@@ -13,6 +27,15 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class LicenseServiceImpl implements LicenseService {
+
+    @Autowired
+    private MiddlewareClusterService clusterService;
+    @Autowired
+    private NamespaceService namespaceService;
+    @Autowired
+    private MiddlewareCRService middlewareCRService;
+    @Autowired
+    private HelmChartService helmChartService;
 
     /**
      * 获取公钥的key
@@ -36,6 +59,11 @@ public class LicenseServiceImpl implements LicenseService {
     }
 
     @Override
+    public LicenseInfoDto info() {
+        return null;
+    }
+
+    @Override
     public Boolean check() {
         // 获取当前总使用量
 
@@ -43,6 +71,25 @@ public class LicenseServiceImpl implements LicenseService {
 
         // 比较返回值
         return false;
+    }
+
+    public void middlewareResource() {
+
+        List<MiddlewareClusterDTO> clusterList = clusterService.listClusterDtos();
+        for (MiddlewareClusterDTO cluster : clusterList) {
+            List<MiddlewareCR> middlewareCrList = middlewareCRService.listCR(cluster.getId(), null, null);
+            List<Namespace> namespaceList = namespaceService.list(cluster.getId());
+            middlewareCrList = middlewareCrList.stream()
+                .filter(middlewareCr -> namespaceList.stream()
+                    .anyMatch(namespace -> namespace.getName().equals(middlewareCr.getMetadata().getNamespace())))
+                .collect(Collectors.toList());
+            for (MiddlewareCR middlewareCr : middlewareCrList){
+                String name = middlewareCr.getMetadata().getName();
+                String namespace = middlewareCr.getMetadata().getNamespace();
+                JSONObject values = helmChartService.getInstalledValues(name, namespace, cluster);
+                // 根据类型去获取对应的cpu
+            }
+        }
     }
 
 }
