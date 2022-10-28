@@ -1240,4 +1240,9 @@ public abstract class AbstractBaseOperator {
         }
     }
 
+    public Double calculateCpuRequest(JSONObject values) {
+        JSONObject requests = values.getJSONObject(RESOURCES);
+        return ResourceCalculationUtil.getResourceValue(requests.getString(CPU), CPU, "");
+    }
+
 }

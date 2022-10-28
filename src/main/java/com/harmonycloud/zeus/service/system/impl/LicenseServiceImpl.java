@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.system.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.model.LicenseInfoDto;
+import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
@@ -9,6 +10,8 @@ import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCluster;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.service.system.LicenseService;
 import com.harmonycloud.zeus.util.K8sClient;
@@ -35,7 +38,11 @@ public class LicenseServiceImpl implements LicenseService {
     @Autowired
     private MiddlewareCRService middlewareCRService;
     @Autowired
+    private MiddlewareService middlewareService;
+    @Autowired
     private HelmChartService helmChartService;
+    @Autowired
+    private MiddlewareCrTypeService middlewareCrTypeService;
 
     /**
      * 获取公钥的key
@@ -86,8 +93,12 @@ public class LicenseServiceImpl implements LicenseService {
             for (MiddlewareCR middlewareCr : middlewareCrList){
                 String name = middlewareCr.getMetadata().getName();
                 String namespace = middlewareCr.getMetadata().getNamespace();
+                String type = middlewareCrTypeService.findTypeByCrType(middlewareCr.getSpec().getType());
+
                 JSONObject values = helmChartService.getInstalledValues(name, namespace, cluster);
                 // 根据类型去获取对应的cpu
+                Middleware middleware = new Middleware().setClusterId(cluster.getId()).setNamespace(namespace).setName(name).setType(type);
+                Double cpu = middlewareService.calculateCpuRequest(middleware, values);
             }
         }
     }

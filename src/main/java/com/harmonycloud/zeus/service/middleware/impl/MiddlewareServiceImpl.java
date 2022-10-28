@@ -905,6 +905,11 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         return beanMiddlewareInfo.getImagePath();
     }
 
+    @Override
+    public Double calculateCpuRequest(Middleware middleware, JSONObject values) {
+        return getOperator(BaseOperator.class, BaseOperator.class, middleware).calculateCpuRequest(values);
+    }
+
     /**
      * 服务排序类，按服务数量进行排序
      */

@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.operator;
 
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.model.middleware.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 
@@ -109,6 +110,13 @@ public interface BaseOperator {
      * @return List<CustomConfig>
      */
     List<String> getConfigmapDataList(ConfigMap configMap);
+
+    /**
+     * 计算中间件cpu申请使用量
+     *
+     * @param values 配置文件
+     */
+    Double calculateCpuRequest(JSONObject values);
 
     /**
      * 获取自定义配置列表

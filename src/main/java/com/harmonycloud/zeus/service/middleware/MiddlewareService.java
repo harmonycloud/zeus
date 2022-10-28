@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.middleware;
 
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
@@ -195,5 +196,12 @@ public interface MiddlewareService {
      * @return
      */
     String middlewareImage(String type, String version);
+
+    /**
+     * 计算中间件cpu申请使用量
+     * @param values
+     * @return
+     */
+    Double calculateCpuRequest(Middleware middleware, JSONObject values);
 
 }
