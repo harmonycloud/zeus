@@ -151,9 +151,19 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public void createTable(String clusterId, String namespace, String middlewareName, String database, TableDto databaseDto) {
+    public void createTable(String clusterId, String namespace, String middlewareName, String database, TableDto tableDto) {
+        JSONObject res = mysqlClient.createTable(getPath(middlewareName,namespace), port, database, tableDto);
+        if (!res.getBoolean("success")) {
+            throw new BusinessException(ErrorMessage.CREATE_TABLE_FAILED, res.getString("message"));
+        }
+    }
 
-
+    @Override
+    public void updateTableOptions(String clusterId,String namespace, String middlewareName,String database,String table,TableDto tableDto) {
+        JSONObject res = mysqlClient.updateTableOptions(getPath(middlewareName,namespace), port, database, table,tableDto);
+        if (!res.getBoolean("success")) {
+            throw new BusinessException(ErrorMessage.ALTER_TABLE_FAILED, res.getString("message"));
+        }
     }
 
     @Override

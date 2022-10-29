@@ -230,7 +230,7 @@ public class MysqlDashboardController {
                                       @PathVariable("database") String database,
                                       @PathVariable("table") String table,
                                       @RequestBody TableDto tableDto) {
-
+        mysqlDashboardService.updateTableOptions(clusterId, namespace, middlewareName, database, table, tableDto);
         return BaseResult.ok();
     }
 

@@ -67,6 +67,12 @@ public interface MysqlClient {
     JSONObject listTables(@Var("host") String host, @Var("port") String port, @Var("database") String database);
 
     /**
+     * 创建表
+     */
+    @Post(url = "/mysql/{host}/port/{port}/databases/{database}/tables")
+    JSONObject createTable(@Var("host") String host, @Var("port") String port, @Var("database") String database, @JSONBody TableDto tableDto);
+
+    /**
      * 更新表基本信息
      */
     @Put(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/options")
