@@ -9,6 +9,7 @@ import com.harmonycloud.caas.common.model.MonitorResourceQuotaBase;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
+import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
@@ -30,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -41,8 +43,6 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class LicenseServiceImpl implements LicenseService {
-
-    public static final Map<String, Double> CPU_COUNT = new HashMap<>();
 
     @Autowired
     private MiddlewareClusterService clusterService;
@@ -57,8 +57,6 @@ public class LicenseServiceImpl implements LicenseService {
     @Autowired
     private MiddlewareCrTypeService middlewareCrTypeService;
     @Autowired
-    private SecretService secretService;
-    @Autowired
     private BeanSystemConfigMapper beanSystemConfigMapper;
 
     private static final String PUBLIC_KEY =
@@ -67,15 +65,15 @@ public class LicenseServiceImpl implements LicenseService {
     private static final String PRIVATE_KEY =
         "MIICeQIBADANBgkqhkiG9w0BAQEFAASCAmMwggJfAgEAAoGBAOpUSFd2FVptp+q4+Bt5ibPwBv7aoKHRrIqsVIPsUhAbX6p62/AqjSGYXF5OaC8sGvch6gM7qfFzH/sy6xB0RIIClL28jNTyF0qDPNaZATzgdn8U1GFyvHBs6DHwWZTVGU9V/+uOgqeE2FDrGAVe2d3tEHNadzyVk3ECml1WmzRnAgMBAAECgYEA4kQz/lAFWmYcCChHWrBG6TrSZnBRPy+pPdYdXa1pqCfmfkVX7lYIJPJr7pwjObmK6CsVPb304TJbJUILfL3oDxBw1dLVlkurW3nTVbgVNfzmUiyOd/IgdqEhHapMXLxjc//XCxLzi6fEHklamC9uegjuABeh22ufmMv14Iu7elECQQD+84HvSmfLAsGmzta8VCL8vmiJlVxSVjjhEDB9nvJCWX4egdoOajWUxjID9tjC3Z/cNSpfhUBroNwiUsVa+1e7AkEA60sOyT2hz3Vml4Rv33rbb7qE38rHJhwWF7Oqs4k2Y3dQdpBZjHa5bjsmFu8zDrvoJPAO24+11Tmb0+4wSw89RQJBAIse8b5UCcNb47RUlhT6jIUCmiTJnjFH343gubUy8NuH3ixji0vmZQqkBFLpdmsPaNZPJKovGnIguz73j74P/VUCQQDkfzOQwsWMzpoesoJiKNFJI30+R5I2tDfQNK6lQ68J0SjWuz/7ZKCXJ+HJi+mteVXr6STEnD8dHqDxovJLMjVxAkEAyXz3qOWggQiJoHTwaIMblt6tbhRmdHSmIj7Igh4f65svY5Tg4wi0a2c96aRRxPMXKbMqpbrOT8aTnqSUkW6JZg==";
 
-    @Value("${request.cpu.limit:1}")
-    private String limit;
+    @Value("${request.cpu.limit:1.0}")
+    private double limit;
 
     @Override
     public void license(String licenseStr) throws Exception {
         // 解析license
         JSONObject license = JSONObject.parseObject(RSAUtils.decryptByPrivateKey(licenseStr, PRIVATE_KEY));
         // 查询数据库 是否已存在license
-        JSONObject exist = getSecret();
+        JSONObject exist = getLicense();
         if (exist == null) {
             saveLicense(license);
         } else {
@@ -83,12 +81,14 @@ public class LicenseServiceImpl implements LicenseService {
         }
     }
 
-    public void saveLicense(JSONObject license) throws Exception{
+    public void saveLicense(JSONObject license) throws Exception {
         // todo 理论上该有的业务处理
         // 添加license
-        updateSysConfig("lecense", RSAUtils.encryptByPublicKey(license.toJSONString(), PUBLIC_KEY));
+        insertSysConfig("lecense", RSAUtils.encryptByPublicKey(license.toJSONString(), PUBLIC_KEY));
         String md5 = PasswordUtils.md5(license.toString());
-        updateSysConfig("sys_code", md5);
+        insertSysConfig("sys_code", md5);
+        insertSysConfig("produce", "0.0");
+        insertSysConfig("test", "0.0");
     }
 
     public void updateLicense(JSONObject license, JSONObject exist) throws Exception {
@@ -104,21 +104,14 @@ public class LicenseServiceImpl implements LicenseService {
         String md5 = PasswordUtils.md5(exist.toString());
 
         // 更新绑定码
-        QueryWrapper<BeanSystemConfig> wrapper = new QueryWrapper<BeanSystemConfig>().eq("config_name", "sys_code");
-        BeanSystemConfig config = beanSystemConfigMapper.selectOne(wrapper);
-        config.setConfigValue(md5);
-
-        beanSystemConfigMapper.updateById(config);
+        updateSysConfig("sys_code", md5);
 
         // 更新license
         String licenseStr = RSAUtils.encryptByPublicKey(exist.toJSONString(), PUBLIC_KEY);
-        QueryWrapper<BeanSystemConfig> licenseWrapper = new QueryWrapper<BeanSystemConfig>().eq("config_name", "license");
-        BeanSystemConfig licenseConfig = beanSystemConfigMapper.selectOne(licenseWrapper);
-        config.setConfigValue(licenseStr);
-        beanSystemConfigMapper.updateById(licenseConfig);
+        updateSysConfig("license", licenseStr);
     }
 
-    public void updateSysConfig(String name, String value) {
+    public void insertSysConfig(String name, String value) {
         String username = CurrentUserRepository.getUser().getUsername();
         BeanSystemConfig config = new BeanSystemConfig();
         config.setConfigName(name);
@@ -127,20 +120,28 @@ public class LicenseServiceImpl implements LicenseService {
         beanSystemConfigMapper.insert(config);
     }
 
+    public void updateSysConfig(String name, String value) {
+        QueryWrapper<BeanSystemConfig> wrapper = new QueryWrapper<BeanSystemConfig>().eq("config_name", name);
+        BeanSystemConfig config = new BeanSystemConfig();
+        config.setConfigName(name);
+        config.setConfigValue(value);
+        beanSystemConfigMapper.update(config, wrapper);
+    }
+
     @Override
     public LicenseInfoDto info() throws Exception {
-        JSONObject license = getSecret();
-        if (license == null){
+        JSONObject license = getLicense();
+        if (license == null) {
             throw new BusinessException(ErrorMessage.NOT_EXIST);
         }
         LicenseInfoDto info = new LicenseInfoDto();
         MonitorResourceQuotaBase produce = new MonitorResourceQuotaBase();
         produce.setTotal(license.getDoubleValue("produce"));
-        produce.setUsed(CPU_COUNT.get("produce"));
+        produce.setUsed(getCpu("produce"));
 
         MonitorResourceQuotaBase test = new MonitorResourceQuotaBase();
         test.setTotal(license.getDoubleValue("test"));
-        test.setUsed(CPU_COUNT.get("test"));
+        test.setUsed(getCpu("test"));
 
         info.setType(license.getString("type"));
         info.setTest(test);
@@ -152,15 +153,22 @@ public class LicenseServiceImpl implements LicenseService {
     }
 
     @Override
-    public Boolean check() {
+    public Boolean check(String clusterId) throws Exception{
+        ThreadPoolExecutorFactory.executor.execute(this::middlewareResource);
+        JSONObject license = getLicense();
+        List<MiddlewareClusterDTO> clusterList = clusterService.listClusterDtos();
+        clusterList =
+            clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(clusterList)) {
+            return false;
+        }
         // 获取当前总使用量
-
-        // 查询secret获取license 并解析获取数据
-
-        // 比较返回值
-        return false;
+        MiddlewareClusterDTO cluster = clusterList.get(0);
+        double cpu = getCpu(cluster.getType());
+        return license.getDoubleValue(cluster.getType()) - cpu > limit;
     }
 
+    @Override
     public void middlewareResource() {
         List<MiddlewareClusterDTO> clusterList = clusterService.listClusterDtos();
         double produce = 0.0;
@@ -173,26 +181,31 @@ public class LicenseServiceImpl implements LicenseService {
                     .anyMatch(namespace -> namespace.getName().equals(middlewareCr.getMetadata().getNamespace())))
                 .collect(Collectors.toList());
             for (MiddlewareCR middlewareCr : middlewareCrList) {
-                String name = middlewareCr.getMetadata().getName();
+                String name = middlewareCr.getSpec().getName();
                 String namespace = middlewareCr.getMetadata().getNamespace();
                 String type = middlewareCrTypeService.findTypeByCrType(middlewareCr.getSpec().getType());
 
                 JSONObject values = helmChartService.getInstalledValues(name, namespace, cluster);
+                if (values == null){
+                    continue;
+                }
                 // 根据类型去获取对应的cpu
                 Middleware middleware =
                     new Middleware().setClusterId(cluster.getId()).setNamespace(namespace).setName(name).setType(type);
-                if ("produce".equals(cluster.getType())){
+                if ("produce".equals(cluster.getType())) {
                     produce += middlewareService.calculateCpuRequest(middleware, values);
-                }else if ("test".equals(cluster.getType())){
+                } else {
                     test += middlewareService.calculateCpuRequest(middleware, values);
                 }
             }
         }
-        CPU_COUNT.put("produce", produce);
-        CPU_COUNT.put("test", test);
+        log.info("produce cpu count: {}", produce);
+        log.info("test cpu count: {}", test);
+        updateSysConfig("produce", String.valueOf(produce));
+        updateSysConfig("test", String.valueOf(test));
     }
 
-    public JSONObject getSecret() throws Exception {
+    public JSONObject getLicense() throws Exception {
         QueryWrapper<BeanSystemConfig> wrapper = new QueryWrapper<BeanSystemConfig>().eq("config_name", "license");
         BeanSystemConfig config = beanSystemConfigMapper.selectOne(wrapper);
         if (config == null) {
@@ -208,6 +221,15 @@ public class LicenseServiceImpl implements LicenseService {
             return null;
         }
         return config.getConfigValue();
+    }
+
+    public Double getCpu(String name) {
+        QueryWrapper<BeanSystemConfig> wrapper = new QueryWrapper<BeanSystemConfig>().eq("config_name", name);
+        BeanSystemConfig config = beanSystemConfigMapper.selectOne(wrapper);
+        if (config == null) {
+            return null;
+        }
+        return Double.parseDouble(config.getConfigValue());
     }
 
     public static void main(String[] args) throws Exception {

@@ -382,7 +382,7 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
             if (quota == null) {
                 continue;
             }
-            String cpu = quota.getJSONObject("requests").getString("CPU");
+            String cpu = quota.getJSONObject("requests").getString(CPU);
             cpuCount += ResourceCalculationUtil.getResourceValue(cpu, CPU, "");
         }
         return cpuCount;

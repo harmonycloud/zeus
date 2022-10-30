@@ -227,7 +227,7 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
         if (resources == null){
             return 0.0;
         }
-        String cpu = resources.getJSONObject("requests").getString("CPU");
+        String cpu = resources.getJSONObject("requests").getString(CPU);
         return ResourceCalculationUtil.getResourceValue(cpu, CPU, "");
     }
 }

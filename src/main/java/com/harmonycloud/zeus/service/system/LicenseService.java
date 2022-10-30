@@ -26,7 +26,12 @@ public interface LicenseService {
      *
      * @return Boolean
      */
-    Boolean check() throws Exception;
+    Boolean check(String clusterId) throws Exception;
+
+    /**
+     * 计算cpu使用量
+     */
+    void middlewareResource();
 
 
 

@@ -45,8 +45,18 @@ public class LicenseController {
             @ApiImplicitParam(name = "license", value = "license", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/check")
-    public BaseResult<Boolean> check() throws Exception {
-        return BaseResult.ok(licenseService.check());
+    public BaseResult<Boolean> check(@RequestParam("clusterId") String clusterId) throws Exception {
+        return BaseResult.ok(licenseService.check(clusterId));
+    }
+
+    @ApiOperation(value = "发布中间件能力校验", notes = "发布中间件能力校验")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "license", value = "license", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("/check/middleware")
+    public BaseResult middleware() throws Exception {
+        licenseService.middlewareResource();
+        return BaseResult.ok();
     }
 
 }

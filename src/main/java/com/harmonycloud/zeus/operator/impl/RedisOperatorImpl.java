@@ -374,12 +374,12 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         double sentinel = 0.0;
         JSONObject resources = values.getJSONObject(REDIS).getJSONObject(RESOURCES);
         JSONObject request = resources.getJSONObject("requests");
-        cpu = ResourceCalculationUtil.getResourceValue(request.getString("CPU"), CPU, "");
+        cpu = ResourceCalculationUtil.getResourceValue(request.getString(CPU), CPU, "");
 
         if (SENTINEL.equals(values.getString(MODE))) {
             JSONObject sentinelResources = values.getJSONObject(SENTINEL).getJSONObject(RESOURCES);
             JSONObject sentinelRequest = resources.getJSONObject("requests");
-            sentinel = ResourceCalculationUtil.getResourceValue(sentinelRequest.getString("CPU"), CPU, "");
+            sentinel = ResourceCalculationUtil.getResourceValue(sentinelRequest.getString(CPU), CPU, "");
             cpu += sentinel;
         }
         return cpu;

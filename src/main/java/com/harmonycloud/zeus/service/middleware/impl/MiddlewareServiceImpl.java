@@ -30,6 +30,7 @@ import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.*;
 import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
+import com.harmonycloud.zeus.service.system.LicenseService;
 import com.harmonycloud.zeus.service.user.ProjectService;
 import com.harmonycloud.zeus.service.user.RoleAuthorityService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
@@ -101,6 +102,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private MiddlewareCrTypeService middlewareCrTypeService;
     @Autowired
     private BeanMiddlewareInfoMapper middlewareInfoMapper;
+    @Autowired
+    private LicenseService licenseService;
 
     @Override
     public List<Middleware> simpleList(String clusterId, String namespace, String type, String keyword) {
@@ -166,6 +169,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Override
     public Middleware create(Middleware middleware) {
         checkBaseParam(middleware);
+        checkLicense(middleware.getClusterId());
         BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
         MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(middleware.getClusterId());
         // pre check
@@ -330,6 +334,14 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private void checkBaseParam(String clusterId, String namespace, String name, String type) {
         if (StringUtils.isAnyBlank(clusterId, namespace, name, type)) {
             throw new IllegalArgumentException("middleware clusterId/namespace/name/type is null");
+        }
+    }
+
+    private void checkLicense(String clusterId){
+        try {
+            licenseService.check(clusterId);
+        }catch (Exception e){
+            log.error("license校验失败");
         }
     }
 

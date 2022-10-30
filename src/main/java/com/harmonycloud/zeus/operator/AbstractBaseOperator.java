@@ -1242,12 +1242,17 @@ public abstract class AbstractBaseOperator {
     }
 
     public Double calculateCpuRequest(JSONObject values) {
+        // todo 乘以实例数 pg instances other replicaCount
         JSONObject resources = values.getJSONObject(RESOURCES);
         if (resources == null){
             return 0.0;
         }
-        String cpu = resources.getJSONObject("requests").getString("CPU");
+        String cpu = resources.getJSONObject("requests").getString(CPU);
         return ResourceCalculationUtil.getResourceValue(cpu, CPU, "");
+    }
+
+    public Integer getReplicas(JSONObject values){
+        return 1;
     }
 
 }
