@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.operator.impl;
 
+import static com.harmonycloud.caas.common.constants.CommonConstant.DOT;
 import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_ZERO;
 import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ARGS;
@@ -117,6 +118,11 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         // 实例扩容
         if (middleware.getQuota() != null && middleware.getQuota().get(middleware.getType()) != null) {
             MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
+            String cpu = quota.getCpu();
+            if (!cpu.contains(DOT)){
+                cpu += ".0";
+                quota.setCpu(cpu);
+            }
             // 设置limit的resources
             setLimitResources(quota);
             if (StringUtils.isNotBlank(quota.getCpu())) {
