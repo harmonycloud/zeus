@@ -492,6 +492,7 @@ public abstract class AbstractBaseOperator {
         if (middleware == null || StringUtils.isBlank(quotaKey) || resources == null) {
             return;
         }
+
         // quota
         MiddlewareQuota quota = checkMiddlewareQuota(middleware, quotaKey);
         JSONObject requests = resources.getJSONObject("requests");
@@ -1241,8 +1242,12 @@ public abstract class AbstractBaseOperator {
     }
 
     public Double calculateCpuRequest(JSONObject values) {
-        JSONObject requests = values.getJSONObject(RESOURCES);
-        return ResourceCalculationUtil.getResourceValue(requests.getString(CPU), CPU, "");
+        JSONObject resources = values.getJSONObject(RESOURCES);
+        if (resources == null){
+            return 0.0;
+        }
+        String cpu = resources.getJSONObject("requests").getString("CPU");
+        return ResourceCalculationUtil.getResourceValue(cpu, CPU, "");
     }
 
 }

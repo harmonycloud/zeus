@@ -13,20 +13,20 @@ public interface LicenseService {
      *
      * @param license
      */
-    void license(String license);
+    void license(String license) throws Exception;
 
     /**
      * 查询license使用信息
      *
      */
-    LicenseInfoDto info();
+    LicenseInfoDto info() throws Exception;
 
     /**
      * 平台可用额度校验
      *
      * @return Boolean
      */
-    Boolean check();
+    Boolean check() throws Exception;
 
 
 

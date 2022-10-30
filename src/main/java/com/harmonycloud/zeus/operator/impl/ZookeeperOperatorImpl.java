@@ -1,7 +1,6 @@
 package com.harmonycloud.zeus.operator.impl;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.PERSISTENCE;
-import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
+import static com.harmonycloud.caas.common.constants.NameConstant.*;
 import static com.harmonycloud.caas.common.enums.DictEnum.POD;
 
 import java.util.List;
@@ -9,6 +8,7 @@ import java.util.Map;
 
 import com.alibaba.fastjson.JSONArray;
 import com.harmonycloud.caas.common.constants.CommonConstant;
+import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.util.K8sConvert;
 import org.apache.commons.lang3.StringUtils;
 
@@ -121,14 +121,13 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
         MiddlewareQuota quota = checkMiddlewareQuota(middleware, quotaKey);
         JSONObject persistence = values.getJSONObject(PERSISTENCE);
         String storageClass = persistence.getString("storageClassName");
-        quota.setStorageClassName(storageClass)
-            .setStorageClassQuota(persistence.getString("volumeSize"));
+        quota.setStorageClassName(storageClass).setStorageClassQuota(persistence.getString("volumeSize"));
         quota.setIsLvmStorage(storageClassService.checkLVMStorage(middleware.getClusterId(), middleware.getNamespace(),
-                values.getString("storageClassName")));
+            values.getString("storageClassName")));
 
         // 获取存储中文名
         try {
-            if (storageClass.contains(",")){
+            if (storageClass.contains(",")) {
                 String[] storageClasses = storageClass.split(",");
                 StringBuilder sb = new StringBuilder();
                 for (String aClass : storageClasses) {
@@ -137,7 +136,7 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
                 }
                 sb.deleteCharAt(sb.length() - 1);
                 quota.setStorageClassAliasName(sb.toString());
-            }else {
+            } else {
                 StorageDto storageDto = storageService.get(middleware.getClusterId(), storageClass, false);
                 quota.setStorageClassAliasName(storageDto.getAliasName());
             }
@@ -147,7 +146,7 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
     }
 
     @Override
-    public void replaceLabels(Middleware middleware, JSONObject values){
+    public void replaceLabels(Middleware middleware, JSONObject values) {
         if (StringUtils.isNotBlank(middleware.getLabels())) {
             String[] labelAry = middleware.getLabels().split(CommonConstant.COMMA);
             JSONObject labelJson = new JSONObject();
@@ -164,12 +163,12 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
     }
 
     @Override
-    public void replaceNodeAffinity(Middleware middleware, JSONObject values){
+    public void replaceNodeAffinity(Middleware middleware, JSONObject values) {
         if (!CollectionUtils.isEmpty(middleware.getNodeAffinity())) {
             // convert to k8s model
             JSONObject nodeAffinity = K8sConvert.convertNodeAffinity2Json(middleware.getNodeAffinity());
             if (nodeAffinity != null) {
-                JSONObject affinity  = new JSONObject();
+                JSONObject affinity = new JSONObject();
                 affinity.put("nodeAffinity", nodeAffinity);
                 values.getJSONObject("pod").put("affinity", affinity);
             }
@@ -177,7 +176,7 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
     }
 
     @Override
-    public void replaceToleration(Middleware middleware, JSONObject values){
+    public void replaceToleration(Middleware middleware, JSONObject values) {
         if (!CollectionUtils.isEmpty(middleware.getTolerations())) {
             JSONArray jsonArray = K8sConvert.convertToleration2Json(middleware.getTolerations());
             values.getJSONObject("pod").put("tolerations", jsonArray);
@@ -190,7 +189,7 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
     }
 
     @Override
-    public void replaceAnnotations(Middleware middleware, JSONObject values){
+    public void replaceAnnotations(Middleware middleware, JSONObject values) {
         if (StringUtils.isNotEmpty(middleware.getAnnotations())) {
             JSONObject ann = new JSONObject();
             String[] annotations = middleware.getAnnotations().split(",");
@@ -220,5 +219,15 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
     @Override
     public void updateConfigData(ConfigMap configMap, List<String> data) {
 
+    }
+
+    @Override
+    public Double calculateCpuRequest(JSONObject values) {
+        JSONObject resources = values.getJSONObject(POD.getEnPhrase()).getJSONObject(RESOURCES);
+        if (resources == null){
+            return 0.0;
+        }
+        String cpu = resources.getJSONObject("requests").getString("CPU");
+        return ResourceCalculationUtil.getResourceValue(cpu, CPU, "");
     }
 }

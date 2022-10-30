@@ -27,7 +27,7 @@ public class LicenseController {
             @ApiImplicitParam(name = "license", value = "license", paramType = "query", dataTypeClass = String.class),
     })
     @PostMapping
-    public BaseResult authentication(@RequestParam("license") String license) {
+    public BaseResult authentication(@RequestParam("license") String license) throws Exception {
         licenseService.license(license);
         return BaseResult.ok();
     }
@@ -36,7 +36,7 @@ public class LicenseController {
     @ApiImplicitParams({
     })
     @GetMapping
-    public BaseResult<LicenseInfoDto> info() {
+    public BaseResult<LicenseInfoDto> info() throws Exception {
         return BaseResult.ok(licenseService.info());
     }
 
@@ -45,7 +45,7 @@ public class LicenseController {
             @ApiImplicitParam(name = "license", value = "license", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/check")
-    public BaseResult<Boolean> check() {
+    public BaseResult<Boolean> check() throws Exception {
         return BaseResult.ok(licenseService.check());
     }
 

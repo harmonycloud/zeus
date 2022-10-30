@@ -5,6 +5,7 @@ import static com.harmonycloud.caas.common.constants.NameConstant.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 
@@ -27,8 +28,7 @@ import io.fabric8.kubernetes.api.model.Quantity;
 
 /**
  * @author dengyulong
- * @date 2021/03/23
- * 处理es逻辑
+ * @date 2021/03/23 处理es逻辑
  */
 @Operator(paramTypes4One = Middleware.class)
 public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
@@ -304,18 +304,18 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
     }
 
     @Override
-    public void editConfigMapData(CustomConfig customConfig, List<String> data){
+    public void editConfigMapData(CustomConfig customConfig, List<String> data) {
         boolean changed = false;
         for (int i = 0; i < data.size(); ++i) {
             if (data.get(i).contains(customConfig.getName())) {
                 String temp = StringUtils.substring(data.get(i), data.get(i).indexOf(":") + 2, data.get(i).length());
-                if (data.get(i).replace(" ", "").replace(temp, "").replace(":", "").equals(customConfig.getName())){
+                if (data.get(i).replace(" ", "").replace(temp, "").replace(":", "").equals(customConfig.getName())) {
                     data.set(i, data.get(i).replace(temp, customConfig.getValue()));
                     changed = true;
                 }
             }
         }
-        if (!changed){
+        if (!changed) {
             data.add(customConfig.getName() + ": " + customConfig.getValue());
         }
     }
@@ -342,10 +342,10 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
 
     @Override
     public void updatePvc(Middleware middleware, List<PersistentVolumeClaim> pvcList) {
-        for (PersistentVolumeClaim pvc : pvcList){
+        for (PersistentVolumeClaim pvc : pvcList) {
             if (CollectionUtils.isEmpty(pvc.getMetadata().getAnnotations())
-                    || !pvc.getMetadata().getAnnotations().containsKey("volume.beta.kubernetes.io/storage-provisioner")
-                    || !StorageClassProvisionerEnum.CSI_LVM.getProvisioner()
+                || !pvc.getMetadata().getAnnotations().containsKey("volume.beta.kubernetes.io/storage-provisioner")
+                || !StorageClassProvisionerEnum.CSI_LVM.getProvisioner()
                     .equals(pvc.getMetadata().getAnnotations().get("volume.beta.kubernetes.io/storage-provisioner"))) {
                 continue;
             }
@@ -361,6 +361,7 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
 
     /**
      * 转换es模式
+     * 
      * @param mode
      * @return
      */
@@ -370,5 +371,20 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
         } else {
             return "complex";
         }
+    }
+
+    @Override
+    public Double calculateCpuRequest(JSONObject values) {
+        double cpuCount = 0.0;
+        JSONObject resources = values.getJSONObject(RESOURCES);
+        for (ElasticSearchRoleEnum role : ElasticSearchRoleEnum.values()){
+            JSONObject quota = resources.getJSONObject(role.getRole());
+            if (quota == null) {
+                continue;
+            }
+            String cpu = quota.getJSONObject("requests").getString("CPU");
+            cpuCount += ResourceCalculationUtil.getResourceValue(cpu, CPU, "");
+        }
+        return cpuCount;
     }
 }

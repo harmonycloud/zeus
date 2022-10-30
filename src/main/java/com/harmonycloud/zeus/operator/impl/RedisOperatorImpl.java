@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.operator.impl;
 import static com.harmonycloud.caas.common.constants.NameConstant.*;
 import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_INGRESS;
+import static com.harmonycloud.caas.common.enums.DictEnum.POD;
 
 
 import com.alibaba.fastjson.JSON;
@@ -12,6 +13,7 @@ import com.harmonycloud.caas.common.model.AffinityDTO;
 import com.harmonycloud.caas.common.model.IngressComponentDto;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.service.k8s.IngressComponentService;
 import com.harmonycloud.zeus.service.k8s.ServiceService;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareServiceImpl;
@@ -364,6 +366,23 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             super.setActiveActiveConfig( "redis", values);
             super.setActiveActiveToleration(middleware, values);
         }
+    }
+
+    @Override
+    public Double calculateCpuRequest(JSONObject values) {
+        double cpu = 0.0;
+        double sentinel = 0.0;
+        JSONObject resources = values.getJSONObject(REDIS).getJSONObject(RESOURCES);
+        JSONObject request = resources.getJSONObject("requests");
+        cpu = ResourceCalculationUtil.getResourceValue(request.getString("CPU"), CPU, "");
+
+        if (SENTINEL.equals(values.getString(MODE))) {
+            JSONObject sentinelResources = values.getJSONObject(SENTINEL).getJSONObject(RESOURCES);
+            JSONObject sentinelRequest = resources.getJSONObject("requests");
+            sentinel = ResourceCalculationUtil.getResourceValue(sentinelRequest.getString("CPU"), CPU, "");
+            cpu += sentinel;
+        }
+        return cpu;
     }
 
 }
