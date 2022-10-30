@@ -7,3 +7,6 @@
 -- 2022.10.28 xutianhong
 - mysql redis proxy 资源逻辑修改
 - 增量备份label添加
+
+-- 2022.10.30 xutianhong
+- 备份恢复逻辑修改
