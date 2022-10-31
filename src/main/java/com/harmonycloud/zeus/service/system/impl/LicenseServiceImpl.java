@@ -14,6 +14,7 @@ import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.tool.encrypt.RSAUtils;
+import com.harmonycloud.tool.file.FileUtil;
 import com.harmonycloud.zeus.bean.BeanSystemConfig;
 import com.harmonycloud.zeus.dao.BeanSystemConfigMapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
@@ -27,6 +28,9 @@ import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.service.system.LicenseService;
 import com.harmonycloud.zeus.util.K8sClient;
+import io.fabric8.kubernetes.client.ConfigBuilder;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -79,6 +83,15 @@ public class LicenseServiceImpl implements LicenseService {
         } else {
             updateLicense(license, exist);
         }
+    }
+
+    public void getKubeSystemUid() throws Exception{
+        String token = FileUtil.readFile("/var/run/secrets/kubernetes.io/serviceaccount/token");
+        log.info("token: {}", token);
+        KubernetesClient client = new DefaultKubernetesClient(new ConfigBuilder().withMasterUrl("https://10.96.0.1:443")
+                .withTrustCerts(true).withOauthToken(token).build());
+        io.fabric8.kubernetes.api.model.Namespace namespace = client.namespaces().withName("kube-system").get();
+        log.info(namespace.getMetadata().getUid());
     }
 
     public void saveLicense(JSONObject license) throws Exception {
