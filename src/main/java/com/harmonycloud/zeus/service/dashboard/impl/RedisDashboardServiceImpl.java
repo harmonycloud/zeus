@@ -2,6 +2,9 @@ package com.harmonycloud.zeus.service.dashboard.impl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.dashboard.ExecuteSqlDto;
 import com.harmonycloud.caas.common.model.dashboard.redis.DataDto;
 import com.harmonycloud.caas.common.model.dashboard.redis.DatabaseDto;
@@ -9,6 +12,8 @@ import com.harmonycloud.caas.common.model.dashboard.redis.KeyValueDto;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.integration.dashboard.RedisClient;
 import com.harmonycloud.zeus.service.dashboard.RedisDashboardService;
+import com.harmonycloud.zeus.service.k8s.ClusterService;
+import com.harmonycloud.zeus.service.registry.HelmChartService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,14 +36,38 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
 
     private String port = "6379";
 
+    @Autowired
+    private HelmChartService  helmChartService;
+    @Autowired
+    private ClusterService clusterService;
+
     @Override
     public boolean support(String type) {
-        return false;
+        return MiddlewareTypeEnum.REDIS.getType().equals(type);
     }
 
     @Override
     public String login(String clusterId, String namespace, String middlewareName, String username, String password) {
-        return null;
+        JSONObject installedValues = helmChartService.getInstalledValues(middlewareName, namespace, clusterService.findById(clusterId));
+        String tempVersion = installedValues.getString("version");
+        String version = "5";
+        if (!StringUtils.isEmpty(tempVersion)) {
+            version = tempVersion.split("\\.")[0];
+        }
+        if(Integer.parseInt(version) < 6){
+            username = "";
+        }
+        int defaultDb = 0;
+        String mod = "single";
+
+        String clusterAddrs = getPath(namespace, middlewareName) + ":" + port;
+        String sentinelAddrs = getPath(namespace, middlewareName) +":" +port;
+        JSONObject res = redisClient.login(getPath(namespace, middlewareName), defaultDb, version,
+                mod, username, password, port, clusterAddrs, sentinelAddrs);
+        if (res.get("data") == null){
+            throw new BusinessException(ErrorMessage.FAILED_TO_LOGIN_REDIS, res.getString("error"));
+        }
+        return res.getString("data");
     }
 
     @Override
@@ -49,6 +78,7 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
     @Override
     public List<DatabaseDto> getDBList(String clusterId, String namespace, String middlewareName) {
         List<DatabaseDto> databaseDtoList = new ArrayList<>();
+        // todo 数据库并非都是 16个
         for (int i = 0; i < 16; i++) {
             DatabaseDto databaseDto = new DatabaseDto();
             databaseDto.setDb(i);
@@ -69,6 +99,10 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
     @Override
     public void setKeyValue(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto) {
         keyValueDto.setValue(keyValueDto.wrapValue());
+        // 给过期时间添加时间单位：秒
+        if (!StringUtils.isEmpty(keyValueDto.getExpiration())) {
+            keyValueDto.setExpiration(keyValueDto.getExpiration() + "s");
+        }
         redisClient.setKeyValue(getPath(namespace, middlewareName), db, key, keyValueDto);
     }
 
@@ -89,19 +123,13 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
 
     @Override
     public void deleteValue(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto) {
-
-
+        keyValueDto.setValue(keyValueDto.wrapValue());
+        redisClient.removeValue(getPath(namespace, middlewareName), db, key, keyValueDto);
     }
 
     @Override
     public void setKeyExpiration(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto) {
         redisClient.setKeyExpiration(getPath(namespace, middlewareName), db, key, keyValueDto);
-    }
-
-    @Override
-    public void updateKeyValue(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto) {
-
-
     }
 
     @Override
@@ -130,8 +158,8 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
         return resList;
     }
 
-    private String getPath(String namespace, String middlewareName){
-        return "10.10.102.52";
+    private String getPath(String namespace, String middlewareName) {
+        return middlewareName + "." + namespace;
     }
 
 }

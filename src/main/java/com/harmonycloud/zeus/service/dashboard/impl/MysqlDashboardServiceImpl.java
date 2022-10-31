@@ -151,9 +151,19 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public void createTable(String clusterId, String namespace, String middlewareName, String database, TableDto databaseDto) {
+    public void createTable(String clusterId, String namespace, String middlewareName, String database, TableDto tableDto) {
+        JSONObject res = mysqlClient.createTable(getPath(middlewareName,namespace), port, database, tableDto);
+        if (!res.getBoolean("success")) {
+            throw new BusinessException(ErrorMessage.CREATE_TABLE_FAILED, res.getString("message"));
+        }
+    }
 
-
+    @Override
+    public void updateTableOptions(String clusterId,String namespace, String middlewareName,String database,String table,TableDto tableDto) {
+        JSONObject res = mysqlClient.updateTableOptions(getPath(middlewareName,namespace), port, database, table,tableDto);
+        if (!res.getBoolean("success")) {
+            throw new BusinessException(ErrorMessage.ALTER_TABLE_FAILED, res.getString("message"));
+        }
     }
 
     @Override
@@ -221,7 +231,10 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void saveTableColumn(String clusterId, String namespace, String middlewareName, String database, String table, List<ColumnDto> columnDtoList) {
-
+        JSONObject res = mysqlClient.saveTableColumns(getPath(middlewareName,namespace), port, database, table, columnDtoList);
+        if (!res.getBoolean("success")) {
+            throw new BusinessException(ErrorMessage.ALTER_TABLE_COLUMN_FAILED, res.getString("message"));
+        }
     }
 
     @Override
@@ -255,7 +268,10 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void saveTableIndex(String clusterId, String namespace, String middlewareName, String database, String table, List<IndexDto> indexDtoList) {
-
+        JSONObject res = mysqlClient.saveTableIndices(getPath(middlewareName,namespace), port, database, table, indexDtoList);
+        if (!res.getBoolean("success")) {
+            throw new BusinessException(ErrorMessage.ALTER_TABLE_INDICES_FAILED, res.getString("message"));
+        }
     }
 
     @Override
@@ -292,8 +308,10 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void saveTableForeignKey(String clusterId, String namespace, String middlewareName, String database, String table, List<ForeignKeyDto> foreignKeyDtos) {
-
-
+        JSONObject res = mysqlClient.saveTableForeignKeys(getPath(middlewareName,namespace), port, database, table, foreignKeyDtos);
+        if (!res.getBoolean("success")) {
+            throw new BusinessException(ErrorMessage.ALTER_TABLE_FOREIGN_KEYS_FAILED, res.getString("message"));
+        }
     }
 
     @Override

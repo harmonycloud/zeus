@@ -26,22 +26,7 @@ import java.util.List;
 public class RedisDashboardController {
 
     @Autowired
-    private RedisClient redisClient;
-    @Autowired
     private RedisDashboardService redisDashboardService;
-
-    @GetMapping("/test")
-    private void test(){
-        JSONObject obj = new JSONObject();
-        obj.put("a","b");
-        String str = obj.toJSONString();
-        System.out.println(str);
-        System.out.println(obj.toString());
-        KeyValueDto dto = new KeyValueDto();
-        dto.setKeyType("zset");
-        redisClient.setKeyValue("10.10.102.52", 1, "testhasaa",dto);
-    }
-
 
     @ApiOperation(value = "查询指定库全部key", notes = "查询指定库全部key")
     @ApiImplicitParams({
@@ -128,14 +113,13 @@ public class RedisDashboardController {
         return BaseResult.ok();
     }
 
-    @ApiOperation(value = "修改key信息", notes = "修改key信息")
+    @ApiOperation(value = "修改key信息", notes = "修改key信息,修改名称或超时时间(s)")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = Integer.class),
             @ApiImplicitParam(name = "key", value = "key", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "newName", value = "新名称", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "keyValueDto", value = "redis参数", paramType = "query", dataTypeClass = String.class),
     })
     @PutMapping("/databases/{database}/keys/{key}")

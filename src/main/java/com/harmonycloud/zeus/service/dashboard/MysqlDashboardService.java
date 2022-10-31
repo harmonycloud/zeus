@@ -63,7 +63,12 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
     /**
      * 创建表
      */
-    void createTable(String clusterId,String namespace, String middlewareName,String database,TableDto databaseDto);
+    void createTable(String clusterId,String namespace, String middlewareName,String database,TableDto tableDto);
+
+    /**
+     * 修改表基本信息
+     */
+    void updateTableOptions(String clusterId,String namespace, String middlewareName,String database,String table,TableDto tableDto);
 
     /**
      * 删除数据表
