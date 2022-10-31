@@ -6,6 +6,9 @@ import com.harmonycloud.caas.common.model.dashboard.mysql.*;
 import com.harmonycloud.zeus.interceptor.DashboardInterceptor;
 import com.harmonycloud.zeus.interceptor.MiddlewareApiInterceptor;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RequestBody;
+
+import java.util.List;
 
 /**
  * @author liyinlong
@@ -129,6 +132,16 @@ public interface MysqlClient {
                                 @Var("database") String database,
                                 @Var("table") String table);
 
+    /**
+     * 保存列信息
+     */
+    @Post(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/columns")
+    JSONObject saveTableColumns(@Var("host") String host,
+                                @Var("port") String port,
+                                @Var("database") String database,
+                                @Var("table") String table,
+                                @JSONBody List<ColumnDto> columns);
+
     // index
     /**
      * 查询数据表所有索引
@@ -139,6 +152,16 @@ public interface MysqlClient {
                                 @Var("database") String database,
                                 @Var("table") String table);
 
+    /**
+     * 保存索引信息
+     */
+    @Post(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/indices")
+    JSONObject saveTableIndices(@Var("host") String host,
+                                @Var("port") String port,
+                                @Var("database") String database,
+                                @Var("table") String table,
+                                @JSONBody List<IndexDto> indexDtos);
+
     // foreign key
     /**
      * 查询数据表所有外键
@@ -148,6 +171,16 @@ public interface MysqlClient {
                                     @Var("port") String port,
                                     @Var("database") String database,
                                     @Var("table") String table);
+
+    /**
+     * 保存外键信息
+     */
+    @Post(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/foreignKeys")
+    JSONObject saveTableForeignKeys(@Var("host") String host,
+                                @Var("port") String port,
+                                @Var("database") String database,
+                                @Var("table") String table,
+                                @JSONBody List<ForeignKeyDto> foreignKeyDtos);
 
     // user
     /**
