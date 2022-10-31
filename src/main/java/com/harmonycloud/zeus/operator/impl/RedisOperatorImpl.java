@@ -355,7 +355,6 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         JSONObject limits = new JSONObject();
 
         MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
-        String cpu = calculateProxyResource(quota.getCpu());
         String memory = calculateProxyResource(quota.getMemory().replace("Gi", ""));
         if (Double.parseDouble(memory) < 0.256) {
             memory = String.valueOf(0.256);
@@ -363,9 +362,9 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             memory = String.valueOf(2);
         }
 
-        requests.put(CPU, cpu);
+        requests.put(CPU, "1");
         requests.put(MEMORY, memory + "Gi");
-        limits.put(CPU, cpu);
+        limits.put(CPU, "1");
         limits.put(MEMORY, memory + "Gi");
         Integer num = quota.getNum();
         predixy.put("replicas", num / 2 == 1 ? num : num / 2);
