@@ -26,22 +26,7 @@ import java.util.List;
 public class RedisDashboardController {
 
     @Autowired
-    private RedisClient redisClient;
-    @Autowired
     private RedisDashboardService redisDashboardService;
-
-    @GetMapping("/test")
-    private void test(){
-        JSONObject obj = new JSONObject();
-        obj.put("a","b");
-        String str = obj.toJSONString();
-        System.out.println(str);
-        System.out.println(obj.toString());
-        KeyValueDto dto = new KeyValueDto();
-        dto.setKeyType("zset");
-        redisClient.setKeyValue("10.10.102.52", 1, "testhasaa",dto);
-    }
-
 
     @ApiOperation(value = "查询指定库全部key", notes = "查询指定库全部key")
     @ApiImplicitParams({

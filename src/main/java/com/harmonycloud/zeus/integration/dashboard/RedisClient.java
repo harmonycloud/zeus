@@ -16,6 +16,30 @@ import org.springframework.stereotype.Component;
 public interface RedisClient {
 
     /**
+     * 登录
+     * @param host redis服务地址，集群内为服务名称(带namespace)
+     * @param db
+     * @param version redis版本 5或6
+     * @param mod redis模式 single、cluster、sentinel
+     * @param username 用户名(redis6以上才支持用户名)
+     * @param password 密码
+     * @param port 端口(single模式才填)
+     * @param clusterAddrs redis集群模式连接信息
+     * @param sentinelAddrs redis哨兵模式连接信息
+     * @return
+     */
+    @Post(url = "/redis/{host}/db/{db}/login")
+    JSONObject login(@Var("host") String host,
+                     @Var("db") Integer db,
+                     @Body(name = "otherMapInfo[version]") String version,
+                     @Body(name = "otherMapInfo[mod]") String mod,
+                     @Body(name = "otherMapInfo[username]") String username,
+                     @Body(name = "otherMapInfo[password]") String password,
+                     @Body(name = "otherMapInfo[port]") String port,
+                     @Body(name = "otherMapInfo[clusterAddrs]") String clusterAddrs,
+                     @Body(name = "otherMapInfo[sentinelAddrs]") String sentinelAddrs);
+
+    /**
      * 查询dbsize
      */
     @Get(url = "/redis/{host}/db/{db}/size")
