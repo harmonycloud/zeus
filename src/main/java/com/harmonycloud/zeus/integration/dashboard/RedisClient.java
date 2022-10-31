@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.integration.dashboard;
 import com.alibaba.fastjson.JSONObject;
 import com.dtflys.forest.annotation.*;
 import com.harmonycloud.caas.common.model.dashboard.redis.KeyValueDto;
+import com.harmonycloud.zeus.interceptor.DashboardInterceptor;
 import com.harmonycloud.zeus.interceptor.MiddlewareApiInterceptor;
 import org.springframework.stereotype.Component;
 
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Address(source = MiddlewareApiAddress.class)
-@BaseRequest(interceptor = {MiddlewareApiInterceptor.class})
+@BaseRequest(interceptor = {DashboardInterceptor.class, MiddlewareApiInterceptor.class})
 public interface RedisClient {
 
     /**

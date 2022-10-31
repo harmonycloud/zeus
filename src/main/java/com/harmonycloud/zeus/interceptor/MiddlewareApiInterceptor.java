@@ -49,6 +49,7 @@ public class MiddlewareApiInterceptor implements Interceptor {
 
     @Override
     public void onError(ForestRuntimeException ex, ForestRequest req, ForestResponse res) {
+        log.info(res.getContent());
         throw new BusinessException(ErrorMessage.MIDDLEWARE_API_REQUEST_ERROR, ex.getMessage());
     }
 
