@@ -135,7 +135,6 @@ public class RedisDashboardController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = Integer.class),
             @ApiImplicitParam(name = "key", value = "key", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "newName", value = "新名称", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "keyValueDto", value = "redis参数", paramType = "query", dataTypeClass = String.class),
     })
     @PutMapping("/databases/{database}/keys/{key}")
