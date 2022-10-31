@@ -55,6 +55,12 @@ public interface RedisClient {
     JSONObject deleteKey(@Var("host") String host, @Var("db") Integer db,@Var("key") String key);
 
     /**
+     * 删除value
+     */
+    @Delete(url = "/redis/{host}/db/{db}/key/{key}/value")
+    JSONObject removeValue(@Var("host") String host, @Var("db") Integer db, @Var("key") String key, @JSONBody KeyValueDto keyValueDto);
+
+    /**
      * 重命名key
      */
     @Put(url = "/redis/{host}/db/{db}/key/{key}/rename/{newName}")

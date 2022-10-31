@@ -128,7 +128,7 @@ public class RedisDashboardController {
         return BaseResult.ok();
     }
 
-    @ApiOperation(value = "修改key信息", notes = "修改key信息")
+    @ApiOperation(value = "修改key信息", notes = "修改key信息,修改名称或超时时间(s)")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),

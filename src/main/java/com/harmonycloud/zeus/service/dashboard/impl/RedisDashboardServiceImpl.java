@@ -49,6 +49,7 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
     @Override
     public List<DatabaseDto> getDBList(String clusterId, String namespace, String middlewareName) {
         List<DatabaseDto> databaseDtoList = new ArrayList<>();
+        // todo 数据库并非都是 16个
         for (int i = 0; i < 16; i++) {
             DatabaseDto databaseDto = new DatabaseDto();
             databaseDto.setDb(i);
@@ -69,6 +70,10 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
     @Override
     public void setKeyValue(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto) {
         keyValueDto.setValue(keyValueDto.wrapValue());
+        // 给过期时间添加时间单位：秒
+        if (!StringUtils.isEmpty(keyValueDto.getExpiration())) {
+            keyValueDto.setExpiration(keyValueDto.getExpiration() + "s");
+        }
         redisClient.setKeyValue(getPath(namespace, middlewareName), db, key, keyValueDto);
     }
 
@@ -89,19 +94,13 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
 
     @Override
     public void deleteValue(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto) {
-
-
+        keyValueDto.setValue(keyValueDto.wrapValue());
+        redisClient.removeValue(getPath(namespace, middlewareName), db, key, keyValueDto);
     }
 
     @Override
     public void setKeyExpiration(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto) {
         redisClient.setKeyExpiration(getPath(namespace, middlewareName), db, key, keyValueDto);
-    }
-
-    @Override
-    public void updateKeyValue(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto) {
-
-
     }
 
     @Override

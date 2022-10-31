@@ -30,8 +30,6 @@ public interface RedisDashboardService extends BaseMiddlewareApiService{
 
     void setKeyExpiration(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto);
 
-    void updateKeyValue(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto);
-
     JSONObject execCMD(String clusterId, String namespace, String middlewareName, Integer db, String cmd);
 
     List<ExecuteSqlDto> listExecuteSql(String clusterId, String namespace, String middlewareName, Integer db, String keyword,String start,String end);
