@@ -1642,6 +1642,12 @@ public class IngressServiceImpl implements IngressService {
     }
 
     @Override
+    public List<IngressDTO> listAllMiddlewareIngress(String clusterId, String namespace, String keyword) {
+        return listAllIngress(clusterId, namespace, keyword).stream().
+                filter(ingressDTO -> !StringUtils.isEmpty(ingressDTO.getServicePurpose())).collect(Collectors.toList());
+    }
+
+    @Override
     public int getAvailablePort(String clusterId, String ingressClassName) {
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         //获取指定ingress
