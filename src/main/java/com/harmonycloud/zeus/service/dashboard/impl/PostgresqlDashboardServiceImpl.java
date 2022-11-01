@@ -462,6 +462,9 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         // 外键约束
         if (!CollectionUtils.isEmpty(tableDto.getTableForeignKeyList())){
             for (TableForeignKey foreign : tableDto.getTableForeignKeyList()) {
+                if(StringUtils.isEmpty(foreign.getTargetSchema())){
+                    foreign.setTargetSchema(tableDto.getSchemaName());
+                }
                 sb.append("CONSTRAINT ").append(foreign.getName()).append(" foreign key ( ").append(foreign.getColumn())
                         .append(") ").append("REFERENCES ").append(foreign.getTargetSchema()).append(".")
                         .append(foreign.getTargetTable()).append("(").append(foreign.getTarget()).append(")")
