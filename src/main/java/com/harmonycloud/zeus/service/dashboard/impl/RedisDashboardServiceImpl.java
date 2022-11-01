@@ -22,9 +22,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -221,6 +223,9 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
             throw new BusinessException(ErrorMessage.FAILED_TO_QUERY_KEY, object.getString("err"));
         }
         JSONArray dataAry = object.getJSONArray("data");
+        if (CollectionUtils.isEmpty(dataAry)) {
+            return Collections.emptyList();
+        }
         List<KeyValueDto> resList = new ArrayList<>();
         dataAry.forEach(data -> {
             JSONObject obj = (JSONObject) data;
