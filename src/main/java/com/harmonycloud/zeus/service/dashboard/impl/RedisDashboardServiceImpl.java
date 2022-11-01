@@ -102,8 +102,9 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
     @Override
     public DataDto getKeyValue(String clusterId, String namespace, String middlewareName, Integer db, String key) {
         JSONObject res = redisClient.getKeyValue(getPath(namespace, middlewareName), db, key);
+        log.info(res.toJSONString());
         DataDto data = new DataDto(res.getJSONObject("data"));
-        log.debug(data.toString());
+        log.info(data.toString());
         return data;
     }
 
