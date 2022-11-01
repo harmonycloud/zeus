@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Address(source = MiddlewareApiAddress.class)
-@BaseRequest(interceptor = {DashboardInterceptor.class, MiddlewareApiInterceptor.class})
+@BaseRequest(interceptor = {MiddlewareApiInterceptor.class})
 public interface RedisClient {
 
     /**

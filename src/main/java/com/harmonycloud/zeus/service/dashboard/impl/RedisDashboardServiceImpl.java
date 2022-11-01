@@ -78,8 +78,8 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
     @Override
     public List<DatabaseDto> getDBList(String clusterId, String namespace, String middlewareName) {
         List<DatabaseDto> databaseDtoList = new ArrayList<>();
-        // todo 数据库并非都是 16个
-        for (int i = 0; i < 16; i++) {
+        int dbNum = getDBNum(clusterId, namespace, middlewareName);
+        for (int i = 0; i < dbNum; i++) {
             DatabaseDto databaseDto = new DatabaseDto();
             databaseDto.setDb(i);
             databaseDto.setSize(redisClient.DBSize(getPath(namespace, middlewareName), i).getInteger("data"));
@@ -140,6 +140,23 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
     @Override
     public List<ExecuteSqlDto> listExecuteSql(String clusterId, String namespace, String middlewareName, Integer db, String keyword,String start,String end) {
         return null;
+    }
+
+    /**
+     * 获取数据库数量，集群模式只有1个库，其他模式有16个库
+     * @param clusterId
+     * @param namespace
+     * @param middlewareName
+     * @return
+     */
+    private int getDBNum(String clusterId, String namespace, String middlewareName) {
+        JSONObject installedValues = helmChartService.getInstalledValues(middlewareName, namespace, clusterService.findById(clusterId));
+        String type = installedValues.getString("type");
+        int dbNum = 16;
+        if (type.equals("cluster")) {
+            dbNum = 1;
+        }
+        return dbNum;
     }
 
     private List<KeyValueDto> convertToKeyValueDto(JSONObject object) {
