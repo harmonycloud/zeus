@@ -6,16 +6,11 @@ import com.dtflys.forest.exceptions.ForestRuntimeException;
 import com.dtflys.forest.http.ForestRequest;
 import com.dtflys.forest.http.ForestResponse;
 import com.dtflys.forest.interceptor.Interceptor;
-import com.dtflys.forest.reflection.ForestMethod;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 
 @Slf4j
-public class DashboardInterceptor implements Interceptor<JSONObject> {
-
-    @Override
-    public void onInvokeMethod(ForestRequest req, ForestMethod method, Object[] args) {
-    }
+public class MysqlDashboardInterceptor implements Interceptor<JSONObject> {
 
     @Override
     public void onSuccess(JSONObject data, ForestRequest req, ForestResponse res) {

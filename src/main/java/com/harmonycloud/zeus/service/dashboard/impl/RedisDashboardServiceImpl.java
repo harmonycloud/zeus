@@ -2,24 +2,30 @@ package com.harmonycloud.zeus.service.dashboard.impl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.github.pagehelper.PageHelper;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.dashboard.ExecuteSqlDto;
 import com.harmonycloud.caas.common.model.dashboard.redis.DataDto;
 import com.harmonycloud.caas.common.model.dashboard.redis.DatabaseDto;
 import com.harmonycloud.caas.common.model.dashboard.redis.KeyValueDto;
 import com.harmonycloud.zeus.annotation.Operator;
+import com.harmonycloud.zeus.bean.BeanSqlExecuteRecord;
+import com.harmonycloud.zeus.dao.BeanSqlExecuteRecordMapper;
 import com.harmonycloud.zeus.integration.dashboard.RedisClient;
 import com.harmonycloud.zeus.service.dashboard.RedisDashboardService;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
+import com.harmonycloud.zeus.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -31,15 +37,17 @@ import java.util.List;
 @Operator(paramTypes4One = String.class)
 public class RedisDashboardServiceImpl implements RedisDashboardService {
 
-    @Autowired
-    private RedisClient redisClient;
-
-    private String port = "6379";
+    @Value("${system.middleware-api.redis.port:6379}")
+    private String port;
 
     @Autowired
     private HelmChartService  helmChartService;
     @Autowired
     private ClusterService clusterService;
+    @Autowired
+    private BeanSqlExecuteRecordMapper sqlExecuteRecordMapper;
+    @Autowired
+    private RedisClient redisClient;
 
     @Override
     public boolean support(String type) {
@@ -60,6 +68,7 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
         int defaultDb = 0;
         String mod = "single";
 
+        // todo 若reids每种模式都可以通过single方式连接，则需要删除参数：clusterAddrs、sentinelAddrs
         String clusterAddrs = getPath(namespace, middlewareName) + ":" + port;
         String sentinelAddrs = getPath(namespace, middlewareName) +":" +port;
         JSONObject res = redisClient.login(getPath(namespace, middlewareName), defaultDb, version,
@@ -134,12 +143,60 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
 
     @Override
     public JSONObject execCMD(String clusterId, String namespace, String middlewareName, Integer db, String cmd) {
-        return null;
+        JSONObject res = redisClient.execCMD(getPath(namespace, middlewareName), db, cmd);
+        BeanSqlExecuteRecord record = new BeanSqlExecuteRecord();
+        String err = res.getString("err");
+        record.setClusterId(clusterId);
+        record.setNamespace(namespace);
+        record.setMiddlewareName(middlewareName);
+        record.setTargetDatabase(String.valueOf(db));
+        // 设置sql
+        String[] cmds = cmd.split(" ");
+        if (cmds.length > 0) {
+            record.setSqlStr(cmds[0]);
+        } else {
+            record.setSqlStr(cmd);
+        }
+        //  设置执行状态和提示信息
+        if (!StringUtils.isEmpty(err)) {
+            record.setMessage(err);
+            record.setStatus("false");
+        } else {
+            record.setStatus("true");
+            // 设置命令执行时长
+            record.setExecTime(res.getString("execTime"));
+        }
+        // 设置影响行数
+        Object data = res.get("data");
+        if (data instanceof JSONArray) {
+            record.setLine(String.valueOf(res.getJSONArray("data").size()));
+        } else {
+            record.setLine("1");
+        }
+        // 设置命令执行时间
+        record.setExecDate(new Date());
+        sqlExecuteRecordMapper.insert(record);
+        return res;
     }
 
     @Override
-    public List<ExecuteSqlDto> listExecuteSql(String clusterId, String namespace, String middlewareName, Integer db, String keyword,String start,String end) {
-        return null;
+    public List<BeanSqlExecuteRecord> listExecuteSql(String clusterId, String namespace, String middlewareName, Integer db, String keyword, String start, String end, Integer pageNum, Integer size) {
+        QueryWrapper<BeanSqlExecuteRecord> wrapper = new QueryWrapper<>();
+        wrapper.eq("cluster_id", clusterId);
+        wrapper.eq("namespace", namespace);
+        wrapper.eq("middleware_name", middlewareName);
+        wrapper.eq("target_database", db);
+        if (!StringUtils.isEmpty(keyword)) {
+            wrapper.like("sqlstr", keyword);
+        }
+        PageHelper.startPage(pageNum, size);
+        if(!StringUtils.isEmpty(start)){
+            wrapper.gt("exec_date", DateUtil.parseUTCDate(start));
+        }
+        if(!StringUtils.isEmpty(end)){
+            wrapper.lt("exec_date", DateUtil.parseUTCDate(end));
+        }
+        return sqlExecuteRecordMapper.selectList(wrapper);
     }
 
     /**
@@ -161,7 +218,7 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
 
     private List<KeyValueDto> convertToKeyValueDto(JSONObject object) {
         if (object.getJSONObject("err") != null) {
-            // throws exception
+            throw new BusinessException(ErrorMessage.FAILED_TO_QUERY_KEY, object.getString("err"));
         }
         JSONArray dataAry = object.getJSONArray("data");
         List<KeyValueDto> resList = new ArrayList<>();

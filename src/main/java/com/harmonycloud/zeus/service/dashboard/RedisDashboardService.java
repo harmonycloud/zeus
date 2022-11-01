@@ -1,10 +1,10 @@
 package com.harmonycloud.zeus.service.dashboard;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.model.dashboard.ExecuteSqlDto;
 import com.harmonycloud.caas.common.model.dashboard.redis.DataDto;
 import com.harmonycloud.caas.common.model.dashboard.redis.DatabaseDto;
 import com.harmonycloud.caas.common.model.dashboard.redis.KeyValueDto;
+import com.harmonycloud.zeus.bean.BeanSqlExecuteRecord;
 
 import java.util.List;
 
@@ -32,6 +32,6 @@ public interface RedisDashboardService extends BaseMiddlewareApiService{
 
     JSONObject execCMD(String clusterId, String namespace, String middlewareName, Integer db, String cmd);
 
-    List<ExecuteSqlDto> listExecuteSql(String clusterId, String namespace, String middlewareName, Integer db, String keyword,String start,String end);
+    List<BeanSqlExecuteRecord> listExecuteSql(String clusterId, String namespace, String middlewareName, Integer db, String keyword, String start, String end, Integer pageNum, Integer size);
 
 }

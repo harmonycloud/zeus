@@ -25,16 +25,34 @@ public class BeanSqlExecuteRecord implements Serializable {
     private Integer id;
 
     /**
+     * 集群id
+     */
+    @TableField("cluster_id")
+    private String clusterId;
+
+    /**
+     * 分区名称
+     */
+    @TableField("namespace")
+    private String namespace;
+
+    /**
+     * 中间件名称
+     */
+    @TableField("middleware_name")
+    private String middlewareName;
+
+    /**
      * 目标database
      */
-    @TableField("database")
-    private String database;
+    @TableField("target_database")
+    private String targetDatabase;
 
     /**
      * 执行sql
      */
-    @TableField("sql")
-    private String sql;
+    @TableField("sqlstr")
+    private String sqlStr;
 
     /**
      * 执行状态
@@ -51,14 +69,14 @@ public class BeanSqlExecuteRecord implements Serializable {
     /**
      * 执行时间
      */
-    @TableField("date")
-    private Date date;
+    @TableField("exec_date")
+    private Date execDate;
 
     /**
      * 耗时
      */
-    @TableField("time")
-    private String time;
+    @TableField("exec_time")
+    private String execTime;
 
     /**
      * 信息

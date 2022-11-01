@@ -3,10 +3,9 @@ package com.harmonycloud.zeus.integration.dashboard;
 import com.alibaba.fastjson.JSONObject;
 import com.dtflys.forest.annotation.*;
 import com.harmonycloud.caas.common.model.dashboard.mysql.*;
-import com.harmonycloud.zeus.interceptor.DashboardInterceptor;
 import com.harmonycloud.zeus.interceptor.MiddlewareApiInterceptor;
+import com.harmonycloud.zeus.interceptor.MysqlDashboardInterceptor;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
@@ -16,7 +15,7 @@ import java.util.List;
  */
 @Component
 @Address(source = MiddlewareApiAddress.class)
-@BaseRequest(interceptor = {MiddlewareApiInterceptor.class, DashboardInterceptor.class})
+@BaseRequest(interceptor = {MiddlewareApiInterceptor.class, MysqlDashboardInterceptor.class})
 public interface MysqlClient {
 
     /**

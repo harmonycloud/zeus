@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.interceptor;
 
+import com.alibaba.fastjson.JSONObject;
 import com.dtflys.forest.exceptions.ForestRuntimeException;
 import com.dtflys.forest.http.ForestRequest;
 import com.dtflys.forest.http.ForestResponse;
@@ -49,8 +50,14 @@ public class MiddlewareApiInterceptor implements Interceptor {
 
     @Override
     public void onError(ForestRuntimeException ex, ForestRequest req, ForestResponse res) {
-        log.info(res.getContent());
-        throw new BusinessException(ErrorMessage.MIDDLEWARE_API_REQUEST_ERROR, ex.getMessage());
+        log.error(res.getContent());
+        if (StringUtils.isNotEmpty(res.getContent())) {
+            JSONObject jsonObject = JSONObject.parseObject(res.getContent());
+            String err = jsonObject.getString("err");
+            throw new BusinessException(ErrorMessage.MIDDLEWARE_API_REQUEST_ERROR, err);
+        } else {
+            throw new BusinessException(ErrorMessage.MIDDLEWARE_API_REQUEST_ERROR, ex.getMessage());
+        }
     }
 
 }
