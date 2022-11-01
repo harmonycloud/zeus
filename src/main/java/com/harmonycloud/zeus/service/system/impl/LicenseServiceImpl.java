@@ -1,24 +1,32 @@
 package com.harmonycloud.zeus.service.system.impl;
 
+import static com.harmonycloud.caas.common.constants.NameConstant.*;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
+
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.LicenseInfoDto;
 import com.harmonycloud.caas.common.model.MonitorResourceQuotaBase;
+import com.harmonycloud.caas.common.model.Secret;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
-import com.harmonycloud.tool.date.DateUtils;
-import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.tool.encrypt.RSAUtils;
-import com.harmonycloud.tool.file.FileUtil;
 import com.harmonycloud.zeus.bean.BeanSystemConfig;
-import com.harmonycloud.zeus.dao.BeanSystemConfigMapper;
+import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCluster;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
@@ -27,18 +35,10 @@ import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.service.system.LicenseService;
+import com.harmonycloud.zeus.service.system.SystemConfigService;
 import com.harmonycloud.zeus.util.K8sClient;
-import io.fabric8.kubernetes.client.ConfigBuilder;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author xutianhong
@@ -53,7 +53,9 @@ public class LicenseServiceImpl implements LicenseService {
     @Autowired
     private NamespaceService namespaceService;
     @Autowired
-    private MiddlewareCRService middlewareCRService;
+    private NamespaceWrapper namespaceWrapper;
+    @Autowired
+    private MiddlewareCRService middlewareCrService;
     @Autowired
     private MiddlewareService middlewareService;
     @Autowired
@@ -61,7 +63,9 @@ public class LicenseServiceImpl implements LicenseService {
     @Autowired
     private MiddlewareCrTypeService middlewareCrTypeService;
     @Autowired
-    private BeanSystemConfigMapper beanSystemConfigMapper;
+    private SystemConfigService systemConfigService;
+    @Autowired
+    private SecretService secretService;
 
     private static final String PUBLIC_KEY =
         "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDqVEhXdhVabafquPgbeYmz8Ab+2qCh0ayKrFSD7FIQG1+qetvwKo0hmFxeTmgvLBr3IeoDO6nxcx/7MusQdESCApS9vIzU8hdKgzzWmQE84HZ/FNRhcrxwbOgx8FmU1RlPVf/rjoKnhNhQ6xgFXtnd7RBzWnc8lZNxAppdVps0ZwIDAQAB";
@@ -76,69 +80,47 @@ public class LicenseServiceImpl implements LicenseService {
     public void license(String licenseStr) throws Exception {
         // 解析license
         JSONObject license = JSONObject.parseObject(RSAUtils.decryptByPrivateKey(licenseStr, PRIVATE_KEY));
+        // check
+        checkUid(license);
         // 查询数据库 是否已存在license
         JSONObject exist = getLicense();
         if (exist == null) {
             saveLicense(license);
         } else {
+            if (licenseStr.equals(exist.getString(LICENSE))){
+                throw new BusinessException(ErrorMessage.LICENSE_USED_IN_PLATFORM);
+            }
             updateLicense(license, exist);
         }
     }
 
-    public void getKubeSystemUid() throws Exception{
-        String token = FileUtil.readFile("/var/run/secrets/kubernetes.io/serviceaccount/token");
-        log.info("token: {}", token);
-        KubernetesClient client = new DefaultKubernetesClient(new ConfigBuilder().withMasterUrl("https://10.96.0.1:443")
-                .withTrustCerts(true).withOauthToken(token).build());
-        io.fabric8.kubernetes.api.model.Namespace namespace = client.namespaces().withName("kube-system").get();
-        log.info(namespace.getMetadata().getUid());
-    }
-
     public void saveLicense(JSONObject license) throws Exception {
-        // todo 理论上该有的业务处理
-        // 添加license
-        insertSysConfig("lecense", RSAUtils.encryptByPublicKey(license.toJSONString(), PUBLIC_KEY));
-        String md5 = PasswordUtils.md5(license.toString());
-        insertSysConfig("sys_code", md5);
-        insertSysConfig("produce", "0.0");
-        insertSysConfig("test", "0.0");
+        Secret secret = new Secret().setName(ZEUS_LICENSE).setNamespace(ZEUS);
+        Map<String, String> data = new HashMap<>();
+        data.put(LICENSE, RSAUtils.encryptByPublicKey(license.toJSONString(), PUBLIC_KEY));
+        secret.setData(data);
+        secretService.create(K8sClient.DEFAULT_CLIENT, ZEUS, secret);
+        // 初始化使用量
+        insertSysConfig(PRODUCE, "0.0");
+        insertSysConfig(TEST, "0.0");
+        insertSysConfig(CPU_UPDATE, FALSE);
     }
 
     public void updateLicense(JSONObject license, JSONObject exist) throws Exception {
         // 添加cpu核数
-        double produce = license.getDoubleValue("produce") + exist.getDoubleValue("produce");
-        double test = license.getDoubleValue("test") + exist.getDoubleValue("test");
-        if (license.containsKey("expireTime")) {
-            exist.put("expireTime", license.getString("expireTime"));
-        }
-        exist.put("produce", produce);
-        exist.put("test", test);
+        double produce = license.getDoubleValue(PRODUCE) + exist.getDoubleValue(PRODUCE);
+        double test = license.getDoubleValue(TEST) + exist.getDoubleValue(TEST);
 
-        String md5 = PasswordUtils.md5(exist.toString());
-
-        // 更新绑定码
-        updateSysConfig("sys_code", md5);
+        exist.put(PRODUCE, produce);
+        exist.put(TEST, test);
 
         // 更新license
         String licenseStr = RSAUtils.encryptByPublicKey(exist.toJSONString(), PUBLIC_KEY);
-        updateSysConfig("license", licenseStr);
-    }
-
-    public void insertSysConfig(String name, String value) {
-        String username = CurrentUserRepository.getUser().getUsername();
-        BeanSystemConfig config = new BeanSystemConfig();
-        config.setConfigName(name);
-        config.setConfigValue(value);
-        config.setCreateUser(username);
-        beanSystemConfigMapper.insert(config);
-    }
-
-    public void updateSysConfig(String name, String value) {
-        QueryWrapper<BeanSystemConfig> wrapper = new QueryWrapper<BeanSystemConfig>().eq("config_name", name);
-        BeanSystemConfig config = new BeanSystemConfig();
-        config.setConfigName(name);
-        config.setConfigValue(value);
-        beanSystemConfigMapper.update(config, wrapper);
+        Secret secret = new Secret();
+        Map<String, String> data = new HashMap<>();
+        data.put(LICENSE, licenseStr);
+        secret.setData(data);
+        secretService.createOrReplace(K8sClient.DEFAULT_CLIENT, ZEUS, secret);
     }
 
     @Override
@@ -149,25 +131,23 @@ public class LicenseServiceImpl implements LicenseService {
         }
         LicenseInfoDto info = new LicenseInfoDto();
         MonitorResourceQuotaBase produce = new MonitorResourceQuotaBase();
-        produce.setTotal(license.getDoubleValue("produce"));
-        produce.setUsed(getCpu("produce"));
+        produce.setTotal(license.getDoubleValue(PRODUCE));
+        produce.setUsed(getCpu(PRODUCE));
 
         MonitorResourceQuotaBase test = new MonitorResourceQuotaBase();
-        test.setTotal(license.getDoubleValue("test"));
-        test.setUsed(getCpu("test"));
+        test.setTotal(license.getDoubleValue(TEST));
+        test.setUsed(getCpu(TEST));
 
-        info.setType(license.getString("type"));
+        info.setType(license.getString(TYPE));
         info.setTest(test);
         info.setProduce(produce);
-        info.setUser(license.getString("user"));
-        // todo
-        info.setCode("");
+        info.setUser(license.getString(USER));
+        info.setCode(license.getString(UID));
         return info;
     }
 
     @Override
-    public Boolean check(String clusterId) throws Exception{
-        ThreadPoolExecutorFactory.executor.execute(this::middlewareResource);
+    public Boolean check(String clusterId) throws Exception {
         JSONObject license = getLicense();
         List<MiddlewareClusterDTO> clusterList = clusterService.listClusterDtos();
         clusterList =
@@ -182,12 +162,18 @@ public class LicenseServiceImpl implements LicenseService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void middlewareResource() {
+        BeanSystemConfig produceConfig = systemConfigService.getConfigForUpdate(PRODUCE);
+        BeanSystemConfig testConfig = systemConfigService.getConfigForUpdate(TEST);
+        if (produceConfig == null || testConfig == null){
+            return;
+        }
         List<MiddlewareClusterDTO> clusterList = clusterService.listClusterDtos();
         double produce = 0.0;
         double test = 0.0;
         for (MiddlewareClusterDTO cluster : clusterList) {
-            List<MiddlewareCR> middlewareCrList = middlewareCRService.listCR(cluster.getId(), null, null);
+            List<MiddlewareCR> middlewareCrList = middlewareCrService.listCR(cluster.getId(), null, null);
             List<Namespace> namespaceList = namespaceService.list(cluster.getId());
             middlewareCrList = middlewareCrList.stream()
                 .filter(middlewareCr -> namespaceList.stream()
@@ -199,13 +185,13 @@ public class LicenseServiceImpl implements LicenseService {
                 String type = middlewareCrTypeService.findTypeByCrType(middlewareCr.getSpec().getType());
 
                 JSONObject values = helmChartService.getInstalledValues(name, namespace, cluster);
-                if (values == null){
+                if (values == null) {
                     continue;
                 }
                 // 根据类型去获取对应的cpu
                 Middleware middleware =
                     new Middleware().setClusterId(cluster.getId()).setNamespace(namespace).setName(name).setType(type);
-                if ("produce".equals(cluster.getType())) {
+                if (PRODUCE.equals(cluster.getType())) {
                     produce += middlewareService.calculateCpuRequest(middleware, values);
                 } else {
                     test += middlewareService.calculateCpuRequest(middleware, values);
@@ -214,40 +200,76 @@ public class LicenseServiceImpl implements LicenseService {
         }
         log.info("produce cpu count: {}", produce);
         log.info("test cpu count: {}", test);
-        updateSysConfig("produce", String.valueOf(produce));
-        updateSysConfig("test", String.valueOf(test));
+        updateSysConfig(PRODUCE, String.valueOf(produce));
+        updateSysConfig(TEST, String.valueOf(test));
     }
 
+    /**
+     * 获取license
+     */
     public JSONObject getLicense() throws Exception {
-        QueryWrapper<BeanSystemConfig> wrapper = new QueryWrapper<BeanSystemConfig>().eq("config_name", "license");
-        BeanSystemConfig config = beanSystemConfigMapper.selectOne(wrapper);
-        if (config == null) {
+        Secret secret = secretService.get(K8sClient.DEFAULT_CLIENT, ZEUS, ZEUS_LICENSE);
+        if (secret == null){
             return null;
         }
-        return JSONObject.parseObject(RSAUtils.decryptByPrivateKey(config.getConfigValue(), PRIVATE_KEY));
-    }
-
-    public String getCode() {
-        QueryWrapper<BeanSystemConfig> wrapper = new QueryWrapper<BeanSystemConfig>().eq("config_name", "sys_code");
-        BeanSystemConfig config = beanSystemConfigMapper.selectOne(wrapper);
-        if (config == null) {
-            return null;
+        if (!secret.getData().containsKey(LICENSE)){
+            log.error("secret中获取license或code失败");
+            throw new BusinessException(ErrorMessage.LICENSE_CHECK_FAILED);
         }
-        return config.getConfigValue();
+        String licenseStr = secret.getData().get(LICENSE);
+        JSONObject license;
+        try {
+            license = JSONObject.parseObject(RSAUtils.decryptByPrivateKey(licenseStr, PRIVATE_KEY));
+        }catch (Exception e){
+            log.error("license解析失败");
+            throw e;
+        }
+        return license;
     }
 
+    /**
+     * 获取使用cpu缓存
+     */
     public Double getCpu(String name) {
-        QueryWrapper<BeanSystemConfig> wrapper = new QueryWrapper<BeanSystemConfig>().eq("config_name", name);
-        BeanSystemConfig config = beanSystemConfigMapper.selectOne(wrapper);
+        BeanSystemConfig config = systemConfigService.getConfig(name);
         if (config == null) {
             return null;
         }
         return Double.parseDouble(config.getConfigValue());
     }
 
+    /**
+     * 校验kube-system分区uid
+     */
+    public void checkUid(JSONObject license) {
+        String uid = getKubeSystemUid();
+        if (!license.containsKey(UID) || !license.getString(UID).equals(uid)) {
+            log.error("license uid 校验失败");
+            throw new BusinessException(ErrorMessage.LICENSE_CHECK_FAILED);
+        }
+    }
+
+    /**
+     * 获取kube-system分区uid
+     */
+    public String getKubeSystemUid() {
+        io.fabric8.kubernetes.api.model.Namespace namespace =
+            namespaceWrapper.get(K8sClient.DEFAULT_CLIENT, KUBE_SYSTEM);
+        log.info(namespace.getMetadata().getUid());
+        return namespace.getMetadata().getUid();
+    }
+
+    public void insertSysConfig(String name, String value) {
+        systemConfigService.addConfig(name, value);
+    }
+
+    public void updateSysConfig(String name, String value) {
+        systemConfigService.updateConfig(name, value);
+    }
+
     public static void main(String[] args) throws Exception {
-        String key =
-            "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDqVEhXdhVabafquPgbeYmz8Ab+2qCh0ayKrFSD7FIQG1+qetvwKo0hmFxeTmgvLBr3IeoDO6nxcx/7MusQdESCApS9vIzU8hdKgzzWmQE84HZ/FNRhcrxwbOgx8FmU1RlPVf/rjoKnhNhQ6xgFXtnd7RBzWnc8lZNxAppdVps0ZwIDAQAB";
+        Scanner scanner = new Scanner(System.in);
+        String uid = scanner.next();
         // 生成licenses
         JSONObject object = new JSONObject();
         Date date = new Date();
@@ -256,8 +278,8 @@ public class LicenseServiceImpl implements LicenseService {
         object.put("test", "200");
         object.put("user", "xth");
         object.put("type", "正式版");
-        object.put("usable", DateUtils.addInteger(date, Calendar.MINUTE, 15));
-        String rsa = RSAUtils.encryptByPublicKey(object.toJSONString(), key);
+        object.put("uid", uid);
+        String rsa = RSAUtils.encryptByPublicKey(object.toJSONString(), PUBLIC_KEY);
         System.out.println(rsa);
         String json = RSAUtils.decryptByPrivateKey(rsa, PRIVATE_KEY);
         System.out.println(json);

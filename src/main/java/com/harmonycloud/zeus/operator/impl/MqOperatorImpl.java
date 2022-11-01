@@ -371,4 +371,12 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
         super.create(middleware, cluster);
     }
 
+    @Override
+    public Integer getReplicas(JSONObject values) {
+        JSONObject clusterInfo = values.getJSONObject(CLUSTER);
+        Integer replicas = clusterInfo.getInteger("membersPerGroup");
+        Integer group = clusterInfo.getInteger("groupReplica");
+        return replicas * group;
+    }
+
 }

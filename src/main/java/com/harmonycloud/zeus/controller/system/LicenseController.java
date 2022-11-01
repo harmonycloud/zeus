@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.controller.system;
 
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.LicenseInfoDto;
+import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.tool.file.FileUtil;
 import com.harmonycloud.zeus.service.system.LicenseService;
 import io.fabric8.kubernetes.client.ConfigBuilder;
@@ -61,22 +62,9 @@ public class LicenseController {
     })
     @GetMapping("/check/middleware")
     public BaseResult middleware() throws Exception {
-        licenseService.middlewareResource();
-        return BaseResult.ok();
-    }
-
-    @ApiOperation(value = "测试", notes = "测试")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "license", value = "license", paramType = "query", dataTypeClass = String.class),
-    })
-    @GetMapping("/check/namespace")
-    public BaseResult namespace() throws Exception {
-        String token = FileUtil.readFile("/var/run/secrets/kubernetes.io/serviceaccount/token");
-        log.info("token: {}", token);
-        KubernetesClient client = new DefaultKubernetesClient(new ConfigBuilder().withMasterUrl("https://10.96.0.1:443")
-                .withTrustCerts(true).withOauthToken(token).build());
-        io.fabric8.kubernetes.api.model.Namespace namespace = client.namespaces().withName("kube-system").get();
-        log.info(namespace.getMetadata().getUid());
+        for (int i = 0; i < 2; ++i){
+            ThreadPoolExecutorFactory.executor.execute(() -> licenseService.middlewareResource());
+        }
         return BaseResult.ok();
     }
 

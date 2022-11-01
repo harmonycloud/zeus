@@ -376,6 +376,7 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
     @Override
     public Double calculateCpuRequest(JSONObject values) {
         double cpuCount = 0.0;
+        JSONObject clusterInfo = values.getJSONObject(CLUSTER);
         JSONObject resources = values.getJSONObject(RESOURCES);
         for (ElasticSearchRoleEnum role : ElasticSearchRoleEnum.values()){
             JSONObject quota = resources.getJSONObject(role.getRole());

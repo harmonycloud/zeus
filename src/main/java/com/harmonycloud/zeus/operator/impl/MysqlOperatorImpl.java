@@ -328,6 +328,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
     }
 
+    @Override
     public void prepareDbManageOpenService(Middleware middleware){
         middlewareManageTask.asyncCreateMysqlOpenService(this, middleware);
     }
@@ -620,7 +621,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         values.put("proxy", proxy);
     }
 
-
+    @Override
     public void createDisasterRecoveryMiddleware(Middleware middleware) {
         MysqlDTO mysqlDTO = middleware.getMysqlDTO();
         //1.为实例创建只读对外服务(NodePort)
@@ -659,6 +660,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
      *
      * @param original
      */
+    @Override
     public void createMysqlReplicate(Middleware original, Middleware disasterRecovery) {
         Middleware middleware = middlewareService.detail(original.getClusterId(), original.getNamespace(), original.getName(), original.getType());
         List<IngressDTO> ingressDTOS = ingressService.get(original.getClusterId(), middleware.getNamespace(),
@@ -729,6 +731,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
     }
 
+    @Override
     public void createIngressService(Middleware middleware, boolean isReadOnlyService) {
         List<IngressComponentDto> ingressComponentList = ingressComponentService.list(middleware.getClusterId());
         if (CollectionUtils.isEmpty(ingressComponentList)) {
@@ -783,6 +786,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
     }
 
+    @Override
     public void deleteDisasterRecoveryInfo(Middleware middleware) {
         // 获取values.yaml
         BeanCacheMiddleware beanCacheMiddleware = cacheMiddlewareService.get(middleware);
@@ -820,6 +824,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
     }
 
+    @Override
     public void prepareDbManageEnv(Middleware middleware) {
         if (middleware.getMysqlDTO() != null && middleware.getMysqlDTO().getDeleteDBManageInfo() != null && Boolean.FALSE.equals(middleware.getMysqlDTO().getDeleteDBManageInfo())) {
             return;
@@ -833,10 +838,20 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         mysqlUserService.create(mysqlUser);
     }
 
+    @Override
     public void clearDbManageData(Middleware middleware) {
         mysqlDbService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
         mysqlUserService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
         mysqlDbPrivService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
+    }
+
+    @Override
+    public Integer getReplicas(JSONObject values){
+        JSONObject args = values.getJSONObject("args");
+        if (args == null) {
+            args = values.getJSONObject("mysqlArgs");
+        }
+        return args.getIntValue(MysqlConstant.REPLICA_COUNT);
     }
 
 }

@@ -174,5 +174,10 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         middlewareBackupCRService.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getBackupFileName());
     }
 
+    @Override
+    public Integer getReplicas(JSONObject values) {
+        return values.getInteger("instances");
+    }
+
 }
 

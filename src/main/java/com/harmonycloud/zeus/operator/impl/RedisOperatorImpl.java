@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.operator.impl;
 import static com.harmonycloud.caas.common.constants.NameConstant.*;
 import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_INGRESS;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PREDIXY;
 import static com.harmonycloud.caas.common.enums.DictEnum.POD;
 
 
@@ -371,18 +372,29 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
     @Override
     public Double calculateCpuRequest(JSONObject values) {
         double cpu = 0.0;
-        double sentinel = 0.0;
+        double sentinelCpu = 0.0;
         JSONObject resources = values.getJSONObject(REDIS).getJSONObject(RESOURCES);
         JSONObject request = resources.getJSONObject("requests");
-        cpu = ResourceCalculationUtil.getResourceValue(request.getString(CPU), CPU, "");
+        cpu = ResourceCalculationUtil.getResourceValue(request.getString(CPU), CPU, "") * getReplicas(values);
 
         if (SENTINEL.equals(values.getString(MODE))) {
+            JSONObject sentinel = values.getJSONObject(SENTINEL);
+            Integer sentinelNum = sentinel.getInteger(REPLICAS);
             JSONObject sentinelResources = values.getJSONObject(SENTINEL).getJSONObject(RESOURCES);
-            JSONObject sentinelRequest = resources.getJSONObject("requests");
-            sentinel = ResourceCalculationUtil.getResourceValue(sentinelRequest.getString(CPU), CPU, "");
-            cpu += sentinel;
+            JSONObject sentinelRequest = sentinelResources.getJSONObject("requests");
+            sentinelCpu = ResourceCalculationUtil.getResourceValue(sentinelRequest.getString(CPU), CPU, "") * sentinelNum;
+            cpu += sentinelCpu;
         }
         return cpu;
     }
 
+    @Override
+    public Integer getReplicas(JSONObject values) {
+        JSONObject redis = values.getJSONObject(REDIS);
+        Integer num = redis.getInteger(REPLICAS);
+        if (SENTINEL.equals(values.getString(MODE)) && values.containsKey(PREDIXY) && values.getBooleanValue(PREDIXY)) {
+            num *= 2;
+        }
+        return num;
+    }
 }

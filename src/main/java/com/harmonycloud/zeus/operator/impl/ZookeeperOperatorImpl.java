@@ -228,6 +228,6 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
             return 0.0;
         }
         String cpu = resources.getJSONObject("requests").getString(CPU);
-        return ResourceCalculationUtil.getResourceValue(cpu, CPU, "");
+        return ResourceCalculationUtil.getResourceValue(cpu, CPU, "") * getReplicas(values);
     }
 }

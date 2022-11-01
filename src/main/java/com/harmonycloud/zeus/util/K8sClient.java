@@ -17,6 +17,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -35,9 +36,8 @@ public class K8sClient {
 
     private static final Map<String, KubernetesClient> K8S_CLIENT_MAP = new ConcurrentHashMap<>();
 
+    @Value("${k8s.master.url:https://10.96.0.1:443}")
     private static String url;
-
-    private static String token;
 
     public static final String DEFAULT_CLIENT = "defaultClient";
 
@@ -45,8 +45,6 @@ public class K8sClient {
     private ClusterService clusterService;
     @Autowired
     private ClusterCertService clusterCertService;
-    @Autowired
-    private K8sDefaultClusterService k8SDefaultClusterService;
     @Autowired
     private MiddlewareClusterService middlewareClusterService;
 
@@ -98,12 +96,6 @@ public class K8sClient {
      * 获取默认集群信息
      */
     public KubernetesClient initDefaultClient(){
-        BeanK8sDefaultCluster defaultCluster = k8SDefaultClusterService.get();
-        if (ObjectUtils.isEmpty(defaultCluster)){
-            throw new BusinessException(ErrorMessage.CLUSTER_NOT_REGISTERED);
-        }
-        K8sClient.url = defaultCluster.getUrl();
-        K8sClient.token = defaultCluster.getToken();
         return InstanceHolder.KUBERNETES_CLIENT;
     }
 
@@ -239,17 +231,9 @@ public class K8sClient {
      */
     private static class InstanceHolder {
         private static final KubernetesClient KUBERNETES_CLIENT = new DefaultKubernetesClient(new ConfigBuilder()
-            .withMasterUrl(url).withTrustCerts(true).withOauthToken(token).withNamespace(null).build());
+            .withMasterUrl(url).withTrustCerts(true).build());
         static {
             K8S_CLIENT_MAP.put(DEFAULT_CLIENT, KUBERNETES_CLIENT);
         }
-    }
-
-    public static String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        K8sClient.url = url;
     }
 }

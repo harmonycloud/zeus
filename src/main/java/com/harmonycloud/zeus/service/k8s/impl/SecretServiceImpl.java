@@ -36,6 +36,9 @@ public class SecretServiceImpl implements SecretService {
     @Override
     public Secret get(String clusterId, String namespace, String secretName) {
         io.fabric8.kubernetes.api.model.Secret secret = secretWrapper.get(clusterId, namespace, secretName);
+        if (secret == null){
+            return null;
+        }
         return new Secret().setClusterId(clusterId).setNamespace(namespace).setName(secretName)
             .setData(secret.getData());
     }
@@ -57,5 +60,19 @@ public class SecretServiceImpl implements SecretService {
         }catch (Exception e){
             throw new BusinessException(ErrorMessage.NOT_EXIST);
         }
+    }
+
+    @Override
+    public void createOrReplace(String clusterId, String namespace, Secret secret){
+        io.fabric8.kubernetes.api.model.Secret sc = secretWrapper.get(clusterId, namespace, secret.getName());
+        if (sc != null){
+            sc.setData(secret.getData());
+        }
+        createOrReplace(clusterId, namespace, sc);
+    }
+
+    @Override
+    public void createOrReplace(String clusterId, String namespace, io.fabric8.kubernetes.api.model.Secret secret){
+        secretWrapper.createOrReplace(clusterId, namespace, secret);
     }
 }

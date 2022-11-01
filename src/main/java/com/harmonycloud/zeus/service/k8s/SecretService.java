@@ -37,4 +37,21 @@ public interface SecretService {
      */
     void create(String clusterId, String namespace, Secret secret);
 
+    /**
+     * 创建或更新secret
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param secret  secret对象
+     */
+    void createOrReplace(String clusterId, String namespace, Secret secret);
+
+    /**
+     * 创建或更新secret
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param secret  secret对象
+     */
+    void createOrReplace(String clusterId, String namespace, io.fabric8.kubernetes.api.model.Secret secret);
 }

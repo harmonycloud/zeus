@@ -20,6 +20,10 @@ public class SecretWrapper {
         K8sClient.getClient(clusterId).secrets().inNamespace(namespace).create(secret);
     }
 
+    public void createOrReplace(String clusterId, String namespace, Secret secret) {
+        K8sClient.getClient(clusterId).secrets().inNamespace(namespace).createOrReplace(secret);
+    }
+
     public List<Secret> list(String clusterId, String namespace) {
         SecretList list = K8sClient.getClient(clusterId).secrets().inNamespace(namespace).list();
         if (list == null || CollectionUtils.isEmpty(list.getItems())) {

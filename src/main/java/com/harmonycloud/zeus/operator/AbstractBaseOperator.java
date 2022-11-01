@@ -241,7 +241,7 @@ public abstract class AbstractBaseOperator {
         } catch (Exception e){
             log.error("获取中间件pvc失败", e);
         }
-        
+
         beanCacheMiddleware.setValuesYaml(JSONObject.toJSONString(values));
         cacheMiddlewareService.insertIfNotPresent(beanCacheMiddleware);
         // helm卸载需要放到最后，要不然一些资源的查询会404
@@ -859,7 +859,7 @@ public abstract class AbstractBaseOperator {
      */
     protected void replaceChart(HelmChartFile helmChart, JSONObject values) {
         JSONObject chart = JSONObject.parseObject(helmChart.getYamlFileMap().get(CHART_YAML_NAME));
-        
+
         // 1. 发布时需检查组件Chart.yaml中的依赖关系，如果有依赖控制面组件的话，则需发布时禁止控制面组件发布
         // 即如果dependencies里，有alias名称包含了operator的，需要把对应的operator设置成false
         JSONArray dependencies = chart.getJSONArray("dependencies");
@@ -941,7 +941,7 @@ public abstract class AbstractBaseOperator {
             log.error("集群{} 分区{} 中间件{}， 告警规则标签添加集群失败", middleware.getClusterId(), middleware.getNamespace(),
                 middleware.getName());
         }
-        
+
     }
 
     /**
@@ -1144,7 +1144,7 @@ public abstract class AbstractBaseOperator {
             external.put(SVC_NAME_TAG, svcSb.toString());
         }
     }
-    
+
     public void checkSvcCreated(Middleware middleware) {
         middleware.getIngresses().forEach(ingressDTO -> ingressDTO.getServiceList().forEach(serviceDTO -> {
             boolean again = true;
@@ -1242,17 +1242,16 @@ public abstract class AbstractBaseOperator {
     }
 
     public Double calculateCpuRequest(JSONObject values) {
-        // todo 乘以实例数 pg instances other replicaCount
         JSONObject resources = values.getJSONObject(RESOURCES);
         if (resources == null){
             return 0.0;
         }
         String cpu = resources.getJSONObject("requests").getString(CPU);
-        return ResourceCalculationUtil.getResourceValue(cpu, CPU, "");
+        return ResourceCalculationUtil.getResourceValue(cpu, CPU, "") * getReplicas(values);
     }
 
-    public Integer getReplicas(JSONObject values){
-        return 1;
+    public Integer getReplicas(JSONObject values) {
+        return values.getIntValue("replicas");
     }
 
 }
