@@ -1484,8 +1484,13 @@ public class IngressServiceImpl implements IngressService {
         } else {
             address = null;
         }
+        // 过滤掉不属于中间件的ingressRouteTCP CR
+        List<IngressRouteTCPCR> items = ingressRouteTCPList.getItems().stream().filter(ingressRouteTCPCR
+                -> ingressRouteTCPCR.getMetadata().getLabels() != null
+                && ingressRouteTCPCR.getMetadata().getLabels().containsKey("middlewareType")).collect(Collectors.toList());
+
         String finalAddress = address;
-        ingressRouteTCPList.getItems().forEach(ingressRouteTCPCR -> {
+        items.forEach(ingressRouteTCPCR -> {
             List<String> entryPoints = ingressRouteTCPCR.getSpec().getEntryPoints();
             if (!CollectionUtils.isEmpty(entryPoints) && !CollectionUtils.isEmpty(ingressRouteTCPCR.getSpec().getRoutes()) && !CollectionUtils.isEmpty(ingressRouteTCPCR.getSpec().getRoutes().get(0).getServices())) {
                 String entryPoint = entryPoints.get(0);
