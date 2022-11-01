@@ -1266,4 +1266,10 @@ public class DateUtil {
         return realDate;
     }
 
+    public static String parseUTCDate(String datetime) {
+        Date date = DateUtils.parseDate(datetime, DateStyle.YYYY_MM_DD_HH_MM_SS);
+        date = DateUtil.addHour(date, -8);
+        return DateUtils.dateToString(date, DateStyle.YYYY_MM_DD_HH_MM_SS);
+    }
+
 }

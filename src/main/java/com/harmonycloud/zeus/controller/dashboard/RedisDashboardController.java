@@ -3,9 +3,8 @@ package com.harmonycloud.zeus.controller.dashboard;
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.dashboard.DatabaseDto;
-import com.harmonycloud.caas.common.model.dashboard.ExecuteSqlDto;
 import com.harmonycloud.caas.common.model.dashboard.redis.KeyValueDto;
-import com.harmonycloud.zeus.integration.dashboard.RedisClient;
+import com.harmonycloud.zeus.bean.BeanSqlExecuteRecord;
 import com.harmonycloud.zeus.service.dashboard.RedisDashboardService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -162,7 +161,7 @@ public class RedisDashboardController {
             @ApiImplicitParam(name = "cmd", value = "命令", paramType = "query", dataTypeClass = String.class),
     })
     @PostMapping("/databases/{database}/cmd")
-    public BaseResult execCMD(@PathVariable("clusterId") String clusterId,
+    public BaseResult<JSONObject> execCMD(@PathVariable("clusterId") String clusterId,
                               @PathVariable("namespace") String namespace,
                               @PathVariable("middlewareName") String middlewareName,
                               @PathVariable("database") Integer database,
@@ -179,16 +178,20 @@ public class RedisDashboardController {
             @ApiImplicitParam(name = "keyword", value = "关键词", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "start", value = "开始时间", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "end", value = "结束时间", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "pageNum", value = "页码", paramType = "query", dataTypeClass = Integer.class),
+            @ApiImplicitParam(name = "size", value = "每页数量", paramType = "query", dataTypeClass = Integer.class),
     })
     @GetMapping("/databases/{database}/cmd/history")
-    public BaseResult<List<ExecuteSqlDto>> listExecuteSql(@PathVariable("clusterId") String clusterId,
-                                                          @PathVariable("namespace") String namespace,
-                                                          @PathVariable("middlewareName") String middlewareName,
-                                                          @PathVariable("database") Integer database,
-                                                          @RequestParam("keyword") String keyword,
-                                                          @RequestParam("start") String start,
-                                                          @RequestParam("end") String end) {
-        return BaseResult.ok(redisDashboardService.listExecuteSql(clusterId, namespace, middlewareName, database, keyword, start, end));
+    public BaseResult<List<BeanSqlExecuteRecord>> listExecuteSql(@PathVariable("clusterId") String clusterId,
+                                                                 @PathVariable("namespace") String namespace,
+                                                                 @PathVariable("middlewareName") String middlewareName,
+                                                                 @PathVariable("database") Integer database,
+                                                                 @RequestParam(value = "keyword", required = false) String keyword,
+                                                                 @RequestParam(value = "start", required = false) String start,
+                                                                 @RequestParam(value = "end", required = false) String end,
+                                                                 @RequestParam(value = "pageNum", required = false, defaultValue = "1") Integer pageNum,
+                                                                 @RequestParam(value = "size", required = false, defaultValue = "10") Integer size) {
+        return BaseResult.ok(redisDashboardService.listExecuteSql(clusterId, namespace, middlewareName, database, keyword, start, end, pageNum, size));
     }
 
 }
