@@ -452,7 +452,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         // 构造column sql语句
         for (ColumnDto columnDto : tableDto.getColumnDtoList()) {
             if (columnDto.getPrimaryKey() != null && columnDto.getPrimaryKey()) {
-                pk.append(columnDto.getPrimaryKey()).append(",");
+                pk.append(columnDto.getColumn()).append(",");
             }
             if (StringUtils.isNotEmpty(columnDto.getComment())) {
                 columnComment.put(columnDto.getColumn(), columnDto.getComment());
