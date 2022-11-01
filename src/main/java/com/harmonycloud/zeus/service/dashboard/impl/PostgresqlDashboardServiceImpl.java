@@ -505,6 +505,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         }
         // 主键约束
         if (StringUtils.isNotEmpty(pk.toString())) {
+            pk.deleteCharAt(pk.length() - 1);
             sb.append("CONSTRAINT ").append("pk_").append(tableDto.getSchemaName()).append("_")
                 .append(tableDto.getTableName()).append(" PRIMARY KEY ").append("(").append(pk.toString()).append(")");
             sb.append(",");
