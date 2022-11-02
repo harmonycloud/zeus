@@ -532,6 +532,9 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             tableDto.setFillFactor("100");
         }
         // Tablespace
+        if (StringUtils.isEmpty(tableDto.getTablespace())){
+            tableDto.setTablespace("pg_default");
+        }
         JSONObject table = new JSONObject();
         table.put("database", tableDto.getDatabaseName());
         table.put("schema", tableDto.getSchemaName());
