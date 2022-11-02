@@ -267,22 +267,4 @@ public class LicenseServiceImpl implements LicenseService {
         systemConfigService.updateConfig(name, value);
     }
 
-    public static void main(String[] args) throws Exception {
-        Scanner scanner = new Scanner(System.in);
-        String uid = scanner.next();
-        // 生成licenses
-        JSONObject object = new JSONObject();
-        Date date = new Date();
-        object.put("time", date);
-        object.put("produce", "300");
-        object.put("test", "200");
-        object.put("user", "xth");
-        object.put("type", "正式版");
-        object.put("uid", uid);
-        String rsa = RSAUtils.encryptByPublicKey(object.toJSONString(), PUBLIC_KEY);
-        System.out.println(rsa);
-        String json = RSAUtils.decryptByPrivateKey(rsa, PRIVATE_KEY);
-        System.out.println(json);
-    }
-
 }

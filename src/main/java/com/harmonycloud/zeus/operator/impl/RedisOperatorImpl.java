@@ -392,7 +392,8 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
     public Integer getReplicas(JSONObject values) {
         JSONObject redis = values.getJSONObject(REDIS);
         Integer num = redis.getInteger(REPLICAS);
-        if (SENTINEL.equals(values.getString(MODE)) && values.containsKey(PREDIXY) && values.getBooleanValue(PREDIXY)) {
+        if (SENTINEL.equals(values.getString(MODE)) && values.containsKey(PREDIXY) &&
+                values.getJSONObject(PREDIXY).getBooleanValue("enableProxy")) {
             num *= 2;
         }
         return num;

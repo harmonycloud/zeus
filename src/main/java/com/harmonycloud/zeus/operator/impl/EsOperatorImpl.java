@@ -378,13 +378,33 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
         double cpuCount = 0.0;
         JSONObject clusterInfo = values.getJSONObject(CLUSTER);
         JSONObject resources = values.getJSONObject(RESOURCES);
-        for (ElasticSearchRoleEnum role : ElasticSearchRoleEnum.values()){
-            JSONObject quota = resources.getJSONObject(role.getRole());
-            if (quota == null) {
-                continue;
+        for (String key : clusterInfo.keySet()){
+            JSONObject quota;
+            String cpu;
+            switch (key){
+                case "masterReplacesCount":
+                    quota = resources.getJSONObject(ElasticSearchRoleEnum.MASTER.getRole());
+                    cpu = quota.getJSONObject("requests").getString(CPU);
+                    cpuCount += ResourceCalculationUtil.getResourceValue(cpu, CPU, "") * clusterInfo.getIntValue(key);
+                    break;
+                case "dataReplacesCount":
+                    quota = resources.getJSONObject(ElasticSearchRoleEnum.DATA.getRole());
+                    cpu = quota.getJSONObject("requests").getString(CPU);
+                    cpuCount += ResourceCalculationUtil.getResourceValue(cpu, CPU, "") * clusterInfo.getIntValue(key);
+                    break;
+                case "clientReplacesCount":
+                    quota = resources.getJSONObject(ElasticSearchRoleEnum.CLIENT.getRole());
+                    cpu = quota.getJSONObject("requests").getString(CPU);
+                    cpuCount += ResourceCalculationUtil.getResourceValue(cpu, CPU, "") * clusterInfo.getIntValue(key);
+                    break;
+                case "coldReplacesCount":
+                    quota = resources.getJSONObject(ElasticSearchRoleEnum.COLD.getRole());
+                    cpu = quota.getJSONObject("requests").getString(CPU);
+                    cpuCount += ResourceCalculationUtil.getResourceValue(cpu, CPU, "") * clusterInfo.getIntValue(key);
+                    break;
+                default:
+                    break;
             }
-            String cpu = quota.getJSONObject("requests").getString(CPU);
-            cpuCount += ResourceCalculationUtil.getResourceValue(cpu, CPU, "");
         }
         return cpuCount;
     }
