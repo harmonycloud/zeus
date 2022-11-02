@@ -1,5 +1,9 @@
 tolerations:
-  - operator: Exists
+  - effect: NoSchedule
+    key: harm.cn/type
+    value: active-active
+  - effect: NoSchedule
+    key: harm.cn/system
 
 nodeAffinity:
   preferredDuringSchedulingIgnoredDuringExecution:
