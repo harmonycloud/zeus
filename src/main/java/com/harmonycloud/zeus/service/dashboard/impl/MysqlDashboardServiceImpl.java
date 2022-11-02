@@ -386,7 +386,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void updatePassword(String clusterId, String namespace, String middlewareName, String username, UserDto userDto) {
-        if (!checkUserExists(namespace, middlewareName, userDto.getUser())) {
+        if (!checkUserExists(namespace, middlewareName, username)) {
             throw new BusinessException(ErrorMessage.MYSQL_USER_NOT_EXISTS);
         }
         JSONObject res = mysqlClient.updatePassword(getPath(middlewareName,namespace), port, username, userDto);
