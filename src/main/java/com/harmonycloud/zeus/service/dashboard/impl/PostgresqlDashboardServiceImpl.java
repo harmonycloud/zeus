@@ -468,7 +468,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
                 if (StringUtils.isEmpty(foreign.getTargetSchema())) {
                     foreign.setTargetSchema(tableDto.getSchemaName());
                 }
-                sb.append("CONSTRAINT ").append(foreign.getName()).append(" foreign key ( ").append(foreign.getColumn())
+                sb.append("CONSTRAINT \"").append(foreign.getName()).append("\" foreign key ( ").append(foreign.getColumn())
                     .append(") ").append("REFERENCES ").append(foreign.getTargetSchema()).append(".")
                     .append(foreign.getTargetTable()).append("(").append(foreign.getTarget()).append(")")
                     .append(" on update ").append(foreign.getOnUpdate()).append(" on delete ")
@@ -479,7 +479,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         // 排它约束
         if (!CollectionUtils.isEmpty(tableDto.getTableExclusionList())) {
             for (TableExclusion exclusion : tableDto.getTableExclusionList()) {
-                sb.append("CONSTRAINT ").append(exclusion.getName()).append(" EXCLUDE using ")
+                sb.append("CONSTRAINT \"").append(exclusion.getName()).append("\" EXCLUDE using ")
                     .append(exclusion.getIndexMethod()).append(" ( ").append(exclusion.getContent()).append(" )");
                 sb.append(",");
             }
@@ -487,7 +487,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         // 唯一约束
         if (!CollectionUtils.isEmpty(tableDto.getTableUniqueList())) {
             for (TableUnique unique : tableDto.getTableUniqueList()) {
-                sb.append("CONSTRAINT ").append(unique.getName()).append(" unique ").append("(")
+                sb.append("CONSTRAINT \"").append(unique.getName()).append("\" unique ").append("(")
                     .append(unique.getColumnName()).append(")").append(unique.getDeferrablity());
                 sb.append(",");
             }
@@ -495,7 +495,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         // 检查约束
         if (!CollectionUtils.isEmpty(tableDto.getTableCheckList())) {
             for (TableCheck check : tableDto.getTableCheckList()) {
-                sb.append("CONSTRAINT ").append(check.getName()).append(" check ").append("(").append(check.getText())
+                sb.append("CONSTRAINT \"").append(check.getName()).append("\" check ").append("(").append(check.getText())
                     .append(") ");
                 if (check.getNoInherit() != null && check.getNoInherit()) {
                     sb.append("no inherit ");
@@ -509,8 +509,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         // 主键约束
         if (StringUtils.isNotEmpty(pk.toString())) {
             pk.deleteCharAt(pk.length() - 1);
-            sb.append("CONSTRAINT ").append("pk_").append(tableDto.getSchemaName()).append("_")
-                .append(tableDto.getTableName()).append(" PRIMARY KEY ").append("(").append(pk.toString()).append(")");
+            sb.append("CONSTRAINT \"").append("pk_").append(tableDto.getSchemaName()).append("_")
+                .append(tableDto.getTableName()).append("\" PRIMARY KEY ").append("(").append(pk.toString()).append(")");
             sb.append(",");
         }
         sb.deleteCharAt(sb.length() - 1);
