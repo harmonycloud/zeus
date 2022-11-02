@@ -282,6 +282,9 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         String path = getPath(middlewareName, namespace);
         setPort(clusterId, namespace, middlewareName);
         JSONObject listTables = postgresqlClient.listTables(path, port, databaseName, schemaName);
+        if (listTables.getJSONArray("data") == null){
+            return new ArrayList<>();
+        }
         List<Map<String, String>> tableList = convertColumn(listTables);
         return tableList.stream().map(table -> {
             TableDto tableDto = new TableDto();
