@@ -39,7 +39,7 @@ import java.util.List;
 @Operator(paramTypes4One = String.class)
 public class RedisDashboardServiceImpl implements RedisDashboardService {
 
-    @Value("${system.middleware-api.redis.port:6379}")
+    @Value("${system.middleware-api.redis.port:31100}")
     private String port;
 
     @Autowired
@@ -68,9 +68,11 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
             username = "";
         }
         int defaultDb = 0;
-        String mod = "single";
+        String mod = getRedisMod(clusterId, namespace, middlewareName);
+        if (StringUtils.isEmpty(mod)) {
+            mod = "single";
+        }
 
-        // todo 若reids每种模式都可以通过single方式连接，则需要删除参数：clusterAddrs、sentinelAddrs
         String clusterAddrs = getPath(namespace, middlewareName) + ":" + port;
         String sentinelAddrs = getPath(namespace, middlewareName) +":" +port;
         JSONObject res = redisClient.login(getPath(namespace, middlewareName), defaultDb, version,
@@ -219,6 +221,18 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
         return dbNum;
     }
 
+    /**
+     * 获取redis集群模式
+     * @param clusterId
+     * @param namespace
+     * @param middlewareName
+     * @return
+     */
+    private String getRedisMod(String clusterId, String namespace, String middlewareName) {
+        JSONObject installedValues = helmChartService.getInstalledValues(middlewareName, namespace, clusterService.findById(clusterId));
+        return installedValues.getString("type");
+    }
+
     private List<KeyValueDto> convertToKeyValueDto(JSONObject object) {
         if (object.getJSONObject("err") != null) {
             throw new BusinessException(ErrorMessage.FAILED_TO_QUERY_KEY, object.getString("err"));
@@ -239,7 +253,8 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
     }
 
     private String getPath(String namespace, String middlewareName) {
-        return middlewareName + "." + namespace;
+//        return middlewareName + "." + namespace;
+        return "10.10.102.52";
     }
 
 }
