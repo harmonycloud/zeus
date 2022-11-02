@@ -866,12 +866,12 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         for (TableUnique key : tableDto.getTableUniqueList()) {
             // 创建唯一约束
             if ("add".equals(key.getOperator())) {
-                JSONObject createForeignKey =
+                JSONObject createUnique =
                     postgresqlClient.createUnique(path, port, tableDto.getDatabaseName(), tableDto.getSchemaName(),
                         tableDto.getTableName(), key.getName(), key.getColumnName(), key.getDeferrablity());
-                if (createForeignKey.get("err") != null) {
+                if (createUnique.get("err") != null) {
                     throw new BusinessException(ErrorMessage.POSTGRESQL_CREATE_UNIQUE_FAILED,
-                        createForeignKey.getJSONObject("err").getString("Message"));
+                            createUnique.getJSONObject("err").getString("Message"));
                 }
             } else if ("delete".equals(key.getOperator())) {
                 // 删除约束

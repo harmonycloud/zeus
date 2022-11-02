@@ -263,7 +263,7 @@ public interface PostgresqlClient {
                             @Var("schema") String schema,
                             @Var("table") String table,
                             @Body String uniqueName,
-                            @Body String columnName,
+                            @Body String column,
                             @Body String deferrablity);
 
     /**
