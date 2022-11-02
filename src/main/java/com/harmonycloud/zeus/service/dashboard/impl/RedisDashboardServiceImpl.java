@@ -85,7 +85,11 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
 
     @Override
     public List<KeyValueDto> getAllKeys(String clusterId, String namespace, String middlewareName, Integer db, String keyword) {
-        return convertToKeyValueDto(redisClient.getAllKeys(getPath(namespace, middlewareName), db));
+        if (StringUtils.isEmpty(keyword)) {
+            return convertToKeyValueDto(redisClient.getAllKeys(getPath(namespace, middlewareName), db));
+        } else {
+            return convertToKeyValueDto(redisClient.getKeys(getPath(namespace, middlewareName), db, "*" + keyword + "*"));
+        }
     }
 
     @Override
