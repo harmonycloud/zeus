@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.operator.impl;
 import static com.harmonycloud.caas.common.constants.NameConstant.CLUSTER;
 import static com.harmonycloud.caas.common.constants.NameConstant.MODE;
 import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ARGS;
 
 import com.alibaba.fastjson.JSONArray;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
@@ -31,11 +32,13 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
 
     @Autowired
     private PodService podService;
-    
+
     @Override
     public void replaceValues(Middleware middleware, MiddlewareClusterDTO cluster, JSONObject values) {
         // 替换通用的值
         replaceCommonValues(middleware, cluster, values);
+        //修改arg的值
+        replaceArgs(middleware,values);
         // 把通用里设置的mode去掉，mq不用在第一级设置mode
         values.remove(MODE);
         MiddlewareQuota mqQuota = middleware.getQuota().get(middleware.getType());
@@ -85,6 +88,11 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
         }
     }
 
+    protected void replaceArgs(Middleware middleware, JSONObject values){
+        JSONObject args = values.getJSONObject("args");
+        args.put("autoCreateTopicEnable",middleware.getRocketMQParam().getAutoCreateTopicEnable());
+    };
+
     @Override
     public Middleware convertByHelmChart(Middleware middleware, MiddlewareClusterDTO cluster) {
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
@@ -103,6 +111,10 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
             RocketMQParam rocketMQParam = middleware.getRocketMQParam();
             if (rocketMQParam == null){
                 rocketMQParam = new RocketMQParam();
+            }
+            JSONObject args = values.getJSONObject(ARGS);
+            if (args != null) {
+                rocketMQParam.setAutoCreateTopicEnable(args.getBoolean("autoCreateTopicEnable"));
             }
             rocketMQParam.setReplicas(clusterInfo.getInteger("membersPerGroup"));
             rocketMQParam.setGroup(clusterInfo.getInteger("groupReplica"));

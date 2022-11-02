@@ -80,6 +80,17 @@ public interface IngressService {
 
     /**
      * 查询单个中间件对外访问
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param middlewareName
+     * @return
+     */
+    List<IngressDTO> get(String clusterId, String namespace, String type, String middlewareName);
+
+    /**
+     * 查询单个中间件对外访问,过滤不需要显示的服务暴露
+     * 信息，例如rocketmq的broker信息
      *
      * @param clusterId      集群id
      * @param namespace      命名空间
@@ -87,7 +98,7 @@ public interface IngressService {
      * @param middlewareName 中间件名称
      * @return
      */
-    List<IngressDTO> get(String clusterId, String namespace, String type, String middlewareName);
+    List<IngressDTO> getMiddlewareIngress(String clusterId, String namespace, String type, String middlewareName);
 
     /**
      * 查询单个中间件对外访问

@@ -475,10 +475,14 @@ public class IngressServiceImpl implements IngressService {
         if ("rocketmq".equals(type) || "kafka".equals(type)) {
             setExternalServiceExposeStatus(type, resList);
         }
-        List<IngressDTO> ingressDTOList = resList.stream().
+        return resList;
+    }
+
+    @Override
+    public List<IngressDTO> getMiddlewareIngress(String clusterId, String namespace, String type, String middlewareName) {
+        return get(clusterId, namespace, type, middlewareName).stream().
                 filter(ingressDTO -> ingressDTO.getServicePurpose() != null && !"null".equals(ingressDTO.getServicePurpose())).
                 collect(Collectors.toList());
-        return ingressDTOList;
     }
 
     @Override
@@ -748,7 +752,11 @@ public class IngressServiceImpl implements IngressService {
     public List<PodInfo> listIngressPod(String clusterId, String namespace, String ingressClassName) {
         Map<String, String> labels = new HashMap<>();
         labels.put("app.kubernetes.io/instance", ingressClassName);
-        return podService.list(clusterId, namespace, labels);
+        List<PodInfo> podInfoList = podService.list(clusterId, namespace, labels);
+        if (CollectionUtils.isEmpty(podInfoList)) {
+            podInfoList = getIngressPodSet(clusterId, namespace, ingressClassName);
+        }
+        return podInfoList;
     }
 
     /**
@@ -760,11 +768,24 @@ public class IngressServiceImpl implements IngressService {
      * @return
      */
     public String getIngressNodeIp(String clusterId, String namespace, String ingressClassName) {
-        List<PodInfo> podInfos = podService.list(clusterId, namespace, ingressClassName);
-        if (!CollectionUtils.isEmpty(podInfos)) {
-            return podInfos.get(0).getHostIp();
+        List<PodInfo> podInfoList = listIngressPod(clusterId, namespace, ingressClassName);
+        if (!CollectionUtils.isEmpty(podInfoList)) {
+            return podInfoList.get(0).getHostIp();
         }
         return "";
+    }
+
+    /**
+     * 根据ingressclassname查找ingress pod
+     * 当接入ingress时，如果ingress不是helm安装的，
+     * 则需要通过pod名称来查询ingress pod
+     * @param clusterId
+     * @param namespace
+     * @param ingressClassName
+     * @return
+     */
+    public List<PodInfo> getIngressPodSet(String clusterId, String namespace, String ingressClassName) {
+        return podService.list(clusterId, namespace, ingressClassName);
     }
 
     /**
@@ -779,6 +800,7 @@ public class IngressServiceImpl implements IngressService {
             if (CollectionUtils.isEmpty(serviceList)) {
                 return;
             }
+            List<Integer> portList = getAvailablePort(clusterId, serviceList.size());
             for (int i = 0; i < serviceList.size(); i++) {
                 ServiceDTO serviceDTO = serviceList.get(i);
                 setServicePort(serviceDTO, ingressDTO.getMiddlewareType());
@@ -786,7 +808,7 @@ public class IngressServiceImpl implements IngressService {
                     continue;
                 }
                 if (StringUtils.isBlank(serviceDTO.getExposePort()) && !serviceDTO.getServiceName().contains("proxy")) {
-                    serviceDTO.setExposePort(String.valueOf(getAvailablePort(clusterId)));
+                    serviceDTO.setExposePort(String.valueOf(portList.get(i)));
                 }
             }
         }
@@ -833,18 +855,15 @@ public class IngressServiceImpl implements IngressService {
      * @return
      */
     private List<Integer> getAvailablePort(String clusterId, int portNum) {
-        int startPort = 30000 + new Random().nextInt(100);
+        int startPort = 30002;
         List<Integer> portList = new ArrayList<>();
-        for (int i = 0; i < portNum; i++) {
-            try {
-                verifyServicePort(clusterId, startPort);
+        Set<Integer> usedPortSet = getUsedPortSet(clusterService.findById(clusterId));
+        for (int i = 0; i < portNum; ) {
+            if (!usedPortSet.contains(startPort)) {
                 portList.add(startPort);
-                startPort++;
-            } catch (Exception e) {
-                log.error("出错了", e);
-                startPort++;
-                i--;
+                i++;
             }
+            startPort++;
         }
         return portList;
     }
