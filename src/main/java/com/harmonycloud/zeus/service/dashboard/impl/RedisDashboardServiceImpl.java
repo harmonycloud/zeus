@@ -69,7 +69,7 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
         }
         int defaultDb = 0;
         String mod = getRedisMod(clusterId, namespace, middlewareName);
-        if (StringUtils.isEmpty(mod)) {
+        if (!"cluster".equals(mod)) {
             mod = "single";
         }
 
