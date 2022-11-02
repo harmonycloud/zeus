@@ -94,6 +94,26 @@ public class RedisDashboardController {
         return BaseResult.ok();
     }
 
+    @ApiOperation(value = "更新value", notes = "更新value")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = Integer.class),
+            @ApiImplicitParam(name = "key", value = "key", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "keyValueDto", value = "redis参数", paramType = "query", dataTypeClass = KeyValueDto.class),
+    })
+    @PutMapping("/databases/{database}/keys/{key}/value")
+    public BaseResult updateValue(@PathVariable("clusterId") String clusterId,
+                               @PathVariable("namespace") String namespace,
+                               @PathVariable("middlewareName") String middlewareName,
+                               @PathVariable("database") Integer database,
+                               @PathVariable("key") String key,
+                               @RequestBody KeyValueDto keyValueDto) {
+        redisDashboardService.updateValue(clusterId, namespace, middlewareName, database, key, keyValueDto);
+        return BaseResult.ok();
+    }
+
     @ApiOperation(value = "删除key", notes = "删除key")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),

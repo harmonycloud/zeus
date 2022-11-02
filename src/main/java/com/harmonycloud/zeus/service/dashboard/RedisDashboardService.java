@@ -22,6 +22,8 @@ public interface RedisDashboardService extends BaseMiddlewareApiService{
 
     void setKeyValue(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto);
 
+    void updateValue(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto);
+
     void deleteKey(String clusterId, String namespace, String middlewareName, Integer db, String key);
 
     void updateKey(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto);
