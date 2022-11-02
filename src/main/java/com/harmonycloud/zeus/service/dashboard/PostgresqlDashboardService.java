@@ -251,9 +251,29 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
                        String schemaName, String tableName, HttpServletRequest request, HttpServletResponse response);
 
     /**
-     * 获取table列表
+     * 获取列信息
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param databaseName 数据库名称
+     * @param schemaName 模式名称
+     * @param tableName 表名称
+     * @return List<ColumnDto>
      */
-    List<ColumnDto> listColumns(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName, String table);
+    List<ColumnDto> listColumns(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName, String tableName);
+
+    /**
+     * 更新列信息
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param databaseName 数据库名称
+     * @param schemaName 模式名称
+     * @param tableName 表名称
+     */
+    void updateColumns(String clusterId, String namespace, String middlewareName, String databaseName, String schemaName, String tableName, TableDto tableDto);
 
     /**
      * 增删外键约束

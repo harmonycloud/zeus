@@ -460,24 +460,24 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             sb.append(turnColumnToSql(columnDto)).append(",");
         }
         // 外键约束
-        if (!CollectionUtils.isEmpty(tableDto.getTableForeignKeyList())){
+        if (!CollectionUtils.isEmpty(tableDto.getTableForeignKeyList())) {
             for (TableForeignKey foreign : tableDto.getTableForeignKeyList()) {
-                if(StringUtils.isEmpty(foreign.getTargetSchema())){
+                if (StringUtils.isEmpty(foreign.getTargetSchema())) {
                     foreign.setTargetSchema(tableDto.getSchemaName());
                 }
                 sb.append("CONSTRAINT ").append(foreign.getName()).append(" foreign key ( ").append(foreign.getColumn())
-                        .append(") ").append("REFERENCES ").append(foreign.getTargetSchema()).append(".")
-                        .append(foreign.getTargetTable()).append("(").append(foreign.getTarget()).append(")")
-                        .append(" on update ").append(foreign.getOnUpdate()).append(" on delete ").append(foreign.getOnDelete())
-                        .append(" ").append(foreign.getDeferrablity());
+                    .append(") ").append("REFERENCES ").append(foreign.getTargetSchema()).append(".")
+                    .append(foreign.getTargetTable()).append("(").append(foreign.getTarget()).append(")")
+                    .append(" on update ").append(foreign.getOnUpdate()).append(" on delete ")
+                    .append(foreign.getOnDelete()).append(" ").append(foreign.getDeferrablity());
                 sb.append(",");
             }
         }
         // 排它约束
-        if (!CollectionUtils.isEmpty(tableDto.getTableExclusionList())){
+        if (!CollectionUtils.isEmpty(tableDto.getTableExclusionList())) {
             for (TableExclusion exclusion : tableDto.getTableExclusionList()) {
                 sb.append("CONSTRAINT ").append(exclusion.getName()).append(" EXCLUDE using ")
-                        .append(exclusion.getIndexMethod()).append(" ( ").append(exclusion.getContent()).append(" )");
+                    .append(exclusion.getIndexMethod()).append(" ( ").append(exclusion.getContent()).append(" )");
                 sb.append(",");
             }
         }
@@ -485,15 +485,15 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         if (!CollectionUtils.isEmpty(tableDto.getTableUniqueList())) {
             for (TableUnique unique : tableDto.getTableUniqueList()) {
                 sb.append("CONSTRAINT ").append(unique.getName()).append(" unique ").append("(")
-                        .append(unique.getColumnName()).append(")").append(unique.getDeferrablity());
+                    .append(unique.getColumnName()).append(")").append(unique.getDeferrablity());
                 sb.append(",");
             }
         }
         // 检查约束
-        if (!CollectionUtils.isEmpty(tableDto.getTableCheckList())){
+        if (!CollectionUtils.isEmpty(tableDto.getTableCheckList())) {
             for (TableCheck check : tableDto.getTableCheckList()) {
                 sb.append("CONSTRAINT ").append(check.getName()).append(" check ").append("(").append(check.getText())
-                        .append(") ");
+                    .append(") ");
                 if (check.getNoInherit() != null && check.getNoInherit()) {
                     sb.append("no inherit ");
                 }
@@ -532,7 +532,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             tableDto.setFillFactor("100");
         }
         // Tablespace
-        if (StringUtils.isEmpty(tableDto.getTablespace())){
+        if (StringUtils.isEmpty(tableDto.getTablespace())) {
             tableDto.setTablespace("pg_default");
         }
         JSONObject table = new JSONObject();
@@ -574,9 +574,6 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         if (StringUtils.isNotEmpty(tableDto.getTableName())) {
             tableName = tableDto.getTableName();
         }
-        // 查询列信息
-        updateColumn(clusterId, namespace, middlewareName, tableDto.getDatabaseName(), schemaName, tableName,
-            tableDto.getColumnDtoList());
     }
 
     @Override
@@ -724,6 +721,85 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     @Override
+    public void updateColumns(String clusterId, String namespace, String middlewareName, String databaseName,
+        String schemaName, String tableName, TableDto tableDto) {
+        List<ColumnDto> newColumnList = tableDto.getColumnDtoList();
+        // 查询列信息
+        String path = getPath(middlewareName, namespace);
+
+        List<ColumnDto> columnDtoList =
+            listColumns(clusterId, namespace, middlewareName, databaseName, schemaName, tableName);
+        Map<String, ColumnDto> columnDtoMap =
+            columnDtoList.stream().collect(Collectors.toMap(ColumnDto::getNum, columnDto -> columnDto));
+        // 比较列信息 根据内容进行修改
+        Map<String, Map<String, String>> change = new HashMap<>();
+        // 获取新增或修改内容
+        for (int i = 0; i < newColumnList.size(); ++i) {
+            Map<String, String> anchor = new HashMap<>();
+            ColumnDto newColumn = newColumnList.get(i);
+            String num = newColumn.getNum();
+            if (!columnDtoMap.containsKey(num) || Integer.parseInt(num) > newColumnList.size()) {
+                // 新增列
+                Map<String, String> add = new HashMap<>();
+                add.put("add", turnColumnToSql(newColumn));
+                change.put(newColumn.getColumn(), add);
+                continue;
+            }
+            // 比较列不同
+            ColumnDto column = columnDtoMap.get(num);
+            // 比较是否开关数组/修改数据类型、修改数据长度
+            if (!column.getArray().equals(newColumn.getArray()) || !column.getDateType().equals(newColumn.getDateType())
+                || !column.getSize().equals(newColumn.getSize())) {
+                anchor.put("dataType", newColumn.getDateType());
+                anchor.put("array", newColumn.getArray().toString());
+                if (!"0".equals(newColumn.getSize())) {
+                    anchor.put("size", newColumn.getSize());
+                }
+            }
+            // 比较是否可空
+            if (!column.getNullable().equals(newColumn.getNullable())) {
+                anchor.put("nullAble", newColumn.getNullable().toString());
+            }
+            // 比较是否主键
+            if (!column.getPrimaryKey().equals(newColumn.getPrimaryKey())) {
+                anchor.put("primary", column.getPrimaryKey().toString());
+            }
+            // 比较默认值是否相同
+            if (!column.getDefaultValue().equals(newColumn.getDefaultValue())) {
+                anchor.put("default", newColumn.getDefaultValue());
+            }
+            // 比较备注
+            if (!column.getComment().equals(newColumn.getComment())) {
+                anchor.put("comment", newColumn.getComment());
+            }
+            // 比较列名称
+            if (!column.getColumn().equals(newColumn.getColumn())) {
+                anchor.put("name", column.getColumn());
+                anchor.put("newName", newColumn.getColumn());
+            }
+            change.put(column.getColumn(), anchor);
+            columnDtoMap.remove(num);
+        }
+        // 获取删除列
+        if (!CollectionUtils.isEmpty(columnDtoMap)) {
+            Map<String, String> delete = new HashMap<>();
+            columnDtoMap.forEach((k, v) -> {
+                delete.put(v.getColumn(), "delete");
+                change.put(v.getColumn(), delete);
+            });
+        }
+        // 更新列信息
+        JSONObject object = new JSONObject();
+        object.put("change", change);
+        JSONObject updateColumn =
+            postgresqlClient.updateColumn(path, port, databaseName, schemaName, tableName, object);
+        JSONObject err = updateColumn.getJSONObject("err");
+        if (err != null) {
+            throw new BusinessException(ErrorMessage.POSTGRESQL_UPDATE_TABLE_FAILED, err.getString("Message"));
+        }
+    }
+
+    @Override
     public void updateForeignKey(String clusterId, String namespace, String middlewareName, TableDto tableDto) {
         if (CollectionUtils.isEmpty(tableDto.getTableForeignKeyList())) {
             return;
@@ -736,6 +812,9 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
                 // 转化列和目标列为字符串
                 key.setColumnName(key.getColumn());
                 key.setTargetColumn(key.getTarget());
+                if (StringUtils.isEmpty(key.getTargetSchema())) {
+                    key.setTargetSchema(tableDto.getSchemaName());
+                }
                 // 创建外键
                 JSONObject createForeignKey = postgresqlClient.createForeignKey(path, port, tableDto.getDatabaseName(),
                     tableDto.getSchemaName(), tableDto.getTableName(), key);
@@ -1119,82 +1198,6 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     public List<String> listCollate() {
         return Arrays.stream(PostgresqlCollateEnum.values()).map(PostgresqlCollateEnum::getName)
             .collect(Collectors.toList());
-    }
-
-    public void updateColumn(String clusterId, String namespace, String middlewareName, String databaseName,
-        String schemaName, String tableName, List<ColumnDto> newColumnList) {
-        String path = getPath(middlewareName, namespace);
-
-        List<ColumnDto> columnDtoList =
-            listColumns(clusterId, namespace, middlewareName, databaseName, schemaName, tableName);
-        Map<String, ColumnDto> columnDtoMap =
-            columnDtoList.stream().collect(Collectors.toMap(ColumnDto::getNum, columnDto -> columnDto));
-        // 比较列信息 根据内容进行修改
-        Map<String, Map<String, String>> change = new HashMap<>();
-        // 获取新增或修改内容
-        for (int i = 0; i < newColumnList.size(); ++i) {
-            Map<String, String> anchor = new HashMap<>();
-            ColumnDto newColumn = newColumnList.get(i);
-            String num = newColumn.getNum();
-            if (!columnDtoMap.containsKey(num) || Integer.parseInt(num) > newColumnList.size()) {
-                // 新增列
-                Map<String, String> add = new HashMap<>();
-                add.put("add", turnColumnToSql(newColumn));
-                change.put(newColumn.getColumn(), add);
-                continue;
-            }
-            // 比较列不同
-            ColumnDto column = columnDtoMap.get(num);
-            // 比较是否开关数组/修改数据类型、修改数据长度
-            if (!column.getArray().equals(newColumn.getArray()) || !column.getDateType().equals(newColumn.getDateType())
-                || !column.getSize().equals(newColumn.getSize())) {
-                anchor.put("dataType", newColumn.getDateType());
-                anchor.put("array", newColumn.getArray().toString());
-                if (!"0".equals(newColumn.getSize())) {
-                    anchor.put("size", newColumn.getSize());
-                }
-            }
-            // 比较是否可空
-            if (!column.getNullable().equals(newColumn.getNullable())) {
-                anchor.put("nullAble", newColumn.getNullable().toString());
-            }
-            // 比较是否主键
-            if (!column.getPrimaryKey().equals(newColumn.getPrimaryKey())) {
-                anchor.put("primary", column.getPrimaryKey().toString());
-            }
-            // 比较默认值是否相同
-            if (!column.getDefaultValue().equals(newColumn.getDefaultValue())) {
-                anchor.put("default", newColumn.getDefaultValue());
-            }
-            // 比较备注
-            if (!column.getComment().equals(newColumn.getComment())) {
-                anchor.put("comment", newColumn.getComment());
-            }
-            // 比较列名称
-            if (!column.getColumn().equals(newColumn.getColumn())) {
-                anchor.put("name", column.getColumn());
-                anchor.put("newName", newColumn.getColumn());
-            }
-            change.put(column.getColumn(), anchor);
-            columnDtoMap.remove(num);
-        }
-        // 获取删除列
-        if (!CollectionUtils.isEmpty(columnDtoMap)) {
-            Map<String, String> delete = new HashMap<>();
-            columnDtoMap.forEach((k, v) -> {
-                delete.put(v.getColumn(), "delete");
-                change.put(v.getColumn(), delete);
-            });
-        }
-        // 更新列信息
-        JSONObject object = new JSONObject();
-        object.put("change", change);
-        JSONObject updateColumn =
-            postgresqlClient.updateColumn(path, port, databaseName, schemaName, tableName, object);
-        JSONObject err = updateColumn.getJSONObject("err");
-        if (err != null) {
-            throw new BusinessException(ErrorMessage.POSTGRESQL_UPDATE_TABLE_FAILED, err.getString("Message"));
-        }
     }
 
     public List<Map<String, String>> convertColumn(JSONObject jsonObject) {

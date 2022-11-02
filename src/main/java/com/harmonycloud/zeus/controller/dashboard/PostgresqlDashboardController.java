@@ -350,6 +350,28 @@ public class PostgresqlDashboardController {
         return BaseResult.ok(postgresqlDashboardService.listColumns(clusterId, namespace, name, databaseName, schemaName, tableName));
     }
 
+    @ApiOperation(value = "更新column", notes = "更新column")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "tableDto", value = "表对象", paramType = "path", dataTypeClass = TableDto.class),
+    })
+    @PutMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/columns")
+    public BaseResult<List<ColumnDto>> updateColumns(@PathVariable("clusterId") String clusterId,
+                                                     @PathVariable("namespace") String namespace,
+                                                     @PathVariable("name") String name,
+                                                     @PathVariable("databaseName") String databaseName,
+                                                     @PathVariable("schemaName") String schemaName,
+                                                     @PathVariable("tableName") String tableName,
+                                                     @RequestBody TableDto tableDto) {
+        postgresqlDashboardService.updateColumns(clusterId, namespace, name, databaseName, schemaName, tableName, tableDto);
+        return BaseResult.ok();
+    }
+
     @ApiOperation(value = "获取table数据条数", notes = "获取table数据条数")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
