@@ -25,3 +25,5 @@
 - 备份任务添加删除中状态
 - redis参数配置添加config set逻辑
 - middleware-controller版本更新
+
+- mysql自定义参数曲线特殊处理innodb_buffer_pool_size

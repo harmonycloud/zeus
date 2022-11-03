@@ -113,17 +113,6 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             if ("sql_mode".equals(beanCustomConfig.getName())) {
                 customConfig.setParamType("multiSelect");
             }
-            if ("innodb_buffer_pool_size".equals(beanCustomConfig.getName())) {
-                // 设置默认值为空
-                String defaultValue = BigDecimal
-                    .valueOf(ResourceCalculationUtil.getResourceValue(
-                        values.getJSONObject("resources").getJSONObject("limits").getString("memory"), "memory", "K"))
-                    .multiply(new BigDecimal("512")).setScale(0, RoundingMode.UP).toString();
-                customConfig.setDefaultValue(defaultValue);
-                if (StringUtils.isEmpty(customConfig.getValue())) {
-                    customConfig.setValue(defaultValue);
-                }
-            }
             if (beanMiddlewareParamTopList.stream()
                 .anyMatch(beanMiddlewareParamTop -> beanMiddlewareParamTop.getParam().equals(customConfig.getName()))) {
                 customConfig.setTopping(true);
