@@ -24,3 +24,4 @@
 -- 2022.11.3 xutianhong/wangpenglei
 - 备份任务添加删除中状态
 - redis参数配置添加config set逻辑
+- middleware-controller版本更新
