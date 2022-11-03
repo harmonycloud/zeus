@@ -42,7 +42,7 @@ public class K8sExecServiceImpl implements K8sExecService {
                     error = true;
                 }
             }
-            if (error) {
+             if (error) {
                 throw new Exception();
             }
 
@@ -60,7 +60,8 @@ public class K8sExecServiceImpl implements K8sExecService {
      * 过滤一些并非异常的提醒信息
      **/
     public boolean filter(String line){
-        return line.contains("Using a password on the command line interface can be insecure");
+        return line.contains("Using a password on the command line interface can be insecure")||
+                line.contains("Warning: Using a password with '-a' or '-u' option on the command line interface may not be safe.");
     }
 
 }

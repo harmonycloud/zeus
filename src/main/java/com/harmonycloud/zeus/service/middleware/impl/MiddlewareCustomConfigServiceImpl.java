@@ -170,15 +170,11 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             }
             data.put(customConfig.getName(), customConfig.getValue());
         }
-        // mysql在不需要重启时，手动执行set global
-        if (config.getType().equals(MiddlewareTypeEnum.MYSQL.getType()) && !restart) {
-            try {
-                doSetGlobal(config, cluster);
-            }catch (Exception e){
-                log.error(ErrorMessage.MYSQL_CONFIG_UPDATE_FAILED.getZhMsg(), e);
-                throw new BusinessException(ErrorMessage.MYSQL_CONFIG_UPDATE_FAILED);
-            }
+        // mysql和redis在不需要重启时，手动执行set global
+        if ((config.getType().equals(MiddlewareTypeEnum.MYSQL.getType()) || config.getType().equals(MiddlewareTypeEnum.REDIS.getType())) && !restart) {
+                doSetGlobal(config, cluster, config.getType());
         }
+
         updateValues(middleware, data, cluster, values);
         // 添加修改历史
         customConfigHistoryService.insert(config.getName(), oldDate, config);
@@ -385,13 +381,66 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         helmChartService.upgrade(middleware, values, newValues, cluster);
     }
 
-    public void doSetGlobal(MiddlewareCustomConfig config, MiddlewareClusterDTO cluster) {
+    public void doSetGlobal(MiddlewareCustomConfig config, MiddlewareClusterDTO cluster, String type) {
+        if ((config.getType().equals(MiddlewareTypeEnum.MYSQL.getType()))){
+            try{
+                doSetGlobalMysql(config, cluster);
+            }catch (Exception e){
+                log.error(ErrorMessage.MYSQL_CONFIG_UPDATE_FAILED.getZhMsg(), e);
+                throw new BusinessException(ErrorMessage.MYSQL_CONFIG_UPDATE_FAILED);
+            }
+        }else if((config.getType().equals(MiddlewareTypeEnum.REDIS.getType()))){
+            try{
+                doSetGlobalRedis(config, cluster);
+            }catch (Exception e){
+                log.error(ErrorMessage.REDIS_CONFIG_UPDATE_FAILED.getZhMsg(), e);
+                throw new BusinessException(ErrorMessage.REDIS_CONFIG_UPDATE_FAILED);
+            }
+        }
+    }
+
+    private void doSetGlobalRedis(MiddlewareCustomConfig config, MiddlewareClusterDTO cluster) {
+        // 获取数据库密码
+        JSONObject values = helmChartService.getInstalledValues(config.getName(), config.getNamespace(), cluster);
+        String password = values.getString("redisPassword");
+        // 获取端口
+        String port = values.getString("redisServicePort");
+        // 获取pod列表
+        MiddlewareCR middlewareCr = middlewareCRService.getCR(cluster.getId(), config.getNamespace(),
+                MiddlewareTypeEnum.REDIS.getType(), config.getName());
+        // 拼接redis-cli命令
+        StringBuilder sb = new StringBuilder();
+        sb.append("'");
+        config.getCustomConfigList().forEach(customConfig -> {
+            sb.append("config set ").append(customConfig.getName()).append(" ").append("\\\"").append(customConfig.getValue()).append("\\\"").append("\\n");
+        });
+        sb.append("'");
+        // 主从节点执行命令
+        if (middlewareCr.getStatus() == null || middlewareCr.getStatus().getInclude() == null
+                || !middlewareCr.getStatus().getInclude().containsKey("pods")) {
+            throw new BusinessException(ErrorMessage.FIND_POD_IN_MIDDLEWARE_FAIL);
+        }
+        middlewareCr.getStatus().getInclude().get("pods").forEach(pods -> {
+            if ("master".equals(pods.getType()) || "slave".equals(pods.getType())) {
+                // 获取host
+                String host = pods.getName().substring(0, pods.getName().lastIndexOf("-"));
+                String execCommand = MessageFormat.format(
+                        "kubectl exec {0} -n {1} -c redis-cluster --server={2} --token={3} --insecure-skip-tls-verify=true " +
+                                "-- bash -c \"echo -en {4} | redis-cli -h {5} -p {6} -a {7} --pipe\"",
+                        pods.getName(), config.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
+                        sb.toString(), host, port, password);
+                k8sExecService.exec(execCommand);
+            }
+        });
+    }
+
+    public void doSetGlobalMysql(MiddlewareCustomConfig config, MiddlewareClusterDTO cluster){
         // 获取数据库密码
         JSONObject values = helmChartService.getInstalledValues(config.getName(), config.getNamespace(), cluster);
         String password = values.getJSONObject("args").getString("root_password");
         // 获取pod列表
         MiddlewareCR middlewareCr = middlewareCRService.getCR(cluster.getId(), config.getNamespace(),
-            MiddlewareTypeEnum.MYSQL.getType(), config.getName());
+                MiddlewareTypeEnum.MYSQL.getType(), config.getName());
         // 拼接数据库语句
         StringBuilder sb = new StringBuilder();
         config.getCustomConfigList().forEach(customConfig -> {
@@ -404,15 +453,15 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         });
         // 主从节点执行命令
         if (middlewareCr.getStatus() == null || middlewareCr.getStatus().getInclude() == null
-            || !middlewareCr.getStatus().getInclude().containsKey("pods")) {
+                || !middlewareCr.getStatus().getInclude().containsKey("pods")) {
             throw new BusinessException(ErrorMessage.FIND_POD_IN_MIDDLEWARE_FAIL);
         }
         middlewareCr.getStatus().getInclude().get("pods").forEach(pods -> {
             if ("Master".equals(pods.getType()) || "Slave".equals(pods.getType())) {
                 String execCommand = MessageFormat.format(
-                    "kubectl exec {0} -n {1} -c mysql --server={2} --token={3} --insecure-skip-tls-verify=true -- mysql -uroot -p{4} -S /data/mysql/db_{5}/conf/mysql.sock -e \"{6}\"",
-                    pods.getName(), config.getNamespace(), cluster.getAddress(), cluster.getAccessToken(), password,
-                    config.getName(), sb.toString());
+                        "kubectl exec {0} -n {1} -c mysql --server={2} --token={3} --insecure-skip-tls-verify=true -- mysql -uroot -p{4} -S /data/mysql/db_{5}/conf/mysql.sock -e \"{6}\"",
+                        pods.getName(), config.getNamespace(), cluster.getAddress(), cluster.getAccessToken(), password,
+                        config.getName(), sb.toString());
                 k8sExecService.exec(execCommand);
             }
         });
