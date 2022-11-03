@@ -53,7 +53,7 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
     /**
      * 查询数据表引擎
      */
-    List<String> listEngines(String clusterId, String namespace, String middlewareName);
+    List<MysqlEngineDto> listEngines(String clusterId, String namespace, String middlewareName);
 
     /**
      * 查询数据库数据表

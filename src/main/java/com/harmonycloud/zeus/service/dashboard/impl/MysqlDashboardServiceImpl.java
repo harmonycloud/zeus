@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.service.dashboard.impl;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.MysqlEngineEnum;
 import com.harmonycloud.caas.common.enums.MysqlPrivilegeEnum;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.enums.middleware.MysqlDataTypeEnum;
@@ -24,10 +25,7 @@ import org.springframework.util.StringUtils;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -104,7 +102,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     public void dropDatabase(String clusterId, String namespace, String middlewareName, String databaseName) {
         JSONObject res = mysqlClient.dropDatabase(getPath(middlewareName,namespace), port, databaseName);
         if (!res.getBoolean("success")) {
-            throw new BusinessException(ErrorMessage.CREATE_DATABASE_FAILED, res.getString("message"));
+            throw new BusinessException(ErrorMessage.DELETE_TABLE_FAILED, res.getString("message"));
         }
     }
 
@@ -127,12 +125,21 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public List<String> listEngines(String clusterId, String namespace, String middlewareName) {
-        JSONArray dataAry = mysqlClient.listEngines(getPath(middlewareName,namespace), port).getJSONArray("dataAry");
+    public List<MysqlEngineDto> listEngines(String clusterId, String namespace, String middlewareName) {
+        JSONArray dataAry = mysqlClient.listEngines(getPath(middlewareName, namespace), port).getJSONArray("dataAry");
         return dataAry.stream().map(data -> {
             JSONObject obj = (JSONObject) data;
-            return obj.getString("ENGINE");
-        }).sorted().collect(Collectors.toList());
+            String engine = obj.getString("ENGINE");
+            MysqlEngineEnum mysqlEngineEnum = MysqlEngineEnum.findByEngineName(engine);
+            MysqlEngineDto mysqlEngineDto = new MysqlEngineDto();
+            if (mysqlEngineEnum != null) {
+                mysqlEngineDto.setEngine(engine);
+                mysqlEngineDto.setIndexTypes(Arrays.asList(mysqlEngineEnum.getIndexTypes()));
+                mysqlEngineDto.setStorageTypes(Arrays.asList(mysqlEngineEnum.getStorageTypes()));
+                mysqlEngineDto.setSupportForeignKey(mysqlEngineEnum.getSupportForeignKey());
+            }
+            return mysqlEngineDto;
+        }).filter(mysqlEngineDto -> !StringUtils.isEmpty(mysqlEngineDto.getEngine())).sorted().collect(Collectors.toList());
     }
 
     @Override
@@ -204,9 +211,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public JSONArray showTableData(String clusterId, String namespace, String middlewareName, String database, String table,QueryInfo queryInfo) {
-        // todo 查询出的数据应该按数据表列的顺序排序
-        JSONArray dataAry = mysqlClient.showTableData(getPath(middlewareName, namespace), port, database, table, queryInfo).getJSONArray("dataAry");
-        return dataAry;
+        return mysqlClient.showTableData(getPath(middlewareName, namespace), port, database, table, queryInfo).getJSONArray("dataAry");
     }
 
     @Override
@@ -386,7 +391,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void updatePassword(String clusterId, String namespace, String middlewareName, String username, UserDto userDto) {
-        if (!checkUserExists(namespace, middlewareName, userDto.getUser())) {
+        if (!checkUserExists(namespace, middlewareName, username)) {
             throw new BusinessException(ErrorMessage.MYSQL_USER_NOT_EXISTS);
         }
         JSONObject res = mysqlClient.updatePassword(getPath(middlewareName,namespace), port, username, userDto);
