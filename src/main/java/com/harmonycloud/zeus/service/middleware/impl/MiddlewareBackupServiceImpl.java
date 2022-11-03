@@ -830,7 +830,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 + parameters.getBucket() + ")";
         backupRecord.setPosition(position);
         // 获取备份状态
-        if (!ObjectUtils.isEmpty(backupStatus)) {
+        if (StringUtils.isNotEmpty(schedule.getMetadata().getDeletionTimestamp())){
+            backupRecord.setPhrase("Deleting");
+        } else if (!ObjectUtils.isEmpty(backupStatus)) {
             backupRecord.setPhrase(backupStatus.getPhase());
         } else {
             backupRecord.setPhrase("Unknown");
@@ -898,7 +900,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         backupRecord.setPosition(position);
 
         // 获取备份状态
-        if (!ObjectUtils.isEmpty(backupStatus)) {
+        if (StringUtils.isNotEmpty(backup.getMetadata().getDeletionTimestamp())) {
+            backupRecord.setPhrase("Deleting");
+        } else if (!ObjectUtils.isEmpty(backupStatus)) {
             backupRecord.setPhrase(backupStatus.getPhase());
             if ("Failed".equals(backupStatus.getPhase())) {
                 backupRecord.setReason(backupStatus.getReason());

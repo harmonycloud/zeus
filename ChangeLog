@@ -20,3 +20,7 @@
 -- 2022.11.1 liyinlong
 - 服务暴露列表报错
 - 服务暴露记录服务暴露字段为null
+
+-- 2022.11.3 xutianhong/wangpenglei
+- 备份任务添加删除中状态
+- redis参数配置添加config set逻辑
