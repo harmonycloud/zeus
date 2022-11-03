@@ -139,9 +139,9 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
     })
     @GetMapping("/engines")
-    public BaseResult<List<String>> listEngines(@PathVariable("clusterId") String clusterId,
-                                                 @PathVariable("namespace") String namespace,
-                                                 @PathVariable("middlewareName") String middlewareName) {
+    public BaseResult<List<MysqlEngineDto>> listEngines(@PathVariable("clusterId") String clusterId,
+                                                @PathVariable("namespace") String namespace,
+                                                @PathVariable("middlewareName") String middlewareName) {
         return BaseResult.ok(mysqlDashboardService.listEngines(clusterId, namespace, middlewareName));
     }
 

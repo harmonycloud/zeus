@@ -17,7 +17,7 @@ public class MysqlUtil {
      */
     public static String extractCharset(String collation) {
         if (StringUtils.isEmpty(collation) || !collation.contains("_")) {
-            return null;
+            return "";
         }
         return collation.substring(0, collation.indexOf("_"));
     }
