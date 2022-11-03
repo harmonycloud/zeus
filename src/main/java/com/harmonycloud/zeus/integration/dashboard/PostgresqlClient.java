@@ -162,7 +162,7 @@ public interface PostgresqlClient {
     /**
      * 更新table
      */
-    @Post(url = "/postgresql/{path}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}")
+    @Put(url = "/postgresql/{path}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}")
     JSONObject updateTable(@Var("path") String path,
                            @Var("port") String port,
                            @Var("database") String database,
@@ -173,7 +173,7 @@ public interface PostgresqlClient {
     /**
      * 更新table column
      */
-    @Post(url = "/postgresql/{path}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/columns")
+    @Put(url = "/postgresql/{path}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/columns")
     JSONObject updateColumn(@Var("path") String path,
                             @Var("port") String port,
                             @Var("database") String database,
@@ -337,11 +337,11 @@ public interface PostgresqlClient {
     @Get(
             url = "/postgresql/{path}/port/{port}/databases/{database}/schemas/{schema}/tables/{table}/inherit?oid={oid}")
     JSONObject getInherit(@Var("path") String path,
-                                @Var("port") String port,
-                                @Var("database") String database,
-                                @Var("schema") String schema,
-                                @Var("table") String table,
-                                @Var("oid") String oid);
+                          @Var("port") String port,
+                          @Var("database") String database,
+                          @Var("schema") String schema,
+                          @Var("table") String table,
+                          @Var("oid") String oid);
 
     /**
      * 查询user列表

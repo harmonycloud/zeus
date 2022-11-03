@@ -282,7 +282,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         String path = getPath(middlewareName, namespace);
         setPort(clusterId, namespace, middlewareName);
         JSONObject listTables = postgresqlClient.listTables(path, port, databaseName, schemaName);
-        if (listTables.getJSONArray("data") == null){
+        if (listTables.getJSONArray("data") == null) {
             return new ArrayList<>();
         }
         List<Map<String, String>> tableList = convertColumn(listTables);
@@ -429,17 +429,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             tableDto.setTableCheckList(tableCheckList);
         }
         // 继承信息
-        JSONObject getInherit =
-            postgresqlClient.getInherit(path, port, databaseName, schemaName, tableName, tableDto.getOid());
-        List<Map<String, String>> inheritList = convertColumn(getInherit);
-        List<TableInherit> tableInheritList = new ArrayList<>();
-        inheritList.forEach(inherit -> {
-            TableInherit tableInherit = new TableInherit();
-            tableInherit.setOid(inherit.get("inhparent"));
-            tableInherit.setTableName(inherit.get("relname"));
-            tableInherit.setSchemaName(inherit.get("nspname"));
-            tableInheritList.add(tableInherit);
-        });
+        List<TableInherit> tableInheritList =
+            getTableInherit(path, port, databaseName, schemaName, tableName, tableDto.getOid());
         tableDto.setTableInheritList(tableInheritList);
         // 获取列信息
         tableDto.setColumnDtoList(
@@ -468,15 +459,15 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
                 if (StringUtils.isEmpty(foreign.getTargetSchema())) {
                     foreign.setTargetSchema(tableDto.getSchemaName());
                 }
-                if (StringUtils.isEmpty(foreign.getOnDelete())){
+                if (StringUtils.isEmpty(foreign.getOnDelete())) {
                     foreign.setOnDelete("NO ACTION");
                 }
-                if (StringUtils.isEmpty(foreign.getOnUpdate())){
+                if (StringUtils.isEmpty(foreign.getOnUpdate())) {
                     foreign.setOnUpdate("NO ACTION");
                 }
-                sb.append("CONSTRAINT \"").append(foreign.getName()).append("\" foreign key ( ").append(foreign.getColumn())
-                    .append(") ").append("REFERENCES ").append(foreign.getTargetSchema()).append(".")
-                    .append(foreign.getTargetTable()).append("(").append(foreign.getTarget()).append(")")
+                sb.append("CONSTRAINT \"").append(foreign.getName()).append("\" foreign key ( ")
+                    .append(foreign.getColumn()).append(") ").append("REFERENCES ").append(foreign.getTargetSchema())
+                    .append(".").append(foreign.getTargetTable()).append("(").append(foreign.getTarget()).append(")")
                     .append(" on update ").append(foreign.getOnUpdate()).append(" on delete ")
                     .append(foreign.getOnDelete()).append(" ").append(foreign.getDeferrablity());
                 sb.append(",");
@@ -501,8 +492,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         // 检查约束
         if (!CollectionUtils.isEmpty(tableDto.getTableCheckList())) {
             for (TableCheck check : tableDto.getTableCheckList()) {
-                sb.append("CONSTRAINT \"").append(check.getName()).append("\" check ").append("(").append(check.getText())
-                    .append(") ");
+                sb.append("CONSTRAINT \"").append(check.getName()).append("\" check ").append("(")
+                    .append(check.getText()).append(") ");
                 if (check.getNoInherit() != null && check.getNoInherit()) {
                     sb.append("no inherit ");
                 }
@@ -516,7 +507,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         if (StringUtils.isNotEmpty(pk.toString())) {
             pk.deleteCharAt(pk.length() - 1);
             sb.append("CONSTRAINT \"").append("pk_").append(tableDto.getSchemaName()).append("_")
-                .append(tableDto.getTableName()).append("\" PRIMARY KEY ").append("(").append(pk.toString()).append(")");
+                .append(tableDto.getTableName()).append("\" PRIMARY KEY ").append("(").append(pk.toString())
+                .append(")");
             sb.append(",");
         }
         sb.deleteCharAt(sb.length() - 1);
@@ -575,13 +567,6 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         JSONObject err = updateTable.getJSONObject("err");
         if (err != null) {
             throw new BusinessException(ErrorMessage.POSTGRESQL_UPDATE_TABLE_FAILED, err.getString("Message"));
-        }
-        // 修正表信息
-        if (StringUtils.isNotEmpty(tableDto.getSchemaName())) {
-            schemaName = tableDto.getSchemaName();
-        }
-        if (StringUtils.isNotEmpty(tableDto.getTableName())) {
-            tableName = tableDto.getTableName();
         }
     }
 
@@ -724,6 +709,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             columnDto.setComment(column.get("col_description"));
             if (column.get("indisprimary") != null && "true".equals(column.get("indisprimary"))) {
                 columnDto.setPrimaryKey(true);
+            }else {
+                columnDto.setPrimaryKey(false);
             }
             return columnDto;
         }).collect(Collectors.toList());
@@ -880,7 +867,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
                         tableDto.getTableName(), key.getName(), key.getColumnName(), key.getDeferrablity());
                 if (createUnique.get("err") != null) {
                     throw new BusinessException(ErrorMessage.POSTGRESQL_CREATE_UNIQUE_FAILED,
-                            createUnique.getJSONObject("err").getString("Message"));
+                        createUnique.getJSONObject("err").getString("Message"));
                 }
             } else if ("delete".equals(key.getOperator())) {
                 // 删除约束
@@ -929,17 +916,23 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         }
         String path = getPath(middlewareName, namespace);
         setPort(clusterId, namespace, middlewareName);
+        // 查询已有的继承关系
+        List<TableInherit> existInheritList = getTableInherit(path, port, tableDto.getDatabaseName(),
+            tableDto.getSchemaName(), tableDto.getTableName(), tableDto.getOid());
+        // 添加继承关系
         for (TableInherit key : tableDto.getTableInheritList()) {
-            // 添加继承关系
-            if ("add".equals(key.getOperator())) {
+            if (existInheritList.stream().noneMatch(tableInherit -> tableInherit.equals(key))) {
                 JSONObject createForeignKey = postgresqlClient.addInherit(path, port, tableDto.getDatabaseName(),
                     tableDto.getSchemaName(), tableDto.getTableName(), key.getSchemaName(), key.getTableName());
                 if (createForeignKey.get("err") != null) {
                     throw new BusinessException(ErrorMessage.POSTGRESQL_ADD_TABLE_INHERIT_FAILED,
                         createForeignKey.getJSONObject("err").getString("Message"));
                 }
-            } else if ("delete".equals(key.getOperator())) {
-                // 取消继承关系
+            }
+        }
+        // 取消继承关系
+        for (TableInherit key : existInheritList) {
+            if (tableDto.getTableInheritList().stream().noneMatch(tableInherit -> tableInherit.equals(key))) {
                 JSONObject dropInherit = postgresqlClient.dropInherit(path, port, tableDto.getDatabaseName(),
                     tableDto.getSchemaName(), tableDto.getTableName(), key.getSchemaName(), key.getTableName());
                 if (dropInherit.get("err") != null) {
@@ -1209,6 +1202,27 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             .collect(Collectors.toList());
     }
 
+    /**
+     * 获取表继承关系
+     */
+    public List<TableInherit> getTableInherit(String path, String port, String databaseName, String schemaName,
+        String tableName, String tableOid) {
+        JSONObject getInherit = postgresqlClient.getInherit(path, port, databaseName, schemaName, tableName, tableOid);
+        if (getInherit.getJSONArray("data") == null){
+            return new ArrayList<>();
+        }
+        List<Map<String, String>> inheritList = convertColumn(getInherit);
+        List<TableInherit> tableInheritList = new ArrayList<>();
+        inheritList.forEach(inherit -> {
+            TableInherit tableInherit = new TableInherit();
+            tableInherit.setOid(inherit.get("inhparent"));
+            tableInherit.setTableName(inherit.get("relname"));
+            tableInherit.setSchemaName(inherit.get("nspname"));
+            tableInheritList.add(tableInherit);
+        });
+        return tableInheritList;
+    }
+
     public List<Map<String, String>> convertColumn(JSONObject jsonObject) {
         dealWithErr(jsonObject, true);
 
@@ -1314,8 +1328,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     public String getPath(String middlewareName, String namespace) {
-        return middlewareName + "." + namespace;
-        // return middlewareName;
+        // return middlewareName + "." + namespace;
+        return middlewareName;
     }
 
 }
