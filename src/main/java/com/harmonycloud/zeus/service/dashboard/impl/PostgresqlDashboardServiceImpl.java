@@ -468,6 +468,12 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
                 if (StringUtils.isEmpty(foreign.getTargetSchema())) {
                     foreign.setTargetSchema(tableDto.getSchemaName());
                 }
+                if (StringUtils.isEmpty(foreign.getOnDelete())){
+                    foreign.setOnDelete("NO ACTION");
+                }
+                if (StringUtils.isEmpty(foreign.getOnUpdate())){
+                    foreign.setOnUpdate("NO ACTION");
+                }
                 sb.append("CONSTRAINT \"").append(foreign.getName()).append("\" foreign key ( ").append(foreign.getColumn())
                     .append(") ").append("REFERENCES ").append(foreign.getTargetSchema()).append(".")
                     .append(foreign.getTargetTable()).append("(").append(foreign.getTarget()).append(")")
