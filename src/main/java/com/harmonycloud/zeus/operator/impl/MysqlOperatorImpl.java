@@ -193,8 +193,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             MysqlDTO mysqlDTO = new MysqlDTO();
             mysqlDTO.setReplicaCount(args.getIntValue(MysqlConstant.REPLICA_COUNT));
             // 设置是否允许备份
-            MiddlewareQuota mysql = middleware.getQuota().get("mysql");
-            mysqlDTO.setIsLvmStorage(mysql.getIsLvmStorage());
+            mysqlDTO.setIsLvmStorage(true);
+            middleware.setIsAllLvmStorage(true);
             middleware.setMysqlDTO(mysqlDTO);
             // 获取关联实例信息
             Boolean isSource = args.getBoolean(MysqlConstant.IS_SOURCE);

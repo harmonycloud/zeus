@@ -105,6 +105,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
         convertRegistry(middleware, cluster);
 
+        middleware.setIsAllLvmStorage(true);
         middleware.setVersion(values.getString("pgsqlVersion"));
         middleware.setPassword(values.getJSONObject("userPasswords").getString("postgres"));
         return middleware;

@@ -58,7 +58,7 @@ data:
       images:
         path: /usr/local/zeus-pv/images/middleware
       platform:
-        version: v1.2.1
+        version: v1.2.3
       user:
         expire: 1
       usercenter: zeus

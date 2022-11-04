@@ -870,6 +870,19 @@ data:
       scope: Namespaced
       versions:
         - name: v1
+          additionalPrinterColumns:
+            - name: Phase
+              type: string
+              description: The cron spec defining the interval a CronJob is run
+              jsonPath: .status.phase
+            - name: OperatorType
+              type: string
+              description: The cron spec defining the interval a CronJob is run
+              jsonPath: .spec.customBackups[0].env[0].value
+            - name: CreateTime
+              type: string
+              description: The cron spec defining the interval a CronJob is run
+              jsonPath: .metadata.creationTimestamp
           schema:
             openAPIV3Schema:
               description: MiddlewareBackup is the Schema for the middlewarebackups API
