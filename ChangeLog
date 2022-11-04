@@ -27,3 +27,6 @@
 - middleware-controller版本更新
 
 - mysql自定义参数曲线特殊处理innodb_buffer_pool_size
+
+-- 2022.11.4 xutianhong
+- 双活label处理完善

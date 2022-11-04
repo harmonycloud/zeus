@@ -26,6 +26,7 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.yaml.snakeyaml.Yaml;
@@ -50,6 +51,9 @@ import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConsta
  */
 @Service
 public class PodServiceImpl implements PodService {
+
+    @Value("${active-active.label.key:topology.kubernetes.io/zone}")
+    private String zoneKey;
 
     @Autowired
     private PodWrapper podWrapper;
@@ -358,8 +362,8 @@ public class PodServiceImpl implements PodService {
         Map<String, Node> nodeMap = nodeList.stream().collect(Collectors.toMap(Node::getName, Node -> Node));
         podInfoList.forEach(podInfo -> {
             Node node = nodeMap.get(podInfo.getNodeName());
-            if (node != null && node.getLabels() != null && node.getLabels().containsKey("zone")) {
-                String areaName = node.getLabels().get("zone");
+            if (node != null && node.getLabels() != null && node.getLabels().containsKey(zoneKey)) {
+                String areaName = node.getLabels().get(zoneKey);
                 BeanActiveArea beanActiveArea = activeAreaService.get(clusterId, areaName);
                 if (beanActiveArea == null) {
                     podInfo.setNodeZone(areaName);
