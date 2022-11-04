@@ -3,7 +3,7 @@ global:
   crdGroup: harmonycloud
   middleware_controller:
     image: middleware-controller
-    tag: v1.2.9
+    tag: v1.2.10
     resources:
       limits:
         cpu: 200m
@@ -14,7 +14,7 @@ global:
     nodeSelector: {}
   middlewarebackup_controller:
     image: middlewarebackup-controller
-    tag: v1.2.7
+    tag: v1.2.8
     resources:
       limits:
         cpu: 200m
@@ -40,7 +40,7 @@ global:
     job_mysql_backup:
       image: middleware-backup-operator
       tag: v1.0.3-mysql
-      mysql8tag: v1.0.2-mysql8
+      mysql8tag: v1.0.3-mysql8
   kubectl:
     installCRDs: true
     tag: 1.21
