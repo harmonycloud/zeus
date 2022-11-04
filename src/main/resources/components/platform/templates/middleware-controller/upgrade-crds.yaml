@@ -870,6 +870,19 @@ data:
       scope: Namespaced
       versions:
         - name: v1
+          additionalPrinterColumns:
+            - name: Phase
+              type: string
+              description: The cron spec defining the interval a CronJob is run
+              jsonPath: .status.phase
+            - name: OperatorType
+              type: string
+              description: The cron spec defining the interval a CronJob is run
+              jsonPath: .spec.customBackups[0].env[0].value
+            - name: CreateTime
+              type: string
+              description: The cron spec defining the interval a CronJob is run
+              jsonPath: .metadata.creationTimestamp
           schema:
             openAPIV3Schema:
               description: MiddlewareBackup is the Schema for the middlewarebackups API
@@ -1262,12 +1275,40 @@ spec:
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.global.kubectl.affinity }}
       affinity:
+        {{- if eq .Values.podAntiAffinity "hard"}}
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: control-plane
+                    operator: In
+                    values:
+                      - backup-controller
+              topologyKey: {{ .Values.podAntiAffinityTopologKey }}
+        {{- else if eq .Values.podAntiAffinity "soft"}}
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: {{ .Values.podAntiAffinityTopologKey }}
+                labelSelector:
+                  matchExpressions:
+                    - key: control-plane
+                      operator: In
+                      values:
+                        - backup-controller
+        {{- end}}
+        {{- with .Values.nodeAffinity }}
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.global.kubectl.tolerations }}
-      tolerations:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
 {{- end }}

@@ -79,7 +79,8 @@ system:
     expire: 8
   platform:
     #平台版本
-    version: v0.2.1
+    version: v1.2.3
+  usercenter: zeus
   skyview:
     username: admin
     password: Ab123456
@@ -93,6 +94,8 @@ system:
     password: Harbor12345
 #ssl
 server:
+  http:
+    port: 8080
   ssl:
     key-alias: zeushttps
     key-store-password: Ab123456

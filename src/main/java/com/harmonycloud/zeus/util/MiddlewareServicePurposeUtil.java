@@ -122,11 +122,11 @@ public class MiddlewareServicePurposeUtil {
         if (serviceName.contains("console-svc")) {
             return "管理页面";
         } else if (serviceName.contains("proxy")) {
-            return "服务代理";
+            return "服务代理proxy-" + serviceName.substring(serviceName.length() - 1);
         } else if (serviceName.contains("namesrv")) {
             return "服务连接";
         } else if (serviceName.contains("master") || serviceName.contains("slave")) {
-            return "集群外访问";
+            return null;
         } else {
             return null;
         }

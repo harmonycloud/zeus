@@ -515,9 +515,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
                     }
                     break;
                 case "mysql":
-                    if (middleware.getQuota().get("mysql").getIsLvmStorage()) {
-                        middlewares.add(middleware);
-                    }
+                    middlewares.add(middleware);
                     break;
                 case "rocketmq":
                     if (middleware.getQuota().get("rocketmq").getIsLvmStorage()) {
@@ -530,9 +528,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
                     }
                     break;
                 case "postgresql":
-                    if (middleware.getQuota().get("postgresql").getIsLvmStorage()) {
-                        middlewares.add(middleware);
-                    }
+                    middlewares.add(middleware);
                     break;
             }
         }
