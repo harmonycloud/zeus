@@ -209,15 +209,18 @@ public class LicenseServiceImpl implements LicenseService {
      */
     public JSONObject getLicense() throws Exception {
         Secret secret = secretService.get(K8sClient.DEFAULT_CLIENT, ZEUS, ZEUS_LICENSE);
+        JSONObject license = new JSONObject();
         if (secret == null){
-            return null;
+            license.put(TYPE, "试用版");
+            license.put(PRODUCE, 5);
+            license.put(TEST, 5);
+            return license;
         }
         if (!secret.getData().containsKey(LICENSE)){
             log.error("secret中获取license或code失败");
             throw new BusinessException(ErrorMessage.LICENSE_CHECK_FAILED);
         }
         String licenseStr = secret.getData().get(LICENSE);
-        JSONObject license;
         try {
             license = JSONObject.parseObject(RSAUtils.decryptByPrivateKey(licenseStr, PRIVATE_KEY));
         }catch (Exception e){
