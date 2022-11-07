@@ -96,8 +96,16 @@ public class K8sClient {
     /**
      * 获取默认集群信息
      */
-    public KubernetesClient initDefaultClient(){
-        return InstanceHolder.KUBERNETES_CLIENT;
+    public KubernetesClient initDefaultClient() {
+        try {
+            KubernetesClient client =
+                    new DefaultKubernetesClient(new ConfigBuilder().withMasterUrl(url).withTrustCerts(true).build());
+            K8S_CLIENT_MAP.put(DEFAULT_CLIENT, client);
+            return client;
+        } catch (Exception e){
+            log.error("初始化默认集群失败, {}", e.getMessage());
+        }
+        return null;
     }
 
     /**
