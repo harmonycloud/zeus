@@ -300,10 +300,8 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
                 ForeignKeyDto tempForeignKeyDto = foreignKeyDtoList.get(foreignKeyDtoList.indexOf(foreignKeyDto));
                 tempForeignKeyDto.getDetails().add(foreignKeyDetailDto);
             } else {
-                // todo 此处需要查询 ondeleteoption和onupdateoption
-                foreignKeyDto.setOnDeleteOption(null);
-                foreignKeyDto.setOnUpdateOption(null);
-
+                foreignKeyDto.setOnDeleteOption(obj.getString("DELETE_RULE"));
+                foreignKeyDto.setOnUpdateOption(obj.getString("UPDATE_RULE"));
                 List<ForeignKeyDetailDto> columnDtoList = new ArrayList<>();
                 columnDtoList.add(foreignKeyDetailDto);
                 foreignKeyDto.setDetails(columnDtoList);
