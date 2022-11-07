@@ -39,6 +39,7 @@ import com.harmonycloud.zeus.service.system.SystemConfigService;
 import com.harmonycloud.zeus.util.K8sClient;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.StringUtils;
 
 /**
  * @author xutianhong
@@ -157,7 +158,7 @@ public class LicenseServiceImpl implements LicenseService {
         }
         // 获取当前总使用量
         MiddlewareClusterDTO cluster = clusterList.get(0);
-        double cpu = getCpu(cluster.getType());
+        double cpu = getCpu(StringUtils.isEmpty(cluster.getType()) ? TEST : cluster.getType());
         return license.getDoubleValue(cluster.getType()) - cpu > limit;
     }
 
