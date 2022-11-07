@@ -5,6 +5,7 @@ import static com.harmonycloud.caas.common.constants.NameConstant.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.alibaba.fastjson.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -86,12 +87,16 @@ public class LicenseServiceImpl implements LicenseService {
         // 查询数据库 是否已存在license
         JSONObject exist = getLicense();
         if (exist.containsKey(TYPE) && "试用版".equals(exist.getString(TYPE))) {
-            license.put(LICENSE, licenseStr);
+            // 记录license
+            recordLicense(license, licenseStr);
+            // 发布license
             saveLicense(license);
         } else {
-            if (licenseStr.equals(exist.getString(LICENSE))){
-                throw new BusinessException(ErrorMessage.LICENSE_USED_IN_PLATFORM);
-            }
+            // 校验是否已绑定
+            checkUsed(exist, licenseStr);
+            // 记录license
+            recordLicense(exist, licenseStr);
+            // 更新license
             updateLicense(license, exist);
         }
     }
@@ -251,6 +256,28 @@ public class LicenseServiceImpl implements LicenseService {
             log.error("license uid 校验失败");
             throw new BusinessException(ErrorMessage.LICENSE_CHECK_FAILED);
         }
+    }
+
+    /**
+     * 校验license是否已被绑定
+     */
+    public void checkUsed(JSONObject license, String licenseStr){
+        JSONArray array = license.getJSONArray(LICENSE);
+        if (array.contains(licenseStr)){
+            throw new BusinessException(ErrorMessage.LICENSE_USED_IN_PLATFORM);
+        }
+    }
+
+    /**
+     * 记录被绑定的license
+     */
+    public void recordLicense(JSONObject license, String licenseStr){
+        JSONArray array = license.getJSONArray(LICENSE);
+        if (array == null){
+            array = new JSONArray();
+        }
+        array.add(licenseStr);
+        license.put(LICENSE, array);
     }
 
     /**
