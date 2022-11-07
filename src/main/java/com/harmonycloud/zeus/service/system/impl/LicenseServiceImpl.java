@@ -189,8 +189,8 @@ public class LicenseServiceImpl implements LicenseService {
                 .collect(Collectors.toList());
             final CountDownLatch clusterCountDownLatch = new CountDownLatch(middlewareCrList.size());
             for (MiddlewareCR middlewareCr : middlewareCrList) {
-                try {
-                    ThreadPoolExecutorFactory.executor.execute(() -> {
+                ThreadPoolExecutorFactory.executor.execute(() -> {
+                    try {
                         String name = middlewareCr.getSpec().getName();
                         String namespace = middlewareCr.getMetadata().getNamespace();
                         String type = middlewareCrTypeService.findTypeByCrType(middlewareCr.getSpec().getType());
@@ -207,10 +207,10 @@ public class LicenseServiceImpl implements LicenseService {
                         } else {
                             testList.add(middlewareService.calculateCpuRequest(middleware, values));
                         }
-                    });
-                } finally {
-                    clusterCountDownLatch.countDown();
-                }
+                    } finally {
+                        clusterCountDownLatch.countDown();
+                    }
+                });
             }
             clusterCountDownLatch.await();
         }
@@ -222,9 +222,9 @@ public class LicenseServiceImpl implements LicenseService {
         updateSysConfig(TEST, String.valueOf(test));
     }
 
-    public Double calculateCpu(List<Double> cpuList){
+    public Double calculateCpu(List<Double> cpuList) {
         Double cpu = 0.0;
-        for (int i = 0; i < cpuList.size(); ++i){
+        for (int i = 0; i < cpuList.size(); ++i) {
             cpu += cpuList.get(i);
         }
         return cpu;

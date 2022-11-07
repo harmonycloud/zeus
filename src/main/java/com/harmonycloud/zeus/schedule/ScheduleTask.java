@@ -17,7 +17,7 @@ public class ScheduleTask {
     @Autowired
     private LicenseService licenseService;
 
-    @Scheduled(fixedRate = 15 * 1000)
+    @Scheduled(fixedRate = 30 * 1000)
     public void calculateCpu(){
         try {
             licenseService.middlewareResource();
