@@ -38,10 +38,10 @@ public class K8sClient {
     private static final Map<String, KubernetesClient> K8S_CLIENT_MAP = new ConcurrentHashMap<>();
 
     @Value("${k8s.master.url:https://10.96.0.1:443}")
-    private static String url;
+    private String url;
     
     @Value("${k8s.master.sa:/var/run/secrets/kubernetes.io/serviceaccount/token}")
-    private static String SERVICE_ACCOUNT_PATH;
+    private String SERVICE_ACCOUNT_PATH;
 
     public static final String DEFAULT_CLIENT = "defaultClient";
 
@@ -243,11 +243,11 @@ public class K8sClient {
     /**
      * 内部类来保证单例的线程安全
      */
-    private static class InstanceHolder {
+    /*private static class InstanceHolder {
         private static final KubernetesClient KUBERNETES_CLIENT = new DefaultKubernetesClient(new ConfigBuilder()
             .withMasterUrl(url).withTrustCerts(true).build());
         static {
             K8S_CLIENT_MAP.put(DEFAULT_CLIENT, KUBERNETES_CLIENT);
         }
-    }
+    }*/
 }
