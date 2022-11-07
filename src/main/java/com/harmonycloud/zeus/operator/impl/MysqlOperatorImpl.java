@@ -96,8 +96,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     private IngressService ingressService;
     @Autowired
     private NamespaceService namespaceService;
-    @Autowired
-    private LicenseService licenseService;
+
 
     @Override
     public boolean support(Middleware middleware) {

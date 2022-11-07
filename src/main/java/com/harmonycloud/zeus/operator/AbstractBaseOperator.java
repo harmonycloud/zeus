@@ -41,6 +41,7 @@ import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareAlertsServiceImpl;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
+import com.harmonycloud.zeus.service.system.LicenseService;
 import com.harmonycloud.zeus.util.K8sConvert;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -126,7 +127,7 @@ public abstract class AbstractBaseOperator {
     @Autowired
     protected NamespaceService namespaceService;
     @Autowired
-    private IngressComponentService ingressComponentService;
+    protected LicenseService licenseService;
     @Autowired
     private BeanMiddlewareInfoMapper middlewareInfoMapper;
     /**
@@ -200,6 +201,8 @@ public abstract class AbstractBaseOperator {
         //5. 修改prometheusRules添加集群
         updateAlerts(middleware);
         add2sql(middleware);
+
+        licenseService.addMiddlewareResource(cluster.getType(), calculateCpuRequest(values));
     }
 
 

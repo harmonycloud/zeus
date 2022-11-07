@@ -108,9 +108,7 @@ public class LicenseServiceImpl implements LicenseService {
         data.put(LICENSE, RSAUtils.encryptByPublicKey(license.toJSONString(), PUBLIC_KEY));
         secret.setData(data);
         secretService.create(K8sClient.DEFAULT_CLIENT, ZEUS, secret);
-        // 初始化使用量
-        insertSysConfig(PRODUCE, "0.0");
-        insertSysConfig(TEST, "0.0");
+
     }
 
     public void updateLicense(JSONObject license, JSONObject exist) throws Exception {
@@ -189,28 +187,32 @@ public class LicenseServiceImpl implements LicenseService {
                 .collect(Collectors.toList());
             final CountDownLatch clusterCountDownLatch = new CountDownLatch(middlewareCrList.size());
             for (MiddlewareCR middlewareCr : middlewareCrList) {
-                ThreadPoolExecutorFactory.executor.execute(() -> {
-                    try {
-                        String name = middlewareCr.getSpec().getName();
-                        String namespace = middlewareCr.getMetadata().getNamespace();
-                        String type = middlewareCrTypeService.findTypeByCrType(middlewareCr.getSpec().getType());
+                try {
+                    ThreadPoolExecutorFactory.executor.execute(() -> {
+                        try {
+                            String name = middlewareCr.getSpec().getName();
+                            String namespace = middlewareCr.getMetadata().getNamespace();
+                            String type = middlewareCrTypeService.findTypeByCrType(middlewareCr.getSpec().getType());
 
-                        JSONObject values = helmChartService.getInstalledValues(name, namespace, cluster);
-                        if (values == null) {
-                            return;
+                            JSONObject values = helmChartService.getInstalledValues(name, namespace, cluster);
+                            if (values == null) {
+                                return;
+                            }
+                            // 根据类型去获取对应的cpu
+                            Middleware middleware = new Middleware().setClusterId(cluster.getId()).setNamespace(namespace)
+                                    .setName(name).setType(type);
+                            if (PRODUCE.equals(cluster.getType())) {
+                                produceList.add(middlewareService.calculateCpuRequest(middleware, values));
+                            } else {
+                                testList.add(middlewareService.calculateCpuRequest(middleware, values));
+                            }
+                        } finally {
+                            clusterCountDownLatch.countDown();
                         }
-                        // 根据类型去获取对应的cpu
-                        Middleware middleware = new Middleware().setClusterId(cluster.getId()).setNamespace(namespace)
-                            .setName(name).setType(type);
-                        if (PRODUCE.equals(cluster.getType())) {
-                            produceList.add(middlewareService.calculateCpuRequest(middleware, values));
-                        } else {
-                            testList.add(middlewareService.calculateCpuRequest(middleware, values));
-                        }
-                    } finally {
-                        clusterCountDownLatch.countDown();
-                    }
-                });
+                    });
+                } catch (Exception e){
+                    log.error("中间件cpu资源查询失败", e);
+                }
             }
             clusterCountDownLatch.await();
         }
@@ -220,6 +222,19 @@ public class LicenseServiceImpl implements LicenseService {
         log.info("test cpu count: {}", test);
         updateSysConfig(PRODUCE, String.valueOf(produce));
         updateSysConfig(TEST, String.valueOf(test));
+    }
+
+    @Override
+    public void addMiddlewareResource(String type, Double cpu) {
+        if (StringUtils.isEmpty(type)) {
+            type = TEST;
+        }
+        BeanSystemConfig config = systemConfigService.getConfig(type);
+        double now = 0.0;
+        if (config != null) {
+            now = Double.parseDouble(config.getConfigValue());
+        }
+        updateSysConfig(type, String.valueOf(now + cpu));
     }
 
     public Double calculateCpu(List<Double> cpuList) {
@@ -262,7 +277,8 @@ public class LicenseServiceImpl implements LicenseService {
     public Double getCpu(String name) {
         BeanSystemConfig config = systemConfigService.getConfig(name);
         if (config == null) {
-            return null;
+            initCpu();
+            return 0.0;
         }
         return Double.parseDouble(config.getConfigValue());
     }
@@ -310,12 +326,19 @@ public class LicenseServiceImpl implements LicenseService {
         return namespace.getMetadata().getUid();
     }
 
-    public void insertSysConfig(String name, String value) {
-        systemConfigService.addConfig(name, value);
+    public void updateSysConfig(String name, String value) {
+        BeanSystemConfig config = systemConfigService.getConfig(name);
+        if (config == null){
+            systemConfigService.addConfig(name, value);
+        }else {
+            systemConfigService.updateConfig(name, value);
+        }
     }
 
-    public void updateSysConfig(String name, String value) {
-        systemConfigService.updateConfig(name, value);
+    public void initCpu(){
+        // 初始化使用量
+        updateSysConfig(PRODUCE, "0.0");
+        updateSysConfig(TEST, "0.0");
     }
 
 }

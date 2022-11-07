@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.system;
 
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.model.LicenseInfoDto;
 
 /**
@@ -32,6 +33,14 @@ public interface LicenseService {
      * 计算cpu使用量
      */
     void middlewareResource() throws Exception;
+
+    /**
+     * 计算cpu使用量
+     *
+     * @param type 集群类型
+     * @param cpu cpu
+     */
+    void addMiddlewareResource(String type, Double cpu);
 
 
 

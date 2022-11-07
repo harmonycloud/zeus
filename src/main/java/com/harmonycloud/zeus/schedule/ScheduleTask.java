@@ -17,12 +17,9 @@ public class ScheduleTask {
     @Autowired
     private LicenseService licenseService;
 
-    @Scheduled(fixedRate = 30 * 1000)
-    public void calculateCpu(){
-        try {
-            licenseService.middlewareResource();
-        }catch (Exception ignored){
-        }
+    @Scheduled(fixedRate =30 * 1000)
+    public void calculateCpu() throws Exception{
+        licenseService.middlewareResource();
     }
 
 }
