@@ -4,6 +4,7 @@ import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.tool.file.FileUtil;
 import com.harmonycloud.zeus.bean.BeanK8sDefaultCluster;
 import com.harmonycloud.zeus.service.k8s.ClusterCertService;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
@@ -38,6 +39,9 @@ public class K8sClient {
 
     @Value("${k8s.master.url:https://10.96.0.1:443}")
     private static String url;
+    
+    @Value("${k8s.master.sa:/var/run/secrets/kubernetes.io/serviceaccount/token}")
+    private static String SERVICE_ACCOUNT_PATH;
 
     public static final String DEFAULT_CLIENT = "defaultClient";
 
@@ -98,12 +102,13 @@ public class K8sClient {
      */
     public KubernetesClient initDefaultClient() {
         try {
-            KubernetesClient client =
-                    new DefaultKubernetesClient(new ConfigBuilder().withMasterUrl(url).withTrustCerts(true).build());
+            String token = FileUtil.readFile(SERVICE_ACCOUNT_PATH);
+            KubernetesClient client = new DefaultKubernetesClient(
+                new ConfigBuilder().withMasterUrl(url).withTrustCerts(true).withOauthToken(token).build());
             K8S_CLIENT_MAP.put(DEFAULT_CLIENT, client);
             return client;
-        } catch (Exception e){
-            log.error("初始化默认集群失败, {}", e.getMessage());
+        } catch (Exception e) {
+            log.error("初始化默认集群失败", e);
         }
         return null;
     }
