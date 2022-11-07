@@ -86,6 +86,7 @@ public class LicenseServiceImpl implements LicenseService {
         // 查询数据库 是否已存在license
         JSONObject exist = getLicense();
         if (exist.containsKey(TYPE) && "试用版".equals(exist.getString(TYPE))) {
+            license.put(LICENSE, licenseStr);
             saveLicense(license);
         } else {
             if (licenseStr.equals(exist.getString(LICENSE))){
@@ -104,7 +105,6 @@ public class LicenseServiceImpl implements LicenseService {
         // 初始化使用量
         insertSysConfig(PRODUCE, "0.0");
         insertSysConfig(TEST, "0.0");
-        insertSysConfig(CPU_UPDATE, FALSE);
     }
 
     public void updateLicense(JSONObject license, JSONObject exist) throws Exception {
@@ -117,7 +117,7 @@ public class LicenseServiceImpl implements LicenseService {
 
         // 更新license
         String licenseStr = RSAUtils.encryptByPublicKey(exist.toJSONString(), PUBLIC_KEY);
-        Secret secret = new Secret();
+        Secret secret = new Secret().setName(ZEUS_LICENSE).setNamespace(ZEUS);
         Map<String, String> data = new HashMap<>();
         data.put(LICENSE, licenseStr);
         secret.setData(data);
