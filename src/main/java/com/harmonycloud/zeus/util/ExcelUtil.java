@@ -75,7 +75,7 @@ public class ExcelUtil {
                     columnCell.setCellValue(columnDto.getColumn());
 
                     XSSFCell dataTypeCell = valueRow.createCell(2);
-                    dataTypeCell.setCellValue(columnDto.getDateType());
+                    dataTypeCell.setCellValue(columnDto.getDataType());
 
                     XSSFCell commentCell = valueRow.createCell(3);
                     commentCell.setCellValue(columnDto.getComment());
