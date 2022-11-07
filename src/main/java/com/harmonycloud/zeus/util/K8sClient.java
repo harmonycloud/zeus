@@ -90,6 +90,7 @@ public class K8sClient {
             addK8sClients(middlewareClusters);
             clusterService.initClusterAttributes(middlewareClusters);
         }
+        initDefaultClient();
     }
 
     /**
