@@ -287,12 +287,14 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
             JSONObject obj = (JSONObject) data;
             ForeignKeyDetailDto foreignKeyDetailDto = new ForeignKeyDetailDto();
             foreignKeyDetailDto.setForeignKey(obj.getString("CONSTRAINT_NAME"));
+            foreignKeyDetailDto.setReferenceDatabase(obj.getString("REFERENCED_TABLE_SCHEMA"));
             foreignKeyDetailDto.setReferenceTable(obj.getString("REFERENCED_TABLE_NAME"));
             foreignKeyDetailDto.setColumn(obj.getString("COLUMN_NAME"));
             foreignKeyDetailDto.setReferencedColumn(obj.getString("REFERENCED_COLUMN_NAME"));
 
             ForeignKeyDto foreignKeyDto = new ForeignKeyDto();
             foreignKeyDto.setForeignKey(foreignKeyDetailDto.getForeignKey());
+            foreignKeyDto.setReferenceDatabase(foreignKeyDetailDto.getReferenceDatabase());
             foreignKeyDto.setReferenceTable(foreignKeyDetailDto.getReferenceTable());
             if (foreignKeyDtoList.contains(foreignKeyDto)) {
                 ForeignKeyDto tempForeignKeyDto = foreignKeyDtoList.get(foreignKeyDtoList.indexOf(foreignKeyDto));

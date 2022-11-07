@@ -60,14 +60,12 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         beanImageRepositoryMapper.insert(beanImageRepository);
         // 更新集群默认镜像仓库
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        if (cluster.getRegistry() == null || StringUtils.isEmpty(cluster.getRegistry().getAddress())) {
-            Registry registry = new Registry();
-            BeanUtils.copyProperties(imageRepositoryDTO, registry);
-            registry.setUser(imageRepositoryDTO.getUsername()).setAddress(imageRepositoryDTO.getHostAddress())
+        Registry registry = new Registry();
+        BeanUtils.copyProperties(imageRepositoryDTO, registry);
+        registry.setUser(imageRepositoryDTO.getUsername()).setAddress(imageRepositoryDTO.getHostAddress())
                 .setType("harbor").setChartRepo(imageRepositoryDTO.getProject()).setId(beanImageRepository.getId());
-            cluster.setRegistry(registry);
-            clusterService.updateCluster(cluster);
-        }
+        cluster.setRegistry(registry);
+        clusterService.update(cluster);
     }
 
     @Override
@@ -112,14 +110,12 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         beanImageRepositoryMapper.updateById(beanImageRepository);
         // 更新集群默认镜像仓库
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        if (cluster.getRegistry() != null && cluster.getRegistry().getId().equals(imageRepositoryDTO.getId())) {
-            Registry registry = cluster.getRegistry();
-            BeanUtils.copyProperties(imageRepositoryDTO, registry);
-            registry.setUser(imageRepositoryDTO.getUsername()).setAddress(imageRepositoryDTO.getHostAddress())
+        Registry registry = cluster.getRegistry();
+        BeanUtils.copyProperties(imageRepositoryDTO, registry);
+        registry.setUser(imageRepositoryDTO.getUsername()).setAddress(imageRepositoryDTO.getHostAddress())
                 .setChartRepo(imageRepositoryDTO.getProject()).setId(beanImageRepository.getId());
-            cluster.setRegistry(registry);
-            clusterService.updateCluster(cluster);
-        }
+        cluster.setRegistry(registry);
+        clusterService.update(cluster);
     }
 
     @Override
