@@ -338,10 +338,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     private void checkLicense(String clusterId){
-        try {
-            licenseService.check(clusterId);
-        }catch (Exception e){
-            log.error("license校验失败");
+        if (licenseService.check(clusterId)){
+            throw new BusinessException(ErrorMessage.LICENSE_CPU_RESOURCE_NOT_ENOUGH);
         }
     }
 

@@ -19,6 +19,7 @@ import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.mysql.MysqlDbPrivService;
 import com.harmonycloud.zeus.service.mysql.MysqlDbService;
 import com.harmonycloud.zeus.service.mysql.MysqlUserService;
+import com.harmonycloud.zeus.service.system.LicenseService;
 import com.harmonycloud.zeus.util.K8sConvert;
 import com.harmonycloud.zeus.util.MysqlConnectionUtil;
 import io.fabric8.kubernetes.api.model.NodeAffinity;
@@ -95,6 +96,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     private IngressService ingressService;
     @Autowired
     private NamespaceService namespaceService;
+    @Autowired
+    private LicenseService licenseService;
 
     @Override
     public boolean support(Middleware middleware) {
@@ -623,6 +626,9 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
 
     @Override
     public void createDisasterRecoveryMiddleware(Middleware middleware) {
+        if (licenseService.check(middleware.getClusterId())){
+            throw new BusinessException(ErrorMessage.LICENSE_CPU_RESOURCE_NOT_ENOUGH);
+        }
         MysqlDTO mysqlDTO = middleware.getMysqlDTO();
         //1.为实例创建只读对外服务(NodePort)
         createOpenService(middleware, true, true);

@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.service.system.impl;
 import static com.harmonycloud.caas.common.constants.NameConstant.*;
 
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONArray;
@@ -130,7 +131,7 @@ public class LicenseServiceImpl implements LicenseService {
     }
 
     @Override
-    public LicenseInfoDto info() throws Exception {
+    public LicenseInfoDto info() {
         JSONObject license = getLicense();
         if (license == null) {
             throw new BusinessException(ErrorMessage.NOT_EXIST);
@@ -153,7 +154,7 @@ public class LicenseServiceImpl implements LicenseService {
     }
 
     @Override
-    public Boolean check(String clusterId) throws Exception {
+    public Boolean check(String clusterId) {
         JSONObject license = getLicense();
         List<MiddlewareClusterDTO> clusterList = clusterService.listClusterDtos();
         clusterList =
@@ -163,21 +164,22 @@ public class LicenseServiceImpl implements LicenseService {
         }
         // 获取当前总使用量
         MiddlewareClusterDTO cluster = clusterList.get(0);
-        double cpu = getCpu(StringUtils.isEmpty(cluster.getType()) ? TEST : cluster.getType());
-        return license.getDoubleValue(cluster.getType()) - cpu > limit;
+        String type = StringUtils.isEmpty(cluster.getType()) ? TEST : cluster.getType();
+        double cpu = getCpu(type);
+        return license.getDoubleValue(type) - cpu > limit;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void middlewareResource() {
+    public void middlewareResource() throws Exception {
         BeanSystemConfig produceConfig = systemConfigService.getConfigForUpdate(PRODUCE);
         BeanSystemConfig testConfig = systemConfigService.getConfigForUpdate(TEST);
-        if (produceConfig == null || testConfig == null){
+        if (produceConfig == null || testConfig == null) {
             return;
         }
         List<MiddlewareClusterDTO> clusterList = clusterService.listClusterDtos();
-        double produce = 0.0;
-        double test = 0.0;
+        List<Double> produceList = new ArrayList<>();
+        List<Double> testList = new ArrayList<>();
         for (MiddlewareClusterDTO cluster : clusterList) {
             List<MiddlewareCR> middlewareCrList = middlewareCrService.listCR(cluster.getId(), null, null);
             List<Namespace> namespaceList = namespaceService.list(cluster.getId());
@@ -185,53 +187,71 @@ public class LicenseServiceImpl implements LicenseService {
                 .filter(middlewareCr -> namespaceList.stream()
                     .anyMatch(namespace -> namespace.getName().equals(middlewareCr.getMetadata().getNamespace())))
                 .collect(Collectors.toList());
+            final CountDownLatch clusterCountDownLatch = new CountDownLatch(middlewareCrList.size());
             for (MiddlewareCR middlewareCr : middlewareCrList) {
-                String name = middlewareCr.getSpec().getName();
-                String namespace = middlewareCr.getMetadata().getNamespace();
-                String type = middlewareCrTypeService.findTypeByCrType(middlewareCr.getSpec().getType());
+                try {
+                    ThreadPoolExecutorFactory.executor.execute(() -> {
+                        String name = middlewareCr.getSpec().getName();
+                        String namespace = middlewareCr.getMetadata().getNamespace();
+                        String type = middlewareCrTypeService.findTypeByCrType(middlewareCr.getSpec().getType());
 
-                JSONObject values = helmChartService.getInstalledValues(name, namespace, cluster);
-                if (values == null) {
-                    continue;
-                }
-                // 根据类型去获取对应的cpu
-                Middleware middleware =
-                    new Middleware().setClusterId(cluster.getId()).setNamespace(namespace).setName(name).setType(type);
-                if (PRODUCE.equals(cluster.getType())) {
-                    produce += middlewareService.calculateCpuRequest(middleware, values);
-                } else {
-                    test += middlewareService.calculateCpuRequest(middleware, values);
+                        JSONObject values = helmChartService.getInstalledValues(name, namespace, cluster);
+                        if (values == null) {
+                            return;
+                        }
+                        // 根据类型去获取对应的cpu
+                        Middleware middleware = new Middleware().setClusterId(cluster.getId()).setNamespace(namespace)
+                            .setName(name).setType(type);
+                        if (PRODUCE.equals(cluster.getType())) {
+                            produceList.add(middlewareService.calculateCpuRequest(middleware, values));
+                        } else {
+                            testList.add(middlewareService.calculateCpuRequest(middleware, values));
+                        }
+                    });
+                } finally {
+                    clusterCountDownLatch.countDown();
                 }
             }
+            clusterCountDownLatch.await();
         }
+        Double produce = calculateCpu(produceList);
+        Double test = calculateCpu(testList);
         log.info("produce cpu count: {}", produce);
         log.info("test cpu count: {}", test);
         updateSysConfig(PRODUCE, String.valueOf(produce));
         updateSysConfig(TEST, String.valueOf(test));
     }
 
+    public Double calculateCpu(List<Double> cpuList){
+        Double cpu = 0.0;
+        for (int i = 0; i < cpuList.size(); ++i){
+            cpu += cpuList.get(i);
+        }
+        return cpu;
+    }
+
     /**
      * 获取license
      */
-    public JSONObject getLicense() throws Exception {
+    public JSONObject getLicense() {
         Secret secret = secretService.get(K8sClient.DEFAULT_CLIENT, ZEUS, ZEUS_LICENSE);
         JSONObject license = new JSONObject();
-        if (secret == null){
+        if (secret == null) {
             license.put(TYPE, "试用版");
             license.put(PRODUCE, 5);
             license.put(TEST, 5);
             return license;
         }
-        if (!secret.getData().containsKey(LICENSE)){
+        if (!secret.getData().containsKey(LICENSE)) {
             log.error("secret中获取license或code失败");
             throw new BusinessException(ErrorMessage.LICENSE_CHECK_FAILED);
         }
         String licenseStr = secret.getData().get(LICENSE);
         try {
             license = JSONObject.parseObject(RSAUtils.decryptByPrivateKey(licenseStr, PRIVATE_KEY));
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("license解析失败");
-            throw e;
+            throw new BusinessException(ErrorMessage.RSA_DECRYPT_FAILED);
         }
         return license;
     }
@@ -261,9 +281,9 @@ public class LicenseServiceImpl implements LicenseService {
     /**
      * 校验license是否已被绑定
      */
-    public void checkUsed(JSONObject license, String licenseStr){
+    public void checkUsed(JSONObject license, String licenseStr) {
         JSONArray array = license.getJSONArray(LICENSE);
-        if (array.contains(licenseStr)){
+        if (array.contains(licenseStr)) {
             throw new BusinessException(ErrorMessage.LICENSE_USED_IN_PLATFORM);
         }
     }
@@ -271,9 +291,9 @@ public class LicenseServiceImpl implements LicenseService {
     /**
      * 记录被绑定的license
      */
-    public void recordLicense(JSONObject license, String licenseStr){
+    public void recordLicense(JSONObject license, String licenseStr) {
         JSONArray array = license.getJSONArray(LICENSE);
-        if (array == null){
+        if (array == null) {
             array = new JSONArray();
         }
         array.add(licenseStr);
