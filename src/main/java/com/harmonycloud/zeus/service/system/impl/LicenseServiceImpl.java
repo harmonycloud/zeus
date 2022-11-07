@@ -85,7 +85,7 @@ public class LicenseServiceImpl implements LicenseService {
         checkUid(license);
         // 查询数据库 是否已存在license
         JSONObject exist = getLicense();
-        if (exist == null) {
+        if (exist.containsKey(TYPE) && "试用版".equals(exist.getString(TYPE))) {
             saveLicense(license);
         } else {
             if (licenseStr.equals(exist.getString(LICENSE))){
