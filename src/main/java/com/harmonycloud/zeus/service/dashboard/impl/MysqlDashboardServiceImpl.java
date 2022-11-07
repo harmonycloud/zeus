@@ -221,13 +221,13 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
             JSONObject obj = (JSONObject) data;
             ColumnDto columnDto = new ColumnDto();
             columnDto.setColumn(obj.getString("COLUMN_NAME"));
-            columnDto.setDateType(obj.getString("COLUMN_TYPE"));
+            columnDto.setDataType(obj.getString("COLUMN_TYPE"));
             columnDto.setComment(obj.getString("COLUMN_COMMENT"));
             columnDto.setNullable(MysqlUtil.convertColumnNullable(obj.getString("IS_NULLABLE")));
             columnDto.setColumnDefault(obj.getString("COLUMN_DEFAULT"));
             columnDto.setPrimary(MysqlUtil.convertColumnPrimary(obj.getString("COLUMN_KEY")));
             columnDto.setAutoIncrement(MysqlUtil.convertAutoIncrement(obj.getString("EXTRA")));
-            columnDto.setSize(MysqlUtil.convertColumnDataSize(columnDto.getDateType()));
+            columnDto.setSize(MysqlUtil.convertColumnDataSize(columnDto.getDataType()));
             columnDto.setCollate(obj.getString("COLLATION_NAME"));
             columnDto.setCharset(MysqlUtil.extractCharset(columnDto.getCollate()));
             return columnDto;
