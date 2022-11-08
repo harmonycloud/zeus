@@ -1130,12 +1130,13 @@ public abstract class AbstractBaseOperator {
     protected void convertRegistry(Middleware middleware, MiddlewareClusterDTO middlewareClusterDTO) {
         if (!ObjectUtils.isEmpty(middlewareClusterDTO.getRegistry())) {
             Registry registry = middlewareClusterDTO.getRegistry();
-            String path = registry.getAddress();
+            StringBuilder path = new StringBuilder();
+            path.append(registry.getAddress());
             if (registry.getPort() != null) {
-                path += ":" + registry.getPort();
+                path.append(":").append(registry.getPort());
             }
-            path += "/" + registry.getChartRepo();
-            middleware.setMirrorImage(path);
+            path.append("/").append(registry.getChartRepo());
+            middleware.setMirrorImage(path.toString());
         }
     }
 
