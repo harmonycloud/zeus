@@ -503,7 +503,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         if (!CollectionUtils.isEmpty(tableDto.getTableUniqueList())) {
             for (TableUnique unique : tableDto.getTableUniqueList()) {
                 sb.append("CONSTRAINT \"").append(unique.getName()).append("\" unique ").append("(")
-                    .append(unique.getColumnName()).append(")").append(unique.getDeferrablity());
+                    .append(unique.getColumnName()).append(") ").append(unique.getDeferrablity());
                 sb.append(",");
             }
         }
@@ -1347,8 +1347,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     public String getPath(String middlewareName, String namespace) {
-        //return middlewareName + "." + namespace;
-        return middlewareName;
+        return middlewareName + "." + namespace;
+        //return middlewareName;
     }
 
 }
