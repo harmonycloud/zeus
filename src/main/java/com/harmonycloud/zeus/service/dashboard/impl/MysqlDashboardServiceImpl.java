@@ -6,8 +6,8 @@ import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.MysqlEngineEnum;
 import com.harmonycloud.caas.common.enums.MysqlPrivilegeEnum;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.enums.middleware.MysqlColumnOperationEnum;
 import com.harmonycloud.caas.common.enums.middleware.MysqlDataTypeEnum;
+import com.harmonycloud.caas.common.enums.middleware.MysqlOperationEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.dashboard.mysql.*;
 import com.harmonycloud.zeus.annotation.Operator;
@@ -203,7 +203,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         tableDto.setAutoIncrement(tableObj.getInteger("AUTO_INCREMENT"));
         tableDto.setMinRows(tableObj.getInteger(""));
         tableDto.setMaxRows(tableObj.getInteger(""));
-
+        // 设置列、索引、外键信息
         tableDto.setColumns(listTableColumns(clusterId, namespace, middlewareName, database, table));
         tableDto.setIndices(listTableIndices(clusterId, namespace, middlewareName, database, table));
         tableDto.setForeignKeys(listTableForeignKeys(clusterId, namespace, middlewareName, database, table));
@@ -238,15 +238,16 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void saveTableColumn(String clusterId, String namespace, String middlewareName, String database, String table, List<ColumnDto> columnDtoList) {
+        // TODO 列字段矫正，当某一列为主键时，必须设为NOT NULL
         for (ColumnDto columnDto : columnDtoList) {
             if(columnDto.isPrimary()){
                 columnDto.setNullable(false);
             }
         }
 
-        List<ColumnDto> oldTableColumns = listTableColumns(clusterId, namespace, middlewareName, database, table);
+        List<ColumnDto> oldColumns = listTableColumns(clusterId, namespace, middlewareName, database, table);
         Map<String, ColumnDto> oldColumnMap = new HashMap<>();
-        oldTableColumns.forEach(tableColumn -> oldColumnMap.put(tableColumn.getColumn(), tableColumn));
+        oldColumns.forEach(tableColumn -> oldColumnMap.put(tableColumn.getColumn(), tableColumn));
 
         Map<String, ColumnDto> columnMap = new HashMap<>();
         columnDtoList.forEach(tableColumn -> columnMap.put(tableColumn.getColumn(), tableColumn));
@@ -257,26 +258,26 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
             ColumnDto oldColumnDto = oldColumnMap.get(newColumnDto.getColumn());
             if (oldColumnDto == null) {
                 // 新增列
-                newColumnDto.setAction(MysqlColumnOperationEnum.ADD.getCode());
+                newColumnDto.setAction(MysqlOperationEnum.ADD.getCode());
                 newColumnList.add(newColumnDto);
                 continue;
             }
             if (!newColumnDto.equals(oldColumnDto)) {
                 if (!StringUtils.isEmpty(newColumnDto.getNewColumn())) {
                     // 修改(改列名)
-                    newColumnDto.setAction(MysqlColumnOperationEnum.CHANGE.getCode());
+                    newColumnDto.setAction(MysqlOperationEnum.CHANGE.getCode());
                 } else {
                     // 修改(不改列名)
-                    newColumnDto.setAction(MysqlColumnOperationEnum.MODIFY.getCode());
+                    newColumnDto.setAction(MysqlOperationEnum.MODIFY.getCode());
                 }
                 newColumnList.add(newColumnDto);
             }
         }
         // 找出要删除的列
-        for (ColumnDto oldColumn : oldTableColumns) {
+        for (ColumnDto oldColumn : oldColumns) {
             ColumnDto columnDto = columnMap.get(oldColumn.getColumn());
             if (columnDto == null) {
-                oldColumn.setAction(MysqlColumnOperationEnum.DROP.getCode());
+                oldColumn.setAction(MysqlOperationEnum.DROP.getCode());
                 newColumnList.add(oldColumn);
             }
         }
@@ -290,8 +291,8 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public List<IndexDto> listTableIndices(String clusterId, String namespace, String middlewareName, String database, String table) {
-        JSONArray dataAry = mysqlClient.listTableIndices(getPath(middlewareName,namespace), port, database, table).getJSONArray("dataAry");
-        List<IndexDto> indexList = new ArrayList<>();
+        JSONArray dataAry = mysqlClient.listTableIndices(getPath(middlewareName, namespace), port, database, table).getJSONArray("dataAry");
+        Map<String, IndexDto> indexMap = new HashMap<>();
         dataAry.forEach(data -> {
             JSONObject obj = (JSONObject) data;
             IndexColumnDto indexColumnDto = new IndexColumnDto();
@@ -302,8 +303,8 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
             indexColumnDto.setIndexComment(obj.getString("Index_comment"));
             IndexDto indexDto = new IndexDto();
             indexDto.setIndex(indexColumnDto.getKeyName());
-            if (indexList.contains(indexDto)) {
-                IndexDto tempIndexDto = indexList.get(indexList.indexOf(indexDto));
+            if (indexMap.containsKey(indexDto.getIndex())) {
+                IndexDto tempIndexDto = indexMap.get(indexDto.getIndex());
                 tempIndexDto.getIndexColumns().add(indexColumnDto);
             } else {
                 indexDto.setType(indexColumnDto.getIndexType());
@@ -311,15 +312,48 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
                 List<IndexColumnDto> columnDtoList = new ArrayList<>();
                 columnDtoList.add(indexColumnDto);
                 indexDto.setIndexColumns(columnDtoList);
-                indexList.add(indexDto);
+                indexMap.put(indexDto.getIndex(), indexDto);
             }
         });
-        return indexList;
+        return new ArrayList<>(indexMap.values());
     }
 
     @Override
     public void saveTableIndex(String clusterId, String namespace, String middlewareName, String database, String table, List<IndexDto> indexDtoList) {
-        JSONObject res = mysqlClient.saveTableIndices(getPath(middlewareName,namespace), port, database, table, indexDtoList);
+        List<IndexDto> oldIndices = listTableIndices(clusterId, namespace, middlewareName, database, table);
+        Map<String, IndexDto> oldIndexMap = new HashMap<>();
+        oldIndices.forEach(indexDto -> oldIndexMap.put(indexDto.getIndex(), indexDto));
+
+        Map<String, IndexDto> indexMap = new HashMap<>();
+        indexDtoList.forEach(indexDto -> indexMap.put(indexDto.getIndex(), indexDto));
+
+        List<IndexDto> newIndexList = new ArrayList<>();
+        // 找出要删除的
+        oldIndices.forEach(oldIndex -> {
+            IndexDto indexDto = indexMap.get(oldIndex.getIndex());
+            if(indexDto == null){
+                oldIndex.setAction(MysqlOperationEnum.DROP.getCode());
+                newIndexList.add(oldIndex);
+            }
+        });
+        // 找出要添加的
+        for (IndexDto indexDto : indexDtoList) {
+            IndexDto oldIndex = oldIndexMap.get(indexDto.getIndex());
+            log.info(oldIndex.toString());
+            log.info(indexDto.toString());
+            if (oldIndex == null) {
+                // 添加新索引
+                indexDto.setAction(MysqlOperationEnum.ADD.getCode());
+            } else {
+                if (!indexDto.equals(oldIndex)) {
+                    // 修改索引
+                    indexDto.setAction(MysqlOperationEnum.MODIFY.getCode());
+                }
+            }
+            newIndexList.add(indexDto);
+        }
+
+        JSONObject res = mysqlClient.saveTableIndices(getPath(middlewareName,namespace), port, database, table, newIndexList);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.ALTER_TABLE_INDICES_FAILED, res.getString("message"));
         }
@@ -327,8 +361,8 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public List<ForeignKeyDto> listTableForeignKeys(String clusterId, String namespace, String middlewareName, String database, String table) {
-        JSONArray dataAry = mysqlClient.listTableForeignKeys(getPath(middlewareName,namespace), port, database, table).getJSONArray("dataAry");
-        List<ForeignKeyDto> foreignKeyDtoList = new ArrayList<>();
+        JSONArray dataAry = mysqlClient.listTableForeignKeys(getPath(middlewareName, namespace), port, database, table).getJSONArray("dataAry");
+        Map<String, ForeignKeyDto> foreignKeyDtoMap = new HashMap<>();
         dataAry.forEach(data -> {
             JSONObject obj = (JSONObject) data;
             ForeignKeyDetailDto foreignKeyDetailDto = new ForeignKeyDetailDto();
@@ -342,8 +376,8 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
             foreignKeyDto.setForeignKey(foreignKeyDetailDto.getForeignKey());
             foreignKeyDto.setReferenceDatabase(foreignKeyDetailDto.getReferenceDatabase());
             foreignKeyDto.setReferenceTable(foreignKeyDetailDto.getReferenceTable());
-            if (foreignKeyDtoList.contains(foreignKeyDto)) {
-                ForeignKeyDto tempForeignKeyDto = foreignKeyDtoList.get(foreignKeyDtoList.indexOf(foreignKeyDto));
+            if (foreignKeyDtoMap.containsKey(foreignKeyDto.getForeignKey())) {
+                ForeignKeyDto tempForeignKeyDto = foreignKeyDtoMap.get(foreignKeyDto.getForeignKey());
                 tempForeignKeyDto.getDetails().add(foreignKeyDetailDto);
             } else {
                 foreignKeyDto.setOnDeleteOption(obj.getString("DELETE_RULE"));
@@ -351,10 +385,10 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
                 List<ForeignKeyDetailDto> columnDtoList = new ArrayList<>();
                 columnDtoList.add(foreignKeyDetailDto);
                 foreignKeyDto.setDetails(columnDtoList);
-                foreignKeyDtoList.add(foreignKeyDto);
+                foreignKeyDtoMap.put(foreignKeyDto.getForeignKey(), foreignKeyDto);
             }
         });
-        return foreignKeyDtoList;
+        return new ArrayList<>(foreignKeyDtoMap.values());
     }
 
     @Override
