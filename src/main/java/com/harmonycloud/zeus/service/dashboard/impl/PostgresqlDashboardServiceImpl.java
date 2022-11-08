@@ -10,6 +10,8 @@ import java.util.stream.Collectors;
 import com.harmonycloud.caas.common.enums.middleware.PostgresqlCollateEnum;
 import com.harmonycloud.caas.common.enums.middleware.PostgresqlDataTypeEnum;
 import com.harmonycloud.caas.common.model.dashboard.mysql.QueryInfo;
+import com.harmonycloud.zeus.bean.BeanSqlExecuteRecord;
+import com.harmonycloud.zeus.service.dashboard.ExecuteSqlService;
 import com.harmonycloud.zeus.util.ExcelUtil;
 import com.harmonycloud.zeus.util.FileDownloadUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -58,6 +60,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     private PostgresqlClient postgresqlClient;
     @Autowired
     private ServiceService serviceService;
+    @Autowired
+    private ExecuteSqlService executeSqlService;
 
     @Override
     public boolean support(String type) {
@@ -84,8 +88,15 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         setPort(clusterId, namespace, middlewareName);
         // 判断sql类型
         boolean query = executeSqlDto.getSql().toLowerCase().contains("select");
+        String sql = executeSqlDto.getSql();
+        if (sql.endsWith(";")){
+            sql = sql.substring(0, sql.length() - 1);
+        }
+        if (query){
+            sql += " limit 3000";
+        }
         ForestResponse<JSONObject> response =
-            postgresqlClient.sqlExecute(path, port, databaseName, executeSqlDto.getSql(), query);
+            postgresqlClient.sqlExecute(path, port, databaseName, sql, query);
         JSONObject sqlExecute = response.getResult();
         // 获取执行结果和异常信息（若存在）
         if (sqlExecute.getJSONObject("err") != null) {
@@ -102,11 +113,18 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             if (query) {
                 executeSqlDto.setData(convertColumn(sqlExecute));
             }
+            executeSqlDto.setStatus("success");
             executeSqlDto.setMessage("success");
         }
-        executeSqlDto.setTime(response.getTimeAsMillisecond());
+        executeSqlDto.setTime(response.getTimeAsMillisecond() + "ms");
         executeSqlDto.setDatabase(databaseName);
         // 执行结果记入数据库
+        BeanSqlExecuteRecord record = new BeanSqlExecuteRecord();
+        record.setClusterId(clusterId).setNamespace(namespace).setMiddlewareName(middlewareName)
+            .setTargetDatabase(databaseName).setSqlStr(executeSqlDto.getSql()).setStatus(executeSqlDto.getStatus())
+            .setExecDate(executeSqlDto.getDate()).setMessage(executeSqlDto.getMessage())
+            .setExecTime(executeSqlDto.getTime());
+        executeSqlService.insert(record);
         return executeSqlDto;
     }
 
@@ -1253,7 +1271,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
 
     public String turnColumnToSql(ColumnDto columnDto) {
         StringBuilder sb = new StringBuilder();
-        sb.append(columnDto.getColumn()).append(" ");
+        sb.append("\"").append(columnDto.getColumn()).append("\" ");
         if (columnDto.getInc() != null && columnDto.getInc()) {
             sb.append("serial");
         } else {
@@ -1267,8 +1285,9 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         }
         sb.append(" ");
         if (StringUtils.isNotEmpty(columnDto.getDefaultValue())) {
-            sb.append(columnDto.getDefaultValue());
+            sb.append("default ").append(columnDto.getDefaultValue());
         }
+        sb.append(" ");
         if (columnDto.getNullable() != null && columnDto.getNullable()) {
             sb.append("not null ");
         }
@@ -1328,8 +1347,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     public String getPath(String middlewareName, String namespace) {
-        return middlewareName + "." + namespace;
-        //return middlewareName;
+        //return middlewareName + "." + namespace;
+        return middlewareName;
     }
 
 }
