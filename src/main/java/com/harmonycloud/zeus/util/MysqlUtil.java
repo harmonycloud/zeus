@@ -27,7 +27,7 @@ public class MysqlUtil {
      * 为了方便表达，平台使用boolean类型（true或false）来表示是否允许为null
      */
     public static boolean convertColumnNullable(String nullAble) {
-        return nullAble.equalsIgnoreCase("no");
+        return !nullAble.equalsIgnoreCase("no");
     }
 
     /**
@@ -52,6 +52,9 @@ public class MysqlUtil {
      * dataType：数据类型 例如：varchar(128)
      */
     public static Integer convertColumnDataSize(String dataType) {
+        if (StringUtils.isEmpty(dataType)) {
+            return null;
+        }
         String reg3 = "(?<=\\()[\\s\\S]*(?=\\))";
         Pattern p3 = Pattern.compile(reg3);
         Matcher m3 = p3.matcher(dataType);
@@ -75,6 +78,18 @@ public class MysqlUtil {
      */
     public static boolean convertGrantAble(String grantAble) {
         return grantAble.equalsIgnoreCase("YES");
+    }
+
+    /**
+     * 将空串转为null
+     * @param value
+     * @return
+     */
+    public static String convertEmptyToNull(String value) {
+        if (StringUtils.isEmpty(value)) {
+            return null;
+        }
+        return value;
     }
 
     public static void main(String[] args) {

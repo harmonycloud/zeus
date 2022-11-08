@@ -143,6 +143,8 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
             redisClient.renameKey(getPath(namespace, middlewareName), db, key, keyValueDto.getKey());
         }
         if (!StringUtils.isEmpty(keyValueDto.getExpiration())) {
+            // 添加时间单位：秒
+            keyValueDto.setExpiration(keyValueDto.getExpiration() + "s");
             redisClient.setKeyExpiration(getPath(namespace, middlewareName), db, key, keyValueDto);
         }
     }

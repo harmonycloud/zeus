@@ -134,7 +134,7 @@ public interface MysqlClient {
     /**
      * 保存列信息
      */
-    @Post(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/columns")
+    @Put(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/columns")
     JSONObject saveTableColumns(@Var("host") String host,
                                 @Var("port") String port,
                                 @Var("database") String database,

@@ -6,6 +6,7 @@ import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.MysqlEngineEnum;
 import com.harmonycloud.caas.common.enums.MysqlPrivilegeEnum;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.harmonycloud.caas.common.enums.middleware.MysqlColumnOperationEnum;
 import com.harmonycloud.caas.common.enums.middleware.MysqlDataTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.dashboard.mysql.*;
@@ -221,13 +222,14 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
             JSONObject obj = (JSONObject) data;
             ColumnDto columnDto = new ColumnDto();
             columnDto.setColumn(obj.getString("COLUMN_NAME"));
-            columnDto.setDataType(obj.getString("COLUMN_TYPE"));
+            columnDto.setDataType(obj.getString("DATA_TYPE"));
+            columnDto.setColumnType(obj.getString("COLUMN_TYPE"));
             columnDto.setComment(obj.getString("COLUMN_COMMENT"));
             columnDto.setNullable(MysqlUtil.convertColumnNullable(obj.getString("IS_NULLABLE")));
             columnDto.setColumnDefault(obj.getString("COLUMN_DEFAULT"));
             columnDto.setPrimary(MysqlUtil.convertColumnPrimary(obj.getString("COLUMN_KEY")));
             columnDto.setAutoIncrement(MysqlUtil.convertAutoIncrement(obj.getString("EXTRA")));
-            columnDto.setSize(MysqlUtil.convertColumnDataSize(columnDto.getDataType()));
+            columnDto.setSize(MysqlUtil.convertColumnDataSize(columnDto.getColumnType()));
             columnDto.setCollate(obj.getString("COLLATION_NAME"));
             columnDto.setCharset(MysqlUtil.extractCharset(columnDto.getCollate()));
             return columnDto;
@@ -236,9 +238,53 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void saveTableColumn(String clusterId, String namespace, String middlewareName, String database, String table, List<ColumnDto> columnDtoList) {
-        JSONObject res = mysqlClient.saveTableColumns(getPath(middlewareName,namespace), port, database, table, columnDtoList);
-        if (!res.getBoolean("success")) {
-            throw new BusinessException(ErrorMessage.ALTER_TABLE_COLUMN_FAILED, res.getString("message"));
+        for (ColumnDto columnDto : columnDtoList) {
+            if(columnDto.isPrimary()){
+                columnDto.setNullable(false);
+            }
+        }
+
+        List<ColumnDto> oldTableColumns = listTableColumns(clusterId, namespace, middlewareName, database, table);
+        Map<String, ColumnDto> oldColumnMap = new HashMap<>();
+        oldTableColumns.forEach(tableColumn -> oldColumnMap.put(tableColumn.getColumn(), tableColumn));
+
+        Map<String, ColumnDto> columnMap = new HashMap<>();
+        columnDtoList.forEach(tableColumn -> columnMap.put(tableColumn.getColumn(), tableColumn));
+
+        List<ColumnDto> newColumnList = new ArrayList<>();
+        // 找出要新增或修改的列
+        for (ColumnDto newColumnDto : columnDtoList) {
+            ColumnDto oldColumnDto = oldColumnMap.get(newColumnDto.getColumn());
+            if (oldColumnDto == null) {
+                // 新增列
+                newColumnDto.setAction(MysqlColumnOperationEnum.ADD.getCode());
+                newColumnList.add(newColumnDto);
+                continue;
+            }
+            if (!newColumnDto.equals(oldColumnDto)) {
+                if (!StringUtils.isEmpty(newColumnDto.getNewColumn())) {
+                    // 修改(改列名)
+                    newColumnDto.setAction(MysqlColumnOperationEnum.CHANGE.getCode());
+                } else {
+                    // 修改(不改列名)
+                    newColumnDto.setAction(MysqlColumnOperationEnum.MODIFY.getCode());
+                }
+                newColumnList.add(newColumnDto);
+            }
+        }
+        // 找出要删除的列
+        for (ColumnDto oldColumn : oldTableColumns) {
+            ColumnDto columnDto = columnMap.get(oldColumn.getColumn());
+            if (columnDto == null) {
+                oldColumn.setAction(MysqlColumnOperationEnum.DROP.getCode());
+                newColumnList.add(oldColumn);
+            }
+        }
+        if (!CollectionUtils.isEmpty(newColumnList)) {
+            JSONObject res = mysqlClient.saveTableColumns(getPath(middlewareName, namespace), port, database, table, newColumnList);
+            if (!res.getBoolean("success")) {
+                throw new BusinessException(ErrorMessage.ALTER_TABLE_COLUMN_FAILED, res.getString("message"));
+            }
         }
     }
 
