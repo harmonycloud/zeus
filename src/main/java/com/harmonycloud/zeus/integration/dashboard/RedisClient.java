@@ -93,7 +93,7 @@ public interface RedisClient {
     /**
      * 设置key过期时间
      */
-    @Put(url = "/redis/{host}/db/{db}/key/{key}/rename/{newName}")
+    @Put(url = "/redis/{host}/db/{db}/key/{key}/expiration")
     JSONObject setKeyExpiration(@Var("host") String host, @Var("db") Integer db, @Var("key") String key, @JSONBody KeyValueDto keyValueDto);
 
     /**
