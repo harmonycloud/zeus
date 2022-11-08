@@ -2,7 +2,6 @@ package com.harmonycloud.zeus.controller.dashboard;
 
 import com.alibaba.fastjson.JSONArray;
 import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.enums.middleware.MysqlDataTypeEnum;
 import com.harmonycloud.caas.common.model.dashboard.ExecuteSqlDto;
 import com.harmonycloud.caas.common.model.dashboard.mysql.*;
 import com.harmonycloud.zeus.service.dashboard.MysqlDashboardService;
@@ -10,10 +9,8 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
-import org.apache.http.entity.mime.MIME;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.util.MimeType;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -204,7 +201,7 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "database", value = "数据库信息", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "tableDto", value = "表信息", paramType = "query", dataTypeClass = DatabaseDto.class),
     })
-    @PostMapping("/databases/{database}/tables/table")
+    @PostMapping("/databases/{database}/tables")
     public BaseResult createDatabase(@PathVariable("clusterId") String clusterId,
                                      @PathVariable("namespace") String namespace,
                                      @PathVariable("middlewareName") String middlewareName,
