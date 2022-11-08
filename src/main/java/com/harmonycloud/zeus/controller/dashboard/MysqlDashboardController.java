@@ -281,8 +281,8 @@ public class MysqlDashboardController {
                                        @PathVariable("middlewareName") String middlewareName,
                                        @PathVariable("database") String database,
                                        @PathVariable("table") String table,
-                                       @RequestBody List<ColumnDto> columnDtoList) {
-        mysqlDashboardService.saveTableColumn(clusterId, namespace, middlewareName, database, table, columnDtoList);
+                                       @RequestBody TableDto tableDto) {
+        mysqlDashboardService.saveTableColumn(clusterId, namespace, middlewareName, database, table, tableDto.getColumns());
         return BaseResult.ok();
     }
 
@@ -319,8 +319,8 @@ public class MysqlDashboardController {
                                      @PathVariable("middlewareName") String middlewareName,
                                      @PathVariable("database") String database,
                                      @PathVariable("table") String table,
-                                     @RequestBody List<IndexDto> indexDtoList) {
-        mysqlDashboardService.saveTableIndex(clusterId, namespace, middlewareName, database, table, indexDtoList);
+                                     @RequestBody TableDto tableDto) {
+        mysqlDashboardService.saveTableIndex(clusterId, namespace, middlewareName, database, table, tableDto.getIndices());
         return BaseResult.ok();
     }
 
@@ -357,8 +357,8 @@ public class MysqlDashboardController {
                                      @PathVariable("middlewareName") String middlewareName,
                                      @PathVariable("database") String database,
                                      @PathVariable("table") String table,
-                                     @RequestBody List<ForeignKeyDto> foreignKeyDtos) {
-        mysqlDashboardService.saveTableForeignKey(clusterId, namespace, middlewareName, database, table, foreignKeyDtos);
+                                     @RequestBody TableDto tableDto) {
+        mysqlDashboardService.saveTableForeignKey(clusterId, namespace, middlewareName, database, table, tableDto.getForeignKeys());
         return BaseResult.ok();
     }
 
