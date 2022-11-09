@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.integration.dashboard;
 
 import com.alibaba.fastjson.JSONObject;
 import com.dtflys.forest.annotation.*;
+import com.harmonycloud.caas.common.model.dashboard.SqlQuery;
 import com.harmonycloud.caas.common.model.dashboard.mysql.*;
 import com.harmonycloud.zeus.interceptor.MiddlewareApiInterceptor;
 import com.harmonycloud.zeus.interceptor.MysqlDashboardInterceptor;
@@ -139,7 +140,7 @@ public interface MysqlClient {
                                 @Var("port") String port,
                                 @Var("database") String database,
                                 @Var("table") String table,
-                                @JSONBody List<ColumnDto> columns);
+                                @JSONBody TableDto tableDto);
 
     // index
     /**
@@ -174,7 +175,7 @@ public interface MysqlClient {
     /**
      * 保存外键信息
      */
-    @Post(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/foreignKeys")
+    @Put(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/foreignKeys")
     JSONObject saveTableForeignKeys(@Var("host") String host,
                                     @Var("port") String port,
                                     @Var("database") String database,
@@ -304,5 +305,13 @@ public interface MysqlClient {
                                     @Var("table") String table,
                                     @JSONBody GrantOptionDto grantOption);
 
+    /**
+     * 执行sql
+     */
+    @Post(url = "/mysql/{host}/port/{port}/databases/{database}")
+    JSONObject execSql(@Var("host") String host,
+                       @Var("port") String port,
+                       @Var("database") String database,
+                       @JSONBody SqlQuery sqlQuery);
 
 }

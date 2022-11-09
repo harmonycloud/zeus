@@ -21,7 +21,7 @@ public class MysqlDashboardInterceptor implements Interceptor<JSONObject> {
             data.put("success", false);
             data.put("message", err.getString("Message"));
         }
-        if ("GET".equalsIgnoreCase(req.getType().getName()) || "showTableData".equals(req.getMethod().getMethodName())) {
+        if ("GET".equalsIgnoreCase(req.getType().getName()) || "showTableData".equals(req.getMethod().getMethodName()) || "execSql".equals(req.getMethod().getMethodName())) {
             JSONArray dataAry = convertResult(data);
             data.put("dataAry", dataAry);
         }

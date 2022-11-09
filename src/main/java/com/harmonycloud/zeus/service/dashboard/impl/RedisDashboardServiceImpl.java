@@ -10,6 +10,7 @@ import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.dashboard.redis.DataDto;
 import com.harmonycloud.caas.common.model.dashboard.redis.DatabaseDto;
 import com.harmonycloud.caas.common.model.dashboard.redis.KeyValueDto;
+import com.harmonycloud.caas.common.model.dashboard.redis.ZSetDto;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.bean.BeanSqlExecuteRecord;
 import com.harmonycloud.zeus.dao.BeanSqlExecuteRecordMapper;
@@ -120,6 +121,14 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
         // 给过期时间添加时间单位：秒
         if (!StringUtils.isEmpty(keyValueDto.getExpiration())) {
             keyValueDto.setExpiration(keyValueDto.getExpiration() + "s");
+        }
+        // 如果zset数据类型没有值，则添加一个默认值
+        if ("zset".equals(keyValueDto.getKeyType()) && keyValueDto.getZsetValue() == null) {
+            ZSetDto zSetDto = new ZSetDto();
+            zSetDto.setMember("default");
+            zSetDto.setScore("1");
+            keyValueDto.setZsetValue(zSetDto);
+            keyValueDto.setValue(keyValueDto.wrapValue());
         }
         redisClient.setKeyValue(getPath(namespace, middlewareName), db, key, keyValueDto);
     }

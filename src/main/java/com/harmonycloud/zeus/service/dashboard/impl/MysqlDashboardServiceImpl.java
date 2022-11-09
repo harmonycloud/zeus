@@ -9,8 +9,12 @@ import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.enums.middleware.MysqlDataTypeEnum;
 import com.harmonycloud.caas.common.enums.middleware.MysqlOperationEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.dashboard.ExecResult;
+import com.harmonycloud.caas.common.model.dashboard.ExecuteSqlDto;
+import com.harmonycloud.caas.common.model.dashboard.SqlQuery;
 import com.harmonycloud.caas.common.model.dashboard.mysql.*;
 import com.harmonycloud.zeus.annotation.Operator;
+import com.harmonycloud.zeus.bean.BeanSqlExecuteRecord;
 import com.harmonycloud.zeus.integration.dashboard.MysqlClient;
 import com.harmonycloud.zeus.service.dashboard.MysqlDashboardService;
 import com.harmonycloud.zeus.util.ExcelUtil;
@@ -239,8 +243,9 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public void saveTableColumn(String clusterId, String namespace, String middlewareName, String database, String table, List<ColumnDto> columnDtoList) {
+    public void saveTableColumn(String clusterId, String namespace, String middlewareName, String database, String table, TableDto tableDto) {
         // TODO 列字段矫正，当某一列为主键时，必须设为NOT NULL
+        List<ColumnDto> columnDtoList = tableDto.getColumns();
         for (ColumnDto columnDto : columnDtoList) {
             if(columnDto.isPrimary()){
                 columnDto.setNullable(false);
@@ -283,8 +288,14 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
                 newColumnList.add(oldColumn);
             }
         }
+        // 判断是否需要修改主键
+        List<String> oldPrimaryKeys = extractPrimaryKey(oldColumns);
+        List<String> newPrimaryKeys = extractPrimaryKey(newColumnList);
+        tableDto.setUpdatePrimaryKey(!oldPrimaryKeys.equals(newPrimaryKeys));
+
         if (!CollectionUtils.isEmpty(newColumnList)) {
-            JSONObject res = mysqlClient.saveTableColumns(getPath(middlewareName, namespace), port, database, table, newColumnList);
+            tableDto.setColumns(newColumnList);
+            JSONObject res = mysqlClient.saveTableColumns(getPath(middlewareName, namespace), port, database, table, tableDto);
             if (!res.getBoolean("success")) {
                 throw new BusinessException(ErrorMessage.ALTER_TABLE_COLUMN_FAILED, res.getString("message"));
             }
@@ -294,9 +305,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     @Override
     public List<IndexDto> listTableIndices(String clusterId, String namespace, String middlewareName, String database, String table) {
         JSONArray dataAry = mysqlClient.listTableIndices(getPath(middlewareName, namespace), port, database, table).getJSONArray("dataAry");
-
-        String tableSql = showTableSql(clusterId, namespace, middlewareName, database, table);
-        Map<String, IndexDto> indexDtoMap = extractTableIndex(tableSql);
+        Map<String, IndexDto> indexDtoMap = extractTableIndex(clusterId, namespace, middlewareName, database, table);
 
         Map<String, IndexDto> indexMap = new HashMap<>();
         dataAry.forEach(data -> {
@@ -394,9 +403,45 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void saveTableForeignKey(String clusterId, String namespace, String middlewareName, String database, String table, List<ForeignKeyDto> foreignKeyDtos) {
-        JSONObject res = mysqlClient.saveTableForeignKeys(getPath(middlewareName,namespace), port, database, table, foreignKeyDtos);
-        if (!res.getBoolean("success")) {
-            throw new BusinessException(ErrorMessage.ALTER_TABLE_FOREIGN_KEYS_FAILED, res.getString("message"));
+        List<ForeignKeyDto> oldForeignKeys = listTableForeignKeys(clusterId, namespace, middlewareName, database, table);
+        Map<String, ForeignKeyDto> oldForeignKeyMap = new HashMap<>();
+        oldForeignKeys.forEach(foreignKeyDto -> oldForeignKeyMap.put(foreignKeyDto.getForeignKey(), foreignKeyDto));
+
+        Map<String, ForeignKeyDto> foreignKeyMap = new HashMap<>();
+        foreignKeyDtos.forEach(foreignKeyDto -> foreignKeyMap.put(foreignKeyDto.getForeignKey(), foreignKeyDto));
+
+        List<ForeignKeyDto> newForeignKeyList = new ArrayList<>();
+        // 找出要删除的
+        for (ForeignKeyDto oldForeignKey : oldForeignKeys) {
+            ForeignKeyDto foreignKeyDto = foreignKeyMap.get(oldForeignKey.getForeignKey());
+            if (foreignKeyDto == null) {
+                oldForeignKey.setAction(MysqlOperationEnum.DROP.getCode());
+                newForeignKeyList.add(oldForeignKey);
+            }
+        }
+        // 找出要添加或修改的
+        for (ForeignKeyDto foreignKeyDto : foreignKeyDtos) {
+            ForeignKeyDto oldForeignKey = oldForeignKeyMap.get(foreignKeyDto.getForeignKey());
+            if (oldForeignKey == null) {
+                // 添加新外键
+                foreignKeyDto.setAction(MysqlOperationEnum.ADD.getCode());
+                newForeignKeyList.add(foreignKeyDto);
+                continue;
+            }
+            if (!foreignKeyDto.equals(oldForeignKey)) {
+                // 修改外键，修改步骤为先删除，再创建
+                oldForeignKey.setAction(MysqlOperationEnum.DROP.getCode());
+                foreignKeyDto.setAction(MysqlOperationEnum.ADD.getCode());
+                newForeignKeyList.add(oldForeignKey);
+                newForeignKeyList.add(foreignKeyDto);
+            }
+        }
+
+        if (!CollectionUtils.isEmpty(newForeignKeyList)) {
+            JSONObject res = mysqlClient.saveTableForeignKeys(getPath(middlewareName, namespace), port, database, table, newForeignKeyList);
+            if (!res.getBoolean("success")) {
+                throw new BusinessException(ErrorMessage.ALTER_TABLE_FOREIGN_KEYS_FAILED, res.getString("message"));
+            }
         }
     }
 
@@ -660,9 +705,44 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         return !CollectionUtils.isEmpty(dataAry);
     }
 
-    private Map<String, IndexDto> extractTableIndex(String tableSql) {
-        String sql = tableSql.substring(0, tableSql.lastIndexOf(")")).replaceAll("\\n", "").trim();
-        List<String> list = Arrays.stream(sql.split(",")).filter(s -> s.contains("KEY")).collect(Collectors.toList());
+    @Override
+    public ExecResult execSql(String clusterId, String namespace, String middlewareName, String database, String sql) {
+        SqlQuery sqlQuery = new SqlQuery(sql);
+        sqlQuery.convertAndSetQuery();
+
+        JSONObject res = mysqlClient.execSql(getPath(middlewareName, namespace), port, database, sqlQuery);
+        JSONArray columnAry = res.getJSONArray("column");
+        JSONArray dataAry = res.getJSONArray("dataAry");
+        ExecResult execResult = new ExecResult();
+        execResult.setColumns(columnAry);
+        execResult.setData(dataAry);
+
+        return execResult;
+    }
+
+    @Override
+    public List<BeanSqlExecuteRecord> listExecuteSql(String clusterId, String namespace, String middlewareName, Integer db, String keyword, String start, String end, Integer pageNum, Integer size) {
+        return null;
+    }
+
+    /**
+     * 从列信息中找出主键列，并返回一个主键列表
+     * @param columnDtoList
+     * @return
+     */
+    private List<String> extractPrimaryKey(List<ColumnDto> columnDtoList) {
+        return columnDtoList.stream().filter(ColumnDto::isPrimary).map(ColumnDto::getColumn).collect(Collectors.toList());
+    }
+
+    /**
+     * 查询创建表SQL，并从中提取出索引信息：包括索引类型和存储类型(这两个字段无法通过直接查mysql系统表获取)
+     * @return
+     */
+    private Map<String, IndexDto> extractTableIndex(String clusterId, String namespace, String middlewareName, String database, String table) {
+        String tableSql = showTableSql(clusterId, namespace, middlewareName, database, table);
+        tableSql = tableSql.substring(0, tableSql.lastIndexOf(")")).trim();
+
+        List<String> list = Arrays.stream(tableSql.split("\\n")).filter(s -> s.contains("KEY") && !s.contains("FOREIGN")).collect(Collectors.toList());
         Map<String, IndexDto> indexMap = new HashMap<>();
         for (String singleIndexSql : list) {
             singleIndexSql = singleIndexSql.trim().replaceAll("`", "");

@@ -2,7 +2,10 @@ package com.harmonycloud.zeus.service.dashboard;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.caas.common.model.dashboard.ExecResult;
+import com.harmonycloud.caas.common.model.dashboard.ExecuteSqlDto;
 import com.harmonycloud.caas.common.model.dashboard.mysql.*;
+import com.harmonycloud.zeus.bean.BeanSqlExecuteRecord;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -98,7 +101,7 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
     /**
      * 保存所有列
      */
-    void saveTableColumn(String clusterId, String namespace, String middlewareName, String database, String table, List<ColumnDto> columnDtoList);
+    void saveTableColumn(String clusterId, String namespace, String middlewareName, String database, String table, TableDto tableDto);
 
     /**
      * 查询指定数据表所有索引
@@ -226,5 +229,15 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
      */
     void exportDatabaseExcel(String clusterId, String namespace, String middlewareName, String database,
                           HttpServletRequest request, HttpServletResponse response);
+
+    /**
+     * 执行sql
+     */
+    ExecResult execSql(String clusterId, String namespace, String middlewareName, String database, String sql);
+
+    /**
+     * 查询SQL执行记录
+     */
+    List<BeanSqlExecuteRecord> listExecuteSql(String clusterId, String namespace, String middlewareName, Integer db, String keyword, String start, String end, Integer pageNum, Integer size);
 
 }
