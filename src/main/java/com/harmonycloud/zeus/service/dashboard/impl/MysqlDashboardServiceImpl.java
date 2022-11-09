@@ -218,7 +218,21 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public JSONArray showTableData(String clusterId, String namespace, String middlewareName, String database, String table,QueryInfo queryInfo) {
-        return mysqlClient.showTableData(getPath(middlewareName, namespace), port, database, table, queryInfo).getJSONArray("dataAry");
+        JSONArray dataAry = mysqlClient.showTableData(getPath(middlewareName, namespace), port, database, table, queryInfo).getJSONArray("dataAry");
+        if (CollectionUtils.isEmpty(dataAry)) {
+            throw new BusinessException(ErrorMessage.FAILED_TO_OBTAIN_TABLE_DATA);
+        }
+        return dataAry;
+    }
+
+    @Override
+    public int getTableRecord(String clusterId, String namespace, String middlewareName, String database, String table) {
+        JSONArray dataAry = mysqlClient.getTableRecord(getPath(middlewareName,namespace), port, database, table).getJSONArray("dataAry");
+        if (CollectionUtils.isEmpty(dataAry)) {
+            throw new BusinessException(ErrorMessage.FAILED_TO_OBTAIN_TABLE_RECORD);
+        }
+        JSONObject tableObj = dataAry.getJSONObject(0);
+        return tableObj.getInteger("num");
     }
 
     @Override
@@ -246,6 +260,9 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     public void saveTableColumn(String clusterId, String namespace, String middlewareName, String database, String table, TableDto tableDto) {
         // TODO 列字段矫正，当某一列为主键时，必须设为NOT NULL
         List<ColumnDto> columnDtoList = tableDto.getColumns();
+        if (CollectionUtils.isEmpty(columnDtoList)) {
+            return;
+        }
         for (ColumnDto columnDto : columnDtoList) {
             if(columnDto.isPrimary()){
                 columnDto.setNullable(false);
@@ -290,7 +307,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         }
         // 判断是否需要修改主键
         List<String> oldPrimaryKeys = extractPrimaryKey(oldColumns);
-        List<String> newPrimaryKeys = extractPrimaryKey(newColumnList);
+        List<String> newPrimaryKeys = extractPrimaryKey(columnDtoList);
         tableDto.setUpdatePrimaryKey(!oldPrimaryKeys.equals(newPrimaryKeys));
 
         if (!CollectionUtils.isEmpty(newColumnList)) {

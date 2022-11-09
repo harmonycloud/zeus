@@ -114,6 +114,15 @@ public interface MysqlClient {
                              @JSONBody QueryInfo queryInfo);
 
     /**
+     * 查询表记录数
+     */
+    @Get(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/record")
+    JSONObject getTableRecord(@Var("host") String host,
+                             @Var("port") String port,
+                             @Var("database") String database,
+                             @Var("table") String table);
+
+    /**
      * 查询建表语句
      */
     @Get(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/script")
