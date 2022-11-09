@@ -89,14 +89,13 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         // 判断sql类型
         boolean query = executeSqlDto.getSql().toLowerCase().contains("select");
         String sql = executeSqlDto.getSql();
-        if (sql.endsWith(";")){
+        if (sql.endsWith(";")) {
             sql = sql.substring(0, sql.length() - 1);
         }
-        if (query){
+        if (query) {
             sql += " limit 3000";
         }
-        ForestResponse<JSONObject> response =
-            postgresqlClient.sqlExecute(path, port, databaseName, sql, query);
+        ForestResponse<JSONObject> response = postgresqlClient.sqlExecute(path, port, databaseName, sql, query);
         JSONObject sqlExecute = response.getResult();
         // 获取执行结果和异常信息（若存在）
         if (sqlExecute.getJSONObject("err") != null) {
@@ -700,10 +699,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         setPort(clusterId, namespace, middlewareName);
         JSONObject listColumns = postgresqlClient.listColumns(path, port, databaseName, schemaName, table);
         List<Map<String, String>> columnList = convertColumn(listColumns);
-        // 记录重复列信息
-        List<String> numList = new ArrayList<>();
-        List<String> tempList = new ArrayList<>();
-        List<ColumnDto> columnDtoList = columnList.stream().map(column -> {
+        return columnList.stream().map(column -> {
             ColumnDto columnDto = new ColumnDto();
             columnDto.setDatabaseName(databaseName);
             columnDto.setSchemaName(schemaName);
@@ -728,21 +724,13 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             columnDto.setNum(column.get("ordinal_position"));
             columnDto.setSize(column.get("character_maximum_length"));
             columnDto.setComment(column.get("col_description"));
-            if (column.get("indisprimary") != null && "true".equals(column.get("indisprimary"))) {
+            if (column.get("constraint_type") != null && "PRIMARY KEY".equals(column.get("constraint_type"))) {
                 columnDto.setPrimaryKey(true);
             } else {
                 columnDto.setPrimaryKey(false);
             }
-            if (numList.contains(columnDto.getNum())) {
-                tempList.add(columnDto.getNum());
-            }
-            numList.add(columnDto.getNum());
             return columnDto;
         }).collect(Collectors.toList());
-        return columnDtoList.stream()
-            .filter(columnDto -> tempList.stream().noneMatch(temp -> temp.equals(columnDto.getNum()))
-                || columnDto.getPrimaryKey())
-            .collect(Collectors.toList());
     }
 
     @Override
@@ -1237,7 +1225,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     public List<TableInherit> getTableInherit(String path, String port, String databaseName, String schemaName,
         String tableName, String tableOid) {
         JSONObject getInherit = postgresqlClient.getInherit(path, port, databaseName, schemaName, tableName, tableOid);
-        if (getInherit.getJSONArray("data") == null){
+        if (getInherit.getJSONArray("data") == null) {
             return new ArrayList<>();
         }
         List<Map<String, String>> inheritList = convertColumn(getInherit);
@@ -1359,7 +1347,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
 
     public String getPath(String middlewareName, String namespace) {
         return middlewareName + "." + namespace;
-        //return middlewareName;
+        // return middlewareName;
     }
 
 }
