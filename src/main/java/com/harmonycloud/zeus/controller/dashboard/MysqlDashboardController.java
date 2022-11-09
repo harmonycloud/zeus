@@ -282,7 +282,7 @@ public class MysqlDashboardController {
                                        @PathVariable("database") String database,
                                        @PathVariable("table") String table,
                                        @RequestBody TableDto tableDto) {
-        mysqlDashboardService.saveTableColumn(clusterId, namespace, middlewareName, database, table, tableDto.getColumns());
+        mysqlDashboardService.saveTableColumn(clusterId, namespace, middlewareName, database, table, tableDto);
         return BaseResult.ok();
     }
 
@@ -637,8 +637,7 @@ public class MysqlDashboardController {
                                                @PathVariable("middlewareName") String middlewareName,
                                                @PathVariable("database") String database,
                                                @RequestParam("sql") String sql) {
-
-        return BaseResult.ok();
+        return BaseResult.ok(mysqlDashboardService.execSql(clusterId, namespace, middlewareName, database, sql));
     }
 
 }
