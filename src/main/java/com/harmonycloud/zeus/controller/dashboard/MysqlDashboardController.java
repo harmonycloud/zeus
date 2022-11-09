@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.controller.dashboard;
 
 import com.alibaba.fastjson.JSONArray;
 import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.model.dashboard.ExecResult;
 import com.harmonycloud.caas.common.model.dashboard.ExecuteSqlDto;
 import com.harmonycloud.caas.common.model.dashboard.mysql.*;
 import com.harmonycloud.zeus.service.dashboard.MysqlDashboardService;
@@ -632,11 +633,11 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "sql", value = "sql语句", paramType = "query", dataTypeClass = String.class),
     })
     @PostMapping("/databases/{database}/query")
-    public BaseResult<ExecuteSqlDto> execQuery(@PathVariable("clusterId") String clusterId,
-                                               @PathVariable("namespace") String namespace,
-                                               @PathVariable("middlewareName") String middlewareName,
-                                               @PathVariable("database") String database,
-                                               @RequestParam("sql") String sql) {
+    public BaseResult<ExecResult> execQuery(@PathVariable("clusterId") String clusterId,
+                                            @PathVariable("namespace") String namespace,
+                                            @PathVariable("middlewareName") String middlewareName,
+                                            @PathVariable("database") String database,
+                                            @RequestParam("sql") String sql) {
         return BaseResult.ok(mysqlDashboardService.execSql(clusterId, namespace, middlewareName, database, sql));
     }
 
