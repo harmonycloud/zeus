@@ -194,6 +194,23 @@ public class MysqlDashboardController {
         return BaseResult.ok(mysqlDashboardService.showTableData(clusterId, namespace, middlewareName, database, table, queryInfo));
     }
 
+    @ApiOperation(value = "获取table记录数", notes = "获取table记录数")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "table", value = "表名", paramType = "path", dataTypeClass = String.class)
+    })
+    @GetMapping("/databases/{database}/tables/{table}/record")
+    public BaseResult<Integer> getTableRecord(@PathVariable("clusterId") String clusterId,
+                                               @PathVariable("namespace") String namespace,
+                                               @PathVariable("middlewareName") String middlewareName,
+                                               @PathVariable("database") String database,
+                                               @PathVariable("table") String table) {
+        return BaseResult.ok(mysqlDashboardService.getTableRecord(clusterId, namespace, middlewareName, database, table));
+    }
+
     @ApiOperation(value = "创建table", notes = "创建table")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
