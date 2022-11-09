@@ -700,7 +700,10 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         setPort(clusterId, namespace, middlewareName);
         JSONObject listColumns = postgresqlClient.listColumns(path, port, databaseName, schemaName, table);
         List<Map<String, String>> columnList = convertColumn(listColumns);
-        return columnList.stream().map(column -> {
+        // 记录重复列信息
+        List<String> numList = new ArrayList<>();
+        List<String> tempList = new ArrayList<>();
+        List<ColumnDto> columnDtoList = columnList.stream().map(column -> {
             ColumnDto columnDto = new ColumnDto();
             columnDto.setDatabaseName(databaseName);
             columnDto.setSchemaName(schemaName);
@@ -727,11 +730,19 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             columnDto.setComment(column.get("col_description"));
             if (column.get("indisprimary") != null && "true".equals(column.get("indisprimary"))) {
                 columnDto.setPrimaryKey(true);
-            }else {
+            } else {
                 columnDto.setPrimaryKey(false);
             }
+            if (numList.contains(columnDto.getNum())) {
+                tempList.add(columnDto.getNum());
+            }
+            numList.add(columnDto.getNum());
             return columnDto;
         }).collect(Collectors.toList());
+        return columnDtoList.stream()
+            .filter(columnDto -> tempList.stream().noneMatch(temp -> temp.equals(columnDto.getNum()))
+                || columnDto.getPrimaryKey())
+            .collect(Collectors.toList());
     }
 
     @Override
