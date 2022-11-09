@@ -776,7 +776,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             }
             // 比较是否主键
             if (!column.getPrimaryKey().equals(newColumn.getPrimaryKey())) {
-                anchor.put("primary", column.getPrimaryKey().toString());
+                anchor.put("primary", newColumn.getPrimaryKey().toString());
             }
             // 比较默认值是否相同
             if (!column.getDefaultValue().equals(newColumn.getDefaultValue())) {
