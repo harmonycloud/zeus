@@ -294,22 +294,24 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     @Override
     public List<IndexDto> listTableIndices(String clusterId, String namespace, String middlewareName, String database, String table) {
         JSONArray dataAry = mysqlClient.listTableIndices(getPath(middlewareName, namespace), port, database, table).getJSONArray("dataAry");
+
+        String tableSql = showTableSql(clusterId, namespace, middlewareName, database, table);
+        Map<String, IndexDto> indexDtoMap = extractTableIndex(tableSql);
+
         Map<String, IndexDto> indexMap = new HashMap<>();
         dataAry.forEach(data -> {
             JSONObject obj = (JSONObject) data;
             IndexColumnDto indexColumnDto = new IndexColumnDto();
             indexColumnDto.setKeyName(obj.getString("Key_name"));
             indexColumnDto.setColumnName(obj.getString("Column_name"));
-            indexColumnDto.setIndexType(obj.getString("Index_type"));
             indexColumnDto.setSubPart(obj.getInteger("Sub_part"));
             indexColumnDto.setIndexComment(obj.getString("Index_comment"));
-            IndexDto indexDto = new IndexDto();
-            indexDto.setIndex(indexColumnDto.getKeyName());
+
+            IndexDto indexDto = indexDtoMap.get(indexColumnDto.getKeyName());
             if (indexMap.containsKey(indexDto.getIndex())) {
                 IndexDto tempIndexDto = indexMap.get(indexDto.getIndex());
                 tempIndexDto.getIndexColumns().add(indexColumnDto);
             } else {
-                indexDto.setType(indexColumnDto.getIndexType());
                 indexDto.setComment(indexColumnDto.getIndexComment());
                 List<IndexColumnDto> columnDtoList = new ArrayList<>();
                 columnDtoList.add(indexColumnDto);
@@ -333,7 +335,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         // 找出要删除的
         oldIndices.forEach(oldIndex -> {
             IndexDto indexDto = indexMap.get(oldIndex.getIndex());
-            if(indexDto == null){
+            if (indexDto == null) {
                 oldIndex.setAction(MysqlOperationEnum.DROP.getCode());
                 newIndexList.add(oldIndex);
             }
@@ -341,21 +343,18 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         // 找出要添加的
         for (IndexDto indexDto : indexDtoList) {
             IndexDto oldIndex = oldIndexMap.get(indexDto.getIndex());
-            log.info(oldIndex.toString());
-            log.info(indexDto.toString());
             if (oldIndex == null) {
                 // 添加新索引
                 indexDto.setAction(MysqlOperationEnum.ADD.getCode());
-            } else {
-                if (!indexDto.equals(oldIndex)) {
-                    // 修改索引
-                    indexDto.setAction(MysqlOperationEnum.MODIFY.getCode());
-                }
+                newIndexList.add(indexDto);
+            } else if (!indexDto.equals(oldIndex)) {
+                // 修改索引
+                indexDto.setAction(MysqlOperationEnum.MODIFY.getCode());
+                newIndexList.add(indexDto);
             }
-            newIndexList.add(indexDto);
         }
 
-        JSONObject res = mysqlClient.saveTableIndices(getPath(middlewareName,namespace), port, database, table, newIndexList);
+        JSONObject res = mysqlClient.saveTableIndices(getPath(middlewareName, namespace), port, database, table, newIndexList);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.ALTER_TABLE_INDICES_FAILED, res.getString("message"));
         }
@@ -590,6 +589,16 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
+    public String showTableSql(String clusterId, String namespace, String middlewareName, String database, String table) {
+        JSONArray dataAry = mysqlClient.showTableScript(getPath(middlewareName, namespace), port, database, table).getJSONArray("dataAry");
+        if (CollectionUtils.isEmpty(dataAry)) {
+            throw new BusinessException(ErrorMessage.FAILED_TO_EXPORT_TABLE_SQL);
+        }
+        JSONObject obj = dataAry.getJSONObject(0);
+        return obj.getString("Create Table");
+    }
+
+    @Override
     public void exportTableExcel(String clusterId, String namespace, String middlewareName, String database, String table, HttpServletRequest request, HttpServletResponse response) {
         try {
             List<ColumnDto> columnDtos = listTableColumns(clusterId, namespace, middlewareName, database, table);
@@ -649,6 +658,32 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         }
         JSONArray dataAry = mysqlClient.showUserDetail(getPath(middlewareName, namespace), port, username).getJSONArray("dataAry");
         return !CollectionUtils.isEmpty(dataAry);
+    }
+
+    private Map<String, IndexDto> extractTableIndex(String tableSql) {
+        String sql = tableSql.substring(0, tableSql.lastIndexOf(")")).replaceAll("\\n", "").trim();
+        List<String> list = Arrays.stream(sql.split(",")).filter(s -> s.contains("KEY")).collect(Collectors.toList());
+        Map<String, IndexDto> indexMap = new HashMap<>();
+        for (String singleIndexSql : list) {
+            singleIndexSql = singleIndexSql.trim().replaceAll("`", "");
+            String[] sqlAry = singleIndexSql.split(" ");
+            IndexDto indexDto = new IndexDto();
+            if (singleIndexSql.startsWith("KEY")) {
+                indexDto.setType("INDEX");
+                indexDto.setIndex(sqlAry[1]);
+            } else if (singleIndexSql.startsWith("PRIMARY")) {
+                indexDto.setIndex("PRIMARY");
+                indexDto.setType("PRIMARY");
+            } else {
+                indexDto.setIndex(sqlAry[2]);
+                indexDto.setType(sqlAry[0]);
+            }
+            if (singleIndexSql.contains("USING")) {
+                indexDto.setStorageType(sqlAry[sqlAry.length - 1]);
+            }
+            indexMap.put(indexDto.getIndex(), indexDto);
+        }
+        return indexMap;
     }
 
     private String getPath(String middlewareName, String namespace) {

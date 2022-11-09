@@ -154,7 +154,7 @@ public interface MysqlClient {
     /**
      * 保存索引信息
      */
-    @Post(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/indices")
+    @Put(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/indices")
     JSONObject saveTableIndices(@Var("host") String host,
                                 @Var("port") String port,
                                 @Var("database") String database,
@@ -176,10 +176,10 @@ public interface MysqlClient {
      */
     @Post(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/foreignKeys")
     JSONObject saveTableForeignKeys(@Var("host") String host,
-                                @Var("port") String port,
-                                @Var("database") String database,
-                                @Var("table") String table,
-                                @JSONBody List<ForeignKeyDto> foreignKeyDtos);
+                                    @Var("port") String port,
+                                    @Var("database") String database,
+                                    @Var("table") String table,
+                                    @JSONBody List<ForeignKeyDto> foreignKeyDtos);
 
     // user
     /**
