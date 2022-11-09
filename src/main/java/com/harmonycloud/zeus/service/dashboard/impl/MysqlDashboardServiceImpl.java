@@ -394,9 +394,45 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void saveTableForeignKey(String clusterId, String namespace, String middlewareName, String database, String table, List<ForeignKeyDto> foreignKeyDtos) {
-        JSONObject res = mysqlClient.saveTableForeignKeys(getPath(middlewareName,namespace), port, database, table, foreignKeyDtos);
-        if (!res.getBoolean("success")) {
-            throw new BusinessException(ErrorMessage.ALTER_TABLE_FOREIGN_KEYS_FAILED, res.getString("message"));
+        List<ForeignKeyDto> oldForeignKeys = listTableForeignKeys(clusterId, namespace, middlewareName, database, table);
+        Map<String, ForeignKeyDto> oldForeignKeyMap = new HashMap<>();
+        oldForeignKeys.forEach(foreignKeyDto -> oldForeignKeyMap.put(foreignKeyDto.getForeignKey(), foreignKeyDto));
+
+        Map<String, ForeignKeyDto> foreignKeyMap = new HashMap<>();
+        foreignKeyDtos.forEach(foreignKeyDto -> foreignKeyMap.put(foreignKeyDto.getForeignKey(), foreignKeyDto));
+
+        List<ForeignKeyDto> newForeignKeyList = new ArrayList<>();
+        // 找出要删除的
+        for (ForeignKeyDto oldForeignKey : oldForeignKeys) {
+            ForeignKeyDto foreignKeyDto = foreignKeyMap.get(oldForeignKey.getForeignKey());
+            if (foreignKeyDto == null) {
+                oldForeignKey.setAction(MysqlOperationEnum.DROP.getCode());
+                newForeignKeyList.add(oldForeignKey);
+            }
+        }
+        // 找出要添加或修改的
+        for (ForeignKeyDto foreignKeyDto : foreignKeyDtos) {
+            ForeignKeyDto oldForeignKey = oldForeignKeyMap.get(foreignKeyDto.getForeignKey());
+            if (oldForeignKey == null) {
+                // 添加新外键
+                foreignKeyDto.setAction(MysqlOperationEnum.ADD.getCode());
+                newForeignKeyList.add(foreignKeyDto);
+                continue;
+            }
+            if (!foreignKeyDto.equals(oldForeignKey)) {
+                // 修改外键，修改步骤为先删除，再创建
+                oldForeignKey.setAction(MysqlOperationEnum.DROP.getCode());
+                foreignKeyDto.setAction(MysqlOperationEnum.ADD.getCode());
+                newForeignKeyList.add(oldForeignKey);
+                newForeignKeyList.add(foreignKeyDto);
+            }
+        }
+
+        if (!CollectionUtils.isEmpty(newForeignKeyList)) {
+            JSONObject res = mysqlClient.saveTableForeignKeys(getPath(middlewareName, namespace), port, database, table, newForeignKeyList);
+            if (!res.getBoolean("success")) {
+                throw new BusinessException(ErrorMessage.ALTER_TABLE_FOREIGN_KEYS_FAILED, res.getString("message"));
+            }
         }
     }
 
