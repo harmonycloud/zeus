@@ -860,7 +860,7 @@ public class IngressServiceImpl implements IngressService {
     private List<Integer> getAvailablePort(String clusterId, int portNum) {
         int startPort = 30002;
         List<Integer> portList = new ArrayList<>();
-        Set<Integer> usedPortSet = getUsedPortSet(clusterService.findById(clusterId));
+        Set<Integer> usedPortSet = getUsedPortSet(clusterService.findById(clusterId), true);
         for (int i = 0; i < portNum; ) {
             if (!usedPortSet.contains(startPort)) {
                 portList.add(startPort);
