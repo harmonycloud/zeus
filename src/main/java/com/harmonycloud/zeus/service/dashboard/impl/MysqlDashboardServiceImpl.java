@@ -14,6 +14,7 @@ import com.harmonycloud.caas.common.model.dashboard.SqlQuery;
 import com.harmonycloud.caas.common.model.dashboard.mysql.*;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.bean.BeanSqlExecuteRecord;
+import com.harmonycloud.zeus.dao.BeanSqlExecuteRecordMapper;
 import com.harmonycloud.zeus.integration.dashboard.MysqlClient;
 import com.harmonycloud.zeus.service.dashboard.MysqlDashboardService;
 import com.harmonycloud.zeus.util.ExcelUtil;
@@ -52,6 +53,9 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Value("${system.middleware-api.mysql.temppath:10.10.102.52}")
     private String temppath;
+
+    @Autowired
+    private BeanSqlExecuteRecordMapper sqlExecuteRecordMapper;
 
     @Override
     public String login(String clusterId, String namespace, String middlewareName, String username, String password) {
@@ -730,16 +734,37 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public ExecResult execSql(String clusterId, String namespace, String middlewareName, String database, String sql) {
+        BeanSqlExecuteRecord record = new BeanSqlExecuteRecord();
+        record.setClusterId(clusterId);
+        record.setNamespace(namespace);
+        record.setMiddlewareName(middlewareName);
+        record.setExecDate(new Date());
+        record.setTargetDatabase(database);
+        record.setSqlStr(sql);
+
         SqlQuery sqlQuery = new SqlQuery(sql);
         sqlQuery.convertAndSetQuery();
-
         JSONObject res = mysqlClient.execSql(getPath(middlewareName, namespace), port, database, sqlQuery);
+        if (!res.getBoolean("success")) {
+            record.setStatus(String.valueOf(false));
+            record.setMessage(res.getString("message"));
+            sqlExecuteRecordMapper.insert(record);
+            throw new BusinessException(ErrorMessage.FAILED_TO_EXEC_QUERY, res.getString("message"));
+        }
         JSONArray columnAry = res.getJSONArray("column");
         JSONArray dataAry = res.getJSONArray("dataAry");
         ExecResult execResult = new ExecResult();
         execResult.setColumns(columnAry);
         execResult.setData(dataAry);
 
+        record.setStatus(String.valueOf(true));
+        record.setExecTime(res.getString("execTime"));
+        if (!CollectionUtils.isEmpty(dataAry)) {
+            record.setLine(dataAry.size());
+        } else {
+            record.setLine(res.getInteger("rowsAffected"));
+        }
+        sqlExecuteRecordMapper.insert(record);
         return execResult;
     }
 

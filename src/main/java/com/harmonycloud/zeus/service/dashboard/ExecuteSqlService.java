@@ -29,4 +29,6 @@ public interface ExecuteSqlService {
      **/
     PageInfo<ExecuteSqlDto> list(String keyword, Integer current, Integer size, String order);
 
+    PageInfo<BeanSqlExecuteRecord> listExecuteSql(String clusterId, String namespace, String middlewareName, String database, String keyword, String startTime, String endTime, Integer pageNum, Integer size);
+
 }

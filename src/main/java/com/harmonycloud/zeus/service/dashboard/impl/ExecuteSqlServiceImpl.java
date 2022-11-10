@@ -8,6 +8,7 @@ import com.harmonycloud.caas.common.model.dashboard.ExecuteSqlDto;
 import com.harmonycloud.zeus.bean.BeanSqlExecuteRecord;
 import com.harmonycloud.zeus.dao.BeanSqlExecuteRecordMapper;
 import com.harmonycloud.zeus.service.dashboard.ExecuteSqlService;
+import com.harmonycloud.zeus.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -64,4 +65,26 @@ public class ExecuteSqlServiceImpl implements ExecuteSqlService {
         }).collect(Collectors.toList()));
         return executeSqlDtoPageInfo;
     }
+
+    @Override
+    public PageInfo<BeanSqlExecuteRecord> listExecuteSql(String clusterId, String namespace, String middlewareName, String database, String keyword, String startTime, String endTime, Integer pageNum, Integer size) {
+        QueryWrapper<BeanSqlExecuteRecord> wrapper = new QueryWrapper<>();
+        wrapper.eq("cluster_id", clusterId);
+        wrapper.eq("namespace", namespace);
+        wrapper.eq("middleware_name", middlewareName);
+        wrapper.eq("target_database", database);
+        if (!org.springframework.util.StringUtils.isEmpty(keyword)) {
+            wrapper.like("sqlstr", keyword);
+        }
+        PageHelper.startPage(pageNum, size);
+        if (!org.springframework.util.StringUtils.isEmpty(startTime)) {
+            wrapper.gt("exec_date", DateUtil.parseUTCDate(startTime));
+        }
+        if (!org.springframework.util.StringUtils.isEmpty(endTime)) {
+            wrapper.lt("exec_date", DateUtil.parseUTCDate(endTime));
+        }
+        PageHelper.startPage(pageNum, size);
+        return new PageInfo<>(beanSqlExecuteRecordMapper.selectList(wrapper));
+    }
+
 }
