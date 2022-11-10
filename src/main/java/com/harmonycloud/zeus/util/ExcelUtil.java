@@ -29,7 +29,7 @@ public class ExcelUtil {
      * @return
      */
     public static String createDatabaseExcel(String filePath, String filename, Map<String, List<ColumnDto>> tableMap) {
-        String pathName = filePath + filename + ".xlsx";
+        String pathName = filePath + File.separator + filename + ".xlsx";
         try {
             File file = new File(pathName);
             file.deleteOnExit();

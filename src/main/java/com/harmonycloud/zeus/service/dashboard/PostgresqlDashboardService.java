@@ -1,13 +1,13 @@
 package com.harmonycloud.zeus.service.dashboard;
 
-import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.model.dashboard.*;
-import com.harmonycloud.caas.common.model.dashboard.mysql.QueryInfo;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletResponse;
+
+import com.harmonycloud.caas.common.model.dashboard.*;
+import com.harmonycloud.caas.common.model.dashboard.mysql.QueryInfo;
 
 /**
  * @author xutianhong
@@ -235,7 +235,7 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
      * @param tableName 表名称
      */
     void getTableCreateSql(String clusterId, String namespace, String middlewareName, String databaseName,
-                           String schemaName, String tableName, HttpServletRequest request, HttpServletResponse response);
+                           String schemaName, String tableName, HttpServletResponse response) throws IOException;
 
     /**
      * 获取表结构文件
@@ -248,7 +248,7 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
      * @param tableName 表名称
      */
     void getTableExcel(String clusterId, String namespace, String middlewareName, String databaseName,
-                       String schemaName, String tableName, HttpServletRequest request, HttpServletResponse response);
+                       String schemaName, String tableName, HttpServletResponse response);
 
     /**
      * 获取列信息

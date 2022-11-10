@@ -1,13 +1,11 @@
 package com.harmonycloud.zeus.util;
 
+import com.harmonycloud.tool.file.FileUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedOutputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URLEncoder;
 
 /**
@@ -16,6 +14,35 @@ import java.net.URLEncoder;
  */
 @Slf4j
 public class FileDownloadUtil {
+
+    public static void downloadFile(HttpServletResponse response, String fileDir, String fileName, String context)
+        throws IOException {
+        FileUtil.writeToLocal(fileDir, fileName, context);
+        downloadFile(response, fileDir, fileName);
+    }
+
+    public static void downloadFile(HttpServletResponse response, String fileDir, String fileName) throws IOException {
+        File file = new File(fileDir + File.separator + fileName);
+        if (file.exists()) {
+            response.setContentType("application/octet-stream");
+            response.setHeader("content-type", "application/octet-stream");
+            response.setHeader("Content-Length", String.valueOf(file.length()));
+            response.setHeader("Content-Disposition", "attachment;fileName=" + URLEncoder.encode(fileName, "utf8"));
+            byte[] buffer = new byte[2048];
+            //输出流
+            try (FileInputStream fis = new FileInputStream(file);
+                BufferedInputStream bis = new BufferedInputStream(fis);
+                OutputStream os = response.getOutputStream()) {
+                int i = bis.read(buffer);
+                while (i != -1) {
+                    os.write(buffer);
+                    i = bis.read(buffer);
+                }
+            } catch (Exception e) {
+                log.error("文件{} 下载失败", fileName);
+            }
+        }
+    }
 
     /**
      * 下载文件

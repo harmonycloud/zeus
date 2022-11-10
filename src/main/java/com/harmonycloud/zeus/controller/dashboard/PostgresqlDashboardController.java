@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.controller.dashboard;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -427,15 +428,14 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
     })
     @GetMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/sql/download")
-    public BaseResult getTableCreateSql(@PathVariable("clusterId") String clusterId,
-                                        @PathVariable("namespace") String namespace,
-                                        @PathVariable("name") String name,
-                                        @PathVariable("databaseName") String databaseName,
-                                        @PathVariable("schemaName") String schemaName,
-                                        @PathVariable("tableName") String tableName,
-                                        HttpServletRequest request,
-                                        HttpServletResponse response) {
-        postgresqlDashboardService.getTableCreateSql(clusterId, namespace, name, databaseName, schemaName, tableName, request, response);
+    public BaseResult<byte[]> getTableCreateSql(@PathVariable("clusterId") String clusterId,
+                                                @PathVariable("namespace") String namespace,
+                                                @PathVariable("name") String name,
+                                                @PathVariable("databaseName") String databaseName,
+                                                @PathVariable("schemaName") String schemaName,
+                                                @PathVariable("tableName") String tableName,
+                                                HttpServletResponse response) throws IOException {
+        postgresqlDashboardService.getTableCreateSql(clusterId, namespace, name, databaseName, schemaName, tableName, response);
         return BaseResult.ok();
     }
 
@@ -455,9 +455,8 @@ public class PostgresqlDashboardController {
                                     @PathVariable("databaseName") String databaseName,
                                     @PathVariable("schemaName") String schemaName,
                                     @PathVariable("tableName") String tableName,
-                                    HttpServletRequest request,
                                     HttpServletResponse response) {
-        postgresqlDashboardService.getTableCreateSql(clusterId, namespace, name, databaseName, schemaName, tableName, request, response);
+        postgresqlDashboardService.getTableExcel(clusterId, namespace, name, databaseName, schemaName, tableName, response);
         return BaseResult.ok();
     }
 

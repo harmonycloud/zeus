@@ -1,19 +1,14 @@
 package com.harmonycloud.zeus.service.dashboard.impl;
 
-import java.nio.charset.StandardCharsets;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.harmonycloud.caas.common.enums.middleware.PostgresqlCollateEnum;
-import com.harmonycloud.caas.common.enums.middleware.PostgresqlDataTypeEnum;
-import com.harmonycloud.caas.common.model.dashboard.mysql.QueryInfo;
-import com.harmonycloud.zeus.bean.BeanSqlExecuteRecord;
-import com.harmonycloud.zeus.service.dashboard.ExecuteSqlService;
-import com.harmonycloud.zeus.util.ExcelUtil;
-import com.harmonycloud.zeus.util.FileDownloadUtil;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,19 +23,23 @@ import com.harmonycloud.caas.common.enums.EncodingEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.PostgresqlPrivilegeEnum;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.harmonycloud.caas.common.enums.middleware.PostgresqlCollateEnum;
+import com.harmonycloud.caas.common.enums.middleware.PostgresqlDataTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.dashboard.*;
+import com.harmonycloud.caas.common.model.dashboard.mysql.QueryInfo;
 import com.harmonycloud.caas.common.model.middleware.ServicePortDTO;
 import com.harmonycloud.zeus.annotation.Operator;
+import com.harmonycloud.zeus.bean.BeanSqlExecuteRecord;
 import com.harmonycloud.zeus.integration.dashboard.PostgresqlClient;
+import com.harmonycloud.zeus.service.dashboard.ExecuteSqlService;
 import com.harmonycloud.zeus.service.dashboard.PostgresqlDashboardService;
 import com.harmonycloud.zeus.service.k8s.ServiceService;
+import com.harmonycloud.zeus.util.ExcelUtil;
+import com.harmonycloud.zeus.util.FileDownloadUtil;
 import com.harmonycloud.zeus.util.PostgresqlAuthorityUtil;
 
 import lombok.extern.slf4j.Slf4j;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author xutianhong
@@ -55,6 +54,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
 
     @Value("${system.middleware-api.postgresql.port:5432}")
     private String port;
+    @Value("${system.upload.path:/usr/local/zeus-pv/upload}")
+    private String uploadPath;
 
     @Autowired
     private PostgresqlClient postgresqlClient;
@@ -637,14 +638,14 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
 
     @Override
     public void getTableCreateSql(String clusterId, String namespace, String middlewareName, String databaseName,
-        String schemaName, String tableName, HttpServletRequest request, HttpServletResponse response) {
+        String schemaName, String tableName, HttpServletResponse response) throws IOException {
         TableDto tableDto = this.getTable(clusterId, namespace, middlewareName, databaseName, schemaName, tableName);
         StringBuilder sb = new StringBuilder();
-        sb.append("create table ").append(tableDto.getTableName()).append(" ( ");
+        sb.append("create table ").append(tableDto.getTableName()).append(" (\n");
         for (int i = 0; i < tableDto.getColumnDtoList().size(); ++i) {
             ColumnDto columnDto = tableDto.getColumnDtoList().get(i);
-            sb.append(columnDto.getColumn()).append(" ").append(columnDto.getDateType());
-            if (!"0".equals(columnDto.getSize())) {
+            sb.append(columnDto.getColumn()).append(" ").append(columnDto.getDataType());
+            if (StringUtils.isNotEmpty(columnDto.getSize()) && !"0".equals(columnDto.getSize())) {
                 sb.append("(").append(columnDto.getSize()).append(")");
             }
             if (columnDto.getArray()) {
@@ -663,29 +664,25 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             }
         }
         sb.append(");");
-        String fileRealName = tableName + ".sql";
-        byte[] sqlBytes = sb.toString().getBytes(StandardCharsets.UTF_8);
-        FileDownloadUtil.downloadFile(request, response, fileRealName, sqlBytes);
+        String fileRealName = tableName + ".sql";;
+        FileDownloadUtil.downloadFile(response, uploadPath, fileRealName, sb.toString());
     }
 
     @Override
     public void getTableExcel(String clusterId, String namespace, String middlewareName, String databaseName,
-        String schemaName, String tableName, HttpServletRequest request, HttpServletResponse response) {
+        String schemaName, String tableName, HttpServletResponse response) {
         try {
-            String path = getPath(middlewareName, namespace);
-            setPort(clusterId, namespace, middlewareName);
             List<ColumnDto> columnDtoList =
                 listColumns(clusterId, namespace, middlewareName, databaseName, schemaName, tableName);
-            String excelFilePath = ExcelUtil.createTableExcel(path, tableName, columnDtoList.stream().map(columnDto -> {
+            ExcelUtil.createTableExcel(uploadPath, tableName, columnDtoList.stream().map(columnDto -> {
                 com.harmonycloud.caas.common.model.dashboard.mysql.ColumnDto column =
                     new com.harmonycloud.caas.common.model.dashboard.mysql.ColumnDto();
                 BeanUtils.copyProperties(columnDto, column);
-                column.setAutoIncrement(columnDto.getInc());
                 column.setColumnDefault(columnDto.getDefaultValue());
                 return column;
             }).collect(Collectors.toList()));
-            String fileRealName = tableName + ".xlsx";
-            FileDownloadUtil.downloadFile(request, response, fileRealName, excelFilePath);
+            String fileName = tableName + ".xlsx";
+            FileDownloadUtil.downloadFile(response, uploadPath, fileName);
         } catch (Exception e) {
             log.error("导出表结构Excel文件失败", e);
             throw new BusinessException(ErrorMessage.FAILED_TO_EXPORT_TABLE_EXCEL);
@@ -716,10 +713,10 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             String data_type = column.get("data_type");
             if ("ARRAY".equals(data_type)) {
                 columnDto.setArray(true);
-                columnDto.setDateType(column.get("array_data_type"));
+                columnDto.setDataType(column.get("array_data_type"));
             } else {
                 columnDto.setArray(false);
-                columnDto.setDateType(data_type);
+                columnDto.setDataType(data_type);
             }
             columnDto.setNum(column.get("ordinal_position"));
             columnDto.setSize(column.get("character_maximum_length"));
@@ -761,9 +758,9 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             // 比较列不同
             ColumnDto column = columnDtoMap.get(num);
             // 比较是否开关数组/修改数据类型、修改数据长度
-            if (!column.getArray().equals(newColumn.getArray()) || !column.getDateType().equals(newColumn.getDateType())
+            if (!column.getArray().equals(newColumn.getArray()) || !column.getDataType().equals(newColumn.getDataType())
                 || !column.getSize().equals(newColumn.getSize())) {
-                anchor.put("dataType", newColumn.getDateType());
+                anchor.put("dataType", newColumn.getDataType());
                 anchor.put("array", newColumn.getArray().toString());
                 if (!"0".equals(newColumn.getSize())) {
                     anchor.put("size", newColumn.getSize());
@@ -1274,7 +1271,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         if (columnDto.getInc() != null && columnDto.getInc()) {
             sb.append("serial");
         } else {
-            sb.append(columnDto.getDateType());
+            sb.append(columnDto.getDataType());
         }
         if (columnDto.getArray() != null && columnDto.getArray()) {
             sb.append("[]");
