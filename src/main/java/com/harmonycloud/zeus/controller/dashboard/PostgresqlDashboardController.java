@@ -428,7 +428,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
     })
     @PostMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/sql/download")
-    public BaseResult<byte[]> getTableCreateSql(@PathVariable("clusterId") String clusterId,
+    public void getTableCreateSql(@PathVariable("clusterId") String clusterId,
                                                 @PathVariable("namespace") String namespace,
                                                 @PathVariable("name") String name,
                                                 @PathVariable("databaseName") String databaseName,
@@ -436,7 +436,6 @@ public class PostgresqlDashboardController {
                                                 @PathVariable("tableName") String tableName,
                                                 HttpServletResponse response) throws IOException {
         postgresqlDashboardService.getTableCreateSql(clusterId, namespace, name, databaseName, schemaName, tableName, response);
-        return BaseResult.ok();
     }
 
     @ApiOperation(value = "获取table excel", notes = "获取table excel")
@@ -449,7 +448,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
     })
     @PostMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/excel/download")
-    public BaseResult getTableExcel(@PathVariable("clusterId") String clusterId,
+    public void getTableExcel(@PathVariable("clusterId") String clusterId,
                                     @PathVariable("namespace") String namespace,
                                     @PathVariable("name") String name,
                                     @PathVariable("databaseName") String databaseName,
@@ -457,7 +456,6 @@ public class PostgresqlDashboardController {
                                     @PathVariable("tableName") String tableName,
                                     HttpServletResponse response) {
         postgresqlDashboardService.getTableExcel(clusterId, namespace, name, databaseName, schemaName, tableName, response);
-        return BaseResult.ok();
     }
 
     // 约束增删
