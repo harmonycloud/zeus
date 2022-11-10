@@ -62,7 +62,7 @@ public class AuthFilter implements Filter {
         return path.contains(auth) || path.contains("/swagger") || path.contains("/v3")
                 || path.contains("/swagger-ui") || path.contains("/images") || path.contains("/webhook")
                 || path.contains("/export") || path.contains("/slowsql/file") || path.contains("/getPersonalConfig")
-                || path.contains("scriptFile") || path.contains("excelFile") || path.contains("/download");
+                || path.contains("scriptFile") || path.contains("excelFile");
     }
 
 }
