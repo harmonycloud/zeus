@@ -427,7 +427,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
     })
-    @GetMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/sql/download")
+    @PostMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/sql/download")
     public BaseResult<byte[]> getTableCreateSql(@PathVariable("clusterId") String clusterId,
                                                 @PathVariable("namespace") String namespace,
                                                 @PathVariable("name") String name,
@@ -448,7 +448,7 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "schemaName", value = "模式名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "tableName", value = "表名称", paramType = "path", dataTypeClass = String.class),
     })
-    @GetMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/excel/download")
+    @PostMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/excel/download")
     public BaseResult getTableExcel(@PathVariable("clusterId") String clusterId,
                                     @PathVariable("namespace") String namespace,
                                     @PathVariable("name") String name,
