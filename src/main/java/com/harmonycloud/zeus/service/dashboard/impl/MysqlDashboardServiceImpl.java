@@ -830,9 +830,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     private String getPath(String middlewareName, String namespace) {
-        // todo 提交时此处代码需删除
-//        return middlewareName + "." + namespace;
-        return temppath;
+        return middlewareName + "." + namespace;
     }
     
 }
