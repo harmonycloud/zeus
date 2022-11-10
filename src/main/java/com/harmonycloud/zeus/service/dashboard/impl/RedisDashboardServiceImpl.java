@@ -65,11 +65,12 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
         if (!StringUtils.isEmpty(tempVersion)) {
             version = tempVersion.split("\\.")[0];
         }
-        if(Integer.parseInt(version) < 6){
+        if (Integer.parseInt(version) < 6) {
             username = "";
         }
         int defaultDb = 0;
         String mod = getRedisMod(clusterId, namespace, middlewareName);
+        // redis哨兵模式和单机模式的连接方式是一样的，因此连接方式只有集群模式和单机模式
         if (!"cluster".equals(mod)) {
             mod = "single";
         }

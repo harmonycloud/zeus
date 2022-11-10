@@ -745,8 +745,9 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         SqlQuery sqlQuery = new SqlQuery(sql);
         sqlQuery.convertAndSetQuery();
         JSONObject res = mysqlClient.execSql(getPath(middlewareName, namespace), port, database, sqlQuery);
+        record.setExecTime(res.getString("execTime"));
+        record.setStatus(res.getString("success"));
         if (!res.getBoolean("success")) {
-            record.setStatus(String.valueOf(false));
             record.setMessage(res.getString("message"));
             sqlExecuteRecordMapper.insert(record);
             throw new BusinessException(ErrorMessage.FAILED_TO_EXEC_QUERY, res.getString("message"));
@@ -757,8 +758,6 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         execResult.setColumns(columnAry);
         execResult.setData(dataAry);
 
-        record.setStatus(String.valueOf(true));
-        record.setExecTime(res.getString("execTime"));
         if (!CollectionUtils.isEmpty(dataAry)) {
             record.setLine(dataAry.size());
         } else {
