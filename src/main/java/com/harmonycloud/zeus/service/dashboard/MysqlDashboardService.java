@@ -206,6 +206,11 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
     boolean checkUserExists(String namespace, String middlewareName, String username);
 
     /**
+     * 判断数据库是否存在，存在则返回true
+     */
+    boolean checkDatabaseExists(String namespace, String middlewareName, String database);
+
+    /**
      * 导出建表sql
      */
     byte[] exportTableSql(String clusterId, String namespace, String middlewareName, String database, String table,

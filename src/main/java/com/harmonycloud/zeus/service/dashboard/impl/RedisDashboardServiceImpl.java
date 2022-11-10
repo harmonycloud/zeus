@@ -197,34 +197,14 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
         // 设置影响行数
         Object data = res.get("data");
         if (data instanceof JSONArray) {
-            record.setLine(String.valueOf(res.getJSONArray("data").size()));
+            record.setLine(res.getJSONArray("data").size());
         } else {
-            record.setLine("1");
+            record.setLine(1);
         }
         // 设置命令执行时间
         record.setExecDate(new Date());
         sqlExecuteRecordMapper.insert(record);
         return res;
-    }
-
-    @Override
-    public List<BeanSqlExecuteRecord> listExecuteSql(String clusterId, String namespace, String middlewareName, Integer db, String keyword, String start, String end, Integer pageNum, Integer size) {
-        QueryWrapper<BeanSqlExecuteRecord> wrapper = new QueryWrapper<>();
-        wrapper.eq("cluster_id", clusterId);
-        wrapper.eq("namespace", namespace);
-        wrapper.eq("middleware_name", middlewareName);
-        wrapper.eq("target_database", db);
-        if (!StringUtils.isEmpty(keyword)) {
-            wrapper.like("sqlstr", keyword);
-        }
-        PageHelper.startPage(pageNum, size);
-        if(!StringUtils.isEmpty(start)){
-            wrapper.gt("exec_date", DateUtil.parseUTCDate(start));
-        }
-        if(!StringUtils.isEmpty(end)){
-            wrapper.lt("exec_date", DateUtil.parseUTCDate(end));
-        }
-        return sqlExecuteRecordMapper.selectList(wrapper);
     }
 
     /**

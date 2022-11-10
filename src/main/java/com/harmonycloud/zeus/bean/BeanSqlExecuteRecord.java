@@ -66,7 +66,7 @@ public class BeanSqlExecuteRecord implements Serializable {
      * 行数
      */
     @TableField("line")
-    private String line;
+    private Integer line;
 
     /**
      * 执行时间

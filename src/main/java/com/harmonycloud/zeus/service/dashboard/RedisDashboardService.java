@@ -34,6 +34,4 @@ public interface RedisDashboardService extends BaseMiddlewareApiService{
 
     JSONObject execCMD(String clusterId, String namespace, String middlewareName, Integer db, String cmd);
 
-    List<BeanSqlExecuteRecord> listExecuteSql(String clusterId, String namespace, String middlewareName, Integer db, String keyword, String start, String end, Integer pageNum, Integer size);
-
 }
