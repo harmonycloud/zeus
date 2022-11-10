@@ -306,10 +306,10 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
                 newColumnList.add(oldColumn);
             }
         }
-        // 判断是否需要修改主键
+        // 设置主键操作类型
         List<String> oldPrimaryKeys = extractPrimaryKey(oldColumns);
         List<String> newPrimaryKeys = extractPrimaryKey(columnDtoList);
-        tableDto.setUpdatePrimaryKey(!oldPrimaryKeys.equals(newPrimaryKeys));
+        tableDto.setPrimaryKeyAction(getPrimaryKeyActionCode(oldPrimaryKeys, newPrimaryKeys));
 
         if (!CollectionUtils.isEmpty(newColumnList)) {
             tableDto.setColumns(newColumnList);
@@ -773,6 +773,25 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     /**
+     * 获取主键操作编码
+     */
+    private int getPrimaryKeyActionCode(List<String> oldPrimaryKeys, List<String> newPrimaryKeys) {
+        if (CollectionUtils.isEmpty(oldPrimaryKeys)) {
+            if (!CollectionUtils.isEmpty(newPrimaryKeys)) {
+                return MysqlOperationEnum.ADD.getCode();
+            } else {
+                return MysqlOperationEnum.NONE.getCode();
+            }
+        } else {
+            if (oldPrimaryKeys.equals(newPrimaryKeys)) {
+                return MysqlOperationEnum.NONE.getCode();
+            } else {
+                return MysqlOperationEnum.MODIFY.getCode();
+            }
+        }
+    }
+
+    /**
      * 纠正列信息
      * @param columnDtoList
      */
@@ -830,7 +849,8 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     private String getPath(String middlewareName, String namespace) {
-        return middlewareName + "." + namespace;
+//        return middlewareName + "." + namespace;
+        return "10.10.102.52";
     }
     
 }
