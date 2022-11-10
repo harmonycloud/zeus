@@ -3,7 +3,6 @@ package com.harmonycloud.zeus.controller.dashboard;
 import com.alibaba.fastjson.JSONArray;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.dashboard.ExecResult;
-import com.harmonycloud.caas.common.model.dashboard.ExecuteSqlDto;
 import com.harmonycloud.caas.common.model.dashboard.mysql.*;
 import com.harmonycloud.zeus.service.dashboard.MysqlDashboardService;
 import io.swagger.annotations.Api;
@@ -46,7 +45,7 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
     })
     @GetMapping("/charsets")
-    public BaseResult<List<String>> listChartset(@PathVariable("clusterId") String clusterId,
+    public BaseResult<List<String>> listCharset(@PathVariable("clusterId") String clusterId,
                                                  @PathVariable("namespace") String namespace,
                                                  @PathVariable("middlewareName") String middlewareName) {
         return BaseResult.ok(mysqlDashboardService.listCharset(clusterId, namespace, middlewareName));
@@ -60,7 +59,7 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "charset", value = "字符集", paramType = "path", dataTypeClass = String.class),
     })
     @GetMapping("/charsets/{charset}/collations")
-    public BaseResult<List<String>> listChartsetCollations(@PathVariable("clusterId") String clusterId,
+    public BaseResult<List<String>> listCharsetCollations(@PathVariable("clusterId") String clusterId,
                                                            @PathVariable("namespace") String namespace,
                                                            @PathVariable("middlewareName") String middlewareName,
                                                            @PathVariable("charset") String charset) {

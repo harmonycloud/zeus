@@ -47,6 +47,12 @@ public interface MysqlClient {
     JSONObject dropDatabase(@Var("host") String host, @Var("port") String port, @Var("database") String database);
 
     /**
+     * 查询数据库详情
+     */
+    @Get(url = "/mysql/{host}/port/{port}/databases/{database}/detail")
+    JSONObject showDatabaseDetail(@Var("host") String host, @Var("port") String port, @Var("database") String database);
+
+    /**
      * 查询字符集
      */
     @Get(url = "/mysql/{host}/port/{port}/charsets")
@@ -93,6 +99,16 @@ public interface MysqlClient {
                          @Var("port") String port,
                          @Var("database") String database,
                          @Var("table") String table);
+
+    /**
+     * 修改表名
+     */
+    @Put(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}")
+    JSONObject renameTable(@Var("host") String host,
+                           @Var("port") String port,
+                           @Var("database") String database,
+                           @Var("table") String table,
+                           @JSONBody TableDto tableDto);
 
     /**
      * 获取表基本信息

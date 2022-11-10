@@ -10,7 +10,6 @@ import com.harmonycloud.caas.common.enums.middleware.MysqlDataTypeEnum;
 import com.harmonycloud.caas.common.enums.middleware.MysqlOperationEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.dashboard.ExecResult;
-import com.harmonycloud.caas.common.model.dashboard.ExecuteSqlDto;
 import com.harmonycloud.caas.common.model.dashboard.SqlQuery;
 import com.harmonycloud.caas.common.model.dashboard.mysql.*;
 import com.harmonycloud.zeus.annotation.Operator;
@@ -76,7 +75,6 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     @Override
     public List<DatabaseDto> listDatabases(String clusterId, String namespace, String middlewareName) {
         JSONArray dataAry = mysqlClient.listDatabases(getPath(middlewareName,namespace), port).getJSONArray("dataAry");
-        // SCHEMA_NAME,DEFAULT_CHARACTER_SET_NAME,DEFAULT_COLLATION_NAME
         return dataAry.stream().map(data -> {
             JSONObject obj = (JSONObject) data;
             DatabaseDto databaseDto = new DatabaseDto();
@@ -89,6 +87,9 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void createDatabase(String clusterId, String namespace, String middlewareName, DatabaseDto databaseDto) {
+        if(checkDatabaseExists(namespace, middlewareName,  databaseDto.getDb())){
+            throw new BusinessException(ErrorMessage.DATABASE_EXISTS);
+        }
         JSONObject res = mysqlClient.createDatabase(getPath(middlewareName,namespace), port, databaseDto);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.CREATE_DATABASE_FAILED, res.getString("message"));
@@ -156,8 +157,6 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
             tableDto.setTableName(obj.getString("TABLE_NAME"));
             tableDto.setCollate(obj.getString("TABLE_COLLATION"));
             tableDto.setCharset(MysqlUtil.extractCharset(obj.getString("TABLE_COLLATION")));
-            // todo 查询每张表的记录数，即：行数
-            tableDto.setRows(0);
             return tableDto;
         }).collect(Collectors.toList());
     }
@@ -187,8 +186,11 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public void updateTableName(String clusterId, String namespace, String middlewareName, String database, String table, TableDto databaseDto) {
-
+    public void updateTableName(String clusterId, String namespace, String middlewareName, String database, String table, TableDto tableDto) {
+        JSONObject res = mysqlClient.renameTable(getPath(middlewareName, namespace), port, database, table, tableDto);
+        if (!res.getBoolean("success")) {
+            throw new BusinessException(ErrorMessage.ALTER_TABLE_FAILED, res.getString("message"));
+        }
     }
 
     @Override
@@ -258,16 +260,11 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void saveTableColumn(String clusterId, String namespace, String middlewareName, String database, String table, TableDto tableDto) {
-        // TODO 列字段矫正，当某一列为主键时，必须设为NOT NULL
         List<ColumnDto> columnDtoList = tableDto.getColumns();
         if (CollectionUtils.isEmpty(columnDtoList)) {
             return;
         }
-        for (ColumnDto columnDto : columnDtoList) {
-            if(columnDto.isPrimary()){
-                columnDto.setNullable(false);
-            }
-        }
+        this.correctColumn(columnDtoList);
 
         List<ColumnDto> oldColumns = listTableColumns(clusterId, namespace, middlewareName, database, table);
         Map<String, ColumnDto> oldColumnMap = new HashMap<>();
@@ -723,6 +720,15 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
+    public boolean checkDatabaseExists(String namespace, String middlewareName, String database) {
+        if (StringUtils.isEmpty(database)) {
+            return false;
+        }
+        JSONArray dataAry = mysqlClient.showDatabaseDetail(getPath(middlewareName, namespace), port, database).getJSONArray("dataAry");
+        return !CollectionUtils.isEmpty(dataAry);
+    }
+
+    @Override
     public ExecResult execSql(String clusterId, String namespace, String middlewareName, String database, String sql) {
         SqlQuery sqlQuery = new SqlQuery(sql);
         sqlQuery.convertAndSetQuery();
@@ -740,6 +746,22 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     @Override
     public List<BeanSqlExecuteRecord> listExecuteSql(String clusterId, String namespace, String middlewareName, Integer db, String keyword, String start, String end, Integer pageNum, Integer size) {
         return null;
+    }
+
+    /**
+     * 纠正列信息
+     * @param columnDtoList
+     */
+    private void correctColumn(List<ColumnDto> columnDtoList) {
+        if (!CollectionUtils.isEmpty(columnDtoList)) {
+            return;
+        }
+        for (ColumnDto columnDto : columnDtoList) {
+            // 当某一列为主键时，必须设为不允许非空
+            if (columnDto.isPrimary()) {
+                columnDto.setNullable(false);
+            }
+        }
     }
 
     /**
