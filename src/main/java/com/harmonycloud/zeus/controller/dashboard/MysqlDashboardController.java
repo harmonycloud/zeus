@@ -237,7 +237,7 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "table", value = "表名", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "tableDto", value = "表信息", paramType = "query", dataTypeClass = TableDto.class),
     })
-    @PutMapping("/databases/{database}/tabes/{table}")
+    @PutMapping("/databases/{database}/tables/{table}")
     public BaseResult updateTableName(@PathVariable("clusterId") String clusterId,
                                       @PathVariable("namespace") String namespace,
                                       @PathVariable("middlewareName") String middlewareName,
@@ -256,7 +256,7 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "table", value = "表名", paramType = "path", dataTypeClass = String.class),
     })
-    @DeleteMapping("/databases/{database}/tabes/{table}")
+    @DeleteMapping("/databases/{database}/tables/{table}")
     public BaseResult deleteTable(@PathVariable("clusterId") String clusterId,
                                   @PathVariable("namespace") String namespace,
                                   @PathVariable("middlewareName") String middlewareName,
