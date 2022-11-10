@@ -45,7 +45,7 @@ public class IngressController {
         if (namespace.equals(ASTERISK)){
             namespace = null;
         }
-        return BaseResult.ok(ingressService.listAllIngress(clusterId, namespace, keyword));
+        return BaseResult.ok(ingressService.listAllMiddlewareIngress(clusterId, namespace, keyword));
     }
 
     @ApiOperation(value = "创建中间件对外访问", notes = "创建中间件对外访问")

@@ -1,7 +1,11 @@
 kubectl:
   installCRDs: true
   tolerations:
-    - operator: Exists
+    - effect: NoSchedule
+      key: harm.cn/type
+      value: active-active
+    - effect: NoSchedule
+      key: harm.cn/system
   imagePullSecrets:
     - name: registrysecret
   affinity:
@@ -19,7 +23,11 @@ imagePullSecrets:
   - name: registrysecret
 
 tolerations:
-  - operator: Exists
+  - effect: NoSchedule
+    key: harm.cn/type
+    value: active-active
+  - effect: NoSchedule
+    key: harm.cn/system
 
 podAntiAffinityTopologKey: "zone"
 

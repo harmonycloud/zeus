@@ -129,7 +129,7 @@ public class TerminalService {
             printReader(errorReader);
         });
         if(StringUtils.isNotEmpty(middlewareName) && StringUtils.isNotEmpty(middlewareType)){
-            onCommand(getDatabaseCommand(cluster, namespace, middlewareName, middlewareType));
+            onCommand(getDatabaseCommand(cluster, namespace, middlewareName, middlewareType, pod));
         }
         process.waitFor();
 
@@ -312,11 +312,11 @@ public class TerminalService {
     /**
      * 执行进入指定数据库数据
      */
-    public String getDatabaseCommand(MiddlewareClusterDTO cluster, String namespace, String name, String type){
+    public String getDatabaseCommand(MiddlewareClusterDTO cluster, String namespace, String name, String type, String pod){
         String command;
         switch (type){
             case "redis":
-                command = middlewareCommandService.getRedisCommand(cluster, namespace, name);
+                command = middlewareCommandService.getRedisCommand(cluster, namespace, name, pod);
                 break;
             case "mysql":
                 command = middlewareCommandService.getMysqlCommand(cluster, namespace, name);

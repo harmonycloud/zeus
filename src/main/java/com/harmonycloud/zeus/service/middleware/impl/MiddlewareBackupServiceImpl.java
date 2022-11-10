@@ -112,10 +112,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         ObjectMeta meta = new ObjectMeta();
         meta.setName(backupName + "-" + INCR);
         meta.setNamespace(namespace);
+        // 获取labels
+        Map<String, String> backupLabel = new HashMap<>();
+        backupLabel.put("middleware", cr.getSpec().getType() + "-" + cr.getSpec().getName());
+        meta.setLabels(backupLabel);
+
         cr.setMetadata(meta);
         cr.setStatus(null);
-        // 设置名称
-        cr.getMetadata().setName(backupName + "-incr");
         // 设置增量备份
         cr.getSpec().getCustomBackups().forEach(cus -> {
             if (cus.containsKey(ENV)){
@@ -396,7 +399,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String restoreTime) {
         // 等待中间件状态正常
-        waitingMiddleware(clusterId, namespace, middlewareName, type);
+        if (!waitingMiddleware(clusterId, namespace, middlewareName, type)){
+            return;
+        }
         MiddlewareRestoreCR crd = new MiddlewareRestoreCR();
         ObjectMeta meta = new ObjectMeta();
         meta.setNamespace(namespace);
@@ -825,7 +830,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 + parameters.getBucket() + ")";
         backupRecord.setPosition(position);
         // 获取备份状态
-        if (!ObjectUtils.isEmpty(backupStatus)) {
+        if (StringUtils.isNotEmpty(schedule.getMetadata().getDeletionTimestamp())){
+            backupRecord.setPhrase("Deleting");
+        } else if (!ObjectUtils.isEmpty(backupStatus)) {
             backupRecord.setPhrase(backupStatus.getPhase());
         } else {
             backupRecord.setPhrase("Unknown");
@@ -893,7 +900,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         backupRecord.setPosition(position);
 
         // 获取备份状态
-        if (!ObjectUtils.isEmpty(backupStatus)) {
+        if (StringUtils.isNotEmpty(backup.getMetadata().getDeletionTimestamp())) {
+            backupRecord.setPhrase("Deleting");
+        } else if (!ObjectUtils.isEmpty(backupStatus)) {
             backupRecord.setPhrase(backupStatus.getPhase());
             if ("Failed".equals(backupStatus.getPhase())) {
                 backupRecord.setReason(backupStatus.getReason());
@@ -955,7 +964,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     /**
      * 创建备份恢复等待中间件创建完毕
      */
-    public void waitingMiddleware(String clusterId, String namespace, String name, String type) {
+    public Boolean waitingMiddleware(String clusterId, String namespace, String name, String type) {
+        boolean flag = false;
         for (int i = 0; i < 20; ++i) {
             MiddlewareCR middlewareCR = null;
             try {
@@ -966,6 +976,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             if (middlewareCR != null && middlewareCR.getStatus() != null
                 && StringUtils.isNotEmpty(middlewareCR.getStatus().getPhase())
                 && middlewareCR.getStatus().getPhase().equalsIgnoreCase(RUNNING)) {
+                flag = true;
                 break;
             }
             try {
@@ -973,6 +984,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             } catch (Exception ignore) {
             }
         }
+        return flag;
     }
 
 }

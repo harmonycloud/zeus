@@ -45,7 +45,7 @@ public interface IngressService {
      * @param cluster
      * @return
      */
-    Set<Integer>  getUsedPortSet(MiddlewareClusterDTO cluster);
+    Set<Integer>  getUsedPortSet(MiddlewareClusterDTO cluster, Boolean filter);
 
     /**
      * 创建中间件对外访问
@@ -134,6 +134,15 @@ public interface IngressService {
      * @return
      */
     List<IngressDTO> listAllIngress(String clusterId, String namespace, String keyword);
+
+    /**
+     * 查询所有中间件ingress(不同于查询所有ingress,此方法会过滤掉不是通过中间件平台创建的服务暴露信息)
+     * @param clusterId
+     * @param namespace
+     * @param keyword
+     * @return
+     */
+    List<IngressDTO> listAllMiddlewareIngress(String clusterId, String namespace, String keyword);
 
     /**
      * 获取一个未被占用的ingress端口

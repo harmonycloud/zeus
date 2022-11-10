@@ -4,7 +4,7 @@ image:
   repository: harbor.middleware.com/middleware
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: v1.7.8
+  tag: v1.7.9
 
 imagePullSecrets: []
 nameOverride: ""
@@ -38,3 +38,4 @@ tolerations: []
 affinity: {}
 
 crdGroup: "harmonycloud"
+

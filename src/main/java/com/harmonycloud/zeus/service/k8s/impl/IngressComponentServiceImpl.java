@@ -17,6 +17,7 @@ import com.harmonycloud.zeus.integration.cluster.ConfigMapWrapper;
 import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
 import com.harmonycloud.zeus.service.AbstractBaseService;
 import com.harmonycloud.zeus.service.ingress.BaseIngressService;
+import com.harmonycloud.zeus.service.ingress.api.TraefikIngressService;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.MathUtil;
@@ -53,9 +54,10 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
     private PodService podService;
     @Autowired
     private IngressService ingressService;
-
     @Autowired
     private ConfigMapWrapper configMapWrapper;
+    @Autowired
+    private TraefikIngressService traefikIngressService;
 
     @Override
     public void install(IngressComponentDto ingressComponentDto) {
@@ -86,15 +88,9 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
 
     @Override
     public void update(IngressComponentDto ingressComponentDto) {
-        QueryWrapper<BeanIngressComponents> wrapper = new QueryWrapper<BeanIngressComponents>().eq("id", ingressComponentDto.getId());
-        BeanIngressComponents beanIngressComponents = beanIngressComponentsMapper.selectOne(wrapper);
-        // 校验存在
-        if (beanIngressComponents == null) {
-            throw new BusinessException(ErrorMessage.INGRESS_CLASS_NOT_EXISTED);
-        }
-        // 更新数据库
-        BeanUtils.copyProperties(ingressComponentDto, beanIngressComponents);
-        beanIngressComponentsMapper.updateById(beanIngressComponents);
+        BaseIngressService service =
+                getOperator(BaseIngressService.class, BaseIngressService.class, ingressComponentDto.getType());
+        service.update(ingressComponentDto);
     }
 
     @Override
@@ -234,15 +230,14 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
     }
 
     @Override
-    public String portCheck(String clusterId, String startPort) {
+    public String portCheck(String clusterId, Integer startPort, Integer endPort) {
         List<Integer> conflictPortList = new ArrayList<>();
-        Set<Integer> usedPortSet = ingressService.getUsedPortSet(clusterService.findById(clusterId));
-        for (int i = 0; i < 100; i++) {
-            int port = Integer.parseInt(startPort) + i;
-            if (usedPortSet.contains(port)) {
-                conflictPortList.add(port);
+        Set<Integer> usedPortSet = ingressService.getUsedPortSet(clusterService.findById(clusterId), true);
+        usedPortSet.forEach(usedPort -> {
+            if (usedPort >= startPort && usedPort <= endPort){
+                conflictPortList.add(usedPort);
             }
-        }
+        });
         conflictPortList.sort(Comparator.comparing(Integer::intValue));
 
         return MathUtil.convert(conflictPortList);
@@ -254,8 +249,7 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
         JSONObject values = helmChartService.getInstalledValues(ingressComponents.getName(),
                 ingressComponents.getNamespace(), clusterService.findById(ingressComponents.getClusterId()));
         if (values != null) {
-            ingressComponentDto.setStartPort(values.getString("startPort"));
-            ingressComponentDto.setEndPort(values.getString("endPort"));
+            ingressComponentDto.setTraefikPortList(traefikIngressService.getTraefikPort(values));
         }
     }
 

@@ -9,6 +9,7 @@ import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
 import com.harmonycloud.caas.common.model.IngressComponentDto;
+import com.harmonycloud.caas.common.model.TraefikPort;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.tool.uuid.UUIDUtils;
@@ -278,7 +279,7 @@ public class IngressServiceImpl implements IngressService {
     }
 
     @Override
-    public Set<Integer> getUsedPortSet(MiddlewareClusterDTO cluster) {
+    public Set<Integer> getUsedPortSet(MiddlewareClusterDTO cluster, Boolean filter) {
         Set<Integer> portSet = new HashSet<>();
         // 查询NodePort端口
         List<io.fabric8.kubernetes.api.model.Service> svcList = serviceWrapper.list(cluster.getId(), null);
@@ -308,19 +309,21 @@ public class IngressServiceImpl implements IngressService {
             });
         }
         // 查询traefik 端口
-        List<IngressComponentDto> traefikComponentDtoList = ingressComponentService.list(cluster.getId(), IngressEnum.TRAEFIK.getName());
-        for (IngressComponentDto ingress : traefikComponentDtoList) {
-            JSONObject installedValues = helmChartService.getInstalledValues(ingress.getIngressClassName(), ingress.getNamespace(), clusterService.findById(ingress.getClusterId()));
-            if (installedValues == null) {
-                continue;
-            }
-            JSONArray additionalArguments = installedValues.getJSONArray("additionalArguments");
-            additionalArguments.forEach(arg -> {
-                String[] strs = arg.toString().split(":");
-                if (strs.length == 2) {
-                    portSet.add(Integer.parseInt(strs[1]));
+        if (filter){
+            List<IngressComponentDto> traefikComponentDtoList = ingressComponentService.list(cluster.getId(), IngressEnum.TRAEFIK.getName());
+            for (IngressComponentDto ingress : traefikComponentDtoList) {
+                JSONObject installedValues = helmChartService.getInstalledValues(ingress.getIngressClassName(), ingress.getNamespace(), clusterService.findById(ingress.getClusterId()));
+                if (installedValues == null) {
+                    continue;
                 }
-            });
+                JSONArray additionalArguments = installedValues.getJSONArray("additionalArguments");
+                additionalArguments.forEach(arg -> {
+                    String[] strs = arg.toString().split(":");
+                    if (strs.length == 2) {
+                        portSet.add(Integer.parseInt(strs[1]));
+                    }
+                });
+            }
         }
         return portSet;
     }
@@ -1500,8 +1503,13 @@ public class IngressServiceImpl implements IngressService {
         } else {
             address = null;
         }
+        // 过滤掉不属于中间件的ingressRouteTCP CR
+        List<IngressRouteTCPCR> items = ingressRouteTCPList.getItems().stream().filter(ingressRouteTCPCR
+                -> ingressRouteTCPCR.getMetadata().getLabels() != null
+                && ingressRouteTCPCR.getMetadata().getLabels().containsKey("middlewareType")).collect(Collectors.toList());
+
         String finalAddress = address;
-        ingressRouteTCPList.getItems().forEach(ingressRouteTCPCR -> {
+        items.forEach(ingressRouteTCPCR -> {
             List<String> entryPoints = ingressRouteTCPCR.getSpec().getEntryPoints();
             if (!CollectionUtils.isEmpty(entryPoints) && !CollectionUtils.isEmpty(ingressRouteTCPCR.getSpec().getRoutes()) && !CollectionUtils.isEmpty(ingressRouteTCPCR.getSpec().getRoutes().get(0).getServices())) {
                 String entryPoint = entryPoints.get(0);
@@ -1653,6 +1661,12 @@ public class IngressServiceImpl implements IngressService {
     }
 
     @Override
+    public List<IngressDTO> listAllMiddlewareIngress(String clusterId, String namespace, String keyword) {
+        return listAllIngress(clusterId, namespace, keyword).stream().
+                filter(ingressDTO -> !StringUtils.isEmpty(ingressDTO.getServicePurpose())).collect(Collectors.toList());
+    }
+
+    @Override
     public int getAvailablePort(String clusterId, String ingressClassName) {
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         //获取指定ingress
@@ -1687,20 +1701,17 @@ public class IngressServiceImpl implements IngressService {
     }
 
     private int getTraefikAvailableServicePort(MiddlewareClusterDTO cluster, IngressComponentDto ingressComponentDto) {
-        IngressComponentDto detail = ingressComponentService.detail(cluster.getId(), ingressComponentDto.getIngressClassName());
-        String startPortStr = detail.getStartPort();
-        String endPortStr = detail.getEndPort();
-        if (!MathUtil.isDigit(startPortStr) && !MathUtil.isDigit(endPortStr)) {
-            return 0;
-        }
-        int port = Integer.parseInt(startPortStr);
-        int endPort = Integer.parseInt(endPortStr);
+        // 获取已使用端口
         Set<Integer> traefikUsedPort = getTraefikUsedPort(cluster);
-        for (; port <= endPort; ) {
-            if (!traefikUsedPort.contains(port)) {
-                return port;
+        // 获取可配置端口范围
+        IngressComponentDto detail = ingressComponentService.detail(cluster.getId(), ingressComponentDto.getIngressClassName());
+        List<TraefikPort> traefikPortList = detail.getTraefikPortList();
+        for (TraefikPort traefikPort : traefikPortList){
+            for (int i = traefikPort.getStartPort(); i < traefikPort.getEndPort(); ++i){
+                if (!traefikUsedPort.contains(i)){
+                    return i;
+                }
             }
-            port++;
         }
         return 0;
     }

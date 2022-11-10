@@ -4,6 +4,8 @@ import static com.harmonycloud.caas.common.constants.NameConstant.*;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -13,6 +15,7 @@ import com.harmonycloud.caas.common.enums.Protocol;
 import com.harmonycloud.caas.common.model.AffinityDTO;
 import com.harmonycloud.caas.common.model.IngressComponentDto;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
+import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
 import com.harmonycloud.zeus.bean.BeanMysqlUser;
 import com.harmonycloud.zeus.service.k8s.*;
@@ -472,7 +475,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         mysqlCluster.getSpec().getClusterSwitch().setFinished(false).setSwitched(false).setMaster(slaveName);
         try {
             mysqlClusterWrapper.update(middleware.getClusterId(), middleware.getNamespace(), mysqlCluster);
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("集群id:{}，命名空间:{}，mysql集群:{}，手动切换异常", middleware.getClusterId(), middleware.getNamespace(),
                     middleware.getName(), e);
             throw new BusinessException(DictEnum.MYSQL_CLUSTER, middleware.getName(), ErrorMessage.SWITCH_FAILED);
@@ -598,19 +601,30 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     }
 
     @Override
-    public void replaceReadWriteProxyValues(ReadWriteProxy readWriteProxy, JSONObject values){
+    public void replaceReadWriteProxyValues(Middleware middleware, JSONObject values){
+
+        ReadWriteProxy readWriteProxy = middleware.getReadWriteProxy();
         JSONObject proxy = new JSONObject();;
         proxy.put("enable", readWriteProxy.getEnabled());
         proxy.put("podAntiAffinity", "soft");
-        proxy.put("replicaCount", 3);
+        // 获取proxy节点数
+        MysqlDTO mysqlDTO = middleware.getMysqlDTO();
+        int replicaCount = mysqlDTO.getReplicaCount();
+        proxy.put("replicaCount", replicaCount + 1);
 
         JSONObject requests = new JSONObject();
         JSONObject limits = new JSONObject();
 
-        requests.put(CPU, "500m");
-        requests.put(MEMORY, "1024Mi");
-        limits.put(CPU, "500m");
-        limits.put(MEMORY, "1024Mi");
+        MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
+        String cpu = calculateProxyResource(quota.getCpu());
+        String memory = calculateProxyResource(quota.getMemory().replace("Gi", ""));
+        if (Double.parseDouble(memory) < 0.256){
+            memory = String.valueOf(0.256);
+        }
+        requests.put(CPU, cpu);
+        requests.put(MEMORY, memory + "Gi");
+        limits.put(CPU, cpu);
+        limits.put(MEMORY, memory + "Gi");
 
         JSONObject resources = new JSONObject();
         resources.put("requests", requests);

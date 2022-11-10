@@ -49,6 +49,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.yaml.snakeyaml.Yaml;
@@ -77,6 +78,9 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public abstract class AbstractBaseOperator {
+
+    @Value("${active-active.label.key:topology.kubernetes.io/zone}")
+    private String zoneKey;
 
     /**
      * 此处的注入，实际上是由各个OperatorImpl子类（如MysqlOperatorImpl）进行注入了，如果直接初始化当前类，会发现值为空
@@ -766,14 +770,14 @@ public abstract class AbstractBaseOperator {
         }
         // 读写分离
         if (middleware.getReadWriteProxy() != null && middleware.getReadWriteProxy().getEnabled()){
-            replaceReadWriteProxyValues(middleware.getReadWriteProxy(), values);
+            replaceReadWriteProxyValues(middleware, values);
         }
     }
 
     /**
      * 处理读写分离
      */
-    protected void replaceReadWriteProxyValues(ReadWriteProxy readWriteProxy, JSONObject values){
+    protected void replaceReadWriteProxyValues(Middleware middleware, JSONObject values){
 
     }
 
@@ -1205,7 +1209,7 @@ public abstract class AbstractBaseOperator {
             middleware.setTolerations(tolerations);
         }
         if (!CollectionUtils.isEmpty(middleware.getNodeAffinity())) {
-            List<AffinityDTO> affinityDTOList = middleware.getNodeAffinity().stream().filter(item -> !item.getLabel().contains("zone!=zoneC")).collect(Collectors.toList());
+            List<AffinityDTO> affinityDTOList = middleware.getNodeAffinity().stream().filter(item -> !item.getLabel().contains(zoneKey + "!=zoneC")).collect(Collectors.toList());
             middleware.setNodeAffinity(affinityDTOList);
         }
     }
@@ -1224,10 +1228,10 @@ public abstract class AbstractBaseOperator {
      * @param activeActiveKey
      */
     public void setActiveActiveConfig(String activeActiveKey, JSONObject values) {
-        values.put("podAntiAffinityTopologKey", "zone");
+        values.put("podAntiAffinityTopologKey", zoneKey);
         values.put("podAntiAffinity", "soft");
         AffinityDTO affinityDTO = new AffinityDTO();
-        affinityDTO.setLabel("zone=zoneC");
+        affinityDTO.setLabel(zoneKey + "=zoneC");
         affinityDTO.setRequired(true);
         JSONObject nodeAffinity = K8sConvert.convertNodeAffinity2Json(affinityDTO, "NotIn");
         if (nodeAffinity != null) {
@@ -1238,6 +1242,11 @@ public abstract class AbstractBaseOperator {
                 values.put("nodeAffinity", nodeAffinity);
             }
         }
+    }
+
+    public String calculateProxyResource(String num){
+        BigDecimal bd = new BigDecimal(num).divide(new BigDecimal("4"));
+        return bd.setScale(2, RoundingMode.UP).toString();
     }
 
 }

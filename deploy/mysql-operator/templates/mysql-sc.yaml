@@ -1,0 +1,12 @@
+{{- if  .Values.storageClassName }}
+{{- if contains "," .Values.storageClassName  }}
+apiVersion: v1
+data:
+  storageclass.list: {{ .Values.storageClassName }}
+kind: ConfigMap
+metadata:
+  annotations:
+    statefulsetController: harmonycloud
+  name: {{ include "mysql.fullname" . }}-sc
+{{- end }}
+{{- end }}
