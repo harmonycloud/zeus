@@ -178,10 +178,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         convertCommonByHelmChart(middleware, values);
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
         convertRegistry(middleware, cluster);
-        // 双活服务过滤掉
-        if(namespaceService.checkAvailableDomain(middleware.getClusterId(), middleware.getNamespace())){
-            super.filterActiveActiveToleration(middleware);
-        }
         // 处理mysql的特有参数
         if (values != null) {
             convertResourcesByHelmChart(middleware, middleware.getType(), values.getJSONObject(RESOURCES));

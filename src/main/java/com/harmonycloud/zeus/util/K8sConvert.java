@@ -225,7 +225,7 @@ public class K8sConvert {
                     for (NodeSelectorRequirement nsq : nsqList) {
                         json.put("required", false);
                         json.put("anti", nsq.getOperator().contains("Not"));
-                        json.put("label", nsq.getKey() + convertOperator(nsq.getOperator()) + (CollectionUtils.isEmpty(nsq.getValues()) ? "" : nsq.getValues().get(0)));
+                        json.put("label", nsq.getKey() + "=" + (CollectionUtils.isEmpty(nsq.getValues()) ? "" : nsq.getValues().get(0)));
                         list.add(JSONObject.toJavaObject(json, tClass));
                     }
                 }
@@ -241,7 +241,8 @@ public class K8sConvert {
                         List<NodeSelectorRequirement> nsr = nst.getMatchExpressions();
                         for (NodeSelectorRequirement ns : nsr) {
                             json.put("required", true);
-                            json.put("label", ns.getKey() + convertOperator(ns.getOperator()) + ns.getValues().get(0));
+                            json.put("anti", ns.getOperator().contains("Not"));
+                            json.put("label", ns.getKey() + "=" + ns.getValues().get(0));
                             list.add(JSONObject.toJavaObject(json, tClass));
                         }
                     }
