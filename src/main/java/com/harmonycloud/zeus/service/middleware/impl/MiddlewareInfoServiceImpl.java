@@ -428,7 +428,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         List<BeanMiddlewareCluster> clusterList = middlewareClusterService.listClustersByClusterId(null);
         List<Middleware> middlewareList = new ArrayList<>();
         clusterList.forEach(cluster -> {
-            List<Namespace> listRegisteredNamespace = clusterService.listRegisteredNamespace(cluster.getClusterId());
+            List<Namespace> listRegisteredNamespace = clusterService.listRegisteredNamespace(cluster.getClusterId(), null);
             List<Middleware> middlewares;
             try{
                 middlewares = middlewareService.simpleList(cluster.getClusterId(), null, null, null);

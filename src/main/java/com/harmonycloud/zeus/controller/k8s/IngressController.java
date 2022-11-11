@@ -41,11 +41,12 @@ public class IngressController {
     @Authority(power = 1)
     public BaseResult<List<IngressDTO>> list(@PathVariable("clusterId") String clusterId,
                                              @PathVariable(value = "namespace") String namespace,
-                                             @RequestParam(value = "keyword", required = false) String keyword) {
+                                             @RequestParam(value = "keyword", required = false) String keyword,
+                                             @RequestParam(value = "projectId", required = false) String projectId) {
         if (namespace.equals(ASTERISK)){
             namespace = null;
         }
-        return BaseResult.ok(ingressService.listAllMiddlewareIngress(clusterId, namespace, keyword));
+        return BaseResult.ok(ingressService.listAllMiddlewareIngress(clusterId, namespace, keyword, projectId));
     }
 
     @ApiOperation(value = "创建中间件对外访问", notes = "创建中间件对外访问")

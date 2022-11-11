@@ -977,11 +977,11 @@ public class ClusterServiceImpl implements ClusterService {
     }
 
     @Override
-    public List<Namespace> listRegisteredNamespace(String clusterId) {
+    public List<Namespace> listRegisteredNamespace(String clusterId, String projectId) {
         if (StringUtils.isEmpty(clusterId)) {
             return Collections.emptyList();
         }
-        List<Namespace> namespaces = namespaceService.list(clusterId, false, false, false, null, null);
+        List<Namespace> namespaces = namespaceService.list(clusterId, false, false, false, null, projectId);
         return namespaces.stream().filter(namespace -> namespace.isRegistered()).collect(Collectors.toList());
     }
 
