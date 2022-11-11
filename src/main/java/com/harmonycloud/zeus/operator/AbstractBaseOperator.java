@@ -464,7 +464,7 @@ public abstract class AbstractBaseOperator {
                 }
             }
             // toleration
-            if (values.getString("tolerationAry") != null) {
+            if (values.containsKey("tolerationAry")) {
                 String tolerationAry = values.getString("tolerationAry");
                 middleware.setTolerations(new ArrayList<>(Arrays.asList(tolerationAry.split(","))));
             }
@@ -1175,10 +1175,13 @@ public abstract class AbstractBaseOperator {
      * @param values
      */
     public void setActiveActiveToleration(Middleware middleware, JSONObject values) {
-        JSONArray jsonArray = K8sConvert.convertToleration2Json(middleware.getTolerations());
-        if (values.getJSONObject("proxy") != null && MiddlewareTypeEnum.MYSQL.getType().equals(middleware.getType())) {
-            JSONObject proxy = values.getJSONObject("proxy");
-            proxy.put("tolerations", jsonArray);
+        if (!CollectionUtils.isEmpty(middleware.getTolerations())) {
+            JSONArray jsonArray = K8sConvert.convertToleration2Json(middleware.getTolerations());
+            if (values.getJSONObject("proxy") != null
+                && MiddlewareTypeEnum.MYSQL.getType().equals(middleware.getType())) {
+                JSONObject proxy = values.getJSONObject("proxy");
+                proxy.put("tolerations", jsonArray);
+            }
         }
     }
 

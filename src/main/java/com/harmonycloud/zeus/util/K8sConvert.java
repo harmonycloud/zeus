@@ -82,7 +82,7 @@ public class K8sConvert {
             String[] labelArr = affinityDTO.getLabel().split("=");
             NodeSelectorTerm nst;
             if (labelArr.length == 2) {
-                String operator = affinityDTO.getAnti() ? "notIn": "In";
+                String operator = affinityDTO.getAnti() ? "NotIn": "In";
                 nst = convertNodeSelectorTerm(labelArr[0], labelArr[1], operator);
             } else if (labelArr.length == 1) {
                 String operator = affinityDTO.getAnti() ? "DoesNotExist": "Exists";
@@ -224,7 +224,7 @@ public class K8sConvert {
                 if (nsqList != null && nsqList.size() > 0) {
                     for (NodeSelectorRequirement nsq : nsqList) {
                         json.put("required", false);
-                        nsq.getOperator();
+                        json.put("anti", nsq.getOperator().contains("Not"));
                         json.put("label", nsq.getKey() + convertOperator(nsq.getOperator()) + (CollectionUtils.isEmpty(nsq.getValues()) ? "" : nsq.getValues().get(0)));
                         list.add(JSONObject.toJavaObject(json, tClass));
                     }
@@ -302,12 +302,14 @@ public class K8sConvert {
 
     public static String convertOperator(String operator) {
         switch (operator) {
-            case "Equals":
+            case "Exists":
                 return "=";
             case "NotIn":
                 return "!=";
             case "In":
                 return "=";
+            case "DoesNotExist":
+                return "!=";
             default:
                 return "";
         }
