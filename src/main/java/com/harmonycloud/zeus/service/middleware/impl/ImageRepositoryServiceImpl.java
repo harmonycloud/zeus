@@ -112,7 +112,8 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         beanImageRepositoryMapper.updateById(beanImageRepository);
         // 更新集群默认镜像仓库
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        if (cluster.getRegistry() != null && cluster.getRegistry().getId().equals(imageRepositoryDTO.getId())) {
+        if (cluster.getRegistry() != null && cluster.getRegistry().getId() != null
+            && cluster.getRegistry().getId().equals(imageRepositoryDTO.getId())) {
             Registry registry = cluster.getRegistry();
             BeanUtils.copyProperties(imageRepositoryDTO, registry);
             registry.setUser(imageRepositoryDTO.getUsername()).setAddress(imageRepositoryDTO.getHostAddress())
