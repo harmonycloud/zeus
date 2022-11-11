@@ -316,11 +316,10 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
             if (!res.getBoolean("success")) {
                 throw new BusinessException(ErrorMessage.ALTER_TABLE_COLUMN_FAILED, res.getString("message"));
             }
+        }
+        if (!columnDtoList.equals(oldColumns) && columnDtoList.size() > 1) {
+            tableDto.setColumns(columnDtoList);
             mysqlClient.reorderTableColumns(getPath(middlewareName, namespace), port, database, table, tableDto);
-        } else {
-            if (!columnDtoList.equals(oldColumns)) {
-                mysqlClient.reorderTableColumns(getPath(middlewareName, namespace), port, database, table, tableDto);
-            }
         }
     }
 
