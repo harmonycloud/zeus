@@ -185,7 +185,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     public void dropTable(String clusterId, String namespace, String middlewareName, String database, String table) {
         JSONObject res = mysqlClient.dropTable(getPath(middlewareName,namespace), port, database, table);
         if (!res.getBoolean("success")) {
-            throw new BusinessException(ErrorMessage.CREATE_DATABASE_FAILED, res.getString("message"));
+            throw new BusinessException(ErrorMessage.DELETE_TABLE_FAILED, res.getString("message"));
         }
     }
 
@@ -232,7 +232,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public int getTableRecord(String clusterId, String namespace, String middlewareName, String database, String table) {
+    public int getTableRecordCount(String clusterId, String namespace, String middlewareName, String database, String table) {
         JSONArray dataAry = mysqlClient.getTableRecord(getPath(middlewareName,namespace), port, database, table).getJSONArray("dataAry");
         if (CollectionUtils.isEmpty(dataAry)) {
             throw new BusinessException(ErrorMessage.FAILED_TO_OBTAIN_TABLE_RECORD);
@@ -310,12 +310,16 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         List<String> oldPrimaryKeys = extractPrimaryKey(oldColumns);
         List<String> newPrimaryKeys = extractPrimaryKey(columnDtoList);
         tableDto.setPrimaryKeyAction(getPrimaryKeyActionCode(oldPrimaryKeys, newPrimaryKeys));
-
         if (!CollectionUtils.isEmpty(newColumnList)) {
             tableDto.setColumns(newColumnList);
             JSONObject res = mysqlClient.saveTableColumns(getPath(middlewareName, namespace), port, database, table, tableDto);
             if (!res.getBoolean("success")) {
                 throw new BusinessException(ErrorMessage.ALTER_TABLE_COLUMN_FAILED, res.getString("message"));
+            }
+            mysqlClient.reorderTableColumns(getPath(middlewareName, namespace), port, database, table, tableDto);
+        } else {
+            if (!columnDtoList.equals(oldColumns)) {
+                mysqlClient.reorderTableColumns(getPath(middlewareName, namespace), port, database, table, tableDto);
             }
         }
     }

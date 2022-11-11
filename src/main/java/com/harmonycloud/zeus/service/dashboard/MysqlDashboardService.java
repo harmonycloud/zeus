@@ -96,7 +96,7 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
     /**
      * 获取表记录数
      */
-    int getTableRecord(String clusterId, String namespace, String middlewareName, String database, String table);
+    int getTableRecordCount(String clusterId, String namespace, String middlewareName, String database, String table);
 
     /**
      * 查询指定数据表所有列

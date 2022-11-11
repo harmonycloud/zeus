@@ -207,7 +207,7 @@ public class MysqlDashboardController {
                                                @PathVariable("middlewareName") String middlewareName,
                                                @PathVariable("database") String database,
                                                @PathVariable("table") String table) {
-        return BaseResult.ok(mysqlDashboardService.getTableRecord(clusterId, namespace, middlewareName, database, table));
+        return BaseResult.ok(mysqlDashboardService.getTableRecordCount(clusterId, namespace, middlewareName, database, table));
     }
 
     @ApiOperation(value = "创建table", notes = "创建table")

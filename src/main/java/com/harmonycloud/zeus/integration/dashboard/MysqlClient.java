@@ -167,6 +167,16 @@ public interface MysqlClient {
                                 @Var("table") String table,
                                 @JSONBody TableDto tableDto);
 
+    /**
+     * 调整列顺序
+     */
+    @Put(url = "/mysql/{host}/port/{port}/databases/{database}/tables/{table}/columns/reorder")
+    JSONObject reorderTableColumns(@Var("host") String host,
+                                   @Var("port") String port,
+                                   @Var("database") String database,
+                                   @Var("table") String table,
+                                   @JSONBody TableDto tableDto);
+
     // index
     /**
      * 查询数据表所有索引
