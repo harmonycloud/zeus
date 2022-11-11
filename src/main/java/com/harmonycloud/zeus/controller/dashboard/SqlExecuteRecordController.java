@@ -54,8 +54,8 @@ public class SqlExecuteRecordController {
             @ApiImplicitParam(name = "pageNum", value = "页码", paramType = "query", dataTypeClass = Integer.class),
             @ApiImplicitParam(name = "size", value = "每页数量", paramType = "query", dataTypeClass = Integer.class),
     })
-    @GetMapping("/databases/{database}/cmd/history")
-    public BaseResult<List<BeanSqlExecuteRecord>> listExecuteSql(@PathVariable("clusterId") String clusterId,
+    @GetMapping("/databases/{database}/history")
+    public BaseResult<PageInfo<BeanSqlExecuteRecord>> listExecuteSql(@PathVariable("clusterId") String clusterId,
                                                                  @PathVariable("namespace") String namespace,
                                                                  @PathVariable("middlewareName") String middlewareName,
                                                                  @PathVariable("database") String database,
