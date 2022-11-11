@@ -167,7 +167,11 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void createTable(String clusterId, String namespace, String middlewareName, String database, TableDto tableDto) {
-        JSONObject res = mysqlClient.createTable(getPath(middlewareName,namespace), port, database, tableDto);
+        if (CollectionUtils.isEmpty(tableDto.getColumns())) {
+            throw new BusinessException(ErrorMessage.INCOMPLETE_TABLE_COLUMN);
+        }
+        correctColumn(tableDto.getColumns());
+        JSONObject res = mysqlClient.createTable(getPath(middlewareName, namespace), port, database, tableDto);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.CREATE_TABLE_FAILED, res.getString("message"));
         }
@@ -665,9 +669,9 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     public void exportTableExcel(String clusterId, String namespace, String middlewareName, String database, String table, HttpServletResponse response) {
         try {
             List<ColumnDto> columnDtos = listTableColumns(clusterId, namespace, middlewareName, database, table);
-            String excelFilePath = ExcelUtil.createTableExcel(path, table, columnDtos);
-            String fileRealName = table + ".xlsx";
-            FileDownloadUtil.downloadFile(response, excelFilePath, fileRealName);
+            ExcelUtil.createTableExcel(path, table, columnDtos);
+            String fileName = table + ".xlsx";
+            FileDownloadUtil.downloadFile(response, path, fileName);
         } catch (Exception e) {
             log.error("导出表结构Excel文件失败", e);
             throw new BusinessException(ErrorMessage.FAILED_TO_EXPORT_TABLE_EXCEL);
@@ -804,6 +808,29 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
             if (columnDto.isPrimary()) {
                 columnDto.setNullable(false);
             }
+            // 设置列默认值
+            if (columnDto.getSize() == null || columnDto.getSize() == 0) {
+                setDefaultDatatypeOption(columnDto);
+            }
+        }
+    }
+
+    /**
+     * 如果字段没有设置数据类型长度，则设置数据类型默认长度
+     * 一些数据类型必须设置长度，比如varchar，不设置长度会报错
+     * @param columnDto
+     */
+    private void setDefaultDatatypeOption(ColumnDto columnDto){
+        if( !(columnDto.getSize() == null || columnDto.getSize() == 0) ){
+            return;
+        }
+        switch (columnDto.getDataType()){
+            case "int":
+                columnDto.setSize(11);
+                break;
+            case "varchar":
+                columnDto.setSize(45);
+                break;
         }
     }
 
