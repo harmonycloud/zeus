@@ -800,7 +800,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
      * @param columnDtoList
      */
     private void correctColumn(List<ColumnDto> columnDtoList) {
-        if (!CollectionUtils.isEmpty(columnDtoList)) {
+        if (CollectionUtils.isEmpty(columnDtoList)) {
             return;
         }
         for (ColumnDto columnDto : columnDtoList) {
@@ -821,9 +821,6 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
      * @param columnDto
      */
     private void setDefaultDatatypeOption(ColumnDto columnDto){
-        if( !(columnDto.getSize() == null || columnDto.getSize() == 0) ){
-            return;
-        }
         switch (columnDto.getDataType()){
             case "int":
                 columnDto.setSize(11);
