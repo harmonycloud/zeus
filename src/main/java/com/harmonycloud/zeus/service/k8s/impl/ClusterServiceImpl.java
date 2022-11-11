@@ -441,10 +441,6 @@ public class ClusterServiceImpl implements ClusterService {
         CLUSTER_MAP.remove(clusterId);
         // 关联数据库信息删除
         bindResourceDelete(cluster);
-        // 移除镜像仓库信息
-        imageRepositoryService.removeImageRepository(clusterId);
-        // 删除可用区初始化状态信息
-        activeAreaService.delete(clusterId);
     }
 
     public void bindResourceDelete(MiddlewareClusterDTO cluster) {
@@ -452,6 +448,12 @@ public class ClusterServiceImpl implements ClusterService {
         clusterComponentService.delete(cluster.getId());
         // 删除ingress信息
         ingressComponentService.delete(cluster.getId());
+        // 移除镜像仓库信息
+        imageRepositoryService.removeImageRepository(cluster.getId());
+        // 删除可用区初始化状态信息
+        activeAreaService.delete(cluster.getId());
+        // 移除项目下分区绑定关系
+        projectService.unBindNamespace(null, cluster.getId(), null);
     }
 
     private void checkClusterExistent(MiddlewareClusterDTO cluster, boolean expectExisting) {
