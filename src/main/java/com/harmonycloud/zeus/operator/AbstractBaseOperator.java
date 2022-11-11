@@ -1174,12 +1174,27 @@ public abstract class AbstractBaseOperator {
      * @param middleware
      * @param values
      */
-    public void setActiveActiveToleration(Middleware middleware, JSONObject values) {
+    public void setActiveActiveToleration(Middleware middleware, JSONObject values){
+        String activeActiveToleration = "harm.cn/type=active-active:NoSchedule";
+        if (!CollectionUtils.isEmpty(middleware.getTolerations())) {
+            if (!middleware.getTolerations().contains(activeActiveToleration)) {
+                middleware.getTolerations().add(activeActiveToleration);
+            }
+        } else {
+            middleware.setTolerations(new ArrayList<>());
+            middleware.getTolerations().add(activeActiveToleration);
+        }
         JSONArray jsonArray = K8sConvert.convertToleration2Json(middleware.getTolerations());
+        values.put("tolerations", jsonArray);
         if (values.getJSONObject("proxy") != null && MiddlewareTypeEnum.MYSQL.getType().equals(middleware.getType())) {
             JSONObject proxy = values.getJSONObject("proxy");
             proxy.put("tolerations", jsonArray);
         }
+        StringBuilder sbf = new StringBuilder();
+        for (String toleration : middleware.getTolerations()) {
+            sbf.append(toleration).append(",");
+        }
+        values.put("tolerationAry", sbf.substring(0, sbf.length()));
     }
 
     /**
@@ -1215,6 +1230,18 @@ public abstract class AbstractBaseOperator {
     public void setActiveActiveConfig(String activeActiveKey, JSONObject values) {
         values.put("podAntiAffinityTopologKey", zoneKey);
         values.put("podAntiAffinity", "soft");
+        AffinityDTO affinityDTO = new AffinityDTO();
+        affinityDTO.setLabel(zoneKey + "=zoneC");
+        affinityDTO.setRequired(true);
+        JSONObject nodeAffinity = K8sConvert.convertNodeAffinity2Json(affinityDTO, "NotIn");
+        if (nodeAffinity != null) {
+            if (!StringUtils.isEmpty(activeActiveKey) && values.containsKey(activeActiveKey)) {
+                JSONObject activeKey = values.getJSONObject(activeActiveKey);
+                activeKey.put("nodeAffinity", nodeAffinity);
+            } else {
+                values.put("nodeAffinity", nodeAffinity);
+            }
+        }
     }
 
     public String calculateProxyResource(String num){

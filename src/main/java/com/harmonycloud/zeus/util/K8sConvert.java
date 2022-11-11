@@ -69,24 +69,21 @@ public class K8sConvert {
 
     /**
      * 将labels转为NodeAffinity
-     * @param dtoLis
+     * @param labels
      * @return
      */
-    public static NodeAffinity convertNodeAffinity(List<AffinityDTO> dtoLis, Boolean required) {
+    public static NodeAffinity convertNodeAffinity(List<String> labels, Boolean required) {
         NodeAffinity nf = new NodeAffinity();
         List<PreferredSchedulingTerm> pstList = new ArrayList<>(1);
         List<NodeSelectorTerm> nss = new ArrayList<>(1);
 
-        for (int i = 0; i < dtoLis.size(); i++) {
-            AffinityDTO affinityDTO = dtoLis.get(i);
-            String[] labelArr = affinityDTO.getLabel().split("=");
+        for (int i = 0; i < labels.size(); i++) {
+            String[] labelArr = labels.get(i).split("=");
             NodeSelectorTerm nst;
             if (labelArr.length == 2) {
-                String operator = affinityDTO.getAnti() ? "notIn": "In";
-                nst = convertNodeSelectorTerm(labelArr[0], labelArr[1], operator);
+                nst = convertNodeSelectorTerm(labelArr[0], labelArr[1]);
             } else if (labelArr.length == 1) {
-                String operator = affinityDTO.getAnti() ? "DoesNotExist": "Exists";
-                nst = convertNodeSelectorTerm(labelArr[0], null, operator);
+                nst = convertNodeSelectorTerm(labelArr[0]);
             } else {
                 continue;
             }
@@ -97,7 +94,7 @@ public class K8sConvert {
                 PreferredSchedulingTerm p = new PreferredSchedulingTerm();
                 p.setPreference(nst);
                 // 权重
-                p.setWeight(dtoLis.size() - i);
+                p.setWeight(labels.size() - i);
                 pstList.add(p);
             }
         }
@@ -142,9 +139,7 @@ public class K8sConvert {
         NodeSelectorRequirement nsr = new NodeSelectorRequirement();
         nsr.setKey(key);
         nsr.setOperator(operator);
-        if (StringUtils.isNotEmpty(value)){
-            nsr.setValues(Collections.singletonList(value));
-        }
+        nsr.setValues(Collections.singletonList(value));
         nsrList.add(nsr);
 
         NodeSelectorTerm nst = new NodeSelectorTerm();
@@ -170,9 +165,9 @@ public class K8sConvert {
         }
         NodeAffinity nodeAffinity;
         if (dtoLis.get(0) != null && dtoLis.get(0).isRequired()) {
-            nodeAffinity = convertNodeAffinity(dtoLis, true);
+            nodeAffinity = convertNodeAffinity(dtoLis.stream().map(AffinityDTO::getLabel).collect(Collectors.toList()), true);
         } else {
-            nodeAffinity = convertNodeAffinity(dtoLis, false);
+            nodeAffinity = convertNodeAffinity(dtoLis.stream().map(AffinityDTO::getLabel).collect(Collectors.toList()), false);
         }
         return convertNodeAffinity2Json(nodeAffinity);
     }
