@@ -636,7 +636,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public byte[] exportTableSql(String clusterId, String namespace, String middlewareName, String database, String table, HttpServletRequest request, HttpServletResponse response) {
+    public void exportTableSql(String clusterId, String namespace, String middlewareName, String database, String table, HttpServletResponse response) {
         try {
             JSONArray dataAry = mysqlClient.showTableScript(getPath(middlewareName, namespace), port, database, table).getJSONArray("dataAry");
             if (CollectionUtils.isEmpty(dataAry)) {
@@ -644,11 +644,8 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
             }
             JSONObject obj = dataAry.getJSONObject(0);
             String sql = obj.getString("Create Table");
-
             String fileRealName = table + ".sql";
-            byte[] sqlBytes = sql.getBytes(StandardCharsets.UTF_8);
-            return sqlBytes;
-//            FileDownloadUtil.downloadFile(request, response, fileRealName, sqlBytes);
+            FileDownloadUtil.downloadFile(response, fileRealName, sql.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             throw new BusinessException(ErrorMessage.FAILED_TO_EXPORT_TABLE_SQL);
         }
@@ -665,12 +662,12 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public void exportTableExcel(String clusterId, String namespace, String middlewareName, String database, String table, HttpServletRequest request, HttpServletResponse response) {
+    public void exportTableExcel(String clusterId, String namespace, String middlewareName, String database, String table, HttpServletResponse response) {
         try {
             List<ColumnDto> columnDtos = listTableColumns(clusterId, namespace, middlewareName, database, table);
             String excelFilePath = ExcelUtil.createTableExcel(path, table, columnDtos);
             String fileRealName = table + ".xlsx";
-            FileDownloadUtil.downloadFile(request, response, fileRealName, excelFilePath);
+            FileDownloadUtil.downloadFile(response, excelFilePath, fileRealName);
         } catch (Exception e) {
             log.error("导出表结构Excel文件失败", e);
             throw new BusinessException(ErrorMessage.FAILED_TO_EXPORT_TABLE_EXCEL);

@@ -44,6 +44,19 @@ public class FileDownloadUtil {
         }
     }
 
+    public static void downloadFile(HttpServletResponse response, String fileName, byte[] bytes) throws IOException {
+        response.setContentType("application/octet-stream");
+        response.setHeader("content-type", "application/octet-stream");
+        response.setHeader("Content-Length", String.valueOf(bytes.length));
+        response.setHeader("Content-Disposition", "attachment;fileName=" + URLEncoder.encode(fileName, "utf8"));
+        //输出流
+        try (OutputStream os = response.getOutputStream()) {
+            os.write(bytes);
+        } catch (Exception e) {
+            log.error("文件{} 下载失败", fileName);
+        }
+    }
+
     /**
      * 下载文件
      * @param request

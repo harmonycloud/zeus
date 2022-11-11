@@ -575,15 +575,14 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "table", value = "表名称", paramType = "path", dataTypeClass = String.class),
     })
-    @GetMapping(value = "/databases/{database}/tables/{table}/scriptFile", produces = "application/octet-stream")
-    public byte[] exportTableSql(@PathVariable("clusterId") String clusterId,
-                                 @PathVariable("namespace") String namespace,
-                                 @PathVariable("middlewareName") String middlewareName,
-                                 @PathVariable("database") String database,
-                                 @PathVariable("table") String table,
-                                 HttpServletRequest request,
-                                 HttpServletResponse response) {
-        return mysqlDashboardService.exportTableSql(clusterId, namespace, middlewareName, database, table, request, response);
+    @PostMapping(value = "/databases/{database}/tables/{table}/scriptFile")
+    public void exportTableSql(@PathVariable("clusterId") String clusterId,
+                               @PathVariable("namespace") String namespace,
+                               @PathVariable("middlewareName") String middlewareName,
+                               @PathVariable("database") String database,
+                               @PathVariable("table") String table,
+                               HttpServletResponse response) {
+        mysqlDashboardService.exportTableSql(clusterId, namespace, middlewareName, database, table, response);
     }
 
     @ApiOperation(value = "导出表结构Excel", notes = "导出表结构Excel")
@@ -594,15 +593,14 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "table", value = "表名称", paramType = "path", dataTypeClass = String.class),
     })
-    @GetMapping("/databases/{database}/tables/{table}/excelFile")
+    @PostMapping("/databases/{database}/tables/{table}/excelFile")
     public void exportTableExcel(@PathVariable("clusterId") String clusterId,
                                  @PathVariable("namespace") String namespace,
                                  @PathVariable("middlewareName") String middlewareName,
                                  @PathVariable("database") String database,
                                  @PathVariable("table") String table,
-                                 HttpServletRequest request,
                                  HttpServletResponse response) {
-        mysqlDashboardService.exportTableExcel(clusterId, namespace, middlewareName, database, table, request, response);
+        mysqlDashboardService.exportTableExcel(clusterId, namespace, middlewareName, database, table, response);
     }
 
     @ApiOperation(value = "导出库sql", notes = "导出库sql")
