@@ -39,6 +39,8 @@ spec:
         - mountPath: /etc/adapter
           name: config
           readOnly: false
+      tolerations:
+      - operator: Exists
       serviceAccountName: prometheus-adapter
       dnsPolicy: ClusterFirst
       hostNetwork: false
@@ -50,39 +52,3 @@ spec:
       - configMap:
           name: adapter-config
         name: config
-      affinity:
-        {{- if eq .Values.podAntiAffinity "hard"}}
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: name
-                    operator: In
-                    values:
-                      - prometheus-adapter
-              topologyKey: {{ .Values.podAntiAffinityTopologKey }}
-        {{- else if eq .Values.podAntiAffinity "soft"}}
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                topologyKey: {{ .Values.podAntiAffinityTopologKey }}
-                labelSelector:
-                  matchExpressions:
-                    - key: name
-                      operator: In
-                      values:
-                        - prometheus-adapter
-        {{- end}}
-        {{- with .Values.nodeAffinity }}
-        nodeAffinity:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}

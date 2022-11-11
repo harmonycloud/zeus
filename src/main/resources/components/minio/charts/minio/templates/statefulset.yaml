@@ -74,20 +74,12 @@ spec:
                   values:
                   - {{ include "minio.fullname" . }}
         {{- end}}
-        {{- with .Values.nodeAffinity }}
-        nodeAffinity:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
       {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
@@ -191,15 +183,6 @@ spec:
     metadata:
       name: {{ include "minio.fullname" . }}-setup
     spec:
-      affinity:
-        {{- with .Values.nodeAffinity }}
-        nodeAffinity:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       restartPolicy: OnFailure
       volumes:
       - name: config

@@ -21,6 +21,16 @@ spec:
       labels:
         app: zeus
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - zeus
+            topologyKey: kubernetes.io/hostname
       containers:
       - env:
         - name: JAVA_OPTS
@@ -66,42 +76,10 @@ spec:
         - mountPath: /var/run
           name: docker
       dnsPolicy: ClusterFirst
-      {{- with .Values.nodeSelector }}
+      {{- with .Values.global.zeus.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      affinity:
-        {{- if eq .Values.podAntiAffinity "hard"}}
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: app
-                    operator: In
-                    values:
-                      - zeus
-              topologyKey: {{ .Values.podAntiAffinityTopologKey }}
-        {{- else if eq .Values.podAntiAffinity "soft"}}
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                topologyKey: {{ .Values.podAntiAffinityTopologKey }}
-                labelSelector:
-                  matchExpressions:
-                    - key: app
-                      operator: In
-                      values:
-                        - zeus
-        {{- end}}
-        {{- with .Values.nodeAffinity }}
-        nodeAffinity:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
       restartPolicy: Always
       schedulerName: default-scheduler
       securityContext: {}

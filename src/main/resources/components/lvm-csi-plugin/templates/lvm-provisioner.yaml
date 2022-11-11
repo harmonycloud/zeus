@@ -17,13 +17,11 @@ spec:
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-            - preference:
-                matchExpressions:
-                  - key: system
-                    operator: In
-                    values:
-                      - "true"
-              weight: 100
+          - weight: 1
+            preference:
+              matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: Exists
       priorityClassName: system-node-critical
       serviceAccount: {{ include "lvm.fullname" . }}
       hostNetwork: true

@@ -1,5 +1,3 @@
-podAntiAffinity: "hard"
-podAntiAffinityTopologKey: "zone"
 image:
   name: 10.10.101.22:8443/middleware/traefik
   # defaults to appVersion

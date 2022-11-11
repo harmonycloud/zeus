@@ -47,42 +47,10 @@ spec:
           subPath: nginx.conf
         - mountPath: /etc/ssl
           name: middleware-ui-tls-volume
-      {{- with .Values.nodeSelector }}
+      {{- with .Values.global.zeus_ui.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      affinity:
-        {{- if eq .Values.podAntiAffinity "hard"}}
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: app
-                    operator: In
-                    values:
-                      - zeus-ui
-              topologyKey: {{ .Values.podAntiAffinityTopologKey }}
-        {{- else if eq .Values.podAntiAffinity "soft"}}
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                topologyKey: {{ .Values.podAntiAffinityTopologKey }}
-                labelSelector:
-                  matchExpressions:
-                    - key: app
-                      operator: In
-                      values:
-                        - zeus-ui
-        {{- end}}
-        {{- with .Values.nodeAffinity }}
-        nodeAffinity:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler

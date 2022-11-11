@@ -58,6 +58,3 @@ volumeSnapshotClass:
   backupPassword: MTIzNDU2Cg==
   bucket: restic-bucket
   url: http://10.1.30.70:31909
-
-imagePullSecrets:
-  - name: registrysecret

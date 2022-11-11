@@ -53,32 +53,3 @@ spec:
   nodeSelector:
     {{- toYaml . | nindent 8 }}
   {{- end }}
-  affinity:
-    {{- if eq .Values.podAntiAffinity "hard"}}
-    podAntiAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        - labelSelector:
-            matchExpressions:
-              - key: prometheus
-                operator: In
-                values:
-                  - k8s
-          topologyKey: {{ .Values.podAntiAffinityTopologKey }}
-    {{- else if eq .Values.podAntiAffinity "soft"}}
-    podAntiAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 100
-          podAffinityTerm:
-            topologyKey: {{ .Values.podAntiAffinityTopologKey }}
-            labelSelector:
-              matchExpressions:
-                - key: prometheus
-                  operator: In
-                  values:
-                    - k8s
-    {{- end}}
-    {{- with .Values.nodeAffinity }}
-    nodeAffinity:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
-

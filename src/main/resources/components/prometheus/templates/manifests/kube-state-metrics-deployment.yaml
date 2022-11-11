@@ -15,6 +15,8 @@ spec:
       labels:
         app: kube-state-metrics
     spec:
+      tolerations:
+        - operator: Exists
       containers:
       - args:
         - --logtostderr
@@ -70,39 +72,3 @@ spec:
         runAsNonRoot: true
         runAsUser: 65534
       serviceAccountName: kube-state-metrics
-      affinity:
-        {{- if eq .Values.podAntiAffinity "hard"}}
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: app
-                    operator: In
-                    values:
-                      - kube-state-metrics
-              topologyKey: {{ .Values.podAntiAffinityTopologKey }}
-        {{- else if eq .Values.podAntiAffinity "soft"}}
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                topologyKey: {{ .Values.podAntiAffinityTopologKey }}
-                labelSelector:
-                  matchExpressions:
-                    - key: app
-                      operator: In
-                      values:
-                        - kube-state-metrics
-        {{- end}}
-        {{- with .Values.nodeAffinity }}
-        nodeAffinity:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
