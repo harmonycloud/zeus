@@ -100,8 +100,13 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
 
     public void createOpenService(Middleware middleware) {
         boolean success = false;
-        MiddlewareServiceNameIndex middlewareServiceNameIndex =
-            ServiceNameConvertUtil.convertRedis(middleware.getName());
+        ReadWriteProxy readWriteProxy = middleware.getReadWriteProxy();
+        String mod = "proxy";
+        if ("sentinel".equals(middleware.getMode()) && !readWriteProxy.getEnabled()) {
+            mod = "sentinel";
+        }
+        MiddlewareServiceNameIndex middlewareServiceNameIndex = ServiceNameConvertUtil.convertRedis(middleware.getName(), mod);
+
         for (int i = 0; i < (60 * 10 * 60) && !success; i++) {
             Middleware detail = middlewareService.detail(middleware.getClusterId(), middleware.getNamespace(),
                 middleware.getName(), middleware.getType());
