@@ -53,7 +53,7 @@ public class MysqlConnectionUtil {
     public static boolean passwordCheck(MysqlAccessInfo mysqlAccessInfo, String user, String password) {
         try {
             Class.forName(DBDRIVER);
-            String dbUrl = "jdbc:mysql://" + mysqlAccessInfo.getHost() + ":" + mysqlAccessInfo.getPort() + "/?characterEncoding=UTF-8";
+            String dbUrl = "jdbc:mysql://" + mysqlAccessInfo.getHost() + ":" + mysqlAccessInfo.getPort() + "/?characterEncoding=UTF-8&useSSL=false";
             DriverManager.getConnection(dbUrl, user, password);
             return true;
         } catch (Exception e) {
