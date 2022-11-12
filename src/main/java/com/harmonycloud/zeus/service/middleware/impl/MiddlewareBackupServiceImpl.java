@@ -882,7 +882,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     public void convertBackupToRecord(MiddlewareBackupCR backup, MiddlewareBackupRecord backupRecord) {
 
         MiddlewareBackupStatus backupStatus = backup.getStatus();
-        backupRecord.setBackupId(backup.getMetadata().getLabels().get("backupId"));
+        if (!CollectionUtils.isEmpty(backup.getMetadata().getLabels())){
+            backupRecord.setBackupId(backup.getMetadata().getLabels().get("backupId"));
+        }
 
         // 获取备份时间
         Date creationTime = DateUtils.parseUTCDate(backup.getMetadata().getCreationTimestamp());
