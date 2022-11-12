@@ -93,7 +93,7 @@ public class CacheMiddlewareServiceImpl implements CacheMiddlewareService {
             .eq("type", middleware.getType()).eq("name", middleware.getName());
         BeanCacheMiddleware beanCacheMiddleware = beanCacheMiddlewareMapper.selectOne(wrapper);
         if (beanCacheMiddleware != null) {
-            beanCacheMiddleware.setValuesYaml(null);
+            beanCacheMiddleware.setValuesYaml("");
             beanCacheMiddlewareMapper.updateById(beanCacheMiddleware);
         }
     }
