@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.controller.dashboard;
 
 import com.github.pagehelper.PageInfo;
 import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.model.SqlRecordQueryDto;
 import com.harmonycloud.caas.common.model.dashboard.DatabaseDto;
 import com.harmonycloud.caas.common.model.dashboard.ExecuteSqlDto;
 import com.harmonycloud.zeus.bean.BeanSqlExecuteRecord;
@@ -48,23 +49,15 @@ public class SqlExecuteRecordController {
             @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = Integer.class),
-            @ApiImplicitParam(name = "keyword", value = "关键词", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "start", value = "开始时间", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "end", value = "结束时间", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "pageNum", value = "页码", paramType = "query", dataTypeClass = Integer.class),
-            @ApiImplicitParam(name = "size", value = "每页数量", paramType = "query", dataTypeClass = Integer.class),
+            @ApiImplicitParam(name = "sqlRecordQueryDto", value = "查询条件", paramType = "query", dataTypeClass = SqlRecordQueryDto.class),
     })
     @GetMapping("/databases/{database}/history")
     public BaseResult<PageInfo<BeanSqlExecuteRecord>> listExecuteSql(@PathVariable("clusterId") String clusterId,
-                                                                 @PathVariable("namespace") String namespace,
-                                                                 @PathVariable("middlewareName") String middlewareName,
-                                                                 @PathVariable("database") String database,
-                                                                 @RequestParam(value = "keyword", required = false) String keyword,
-                                                                 @RequestParam(value = "start", required = false) String start,
-                                                                 @RequestParam(value = "end", required = false) String end,
-                                                                 @RequestParam(value = "pageNum", required = false, defaultValue = "1") Integer pageNum,
-                                                                 @RequestParam(value = "size", required = false, defaultValue = "10") Integer size) {
-        return BaseResult.ok(executeSqlService.listExecuteSql(clusterId, namespace, middlewareName, database, keyword, start, end, pageNum, size));
+                                                                     @PathVariable("namespace") String namespace,
+                                                                     @PathVariable("middlewareName") String middlewareName,
+                                                                     @PathVariable("database") String database,
+                                                                     @RequestBody SqlRecordQueryDto sqlRecordQueryDto) {
+        return BaseResult.ok(executeSqlService.listExecuteSql(clusterId, namespace, middlewareName, database, sqlRecordQueryDto));
     }
 
 }

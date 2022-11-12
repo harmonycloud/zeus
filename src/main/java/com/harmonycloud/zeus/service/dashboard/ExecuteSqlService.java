@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.dashboard;
 
 import com.github.pagehelper.PageInfo;
+import com.harmonycloud.caas.common.model.SqlRecordQueryDto;
 import com.harmonycloud.caas.common.model.dashboard.ExecuteSqlDto;
 import com.harmonycloud.zeus.bean.BeanSqlExecuteRecord;
 
@@ -29,6 +30,6 @@ public interface ExecuteSqlService {
      **/
     PageInfo<ExecuteSqlDto> list(String keyword, Integer current, Integer size, String order);
 
-    PageInfo<BeanSqlExecuteRecord> listExecuteSql(String clusterId, String namespace, String middlewareName, String database, String keyword, String startTime, String endTime, Integer pageNum, Integer size);
+    PageInfo<BeanSqlExecuteRecord> listExecuteSql(String clusterId, String namespace, String middlewareName, String database, SqlRecordQueryDto sqlRecordQueryDto);
 
 }

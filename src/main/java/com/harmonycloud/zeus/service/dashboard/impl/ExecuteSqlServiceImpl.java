@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.harmonycloud.caas.common.model.SqlRecordQueryDto;
 import com.harmonycloud.caas.common.model.dashboard.ExecuteSqlDto;
 import com.harmonycloud.zeus.bean.BeanSqlExecuteRecord;
 import com.harmonycloud.zeus.dao.BeanSqlExecuteRecordMapper;
@@ -13,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -67,21 +67,52 @@ public class ExecuteSqlServiceImpl implements ExecuteSqlService {
     }
 
     @Override
-    public PageInfo<BeanSqlExecuteRecord> listExecuteSql(String clusterId, String namespace, String middlewareName, String database, String keyword, String startTime, String endTime, Integer pageNum, Integer size) {
+    public PageInfo<BeanSqlExecuteRecord> listExecuteSql(String clusterId, String namespace, String middlewareName, String database, SqlRecordQueryDto sqlRecordQueryDto) {
         QueryWrapper<BeanSqlExecuteRecord> wrapper = new QueryWrapper<>();
         wrapper.eq("cluster_id", clusterId);
         wrapper.eq("namespace", namespace);
         wrapper.eq("middleware_name", middlewareName);
         wrapper.eq("target_database", database);
-        if (!org.springframework.util.StringUtils.isEmpty(keyword)) {
-            wrapper.like("sqlstr", keyword);
+        if (!org.springframework.util.StringUtils.isEmpty(sqlRecordQueryDto.getKeyword())) {
+            wrapper.like("sqlstr", sqlRecordQueryDto.getKeyword());
         }
-        PageHelper.startPage(pageNum, size);
-        if (!org.springframework.util.StringUtils.isEmpty(startTime)) {
-            wrapper.gt("exec_date", DateUtil.parseUTCDate(startTime));
+        if (!org.springframework.util.StringUtils.isEmpty(sqlRecordQueryDto.getStartTime())) {
+            wrapper.gt("exec_date", DateUtil.parseUTCDate(sqlRecordQueryDto.getStartTime()));
         }
-        if (!org.springframework.util.StringUtils.isEmpty(endTime)) {
-            wrapper.lt("exec_date", DateUtil.parseUTCDate(endTime));
+        if (!org.springframework.util.StringUtils.isEmpty(sqlRecordQueryDto.getEndTime())) {
+            wrapper.lt("exec_date", DateUtil.parseUTCDate(sqlRecordQueryDto.getEndTime()));
+        }
+        if (sqlRecordQueryDto.getAscExecDateOrder() != null) {
+            if (!sqlRecordQueryDto.getAscExecDateOrder()) {
+                wrapper.orderByDesc("exec_date");
+            } else {
+                wrapper.orderByAsc("exec_data");
+            }
+        }
+        if (sqlRecordQueryDto.getAscLineOrder() != null) {
+            if (!sqlRecordQueryDto.getAscLineOrder()) {
+                wrapper.orderByDesc("line");
+            } else {
+                wrapper.orderByAsc("line");
+            }
+        }
+        if (sqlRecordQueryDto.getAscExecTimeOrder() != null) {
+            if (!sqlRecordQueryDto.getAscExecTimeOrder()) {
+                wrapper.orderByDesc("exec_time");
+            } else {
+                wrapper.orderByAsc("exec_time");
+            }
+        }
+        if (sqlRecordQueryDto.getStatus() != null) {
+            wrapper.eq("status", sqlRecordQueryDto.getStatus());
+        }
+
+        int pageNum = 1, size = 10;
+        if (sqlRecordQueryDto.getPageNum() != null && sqlRecordQueryDto.getPageNum() != 0) {
+            pageNum = sqlRecordQueryDto.getPageNum();
+        }
+        if (sqlRecordQueryDto.getSize() != null && sqlRecordQueryDto.getSize() != 0) {
+            size = sqlRecordQueryDto.getSize();
         }
         PageHelper.startPage(pageNum, size);
         return new PageInfo<>(beanSqlExecuteRecordMapper.selectList(wrapper));
