@@ -182,7 +182,7 @@ public class IngressServiceImpl implements IngressService {
         if (!CollectionUtils.isEmpty(ingressDTO.getServiceList())) {
             ingressDTO.getServiceList().forEach(ingress -> {
                 if (StringUtils.isNotBlank(ingress.getExposePort())) {
-                    verifyServicePort(clusterId, Integer.parseInt(ingress.getExposePort()));
+                    verifyServicePort(clusterId, ingressDTO.getIngressClassName(), ingressDTO.getExposeType(), Integer.parseInt(ingress.getExposePort()));
                 }
             });
         }
@@ -191,16 +191,13 @@ public class IngressServiceImpl implements IngressService {
 
         if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_INGRESS)) {
             try {
-                QueryWrapper<BeanIngressComponents> queryWrapper = new QueryWrapper<>();
-                queryWrapper.eq("cluster_id", ingressDTO.getClusterId());
-                queryWrapper.eq("ingress_class_name", ingressDTO.getIngressClassName());
-                BeanIngressComponents ingressComponents = beanIngressComponentsMapper.selectOne(queryWrapper);
+                IngressComponentDto ingressComponentDto = ingressComponentService.get(clusterId, ingressDTO.getIngressClassName());
                 if (ingressDTO.getProtocol().equals(Protocol.HTTP.getValue())) {
                     Ingress ingress = convertK8sIngress(namespace, ingressDTO);
                     ingressWrapper.create(clusterId, namespace, ingress);
                 } else if (ingressDTO.getProtocol().equals(Protocol.TCP.getValue())) {
-                    if (IngressEnum.TRAEFIK.getName().equals(ingressComponents.getType())) {
-                        ingressRouteTCPWrapper.benchCreate(clusterId, convertIngressRouteTCP(ingressDTO, ingressComponents.getName()));
+                    if (IngressEnum.TRAEFIK.getName().equals(ingressComponentDto.getType())) {
+                        ingressRouteTCPWrapper.benchCreate(clusterId, convertIngressRouteTCP(ingressDTO, ingressComponentDto.getName()));
                     } else {
                         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
                         ConfigMap configMap = covertTcpConfig(cluster, namespace, ingressDTO);
@@ -240,9 +237,24 @@ public class IngressServiceImpl implements IngressService {
     }
 
     @Override
-    public void checkServiceTcpPort(MiddlewareClusterDTO cluster, List<ServiceDTO> serviceList) {
+    public void checkServiceTcpPort(MiddlewareClusterDTO cluster, String ingressClassName, String exposeType,List<ServiceDTO> serviceList) {
         if (CollectionUtils.isEmpty(serviceList)) {
             return;
+        }
+        // 当服务暴露方式不是traefik时，端口不可以在traefik定义的端口范围内
+        IngressComponentDto ingressComponent = ingressComponentService.get(cluster.getId(), ingressClassName);
+        if (!(ingressComponent != null && StringUtils.equals(ingressComponent.getType(), IngressEnum.TRAEFIK.getName()))) {
+            List<IngressComponentDto> ingressComponentDtos = ingressComponentService.list(cluster.getId(), IngressEnum.TRAEFIK.getName());
+            List<TraefikPort> traefikPortList = new ArrayList<>();
+            ingressComponentDtos.forEach(ingressComponentDto -> traefikPortList.addAll(ingressComponentDto.getTraefikPortList()));
+            List<Integer> portList = serviceList.stream().map(serviceDTO -> Integer.parseInt(serviceDTO.getExposePort())).collect(Collectors.toList());
+            for (Integer port : portList) {
+                for (TraefikPort traefikPort : traefikPortList) {
+                    if (port >= traefikPort.getStartPort() && port <= traefikPort.getEndPort()) {
+                        throw new BusinessException(ErrorMessage.TCP_PORT_ALREADY_USED, String.valueOf(port));
+                    }
+                }
+            }
         }
 
         // 校验Nginx TCP配置文件
@@ -328,22 +340,22 @@ public class IngressServiceImpl implements IngressService {
         return portSet;
     }
 
-    @Override
-    public void createIngressTcp(MiddlewareClusterDTO cluster, String namespace, List<ServiceDTO> serviceList,
-                                 boolean checkPort) {
-        if (CollectionUtils.isEmpty(serviceList)) {
-            return;
-        }
-        if (checkPort) {
-            checkServiceTcpPort(cluster, serviceList);
-        }
-        // 转换Ingress TCP配置文件
-        IngressDTO ingressDTO = new IngressDTO();
-        ingressDTO.setServiceList(serviceList);
-        ConfigMap configMap = covertTcpConfig(cluster, namespace, ingressDTO);
-        // 更新配置文件
-        configMapWrapper.update(cluster.getId(), getIngressTcpNamespace(cluster, null), configMap);
-    }
+//    @Override
+//    public void createIngressTcp(MiddlewareClusterDTO cluster, String namespace, List<ServiceDTO> serviceList,
+//                                 boolean checkPort) {
+//        if (CollectionUtils.isEmpty(serviceList)) {
+//            return;
+//        }
+//        if (checkPort) {
+//            checkServiceTcpPort(cluster, serviceList);
+//        }
+//        // 转换Ingress TCP配置文件
+//        IngressDTO ingressDTO = new IngressDTO();
+//        ingressDTO.setServiceList(serviceList);
+//        ConfigMap configMap = covertTcpConfig(cluster, namespace, ingressDTO);
+//        // 更新配置文件
+//        configMapWrapper.update(cluster.getId(), getIngressTcpNamespace(cluster, null), configMap);
+//    }
 
     @Override
     public void delete(String clusterId, String namespace, String middlewareName, String name, IngressDTO ingressDTO) {
@@ -543,34 +555,42 @@ public class IngressServiceImpl implements IngressService {
     }
 
     @Override
-    public void verifyServicePort(String clusterId, Integer port) {
-        MiddlewareClusterDTO clusterDTO = clusterService.findById(clusterId);
+    public void verifyServicePort(String clusterId, String ingressClassName, String exposeType, Integer port) {
         ServiceDTO serviceDTO = new ServiceDTO();
         serviceDTO.setExposePort(String.valueOf(port));
         List<ServiceDTO> serviceDTOList = new ArrayList<>();
         serviceDTOList.add(serviceDTO);
-        checkServiceTcpPort(clusterDTO, serviceDTOList);
+        checkServiceTcpPort(clusterService.findById(clusterId), ingressClassName, exposeType,serviceDTOList);
     }
 
     @Override
-    public Set<String> listIngressIp(String clusterId, String ingressClassName) {
+    public List<String> listIngressIp(String clusterId, String ingressClassName) {
         IngressComponentDto ingressComponentDto = ingressComponentService.get(clusterId, ingressClassName);
         if (ingressComponentDto == null) {
-            return Collections.emptySet();
+            return Collections.emptyList();
         }
         List<PodInfo> podInfoList;
-        Set<String> ingressPodIpSet = new HashSet<>();
+        List<String> ingressPodIpList = new ArrayList<>();
         if (StringUtils.isNotBlank(ingressComponentDto.getAddress())) {
-            ingressPodIpSet.add(ingressComponentDto.getAddress());
+            ingressPodIpList.add(ingressComponentDto.getAddress());
         } else {
             podInfoList = listIngressPod(clusterId, ingressComponentDto.getNamespace(), ingressComponentDto.getName());
             podInfoList = podInfoList.stream().filter(podInfo -> "Running".equals(podInfo.getStatus())
                     && StringUtils.isNotBlank(podInfo.getHostIp())).collect(Collectors.toList());
             podInfoList.forEach(podInfo -> {
-                ingressPodIpSet.add(podInfo.getHostIp());
+                ingressPodIpList.add(podInfo.getHostIp());
             });
         }
-        return ingressPodIpSet;
+        return ingressPodIpList;
+    }
+
+    @Override
+    public String getIngressIp(String clusterId, String ingressClassName) {
+        List<String> ingressIpSet = listIngressIp(clusterId, ingressClassName);
+        if (CollectionUtils.isEmpty(ingressIpSet)) {
+            throw new BusinessException(ErrorMessage.INGRESS_NOT_AVAILABLE);
+        }
+        return ingressIpSet.get(0);
     }
 
     // 对部分中间件做特殊处理
@@ -688,7 +708,7 @@ public class IngressServiceImpl implements IngressService {
         ingressDTOS.forEach(ingressDTO -> {
             if (StringUtils.isNotEmpty(ingressDTO.getIngressClassName())) {
                 // 设置ingress pod
-                ingressDTO.setIngressIpSet(listIngressIp(clusterId, ingressDTO.getIngressClassName()));
+                ingressDTO.setIngressIpSet(new HashSet<>(listIngressIp(clusterId, ingressDTO.getIngressClassName())));
             }
             // 设置服务暴露的网络模型 4层或7层
             setServiceNetworkModel(ingressDTO);

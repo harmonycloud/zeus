@@ -38,7 +38,7 @@ public interface IngressService {
      * @param cluster     集群
      * @param serviceList 服务列表
      */
-    void checkServiceTcpPort(MiddlewareClusterDTO cluster, List<ServiceDTO> serviceList);
+    void checkServiceTcpPort(MiddlewareClusterDTO cluster, String ingressClassName, String exposeType, List<ServiceDTO> serviceList);
 
     /**
      * 获取集群已被使用的端口列表
@@ -55,7 +55,7 @@ public interface IngressService {
      * @param serviceList 服务列表
      * @param checkPort   校验端口
      */
-    void createIngressTcp(MiddlewareClusterDTO cluster, String namespace, List<ServiceDTO> serviceList, boolean checkPort);
+//    void createIngressTcp(MiddlewareClusterDTO cluster, String namespace, List<ServiceDTO> serviceList, boolean checkPort);
 
     /**
      * 删除中间件对外访问
@@ -166,7 +166,7 @@ public interface IngressService {
      * @param clusterId
      * @param port
      */
-    void verifyServicePort(String clusterId, Integer port);
+    void verifyServicePort(String clusterId, String ingressClassName, String exposeType, Integer port);
 
     /**
      * 查询ingress ip
@@ -174,6 +174,11 @@ public interface IngressService {
      * @param ingressClassName
      * @return
      */
-    Set<String> listIngressIp(String clusterId, String ingressClassName);
+    List<String> listIngressIp(String clusterId, String ingressClassName);
+
+    /**
+     * 获取一个可用的ingress ip
+     */
+    String getIngressIp(String clusterId, String ingressClassName);
 
 }

@@ -109,7 +109,7 @@ public class IngressController {
     @GetMapping("/verifyServicePort")
     public BaseResult verifyServicePort(@PathVariable("clusterId") String clusterId,
                                         @RequestParam("port") Integer port){
-        ingressService.verifyServicePort(clusterId, port);
+        ingressService.verifyServicePort(clusterId, null,null,port);
         return BaseResult.ok();
     }
     

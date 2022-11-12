@@ -6,6 +6,8 @@ import static com.harmonycloud.zeus.util.RedisUtil.getRedisSentinelIsOk;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.model.Node;
+import com.harmonycloud.zeus.service.k8s.NodeService;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +52,8 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
     private ServiceServiceImpl serviceService;
     @Autowired
     private RedisOperatorImpl redisOperator;
+    @Autowired
+    private NodeService nodeService;
 
     @Override
     public List<RedisDbDTO> listRedisDb(String clusterId, String namespace, String middlewareName, String db,
@@ -364,21 +368,26 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
             middleware =
                 middlewareService.detail(clusterId, namespace, middlewareName, MiddlewareTypeEnum.REDIS.getType());
         }
-        List<IngressDTO> ingressDTOS =
+        List<IngressDTO> serviceDTOS =
             ingressService.get(clusterId, namespace, MiddlewareTypeEnum.REDIS.getType(), middlewareName);
-        ingressDTOS = ingressDTOS.stream().filter(ingressDTO -> (!ingressDTO.getName().contains("readonly")))
-            .collect(Collectors.toList());
 
         RedisAccessInfo redisAccessInfo = new RedisAccessInfo();
-        if (!CollectionUtils.isEmpty(ingressDTOS)) {
+        if (!CollectionUtils.isEmpty(serviceDTOS)) {
             // 优先使用ingress或NodePort暴露的服务
+            List<IngressDTO> ingressDTOS = serviceDTOS.stream().filter(ingressDTO -> (!ingressDTO.getName().contains("readonly")))
+                    .collect(Collectors.toList());
             IngressDTO ingressDTO = ingressDTOS.get(0);
-            Set<String> ingressIpSet = ingressService.listIngressIp(clusterId, ingressDTO.getIngressClassName());
             String exposeIP = "";
-            for (String ip : ingressIpSet) {
-                exposeIP = ip;
-                break;
+            if (!CollectionUtils.isEmpty(ingressDTOS)) {
+                exposeIP = ingressService.getIngressIp(clusterId, ingressDTO.getIngressClassName());
+            } else {
+                ingressDTO = serviceDTOS.get(0);
+                List<Node> nodeList = nodeService.list(clusterId);
+                if (!CollectionUtils.isEmpty(nodeList)) {
+                    exposeIP = nodeList.get(0).getIp();
+                }
             }
+
             List<ServiceDTO> serviceList = ingressDTO.getServiceList();
             if (!CollectionUtils.isEmpty(serviceList)) {
                 ServiceDTO serviceDTO = serviceList.get(0);

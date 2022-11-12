@@ -883,12 +883,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 }
             }
             List<ServiceDTO> serviceList = ingressDTO.getServiceList();
-            Set<String> ipSet = ingressService.listIngressIp(clusterId, ingressDTO.getIngressClassName());
-            String exposeIp = "";
-            for (String ip : ipSet) {
-                exposeIp = ip;
-                break;
-            }
+            String exposeIp = ingressService.getIngressIp(clusterId, ingressDTO.getIngressClassName());
             if (!CollectionUtils.isEmpty(serviceList)) {
                 for (ServiceDTO serviceDTO : serviceList) {
                     if (serviceDTO.getServicePort().equals(servicePort)) {
