@@ -412,7 +412,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             for (BeanCacheMiddleware beanCacheMiddleware : beanCacheMiddlewareList) {
                 Middleware middleware = new Middleware();
                 BeanUtils.copyProperties(beanCacheMiddleware, middleware);
-                if (StringUtils.isEmpty(beanCacheMiddleware.getValuesYaml())) {
+                if (!StringUtils.isEmpty(beanCacheMiddleware.getValuesYaml())) {
                     middleware.setStatus("Deleted");
                 } else {
                     if (StringUtils.isEmpty(beanCacheMiddleware.getPvc())
