@@ -252,6 +252,12 @@ public class MysqlServiceImpl implements MysqlService {
             middleware.setName(middlewareName);
             middleware.setType(MiddlewareTypeEnum.MYSQL.getType());
             mysqlOperator.createOpenService(middleware, false, false);
+            // ingress服务创建后不一定立即就可以使用，这里延迟5秒
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             return queryBasicAccessInfo(clusterId, namespace, middlewareName, null);
         }
     }
