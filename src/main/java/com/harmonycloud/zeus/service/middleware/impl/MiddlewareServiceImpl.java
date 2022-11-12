@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.constants.NameConstant;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareGrafanaNameEnum;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.MonitorResourceQuota;
@@ -298,7 +299,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
         MonitorDto monitorDto = new MonitorDto();
         monitorDto.setUrl(monitorInfo.getAddress() + "/d/" + mwInfo.getGrafanaId() + "/" + middleware.getType()
-                + "?var-namespace=" + middleware.getNamespace() + "&var-service=" + middleware.getName());
+            + "?var-namespace=" + middleware.getNamespace() + "&"
+            + MiddlewareGrafanaNameEnum.findByType(middleware.getType()).getName() + "=" + middleware.getName());
         monitorDto.setAuthorization("Bearer " + monitorInfo.getToken());
         return monitorDto;
     }
