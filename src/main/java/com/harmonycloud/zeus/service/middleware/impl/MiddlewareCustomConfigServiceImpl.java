@@ -244,8 +244,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
                     // 封装数据库对象
                     BeanCustomConfig beanCustomConfig = new BeanCustomConfig();
                     beanCustomConfig.setName(key);
-                    beanCustomConfig.setDefaultValue("true".equals(param.get("default")) ? "ON"
-                        : "false".equals(param.get("default")) ? "OFF" : param.get("default"));
+                    beanCustomConfig.setDefaultValue(param.get("default"));
                     beanCustomConfig.setRestart("y".equals(param.get("isReboot")));
                     beanCustomConfig.setRanges(param.get("range"));
                     beanCustomConfig.setDescription(param.get("describe"));
