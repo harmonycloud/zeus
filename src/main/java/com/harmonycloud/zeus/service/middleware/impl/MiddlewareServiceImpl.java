@@ -101,6 +101,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private MiddlewareCrTypeService middlewareCrTypeService;
     @Autowired
     private BeanMiddlewareInfoMapper middlewareInfoMapper;
+    @Autowired
+    private PvcService pvcService;
 
     @Override
     public List<Middleware> simpleList(String clusterId, String namespace, String type, String keyword) {
@@ -410,7 +412,18 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             for (BeanCacheMiddleware beanCacheMiddleware : beanCacheMiddlewareList) {
                 Middleware middleware = new Middleware();
                 BeanUtils.copyProperties(beanCacheMiddleware, middleware);
-                middleware.setStatus("Deleted");
+                if (StringUtils.isEmpty(beanCacheMiddleware.getValuesYaml())) {
+                    middleware.setStatus("Deleted");
+                } else {
+                    if (StringUtils.isEmpty(beanCacheMiddleware.getPvc())
+                        || !pvcService.checkPvcExist(beanCacheMiddleware.getClusterId(),
+                            beanCacheMiddleware.getNamespace(), beanCacheMiddleware.getPvc().split(","))) {
+                        cacheMiddlewareService.delete(middleware);
+                        continue;
+                    } else {
+                        middleware.setStatus("Deleting");
+                    }
+                }
                 // 先移除可能因为异步导致残留的原中间件信息
                 finalMiddlewareList.removeIf(mw -> mw.getName().equals(beanCacheMiddleware.getName())
                     && mw.getNamespace().equals(beanCacheMiddleware.getNamespace()));

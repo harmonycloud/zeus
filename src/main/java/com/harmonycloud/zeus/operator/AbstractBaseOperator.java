@@ -258,8 +258,8 @@ public abstract class AbstractBaseOperator {
         deleteCustomConfigHistory(middleware);
         middlewareBackupService.deleteMiddlewareBackupInfo(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
         removeSql(middleware);
-        //删除数据库记录
-        cacheMiddlewareService.delete(middleware);
+        // 设置values.yaml为null
+        cacheMiddlewareService.updateValuesToNull(middleware);
     }
 
     /**
