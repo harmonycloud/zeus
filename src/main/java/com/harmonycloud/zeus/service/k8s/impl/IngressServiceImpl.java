@@ -28,7 +28,6 @@ import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.service.user.UserService;
 import com.harmonycloud.zeus.util.DateUtil;
-import com.harmonycloud.zeus.util.MathUtil;
 import com.harmonycloud.zeus.util.MiddlewareServicePurposeUtil;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.*;
@@ -187,8 +186,9 @@ public class IngressServiceImpl implements IngressService {
                 }
             });
         }
-        // 为rocketmq和kafka设置服务端口号
-        checkAndAllocateServicePort(clusterId, ingressDTO);
+        // 对部分中间件做特殊处理
+        configCustomMiddleware(clusterId, namespace, middlewareName, ingressDTO);
+
         if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_INGRESS)) {
             try {
                 QueryWrapper<BeanIngressComponents> queryWrapper = new QueryWrapper<>();
@@ -573,6 +573,22 @@ public class IngressServiceImpl implements IngressService {
         return ingressPodIpSet;
     }
 
+    // 对部分中间件做特殊处理
+    private void configCustomMiddleware(String clusterId, String namespace, String middlewareName, IngressDTO ingressDTO) {
+        String middlewareType = ingressDTO.getMiddlewareType();
+        if ("rocketmq".equals(middlewareType) || "kafka".equals(middlewareType)) {
+            allocateMQServicePort(clusterId, ingressDTO);
+        }
+        switch (middlewareType) {
+            case "rocketmq":
+            case "kafka":
+                allocateMQServicePort(clusterId, ingressDTO);
+                break;
+            case "mysql":
+                setMysqlServicePort(clusterId, namespace, middlewareName, ingressDTO);
+        }
+    }
+
     /**
      * 检查是否是消息队列
      * @param ingressDTO
@@ -791,13 +807,28 @@ public class IngressServiceImpl implements IngressService {
         return podService.list(clusterId, namespace, ingressClassName);
     }
 
+    private void setMysqlServicePort(String clusterId, String namespace, String middlewareName, IngressDTO ingressDTO) {
+        JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, clusterService.findById(clusterId));
+        String port = "3306";
+        if (values != null && values.containsKey("args")) {
+            JSONObject args = values.getJSONObject("args");
+            if (args != null && args.containsKey("server_port")) {
+                port = args.getString("server_port");
+            }
+        }
+        String finalPort = port;
+        ingressDTO.getServiceList().forEach(serviceDTO -> {
+            serviceDTO.setTargetPort(finalPort);
+            serviceDTO.setServicePort(finalPort);
+        });
+    }
+
     /**
      * 当为kafka或rockeymq暴露服务时，若用户未设置服务端口号，则为服务随机分配端口号
-     *
      * @param clusterId
      * @param ingressDTO
      */
-    private void checkAndAllocateServicePort(String clusterId, IngressDTO ingressDTO) {
+    private void allocateMQServicePort(String clusterId, IngressDTO ingressDTO) {
         if ("rocketmq".equals(ingressDTO.getMiddlewareType()) || "kafka".equals(ingressDTO.getMiddlewareType())) {
             List<ServiceDTO> serviceList = ingressDTO.getServiceList();
             if (CollectionUtils.isEmpty(serviceList)) {
