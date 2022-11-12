@@ -687,7 +687,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
                 String usedCpuQuery = "sum(rate(container_cpu_usage_seconds_total{pod=~\"" + pods.toString()
-                    + "\",namespace=\"" + namespace + "\",endpoint!=\"\"}[5m])) by (pod)";
+                    + "\",namespace=\"" + namespace + "\",endpoint!=\"\",container!=\"\"}[5m])) by (pod)";
                 PrometheusResponse usedCpu = prometheusResourceMonitorService.query(clusterId, usedCpuQuery);
                 Map<String, Double> result = convertResponse(usedCpu);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
@@ -725,7 +725,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
                 String usedMemoryQuery = "sum(container_memory_working_set_bytes{pod=~\"" + pods.toString()
-                    + "\",namespace=\"" + namespace + "\",endpoint!=\"\"}) by (pod) /1024/1024/1024/2";
+                    + "\",namespace=\"" + namespace + "\",endpoint!=\"\",container!=\"\"}) by (pod) /1024/1024/1024";
                 PrometheusResponse usedMemory = prometheusResourceMonitorService.query(clusterId, usedMemoryQuery);
                 Map<String, Double> result = convertResponse(usedMemory);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {

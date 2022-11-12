@@ -190,7 +190,7 @@ public class OverviewServiceImpl implements OverviewService {
 
         // 获取cpu使用情况
         String cpuUsedQuery = "sum by (container_name)(rate(container_cpu_usage_seconds_total{pod=~\"" + pods.toString()
-            + "\",namespace=\"" + namespace + "\",endpoint!=\"\"}[1m]))";
+            + "\",namespace=\"" + namespace + "\",endpoint!=\"\",container!=\"\"}[1m]))";
         queryMap.put("query", cpuUsedQuery);
         PrometheusResponse prometheusCpuUsed =
             prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
@@ -207,7 +207,7 @@ public class OverviewServiceImpl implements OverviewService {
             prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);
         // 获取memory使用情况
         String memoryUsedQuery = "sum by(container_name) (container_memory_working_set_bytes{namespace=\"" + namespace
-            + "\", pod=~\"" + pods.toString() + "\"})";
+            + "\", pod=~\"" + pods.toString() + "\",container!=\"\"})";
         queryMap.put("query", memoryUsedQuery);
         PrometheusResponse prometheusMemoryUsed =
             prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION_RANGE, queryMap);

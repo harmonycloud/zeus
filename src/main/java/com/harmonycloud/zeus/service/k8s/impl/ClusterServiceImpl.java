@@ -697,7 +697,7 @@ public class ClusterServiceImpl implements ClusterService {
                 // 查询cpu每5分钟平均用量
                 try {
                     String per5MinCpuUsedQuery = "sum(rate(container_cpu_usage_seconds_total{pod=~\"" + pods.toString()
-                        + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\",endpoint!=\"\"}[5m]))";
+                        + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\",endpoint!=\"\",container!=\"\"}[5m]))";
                     queryMap.put("query", per5MinCpuUsedQuery);
                     PrometheusResponse per5MinCpuUsed =
                         prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
@@ -731,7 +731,7 @@ public class ClusterServiceImpl implements ClusterService {
                 try {
                     String per5MinMemoryUsedQuery = "sum(avg_over_time(container_memory_working_set_bytes{pod=~\""
                         + pods.toString() + "\",namespace=\"" + mwCrd.getMetadata().getNamespace()
-                        + "\",endpoint!=\"\"}[5m])) /1024/1024/1024/2";
+                        + "\",endpoint!=\"\",container!=\"\"}[5m])) /1024/1024/1024";
                     queryMap.put("query", per5MinMemoryUsedQuery);
                     PrometheusResponse per5MinMemoryUsed =
                         prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
