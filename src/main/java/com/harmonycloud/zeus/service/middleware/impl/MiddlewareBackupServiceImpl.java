@@ -882,9 +882,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     public void convertBackupToRecord(MiddlewareBackupCR backup, MiddlewareBackupRecord backupRecord) {
 
         MiddlewareBackupStatus backupStatus = backup.getStatus();
-        if (!CollectionUtils.isEmpty(backup.getMetadata().getLabels())){
-            backupRecord.setBackupId(backup.getMetadata().getLabels().get("backupId"));
+        Map<String, String> labels = new HashMap<>();
+        if (!CollectionUtils.isEmpty(backup.getMetadata().getLabels())) {
+            labels.putAll(backup.getMetadata().getLabels());
         }
+
+        // 获取备份id
+        backupRecord.setBackupId(labels.get("backupId"));
 
         // 获取备份时间
         Date creationTime = DateUtils.parseUTCDate(backup.getMetadata().getCreationTimestamp());
@@ -913,11 +917,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             backupRecord.setPhrase("Unknown");
         }
         backupRecord.setSourceType(middlewareCrTypeService.findTypeByCrType(backup.getSpec().getType()));
-        backupRecord.setAddressId(backup.getMetadata().getLabels().get("addressId"));
+        backupRecord.setAddressId(labels.get("addressId"));
         backupRecord.setSourceName(backup.getSpec().getName());
         backupRecord.setBackupMode("single");
         backupRecord.setSchedule(false);
-        backupRecord.setOwner(backup.getMetadata().getLabels().get(OWNER));
+        backupRecord.setOwner(labels.get(OWNER));
     }
 
     /**
