@@ -350,6 +350,10 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
                 indexMap.put(indexDto.getIndex(), indexDto);
             }
         });
+        Collection<IndexDto> indexDtos = indexMap.values();
+        if (CollectionUtils.isEmpty(indexDtos)) {
+            return new ArrayList<>(indexDtos);
+        }
         return new ArrayList<>(reorderIndex((List<IndexDto>) indexMap.values()));
     }
 
