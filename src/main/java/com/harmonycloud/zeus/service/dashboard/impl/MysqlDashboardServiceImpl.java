@@ -353,7 +353,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
                 indexMap.put(indexDto.getIndex(), indexDto);
             }
         });
-        return new ArrayList<>(indexMap.values());
+        return new ArrayList<>(reorderIndex((List<IndexDto>) indexMap.values()));
     }
 
     @Override
@@ -774,6 +774,37 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     @Override
     public List<BeanSqlExecuteRecord> listExecuteSql(String clusterId, String namespace, String middlewareName, Integer db, String keyword, String start, String end, Integer pageNum, Integer size) {
         return null;
+    }
+
+    /**
+     * 调整索引顺序，将PRIMARY索引排在第一位
+     * @param indexDtoList
+     */
+    private List<IndexDto> reorderIndex(List<IndexDto> indexDtoList) {
+        if (CollectionUtils.isEmpty(indexDtoList)) {
+            return indexDtoList;
+        }
+        IndexDto firstIndexDto = indexDtoList.get(0);
+        if (primaryIndexCheck(firstIndexDto)) {
+            return indexDtoList;
+        }
+        for (int i = 0; i < indexDtoList.size(); i++) {
+            IndexDto indexDto = indexDtoList.get(i);
+            if (primaryIndexCheck(indexDto)) {
+                indexDtoList.set(0, indexDto);
+                indexDtoList.set(i, firstIndexDto);
+            }
+        }
+        return indexDtoList;
+    }
+
+    /**
+     * 检查索引是否是PRIMARY索引
+     * @param indexDto
+     * @return
+     */
+    private boolean primaryIndexCheck(IndexDto indexDto) {
+        return "PRIMARY".equalsIgnoreCase(indexDto.getIndex());
     }
 
     /**
