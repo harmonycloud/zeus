@@ -216,6 +216,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         tableDto.setCharset(MysqlUtil.extractCharset(tableObj.getString("TABLE_COLLATION")));
         tableDto.setAutoIncrement(tableObj.getInteger("AUTO_INCREMENT"));
         tableDto.setEngine(tableObj.getString("ENGINE"));
+        tableDto.setRowFormat(tableObj.getString("ROW_FORMAT"));
         // 设置列、索引、外键信息
         tableDto.setColumns(listTableColumns(clusterId, namespace, middlewareName, database, table));
         tableDto.setIndices(listTableIndices(clusterId, namespace, middlewareName, database, table));
