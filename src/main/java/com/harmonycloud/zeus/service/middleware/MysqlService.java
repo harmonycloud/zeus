@@ -56,4 +56,5 @@ public interface MysqlService {
      * @throws Exception
      */
     PageObject<MysqlLogDTO> auditSql(MysqlLogQuery auditLogQuery);
+
 }

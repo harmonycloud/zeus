@@ -4,7 +4,12 @@ import com.alibaba.fastjson.JSONArray;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.dashboard.ExecResult;
 import com.harmonycloud.caas.common.model.dashboard.mysql.*;
+import com.harmonycloud.caas.common.model.middleware.MysqlLogDTO;
+import com.harmonycloud.caas.common.model.middleware.MysqlLogQuery;
+import com.harmonycloud.tool.page.PageObject;
+import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.dashboard.MysqlDashboardService;
+import com.harmonycloud.zeus.service.middleware.MysqlService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -28,6 +33,8 @@ public class MysqlDashboardController {
 
     @Autowired
     private MysqlDashboardService mysqlDashboardService;
+    @Autowired
+    private MysqlService mysqlService;
 
     @Value("${system.mysql.defaultPassword:zeus123.com}")
     private String defaultPassword;
@@ -653,6 +660,12 @@ public class MysqlDashboardController {
                                             @PathVariable("database") String database,
                                             @RequestParam("sql") String sql) {
         return BaseResult.ok(mysqlDashboardService.execSql(clusterId, namespace, middlewareName, database, sql));
+    }
+
+    @ApiOperation(value = "查询审计日志", notes = "查询审计日志")
+    @PostMapping("/auditSql")
+    public BaseResult<PageObject<MysqlLogDTO>> queryAuditSql(@RequestBody MysqlLogQuery auditLogQuery) {
+        return BaseResult.ok(mysqlService.auditSql(auditLogQuery));
     }
 
 }
