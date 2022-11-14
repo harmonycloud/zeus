@@ -888,7 +888,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         List<String> list = Arrays.stream(tableSql.split("\\n")).filter(s -> s.contains("KEY") && !s.contains("FOREIGN")).collect(Collectors.toList());
         Map<String, IndexDto> indexMap = new HashMap<>();
         for (String singleIndexSql : list) {
-            singleIndexSql = singleIndexSql.trim().replaceAll("`", "");
+            singleIndexSql = singleIndexSql.trim().replaceAll("`|,", "");
             String[] sqlAry = singleIndexSql.split(" ");
             IndexDto indexDto = new IndexDto();
             if (singleIndexSql.startsWith("KEY")) {
