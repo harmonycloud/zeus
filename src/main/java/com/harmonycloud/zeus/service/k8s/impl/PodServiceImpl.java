@@ -407,7 +407,7 @@ public class PodServiceImpl implements PodService {
             StorageClassDTO scDTO = storageClassService.fuzzySearchStorageClass(scMap, po.getName());
             if (scDTO != null) {
                 pi.getResources().setStorageClassQuota(scDTO.getStorage()).setStorageClassName(scDTO.getStorageClassName())
-                        .setIsLvmStorage(scDTO.getIsLvmStorage());
+                        .setIsLvmStorage(scDTO.getIsLvmStorage()).setProvisioner(scDTO.getProvisioner());
                 isAllLvmStorage.set(isAllLvmStorage.get() & scDTO.getIsLvmStorage());
                 // 给pod设置绑定的pvc
                 setPodPvc(pi, pvcInfos);
