@@ -352,9 +352,9 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         });
         Collection<IndexDto> indexDtos = indexMap.values();
         if (CollectionUtils.isEmpty(indexDtos)) {
-            return new ArrayList<>(indexDtos);
+            return Collections.emptyList();
         }
-        return new ArrayList<>(reorderIndex((List<IndexDto>) indexMap.values()));
+        return reorderAndGetIndices(indexMap.values());
     }
 
     @Override
@@ -779,9 +779,10 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     /**
      * 调整索引顺序，将PRIMARY索引排在第一位
-     * @param indexDtoList
+     * @param indexDtos
      */
-    private List<IndexDto> reorderIndex(List<IndexDto> indexDtoList) {
+    private List<IndexDto> reorderAndGetIndices(Collection<IndexDto> indexDtos) {
+        ArrayList<IndexDto> indexDtoList = new ArrayList<>(indexDtos);
         if (CollectionUtils.isEmpty(indexDtoList)) {
             return indexDtoList;
         }
