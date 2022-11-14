@@ -251,7 +251,7 @@ public class IngressServiceImpl implements IngressService {
             for (Integer port : portList) {
                 for (TraefikPort traefikPort : traefikPortList) {
                     if (port >= traefikPort.getStartPort() && port <= traefikPort.getEndPort()) {
-                        throw new BusinessException(ErrorMessage.TCP_PORT_ALREADY_USED, String.valueOf(port));
+                        throw new BusinessException(ErrorMessage.PORT_IS_DEFINED_BY_TRAEFIK, String.valueOf(port));
                     }
                 }
             }
