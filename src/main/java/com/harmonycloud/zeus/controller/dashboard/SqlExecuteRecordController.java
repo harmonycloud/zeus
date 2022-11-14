@@ -51,7 +51,7 @@ public class SqlExecuteRecordController {
             @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = Integer.class),
             @ApiImplicitParam(name = "sqlRecordQueryDto", value = "查询条件", paramType = "query", dataTypeClass = SqlRecordQueryDto.class),
     })
-    @GetMapping("/databases/{database}/history")
+    @PostMapping("/databases/{database}/history")
     public BaseResult<PageInfo<BeanSqlExecuteRecord>> listExecuteSql(@PathVariable("clusterId") String clusterId,
                                                                      @PathVariable("namespace") String namespace,
                                                                      @PathVariable("middlewareName") String middlewareName,
