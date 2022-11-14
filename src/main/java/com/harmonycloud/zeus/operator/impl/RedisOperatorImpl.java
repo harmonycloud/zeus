@@ -7,15 +7,18 @@ import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConsta
 
 
 import com.harmonycloud.caas.common.enums.Protocol;
+import com.harmonycloud.caas.common.model.AffinityDTO;
 import com.harmonycloud.caas.common.model.IngressComponentDto;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.tool.collection.JsonUtils;
 import com.harmonycloud.zeus.service.k8s.IngressComponentService;
 import com.harmonycloud.zeus.service.k8s.ServiceService;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareServiceImpl;
 import com.harmonycloud.zeus.util.K8sConvert;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.NodeAffinity;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -394,6 +397,23 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             if (nodeAffinity != null) {
                 affinity.putAll(nodeAffinity);
             }
+        }
+    }
+
+    @Override
+    public void convertNodeAffinity(Middleware middleware, JSONObject values) {
+        JSONObject affinity;
+        if (values.containsKey(REDIS) && values.getJSONObject(REDIS).containsKey(NODE_AFFINITY)) {
+            affinity = values.getJSONObject(REDIS).getJSONObject("nodeAffinity");
+        } else if (JsonUtils.isJsonObject(values.getString("nodeAffinity"))) {
+            affinity = values.getJSONObject("nodeAffinity");
+        } else {
+            return;
+        }
+        if (!CollectionUtils.isEmpty(affinity)) {
+            List<AffinityDTO> dto = K8sConvert.convertNodeAffinity(
+                JSONObject.parseObject(affinity.toJSONString(), NodeAffinity.class), AffinityDTO.class);
+            middleware.setNodeAffinity(dto);
         }
     }
 

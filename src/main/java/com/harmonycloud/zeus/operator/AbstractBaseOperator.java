@@ -455,14 +455,8 @@ public abstract class AbstractBaseOperator {
             }
 
             // node affinity
-            if (JsonUtils.isJsonObject(values.getString("nodeAffinity"))) {
-                JSONObject nodeAffinity = values.getJSONObject("nodeAffinity");
-                if (!CollectionUtils.isEmpty(nodeAffinity)) {
-                    List<AffinityDTO> dto = K8sConvert.convertNodeAffinity(
-                        JSONObject.parseObject(nodeAffinity.toJSONString(), NodeAffinity.class), AffinityDTO.class);
-                    middleware.setNodeAffinity(dto);
-                }
-            }
+            convertNodeAffinity(middleware, values);
+            
             // toleration
             if (values.containsKey("tolerationAry")) {
                 String tolerationAry = values.getString("tolerationAry");
@@ -489,6 +483,17 @@ public abstract class AbstractBaseOperator {
             //setImagePath(middleware, values);
         } else {
             middleware.setAliasName(middleware.getName());
+        }
+    }
+    
+    public void convertNodeAffinity(Middleware middleware, JSONObject values) {
+        if (JsonUtils.isJsonObject(values.getString("nodeAffinity"))) {
+            JSONObject nodeAffinity = values.getJSONObject("nodeAffinity");
+            if (!CollectionUtils.isEmpty(nodeAffinity)) {
+                List<AffinityDTO> dto = K8sConvert.convertNodeAffinity(
+                    JSONObject.parseObject(nodeAffinity.toJSONString(), NodeAffinity.class), AffinityDTO.class);
+                middleware.setNodeAffinity(dto);
+            }
         }
     }
 
