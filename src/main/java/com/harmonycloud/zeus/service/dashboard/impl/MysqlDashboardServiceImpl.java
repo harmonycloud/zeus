@@ -873,8 +873,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     private String getPath(String middlewareName, String namespace) {
-//        return middlewareName + "." + namespace;
-        return "10.10.102.52";
+        return middlewareName + "." + namespace;
     }
     
 }
