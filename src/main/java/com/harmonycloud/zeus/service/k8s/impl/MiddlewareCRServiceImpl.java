@@ -224,8 +224,6 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
                 ? mw.getSpec().getName().replace("harmonycloud-", "") : mw.getSpec().getName())
             .setNamespace(mw.getMetadata().getNamespace())
             .setType(middlewareCrTypeService.findTypeByCrType(mw.getSpec().getType()))
-            .setStatus(mw.getStatus() != null ? mw.getStatus().getPhase() : "")
-            .setReason(mw.getStatus() != null ? mw.getStatus().getReason() : "")
             .setCreateTime(DateUtils.parseUTCDate(mw.getMetadata().getCreationTimestamp())).setPodNum(getPodNum(mw))
             .setPods(getPodName(mw));
         if (mw.getStatus() != null) {
