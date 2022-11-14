@@ -328,6 +328,9 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     @Override
     public List<IndexDto> listTableIndices(String clusterId, String namespace, String middlewareName, String database, String table) {
         JSONArray dataAry = mysqlClient.listTableIndices(getPath(middlewareName, namespace), port, database, table).getJSONArray("dataAry");
+        if (CollectionUtils.isEmpty(dataAry)) {
+            return Collections.emptyList();
+        }
         Map<String, IndexDto> indexDtoMap = extractTableIndex(clusterId, namespace, middlewareName, database, table);
 
         Map<String, IndexDto> indexMap = new HashMap<>();
