@@ -82,10 +82,10 @@ public class K8sConvert {
             String[] labelArr = affinityDTO.getLabel().split("=");
             NodeSelectorTerm nst;
             if (labelArr.length == 2) {
-                String operator = affinityDTO.getAnti() ? "NotIn": "In";
+                String operator = affinityDTO.getAnti() == null ? "IN" : affinityDTO.getAnti() ? "NotIn": "In";
                 nst = convertNodeSelectorTerm(labelArr[0], labelArr[1], operator);
             } else if (labelArr.length == 1) {
-                String operator = affinityDTO.getAnti() ? "DoesNotExist": "Exists";
+                String operator = affinityDTO.getAnti() == null ? "IN" : affinityDTO.getAnti() ? "NotIn": "In";
                 nst = convertNodeSelectorTerm(labelArr[0], null, operator);
             } else {
                 continue;
