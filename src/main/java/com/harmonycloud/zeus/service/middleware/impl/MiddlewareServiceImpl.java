@@ -57,6 +57,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.LVM_PROVISIONER;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
 /**
@@ -636,6 +637,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             new MiddlewareTopologyDTO().setClusterId(clusterId).setNamespace(namespace).setName(name).setType(type)
                 .setStatus(middleware.getStatus()).setPods(middleware.getPods())
                 .setPodInfoGroup(middleware.getPodInfoGroup()).setMonitorResourceQuota(new MonitorResourceQuota());
+        // 设置 LVM_PROVISIONER
+        if (middleware.getPods().stream()
+            .anyMatch(podInfo -> StringUtils.isNotEmpty(podInfo.getResources().getProvisioner())
+                && podInfo.getResources().getProvisioner().equals(LVM_PROVISIONER))) {
+            middlewareTopologyDTO.setProvisioner(LVM_PROVISIONER);
+        }
         // 获取alias name
         JSONObject values = helmChartService.getInstalledValues(name, namespace, clusterService.findById(clusterId));
         middlewareTopologyDTO.setAliasName(values.getOrDefault("aliasName", "").toString());

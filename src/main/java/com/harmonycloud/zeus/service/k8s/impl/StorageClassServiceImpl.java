@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.k8s.impl;
 
 import static com.harmonycloud.caas.common.constants.NameConstant.DISK;
 import static com.harmonycloud.caas.common.constants.NameConstant.STORAGE;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.STORAGE_PROVISIONER;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -115,9 +116,9 @@ public class StorageClassServiceImpl implements StorageClassService {
                     String storage = pvc.getSpec().getResources().getRequests().get(STORAGE).toString();
                     String storageName = pvc.getSpec().getStorageClassName();
                     if (!CollectionUtils.isEmpty(pvc.getMetadata().getAnnotations()) && pvc.getMetadata()
-                        .getAnnotations().containsKey("volume.beta.kubernetes.io/storage-provisioner")) {
+                        .getAnnotations().containsKey(STORAGE_PROVISIONER)) {
                         sc.setProvisioner(
-                            pvc.getMetadata().getAnnotations().get("volume.beta.kubernetes.io/storage-provisioner"));
+                            pvc.getMetadata().getAnnotations().get(STORAGE_PROVISIONER));
                     }
                     boolean isLvmStorage = checkLVMStorage(clusterId, namespace, storageName);
                     sc.setIsLvmStorage(isLvmStorage).setStorage(storage).setStorageClassName(storageName);
