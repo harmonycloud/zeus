@@ -59,7 +59,8 @@ public class MysqlUtil {
         Pattern p3 = Pattern.compile(reg3);
         Matcher m3 = p3.matcher(dataType);
         if (m3.find()) {
-            return Integer.parseInt(m3.group());
+            String size = m3.group().split(",")[0];
+            return Integer.parseInt(size);
         }
         return null;
     }
