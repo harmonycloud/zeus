@@ -46,12 +46,9 @@ public class MysqlUtil {
     }
 
     /**
-     * mysql中不直接存储某一列的数据长度，而是存储数据类型加长度，
-     * 例如 长度为128的varchar类型的数据存储为varchar(128)，因此，
-     * 如果要获取某一列的数据长度，则需要根据数据类型提取
-     * dataType：数据类型 例如：varchar(128)
+     * 获取数据列数据类型选项:例如varchar(128),则返回128，decimal(12,1)，则返回 12,1
      */
-    public static Integer convertColumnDataSize(String dataType) {
+    public static String convertColumnDataOptions(String dataType) {
         if (StringUtils.isEmpty(dataType)) {
             return null;
         }
@@ -59,10 +56,9 @@ public class MysqlUtil {
         Pattern p3 = Pattern.compile(reg3);
         Matcher m3 = p3.matcher(dataType);
         if (m3.find()) {
-            String size = m3.group().split(",")[0];
-            return Integer.parseInt(size);
+            return m3.group();
         }
-        return null;
+        return "";
     }
 
     /**
@@ -95,7 +91,7 @@ public class MysqlUtil {
 
     public static void main(String[] args) {
 
-        convertColumnDataSize("varchar(125)");
+        convertColumnDataOptions("varchar(125)");
     }
 
 }

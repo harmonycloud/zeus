@@ -257,7 +257,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
             columnDto.setColumnDefault(obj.getString("COLUMN_DEFAULT"));
             columnDto.setPrimary(MysqlUtil.convertColumnPrimary(obj.getString("COLUMN_KEY")));
             columnDto.setAutoIncrement(MysqlUtil.convertAutoIncrement(obj.getString("EXTRA")));
-            columnDto.setSize(MysqlUtil.convertColumnDataSize(columnDto.getColumnType()));
+            columnDto.setSize(MysqlUtil.convertColumnDataOptions(columnDto.getColumnType()));
             columnDto.setCollate(obj.getString("COLLATION_NAME"));
             columnDto.setCharset(MysqlUtil.extractCharset(columnDto.getCollate()));
             return columnDto;
@@ -846,7 +846,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
                 columnDto.setNullable(false);
             }
             // 设置列默认值
-            if (columnDto.getSize() == null || columnDto.getSize() == 0) {
+            if (StringUtils.isEmpty(columnDto.getSize())) {
                 setDefaultDatatypeOption(columnDto);
             }
         }
@@ -860,10 +860,10 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     private void setDefaultDatatypeOption(ColumnDto columnDto){
         switch (columnDto.getDataType()){
             case "int":
-                columnDto.setSize(11);
+                columnDto.setSize("11");
                 break;
             case "varchar":
-                columnDto.setSize(45);
+                columnDto.setSize("45");
                 break;
         }
     }
