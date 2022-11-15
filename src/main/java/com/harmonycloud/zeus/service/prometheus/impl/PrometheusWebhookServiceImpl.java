@@ -111,7 +111,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
                 alertInfo = alertInfos.get(0);
                 beanAlertRecord.setLay(StringUtils.isNotEmpty(alertInfo.getLay()) ? alertInfo.getLay() : "service");
                 beanAlertRecord.setAlertId(alertInfo.getAlertId());
-                beanAlertRecord.setExpr(alertInfo.getDescription() + alertInfo.getSymbol() + alertInfo.getThreshold() + "%");
+                beanAlertRecord.setExpr(alertInfo.getDescription() + alertInfo.getSymbol() + alertInfo.getThreshold());
                 beanAlertRecord.setContent(alertInfo.getContent() == null ? "" : alertInfo.getContent());
             } else {
                 beanAlertRecord.setLay("service");
