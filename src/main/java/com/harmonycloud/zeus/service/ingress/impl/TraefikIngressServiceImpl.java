@@ -39,10 +39,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 
 import static com.harmonycloud.caas.common.constants.CommonConstant.RESOURCE_ALREADY_EXISTED;
@@ -362,8 +359,40 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
             traefikPort.setEndPort(Integer.valueOf(values.getString("endPort")));
             traefikPortList.add(traefikPort);
         } else {
-            TraefikPort traefikPort = new TraefikPort().setStartPort(30000).setEndPort(65535);
-            traefikPortList.add(traefikPort);
+            traefikPortList.addAll(resolveAdditionalArguments(values));
+        }
+        return traefikPortList;
+    }
+
+    public List<TraefikPort> resolveAdditionalArguments(JSONObject values) {
+        TreeSet<Integer> portList = new TreeSet<>();
+
+        JSONArray additionalArguments = values.getJSONArray("additionalArguments");
+        additionalArguments.forEach(arg -> {
+            String[] strs = arg.toString().split(":");
+            if (strs.length == 2) {
+                portList.add(Integer.parseInt(strs[1]));
+            }
+        });
+        List<TraefikPort> traefikPortList = new ArrayList<>();
+        Integer start = null;
+        Integer end = null;
+        for (Integer num : portList){
+            if (start == null){
+                start = num;
+            }else {
+                if (!num.equals(end + 1)) {
+                    TraefikPort traefikPort = new TraefikPort();
+                    traefikPort.setStartPort(start);
+                    traefikPort.setEndPort(end);
+                    start = num;
+                    traefikPortList.add(traefikPort);
+                }
+            }
+            end = num;
+        }
+        if (start != null && (start.equals(end) || CollectionUtils.isEmpty(traefikPortList))){
+            traefikPortList.add(new TraefikPort().setStartPort(start).setEndPort(end));
         }
         return traefikPortList;
     }
