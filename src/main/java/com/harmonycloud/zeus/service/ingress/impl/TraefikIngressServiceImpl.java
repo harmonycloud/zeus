@@ -179,6 +179,10 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
             // 获取values.yaml
             JSONObject values =
                 helmChartService.getInstalledValues(ingressComponentDto.getName(), MIDDLEWARE_OPERATOR, cluster);
+            if (values == null){
+                log.error("负载均衡{} 查询values.yaml失败", ingressComponentDto.getName());
+                throw new BusinessException(ErrorMessage.INGRESS_COMPONENTS_VALUES_NOT_FOUND);
+            }
             JSONArray additionalArguments = new JSONArray();
 
             // 封装端口组
