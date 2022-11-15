@@ -31,6 +31,13 @@ public class ExcelUtil {
     public static String createDatabaseExcel(String filePath, String filename, Map<String, List<ColumnDto>> tableMap) {
         String pathName = filePath + File.separator + filename + ".xlsx";
         try {
+            File dir = new File(filePath);
+            if (!dir.exists()) {
+                if (!dir.createNewFile()) {
+                    log.error("创建excel文件夹失败");
+                }
+            }
+
             File file = new File(pathName);
             file.deleteOnExit();
             if (!file.createNewFile()) {
