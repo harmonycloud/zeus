@@ -33,7 +33,7 @@ public class ExcelUtil {
         try {
             File dir = new File(filePath);
             if (!dir.exists()) {
-                if (!dir.createNewFile()) {
+                if (!dir.mkdir()) {
                     log.error("创建excel文件夹失败");
                 }
             }
