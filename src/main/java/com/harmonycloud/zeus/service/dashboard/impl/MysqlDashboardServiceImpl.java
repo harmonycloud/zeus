@@ -653,7 +653,12 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
                 throw new BusinessException(ErrorMessage.FAILED_TO_EXPORT_TABLE_SQL);
             }
             JSONObject obj = dataAry.getJSONObject(0);
-            String sql = obj.getString("Create Table");
+            String sql = "";
+            if (obj.containsKey("Table")) {
+                sql = obj.getString("Create Table");
+            } else if (obj.containsKey("View")) {
+                sql = obj.getString("Create View");
+            }
             String fileRealName = table + ".sql";
             FileDownloadUtil.downloadFile(response, fileRealName, sql.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
