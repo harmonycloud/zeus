@@ -631,7 +631,6 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         if (!CollectionUtils.isEmpty(tablePrivilegeAry)) {
             privilegeAry.addAll(tablePrivilegeAry);
         }
-        // todo 返回的结果如何排序？新的授权记录排在后面怎么办？
         return privilegeAry.stream().map(privilege -> {
             JSONObject obj = (JSONObject) privilege;
             GrantOptionDto grantOptionDto = new GrantOptionDto();
@@ -639,8 +638,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
             grantOptionDto.setTable(obj.getString("TABLE_NAME"));
             grantOptionDto.setPrivilege(obj.getString("PRIVILEGE"));
             grantOptionDto.setGrantAble(MysqlUtil.convertGrantAble(obj.getString("IS_GRANTABLE")));
-            // todo 此处需将权限字符串转为权限类型编号
-            grantOptionDto.setPrivilegeType(1);
+            grantOptionDto.setPrivilegeType(MysqlUtil.convertPrivilege(grantOptionDto.getPrivilege()));
             return grantOptionDto;
         }).collect(Collectors.toList());
     }

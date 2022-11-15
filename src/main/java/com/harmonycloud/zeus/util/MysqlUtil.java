@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.util;
 
+import com.harmonycloud.caas.common.enums.MysqlPrivilegeEnum;
 import org.springframework.util.StringUtils;
 
 import java.util.regex.Matcher;
@@ -78,15 +79,20 @@ public class MysqlUtil {
     }
 
     /**
-     * 将空串转为null
-     * @param value
+     * 将权限类型转换为权限编码
+     * @param privilege
      * @return
      */
-    public static String convertEmptyToNull(String value) {
-        if (StringUtils.isEmpty(value)) {
-            return null;
+    public static int convertPrivilege(String privilege) {
+        if (privilege.contains("DELETE")) {
+            if (privilege.contains("DROP")) {
+                return MysqlPrivilegeEnum.DB_DML.getAuthority();
+            } else {
+                return MysqlPrivilegeEnum.DB_READ_WRITE.getAuthority();
+            }
+        } else {
+            return MysqlPrivilegeEnum.DB_READ_ONLY.getAuthority();
         }
-        return value;
     }
 
     public static void main(String[] args) {
