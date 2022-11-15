@@ -215,6 +215,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      */
     @Override
     public void createBackupSchedule(MiddlewareBackupDTO backupDTO) {
+        checkBackupScheduleExist(backupDTO);
         Minio minio = mysqlAdapterService.getMinio(backupDTO.getAddressId());
         MiddlewareBackupScheduleCR crd = new MiddlewareBackupScheduleCR();
         ObjectMeta meta =
@@ -279,7 +280,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             new MiddlewareBackupSpec.MiddlewareBackupDestination();
         destination.setDestinationType("minio")
             .setParameters(new MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters(
-                minio.getBucketName(), minio.getEndpoint(), backupDTO.getType(), base64AccessKeyId,
+                minio.getBucketName(), minio.getEndpoint(), meta.getName(), base64AccessKeyId,
                 base64SecretAccessKey, "MTIzNDU2Cg=="));
 
         List<Map<String, Object>> customBackups = new ArrayList<>();
@@ -991,6 +992,16 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             }
         }
         return flag;
+    }
+
+    public void checkBackupScheduleExist(MiddlewareBackupDTO backupDTO){
+        MiddlewareBackupScheduleList list = backupScheduleCRDService.list(backupDTO.getClusterId(), backupDTO.getNamespace());
+        if (list != null && !CollectionUtils.isEmpty(list.getItems())){
+            List<MiddlewareBackupScheduleCR> items = list.getItems();
+            if (items.stream().anyMatch(item -> item.getSpec().getName().equals(backupDTO.getMiddlewareName()))){
+                throw new BusinessException(ErrorMessage.MIDDLEWARE_BACKUP_SCHEDULE_EXIST);
+            }
+        }
     }
 
 }
