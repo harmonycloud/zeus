@@ -38,15 +38,15 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "databaseName", value = "库名称", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "executeSqlDto", value = "数据对象", paramType = "query", dataTypeClass = ExecuteSqlDto.class),
+            @ApiImplicitParam(name = "sql", value = "sql语句", paramType = "query", dataTypeClass = String.class),
     })
     @PostMapping("/databases/{databaseName}/sql")
     public BaseResult<ExecuteSqlDto> executeSql(@PathVariable("clusterId") String clusterId,
                                                       @PathVariable("namespace") String namespace,
                                                       @PathVariable("name") String name,
                                                       @PathVariable("databaseName") String databaseName,
-                                                      @RequestBody ExecuteSqlDto executeSqlDto) {
-        return BaseResult.ok(postgresqlDashboardService.executeSql(clusterId, namespace, name, databaseName, executeSqlDto));
+                                                      @RequestParam("sql") String sql) {
+        return BaseResult.ok(postgresqlDashboardService.executeSql(clusterId, namespace, name, databaseName, sql));
     }
 
     @ApiOperation(value = "获取database列表", notes = "获取database列表")

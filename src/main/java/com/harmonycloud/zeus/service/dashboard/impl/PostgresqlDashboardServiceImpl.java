@@ -82,14 +82,14 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     @Override
-    public ExecuteSqlDto executeSql(String clusterId, String namespace, String middlewareName, String databaseName,
-        ExecuteSqlDto executeSqlDto) {
+    public ExecuteSqlDto executeSql(String clusterId, String namespace, String middlewareName, String databaseName, String sql) {
+        ExecuteSqlDto executeSqlDto = new ExecuteSqlDto();
         executeSqlDto.setDate(new Date());
+        executeSqlDto.setSql(sql);
         String path = getPath(middlewareName, namespace);
         setPort(clusterId, namespace, middlewareName);
         // 判断sql类型
         boolean query = executeSqlDto.getSql().toLowerCase().contains("select");
-        String sql = executeSqlDto.getSql();
         if (sql.endsWith(";")) {
             sql = sql.substring(0, sql.length() - 1);
         }

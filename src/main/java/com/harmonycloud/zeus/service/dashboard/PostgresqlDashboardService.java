@@ -22,11 +22,10 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
      * @param namespace 分区
      * @param middlewareName 中间件名称
      * @param databaseName 库名称
-     * @param executeSqlDto 执行sql对象
+     * @param sql sql语句
      * @return  ExecuteSqlDto
      */
-    ExecuteSqlDto executeSql(String clusterId, String namespace, String middlewareName, String databaseName,
-                                 ExecuteSqlDto executeSqlDto);
+    ExecuteSqlDto executeSql(String clusterId, String namespace, String middlewareName, String databaseName, String sql);
 
     /**
      * 获取database列表
