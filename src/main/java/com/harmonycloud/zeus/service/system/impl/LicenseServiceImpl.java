@@ -253,8 +253,8 @@ public class LicenseServiceImpl implements LicenseService {
         JSONObject license = new JSONObject();
         if (secret == null) {
             license.put(TYPE, "试用版");
-            license.put(PRODUCE, 5);
-            license.put(TEST, 5);
+            license.put(PRODUCE, 20);
+            license.put(TEST, 20);
             return license;
         }
         if (!secret.getData().containsKey(LICENSE)) {
