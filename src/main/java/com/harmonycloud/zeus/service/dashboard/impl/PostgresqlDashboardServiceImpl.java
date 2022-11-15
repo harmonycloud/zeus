@@ -310,6 +310,9 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             tableDto.setTableName(table.get("tablename"));
             tableDto.setOwner(table.get("tableowner"));
             tableDto.setTablespace(table.get("tablespace"));
+            if (StringUtils.isEmpty(tableDto.getTablespace())){
+                tableDto.setTablespace("pg_default");
+            }
             tableDto.setDescription(table.get("description"));
             tableDto.setDatabaseName(databaseName);
             tableDto.setSchemaName(schemaName);
