@@ -21,6 +21,7 @@ import com.harmonycloud.zeus.util.ExcelUtil;
 import com.harmonycloud.zeus.util.FileDownloadUtil;
 import com.harmonycloud.zeus.util.MysqlUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -724,12 +725,17 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public boolean checkUserExists(String namespace, String middlewareName, String username) {
-        if (StringUtils.isEmpty(username)) {
-            return false;
-        }
+    public UserDto showUserDetail(String namespace, String middlewareName, String username) {
         JSONArray dataAry = mysqlClient.showUserDetail(getPath(middlewareName, namespace), port, username).getJSONArray("dataAry");
-        return !CollectionUtils.isEmpty(dataAry);
+        if (CollectionUtils.isEmpty(dataAry)) {
+            return null;
+        }
+        UserDto userDto = new UserDto();
+        JSONObject obj = dataAry.getJSONObject(0);
+        userDto.setUser(obj.getString("User"));
+        userDto.setGrantAble(MysqlUtil.convertGrantPriv(obj.getString("Grant_priv")));
+        userDto.setAccountLocked(MysqlUtil.convertGrantPriv(obj.getString("account_locked")));
+        return userDto;
     }
 
     @Override
@@ -779,6 +785,18 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     @Override
     public List<BeanSqlExecuteRecord> listExecuteSql(String clusterId, String namespace, String middlewareName, Integer db, String keyword, String start, String end, Integer pageNum, Integer size) {
         return null;
+    }
+
+    /**
+     * 检查用户是否存在，若存在则返回true
+     * @param namespace
+     * @param middlewareName
+     * @param username
+     * @return
+     */
+    public boolean checkUserExists(String namespace, String middlewareName, String username) {
+        UserDto userDto = showUserDetail(namespace, middlewareName, username);
+        return userDto != null;
     }
 
     /**

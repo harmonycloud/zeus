@@ -201,9 +201,9 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
     List<GrantOptionDto> listUserAuthority(String clusterId, String namespace, String middlewareName, String username);
 
     /**
-     * 判断用户是否存在，存在则返回true
+     * 查询用户详情
      */
-    boolean checkUserExists(String namespace, String middlewareName, String username);
+    UserDto showUserDetail(String namespace, String middlewareName, String username);
 
     /**
      * 判断数据库是否存在，存在则返回true

@@ -418,6 +418,20 @@ public class MysqlDashboardController {
         return BaseResult.ok();
     }
 
+    @ApiOperation(value = "查询用户详细信息", notes = "查询用户详细信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "username", value = "用户名", paramType = "path", dataTypeClass = UserDto.class),
+    })
+    @GetMapping("/users/{username}/detail")
+    public BaseResult<UserDto> userDetail(@PathVariable("namespace") String namespace,
+                                 @PathVariable("middlewareName") String middlewareName,
+                                 @PathVariable("username") String username) {
+        return BaseResult.ok(mysqlDashboardService.showUserDetail(namespace, middlewareName, username));
+    }
+
     @ApiOperation(value = "删除用户", notes = "删除用户")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
