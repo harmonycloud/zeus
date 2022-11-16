@@ -173,7 +173,8 @@ public class K8sConvert {
         if (map.containsKey(true)) {
             nodeAffinity.setRequiredDuringSchedulingIgnoredDuringExecution(
                 convertNodeAffinity(map.get(true), true).getRequiredDuringSchedulingIgnoredDuringExecution());
-        } else if (map.containsKey(false)) {
+        }
+        if (map.containsKey(false)) {
             nodeAffinity.setPreferredDuringSchedulingIgnoredDuringExecution(
                 convertNodeAffinity(map.get(false), false).getPreferredDuringSchedulingIgnoredDuringExecution());
         }
