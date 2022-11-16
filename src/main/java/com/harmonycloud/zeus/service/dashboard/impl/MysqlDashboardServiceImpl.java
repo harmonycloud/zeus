@@ -113,7 +113,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     public void dropDatabase(String clusterId, String namespace, String middlewareName, String databaseName) {
         JSONObject res = mysqlClient.dropDatabase(getPath(middlewareName,namespace), port, databaseName);
         if (!res.getBoolean("success")) {
-            throw new BusinessException(ErrorMessage.DELETE_TABLE_FAILED, res.getString("message"));
+            throw new BusinessException(ErrorMessage.DELETE_DATABASE_FAILED, res.getString("message"));
         }
     }
 
@@ -866,7 +866,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
             if (columnDto.isPrimary()) {
                 columnDto.setNullable(false);
             }
-            // 设置列默认值
+            // 设置列类型参数
             if (StringUtils.isEmpty(columnDto.getSize())) {
                 setDefaultDatatypeOption(columnDto);
             }

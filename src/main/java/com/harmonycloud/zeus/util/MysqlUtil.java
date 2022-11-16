@@ -35,7 +35,7 @@ public class MysqlUtil {
      * mysql中使用COLUMN_KEY来存储某一列是否是主键，当值为PRI时表示该列是主键
      */
     public static boolean convertColumnPrimary(String columnKey) {
-        return columnKey.contains("PRI");
+        return columnKey.equalsIgnoreCase("PRI");
     }
 
     /**
