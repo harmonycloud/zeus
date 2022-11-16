@@ -89,13 +89,6 @@ public class ExecuteSqlServiceImpl implements ExecuteSqlService {
                 wrapper.orderByAsc("exec_date");
             }
         }
-        if (sqlRecordQueryDto.getAscLineOrder() != null) {
-            if (!sqlRecordQueryDto.getAscLineOrder()) {
-                wrapper.orderByDesc("line");
-            } else {
-                wrapper.orderByAsc("line");
-            }
-        }
         if (sqlRecordQueryDto.getAscExecTimeOrder() != null) {
             if (!sqlRecordQueryDto.getAscExecTimeOrder()) {
                 wrapper.orderByDesc("exec_time");
