@@ -41,6 +41,9 @@ import com.harmonycloud.zeus.util.PostgresqlAuthorityUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.harmonycloud.caas.common.constants.middleware.PostgresqlDashboardConstant.TEMPLATE0;
+import static com.harmonycloud.caas.common.constants.middleware.PostgresqlDashboardConstant.TEMPLATE1;
+
 /**
  * @author xutianhong
  * @Date 2022/10/11 2:50 下午
@@ -1098,8 +1101,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         // 获取库权限
         JSONObject listDatabases = postgresqlClient.listDatabases(path, port);
         List<Map<String, String>> databaseList = convertColumn(listDatabases);
-        List<MiddlewareUserAuthority> userDatabaseAuthorityList = new ArrayList<>();
-        databaseList.forEach(database -> {
+        List<MiddlewareUserAuthority> userDatabaseAuthorityList = databaseList.stream().map(database -> {
             MiddlewareUserAuthority databaseAuthority = new MiddlewareUserAuthority();
             databaseAuthority.setDatabase(database.get("datname"));
             if (database.get("datdba").equals(oid)) {
@@ -1113,8 +1115,9 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
                 }
                 databaseAuthority.setAuthority(authority);
             }
-            userDatabaseAuthorityList.add(databaseAuthority);
-        });
+            return databaseAuthority;
+        }).filter(database -> !database.getDatabase().equals(TEMPLATE0) && !database.getDatabase().equals(TEMPLATE1))
+            .collect(Collectors.toList());
         // 获取模式权限
         List<MiddlewareUserAuthority> userSchemaAuthorityList = new ArrayList<>();
         for (MiddlewareUserAuthority database : userDatabaseAuthorityList) {
@@ -1346,8 +1349,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     public String getPath(String middlewareName, String namespace) {
-        return middlewareName + "." + namespace;
-        // return middlewareName;
+        //return middlewareName + "." + namespace;
+        return middlewareName;
     }
 
 }
