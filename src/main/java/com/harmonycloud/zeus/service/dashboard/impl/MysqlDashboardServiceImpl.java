@@ -775,12 +775,6 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         ExecResult execResult = new ExecResult();
         execResult.setColumns(columnAry);
         execResult.setData(dataAry);
-
-        if (!CollectionUtils.isEmpty(dataAry)) {
-            record.setLine(dataAry.size());
-        } else {
-            record.setLine(res.getInteger("rowsAffected"));
-        }
         sqlExecuteRecordMapper.insert(record);
         return execResult;
     }
