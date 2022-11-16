@@ -144,6 +144,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             databaseDto.setEncoding(database.get("encoding"));
             databaseDto.setCollate(database.get("datcollate"));
             databaseDto.setOwner(database.get("datdba"));
+            databaseDto.setTablespace(database.get("spcname"));
             return databaseDto;
         }).collect(Collectors.toList());
     }
