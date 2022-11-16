@@ -168,11 +168,14 @@ public class K8sConvert {
         if (CollectionUtils.isEmpty(dtoLis)) {
             return null;
         }
-        NodeAffinity nodeAffinity;
-        if (dtoLis.get(0) != null && dtoLis.get(0).isRequired()) {
-            nodeAffinity = convertNodeAffinity(dtoLis, true);
-        } else {
-            nodeAffinity = convertNodeAffinity(dtoLis, false);
+        NodeAffinity nodeAffinity = new NodeAffinity();
+        Map<Boolean, List<AffinityDTO>> map = dtoLis.stream().collect(Collectors.groupingBy(AffinityDTO::isRequired));
+        if (map.containsKey(true)) {
+            nodeAffinity.setRequiredDuringSchedulingIgnoredDuringExecution(
+                convertNodeAffinity(map.get(true), true).getRequiredDuringSchedulingIgnoredDuringExecution());
+        } else if (map.containsKey(false)) {
+            nodeAffinity.setPreferredDuringSchedulingIgnoredDuringExecution(
+                convertNodeAffinity(map.get(false), false).getPreferredDuringSchedulingIgnoredDuringExecution());
         }
         return convertNodeAffinity2Json(nodeAffinity);
     }
