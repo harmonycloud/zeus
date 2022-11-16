@@ -190,17 +190,12 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
         if (!StringUtils.isEmpty(err)) {
             record.setMessage(err);
             record.setStatus("false");
+            res.put("success", false);
         } else {
             record.setStatus("true");
             // 设置命令执行时长
             record.setExecTime(res.getString("execTime"));
-        }
-        // 设置影响行数
-        Object data = res.get("data");
-        if (data instanceof JSONArray) {
-            record.setLine(res.getJSONArray("data").size());
-        } else {
-            record.setLine(1);
+            res.put("success", true);
         }
         // 设置命令执行时间
         record.setExecDate(new Date());
