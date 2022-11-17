@@ -227,6 +227,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public JSONArray showTableData(String clusterId, String namespace, String middlewareName, String database, String table, QueryInfo queryInfo) {
+        // TODO 分页功能待实现
         int count = getTableRecordCount(clusterId, namespace, middlewareName, database, table);
         JSONArray dataAry = mysqlClient.showTableData(getPath(middlewareName, namespace), port, database, table, queryInfo).getJSONArray("dataAry");
         if (CollectionUtils.isEmpty(dataAry)) {
