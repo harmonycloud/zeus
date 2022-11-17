@@ -180,7 +180,7 @@ DROP TABLE IF EXISTS `backup_name`;
 CREATE TABLE `backup_name` (
   `id` int NOT NULL AUTO_INCREMENT,
   `backup_id` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '备份任务标识',
-  `backup_name` varchar(32) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '备份任务名称',
+  `backup_name` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '备份任务名称',
   `cluster_id` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '集群ID',
   `backup_type` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '备份类型',
   PRIMARY KEY (`id`)
@@ -1189,6 +1189,25 @@ create table `active_area` (
     `init` tinyint(1) DEFAULT NULL COMMENT '是否初始化',
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin comment '可用区'
+
+--
+-- Table structure for table `sql_execute_record`
+--
+
+DROP TABLE IF EXISTS `sql_execute_record`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `sql_execute_record` (
+    `id` int NOT NULL AUTO_INCREMENT COMMENT '自增Id',
+    `database` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '目标database',
+    `sql` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '执行sql',
+    `line` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '行数',
+    `time` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '耗时',
+    `message` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '信息',
+    `status` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '状态',
+    `date` timestamp NULL DEFAULT NULL COMMENT '执行时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='sql执行表';
 
 --
 -- Table structure for table `user`
