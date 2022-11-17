@@ -486,7 +486,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
             UserDto userDto = new UserDto();
             userDto.setUser(obj.getString("User"));
             userDto.setGrantAble(MysqlUtil.convertGrantPriv(obj.getString("Grant_priv")));
-            userDto.setEnable(!MysqlUtil.convertGrantPriv(obj.getString("account_locked")));
+            userDto.setUsable(!MysqlUtil.convertGrantPriv(obj.getString("account_locked")));
             return userDto;
         }).filter(userDto -> {
             if (!StringUtils.isEmpty(keyword)) {
@@ -739,7 +739,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         JSONObject obj = dataAry.getJSONObject(0);
         userDto.setUser(obj.getString("User"));
         userDto.setGrantAble(MysqlUtil.convertGrantPriv(obj.getString("Grant_priv")));
-        userDto.setEnable(!MysqlUtil.convertGrantPriv(obj.getString("account_locked")));
+        userDto.setUsable(!MysqlUtil.convertGrantPriv(obj.getString("account_locked")));
         return userDto;
     }
 
