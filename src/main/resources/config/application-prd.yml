@@ -55,7 +55,7 @@ system:
     expire: 8
   platform:
     #平台版本
-    version: v1.2.1
+    version: v1.2.4
   usercenter: zeus
   skyview:
     username: admin

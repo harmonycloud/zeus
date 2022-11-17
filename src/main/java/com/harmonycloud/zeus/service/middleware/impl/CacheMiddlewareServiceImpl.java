@@ -85,4 +85,16 @@ public class CacheMiddlewareServiceImpl implements CacheMiddlewareService {
     public void delete(Middleware middleware) {
         this.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
     }
+
+    @Override
+    public void updateValuesToNull(Middleware middleware) {
+        QueryWrapper<BeanCacheMiddleware> wrapper = new QueryWrapper<BeanCacheMiddleware>()
+            .eq("cluster_id", middleware.getClusterId()).eq("namespace", middleware.getNamespace())
+            .eq("type", middleware.getType()).eq("name", middleware.getName());
+        BeanCacheMiddleware beanCacheMiddleware = beanCacheMiddlewareMapper.selectOne(wrapper);
+        if (beanCacheMiddleware != null) {
+            beanCacheMiddleware.setValuesYaml("");
+            beanCacheMiddlewareMapper.updateById(beanCacheMiddleware);
+        }
+    }
 }

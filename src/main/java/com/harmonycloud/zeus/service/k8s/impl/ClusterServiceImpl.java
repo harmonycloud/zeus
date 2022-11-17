@@ -441,10 +441,6 @@ public class ClusterServiceImpl implements ClusterService {
         CLUSTER_MAP.remove(clusterId);
         // 关联数据库信息删除
         bindResourceDelete(cluster);
-        // 移除镜像仓库信息
-        imageRepositoryService.removeImageRepository(clusterId);
-        // 删除可用区初始化状态信息
-        activeAreaService.delete(clusterId);
     }
 
     public void bindResourceDelete(MiddlewareClusterDTO cluster) {
@@ -452,6 +448,12 @@ public class ClusterServiceImpl implements ClusterService {
         clusterComponentService.delete(cluster.getId());
         // 删除ingress信息
         ingressComponentService.delete(cluster.getId());
+        // 移除镜像仓库信息
+        imageRepositoryService.removeImageRepository(cluster.getId());
+        // 删除可用区初始化状态信息
+        activeAreaService.delete(cluster.getId());
+        // 移除项目下分区绑定关系
+        projectService.unBindNamespace(null, cluster.getId(), null);
     }
 
     private void checkClusterExistent(MiddlewareClusterDTO cluster, boolean expectExisting) {
@@ -695,7 +697,7 @@ public class ClusterServiceImpl implements ClusterService {
                 // 查询cpu每5分钟平均用量
                 try {
                     String per5MinCpuUsedQuery = "sum(rate(container_cpu_usage_seconds_total{pod=~\"" + pods.toString()
-                        + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\",endpoint!=\"\"}[5m]))";
+                        + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\",endpoint!=\"\",container!=\"\"}[5m]))";
                     queryMap.put("query", per5MinCpuUsedQuery);
                     PrometheusResponse per5MinCpuUsed =
                         prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
@@ -729,7 +731,7 @@ public class ClusterServiceImpl implements ClusterService {
                 try {
                     String per5MinMemoryUsedQuery = "sum(avg_over_time(container_memory_working_set_bytes{pod=~\""
                         + pods.toString() + "\",namespace=\"" + mwCrd.getMetadata().getNamespace()
-                        + "\",endpoint!=\"\"}[5m])) /1024/1024/1024/2";
+                        + "\",endpoint!=\"\",container!=\"\"}[5m])) /1024/1024/1024";
                     queryMap.put("query", per5MinMemoryUsedQuery);
                     PrometheusResponse per5MinMemoryUsed =
                         prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
@@ -975,11 +977,11 @@ public class ClusterServiceImpl implements ClusterService {
     }
 
     @Override
-    public List<Namespace> listRegisteredNamespace(String clusterId) {
+    public List<Namespace> listRegisteredNamespace(String clusterId, String projectId) {
         if (StringUtils.isEmpty(clusterId)) {
             return Collections.emptyList();
         }
-        List<Namespace> namespaces = namespaceService.list(clusterId, false, false, false, null, null);
+        List<Namespace> namespaces = namespaceService.list(clusterId, false, false, false, null, projectId);
         return namespaces.stream().filter(namespace -> namespace.isRegistered()).collect(Collectors.toList());
     }
 

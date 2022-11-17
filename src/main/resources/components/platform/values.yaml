@@ -3,7 +3,7 @@ global:
   crdGroup: harmonycloud
   middleware_controller:
     image: middleware-controller
-    tag: v1.2.9
+    tag: v1.2.10
     resources:
       limits:
         cpu: 200m
@@ -14,7 +14,7 @@ global:
     nodeSelector: {}
   middlewarebackup_controller:
     image: middlewarebackup-controller
-    tag: v1.2.5
+    tag: v1.2.8
     resources:
       limits:
         cpu: 200m
@@ -24,21 +24,23 @@ global:
         memory: 512Mi
     nodeSelector: {}
     job_creator:
-      jobNamespace: middleware-job
+      jobTolerations: harm.cn/type
+      jobNamespace: ""
       jobServiceAccount: job-creator
       # jobSecondsAfterFinished: 60
       # jobActiveDeadlineSeconds: 86400
       image: backup-job-creator
-      tag: v1.0.2
+      tag: v1.0.3
     common_path_backup:
       image: middleware-backup-operator
       tag: v1.0.3-common
     job_pgsql_backup:
       image: middleware-backup-operator
-      tag: v1.0.4-pgsql
+      tag: v1.0.5-pgsql
     job_mysql_backup:
       image: middleware-backup-operator
-      tag: v1.0.2-mysql
+      tag: v1.0.3-mysql
+      mysql8tag: v1.0.3-mysql8
   kubectl:
     installCRDs: true
     tag: 1.21

@@ -428,7 +428,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         List<BeanMiddlewareCluster> clusterList = middlewareClusterService.listClustersByClusterId(null);
         List<Middleware> middlewareList = new ArrayList<>();
         clusterList.forEach(cluster -> {
-            List<Namespace> listRegisteredNamespace = clusterService.listRegisteredNamespace(cluster.getClusterId());
+            List<Namespace> listRegisteredNamespace = clusterService.listRegisteredNamespace(cluster.getClusterId(), null);
             List<Middleware> middlewares;
             try{
                 middlewares = middlewareService.simpleList(cluster.getClusterId(), null, null, null);
@@ -515,9 +515,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
                     }
                     break;
                 case "mysql":
-                    if (middleware.getQuota().get("mysql").getIsLvmStorage()) {
-                        middlewares.add(middleware);
-                    }
+                    middlewares.add(middleware);
                     break;
                 case "rocketmq":
                     if (middleware.getQuota().get("rocketmq").getIsLvmStorage()) {
@@ -530,9 +528,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
                     }
                     break;
                 case "postgresql":
-                    if (middleware.getQuota().get("postgresql").getIsLvmStorage()) {
-                        middlewares.add(middleware);
-                    }
+                    middlewares.add(middleware);
                     break;
             }
         }

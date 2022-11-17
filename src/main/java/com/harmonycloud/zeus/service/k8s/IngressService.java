@@ -20,7 +20,7 @@ public interface IngressService {
      * @param keyword
      * @return
      */
-    List<IngressDTO> list(String clusterId, String namespace, String keyword);
+    List<IngressDTO> list(String clusterId, String namespace, String keyword, String projectId);
 
     /**
      * 创建中间件对外访问
@@ -38,14 +38,14 @@ public interface IngressService {
      * @param cluster     集群
      * @param serviceList 服务列表
      */
-    void checkServiceTcpPort(MiddlewareClusterDTO cluster, List<ServiceDTO> serviceList);
+    void checkServiceTcpPort(MiddlewareClusterDTO cluster, String ingressClassName, String exposeType, List<ServiceDTO> serviceList);
 
     /**
      * 获取集群已被使用的端口列表
      * @param cluster
      * @return
      */
-    Set<Integer>  getUsedPortSet(MiddlewareClusterDTO cluster);
+    Set<Integer>  getUsedPortSet(MiddlewareClusterDTO cluster, Boolean filter);
 
     /**
      * 创建中间件对外访问
@@ -55,7 +55,7 @@ public interface IngressService {
      * @param serviceList 服务列表
      * @param checkPort   校验端口
      */
-    void createIngressTcp(MiddlewareClusterDTO cluster, String namespace, List<ServiceDTO> serviceList, boolean checkPort);
+//    void createIngressTcp(MiddlewareClusterDTO cluster, String namespace, List<ServiceDTO> serviceList, boolean checkPort);
 
     /**
      * 删除中间件对外访问
@@ -80,6 +80,17 @@ public interface IngressService {
 
     /**
      * 查询单个中间件对外访问
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param middlewareName
+     * @return
+     */
+    List<IngressDTO> get(String clusterId, String namespace, String type, String middlewareName);
+
+    /**
+     * 查询单个中间件对外访问,过滤不需要显示的服务暴露
+     * 信息，例如rocketmq的broker信息
      *
      * @param clusterId      集群id
      * @param namespace      命名空间
@@ -87,7 +98,7 @@ public interface IngressService {
      * @param middlewareName 中间件名称
      * @return
      */
-    List<IngressDTO> get(String clusterId, String namespace, String type, String middlewareName);
+    List<IngressDTO> getMiddlewareIngress(String clusterId, String namespace, String type, String middlewareName);
 
     /**
      * 查询单个中间件对外访问
@@ -122,7 +133,16 @@ public interface IngressService {
      * @param keyword
      * @return
      */
-    List<IngressDTO> listAllIngress(String clusterId, String namespace, String keyword);
+    List<IngressDTO> listAllIngress(String clusterId, String namespace, String keyword, String projectId);
+
+    /**
+     * 查询所有中间件ingress(不同于查询所有ingress,此方法会过滤掉不是通过中间件平台创建的服务暴露信息)
+     * @param clusterId
+     * @param namespace
+     * @param keyword
+     * @return
+     */
+    List<IngressDTO> listAllMiddlewareIngress(String clusterId, String namespace, String keyword, String projectId);
 
     /**
      * 获取一个未被占用的ingress端口
@@ -146,7 +166,7 @@ public interface IngressService {
      * @param clusterId
      * @param port
      */
-    void verifyServicePort(String clusterId, Integer port);
+    void verifyServicePort(String clusterId, String ingressClassName, String exposeType, Integer port);
 
     /**
      * 查询ingress ip
@@ -154,6 +174,11 @@ public interface IngressService {
      * @param ingressClassName
      * @return
      */
-    Set<String> listIngressIp(String clusterId, String ingressClassName);
+    List<String> listIngressIp(String clusterId, String ingressClassName);
+
+    /**
+     * 获取一个可用的ingress ip
+     */
+    String getIngressIp(String clusterId, String ingressClassName);
 
 }

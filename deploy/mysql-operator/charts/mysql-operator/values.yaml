@@ -2,18 +2,14 @@ operatorpwd: "abcd!@#$"
 replicapwd: "abcd!@#$"
 sshpwd: "abcd!@#$"
 mysqlUserHost: "%"
-
 replicaCount: 1
-
 image:
   repository: harbor.middleware.com/middleware
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: v1.8.13
   kubectlTag: 1.21
-
 updateStrategy: "OnDelete"
-
 kubectl:
   installCRDs: true
   resources:
@@ -25,25 +21,38 @@ kubectl:
       memory: 256Mi
   nodeSelector: {}
   tolerations:
-    - operator: Exists
-  affinity: {}
-
-imagePullSecrets: []
+    - effect: NoSchedule
+      key: harm.cn/type
+      value: active-active
+    - effect: NoSchedule
+      key: harm.cn/system
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - preference:
+            matchExpressions:
+              - key: system
+                operator: In
+                values:
+                  - "true"
+          weight: 100
+  imagePullSecrets:
+    - name: registrysecret
+imagePullSecrets:
+  - name: registrysecret
 nameOverride: ""
 fullnameOverride: ""
-
 podAnnotations: {}
-
 podSecurityContext: {}
-  # fsGroup: 2000
+# fsGroup: 2000
 
 securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+# capabilities:
+#   drop:
+#   - ALL
+# readOnlyRootFilesystem: true
+# runAsNonRoot: true
+# runAsUser: 1000
 
 resources:
   limits:
@@ -52,15 +61,23 @@ resources:
   requests:
     cpu: 100m
     memory: 256Mi
-
 nodeSelector: {}
-
 tolerations:
-  - operator: Exists
-
+  - effect: NoSchedule
+    key: harm.cn/type
+    value: active-active
+  - effect: NoSchedule
+    key: harm.cn/system
 affinity: {}
-
-podAntiAffinityTopologKey: "kubernetes.io/hostname"
-
+podAntiAffinityTopologKey: "zone"
 #取值[hard|soft] hard:强制反亲和 soft:非强制反亲和
 podAntiAffinity: "soft"
+nodeAffinity:
+  preferredDuringSchedulingIgnoredDuringExecution:
+    - preference:
+        matchExpressions:
+          - key: system
+            operator: In
+            values:
+              - "true"
+      weight: 100

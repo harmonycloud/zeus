@@ -69,21 +69,24 @@ public class K8sConvert {
 
     /**
      * 将labels转为NodeAffinity
-     * @param labels
+     * @param dtoLis
      * @return
      */
-    public static NodeAffinity convertNodeAffinity(List<String> labels, Boolean required) {
+    public static NodeAffinity convertNodeAffinity(List<AffinityDTO> dtoLis, Boolean required) {
         NodeAffinity nf = new NodeAffinity();
         List<PreferredSchedulingTerm> pstList = new ArrayList<>(1);
         List<NodeSelectorTerm> nss = new ArrayList<>(1);
 
-        for (int i = 0; i < labels.size(); i++) {
-            String[] labelArr = labels.get(i).split("=");
+        for (int i = 0; i < dtoLis.size(); i++) {
+            AffinityDTO affinityDTO = dtoLis.get(i);
+            String[] labelArr = affinityDTO.getLabel().split("=");
             NodeSelectorTerm nst;
             if (labelArr.length == 2) {
-                nst = convertNodeSelectorTerm(labelArr[0], labelArr[1]);
+                String operator = affinityDTO.getAnti() == null ? "IN" : affinityDTO.getAnti() ? "NotIn": "In";
+                nst = convertNodeSelectorTerm(labelArr[0], labelArr[1], operator);
             } else if (labelArr.length == 1) {
-                nst = convertNodeSelectorTerm(labelArr[0]);
+                String operator = affinityDTO.getAnti() == null ? "IN" : affinityDTO.getAnti() ? "NotIn": "In";
+                nst = convertNodeSelectorTerm(labelArr[0], null, operator);
             } else {
                 continue;
             }
@@ -94,7 +97,7 @@ public class K8sConvert {
                 PreferredSchedulingTerm p = new PreferredSchedulingTerm();
                 p.setPreference(nst);
                 // 权重
-                p.setWeight(labels.size() - i);
+                p.setWeight(dtoLis.size() - i);
                 pstList.add(p);
             }
         }
@@ -139,7 +142,9 @@ public class K8sConvert {
         NodeSelectorRequirement nsr = new NodeSelectorRequirement();
         nsr.setKey(key);
         nsr.setOperator(operator);
-        nsr.setValues(Collections.singletonList(value));
+        if (StringUtils.isNotEmpty(value)){
+            nsr.setValues(Collections.singletonList(value));
+        }
         nsrList.add(nsr);
 
         NodeSelectorTerm nst = new NodeSelectorTerm();
@@ -163,11 +168,15 @@ public class K8sConvert {
         if (CollectionUtils.isEmpty(dtoLis)) {
             return null;
         }
-        NodeAffinity nodeAffinity;
-        if (dtoLis.get(0) != null && dtoLis.get(0).isRequired()) {
-            nodeAffinity = convertNodeAffinity(dtoLis.stream().map(AffinityDTO::getLabel).collect(Collectors.toList()), true);
-        } else {
-            nodeAffinity = convertNodeAffinity(dtoLis.stream().map(AffinityDTO::getLabel).collect(Collectors.toList()), false);
+        NodeAffinity nodeAffinity = new NodeAffinity();
+        Map<Boolean, List<AffinityDTO>> map = dtoLis.stream().collect(Collectors.groupingBy(AffinityDTO::isRequired));
+        if (map.containsKey(true)) {
+            nodeAffinity.setRequiredDuringSchedulingIgnoredDuringExecution(
+                convertNodeAffinity(map.get(true), true).getRequiredDuringSchedulingIgnoredDuringExecution());
+        }
+        if (map.containsKey(false)) {
+            nodeAffinity.setPreferredDuringSchedulingIgnoredDuringExecution(
+                convertNodeAffinity(map.get(false), false).getPreferredDuringSchedulingIgnoredDuringExecution());
         }
         return convertNodeAffinity2Json(nodeAffinity);
     }
@@ -219,8 +228,8 @@ public class K8sConvert {
                 if (nsqList != null && nsqList.size() > 0) {
                     for (NodeSelectorRequirement nsq : nsqList) {
                         json.put("required", false);
-                        nsq.getOperator();
-                        json.put("label", nsq.getKey() + convertOperator(nsq.getOperator()) + (CollectionUtils.isEmpty(nsq.getValues()) ? "" : nsq.getValues().get(0)));
+                        json.put("anti", nsq.getOperator().contains("Not"));
+                        json.put("label", nsq.getKey() + "=" + (CollectionUtils.isEmpty(nsq.getValues()) ? "" : nsq.getValues().get(0)));
                         list.add(JSONObject.toJavaObject(json, tClass));
                     }
                 }
@@ -236,7 +245,8 @@ public class K8sConvert {
                         List<NodeSelectorRequirement> nsr = nst.getMatchExpressions();
                         for (NodeSelectorRequirement ns : nsr) {
                             json.put("required", true);
-                            json.put("label", ns.getKey() + convertOperator(ns.getOperator()) + ns.getValues().get(0));
+                            json.put("anti", ns.getOperator().contains("Not"));
+                            json.put("label", ns.getKey() + "=" + ns.getValues().get(0));
                             list.add(JSONObject.toJavaObject(json, tClass));
                         }
                     }
@@ -297,12 +307,14 @@ public class K8sConvert {
 
     public static String convertOperator(String operator) {
         switch (operator) {
-            case "Equals":
+            case "Exists":
                 return "=";
             case "NotIn":
                 return "!=";
             case "In":
                 return "=";
+            case "DoesNotExist":
+                return "!=";
             default:
                 return "";
         }

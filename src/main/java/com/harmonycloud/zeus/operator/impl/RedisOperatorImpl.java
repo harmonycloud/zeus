@@ -3,17 +3,17 @@ package com.harmonycloud.zeus.operator.impl;
 import static com.harmonycloud.caas.common.constants.NameConstant.*;
 import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_INGRESS;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.NODE_AFFINITY;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PREDIXY;
 import static com.harmonycloud.caas.common.enums.DictEnum.POD;
 
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
 import com.harmonycloud.caas.common.enums.Protocol;
 import com.harmonycloud.caas.common.model.AffinityDTO;
 import com.harmonycloud.caas.common.model.IngressComponentDto;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.tool.collection.JsonUtils;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.service.k8s.IngressComponentService;
 import com.harmonycloud.zeus.service.k8s.ServiceService;
@@ -21,6 +21,7 @@ import com.harmonycloud.zeus.service.middleware.impl.MiddlewareServiceImpl;
 import com.harmonycloud.zeus.util.K8sConvert;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.NodeAffinity;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -37,8 +38,7 @@ import java.util.stream.Collectors;
 
 /**
  * @author dengyulong
- * @date 2021/03/23
- * 处理redis逻辑
+ * @date 2021/03/23 处理redis逻辑
  */
 @Slf4j
 @Operator(paramTypes4One = Middleware.class)
@@ -63,9 +63,12 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         ingressDTO.setExposeType(MIDDLEWARE_EXPOSE_INGRESS);
         ingressDTO.setProtocol(Protocol.TCP.getValue());
         ingressDTO.setMiddlewareType(middleware.getType());
-        List<ServicePortDTO> servicePortDTOList = serviceService.list(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType()).stream().filter(servicePortDTO -> {
-            return !(servicePortDTO.getServiceName().contains("readonly") || servicePortDTO.getServiceName().contains("sentinel"));
-        }).collect(Collectors.toList());
+        List<ServicePortDTO> servicePortDTOList = serviceService
+            .list(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType())
+            .stream().filter(servicePortDTO -> {
+                return !(servicePortDTO.getServiceName().contains("readonly")
+                    || servicePortDTO.getServiceName().contains("sentinel"));
+            }).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(servicePortDTOList)) {
             return;
         }
@@ -88,8 +91,8 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         ingressService.create(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), ingressDTO);
     }
 
-
-    private void executeCreateOpenService(Middleware middleware, MiddlewareServiceNameIndex middlewareServiceNameIndex) {
+    private void executeCreateOpenService(Middleware middleware,
+        MiddlewareServiceNameIndex middlewareServiceNameIndex) {
         List<IngressComponentDto> ingressComponentList = ingressComponentService.list(middleware.getClusterId());
         log.info("开始为{}创建对外服务，参数：{}", middleware.getName(), middleware);
         if (CollectionUtils.isEmpty(ingressComponentList)) {
@@ -103,9 +106,16 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
 
     public void createOpenService(Middleware middleware) {
         boolean success = false;
-        MiddlewareServiceNameIndex middlewareServiceNameIndex = ServiceNameConvertUtil.convertRedis(middleware.getName());
+        ReadWriteProxy readWriteProxy = middleware.getReadWriteProxy();
+        String mod = "proxy";
+        if ("sentinel".equals(middleware.getMode()) && !readWriteProxy.getEnabled()) {
+            mod = "sentinel";
+        }
+        MiddlewareServiceNameIndex middlewareServiceNameIndex = ServiceNameConvertUtil.convertRedis(middleware.getName(), mod);
+
         for (int i = 0; i < (60 * 10 * 60) && !success; i++) {
-            Middleware detail = middlewareService.detail(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
+            Middleware detail = middlewareService.detail(middleware.getClusterId(), middleware.getNamespace(),
+                middleware.getName(), middleware.getType());
             log.info("为实例：{}创建对外服务：状态：{},已用时：{}s", detail.getName(), detail.getStatus(), i);
             if (detail != null) {
                 if (detail.getStatus() != null && "Running".equals(detail.getStatus())) {
@@ -141,7 +151,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
                 }
             }
             Integer num = redisQuota.getNum();
-            if (middleware.getReadWriteProxy() != null && middleware.getReadWriteProxy().getEnabled()){
+            if (middleware.getReadWriteProxy() != null && middleware.getReadWriteProxy().getEnabled()) {
                 num = num / 2;
             }
             redis.put(REPLICAS, num);
@@ -172,11 +182,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
         convertCommonByHelmChart(middleware, values);
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
-        convertRegistry(middleware,cluster);
-        // 双活服务过滤掉主机容忍和主机亲和
-        if(namespaceService.checkAvailableDomain(middleware.getClusterId(), middleware.getNamespace())){
-            super.filterActiveActiveToleration(middleware);
-        }
+        convertRegistry(middleware, cluster);
 
         // 处理redis特有参数
         if (values != null) {
@@ -185,7 +191,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             convertResourcesByHelmChart(middleware, middleware.getType(), redisQuota.getJSONObject(RESOURCES));
             middleware.getQuota().get(middleware.getType()).setNum(redisQuota.getInteger(REPLICAS));
             // 读写分离
-            if (values.containsKey("predixy")){
+            if (values.containsKey("predixy")) {
                 ReadWriteProxy readWriteProxy = new ReadWriteProxy();
                 readWriteProxy.setEnabled(values.getJSONObject("predixy").getBoolean("enableProxy"));
                 middleware.setReadWriteProxy(readWriteProxy);
@@ -207,6 +213,8 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
 
     @Override
     public void update(Middleware middleware, MiddlewareClusterDTO cluster) {
+        JSONObject values =
+            helmChartService.getInstalledValues(middleware.getName(), middleware.getNamespace(), cluster);
         if (cluster == null) {
             cluster = clusterService.findById(middleware.getClusterId());
         }
@@ -233,7 +241,12 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             }
             // 实例模式扩容
             if (quota.getNum() != null) {
-                sb.append("redis.replicas=").append(quota.getNum()).append(",");
+                if ("sentinel".equals(values.getString("mode")) && values.containsKey("predixy")
+                    && values.getJSONObject("predixy").getBoolean("enableProxy")) {
+                    sb.append("redis.replicas=").append(quota.getNum() / 2).append(",");
+                } else {
+                    sb.append("redis.replicas=").append(quota.getNum()).append(",");
+                }
             }
         }
 
@@ -245,20 +258,19 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             // 实例规格扩容
             // cpu
             if (StringUtils.isNotBlank(sentinelQuota.getCpu())) {
-                sb.append("sentinel.resources.requests.cpu=").append(sentinelQuota.getCpu()).append(",sentinel.resources.limits.cpu=")
-                        .append(sentinelQuota.getLimitCpu()).append(",");
+                sb.append("sentinel.resources.requests.cpu=").append(sentinelQuota.getCpu())
+                    .append(",sentinel.resources.limits.cpu=").append(sentinelQuota.getLimitCpu()).append(",");
             }
             // memory
             if (StringUtils.isNotBlank(sentinelQuota.getMemory())) {
                 sb.append("sentinel.resources.requests.memory=").append(sentinelQuota.getMemory())
-                        .append(",sentinel.resources.limits.memory=").append(sentinelQuota.getLimitMemory()).append(",");
+                    .append(",sentinel.resources.limits.memory=").append(sentinelQuota.getLimitMemory()).append(",");
             }
             // 实例模式扩容
             if (sentinelQuota.getNum() != null) {
                 sb.append("sentinel.replicas=").append(sentinelQuota.getNum()).append(",");
             }
         }
-
 
         // 密码
         if (StringUtils.isNotBlank(middleware.getPassword())) {
@@ -284,12 +296,12 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
     }
 
     @Override
-    public void editConfigMapData(CustomConfig customConfig, List<String> data){
+    public void editConfigMapData(CustomConfig customConfig, List<String> data) {
         for (int i = 0; i < data.size(); ++i) {
             if (data.get(i).contains(customConfig.getName())) {
                 String temp = StringUtils.substring(data.get(i), data.get(i).indexOf(" ") + 1, data.get(i).length());
                 String test = data.get(i).replace(" ", "").replace(temp, "");
-                if (data.get(i).replace(" ", "").replace(temp, "").equals(customConfig.getName())){
+                if (data.get(i).replace(" ", "").replace(temp, "").equals(customConfig.getName())) {
                     data.set(i, data.get(i).replace(temp, customConfig.getValue()));
                 }
             }
@@ -340,18 +352,28 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
     }
 
     @Override
-    public void replaceReadWriteProxyValues(ReadWriteProxy readWriteProxy, JSONObject values){
+    public void replaceReadWriteProxyValues(Middleware middleware, JSONObject values) {
+        ReadWriteProxy readWriteProxy = middleware.getReadWriteProxy();
         JSONObject predixy = new JSONObject();
         predixy.put("enableProxy", readWriteProxy.getEnabled());
 
         JSONObject requests = new JSONObject();
         JSONObject limits = new JSONObject();
 
-        requests.put(CPU, "200m");
-        requests.put(MEMORY, "512Mi");
-        limits.put(CPU, "200m");
-        limits.put(MEMORY, "512Mi");
-        predixy.put("replicas", 3);
+        MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
+        String memory = calculateProxyResource(quota.getMemory().replace("Gi", ""));
+        if (Double.parseDouble(memory) < 0.256) {
+            memory = String.valueOf(0.256);
+        } else if (Double.parseDouble(memory) > 2) {
+            memory = String.valueOf(2);
+        }
+
+        requests.put(CPU, "1");
+        requests.put(MEMORY, memory + "Gi");
+        limits.put(CPU, "1");
+        limits.put(MEMORY, memory + "Gi");
+        Integer num = quota.getNum();
+        predixy.put("replicas", num / 2 == 1 ? num : num / 2);
 
         JSONObject resources = new JSONObject();
         resources.put("requests", requests);
@@ -362,9 +384,46 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
     }
 
     @Override
+    protected void replaceNodeAffinity(Middleware middleware, JSONObject values) {
+        JSONObject affinity;
+        if (values.containsKey(REDIS) && values.getJSONObject(REDIS).containsKey(NODE_AFFINITY)) {
+            affinity = values.getJSONObject(REDIS).getJSONObject(NODE_AFFINITY);
+        } else if (values.containsKey(NODE_AFFINITY)) {
+            affinity = values.getJSONObject(NODE_AFFINITY);
+        } else {
+            affinity = new JSONObject();
+            values.put(NODE_AFFINITY, affinity);
+        }
+        if (!CollectionUtils.isEmpty(middleware.getNodeAffinity())) {
+            // convert to k8s model
+            JSONObject nodeAffinity = K8sConvert.convertNodeAffinity2Json(middleware.getNodeAffinity());
+            if (nodeAffinity != null) {
+                affinity.putAll(nodeAffinity);
+            }
+        }
+    }
+
+    @Override
+    public void convertNodeAffinity(Middleware middleware, JSONObject values) {
+        JSONObject affinity;
+        if (values.containsKey(REDIS) && values.getJSONObject(REDIS).containsKey(NODE_AFFINITY)) {
+            affinity = values.getJSONObject(REDIS).getJSONObject("nodeAffinity");
+        } else if (JsonUtils.isJsonObject(values.getString("nodeAffinity"))) {
+            affinity = values.getJSONObject("nodeAffinity");
+        } else {
+            return;
+        }
+        if (!CollectionUtils.isEmpty(affinity)) {
+            List<AffinityDTO> dto = K8sConvert.convertNodeAffinity(
+                JSONObject.parseObject(affinity.toJSONString(), NodeAffinity.class), AffinityDTO.class);
+            middleware.setNodeAffinity(dto);
+        }
+    }
+
+    @Override
     public void checkAndSetActiveActive(JSONObject values, Middleware middleware) {
         if (namespaceService.checkAvailableDomain(middleware.getClusterId(), middleware.getNamespace())) {
-            super.setActiveActiveConfig( "redis", values);
+            super.setActiveActiveConfig("redis", values);
             super.setActiveActiveToleration(middleware, values);
         }
     }

@@ -35,17 +35,18 @@ public class IngressController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "keyword", value = "模糊搜索", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/ingress")
     @Authority(power = 1)
     public BaseResult<List<IngressDTO>> list(@PathVariable("clusterId") String clusterId,
                                              @PathVariable(value = "namespace") String namespace,
-                                             @RequestParam(value = "keyword", required = false) String keyword) {
+                                             @RequestParam(value = "keyword", required = false) String keyword,
+                                             @RequestParam(value = "projectId", required = false) String projectId) {
         if (namespace.equals(ASTERISK)){
             namespace = null;
         }
-        return BaseResult.ok(ingressService.listAllIngress(clusterId, namespace, keyword));
+        return BaseResult.ok(ingressService.listAllMiddlewareIngress(clusterId, namespace, keyword, projectId));
     }
 
     @ApiOperation(value = "创建中间件对外访问", notes = "创建中间件对外访问")
@@ -97,7 +98,7 @@ public class IngressController {
                                       @PathVariable("namespace") String namespace,
                                       @PathVariable("middlewareName") String middlewareName,
                                       @RequestParam("type") String type) {
-        return BaseResult.ok(ingressService.get(clusterId, namespace, type, middlewareName));
+        return BaseResult.ok(ingressService.getMiddlewareIngress(clusterId, namespace, type, middlewareName));
     }
 
     @ApiOperation(value = "校验服务端口是否可用", notes = "校验服务端口是否可用")
@@ -108,7 +109,7 @@ public class IngressController {
     @GetMapping("/verifyServicePort")
     public BaseResult verifyServicePort(@PathVariable("clusterId") String clusterId,
                                         @RequestParam("port") Integer port){
-        ingressService.verifyServicePort(clusterId, port);
+        ingressService.verifyServicePort(clusterId, null,null,port);
         return BaseResult.ok();
     }
     

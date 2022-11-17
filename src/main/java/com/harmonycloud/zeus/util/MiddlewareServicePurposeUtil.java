@@ -39,10 +39,18 @@ public class MiddlewareServicePurposeUtil {
             serviceNameList.add(serviceName);
         }
         StringBuffer sbf = new StringBuffer();
+        // 当一个http ingress包含多个服务时，一个服务暴露就会有多个用途
         serviceNameList.forEach(svcName -> {
-            sbf.append(getPurpose(middlewareName, middlewareType, svcName)).append(",");
+            String purpose = getPurpose(middlewareName, middlewareType, svcName);
+            if (purpose != null) {
+                sbf.append(purpose).append(",");
+            }
         });
-        return sbf.substring(0, sbf.length() - 1);
+        if (StringUtils.isEmpty(sbf.toString())) {
+            return null;
+        } else {
+            return sbf.substring(0, sbf.length() - 1);
+        }
     }
 
     private static String getPurpose(String middlewareName, String middlewareType, String serviceName) {
@@ -122,11 +130,11 @@ public class MiddlewareServicePurposeUtil {
         if (serviceName.contains("console-svc")) {
             return "管理页面";
         } else if (serviceName.contains("proxy")) {
-            return "服务代理";
+            return "服务代理proxy-" + serviceName.substring(serviceName.length() - 1);
         } else if (serviceName.contains("namesrv")) {
             return "服务连接";
         } else if (serviceName.contains("master") || serviceName.contains("slave")) {
-            return "集群外访问";
+            return null;
         } else {
             return null;
         }

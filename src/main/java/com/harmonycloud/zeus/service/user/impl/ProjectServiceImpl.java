@@ -83,6 +83,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Transactional(rollbackFor = Exception.class)
     public void add(ProjectDto projectDto) {
         AssertUtil.notBlank(projectDto.getName(), DictEnum.PROJECT_NAME);
+        checkParam(projectDto);
         String projectId = UUIDUtils.get16UUID();
         BeanProject beanProject = new BeanProject();
         BeanUtils.copyProperties(projectDto, beanProject);
@@ -523,6 +524,14 @@ public class ProjectServiceImpl implements ProjectService {
             return namespaces;
         }
         return setAvailableDomainStatus(namespaces, clusterId);
+    }
+
+    public void checkParam(ProjectDto projectDto){
+        QueryWrapper<BeanProject> wrapper = new QueryWrapper<BeanProject>().eq("name", projectDto.getName());
+        List<BeanProject> beanProjectList = beanProjectMapper.selectList(wrapper);
+        if (!CollectionUtils.isEmpty(beanProjectList)){
+            throw new BusinessException(ErrorMessage.PROJECT_NAME_EXIST);
+        }
     }
 
     /**
