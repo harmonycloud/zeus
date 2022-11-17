@@ -883,6 +883,7 @@ CREATE TABLE `personal_config` (
   `create_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
   `update_time` timestamp NULL DEFAULT NULL COMMENT '修改时间',
   `status` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '是否默认',
+  `platform_alias_name` VARCHAR(256) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT "中间件平台" COMMENT '平台别名'
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
