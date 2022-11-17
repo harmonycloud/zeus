@@ -226,7 +226,8 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public JSONArray showTableData(String clusterId, String namespace, String middlewareName, String database, String table,QueryInfo queryInfo) {
+    public JSONArray showTableData(String clusterId, String namespace, String middlewareName, String database, String table, QueryInfo queryInfo) {
+        int count = getTableRecordCount(clusterId, namespace, middlewareName, database, table);
         JSONArray dataAry = mysqlClient.showTableData(getPath(middlewareName, namespace), port, database, table, queryInfo).getJSONArray("dataAry");
         if (CollectionUtils.isEmpty(dataAry)) {
             throw new BusinessException(ErrorMessage.FAILED_TO_OBTAIN_TABLE_DATA);

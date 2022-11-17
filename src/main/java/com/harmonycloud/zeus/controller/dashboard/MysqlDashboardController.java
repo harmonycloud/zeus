@@ -678,7 +678,13 @@ public class MysqlDashboardController {
 
     @ApiOperation(value = "查询审计日志", notes = "查询审计日志")
     @PostMapping("/auditSql")
-    public BaseResult<PageObject<MysqlLogDTO>> queryAuditSql(@RequestBody MysqlLogQuery auditLogQuery) {
+    public BaseResult<PageObject<MysqlLogDTO>> queryAuditSql(@PathVariable("clusterId") String clusterId,
+                                                             @PathVariable("namespace") String namespace,
+                                                             @PathVariable("middlewareName") String middlewareName,
+                                                             @RequestBody MysqlLogQuery auditLogQuery) {
+        auditLogQuery.setClusterId(clusterId);
+        auditLogQuery.setNamespace(namespace);
+        auditLogQuery.setMiddlewareName(middlewareName);
         return BaseResult.ok(mysqlService.auditSql(auditLogQuery));
     }
 
