@@ -108,7 +108,7 @@ public class K8sClient {
             K8S_CLIENT_MAP.put(DEFAULT_CLIENT, client);
             return client;
         } catch (Exception e) {
-            log.error("初始化默认集群失败", e);
+            log.error("初始化默认集群失败");
         }
         return null;
     }
