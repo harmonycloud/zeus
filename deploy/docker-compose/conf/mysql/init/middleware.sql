@@ -1199,16 +1199,18 @@ DROP TABLE IF EXISTS `sql_execute_record`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `sql_execute_record` (
-    `id` int NOT NULL AUTO_INCREMENT COMMENT '自增Id',
-    `database` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '目标database',
-    `sql` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '执行sql',
-    `line` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '行数',
-    `time` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '耗时',
-    `message` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '信息',
-    `status` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '状态',
-    `date` timestamp NULL DEFAULT NULL COMMENT '执行时间',
+    `id` int(11) NOT NULL,
+    `cluster_id` varchar(256) COLLATE utf8_bin DEFAULT NULL,
+    `namespace` varchar(256) COLLATE utf8_bin DEFAULT NULL,
+    `middleware_name` varchar(256) COLLATE utf8_bin DEFAULT NULL,
+    `target_database` varchar(256) COLLATE utf8_bin DEFAULT NULL,
+    `sqlstr` varchar(1024) COLLATE utf8_bin DEFAULT NULL COMMENT '执行sql',
+    `status` varchar(45) COLLATE utf8_bin DEFAULT NULL COMMENT '执行状态',
+    `exec_date` timestamp NULL DEFAULT NULL COMMENT '执行时间',
+    `exec_time` varchar(45) COLLATE utf8_bin DEFAULT NULL COMMENT '耗时',
+    `message` varchar(45) COLLATE utf8_bin DEFAULT NULL COMMENT '信息',
     PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='sql执行表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT 'sql执行记录表';
 
 --
 -- Table structure for table `user`
