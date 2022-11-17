@@ -986,8 +986,9 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         MiddlewareUserDto middlewareUserDto) {
         String path = getPath(middlewareName, namespace);
         setPort(clusterId, namespace, middlewareName);
-        JSONObject addUser =
-            postgresqlClient.addUser(path, port, middlewareUserDto.getUsername(), middlewareUserDto.getPassword());
+        String inherit = middlewareUserDto.isInherit() ? "INHERIT" : "NOINHERIT";
+        JSONObject addUser = postgresqlClient.addUser(path, port, middlewareUserDto.getUsername(),
+            middlewareUserDto.getPassword(), inherit);
         JSONObject err = addUser.getJSONObject("err");
         if (err != null) {
             throw new BusinessException(ErrorMessage.POSTGRESQL_CREATE_USER_FAILED, err.getString("Message"));
@@ -1350,8 +1351,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     public String getPath(String middlewareName, String namespace) {
-        return middlewareName + "." + namespace;
-        //return middlewareName;
+        //return middlewareName + "." + namespace;
+        return middlewareName;
     }
 
 }

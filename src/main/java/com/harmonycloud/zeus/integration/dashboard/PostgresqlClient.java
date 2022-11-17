@@ -357,7 +357,8 @@ public interface PostgresqlClient {
     JSONObject addUser(@Var("path") String path,
                        @Var("port") String port,
                        @Body("username") String username,
-                       @Body("password") String password);
+                       @Body("password") String password,
+                       @Body("inherit") String inherit);
 
     /**
      * 更新密码
