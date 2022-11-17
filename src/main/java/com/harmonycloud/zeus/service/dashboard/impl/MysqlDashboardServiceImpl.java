@@ -843,6 +843,9 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         } else {
             if (oldPrimaryKeys.equals(newPrimaryKeys)) {
                 return MysqlOperationEnum.NONE.getCode();
+            }
+            if (CollectionUtils.isEmpty(newPrimaryKeys)) {
+                return MysqlOperationEnum.DROP.getCode();
             } else {
                 return MysqlOperationEnum.MODIFY.getCode();
             }
