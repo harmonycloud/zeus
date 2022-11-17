@@ -1,4 +1,13 @@
 parameters:
+  - max_connections:
+      - name: default
+        value: LEAST((DBInstanceMemory-innodb_buffer_pool_size)/3*1024*1024/2, 5500)
+      - name: isReboot
+        value: n
+      - name: range
+        value: [1-5500]
+      - name: describe
+        value: The maximum permitted number of simultaneous client connections.
   - innodb_buffer_pool_size:
       - name: default
         value: DBInstanceMemory*1/2
@@ -46,11 +55,11 @@ parameters:
         value: "If there is more than this number of interrupted connections from a host this host will be blocked from further connections"
   - max_user_connections:
       - name: default
-        value: 1200
+        value: LEAST((max_connections/2, 3000)
       - name: isReboot
         value: n
       - name: range
-        value: [0-4294967295]
+        value: [0-3000]
       - name: describe
         value: "The maximum number of simultaneous connections permitted to any given MySQL user account. A value of 0 (the default) means “no limit.”"
   - max_execution_time:
@@ -118,7 +127,7 @@ parameters:
         value: "The transaction isolation level."
   - skip_name_resolve:
       - name: default
-        value: ON
+        value: 'ON'
       - name: isReboot
         value: y
       - name: range
@@ -127,7 +136,7 @@ parameters:
         value: "Whether to resolve host names when checking client connections. If this variable is OFF, mysqld resolves host names when checking client connections. If it is ON, mysqld uses only IP numbers; in this case, all Host column values in the grant tables must be IP addresses. "
   - explicit_defaults_for_timestamp:
       - name: default
-        value: ON
+        value: 'ON'
       - name: isReboot
         value: n
       - name: range
@@ -154,7 +163,7 @@ parameters:
         value: "This variable controls server-side LOCAL capability for LOAD DATA statements."
   - event_scheduler:
       - name: default
-        value: OFF
+        value: 'OFF'
       - name: isReboot
         value: n
       - name: range
@@ -172,7 +181,7 @@ parameters:
         value: "A string to be executed by the server for each client that connects. The string consists of one or more SQL statements, separated by semicolon characters."
   - slow_query_log:
       - name: default
-        value: ON
+        value: 'ON'
       - name: isReboot
         value: n
       - name: range
@@ -194,7 +203,7 @@ parameters:
       - name: isReboot
         value: n
       - name: range
-        value: [ON|OFF]
+        value: [0|1]
       - name: describe
         value: "Log queries that are executed without benefit of any index to the slow log if it is open"
   - log_throttle_queries_not_using_indexes:
@@ -208,7 +217,7 @@ parameters:
         value: "If log_queries_not_using_indexes is enabled, the log_throttle_queries_not_using_indexes variable limits the number of such queries per minute that can be written to the slow query log."
   - general_log:
       - name: default
-        value: OFF
+        value: 'OFF'
       - name: isReboot
         value: y
       - name: range
@@ -235,7 +244,7 @@ parameters:
         value: "If a write to the binary log causes the current log file size to exceed the value of this variable, the server rotates the binary logs (closes the current file and opens the next one). "
   - binlog_rows_query_log_events:
       - name: default
-        value: ON
+        value: 'ON'
       - name: isReboot
         value: n
       - name: range
@@ -289,7 +298,7 @@ parameters:
         value: "If a write by a replica to its relay log causes the current log file size to exceed the value of this variable, the replica rotates the relay logs (closes the current file and opens the next one). If max_relay_log_size is 0, the server uses max_binlog_size for both the binary log and the relay log. If max_relay_log_size is greater than 0, it constrains the size of the relay log, which enables you to have different sizes for the two logs. You must set max_relay_log_size to between 4096 bytes and 1GB (inclusive), or to 0."
   - relay_log_purge:
       - name: default
-        value: ON
+        value: 'ON'
       - name: isReboot
         value: n
       - name: range
@@ -298,7 +307,7 @@ parameters:
         value: "Disables or enables automatic purging of relay log files as soon as they are not needed any more."
   - relay_log_recovery:
       - name: default
-        value: ON
+        value: 'ON'
       - name: isReboot
         value: y
       - name: range
@@ -325,7 +334,7 @@ parameters:
         value: "The maximum number of transactions to wait for before aborting the current delay as specified by binlog_group_commit_sync_delay. If binlog_group_commit_sync_delay is set to 0, then this option has no effect."
   - master_verify_checksum:
       - name: default
-        value: ON
+        value: 'ON'
       - name: isReboot
         value: n
       - name: range
@@ -460,11 +469,11 @@ parameters:
         value: "Number of seconds to wait for a block to be written to a connection before aborting the write"
   - skip_external_locking:
       - name: default
-        value: ON
+        value: 1
       - name: isReboot
         value: y
       - name: range
-        value: [ON|OFF]
+        value: [0|1]
       - name: describe
         value: "This is OFF if mysqld uses external locking (system locking), ON if external locking is disabled. This affects only MyISAM table access."
   - key_buffer_size:
@@ -494,15 +503,6 @@ parameters:
         value: [NEVER|AUTO|ALWAYS]
       - name: describe
         value: "Use concurrent insert with MyISAM. Possible values are NEVER, AUTO, ALWAYS"
-  - open_files_limit:
-      - name: default
-        value: 65000
-      - name: isReboot
-        value: y
-      - name: range
-        value: [1-2147483647]
-      - name: describe
-        value: "If this is not 0, then mysqld will use this value to reserve file descriptors to use with setrlimit()"
   - table_open_cache:
       - name: default
         value: 16000
@@ -541,7 +541,7 @@ parameters:
         value: "The number of log files in the log group. "
   - innodb_undo_log_truncate:
       - name: default
-        value: ON
+        value: 'ON'
       - name: isReboot
         value: n
       - name: range
@@ -622,7 +622,7 @@ parameters:
         value: "The size in bytes of the buffer that InnoDB uses to write to the log files on disk."
   - innodb_buffer_pool_load_at_startup:
       - name: default
-        value: ON
+        value: 'ON'
       - name: isReboot
         value: y
       - name: range
@@ -631,7 +631,7 @@ parameters:
         value: "Specifies that, on MySQL server startup, the InnoDB buffer pool is automatically warmed up by loading the same pages it held at an earlier time. Typically used in combination with innodb_buffer_pool_dump_at_shutdown."
   - innodb_buffer_pool_dump_at_shutdown:
       - name: default
-        value: ON
+        value: 'ON'
       - name: isReboot
         value: n
       - name: range
@@ -683,18 +683,9 @@ parameters:
         value: [1-81920]
       - name: describe
         value: "How many files at the maximum InnoDB keeps open at the same time."
-  - innodb_page_cleaners:
-      - name: default
-        value: 4
-      - name: isReboot
-        value: y
-      - name: range
-        value: [1-64]
-      - name: describe
-        value: "The number of page cleaner threads that flush dirty pages from buffer pool instances. Page cleaner threads perform flush list and LRU flushing. A single page cleaner thread was introduced in MySQL 5.6 to offload buffer pool flushing work from the InnoDB master thread. In MySQL 5.7, InnoDB provides support for multiple page cleaner threads. A value of 1 maintains the pre-MySQL 5.7 configuration in which there is a single page cleaner thread. When there are multiple page cleaner threads, buffer pool flushing tasks for each buffer pool instance are dispatched to idle page cleaner threads. The innodb_page_cleaners default value was changed from 1 to 4 in MySQL 5.7. If the number of page cleaner threads exceeds the number of buffer pool instances."
   - innodb_strict_mode:
       - name: default
-        value: ON
+        value: 'ON'
       - name: isReboot
         value: n
       - name: range
@@ -725,12 +716,12 @@ parameters:
       - name: isReboot
         value: y
       - name: range
-        value: [ON|OFF]
+        value: [0|1]
       - name: describe
         value: "Print all deadlocks to MySQL error log (off by default)"
   - innodb_rollback_on_timeout:
       - name: default
-        value: ON
+        value: 'ON'
       - name: isReboot
         value: y
       - name: range
@@ -739,7 +730,7 @@ parameters:
         value: "Roll back the complete transaction on lock wait timeout, for 4.x compatibility (disabled by default)"
   - innodb_adaptive_hash_index:
       - name: default
-        value: ON
+        value: 'ON'
       - name: isReboot
         value: n
       - name: range

@@ -52,7 +52,7 @@ image:
   pullPolicy: IfNotPresent
   testImageTag: v0.3
   logrotateImageTag: 1.3
-  proxyImageTag: 2.3.2
+  proxyImageTag: 2.3.2-1.0.0
 
 nameOverride: ""
 fullnameOverride: ""
@@ -115,6 +115,8 @@ proxy:
     requests:
       cpu: 500m
       memory: 1024Mi
+  args:
+    sync_user_period: 600000
 
 features:
   threadpool:
