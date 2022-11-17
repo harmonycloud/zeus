@@ -290,7 +290,8 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
                 newColumnList.add(newColumnDto);
                 continue;
             }
-            if (!newColumnDto.equals(oldColumnDto)) {
+            // 找出有修改或主键被勾选的列
+            if (!newColumnDto.equals(oldColumnDto) || newColumnDto.isPrimary()) {
                 if (!StringUtils.isEmpty(newColumnDto.getNewColumn())) {
                     // 修改(改列名)
                     newColumnDto.setAction(MysqlOperationEnum.CHANGE.getCode());
