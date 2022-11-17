@@ -1252,6 +1252,21 @@ data:
     /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
     /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
+    DROP TABLE IF EXISTS `sql_execute_record`;
+    CREATE TABLE `sql_execute_record` (
+      `id` int(11) NOT NULL,
+      `cluster_id` varchar(256) COLLATE utf8_bin DEFAULT NULL,
+      `namespace` varchar(256) COLLATE utf8_bin DEFAULT NULL,
+      `middleware_name` varchar(256) COLLATE utf8_bin DEFAULT NULL,
+      `target_database` varchar(256) COLLATE utf8_bin DEFAULT NULL,
+      `sqlstr` varchar(1024) COLLATE utf8_bin DEFAULT NULL COMMENT '执行sql',
+      `status` varchar(45) COLLATE utf8_bin DEFAULT NULL COMMENT '执行状态',
+      `exec_date` timestamp NULL DEFAULT NULL COMMENT '执行时间',
+      `exec_time` varchar(45) COLLATE utf8_bin DEFAULT NULL COMMENT '耗时',
+      `message` varchar(45) COLLATE utf8_bin DEFAULT NULL COMMENT '信息',
+      PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
     -- Dump completed on 2022-07-20 13:47:48
 
 
