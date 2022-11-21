@@ -18,3 +18,13 @@ CREATE TABLE `sql_execute_record` (
 -- wangpenglei
 -- 2022.10.27  修改任务名称长度
 alter table backup_name modify backup_name varchar(128) null comment '备份任务名称';
+
+-- xutianhong
+-- 2022.11.21 修改集群组件表
+alter table cluster_components add protocol varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '协议' after component;
+alter table cluster_components add host varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '地址' after protocol;
+alter table cluster_components add port int null COMMENT '端口' after host;
+alter table cluster_components add username varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '用户名' after port;
+alter table cluster_components add password varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '密码' after username;
+
+
