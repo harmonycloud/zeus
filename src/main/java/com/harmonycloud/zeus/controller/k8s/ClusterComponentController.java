@@ -96,9 +96,10 @@ public class ClusterComponentController {
     @PutMapping("/{componentName}")
     public BaseResult update(@PathVariable("clusterId") String clusterId,
                              @PathVariable("componentName") String componentName,
-                             @RequestBody MiddlewareClusterDTO cluster) {
-        cluster.setId(clusterId);
-        clusterComponentService.integrate(cluster, componentName, true);
+                             @RequestBody ClusterComponentsDto clusterComponentsDto) {
+        clusterComponentsDto.setClusterId(clusterId);
+        clusterComponentsDto.setComponent(componentName);
+        clusterComponentService.integrate(clusterComponentsDto, true);
         return BaseResult.ok();
     }
 
@@ -111,9 +112,10 @@ public class ClusterComponentController {
     @PutMapping("/{componentName}/integrate")
     public BaseResult integrate(@PathVariable("clusterId") String clusterId,
                                 @PathVariable("componentName") String componentName,
-                                @RequestBody MiddlewareClusterDTO cluster) {
-        cluster.setId(clusterId);
-        clusterComponentService.integrate(cluster, componentName, false);
+                                @RequestBody ClusterComponentsDto clusterComponentsDto) {
+        clusterComponentsDto.setClusterId(clusterId);
+        clusterComponentsDto.setComponent(componentName);
+        clusterComponentService.integrate(clusterComponentsDto, false);
         return BaseResult.ok();
     }
 

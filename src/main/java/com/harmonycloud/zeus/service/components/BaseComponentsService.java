@@ -27,13 +27,6 @@ public interface BaseComponentsService {
     void deploy(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto);
 
     /**
-     * 接入组件
-     *
-     * @param cluster 集群信息
-     */
-    void integrate(MiddlewareClusterDTO cluster);
-
-    /**
      * 卸载/取消接入 组件
      *
      * @param cluster 集群信息

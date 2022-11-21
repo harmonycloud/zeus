@@ -413,11 +413,6 @@ public class ClusterServiceImpl implements ClusterService {
         if (cluster.getLogging().getElasticSearch() == null) {
             cluster.getLogging().setElasticSearch(new MiddlewareClusterLoggingInfo());
         }
-
-        // 初始化存储相关内容
-        if (cluster.getStorage() == null) {
-            cluster.setStorage(new MiddlewareClusterStorage());
-        }
         // cluster.getStorage().computeIfAbsent(SUPPORT, k -> new HashMap<String, Object>());
     }
 

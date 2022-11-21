@@ -7,6 +7,7 @@ import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.MiddlewareControllerService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
 
@@ -25,11 +26,6 @@ public class MiddlewareControllerServiceImpl extends AbstractBaseOperator implem
     @Override
     public boolean support(String name) {
         return ComponentsEnum.MIDDLEWARE_CONTROLLER.getName().equals(name);
-    }
-
-    @Override
-    public void integrate(MiddlewareClusterDTO cluster) {
-
     }
     
     @Override
@@ -55,8 +51,16 @@ public class MiddlewareControllerServiceImpl extends AbstractBaseOperator implem
     }
 
     @Override
-    protected void updateCluster(MiddlewareClusterDTO cluster) {
-
+    public void initAddress(ClusterComponentsDto clusterComponentsDto, MiddlewareClusterDTO cluster){
+        if (StringUtils.isEmpty(clusterComponentsDto.getProtocol())){
+            clusterComponentsDto.setProtocol("http");
+        }
+        if (StringUtils.isEmpty(clusterComponentsDto.getHost())){
+            clusterComponentsDto.setHost(cluster.getHost());
+        }
+        if (StringUtils.isEmpty(clusterComponentsDto.getPort())){
+            clusterComponentsDto.setPort("31808");
+        }
     }
 
     @Override

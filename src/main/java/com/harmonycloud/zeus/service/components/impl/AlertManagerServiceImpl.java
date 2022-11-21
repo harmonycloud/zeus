@@ -56,16 +56,6 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
     }
 
     @Override
-    public void integrate(MiddlewareClusterDTO cluster) {
-        MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
-        if (existCluster.getMonitor() == null){
-            existCluster.setMonitor(new MiddlewareClusterMonitor());
-        }
-        existCluster.getMonitor().setAlertManager(cluster.getMonitor().getAlertManager());
-        clusterService.update(existCluster);
-    }
-
-    @Override
     public void delete(MiddlewareClusterDTO cluster, Integer status) {
         //uninstall
         if (status != 1){
@@ -98,14 +88,16 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
     }
 
     @Override
-    public void updateCluster(MiddlewareClusterDTO cluster){
-        MiddlewareClusterMonitorInfo alertManager = new MiddlewareClusterMonitorInfo();
-        alertManager.setProtocol("http").setPort("31902").setHost(cluster.getHost());
-        if (cluster.getMonitor() == null){
-            cluster.setMonitor(new MiddlewareClusterMonitor());
+    public void initAddress(ClusterComponentsDto clusterComponentsDto, MiddlewareClusterDTO cluster){
+        if (StringUtils.isEmpty(clusterComponentsDto.getProtocol())){
+            clusterComponentsDto.setProtocol("http");
         }
-        cluster.getMonitor().setAlertManager(alertManager);
-        clusterService.update(cluster);
+        if (StringUtils.isEmpty(clusterComponentsDto.getHost())){
+            clusterComponentsDto.setHost(cluster.getHost());
+        }
+        if (StringUtils.isEmpty(clusterComponentsDto.getPort())){
+            clusterComponentsDto.setPort("31902");
+        }
     }
 
     @Override

@@ -89,17 +89,7 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
         helmChartService.installComponents(ComponentsEnum.GRAFANA.getName(), "monitoring", componentsPath + File.separator + "grafana",
                 yaml.loadAs(values, JSONObject.class), jsonValues, cluster);
         //更新middlewareCluster
-        updateCluster(cluster);
-    }
-
-    @Override
-    public void integrate(MiddlewareClusterDTO cluster) {
-        MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
-        if (existCluster.getMonitor() == null){
-            existCluster.setMonitor(new MiddlewareClusterMonitor());
-        }
-        existCluster.getMonitor().setGrafana(cluster.getMonitor().getGrafana());
-        clusterService.update(existCluster);
+        initAddress(clusterComponentsDto, cluster);
     }
 
     @Override
@@ -124,15 +114,16 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
     }
 
     @Override
-    protected void updateCluster(MiddlewareClusterDTO cluster) {
-        MiddlewareClusterMonitorInfo grafana = new MiddlewareClusterMonitorInfo();
-        grafana.setProtocol(cluster.getMonitor().getGrafana().getProtocol()).setPort("31900")
-                .setHost(cluster.getHost());
-        if (cluster.getMonitor() == null){
-            cluster.setMonitor(new MiddlewareClusterMonitor());
+    public void initAddress(ClusterComponentsDto clusterComponentsDto, MiddlewareClusterDTO cluster){
+        if (StringUtils.isEmpty(clusterComponentsDto.getProtocol())){
+            clusterComponentsDto.setProtocol("http");
         }
-        cluster.getMonitor().setGrafana(grafana);
-        clusterService.update(cluster);
+        if (StringUtils.isEmpty(clusterComponentsDto.getHost())){
+            clusterComponentsDto.setHost(cluster.getHost());
+        }
+        if (StringUtils.isEmpty(clusterComponentsDto.getPort())){
+            clusterComponentsDto.setPort("31900");
+        }
     }
 
     @Override

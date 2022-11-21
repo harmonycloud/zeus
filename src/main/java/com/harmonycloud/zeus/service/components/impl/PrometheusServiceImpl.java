@@ -46,16 +46,6 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
     }
 
     @Override
-    public void integrate(MiddlewareClusterDTO cluster) {
-        MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
-        if (existCluster.getMonitor() == null){
-            existCluster.setMonitor(new MiddlewareClusterMonitor());
-        }
-        existCluster.getMonitor().setPrometheus(cluster.getMonitor().getPrometheus());
-        clusterService.update(existCluster);
-    }
-
-    @Override
     protected String getValues(String repository, MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
        String setValues = "image.prometheus.repository=" + repository + "/prometheus" +
                 ",image.configmapReload.repository=" + repository + "/configmap-reload" +
@@ -97,14 +87,16 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
     }
 
     @Override
-    protected void updateCluster(MiddlewareClusterDTO cluster) {
-        MiddlewareClusterMonitorInfo prometheus = new MiddlewareClusterMonitorInfo();
-        prometheus.setProtocol("http").setPort("31901").setHost(cluster.getHost());
-        if (cluster.getMonitor() == null){
-            cluster.setMonitor(new MiddlewareClusterMonitor());
+    public void initAddress(ClusterComponentsDto clusterComponentsDto, MiddlewareClusterDTO cluster){
+        if (StringUtils.isEmpty(clusterComponentsDto.getProtocol())){
+            clusterComponentsDto.setProtocol("http");
         }
-        cluster.getMonitor().setPrometheus(prometheus);
-        clusterService.update(cluster);
+        if (StringUtils.isEmpty(clusterComponentsDto.getHost())){
+            clusterComponentsDto.setHost(cluster.getHost());
+        }
+        if (StringUtils.isEmpty(clusterComponentsDto.getPort())){
+            clusterComponentsDto.setPort("31901");
+        }
     }
 
     @Override

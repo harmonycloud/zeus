@@ -48,28 +48,8 @@ public class LocalPathServiceImpl extends AbstractBaseOperator implements LocalP
     }
 
     @Override
-    public void integrate(MiddlewareClusterDTO cluster) {
-        MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
-        if (existCluster.getStorage().getSupport() == null) {
-            existCluster.getStorage().setSupport(new ArrayList<>());
-        }
-        List<MiddlewareClusterStorageSupport> existSupport = existCluster.getStorage().getSupport();
-        List<MiddlewareClusterStorageSupport> support = cluster.getStorage().getSupport();
-        existSupport = existSupport.stream().filter(st -> !ComponentsEnum.LOCAL_PATH.getName().equals(st.getType()))
-            .collect(Collectors.toList());
-        existSupport.addAll(support);
-        existCluster.getStorage().setSupport(existSupport);
-        clusterService.update(existCluster);
-    }
-
-    @Override
     public void delete(MiddlewareClusterDTO cluster, Integer status) {
         helmChartService.uninstall(cluster, "middleware-operator", ComponentsEnum.LOCAL_PATH.getName());
-        List<MiddlewareClusterStorageSupport> support = cluster.getStorage().getSupport();
-        support = support.stream().filter(st -> !ComponentsEnum.LOCAL_PATH.getName().equals(st.getType()))
-            .collect(Collectors.toList());
-        cluster.getStorage().setSupport(support);
-        clusterService.update(cluster);
     }
 
     @Override
@@ -87,18 +67,8 @@ public class LocalPathServiceImpl extends AbstractBaseOperator implements LocalP
     }
 
     @Override
-    protected void updateCluster(MiddlewareClusterDTO cluster) {
-        if (CollectionUtils.isEmpty(cluster.getStorage().getSupport())) {
-            cluster.getStorage().setSupport(new ArrayList<>());
-        }
-        MiddlewareClusterStorageSupport support = new MiddlewareClusterStorageSupport();
-        support.setName(ComponentsEnum.LOCAL_PATH.getName());
-        support.setType(ComponentsEnum.LOCAL_PATH.getName());
-        support.setNamespace("middleware-operator");
-        List<MiddlewareClusterStorageSupport> list = new ArrayList<>();
-        list.add(support);
-        cluster.getStorage().setSupport(list);
-        clusterService.update(cluster);
+    public void initAddress(ClusterComponentsDto clusterComponentsDto, MiddlewareClusterDTO cluster){
+
     }
 
     @Override

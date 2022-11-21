@@ -59,7 +59,7 @@ public abstract class AbstractBaseOperator {
         //发布组件
         install(setValues,cluster);
         //更新middlewareCluster
-        updateCluster(cluster);
+        initAddress(clusterComponentsDto, cluster);
     }
 
     public void updateStatus(MiddlewareClusterDTO cluster, BeanClusterComponents beanClusterComponents) {
@@ -125,9 +125,9 @@ public abstract class AbstractBaseOperator {
     /**
      * 更新集群信息
      *
-     * @param cluster 集群对象
+     * @param clusterComponentsDto 集群组件对象
      */
-    protected abstract void updateCluster(MiddlewareClusterDTO cluster);
+    protected abstract void initAddress(ClusterComponentsDto clusterComponentsDto, MiddlewareClusterDTO cluster);
 
     /**
      * 更新集群信息
