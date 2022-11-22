@@ -12,6 +12,7 @@ import com.harmonycloud.zeus.util.RequestUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -40,6 +41,9 @@ import static com.harmonycloud.caas.common.constants.CommonConstant.*;
 @Slf4j
 @Service
 public class RoleServiceImpl implements RoleService {
+
+    @Value("${system.disasterRecovery:true}")
+    private String disasterEnable;
 
     @Autowired
     private BeanRoleMapper beanRoleMapper;
@@ -149,12 +153,20 @@ public class RoleServiceImpl implements RoleService {
                 .collect(Collectors.toList()).get(0);
             for (String key : userRole.getPower().keySet()) {
                 if (Integer.parseInt(userRole.getPower().get(key).split("")[1]) == 1) {
-                    ids = Arrays.asList(3, 4, 5, 7, 8, 9, 12, 13, 14, 15, 16);
+                    if (Boolean.parseBoolean(disasterEnable)) {
+                        ids = Arrays.asList(3, 4, 5, 7, 8, 9, 10, 12, 13, 14, 15, 16);
+                    } else {
+                        ids = Arrays.asList(3, 4, 5, 7, 8, 9, 12, 13, 14, 15, 16);
+                    }
                     break;
                 }
             }
         } else {
-            ids = Arrays.asList(1, 2, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22);
+            if (Boolean.parseBoolean(disasterEnable)) {
+                ids = Arrays.asList(1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22);
+            } else {
+                ids = Arrays.asList(1, 2, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22);
+            }
         }
         // 获取菜单信息
         List<ResourceMenuDto> resourceMenuDtoList = resourceMenuService.list(ids);
