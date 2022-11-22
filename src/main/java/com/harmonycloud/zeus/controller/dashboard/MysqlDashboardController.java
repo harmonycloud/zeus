@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.controller.dashboard;
 
 import com.alibaba.fastjson.JSONArray;
+import com.github.pagehelper.PageInfo;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.dashboard.ExecResult;
 import com.harmonycloud.caas.common.model.dashboard.mysql.*;
@@ -191,12 +192,12 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "queryInfo", value = "查询信息", paramType = "query", dataTypeClass = QueryInfo.class),
     })
     @PostMapping("/databases/{database}/tables/{table}/data")
-    public BaseResult<JSONArray> showTableData(@PathVariable("clusterId") String clusterId,
-                                               @PathVariable("namespace") String namespace,
-                                               @PathVariable("middlewareName") String middlewareName,
-                                               @PathVariable("database") String database,
-                                               @PathVariable("table") String table,
-                                               @RequestBody QueryInfo queryInfo) {
+    public BaseResult<PageInfo<Object>> showTableData(@PathVariable("clusterId") String clusterId,
+                                                      @PathVariable("namespace") String namespace,
+                                                      @PathVariable("middlewareName") String middlewareName,
+                                                      @PathVariable("database") String database,
+                                                      @PathVariable("table") String table,
+                                                      @RequestBody QueryInfo queryInfo) {
         return BaseResult.ok(mysqlDashboardService.showTableData(clusterId, namespace, middlewareName, database, table, queryInfo));
     }
 

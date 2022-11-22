@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.dashboard.impl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.github.pagehelper.PageInfo;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.MysqlEngineEnum;
 import com.harmonycloud.caas.common.enums.MysqlPrivilegeEnum;
@@ -226,14 +227,15 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public JSONArray showTableData(String clusterId, String namespace, String middlewareName, String database, String table, QueryInfo queryInfo) {
-        // TODO 分页功能待实现
-        int count = getTableRecordCount(clusterId, namespace, middlewareName, database, table);
+    public PageInfo<Object> showTableData(String clusterId, String namespace, String middlewareName, String database, String table, QueryInfo queryInfo) {
         JSONArray dataAry = mysqlClient.showTableData(getPath(middlewareName, namespace), port, database, table, queryInfo).getJSONArray("dataAry");
+        PageInfo<Object> pageInfo = new PageInfo<>();
+        pageInfo.setTotal(getTableRecordCount(clusterId, namespace, middlewareName, database, table));
+        pageInfo.setList(dataAry);
         if (CollectionUtils.isEmpty(dataAry)) {
             throw new BusinessException(ErrorMessage.FAILED_TO_OBTAIN_TABLE_DATA);
         }
-        return dataAry;
+        return pageInfo;
     }
 
     @Override
