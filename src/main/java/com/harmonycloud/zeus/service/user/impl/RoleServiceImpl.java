@@ -149,8 +149,12 @@ public class RoleServiceImpl implements RoleService {
         if (Boolean.TRUE.equals(!userDto.getIsAdmin()) && StringUtils.isNotEmpty(projectId)) {
             ids = Arrays.asList(3, 4);
             // 判断是否非普通用户
-            UserRole userRole = userDto.getUserRoleList().stream().filter(ur -> ur.getProjectId().equals(projectId))
-                .collect(Collectors.toList()).get(0);
+            List<UserRole> roles = userDto.getUserRoleList().stream().filter(ur -> ur.getProjectId().equals(projectId))
+                    .collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(roles)) {
+                throw new BusinessException(ErrorMessage.PROJECT_NOT_EXIST_OR_DELETED);
+            }
+            UserRole userRole = roles.get(0);
             for (String key : userRole.getPower().keySet()) {
                 if (Integer.parseInt(userRole.getPower().get(key).split("")[1]) == 1) {
                     if (Boolean.parseBoolean(disasterEnable)) {
