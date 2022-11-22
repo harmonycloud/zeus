@@ -46,7 +46,7 @@ public class LogController {
     public BaseResult queryLog(@PathVariable("clusterId") String clusterId,
                                @PathVariable("namespace") String namespace,
                                @PathVariable("middlewareName") String middlewareName,
-                               @ModelAttribute LogQueryDto logQueryDto) {
+                               @RequestBody LogQueryDto logQueryDto) {
         try {
             logQueryDto.setClusterId(clusterId);
             logQueryDto.setNamespace(namespace);
@@ -91,12 +91,12 @@ public class LogController {
      */
     @ApiOperation(value = "查询pod日志文件列表", notes = "从es获取pod的日志文件列表")
     @ResponseBody
-    @RequestMapping(value = "/filenames", method = RequestMethod.GET)
+    @RequestMapping(value = "/filenames", method = RequestMethod.POST)
     @Authority(power = 1)
     public BaseResult listLogFilenames(@PathVariable("clusterId") String clusterId,
                                        @PathVariable("namespace") String namespace,
                                        @PathVariable("middlewareName") String middlewareName,
-                                       @ModelAttribute LogQueryDto logQueryDto) {
+                                       @RequestBody LogQueryDto logQueryDto) {
         try {
             logQueryDto.setClusterId(clusterId);
             logQueryDto.setNamespace(namespace);
