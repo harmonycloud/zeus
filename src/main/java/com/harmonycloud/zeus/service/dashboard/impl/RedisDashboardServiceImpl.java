@@ -75,7 +75,8 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
             mod = "single";
         }
 
-        String clusterAddrs = getPath(namespace, middlewareName) + ":" + port;
+        String clusterAddrsPrefix = getPath(namespace, middlewareName) + ":" + port;
+        String clusterAddrs = "test-redis-5."+clusterAddrsPrefix + "," + "test-redis-0."+clusterAddrsPrefix + ","+ "test-redis-1."+clusterAddrsPrefix;
         String sentinelAddrs = getPath(namespace, middlewareName) +":" +port;
         JSONObject res = redisClient.login(getPath(namespace, middlewareName), defaultDb, version,
                 mod, username, password, port, clusterAddrs, sentinelAddrs);
