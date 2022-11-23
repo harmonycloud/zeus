@@ -97,4 +97,12 @@ public interface UserRoleService {
      * @return
      */
     BeanUserRole get(String userName,String projectId);
+
+    /**
+     * 删除项目不存在角色信息
+     * @param userName
+     * @param projectIds
+     */
+    void deleteRedundantRole(String userName, List<String> projectIds);
+
 }

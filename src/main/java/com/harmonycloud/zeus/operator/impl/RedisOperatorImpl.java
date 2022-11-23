@@ -195,6 +195,10 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
                 ReadWriteProxy readWriteProxy = new ReadWriteProxy();
                 readWriteProxy.setEnabled(values.getJSONObject("predixy").getBoolean("enableProxy"));
                 middleware.setReadWriteProxy(readWriteProxy);
+            } else {
+                ReadWriteProxy readWriteProxy = new ReadWriteProxy();
+                readWriteProxy.setEnabled(false);
+                middleware.setReadWriteProxy(readWriteProxy);
             }
             // 哨兵
             if (SENTINEL.equals(middleware.getMode())) {
