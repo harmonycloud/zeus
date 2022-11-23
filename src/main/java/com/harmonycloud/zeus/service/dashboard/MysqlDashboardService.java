@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.dashboard;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.github.pagehelper.PageInfo;
 import com.harmonycloud.caas.common.model.dashboard.ExecResult;
 import com.harmonycloud.caas.common.model.dashboard.ExecuteSqlDto;
 import com.harmonycloud.caas.common.model.dashboard.mysql.*;
@@ -91,7 +92,7 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
     /**
      * 获取表数据
      */
-    JSONArray showTableData(String clusterId, String namespace, String middlewareName, String database, String table, QueryInfo queryInfo);
+    PageInfo<Object> showTableData(String clusterId, String namespace, String middlewareName, String database, String table, QueryInfo queryInfo);
 
     /**
      * 获取表记录数
