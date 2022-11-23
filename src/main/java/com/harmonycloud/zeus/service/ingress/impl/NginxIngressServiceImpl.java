@@ -163,7 +163,7 @@ public class NginxIngressServiceImpl extends AbstractBaseOperator implements Ngi
         if (beanIngressComponents == null) {
             throw new BusinessException(ErrorMessage.INGRESS_CLASS_NOT_EXISTED);
         }
-        // todo 更新数据库
+        // 更新数据库
         BeanUtils.copyProperties(ingressComponentDto, beanIngressComponents);
         beanIngressComponentsMapper.updateById(beanIngressComponents);
     }

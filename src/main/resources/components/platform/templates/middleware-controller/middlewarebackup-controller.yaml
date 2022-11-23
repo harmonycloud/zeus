@@ -57,6 +57,7 @@ rules:
   - persistentvolumes
   - pods
   - configmaps
+  - secrets
   verbs:
   - delete
 - apiGroups:

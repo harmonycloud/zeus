@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.user.skyviewimpl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.base.CaasResult;
 import com.harmonycloud.caas.common.model.ProjectDTO;
 import com.harmonycloud.caas.common.model.user.RoleDto;
@@ -55,7 +56,6 @@ public class Skyview2UserServiceImpl extends UserServiceImpl {
         if (StringUtils.isEmpty(userName)) {
             userName = getUsername();
         }
-        // 如果用户名和项目id都为空，则查询角色列表
         synchronized (this){
             syncCurrentUserInfo();
         }
@@ -88,6 +88,7 @@ public class Skyview2UserServiceImpl extends UserServiceImpl {
         JSONArray userData = userResult.getData();
         return convertUserData(userData);
     }
+
 
 
     public List<UserDto> convertUserData(JSONArray userData) {
@@ -238,7 +239,11 @@ public class Skyview2UserServiceImpl extends UserServiceImpl {
                 userRoleService.insert(null, username, 1);
             }
         } else {
+            // 删除管理员角色
             userRoleService.delete(username, null, 1);
+            // 删除项目不存在的角色信息
+            List<String> projectIds = projects.stream().map(ProjectDTO::getProjectId).collect(Collectors.toList());
+            userRoleService.deleteRedundantRole(username, projectIds);
             // 5、判断用户在每个项目下的角色是否是租户管理员，若是，则判断是否已存储该用户每个项目项目管理员角色，没有则存储 => 所有项目项目管理员
             for (ProjectDTO project : projects) {
                 if (project.getUserRoleId() == null) {

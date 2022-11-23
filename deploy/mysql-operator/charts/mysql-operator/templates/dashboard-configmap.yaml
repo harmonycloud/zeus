@@ -2,7 +2,7 @@ kind: ConfigMap
 metadata:
   name: {{ include "mysql-operator.fullname" . }}-dashboard
   labels:
-    grafana_dashboard: "1" 
+    grafana_dashboard: "1"
 apiVersion: v1
 data:
   MySQL.json: |-
@@ -24,8 +24,8 @@ data:
       "editable": true,
       "gnetId": 7362,
       "graphTooltip": 1,
-      "id": 39,
-      "iteration": 1609832838293,
+      "id": 54,
+      "iteration": 1668244933400,
       "links": [],
       "panels": [
         {
@@ -58,6 +58,12 @@ data:
           "description": "**MySQL Uptime**\n\nThe amount of time since the last restart of the MySQL server process.",
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "s",
           "gauge": {
             "maxValue": 100,
@@ -80,10 +86,12 @@ data:
           "mappingType": 1,
           "mappingTypes": [
             {
+              "$$hashKey": "object:1941",
               "name": "value to text",
               "value": 1
             },
             {
+              "$$hashKey": "object:1942",
               "name": "range to text",
               "value": 2
             }
@@ -91,7 +99,6 @@ data:
           "maxDataPoints": 100,
           "nullPointMode": "connected",
           "nullText": null,
-          "options": {},
           "postfix": "s",
           "postfixFontSize": "80%",
           "prefix": "",
@@ -150,6 +157,12 @@ data:
           "description": "**Current QPS**\n\nBased on the queries reported by MySQL's ``SHOW STATUS`` command, it is the number of statements executed by the server within the last second. This variable includes statements executed within stored programs, unlike the Questions variable. It does not count \n``COM_PING`` or ``COM_STATISTICS`` commands.",
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "short",
           "gauge": {
             "maxValue": 100,
@@ -189,7 +202,6 @@ data:
           "maxDataPoints": 100,
           "nullPointMode": "connected",
           "nullText": null,
-          "options": {},
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -247,6 +259,12 @@ data:
           "description": "**InnoDB Buffer Pool Size**\n\nInnoDB maintains a storage area called the buffer pool for caching data and indexes in memory.  Knowing how the InnoDB buffer pool works, and taking advantage of it to keep frequently accessed data in memory, is one of the most important aspects of MySQL tuning. The goal is to keep the working set in memory. In most cases, this should be between 60%-90% of available memory on a dedicated database host, but depends on many factors.",
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "bytes",
           "gauge": {
             "maxValue": 100,
@@ -286,7 +304,6 @@ data:
           "maxDataPoints": 100,
           "nullPointMode": "connected",
           "nullText": null,
-          "options": {},
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -342,6 +359,12 @@ data:
           "description": "**InnoDB Buffer Pool Size % of Total RAM**\n\nInnoDB maintains a storage area called the buffer pool for caching data and indexes in memory.  Knowing how the InnoDB buffer pool works, and taking advantage of it to keep frequently accessed data in memory, is one of the most important aspects of MySQL tuning. The goal is to keep the working set in memory. In most cases, this should be between 60%-90% of available memory on a dedicated database host, but depends on many factors.",
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "percent",
           "gauge": {
             "maxValue": 100,
@@ -381,7 +404,6 @@ data:
           "maxDataPoints": 100,
           "nullPointMode": "connected",
           "nullText": null,
-          "options": {},
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -452,6 +474,12 @@ data:
           ],
           "datasource": null,
           "decimals": 1,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "s",
           "gauge": {
             "maxValue": 100,
@@ -472,10 +500,12 @@ data:
           "mappingType": 1,
           "mappingTypes": [
             {
+              "$$hashKey": "object:181",
               "name": "value to text",
               "value": 1
             },
             {
+              "$$hashKey": "object:182",
               "name": "range to text",
               "value": 2
             }
@@ -483,7 +513,6 @@ data:
           "maxDataPoints": 100,
           "nullPointMode": "connected",
           "nullText": null,
-          "options": {},
           "postfix": "",
           "postfixFontSize": "80%",
           "prefix": "",
@@ -506,7 +535,9 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "expr": "mysql_slave_status_seconds_behind_master{namespace=\"$namespace\",pod=\"$pod\"}",
+              "expr": "sum(mysql_slave_status_seconds_behind_master{namespace=\"$namespace\",pod=\"$pod\"})",
+              "interval": "",
+              "legendFormat": "",
               "refId": "A"
             }
           ],
@@ -518,6 +549,7 @@ data:
           "valueFontSize": "80%",
           "valueMaps": [
             {
+              "$$hashKey": "object:184",
               "op": "=",
               "text": "N/A",
               "value": "null"
@@ -535,6 +567,12 @@ data:
             "#d44a3a"
           ],
           "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -555,10 +593,12 @@ data:
           "mappingType": 1,
           "mappingTypes": [
             {
+              "$$hashKey": "object:2208",
               "name": "value to text",
               "value": 1
             },
             {
+              "$$hashKey": "object:2209",
               "name": "range to text",
               "value": 2
             }
@@ -566,7 +606,6 @@ data:
           "maxDataPoints": 100,
           "nullPointMode": "connected",
           "nullText": null,
-          "options": {},
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -589,7 +628,9 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "expr": "mysql_slave_status_slave_sql_running{namespace=\"$namespace\",pod=\"$pod\"}",
+              "expr": "sum(mysql_slave_status_slave_sql_running{namespace=\"$namespace\",pod=\"$pod\"})",
+              "interval": "",
+              "legendFormat": "",
               "refId": "A"
             }
           ],
@@ -601,11 +642,13 @@ data:
           "valueFontSize": "80%",
           "valueMaps": [
             {
+              "$$hashKey": "object:2211",
               "op": "=",
               "text": "Yes",
               "value": "1"
             },
             {
+              "$$hashKey": "object:2212",
               "op": "=",
               "text": "No",
               "value": "0"
@@ -625,6 +668,12 @@ data:
           ],
           "datasource": null,
           "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -656,7 +705,6 @@ data:
           "maxDataPoints": 100,
           "nullPointMode": "connected",
           "nullText": null,
-          "options": {},
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -679,7 +727,7 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "expr": "mysql_slave_status_slave_io_running{namespace=\"$namespace\",pod=\"$pod\"}",
+              "expr": "sum(mysql_slave_status_slave_io_running{namespace=\"$namespace\",pod=\"$pod\"})",
               "instant": false,
               "refId": "A"
             }
@@ -729,6 +777,13 @@ data:
           "description": "**Max Connections** \n\nMax Connections is the maximum permitted number of simultaneous client connections. By default, this is 151. Increasing this value increases the number of file descriptors that mysqld requires. If the required number of descriptors are not available, the server reduces the value of Max Connections.\n\nmysqld actually permits Max Connections + 1 clients to connect. The extra connection is reserved for use by accounts that have the SUPER privilege, such as root.\n\nMax Used Connections is the maximum number of connections that have been in use simultaneously since the server started.\n\nConnections is the number of connection attempts (successful or not) to the MySQL server.",
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 2,
           "fillGradient": 0,
           "grid": {},
@@ -739,6 +794,7 @@ data:
             "y": 11
           },
           "height": "250px",
+          "hiddenSeries": false,
           "id": 92,
           "legend": {
             "alignAsTable": true,
@@ -763,9 +819,10 @@ data:
           ],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -873,6 +930,13 @@ data:
           "description": "**MySQL Active Threads**\n\nThreads Connected is the number of open connections, while Threads Running is the number of threads not sleeping.",
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 2,
           "fillGradient": 0,
           "grid": {},
@@ -882,6 +946,7 @@ data:
             "x": 12,
             "y": 11
           },
+          "hiddenSeries": false,
           "id": 10,
           "legend": {
             "alignAsTable": true,
@@ -900,9 +965,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1033,6 +1099,13 @@ data:
           "description": "**MySQL Questions**\n\nThe number of statements executed by the server. This includes only statements sent to the server by clients and not statements executed within stored programs, unlike the Queries used in the QPS calculation. \n\nThis variable does not count the following commands:\n* ``COM_PING``\n* ``COM_STATISTICS``\n* ``COM_STMT_PREPARE``\n* ``COM_STMT_CLOSE``\n* ``COM_STMT_RESET``",
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 2,
           "fillGradient": 0,
           "grid": {},
@@ -1042,6 +1115,7 @@ data:
             "x": 0,
             "y": 19
           },
+          "hiddenSeries": false,
           "id": 53,
           "legend": {
             "alignAsTable": true,
@@ -1065,9 +1139,10 @@ data:
           ],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1140,6 +1215,13 @@ data:
           "description": "**MySQL Thread Cache**\n\nThe thread_cache_size variable sets how many threads the server should cache to reuse. When a client disconnects, the client's threads are put in the cache if the cache is not full. It is autosized in MySQL 5.6.8 and above (capped to 100). Requests for threads are satisfied by reusing threads taken from the cache if possible, and only when the cache is empty is a new thread created.\n\n* *Threads_created*: The number of threads created to handle connections.\n* *Threads_cached*: The number of threads in the thread cache.",
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 2,
           "fillGradient": 0,
           "grid": {},
@@ -1149,6 +1231,7 @@ data:
             "x": 12,
             "y": 19
           },
+          "hiddenSeries": false,
           "id": 11,
           "legend": {
             "alignAsTable": true,
@@ -1173,9 +1256,10 @@ data:
           ],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1293,6 +1377,13 @@ data:
           "decimals": 2,
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 2,
           "fillGradient": 0,
           "grid": {},
@@ -1302,6 +1393,7 @@ data:
             "x": 0,
             "y": 27
           },
+          "hiddenSeries": false,
           "id": 22,
           "legend": {
             "alignAsTable": true,
@@ -1321,9 +1413,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1419,6 +1512,13 @@ data:
           "description": "**MySQL Select Types**\n\nAs with most relational databases, selecting based on indexes is more efficient than scanning an entire table's data. Here we see the counters for selects not done with indexes.\n\n* ***Select Scan*** is how many queries caused full table scans, in which all the data in the table had to be read and either discarded or returned.\n* ***Select Range*** is how many queries used a range scan, which means MySQL scanned all rows in a given range.\n* ***Select Full Join*** is the number of joins that are not joined on an index, this is usually a huge performance hit.",
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 2,
           "fillGradient": 0,
           "grid": {},
@@ -1429,6 +1529,7 @@ data:
             "y": 27
           },
           "height": "250px",
+          "hiddenSeries": false,
           "id": 311,
           "legend": {
             "alignAsTable": true,
@@ -1449,9 +1550,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1591,6 +1693,13 @@ data:
           "description": "**MySQL Sorts**\n\nDue to a query's structure, order, or other requirements, MySQL sorts the rows before returning them. For example, if a table is ordered 1 to 10 but you want the results reversed, MySQL then has to sort the rows to return 10 to 1.\n\nThis graph also shows when sorts had to scan a whole table or a given range of a table in order to return the results and which could not have been sorted via an index.",
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 2,
           "fillGradient": 0,
           "grid": {},
@@ -1600,6 +1709,7 @@ data:
             "x": 0,
             "y": 35
           },
+          "hiddenSeries": false,
           "id": 30,
           "legend": {
             "alignAsTable": true,
@@ -1620,9 +1730,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1734,6 +1845,13 @@ data:
           "description": "**MySQL Slow Queries**\n\nSlow queries are defined as queries being slower than the long_query_time setting. For example, if you have long_query_time set to 3, all queries that take longer than 3 seconds to complete will show on this graph.",
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 2,
           "fillGradient": 0,
           "grid": {},
@@ -1743,6 +1861,7 @@ data:
             "x": 12,
             "y": 35
           },
+          "hiddenSeries": false,
           "id": 48,
           "legend": {
             "alignAsTable": true,
@@ -1759,9 +1878,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1851,6 +1971,13 @@ data:
           "description": "**Aborted Connections**\n\nWhen a given host connects to MySQL and the connection is interrupted in the middle (for example due to bad credentials), MySQL keeps that info in a system table (since 5.6 this table is exposed in performance_schema).\n\nIf the amount of failed requests without a successful connection reaches the value of max_connect_errors, mysqld assumes that something is wrong and blocks the host from further connection.\n\nTo allow connections from that host again, you need to issue the ``FLUSH HOSTS`` statement.",
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 2,
           "fillGradient": 0,
           "grid": {},
@@ -1860,6 +1987,7 @@ data:
             "x": 0,
             "y": 43
           },
+          "hiddenSeries": false,
           "id": 47,
           "legend": {
             "alignAsTable": true,
@@ -1878,9 +2006,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1969,6 +2098,13 @@ data:
           "description": "**Table Locks**\n\nMySQL takes a number of different locks for varying reasons. In this graph we see how many Table level locks MySQL has requested from the storage engine. In the case of InnoDB, many times the locks could actually be row locks as it only takes table level locks in a few specific cases.\n\nIt is most useful to compare Locks Immediate and Locks Waited. If Locks waited is rising, it means you have lock contention. Otherwise, Locks Immediate rising and falling is normal activity.",
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 2,
           "fillGradient": 0,
           "grid": {},
@@ -1978,6 +2114,7 @@ data:
             "x": 12,
             "y": 43
           },
+          "hiddenSeries": false,
           "id": 32,
           "legend": {
             "alignAsTable": true,
@@ -1997,9 +2134,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -2100,6 +2238,13 @@ data:
           "description": "**MySQL Network Traffic**\n\nHere we can see how much network traffic is generated by MySQL. Outbound is network traffic sent from MySQL and Inbound is network traffic MySQL has received.",
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 6,
           "fillGradient": 0,
           "grid": {},
@@ -2109,6 +2254,7 @@ data:
             "x": 0,
             "y": 51
           },
+          "hiddenSeries": false,
           "id": 9,
           "legend": {
             "alignAsTable": true,
@@ -2128,9 +2274,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -2216,6 +2363,13 @@ data:
           "description": "**MySQL Network Usage Hourly**\n\nHere we can see how much network traffic is generated by MySQL per hour. You can use the bar graph to compare data sent by MySQL and data received by MySQL.",
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 6,
           "fillGradient": 0,
           "grid": {},
@@ -2226,6 +2380,7 @@ data:
             "y": 51
           },
           "height": "250px",
+          "hiddenSeries": false,
           "id": 381,
           "legend": {
             "alignAsTable": true,
@@ -2245,9 +2400,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -2348,6 +2504,13 @@ data:
           "description": "***System Memory***: Total Memory for the system.\\\n***InnoDB Buffer Pool Data***: InnoDB maintains a storage area called the buffer pool for caching data and indexes in memory.\\\n***TokuDB Cache Size***: Similar in function to the InnoDB Buffer Pool,  TokuDB will allocate 50% of the installed RAM for its own cache.\\\n***Key Buffer Size***: Index blocks for MYISAM tables are buffered and are shared by all threads. key_buffer_size is the size of the buffer used for index blocks.\\\n***Adaptive Hash Index Size***: When InnoDB notices that some index values are being accessed very frequently, it builds a hash index for them in memory on top of B-Tree indexes.\\\n ***Query Cache Size***: The query cache stores the text of a SELECT statement together with the corresponding result that was sent to the client. The query cache has huge scalability problems in that only one thread can do an operation in the query cache at the same time.\\\n***InnoDB Dictionary Size***: The data dictionary is InnoDB ‘s internal catalog of tables. InnoDB stores the data dictionary on disk, and loads entries into memory while the server is running.\\\n***InnoDB Log Buffer Size***: The MySQL InnoDB log buffer allows transactions to run without having to write the log to disk before the transactions commit.",
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 6,
           "fillGradient": 0,
           "grid": {},
@@ -2357,6 +2520,7 @@ data:
             "x": 0,
             "y": 59
           },
+          "hiddenSeries": false,
           "id": 50,
           "legend": {
             "alignAsTable": true,
@@ -2383,9 +2547,10 @@ data:
           ],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -2546,9 +2711,16 @@ data:
           "dashes": false,
           "datasource": null,
           "decimals": 2,
-          "description": "**Top Command Counters**\n\nThe Com_{{`{{xxx}}`}} statement counter variables indicate the number of times each xxx statement has been executed. There is one status variable for each type of statement. For example, Com_delete and Com_update count [``DELETE``](https://dev.mysql.com/doc/refman/5.7/en/delete.html) and [``UPDATE``](https://dev.mysql.com/doc/refman/5.7/en/update.html) statements, respectively. Com_delete_multi and Com_update_multi are similar but apply to [``DELETE``](https://dev.mysql.com/doc/refman/5.7/en/delete.html) and [``UPDATE``](https://dev.mysql.com/doc/refman/5.7/en/update.html) statements that use multiple-table syntax.",
+          "description": "**Top Command Counters**\n\nThe  statement counter variables indicate the number of times each xxx statement has been executed. There is one status variable for each type of statement. For example, Com_delete and Com_update count [``DELETE``](https://dev.mysql.com/doc/refman/5.7/en/delete.html) and [``UPDATE``](https://dev.mysql.com/doc/refman/5.7/en/update.html) statements, respectively. Com_delete_multi and Com_update_multi are similar but apply to [``DELETE``](https://dev.mysql.com/doc/refman/5.7/en/delete.html) and [``UPDATE``](https://dev.mysql.com/doc/refman/5.7/en/update.html) statements that use multiple-table syntax.",
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 2,
           "fillGradient": 0,
           "grid": {},
@@ -2558,6 +2730,7 @@ data:
             "x": 0,
             "y": 67
           },
+          "hiddenSeries": false,
           "id": 14,
           "legend": {
             "alignAsTable": true,
@@ -2584,9 +2757,10 @@ data:
           ],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -2660,6 +2834,13 @@ data:
           "description": "**Top Command Counters Hourly**\n\nThe Com_{{`{{xxx}}`}} statement counter variables indicate the number of times each xxx statement has been executed. There is one status variable for each type of statement. For example, Com_delete and Com_update count [``DELETE``](https://dev.mysql.com/doc/refman/5.7/en/delete.html) and [``UPDATE``](https://dev.mysql.com/doc/refman/5.7/en/update.html) statements, respectively. Com_delete_multi and Com_update_multi are similar but apply to [``DELETE``](https://dev.mysql.com/doc/refman/5.7/en/delete.html) and [``UPDATE``](https://dev.mysql.com/doc/refman/5.7/en/update.html) statements that use multiple-table syntax.",
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 6,
           "fillGradient": 0,
           "grid": {},
@@ -2669,6 +2850,7 @@ data:
             "x": 0,
             "y": 74
           },
+          "hiddenSeries": false,
           "id": 39,
           "legend": {
             "alignAsTable": true,
@@ -2693,9 +2875,10 @@ data:
           ],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -2710,9 +2893,9 @@ data:
               "errors": {},
               "expr": "topk(5, increase(mysql_global_status_commands_total{namespace=\"$namespace\",pod=\"$pod\"}[1h])>0)",
               "format": "time_series",
-              "interval": "1h",
+              "interval": "30m",
               "intervalFactor": 1,
-              "legendFormat": "Com_{{`{{command}}`}}",
+              "legendFormat": "{{`{{command}}`}}",
               "metric": "",
               "refId": "A",
               "step": 3600
@@ -2768,6 +2951,13 @@ data:
           "description": "**MySQL Handlers**\n\nHandler statistics are internal statistics on how MySQL is selecting, updating, inserting, and modifying rows, tables, and indexes.\n\nThis is in fact the layer between the Storage Engine and MySQL.\n\n* `read_rnd_next` is incremented when the server performs a full table scan and this is a counter you don't really want to see with a high value.\n* `read_key` is incremented when a read is done with an index.\n* `read_next` is incremented when the storage engine is asked to 'read the next index entry'. A high value means a lot of index scans are being done.",
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 2,
           "fillGradient": 0,
           "grid": {},
@@ -2777,6 +2967,7 @@ data:
             "x": 0,
             "y": 81
           },
+          "hiddenSeries": false,
           "id": 8,
           "legend": {
             "alignAsTable": true,
@@ -2797,9 +2988,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -2871,6 +3063,13 @@ data:
           "decimals": 2,
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 2,
           "fillGradient": 0,
           "grid": {},
@@ -2880,6 +3079,7 @@ data:
             "x": 0,
             "y": 88
           },
+          "hiddenSeries": false,
           "id": 28,
           "legend": {
             "alignAsTable": true,
@@ -2900,9 +3100,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -2965,217 +3166,13 @@ data:
           }
         },
         {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
-          "decimals": 2,
-          "editable": true,
-          "error": false,
-          "fill": 0,
-          "fillGradient": 0,
-          "grid": {},
-          "gridPos": {
-            "h": 7,
-            "w": 24,
-            "x": 0,
-            "y": 95
-          },
-          "id": 40,
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": false,
-            "hideZero": true,
-            "max": true,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "sort": "avg",
-            "sortDesc": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 2,
-          "links": [],
-          "nullPointMode": "null",
-          "options": {
-            "dataLinks": []
-          },
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "calculatedInterval": "2m",
-              "datasourceErrors": {},
-              "errors": {},
-              "expr": "mysql_info_schema_threads{namespace=\"$namespace\",pod=\"$pod\"}",
-              "interval": "$interval",
-              "intervalFactor": 1,
-              "legendFormat": "{{`{{state}}`}}",
-              "metric": "",
-              "refId": "A",
-              "step": 20
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "Process States",
-          "tooltip": {
-            "msResolution": false,
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "logBase": 1,
-              "max": null,
-              "min": 0,
-              "show": true
-            },
-            {
-              "format": "short",
-              "logBase": 1,
-              "max": null,
-              "min": 0,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": true,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
-          "decimals": 2,
-          "editable": true,
-          "error": false,
-          "fill": 6,
-          "fillGradient": 0,
-          "grid": {},
-          "gridPos": {
-            "h": 7,
-            "w": 24,
-            "x": 0,
-            "y": 102
-          },
-          "id": 49,
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": false,
-            "hideZero": true,
-            "max": true,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "sort": "avg",
-            "sortDesc": true,
-            "total": false,
-            "values": true
-          },
-          "lines": false,
-          "linewidth": 2,
-          "links": [],
-          "nullPointMode": "null",
-          "options": {
-            "dataLinks": []
-          },
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": true,
-          "steppedLine": false,
-          "targets": [
-            {
-              "calculatedInterval": "2m",
-              "datasourceErrors": {},
-              "errors": {},
-              "expr": "topk(5, avg_over_time(mysql_info_schema_threads{namespace=\"$namespace\",pod=\"$pod\"}[1h]))",
-              "interval": "1h",
-              "intervalFactor": 1,
-              "legendFormat": "{{`{{state}}`}}",
-              "metric": "",
-              "refId": "A",
-              "step": 3600
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": "24h",
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "Top Process States Hourly",
-          "tooltip": {
-            "msResolution": false,
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "logBase": 1,
-              "max": null,
-              "min": 0,
-              "show": true
-            },
-            {
-              "format": "short",
-              "logBase": 1,
-              "max": null,
-              "min": 0,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
           "collapsed": false,
           "datasource": null,
           "gridPos": {
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 109
+            "y": 95
           },
           "id": 391,
           "panels": [],
@@ -3184,285 +3181,13 @@ data:
           "type": "row"
         },
         {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
-          "decimals": 2,
-          "description": "**MySQL Query Cache Memory**\n\nThe query cache has huge scalability problems in that only one thread can do an operation in the query cache at the same time. This serialization is true not only for SELECTs, but also for INSERT/UPDATE/DELETE.\n\nThis also means that the larger the `query_cache_size` is set to, the slower those operations become. In concurrent environments, the MySQL Query Cache quickly becomes a contention point, decreasing performance. MariaDB and AWS Aurora have done work to try and eliminate the query cache contention in their flavors of MySQL, while MySQL 8.0 has eliminated the query cache feature.\n\nThe recommended settings for most environments is to set:\n  ``query_cache_type=0``\n  ``query_cache_size=0``\n\nNote that while you can dynamically change these values, to completely remove the contention point you have to restart the database.",
-          "editable": true,
-          "error": false,
-          "fill": 2,
-          "fillGradient": 0,
-          "grid": {},
-          "gridPos": {
-            "h": 7,
-            "w": 12,
-            "x": 0,
-            "y": 110
-          },
-          "id": 46,
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": false,
-            "max": true,
-            "min": true,
-            "rightSide": false,
-            "show": true,
-            "sort": "avg",
-            "sortDesc": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 2,
-          "links": [],
-          "nullPointMode": "null",
-          "options": {
-            "dataLinks": []
-          },
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "calculatedInterval": "2m",
-              "datasourceErrors": {},
-              "errors": {},
-              "expr": "mysql_global_status_qcache_free_memory{namespace=\"$namespace\",pod=\"$pod\"}",
-              "format": "time_series",
-              "interval": "$interval",
-              "intervalFactor": 1,
-              "legendFormat": "Free Memory",
-              "metric": "",
-              "refId": "F",
-              "step": 20
-            },
-            {
-              "calculatedInterval": "2m",
-              "datasourceErrors": {},
-              "errors": {},
-              "expr": "mysql_global_variables_query_cache_size{namespace=\"$namespace\",pod=\"$pod\"}",
-              "format": "time_series",
-              "interval": "$interval",
-              "intervalFactor": 1,
-              "legendFormat": "Query Cache Size",
-              "metric": "",
-              "refId": "E",
-              "step": 20
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "MySQL Query Cache Memory",
-          "tooltip": {
-            "msResolution": false,
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "bytes",
-              "logBase": 1,
-              "max": null,
-              "min": 0,
-              "show": true
-            },
-            {
-              "format": "short",
-              "logBase": 1,
-              "max": null,
-              "min": 0,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
-          "decimals": 2,
-          "description": "**MySQL Query Cache Activity**\n\nThe query cache has huge scalability problems in that only one thread can do an operation in the query cache at the same time. This serialization is true not only for SELECTs, but also for INSERT/UPDATE/DELETE.\n\nThis also means that the larger the `query_cache_size` is set to, the slower those operations become. In concurrent environments, the MySQL Query Cache quickly becomes a contention point, decreasing performance. MariaDB and AWS Aurora have done work to try and eliminate the query cache contention in their flavors of MySQL, while MySQL 8.0 has eliminated the query cache feature.\n\nThe recommended settings for most environments is to set:\n``query_cache_type=0``\n``query_cache_size=0``\n\nNote that while you can dynamically change these values, to completely remove the contention point you have to restart the database.",
-          "editable": true,
-          "error": false,
-          "fill": 2,
-          "fillGradient": 0,
-          "grid": {},
-          "gridPos": {
-            "h": 7,
-            "w": 12,
-            "x": 12,
-            "y": 110
-          },
-          "height": "",
-          "id": 45,
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": false,
-            "max": true,
-            "min": true,
-            "rightSide": false,
-            "show": true,
-            "sort": "avg",
-            "sortDesc": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 2,
-          "links": [],
-          "nullPointMode": "null",
-          "options": {
-            "dataLinks": []
-          },
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "calculatedInterval": "2m",
-              "datasourceErrors": {},
-              "errors": {},
-              "expr": "rate(mysql_global_status_qcache_hits{namespace=\"$namespace\",pod=\"$pod\"}[$interval]) or irate(mysql_global_status_qcache_hits{namespace=\"$namespace\",pod=\"$pod\"}[5m])",
-              "format": "time_series",
-              "interval": "$interval",
-              "intervalFactor": 1,
-              "legendFormat": "Hits",
-              "metric": "",
-              "refId": "B",
-              "step": 20
-            },
-            {
-              "calculatedInterval": "2m",
-              "datasourceErrors": {},
-              "errors": {},
-              "expr": "rate(mysql_global_status_qcache_inserts{namespace=\"$namespace\",pod=\"$pod\"}[$interval]) or irate(mysql_global_status_qcache_inserts{namespace=\"$namespace\",pod=\"$pod\"}[5m])",
-              "format": "time_series",
-              "interval": "$interval",
-              "intervalFactor": 1,
-              "legendFormat": "Inserts",
-              "metric": "",
-              "refId": "C",
-              "step": 20
-            },
-            {
-              "calculatedInterval": "2m",
-              "datasourceErrors": {},
-              "errors": {},
-              "expr": "rate(mysql_global_status_qcache_not_cached{namespace=\"$namespace\",pod=\"$pod\"}[$interval]) or irate(mysql_global_status_qcache_not_cached{namespace=\"$namespace\",pod=\"$pod\"}[5m])",
-              "format": "time_series",
-              "interval": "$interval",
-              "intervalFactor": 1,
-              "legendFormat": "Not Cached",
-              "metric": "",
-              "refId": "D",
-              "step": 20
-            },
-            {
-              "calculatedInterval": "2m",
-              "datasourceErrors": {},
-              "errors": {},
-              "expr": "rate(mysql_global_status_qcache_lowmem_prunes{namespace=\"$namespace\",pod=\"$pod\"}[$interval]) or irate(mysql_global_status_qcache_lowmem_prunes{namespace=\"$namespace\",pod=\"$pod\"}[5m])",
-              "format": "time_series",
-              "interval": "$interval",
-              "intervalFactor": 1,
-              "legendFormat": "Prunes",
-              "metric": "",
-              "refId": "F",
-              "step": 20
-            },
-            {
-              "calculatedInterval": "2m",
-              "datasourceErrors": {},
-              "errors": {},
-              "expr": "mysql_global_status_qcache_queries_in_cache{namespace=\"$namespace\",pod=\"$pod\"}",
-              "format": "time_series",
-              "interval": "$interval",
-              "intervalFactor": 1,
-              "legendFormat": "Queries in Cache",
-              "metric": "",
-              "refId": "E",
-              "step": 20
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "MySQL Query Cache Activity",
-          "tooltip": {
-            "msResolution": false,
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "logBase": 1,
-              "max": null,
-              "min": 0,
-              "show": true
-            },
-            {
-              "format": "short",
-              "logBase": 1,
-              "max": null,
-              "min": 0,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
           "collapsed": false,
           "datasource": null,
           "gridPos": {
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 117
+            "y": 96
           },
           "id": 392,
           "panels": [],
@@ -3479,6 +3204,13 @@ data:
           "decimals": 2,
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 2,
           "fillGradient": 0,
           "grid": {},
@@ -3486,8 +3218,9 @@ data:
             "h": 7,
             "w": 12,
             "x": 0,
-            "y": 118
+            "y": 97
           },
+          "hiddenSeries": false,
           "id": 43,
           "legend": {
             "alignAsTable": true,
@@ -3505,9 +3238,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -3578,6 +3312,13 @@ data:
           "decimals": 2,
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 2,
           "fillGradient": 0,
           "grid": {},
@@ -3585,8 +3326,9 @@ data:
             "h": 7,
             "w": 12,
             "x": 12,
-            "y": 118
+            "y": 97
           },
+          "hiddenSeries": false,
           "id": 41,
           "legend": {
             "alignAsTable": true,
@@ -3605,9 +3347,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -3696,7 +3439,7 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 125
+            "y": 104
           },
           "id": 393,
           "panels": [],
@@ -3714,6 +3457,13 @@ data:
           "description": "**MySQL Table Open Cache Status**\n\nThe recommendation is to set the `table_open_cache_instances` to a loose correlation to virtual CPUs, keeping in mind that more instances means the cache is split more times. If you have a cache set to 500 but it has 10 instances, each cache will only have 50 cached.\n\nThe `table_definition_cache` and `table_open_cache` can be left as default as they are auto-sized MySQL 5.6 and above (ie: do not set them to any value).",
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 2,
           "fillGradient": 0,
           "grid": {},
@@ -3721,8 +3471,9 @@ data:
             "h": 7,
             "w": 12,
             "x": 0,
-            "y": 126
+            "y": 105
           },
+          "hiddenSeries": false,
           "id": 44,
           "legend": {
             "alignAsTable": true,
@@ -3747,9 +3498,10 @@ data:
           ],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -3863,6 +3615,13 @@ data:
           "description": "**MySQL Open Tables**\n\nThe recommendation is to set the `table_open_cache_instances` to a loose correlation to virtual CPUs, keeping in mind that more instances means the cache is split more times. If you have a cache set to 500 but it has 10 instances, each cache will only have 50 cached.\n\nThe `table_definition_cache` and `table_open_cache` can be left as default as they are auto-sized MySQL 5.6 and above (ie: do not set them to any value).",
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 2,
           "fillGradient": 0,
           "grid": {},
@@ -3870,8 +3629,9 @@ data:
             "h": 7,
             "w": 12,
             "x": 12,
-            "y": 126
+            "y": 105
           },
+          "hiddenSeries": false,
           "id": 42,
           "legend": {
             "alignAsTable": true,
@@ -3896,9 +3656,10 @@ data:
           ],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -3981,7 +3742,7 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 133
+            "y": 112
           },
           "id": 394,
           "panels": [],
@@ -3999,6 +3760,13 @@ data:
           "description": "**MySQL Table Definition Cache**\n\nThe recommendation is to set the `table_open_cache_instances` to a loose correlation to virtual CPUs, keeping in mind that more instances means the cache is split more times. If you have a cache set to 500 but it has 10 instances, each cache will only have 50 cached.\n\nThe `table_definition_cache` and `table_open_cache` can be left as default as they are auto-sized MySQL 5.6 and above (ie: do not set them to any value).",
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 2,
           "fillGradient": 0,
           "grid": {},
@@ -4006,8 +3774,9 @@ data:
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 134
+            "y": 113
           },
+          "hiddenSeries": false,
           "id": 54,
           "legend": {
             "alignAsTable": true,
@@ -4032,9 +3801,10 @@ data:
           ],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -4131,7 +3901,7 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 141
+            "y": 120
           },
           "id": 395,
           "panels": [],
@@ -4148,6 +3918,13 @@ data:
           "decimals": null,
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 2,
           "fillGradient": 0,
           "grid": {},
@@ -4155,8 +3932,9 @@ data:
             "h": 7,
             "w": 8,
             "x": 0,
-            "y": 142
+            "y": 121
           },
+          "hiddenSeries": false,
           "id": 31,
           "legend": {
             "alignAsTable": false,
@@ -4177,9 +3955,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -4192,7 +3971,7 @@ data:
               "calculatedInterval": "2s",
               "datasourceErrors": {},
               "errors": {},
-              "expr": "rate(node_vmstat_pgpgin{namespace=\"$namespace\",pod=\"$pod\"}[$interval]) * 1024 or irate(node_vmstat_pgpgin{namespace=\"$namespace\",pod=\"$pod\"}[5m]) * 1024",
+              "expr": "rate(node_vmstat_pgpgin{kubernetes_pod_node_name=\"$node\"}[$interval]) * 1024 or irate(node_vmstat_pgpgin{node=\"$node\"}[5m]) * 1024",
               "interval": "$interval",
               "intervalFactor": 1,
               "legendFormat": "Page In",
@@ -4205,7 +3984,8 @@ data:
               "calculatedInterval": "2s",
               "datasourceErrors": {},
               "errors": {},
-              "expr": "rate(node_vmstat_pgpgout{namespace=\"$namespace\",pod=\"$pod\"}[$interval]) * 1024 or irate(node_vmstat_pgpgout{namespace=\"$namespace\",pod=\"$pod\"}[5m]) * 1024",
+              "expr": "rate(node_vmstat_pgpgout{kubernetes_pod_node_name=\"$node\"}[$interval]) * 1024 or irate(node_vmstat_pgpgout{kubernetes_pod_node_name=\"$node\"}[5m]) * 1024",
+              "hide": true,
               "interval": "$interval",
               "intervalFactor": 1,
               "legendFormat": "Page Out",
@@ -4236,6 +4016,7 @@ data:
           },
           "yaxes": [
             {
+              "$$hashKey": "object:296",
               "format": "Bps",
               "label": "",
               "logBase": 1,
@@ -4244,6 +4025,7 @@ data:
               "show": true
             },
             {
+              "$$hashKey": "object:297",
               "format": "bytes",
               "logBase": 1,
               "max": null,
@@ -4265,16 +4047,24 @@ data:
           "decimals": null,
           "editable": true,
           "error": false,
-          "fill": 6,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
+          "fill": 1,
           "fillGradient": 0,
           "grid": {},
           "gridPos": {
             "h": 7,
             "w": 8,
             "x": 8,
-            "y": 142
+            "y": 121
           },
           "height": "250px",
+          "hiddenSeries": false,
           "id": 37,
           "legend": {
             "alignAsTable": false,
@@ -4295,9 +4085,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -4310,7 +4101,7 @@ data:
               "calculatedInterval": "2s",
               "datasourceErrors": {},
               "errors": {},
-              "expr": "node_memory_MemTotal_bytes{namespace=\"$namespace\",pod=\"$pod\"} - (node_memory_MemFree_bytes{namespace=\"$namespace\",pod=\"$pod\"} + node_memory_Buffers{namespace=\"$namespace\",pod=\"$pod\"} + node_memory_Cached{namespace=\"$namespace\",pod=\"$pod\"})",
+              "expr": "node_memory_MemTotal_bytes{kubernetes_pod_node_name=\"$node\"} - (node_memory_MemFree_bytes{kubernetes_pod_node_name=\"$node\"} + node_memory_Buffers{kubernetes_pod_node_name=\"$node\"} + node_memory_Cached{kubernetes_pod_node_name=\"$node\"})",
               "interval": "$interval",
               "intervalFactor": 1,
               "legendFormat": "Used",
@@ -4323,7 +4114,7 @@ data:
               "calculatedInterval": "2s",
               "datasourceErrors": {},
               "errors": {},
-              "expr": "node_memory_MemFree_bytes{namespace=\"$namespace\",pod=\"$pod\"}",
+              "expr": "node_memory_MemFree_bytes{kubernetes_pod_node_name=\"$node\"}",
               "interval": "$interval",
               "intervalFactor": 1,
               "legendFormat": "Free",
@@ -4336,7 +4127,7 @@ data:
               "calculatedInterval": "2s",
               "datasourceErrors": {},
               "errors": {},
-              "expr": "node_memory_Buffers{namespace=\"$namespace\",pod=\"$pod\"}",
+              "expr": "node_memory_Buffers{kubernetes_pod_node_name=\"$node\"}",
               "interval": "$interval",
               "intervalFactor": 1,
               "legendFormat": "Buffers",
@@ -4349,7 +4140,7 @@ data:
               "calculatedInterval": "2s",
               "datasourceErrors": {},
               "errors": {},
-              "expr": "node_memory_Cached{namespace=\"$namespace\",pod=\"$pod\"}",
+              "expr": "node_memory_Cached{kubernetes_pod_node_name=\"$node\"}",
               "interval": "$interval",
               "intervalFactor": 1,
               "legendFormat": "Cached",
@@ -4380,6 +4171,7 @@ data:
           },
           "yaxes": [
             {
+              "$$hashKey": "object:936",
               "format": "bytes",
               "label": "",
               "logBase": 1,
@@ -4388,6 +4180,7 @@ data:
               "show": true
             },
             {
+              "$$hashKey": "object:937",
               "format": "bytes",
               "logBase": 1,
               "max": null,
@@ -4417,6 +4210,13 @@ data:
           "decimals": null,
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 6,
           "fillGradient": 0,
           "grid": {},
@@ -4424,9 +4224,10 @@ data:
             "h": 7,
             "w": 8,
             "x": 16,
-            "y": 142
+            "y": 121
           },
           "height": "",
+          "hiddenSeries": false,
           "id": 2,
           "legend": {
             "alignAsTable": false,
@@ -4448,14 +4249,16 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [
             {
+              "$$hashKey": "object:374",
               "alias": "Max Core Utilization",
               "lines": false,
               "pointradius": 1,
@@ -4463,6 +4266,7 @@ data:
               "stack": false
             },
             {
+              "$$hashKey": "object:375",
               "alias": "Load 1m",
               "color": "#58140C",
               "fill": 2,
@@ -4475,23 +4279,10 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "calculatedInterval": "2s",
-              "datasourceErrors": {},
-              "errors": {},
-              "expr": "clamp_max(((avg by (mode) ( (clamp_max(rate(node_cpu_seconds_total{namespace=\"$namespace\",pod=\"$pod\",mode!=\"idle\"}[$interval]),1)) or (clamp_max(irate(node_cpu_seconds_total{namespace=\"$namespace\",pod=\"$pod\",mode!=\"idle\"}[5m]),1)) ))*100 or (avg_over_time(node_cpu_seconds_total_average{instance=~\"$host\", mode!=\"total\", mode!=\"idle\"}[$interval]) or avg_over_time(node_cpu_seconds_total_average{instance=~\"$host\", mode!=\"total\", mode!=\"idle\"}[5m]))),100)",
+              "expr": "clamp_max(max by () (sum  by (cpu) ( (clamp_max(rate(node_cpu_seconds_total{kubernetes_pod_node_name=\"$node\",mode!=\"idle\",mode!=\"iowait\"}[$interval]),1)) or (clamp_max(irate(node_cpu_seconds_total{kubernetes_pod_node_name=\"$node\",mode!=\"idle\",mode!=\"iowait\"}[5m]),1)) ))*100,100)",
               "format": "time_series",
               "hide": false,
-              "interval": "$interval",
-              "intervalFactor": 1,
-              "legendFormat": "{{`{{mode}}`}}",
-              "metric": "",
-              "refId": "A",
-              "step": 20
-            },
-            {
-              "expr": "clamp_max(max by () (sum  by (cpu) ( (clamp_max(rate(node_cpu_seconds_total{namespace=\"$namespace\",pod=\"$pod\",mode!=\"idle\",mode!=\"iowait\"}[$interval]),1)) or (clamp_max(irate(node_cpu_seconds_total{namespace=\"$namespace\",pod=\"$pod\",mode!=\"idle\",mode!=\"iowait\"}[5m]),1)) ))*100,100)",
-              "format": "time_series",
-              "hide": true,
+              "instant": false,
               "interval": "$interval",
               "intervalFactor": 1,
               "legendFormat": "Max Core Utilization",
@@ -4499,10 +4290,12 @@ data:
               "step": 20
             },
             {
-              "expr": "node_load1{namespace=\"$namespace\",pod=\"$pod\"}",
+              "expr": "node_load1{kubernetes_pod_node_name=\"$node\"}",
               "format": "time_series",
               "hide": false,
-              "intervalFactor": 2,
+              "instant": false,
+              "interval": "$interval",
+              "intervalFactor": 1,
               "legendFormat": "Load 1m",
               "refId": "C"
             }
@@ -4528,6 +4321,7 @@ data:
           },
           "yaxes": [
             {
+              "$$hashKey": "object:400",
               "decimals": 1,
               "format": "percent",
               "label": "",
@@ -4537,6 +4331,7 @@ data:
               "show": true
             },
             {
+              "$$hashKey": "object:401",
               "format": "none",
               "logBase": 1,
               "max": null,
@@ -4558,6 +4353,13 @@ data:
           "decimals": 2,
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 2,
           "fillGradient": 0,
           "grid": {},
@@ -4565,9 +4367,10 @@ data:
             "h": 7,
             "w": 8,
             "x": 0,
-            "y": 149
+            "y": 128
           },
           "height": "250px",
+          "hiddenSeries": false,
           "id": 36,
           "legend": {
             "alignAsTable": false,
@@ -4582,14 +4385,15 @@ data:
             "total": false,
             "values": true
           },
-          "lines": false,
+          "lines": true,
           "linewidth": 2,
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 1,
           "points": true,
           "renderer": "flot",
@@ -4602,8 +4406,9 @@ data:
               "calculatedInterval": "2m",
               "datasourceErrors": {},
               "errors": {},
-              "expr": "sum((rate(node_disk_read_time_seconds_total{device!~\"dm-.+\", namespace=\"$namespace\",pod=\"$pod\"}[$interval]) / rate(node_disk_reads_completed_total{device!~\"dm-.+\", namespace=\"$namespace\",pod=\"$pod\"}[$interval])) or (irate(node_disk_read_time_seconds_total{device!~\"dm-.+\", namespace=\"$namespace\",pod=\"$pod\"}[5m]) / irate(node_disk_reads_completed_total{device!~\"dm-.+\", namespace=\"$namespace\",pod=\"$pod\"}[5m]))\nor avg_over_time(aws_rds_read_latency_average{namespace=\"$namespace\",pod=\"$pod\"}[$interval]) or avg_over_time(aws_rds_read_latency_average{namespace=\"$namespace\",pod=\"$pod\"}[5m]))",
+              "expr": "rate(node_disk_read_time_seconds_total{device!~\"dm-.+\", kubernetes_pod_node_name=\"$node\"}[$interval]) / rate(node_disk_reads_completed_total{device!~\"dm-.+\", kubernetes_pod_node_name=\"$node\"}[$interval])",
               "format": "time_series",
+              "hide": false,
               "interval": "$interval",
               "intervalFactor": 1,
               "legendFormat": "Read",
@@ -4616,7 +4421,7 @@ data:
               "calculatedInterval": "2m",
               "datasourceErrors": {},
               "errors": {},
-              "expr": "sum((rate(node_disk_write_time_seconds_total{device!~\"dm-.+\", namespace=\"$namespace\",pod=\"$pod\"}[$interval]) / rate(node_disk_writes_completed_total{device!~\"dm-.+\", namespace=\"$namespace\",pod=\"$pod\"}[$interval])) or (irate(node_disk_write_time_seconds_total{device!~\"dm-.+\", namespace=\"$namespace\",pod=\"$pod\"}[5m]) / irate(node_disk_writes_completed_total{device!~\"dm-.+\", namespace=\"$namespace\",pod=\"$pod\"}[5m])) or \navg_over_time(aws_rds_write_latency_average{namespace=\"$namespace\",pod=\"$pod\"}[$interval]) or avg_over_time(aws_rds_write_latency_average{namespace=\"$namespace\",pod=\"$pod\"}[5m]))",
+              "expr": "rate(node_disk_read_time_seconds_total{device!~\"dm-.+\", kubernetes_pod_node_name=\"sds1\"}[$interval]) / rate(node_disk_reads_completed_total{device!~\"dm-.+\", kubernetes_pod_node_name=\"sds1\"}[$interval])",
               "format": "time_series",
               "interval": "$interval",
               "intervalFactor": 1,
@@ -4648,6 +4453,7 @@ data:
           },
           "yaxes": [
             {
+              "$$hashKey": "object:1016",
               "format": "ms",
               "label": "",
               "logBase": 2,
@@ -4656,6 +4462,7 @@ data:
               "show": true
             },
             {
+              "$$hashKey": "object:1017",
               "format": "ms",
               "label": "",
               "logBase": 1,
@@ -4678,6 +4485,13 @@ data:
           "decimals": null,
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 2,
           "fillGradient": 0,
           "grid": {},
@@ -4685,9 +4499,10 @@ data:
             "h": 7,
             "w": 8,
             "x": 8,
-            "y": 149
+            "y": 128
           },
           "height": "250px",
+          "hiddenSeries": false,
           "id": 21,
           "legend": {
             "alignAsTable": false,
@@ -4708,14 +4523,16 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [
             {
+              "$$hashKey": "object:1169",
               "alias": "Outbound",
               "transform": "negative-Y"
             }
@@ -4728,7 +4545,7 @@ data:
               "calculatedInterval": "2s",
               "datasourceErrors": {},
               "errors": {},
-              "expr": "sum(rate(node_network_receive_bytes_total{namespace=\"$namespace\",pod=\"$pod\", device!=\"lo\"}[$interval])) or sum(irate(node_network_receive_bytes_total{namespace=\"$namespace\",pod=\"$pod\", device!=\"lo\"}[5m])) or sum(max_over_time(rdsosmetrics_network_rx{namespace=\"$namespace\",pod=\"$pod\"}[$interval])) or sum(max_over_time(rdsosmetrics_network_rx{namespace=\"$namespace\",pod=\"$pod\"}[5m])) ",
+              "expr": "sum(rate(node_network_receive_bytes_total{kubernetes_pod_node_name=\"$node\", device!=\"lo\"}[$interval])) or sum(irate(node_network_receive_bytes_total{kubernetes_pod_node_name=\"$node\", device!=\"lo\"}[5m])) or sum(max_over_time(rdsosmetrics_network_rx{kubernetes_pod_node_name=\"$node\"}[$interval])) or sum(max_over_time(rdsosmetrics_network_rx{kubernetes_pod_node_name=\"$node\"}[5m])) ",
               "format": "time_series",
               "interval": "$interval",
               "intervalFactor": 1,
@@ -4742,7 +4559,7 @@ data:
               "calculatedInterval": "2s",
               "datasourceErrors": {},
               "errors": {},
-              "expr": "sum(rate(node_network_transmit_bytes_total{namespace=\"$namespace\",pod=\"$pod\", device!=\"lo\"}[$interval])) or sum(irate(node_network_transmit_bytes_total{namespace=\"$namespace\",pod=\"$pod\", device!=\"lo\"}[5m])) or\nsum(max_over_time(rdsosmetrics_network_tx{namespace=\"$namespace\",pod=\"$pod\"}[$interval])) or sum(max_over_time(rdsosmetrics_network_tx{namespace=\"$namespace\",pod=\"$pod\"}[5m]))",
+              "expr": "sum(rate(node_network_transmit_bytes_total{kubernetes_pod_node_name=\"$node\", device!=\"lo\"}[$interval])) or sum(irate(node_network_transmit_bytes_total{kubernetes_pod_node_name=\"$node\", device!=\"lo\"}[5m])) or\nsum(max_over_time(rdsosmetrics_network_tx{kubernetes_pod_node_name=\"$node\"}[$interval])) or sum(max_over_time(rdsosmetrics_network_tx{kubernetes_pod_node_name=\"$node\"}[5m]))",
               "format": "time_series",
               "interval": "$interval",
               "intervalFactor": 1,
@@ -4774,6 +4591,7 @@ data:
           },
           "yaxes": [
             {
+              "$$hashKey": "object:1176",
               "format": "Bps",
               "label": "",
               "logBase": 1,
@@ -4782,6 +4600,7 @@ data:
               "show": true
             },
             {
+              "$$hashKey": "object:1177",
               "format": "bytes",
               "logBase": 1,
               "max": null,
@@ -4803,6 +4622,13 @@ data:
           "decimals": null,
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 2,
           "fillGradient": 0,
           "grid": {},
@@ -4810,8 +4636,9 @@ data:
             "h": 7,
             "w": 8,
             "x": 16,
-            "y": 149
+            "y": 128
           },
+          "hiddenSeries": false,
           "id": 38,
           "legend": {
             "alignAsTable": false,
@@ -4832,9 +4659,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -4847,7 +4675,7 @@ data:
               "calculatedInterval": "2s",
               "datasourceErrors": {},
               "errors": {},
-              "expr": "rate(node_vmstat_pswpin{namespace=\"$namespace\",pod=\"$pod\"}[$interval]) * 4096 or irate(node_vmstat_pswpin{namespace=\"$namespace\",pod=\"$pod\"}[5m]) * 4096",
+              "expr": "rate(node_vmstat_pswpin{kubernetes_pod_node_name=\"$node\"}[$interval]) * 4096 or irate(node_vmstat_pswpin{kubernetes_pod_node_name=\"$node\"}[5m]) * 4096",
               "interval": "$interval",
               "intervalFactor": 1,
               "legendFormat": "Swap In (Reads)",
@@ -4860,7 +4688,7 @@ data:
               "calculatedInterval": "2s",
               "datasourceErrors": {},
               "errors": {},
-              "expr": "rate(node_vmstat_pswpout{namespace=\"$namespace\",pod=\"$pod\"}[$interval]) * 4096 or irate(node_vmstat_pswpout{namespace=\"$namespace\",pod=\"$pod\"}[5m]) * 4096",
+              "expr": "rate(node_vmstat_pswpout{kubernetes_pod_node_name=\"$node\"}[$interval]) * 4096 or irate(node_vmstat_pswpout{kubernetes_pod_node_name=\"$node\"}[5m]) * 4096",
               "interval": "$interval",
               "intervalFactor": 1,
               "legendFormat": "Swap Out (Writes)",
@@ -4891,6 +4719,7 @@ data:
           },
           "yaxes": [
             {
+              "$$hashKey": "object:1254",
               "format": "Bps",
               "label": "",
               "logBase": 1,
@@ -4899,6 +4728,7 @@ data:
               "show": true
             },
             {
+              "$$hashKey": "object:1255",
               "format": "bytes",
               "logBase": 1,
               "max": null,
@@ -4913,7 +4743,7 @@ data:
         }
       ],
       "refresh": "30s",
-      "schemaVersion": 20,
+      "schemaVersion": 26,
       "style": "dark",
       "tags": [
         "Percona",
@@ -4925,12 +4755,14 @@ data:
             "allFormat": "glob",
             "auto": true,
             "auto_count": 200,
-            "auto_min": "1s",
+            "auto_min": "5m",
             "current": {
-              "text": "1s",
-              "value": "1s"
+              "selected": false,
+              "text": "5m",
+              "value": "5m"
             },
             "datasource": null,
+            "error": null,
             "hide": 0,
             "includeAll": false,
             "label": "Interval",
@@ -4944,7 +4776,7 @@ data:
                 "value": "$__auto_interval_interval"
               },
               {
-                "selected": true,
+                "selected": false,
                 "text": "1s",
                 "value": "1s"
               },
@@ -4959,7 +4791,7 @@ data:
                 "value": "1m"
               },
               {
-                "selected": false,
+                "selected": true,
                 "text": "5m",
                 "value": "5m"
               },
@@ -4980,6 +4812,7 @@ data:
               }
             ],
             "query": "1s,5s,1m,5m,1h,6h,1d",
+            "queryValue": "",
             "refresh": 2,
             "skipUrlSync": false,
             "type": "interval"
@@ -4987,11 +4820,13 @@ data:
           {
             "allValue": null,
             "current": {
-              "text": "middleware-test",
-              "value": "middleware-test"
+              "selected": false,
+              "text": "test",
+              "value": "test"
             },
             "datasource": null,
             "definition": "label_values(mysql_up, namespace)",
+            "error": null,
             "hide": 0,
             "includeAll": false,
             "label": "Namespace",
@@ -5012,12 +4847,13 @@ data:
           {
             "allValue": null,
             "current": {
-              "isNone": true,
-              "text": "None",
-              "value": ""
+              "selected": false,
+              "text": "by-sc01",
+              "value": "by-sc01"
             },
             "datasource": null,
             "definition": "query_result(kube_statefulset_labels{namespace=\"$namespace\", label_operatorname=\"mysql-operator\"})",
+            "error": null,
             "hide": 0,
             "includeAll": false,
             "label": "Mysql cluster",
@@ -5039,12 +4875,13 @@ data:
             "allFormat": "glob",
             "allValue": null,
             "current": {
-              "isNone": true,
-              "text": "None",
-              "value": ""
+              "selected": false,
+              "text": "by-sc01-0",
+              "value": "by-sc01-0"
             },
             "datasource": null,
             "definition": "label_values(kube_pod_info{namespace=\"$namespace\", created_by_name=\"$mc\"}, pod) ",
+            "error": null,
             "hide": 0,
             "includeAll": false,
             "label": "Pod",
@@ -5063,11 +4900,41 @@ data:
             "tagsQuery": null,
             "type": "query",
             "useTags": false
+          },
+          {
+            "allFormat": "glob",
+            "allValue": null,
+            "current": {
+              "selected": false,
+              "text": "mw-worker1",
+              "value": "mw-worker1"
+            },
+            "datasource": null,
+            "definition": "label_values(kube_pod_info{namespace=\"$namespace\", pod=\"$pod\"}, node)",
+            "error": null,
+            "hide": 2,
+            "includeAll": false,
+            "label": "node",
+            "multi": false,
+            "multiFormat": "regex values",
+            "name": "node",
+            "options": [],
+            "query": "label_values(kube_pod_info{namespace=\"$namespace\", pod=\"$pod\"}, node)",
+            "refresh": 1,
+            "refresh_on_load": false,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 1,
+            "tagValuesQuery": null,
+            "tags": [],
+            "tagsQuery": null,
+            "type": "query",
+            "useTags": false
           }
         ]
       },
       "time": {
-        "from": "now-12h",
+        "from": "now-6h",
         "to": "now"
       },
       "timepicker": {
@@ -5105,5 +4972,5 @@ data:
       "timezone": "browser",
       "title": "MySQL Overview",
       "uid": "uaKUl7_Mk",
-      "version": 14
+      "version": 3
     }

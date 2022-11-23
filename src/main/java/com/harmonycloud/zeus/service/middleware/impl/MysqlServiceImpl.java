@@ -189,11 +189,7 @@ public class MysqlServiceImpl implements MysqlService {
             String exposeIP = "";
             if (!CollectionUtils.isEmpty(ingressDTOS)) {
                 ingressDTO = ingressDTOS.get(0);
-                Set<String> ipSet = ingressService.listIngressIp(clusterId, ingressDTO.getIngressClassName());
-                for (String ip : ipSet) {
-                    exposeIP = ip;
-                    break;
-                }
+                exposeIP = ingressService.getIngressIp(clusterId, ingressDTO.getIngressClassName());
             } else {
                 ingressDTO = serviceDTOS.get(0);
                 List<Node> nodeList = nodeService.list(clusterId);
@@ -256,6 +252,12 @@ public class MysqlServiceImpl implements MysqlService {
             middleware.setName(middlewareName);
             middleware.setType(MiddlewareTypeEnum.MYSQL.getType());
             mysqlOperator.createOpenService(middleware, false, false);
+            // ingress服务创建后不一定立即就可以使用，这里延迟5秒
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             return queryBasicAccessInfo(clusterId, namespace, middlewareName, null);
         }
     }

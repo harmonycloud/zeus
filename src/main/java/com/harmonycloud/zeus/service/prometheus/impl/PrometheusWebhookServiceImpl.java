@@ -107,18 +107,16 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
                     .eq("cluster_id", clusterId);
             AlertRuleId alertInfo = new AlertRuleId();
             List<AlertRuleId> alertInfos = alertRuleIdMapper.selectList(wrapper);
-            String lay;
             if (!CollectionUtils.isEmpty(alertInfos)) {
                 alertInfo = alertInfos.get(0);
-                beanAlertRecord.setLay(alertInfo.getLay());
+                beanAlertRecord.setLay(StringUtils.isNotEmpty(alertInfo.getLay()) ? alertInfo.getLay() : "service");
                 beanAlertRecord.setAlertId(alertInfo.getAlertId());
-                beanAlertRecord.setExpr(alertInfo.getDescription() + alertInfo.getSymbol() + alertInfo.getThreshold() + "%");
+                beanAlertRecord.setExpr(alertInfo.getDescription() + alertInfo.getSymbol() + alertInfo.getThreshold());
                 beanAlertRecord.setContent(alertInfo.getContent() == null ? "" : alertInfo.getContent());
-                lay = AlertConstant.LAY_SYSTEM;
             } else {
                 beanAlertRecord.setLay("service");
-                lay = AlertConstant.LAY_SERVICE;
             }
+            String lay = beanAlertRecord.getLay();
             beanAlertRecordMapper.insert(beanAlertRecord);
             // 设置通道沉默时间
             if (annotations.containsKey("silence") && StringUtils.isNotEmpty(clusterId)) {

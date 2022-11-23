@@ -20,7 +20,7 @@ public interface IngressService {
      * @param keyword
      * @return
      */
-    List<IngressDTO> list(String clusterId, String namespace, String keyword);
+    List<IngressDTO> list(String clusterId, String namespace, String keyword, String projectId);
 
     /**
      * 创建中间件对外访问
@@ -38,14 +38,14 @@ public interface IngressService {
      * @param cluster     集群
      * @param serviceList 服务列表
      */
-    void checkServiceTcpPort(MiddlewareClusterDTO cluster, List<ServiceDTO> serviceList);
+    void checkServiceTcpPort(MiddlewareClusterDTO cluster, String ingressClassName, String exposeType, List<ServiceDTO> serviceList);
 
     /**
      * 获取集群已被使用的端口列表
      * @param cluster
      * @return
      */
-    Set<Integer>  getUsedPortSet(MiddlewareClusterDTO cluster);
+    Set<Integer>  getUsedPortSet(MiddlewareClusterDTO cluster, Boolean filter);
 
     /**
      * 创建中间件对外访问
@@ -55,7 +55,7 @@ public interface IngressService {
      * @param serviceList 服务列表
      * @param checkPort   校验端口
      */
-    void createIngressTcp(MiddlewareClusterDTO cluster, String namespace, List<ServiceDTO> serviceList, boolean checkPort);
+//    void createIngressTcp(MiddlewareClusterDTO cluster, String namespace, List<ServiceDTO> serviceList, boolean checkPort);
 
     /**
      * 删除中间件对外访问
@@ -133,7 +133,16 @@ public interface IngressService {
      * @param keyword
      * @return
      */
-    List<IngressDTO> listAllIngress(String clusterId, String namespace, String keyword);
+    List<IngressDTO> listAllIngress(String clusterId, String namespace, String keyword, String projectId);
+
+    /**
+     * 查询所有中间件ingress(不同于查询所有ingress,此方法会过滤掉不是通过中间件平台创建的服务暴露信息)
+     * @param clusterId
+     * @param namespace
+     * @param keyword
+     * @return
+     */
+    List<IngressDTO> listAllMiddlewareIngress(String clusterId, String namespace, String keyword, String projectId);
 
     /**
      * 获取一个未被占用的ingress端口
@@ -157,7 +166,7 @@ public interface IngressService {
      * @param clusterId
      * @param port
      */
-    void verifyServicePort(String clusterId, Integer port);
+    void verifyServicePort(String clusterId, String ingressClassName, String exposeType, Integer port);
 
     /**
      * 查询ingress ip
@@ -165,6 +174,11 @@ public interface IngressService {
      * @param ingressClassName
      * @return
      */
-    Set<String> listIngressIp(String clusterId, String ingressClassName);
+    List<String> listIngressIp(String clusterId, String ingressClassName);
+
+    /**
+     * 获取一个可用的ingress ip
+     */
+    String getIngressIp(String clusterId, String ingressClassName);
 
 }

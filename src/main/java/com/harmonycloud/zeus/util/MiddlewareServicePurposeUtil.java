@@ -39,10 +39,18 @@ public class MiddlewareServicePurposeUtil {
             serviceNameList.add(serviceName);
         }
         StringBuffer sbf = new StringBuffer();
+        // 当一个http ingress包含多个服务时，一个服务暴露就会有多个用途
         serviceNameList.forEach(svcName -> {
-            sbf.append(getPurpose(middlewareName, middlewareType, svcName)).append(",");
+            String purpose = getPurpose(middlewareName, middlewareType, svcName);
+            if (purpose != null) {
+                sbf.append(purpose).append(",");
+            }
         });
-        return sbf.substring(0, sbf.length() - 1);
+        if (StringUtils.isEmpty(sbf.toString())) {
+            return null;
+        } else {
+            return sbf.substring(0, sbf.length() - 1);
+        }
     }
 
     private static String getPurpose(String middlewareName, String middlewareType, String serviceName) {

@@ -1,0 +1,33 @@
+- traefik 组件支持端口动态修改
+- 中间件发布支持多storageClass
+- 双活节点label key值支持动态修改
+- middleware controller 对象字段添加
+- es动态配置protocol
+
+-- 2022.10.28 xutianhong
+- mysql redis proxy 资源逻辑修改
+- 增量备份label添加
+
+-- 2022.10.30 xutianhong
+- 备份恢复逻辑修改
+- pg资源配额更新
+- 修改pod进入数据库命令
+
+-- 2022.10.31 xutianhong
+- redis节点数量修改区分读写分离模式
+- 修改redis读写分离节点cpu默认为1
+
+-- 2022.11.1 liyinlong
+- 服务暴露列表报错
+- 服务暴露记录服务暴露字段为null
+
+-- 2022.11.3 xutianhong/wangpenglei
+- 备份任务添加删除中状态
+- redis参数配置添加config set逻辑
+- middleware-controller版本更新
+
+- mysql自定义参数曲线特殊处理innodb_buffer_pool_size
+
+-- 2022.11.4 xutianhong
+- 双活label处理完善
+- 修复下架中间件时的系统错误问题

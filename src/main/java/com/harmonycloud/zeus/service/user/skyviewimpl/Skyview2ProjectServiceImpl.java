@@ -91,9 +91,9 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
                 try {
                     JSONObject jsonTenant = (JSONObject) tenant;
                     log.info("提交查询租户信息:{}", jsonTenant.getString("tenantId"));
-                    CaasResult<JSONArray> projectResult = projectServiceClient.getTenantProject(caastoken, jsonTenant.getString("tenantId"));
+                    CaasResult<JSONObject> projectResult = projectServiceClient.getProjectList(caastoken, jsonTenant.getString("tenantId"));
                     if (Boolean.TRUE.equals(projectResult.getSuccess())) {
-                        JSONArray projectList = projectResult.getData();
+                        JSONArray projectList = projectResult.getJSONArray("projectList");
                         projects.addAll(convertProject(projectList, jsonTenant.getString("tenantName"), jsonTenant.getString("aliasName"), caastoken));
                     }
                 } catch (Exception e) {

@@ -181,7 +181,7 @@ public interface ClusterService {
      * @param clusterId 集群id
      * @return
      */
-    List<Namespace> listRegisteredNamespace(String clusterId);
+    List<Namespace> listRegisteredNamespace(String clusterId, String projectId);
 
     /**
      * 将观云台clusterid转换为中间件平台clusterid
