@@ -1,0 +1,25 @@
+tolerations:
+  - effect: NoSchedule
+    key: harm.cn/type
+    value: active-active
+  - effect: NoSchedule
+    key: harm.cn/system
+
+nodeAffinity:
+  preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      preference:
+        matchExpressions:
+          - key: system
+            operator: In
+            values:
+              - "true"
+
+podAntiAffinityTopologKey: "zone"
+
+imagePullSecrets:
+  - name: registrysecret
+
+
+
+

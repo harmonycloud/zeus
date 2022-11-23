@@ -1,11 +1,15 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
 import static com.harmonycloud.caas.common.constants.NameConstant.SENTINEL;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_NODEPORT;
 import static com.harmonycloud.zeus.util.RedisUtil.getRedisSentinelIsOk;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.model.Node;
+import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.zeus.service.k8s.NodeService;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +22,6 @@ import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.RedisAccessInfo;
 import com.harmonycloud.caas.common.model.RedisDbDTO;
-import com.harmonycloud.caas.common.model.middleware.IngressDTO;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.ServiceDTO;
-import com.harmonycloud.caas.common.model.middleware.ServicePortDTO;
 import com.harmonycloud.zeus.operator.impl.RedisOperatorImpl;
 import com.harmonycloud.zeus.service.k8s.IngressService;
 import com.harmonycloud.zeus.service.k8s.impl.ServiceServiceImpl;
@@ -50,6 +50,8 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
     private ServiceServiceImpl serviceService;
     @Autowired
     private RedisOperatorImpl redisOperator;
+    @Autowired
+    private NodeService nodeService;
 
     @Override
     public List<RedisDbDTO> listRedisDb(String clusterId, String namespace, String middlewareName, String db,
@@ -77,21 +79,17 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
         paramCheck(db.getDb());
         RedisAccessInfo redisAccessInfo = checkAndGetDbManageAccessInfo(clusterId, namespace, middlewareName);
         Jedis jedis;
-        if (SENTINEL.equals(redisAccessInfo.getMode())) {
-            jedis = getRedisSentinelIsOk(redisAccessInfo);
-            if (RedisConstant.PONG.equalsIgnoreCase(jedis.ping())) {
-                jedis.select(Integer.parseInt(db.getDb()));
-                if (RedisConstant.OUT.equals(db.getStatus())) {
-                    if (jedis.exists(db.getKey())) {
-                        throw new BusinessException(ErrorMessage.KEY_ALREADY_EXISTS);
-                    }
+        jedis = getRedisSentinelIsOk(redisAccessInfo);
+        if (RedisConstant.PONG.equalsIgnoreCase(jedis.ping())) {
+            jedis.select(Integer.parseInt(db.getDb()));
+            if (RedisConstant.OUT.equals(db.getStatus())) {
+                if (jedis.exists(db.getKey())) {
+                    throw new BusinessException(ErrorMessage.KEY_ALREADY_EXISTS);
                 }
-                paddingDataByType(jedis, db);
-            } else {
-                throw new BusinessException(ErrorMessage.REDIS_SERVER_CONNECT_FAILED);
             }
+            paddingDataByType(jedis, db);
         } else {
-            throw new BusinessException(ErrorMessage.TEMPORARY_NOT_SUPPORT_CLUSTER);
+            throw new BusinessException(ErrorMessage.REDIS_SERVER_CONNECT_FAILED);
         }
         jedis.close();
     }
@@ -335,7 +333,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
      * 如果没有暴露服务则手动暴露
      */
     private RedisAccessInfo checkAndGetDbManageAccessInfo(String clusterId, String namespace, String middlewareName) {
-        RedisAccessInfo redisAccessInfo = queryBasicAccessInfo(clusterId, namespace, middlewareName, null);
+        RedisAccessInfo redisAccessInfo = queryBasicAccessInfo(clusterId, namespace, middlewareName);
         if (redisAccessInfo.isOpenService()) {
             return redisAccessInfo;
         } else {
@@ -351,34 +349,39 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            return queryBasicAccessInfo(clusterId, namespace, middlewareName, null);
+            return queryBasicAccessInfo(clusterId, namespace, middlewareName);
         }
     }
 
     /**
      * 获取redis暴露出来的地址
      */
-    private RedisAccessInfo queryBasicAccessInfo(String clusterId, String namespace, String middlewareName,
-        Middleware middleware) {
-        if (middleware == null) {
-            middleware =
-                middlewareService.detail(clusterId, namespace, middlewareName, MiddlewareTypeEnum.REDIS.getType());
+    private RedisAccessInfo queryBasicAccessInfo(String clusterId, String namespace, String middlewareName) {
+        Middleware middleware = middlewareService.detail(clusterId, namespace, middlewareName, MiddlewareTypeEnum.REDIS.getType());
+        ReadWriteProxy readWriteProxy = middleware.getReadWriteProxy();
+        if ("cluster".equals(middleware.getMode()) && !readWriteProxy.getEnabled()) {
+            throw new BusinessException(ErrorMessage.TEMPORARY_NOT_SUPPORT_CLUSTER);
         }
-        List<IngressDTO> ingressDTOS =
+        List<IngressDTO> serviceDTOS =
             ingressService.get(clusterId, namespace, MiddlewareTypeEnum.REDIS.getType(), middlewareName);
-        ingressDTOS = ingressDTOS.stream().filter(ingressDTO -> (!ingressDTO.getName().contains("readonly")))
-            .collect(Collectors.toList());
 
         RedisAccessInfo redisAccessInfo = new RedisAccessInfo();
-        if (!CollectionUtils.isEmpty(ingressDTOS)) {
+        if (!CollectionUtils.isEmpty(serviceDTOS)) {
             // 优先使用ingress或NodePort暴露的服务
+            List<IngressDTO> ingressDTOS = serviceDTOS.stream().filter(ingressDTO -> (!ingressDTO.getName().contains("readonly")))
+                    .collect(Collectors.toList());
             IngressDTO ingressDTO = ingressDTOS.get(0);
-            Set<String> ingressIpSet = ingressService.listIngressIp(clusterId, ingressDTO.getIngressClassName());
             String exposeIP = "";
-            for (String ip : ingressIpSet) {
-                exposeIP = ip;
-                break;
+            if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_NODEPORT)) {
+                ingressDTO = serviceDTOS.get(0);
+                List<Node> nodeList = nodeService.list(clusterId);
+                if (!CollectionUtils.isEmpty(nodeList)) {
+                    exposeIP = nodeList.get(0).getIp();
+                }
+            } else {
+                exposeIP = ingressService.getIngressIp(clusterId, ingressDTO.getIngressClassName());
             }
+
             List<ServiceDTO> serviceList = ingressDTO.getServiceList();
             if (!CollectionUtils.isEmpty(serviceList)) {
                 ServiceDTO serviceDTO = serviceList.get(0);

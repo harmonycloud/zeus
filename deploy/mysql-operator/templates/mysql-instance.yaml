@@ -17,6 +17,10 @@ spec:
       repository: {{ .Values.image.repository }}/proxysql
       tag: {{ .Values.image.proxyImageTag}}
       pullPolicy: {{ .Values.image.pullPolicy}}
+    {{- with .Values.proxy.args }}
+    args:
+    {{- toYaml . | nindent 6 }}
+    {{- end }}
   {{- /*拓扑策略*/ -}}
   {{- include "middlware.proxy.topologyDistribution" . | indent 4 -}}
   {{- end }}

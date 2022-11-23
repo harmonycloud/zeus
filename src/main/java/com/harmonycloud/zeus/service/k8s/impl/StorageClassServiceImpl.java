@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.k8s.impl;
 
 import static com.harmonycloud.caas.common.constants.NameConstant.DISK;
 import static com.harmonycloud.caas.common.constants.NameConstant.STORAGE;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.STORAGE_PROVISIONER;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -104,16 +105,24 @@ public class StorageClassServiceImpl implements StorageClassService {
     }
 
     @Override
-    public Map<String, StorageClassDTO> convertStorageClass(List<MiddlewareInfo> pvcInfos, String clusterId, String namespace) {
+    public Map<String, StorageClassDTO> convertStorageClass(List<MiddlewareInfo> pvcInfos, String clusterId,
+        String namespace) {
         Map<String, StorageClassDTO> scMap = new HashMap<>();
         if (!CollectionUtils.isEmpty(pvcInfos)) {
             pvcInfos.forEach(pvcInfo -> {
                 PersistentVolumeClaim pvc = pvcWrapper.get(clusterId, namespace, pvcInfo.getName());
                 if (pvc != null) {
+                    StorageClassDTO sc = new StorageClassDTO();
                     String storage = pvc.getSpec().getResources().getRequests().get(STORAGE).toString();
                     String storageName = pvc.getSpec().getStorageClassName();
+                    if (!CollectionUtils.isEmpty(pvc.getMetadata().getAnnotations()) && pvc.getMetadata()
+                        .getAnnotations().containsKey(STORAGE_PROVISIONER)) {
+                        sc.setProvisioner(
+                            pvc.getMetadata().getAnnotations().get(STORAGE_PROVISIONER));
+                    }
                     boolean isLvmStorage = checkLVMStorage(clusterId, namespace, storageName);
-                    scMap.put(pvcInfo.getName(), new StorageClassDTO(storage, storageName, isLvmStorage));
+                    sc.setIsLvmStorage(isLvmStorage).setStorage(storage).setStorageClassName(storageName);
+                    scMap.put(pvcInfo.getName(), sc);
                 }
             });
         }

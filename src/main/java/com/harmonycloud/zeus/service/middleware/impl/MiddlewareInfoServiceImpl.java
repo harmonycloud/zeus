@@ -210,7 +210,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     public List<MiddlewareInfoDTO> version(String clusterId, String type) {
         List<BeanMiddlewareInfo> mwInfoList = listByType(type);
         BeanClusterMiddlewareInfo clusterMwInfo = clusterMiddlewareInfoService.get(clusterId, type);
-        if (mwInfoList.size() == 1 && clusterMwInfo.getStatus() == 2) {
+        if (mwInfoList.size() == 1 && (clusterMwInfo == null || clusterMwInfo.getStatus() == 2)) {
             return mwInfoList.stream().map(info -> {
                 MiddlewareInfoDTO dto = new MiddlewareInfoDTO();
                 BeanUtils.copyProperties(info, dto);
@@ -428,7 +428,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         List<BeanMiddlewareCluster> clusterList = middlewareClusterService.listClustersByClusterId(null);
         List<Middleware> middlewareList = new ArrayList<>();
         clusterList.forEach(cluster -> {
-            List<Namespace> listRegisteredNamespace = clusterService.listRegisteredNamespace(cluster.getClusterId());
+            List<Namespace> listRegisteredNamespace = clusterService.listRegisteredNamespace(cluster.getClusterId(), null);
             List<Middleware> middlewares;
             try{
                 middlewares = middlewareService.simpleList(cluster.getClusterId(), null, null, null);

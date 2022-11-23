@@ -171,14 +171,14 @@ public class NodeServiceImpl implements NodeService {
             // 设置cpu
             nodeRs.setCpuUsed(nodeCpuUsed.getOrDefault(node.getName(), null));
             nodeRs.setCpuTotal(nodeCpuTotal.getOrDefault(node.getName(), null));
-            if (nodeRs.getCpuUsed() != null) {
+            if (nodeRs.getCpuUsed() != null && nodeRs.getCpuTotal() != null) {
                 nodeRs.setCpuRate(ResourceCalculationUtil.roundNumber(
                         BigDecimal.valueOf(nodeRs.getCpuUsed() / nodeRs.getCpuTotal() * 100), 2, RoundingMode.CEILING));
             }
             // 设置memory
             nodeRs.setMemoryUsed(nodeMemoryUsed.getOrDefault(node.getName(), null));
             nodeRs.setMemoryTotal(nodeMemoryTotal.getOrDefault(node.getName(), null));
-            if (nodeRs.getMemoryUsed() != null){
+            if (nodeRs.getMemoryUsed() != null && nodeRs.getMemoryUsed() != null){
                 nodeRs.setMemoryRate(ResourceCalculationUtil.roundNumber(
                         BigDecimal.valueOf(nodeRs.getMemoryUsed() / nodeRs.getMemoryTotal() * 100), 2, RoundingMode.CEILING));
             }

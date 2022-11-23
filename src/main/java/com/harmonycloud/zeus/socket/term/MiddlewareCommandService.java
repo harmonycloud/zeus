@@ -20,10 +20,15 @@ public class MiddlewareCommandService {
     @Autowired
     private HelmChartService helmChartService;
 
-    public String getRedisCommand(MiddlewareClusterDTO cluster, String namespace, String name) {
+    public String getRedisCommand(MiddlewareClusterDTO cluster, String namespace, String name, String pod) {
         JSONObject values = helmChartService.getInstalledValues(name, namespace, cluster);
         String password = values.getString("redisPassword");
-        return "redis-cli -h " + name + " -p 6379 -a " + password;
+        if ("sentinel".equals(values.getString("mode")) && values.containsKey("predixy")
+            && values.getJSONObject("predixy").getBooleanValue("enableProxy")) {
+            return "redis-cli -h " + pod.substring(0, pod.lastIndexOf("-")) + " -p 6379 -a " + password;
+        }else {
+            return "redis-cli -h " + name + " -p 6379 -a " + password;
+        }
     }
 
     public String getMysqlCommand(MiddlewareClusterDTO cluster, String namespace, String name) {

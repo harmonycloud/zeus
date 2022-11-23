@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.constants.NameConstant;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareGrafanaNameEnum;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.MonitorResourceQuota;
@@ -56,6 +57,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.LVM_PROVISIONER;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
 /**
@@ -101,6 +103,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private MiddlewareCrTypeService middlewareCrTypeService;
     @Autowired
     private BeanMiddlewareInfoMapper middlewareInfoMapper;
+    @Autowired
+    private PvcService pvcService;
 
     @Override
     public List<Middleware> simpleList(String clusterId, String namespace, String type, String keyword) {
@@ -296,7 +300,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
         MonitorDto monitorDto = new MonitorDto();
         monitorDto.setUrl(monitorInfo.getAddress() + "/d/" + mwInfo.getGrafanaId() + "/" + middleware.getType()
-                + "?var-namespace=" + middleware.getNamespace() + "&var-service=" + middleware.getName());
+            + "?var-namespace=" + middleware.getNamespace() + "&"
+            + MiddlewareGrafanaNameEnum.findByType(middleware.getType()).getName() + "=" + middleware.getName());
         monitorDto.setAuthorization("Bearer " + monitorInfo.getToken());
         return monitorDto;
     }
@@ -410,7 +415,18 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             for (BeanCacheMiddleware beanCacheMiddleware : beanCacheMiddlewareList) {
                 Middleware middleware = new Middleware();
                 BeanUtils.copyProperties(beanCacheMiddleware, middleware);
-                middleware.setStatus("Deleted");
+                if (!StringUtils.isEmpty(beanCacheMiddleware.getValuesYaml())) {
+                    middleware.setStatus("Deleted");
+                } else {
+                    if (StringUtils.isEmpty(beanCacheMiddleware.getPvc())
+                        || !pvcService.checkPvcExist(beanCacheMiddleware.getClusterId(),
+                            beanCacheMiddleware.getNamespace(), beanCacheMiddleware.getPvc().split(","))) {
+                        cacheMiddlewareService.delete(middleware);
+                        continue;
+                    } else {
+                        middleware.setStatus("Deleting");
+                    }
+                }
                 // 先移除可能因为异步导致残留的原中间件信息
                 finalMiddlewareList.removeIf(mw -> mw.getName().equals(beanCacheMiddleware.getName())
                     && mw.getNamespace().equals(beanCacheMiddleware.getNamespace()));
@@ -621,6 +637,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             new MiddlewareTopologyDTO().setClusterId(clusterId).setNamespace(namespace).setName(name).setType(type)
                 .setStatus(middleware.getStatus()).setPods(middleware.getPods())
                 .setPodInfoGroup(middleware.getPodInfoGroup()).setMonitorResourceQuota(new MonitorResourceQuota());
+        // 设置 LVM_PROVISIONER
+        if (middleware.getPods().stream()
+            .anyMatch(podInfo -> StringUtils.isNotEmpty(podInfo.getResources().getProvisioner())
+                && podInfo.getResources().getProvisioner().equals(LVM_PROVISIONER))) {
+            middlewareTopologyDTO.setProvisioner(LVM_PROVISIONER);
+        }
         // 获取alias name
         JSONObject values = helmChartService.getInstalledValues(name, namespace, clusterService.findById(clusterId));
         middlewareTopologyDTO.setAliasName(values.getOrDefault("aliasName", "").toString());
@@ -674,7 +696,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
                 String usedCpuQuery = "sum(rate(container_cpu_usage_seconds_total{pod=~\"" + pods.toString()
-                    + "\",namespace=\"" + namespace + "\",endpoint!=\"\"}[5m])) by (pod)";
+                    + "\",namespace=\"" + namespace + "\",endpoint!=\"\",container!=\"\"}[5m])) by (pod)";
                 PrometheusResponse usedCpu = prometheusResourceMonitorService.query(clusterId, usedCpuQuery);
                 Map<String, Double> result = convertResponse(usedCpu);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
@@ -712,7 +734,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
                 String usedMemoryQuery = "sum(container_memory_working_set_bytes{pod=~\"" + pods.toString()
-                    + "\",namespace=\"" + namespace + "\",endpoint!=\"\"}) by (pod) /1024/1024/1024/2";
+                    + "\",namespace=\"" + namespace + "\",endpoint!=\"\",container!=\"\"}) by (pod) /1024/1024/1024";
                 PrometheusResponse usedMemory = prometheusResourceMonitorService.query(clusterId, usedMemoryQuery);
                 Map<String, Double> result = convertResponse(usedMemory);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
@@ -870,12 +892,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 }
             }
             List<ServiceDTO> serviceList = ingressDTO.getServiceList();
-            Set<String> ipSet = ingressService.listIngressIp(clusterId, ingressDTO.getIngressClassName());
-            String exposeIp = "";
-            for (String ip : ipSet) {
-                exposeIp = ip;
-                break;
-            }
+            String exposeIp = ingressService.getIngressIp(clusterId, ingressDTO.getIngressClassName());
             if (!CollectionUtils.isEmpty(serviceList)) {
                 for (ServiceDTO serviceDTO : serviceList) {
                     if (serviceDTO.getServicePort().equals(servicePort)) {

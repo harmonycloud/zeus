@@ -201,4 +201,11 @@ public class UserRoleServiceImpl implements UserRoleService {
         return userRoleList.get(0);
     }
 
+    @Override
+    public void deleteRedundantRole(String userName, List<String> projectIds) {
+        QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<>();
+        wrapper.notIn("project_id", projectIds);
+        beanUserRoleMapper.delete(wrapper);
+    }
+
 }

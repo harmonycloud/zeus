@@ -71,4 +71,11 @@ public interface CacheMiddlewareService {
      */
     void delete(Middleware middleware);
 
+    /**
+     * 更新values.yaml为null
+     *
+     * @param middleware
+     */
+    void updateValuesToNull(Middleware middleware);
+
 }

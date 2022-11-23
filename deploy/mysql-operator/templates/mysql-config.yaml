@@ -23,27 +23,27 @@ data:
     socket                          =/data/mysql/DBNAME/conf/mysql.sock
     pid_file                        =/data/mysql/DBNAME/conf/mysql.pid
     #************** connection ***************
-    {{- $memory := regexFind "[0-9]*" .Values.resources.limits.memory }}
+    {{- $memory := regexFind "[0-9,.]*" .Values.resources.limits.memory }}
     {{- if or (contains "MI" (upper .Values.resources.limits.memory)) (contains "M" (upper .Values.resources.limits.memory)) }}
-    {{- $maxConnectionsMemory := div $memory 4 }}
-    {{- $bufferMemory := printf "%d%s" (div (mul $memory  1) 2) "M" }}
+    {{- $bufferMemory := div (mul $memory  1) 2 }}
+    {{- $maxConnectionsMemory := div (div (sub $memory $bufferMemory) 3) 2 }}
+    {{- $bufferMemoryStr := printf "%d%s" (div (mul $memory  1) 2) "M" }}
     max_connections                 ={{ .Values.args.max_connections | default $maxConnectionsMemory }}
-    innodb_buffer_pool_size         ={{ .Values.args.innodb_buffer_pool_size | default $bufferMemory }} }}
+    innodb_buffer_pool_size         ={{ .Values.args.innodb_buffer_pool_size | default $bufferMemoryStr }}
+    {{- $maxUserConnections := div (mul $maxConnectionsMemory  1) 2 }}
+    max_user_connections            ={{ .Values.args.max_user_connections | default $maxUserConnections }}
     {{- else if or (contains "GI" (upper .Values.resources.limits.memory)) (contains "G" (upper .Values.resources.limits.memory)) }}
-    {{- $maxConnectionsMemory := div (mul $memory  1024) 4 }}
-    {{- $bufferMemory := printf "%d%s"  (div (mul $memory  1) 2) "G" }}
-    {{- if eq $maxConnectionsMemory 0 }}
-    {{- $maxConnectionsMemory = 256 }}
-    {{- end }}
-    {{- if eq $bufferMemory "0G" }}
-    {{- $bufferMemory = "400M" }}
-    {{- end }}
+    {{- $bufferMemory := div (mul (ceil $memory)  1024) 2 }}
+    {{- $memory := ceil ($memory | float64 ) }}
+    {{- $maxConnectionsMemory := div (div (sub (mul ($memory|int64) 1024) $bufferMemory) 3) 2 }}
+    {{- $bufferMemoryStr := printf "%d%s"  (div (mul $memory  1024) 2) "M" }}
+
     max_connections                 ={{ .Values.args.max_connections | default $maxConnectionsMemory }}
-    innodb_buffer_pool_size         ={{ .Values.args.innodb_buffer_pool_size | default $bufferMemory  }}
-    max_connect_errors              ={{ .Values.args.max_connect_errors | default 100000 }}
+    innodb_buffer_pool_size         ={{ .Values.args.innodb_buffer_pool_size | default $bufferMemoryStr  }}
     {{- $maxUserConnections := div (mul $maxConnectionsMemory  1) 2 }}
     max_user_connections            ={{ .Values.args.max_user_connections | default $maxUserConnections }}
     {{- end }}
+    max_connect_errors              ={{ .Values.args.max_connect_errors | default 100000 }}
     #************** sql timeout & limits ***************
     max_execution_time              ={{ .Values.args.max_execution_time | default 10000 }}
     group_concat_max_len            ={{ .Values.args.group_concat_max_len | default 1048576 }}

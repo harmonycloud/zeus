@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.components;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.enums.ComponentsEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.ClusterComponentsDto;
@@ -71,7 +72,12 @@ public abstract class AbstractBaseOperator {
         }
         // 删除中状态的后续变化只能是未安装
         else if (!CollectionUtils.isEmpty(podInfoList) && status != NUM_FIVE) {
-            if (podInfoList.stream()
+            if (beanClusterComponents.getComponent().equals(ComponentsEnum.MIDDLEWARE_CONTROLLER.getName())
+                && podInfoList.stream()
+                    .anyMatch(pod -> "Running".equals(pod.getStatus()) || "Completed".equals(pod.getStatus()))) {
+                // 特殊处理middleware-controller 状态正常
+                status = NUM_THREE;
+            } else if (podInfoList.stream()
                 .allMatch(pod -> "Running".equals(pod.getStatus()) || "Completed".equals(pod.getStatus()))) {
                 // 正常
                 status = NUM_THREE;

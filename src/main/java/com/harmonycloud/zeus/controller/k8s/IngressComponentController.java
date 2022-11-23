@@ -192,12 +192,14 @@ public class IngressComponentController {
     @ApiOperation(value = "端口校验", notes = "端口校验")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "startPort", value = "startPort", paramType = "query", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "startPort", value = "startPort", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "endPort", value = "endPort", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/check")
-    public BaseResult<List<String>> portCheck(@RequestParam("startPort") String startPort,
-                                              @PathVariable("clusterId") String clusterId) {
-        return BaseResult.ok(ingressComponentService.portCheck(clusterId, startPort));
+    public BaseResult<List<String>> portCheck(@PathVariable("clusterId") String clusterId,
+                                              @RequestParam("startPort") Integer startPort,
+                                              @RequestParam("endPort") Integer endPort) {
+        return BaseResult.ok(ingressComponentService.portCheck(clusterId, startPort, endPort));
     }
 
 }

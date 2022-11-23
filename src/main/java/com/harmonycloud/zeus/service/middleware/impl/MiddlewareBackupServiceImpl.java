@@ -112,10 +112,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         ObjectMeta meta = new ObjectMeta();
         meta.setName(backupName + "-" + INCR);
         meta.setNamespace(namespace);
+        // 获取labels
+        Map<String, String> backupLabel = new HashMap<>();
+        backupLabel.put("middleware", cr.getSpec().getType() + "-" + cr.getSpec().getName());
+        meta.setLabels(backupLabel);
+
         cr.setMetadata(meta);
         cr.setStatus(null);
-        // 设置名称
-        cr.getMetadata().setName(backupName + "-incr");
         // 设置增量备份
         cr.getSpec().getCustomBackups().forEach(cus -> {
             if (cus.containsKey(ENV)){
@@ -212,6 +215,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      */
     @Override
     public void createBackupSchedule(MiddlewareBackupDTO backupDTO) {
+        checkBackupScheduleExist(backupDTO);
         Minio minio = mysqlAdapterService.getMinio(backupDTO.getAddressId());
         MiddlewareBackupScheduleCR crd = new MiddlewareBackupScheduleCR();
         ObjectMeta meta =
@@ -276,7 +280,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             new MiddlewareBackupSpec.MiddlewareBackupDestination();
         destination.setDestinationType("minio")
             .setParameters(new MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters(
-                minio.getBucketName(), minio.getEndpoint(), backupDTO.getType(), base64AccessKeyId,
+                minio.getBucketName(), minio.getEndpoint(), meta.getName(), base64AccessKeyId,
                 base64SecretAccessKey, "MTIzNDU2Cg=="));
 
         List<Map<String, Object>> customBackups = new ArrayList<>();
@@ -396,7 +400,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String restoreTime) {
         // 等待中间件状态正常
-        waitingMiddleware(clusterId, namespace, middlewareName, type);
+        if (!waitingMiddleware(clusterId, namespace, middlewareName, type)){
+            return;
+        }
         MiddlewareRestoreCR crd = new MiddlewareRestoreCR();
         ObjectMeta meta = new ObjectMeta();
         meta.setNamespace(namespace);
@@ -593,7 +599,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         setTaskName(recordList, clusterId, null);
         // 根据关键词进行过滤
         if (StringUtils.isNotEmpty(keyword)) {
-            recordList = recordList.stream().filter(record -> record.getTaskName().contains(keyword))
+            recordList = recordList.stream().filter(record -> record.getTaskName().equals(keyword))
                 .collect(Collectors.toList());
         }
         // 根据中间件名称进行过滤
@@ -825,7 +831,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 + parameters.getBucket() + ")";
         backupRecord.setPosition(position);
         // 获取备份状态
-        if (!ObjectUtils.isEmpty(backupStatus)) {
+        if (StringUtils.isNotEmpty(schedule.getMetadata().getDeletionTimestamp())){
+            backupRecord.setPhrase("Deleting");
+        } else if (!ObjectUtils.isEmpty(backupStatus)) {
             backupRecord.setPhrase(backupStatus.getPhase());
         } else {
             backupRecord.setPhrase("Unknown");
@@ -875,7 +883,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     public void convertBackupToRecord(MiddlewareBackupCR backup, MiddlewareBackupRecord backupRecord) {
 
         MiddlewareBackupStatus backupStatus = backup.getStatus();
-        backupRecord.setBackupId(backup.getMetadata().getLabels().get("backupId"));
+        Map<String, String> labels = new HashMap<>();
+        if (!CollectionUtils.isEmpty(backup.getMetadata().getLabels())) {
+            labels.putAll(backup.getMetadata().getLabels());
+        }
+
+        // 获取备份id
+        backupRecord.setBackupId(labels.get("backupId"));
 
         // 获取备份时间
         Date creationTime = DateUtils.parseUTCDate(backup.getMetadata().getCreationTimestamp());
@@ -893,7 +907,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         backupRecord.setPosition(position);
 
         // 获取备份状态
-        if (!ObjectUtils.isEmpty(backupStatus)) {
+        if (StringUtils.isNotEmpty(backup.getMetadata().getDeletionTimestamp())) {
+            backupRecord.setPhrase("Deleting");
+        } else if (!ObjectUtils.isEmpty(backupStatus)) {
             backupRecord.setPhrase(backupStatus.getPhase());
             if ("Failed".equals(backupStatus.getPhase())) {
                 backupRecord.setReason(backupStatus.getReason());
@@ -902,11 +918,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             backupRecord.setPhrase("Unknown");
         }
         backupRecord.setSourceType(middlewareCrTypeService.findTypeByCrType(backup.getSpec().getType()));
-        backupRecord.setAddressId(backup.getMetadata().getLabels().get("addressId"));
+        backupRecord.setAddressId(labels.get("addressId"));
         backupRecord.setSourceName(backup.getSpec().getName());
         backupRecord.setBackupMode("single");
         backupRecord.setSchedule(false);
-        backupRecord.setOwner(backup.getMetadata().getLabels().get(OWNER));
+        backupRecord.setOwner(labels.get(OWNER));
     }
 
     /**
@@ -955,7 +971,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     /**
      * 创建备份恢复等待中间件创建完毕
      */
-    public void waitingMiddleware(String clusterId, String namespace, String name, String type) {
+    public Boolean waitingMiddleware(String clusterId, String namespace, String name, String type) {
+        boolean flag = false;
         for (int i = 0; i < 20; ++i) {
             MiddlewareCR middlewareCR = null;
             try {
@@ -966,11 +983,23 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             if (middlewareCR != null && middlewareCR.getStatus() != null
                 && StringUtils.isNotEmpty(middlewareCR.getStatus().getPhase())
                 && middlewareCR.getStatus().getPhase().equalsIgnoreCase(RUNNING)) {
+                flag = true;
                 break;
             }
             try {
                 Thread.sleep(30000);
             } catch (Exception ignore) {
+            }
+        }
+        return flag;
+    }
+
+    public void checkBackupScheduleExist(MiddlewareBackupDTO backupDTO){
+        MiddlewareBackupScheduleList list = backupScheduleCRDService.list(backupDTO.getClusterId(), backupDTO.getNamespace());
+        if (list != null && !CollectionUtils.isEmpty(list.getItems())){
+            List<MiddlewareBackupScheduleCR> items = list.getItems();
+            if (items.stream().anyMatch(item -> item.getSpec().getName().equals(backupDTO.getMiddlewareName()))){
+                throw new BusinessException(ErrorMessage.MIDDLEWARE_BACKUP_SCHEDULE_EXIST);
             }
         }
     }
