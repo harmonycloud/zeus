@@ -55,8 +55,13 @@ public class Skyview2AuthServiceImpl extends AuthServiceImpl {
         // 连接观云台，登录
         CaasResult<JSONObject> loginResult = skyview2UserService.login(userName, tempPassword, "ch");
 
+        // 检查账号是否可用
         if (CaasResponseUtil.fitError(loginResult, CaasErrorMessage.AUTH_FAIL)) {
             throw new BusinessException(ErrorMessage.AUTH_FAILED);
+        }
+        // 检查账号是否密码过期
+        if (CaasResponseUtil.fitError(loginResult, CaasErrorMessage.PASSWORD_IS_EXPIRED)) {
+            throw new BusinessException(ErrorMessage.PASSWORD_IS_EXPIRED);
         }
 
         String caasToken = loginResult.getStringVal("token");
