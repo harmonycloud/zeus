@@ -119,4 +119,13 @@ public class ClusterComponentController {
         return BaseResult.ok();
     }
 
+    @ApiOperation(value = "查询日志采集组件的安装情况", notes = "查询日志采集组件的安装情况")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+    })
+    @GetMapping("logging/logCollect")
+    public BaseResult<Boolean> logCollect(@PathVariable("clusterId") String clusterId) {
+        return BaseResult.ok(clusterComponentService.logCollect(clusterId));
+    }
+
 }

@@ -10,6 +10,7 @@ import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.bean.BeanClusterComponents;
 import com.harmonycloud.zeus.dao.BeanClusterComponentsMapper;
+import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareManagerService;
 import org.apache.commons.lang3.StringUtils;
@@ -125,6 +126,9 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
 
     @Override
     public void integrate(ClusterComponentsDto clusterComponentsDto, Boolean update) {
+        if (clusterComponentsDto.getComponent().equals(ComponentsEnum.LOGGING.getName()) && update){
+            // 安装卸载log-pilot
+        }
         Integer status = update ? null : 1;
         record(clusterComponentsDto.getClusterId(), clusterComponentsDto, status);
     }
@@ -220,6 +224,12 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
             log.error("查询集群组件失败了");
         }
         return false;
+    }
+
+    @Override
+    public Boolean logCollect(String clusterId) {
+        List<HelmListInfo> list = helmChartService.listHelm("logging", null, clusterService.findById(clusterId));
+        return list.stream().anyMatch(helmListInfo -> "log".equals(helmListInfo.getName()));
     }
 
     /**

@@ -78,4 +78,12 @@ public interface ClusterComponentService {
      */
     boolean checkInstalled(String clusterId, String componentName);
 
+    /**
+     * 查询日志采集组件的安装情况
+     *
+     * @param clusterId 集群id
+     * @return boolean
+     */
+    Boolean logCollect(String clusterId);
+
 }
