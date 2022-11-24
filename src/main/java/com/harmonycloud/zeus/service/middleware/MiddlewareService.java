@@ -6,6 +6,7 @@ import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.tool.page.PageObject;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -203,5 +204,15 @@ public interface MiddlewareService {
      * @return
      */
     Double calculateCpuRequest(Middleware middleware, JSONObject values);
+
+    /**
+     * 获取middleware所有pod
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param middlewareName
+     * @return
+     */
+    List<MiddlewareInfo> listMiddlewarePod(String clusterId, String namespace, String type, String middlewareName);
 
 }
