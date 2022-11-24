@@ -6,11 +6,11 @@ package com.harmonycloud.zeus.util;
  */
 public class K8sServiceNameUtil {
 
-    public static String getServicePath(String serviceName, String namespace) {
+    public static String getServicePath(String namespace, String serviceName) {
         return serviceName + "." + namespace;
     }
 
-    public static String getServicePath(String prefix, String serviceName, String namespace) {
+    public static String getServicePath(String prefix, String namespace, String serviceName) {
         return prefix + "." + getServicePath(serviceName, namespace);
     }
 

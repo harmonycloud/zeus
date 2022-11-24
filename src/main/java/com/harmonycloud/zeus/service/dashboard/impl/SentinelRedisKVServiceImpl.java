@@ -22,7 +22,7 @@ public class SentinelRedisKVServiceImpl implements RedisKVService {
 
     @Override
     public JSONArray getKeys(String clusterId, String namespace, String middlewareName, Integer db) {
-        JSONObject res = redisClient.getAllKeys(K8sServiceNameUtil.getServicePath(middlewareName, namespace), db);
+        JSONObject res = redisClient.getAllKeys(K8sServiceNameUtil.getServicePath(namespace, middlewareName), db);
         if (res.getJSONObject("err") != null) {
             throw new BusinessException(ErrorMessage.FAILED_TO_QUERY_KEY, res.getString("err"));
         }
@@ -31,7 +31,7 @@ public class SentinelRedisKVServiceImpl implements RedisKVService {
 
     @Override
     public JSONArray getKeysWithPattern(String clusterId, String namespace, String middlewareName, Integer db, String keyword) {
-        JSONObject res = redisClient.getKeys(K8sServiceNameUtil.getServicePath(middlewareName, namespace), db, keyword);
+        JSONObject res = redisClient.getKeys(K8sServiceNameUtil.getServicePath(namespace, middlewareName), db, keyword);
         if (res.getJSONObject("err") != null) {
             throw new BusinessException(ErrorMessage.FAILED_TO_QUERY_KEY, res.getString("err"));
         }
