@@ -108,11 +108,9 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
     }
 
     @Override
-    public void setStatus(ClusterComponentsDto clusterComponentsDto, MiddlewareClusterDTO cluster){
-        if (cluster.getMonitor() == null || cluster.getMonitor().getAlertManager() == null
-                || StringUtils.isAnyEmpty(cluster.getMonitor().getAlertManager().getPort(),
-                cluster.getMonitor().getAlertManager().getHost(),
-                cluster.getMonitor().getAlertManager().getProtocol())) {
+    public void setStatus(ClusterComponentsDto clusterComponentsDto) {
+        if (StringUtils.isAnyEmpty(clusterComponentsDto.getProtocol(), clusterComponentsDto.getHost(),
+            clusterComponentsDto.getPort())) {
             clusterComponentsDto.setStatus(7);
         }
     }

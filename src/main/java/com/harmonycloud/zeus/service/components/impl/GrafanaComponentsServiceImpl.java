@@ -132,11 +132,9 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
     }
 
     @Override
-    public void setStatus(ClusterComponentsDto clusterComponentsDto, MiddlewareClusterDTO cluster){
-        if (cluster.getMonitor() == null || cluster.getMonitor().getGrafana() == null
-                || StringUtils.isAnyEmpty(cluster.getMonitor().getGrafana().getPort(),
-                cluster.getMonitor().getGrafana().getHost(),
-                cluster.getMonitor().getGrafana().getProtocol())) {
+    public void setStatus(ClusterComponentsDto clusterComponentsDto){
+        if (StringUtils.isAnyEmpty(clusterComponentsDto.getProtocol(), clusterComponentsDto.getHost(),
+                clusterComponentsDto.getPort())) {
             clusterComponentsDto.setStatus(7);
         }
     }

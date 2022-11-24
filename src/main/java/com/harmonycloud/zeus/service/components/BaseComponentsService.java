@@ -38,7 +38,7 @@ public interface BaseComponentsService {
      * 更新组件状态
      *
      * @param cluster 集群信息
-     * @param name 组件名称
+     * @param beanClusterComponents 组件对象
      */
     void updateStatus(MiddlewareClusterDTO cluster, BeanClusterComponents beanClusterComponents);
 
@@ -46,9 +46,8 @@ public interface BaseComponentsService {
      * 处理特殊状态
      *
      * @param clusterComponentsDto 集群组件对象
-     * @param cluster 集群对象
      * @return List<ClusterComponentsDto>
      */
-    void setStatus(ClusterComponentsDto clusterComponentsDto, MiddlewareClusterDTO cluster);
+    void setStatus(ClusterComponentsDto clusterComponentsDto);
 
 }

@@ -208,11 +208,9 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
     }
 
     @Override
-    public void setStatus(ClusterComponentsDto clusterComponentsDto, MiddlewareClusterDTO cluster){
-        if (cluster.getLogging() == null || cluster.getLogging().getElasticSearch() == null
-                || StringUtils.isAnyEmpty(cluster.getLogging().getElasticSearch().getPort(),
-                cluster.getLogging().getElasticSearch().getHost(),
-                cluster.getLogging().getElasticSearch().getProtocol())) {
+    public void setStatus(ClusterComponentsDto clusterComponentsDto) {
+        if (StringUtils.isAnyEmpty(clusterComponentsDto.getProtocol(), clusterComponentsDto.getHost(),
+            clusterComponentsDto.getPort())) {
             clusterComponentsDto.setStatus(7);
         }
     }

@@ -186,8 +186,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
                 dto.setSeconds(DateUtils.getIntervalDays(new Date(), dto.getCreateTime()));
             }
             if (cm.getStatus() == NUM_ONE || cm.getStatus() == NUM_THREE || cm.getStatus() == NUM_FOUR) {
-                getOperator(BaseComponentsService.class, BaseComponentsService.class, dto.getComponent()).setStatus(dto,
-                    cluster);
+                getOperator(BaseComponentsService.class, BaseComponentsService.class, dto.getComponent()).setStatus(dto);
             }
             return dto;
         }).collect(Collectors.toList());

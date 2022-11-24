@@ -90,8 +90,7 @@ public abstract class AbstractBaseOperator {
         beanClusterComponentsMapper.updateById(beanClusterComponents);
     }
 
-    public void setStatus(ClusterComponentsDto clusterComponentsDto, MiddlewareClusterDTO cluster){
-
+    public void setStatus(ClusterComponentsDto clusterComponentsDto){
     }
 
     /**

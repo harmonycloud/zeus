@@ -115,11 +115,9 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
     }
 
     @Override
-    public void setStatus(ClusterComponentsDto clusterComponentsDto, MiddlewareClusterDTO cluster){
-        if (cluster.getMonitor() == null || cluster.getMonitor().getPrometheus() == null
-                || StringUtils.isAnyEmpty(cluster.getMonitor().getPrometheus().getPort(),
-                cluster.getMonitor().getPrometheus().getHost(),
-                cluster.getMonitor().getPrometheus().getProtocol())) {
+    public void setStatus(ClusterComponentsDto clusterComponentsDto){
+        if (StringUtils.isAnyEmpty(clusterComponentsDto.getProtocol(), clusterComponentsDto.getHost(),
+                clusterComponentsDto.getPort())) {
             clusterComponentsDto.setStatus(7);
         }
     }
