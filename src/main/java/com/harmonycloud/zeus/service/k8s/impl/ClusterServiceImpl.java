@@ -16,12 +16,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.enums.*;
-import com.harmonycloud.zeus.bean.BeanActiveArea;
-import com.harmonycloud.zeus.dao.BeanActiveAreaMapper;
-import com.harmonycloud.zeus.integration.cluster.NodeWrapper;
-import io.fabric8.kubernetes.api.model.NodeCondition;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -33,9 +27,14 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.constants.NameConstant;
+import com.harmonycloud.caas.common.enums.ComponentsEnum;
+import com.harmonycloud.caas.common.enums.DictEnum;
+import com.harmonycloud.caas.common.enums.ErrorCodeMessage;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
@@ -47,6 +46,10 @@ import com.harmonycloud.caas.filters.user.CurrentUser;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.harmonycloud.zeus.bean.BeanActiveArea;
+import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
+import com.harmonycloud.zeus.dao.BeanActiveAreaMapper;
+import com.harmonycloud.zeus.integration.cluster.NodeWrapper;
 import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.service.k8s.*;
@@ -88,8 +91,6 @@ public class ClusterServiceImpl implements ClusterService {
     private NodeService nodeService;
     @Autowired
     private NamespaceService namespaceService;
-    @Autowired
-    private K8sDefaultClusterService k8SDefaultClusterService;
     @Autowired
     private HelmChartService helmChartService;
     @Autowired
@@ -265,11 +266,6 @@ public class ClusterServiceImpl implements ClusterService {
         // 设置证书信息
         clusterCertService.setCertByAdminConf(cluster.getCert());
 
-        // 校验registry
-        if (cluster.getRegistry() != null && cluster.getRegistry().getAddress() != null) {
-            registryService.validate(cluster.getRegistry());
-        }
-
         try {
             // 先添加fabric8客户端，否则无法用fabric8调用APIServer
             k8sClient.addK8sClient(cluster, false);
@@ -284,19 +280,8 @@ public class ClusterServiceImpl implements ClusterService {
         // 保存证书
         try {
             clusterCertService.saveCert(cluster);
-            // 若为第一个集群 则将clusterId, url, serviceAccount存入数据库
-            if (k8SDefaultClusterService.get() == null) {
-                k8SDefaultClusterService.create(cluster);
-            }
         } catch (Exception e) {
             log.error("集群{}，保存证书异常", cluster.getId(), e);
-        }
-        // 发布middlewareCluster的crd
-        try {
-            createMiddlewareCrd(cluster);
-        } catch (Exception e) {
-            k8SDefaultClusterService.delete(cluster.getId());
-            throw new BusinessException(ErrorMessage.MIDDLEWARE_CONTROLLER_INSTALL_FAILED);
         }
         // 保存集群
         MiddlewareCluster mw = convert(cluster);
@@ -315,7 +300,7 @@ public class ClusterServiceImpl implements ClusterService {
             insertMysqlImageRepository(cluster);
         }
         // 将chart包存进数据库
-        insertMysqlChart(cluster.getId());
+        initMiddlewareChart();
         // 判断middleware-operator分区是否存在，不存在则创建
         synchronized (this) {
             List<Namespace> namespaceList = namespaceService.list(cluster.getId(), false, "middleware-operator");
@@ -347,20 +332,6 @@ public class ClusterServiceImpl implements ClusterService {
         clusterCertService.setCertByAdminConf(cluster.getCert());
         k8sClient.updateK8sClient(cluster);
 
-        // 校验registry
-        if (cluster.getRegistry() != null && cluster.getRegistry().getAddress() != null) {
-            if (checkRegistry) {
-                registryService.validate(cluster.getRegistry());
-            }
-        }
-
-        // 校验es（包含重置es客户端）
-        /*if (StringUtils.isNotBlank(cluster.getLogging().getElasticSearch().getHost())
-            && (!esComponentService.checkEsConnection(cluster) || esComponentService.resetEsClient(cluster) == null)) {
-            throw new BusinessException(DictEnum.ES_COMPONENT, cluster.getLogging().getElasticSearch().getAddress(),
-                ErrorMessage.VALIDATE_FAILED);
-        }*/
-
         // 只修改昵称，证书，ingress，制品服务，es
         oldCluster.setNickname(cluster.getNickname());
         oldCluster.setCert(cluster.getCert());
@@ -369,8 +340,6 @@ public class ClusterServiceImpl implements ClusterService {
         oldCluster.setActiveActive(cluster.getActiveActive());
 
         update(oldCluster);
-        // 修改镜像仓库信息
-        // updateMysqlImageRepository(cluster);
     }
 
     @Override
@@ -390,30 +359,6 @@ public class ClusterServiceImpl implements ClusterService {
         if (cluster.getCert() == null || StringUtils.isEmpty(cluster.getCert().getCertificate())) {
             throw new IllegalArgumentException("cluster cert info is null");
         }
-
-        // 校验集群使用的制品服务参数
-        Registry registry = cluster.getRegistry();
-        if (registry == null || StringUtils.isAnyEmpty(registry.getProtocol(), registry.getAddress(),
-            registry.getChartRepo(), registry.getUser(), registry.getPassword())) {
-            registry = new Registry();
-            /*            registry.setAddress("middleware.harmonycloud.cn").setProtocol("http").setPort(38080).setUser("admin")
-                    .setPassword("Hc@Cloud01").setType("harbor").setChartRepo("middleware");*/
-            cluster.setRegistry(registry);
-        }
-        // 设置默认参数
-        // 如果没有数据中心，默认用default命名空间
-        if (StringUtils.isBlank(cluster.getDcId())) {
-            cluster.setDcId(DEFAULT);
-        }
-
-        // 设置es信息
-        if (cluster.getLogging() == null) {
-            cluster.setLogging(new MiddlewareClusterLogging());
-        }
-        if (cluster.getLogging().getElasticSearch() == null) {
-            cluster.getLogging().setElasticSearch(new MiddlewareClusterLoggingInfo());
-        }
-        // cluster.getStorage().computeIfAbsent(SUPPORT, k -> new HashMap<String, Object>());
     }
 
     @Override
@@ -431,8 +376,6 @@ public class ClusterServiceImpl implements ClusterService {
             log.error("集群id：{}，删除集群异常", clusterId, e);
             throw new BusinessException(DictEnum.CLUSTER, cluster.getNickname(), ErrorMessage.DELETE_FAIL);
         }
-        // 从map中移除
-        k8SDefaultClusterService.delete(clusterId);
         CLUSTER_MAP.remove(clusterId);
         // 关联数据库信息删除
         bindResourceDelete(cluster);
@@ -540,7 +483,11 @@ public class ClusterServiceImpl implements ClusterService {
         return SerializationUtils.clone(cluster);
     }
 
-    public void insertMysqlChart(String clusterId) {
+    public void initMiddlewareChart() {
+        List<BeanMiddlewareInfo> list = middlewareInfoService.list(true);
+        if (!CollectionUtils.isEmpty(list)) {
+            return;
+        }
         File file = new File(middlewarePath);
         for (String name : file.list()) {
             ThreadPoolExecutorFactory.executor.execute(() -> {
@@ -1130,25 +1077,6 @@ public class ClusterServiceImpl implements ClusterService {
             });
         }
     }
-    /**
-     * 设置集群状态，当所有节点都ready时，集群状态即为正常
-     * @param clusterDTO
-     * @return
-     */
-//    private void setClusterStatusCode(MiddlewareClusterDTO clusterDTO) {
-//        List<io.fabric8.kubernetes.api.model.Node> nodes = nodeWrapper.list(clusterDTO.getId());
-//        for (io.fabric8.kubernetes.api.model.Node node : nodes) {
-//            if (node.getStatus() == null || CollectionUtils.isEmpty(node.getStatus().getConditions())) {
-//                clusterDTO.setStatusCode(0);
-//            }
-//            List<NodeCondition> conditions = node.getStatus().getConditions();
-//            NodeCondition nodeCondition = conditions.get(conditions.size() - 1);
-//            if (!"Ready".equalsIgnoreCase(nodeCondition.getType())) {
-//                clusterDTO.setStatusCode(0);
-//            }
-//        }
-//        clusterDTO.setStatusCode(1);
-//    }
 
     /**
      * 获取集群是否已开启可用区

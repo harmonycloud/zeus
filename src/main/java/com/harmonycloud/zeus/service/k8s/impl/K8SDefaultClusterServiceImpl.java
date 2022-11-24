@@ -18,6 +18,7 @@ import java.util.List;
  */
 @Slf4j
 @Service
+@Deprecated
 public class K8SDefaultClusterServiceImpl implements K8sDefaultClusterService {
     
     @Autowired

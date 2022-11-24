@@ -202,9 +202,6 @@ public class ClusterController {
      */
     private void desensitize(MiddlewareClusterDTO cluster) {
         cluster.setAccessToken(null);
-        if (cluster.getRegistry() != null) {
-            cluster.getRegistry().setPassword(null);
-        }
         cluster.setCert(null);
     }
 
