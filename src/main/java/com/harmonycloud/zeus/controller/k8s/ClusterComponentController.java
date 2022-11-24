@@ -107,7 +107,7 @@ public class ClusterComponentController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "componentName", value = "集群组件名称", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "clusterComponentsDto", value = "集群信息", paramType = "集群组件信息", dataTypeClass = ClusterComponentsDto.class)
+            @ApiImplicitParam(name = "clusterComponentsDto", value = "集群组件信息", paramType = "query", dataTypeClass = ClusterComponentsDto.class)
     })
     @PutMapping("/{componentName}/integrate")
     public BaseResult integrate(@PathVariable("clusterId") String clusterId,
