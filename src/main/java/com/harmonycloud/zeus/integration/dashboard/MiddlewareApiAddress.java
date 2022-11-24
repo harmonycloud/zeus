@@ -54,7 +54,7 @@ public class MiddlewareApiAddress implements AddressSource {
             clusterComponentService.get(clusterId, ComponentsEnum.MIDDLEWARE_CONTROLLER.getName());
         if (StringUtils.isNotEmpty(clusterComponentsDto.getProtocol())
             && StringUtils.isNotEmpty(clusterComponentsDto.getHost())
-            && StringUtils.isEmpty(clusterComponentsDto.getPort())) {
+            && StringUtils.isNotEmpty(clusterComponentsDto.getPort())) {
             protocol = clusterComponentsDto.getProtocol();
             host = clusterComponentsDto.getHost();
             port = Integer.parseInt(clusterComponentsDto.getPort());
