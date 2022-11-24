@@ -130,7 +130,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
 
     @Override
     public void integrate(ClusterComponentsDto clusterComponentsDto, Boolean update) {
-        if (clusterComponentsDto.getComponent().equals(ComponentsEnum.LOGGING.getName()) && update){
+        if (clusterComponentsDto.getComponent().equals(ComponentsEnum.LOGGING.getName())){
             // 安装卸载log-pilot
             updateLogPilot(clusterComponentsDto);
         }
