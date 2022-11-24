@@ -19,6 +19,7 @@ import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
 import com.harmonycloud.zeus.bean.BeanMysqlUser;
 import com.harmonycloud.zeus.service.k8s.*;
+import com.harmonycloud.zeus.service.middleware.ImageRepositoryService;
 import com.harmonycloud.zeus.service.mysql.MysqlDbPrivService;
 import com.harmonycloud.zeus.service.mysql.MysqlDbService;
 import com.harmonycloud.zeus.service.mysql.MysqlUserService;
@@ -75,6 +76,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     private BackupService backupService;
     @Autowired
     private MysqlScheduleBackupService mysqlScheduleBackupService;
+    @Autowired
+    private ImageRepositoryService imageRepositoryService;
     @Autowired
     private ClusterService clusterService;
     @Autowired
@@ -661,8 +664,13 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         sourceDto.setType("slave-slave");
         relationMiddleware.setMysqlDTO(sourceDto);
 
-        BaseOperator operator = middlewareService.getOperator(BaseOperator.class, BaseOperator.class, relationMiddleware);
+         //3 修改灾备实例镜像仓库
         MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(relationMiddleware.getClusterId());
+        if (StringUtils.isNotEmpty(middleware.getMirrorImageId())) {
+            cluster.setRegistry(imageRepositoryService.generateRegistry(middleware.getMirrorImageId()));
+        }
+
+        BaseOperator operator = middlewareService.getOperator(BaseOperator.class, BaseOperator.class, relationMiddleware);
         operator.createPreCheck(relationMiddleware, cluster);
         this.create(relationMiddleware, cluster);
         //3.异步创建关联关系

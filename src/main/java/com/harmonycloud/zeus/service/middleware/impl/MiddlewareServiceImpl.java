@@ -1099,23 +1099,18 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
      * 填充镜像仓库信息
      */
     public void updateRegistry(Middleware middleware, MiddlewareClusterDTO middlewareClusterDTO) {
-        Registry registry = middlewareClusterDTO.getRegistry();
+        String repositoryId = null;
         if (StringUtils.isNotEmpty(middleware.getMirrorImageId())) {
-            getMirrorImageDTO(middleware.getMirrorImageId(),registry);
+            repositoryId = middleware.getMirrorImageId();
         }
         if (middleware.getDynamicValues() != null) {
             if (StringUtils.isNotEmpty(middleware.getDynamicValues().get("mirrorImageId"))) {
-                getMirrorImageDTO(middleware.getDynamicValues().get("mirrorImageId"),registry);
+                repositoryId = middleware.getDynamicValues().get("mirrorImageId");
             }
         }
-    }
-
-    public void getMirrorImageDTO(String mirrorImageId, Registry registry) {
-        ImageRepositoryDTO imageRepositoryDTO = imageRepositoryService.detailById(Integer.valueOf(mirrorImageId));
-        BeanUtils.copyProperties(imageRepositoryDTO,registry);
-        registry.setUser(imageRepositoryDTO.getUsername());
-        registry.setChartRepo(imageRepositoryDTO.getProject());
-        registry.setPort(imageRepositoryDTO.getPort());
-        registry.setAddress(imageRepositoryDTO.getHostAddress());
+        if (StringUtils.isEmpty(repositoryId)) {
+            return;
+        }
+        middlewareClusterDTO.setRegistry(imageRepositoryService.generateRegistry(repositoryId));
     }
 }

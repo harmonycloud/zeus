@@ -70,8 +70,16 @@ public interface ImageRepositoryService {
 
     /**
      * 通过主键ID查看详情
-     * @param id
+     * @param registry
      * @return
      */
     ImageRepositoryDTO convertRegistry(Registry registry);
+
+
+    /**
+     * 生成register对象
+     * @param mirrorImageId 镜像仓库id
+     * @return Registry
+     */
+    Registry generateRegistry(String mirrorImageId);
 }

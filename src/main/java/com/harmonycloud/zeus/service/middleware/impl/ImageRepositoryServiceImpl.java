@@ -185,6 +185,18 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         return imageRepositoryDTO;
     }
 
+    @Override
+    public Registry generateRegistry(String mirrorImageId) {
+        Registry registry = new Registry();
+        ImageRepositoryDTO imageRepositoryDTO = this.detailById(Integer.valueOf(mirrorImageId));
+        BeanUtils.copyProperties(imageRepositoryDTO,registry);
+        registry.setUser(imageRepositoryDTO.getUsername());
+        registry.setChartRepo(imageRepositoryDTO.getProject());
+        registry.setPort(imageRepositoryDTO.getPort());
+        registry.setAddress(imageRepositoryDTO.getHostAddress());
+        return registry;
+    }
+
     /**
      * 校验仓库是否可以连接
      */
