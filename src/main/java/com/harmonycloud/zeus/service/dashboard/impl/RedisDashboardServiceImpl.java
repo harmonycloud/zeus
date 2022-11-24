@@ -12,10 +12,12 @@ import com.harmonycloud.caas.common.model.dashboard.redis.ZSetDto;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.bean.BeanSqlExecuteRecord;
 import com.harmonycloud.zeus.dao.BeanSqlExecuteRecordMapper;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.integration.dashboard.RedisClient;
 import com.harmonycloud.zeus.service.dashboard.RedisDashboardService;
 import com.harmonycloud.zeus.service.dashboard.RedisKVService;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.K8sServiceNameUtil;
 import com.harmonycloud.zeus.util.SpringContextUtils;
@@ -30,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author liyinlong
@@ -51,6 +54,8 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
     private BeanSqlExecuteRecordMapper sqlExecuteRecordMapper;
     @Autowired
     private RedisClient redisClient;
+    @Autowired
+    private MiddlewareService middlewareService;
 
     @Override
     public boolean support(String type) {
@@ -71,12 +76,13 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
         int defaultDb = 0;
         String mod = getRedisMod(clusterId, namespace, middlewareName);
         // redis哨兵模式和单机模式的连接方式是一样的，因此连接方式只有集群模式和单机模式
-        if (!"cluster".equals(mod)) {
+        String clusterAddrs = "";
+        if ("cluster".equals(mod)) {
+            clusterAddrs = getClusterAddress(clusterId, namespace, middlewareName);
+        } else {
             mod = "single";
         }
 
-        String clusterAddrsPrefix = K8sServiceNameUtil.getServicePath(namespace, middlewareName) + ":" + port;
-        String clusterAddrs = "test-redis-5."+clusterAddrsPrefix + "," + "test-redis-0."+clusterAddrsPrefix + ","+ "test-redis-1."+clusterAddrsPrefix;
         String sentinelAddrs = K8sServiceNameUtil.getServicePath(namespace, middlewareName) +":" +port;
         JSONObject res = redisClient.login(K8sServiceNameUtil.getServicePath(namespace, middlewareName), defaultDb, version,
                 mod, username, password, port, clusterAddrs, sentinelAddrs);
@@ -113,9 +119,8 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
     @Override
     public DataDto getKeyValue(String clusterId, String namespace, String middlewareName, Integer db, String key) {
         JSONObject res = redisClient.getKeyValue(K8sServiceNameUtil.getServicePath(namespace, middlewareName), db, key);
-        log.info(res.toJSONString());
         DataDto data = new DataDto(res.getJSONObject("data"));
-        log.info(data.toString());
+        log.debug(data.toString());
         return data;
     }
 
@@ -204,6 +209,34 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
         record.setExecDate(new Date());
         sqlExecuteRecordMapper.insert(record);
         return res;
+    }
+
+    /**
+     * 获取redis集群连接地址
+     * @param clusterId
+     * @param namespace
+     * @param middlewareName
+     * @return
+     */
+    private String getClusterAddress(String clusterId, String namespace, String middlewareName) {
+        String clusterAddrsPrefix = K8sServiceNameUtil.getServicePath(namespace, middlewareName) + ":" + port;
+        List<MiddlewareInfo> pods = listMasterPod(clusterId, namespace, middlewareName);
+        StringBuilder sbf = new StringBuilder();
+        for (int i = 0; i < pods.size(); i++) {
+            sbf.append(pods.get(i).getName());
+            sbf.append(".");
+            sbf.append(clusterAddrsPrefix);
+            if (i != (pods.size() - 1)) {
+                sbf.append(",");
+            }
+        }
+        return sbf.toString();
+    }
+
+    private List<MiddlewareInfo> listMasterPod(String clusterId, String namespace, String middlewareName) {
+        return middlewareService.listMiddlewarePod(clusterId, namespace, MiddlewareTypeEnum.REDIS.getType(), middlewareName).
+                stream().filter(middlewareInfo -> middlewareInfo.getType().equals("master")).collect(Collectors.toList()).
+                stream().sorted(new ClusterRedisKVServiceImpl.MiddlewareInfoComparator()).collect(Collectors.toList());
     }
 
     /**
