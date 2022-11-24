@@ -60,7 +60,7 @@ public class ExecuteSqlServiceImpl implements ExecuteSqlService {
             executeSqlDto.setDate(record.getExecDate());
             executeSqlDto.setTime(record.getExecTime());
             executeSqlDto.setDatabase(record.getTargetDatabase());
-            executeSqlDto.setStatus(record.getStatus());
+            executeSqlDto.setStatus(record.getExecStatus());
             return executeSqlDto;
         }).collect(Collectors.toList()));
         return executeSqlDtoPageInfo;

@@ -197,10 +197,10 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
         //  设置执行状态和提示信息
         if (!StringUtils.isEmpty(err)) {
             record.setMessage(err);
-            record.setStatus("false");
+            record.setExecStatus("false");
             res.put("success", false);
         } else {
-            record.setStatus("true");
+            record.setExecStatus("true");
             // 设置命令执行时长
             record.setExecTime(res.getString("execTime"));
             res.put("success", true);

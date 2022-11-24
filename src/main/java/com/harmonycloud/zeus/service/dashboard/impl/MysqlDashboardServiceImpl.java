@@ -22,7 +22,6 @@ import com.harmonycloud.zeus.util.ExcelUtil;
 import com.harmonycloud.zeus.util.FileDownloadUtil;
 import com.harmonycloud.zeus.util.MysqlUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -769,7 +768,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         sqlQuery.convertAndSetQuery();
         JSONObject res = mysqlClient.execSql(getPath(middlewareName, namespace), port, database, sqlQuery);
         record.setExecTime(res.getString("execTime"));
-        record.setStatus(res.getString("success"));
+        record.setExecStatus(res.getString("success"));
         if (!res.getBoolean("success")) {
             record.setMessage(res.getString("message"));
             sqlExecuteRecordMapper.insert(record);

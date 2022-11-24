@@ -124,7 +124,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         // 执行结果记入数据库
         BeanSqlExecuteRecord record = new BeanSqlExecuteRecord();
         record.setClusterId(clusterId).setNamespace(namespace).setMiddlewareName(middlewareName)
-            .setTargetDatabase(databaseName).setSqlStr(executeSqlDto.getSql()).setStatus(executeSqlDto.getStatus())
+            .setTargetDatabase(databaseName).setSqlStr(executeSqlDto.getSql()).setExecStatus(executeSqlDto.getStatus())
             .setExecDate(executeSqlDto.getDate()).setMessage(executeSqlDto.getMessage())
             .setExecTime(executeSqlDto.getTime());
         executeSqlService.insert(record);
