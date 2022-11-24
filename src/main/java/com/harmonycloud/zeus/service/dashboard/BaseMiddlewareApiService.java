@@ -26,4 +26,13 @@ public interface BaseMiddlewareApiService {
      */
     String login(String clusterId, String namespace, String middlewareName, String username, String password);
 
+    /**
+     * 登录
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     */
+    void logout(String clusterId, String namespace, String middlewareName);
+
 }

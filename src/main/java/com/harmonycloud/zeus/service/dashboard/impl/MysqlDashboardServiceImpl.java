@@ -69,6 +69,11 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
+    public void logout(String clusterId, String namespace, String middlewareName) {
+
+    }
+
+    @Override
     public boolean support(String type) {
         return MiddlewareTypeEnum.MYSQL.getType().equals(type);
     }

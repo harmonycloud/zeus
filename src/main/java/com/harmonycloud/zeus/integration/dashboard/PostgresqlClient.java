@@ -29,6 +29,13 @@ public interface PostgresqlClient {
                      @Body("password") String password);
 
     /**
+     * 登录
+     */
+    @Post(url = "/postgresql/{path}/port/{port}/logout")
+    void logout(@Var("path") String path,
+                @Var("port") String port);
+
+    /**
      * 执行sql语句
      */
     @Post(url = "/postgresql/{path}/port/{port}/databases/{databaseName}/sql")

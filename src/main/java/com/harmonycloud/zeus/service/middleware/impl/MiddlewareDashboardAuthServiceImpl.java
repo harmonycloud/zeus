@@ -38,4 +38,12 @@ public class MiddlewareDashboardAuthServiceImpl extends AbstractBaseService impl
         res.put("mwToken", token);
         return res;
     }
+
+    @Override
+    public void logout(String clusterId, String namespace, String middlewareName, String type) {
+        // 根据类型前往不同的中间件尝试登录
+        BaseMiddlewareApiService service =
+                getOperator(BaseMiddlewareApiService.class, BaseMiddlewareApiService.class, type);
+        service.logout(clusterId, namespace, middlewareName);
+    }
 }

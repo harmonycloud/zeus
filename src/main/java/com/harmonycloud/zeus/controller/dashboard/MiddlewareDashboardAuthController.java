@@ -10,7 +10,6 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.ServletRequest;
 
 /**
  * @author xutianhong
@@ -41,6 +40,22 @@ public class MiddlewareDashboardAuthController {
                                         @RequestParam("password") String password,
                                         @RequestParam("type") String type) {
         return BaseResult.ok(middlewareDashboardAuthService.login(clusterId, namespace, middlewareName, username, password, type));
+    }
+
+    @ApiOperation(value = "中间件登录", notes = "中间件登录")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "类型", paramType = "query", dataTypeClass = String.class),
+    })
+    @PostMapping("/logout")
+    public BaseResult<String> logout(@PathVariable("clusterId") String clusterId,
+                                     @PathVariable("namespace") String namespace,
+                                     @PathVariable("middlewareName") String middlewareName,
+                                     @RequestParam("type") String type) {
+        middlewareDashboardAuthService.logout(clusterId, namespace, middlewareName, type);
+        return BaseResult.ok();
     }
 
 }

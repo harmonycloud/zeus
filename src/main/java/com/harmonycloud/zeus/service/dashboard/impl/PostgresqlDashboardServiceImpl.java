@@ -85,6 +85,13 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     @Override
+    public void logout(String clusterId, String namespace, String middlewareName) {
+        String path = getPath(middlewareName, namespace);
+        setPort(clusterId, namespace, middlewareName);
+        postgresqlClient.logout(path, port);
+    }
+
+    @Override
     public ExecuteSqlDto executeSql(String clusterId, String namespace, String middlewareName, String databaseName, String sql) {
         ExecuteSqlDto executeSqlDto = new ExecuteSqlDto();
         executeSqlDto.setDate(new Date());

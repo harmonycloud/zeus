@@ -87,6 +87,11 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
     }
 
     @Override
+    public void logout(String clusterId, String namespace, String middlewareName) {
+
+    }
+
+    @Override
     public List<KeyValueDto> getAllKeys(String clusterId, String namespace, String middlewareName, Integer db, String keyword) {
         RedisKVService redisKVService = getKVService(clusterId, namespace, middlewareName);
         if (StringUtils.isEmpty(keyword)) {
