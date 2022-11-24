@@ -134,8 +134,6 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
             projectDTO.setCreateTime(jsonProject.getDate("createTime"));
             projectDTO.setTenantName(tenantName);
             projectDTO.setTenantAliasName(tenantAliasName);
-            projectDTO.setNamespaces(convertProjectNamespace(jsonProject.getJSONArray("namespaceList"), projectDTO.getProjectId()));
-            projectDTO.setNamespaceCount(projectDTO.getNamespaces().size());
             // 查询项目成员
             executorService.submit(() -> {
                 try {
@@ -148,6 +146,10 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
                     } else {
                         projectDTO.setMemberCount(0);
                     }
+                    // 查询项目分区
+                    JSONArray projectAry = listProjectNamespace(projectDTO.getTenantId(), projectDTO.getProjectId(), caastoken);
+                    projectDTO.setNamespaces(convertProjectNamespace(projectAry, projectDTO.getProjectId()));
+                    projectDTO.setNamespaceCount(projectAry.size());
                     projectTenantCache.put(projectDTO.getProjectId(), projectDTO.getTenantId());
                     projectDTOList.add(projectDTO);
                 } catch (Exception e) {
@@ -238,8 +240,18 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
      * @return
      */
     private JSONArray listProjectNamespace(String tenantId, String projectId) {
-        CaasResult<JSONArray> projectNamespace = projectServiceClient.getProjectNamespace(ZeusCurrentUser.getCaasToken(), tenantId, projectId);
-        CaasResult<JSONArray> federationProjectNamespace = projectServiceClient.getFederationProjectNamespace(ZeusCurrentUser.getCaasToken(), tenantId, projectId);
+        return listProjectNamespace(tenantId, projectId, ZeusCurrentUser.getCaasToken());
+    }
+
+    /**
+     * 查询项目分区
+     * @param tenantId
+     * @param projectId
+     * @return
+     */
+    private JSONArray listProjectNamespace(String tenantId, String projectId, String caasToken) {
+        CaasResult<JSONArray> projectNamespace = projectServiceClient.getProjectNamespace(caasToken, tenantId, projectId);
+        CaasResult<JSONArray> federationProjectNamespace = projectServiceClient.getFederationProjectNamespace(caasToken, tenantId, projectId);
         JSONArray projectAry = new JSONArray();
         if (projectNamespace.getData() != null && !projectNamespace.getData().isEmpty()) {
             projectAry.addAll(projectNamespace.getData());
@@ -249,7 +261,6 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
         }
         return projectAry;
     }
-
 
     /**
      * 查询当前用户所有分区
