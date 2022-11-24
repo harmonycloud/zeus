@@ -163,6 +163,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         ingressService.create(cluster.getId(), "logging", "kubernetes-logging", ingressDTO);
     }
 
+    @Override
     public void logPilot(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
         String repository = getRepository(cluster);
         String setValues = "image.logpilotRepository=" + repository + "/log-pilot" +

@@ -11,6 +11,7 @@ import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.bean.BeanClusterComponents;
 import com.harmonycloud.zeus.dao.BeanClusterComponentsMapper;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
+import com.harmonycloud.zeus.service.components.api.LoggingService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareManagerService;
 import org.apache.commons.lang3.StringUtils;
@@ -34,6 +35,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 import static com.harmonycloud.caas.common.constants.CommonConstant.*;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
 
 /**
  * @author dengyulong
@@ -53,6 +55,8 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
     private MiddlewareManagerService middlewareManagerService;
     @Autowired
     private NamespaceService namespaceService;
+    @Autowired
+    private LoggingService loggingService;
 
     @Override
     public void deploy(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
@@ -128,6 +132,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
     public void integrate(ClusterComponentsDto clusterComponentsDto, Boolean update) {
         if (clusterComponentsDto.getComponent().equals(ComponentsEnum.LOGGING.getName()) && update){
             // 安装卸载log-pilot
+            updateLogPilot(clusterComponentsDto);
         }
         Integer status = update ? null : 1;
         record(clusterComponentsDto.getClusterId(), clusterComponentsDto, status);
@@ -308,6 +313,19 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
             || ComponentsEnum.MIDDLEWARE_CONTROLLER.getName().equals(name)
             || ComponentsEnum.LVM.getName().equals(name)) {
             namespaceService.createMiddlewareOperator(clusterComponentsDto.getClusterId());
+        }
+    }
+
+    public void updateLogPilot(ClusterComponentsDto clusterComponentsDto){
+        boolean exist = logCollect(clusterComponentsDto.getClusterId());
+        if (exist == clusterComponentsDto.getLogCollect()){
+            return;
+        }
+        MiddlewareClusterDTO cluster = clusterService.findById(clusterComponentsDto.getClusterId());
+        if (clusterComponentsDto.getLogCollect()){
+            loggingService.logPilot(cluster, clusterComponentsDto);
+        }else {
+            helmChartService.uninstall(cluster, MIDDLEWARE_OPERATOR, "log");
         }
     }
 
