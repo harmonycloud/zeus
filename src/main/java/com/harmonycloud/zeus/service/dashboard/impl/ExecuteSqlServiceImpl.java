@@ -77,10 +77,10 @@ public class ExecuteSqlServiceImpl implements ExecuteSqlService {
             wrapper.like("sqlstr", sqlRecordQueryDto.getKeyword());
         }
         if (!org.springframework.util.StringUtils.isEmpty(sqlRecordQueryDto.getStartTime())) {
-            wrapper.gt("exec_date", DateUtil.parseUTCDate(sqlRecordQueryDto.getStartTime()));
+            wrapper.gt("exec_date", DateUtil.parseUTCDate(sqlRecordQueryDto.getStartTime() + " 00:00:00"));
         }
         if (!org.springframework.util.StringUtils.isEmpty(sqlRecordQueryDto.getEndTime())) {
-            wrapper.lt("exec_date", DateUtil.parseUTCDate(sqlRecordQueryDto.getEndTime()));
+            wrapper.lt("exec_date", DateUtil.parseUTCDate(sqlRecordQueryDto.getEndTime() + " 23:59:59"));
         }
         if (sqlRecordQueryDto.getAscExecDateOrder() != null) {
             if (!sqlRecordQueryDto.getAscExecDateOrder()) {
