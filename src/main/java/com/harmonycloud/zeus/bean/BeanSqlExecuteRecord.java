@@ -59,8 +59,8 @@ public class BeanSqlExecuteRecord implements Serializable {
     /**
      * 执行状态
      */
-    @TableField("status")
-    private String status;
+    @TableField("exec_status")
+    private String execStatus;
 
     /**
      * 执行时间

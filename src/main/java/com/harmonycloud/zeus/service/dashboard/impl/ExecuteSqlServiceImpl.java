@@ -60,7 +60,7 @@ public class ExecuteSqlServiceImpl implements ExecuteSqlService {
             executeSqlDto.setDate(record.getExecDate());
             executeSqlDto.setTime(record.getExecTime());
             executeSqlDto.setDatabase(record.getTargetDatabase());
-            executeSqlDto.setStatus(record.getStatus());
+            executeSqlDto.setStatus(record.getExecStatus());
             return executeSqlDto;
         }).collect(Collectors.toList()));
         return executeSqlDtoPageInfo;
@@ -77,10 +77,10 @@ public class ExecuteSqlServiceImpl implements ExecuteSqlService {
             wrapper.like("sqlstr", sqlRecordQueryDto.getKeyword());
         }
         if (!org.springframework.util.StringUtils.isEmpty(sqlRecordQueryDto.getStartTime())) {
-            wrapper.gt("exec_date", DateUtil.parseUTCDate(sqlRecordQueryDto.getStartTime()));
+            wrapper.gt("exec_date", DateUtil.parseUTCDate(sqlRecordQueryDto.getStartTime() + " 00:00:00"));
         }
         if (!org.springframework.util.StringUtils.isEmpty(sqlRecordQueryDto.getEndTime())) {
-            wrapper.lt("exec_date", DateUtil.parseUTCDate(sqlRecordQueryDto.getEndTime()));
+            wrapper.lt("exec_date", DateUtil.parseUTCDate(sqlRecordQueryDto.getEndTime() + " 23:59:59"));
         }
         if (sqlRecordQueryDto.getAscExecDateOrder() != null) {
             if (!sqlRecordQueryDto.getAscExecDateOrder()) {
@@ -97,7 +97,7 @@ public class ExecuteSqlServiceImpl implements ExecuteSqlService {
             }
         }
         if (sqlRecordQueryDto.getStatus() != null) {
-            wrapper.eq("status", sqlRecordQueryDto.getStatus());
+            wrapper.eq("exec_status", sqlRecordQueryDto.getStatus().toString());
         }
 
         int pageNum = 1, size = 10;
