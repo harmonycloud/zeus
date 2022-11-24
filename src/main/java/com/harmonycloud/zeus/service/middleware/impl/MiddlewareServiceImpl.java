@@ -938,6 +938,15 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         return getOperator(BaseOperator.class, BaseOperator.class, middleware).calculateCpuRequest(values);
     }
 
+    @Override
+    public List<MiddlewareInfo> listMiddlewarePod(String clusterId, String namespace, String type, String middlewareName) {
+        MiddlewareCR middlewareCR = middlewareCRService.getCR(clusterId, namespace, type, middlewareName);
+        if (middlewareCR == null || middlewareCR.getStatus() == null || middlewareCR.getStatus().getInclude() == null) {
+            throw new BusinessException(ErrorMessage.MIDDLEWARE_NOT_EXIST);
+        }
+        return middlewareCR.getStatus().getInclude().get("pods");
+    }
+
     /**
      * 服务排序类，按服务数量进行排序
      */
