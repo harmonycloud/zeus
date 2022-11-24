@@ -210,6 +210,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
     @Override
     public void recovery(Middleware middleware) {
+        checkLicense(middleware.getClusterId());
         MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(middleware.getClusterId());
         // pre check
         BeanCacheMiddleware beanCacheMiddleware = cacheMiddlewareService.get(middleware);
