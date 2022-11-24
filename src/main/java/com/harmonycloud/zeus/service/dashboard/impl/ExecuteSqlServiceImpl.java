@@ -97,7 +97,7 @@ public class ExecuteSqlServiceImpl implements ExecuteSqlService {
             }
         }
         if (sqlRecordQueryDto.getStatus() != null) {
-            wrapper.eq("exec_status", sqlRecordQueryDto.getStatus());
+            wrapper.eq("exec_status", sqlRecordQueryDto.getStatus().toString());
         }
 
         int pageNum = 1, size = 10;
