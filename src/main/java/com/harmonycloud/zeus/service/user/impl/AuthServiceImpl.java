@@ -37,6 +37,11 @@ public class AuthServiceImpl implements AuthService {
 
     @Value("${system.user.expire:0.5}")
     private Double expireTime;
+    @Value("${system.user.account.expire:180}")
+    private Double accountExpireDay;
+    @Value("${system.user.account.alert:15}")
+    private Double accountExpireAlertDay;
+
     @Autowired
     private UserService userService;
     @Autowired
@@ -81,7 +86,7 @@ public class AuthServiceImpl implements AuthService {
         //校验密码日期
         if (userDto.getPasswordTime() != null) {
             long passwordTime = DateUtils.getIntervalDays(new Date(), userDto.getPasswordTime()) / 3600 / 24 / 1000;
-            if (passwordTime > 165) {
+            if (passwordTime > accountExpireDay - accountExpireAlertDay) {
                 res.put("rePassword", passwordTime);
             }
         }
