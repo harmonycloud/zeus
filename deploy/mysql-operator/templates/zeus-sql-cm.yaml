@@ -1209,7 +1209,7 @@ data:
         `middleware_name` varchar(256) COLLATE utf8_bin DEFAULT NULL,
         `target_database` varchar(256) COLLATE utf8_bin DEFAULT NULL,
         `sqlstr` varchar(1024) COLLATE utf8_bin DEFAULT NULL COMMENT '执行sql',
-        `status` varchar(45) COLLATE utf8_bin DEFAULT NULL COMMENT '执行状态',
+        `exec_status` varchar(45) COLLATE utf8_bin DEFAULT NULL COMMENT '执行状态',
         `exec_date` timestamp NULL DEFAULT NULL COMMENT '执行时间',
         `exec_time` varchar(45) COLLATE utf8_bin DEFAULT NULL COMMENT '耗时',
         `message` varchar(45) COLLATE utf8_bin DEFAULT NULL COMMENT '信息',
