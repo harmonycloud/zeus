@@ -11,7 +11,7 @@ CREATE TABLE `sql_execute_record` (
   `exec_status` varchar(45) COLLATE utf8_bin DEFAULT NULL COMMENT '执行状态',
   `exec_date` timestamp NULL DEFAULT NULL COMMENT '执行时间',
   `exec_time` varchar(45) COLLATE utf8_bin DEFAULT NULL COMMENT '耗时',
-  `message` varchar(45) COLLATE utf8_bin DEFAULT NULL COMMENT '信息',
+  `message` varchar(1024) COLLATE utf8_bin DEFAULT NULL COMMENT '信息',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=55 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='sql执行记录表';
 
