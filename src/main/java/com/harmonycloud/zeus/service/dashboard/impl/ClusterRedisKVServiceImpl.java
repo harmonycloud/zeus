@@ -39,7 +39,9 @@ public class ClusterRedisKVServiceImpl implements RedisKVService {
             if (res.getJSONObject("err") != null || !"".equals(res.getString("err"))) {
                 throw new BusinessException(ErrorMessage.FAILED_TO_QUERY_KEY, res.getString("err"));
             }
-            jsonArray.addAll(res.getJSONArray("data"));
+            if (res.getJSONObject("data") != null) {
+                jsonArray.addAll(res.getJSONArray("data"));
+            }
         });
         return jsonArray;
     }
