@@ -161,14 +161,9 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
     }
 
     @Override
-    public void updateKey(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto) {
+    public void renameKey(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto) {
         if (!StringUtils.isEmpty(keyValueDto.getKey())) {
             redisClient.renameKey(K8sServiceNameUtil.getServicePath(namespace, middlewareName), db, key, keyValueDto.getKey());
-        }
-        if (!StringUtils.isEmpty(keyValueDto.getExpiration())) {
-            // 添加时间单位：秒
-            keyValueDto.setExpiration(keyValueDto.getExpiration() + "s");
-            redisClient.setKeyExpiration(K8sServiceNameUtil.getServicePath(namespace, middlewareName), db, key, keyValueDto);
         }
     }
 
@@ -179,8 +174,12 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
     }
 
     @Override
-    public void setKeyExpiration(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto) {
-        redisClient.setKeyExpiration(K8sServiceNameUtil.getServicePath(namespace, middlewareName), db, key, keyValueDto);
+    public void expireKey(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto) {
+        if (!StringUtils.isEmpty(keyValueDto.getExpiration())) {
+            // 添加时间单位：秒
+            keyValueDto.setExpiration(keyValueDto.getExpiration() + "s");
+            redisClient.setKeyExpiration(K8sServiceNameUtil.getServicePath(namespace, middlewareName), db, key, keyValueDto);
+        }
     }
 
     @Override

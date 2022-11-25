@@ -26,11 +26,11 @@ public interface RedisDashboardService extends BaseMiddlewareApiService{
 
     void deleteKey(String clusterId, String namespace, String middlewareName, Integer db, String key);
 
-    void updateKey(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto);
+    void renameKey(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto);
 
     void deleteValue(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto);
 
-    void setKeyExpiration(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto);
+    void expireKey(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto);
 
     JSONObject execCMD(String clusterId, String namespace, String middlewareName, Integer db, String cmd);
 

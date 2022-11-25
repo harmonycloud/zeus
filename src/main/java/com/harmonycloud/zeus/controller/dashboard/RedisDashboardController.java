@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.dashboard.DatabaseDto;
 import com.harmonycloud.caas.common.model.dashboard.redis.KeyValueDto;
-import com.harmonycloud.zeus.bean.BeanSqlExecuteRecord;
 import com.harmonycloud.zeus.service.dashboard.RedisDashboardService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -132,7 +131,7 @@ public class RedisDashboardController {
         return BaseResult.ok();
     }
 
-    @ApiOperation(value = "修改key信息", notes = "修改key信息,修改名称或超时时间(s)")
+    @ApiOperation(value = "修改key名", notes = "修改key名")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
@@ -141,14 +140,34 @@ public class RedisDashboardController {
             @ApiImplicitParam(name = "key", value = "key", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "keyValueDto", value = "redis参数", paramType = "query", dataTypeClass = String.class),
     })
-    @PutMapping("/databases/{database}/keys/{key}")
+    @PutMapping("/databases/{database}/keys/{key}/rename")
     public BaseResult updateKey(@PathVariable("clusterId") String clusterId,
                                 @PathVariable("namespace") String namespace,
                                 @PathVariable("middlewareName") String middlewareName,
                                 @PathVariable("database") Integer database,
                                 @PathVariable("key") String key,
                                 @RequestBody KeyValueDto keyValueDto) {
-        redisDashboardService.updateKey(clusterId, namespace, middlewareName, database, key, keyValueDto);
+        redisDashboardService.renameKey(clusterId, namespace, middlewareName, database, key, keyValueDto);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "修改key过期时间", notes = "修改key过期时间")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = Integer.class),
+            @ApiImplicitParam(name = "key", value = "key", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "keyValueDto", value = "redis参数", paramType = "query", dataTypeClass = String.class),
+    })
+    @PutMapping("/databases/{database}/keys/{key}/expiration")
+    public BaseResult expireKey(@PathVariable("clusterId") String clusterId,
+                                @PathVariable("namespace") String namespace,
+                                @PathVariable("middlewareName") String middlewareName,
+                                @PathVariable("database") Integer database,
+                                @PathVariable("key") String key,
+                                @RequestBody KeyValueDto keyValueDto) {
+        redisDashboardService.renameKey(clusterId, namespace, middlewareName, database, key, keyValueDto);
         return BaseResult.ok();
     }
 
