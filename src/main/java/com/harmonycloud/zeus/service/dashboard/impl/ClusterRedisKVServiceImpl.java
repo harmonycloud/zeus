@@ -36,12 +36,7 @@ public class ClusterRedisKVServiceImpl implements RedisKVService {
         JSONArray jsonArray = new JSONArray();
         pods.forEach(pod -> {
             JSONObject res = redisClient.getAllKeys(K8sServiceNameUtil.getServicePath(pod.getName(), middlewareName, namespace), db);
-            if (res.getJSONObject("err") != null || !"".equals(res.getString("err"))) {
-                throw new BusinessException(ErrorMessage.FAILED_TO_QUERY_KEY, res.getString("err"));
-            }
-            if (res.getJSONArray("data") != null) {
-                jsonArray.addAll(res.getJSONArray("data"));
-            }
+            jsonArray.addAll(convertResult(res));
         });
         return jsonArray;
     }
@@ -52,15 +47,20 @@ public class ClusterRedisKVServiceImpl implements RedisKVService {
         JSONArray jsonArray = new JSONArray();
         pods.forEach(pod -> {
             JSONObject res = redisClient.getKeys(K8sServiceNameUtil.getServicePath(pod.getName(), middlewareName, namespace), db, keyword);
-            if (res.getJSONObject("err") != null || !"".equals(res.getString("err"))) {
-                throw new BusinessException(ErrorMessage.FAILED_TO_QUERY_KEY, res.getString("err"));
-            }
-            JSONArray data = res.getJSONArray("data");
-            if (!CollectionUtils.isEmpty(data)) {
-                jsonArray.addAll(data);
-            }
+            jsonArray.addAll(convertResult(res));
         });
         return jsonArray;
+    }
+
+    private JSONArray convertResult(JSONObject res) {
+        if (res.getJSONObject("err") != null || !"".equals(res.getString("err"))) {
+            throw new BusinessException(ErrorMessage.FAILED_TO_QUERY_KEY, res.getString("err"));
+        }
+        JSONArray data = res.getJSONArray("data");
+        if (!CollectionUtils.isEmpty(data)) {
+            return data;
+        }
+        return new JSONArray();
     }
 
     private List<MiddlewareInfo> listMasterPod(String clusterId, String namespace, String middlewareName) {
