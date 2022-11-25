@@ -42,7 +42,7 @@ public class MiddlewareDashboardAuthController {
         return BaseResult.ok(middlewareDashboardAuthService.login(clusterId, namespace, middlewareName, username, password, type));
     }
 
-    @ApiOperation(value = "中间件登录", notes = "中间件登录")
+    @ApiOperation(value = "中间件登出", notes = "中间件登出")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
