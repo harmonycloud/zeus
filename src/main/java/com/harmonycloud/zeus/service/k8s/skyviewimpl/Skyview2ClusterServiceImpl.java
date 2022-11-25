@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.zeus.skyviewservice.Skyview2UserService;
 import com.harmonycloud.zeus.skyviewservice.client.Skyview2ClusterServiceClient;
 import com.harmonycloud.zeus.skyviewservice.client.Skyview2UserServiceClient;
 import org.apache.commons.beanutils.BeanUtils;
@@ -48,6 +49,8 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
     private String skyviewAdminName;
     @Value("${system.skyview.password:Hc@Cloud01}")
     private String skyviewAdminPassword;
+    @Autowired
+    private Skyview2UserService skyview2UserService;
 
     @Autowired
     private Skyview2UserServiceClient userServiceClient;
@@ -181,7 +184,7 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
         if (encryptPassword) {
             tempPassword = CryptoUtils.encrypt(skyviewAdminPassword);
         }
-        CaasResult<JSONObject> caasResult = userServiceClient.login(skyviewAdminName, tempPassword, "ch");
+        CaasResult<JSONObject> caasResult = skyview2UserService.login(skyviewAdminName, tempPassword, "ch");
         if (!caasResult.getSuccess()){
             log.error("集群同步时，用户{} 登录观云台失败，原因：{}", skyviewAdminName, caasResult.getData());
             throw new BusinessException(ErrorMessage.LOGIN_CAAS_API_FAILED);
