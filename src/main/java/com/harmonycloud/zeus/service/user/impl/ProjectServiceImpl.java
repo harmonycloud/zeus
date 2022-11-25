@@ -554,15 +554,20 @@ public class ProjectServiceImpl implements ProjectService {
      * @return
      */
     public List<Namespace> setAvailableDomainStatus(List<Namespace> namespaces, String clusterId) {
-        List<Namespace> nsList = namespaceService.list(clusterId, true, null);
-        Map<String, Boolean> nsMap = new HashMap<>();
-        nsList.forEach(ns -> {
-            nsMap.put(ns.getName(), ns.isAvailableDomain());
-        });
-        namespaces.forEach(ns -> {
-            ns.setAvailableDomain(nsMap.get(ns.getName()));
-        });
-        return namespaces;
+        try {
+            List<Namespace> nsList = namespaceService.list(clusterId, false, null);
+            Map<String, Boolean> nsMap = new HashMap<>();
+            nsList.forEach(ns -> {
+                nsMap.put(ns.getName(), ns.isAvailableDomain());
+            });
+            namespaces.forEach(ns -> {
+                ns.setAvailableDomain(nsMap.get(ns.getName()));
+            });
+            return namespaces;
+        } catch (Exception e) {
+            log.error("查询双活分区状态失败", e);
+            return namespaces;
+        }
     }
 
 }

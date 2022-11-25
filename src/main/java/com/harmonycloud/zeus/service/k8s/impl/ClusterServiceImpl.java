@@ -610,10 +610,10 @@ public class ClusterServiceImpl implements ClusterService {
         List<MiddlewareResourceInfo> mwResourceInfoList = new ArrayList<>();
         final CountDownLatch clusterCountDownLatch = new CountDownLatch(mwCrdList.size());
         mwCrdList.forEach(mwCrd -> ThreadPoolExecutorFactory.executor.execute(() -> {
+            MiddlewareResourceInfo middlewareResourceInfo = new MiddlewareResourceInfo();
             try {
                 Middleware middleware = middlewareService.detail(clusterId, mwCrd.getMetadata().getNamespace(),
                     mwCrd.getSpec().getName(), middlewareCrTypeService.findTypeByCrType(mwCrd.getSpec().getType()));
-                MiddlewareResourceInfo middlewareResourceInfo = new MiddlewareResourceInfo();
                 BeanUtils.copyProperties(middleware, middlewareResourceInfo);
                 middlewareResourceInfo.setClusterId(clusterId);
                 middlewareResourceInfo.setImagePath(imagePathMap.getOrDefault(middleware.getType(), null));
@@ -734,11 +734,11 @@ public class ClusterServiceImpl implements ClusterService {
                     middlewareResourceInfo.setStorageRate(
                         ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(storageRate), 2, RoundingMode.CEILING));
                 }
-                mwResourceInfoList.add(middlewareResourceInfo);
             } catch (Exception e) {
                 log.error("查询资源使用额度出错了", e);
             } finally {
                 log.info("{}查询完成", mwCrd.getMetadata().getName());
+                mwResourceInfoList.add(middlewareResourceInfo);
                 clusterCountDownLatch.countDown();
             }
         }));
