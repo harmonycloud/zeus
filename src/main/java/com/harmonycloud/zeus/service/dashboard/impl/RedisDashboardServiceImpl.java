@@ -235,12 +235,15 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
                 sbf.append(",");
             }
         }
+        if (StringUtils.isEmpty(sbf.toString())) {
+            sbf.append(clusterAddrsPrefix);
+        }
         return sbf.toString();
     }
 
     private List<MiddlewareInfo> listMasterPod(String clusterId, String namespace, String middlewareName) {
-        return middlewareService.listMiddlewarePod(clusterId, namespace, MiddlewareTypeEnum.REDIS.getType(), middlewareName).
-                stream().filter(middlewareInfo -> middlewareInfo.getType().equals("master")).collect(Collectors.toList()).
+        List<MiddlewareInfo> pods = middlewareService.listMiddlewarePod(clusterId, namespace, MiddlewareTypeEnum.REDIS.getType(), middlewareName);
+        return pods.stream().filter(middlewareInfo -> middlewareInfo.getType() != null && middlewareInfo.getType().equals("master")).collect(Collectors.toList()).
                 stream().sorted(new ClusterRedisKVServiceImpl.MiddlewareInfoComparator()).collect(Collectors.toList());
     }
 
