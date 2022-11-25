@@ -741,7 +741,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
                 columnDto.setPrimaryKey(false);
             }
             return columnDto;
-        }).collect(Collectors.toList());
+        }).sorted(Comparator.comparing(columnDto -> Integer.valueOf(columnDto.getNum()))).collect(Collectors.toList());
     }
 
     @Override
