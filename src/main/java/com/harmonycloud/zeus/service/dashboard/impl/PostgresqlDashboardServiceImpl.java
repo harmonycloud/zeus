@@ -1296,7 +1296,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         }
         sb.append(" ");
         if (StringUtils.isNotEmpty(columnDto.getDefaultValue())) {
-            sb.append("default ").append(columnDto.getDefaultValue());
+            sb.append("default ").append("'").append(columnDto.getDefaultValue()).append("'");
         }
         sb.append(" ");
         if (columnDto.getNullable() != null && !columnDto.getNullable()) {
