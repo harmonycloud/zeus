@@ -46,7 +46,7 @@ public class MiddlewareDashboardAuthController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "type", value = "类型", paramType = "query", dataTypeClass = String.class),
     })
     @PostMapping("/logout")
