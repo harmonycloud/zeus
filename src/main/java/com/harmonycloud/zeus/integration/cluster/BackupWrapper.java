@@ -1,25 +1,29 @@
 package com.harmonycloud.zeus.integration.cluster;
 
-import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.zeus.integration.cluster.bean.BackupCR;
-import com.harmonycloud.zeus.integration.cluster.bean.BackupList;
-import com.harmonycloud.zeus.util.K8sClient;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
-import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
+import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
+
+import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.zeus.integration.cluster.bean.BackupCR;
+import com.harmonycloud.zeus.integration.cluster.bean.BackupList;
+import com.harmonycloud.zeus.util.K8sClient;
+
+import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author xutianhong
  * @Date 2021/4/6 4:41 下午
  */
 @Component
+@Slf4j
 public class BackupWrapper {
 
     private static final CustomResourceDefinitionContext CONTEXT = new CustomResourceDefinitionContext.Builder()
@@ -33,17 +37,22 @@ public class BackupWrapper {
      * 获取备份
      */
     public List<BackupCR> list(String clusterId, String namespace){
-        Map<String, Object> map =null;
-        if ("*".equals(namespace)) {
-            map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(null);
-        } else {
-            map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace);
+        try {
+            Map<String, Object> map;
+            if ("*".equals(namespace)) {
+                map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(null);
+            } else {
+                map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace);
+            }
+            BackupList backupList = JSONObject.parseObject(JSONObject.toJSONString(map), BackupList.class);
+            if (backupList == null || CollectionUtils.isEmpty(backupList.getItems())){
+                return new ArrayList<>();
+            }
+            return backupList.getItems();
+        } catch (Exception e){
+            log.error("查询mysql备份失败", e);
         }
-        BackupList backupList = JSONObject.parseObject(JSONObject.toJSONString(map), BackupList.class);
-        if (backupList == null || CollectionUtils.isEmpty(backupList.getItems())){
-            return new ArrayList<>();
-        }
-        return backupList.getItems();
+        return new ArrayList<>();
     }
 
 
