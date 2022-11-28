@@ -1299,7 +1299,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             sb.append("default ").append(columnDto.getDefaultValue());
         }
         sb.append(" ");
-        if (columnDto.getNullable() != null && columnDto.getNullable()) {
+        if (columnDto.getNullable() != null && !columnDto.getNullable()) {
             sb.append("not null ");
         }
         if (StringUtils.isNotEmpty(columnDto.getCollate())) {
