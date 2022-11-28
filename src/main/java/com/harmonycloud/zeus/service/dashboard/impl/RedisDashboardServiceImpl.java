@@ -20,6 +20,7 @@ import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.K8sServiceNameUtil;
+import com.harmonycloud.zeus.util.RedisUtil;
 import com.harmonycloud.zeus.util.SpringContextUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,19 +75,34 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
             username = "";
         }
         int defaultDb = 0;
-        String mod = getRedisMod(clusterId, namespace, middlewareName);
+        String deployMod = RedisUtil.getRedisDeployMod(installedValues);
         // redis哨兵模式和单机模式的连接方式是一样的，因此连接方式只有集群模式和单机模式
+        String redisPort = port;
         String clusterAddrs = "";
-        if ("cluster".equals(mod)) {
-            clusterAddrs = getClusterAddress(clusterId, namespace, middlewareName);
-        } else {
-            mod = "single";
+        String sentinelAddrs = "";
+        String redisMod = "";
+        String host = K8sServiceNameUtil.getServicePath(namespace, middlewareName);
+        switch (deployMod) {
+            case "cluster":
+            case "clusterProxy":
+                redisMod = "cluster";
+                clusterAddrs = getClusterAddress(clusterId, namespace, middlewareName);
+                break;
+            case "sentinel":
+                redisMod = "single";
+                sentinelAddrs = K8sServiceNameUtil.getServicePath(namespace, middlewareName) + ":" + port;
+                break;
+            case "sentinelProxy":
+                redisMod = "single";
+                redisPort = "7617";
+                host = K8sServiceNameUtil.getRedisPredixyServicePath(namespace, middlewareName);
+                break;
+            default:
+                throw new BusinessException(ErrorMessage.UNKNOWN_REDIS_CLUSTER);
         }
-
-        String sentinelAddrs = K8sServiceNameUtil.getServicePath(namespace, middlewareName) +":" +port;
-        JSONObject res = redisClient.login(K8sServiceNameUtil.getServicePath(namespace, middlewareName), defaultDb, version,
-                mod, username, password, port, clusterAddrs, sentinelAddrs);
-        if (res.get("data") == null){
+        JSONObject res = redisClient.login(defaultDb, host, version,
+                redisMod, username, password, redisPort, clusterAddrs, sentinelAddrs);
+        if (res.get("data") == null) {
             throw new BusinessException(ErrorMessage.FAILED_TO_LOGIN_REDIS, res.getString("error"));
         }
         return res.getString("data");
@@ -115,7 +131,7 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
         for (int i = 0; i < dbNum; i++) {
             DatabaseDto databaseDto = new DatabaseDto();
             databaseDto.setDb(i);
-            databaseDto.setSize(redisClient.DBSize(K8sServiceNameUtil.getServicePath(namespace, middlewareName), i).getInteger("data"));
+            databaseDto.setSize(redisClient.DBSize(i).getInteger("data"));
             databaseDtoList.add(databaseDto);
         }
         return databaseDtoList;
@@ -123,7 +139,7 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
 
     @Override
     public DataDto getKeyValue(String clusterId, String namespace, String middlewareName, Integer db, String key) {
-        JSONObject res = redisClient.getKeyValue(K8sServiceNameUtil.getServicePath(namespace, middlewareName), db, key);
+        JSONObject res = redisClient.getKeyValue(db, key);
         DataDto data = new DataDto(res.getJSONObject("data"));
         log.debug(data.toString());
         return data;
@@ -144,7 +160,7 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
             keyValueDto.setZsetValue(zSetDto);
             keyValueDto.setValue(keyValueDto.wrapValue());
         }
-        redisClient.setKeyValue(K8sServiceNameUtil.getServicePath(namespace, middlewareName), db, key, keyValueDto);
+        redisClient.setKeyValue(db, key, keyValueDto);
     }
 
     @Override
@@ -152,25 +168,25 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
         keyValueDto.setValue(keyValueDto.wrapValue());
         // 更新value时，为避免expiration被重置，这里将expiration设置为空字符串
         keyValueDto.setExpiration("");
-        redisClient.setKeyValue(K8sServiceNameUtil.getServicePath(namespace, middlewareName), db, key, keyValueDto);
+        redisClient.setKeyValue(db, key, keyValueDto);
     }
 
     @Override
     public void deleteKey(String clusterId, String namespace, String middlewareName, Integer db, String key) {
-        redisClient.deleteKey(K8sServiceNameUtil.getServicePath(namespace, middlewareName), db, key);
+        redisClient.deleteKey(db, key);
     }
 
     @Override
     public void renameKey(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto) {
         if (!StringUtils.isEmpty(keyValueDto.getKey())) {
-            redisClient.renameKey(K8sServiceNameUtil.getServicePath(namespace, middlewareName), db, key, keyValueDto.getKey());
+            redisClient.renameKey(db, key, keyValueDto.getKey());
         }
     }
 
     @Override
     public void deleteValue(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto) {
         keyValueDto.setValue(keyValueDto.wrapValue());
-        redisClient.removeValue(K8sServiceNameUtil.getServicePath(namespace, middlewareName), db, key, keyValueDto);
+        redisClient.removeValue(db, key, keyValueDto);
     }
 
     @Override
@@ -178,13 +194,13 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
         if (!StringUtils.isEmpty(keyValueDto.getExpiration())) {
             // 添加时间单位：秒
             keyValueDto.setExpiration(keyValueDto.getExpiration() + "s");
-            redisClient.setKeyExpiration(K8sServiceNameUtil.getServicePath(namespace, middlewareName), db, key, keyValueDto);
+            redisClient.setKeyExpiration(db, key, keyValueDto);
         }
     }
 
     @Override
     public JSONObject execCMD(String clusterId, String namespace, String middlewareName, Integer db, String cmd) {
-        JSONObject res = redisClient.execCMD(K8sServiceNameUtil.getServicePath(namespace, middlewareName), db, cmd);
+        JSONObject res = redisClient.execCMD(db, cmd);
         BeanSqlExecuteRecord record = new BeanSqlExecuteRecord();
         String err = res.getString("err");
         record.setClusterId(clusterId);
@@ -243,7 +259,7 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
     private List<MiddlewareInfo> listMasterPod(String clusterId, String namespace, String middlewareName) {
         List<MiddlewareInfo> pods = middlewareService.listMiddlewarePod(clusterId, namespace, MiddlewareTypeEnum.REDIS.getType(), middlewareName);
         return pods.stream().filter(middlewareInfo -> middlewareInfo.getType() != null && middlewareInfo.getType().equals("master")).collect(Collectors.toList()).
-                stream().sorted(new ClusterRedisKVServiceImpl.MiddlewareInfoComparator()).collect(Collectors.toList());
+                stream().sorted(new RedisAggregationKVServiceImpl.MiddlewareInfoComparator()).collect(Collectors.toList());
     }
 
     /**
@@ -263,29 +279,20 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
         return dbNum;
     }
 
-    /**
-     * 获取redis集群模式
-     * @param clusterId
-     * @param namespace
-     * @param middlewareName
-     * @return
-     */
-    private String getRedisMod(String clusterId, String namespace, String middlewareName) {
-        JSONObject installedValues = helmChartService.getInstalledValues(middlewareName, namespace, clusterService.findById(clusterId));
-        return installedValues.getString("type");
-    }
-
     private RedisKVService getKVService(String clusterId, String namespace, String middlewareName) {
-        String type = getRedisMod(clusterId, namespace, middlewareName);
-        return (RedisKVService) SpringContextUtils.getBean(getRedisServiceBeanName(type));
+        JSONObject installedValues = helmChartService.getInstalledValues(middlewareName, namespace, clusterService.findById(clusterId));
+        String deployMod = RedisUtil.getRedisDeployMod(installedValues);
+        return (RedisKVService) SpringContextUtils.getBean(getRedisServiceBeanName(deployMod));
     }
 
-    private String getRedisServiceBeanName(String type) {
-        switch (type) {
+    private String getRedisServiceBeanName(String deployMod) {
+        switch (deployMod) {
             case "sentinel":
                 return SentinelRedisKVServiceImpl.class.getSimpleName();
             case "cluster":
-                return ClusterRedisKVServiceImpl.class.getSimpleName();
+            case "clusterProxy":
+            case "sentinelProxy":
+                return RedisAggregationKVServiceImpl.class.getSimpleName();
             default:
                 throw new BusinessException(ErrorMessage.UNKNOWN_REDIS_CLUSTER);
         }

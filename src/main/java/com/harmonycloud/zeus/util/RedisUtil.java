@@ -1,5 +1,7 @@
 package com.harmonycloud.zeus.util;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.RedisAccessInfo;
@@ -9,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.DefaultStringRedisConnection;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.util.CollectionUtils;
 import redis.clients.jedis.*;
 
 import java.util.HashSet;
@@ -149,6 +152,42 @@ public class RedisUtil {
 //            }
 //        });
         return new JedisCluster(nodes,1000,1000,1,redisAccessInfo.getPassword(),config);
+    }
+
+    /**
+     * 转换redis查询结果
+     * @param res
+     * @return
+     */
+    public static JSONArray convertResult(JSONObject res) {
+        if (res.getJSONObject("err") != null || !"".equals(res.getString("err"))) {
+            throw new BusinessException(ErrorMessage.FAILED_TO_QUERY_KEY, res.getString("err"));
+        }
+        JSONArray data = res.getJSONArray("data");
+        if (!CollectionUtils.isEmpty(data)) {
+            return data;
+        }
+        return new JSONArray();
+    }
+
+    /**
+     * 获取redis部署模式
+     * @param installedValues
+     * @return type:cluster/sentinel
+     */
+    public static String getRedisDeployMod(JSONObject installedValues) {
+        String type = installedValues.getString("type");
+        JSONObject predixy = installedValues.getJSONObject("predixy");
+        if (predixy != null) {
+            Boolean enableProxy = predixy.getBoolean("enableProxy");
+            if (enableProxy) {
+                return type + "Proxy";
+            } else {
+                return type;
+            }
+        } else {
+            return type;
+        }
     }
 
 }
