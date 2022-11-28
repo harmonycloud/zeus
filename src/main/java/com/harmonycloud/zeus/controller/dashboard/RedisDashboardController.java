@@ -167,7 +167,7 @@ public class RedisDashboardController {
                                 @PathVariable("database") Integer database,
                                 @PathVariable("key") String key,
                                 @RequestBody KeyValueDto keyValueDto) {
-        redisDashboardService.renameKey(clusterId, namespace, middlewareName, database, key, keyValueDto);
+        redisDashboardService.expireKey(clusterId, namespace, middlewareName, database, key, keyValueDto);
         return BaseResult.ok();
     }
 
