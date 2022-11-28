@@ -6,12 +6,16 @@ package com.harmonycloud.zeus.util;
  */
 public class K8sServiceNameUtil {
 
-    public static String getServicePath(String namespace, String serviceName) {
-        return serviceName + "." + namespace;
+    public static String getServicePath(String namespace, String middlewareName) {
+        return middlewareName + "." + namespace;
     }
 
-    public static String getServicePath(String prefix, String namespace, String serviceName) {
-        return prefix + "." + getServicePath(serviceName, namespace);
+    public static String getServicePath(String prefix, String namespace, String middlewareName) {
+        return prefix + "." + getServicePath(middlewareName, namespace);
+    }
+
+    public static String getRedisPredixyServicePath(String namespace, String middlewareName) {
+        return middlewareName + "-predixy." + namespace;
     }
 
 }

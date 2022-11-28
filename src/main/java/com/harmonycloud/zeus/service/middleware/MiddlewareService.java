@@ -215,4 +215,14 @@ public interface MiddlewareService {
      */
     List<MiddlewareInfo> listMiddlewarePod(String clusterId, String namespace, String type, String middlewareName);
 
+    /**
+     * 获取middleware所有service
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param middlewareName
+     * @return
+     */
+    List<MiddlewareInfo> listMiddlewareService(String clusterId, String namespace, String type, String middlewareName);
+
 }
