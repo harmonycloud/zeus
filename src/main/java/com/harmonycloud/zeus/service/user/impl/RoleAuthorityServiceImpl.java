@@ -2,13 +2,17 @@ package com.harmonycloud.zeus.service.user.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.zeus.bean.user.BeanRoleAuthority;
+import com.harmonycloud.zeus.dao.user.BeanResourceMenuRoleMapper;
 import com.harmonycloud.zeus.dao.user.BeanRoleAuthorityMapper;
+import com.harmonycloud.zeus.service.user.ResourceMenuRoleService;
 import com.harmonycloud.zeus.service.user.RoleAuthorityService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +26,8 @@ public class RoleAuthorityServiceImpl implements RoleAuthorityService {
 
     @Autowired
     private BeanRoleAuthorityMapper beanRoleAuthorityMapper;
+    @Autowired
+    private ResourceMenuRoleService resourceMenuRoleService;
 
     @Override
     public void insert(Integer roleId, String type, String power) {
@@ -49,24 +55,19 @@ public class RoleAuthorityServiceImpl implements RoleAuthorityService {
 
     @Override
     public void update(Integer roleId, Map<String, String> power) {
+        boolean ops = false;
+        // 删除当前权限
         QueryWrapper<BeanRoleAuthority> wrapper = new QueryWrapper<BeanRoleAuthority>().eq("role_id", roleId);
-        List<BeanRoleAuthority> beanRoleAuthorityList = beanRoleAuthorityMapper.selectList(wrapper);
-        beanRoleAuthorityList.forEach(beanRoleAuthority -> {
-            if (power.containsKey(beanRoleAuthority.getType())){
-                beanRoleAuthority.setPower(power.get(beanRoleAuthority.getType()));
-                beanRoleAuthorityMapper.updateById(beanRoleAuthority);
-                power.remove(beanRoleAuthority.getType());
+        beanRoleAuthorityMapper.delete(wrapper);
+        // 添加新权限
+        for (String key : power.keySet()){
+            if (Integer.parseInt(power.get(key).split("")[1]) == 1){
+                ops = true;
             }
-        });
-        if (!CollectionUtils.isEmpty(power)){
-            for (String key : power.keySet()){
-                BeanRoleAuthority beanRoleAuthority = new BeanRoleAuthority();
-                beanRoleAuthority.setRoleId(roleId);
-                beanRoleAuthority.setType(key);
-                beanRoleAuthority.setPower(power.get(key));
-                beanRoleAuthorityMapper.insert(beanRoleAuthority);
-            }
+            insert(roleId, key, power.get(key));
         }
+        // 判断该角色是否拥有运维权限
+        resourceMenuRoleService.updateOpsMenu(roleId, ops);
     }
 
     @Override
