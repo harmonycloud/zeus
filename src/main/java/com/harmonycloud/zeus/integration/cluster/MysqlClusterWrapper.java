@@ -42,7 +42,6 @@ public class MysqlClusterWrapper {
             return null;
         }
         JSONObject resObj = JSONObject.parseObject(JSONObject.toJSONString(map));
-        System.out.println(JSONObject.toJSONString(resObj));
         return JSONObject.parseObject(JSONObject.toJSONString(resObj), MysqlCluster.class);
     }
 
