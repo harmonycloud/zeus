@@ -236,9 +236,6 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         PageInfo<Object> pageInfo = new PageInfo<>();
         pageInfo.setTotal(getTableRecordCount(clusterId, namespace, middlewareName, database, table));
         pageInfo.setList(dataAry);
-        if (CollectionUtils.isEmpty(dataAry)) {
-            throw new BusinessException(ErrorMessage.FAILED_TO_OBTAIN_TABLE_DATA);
-        }
         return pageInfo;
     }
 
