@@ -352,6 +352,7 @@ public class ProjectServiceImpl implements ProjectService {
                 .setImagePath(middlewareImagePathMap.getOrDefault(mwType, null));
             infoList.add(projectMiddlewareResourceInfo);
         }
+        infoList.sort(Comparator.comparing(ProjectMiddlewareResourceInfo::getType));
         return infoList;
     }
 
