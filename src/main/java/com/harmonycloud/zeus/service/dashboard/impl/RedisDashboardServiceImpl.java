@@ -208,12 +208,7 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
         record.setMiddlewareName(middlewareName);
         record.setTargetDatabase(String.valueOf(db));
         // 设置sql
-        String[] cmds = cmd.split(" ");
-        if (cmds.length > 0) {
-            record.setSqlStr(cmds[0]);
-        } else {
-            record.setSqlStr(cmd);
-        }
+        record.setSqlStr(cmd);
         //  设置执行状态和提示信息
         if (!StringUtils.isEmpty(err)) {
             record.setMessage(err);
