@@ -165,7 +165,7 @@ public class RoleServiceImpl implements RoleService {
             list = list.stream().filter(menuDto -> menuDto.getId() != Integer.parseInt(disasterMenuId))
                 .collect(Collectors.toList());
         }
-        List<Integer> ids = list.stream().map(BeanResourceMenuRole::getId).collect(Collectors.toList());
+        List<Integer> ids = list.stream().map(BeanResourceMenuRole::getResourceMenuId).collect(Collectors.toList());
         // 获取菜单信息
         List<ResourceMenuDto> resourceMenuDtoList = resourceMenuService.list(ids);
         return resourceMenuDtoList.stream().filter(ResourceMenuDto::getOwn).collect(Collectors.toList());
