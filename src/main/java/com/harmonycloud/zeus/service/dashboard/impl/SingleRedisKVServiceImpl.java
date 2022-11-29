@@ -8,6 +8,7 @@ import com.harmonycloud.zeus.integration.dashboard.RedisClient;
 import com.harmonycloud.zeus.service.dashboard.RedisKVService;
 import com.harmonycloud.zeus.util.K8sServiceNameUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,14 +16,17 @@ import org.springframework.stereotype.Service;
  * @since 2022/11/23 11:25 上午
  */
 @Service("SentinelRedisKVServiceImpl")
-public class SentinelRedisKVServiceImpl implements RedisKVService {
+public class SingleRedisKVServiceImpl implements RedisKVService {
 
     @Autowired
     private RedisClient redisClient;
 
+    @Value("${system.middleware-api.redis.port:6379}")
+    private String port;
+
     @Override
     public JSONArray getKeys(String clusterId, String namespace, String middlewareName, Integer db) {
-        JSONObject res = redisClient.getAllKeys(K8sServiceNameUtil.getServicePath(namespace, middlewareName), db);
+        JSONObject res = redisClient.getAllKeys(K8sServiceNameUtil.getServicePath(namespace, middlewareName), port, db);
         if (res.getJSONObject("err") != null) {
             throw new BusinessException(ErrorMessage.FAILED_TO_QUERY_KEY, res.getString("err"));
         }
@@ -31,7 +35,7 @@ public class SentinelRedisKVServiceImpl implements RedisKVService {
 
     @Override
     public JSONArray getKeysWithPattern(String clusterId, String namespace, String middlewareName, Integer db, String keyword) {
-        JSONObject res = redisClient.getKeys(K8sServiceNameUtil.getServicePath(namespace, middlewareName), db, keyword);
+        JSONObject res = redisClient.getKeys(K8sServiceNameUtil.getServicePath(namespace, middlewareName), port, db, keyword);
         if (res.getJSONObject("err") != null) {
             throw new BusinessException(ErrorMessage.FAILED_TO_QUERY_KEY, res.getString("err"));
         }

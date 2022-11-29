@@ -48,7 +48,7 @@ public interface RedisClient {
      * 查询所有key
      */
     @Get(url = "/redis/db/{db}/keys")
-    JSONObject getAllKeys(@Query("host") String host, @Var("db") Integer db);
+    JSONObject getAllKeys(@Query("host") String host, @Query("port") String port, @Var("db") Integer db);
 
     /**
      * 获取key的值
@@ -60,7 +60,7 @@ public interface RedisClient {
      * 查询所有key,并根据keyword过滤
      */
     @Get(url = "/redis/db/{db}/keys/pattern/{keyword}")
-    JSONObject getKeys(@Query("host") String host, @Var("db") Integer db, @Var("keyword") String keyword);
+    JSONObject getKeys(@Query("host") String host, @Query("port") String port, @Var("db") Integer db, @Var("keyword") String keyword);
 
     /**
      * 设置key的值
