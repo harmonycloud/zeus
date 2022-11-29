@@ -698,8 +698,9 @@ public class ClusterServiceImpl implements ClusterService {
                 }
                 // 查询cpu每5分钟平均用量
                 try {
-                    String per5MinCpuUsedQuery = "sum(rate(container_cpu_usage_seconds_total{pod=~\"" + pods.toString()
-                        + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\",endpoint!=\"\",container!=\"\"}[5m]))";
+                    String per5MinCpuUsedQuery =
+                        "sum(rate(container_cpu_usage_seconds_total{pod=~\"" + pods.toString() + "\",namespace=\""
+                            + mwCrd.getMetadata().getNamespace() + "\",endpoint!=\"\",container!=\"\"}[5m]))";
                     queryMap.put("query", per5MinCpuUsedQuery);
                     PrometheusResponse per5MinCpuUsed =
                         prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
@@ -772,25 +773,23 @@ public class ClusterServiceImpl implements ClusterService {
                 }
 
                 // 计算cpu使用率
-                if (mwRsInfo.getRequestCpu() != null && mwRsInfo.getPer5MinCpu() != null) {
-                    double cpuRate =
-                            mwRsInfo.getPer5MinCpu() / mwRsInfo.getRequestCpu() * 100;
+                if (mwRsInfo.getRequestCpu() != null && mwRsInfo.getRequestCpu() != 0
+                    && mwRsInfo.getPer5MinCpu() != null) {
+                    double cpuRate = mwRsInfo.getPer5MinCpu() / mwRsInfo.getRequestCpu() * 100;
                     mwRsInfo.setCpuRate(
                         ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(cpuRate), 2, RoundingMode.CEILING));
                 }
                 // 计算memory使用率
-                if (mwRsInfo.getRequestMemory() != null
+                if (mwRsInfo.getRequestMemory() != null && mwRsInfo.getRequestMemory() != 0
                     && mwRsInfo.getPer5MinMemory() != null) {
-                    double memoryRate =
-                            mwRsInfo.getPer5MinMemory() / mwRsInfo.getRequestMemory() * 100;
+                    double memoryRate = mwRsInfo.getPer5MinMemory() / mwRsInfo.getRequestMemory() * 100;
                     mwRsInfo.setMemoryRate(
                         ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(memoryRate), 2, RoundingMode.CEILING));
                 }
                 // 计算pvc使用率
-                if (mwRsInfo.getRequestStorage() != null
+                if (mwRsInfo.getRequestStorage() != null && mwRsInfo.getRequestStorage() != 0
                     && mwRsInfo.getPer5MinStorage() != null) {
-                    double storageRate =
-                            mwRsInfo.getPer5MinStorage() / mwRsInfo.getRequestStorage() * 100;
+                    double storageRate = mwRsInfo.getPer5MinStorage() / mwRsInfo.getRequestStorage() * 100;
                     mwRsInfo.setStorageRate(
                         ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(storageRate), 2, RoundingMode.CEILING));
                 }
@@ -1119,20 +1118,22 @@ public class ClusterServiceImpl implements ClusterService {
         if (run) {
             ThreadPoolExecutorFactory.executor.execute(() -> {
                 run = false;
-                List<MiddlewareClusterDTO> clusterList = listClusters().stream()
-                    .filter(clusterDTO -> clusterDTO.getId().equals(clusterId)).collect(Collectors.toList());
-                if (CollectionUtils.isEmpty(clusterList)) {
-                    log.error("刷新集群信息失败，未找到集群:{}", clusterId);
-                }
-                MiddlewareClusterDTO dto = clusterList.get(0);
-                CLUSTER_MAP.put(clusterId, SerializationUtils.clone(dto));
-                try {
-                    log.info("刷新集群信息成功，将静默10s");
-                    Thread.sleep(10000);
-                    log.info("静默完成，可再次刷新");
-                    run = true;
-                } catch (InterruptedException e) {
-                    log.error("线程休眠异常", e);
+                synchronized (this) {
+                    List<MiddlewareClusterDTO> clusterList = listClusters().stream()
+                        .filter(clusterDTO -> clusterDTO.getId().equals(clusterId)).collect(Collectors.toList());
+                    if (CollectionUtils.isEmpty(clusterList)) {
+                        log.error("刷新集群信息失败，未找到集群:{}", clusterId);
+                    }
+                    MiddlewareClusterDTO dto = clusterList.get(0);
+                    CLUSTER_MAP.put(clusterId, SerializationUtils.clone(dto));
+                    try {
+                        log.info("刷新集群信息成功，将静默10s");
+                        Thread.sleep(10000);
+                        log.info("静默完成，可再次刷新");
+                        run = true;
+                    } catch (InterruptedException e) {
+                        log.error("线程休眠异常", e);
+                    }
                 }
             });
         }
