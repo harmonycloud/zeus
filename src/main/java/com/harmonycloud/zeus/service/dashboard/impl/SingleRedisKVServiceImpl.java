@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
  * @author liyinlong
  * @since 2022/11/23 11:25 上午
  */
-@Service("SentinelRedisKVServiceImpl")
+@Service("SingleRedisKVServiceImpl")
 public class SingleRedisKVServiceImpl implements RedisKVService {
 
     @Autowired
