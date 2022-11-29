@@ -604,6 +604,20 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         }
     }
 
+    @Override
+    public String getChartVersion(JSONObject values, String type) {
+        if (StringUtils.isNotEmpty(values.getString("chart-version"))) {
+            return values.getString("chart-version");
+        } else {
+            List<BeanMiddlewareInfo> beanMiddlewareInfoList = middlewareInfoService.list(true).stream()
+                .filter(info -> info.getChartName().equals(type)).collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(beanMiddlewareInfoList)) {
+                return beanMiddlewareInfoList.get(0).getChartVersion();
+            }
+        }
+        return null;
+    }
+
     private String getUploadPath() {
         return uploadPath + SUB_DIR;
     }

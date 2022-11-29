@@ -430,14 +430,7 @@ public abstract class AbstractBaseOperator {
                     .setVersion(values.getString("version"))
                     .setMode(values.getString(MODE));
             // 获取chart-version
-            if (StringUtils.isNotEmpty(values.getString("chart-version"))) {
-                middleware.setChartVersion(values.getString("chart-version"));
-            } else {
-                BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoService.list(true).stream()
-                    .filter(info -> info.getChartName().equals(middleware.getType())).collect(Collectors.toList())
-                    .get(0);
-                middleware.setChartVersion(beanMiddlewareInfo.getChartVersion());
-            }
+            middleware.setChartVersion(helmChartService.getChartVersion(values, middleware.getType()));
             // 获取annotations
             if (values.containsKey("annotations")) {
                 JSONObject ann = values.getJSONObject("annotations");

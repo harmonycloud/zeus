@@ -87,9 +87,13 @@ public class RoleAuthorityServiceImpl implements RoleAuthorityService {
     @Override
     public Boolean checkOps(String roleId, String type) {
         boolean flag = false;
+        String projectId = RequestUtil.getProjectId();
+        if (StringUtils.isEmpty(projectId)){
+            return false;
+        }
         if (StringUtils.isEmpty(roleId)) {
             String username = CurrentUserRepository.getUser().getUsername();
-            roleId = String.valueOf(userRoleService.getRoleId(username, RequestUtil.getProjectId()));
+            roleId = String.valueOf(userRoleService.getRoleId(username, projectId));
         }
         QueryWrapper<BeanRoleAuthority> wrapper =
             new QueryWrapper<BeanRoleAuthority>().eq("role_id", roleId).eq("type", type);
