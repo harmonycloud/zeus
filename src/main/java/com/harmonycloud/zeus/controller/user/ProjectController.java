@@ -78,6 +78,7 @@ public class ProjectController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "withQuota", value = "配额", paramType = "query", required = false, defaultValue = "false", dataTypeClass = Boolean.class),
     })
     @GetMapping("/{projectId}/namespace")
     public BaseResult<List<Namespace>> getNamespace(@PathVariable("projectId") String projectId,
