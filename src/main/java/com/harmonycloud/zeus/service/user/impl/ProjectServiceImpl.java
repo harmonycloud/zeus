@@ -78,6 +78,8 @@ public class ProjectServiceImpl implements ProjectService {
     private ClusterMiddlewareInfoService clusterMiddlewareInfoService;
     @Autowired
     private ClusterComponentService clusterComponentService;
+    @Autowired
+    private NamespaceService namespaceService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -478,21 +480,19 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public List<String> getClusters(String projectId) {
-        List<Namespace> namespaceList = this.getNamespace(projectId, null);
+        List<Namespace> namespaceList = this.getNamespace(projectId, null, false);
         return namespaceList.stream().map(Namespace::getClusterId).collect(Collectors.toList());
     }
-    @Autowired
-    private NamespaceService namespaceService;
 
     @Override
     public List<Namespace> getNamespace(String projectId) {
-        return getNamespace(projectId, null);
+        return getNamespace(projectId, null, false);
     }
 
     @Override
-    public List<Namespace> getNamespace(String projectId, String clusterId) {
+    public List<Namespace> getNamespace(String projectId, String clusterId, Boolean withQuota) {
         QueryWrapper<BeanProjectNamespace> wrapper =
-                new QueryWrapper<BeanProjectNamespace>().eq("project_id", projectId);
+            new QueryWrapper<BeanProjectNamespace>().eq("project_id", projectId);
         if (!StringUtils.isEmpty(clusterId)) {
             wrapper.eq("cluster_id", clusterId);
         }
@@ -510,6 +510,9 @@ public class ProjectServiceImpl implements ProjectService {
 
         if (StringUtils.isEmpty(clusterId)) {
             return namespaces;
+        }
+        if (withQuota) {
+            namespaceService.listNamespaceWithQuota(namespaces, clusterId);
         }
         return setAvailableDomainStatus(namespaces, clusterId);
     }
