@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.github.pagehelper.PageInfo;
 import com.harmonycloud.caas.common.model.dashboard.mysql.QueryInfo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import com.harmonycloud.caas.common.base.BaseResult;
@@ -405,14 +407,23 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "orderMap", value = "排序", paramType = "query", dataTypeClass = Map.class),
     })
     @PostMapping("/databases/{databaseName}/schemas/{schemaName}/tables/{tableName}/data")
-    public BaseResult<List<Map<String, String>>> getTableData(@PathVariable("clusterId") String clusterId,
+    public BaseResult<PageInfo<Map<String, String>>> getTableData(@PathVariable("clusterId") String clusterId,
                                                     @PathVariable("namespace") String namespace,
                                                     @PathVariable("name") String name,
                                                     @PathVariable("databaseName") String databaseName,
                                                     @PathVariable("schemaName") String schemaName,
                                                     @PathVariable("tableName") String tableName,
                                                     @RequestBody QueryInfo queryInfo) {
-        return BaseResult.ok(postgresqlDashboardService.getTableData(clusterId, namespace, name, databaseName, schemaName, tableName, queryInfo));
+        // 查询数据
+        List<Map<String, String>> data = postgresqlDashboardService.getTableData(clusterId, namespace, name,
+            databaseName, schemaName, tableName, queryInfo);
+        // 初始化page结构
+        PageInfo<Map<String, String>> page = new PageInfo<>();
+        page.setList(data);
+        // 获取total数据量
+        page.setTotal(postgresqlDashboardService.getTableDataCount(clusterId, namespace, name, databaseName, schemaName,
+            tableName));
+        return BaseResult.ok(page);
     }
 
     @ApiOperation(value = "获取建表语句", notes = "获取建表语句")
