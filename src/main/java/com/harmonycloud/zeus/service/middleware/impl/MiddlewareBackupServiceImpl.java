@@ -589,8 +589,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         List<MiddlewareBackupRecord> backupSchedules = listBackupSchedule(clusterId, namespace, type, middlewareName);
         // 获取备份任务的最近备份时间
         setBackupScheduleBackupTime(backupSchedules, backupRecords);
-        // 过滤backupSchedule所产生的backup
+        // 过滤backupSchedule所产生的backup  过滤删除中的任务
         backupRecords = backupRecords.stream().filter(backupRecord -> StringUtils.isEmpty(backupRecord.getOwner()))
+            .filter(backupRecord -> StringUtils.isEmpty(backupRecord.getPhrase())
+                || !"Deleting".equals(backupRecord.getPhrase()))
             .collect(Collectors.toList());
 
         recordList.addAll(backupRecords);
