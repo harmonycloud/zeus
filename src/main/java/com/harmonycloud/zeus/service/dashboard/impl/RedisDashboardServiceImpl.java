@@ -288,7 +288,7 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
     private String getRedisServiceBeanName(String deployMod) {
         switch (deployMod) {
             case "sentinel":
-                return SentinelRedisKVServiceImpl.class.getSimpleName();
+                return SingleRedisKVServiceImpl.class.getSimpleName();
             case "cluster":
             case "clusterProxy":
             case "sentinelProxy":

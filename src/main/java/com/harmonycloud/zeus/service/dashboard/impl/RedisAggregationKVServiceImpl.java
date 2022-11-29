@@ -12,6 +12,7 @@ import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.K8sServiceNameUtil;
 import com.harmonycloud.zeus.util.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -34,6 +35,9 @@ public class RedisAggregationKVServiceImpl implements RedisKVService {
     @Autowired
     private ClusterService clusterService;
 
+    @Value("${system.middleware-api.redis.port:6379}")
+    private String port;
+
     @Override
     public JSONArray getKeys(String clusterId, String namespace, String middlewareName, Integer db) {
         List<String> paths = listServicePath(clusterId, namespace, middlewareName);
@@ -55,12 +59,12 @@ public class RedisAggregationKVServiceImpl implements RedisKVService {
     }
 
     public JSONArray getKeys(String host, Integer db) {
-        JSONObject res = redisClient.getAllKeys(host, db);
+        JSONObject res = redisClient.getAllKeys(host, port, db);
         return RedisUtil.convertResult(res);
     }
 
     public JSONArray getKeysWithPattern(String host, Integer db, String keyword) {
-        JSONObject res = redisClient.getKeys(host, db, keyword);
+        JSONObject res = redisClient.getKeys(host, port, db, keyword);
         return RedisUtil.convertResult(res);
     }
 

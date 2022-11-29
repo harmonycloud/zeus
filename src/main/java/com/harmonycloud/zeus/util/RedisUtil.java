@@ -16,6 +16,8 @@ import redis.clients.jedis.*;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author yushuaikang
@@ -188,6 +190,25 @@ public class RedisUtil {
         } else {
             return type;
         }
+    }
+
+    public static String extractShardIndex(String podName) {
+        if (org.springframework.util.StringUtils.isEmpty(podName)) {
+            return null;
+        }
+        String reg3 = "(?<=shard\\-)[\\s\\S]*(?=\\-)";
+        Pattern p3 = Pattern.compile(reg3);
+        Matcher m3 = p3.matcher(podName);
+        if (m3.find()) {
+            return m3.group();
+        }
+        return "";
+    }
+
+    public static void main(String[] args) {
+        String podname = "";
+        String s = extractShardIndex("predis-shard-1-0");
+        System.out.println(s);
     }
 
 }
