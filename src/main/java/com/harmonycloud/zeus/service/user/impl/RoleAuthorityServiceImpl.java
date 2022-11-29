@@ -1,16 +1,21 @@
 package com.harmonycloud.zeus.service.user.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.zeus.bean.user.BeanRoleAuthority;
 import com.harmonycloud.zeus.dao.user.BeanResourceMenuRoleMapper;
 import com.harmonycloud.zeus.dao.user.BeanRoleAuthorityMapper;
 import com.harmonycloud.zeus.service.user.ResourceMenuRoleService;
 import com.harmonycloud.zeus.service.user.RoleAuthorityService;
+import com.harmonycloud.zeus.service.user.UserRoleService;
+import com.harmonycloud.zeus.service.user.UserService;
+import com.harmonycloud.zeus.util.RequestUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
 import java.util.List;
@@ -28,6 +33,8 @@ public class RoleAuthorityServiceImpl implements RoleAuthorityService {
     private BeanRoleAuthorityMapper beanRoleAuthorityMapper;
     @Autowired
     private ResourceMenuRoleService resourceMenuRoleService;
+    @Autowired
+    private UserRoleService userRoleService;
 
     @Override
     public void insert(Integer roleId, String type, String power) {
@@ -75,5 +82,24 @@ public class RoleAuthorityServiceImpl implements RoleAuthorityService {
         QueryWrapper<BeanRoleAuthority> wrapper = new QueryWrapper<BeanRoleAuthority>().eq("type", type);
         List<BeanRoleAuthority> beanRoleAuthorityList = beanRoleAuthorityMapper.selectList(wrapper);
         return !CollectionUtils.isEmpty(beanRoleAuthorityList);
+    }
+
+    @Override
+    public Boolean checkOps(String roleId, String type) {
+        boolean flag = false;
+        if (StringUtils.isEmpty(roleId)) {
+            String username = CurrentUserRepository.getUser().getUsername();
+            roleId = String.valueOf(userRoleService.getRoleId(username, RequestUtil.getProjectId()));
+        }
+        QueryWrapper<BeanRoleAuthority> wrapper =
+            new QueryWrapper<BeanRoleAuthority>().eq("role_id", roleId).eq("type", type);
+        List<BeanRoleAuthority> beanRoleAuthorityList = beanRoleAuthorityMapper.selectList(wrapper);
+        if (!CollectionUtils.isEmpty(beanRoleAuthorityList)) {
+            BeanRoleAuthority roleAuthority = beanRoleAuthorityList.get(0);
+            if (Integer.parseInt(roleAuthority.getPower().split("")[1]) == 1) {
+                flag = true;
+            }
+        }
+        return flag;
     }
 }

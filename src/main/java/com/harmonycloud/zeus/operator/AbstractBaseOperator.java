@@ -41,6 +41,8 @@ import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareAlertsServiceImpl;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
+import com.harmonycloud.zeus.service.user.RoleAuthorityService;
+import com.harmonycloud.zeus.service.user.UserService;
 import com.harmonycloud.zeus.util.K8sConvert;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -130,9 +132,9 @@ public abstract class AbstractBaseOperator {
     @Autowired
     protected NamespaceService namespaceService;
     @Autowired
-    private IngressComponentService ingressComponentService;
-    @Autowired
     private BeanMiddlewareInfoMapper middlewareInfoMapper;
+    @Autowired
+    private RoleAuthorityService roleAuthorityService;
     /**
      * 是否支持该中间件
      */
@@ -1211,6 +1213,13 @@ public abstract class AbstractBaseOperator {
     public String calculateProxyResource(String num){
         BigDecimal bd = new BigDecimal(num).divide(new BigDecimal("4"));
         return bd.setScale(2, RoundingMode.UP).toString();
+    }
+
+    /**
+     * 校验用户权限
+     */
+    public Boolean checkUserAuthority(String type){
+        return roleAuthorityService.checkOps(null, type);
     }
 
 }
