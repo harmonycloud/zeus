@@ -507,12 +507,17 @@ public class ProjectServiceImpl implements ProjectService {
             }
             return namespace;
         }).collect(Collectors.toList());
+        // 查询quota
+        if (withQuota) {
+            Map<String, List<Namespace>> namespaceMap =
+                namespaces.stream().collect(Collectors.groupingBy(Namespace::getClusterId));
+            for (String key : namespaceMap.keySet()) {
+                namespaceService.listNamespaceWithQuota(namespaceMap.get(key), key);
+            }
+        }
 
         if (StringUtils.isEmpty(clusterId)) {
             return namespaces;
-        }
-        if (withQuota) {
-            namespaceService.listNamespaceWithQuota(namespaces, clusterId);
         }
         return setAvailableDomainStatus(namespaces, clusterId);
     }
