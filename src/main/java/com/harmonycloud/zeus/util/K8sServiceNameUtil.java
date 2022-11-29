@@ -11,7 +11,7 @@ public class K8sServiceNameUtil {
     }
 
     public static String getServicePath(String prefix, String namespace, String middlewareName) {
-        return prefix + "." + getServicePath(middlewareName, namespace);
+        return prefix + "." + getServicePath(namespace, middlewareName);
     }
 
     public static String getRedisPredixyServicePath(String namespace, String middlewareName) {
