@@ -591,6 +591,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         setBackupScheduleBackupTime(backupSchedules, backupRecords);
         // 过滤backupSchedule所产生的backup
         backupRecords = backupRecords.stream().filter(backupRecord -> StringUtils.isEmpty(backupRecord.getOwner()))
+            .filter(backupRecord -> StringUtils.isEmpty(backupRecord.getPhrase())
+                || !"Deleting".equals(backupRecord.getPhrase()))
             .collect(Collectors.toList());
 
         recordList.addAll(backupRecords);
