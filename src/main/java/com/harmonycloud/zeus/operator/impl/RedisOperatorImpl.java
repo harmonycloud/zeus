@@ -173,6 +173,12 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         if (middleware.getPort() != null) {
             values.put("redisServicePort", middleware.getPort());
         }
+
+        //主机网络配置
+        if (middleware.getRedisParam() != null && middleware.getRedisParam().getHostNetwork() != null) {
+            values.put("hostNetwork", middleware.getRedisParam().getHostNetwork());
+        }
+
         // 设置双活参数
         checkAndSetActiveActive(values, middleware);
     }
