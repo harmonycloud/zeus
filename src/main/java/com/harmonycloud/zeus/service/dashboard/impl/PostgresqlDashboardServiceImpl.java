@@ -762,7 +762,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             Map<String, String> anchor = new HashMap<>();
             ColumnDto newColumn = newColumnList.get(i);
             String num = newColumn.getNum();
-            if (!columnDtoMap.containsKey(num) || Integer.parseInt(num) > newColumnList.size()) {
+            if (!columnDtoMap.containsKey(num)) {
                 // 新增列
                 Map<String, String> add = new HashMap<>();
                 add.put("add", turnColumnToSql(newColumn));
@@ -808,7 +808,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         if (!CollectionUtils.isEmpty(columnDtoMap)) {
             Map<String, String> delete = new HashMap<>();
             columnDtoMap.forEach((k, v) -> {
-                delete.put(v.getColumn(), "delete");
+                delete.put("delete", v.getColumn());
                 change.put(v.getColumn(), delete);
             });
         }
