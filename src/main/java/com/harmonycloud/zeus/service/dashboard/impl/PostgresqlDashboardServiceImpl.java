@@ -735,7 +735,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             columnDto.setNum(column.get("ordinal_position"));
             columnDto.setSize(column.get("character_maximum_length"));
             columnDto.setComment(column.get("col_description"));
-            if (column.get("constraint_type") != null && "PRIMARY KEY".equals(column.get("constraint_type"))) {
+            if (column.get("contype") != null && "p".equals(column.get("contype"))) {
                 columnDto.setPrimaryKey(true);
             } else {
                 columnDto.setPrimaryKey(false);
@@ -1183,6 +1183,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         userAuthorityList.addAll(userDatabaseAuthorityList);
         userAuthorityList.addAll(userSchemaAuthorityList);
         userAuthorityList.addAll(userTableAuthorityList);
+        userAuthorityList.sort(Comparator.comparing(MiddlewareUserAuthority::getDatabase));
         return userAuthorityList;
     }
 
