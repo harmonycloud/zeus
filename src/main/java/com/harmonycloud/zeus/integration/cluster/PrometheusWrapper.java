@@ -4,9 +4,12 @@ import java.util.Map;
 
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.zeus.integration.cluster.api.PrometheusApi;
 import com.harmonycloud.zeus.integration.cluster.client.PrometheusClient;
+import com.harmonycloud.zeus.service.k8s.ClusterComponentService;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -34,6 +37,8 @@ public class PrometheusWrapper {
     private String prometheusPort;
     @Value("${k8s.monitoring.alertManager.port:31902}")
     private String alertManagerPort;
+    @Autowired
+    private ClusterComponentService clusterComponentService;
 
     public PrometheusResponse get(String clusterId, String prometheusApiVersion, Map<String, String> queryMap)
         throws Exception {
@@ -72,17 +77,17 @@ public class PrometheusWrapper {
     }
 
     private MiddlewareClusterMonitorInfo getPrometheusInfo(MiddlewareClusterDTO cluster) {
-        MiddlewareClusterMonitorInfo prometheus;
-        if (cluster.getMonitor() == null || cluster.getMonitor().getPrometheus() == null) {
+        ClusterComponentsDto clusterComponentsDto = clusterComponentService.get(cluster.getId(), "prometheus");
+        if (clusterComponentsDto==null){
             throw new BusinessException(ErrorMessage.PROMETHEUS_NOT_INSTALLED);
-        } else {
-            prometheus = cluster.getMonitor().getPrometheus();
-            if (StringUtils.isBlank(cluster.getMonitor().getPrometheus().getProtocol())) {
-                prometheus.setProtocol(Protocol.HTTP.getValue().toLowerCase());
-            }
-            if (StringUtils.isBlank(cluster.getMonitor().getPrometheus().getPort())) {
-                prometheus.setPort(prometheusPort);
-            }
+        }
+        MiddlewareClusterMonitorInfo prometheus = new MiddlewareClusterMonitorInfo();
+        BeanUtils.copyProperties(clusterComponentsDto,prometheus);
+        if (StringUtils.isBlank(prometheus.getProtocol())){
+            prometheus.setProtocol(Protocol.HTTP.getValue().toLowerCase());
+        }
+        if (StringUtils.isBlank(prometheus.getPort())){
+            prometheus.setPort(prometheusPort);
         }
         if (StringUtils.isEmpty(prometheus.getAddress())) {
             prometheus.setAddress(prometheus.getProtocol() + "://" + prometheus.getHost() + ":" + prometheus.getPort());
