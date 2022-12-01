@@ -897,8 +897,12 @@ public abstract class AbstractBaseOperator {
      * 处理通用的存储
      */
     protected void replaceCommonStorages(MiddlewareQuota quota, JSONObject values) {
-        values.put("storageClassName", quota.getStorageClassName());
-        values.put("storageSize", quota.getStorageClassQuota() + "Gi");
+        if (!StringUtils.isEmpty(quota.getStorageClassName())) {
+            values.put("storageClassName", quota.getStorageClassName());
+        }
+        if (!StringUtils.isEmpty(quota.getStorageClassQuota())) {
+            values.put("storageSize", quota.getStorageClassQuota() + "Gi");
+        }
     }
 
     /**
@@ -1300,7 +1304,7 @@ public abstract class AbstractBaseOperator {
             item.put("name", name);
             item.put("mountPath", customVolume.getMountPath());
             item.put("storageClass", customVolume.getStorageClass());
-            item.put("volumeSize", customVolume.getVolumeSize() + "G");
+            item.put("volumeSize", customVolume.getVolumeSize() + "Gi");
             item.put("hostPath", customVolume.getHostPath());
             JSONArray containers = new JSONArray();
             containers.addAll(customVolume.getTargetContainers());
