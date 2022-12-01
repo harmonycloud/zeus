@@ -5,7 +5,6 @@ import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_INGRESS;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.NODE_AFFINITY;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PREDIXY;
-import static com.harmonycloud.caas.common.enums.DictEnum.POD;
 
 
 import com.harmonycloud.caas.common.enums.Protocol;
@@ -173,6 +172,11 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         if (middleware.getPort() != null) {
             values.put("redisServicePort", middleware.getPort());
         }
+        // 设置分盘挂载目录
+        if(values.containsKey("customVolumes")){
+
+        }
+
         // 设置双活参数
         checkAndSetActiveActive(values, middleware);
     }
@@ -183,6 +187,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         convertCommonByHelmChart(middleware, values);
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
         convertRegistry(middleware, cluster);
+        convertCustomVolumesByHelmChart(middleware, values);
 
         // 处理redis特有参数
         if (values != null) {

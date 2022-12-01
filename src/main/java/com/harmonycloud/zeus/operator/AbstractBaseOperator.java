@@ -639,6 +639,30 @@ public abstract class AbstractBaseOperator {
         });
     }
 
+    public void convertCustomVolumesByHelmChart(Middleware middleware, JSONObject values) {
+        JSONArray array = values.getJSONArray("customVolumes");
+        if (!CollectionUtils.isEmpty(array)) {
+            List<CustomVolume> customVolumeList = array.stream().map(item -> {
+                CustomVolume customVolume = null;
+                try {
+                    LinkedHashMap<String, Object> obj = (LinkedHashMap<String, Object>) item;
+                    customVolume = new CustomVolume();
+                    customVolume.setName(obj.get("name").toString());
+                    customVolume.setMountPath(obj.get("mountPath").toString());
+                    ArrayList<String> targetContainers = (ArrayList<String>) obj.get("targetContainers");
+                    customVolume.setTargetContainers(targetContainers);
+                    customVolume.setStorageClass(obj.get("storageClass").toString());
+                    customVolume.setVolumeSize(obj.get("volumeSize").toString());
+                    customVolume.setHostPath(obj.get("hostPath").toString());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return customVolume;
+            }).collect(Collectors.toList());
+            middleware.setCustomVolumes(customVolumeList);
+        }
+    }
+
     /**
      * 通过variable在values中获取对应的值
      */
@@ -781,6 +805,15 @@ public abstract class AbstractBaseOperator {
         // 读写分离
         if (middleware.getReadWriteProxy() != null && middleware.getReadWriteProxy().getEnabled()){
             replaceReadWriteProxyValues(middleware, values);
+        }
+        // 自定义目录
+        replaceCustomVolumeValues(middleware, values);
+    }
+
+    // 处理自定义目录
+    private void replaceCustomVolumeValues(Middleware middleware, JSONObject values){
+        if(!CollectionUtils.isEmpty(middleware.getCustomVolumes())){
+            values.put("customVolumes", convertCustomVolumes(middleware.getCustomVolumes()));
         }
     }
 
@@ -1252,6 +1285,28 @@ public abstract class AbstractBaseOperator {
 
     public Integer getReplicas(JSONObject values) {
         return values.getIntValue("replicas");
+    }
+
+    /**
+     * 转换CustomVolume
+     * @param customVolumes
+     * @return
+     */
+    private JSONArray convertCustomVolumes(List<CustomVolume> customVolumes) {
+        JSONArray array = new JSONArray();
+        customVolumes.forEach(customVolume -> {
+            JSONObject item = new JSONObject();
+            item.put("name", customVolume.getName());
+            item.put("mountPath", customVolume.getMountPath());
+            item.put("storageClass", customVolume.getStorageClass());
+            item.put("volumeSize", customVolume.getVolumeSize() + "G");
+            item.put("hostPath", customVolume.getHostPath());
+            JSONArray containers = new JSONArray();
+            containers.addAll(customVolume.getTargetContainers());
+            item.put("targetContainers", containers);
+            array.add(item);
+        });
+        return array;
     }
 
 }
