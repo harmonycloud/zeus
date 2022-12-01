@@ -8,6 +8,7 @@ import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareGrafanaNameEnum;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.MonitorResourceQuota;
 import com.harmonycloud.caas.common.model.MonitorResourceQuotaBase;
 import com.harmonycloud.caas.common.model.PrometheusResponse;
@@ -108,6 +109,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private PvcService pvcService;
     @Autowired
     private LicenseService licenseService;
+    @Autowired
+    private ClusterComponentService clusterComponentService;
 
     @Override
     public List<Middleware> simpleList(String clusterId, String namespace, String type, String keyword) {
@@ -269,7 +272,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Override
     public MonitorDto monitor(String clusterId, String namespace, String name, String type, String chartVersion) {
         Middleware middleware = new Middleware(clusterId, namespace, name, type).setChartVersion(chartVersion);
-        MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
         List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.list(true);
         Map<String, BeanMiddlewareInfo> middlewareInfoMap  = new HashMap<>();
         for (BeanMiddlewareInfo beanMiddlewareInfo : middlewareInfoList) {
@@ -286,11 +288,13 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             throw new BusinessException(ErrorMessage.GRAFANA_ID_NOT_FOUND);
         }
 
-        MiddlewareClusterMonitor monitor = cluster.getMonitor();
-        if (monitor == null){
+        //获取组件信息
+        ClusterComponentsDto grafana = clusterComponentService.get(clusterId, "grafana");
+        if (grafana == null) {
             throw new BusinessException(ErrorMessage.CLUSTER_MONITOR_INFO_NOT_FOUND);
         }
-        MiddlewareClusterMonitorInfo monitorInfo =monitor.getGrafana();
+        MiddlewareClusterMonitorInfo monitorInfo = new MiddlewareClusterMonitorInfo();
+        BeanUtils.copyProperties(grafana,monitorInfo);
         if (monitorInfo == null
                 || StringUtils.isAnyEmpty(monitorInfo.getProtocol(), monitorInfo.getHost(), monitorInfo.getPort())) {
             throw new BusinessException(ErrorMessage.CLUSTER_MONITOR_INFO_NOT_FOUND);
@@ -299,8 +303,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         if (StringUtils.isEmpty(monitorInfo.getToken()) && StringUtils.isNotEmpty(monitorInfo.getUsername())
                 && StringUtils.isNotEmpty(monitorInfo.getPassword())) {
             grafanaService.setToken(monitorInfo);
-            cluster.getMonitor().setGrafana(monitorInfo);
-            clusterService.update(cluster);
         }
 
         MonitorDto monitorDto = new MonitorDto();
