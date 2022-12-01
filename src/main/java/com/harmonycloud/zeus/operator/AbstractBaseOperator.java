@@ -642,7 +642,8 @@ public abstract class AbstractBaseOperator {
     public void convertCustomVolumesByHelmChart(Middleware middleware, JSONObject values) {
         JSONArray array = values.getJSONArray("customVolumes");
         if (!CollectionUtils.isEmpty(array)) {
-            List<CustomVolume> customVolumeList = array.stream().map(item -> {
+            Map<String, CustomVolume> customVolumeMap = new HashMap<>();
+            array.forEach(item -> {
                 CustomVolume customVolume = null;
                 try {
                     LinkedHashMap<String, Object> obj = (LinkedHashMap<String, Object>) item;
@@ -657,9 +658,9 @@ public abstract class AbstractBaseOperator {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                return customVolume;
-            }).collect(Collectors.toList());
-            middleware.setCustomVolumes(customVolumeList);
+                customVolumeMap.put(customVolume.getName(), customVolume);
+            });
+            middleware.setCustomVolumes(customVolumeMap);
         }
     }
 
@@ -1292,11 +1293,11 @@ public abstract class AbstractBaseOperator {
      * @param customVolumes
      * @return
      */
-    private JSONArray convertCustomVolumes(List<CustomVolume> customVolumes) {
+    private JSONArray convertCustomVolumes(Map<String, CustomVolume> customVolumes) {
         JSONArray array = new JSONArray();
-        customVolumes.forEach(customVolume -> {
+        customVolumes.forEach((name, customVolume)->{
             JSONObject item = new JSONObject();
-            item.put("name", customVolume.getName());
+            item.put("name", name);
             item.put("mountPath", customVolume.getMountPath());
             item.put("storageClass", customVolume.getStorageClass());
             item.put("volumeSize", customVolume.getVolumeSize() + "G");
