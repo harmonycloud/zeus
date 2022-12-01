@@ -71,6 +71,10 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         values.put("userPasswords", userPasswords);
         // 替换版本
         values.put("pgsqlVersion", middleware.getVersion());
+        // 主机网络配置
+        if (middleware.getPostgresqlParam() != null && middleware.getPostgresqlParam().getHostNetwork() != null) {
+            values.put("hostNetwork", middleware.getPostgresqlParam().getHostNetwork());
+        }
 
         // 备份恢复
         if (StringUtils.isNotEmpty(middleware.getBackupFileName())){
@@ -105,6 +109,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         convertResourcesByHelmChart(middleware, middleware.getType(), values.getJSONObject(RESOURCES));
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
         convertRegistry(middleware, cluster);
+        convertCustomVolumesByHelmChart(middleware, values);
 
         middleware.setIsAllLvmStorage(true);
         middleware.setVersion(values.getString("pgsqlVersion"));

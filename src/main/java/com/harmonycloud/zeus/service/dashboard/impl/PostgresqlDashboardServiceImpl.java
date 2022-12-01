@@ -735,7 +735,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             columnDto.setNum(column.get("ordinal_position"));
             columnDto.setSize(column.get("character_maximum_length"));
             columnDto.setComment(column.get("col_description"));
-            if (column.get("constraint_type") != null && "PRIMARY KEY".equals(column.get("constraint_type"))) {
+            if (column.get("contype") != null && "p".equals(column.get("contype"))) {
                 columnDto.setPrimaryKey(true);
             } else {
                 columnDto.setPrimaryKey(false);
@@ -762,7 +762,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             Map<String, String> anchor = new HashMap<>();
             ColumnDto newColumn = newColumnList.get(i);
             String num = newColumn.getNum();
-            if (!columnDtoMap.containsKey(num) || Integer.parseInt(num) > newColumnList.size()) {
+            if (!columnDtoMap.containsKey(num)) {
                 // 新增列
                 Map<String, String> add = new HashMap<>();
                 add.put("add", turnColumnToSql(newColumn));
@@ -808,7 +808,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         if (!CollectionUtils.isEmpty(columnDtoMap)) {
             Map<String, String> delete = new HashMap<>();
             columnDtoMap.forEach((k, v) -> {
-                delete.put(v.getColumn(), "delete");
+                delete.put("delete", v.getColumn());
                 change.put(v.getColumn(), delete);
             });
         }
@@ -1183,6 +1183,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         userAuthorityList.addAll(userDatabaseAuthorityList);
         userAuthorityList.addAll(userSchemaAuthorityList);
         userAuthorityList.addAll(userTableAuthorityList);
+        userAuthorityList.sort(Comparator.comparing(MiddlewareUserAuthority::getDatabase));
         return userAuthorityList;
     }
 
