@@ -52,4 +52,13 @@ public interface RedisService {
      */
     List<RedisDbDTO> listRedisDb(String clusterId, String namespace, String middlewareName, String db, String keyWord);
 
+    /**
+     *
+     * @param clusterId 集群id
+     * @param namespace 命名空间
+     * @param middlewareName 中间件名称
+     * @param slaveName 从节点名称
+     * @return
+     */
+    String getBurstMaster(String clusterId, String namespace, String middlewareName, String slaveName);
 }
