@@ -463,22 +463,20 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public void bindNamespace(Namespace namespace) {
-        checkAndBindImagePullSecret(namespace.getClusterId(), namespace.getName());
-
-//        QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<BeanProjectNamespace>()
-//            .eq("namespace", namespace.getName()).eq("cluster_id", namespace.getClusterId());
-//        List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
-//        if (!CollectionUtils.isEmpty(beanProjectNamespaceList)) {
-//            throw new BusinessException(ErrorMessage.PROJECT_NAMESPACE_ALREADY_BIND);
-//        }
-//        AssertUtil.notBlank(namespace.getProjectId(), DictEnum.PROJECT_ID);
-//        AssertUtil.notBlank(namespace.getName(), DictEnum.NAMESPACE_NAME);
-//        BeanProjectNamespace beanProjectNamespace = new BeanProjectNamespace();
-//        BeanUtils.copyProperties(namespace, beanProjectNamespace);
-//        beanProjectNamespace.setNamespace(namespace.getName());
-//        beanProjectNamespaceMapper.insert(beanProjectNamespace);
+        QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<BeanProjectNamespace>()
+            .eq("namespace", namespace.getName()).eq("cluster_id", namespace.getClusterId());
+        List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
+        if (!CollectionUtils.isEmpty(beanProjectNamespaceList)) {
+            throw new BusinessException(ErrorMessage.PROJECT_NAMESPACE_ALREADY_BIND);
+        }
+        AssertUtil.notBlank(namespace.getProjectId(), DictEnum.PROJECT_ID);
+        AssertUtil.notBlank(namespace.getName(), DictEnum.NAMESPACE_NAME);
+        BeanProjectNamespace beanProjectNamespace = new BeanProjectNamespace();
+        BeanUtils.copyProperties(namespace, beanProjectNamespace);
+        beanProjectNamespace.setNamespace(namespace.getName());
+        beanProjectNamespaceMapper.insert(beanProjectNamespace);
         // 给分区默认serviceAccount绑定imagePullSecret
-
+        checkAndBindImagePullSecret(namespace.getClusterId(), namespace.getName());
     }
 
     @Override
