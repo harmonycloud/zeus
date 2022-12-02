@@ -323,7 +323,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
                 bean.setChartName(mwInfoList.get(0).getChartName());
                 bean.setChartVersion(mwInfoList.get(0).getChartVersion());
                 bean.setStatus(2);
-                clusterMiddlewareInfoService.insert(clusterMwInfo);
+                clusterMiddlewareInfoService.insert(bean);
             }
         });
     }
