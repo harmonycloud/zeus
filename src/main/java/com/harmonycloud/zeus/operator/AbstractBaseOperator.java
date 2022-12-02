@@ -640,6 +640,10 @@ public abstract class AbstractBaseOperator {
     }
 
     public void convertCustomVolumesByHelmChart(Middleware middleware, JSONObject values) {
+        Object volumeObject = values.get("customVolumes");
+        if (!(volumeObject instanceof List)) {
+            return;
+        }
         JSONArray array = values.getJSONArray("customVolumes");
         if (!CollectionUtils.isEmpty(array)) {
             Map<String, CustomVolume> customVolumeMap = new HashMap<>();
