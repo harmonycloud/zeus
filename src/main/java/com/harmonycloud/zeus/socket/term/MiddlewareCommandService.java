@@ -25,9 +25,9 @@ public class MiddlewareCommandService {
         String password = values.getString("redisPassword");
         if ("sentinel".equals(values.getString("mode")) && values.containsKey("predixy")
             && values.getJSONObject("predixy").getBooleanValue("enableProxy")) {
-            return "redis-cli -h " + pod.substring(0, pod.lastIndexOf("-")) + " -p 6379 -a " + password;
+            return "redis-cli -h " + pod.substring(0, pod.lastIndexOf("-")) + " -p 6379 -a " + password + " -c";
         }else {
-            return "redis-cli -h " + name + " -p 6379 -a " + password;
+            return "redis-cli -h " + name + " -p 6379 -a " + password + " -c";
         }
     }
 
