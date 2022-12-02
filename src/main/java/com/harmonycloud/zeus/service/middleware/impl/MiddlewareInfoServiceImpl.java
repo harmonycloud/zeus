@@ -306,11 +306,12 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         if (clusterMwInfoList.stream().anyMatch(clusterMwInfo -> !clusterMwInfo.getStatus().equals(2))) {
             throw new BusinessException(ErrorMessage.MIDDLEWARE_STILL_BE_USED);
         }
-        List<BeanMiddlewareInfo> mwInfoList = this.listByType(chartName);
         // 删除中间件信息
         QueryWrapper<BeanMiddlewareInfo> wrapper =
             new QueryWrapper<BeanMiddlewareInfo>().eq("chart_name", chartName).eq("chart_version", chartVersion);
         middlewareInfoMapper.delete(wrapper);
+        // 获取最新中间件信息
+        List<BeanMiddlewareInfo> mwInfoList = this.listByType(chartName);
         // 删除集群绑定信息
         clusterMwInfoList.forEach(clusterMwInfo -> {
             clusterMiddlewareInfoService.delete(clusterMwInfo.getClusterId(), clusterMwInfo.getChartName(),
