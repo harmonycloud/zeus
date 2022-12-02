@@ -92,4 +92,20 @@ public class RedisController {
         redisService.delete(clusterId,namespace,middlewareName,redisDbDTO);
         return BaseResult.ok();
     }
+
+    @ApiOperation(value = "获取分片主节点", notes = "获取分片主节点")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "服务名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "slaveName", value = "从节点名称", paramType = "query", dataTypeClass = String.class)
+    })
+    @GetMapping("burstMaster")
+    @Authority(power = 3)
+    public BaseResult getBurstMaster(@PathVariable("clusterId") String clusterId,
+                                     @PathVariable(value = "namespace") String namespace,
+                                     @PathVariable(value = "middlewareName") String middlewareName,
+                                     @RequestParam(value = "slaveName") String slaveName) {
+        return BaseResult.ok(redisService.getBurstMaster(clusterId, namespace, middlewareName, slaveName));
+    }
 }
