@@ -966,8 +966,11 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Override
     public List<MiddlewareInfo> listMiddlewarePod(String clusterId, String namespace, String type, String middlewareName) {
         MiddlewareCR middlewareCR = middlewareCRService.getCR(clusterId, namespace, type, middlewareName);
-        if (middlewareCR == null || middlewareCR.getStatus() == null || middlewareCR.getStatus().getInclude() == null) {
+        if (middlewareCR == null) {
             throw new BusinessException(ErrorMessage.MIDDLEWARE_NOT_EXIST);
+        }
+        if (middlewareCR.getStatus() == null || middlewareCR.getStatus().getInclude() == null) {
+            throw new BusinessException(ErrorMessage.MIDDLEWARE_CLUSTER_STATUS_ABNORMAL);
         }
         return middlewareCR.getStatus().getInclude().get("pods");
     }
