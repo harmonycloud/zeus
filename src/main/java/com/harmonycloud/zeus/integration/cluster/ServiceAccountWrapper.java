@@ -20,4 +20,9 @@ public class ServiceAccountWrapper {
             .create(serviceAccount);
     }
 
+    public ServiceAccount createOrReplace(String clusterId, ServiceAccount serviceAccount) {
+        return K8sClient.getClient(clusterId).serviceAccounts().inNamespace(serviceAccount.getMetadata().getNamespace())
+                .createOrReplace(serviceAccount);
+    }
+
 }

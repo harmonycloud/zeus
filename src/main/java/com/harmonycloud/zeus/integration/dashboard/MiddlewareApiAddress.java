@@ -52,13 +52,13 @@ public class MiddlewareApiAddress implements AddressSource {
         // 根据集群id获取middleware-api组件地址
         ClusterComponentsDto clusterComponentsDto =
             clusterComponentService.get(clusterId, ComponentsEnum.MIDDLEWARE_CONTROLLER.getName());
-        if (StringUtils.isNotEmpty(clusterComponentsDto.getProtocol())
-            && StringUtils.isNotEmpty(clusterComponentsDto.getHost())
-            && StringUtils.isNotEmpty(clusterComponentsDto.getPort())) {
-            protocol = clusterComponentsDto.getProtocol();
-            host = clusterComponentsDto.getHost();
-            port = Integer.parseInt(clusterComponentsDto.getPort());
-        }
+//        if (StringUtils.isNotEmpty(clusterComponentsDto.getProtocol())
+//            && StringUtils.isNotEmpty(clusterComponentsDto.getHost())
+//            && StringUtils.isNotEmpty(clusterComponentsDto.getPort())) {
+//            protocol = clusterComponentsDto.getProtocol();
+//            host = clusterComponentsDto.getHost();
+//            port = Integer.parseInt(clusterComponentsDto.getPort());
+//        }
         // 返回 Forest 地址对象
         return new ForestAddress(protocol, host, port);
     }

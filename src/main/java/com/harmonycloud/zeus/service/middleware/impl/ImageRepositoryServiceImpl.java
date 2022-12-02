@@ -1,19 +1,25 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.api.R;
 import com.github.pagehelper.PageInfo;
 import com.harmonycloud.caas.common.constants.CommonConstant;
+import com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.middleware.ImageRepositoryDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.Registry;
+import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.bean.BeanImageRepository;
 import com.harmonycloud.zeus.dao.BeanImageRepositoryMapper;
+import com.harmonycloud.zeus.integration.cluster.SecretWrapper;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.middleware.ImageRepositoryService;
 import com.harmonycloud.zeus.service.registry.RegistryService;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -21,9 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.List;
-import java.util.regex.Pattern;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -43,6 +47,12 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
 
     @Value("${system.checkRegistry:false}")
     private boolean checkRegistry;
+
+    @Value("${system.privateRegistry.registryLabelKey:middleware-registry-id}")
+    private String registryLabelKey;
+
+    @Autowired
+    private SecretWrapper secretWrapper;
 
     @Override
     public void insert(String clusterId, ImageRepositoryDTO imageRepositoryDTO) {
@@ -195,6 +205,82 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         registry.setPort(imageRepositoryDTO.getPort());
         registry.setAddress(imageRepositoryDTO.getHostAddress());
         return registry;
+    }
+
+    @Override
+    public void createImagePullSecret(String clusterId, String namespace, List<ImageRepositoryDTO> imageRepositoryDTOS) {
+        for (ImageRepositoryDTO repositoryDTO : imageRepositoryDTOS) {
+            Secret secret = secretWrapper.get(clusterId, namespace, registryLabelKey, repositoryDTO.getId().toString());
+            if (secret == null) {
+                Map<String, String> data = new HashMap<>();
+                data.put(".dockerconfigjson", encryptRegistry(repositoryDTO));
+                secret = new Secret();
+                secret.setKind(MiddlewareConstant.SECRET);
+                secret.setApiVersion(MiddlewareConstant.V1);
+                secret.setType("kubernetes.io/dockerconfigjson");
+                secret.setData(data);
+                ObjectMeta objectMeta = new ObjectMeta();
+                objectMeta.setNamespace(namespace);
+                objectMeta.setName("middleware-registry-" + UUIDUtils.get8UUID());
+                Map<String, String> labels = new HashMap<>();
+                labels.put(registryLabelKey, repositoryDTO.getId().toString());
+                objectMeta.setLabels(labels);
+                secret.setMetadata(objectMeta);
+                secretWrapper.create(clusterId, namespace, secret);
+            }
+        }
+    }
+
+    @Override
+    public void createImagePullSecret(String clusterId, String namespace, Integer registryId) {
+        ImageRepositoryDTO imageRepositoryDTO = detailById(registryId);
+        if (imageRepositoryDTO == null) {
+            throw new BusinessException(ErrorMessage.REGISTRY_NOT_FOUND);
+        }
+        List<ImageRepositoryDTO> imageRepositoryDTOS = new ArrayList<>();
+        imageRepositoryDTOS.add(imageRepositoryDTO);
+        createImagePullSecret(clusterId, namespace, imageRepositoryDTOS);
+    }
+
+    @Override
+    public List<Secret> listImagePullSecret(String clusterId, String namespace) {
+        return secretWrapper.list(clusterId,  namespace, registryLabelKey);
+    }
+
+    @Override
+    public Secret getImagePullSecret(String clusterId, String namespace, String registryId) {
+        return secretWrapper.get(clusterId, namespace, registryLabelKey, registryId);
+    }
+
+    /**
+     * 加密制品仓库信息
+     * @param registry
+     * @return
+     */
+    private String encryptRegistry(ImageRepositoryDTO registry) {
+        String host = registry.getAddress();
+        Integer port = registry.getPort();
+        String user = registry.getUsername();
+        String password = registry.getPassword();
+
+        Base64.Encoder encoder = Base64.getEncoder();
+        String auth = user + ":" + password;
+        auth = encoder.encodeToString(auth.getBytes());
+
+        JSONObject authInfo = new JSONObject();
+        authInfo.put("auth", auth);
+        authInfo.put("username", user);
+        authInfo.put("password", password);
+
+        JSONObject registryJson = new JSONObject();
+        String address = (port == null) ? host : host + ":" + port;
+        registryJson.put(address, authInfo);
+
+        JSONObject authObj = new JSONObject();
+        authObj.put("auths", registryJson);
+
+        String res = authObj.toJSONString();
+        return encoder.encodeToString(res.getBytes());
     }
 
     /**

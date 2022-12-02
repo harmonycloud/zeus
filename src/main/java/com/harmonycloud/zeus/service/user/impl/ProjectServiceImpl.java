@@ -6,11 +6,17 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
-import com.harmonycloud.zeus.service.k8s.ClusterComponentService;
-import com.harmonycloud.zeus.service.k8s.NamespaceService;
+import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.zeus.bean.BeanImageRepository;
+import com.harmonycloud.zeus.dao.BeanImageRepositoryMapper;
+import com.harmonycloud.zeus.service.k8s.*;
+import com.harmonycloud.zeus.service.middleware.ImageRepositoryService;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.ServiceAccount;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,10 +28,6 @@ import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
-import com.harmonycloud.caas.common.model.middleware.Namespace;
-import com.harmonycloud.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.user.ProjectDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.caas.common.model.user.UserRole;
@@ -40,8 +42,6 @@ import com.harmonycloud.zeus.bean.user.BeanProjectNamespace;
 import com.harmonycloud.zeus.dao.user.BeanProjectMapper;
 import com.harmonycloud.zeus.dao.user.BeanProjectNamespaceMapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
-import com.harmonycloud.zeus.service.k8s.ClusterService;
-import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.user.ProjectService;
@@ -78,6 +78,12 @@ public class ProjectServiceImpl implements ProjectService {
     private ClusterMiddlewareInfoService clusterMiddlewareInfoService;
     @Autowired
     private ClusterComponentService clusterComponentService;
+    @Autowired
+    private ServiceAccountService serviceAccountService;
+    @Autowired
+    private ImageRepositoryService imageRepositoryService;
+    @Value("${system.privateRegistry.middlewareServiceAccount:default}")
+    private String middlewareServiceAccount;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -457,18 +463,22 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public void bindNamespace(Namespace namespace) {
-        QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<BeanProjectNamespace>()
-            .eq("namespace", namespace.getName()).eq("cluster_id", namespace.getClusterId());
-        List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
-        if (!CollectionUtils.isEmpty(beanProjectNamespaceList)) {
-            throw new BusinessException(ErrorMessage.PROJECT_NAMESPACE_ALREADY_BIND);
-        }
-        AssertUtil.notBlank(namespace.getProjectId(), DictEnum.PROJECT_ID);
-        AssertUtil.notBlank(namespace.getName(), DictEnum.NAMESPACE_NAME);
-        BeanProjectNamespace beanProjectNamespace = new BeanProjectNamespace();
-        BeanUtils.copyProperties(namespace, beanProjectNamespace);
-        beanProjectNamespace.setNamespace(namespace.getName());
-        beanProjectNamespaceMapper.insert(beanProjectNamespace);
+        checkAndBindImagePullSecret(namespace.getClusterId(), namespace.getName());
+
+//        QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<BeanProjectNamespace>()
+//            .eq("namespace", namespace.getName()).eq("cluster_id", namespace.getClusterId());
+//        List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
+//        if (!CollectionUtils.isEmpty(beanProjectNamespaceList)) {
+//            throw new BusinessException(ErrorMessage.PROJECT_NAMESPACE_ALREADY_BIND);
+//        }
+//        AssertUtil.notBlank(namespace.getProjectId(), DictEnum.PROJECT_ID);
+//        AssertUtil.notBlank(namespace.getName(), DictEnum.NAMESPACE_NAME);
+//        BeanProjectNamespace beanProjectNamespace = new BeanProjectNamespace();
+//        BeanUtils.copyProperties(namespace, beanProjectNamespace);
+//        beanProjectNamespace.setNamespace(namespace.getName());
+//        beanProjectNamespaceMapper.insert(beanProjectNamespace);
+        // 给分区默认serviceAccount绑定imagePullSecret
+
     }
 
     @Override
@@ -568,6 +578,14 @@ public class ProjectServiceImpl implements ProjectService {
             log.error("查询双活分区状态失败", e);
             return namespaces;
         }
+    }
+
+    private void checkAndBindImagePullSecret(String clusterId, String namespace) {
+        ServiceAccount serviceAccount = serviceAccountService.get(clusterId, namespace, middlewareServiceAccount);
+        List<ImageRepositoryDTO> imageRepositoryDTOS = imageRepositoryService.list(clusterId);
+        imageRepositoryService.createImagePullSecret(clusterId, namespace, imageRepositoryDTOS);
+        List<Secret> allImagePullSecret = imageRepositoryService.listImagePullSecret(clusterId, namespace);
+        serviceAccountService.bindImagePullSecret(clusterId, namespace, serviceAccount, allImagePullSecret);
     }
 
 }

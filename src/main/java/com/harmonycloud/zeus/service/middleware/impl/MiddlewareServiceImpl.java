@@ -40,11 +40,15 @@ import com.harmonycloud.zeus.util.ChartVersionUtil;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import com.harmonycloud.zeus.util.YamlUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.LocalObjectReference;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.ServiceAccount;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -111,6 +115,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private LicenseService licenseService;
     @Autowired
     private ClusterComponentService clusterComponentService;
+    @Value("${system.privateRegistry.middlewareServiceAccount:default}")
+    private String middlewareServiceAccount;
+    @Autowired
+    private ServiceAccountService serviceAccountService;
 
     @Override
     public List<Middleware> simpleList(String clusterId, String namespace, String type, String keyword) {
@@ -176,12 +184,14 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Override
     public Middleware create(Middleware middleware) {
         checkBaseParam(middleware);
-        checkLicense(middleware.getClusterId());
+//        checkLicense(middleware.getClusterId());
         BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
         MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(middleware.getClusterId());
         // pre check
         operator.createPreCheck(middleware, cluster);
         updateRegistry(middleware,cluster);
+        // bind imagePullSecret to default serviceAccount
+        checkAndBindImagePullSecret(middleware.getClusterId(), middleware.getNamespace(), middleware.getMirrorImageId());
         // create
         operator.create(middleware, cluster);
         // 查看middleware有没有创建出来
@@ -581,6 +591,19 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             return operatorCheckRes;
         }
         return BaseResult.ok();
+    }
+
+    private void checkAndBindImagePullSecret(String clusterId, String namespace, String registryId) {
+        ServiceAccount serviceAccount = serviceAccountService.get(clusterId, namespace, middlewareServiceAccount);
+        List<LocalObjectReference> imagePullSecrets = serviceAccount.getImagePullSecrets();
+        Secret secret = imageRepositoryService.getImagePullSecret(clusterId, namespace, registryId);
+        imagePullSecrets = imagePullSecrets.stream().filter(
+                imagePullSecret -> secret != null && imagePullSecret.getName().equals(secret.getMetadata().getName())).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(imagePullSecrets)) {
+            imageRepositoryService.createImagePullSecret(clusterId, namespace, Integer.parseInt(registryId));
+            List<Secret> secrets = imageRepositoryService.listImagePullSecret(clusterId, namespace);
+            serviceAccountService.bindImagePullSecret(clusterId, namespace, serviceAccount, secrets);
+        }
     }
 
     /**

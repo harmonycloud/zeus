@@ -3,6 +3,8 @@ package com.harmonycloud.zeus.service.middleware;
 import com.github.pagehelper.PageInfo;
 import com.harmonycloud.caas.common.model.middleware.ImageRepositoryDTO;
 import com.harmonycloud.caas.common.model.middleware.Registry;
+import com.harmonycloud.zeus.bean.BeanImageRepository;
+import io.fabric8.kubernetes.api.model.Secret;
 
 import java.util.List;
 
@@ -82,4 +84,22 @@ public interface ImageRepositoryService {
      * @return Registry
      */
     Registry generateRegistry(String mirrorImageId);
+
+    /**
+     * 创建imagePullSecret
+     */
+    void createImagePullSecret(String clusterId, String namespace, List<ImageRepositoryDTO> imageRepositoryDTOS);
+
+    /**
+     * 创建imagePullSecret
+     */
+    void createImagePullSecret(String clusterId, String namespace, Integer registryId);
+
+    /**
+     * 查询分区下所有中间件平台的imagePullSecret
+     */
+    List<Secret> listImagePullSecret(String clusterId, String namespace);
+
+    Secret getImagePullSecret(String clusterId, String namespace, String registryId);
+
 }
