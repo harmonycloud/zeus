@@ -173,13 +173,6 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             values.put("redisServicePort", middleware.getPort());
         }
 
-        //主机网络配置
-        if (middleware.getRedisParam() != null && middleware.getRedisParam().getHostNetwork() != null) {
-            values.getJSONObject("redis").put("hostNetwork", middleware.getRedisParam().getHostNetwork());
-            values.getJSONObject("sentinel").put("hostNetwork", middleware.getRedisParam().getHostNetwork());
-            values.getJSONObject("predixy").put("hostNetwork", middleware.getRedisParam().getHostNetwork());
-        }
-
         // 设置分盘挂载目录
         if(values.containsKey("customVolumes")){
 
