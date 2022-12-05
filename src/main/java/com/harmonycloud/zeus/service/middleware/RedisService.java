@@ -58,7 +58,7 @@ public interface RedisService {
      * @param namespace 命名空间
      * @param middlewareName 中间件名称
      * @param slaveName 从节点名称
-     * @return
+     * @return mode 模式
      */
-    String getBurstMaster(String clusterId, String namespace, String middlewareName, String slaveName);
+    String getBurstMaster(String clusterId, String namespace, String middlewareName, String slaveName, String mode);
 }
