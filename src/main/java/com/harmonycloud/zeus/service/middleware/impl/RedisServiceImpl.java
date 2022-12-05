@@ -81,26 +81,41 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
     }
 
     @Override
-    public String getBurstMaster(String clusterId, String namespace, String middlewareName, String slaveName) {
-        if (StringUtils.isBlank(slaveName)){
+    public String getBurstMaster(String clusterId, String namespace, String middlewareName, String slaveName, String mode) {
+        if (StringUtils.isBlank(slaveName)) {
             throw new BusinessException(ErrorMessage.REDIS_INCOMPLETE_PARAMETERS);
         }
         MiddlewareCR cr = middlewareCRService.getCR(clusterId, namespace, MiddlewareTypeEnum.REDIS.getType(), middlewareName);
         JSONObject status = JSONObject.parseObject(cr.getMetadata().getAnnotations().get("status"));
         JSONArray conditions = status.getJSONArray("conditions");
 
-        String masterNodeId = null;
-        for (Object condition:conditions) {
-            JSONObject con = (JSONObject) condition;
-            if (slaveName.equals(con.getString("name"))) {
-                masterNodeId = con.getString("masterNodeId");
-                break;
+        // 哨兵模式
+        if ("sentinel".equals(mode)) {
+            // 分片名字
+            String burstName = slaveName.substring(0, slaveName.lastIndexOf("-"));
+            for (Object condition : conditions) {
+                JSONObject con = (JSONObject) condition;
+                String conName = con.getString("name");
+                if (conName.contains(burstName) && !slaveName.equals(conName)) {
+                    return conName;
+                }
             }
-        }
-        if (masterNodeId==null) throw new BusinessException(ErrorMessage.NODE_NOT_FOUND);
-        for (Object condition:conditions){
-            JSONObject con = (JSONObject) condition;
-            if (masterNodeId.equals(con.getString("nodeId"))) return con.getString("name");
+        } else {
+            String masterNodeId = null;
+            for (Object condition : conditions) {
+                JSONObject con = (JSONObject) condition;
+                if (slaveName.equals(con.getString("name"))) {
+                    masterNodeId = con.getString("masterNodeId");
+                    break;
+                }
+            }
+            if (masterNodeId == null) throw new BusinessException(ErrorMessage.NODE_NOT_FOUND);
+            for (Object condition : conditions) {
+                JSONObject con = (JSONObject) condition;
+                if (masterNodeId.equals(con.getString("nodeId"))) {
+                    return con.getString("name");
+                }
+            }
         }
         throw new BusinessException(ErrorMessage.CANNOT_FIND_MASTER);
     }
