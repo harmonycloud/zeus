@@ -195,12 +195,14 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         String appVersion = infoMap.get("appVersion") == null ? null : infoMap.get("appVersion").toString();
         String official = "";
         String type = "";
+        String version = "";
         Object object = infoMap.getOrDefault("annotations", "");
         String compatibleVersions = null;
         if (!ObjectUtils.isEmpty(object)) {
             JSONObject annotations = JSONObject.parseObject(JSONObject.toJSONString(object));
             official = annotations.getOrDefault("owner", "other").toString();
             type = annotations.getOrDefault("type", "").toString();
+            version = annotations.getOrDefault("version", "").toString();
             compatibleVersions = annotations.get("compatibleVersions") == null ? null : annotations.get("compatibleVersions").toString();
         }
         List<Map<String, String>> dependencies = infoMap.containsKey("dependencies")
@@ -217,7 +219,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         yamlFileMap.put(CHART_YAML_NAME, JSONObject.toJSONString(infoMap));
 
         return new HelmChartFile().setDescription(description).setIconPath(iconPath).setType(type)
-            .setAppVersion(appVersion).setOfficial(official).setYamlFileMap(yamlFileMap)
+            .setAppVersion(appVersion).setOfficial(official).setYamlFileMap(yamlFileMap).setVersion(version)
             .setDependency(CollectionUtils.isEmpty(dependencies) ? new HashMap<>() : dependencies.get(0))
             .setChartName(chartName).setChartVersion(chartVersion).setCompatibleVersions(compatibleVersions);
     }
