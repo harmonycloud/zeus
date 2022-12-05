@@ -270,6 +270,10 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
                 JSONArray accounts = new JSONArray();
                 for (RocketMQAccount mqAccount : rocketMQACL.getRocketMQAccountList()) {
                     JSONObject account = new JSONObject();
+                    // 如果accessKey或secretKey为空，则不添加该账户
+                    if (StringUtils.isEmpty(mqAccount.getAccessKey()) || StringUtils.isEmpty(mqAccount.getSecretKey())) {
+                        continue;
+                    }
                     account.put("accessKey", mqAccount.getAccessKey());
                     account.put("secretKey", mqAccount.getSecretKey());
                     account.put("whiteRemoteAddress",
