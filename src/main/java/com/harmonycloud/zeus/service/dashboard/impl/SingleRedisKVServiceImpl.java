@@ -42,4 +42,9 @@ public class SingleRedisKVServiceImpl implements RedisKVService {
         return res.getJSONArray("data");
     }
 
+    @Override
+    public Integer dbSize(String clusterId, String namespace, String middlewareName, Integer db) {
+        return redisClient.DBSize(K8sServiceNameUtil.getServicePath(namespace, middlewareName), port, db).getInteger("data");
+    }
+
 }

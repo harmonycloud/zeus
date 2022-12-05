@@ -42,7 +42,7 @@ public interface RedisClient {
      * 查询dbsize
      */
     @Get(url = "/redis/db/{db}/size")
-    JSONObject DBSize(@Var("db") Integer db);
+    JSONObject DBSize(@Query("host") String host, @Query("port") String port, @Var("db") Integer db);
 
     /**
      * 查询所有key

@@ -11,4 +11,6 @@ public interface RedisKVService {
     JSONArray getKeys(String clusterId, String namespace, String middlewareName, Integer db);
 
     JSONArray getKeysWithPattern(String clusterId, String namespace, String middlewareName, Integer db, String keyword);
+
+    Integer dbSize(String clusterId, String namespace, String middlewareName, Integer db);
 }
