@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -56,6 +57,20 @@ public class RedisAggregationKVServiceImpl implements RedisKVService {
             jsonArray.addAll(getKeysWithPattern(path, db, keyword));
         });
         return jsonArray;
+    }
+
+    @Override
+    public Integer dbSize(String clusterId, String namespace, String middlewareName, Integer db) {
+        List<String> paths = listServicePath(clusterId, namespace, middlewareName);
+        AtomicInteger dbSize = new AtomicInteger(0);
+        paths.forEach(path -> {
+            try {
+                dbSize.getAndSet(redisClient.DBSize(path, port, db).getInteger("data") + dbSize.get());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        return dbSize.get();
     }
 
     public JSONArray getKeys(String host, Integer db) {

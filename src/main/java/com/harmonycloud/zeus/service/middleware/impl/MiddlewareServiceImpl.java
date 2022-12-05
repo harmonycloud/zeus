@@ -184,7 +184,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Override
     public Middleware create(Middleware middleware) {
         checkBaseParam(middleware);
-//        checkLicense(middleware.getClusterId());
+        checkLicense(middleware.getClusterId());
         BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
         MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(middleware.getClusterId());
         // pre check
