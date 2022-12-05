@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.middleware;
 
 import java.util.List;
+import java.util.Map;
 
 import com.harmonycloud.caas.common.model.RedisDbDTO;
 
@@ -61,4 +62,14 @@ public interface RedisService {
      * @return mode 模式
      */
     String getBurstMaster(String clusterId, String namespace, String middlewareName, String slaveName, String mode);
+
+    /**
+     *
+     * @param clusterId 集群id
+     * @param namespace 命名空间
+     * @param middlewareName 中间件名称
+     * @return mode 模式
+     * @return
+     */
+    Map<String,String> burstList(String clusterId, String namespace, String middlewareName, String mode);
 }
