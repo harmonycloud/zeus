@@ -444,6 +444,9 @@ public class PodServiceImpl implements PodService {
 
                 JSONObject statusObj = JSONObject.parseObject(status);
                 JSONArray conditions = statusObj.getJSONArray("conditions");
+                if (CollectionUtils.isEmpty(conditions)) {
+                    return podInfoList;
+                }
                 Map<String, String> podStatusMap = new HashMap<>();
                 Map<String, String> podNodeIdMap = new HashMap<>();
                 conditions.forEach(condition -> {
