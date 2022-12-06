@@ -386,26 +386,22 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
                 case "masterReplacesCount":
                     quota = resources.getJSONObject(ElasticSearchRoleEnum.MASTER.getRole());
                     cpu = quota.getJSONObject("requests").getString(CPU);
-                    cpuCount += MathUtil.multiplyExact(ResourceCalculationUtil.getResourceValue(cpu, CPU, ""),
-                        clusterInfo.getDoubleValue(key), 2);
+                    cpuCount += ResourceCalculationUtil.getResourceValue(cpu, CPU, "") * clusterInfo.getIntValue(key);
                     break;
                 case "dataReplacesCount":
                     quota = resources.getJSONObject(ElasticSearchRoleEnum.DATA.getRole());
                     cpu = quota.getJSONObject("requests").getString(CPU);
-                    cpuCount += MathUtil.multiplyExact(ResourceCalculationUtil.getResourceValue(cpu, CPU, ""),
-                        clusterInfo.getDoubleValue(key), 2);
+                    cpuCount += ResourceCalculationUtil.getResourceValue(cpu, CPU, "") * clusterInfo.getIntValue(key);
                     break;
                 case "clientReplacesCount":
                     quota = resources.getJSONObject(ElasticSearchRoleEnum.CLIENT.getRole());
                     cpu = quota.getJSONObject("requests").getString(CPU);
-                    cpuCount += MathUtil.multiplyExact(ResourceCalculationUtil.getResourceValue(cpu, CPU, ""),
-                        clusterInfo.getDoubleValue(key), 2);
+                    cpuCount += ResourceCalculationUtil.getResourceValue(cpu, CPU, "") * clusterInfo.getIntValue(key);
                     break;
                 case "coldReplacesCount":
                     quota = resources.getJSONObject(ElasticSearchRoleEnum.COLD.getRole());
                     cpu = quota.getJSONObject("requests").getString(CPU);
-                    cpuCount += MathUtil.multiplyExact(ResourceCalculationUtil.getResourceValue(cpu, CPU, ""),
-                        clusterInfo.getDoubleValue(key), 2);
+                    cpuCount += ResourceCalculationUtil.getResourceValue(cpu, CPU, "") * clusterInfo.getIntValue(key);
                     break;
                 default:
                     break;

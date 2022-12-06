@@ -2,11 +2,15 @@ package com.harmonycloud.zeus.service.system.impl;
 
 import static com.harmonycloud.caas.common.constants.NameConstant.*;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONArray;
+import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.harmonycloud.zeus.util.MathUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -169,15 +173,8 @@ public class LicenseServiceImpl implements LicenseService {
     }
 
     @Override
-    public void refreshMiddlewareResource() throws Exception {
-        if (getLock()){
-            middlewareResource();
-            systemConfigService.updateConfig("lock", FALSE);
-        }
-    }
-
     @Transactional(rollbackFor = Exception.class)
-    public void middlewareResource() throws Exception {
+    public void refreshMiddlewareResource() throws Exception {
         BeanSystemConfig produceConfig = systemConfigService.getConfigForUpdate(PRODUCE);
         BeanSystemConfig testConfig = systemConfigService.getConfigForUpdate(TEST);
         if (produceConfig == null || testConfig == null) {
@@ -245,26 +242,16 @@ public class LicenseServiceImpl implements LicenseService {
         updateSysConfig(type, String.valueOf(now + cpu));
     }
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
-    public boolean getLock() {
-        boolean lock = false;
-        BeanSystemConfig config = systemConfigService.getConfigForUpdate("lock");
-        if (config == null) {
-            systemConfigService.addConfig("lock", TRUE);
-            lock = true;
-        } else if (config.getConfigValue().equals(FALSE)) {
-            lock = true;
-            systemConfigService.updateConfig("lock", TRUE);
-        }
-        return lock;
-    }
-
     public Double calculateCpu(List<Double> cpuList) {
-        Double cpu = 0.0;
-        for (int i = 0; i < cpuList.size(); ++i) {
-            cpu += cpuList.get(i);
+        double total = 0.0;
+        if (!CollectionUtils.isEmpty(cpuList)) {
+            for (Double cpu : cpuList) {
+                if (cpu != null) {
+                    total += cpu;
+                }
+            }
         }
-        return cpu;
+        return ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(total), 2, RoundingMode.CEILING);
     }
 
     /**

@@ -1290,7 +1290,7 @@ public abstract class AbstractBaseOperator {
             return 0.0;
         }
         String cpu = resources.getJSONObject("requests").getString(CPU);
-        return MathUtil.multiplyExact(ResourceCalculationUtil.getResourceValue(cpu, CPU, ""), getReplicas(values), 2);
+        return ResourceCalculationUtil.getResourceValue(cpu, CPU, "") * getReplicas(values);
     }
 
     public Integer getReplicas(JSONObject values) {
