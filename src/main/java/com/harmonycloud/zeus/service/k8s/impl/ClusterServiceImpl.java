@@ -507,18 +507,6 @@ public class ClusterServiceImpl implements ClusterService {
         imageRepositoryService.insert(clusterDTO.getId(), imageRepositoryDTO);
     }
 
-    public void updateMysqlImageRepository(MiddlewareClusterDTO clusterDTO) {
-        Registry registry = clusterDTO.getRegistry();
-        ImageRepositoryDTO imageRepositoryDTO = imageRepositoryService.detailByClusterId(clusterDTO.getName());
-        BeanUtils.copyProperties(registry, imageRepositoryDTO);
-        imageRepositoryDTO.setUsername(registry.getUser());
-        imageRepositoryDTO.setProject(registry.getChartRepo());
-        imageRepositoryDTO.setIsDefault(CommonConstant.NUM_ONE);
-        imageRepositoryDTO.setPort(registry.getPort());
-        imageRepositoryDTO.setHostAddress(registry.getAddress());
-        imageRepositoryService.update(clusterDTO.getId(), imageRepositoryDTO);
-    }
-
     public void clusterResource(MiddlewareClusterDTO cluster) {
         Map<String, String> query = new HashMap<>();
         Map<String, String> resource = new HashMap<>();
