@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.harmonycloud.zeus.util.MathUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 
@@ -378,29 +379,33 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
         double cpuCount = 0.0;
         JSONObject clusterInfo = values.getJSONObject(CLUSTER);
         JSONObject resources = values.getJSONObject(RESOURCES);
-        for (String key : clusterInfo.keySet()){
+        for (String key : clusterInfo.keySet()) {
             JSONObject quota;
             String cpu;
-            switch (key){
+            switch (key) {
                 case "masterReplacesCount":
                     quota = resources.getJSONObject(ElasticSearchRoleEnum.MASTER.getRole());
                     cpu = quota.getJSONObject("requests").getString(CPU);
-                    cpuCount += ResourceCalculationUtil.getResourceValue(cpu, CPU, "") * clusterInfo.getIntValue(key);
+                    cpuCount += MathUtil.multiplyExact(ResourceCalculationUtil.getResourceValue(cpu, CPU, ""),
+                        clusterInfo.getDoubleValue(key), 2);
                     break;
                 case "dataReplacesCount":
                     quota = resources.getJSONObject(ElasticSearchRoleEnum.DATA.getRole());
                     cpu = quota.getJSONObject("requests").getString(CPU);
-                    cpuCount += ResourceCalculationUtil.getResourceValue(cpu, CPU, "") * clusterInfo.getIntValue(key);
+                    cpuCount += MathUtil.multiplyExact(ResourceCalculationUtil.getResourceValue(cpu, CPU, ""),
+                        clusterInfo.getDoubleValue(key), 2);
                     break;
                 case "clientReplacesCount":
                     quota = resources.getJSONObject(ElasticSearchRoleEnum.CLIENT.getRole());
                     cpu = quota.getJSONObject("requests").getString(CPU);
-                    cpuCount += ResourceCalculationUtil.getResourceValue(cpu, CPU, "") * clusterInfo.getIntValue(key);
+                    cpuCount += MathUtil.multiplyExact(ResourceCalculationUtil.getResourceValue(cpu, CPU, ""),
+                        clusterInfo.getDoubleValue(key), 2);
                     break;
                 case "coldReplacesCount":
                     quota = resources.getJSONObject(ElasticSearchRoleEnum.COLD.getRole());
                     cpu = quota.getJSONObject("requests").getString(CPU);
-                    cpuCount += ResourceCalculationUtil.getResourceValue(cpu, CPU, "") * clusterInfo.getIntValue(key);
+                    cpuCount += MathUtil.multiplyExact(ResourceCalculationUtil.getResourceValue(cpu, CPU, ""),
+                        clusterInfo.getDoubleValue(key), 2);
                     break;
                 default:
                     break;

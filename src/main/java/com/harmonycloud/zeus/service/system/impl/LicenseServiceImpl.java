@@ -10,6 +10,7 @@ import com.alibaba.fastjson.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
@@ -168,6 +169,13 @@ public class LicenseServiceImpl implements LicenseService {
     }
 
     @Override
+    public void refreshMiddlewareResource() throws Exception {
+        if (getLock()){
+            middlewareResource();
+            systemConfigService.updateConfig("lock", FALSE);
+        }
+    }
+
     @Transactional(rollbackFor = Exception.class)
     public void middlewareResource() throws Exception {
         BeanSystemConfig produceConfig = systemConfigService.getConfigForUpdate(PRODUCE);
@@ -237,6 +245,20 @@ public class LicenseServiceImpl implements LicenseService {
         updateSysConfig(type, String.valueOf(now + cpu));
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public boolean getLock() {
+        boolean lock = false;
+        BeanSystemConfig config = systemConfigService.getConfigForUpdate("lock");
+        if (config == null) {
+            systemConfigService.addConfig("lock", TRUE);
+            lock = true;
+        } else if (config.getConfigValue().equals(FALSE)) {
+            lock = true;
+            systemConfigService.updateConfig("lock", TRUE);
+        }
+        return lock;
+    }
+
     public Double calculateCpu(List<Double> cpuList) {
         Double cpu = 0.0;
         for (int i = 0; i < cpuList.size(); ++i) {
@@ -275,10 +297,14 @@ public class LicenseServiceImpl implements LicenseService {
      * 获取使用cpu缓存
      */
     public Double getCpu(String name) {
-        BeanSystemConfig config = systemConfigService.getConfig(name);
+        BeanSystemConfig config = systemConfigService.getConfigForUpdate(name);
         if (config == null) {
             initCpu();
             return 0.0;
+        }
+        try {
+            refreshMiddlewareResource();
+        } catch (Exception ignored){
         }
         return Double.parseDouble(config.getConfigValue());
     }

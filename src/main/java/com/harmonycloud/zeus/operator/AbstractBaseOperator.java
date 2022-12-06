@@ -43,6 +43,7 @@ import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.service.system.LicenseService;
 import com.harmonycloud.zeus.util.K8sConvert;
+import com.harmonycloud.zeus.util.MathUtil;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.Service;
@@ -1289,7 +1290,7 @@ public abstract class AbstractBaseOperator {
             return 0.0;
         }
         String cpu = resources.getJSONObject("requests").getString(CPU);
-        return ResourceCalculationUtil.getResourceValue(cpu, CPU, "") * getReplicas(values);
+        return MathUtil.multiplyExact(ResourceCalculationUtil.getResourceValue(cpu, CPU, ""), getReplicas(values), 2);
     }
 
     public Integer getReplicas(JSONObject values) {

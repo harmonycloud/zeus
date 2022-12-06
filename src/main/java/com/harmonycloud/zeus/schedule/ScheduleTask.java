@@ -19,7 +19,7 @@ public class ScheduleTask {
 
     @Scheduled(fixedRate =30 * 1000)
     public void calculateCpu() throws Exception{
-        //licenseService.middlewareResource();
+        licenseService.refreshMiddlewareResource();
     }
 
 }

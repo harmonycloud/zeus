@@ -18,6 +18,7 @@ import com.harmonycloud.zeus.service.k8s.IngressComponentService;
 import com.harmonycloud.zeus.service.k8s.ServiceService;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareServiceImpl;
 import com.harmonycloud.zeus.util.K8sConvert;
+import com.harmonycloud.zeus.util.MathUtil;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.NodeAffinity;
@@ -451,14 +452,16 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         double sentinelCpu = 0.0;
         JSONObject resources = values.getJSONObject(REDIS).getJSONObject(RESOURCES);
         JSONObject request = resources.getJSONObject("requests");
-        cpu = ResourceCalculationUtil.getResourceValue(request.getString(CPU), CPU, "") * getReplicas(values);
+        cpu = MathUtil.multiplyExact(ResourceCalculationUtil.getResourceValue(request.getString(CPU), CPU, ""),
+            getReplicas(values), 2);
 
         if (SENTINEL.equals(values.getString(MODE))) {
             JSONObject sentinel = values.getJSONObject(SENTINEL);
             Integer sentinelNum = sentinel.getInteger(REPLICAS);
             JSONObject sentinelResources = values.getJSONObject(SENTINEL).getJSONObject(RESOURCES);
             JSONObject sentinelRequest = sentinelResources.getJSONObject("requests");
-            sentinelCpu = ResourceCalculationUtil.getResourceValue(sentinelRequest.getString(CPU), CPU, "") * sentinelNum;
+            sentinelCpu = MathUtil.multiplyExact(
+                ResourceCalculationUtil.getResourceValue(sentinelRequest.getString(CPU), CPU, ""), sentinelNum, 2);
             cpu += sentinelCpu;
         }
         return cpu;

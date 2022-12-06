@@ -870,11 +870,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
 
     @Override
     public Integer getReplicas(JSONObject values){
-        JSONObject args = values.getJSONObject("args");
-        if (args == null) {
-            args = values.getJSONObject("mysqlArgs");
-        }
-        return args.getIntValue(MysqlConstant.REPLICA_COUNT);
+        return values.getIntValue(MysqlConstant.REPLICA_COUNT);
     }
 
 }

@@ -10,6 +10,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.util.K8sConvert;
+import com.harmonycloud.zeus.util.MathUtil;
 import org.apache.commons.lang3.StringUtils;
 
 import com.alibaba.fastjson.JSONObject;
@@ -224,10 +225,10 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
     @Override
     public Double calculateCpuRequest(JSONObject values) {
         JSONObject resources = values.getJSONObject(POD.getEnPhrase()).getJSONObject(RESOURCES);
-        if (resources == null){
+        if (resources == null) {
             return 0.0;
         }
         String cpu = resources.getJSONObject("requests").getString(CPU);
-        return ResourceCalculationUtil.getResourceValue(cpu, CPU, "") * getReplicas(values);
+        return MathUtil.multiplyExact(ResourceCalculationUtil.getResourceValue(cpu, CPU, ""), getReplicas(values), 2);
     }
 }
