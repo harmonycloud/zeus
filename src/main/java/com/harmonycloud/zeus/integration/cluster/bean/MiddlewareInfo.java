@@ -16,4 +16,7 @@ public class MiddlewareInfo {
     private String type;
 
     private int orderNum;
+
+    private String aliasType;
+
 }

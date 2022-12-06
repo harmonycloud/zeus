@@ -1,8 +1,11 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.constants.DateStyle;
 import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.ContainerWithStatus;
@@ -37,6 +40,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -122,11 +126,12 @@ public class PodServiceImpl implements PodService {
      * @param podInfoList
      * @return
      */
-    private PodInfoGroup convertListToGroup(List<PodInfo> podInfoList) {
+    private PodInfoGroup convertPodListToGroup(List<PodInfo> podInfoList) {
         PodInfoGroup podInfoGroup = new PodInfoGroup();
         Map<String, List<PodInfo>> podMap = new HashMap<>();
+        // 根据pod role进行分组，k、v分别为节点角色、相同角色节点列表
         podInfoList.forEach(podInfo -> {
-            String role = podInfo.getRole();
+            String role = StringUtils.isNotBlank(podInfo.getGroup()) ? podInfo.getGroup() : podInfo.getRole();
             List<PodInfo> infoList;
             if (role == null) {
                 infoList = podMap.get("default");
@@ -144,6 +149,7 @@ public class PodServiceImpl implements PodService {
             infoList.add(podInfo);
         });
 
+        // 转为列表
         if (podMap.keySet().size() > 1) {
             List<PodInfoGroup> list = new ArrayList<>();
             podMap.forEach((k, v) -> {
@@ -164,6 +170,7 @@ public class PodServiceImpl implements PodService {
         }
         return podInfoGroup;
     }
+
     /**
      * 获取pod真实状态
      * @param pod
@@ -416,12 +423,55 @@ public class PodServiceImpl implements PodService {
             setPodBackupStatus(clusterId, namespace, type, middlewareName, pi);
             podInfoList.add(pi);
         }
+        // 添加pod额外角色类型
+        podInfoList = addPodExtraRole(podInfoList, mw, type);
         // 设置pod所在可用区
         this.setPodArea(clusterId, podInfoList);
         middleware.setIsAllLvmStorage(isAllLvmStorage.get());
-        middleware.setPodInfoGroup(convertListToGroup(podInfoList));
+        middleware.setPodInfoGroup(convertPodListToGroup(podInfoList));
         middleware.setPods(podInfoList);
         return middleware;
+    }
+
+    private List<PodInfo> addPodExtraRole(List<PodInfo> podInfoList, MiddlewareCR mw, String type) {
+        if (MiddlewareTypeEnum.REDIS.getType().equals(type)) {
+            String status = mw.getMetadata().getAnnotations().get("status");
+            if (StringUtils.isNotBlank(status)) {
+                Map<String, PodInfo> podInfoMap = new HashMap<>();
+                podInfoList.forEach(podInfo -> {
+                    podInfoMap.put(podInfo.getPodName(), podInfo);
+                });
+
+                JSONObject statusObj = JSONObject.parseObject(status);
+                JSONArray conditions = statusObj.getJSONArray("conditions");
+                Map<String, String> podStatusMap = new HashMap<>();
+                Map<String, String> podNodeIdMap = new HashMap<>();
+                conditions.forEach(condition -> {
+                    JSONObject single = (JSONObject) condition;
+                    podStatusMap.put(single.getString("name"), single.getString("masterNodeId"));
+                    podNodeIdMap.put(single.getString("nodeId"), single.getString("name"));
+                });
+
+                AtomicInteger groupIdIndex = new AtomicInteger();
+                conditions.forEach(condition -> {
+                    JSONObject single = (JSONObject) condition;
+                    String podName = single.getString("name");
+                    String podType = single.getString("type");
+                    if ("slave".equals(podType)) {
+                        String group = "shard-" + groupIdIndex;
+                        PodInfo slavePodInfo = podInfoMap.get(podName);
+                        slavePodInfo.setGroup(group);
+                        String masterNodeId = podStatusMap.get(podName);
+                        String masterPodName = podNodeIdMap.get(masterNodeId);
+                        PodInfo masterPodInfo = podInfoMap.get(masterPodName);
+                        masterPodInfo.setGroup(group);
+                        groupIdIndex.getAndIncrement();
+                    }
+                });
+                return new ArrayList<>(podInfoMap.values());
+            }
+        }
+        return podInfoList;
     }
 
 }
