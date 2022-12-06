@@ -137,24 +137,6 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         QueryWrapper<BeanImageRepository> wrapper = new QueryWrapper<>();
         wrapper.eq("cluster_id", clusterId).eq("id", id);
         beanImageRepositoryMapper.delete(wrapper);
-        // 更新集群默认镜像仓库
-        /*MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        if (cluster.getRegistry() != null && cluster.getRegistry().getId().equals(Integer.parseInt(id))) {
-            QueryWrapper<BeanImageRepository> existWrapper =
-                new QueryWrapper<BeanImageRepository>().eq("cluster_id", clusterId);
-            List<BeanImageRepository> beanImageRepositoryList = beanImageRepositoryMapper.selectList(existWrapper);
-            if (beanImageRepositoryList.size() == 0) {
-                cluster.setRegistry(new Registry());
-            }else {
-                BeanImageRepository beanImageRepository = beanImageRepositoryList.get(0);
-                Registry registry = cluster.getRegistry();
-                BeanUtils.copyProperties(beanImageRepository, registry);
-                registry.setUser(beanImageRepository.getUsername()).setAddress(beanImageRepository.getHostAddress())
-                        .setChartRepo(beanImageRepository.getProject()).setId(beanImageRepository.getId());
-                cluster.setRegistry(registry);
-            }
-            clusterService.updateCluster(cluster);
-        }*/
     }
 
     @Override

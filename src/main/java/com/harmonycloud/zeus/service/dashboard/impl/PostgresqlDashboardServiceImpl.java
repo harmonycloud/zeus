@@ -240,6 +240,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             schemaDto.setSchemaName(schema.get("nspname"));
             schemaDto.setDatabaseName(databaseName);
             schemaDto.setOwner(schema.get("rolname"));
+            schemaDto.setComment(schema.get("obj_description"));
             return schemaDto;
         }).collect(Collectors.toList());
     }
