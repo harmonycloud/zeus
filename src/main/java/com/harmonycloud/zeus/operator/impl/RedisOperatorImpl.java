@@ -7,14 +7,19 @@ import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConsta
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PREDIXY;
 
 
+import com.alibaba.fastjson.JSONArray;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.Protocol;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.AffinityDTO;
 import com.harmonycloud.caas.common.model.IngressComponentDto;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.collection.JsonUtils;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.service.k8s.IngressComponentService;
+import com.harmonycloud.zeus.service.k8s.K8sExecService;
 import com.harmonycloud.zeus.service.k8s.ServiceService;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareServiceImpl;
 import com.harmonycloud.zeus.util.K8sConvert;
@@ -32,6 +37,7 @@ import com.harmonycloud.tool.encrypt.PasswordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -49,6 +55,8 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
     private MiddlewareServiceImpl middlewareService;
     @Autowired
     private ServiceService serviceService;
+    @Autowired
+    private K8sExecService k8sExecService;
 
     public void createIngressService(Middleware middleware) {
         List<IngressComponentDto> ingressComponentList = ingressComponentService.list(middleware.getClusterId());
@@ -473,5 +481,41 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             num *= 2;
         }
         return num;
+    }
+
+    @Override
+    public void switchMiddleware(Middleware middleware, String slaveName) {
+        MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
+        // 获取数据库密码
+        JSONObject values = helmChartService.getInstalledValues(middleware.getName(), middleware.getNamespace(), cluster);
+        String password = values.getString("redisPassword");
+        // 获取端口
+        String port = values.getString("redisServicePort");
+        MiddlewareCR cr = middlewareCRService.getCR(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
+
+        //获取从节点信息
+        JSONObject status = JSONObject.parseObject(cr.getMetadata().getAnnotations().get("status"));
+        JSONArray conditions = status.getJSONArray("conditions");
+        JSONObject slavePod = null;
+        for (Object condition : conditions) {
+            JSONObject con = (JSONObject) condition;
+            if (slaveName.equals(con.getString("name")) && "slave".equals(con.getString("type"))) {
+                slavePod = con;
+                break;
+            }
+        }
+        if (slavePod == null) {
+            throw new BusinessException(ErrorMessage.NODE_NOT_FOUND);
+        }
+        // 获取slaveIP
+        String slaveIP = slavePod.getString("instance").split(":")[0];
+        //从节点执行命令
+        String execCommand = MessageFormat.format(
+                "kubectl exec {0} -n {1} -c redis-cluster --server={2} --token={3} --insecure-skip-tls-verify=true " +
+                        "-- bash -c \"redis-cli -h {4} -a {5} cluster failover\"",
+                slaveName, middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
+                slaveIP, password);
+        k8sExecService.exec(execCommand);
+
     }
 }

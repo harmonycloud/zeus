@@ -394,6 +394,10 @@ public abstract class AbstractBaseOperator {
 
     }
 
+    public void switchMiddleware(Middleware middleware, String slaveName) {
+
+    }
+
     /**
      * 从helm chart转回middleware
      */
