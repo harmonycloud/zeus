@@ -311,9 +311,22 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         QueryWrapper<BeanMiddlewareInfo> wrapper =
             new QueryWrapper<BeanMiddlewareInfo>().eq("chart_name", chartName).eq("chart_version", chartVersion);
         middlewareInfoMapper.delete(wrapper);
+        // 获取最新中间件信息
+        List<BeanMiddlewareInfo> mwInfoList = this.listByType(chartName);
         // 删除集群绑定信息
-        clusterMwInfoList.forEach(clusterMwInfo -> clusterMiddlewareInfoService.delete(clusterMwInfo.getClusterId(),
-            clusterMwInfo.getChartName(), clusterMwInfo.getChartVersion()));
+        clusterMwInfoList.forEach(clusterMwInfo -> {
+            clusterMiddlewareInfoService.delete(clusterMwInfo.getClusterId(), clusterMwInfo.getChartName(),
+                clusterMwInfo.getChartVersion());
+            // 重新写入最新的绑定关系
+            if (!CollectionUtils.isEmpty(mwInfoList)){
+                BeanClusterMiddlewareInfo bean = new BeanClusterMiddlewareInfo();
+                bean.setClusterId(clusterMwInfo.getClusterId());
+                bean.setChartName(mwInfoList.get(0).getChartName());
+                bean.setChartVersion(mwInfoList.get(0).getChartVersion());
+                bean.setStatus(2);
+                clusterMiddlewareInfoService.insert(bean);
+            }
+        });
     }
 
     @Override
