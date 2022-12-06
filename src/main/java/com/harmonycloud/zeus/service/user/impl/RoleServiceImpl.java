@@ -42,13 +42,17 @@ import static com.harmonycloud.caas.common.constants.CommonConstant.*;
 @Service
 public class RoleServiceImpl implements RoleService {
 
-    @Value("${system.disasterRecovery:true}")
+    @Value("${system.disasterRecovery.enable:true}")
     private String disasterEnable;
+    @Value("${system.disasterRecovery.menu-id:10}")
+    private String disasterMenuId;
 
     @Autowired
     private BeanRoleMapper beanRoleMapper;
     @Autowired
     private ResourceMenuService resourceMenuService;
+    @Autowired
+    private ResourceMenuRoleService resourceMenuRoleService;
     @Autowired
     private UserRoleService userRoleService;
     @Autowired
@@ -57,8 +61,6 @@ public class RoleServiceImpl implements RoleService {
     private RoleAuthorityService roleAuthorityService;
     @Autowired
     private MiddlewareInfoService middlewareInfoService;
-    @Autowired
-    private UserService userService;
 
     @Override
     public void add(RoleDto roleDto) {
@@ -78,6 +80,8 @@ public class RoleServiceImpl implements RoleService {
         // 绑定角色权限
         initRolePower(roleDto);
         bindRolePower(roleDto);
+        // 初始化菜单权限
+        initResourceMenuRole(roleDto);
     }
 
     @Override
@@ -103,6 +107,8 @@ public class RoleServiceImpl implements RoleService {
         roleAuthorityService.delete(roleId);
         //删除角色集群绑定
         clusterRoleService.delete(roleId);
+        // 删除角色菜单绑定关系
+        resourceMenuRoleService.delete(roleId);
     }
 
     @Override
@@ -145,33 +151,21 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public List<ResourceMenuDto> listMenuByRoleId(UserDto userDto, String projectId) {
-        List<Integer> ids;
+        List<BeanResourceMenuRole> list;
         if (Boolean.TRUE.equals(!userDto.getIsAdmin()) && StringUtils.isNotEmpty(projectId)) {
-            ids = Arrays.asList(3, 4);
-            // 判断是否非普通用户
-            List<UserRole> roles = userDto.getUserRoleList().stream().filter(ur -> ur.getProjectId().equals(projectId))
-                    .collect(Collectors.toList());
-            if (CollectionUtils.isEmpty(roles)) {
-                throw new BusinessException(ErrorMessage.PROJECT_NOT_EXIST_OR_DELETED);
-            }
-            UserRole userRole = roles.get(0);
-            for (String key : userRole.getPower().keySet()) {
-                if (Integer.parseInt(userRole.getPower().get(key).split("")[1]) == 1) {
-                    if (Boolean.parseBoolean(disasterEnable)) {
-                        ids = Arrays.asList(3, 4, 5, 7, 8, 9, 10, 12, 13, 14, 15, 16);
-                    } else {
-                        ids = Arrays.asList(3, 4, 5, 7, 8, 9, 12, 13, 14, 15, 16);
-                    }
-                    break;
-                }
-            }
+            Integer roleId =
+                userDto.getUserRoleList().stream().filter(userRole -> userRole.getProjectId().equals(projectId))
+                    .collect(Collectors.toList()).get(0).getRoleId();
+            list = resourceMenuRoleService.list(String.valueOf(roleId));
         } else {
-            if (Boolean.parseBoolean(disasterEnable)) {
-                ids = Arrays.asList(1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22);
-            } else {
-                ids = Arrays.asList(1, 2, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22);
-            }
+            list = resourceMenuRoleService.listAdminMenu();
         }
+        // 过滤是否开启灾备服务
+        if (!Boolean.parseBoolean(disasterEnable)) {
+            list = list.stream().filter(menuDto -> menuDto.getId() != Integer.parseInt(disasterMenuId))
+                .collect(Collectors.toList());
+        }
+        List<Integer> ids = list.stream().map(BeanResourceMenuRole::getResourceMenuId).collect(Collectors.toList());
         // 获取菜单信息
         List<ResourceMenuDto> resourceMenuDtoList = resourceMenuService.list(ids);
         return resourceMenuDtoList.stream().filter(ResourceMenuDto::getOwn).collect(Collectors.toList());
@@ -230,5 +224,11 @@ public class RoleServiceImpl implements RoleService {
         Map<String, String> power = new HashMap<>();
         beanMiddlewareInfoList.forEach(beanMiddlewareInfo -> power.put(beanMiddlewareInfo.getChartName(), "0000"));
         roleDto.setPower(power);
+    }
+
+    public void initResourceMenuRole(RoleDto roleDto){
+        resourceMenuRoleService.init(roleDto.getId());
+        resourceMenuRoleService.add(roleDto.getId(), 3, true);
+        resourceMenuRoleService.add(roleDto.getId(), 4, true);
     }
 }

@@ -49,8 +49,13 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 
     @Override
     public BeanSystemConfig getConfigForUpdate(String name) {
-        QueryWrapper<BeanSystemConfig> wrapper =
-            new QueryWrapper<BeanSystemConfig>().eq(CONFIG_NAME, name).last("for update");
-        return beanSystemConfigMapper.selectOne(wrapper);
+        try {
+            QueryWrapper<BeanSystemConfig> wrapper =
+                    new QueryWrapper<BeanSystemConfig>().eq(CONFIG_NAME, name).last("for update");
+            return beanSystemConfigMapper.selectOne(wrapper);
+        } catch (Exception e){
+            log.error("select for update 获取锁超时, {}", e.getMessage());
+            return null;
+        }
     }
 }

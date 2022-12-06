@@ -8,6 +8,7 @@ import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConsta
 
 
 import com.harmonycloud.caas.common.enums.Protocol;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.model.AffinityDTO;
 import com.harmonycloud.caas.common.model.IngressComponentDto;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
@@ -18,6 +19,7 @@ import com.harmonycloud.zeus.service.k8s.IngressComponentService;
 import com.harmonycloud.zeus.service.k8s.ServiceService;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareServiceImpl;
 import com.harmonycloud.zeus.util.K8sConvert;
+import com.harmonycloud.zeus.util.MathUtil;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.NodeAffinity;
@@ -199,7 +201,10 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
 
         // 处理redis特有参数
         if (values != null) {
-            middleware.setPassword(values.getString("redisPassword")).setPort(values.getInteger("port"));
+            if (checkUserAuthority(MiddlewareTypeEnum.REDIS.getType())){
+                middleware.setPassword(values.getString("redisPassword"));
+            }
+            middleware.setPort(values.getInteger("port"));
             JSONObject redisQuota = values.getJSONObject(REDIS);
             convertResourcesByHelmChart(middleware, middleware.getType(), redisQuota.getJSONObject(RESOURCES));
             middleware.getQuota().get(middleware.getType()).setNum(redisQuota.getInteger(REPLICAS));

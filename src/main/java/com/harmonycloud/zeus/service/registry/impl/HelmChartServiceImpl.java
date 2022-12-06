@@ -195,12 +195,14 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         String appVersion = infoMap.get("appVersion") == null ? null : infoMap.get("appVersion").toString();
         String official = "";
         String type = "";
+        String version = "";
         Object object = infoMap.getOrDefault("annotations", "");
         String compatibleVersions = null;
         if (!ObjectUtils.isEmpty(object)) {
             JSONObject annotations = JSONObject.parseObject(JSONObject.toJSONString(object));
             official = annotations.getOrDefault("owner", "other").toString();
             type = annotations.getOrDefault("type", "").toString();
+            version = annotations.getOrDefault("version", "").toString();
             compatibleVersions = annotations.get("compatibleVersions") == null ? null : annotations.get("compatibleVersions").toString();
         }
         List<Map<String, String>> dependencies = infoMap.containsKey("dependencies")
@@ -217,7 +219,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         yamlFileMap.put(CHART_YAML_NAME, JSONObject.toJSONString(infoMap));
 
         return new HelmChartFile().setDescription(description).setIconPath(iconPath).setType(type)
-            .setAppVersion(appVersion).setOfficial(official).setYamlFileMap(yamlFileMap)
+            .setAppVersion(appVersion).setOfficial(official).setYamlFileMap(yamlFileMap).setVersion(version)
             .setDependency(CollectionUtils.isEmpty(dependencies) ? new HashMap<>() : dependencies.get(0))
             .setChartName(chartName).setChartVersion(chartVersion).setCompatibleVersions(compatibleVersions);
     }
@@ -603,6 +605,20 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             log.error("集群{} 中间件{} 创建operator失败", clusterId, helmChartFile.getChartName());
             throw new BusinessException(ErrorMessage.CREATE_MIDDLEWARE_OPERATOR_FAILED);
         }
+    }
+
+    @Override
+    public String getChartVersion(JSONObject values, String type) {
+        if (StringUtils.isNotEmpty(values.getString("chart-version"))) {
+            return values.getString("chart-version");
+        } else {
+            List<BeanMiddlewareInfo> beanMiddlewareInfoList = middlewareInfoService.list(true).stream()
+                .filter(info -> info.getChartName().equals(type)).collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(beanMiddlewareInfoList)) {
+                return beanMiddlewareInfoList.get(0).getChartVersion();
+            }
+        }
+        return null;
     }
 
     private String getUploadPath() {

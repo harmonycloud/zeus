@@ -14,7 +14,7 @@ global:
     nodeSelector: {}
   middlewarebackup_controller:
     image: middlewarebackup-controller
-    tag: v1.2.12
+    tag: v1.2.12-2
     resources:
       limits:
         cpu: 200m
