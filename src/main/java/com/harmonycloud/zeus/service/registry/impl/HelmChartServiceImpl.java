@@ -556,8 +556,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         BeanImageRepository registry = imageRepositoryService.getClusterDefaultRegistry(cluster.getId());
         JSONObject values = yaml.loadAs(HelmChartUtil.getValueYaml(operatorChartPath), JSONObject.class);
-        values.getJSONObject("image").put("repository",
-                registry.getAddress() + "/" + registry.getProject());
+        values.getJSONObject("image").put("repository", registry.getAddress());
         //高可用或单实例
         if (SIMPLE.equals(type)) {
             values.put("replicaCount",1);

@@ -217,7 +217,8 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
             throw new BusinessException(ErrorMessage.CLUSTER_NOT_ADD_REPOSITORY);
         }
         List<BeanImageRepository> defaultRegistries = repositories.stream().
-                filter(beanImageRepository -> beanImageRepository.getIsDefault() == 1).collect(Collectors.toList());
+                filter(beanImageRepository -> beanImageRepository.getIsDefault() != null && beanImageRepository.getIsDefault() == 1).
+                collect(Collectors.toList());
         if (CollectionUtils.isEmpty(defaultRegistries)) {
             return defaultRegistries.get(0);
         } else {
