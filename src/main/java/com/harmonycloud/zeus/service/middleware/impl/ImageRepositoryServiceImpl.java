@@ -26,6 +26,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -205,6 +206,23 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         registry.setPort(imageRepositoryDTO.getPort());
         registry.setAddress(imageRepositoryDTO.getHostAddress());
         return registry;
+    }
+
+    @Override
+    public BeanImageRepository getClusterDefaultRegistry(String clusterId) {
+        QueryWrapper<BeanImageRepository> wrapper = new QueryWrapper<>();
+        wrapper.eq("cluster_id", clusterId);
+        List<BeanImageRepository> repositories = beanImageRepositoryMapper.selectList(wrapper);
+        if (CollectionUtils.isEmpty(repositories)) {
+            throw new BusinessException(ErrorMessage.CLUSTER_NOT_ADD_REPOSITORY);
+        }
+        List<BeanImageRepository> defaultRegistries = repositories.stream().
+                filter(beanImageRepository -> beanImageRepository.getIsDefault() == 1).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(defaultRegistries)) {
+            return defaultRegistries.get(0);
+        } else {
+            return repositories.get(0);
+        }
     }
 
     @Override

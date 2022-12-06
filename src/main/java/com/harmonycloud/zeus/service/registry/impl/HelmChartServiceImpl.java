@@ -14,6 +14,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.zeus.bean.BeanImageRepository;
 import com.harmonycloud.zeus.integration.registry.HelmChartWrapper;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.V1HelmChartVersion;
@@ -553,14 +554,10 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     public void editOperatorChart(String clusterId, String operatorChartPath, String type) {
         Yaml yaml = new Yaml();
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        List<ImageRepositoryDTO> imageRepositoryDTOList = imageRepositoryService.list(cluster.getId());
-        if (CollectionUtils.isEmpty(imageRepositoryDTOList)) {
-            log.error("集群{} 未添加镜像仓库", clusterId);
-            throw new BusinessException(ErrorMessage.CLUSTER_NOT_ADD_REPOSITORY);
-        }
+        BeanImageRepository registry = imageRepositoryService.getClusterDefaultRegistry(cluster.getId());
         JSONObject values = yaml.loadAs(HelmChartUtil.getValueYaml(operatorChartPath), JSONObject.class);
         values.getJSONObject("image").put("repository",
-            imageRepositoryDTOList.get(0).getRegistryAddress() + "/" + imageRepositoryDTOList.get(0).getProject());
+                registry.getAddress() + "/" + registry.getProject());
         //高可用或单实例
         if (SIMPLE.equals(type)) {
             values.put("replicaCount",1);
