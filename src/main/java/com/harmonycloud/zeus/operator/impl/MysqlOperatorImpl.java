@@ -190,7 +190,9 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             if (args == null) {
                 args = values.getJSONObject("mysqlArgs");
             }
-            middleware.setPassword(args.getString("root_password"));
+            if (checkUserAuthority(MiddlewareTypeEnum.MYSQL.getType())) {
+                middleware.setPassword(args.getString("root_password"));
+            }
             middleware.setCharSet(args.getString("character_set_server"));
             middleware.setPort(args.getIntValue("server_port"));
 

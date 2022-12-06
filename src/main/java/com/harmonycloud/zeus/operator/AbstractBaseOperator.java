@@ -41,6 +41,8 @@ import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareAlertsServiceImpl;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
+import com.harmonycloud.zeus.service.user.RoleAuthorityService;
+import com.harmonycloud.zeus.service.user.UserService;
 import com.harmonycloud.zeus.service.system.LicenseService;
 import com.harmonycloud.zeus.util.K8sConvert;
 import com.harmonycloud.zeus.util.MathUtil;
@@ -134,6 +136,8 @@ public abstract class AbstractBaseOperator {
     protected LicenseService licenseService;
     @Autowired
     private BeanMiddlewareInfoMapper middlewareInfoMapper;
+    @Autowired
+    private RoleAuthorityService roleAuthorityService;
 
     /**
      * 是否支持该中间件
@@ -434,14 +438,7 @@ public abstract class AbstractBaseOperator {
                 .setLabels(values.getString("middleware-label")).setVersion(values.getString("version"))
                 .setMode(values.getString(MODE));
             // 获取chart-version
-            if (StringUtils.isNotEmpty(values.getString("chart-version"))) {
-                middleware.setChartVersion(values.getString("chart-version"));
-            } else {
-                BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoService.list(true).stream()
-                    .filter(info -> info.getChartName().equals(middleware.getType())).collect(Collectors.toList())
-                    .get(0);
-                middleware.setChartVersion(beanMiddlewareInfo.getChartVersion());
-            }
+            middleware.setChartVersion(helmChartService.getChartVersion(values, middleware.getType()));
             // 获取annotations
             if (values.containsKey("annotations")) {
                 JSONObject ann = values.getJSONObject("annotations");
@@ -1317,6 +1314,13 @@ public abstract class AbstractBaseOperator {
             array.add(item);
         });
         return array;
+    }
+
+    /**
+     * 校验用户权限
+     */
+    public Boolean checkUserAuthority(String type){
+        return roleAuthorityService.checkOps(null, type);
     }
 
 }

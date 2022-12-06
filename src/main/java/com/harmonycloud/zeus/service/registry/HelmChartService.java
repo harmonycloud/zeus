@@ -229,4 +229,12 @@ public interface HelmChartService {
      */
     void createOperator(String chartPath, String clusterId, HelmChartFile helmChartFile, String type);
 
+    /**
+     * 根据values.yaml获取chartVersion
+     *
+     * @param values values
+     * @param type   类型
+     * @return String
+     */
+    String getChartVersion(JSONObject values, String type);
 }

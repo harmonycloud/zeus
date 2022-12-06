@@ -27,6 +27,7 @@ import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.ChartVersionUtil;
+import com.harmonycloud.zeus.util.MiddlewareVersionUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -207,7 +208,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     }
 
     @Override
-    public List<MiddlewareInfoDTO> version(String clusterId, String type) {
+    public List<MiddlewareInfoDTO> chartVersion(String clusterId, String type) {
         List<BeanMiddlewareInfo> mwInfoList = listByType(type);
         BeanClusterMiddlewareInfo clusterMwInfo = clusterMiddlewareInfoService.get(clusterId, type);
         if (mwInfoList.size() == 1 && (clusterMwInfo == null || clusterMwInfo.getStatus() == 2)) {
@@ -288,7 +289,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         middlewareInfo.setChart(file2byte(Paths.get(file.getAbsolutePath())));
         if (CollectionUtils.isEmpty(beanMiddlewareInfos)) {
             middlewareInfo.setChartVersion(helmChartFile.getChartVersion());
-            middlewareInfo.setVersion(helmChartFile.getAppVersion());
+            middlewareInfo.setVersion(helmChartFile.getVersion());
 
             middlewareInfo.setCreateTime(new Date());
             middlewareInfoMapper.insert(middlewareInfo);
@@ -470,6 +471,16 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         middlewareInfoDTOS.clear();
         middlewareInfoDTOS.addAll(set);
         return middlewareInfoDTOS;
+    }
+
+    @Override
+    public Map<String, List<String>> version(String type, String chartVersion) {
+        BeanMiddlewareInfo mwInfo = get(type, chartVersion);
+        String version = mwInfo.getVersion();
+        if (StringUtils.isEmpty(version)){
+            return null;
+        }
+        return MiddlewareVersionUtil.convertVersion(version);
     }
 
     @Override

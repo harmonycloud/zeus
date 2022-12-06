@@ -50,4 +50,13 @@ public interface RoleAuthorityService {
      */
     Boolean checkExistByType(String type);
 
+    /**
+     * 通过角色id确认是否拥有运维权限
+     *
+     * @param roleId     角色id
+     * @param type       类型
+     * @return Boolean
+     */
+    Boolean checkOps(String roleId, String type);
+
 }

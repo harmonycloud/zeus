@@ -9,6 +9,7 @@ import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author dengyulong
@@ -84,7 +85,7 @@ public interface MiddlewareInfoService {
      * @param type 类型
      * @return
      */
-    List<MiddlewareInfoDTO> version(String clusterId, String type);
+    List<MiddlewareInfoDTO> chartVersion(String clusterId, String type);
 
     /**
      * 更新中间件信息
@@ -130,4 +131,12 @@ public interface MiddlewareInfoService {
      * @return
      */
     List<MiddlewareInfoDTO> clusterList();
+
+    /**
+     * 查询指定中间件发布时可指定版本
+     *
+     * @param type 类型
+     * @return Map<String, List<String>>
+     */
+    Map<String, List<String>> version(String type, String chartVersion);
 }

@@ -75,8 +75,6 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private RoleService roleService;
     @Autowired
-    private MiddlewareService middlewareService;
-    @Autowired
     private PersonalMapper personalMapper;
     @Autowired
     private BeanMailToUserMapper beanMailToUserMapper;

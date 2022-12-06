@@ -82,10 +82,13 @@ public class ProjectController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "withQuota", value = "配额", paramType = "query", required = false, defaultValue = "false", dataTypeClass = Boolean.class),
     })
     @GetMapping("/{projectId}/namespace")
-    public BaseResult<List<Namespace>> getNamespace(@PathVariable("projectId") String projectId, @RequestParam(value = "clusterId", required = false) String clusterId) {
-        return BaseResult.ok(projectService.getNamespace(projectId, clusterId));
+    public BaseResult<List<Namespace>> getNamespace(@PathVariable("projectId") String projectId,
+                                                    @RequestParam(value = "clusterId", required = false) String clusterId,
+                                                    @RequestParam(value = "withQuota", required = false, defaultValue = "false") Boolean withQuota) {
+        return BaseResult.ok(projectService.getNamespace(projectId, clusterId, withQuota));
     }
 
     @ApiOperation(value = "获取项目下可分配分区", notes = "获取项目下可分配分区")
