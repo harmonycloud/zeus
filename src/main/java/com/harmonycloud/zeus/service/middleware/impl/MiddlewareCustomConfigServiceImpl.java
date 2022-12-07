@@ -1,7 +1,5 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -27,7 +25,6 @@ import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.tool.date.DateUtils;
-import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.bean.BeanCustomConfig;
 import com.harmonycloud.zeus.bean.BeanCustomConfigHistory;
 import com.harmonycloud.zeus.bean.BeanMiddlewareParamTop;
@@ -41,7 +38,6 @@ import com.harmonycloud.zeus.service.registry.HelmChartService;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ASCEND;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.DESCEND;
 
 /**
  * @author xutianhong
@@ -161,7 +157,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         }
         // mysql和redis在不需要重启时，手动执行set global
         if ((config.getType().equals(MiddlewareTypeEnum.MYSQL.getType()) || config.getType().equals(MiddlewareTypeEnum.REDIS.getType())) && !restart) {
-                doSetGlobal(config, cluster, config.getType());
+                doUpdateCustomConfig(config, cluster, config.getType());
         }
 
         updateValues(middleware, data, cluster, values);
@@ -369,7 +365,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         helmChartService.upgrade(middleware, values, newValues, cluster);
     }
 
-    public void doSetGlobal(MiddlewareCustomConfig config, MiddlewareClusterDTO cluster, String type) {
+    public void doUpdateCustomConfig(MiddlewareCustomConfig config, MiddlewareClusterDTO cluster, String type) {
         if ((config.getType().equals(MiddlewareTypeEnum.MYSQL.getType()))){
             try{
                 doSetGlobalMysql(config, cluster);
@@ -379,7 +375,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             }
         }else if((config.getType().equals(MiddlewareTypeEnum.REDIS.getType()))){
             try{
-                doSetGlobalRedis(config, cluster);
+                doConfigSetRedis(config, cluster);
             }catch (Exception e){
                 log.error(ErrorMessage.REDIS_CONFIG_UPDATE_FAILED.getZhMsg(), e);
                 throw new BusinessException(ErrorMessage.REDIS_CONFIG_UPDATE_FAILED);
@@ -387,7 +383,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         }
     }
 
-    private void doSetGlobalRedis(MiddlewareCustomConfig config, MiddlewareClusterDTO cluster) {
+    private void doConfigSetRedis(MiddlewareCustomConfig config, MiddlewareClusterDTO cluster) {
         // 获取数据库密码
         JSONObject values = helmChartService.getInstalledValues(config.getName(), config.getNamespace(), cluster);
         String password = values.getString("redisPassword");
