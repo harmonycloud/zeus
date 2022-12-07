@@ -259,7 +259,7 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
      * @return
      */
     private String encryptRegistry(ImageRepositoryDTO registry) {
-        String host = registry.getAddress();
+        String host = registry.getHostAddress();
         Integer port = registry.getPort();
         String user = registry.getUsername();
         String password = registry.getPassword();
