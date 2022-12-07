@@ -130,6 +130,9 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
 
         middleware.setIsAllLvmStorage(true);
         middleware.setVersion(values.getString("pgsqlVersion"));
+        if (checkUserAuthority(MiddlewareTypeEnum.POSTGRESQL.getType())){
+            middleware.setPassword(values.getJSONObject("userPasswords").getString("postgres"));
+        }
         middleware.setPassword(values.getJSONObject("userPasswords").getString("postgres"));
 
         // 是否自动切换

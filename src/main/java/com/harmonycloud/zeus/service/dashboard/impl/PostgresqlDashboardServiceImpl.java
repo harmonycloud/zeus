@@ -240,6 +240,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             schemaDto.setSchemaName(schema.get("nspname"));
             schemaDto.setDatabaseName(databaseName);
             schemaDto.setOwner(schema.get("rolname"));
+            schemaDto.setComment(schema.get("obj_description"));
             return schemaDto;
         }).collect(Collectors.toList());
     }
@@ -985,7 +986,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             middlewareUserDto.setUsable(Boolean.parseBoolean(map.get("rolcanlogin")));
             middlewareUserDto.setInherit(Boolean.parseBoolean(map.get("rolinherit")));
             return middlewareUserDto;
-        }).collect(Collectors.toList());
+        }).filter(user -> user.getUsername().toLowerCase().contains(keyword)).collect(Collectors.toList());
     }
 
     @Override

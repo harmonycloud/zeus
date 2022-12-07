@@ -84,6 +84,8 @@ public class ProjectServiceImpl implements ProjectService {
     private ImageRepositoryService imageRepositoryService;
     @Value("${system.privateRegistry.middlewareServiceAccount:default}")
     private String middlewareServiceAccount;
+    @Autowired
+    private NamespaceService namespaceService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -367,6 +369,7 @@ public class ProjectServiceImpl implements ProjectService {
                 .setImagePath(middlewareImagePathMap.getOrDefault(mwType, null));
             infoList.add(projectMiddlewareResourceInfo);
         }
+        infoList.sort(Comparator.comparing(ProjectMiddlewareResourceInfo::getType));
         return infoList;
     }
 
@@ -497,20 +500,17 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public List<String> getClusters(String projectId) {
-        List<Namespace> namespaceList = this.getNamespace(projectId, null);
+        List<Namespace> namespaceList = this.getNamespace(projectId, null, false);
         return namespaceList.stream().map(Namespace::getClusterId).collect(Collectors.toList());
     }
 
-    @Autowired
-    private NamespaceService namespaceService;
-
     @Override
     public List<Namespace> getNamespace(String projectId) {
-        return getNamespace(projectId, null);
+        return getNamespace(projectId, null, false);
     }
 
     @Override
-    public List<Namespace> getNamespace(String projectId, String clusterId) {
+    public List<Namespace> getNamespace(String projectId, String clusterId, Boolean withQuota) {
         QueryWrapper<BeanProjectNamespace> wrapper =
             new QueryWrapper<BeanProjectNamespace>().eq("project_id", projectId);
         if (!StringUtils.isEmpty(clusterId)) {
@@ -527,6 +527,14 @@ public class ProjectServiceImpl implements ProjectService {
             }
             return namespace;
         }).collect(Collectors.toList());
+        // 查询quota
+        if (withQuota) {
+            Map<String, List<Namespace>> namespaceMap =
+                namespaces.stream().collect(Collectors.groupingBy(Namespace::getClusterId));
+            for (String key : namespaceMap.keySet()) {
+                namespaceService.listNamespaceWithQuota(namespaceMap.get(key), key);
+            }
+        }
 
         if (StringUtils.isEmpty(clusterId)) {
             return namespaces;
@@ -556,7 +564,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     /**
      * 设置双活分区状态
-     * 
+     *
      * @param namespaces
      * @param clusterId
      * @return

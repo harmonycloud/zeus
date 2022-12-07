@@ -1,5 +1,9 @@
 package com.harmonycloud.zeus.util;
 
+import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -104,6 +108,21 @@ public class MathUtil {
         } catch (NumberFormatException e) {
             return false;
         }
+    }
+
+    /**
+     * 判断一个字符串是否是数字
+     * @param x
+     * @param y
+     * @param size
+     * @return double
+     */
+    public static double multiplyExact(double x, double y, int size){
+        double r = x * y;
+        if (size > 0){
+            ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(r), size, RoundingMode.CEILING);
+        }
+        return r;
     }
 
 }

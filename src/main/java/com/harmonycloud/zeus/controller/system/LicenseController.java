@@ -56,4 +56,16 @@ public class LicenseController {
         return BaseResult.ok(licenseService.check(clusterId));
     }
 
+    @ApiOperation(value = "发布中间件能力校验", notes = "发布中间件能力校验")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "license", value = "license", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("/check/test")
+    public BaseResult<Boolean> test() throws Exception {
+        for (int i = 0; i < 3; ++i){
+            licenseService.refreshMiddlewareResource();
+        }
+        return BaseResult.ok();
+    }
+
 }
