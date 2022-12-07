@@ -7,7 +7,9 @@ import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConsta
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PREDIXY;
 
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.alibaba.fastjson.JSONArray;
+import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.Protocol;
 import com.harmonycloud.caas.common.exception.BusinessException;
@@ -501,6 +503,9 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         //获取从节点信息
         JSONObject status = JSONObject.parseObject(cr.getMetadata().getAnnotations().get("status"));
         JSONArray conditions = status.getJSONArray("conditions");
+        if (CollectionUtil.isEmpty(conditions)) {
+            throw new BusinessException(DictEnum.POD, ErrorMessage.NOT_FOUND);
+        }
         JSONObject slavePod = null;
         for (Object condition : conditions) {
             JSONObject con = (JSONObject) condition;
