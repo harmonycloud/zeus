@@ -986,7 +986,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             middlewareUserDto.setUsable(Boolean.parseBoolean(map.get("rolcanlogin")));
             middlewareUserDto.setInherit(Boolean.parseBoolean(map.get("rolinherit")));
             return middlewareUserDto;
-        }).collect(Collectors.toList());
+        }).filter(user -> user.getUsername().toLowerCase().contains(keyword)).collect(Collectors.toList());
     }
 
     @Override
