@@ -122,41 +122,41 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
 
     @Override
     public Map<String, String> burstList(String clusterId, String namespace, String middlewareName, String mode) {
-        Map<String,String> burstMap = new HashMap<>();
+        Map<String, String> burstMap = new HashMap<>();
         MiddlewareCR cr = middlewareCRService.getCR(clusterId, namespace, MiddlewareTypeEnum.REDIS.getType(), middlewareName);
         JSONObject status = JSONObject.parseObject(cr.getMetadata().getAnnotations().get("status"));
         JSONArray conditions = status.getJSONArray("conditions");
 
         Map<String, JSONObject> conditionMap = new HashMap<>();
         // 哨兵模式
-        if ("sentinel".equals(mode)){
-              conditions.forEach(condition->{
-                  JSONObject con = (JSONObject)condition;
-                  if ("master".equals(con.getString("type"))){
-                      String name = con.getString("name");
-                      String burstName = name.substring(0, name.lastIndexOf("-"));
-                      conditionMap.put(burstName,con);
-                  }
-              });
-              conditions.forEach(condition->{
-                  JSONObject con = (JSONObject)condition;
-                  if ("slave".equals(con.getString("type"))){
-                      String name = con.getString("name");
-                      String burstName = name.substring(0, name.lastIndexOf("-"));
-                      JSONObject master = conditionMap.get(burstName);
-                      burstMap.put(master.getString("name"),con.getString("name"));
-                  }
-              });
-        }else{
-            conditions.forEach(condition->{
-                JSONObject con = (JSONObject)condition;
-                conditionMap.put(con.getString("nodeId"),con);
+        if ("sentinel".equals(mode)) {
+            conditions.forEach(condition -> {
+                JSONObject con = (JSONObject) condition;
+                if ("master".equals(con.getString("type"))) {
+                    String name = con.getString("name");
+                    String burstName = name.substring(0, name.lastIndexOf("-"));
+                    conditionMap.put(burstName, con);
+                }
             });
-            conditions.forEach(condition->{
-                JSONObject con = (JSONObject)condition;
-                if ("slave".equals(con.getString("type"))){
+            conditions.forEach(condition -> {
+                JSONObject con = (JSONObject) condition;
+                if ("slave".equals(con.getString("type"))) {
+                    String name = con.getString("name");
+                    String burstName = name.substring(0, name.lastIndexOf("-"));
+                    JSONObject master = conditionMap.get(burstName);
+                    burstMap.put(master.getString("name"), con.getString("name"));
+                }
+            });
+        } else {
+            conditions.forEach(condition -> {
+                JSONObject con = (JSONObject) condition;
+                conditionMap.put(con.getString("nodeId"), con);
+            });
+            conditions.forEach(condition -> {
+                JSONObject con = (JSONObject) condition;
+                if ("slave".equals(con.getString("type"))) {
                     JSONObject masterNode = conditionMap.get(con.getString("masterNodeId"));
-                    burstMap.put(masterNode.getString("name"),con.getString("name"));
+                    burstMap.put(masterNode.getString("name"), con.getString("name"));
                 }
             });
         }

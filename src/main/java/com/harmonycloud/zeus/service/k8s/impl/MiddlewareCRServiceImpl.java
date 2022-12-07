@@ -7,14 +7,19 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.integration.cluster.MiddlewareWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
+import com.harmonycloud.zeus.integration.cluster.bean.Status;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.PodService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
+import com.mchange.v2.util.PropertiesUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.util.PropertiesUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -239,6 +244,13 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
     public boolean checkIfExist(String clusterId, String namespace, String type, String middlewareName) {
         String crdName = middlewareCrTypeService.findByType(type) + "-" + middlewareName;
         return middlewareWrapper.checkIfExist(clusterId, namespace, crdName);
+    }
+
+    @Override
+    public Status getStatus(String clusterId, String namespace, String type, String middlewareName) {
+        MiddlewareCR cr = getCR(clusterId, namespace, type, middlewareName);
+        JSONObject statusJSON = JSONObject.parseObject(cr.getMetadata().getAnnotations().get("status"), JSONObject.class);
+        return JSONObject.toJavaObject(statusJSON, Status.class);
     }
 
     @Override

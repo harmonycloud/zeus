@@ -28,6 +28,7 @@ import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.operator.BaseOperator;
 import com.harmonycloud.zeus.service.AbstractBaseService;
+import com.harmonycloud.zeus.service.ingress.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.*;
 import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
@@ -274,9 +275,16 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public void switchMiddleware(String clusterId, String namespace, String name, String type, Boolean isAuto) {
+    public void switchMiddleware(String clusterId, String namespace, String name, String type, String slaveName, Boolean isAuto) {
         Middleware middleware = new Middleware(clusterId, namespace, name, type).setAutoSwitch(isAuto);
-        getOperator(BaseOperator.class, BaseOperator.class, middleware).switchMiddleware(middleware);
+        BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
+        // redis分片内单独切换主从
+        if (MiddlewareTypeEnum.REDIS.getType().equals(type)){
+            operator.switchMiddleware(middleware, slaveName);
+        }else {
+            operator.switchMiddleware(middleware);
+        }
+
     }
 
     @Override
