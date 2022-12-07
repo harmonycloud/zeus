@@ -3,9 +3,11 @@ package com.harmonycloud.zeus.service.k8s;
 import java.util.List;
 import java.util.Map;
 
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
+import com.harmonycloud.zeus.integration.cluster.bean.Status;
 
 /**
  * @author xutianhong
@@ -101,4 +103,13 @@ public interface MiddlewareCRService {
      */
     boolean checkIfExist(String clusterId, String namespace, String type, String middlewareName);
 
+    /**
+     * 获取中间件状态
+     * @param clusterId  集群ID
+     * @param namespace  命名空间
+     * @param type       类型
+     * @param middlewareName 中间件名称
+     * @return
+     */
+    public Status getStatus(String clusterId, String namespace, String type, String middlewareName);
 }
