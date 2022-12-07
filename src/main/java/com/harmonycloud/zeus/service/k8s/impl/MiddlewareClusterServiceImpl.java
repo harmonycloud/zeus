@@ -97,6 +97,7 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
             wrapper.eq("cluster_id", clusterId);
         }
         List<BeanMiddlewareCluster> beanMiddlewareClusters = middlewareClusterMapper.selectList(wrapper);
+        // todo 此逻辑是否可删除
         if (CollectionUtils.isEmpty(beanMiddlewareClusters)){
             beanMiddlewareClusters = initMiddlewareCluster();
         }

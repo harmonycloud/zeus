@@ -32,7 +32,7 @@ public interface LicenseService {
     /**
      * 计算cpu使用量
      */
-    void middlewareResource() throws Exception;
+    void refreshMiddlewareResource() throws Exception;
 
     /**
      * 计算cpu使用量

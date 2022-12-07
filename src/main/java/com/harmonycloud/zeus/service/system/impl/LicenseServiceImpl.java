@@ -2,14 +2,19 @@ package com.harmonycloud.zeus.service.system.impl;
 
 import static com.harmonycloud.caas.common.constants.NameConstant.*;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONArray;
+import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.harmonycloud.zeus.util.MathUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
@@ -169,7 +174,7 @@ public class LicenseServiceImpl implements LicenseService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void middlewareResource() throws Exception {
+    public void refreshMiddlewareResource() throws Exception {
         BeanSystemConfig produceConfig = systemConfigService.getConfigForUpdate(PRODUCE);
         BeanSystemConfig testConfig = systemConfigService.getConfigForUpdate(TEST);
         if (produceConfig == null || testConfig == null) {
@@ -238,11 +243,15 @@ public class LicenseServiceImpl implements LicenseService {
     }
 
     public Double calculateCpu(List<Double> cpuList) {
-        Double cpu = 0.0;
-        for (int i = 0; i < cpuList.size(); ++i) {
-            cpu += cpuList.get(i);
+        double total = 0.0;
+        if (!CollectionUtils.isEmpty(cpuList)) {
+            for (Double cpu : cpuList) {
+                if (cpu != null) {
+                    total += cpu;
+                }
+            }
         }
-        return cpu;
+        return ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(total), 2, RoundingMode.CEILING);
     }
 
     /**
@@ -275,10 +284,14 @@ public class LicenseServiceImpl implements LicenseService {
      * 获取使用cpu缓存
      */
     public Double getCpu(String name) {
-        BeanSystemConfig config = systemConfigService.getConfig(name);
+        BeanSystemConfig config = systemConfigService.getConfigForUpdate(name);
         if (config == null) {
             initCpu();
             return 0.0;
+        }
+        try {
+            refreshMiddlewareResource();
+        } catch (Exception ignored){
         }
         return Double.parseDouble(config.getConfigValue());
     }

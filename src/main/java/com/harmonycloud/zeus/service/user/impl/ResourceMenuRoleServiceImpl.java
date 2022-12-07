@@ -1,14 +1,18 @@
 package com.harmonycloud.zeus.service.user.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.zeus.bean.user.BeanResourceMenuRole;
 import com.harmonycloud.zeus.dao.user.BeanResourceMenuRoleMapper;
 import com.harmonycloud.zeus.service.user.ResourceMenuRoleService;
+import com.harmonycloud.zeus.service.user.ResourceMenuService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -19,9 +23,27 @@ import java.util.List;
 @Slf4j
 public class ResourceMenuRoleServiceImpl implements ResourceMenuRoleService {
 
+    @Value("${system.user.admin.role-id:1}")
+    private String adminRoleId;
+    @Value("${system.user.role.resource-menu:5,8,9,10,12,14,15,16}")
+    private String opsIds;
+
     @Autowired
     private BeanResourceMenuRoleMapper beanResourceMenuRoleMapper;
-    
+    @Autowired
+    private ResourceMenuService resourceMenuService;
+
+    @Override
+    public void init(Integer roleId) {
+        List<ResourceMenuDto> menuDtoList = resourceMenuService.list();
+        menuDtoList.forEach(menu -> add(roleId, menu.getId(), menu.getId() == 3 || menu.getId() == 4));
+    }
+
+    @Override
+    public List<BeanResourceMenuRole> listAdminMenu() {
+        return list(adminRoleId);
+    }
+
     @Override
     public List<BeanResourceMenuRole> list(String roleId) {
         QueryWrapper<BeanResourceMenuRole> rmRoleWrapper =
@@ -54,5 +76,11 @@ public class ResourceMenuRoleServiceImpl implements ResourceMenuRoleService {
         BeanResourceMenuRole beanResourceMenuRole = new BeanResourceMenuRole();
         beanResourceMenuRole.setAvailable(available);
         beanResourceMenuRoleMapper.update(beanResourceMenuRole, wrapper);
+    }
+
+    @Override
+    public void updateOpsMenu(Integer roleId, boolean ops) {
+        List<String> optIdList = Arrays.asList(opsIds.split(","));
+        optIdList.forEach(optId -> this.update(roleId, Integer.parseInt(optId), ops));
     }
 }

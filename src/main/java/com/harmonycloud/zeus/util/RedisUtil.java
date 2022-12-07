@@ -206,7 +206,6 @@ public class RedisUtil {
     }
 
     public static void main(String[] args) {
-        String podname = "";
         String s = extractShardIndex("predis-shard-1-0");
         System.out.println(s);
     }

@@ -1,20 +1,16 @@
 package com.harmonycloud.zeus.controller.middleware;
 
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareInfoDTO;
-import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareInfoDTO;
+import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
-
-import java.util.List;
 
 /**
  * @author dengyulong
@@ -54,9 +50,9 @@ public class MiddlewareInfoController {
             @ApiImplicitParam(name = "type", value = "类型", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/version")
-    public BaseResult version(@RequestParam(value = "clusterId") String clusterId,
-                              @RequestParam(value = "type") String type) {
-        return BaseResult.ok(middlewareInfoService.version(clusterId, type));
+    public BaseResult chartVersion(@RequestParam(value = "clusterId") String clusterId,
+                                   @RequestParam(value = "type") String type) {
+        return BaseResult.ok(middlewareInfoService.chartVersion(clusterId, type));
     }
 
     @ApiOperation(value = "中间件下架", notes = "中间件下架")
@@ -85,5 +81,16 @@ public class MiddlewareInfoController {
     @GetMapping("/middleware")
     public BaseResult clusterList() {
         return BaseResult.ok(middlewareInfoService.clusterList());
+    }
+
+    @ApiOperation(value = "查询指定中间件发布时可指定版本", notes = "查询指定中间件发布时可指定版本")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "type", value = "类型", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "chartVersion", value = "chart版本", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("/{type}/version")
+    public BaseResult version(@PathVariable("type") String type,
+                              @RequestParam("chartVersion") String chartVersion) {
+        return BaseResult.ok(middlewareInfoService.version(type, chartVersion));
     }
 }

@@ -13,6 +13,13 @@ public interface ResourceMenuService {
 
     /**
      * 获取菜单详细信息
+     *
+     * @return List<BeanResourceMenu>
+     */
+    List<ResourceMenuDto> list();
+
+    /**
+     * 获取菜单详细信息
      * @param ids 菜单id列表
      *
      * @return List<BeanResourceMenu>

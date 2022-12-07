@@ -86,6 +86,13 @@ public interface ImageRepositoryService {
     Registry generateRegistry(String mirrorImageId);
 
     /**
+     * 获取集群模式registry
+     * @param clusterId
+     * @return
+     */
+    BeanImageRepository getClusterDefaultRegistry(String clusterId);
+
+    /**
      * 创建imagePullSecret
      */
     void createImagePullSecret(String clusterId, String namespace, List<ImageRepositoryDTO> imageRepositoryDTOS);

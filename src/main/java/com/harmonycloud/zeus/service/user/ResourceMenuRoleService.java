@@ -11,6 +11,20 @@ import java.util.List;
 public interface ResourceMenuRoleService {
 
     /**
+     * 初始化角色菜单权限
+     * @param roleId 角色id
+     *
+     */
+    void init(Integer roleId);
+
+    /**
+     * 获取admin角色菜单映照列表
+     *
+     * @return List<BeanResourceMenuRole>
+     */
+    List<BeanResourceMenuRole> listAdminMenu();
+
+    /**
      * 获取角色菜单映照列表
      * @param roleId 角色id
      *
@@ -43,5 +57,14 @@ public interface ResourceMenuRoleService {
      *
      */
     void update(Integer roleId, Integer resourceMenuId, Boolean available);
+
+    /**
+     * 根据是否拥有运维权限更新角色菜单绑定关系
+     *
+     * @param roleId 角色id
+     * @param ops 是否拥有运维权限
+     *
+     */
+    void updateOpsMenu(Integer roleId, boolean ops);
 
 }
