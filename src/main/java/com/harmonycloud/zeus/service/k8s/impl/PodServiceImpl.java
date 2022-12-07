@@ -22,7 +22,9 @@ import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
+import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.DateUtil;
+import com.harmonycloud.zeus.util.RedisUtil;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -429,7 +431,7 @@ public class PodServiceImpl implements PodService {
             podInfoList.add(pi);
         }
         // 添加pod额外角色类型
-        podInfoList = addPodExtraRole(podInfoList, mw, type);
+        podInfoList = addPodExtraRole(clusterId, namespace, middlewareName, type, podInfoList, mw);
         // 设置pod所在可用区
         this.setPodArea(clusterId, podInfoList);
         middleware.setIsAllLvmStorage(isAllLvmStorage.get());
@@ -437,9 +439,30 @@ public class PodServiceImpl implements PodService {
         middleware.setPods(podInfoList);
         return middleware;
     }
+    @Autowired
+    private HelmChartService helmChartService;
+    @Autowired
+    private ClusterService clusterService;
 
-    private List<PodInfo> addPodExtraRole(List<PodInfo> podInfoList, MiddlewareCR mw, String type) {
+    private List<PodInfo> addPodExtraRole(String clusterId, String namespace, String middlewareName, String type, List<PodInfo> podInfoList, MiddlewareCR mw) {
         if (MiddlewareTypeEnum.REDIS.getType().equals(type)) {
+            return addRedisPodExtraRole(clusterId, namespace, middlewareName, podInfoList, mw);
+        }
+        return podInfoList;
+    }
+
+
+    private List<PodInfo> addRedisPodExtraRole(String clusterId, String namespace, String middlewareName, List<PodInfo> podInfoList, MiddlewareCR mw) {
+        String deployMod = RedisUtil.getRedisDeployMod(helmChartService.getInstalledValues(middlewareName, namespace, clusterService.findById(clusterId)));
+        // 哨兵模式通过name判断分片，集群模式通过slave的masterNodeId判断分片
+        if (deployMod.contains("sentinel")) {
+            podInfoList.forEach(podInfo -> {
+                String shardIndex = RedisUtil.extractShardIndex(podInfo.getPodName());
+                if (StringUtils.isNotBlank(shardIndex)) {
+                    podInfo.setGroup("shard-" + shardIndex);
+                }
+            });
+        } else {
             String status = mw.getMetadata().getAnnotations().get("status");
             if (StringUtils.isNotBlank(status)) {
                 Map<String, PodInfo> podInfoMap = new HashMap<>();
@@ -481,5 +504,4 @@ public class PodServiceImpl implements PodService {
         }
         return podInfoList;
     }
-
 }
