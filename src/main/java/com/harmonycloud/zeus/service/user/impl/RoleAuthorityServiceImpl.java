@@ -93,7 +93,11 @@ public class RoleAuthorityServiceImpl implements RoleAuthorityService {
         }
         if (StringUtils.isEmpty(roleId)) {
             String username = CurrentUserRepository.getUser().getUsername();
-            roleId = String.valueOf(userRoleService.getRoleId(username, projectId));
+            Integer rid = userRoleService.getRoleId(username, projectId);
+            if (rid == null && userRoleService.checkAdmin(username)){
+                return true;
+            }
+            roleId = String.valueOf(rid);
         }
         QueryWrapper<BeanRoleAuthority> wrapper =
             new QueryWrapper<BeanRoleAuthority>().eq("role_id", roleId).eq("type", type);

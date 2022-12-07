@@ -15,9 +15,8 @@ public class MiddlewareVersionUtil {
         Map<String, List<String>> map = new HashMap<>();
         try {
             String[] versions = version.split(",");
-            Set<String> set = new HashSet<>();
             for (int i = 0; i < versions.length; ++i) {
-                String vx = versions[i].split("\\.")[0] + ".x";
+                String vx = versions[i].split("\\.")[0];
                 if (!map.containsKey(vx)) {
                     List<String> list = new ArrayList<>();
                     list.add(versions[i]);
