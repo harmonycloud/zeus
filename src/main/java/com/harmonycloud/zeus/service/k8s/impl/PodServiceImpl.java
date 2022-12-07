@@ -163,9 +163,14 @@ public class PodServiceImpl implements PodService {
             podInfoGroup.setListChildGroup(list);
         } else {
             podMap.forEach((k, v) -> {
-                podInfoGroup.setRole(k);
-                podInfoGroup.setPods(v);
-                podInfoGroup.setHasChildGroup(false);
+                List<PodInfoGroup> list = new ArrayList<>();
+                PodInfoGroup tempGroup = new PodInfoGroup();
+                tempGroup.setRole(k);
+                tempGroup.setPods(v);
+                tempGroup.setHasChildGroup(false);
+                list.add(tempGroup);
+                podInfoGroup.setListChildGroup(list);
+                podInfoGroup.setHasChildGroup(true);
             });
         }
         return podInfoGroup;
