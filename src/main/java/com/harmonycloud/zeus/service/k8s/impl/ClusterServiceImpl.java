@@ -78,6 +78,8 @@ public class ClusterServiceImpl implements ClusterService {
     private static boolean run = true;
     @Value("${system.upload.path:/usr/local/zeus-pv/upload}")
     private String uploadPath;
+    @Value("${k8s.default.dc:default}")
+    private String dc;
 
     @Autowired
     private MiddlewareClusterService middlewareClusterService;
@@ -358,6 +360,9 @@ public class ClusterServiceImpl implements ClusterService {
     private void checkParams(MiddlewareClusterDTO cluster) {
         if (cluster.getCert() == null || StringUtils.isEmpty(cluster.getCert().getCertificate())) {
             throw new IllegalArgumentException("cluster cert info is null");
+        }
+        if(StringUtils.isEmpty(cluster.getDcId())){
+            cluster.setDcId(dc);
         }
     }
 
