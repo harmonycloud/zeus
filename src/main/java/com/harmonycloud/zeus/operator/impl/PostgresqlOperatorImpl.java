@@ -19,6 +19,7 @@ import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
+import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.cmd.CmdExecUtil;
 import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
@@ -30,10 +31,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.model.middleware.CustomConfig;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareQuota;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.operator.api.PostgresqlOperator;
@@ -137,6 +134,8 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
 
         // 是否自动切换
         middleware.setAutoSwitch(getAutoSwitch(middleware, cluster));
+
+        middleware.setPostgresqlParam(new PostgresqlParam().setHostNetwork(values.getBoolean("hostNetwork")));
         return middleware;
     }
 
