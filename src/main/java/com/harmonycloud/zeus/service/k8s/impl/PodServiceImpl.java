@@ -421,7 +421,6 @@ public class PodServiceImpl implements PodService {
             }
             // 设置pod备份状态
             setPodBackupStatus(clusterId, namespace, type, middlewareName, pi);
-            podInfoList.add(pi);
         }
         // 添加pod额外角色类型
         podInfoList = addPodExtraRole(clusterId, namespace, middlewareName, type, podInfoList, mw);
