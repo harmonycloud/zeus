@@ -7,8 +7,10 @@ import static com.harmonycloud.zeus.util.RedisUtil.getRedisSentinelIsOk;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.model.Node;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
@@ -88,6 +90,9 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
         MiddlewareCR cr = middlewareCRService.getCR(clusterId, namespace, MiddlewareTypeEnum.REDIS.getType(), middlewareName);
         JSONObject status = JSONObject.parseObject(cr.getMetadata().getAnnotations().get("status"));
         JSONArray conditions = status.getJSONArray("conditions");
+        if (CollectionUtil.isEmpty(conditions)){
+            throw new BusinessException(DictEnum.POD,ErrorMessage.NOT_FOUND);
+        }
 
         // 哨兵模式
         if ("sentinel".equals(mode)) {
@@ -126,6 +131,9 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
         MiddlewareCR cr = middlewareCRService.getCR(clusterId, namespace, MiddlewareTypeEnum.REDIS.getType(), middlewareName);
         JSONObject status = JSONObject.parseObject(cr.getMetadata().getAnnotations().get("status"));
         JSONArray conditions = status.getJSONArray("conditions");
+        if (CollectionUtil.isEmpty(conditions)){
+            throw new BusinessException(DictEnum.POD,ErrorMessage.NOT_FOUND);
+        }
 
         Map<String, JSONObject> conditionMap = new HashMap<>();
         // 哨兵模式

@@ -136,19 +136,25 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         middleware.setPassword(values.getJSONObject("userPasswords").getString("postgres"));
 
         // 是否自动切换
+        middleware.setAutoSwitch(getAutoSwitch(middleware, cluster));
+        return middleware;
+    }
+
+    public Boolean getAutoSwitch(Middleware middleware, MiddlewareClusterDTO cluster) {
+        // 获取patroniService
         String patroniName = middleware.getName() + "-patroni";
         Service patroniService = serviceWrapper.get(middleware.getClusterId(), middleware.getNamespace(), patroniName);
 
         if (patroniService == null) {
             throw new BusinessException(DictEnum.SERVICE, patroniName, ErrorMessage.NOT_EXIST);
         }
-
+        // 获取pod列表
         List<Status.Condition> conditions = middlewareCRService.getStatus(middleware.getClusterId()
                 , middleware.getNamespace(), MiddlewareTypeEnum.POSTGRESQL.getType(), middleware.getName()).getConditions();
-        if (CollectionUtil.isEmpty(conditions)){
-            throw new BusinessException(DictEnum.POD,ErrorMessage.NOT_FOUND);
+        if (CollectionUtil.isEmpty(conditions)) {
+            return true;
         }
-
+        // pod执行命令
         String execCommand = MessageFormat.format(
                 "kubectl exec {0} -n {1} -c postgres --server={2} --token={3} --insecure-skip-tls-verify=true " +
                         "-- bash  -c \"curl -s http://{4}:8008/patroni | jq .\"",
@@ -158,8 +164,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         StringBuilder sb = new StringBuilder();
         resList.forEach(sb::append);
         JSONObject resJSON = JSONObject.parseObject(sb.toString());
-        middleware.setAutoSwitch(resJSON.getBoolean("pause") == null || !resJSON.getBoolean("pause"));
-        return middleware;
+        return resJSON.getBoolean("pause") == null || !resJSON.getBoolean("pause");
     }
 
     @Override
