@@ -542,7 +542,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             return Collections.emptyList();
         }
         JSONObject redis = values.getJSONObject("redis");
-        if (redis != null && redis.containsKey("hostNetwork") && redis.containsKey("type") && redis.getBoolean("hostNetwork")) {
+        if (redis != null && redis.containsKey("hostNetwork") && values.containsKey("type") && redis.getBoolean("hostNetwork")) {
             List<PodInfo> podInfoList = podService.listMiddlewarePods(clusterId, namespace, middlewareName, MiddlewareTypeEnum.REDIS.getType());
             String deployMod = RedisUtil.getRedisDeployMod(values);
             switch (deployMod) {

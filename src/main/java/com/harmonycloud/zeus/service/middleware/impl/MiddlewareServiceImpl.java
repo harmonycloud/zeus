@@ -912,8 +912,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
     @Override
     public List<IngressDTO> listHostNetworkAddress(String clusterId, String namespace, String name, String type) {
-        BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, type);
-        return null;
+        Middleware middleware = new Middleware();
+        middleware.setType(type);
+        BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
+        return operator.listHostNetworkAddress(clusterId, namespace, name, type);
     }
 
     @Override

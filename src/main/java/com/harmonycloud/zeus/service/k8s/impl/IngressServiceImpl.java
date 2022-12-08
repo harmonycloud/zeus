@@ -26,6 +26,7 @@ import com.harmonycloud.zeus.operator.BaseOperator;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
+import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.service.user.UserService;
 import com.harmonycloud.zeus.util.DateUtil;
@@ -95,6 +96,8 @@ public class IngressServiceImpl implements IngressService {
     private IngressRouteTCPWrapper ingressRouteTCPWrapper;
     @Autowired
     private NodeService nodeService;
+    @Autowired
+    private MiddlewareService middlewareService;
 
     @Value("${k8s.ingress.default.name:nginx-ingress-controller}")
     private String defaultIngressName;
@@ -596,9 +599,7 @@ public class IngressServiceImpl implements IngressService {
 
     @Override
     public List<IngressDTO> getHostNetworkAddress(String clusterId, String namespace, String type, String middlewareName) {
-
-
-        return null;
+        return middlewareService.listHostNetworkAddress(clusterId, namespace, middlewareName, type);
     }
 
     // 对部分中间件做特殊处理
