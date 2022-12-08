@@ -155,6 +155,9 @@ public interface BaseOperator {
     @Deprecated
     void updateConfigData(ConfigMap configMap, List<String> data);
 
-
+    /**
+     * 查询中间件hostnetwork访问地址
+     */
+    List<IngressDTO> listHostNetworkAddress(String clusterId, String namespace, String middlewareName, String type);
 
 }

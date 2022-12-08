@@ -7,6 +7,7 @@ import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConsta
 
 import java.text.MessageFormat;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -25,6 +26,8 @@ import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.service.k8s.K8sExecService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareBackupCRService;
+import com.harmonycloud.zeus.service.k8s.PodService;
+import com.harmonycloud.zeus.util.RedisUtil;
 import com.mchange.v1.util.CollectionUtils;
 import io.fabric8.kubernetes.api.model.Service;
 import org.apache.commons.lang3.StringUtils;
@@ -58,9 +61,10 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
 
     @Autowired
     public ServiceWrapper serviceWrapper;
-
     @Autowired
     public K8sExecService k8sExecService;
+    @Autowired
+    private PodService podService;
 
     @Override
     public void replaceValues(Middleware middleware, MiddlewareClusterDTO cluster, JSONObject values) {
@@ -257,6 +261,26 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             handSwitch(middleware,cr);
         }
 
+    }
+
+    @Override
+    public List<IngressDTO> listHostNetworkAddress(String clusterId, String namespace, String middlewareName, String type) {
+        JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, clusterService.findById(clusterId));
+        if (values == null) {
+            return Collections.emptyList();
+        }
+        if (values.containsKey("hostNetwork") && values.getBoolean("hostNetwork")) {
+            List<PodInfo> podInfoList = podService.listMiddlewarePods(clusterId, namespace, middlewareName, MiddlewareTypeEnum.POSTGRESQL.getType());
+            podInfoList = podInfoList.stream().filter(podInfo -> "master".equals(podInfo.getRole())).collect(Collectors.toList());
+            return podInfoList.stream().map(podInfo -> {
+                IngressDTO ingressDTO = new IngressDTO();
+                ingressDTO.setServicePurpose(podInfo.getPodName());
+                ingressDTO.setExposeIP(podInfo.getHostIp());
+                ingressDTO.setExposePort("5432");
+                return ingressDTO;
+            }).collect(Collectors.toList());
+        }
+        return Collections.emptyList();
     }
 
     private void handSwitch(Middleware middleware, MiddlewareCR cr) {

@@ -181,4 +181,10 @@ public interface IngressService {
      */
     String getIngressIp(String clusterId, String ingressClassName);
 
+    /**
+     * 获取hostnetwork访问信息
+     * @return
+     */
+    List<IngressDTO> getHostNetworkAddress(String clusterId, String namespace, String type, String middlewareName);
+
 }

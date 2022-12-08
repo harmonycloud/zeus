@@ -22,6 +22,7 @@ import com.harmonycloud.zeus.integration.cluster.IngressRouteTCPWrapper;
 import com.harmonycloud.zeus.integration.cluster.IngressWrapper;
 import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
+import com.harmonycloud.zeus.operator.BaseOperator;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
@@ -591,6 +592,13 @@ public class IngressServiceImpl implements IngressService {
             throw new BusinessException(ErrorMessage.INGRESS_NOT_AVAILABLE);
         }
         return ingressIpSet.get(0);
+    }
+
+    @Override
+    public List<IngressDTO> getHostNetworkAddress(String clusterId, String namespace, String type, String middlewareName) {
+
+
+        return null;
     }
 
     // 对部分中间件做特殊处理

@@ -192,6 +192,13 @@ public class RedisUtil {
         }
     }
 
+    public static String getServicePort(String podType) {
+        if ("proxy".equals(podType)) {
+            return "7617";
+        }
+        return "6379";
+    }
+
     public static String extractShardIndex(String podName) {
         if (org.springframework.util.StringUtils.isEmpty(podName)) {
             return null;

@@ -92,7 +92,19 @@ public interface PodService {
      * @param type           中间件类型
      * @return
      */
-    Middleware listPods(MiddlewareCR mw, String clusterId, String namespace, String middlewareName, String type);
+    Middleware listPodsWithMiddleware(MiddlewareCR mw, String clusterId, String namespace, String middlewareName, String type);
+
+    /**
+     * 查询中间件所有pod
+     * @param mw
+     * @param clusterId
+     * @param namespace
+     * @param middlewareName
+     * @param type
+     * @return
+     */
+    List<PodInfo> listMiddlewarePods(String clusterId, String namespace, String middlewareName, String type);
+
     /**
      * 查询pod yaml
      *

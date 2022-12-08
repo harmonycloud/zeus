@@ -911,6 +911,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
+    public List<IngressDTO> listHostNetworkAddress(String clusterId, String namespace, String name, String type) {
+        BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, type);
+        return null;
+    }
+
+    @Override
     public String platform(String clusterId, String namespace, String name, String type) {
         if (!type.equals(MiddlewareTypeEnum.ELASTIC_SEARCH.getType())
                 && !type.equals(MiddlewareTypeEnum.KAFKA.getType())

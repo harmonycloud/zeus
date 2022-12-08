@@ -23,10 +23,11 @@ import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.service.k8s.IngressComponentService;
 import com.harmonycloud.zeus.service.k8s.K8sExecService;
+import com.harmonycloud.zeus.service.k8s.PodService;
 import com.harmonycloud.zeus.service.k8s.ServiceService;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareServiceImpl;
 import com.harmonycloud.zeus.util.K8sConvert;
-import com.harmonycloud.zeus.util.MathUtil;
+import com.harmonycloud.zeus.util.RedisUtil;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.NodeAffinity;
@@ -61,6 +62,8 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
     private ServiceService serviceService;
     @Autowired
     private K8sExecService k8sExecService;
+    @Autowired
+    private PodService podService;
 
     public void createIngressService(Middleware middleware) {
         List<IngressComponentDto> ingressComponentList = ingressComponentService.list(middleware.getClusterId());
@@ -531,4 +534,37 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         k8sExecService.exec(execCommand);
 
     }
+
+    @Override
+    public List<IngressDTO> listHostNetworkAddress(String clusterId, String namespace, String middlewareName, String type) {
+        JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, clusterService.findById(clusterId));
+        if (values == null) {
+            return Collections.emptyList();
+        }
+        JSONObject redis = values.getJSONObject("redis");
+        if (redis != null && redis.containsKey("hostNetwork") && redis.containsKey("type") && redis.getBoolean("hostNetwork")) {
+            List<PodInfo> podInfoList = podService.listMiddlewarePods(clusterId, namespace, middlewareName, MiddlewareTypeEnum.REDIS.getType());
+            String deployMod = RedisUtil.getRedisDeployMod(values);
+            switch (deployMod) {
+                case "cluster":
+                    break;
+                case "clusterProxy":
+                case "sentinelProxy":
+                    podInfoList = podInfoList.stream().filter(podInfo -> "proxy".equals(podInfo.getRole())).collect(Collectors.toList());
+                    break;
+                case "sentinel":
+                    podInfoList = podInfoList.stream().filter(podInfo -> "sentinel".equals(podInfo.getRole())).collect(Collectors.toList());
+                    break;
+            }
+            return podInfoList.stream().map(podInfo -> {
+                IngressDTO ingressDTO = new IngressDTO();
+                ingressDTO.setServicePurpose(podInfo.getPodName());
+                ingressDTO.setExposeIP(podInfo.getHostIp());
+                ingressDTO.setExposePort(RedisUtil.getServicePort(podInfo.getRole()));
+                return ingressDTO;
+            }).collect(Collectors.toList());
+        }
+        return Collections.emptyList();
+    }
+
 }

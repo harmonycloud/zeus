@@ -46,6 +46,7 @@ import com.harmonycloud.zeus.service.user.UserService;
 import com.harmonycloud.zeus.service.system.LicenseService;
 import com.harmonycloud.zeus.util.K8sConvert;
 import com.harmonycloud.zeus.util.MathUtil;
+import com.harmonycloud.zeus.util.RedisUtil;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.Service;
@@ -306,7 +307,6 @@ public abstract class AbstractBaseOperator {
         // 更新helm
         helmChartService.upgrade(middleware, sb.toString(), cluster);
     }
-
     /**
      * 更新通用字段
      *
@@ -355,6 +355,14 @@ public abstract class AbstractBaseOperator {
             pvc.getSpec().getResources().getRequests().put(STORAGE, new Quantity(storage));
             pvcWrapper.update(middleware.getClusterId(), middleware.getNamespace(), pvc);
         }
+    }
+
+    /**
+     * 获取hostnetwork访问地址
+     * @return
+     */
+    public List<IngressDTO> getHostNetworkAddress(String clusterId, String namespace, String middlewareName) {
+        return null;
     }
 
     public void updateStorage(Middleware middleware) {

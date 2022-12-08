@@ -73,11 +73,15 @@ public class PodServiceImpl implements PodService {
     private NodeService nodeService;
     @Autowired
     private ActiveAreaService activeAreaService;
+    @Autowired
+    private HelmChartService helmChartService;
+    @Autowired
+    private ClusterService clusterService;
 
     @Override
     public Middleware list(String clusterId, String namespace, String middlewareName, String type) {
         MiddlewareCR mw = middlewareCRService.getCR(clusterId, namespace, type, middlewareName);
-        Middleware middleware = listPods(mw, clusterId, namespace, middlewareName, type);
+        Middleware middleware = listPodsWithMiddleware(mw, clusterId, namespace, middlewareName, type);
         middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(clusterId, middleware.getNamespace(), middleware.getType(), middleware.getName()));
         return middleware;
     }
@@ -391,17 +395,12 @@ public class PodServiceImpl implements PodService {
     }
 
     @Override
-    public Middleware listPods(MiddlewareCR mw, String clusterId, String namespace, String middlewareName, String type){
+    public Middleware listPodsWithMiddleware(MiddlewareCR mw, String clusterId, String namespace, String middlewareName, String type){
         if (mw == null) {
             throw new BusinessException(DictEnum.MIDDLEWARE, middlewareName, ErrorMessage.NOT_EXIST);
         }
         Middleware middleware = middlewareCRService.simpleConvert(mw);
-        if (CollectionUtils.isEmpty(mw.getStatus().getInclude())) {
-            middleware.setPods(new ArrayList<>(0));
-            return middleware;
-        }
-        List<MiddlewareInfo> pods = mw.getStatus().getInclude().get(PODS);
-        if (CollectionUtils.isEmpty(pods)) {
+        if (CollectionUtils.isEmpty(mw.getStatus().getInclude()) || CollectionUtils.isEmpty(mw.getStatus().getInclude().get(PODS))) {
             middleware.setPods(new ArrayList<>(0));
             return middleware;
         }
@@ -409,16 +408,10 @@ public class PodServiceImpl implements PodService {
         Map<String, StorageClassDTO> scMap = storageClassService.convertStorageClass(pvcInfos, clusterId, namespace);
         AtomicReference<Boolean> isAllLvmStorage = new AtomicReference<>(true);
         // 给pod设置存储
-        List<PodInfo> podInfoList = new ArrayList<>();
-        for (MiddlewareInfo po : pods) {
-            Pod pod = podWrapper.get(clusterId, namespace, po.getName());
-            if (pod == null) {
-                continue;
-            }
-            PodInfo pi = convertPodInfo(pod)
-                    .setRole(StringUtils.isBlank(po.getType()) ? null : po.getType().toLowerCase());
+        List<PodInfo> podInfoList = listMiddlewarePods(mw, clusterId, namespace, middlewareName, type);
+        for (PodInfo pi : podInfoList) {
             // storage
-            StorageClassDTO scDTO = storageClassService.fuzzySearchStorageClass(scMap, po.getName());
+            StorageClassDTO scDTO = storageClassService.fuzzySearchStorageClass(scMap, pi.getPodName());
             if (scDTO != null) {
                 pi.getResources().setStorageClassQuota(scDTO.getStorage()).setStorageClassName(scDTO.getStorageClassName())
                         .setIsLvmStorage(scDTO.getIsLvmStorage()).setProvisioner(scDTO.getProvisioner());
@@ -439,10 +432,29 @@ public class PodServiceImpl implements PodService {
         middleware.setPods(podInfoList);
         return middleware;
     }
-    @Autowired
-    private HelmChartService helmChartService;
-    @Autowired
-    private ClusterService clusterService;
+
+    @Override
+    public List<PodInfo> listMiddlewarePods(String clusterId, String namespace, String middlewareName, String type) {
+        MiddlewareCR middlewareCR = middlewareCRService.getCR(clusterId, namespace, middlewareName, type);
+        return listMiddlewarePods(middlewareCR, clusterId, namespace, middlewareName, type);
+    }
+
+    public List<PodInfo> listMiddlewarePods(MiddlewareCR mw, String clusterId, String namespace, String middlewareName, String type) {
+        List<MiddlewareInfo> pods = mw.getStatus().getInclude().get(PODS);
+        List<PodInfo> podInfoList = new ArrayList<>();
+        for (MiddlewareInfo po : pods) {
+            Pod pod = podWrapper.get(clusterId, namespace, po.getName());
+            if (pod == null) {
+                continue;
+            }
+            PodInfo pi = convertPodInfo(pod)
+                    .setRole(StringUtils.isBlank(po.getType()) ? null : po.getType().toLowerCase());
+            podInfoList.add(pi);
+        }
+        return podInfoList;
+    }
+
+
 
     private List<PodInfo> addPodExtraRole(String clusterId, String namespace, String middlewareName, String type, List<PodInfo> podInfoList, MiddlewareCR mw) {
         if (MiddlewareTypeEnum.REDIS.getType().equals(type)) {
