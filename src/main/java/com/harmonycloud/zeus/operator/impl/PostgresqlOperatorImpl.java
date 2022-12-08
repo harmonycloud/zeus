@@ -152,7 +152,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         List<Status.Condition> conditions = middlewareCRService.getStatus(middleware.getClusterId()
                 , middleware.getNamespace(), MiddlewareTypeEnum.POSTGRESQL.getType(), middleware.getName()).getConditions();
         if (CollectionUtil.isEmpty(conditions)) {
-            return null;
+            return true;
         }
         // pod执行命令
         String execCommand = MessageFormat.format(
