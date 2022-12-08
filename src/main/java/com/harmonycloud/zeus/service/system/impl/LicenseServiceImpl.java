@@ -9,6 +9,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONArray;
+import com.harmonycloud.tool.encrypt.Base64Utils;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.util.MathUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -152,7 +153,7 @@ public class LicenseServiceImpl implements LicenseService {
         info.setTest(test);
         info.setProduce(produce);
         info.setUser(license.getString(USER));
-        info.setCode(license.getString(UID));
+        info.setCode(Arrays.toString(Base64Utils.decode(license.getString(UID))));
         return info;
     }
 

@@ -7,6 +7,8 @@ data:
     {{- if eq .Values.version "8.0" }}
     default-authentication-plugin   =mysql_native_password
     plugin_dir=/usr/lib64/mysql/plugin/
+    {{- $sql_mode := regexReplaceAll "NO_AUTO_CREATE_USER," .Values.args.sql_mode ""}}
+    sql_mode                        ={{ $sql_mode | default "NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO" }}
     {{- end }}
     {{- if eq .Values.version "5.7" }}
     query_cache_type                ={{ .Values.args.query_cache_type | default "OFF" }}
