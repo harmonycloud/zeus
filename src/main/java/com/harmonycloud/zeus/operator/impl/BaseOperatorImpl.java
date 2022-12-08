@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.operator.impl;
 
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.model.middleware.CustomConfig;
+import com.harmonycloud.caas.common.model.middleware.IngressDTO;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.operator.AbstractBaseOperator;
@@ -43,4 +44,10 @@ public class BaseOperatorImpl extends AbstractBaseOperator implements BaseOperat
     public void editConfigMapData(CustomConfig customConfig, List<String> data) {
 
     }
+
+    @Override
+    public List<IngressDTO> listHostNetworkAddress(String clusterId, String namespace, String middlewareName, String type) {
+        return null;
+    }
+
 }

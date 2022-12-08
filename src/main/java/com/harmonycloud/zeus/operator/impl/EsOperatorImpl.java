@@ -5,6 +5,7 @@ import static com.harmonycloud.caas.common.constants.NameConstant.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.util.MathUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -14,10 +15,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.middleware.ElasticSearchRoleEnum;
 import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.harmonycloud.caas.common.model.StorageDto;
-import com.harmonycloud.caas.common.model.middleware.CustomConfig;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareQuota;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.operator.api.EsOperator;
@@ -408,5 +405,10 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
             }
         }
         return cpuCount;
+    }
+
+    @Override
+    public List<IngressDTO> listHostNetworkAddress(String clusterId, String namespace, String middlewareName, String type) {
+        return null;
     }
 }

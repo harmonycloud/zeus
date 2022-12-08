@@ -875,4 +875,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         return values.getIntValue(MysqlConstant.REPLICA_COUNT);
     }
 
+    @Override
+    public List<IngressDTO> listHostNetworkAddress(String clusterId, String namespace, String middlewareName, String type) {
+        return null;
+    }
 }

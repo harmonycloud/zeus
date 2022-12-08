@@ -255,6 +255,11 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
         configMap.getData().put("broker.properties.tmpl", temp.toString());
     }
 
+    @Override
+    public List<IngressDTO> listHostNetworkAddress(String clusterId, String namespace, String middlewareName, String type) {
+        return null;
+    }
+
     /**
      * 写入values.yaml
      */

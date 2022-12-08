@@ -8,6 +8,7 @@ import java.util.Map;
 
 import com.alibaba.fastjson.JSONArray;
 import com.harmonycloud.caas.common.constants.CommonConstant;
+import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.util.K8sConvert;
 import com.harmonycloud.zeus.util.MathUtil;
@@ -15,10 +16,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.model.StorageDto;
-import com.harmonycloud.caas.common.model.middleware.CustomConfig;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareQuota;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.operator.api.ZookeeperOperator;
 import com.harmonycloud.zeus.operator.miiddleware.AbstractZookeeperOperator;
@@ -220,6 +217,11 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
     @Override
     public void updateConfigData(ConfigMap configMap, List<String> data) {
 
+    }
+
+    @Override
+    public List<IngressDTO> listHostNetworkAddress(String clusterId, String namespace, String middlewareName, String type) {
+        return null;
     }
 
     @Override

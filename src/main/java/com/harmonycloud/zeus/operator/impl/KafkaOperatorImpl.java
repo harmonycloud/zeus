@@ -140,4 +140,9 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
     public void updateConfigData(ConfigMap configMap, List<String> data) {
 
     }
+
+    @Override
+    public List<IngressDTO> listHostNetworkAddress(String clusterId, String namespace, String middlewareName, String type) {
+        return null;
+    }
 }
