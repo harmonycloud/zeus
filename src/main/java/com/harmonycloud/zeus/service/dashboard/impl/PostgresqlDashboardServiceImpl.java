@@ -110,7 +110,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         JSONObject sqlExecute = response.getResult();
         // 获取执行结果和异常信息（若存在）
         if (sqlExecute.getJSONObject("err") != null) {
-            executeSqlDto.setStatus("failed");
+            executeSqlDto.setStatus("false");
             executeSqlDto.setErr(sqlExecute.getJSONObject("err"));
             // 处理异常信息
             JSONObject err = sqlExecute.getJSONObject("err");
@@ -123,8 +123,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             if (query) {
                 executeSqlDto.setData(convertColumn(sqlExecute));
             }
-            executeSqlDto.setStatus("success");
-            executeSqlDto.setMessage("success");
+            executeSqlDto.setStatus("true");
+            //executeSqlDto.setMessage("success");
         }
         executeSqlDto.setTime(response.getTimeAsMillisecond() + "ms");
         executeSqlDto.setDatabase(databaseName);
