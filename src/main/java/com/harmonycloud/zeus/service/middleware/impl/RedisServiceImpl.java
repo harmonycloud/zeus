@@ -131,8 +131,8 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
         MiddlewareCR cr = middlewareCRService.getCR(clusterId, namespace, MiddlewareTypeEnum.REDIS.getType(), middlewareName);
         JSONObject status = JSONObject.parseObject(cr.getMetadata().getAnnotations().get("status"));
         JSONArray conditions = status.getJSONArray("conditions");
-        if (CollectionUtil.isEmpty(conditions)){
-            throw new BusinessException(DictEnum.POD,ErrorMessage.NOT_FOUND);
+        if (CollectionUtil.isEmpty(conditions)) {
+            return null;
         }
 
         Map<String, JSONObject> conditionMap = new HashMap<>();
