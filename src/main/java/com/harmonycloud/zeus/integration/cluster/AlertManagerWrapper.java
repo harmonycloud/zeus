@@ -4,6 +4,8 @@ import java.util.Map;
 
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.ClusterComponentsDto;
+import com.harmonycloud.zeus.service.k8s.ClusterComponentService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +31,8 @@ public class AlertManagerWrapper {
     private ClusterService clusterService;
     @Value("${k8s.monitoring.alertManager.port:31252}")
     private String alertManagerPort;
+    @Autowired
+    private ClusterComponentService  clusterComponentService;
 
     public void setSilence(String clusterId, String alertManagerApiVersion, Map<String, Object> body) throws Exception {
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
@@ -43,29 +47,30 @@ public class AlertManagerWrapper {
     public AlertManagerClient createApi(MiddlewareClusterDTO cluster, String alertManagerApiVersion) {
         MiddlewareClusterMonitorInfo alertManager = getAlertManagerInfo(cluster);
         AlertManagerClient client = new AlertManagerClient(alertManager.getProtocol(), alertManager.getHost(),
-            Integer.parseInt(alertManager.getPort()),
-            alertManager.getAddress()
-                .replace(alertManager.getProtocol() + "://" + alertManager.getHost() + ":" + alertManager.getPort(), "")
-                + alertManagerApiVersion);
-        if (cluster.getMonitor() != null && cluster.getMonitor().getAlertManager() != null
-            && StringUtils.isNotEmpty(cluster.getMonitor().getAlertManager().getUsername())
-            && StringUtils.isNotEmpty(cluster.getMonitor().getAlertManager().getPassword())) {
-            client.addHttpBasicAuth(ADMIN, cluster.getMonitor().getAlertManager().getUsername(),
-                cluster.getMonitor().getAlertManager().getPassword());
+                Integer.parseInt(alertManager.getPort()),
+                alertManager.getAddress()
+                        .replace(alertManager.getProtocol() + "://" + alertManager.getHost() + ":" + alertManager.getPort(), "")
+                        + alertManagerApiVersion);
+        ClusterComponentsDto clusterComponentsDto = clusterComponentService.get(cluster.getId(), "alertmanager");
+        if (clusterComponentsDto != null
+                && StringUtils.isNotEmpty(clusterComponentsDto.getUsername())
+                && StringUtils.isNotEmpty(clusterComponentsDto.getPassword())) {
+            client.addHttpBasicAuth(ADMIN, clusterComponentsDto.getUsername(),
+                    clusterComponentsDto.getPassword());
         }
         return client;
     }
 
     private MiddlewareClusterMonitorInfo getAlertManagerInfo(MiddlewareClusterDTO cluster) {
-        MiddlewareClusterMonitorInfo alertManager;
-        if (cluster.getMonitor() == null || cluster.getMonitor().getAlertManager() == null) {
+        MiddlewareClusterMonitorInfo alertManager = new MiddlewareClusterMonitorInfo();
+        ClusterComponentsDto clusterComponentsDto = clusterComponentService.get(cluster.getId(), "alertmanager");
+        if (clusterComponentsDto == null) {
             throw new BusinessException(ErrorMessage.ALERT_MANAGER_NOT_INSTALLED);
         } else {
-            alertManager = cluster.getMonitor().getAlertManager();
-            if (StringUtils.isBlank(cluster.getMonitor().getAlertManager().getProtocol())) {
+            if (StringUtils.isBlank(clusterComponentsDto.getProtocol())) {
                 alertManager.setProtocol(Protocol.HTTP.getValue().toLowerCase());
             }
-            if (StringUtils.isBlank(cluster.getMonitor().getAlertManager().getPort())) {
+            if (StringUtils.isBlank(clusterComponentsDto.getPort())) {
                 alertManager.setPort(alertManagerPort);
             }
         }

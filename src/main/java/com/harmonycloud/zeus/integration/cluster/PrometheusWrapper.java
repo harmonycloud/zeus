@@ -67,11 +67,12 @@ public class PrometheusWrapper {
                         prometheus.getAddress()
                                 .replace(prometheus.getProtocol() + "://" + prometheus.getHost() + ":" + prometheus.getPort(), "")
                                 + prometheusApiVersion);
-        if (cluster.getMonitor() != null && cluster.getMonitor().getPrometheus() != null
-            && StringUtils.isNotEmpty(cluster.getMonitor().getPrometheus().getUsername())
-            && StringUtils.isNotEmpty(cluster.getMonitor().getPrometheus().getPassword())) {
-            client.addHttpBasicAuth(ADMIN, cluster.getMonitor().getPrometheus().getUsername(),
-                cluster.getMonitor().getPrometheus().getPassword());
+        ClusterComponentsDto componentsDto = clusterComponentService.get(clusterId, "prometheus");
+        if (componentsDto != null
+            && StringUtils.isNotEmpty(componentsDto.getUsername())
+            && StringUtils.isNotEmpty(componentsDto.getPassword())) {
+            client.addHttpBasicAuth(ADMIN, componentsDto.getUsername(),
+                    componentsDto.getPassword());
         }
         return client;
     }

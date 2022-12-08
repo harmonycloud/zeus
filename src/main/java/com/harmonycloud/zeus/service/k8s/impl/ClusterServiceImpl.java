@@ -935,7 +935,8 @@ public class ClusterServiceImpl implements ClusterService {
     public ClusterQuotaDTO monitoring(String clusterId) {
         // 计算集群cpu和memory
         MiddlewareClusterDTO cluster = findById(clusterId);
-        if (cluster.getMonitor() != null && cluster.getMonitor().getPrometheus() != null) {
+        ClusterComponentsDto componentsDto = clusterComponentService.get(clusterId, "prometheus");
+        if (componentsDto != null) {
             clusterResource(cluster);
         }
         return cluster.getClusterQuotaDTO();

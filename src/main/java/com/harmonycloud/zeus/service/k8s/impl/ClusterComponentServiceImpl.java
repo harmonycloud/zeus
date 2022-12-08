@@ -60,8 +60,6 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
 
     @Override
     public void deploy(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
-        // 特殊处理grafana
-        grafana(cluster, clusterComponentsDto);
         // 获取service
         BaseComponentsService service =
             getOperator(BaseComponentsService.class, BaseComponentsService.class, clusterComponentsDto.getComponent());
@@ -280,18 +278,18 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
     /**
      * 特殊处理grafana，写入protocol
      */
-    public void grafana(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
-        if (StringUtils.isNotEmpty(clusterComponentsDto.getProtocol())
-            && clusterComponentsDto.getComponent().equals(ComponentsEnum.GRAFANA.getName())) {
-            if (cluster.getMonitor() == null) {
-                cluster.setMonitor(new MiddlewareClusterMonitor());
-            }
-            if (cluster.getMonitor().getGrafana() == null) {
-                cluster.getMonitor().setGrafana(new MiddlewareClusterMonitorInfo());
-            }
-            cluster.getMonitor().getGrafana().setProtocol(clusterComponentsDto.getProtocol());
-        }
-    }
+//    public void grafana(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
+//        if (StringUtils.isNotEmpty(clusterComponentsDto.getProtocol())
+//            && clusterComponentsDto.getComponent().equals(ComponentsEnum.GRAFANA.getName())) {
+//            if (cluster.getMonitor() == null) {
+//                cluster.setMonitor(new MiddlewareClusterMonitor());
+//            }
+//            if (cluster.getMonitor().getGrafana() == null) {
+//                cluster.getMonitor().setGrafana(new MiddlewareClusterMonitorInfo());
+//            }
+//            cluster.getMonitor().getGrafana().setProtocol(clusterComponentsDto.getProtocol());
+//        }
+//    }
 
     public void installSuccessCheck(MiddlewareClusterDTO cluster, String componentName) {
         QueryWrapper<BeanClusterComponents> wrapper =

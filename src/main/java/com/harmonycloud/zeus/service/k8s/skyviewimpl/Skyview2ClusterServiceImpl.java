@@ -53,8 +53,6 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
     private Skyview2UserService skyview2UserService;
 
     @Autowired
-    private Skyview2UserServiceClient userServiceClient;
-    @Autowired
     private Skyview2ClusterServiceClient clusterServiceClient;
     @Autowired
     private NamespaceService namespaceService;
@@ -215,15 +213,6 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
         // 映射相同host下观云台和中间件平台的不同的clusterId
         Map<String, String> zeusClusterMap = clusterDTOS.stream().collect(Collectors.toMap(MiddlewareClusterDTO::getHost, MiddlewareClusterDTO::getId));
         skyviewClusterMap.forEach((k, v) -> clusterIdMap.put(v, zeusClusterMap.get(k) != null ? zeusClusterMap.get(k) : k));
-    }
-
-    private void saveComponent(String clusterId, ClusterDTO clusterDTO) {
-        MiddlewareClusterDTO middlewareClusterDTO = super.findById(clusterId);
-        MiddlewareClusterDTO prometheus = new MiddlewareClusterDTO();
-        if (middlewareClusterDTO.getMonitor() == null || (middlewareClusterDTO.getMonitor() != null && middlewareClusterDTO.getMonitor().getPrometheus() == null)) {
-
-        }
-        //clusterComponentService.integrate();
     }
 
     /**

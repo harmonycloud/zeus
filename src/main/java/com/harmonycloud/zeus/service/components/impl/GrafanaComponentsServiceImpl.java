@@ -11,7 +11,9 @@ import com.harmonycloud.tool.cmd.HelmChartUtil;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.GrafanaService;
+import com.harmonycloud.zeus.service.k8s.ClusterComponentService;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
 import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
@@ -28,6 +30,8 @@ import java.util.List;
 public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implements GrafanaService {
 
     public static final String GRAFANA = "grafana";
+    @Autowired
+    private ClusterComponentService clusterComponentService;
 
     @Override
     public boolean support(String name) {
@@ -61,8 +65,9 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
         jsonValues.put("image", image);
         jsonValues.put("sidecar", sidecar);
         jsonValues.put("persistence", persistence);
-        if (cluster.getMonitor() != null && cluster.getMonitor().getGrafana() != null
-            && "https".equals(cluster.getMonitor().getGrafana().getProtocol())) {
+
+        ClusterComponentsDto componentsDto = clusterComponentService.get(cluster.getId(), "grafana");
+        if (componentsDto != null && "https".equals(componentsDto.getProtocol())) {
             JSONObject ini = new JSONObject();
             JSONObject server = new JSONObject();
             server.put("protocol", "https");
@@ -97,10 +102,6 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
         if (status != 1){
             helmChartService.uninstall(cluster, "monitoring",  ComponentsEnum.GRAFANA.getName());
         }
-        if (cluster.getMonitor().getGrafana() != null){
-            cluster.getMonitor().setGrafana(null);
-        }
-        clusterService.update(cluster);
     }
 
     @Override

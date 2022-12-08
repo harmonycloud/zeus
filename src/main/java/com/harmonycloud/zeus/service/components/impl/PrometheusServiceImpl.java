@@ -9,7 +9,9 @@ import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitor;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitorInfo;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
+import com.harmonycloud.zeus.service.k8s.ClusterComponentService;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
@@ -29,6 +31,9 @@ import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
 @Service
 @Operator(paramTypes4One = String.class)
 public class PrometheusServiceImpl extends AbstractBaseOperator implements PrometheusService {
+
+    @Autowired
+    private ClusterComponentService clusterComponentService;
 
     @Override
     public boolean support(String name) {
@@ -80,10 +85,6 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
             // uninstall
             helmChartService.uninstall(cluster, "default", ComponentsEnum.PROMETHEUS.getName());
         }
-        if (cluster.getMonitor().getPrometheus() != null){
-            cluster.getMonitor().setPrometheus(null);
-        }
-        clusterService.update(cluster);
     }
 
     @Override
@@ -108,8 +109,8 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
 
     public void checkExist(MiddlewareClusterDTO cluster) {
         List<HelmListInfo> helmListInfos = helmChartService.listHelm("", "", cluster);
-        if (cluster.getMonitor().getPrometheus() != null
-            || helmListInfos.stream().anyMatch(helm -> "prometheus".equals(helm.getName()))) {
+        ClusterComponentsDto clusterComponentsDto = clusterComponentService.get(cluster.getId(), "prometheus");
+        if (clusterComponentsDto != null || helmListInfos.stream().anyMatch(helm -> "prometheus".equals(helm.getName()))) {
             throw new BusinessException(ErrorMessage.EXIST);
         }
     }

@@ -61,11 +61,6 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
         if (status != 1){
             helmChartService.uninstall(cluster, "monitoring", ComponentsEnum.ALERTMANAGER.getName());
         }
-        //更新集群
-        if (cluster.getMonitor().getAlertManager() != null){
-            cluster.getMonitor().setAlertManager(null);
-        }
-        clusterService.update(cluster);
     }
 
     @Override
