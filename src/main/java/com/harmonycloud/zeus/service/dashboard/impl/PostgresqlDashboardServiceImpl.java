@@ -179,10 +179,10 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
 
     @Override
     public void addDatabase(String clusterId, String namespace, String middlewareName, DatabaseDto databaseDto) {
-        if (StringUtils.isNotEmpty(databaseDto.getEncoding())) {
+        if (StringUtils.isEmpty(databaseDto.getEncoding())) {
             databaseDto.setEncoding("UTF8");
         }
-        if (StringUtils.isNotEmpty(databaseDto.getTablespace())) {
+        if (StringUtils.isEmpty(databaseDto.getTablespace())) {
             databaseDto.setTablespace("pg_default");
         }
         String path = getPath(middlewareName, namespace);
