@@ -1270,7 +1270,7 @@ DROP TABLE IF EXISTS `sql_execute_record`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `sql_execute_record` (
-    `id` int(11) NOT NULL,
+    `id` int(11) NOT NULL AUTO_INCREMENT,
     `cluster_id` varchar(256) COLLATE utf8_bin DEFAULT NULL,
     `namespace` varchar(256) COLLATE utf8_bin DEFAULT NULL,
     `middleware_name` varchar(256) COLLATE utf8_bin DEFAULT NULL,
