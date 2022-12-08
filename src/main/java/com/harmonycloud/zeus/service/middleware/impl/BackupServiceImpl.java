@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.middleware.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,7 +43,13 @@ public class BackupServiceImpl implements BackupService {
      */
     @Override
     public List<Backup> listBackup(String clusterId, String namespace) {
-        List<BackupCR> backupCRList = backupWrapper.list(clusterId, namespace);
+        List<BackupCR> backupCRList = null;
+        try {
+            backupCRList = backupWrapper.list(clusterId, namespace);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
         if (CollectionUtils.isEmpty(backupCRList)) {
             return new ArrayList<>(0);
         }
