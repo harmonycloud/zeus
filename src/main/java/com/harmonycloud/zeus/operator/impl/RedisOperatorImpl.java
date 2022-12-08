@@ -234,6 +234,15 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
                 middleware.getQuota().get(middleware.getType()).setNum(num);
             }
         }
+
+        // 主机网络配置
+        RedisParam redisParam = new RedisParam();
+        JSONObject predixy = values.getJSONObject("predixy");
+        if (predixy != null) {
+            redisParam.setHostNetwork(predixy.getBoolean("hostNetwork"));
+        }
+        middleware.setRedisParam(redisParam);
+
         return middleware;
     }
 
