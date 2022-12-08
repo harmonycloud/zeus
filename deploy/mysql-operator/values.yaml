@@ -115,6 +115,10 @@ proxy:
     requests:
       cpu: 500m
       memory: 1024Mi
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
   args:
     sync_user_period: 600000
 

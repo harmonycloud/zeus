@@ -95,9 +95,10 @@ public interface MiddlewareService {
      * @param namespace 命名空间
      * @param name      中间件名称
      * @param type      中间件类型
+     * @param slaveName 从节点名称
      * @param isAuto    是否自动切换
      */
-    void switchMiddleware(String clusterId, String namespace, String name, String type, Boolean isAuto);
+    void switchMiddleware(String clusterId, String namespace, String name, String type, String slaveName, Boolean isAuto);
 
     /**
      * 性能监控
