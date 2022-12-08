@@ -887,7 +887,7 @@ data:
       `create_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
       `update_time` timestamp NULL DEFAULT NULL COMMENT '修改时间',
       `status` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '是否默认',
-      `platform_alias_name` VARCHAR(256) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT "中间件平台" COMMENT '平台别名'
+      `platform_alias_name` VARCHAR(256) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT "中间件平台" COMMENT '平台别名',
       PRIMARY KEY (`id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
     /*!40101 SET character_set_client = @saved_cs_client */;
@@ -1193,7 +1193,7 @@ data:
         `alias_name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL comment '可用区中文别名',
         `init` tinyint(1) DEFAULT NULL COMMENT '是否初始化',
         PRIMARY KEY (`id`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin comment '可用区'
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin comment '可用区';
 
     --
     -- Table structure for table `sql_execute_record`
@@ -1246,20 +1246,6 @@ data:
     INSERT INTO `user` VALUES (1,'admin','超级管理员','6DA05F9A0ED31ABEEFD41C768B2E7233',NULL,NULL,NULL,NULL,NULL);
     /*!40000 ALTER TABLE `user` ENABLE KEYS */;
     UNLOCK TABLES;
-    /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
-
-    /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-    /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-    /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-    /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-    /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-    /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-    /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-
-    -- Dump completed on 2022-07-20 13:47:48
-
-
-
 
 kind: ConfigMap
 metadata:

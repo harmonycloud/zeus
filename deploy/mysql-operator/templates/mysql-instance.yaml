@@ -38,7 +38,7 @@ spec:
           {{- toYaml . | nindent 10 }}
         {{- end }}
 {{- if .Values.init_at_setup.enabled }}
-  initScriptCMName: {{ include "mysql.fullname" . }}-init-sql-file
+  initScriptCMName: zeus-init-sql-file
 {{- end }}
   clusterSwitch:
     switched: false
