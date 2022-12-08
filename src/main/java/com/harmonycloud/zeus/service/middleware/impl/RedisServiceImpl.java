@@ -130,6 +130,9 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
         Map<String, String> burstMap = new HashMap<>();
         MiddlewareCR cr = middlewareCRService.getCR(clusterId, namespace, MiddlewareTypeEnum.REDIS.getType(), middlewareName);
         JSONObject status = JSONObject.parseObject(cr.getMetadata().getAnnotations().get("status"));
+        if (status == null) {
+            return null;
+        }
         JSONArray conditions = status.getJSONArray("conditions");
         if (CollectionUtil.isEmpty(conditions)) {
             return null;
