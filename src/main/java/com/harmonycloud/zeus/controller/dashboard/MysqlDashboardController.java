@@ -569,8 +569,8 @@ public class MysqlDashboardController {
                                       @PathVariable("namespace") String namespace,
                                       @PathVariable("middlewareName") String middlewareName,
                                       @PathVariable("username") String username,
-                                      @RequestBody List<GrantOptionDto> grantOptionDtos) {
-        mysqlDashboardService.revokePrivilege(clusterId, namespace, middlewareName, username, grantOptionDtos);
+                                      @RequestBody UserPrivilegeDto userPrivilegeDto) {
+        mysqlDashboardService.revokePrivilege(clusterId, namespace, middlewareName, username, userPrivilegeDto.getGrantOptionDtos());
         return BaseResult.ok();
     }
 
