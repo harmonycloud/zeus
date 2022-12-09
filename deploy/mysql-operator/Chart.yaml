@@ -1,15 +1,16 @@
-apiVersion: v2
-name: mysql
-description: mysql instance chart
-type: application
-version: 1.8.17
-appVersion: "5.7"
-dependencies:
-  - alias: mysql-operator
-    condition: mysql-operator.enabled
-    name: mysql-operator
-    repository: file://./charts/mysql-operator
-    version: 1.8.17
 annotations:
   owner: harmonycloud
   type: db
+  version: 5.7,8.0
+apiVersion: v2
+appVersion: "5.7"
+dependencies:
+- alias: mysql-operator
+  condition: mysql-operator.enabled
+  name: mysql-operator
+  repository: file://./charts/mysql-operator
+  version: 1.8.17
+description: mysql instance chart
+name: mysql
+type: application
+version: 1.8.17

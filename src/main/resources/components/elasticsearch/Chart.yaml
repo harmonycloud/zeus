@@ -1,6 +1,7 @@
 annotations:
   owner: harmonycloud
   type: db
+  version: 6.8,7.16
 apiVersion: v2
 appVersion: 6.8.22
 dependencies:
