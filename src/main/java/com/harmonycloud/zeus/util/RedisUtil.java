@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.RedisAccessInfo;
+import com.harmonycloud.caas.common.model.dashboard.redis.ScanResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,10 +15,10 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.CollectionUtils;
 import redis.clients.jedis.*;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @author yushuaikang
@@ -210,6 +211,20 @@ public class RedisUtil {
             return m3.group();
         }
         return "";
+    }
+
+    public static ScanResult convertScanResult(JSONObject res) {
+        JSONObject data = res.getJSONObject("data");
+        JSONArray keys = data.getJSONArray("keys");
+        ScanResult scanResult = new ScanResult();
+        if (!CollectionUtils.isEmpty(keys)) {
+            List<String> keyList = keys.stream().map(Object::toString).collect(Collectors.toList());
+            scanResult.setKeys(keyList);
+        } else {
+            scanResult.setKeys(new ArrayList<>());
+        }
+        scanResult.setCursor(data.getInteger("nextCursor"));
+        return scanResult;
     }
 
     public static void main(String[] args) {

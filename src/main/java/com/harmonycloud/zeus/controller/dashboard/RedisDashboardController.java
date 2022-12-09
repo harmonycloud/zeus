@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.dashboard.DatabaseDto;
 import com.harmonycloud.caas.common.model.dashboard.redis.KeyValueDto;
+import com.harmonycloud.caas.common.model.dashboard.redis.ScanResult;
 import com.harmonycloud.zeus.service.dashboard.RedisDashboardService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -26,7 +27,24 @@ public class RedisDashboardController {
     @Autowired
     private RedisDashboardService redisDashboardService;
 
-    @ApiOperation(value = "查询指定库全部key", notes = "查询指定库全部key")
+//    @ApiOperation(value = "查询指定库全部key", notes = "查询指定库全部key")
+//    @ApiImplicitParams({
+//            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+//            @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
+//            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+//            @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = Integer.class),
+//            @ApiImplicitParam(name = "keyword", value = "key关键词", paramType = "query", dataTypeClass = String.class),
+//    })
+//    @GetMapping("/databases/{database}/keys")
+//    public BaseResult<List<KeyValueDto>> getAllKeys(@PathVariable("clusterId") String clusterId,
+//                                                 @PathVariable("namespace") String namespace,
+//                                                 @PathVariable("middlewareName") String middlewareName,
+//                                                 @PathVariable("database") Integer database,
+//                                                 @RequestParam(value = "keyword", defaultValue = "") String keyword) {
+//        return BaseResult.ok(redisDashboardService.getAllKeys(clusterId,  namespace, middlewareName, database, keyword));
+//    }
+
+    @ApiOperation(value = "分页查询key", notes = "分页查询key")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
@@ -35,12 +53,15 @@ public class RedisDashboardController {
             @ApiImplicitParam(name = "keyword", value = "key关键词", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/databases/{database}/keys")
-    public BaseResult<List<KeyValueDto>> listChartset(@PathVariable("clusterId") String clusterId,
-                                                 @PathVariable("namespace") String namespace,
-                                                 @PathVariable("middlewareName") String middlewareName,
-                                                 @PathVariable("database") Integer database,
-                                                 @RequestParam(value = "keyword", defaultValue = "") String keyword) {
-        return BaseResult.ok(redisDashboardService.getAllKeys(clusterId,  namespace, middlewareName, database, keyword));
+    public BaseResult<ScanResult> scanKeys(@PathVariable("clusterId") String clusterId,
+                                           @PathVariable("namespace") String namespace,
+                                           @PathVariable("middlewareName") String middlewareName,
+                                           @PathVariable("database") Integer database,
+                                           @RequestParam(value = "keyword", defaultValue = "") String keyword,
+                                           @RequestParam(value = "cursor", defaultValue = "0") Integer cursor,
+                                           @RequestParam(value = "count", defaultValue = "10") Integer count,
+                                           @RequestParam(value = "pod", defaultValue = "") String pod) {
+        return BaseResult.ok(redisDashboardService.scan(clusterId, namespace, middlewareName, database, keyword, cursor, count, pod));
     }
 
     @ApiOperation(value = "获取全部库", notes = "获取全部库")
@@ -50,7 +71,7 @@ public class RedisDashboardController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class)
     })
     @GetMapping("/databases")
-    public BaseResult<List<DatabaseDto>> listChartset(@PathVariable("clusterId") String clusterId,
+    public BaseResult<List<DatabaseDto>> getDBList(@PathVariable("clusterId") String clusterId,
                                                       @PathVariable("namespace") String namespace,
                                                       @PathVariable("middlewareName") String middlewareName) {
         return BaseResult.ok(redisDashboardService.getDBList(clusterId, namespace, middlewareName));

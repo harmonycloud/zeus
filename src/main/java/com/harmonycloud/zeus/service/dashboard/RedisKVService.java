@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.dashboard;
 
 import com.alibaba.fastjson.JSONArray;
+import com.harmonycloud.caas.common.model.dashboard.redis.ScanResult;
 
 /**
  * @author liyinlong
@@ -13,4 +14,7 @@ public interface RedisKVService {
     JSONArray getKeysWithPattern(String clusterId, String namespace, String middlewareName, Integer db, String keyword);
 
     Integer dbSize(String clusterId, String namespace, String middlewareName, Integer db);
+
+    ScanResult scan(String clusterId, String namespace, String middlewareName, Integer db, String keyword, Integer cursor, Integer count, String shard);
+
 }

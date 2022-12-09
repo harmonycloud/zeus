@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.model.dashboard.redis.DataDto;
 import com.harmonycloud.caas.common.model.dashboard.redis.DatabaseDto;
 import com.harmonycloud.caas.common.model.dashboard.redis.KeyValueDto;
+import com.harmonycloud.caas.common.model.dashboard.redis.ScanResult;
 import com.harmonycloud.zeus.bean.BeanSqlExecuteRecord;
 
 import java.util.List;
@@ -15,6 +16,8 @@ import java.util.List;
 public interface RedisDashboardService extends BaseMiddlewareApiService{
 
     List<KeyValueDto> getAllKeys(String clusterId, String namespace, String middlewareName, Integer db, String keyword);
+
+    ScanResult scan(String clusterId, String namespace, String middlewareName, Integer db, String keyword, Integer cursor, Integer count, String pod);
 
     List<DatabaseDto> getDBList(String clusterId, String namespace, String middlewareName);
 

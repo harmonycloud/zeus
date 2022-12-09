@@ -5,10 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.dashboard.redis.DataDto;
-import com.harmonycloud.caas.common.model.dashboard.redis.DatabaseDto;
-import com.harmonycloud.caas.common.model.dashboard.redis.KeyValueDto;
-import com.harmonycloud.caas.common.model.dashboard.redis.ZSetDto;
+import com.harmonycloud.caas.common.model.dashboard.redis.*;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.bean.BeanSqlExecuteRecord;
 import com.harmonycloud.zeus.dao.BeanSqlExecuteRecordMapper;
@@ -122,6 +119,12 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
             keyword = "*" + keyword + "*";
             return convertToKeyValueDto(redisKVService.getKeysWithPattern(clusterId, namespace, middlewareName, db, keyword));
         }
+    }
+
+    @Override
+    public ScanResult scan(String clusterId, String namespace, String middlewareName, Integer db, String keyword, Integer cursor, Integer count, String pod) {
+        RedisKVService redisKVService = getKVService(clusterId, namespace, middlewareName);
+        return redisKVService.scan(clusterId, namespace, middlewareName, db, keyword, cursor, count, pod);
     }
 
     @Override
