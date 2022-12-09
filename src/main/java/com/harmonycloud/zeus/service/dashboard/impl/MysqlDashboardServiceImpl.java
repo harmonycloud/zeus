@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -637,9 +638,11 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         if (!CollectionUtils.isEmpty(tablePrivilegeAry)) {
             privilegeAry.addAll(tablePrivilegeAry);
         }
+        AtomicInteger index = new AtomicInteger();
         return privilegeAry.stream().map(privilege -> {
             JSONObject obj = (JSONObject) privilege;
             GrantOptionDto grantOptionDto = new GrantOptionDto();
+            grantOptionDto.setId(index.getAndIncrement());
             grantOptionDto.setDb(obj.getString("TABLE_SCHEMA"));
             grantOptionDto.setTable(obj.getString("TABLE_NAME"));
             grantOptionDto.setPrivilege(obj.getString("PRIVILEGE"));
