@@ -4,7 +4,6 @@ import static com.harmonycloud.caas.common.constants.CommonConstant.FALSE;
 import static com.harmonycloud.caas.common.constants.CommonConstant.TRUE;
 import static com.harmonycloud.caas.common.constants.NameConstant.*;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.USE_NODE_PORT;
 import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.CHART_YAML_NAME;
 
 import java.math.BigDecimal;
@@ -12,44 +11,6 @@ import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import cn.hutool.json.JSONUtil;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.constants.CommonConstant;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
-import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
-import com.harmonycloud.caas.common.model.StorageDto;
-import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
-import com.harmonycloud.tool.uuid.UUIDUtils;
-import com.harmonycloud.zeus.bean.BeanAlertRule;
-import com.harmonycloud.zeus.bean.AlertRuleId;
-import com.harmonycloud.zeus.dao.BeanAlertRuleMapper;
-import com.harmonycloud.zeus.dao.AlertRuleIdMapper;
-import com.harmonycloud.zeus.dao.BeanMiddlewareInfoMapper;
-import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.prometheus.PrometheusRuleGroups;
-import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
-import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
-import com.harmonycloud.zeus.service.aspect.AspectService;
-import com.harmonycloud.zeus.service.k8s.*;
-import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
-import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
-import com.harmonycloud.zeus.schedule.MiddlewareManageTask;
-import com.harmonycloud.zeus.service.middleware.*;
-import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareService;
-import com.harmonycloud.zeus.service.middleware.impl.MiddlewareAlertsServiceImpl;
-import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
-import com.harmonycloud.zeus.service.registry.HelmChartService;
-import com.harmonycloud.zeus.service.user.RoleAuthorityService;
-import com.harmonycloud.zeus.service.user.UserService;
-import com.harmonycloud.zeus.service.system.LicenseService;
-import com.harmonycloud.zeus.util.K8sConvert;
-import com.harmonycloud.zeus.util.MathUtil;
-import com.harmonycloud.zeus.util.RedisUtil;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
-import io.fabric8.kubernetes.api.model.Quantity;
-import io.fabric8.kubernetes.api.model.Service;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.BeanUtils;
@@ -61,19 +22,48 @@ import org.yaml.snakeyaml.Yaml;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
+import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.AffinityDTO;
+import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
+import com.harmonycloud.caas.common.model.StorageDto;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
-import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
-import com.harmonycloud.zeus.integration.cluster.bean.prometheus.PrometheusRule;
+import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.tool.collection.JsonUtils;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.harmonycloud.tool.uuid.UUIDUtils;
+import com.harmonycloud.zeus.bean.*;
+import com.harmonycloud.zeus.dao.AlertRuleIdMapper;
+import com.harmonycloud.zeus.dao.BeanAlertRuleMapper;
+import com.harmonycloud.zeus.dao.BeanMiddlewareInfoMapper;
+import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
+import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
+import com.harmonycloud.zeus.integration.cluster.bean.prometheus.PrometheusRule;
+import com.harmonycloud.zeus.integration.cluster.bean.prometheus.PrometheusRuleGroups;
+import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
+import com.harmonycloud.zeus.schedule.MiddlewareManageTask;
+import com.harmonycloud.zeus.service.aspect.AspectService;
+import com.harmonycloud.zeus.service.k8s.*;
+import com.harmonycloud.zeus.service.middleware.*;
+import com.harmonycloud.zeus.service.middleware.impl.MiddlewareAlertsServiceImpl;
+import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
+import com.harmonycloud.zeus.service.registry.HelmChartService;
+import com.harmonycloud.zeus.service.system.LicenseService;
+import com.harmonycloud.zeus.service.user.RoleAuthorityService;
+import com.harmonycloud.zeus.util.K8sConvert;
 
+import cn.hutool.json.JSONUtil;
 import io.fabric8.kubernetes.api.model.NodeAffinity;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.Service;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -186,6 +176,8 @@ public abstract class AbstractBaseOperator {
         aspectService.operation(cluster, middleware, middleware.getDynamicValues(), values);
         // map to yaml
         String newValuesYaml = yaml.dumpAsMap(values);
+        // deal with 'version'
+        newValuesYaml = replaceSingleQuotes(newValuesYaml);
         helmChart.setValueYaml(newValuesYaml);
         // write to local file
         helmChartService.coverYamlFile(helmChart);
@@ -1333,6 +1325,10 @@ public abstract class AbstractBaseOperator {
      */
     public Boolean checkUserAuthority(String type){
         return roleAuthorityService.checkOps(null, type);
+    }
+
+    public String replaceSingleQuotes(String valueYaml){
+        return valueYaml;
     }
 
 }

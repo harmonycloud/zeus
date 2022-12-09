@@ -1,7 +1,6 @@
 package com.harmonycloud.zeus.operator.impl;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.DOT;
-import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_ZERO;
+import static com.harmonycloud.caas.common.constants.CommonConstant.*;
 import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ARGS;
 
@@ -11,37 +10,35 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import cn.hutool.core.collection.CollectionUtil;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alibaba.fastjson.JSONArray;
-import com.harmonycloud.caas.common.constants.NameConstant;
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.exception.CaasRuntimeException;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.cmd.CmdExecUtil;
+import com.harmonycloud.tool.encrypt.PasswordUtils;
+import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.*;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupCR;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupSpec;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
+import com.harmonycloud.zeus.integration.cluster.bean.Status;
+import com.harmonycloud.zeus.operator.api.PostgresqlOperator;
+import com.harmonycloud.zeus.operator.miiddleware.AbstractPostgresqlOperator;
 import com.harmonycloud.zeus.service.k8s.K8sExecService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareBackupCRService;
 import com.harmonycloud.zeus.service.k8s.PodService;
-import com.harmonycloud.zeus.util.RedisUtil;
-import com.mchange.v1.util.CollectionUtils;
-import io.fabric8.kubernetes.api.model.Service;
-import org.apache.commons.lang3.StringUtils;
 
-import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.tool.encrypt.PasswordUtils;
-import com.harmonycloud.zeus.annotation.Operator;
-import com.harmonycloud.zeus.operator.api.PostgresqlOperator;
-import com.harmonycloud.zeus.operator.miiddleware.AbstractPostgresqlOperator;
-
+import cn.hutool.core.collection.CollectionUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.Service;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xutianhong
@@ -88,7 +85,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         userPasswords.put("postgres", middleware.getPassword());
         values.put("userPasswords", userPasswords);
         // 替换版本
-        values.put("pgsqlVersion", Double.parseDouble(middleware.getVersion()));
+        values.put("pgsqlVersion", middleware.getVersion() + MIDDLEWARE_VERSION_PLACEHOLDER_STRING);
         // 主机网络配置
         if (middleware.getPostgresqlParam() != null && middleware.getPostgresqlParam().getHostNetwork() != null) {
             values.put("hostNetwork", middleware.getPostgresqlParam().getHostNetwork());
@@ -333,6 +330,11 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
                 pod.getString("name"), middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
                 !middleware.getAutoSwitch(), patroniName);
             k8sExecService.exec(execCommand);
+    }
+
+    @Override
+    public String replaceSingleQuotes(String valueYaml){
+        return valueYaml.replace(MIDDLEWARE_VERSION_PLACEHOLDER_STRING, "");
     }
 }
 
