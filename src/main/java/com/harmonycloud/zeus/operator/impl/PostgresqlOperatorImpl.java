@@ -88,7 +88,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         userPasswords.put("postgres", middleware.getPassword());
         values.put("userPasswords", userPasswords);
         // 替换版本
-        values.put("pgsqlVersion", middleware.getVersion());
+        values.put("pgsqlVersion", Double.parseDouble(middleware.getVersion()));
         // 主机网络配置
         if (middleware.getPostgresqlParam() != null && middleware.getPostgresqlParam().getHostNetwork() != null) {
             values.put("hostNetwork", middleware.getPostgresqlParam().getHostNetwork());
