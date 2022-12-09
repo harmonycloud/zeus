@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -91,10 +93,7 @@ public class RedisAggregationKVServiceImpl implements RedisKVService {
                     stream().filter(middlewareInfo -> middlewareInfo.getName().contains("shard") && !middlewareInfo.getName().contains("readonly")).
                     collect(Collectors.toList()).stream().sorted(new MiddlewareInfoComparator()).map(middlewareInfo -> K8sServiceNameUtil.getServicePath(namespace, middlewareInfo.getName())).collect(Collectors.toList());
         } else {
-            return middlewareService.listMiddlewarePod(clusterId, namespace, MiddlewareTypeEnum.REDIS.getType(), middlewareName).
-                    stream().filter(middlewareInfo -> middlewareInfo.getType().equals("master")).collect(Collectors.toList()).
-                    stream().sorted(new MiddlewareInfoComparator()).
-                    map(middlewareInfo -> K8sServiceNameUtil.getServicePath(middlewareInfo.getName(), namespace, middlewareName)).collect(Collectors.toList());
+            return Collections.singletonList(K8sServiceNameUtil.getServicePath(namespace, middlewareName));
         }
     }
 

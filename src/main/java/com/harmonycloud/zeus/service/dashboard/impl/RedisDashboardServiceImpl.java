@@ -127,11 +127,13 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
     @Override
     public List<DatabaseDto> getDBList(String clusterId, String namespace, String middlewareName) {
         List<DatabaseDto> databaseDtoList = new ArrayList<>();
+        RedisKVService redisKVService = getKVService(clusterId, namespace, middlewareName);
         int dbNum = getDBNum(clusterId, namespace, middlewareName);
         for (int i = 0; i < dbNum; i++) {
             DatabaseDto databaseDto = new DatabaseDto();
             databaseDto.setDb(i);
-            databaseDto.setSize(redisClient.DBSize(K8sServiceNameUtil.getServicePath(namespace, middlewareName), port, i).getInteger("data"));
+//            databaseDto.setSize(redisClient.DBSize(K8sServiceNameUtil.getServicePath(namespace, middlewareName), port, i).getInteger("data"));
+            databaseDto.setSize(redisKVService.dbSize(clusterId, namespace, middlewareName, i));
             databaseDtoList.add(databaseDto);
         }
         return databaseDtoList;
