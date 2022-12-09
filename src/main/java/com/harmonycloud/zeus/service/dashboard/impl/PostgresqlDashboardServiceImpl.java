@@ -1020,7 +1020,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         String path = getPath(middlewareName, namespace);
         setPort(clusterId, namespace, middlewareName);
         String grantOption = "";
-        if (middlewareUserAuthority.getGrantAble()) {
+        if (middlewareUserAuthority.getGrantAble() != null && middlewareUserAuthority.getGrantAble()) {
             grantOption = "with grant option";
         }
         if (StringUtils.isNotEmpty(middlewareUserAuthority.getTable())) {
