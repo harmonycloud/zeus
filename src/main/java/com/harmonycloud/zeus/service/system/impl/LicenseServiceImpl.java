@@ -153,7 +153,7 @@ public class LicenseServiceImpl implements LicenseService {
         info.setTest(test);
         info.setProduce(produce);
         info.setUser(license.getString(USER));
-        info.setCode(Arrays.toString(Base64Utils.decode(license.getString(UID))));
+        info.setCode(license.getString(UID));
         return info;
     }
 
