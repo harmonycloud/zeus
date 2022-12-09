@@ -8,19 +8,15 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
-import com.alibaba.fastjson.JSONArray;
-import com.harmonycloud.tool.encrypt.Base64Utils;
-import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
-import com.harmonycloud.zeus.util.MathUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.LicenseInfoDto;
@@ -30,8 +26,9 @@ import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
-import com.harmonycloud.caas.filters.user.CurrentUserRepository;
+import com.harmonycloud.tool.encrypt.Base64Utils;
 import com.harmonycloud.tool.encrypt.RSAUtils;
+import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.bean.BeanSystemConfig;
 import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
@@ -47,7 +44,6 @@ import com.harmonycloud.zeus.service.system.SystemConfigService;
 import com.harmonycloud.zeus.util.K8sClient;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.StringUtils;
 
 /**
  * @author xutianhong
@@ -153,7 +149,10 @@ public class LicenseServiceImpl implements LicenseService {
         info.setTest(test);
         info.setProduce(produce);
         info.setUser(license.getString(USER));
-        info.setCode(license.getString(UID));
+        String uid = license.getString(UID);
+        if (StringUtils.isNotEmpty(uid)){
+            info.setCode(Arrays.toString(Base64Utils.decode(uid)));
+        }
         return info;
     }
 
