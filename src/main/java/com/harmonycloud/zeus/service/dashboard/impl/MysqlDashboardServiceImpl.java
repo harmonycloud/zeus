@@ -602,6 +602,9 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     public void revokePrivilege(String clusterId, String namespace, String middlewareName, String username, List<GrantOptionDto> grantOptionDtos) {
         grantOptionDtos.forEach(grantOptionDto -> {
             grantOptionDto.setUsername(username);
+            if (grantOptionDto.getGrantAble()) {
+                grantOptionDto.setPrivilege(grantOptionDto.getPrivilege() + ", GRANT OPTION ");
+            }
             // 如果table为空，则执行释放数据库权限,否则执行释放数据表权限
             if (StringUtils.isEmpty(grantOptionDto.getTable())) {
                 revokeDatabasePrivilege(clusterId, namespace, middlewareName, grantOptionDto.getDb(), grantOptionDto);
