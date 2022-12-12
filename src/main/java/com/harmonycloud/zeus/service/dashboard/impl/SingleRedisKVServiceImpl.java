@@ -4,12 +4,19 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.dashboard.redis.ScanResult;
 import com.harmonycloud.zeus.integration.dashboard.RedisClient;
 import com.harmonycloud.zeus.service.dashboard.RedisKVService;
 import com.harmonycloud.zeus.util.K8sServiceNameUtil;
+import com.harmonycloud.zeus.util.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author liyinlong
@@ -45,6 +52,12 @@ public class SingleRedisKVServiceImpl implements RedisKVService {
     @Override
     public Integer dbSize(String clusterId, String namespace, String middlewareName, Integer db) {
         return redisClient.DBSize(K8sServiceNameUtil.getServicePath(namespace, middlewareName), port, db).getInteger("data");
+    }
+
+    @Override
+    public ScanResult scan(String clusterId, String namespace, String middlewareName, Integer db, String keyword, Integer cursor, Integer count, String shard) {
+        JSONObject res = redisClient.scan(K8sServiceNameUtil.getServicePath(namespace, middlewareName), port, db, keyword, cursor, count);
+        return RedisUtil.convertScanResult(res);
     }
 
 }

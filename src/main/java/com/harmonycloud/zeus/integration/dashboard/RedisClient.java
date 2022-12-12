@@ -101,4 +101,10 @@ public interface RedisClient {
     @Post(url = "/redis/db/{db}/exec")
     JSONObject execCMD(@Var("db") Integer db, @Body("cmd") String cmd);
 
+    /**
+     * 渐进式遍历
+     */
+    @Get(url = "/redis/db/{db}/scan")
+    JSONObject scan(@Query("host") String host, @Query("port") String port, @Var("db") Integer db, @Query("keyword") String keyword, @Query("cursor") Integer cursor, @Query("count") Integer count);
+
 }
