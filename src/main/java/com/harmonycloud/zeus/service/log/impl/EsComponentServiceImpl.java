@@ -5,16 +5,19 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.constants.CoreConstant;
 import com.harmonycloud.caas.common.constants.DateStyle;
+import com.harmonycloud.caas.common.enums.ComponentsEnum;
 import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.EsSearchTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.api.client.ElasticSearchClient;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.json.JsonUtil;
 import com.harmonycloud.tool.page.PageObject;
 import com.harmonycloud.zeus.bean.BeanOperationAudit;
+import com.harmonycloud.zeus.service.k8s.ClusterComponentService;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.log.EsComponentService;
 import com.harmonycloud.zeus.service.middleware.EsService;
@@ -65,62 +68,65 @@ public class EsComponentServiceImpl implements EsComponentService {
     @Autowired
     private EsService esService;
 
+    @Autowired
+    private ClusterComponentService clusterComponentService;
+
     @Override
-    public RestHighLevelClient getEsClient(MiddlewareClusterDTO cluster) throws Exception {
-        RestHighLevelClient client = esClients.get(cluster.getId());
+    public RestHighLevelClient getEsClient(String clusterId) throws Exception {
+        RestHighLevelClient client = esClients.get(clusterId);
         if (client == null) {
-            client = this.createEsClient(cluster);
-            esClients.put(cluster.getId(), client);
+            client = this.createEsClient(clusterId);
+            esClients.put(clusterId, client);
         }
         return client;
     }
 
     @Override
-    public RestHighLevelClient resetEsClient(MiddlewareClusterDTO cluster) {
-        RestHighLevelClient client = this.createEsClient(cluster);
-        esClients.put(cluster.getId(), client);
+    public RestHighLevelClient resetEsClient(String clusterId) {
+        RestHighLevelClient client = this.createEsClient(clusterId);
+        esClients.put(clusterId, client);
         return client;
     }
 
     @Override
-    public RestClient getLowLevelClient(MiddlewareClusterDTO cluster) {
-        RestHighLevelClient client = esClients.get(cluster.getId());
+    public RestClient getLowLevelClient(String clusterId) {
+        RestHighLevelClient client = esClients.get(clusterId);
         if (client == null) {
-            client = this.createEsClient(cluster);
-            esClients.put(cluster.getId(), client);
+            client = this.createEsClient(clusterId);
+            esClients.put(clusterId, client);
         }
         return client.getLowLevelClient();
     }
 
     @Override
-    public boolean isExistIndex(String index, MiddlewareClusterDTO cluster) throws Exception {
+    public boolean isExistIndex(String index, String clusterId) throws Exception {
         GetIndexRequest indexRequest = new GetIndexRequest().indices(index);
-        boolean exists = this.getEsClient(cluster).indices().exists(indexRequest, RequestOptions.DEFAULT);
+        boolean exists = this.getEsClient(clusterId).indices().exists(indexRequest, RequestOptions.DEFAULT);
         return exists;
     }
 
     @Override
-    public boolean deleteIndex(String indexName, MiddlewareClusterDTO cluster) throws Exception {
-        if (!isExistIndex(indexName, cluster)) {
+    public boolean deleteIndex(String indexName, String clusterId) throws Exception {
+        if (!isExistIndex(indexName, clusterId)) {
             throw new BusinessException(ErrorMessage.NOT_FOUND, DictEnum.LOG_INDEX.phrase());
         }
         DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest(indexName);
         deleteIndexRequest.indicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
-        AcknowledgedResponse response = this.getEsClient(cluster).indices().delete(deleteIndexRequest, RequestOptions.DEFAULT);
+        AcknowledgedResponse response = this.getEsClient(clusterId).indices().delete(deleteIndexRequest, RequestOptions.DEFAULT);
         return response.isAcknowledged();
 
     }
 
-    private RestHighLevelClient createEsClient(MiddlewareClusterDTO cluster) {
-        MiddlewareClusterLoggingInfo elasticSearch = Optional.ofNullable(cluster).map(MiddlewareClusterDTO::getLogging).map(MiddlewareClusterLogging::getElasticSearch).orElse(null);
-        if (elasticSearch == null || StringUtils.isEmpty(elasticSearch.getHost())) {
+    private RestHighLevelClient createEsClient(String clusterId) {
+        ClusterComponentsDto es = clusterComponentService.get(clusterId, ComponentsEnum.LOGGING.getName());
+        if (es == null) {
             throw new BusinessException(ErrorMessage.CLUSTER_ES_SERVICE_ERROR);
         }
-        String protocol = elasticSearch.getProtocol();
-        String userName = elasticSearch.getUser();
-        String password = elasticSearch.getPassword();
-        String esHost = elasticSearch.getHost();
-        Integer port = Integer.valueOf(elasticSearch.getPort());
+        String protocol = es.getProtocol();
+        String userName = es.getUsername();
+        String password = es.getPassword();
+        String esHost = es.getHost();
+        Integer port = Integer.valueOf(es.getPort());
         if (StringUtils.isEmpty(userName)) {
             // userName不能等于null
             userName = "";
@@ -130,24 +136,20 @@ public class EsComponentServiceImpl implements EsComponentService {
                     ElasticSearchClient.getHighLevelClient(protocol, esHost, userName, password, port);
             return highLevelClient;
         } catch (Exception e) {
-            log.error("创建ElasticSearch Client 失败,cluster:{}", JSONObject.toJSONString(cluster), e);
+            log.error("创建ElasticSearch Client 失败,cluster:{}", JSONObject.toJSONString(clusterId), e);
             throw new BusinessException(ErrorMessage.CLUSTER_ES_SERVICE_ERROR);
         }
     }
 
     @Override
-    public PageObject<MysqlLogDTO> getSlowSql(MiddlewareClusterDTO cluster, MysqlLogQuery slowLogQuery) throws Exception {
-        if (cluster == null) {
-            return new PageObject<>(new ArrayList<>(), CommonConstant.NUM_ZERO);
-        }
-        String clusterId = cluster.getId();
+    public PageObject<MysqlLogDTO> getSlowSql(String clusterId, MysqlLogQuery slowLogQuery) throws Exception {
         RestHighLevelClient esClient = esClients.get(clusterId);
         if (esClient == null) {
-            esClient = this.getEsClient(clusterService.findById(clusterId));
+            esClient = this.getEsClient(clusterId);
         }
         BoolQueryBuilder query = this.getSearchRequestBuilder(slowLogQuery);
         //根据时间范围判断落在哪几个索引
-        List<String> indexNameList = getExistIndexNames(esClient, cluster, slowLogQuery.getStartTime(), slowLogQuery.getEndTime());
+        List<String> indexNameList = getExistIndexNames(esClient, clusterId, slowLogQuery.getStartTime(), slowLogQuery.getEndTime());
         if (CollectionUtils.isEmpty(indexNameList)) {
             return new PageObject<>(new ArrayList<>(), CommonConstant.NUM_ZERO);
         }
@@ -156,14 +158,10 @@ public class EsComponentServiceImpl implements EsComponentService {
     }
 
     @Override
-    public PageObject<MysqlLogDTO> getAuditSql(MiddlewareClusterDTO cluster, MysqlLogQuery auditLogQuery) throws Exception {
-        if (cluster == null) {
-            return new PageObject<>(new ArrayList<>(), CommonConstant.NUM_ZERO);
-        }
-        String clusterId = cluster.getId();
+    public PageObject<MysqlLogDTO> getAuditSql(String clusterId, MysqlLogQuery auditLogQuery) throws Exception {
         RestHighLevelClient esClient = esClients.get(clusterId);
         if (esClient == null) {
-            esClient = this.getEsClient(clusterService.findById(clusterId));
+            esClient = this.getEsClient(clusterId);
         }
         if (auditLogQuery.getCurrent() == null) {
             auditLogQuery.setCurrent(1);
@@ -173,7 +171,7 @@ public class EsComponentServiceImpl implements EsComponentService {
         }
         BoolQueryBuilder query = this.getAuditSearchRequestBuilder(auditLogQuery);
         // 获取SQL审计所有索引
-        List<String> indexNameList = getExistAuditIndexNames(esClient, cluster);
+        List<String> indexNameList = getExistAuditIndexNames(esClient, clusterId);
         if (CollectionUtils.isEmpty(indexNameList)) {
             return new PageObject<>(new ArrayList<>(), CommonConstant.NUM_ZERO);
         }
@@ -187,13 +185,13 @@ public class EsComponentServiceImpl implements EsComponentService {
     /**
      * 校验es组件
      *
-     * @param cluster
+     * @param clusterId
      * @return
      */
     @Override
-    public Boolean checkEsConnection(MiddlewareClusterDTO cluster) {
+    public Boolean checkEsConnection(String clusterId) {
         try {
-            RestHighLevelClient client = this.createEsClient(cluster);
+            RestHighLevelClient client = this.createEsClient(clusterId);
             ClusterHealthRequest healthRequest = new ClusterHealthRequest();
             ClusterHealthStatus status = client.cluster().health(healthRequest, RequestOptions.DEFAULT).getStatus();
             if (StringUtils.equals(status.name(), ClusterHealthStatus.RED.name())) {
@@ -206,17 +204,17 @@ public class EsComponentServiceImpl implements EsComponentService {
         return true;
     }
 
-    private void transferIndex(String index, MiddlewareClusterDTO cluster) throws Exception {
+    private void transferIndex(String index, String clusterId) throws Exception {
 
-        if (!isExistIndex(index, cluster)) {
-            log.info("索引不存在，index:{}, clusterId:{}", index, cluster.getId());
+        if (!isExistIndex(index, clusterId)) {
+            log.info("索引不存在，index:{}, clusterId:{}", index, clusterId);
         }
-        log.info("索引模板创建后，对集群{}的索引{}迁移数据", cluster.getName(), index);
+        log.info("索引模板创建后，对集群{}的索引{}迁移数据", clusterId, index);
         String backupIndexName = "backup-" + index;
-        BulkByScrollResponse res = this.reIndex(index, backupIndexName, cluster.getId());
+        BulkByScrollResponse res = this.reIndex(index, backupIndexName, clusterId);
         log.info(res.getStatus().toString());
-        deleteIndex(index, cluster);
-        this.reIndex(backupIndexName, index, cluster.getId());
+        deleteIndex(index, clusterId);
+        this.reIndex(backupIndexName, index, clusterId);
     }
 
     private BulkByScrollResponse reIndex(String sourceIndex, String destIndex, String clusterId) throws IOException {
@@ -226,13 +224,13 @@ public class EsComponentServiceImpl implements EsComponentService {
         return esClients.get(clusterId).reindex(reindexRequest, RequestOptions.DEFAULT);
     }
 
-    private String getAuthorization(MiddlewareClusterDTO cluster) {
-        MiddlewareClusterLoggingInfo elasticSearch = cluster.getLogging().getElasticSearch();
-        if (StringUtils.isEmpty(elasticSearch.getUser()) || StringUtils.isEmpty(elasticSearch.getPassword())) {
+    private String getAuthorization(String clusterId) {
+        ClusterComponentsDto es = clusterComponentService.get(clusterId, ComponentsEnum.LOGGING.getName());
+        if (StringUtils.isEmpty(es.getUsername()) || StringUtils.isEmpty(es.getPassword())) {
             return "";
         }
         try {
-            return Base64.getEncoder().encodeToString((elasticSearch.getUser() + ":" + elasticSearch.getPassword()).getBytes("UTF-8"));
+            return Base64.getEncoder().encodeToString((es.getUsername() + ":" + es.getPassword()).getBytes("UTF-8"));
         } catch (UnsupportedEncodingException e) {
             log.error("获取es authorization 失败", e);
             return "";
@@ -299,7 +297,7 @@ public class EsComponentServiceImpl implements EsComponentService {
         return query;
     }
 
-    private List<String> getExistIndexNames(RestHighLevelClient esClient, MiddlewareClusterDTO cluster, String startTime, String endTime) throws Exception {
+    private List<String> getExistIndexNames(RestHighLevelClient esClient, String clusterId, String startTime, String endTime) throws Exception {
         List<String> indexNameList = new ArrayList<>();
         if (StringUtils.isNotBlank(startTime) && StringUtils.isNotBlank(endTime)) {
             Date startDate = DateUtils.parseUTCDate(startTime);
@@ -325,7 +323,7 @@ public class EsComponentServiceImpl implements EsComponentService {
         }
         indexNameList = CollectionUtils.isNotEmpty(indexNameList) ? indexNameList : Arrays.asList(generateIndexName());
         // 取得已存在的索引
-        String result = resultByGetRestClient(esClient, cluster, "/_cat/indices?format=json");
+        String result = resultByGetRestClient(esClient, clusterId, "/_cat/indices?format=json");
         List<String> indices = new ArrayList<>();
         if (StringUtils.isNotEmpty(result)) {
             List<Map<String, String>> indexMap = JsonUtil.jsonToPojo(result, ArrayList.class);
@@ -337,9 +335,9 @@ public class EsComponentServiceImpl implements EsComponentService {
         return indexNameList;
     }
 
-    private List<String> getExistAuditIndexNames(RestHighLevelClient esClient, MiddlewareClusterDTO cluster) throws Exception {
+    private List<String> getExistAuditIndexNames(RestHighLevelClient esClient, String clusterId) throws Exception {
         // 取得所有索引
-        String result = resultByGetRestClient(esClient, cluster, "/_cat/indices/mysqlaudit-*?format=json");
+        String result = resultByGetRestClient(esClient, clusterId, "/_cat/indices/mysqlaudit-*?format=json");
         List<String> indices = new ArrayList<>();
         if (StringUtils.isNotEmpty(result)) {
             List<Map<String, String>> indexMap = JsonUtil.jsonToPojo(result, ArrayList.class);
@@ -358,20 +356,17 @@ public class EsComponentServiceImpl implements EsComponentService {
     }
 
     @Override
-    public String resultByGetRestClient(RestHighLevelClient client, MiddlewareClusterDTO cluster, String endPoint) throws Exception {
-        if (cluster == null) {
-            return null;
-        }
+    public String resultByGetRestClient(RestHighLevelClient client, String clusterId, String endPoint) throws Exception {
         Request request = new Request("GET", endPoint);
-        MiddlewareClusterLoggingInfo elasticSearch = Optional.ofNullable(cluster).map(MiddlewareClusterDTO::getLogging).map(MiddlewareClusterLogging::getElasticSearch).orElse(null);
-        if (elasticSearch == null || StringUtils.isEmpty(elasticSearch.getHost())) {
+        ClusterComponentsDto es = clusterComponentService.get(clusterId, ComponentsEnum.LOGGING.getName());
+        if (es == null) {
             throw new BusinessException(ErrorMessage.CLUSTER_ES_SERVICE_ERROR);
         }
-        String userName = elasticSearch.getUser();
-        String password = elasticSearch.getPassword();
+        String userName = es.getUsername();
+        String password = es.getPassword();
         if (StringUtils.isNotEmpty(userName) && StringUtils.isNotEmpty(password)) {
             RequestOptions.Builder builder = RequestOptions.DEFAULT.toBuilder();
-            builder.addHeader("Authorization", "Basic " + getAuthorization(cluster)); // (1)
+            builder.addHeader("Authorization", "Basic " + getAuthorization(clusterId)); // (1)
             builder.setHttpAsyncResponseConsumerFactory(           // (2)
                     new HttpAsyncResponseConsumerFactory.HeapBufferedResponseConsumerFactory(30 * 1024 * 1024));
             // 调用build()方法创建对象
@@ -431,8 +426,7 @@ public class EsComponentServiceImpl implements EsComponentService {
     @Override
     public IndexResponse saveAuditRepository(BeanOperationAudit beanRequest, String clusterId) {
         try {
-            MiddlewareClusterDTO middlewareClusterDTO = clusterService.findById(clusterId);
-            RestHighLevelClient restHighLevelClient = esService.getEsClient(middlewareClusterDTO);
+            RestHighLevelClient restHighLevelClient = esService.getEsClient(clusterId);
 
             String indexName = "audit-" + EsIndexUtil.getSuffix();
             IndexRequest request = new IndexRequest(indexName, "_doc");

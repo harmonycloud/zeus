@@ -138,7 +138,6 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
         for (int i = 0; i < dbNum; i++) {
             DatabaseDto databaseDto = new DatabaseDto();
             databaseDto.setDb(i);
-//            databaseDto.setSize(redisClient.DBSize(K8sServiceNameUtil.getServicePath(namespace, middlewareName), port, i).getInteger("data"));
             databaseDto.setSize(redisKVService.dbSize(clusterId, namespace, middlewareName, i));
             databaseDtoList.add(databaseDto);
         }
