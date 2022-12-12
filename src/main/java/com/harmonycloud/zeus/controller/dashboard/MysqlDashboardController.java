@@ -1,6 +1,5 @@
 package com.harmonycloud.zeus.controller.dashboard;
 
-import com.alibaba.fastjson.JSONArray;
 import com.github.pagehelper.PageInfo;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.dashboard.ExecResult;
@@ -8,7 +7,6 @@ import com.harmonycloud.caas.common.model.dashboard.mysql.*;
 import com.harmonycloud.caas.common.model.middleware.MysqlLogDTO;
 import com.harmonycloud.caas.common.model.middleware.MysqlLogQuery;
 import com.harmonycloud.tool.page.PageObject;
-import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.dashboard.MysqlDashboardService;
 import com.harmonycloud.zeus.service.middleware.MysqlService;
 import io.swagger.annotations.Api;

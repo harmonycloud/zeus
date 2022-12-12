@@ -20,7 +20,6 @@ import com.harmonycloud.zeus.service.k8s.NodeService;
 import com.harmonycloud.zeus.service.k8s.impl.ServiceServiceImpl;
 import com.harmonycloud.zeus.service.log.EsComponentService;
 import com.harmonycloud.zeus.service.middleware.MysqlService;
-import com.harmonycloud.zeus.service.mysql.MysqlDbService;
 import com.harmonycloud.zeus.service.mysql.MysqlUserService;
 import com.harmonycloud.zeus.util.MyAESUtil;
 import com.harmonycloud.zeus.util.MysqlConnectionUtil;
@@ -34,9 +33,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_NODEPORT;
 
 /**
  * @author dengyulong
@@ -54,8 +50,6 @@ public class MysqlServiceImpl implements MysqlService {
     private MiddlewareServiceImpl middlewareService;
     @Autowired
     private ServiceServiceImpl serviceService;
-    @Autowired
-    private ClusterService clusterService;
     @Autowired
     private EsComponentService esComponentService;
     @Autowired
@@ -95,7 +89,6 @@ public class MysqlServiceImpl implements MysqlService {
         if (mysqlDTO != null) {
             Boolean isSource = mysqlDTO.getIsSource();
             MysqlAccessInfo source = queryBasicAccessInfo(clusterId, namespace, middlewareName, middleware);
-            source.setPassword(middleware.getPassword());
             source.setClusterId(clusterId);
             source.setNamespace(namespace);
             source.setMiddlewareName(middlewareName);
@@ -111,14 +104,8 @@ public class MysqlServiceImpl implements MysqlService {
                     log.error("关联实例不存在", e);
                     return BaseResult.ok(res);
                 }
-                MysqlDTO relationMiddlewareMysqlDTO = relationMiddleware.getMysqlDTO();
                 MysqlAccessInfo relation;
-                if (relationMiddlewareMysqlDTO != null) {
-                    relation = queryBasicAccessInfo(relationClusterId, relationNamespace, relationName, middleware);
-                } else {
-                    relation = queryBasicAccessInfo(relationClusterId, relationNamespace, relationName, middleware);
-                }
-                relation.setPassword( relationMiddleware.getPassword());
+                relation = queryBasicAccessInfo(relationClusterId, relationNamespace, relationName, middleware);
                 relation.setClusterId( relationClusterId);
                 relation.setNamespace(relationNamespace);
                 relation.setMiddlewareName( relationName);

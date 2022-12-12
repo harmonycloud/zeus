@@ -101,20 +101,6 @@ public interface IngressService {
     List<IngressDTO> getMiddlewareIngress(String clusterId, String namespace, String type, String middlewareName);
 
     /**
-     * 查询单个中间件对外访问
-     *
-     * @param clusterId      集群id
-     * @param namespace      命名空间
-     * @param type           中间件类型
-     * @param middlewareName 中间件名称
-     * @param name           对外访问名称
-     * @param exposeType     对外暴露方式
-     * @param protocol       协议
-     * @return
-     */
-    IngressDTO get(String clusterId, String namespace, String type, String middlewareName, String name, String exposeType, String protocol);
-
-    /**
      * 查询中间件ingress列表
      *
      * @param clusterId  集群id
