@@ -27,23 +27,6 @@ public class RedisDashboardController {
     @Autowired
     private RedisDashboardService redisDashboardService;
 
-//    @ApiOperation(value = "查询指定库全部key", notes = "查询指定库全部key")
-//    @ApiImplicitParams({
-//            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-//            @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
-//            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
-//            @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = Integer.class),
-//            @ApiImplicitParam(name = "keyword", value = "key关键词", paramType = "query", dataTypeClass = String.class),
-//    })
-//    @GetMapping("/databases/{database}/keys")
-//    public BaseResult<List<KeyValueDto>> getAllKeys(@PathVariable("clusterId") String clusterId,
-//                                                 @PathVariable("namespace") String namespace,
-//                                                 @PathVariable("middlewareName") String middlewareName,
-//                                                 @PathVariable("database") Integer database,
-//                                                 @RequestParam(value = "keyword", defaultValue = "") String keyword) {
-//        return BaseResult.ok(redisDashboardService.getAllKeys(clusterId,  namespace, middlewareName, database, keyword));
-//    }
-
     @ApiOperation(value = "分页查询key", notes = "分页查询key")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
