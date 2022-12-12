@@ -264,10 +264,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             //middleware.setRelationMiddleware(relationMiddleware);
             middlewareManageTask.asyncCreateDisasterRecoveryMiddleware(this, middleware);
         }
-        // 创建对外服务
-        prepareDbManageOpenService(middleware);
-        // 准备数据库管理环境
-        prepareDbManageEnv(middleware);
     }
 
     @Override
