@@ -82,9 +82,8 @@ public class LogServiceImpl implements LogService {
     @Override
     public void exportLog(LogQuery logQuery, HttpServletResponse response) throws Exception {
         AssertUtil.notBlank(logQuery.getClusterId(), DictEnum.CLUSTER_ID);
-        OutputStream outputStream = null;
-        MiddlewareClusterDTO cluster = clusterService.findById(logQuery.getClusterId());
-        RestHighLevelClient client = esService.getEsClient(cluster);
+        OutputStream outputStream;
+        RestHighLevelClient client = esService.getEsClient(logQuery.getClusterId());
         if (StringUtils.isBlank(logQuery.getMiddlewareName())
                 && StringUtils.isBlank(logQuery.getPod())
                 && StringUtils.isBlank(logQuery.getContainer())) {
@@ -94,14 +93,14 @@ public class LogServiceImpl implements LogService {
         SearchRequest request = this.getSearchRequestBuilder(logQuery);
         SearchSourceBuilder builder = request.source();
         builder.size(logQuery.getPageSize());
-        SearchResponse scrollResp = null;
+        SearchResponse scrollResp;
         try {
             scrollResp = client.search(request, RequestOptions.DEFAULT);
         } catch (ElasticsearchStatusException e) {
             if (isExceedMaxResult(e)) {
                 //设置最大查询结果条数
                 logger.info("设置日志条数最大搜索条数,index：{}, clusterId:{}",
-                        JSONObject.toJSONString(logQuery.getIndexes()), cluster.getId());
+                        JSONObject.toJSONString(logQuery.getIndexes()), logQuery.getClusterId());
                 esService.updateIndexMaxResultWindow(client, logQuery.getIndexes(), MAX_EXPORT_LENGTH);
                 scrollResp = client.search(request, RequestOptions.DEFAULT);
             } else {
@@ -145,8 +144,7 @@ public class LogServiceImpl implements LogService {
         SearchResponse scrollResp = null;
         String scrollId = logQuery.getScrollId();
 
-        MiddlewareClusterDTO middlewareClusterDTO = clusterService.findById(logQuery.getClusterId());
-        RestHighLevelClient client = esService.getEsClient(middlewareClusterDTO);
+        RestHighLevelClient client = esService.getEsClient(logQuery.getClusterId());
 
         if (StringUtils.isBlank(scrollId)) {
             if (StringUtils.isBlank(logQuery.getNamespace())) {
@@ -188,8 +186,7 @@ public class LogServiceImpl implements LogService {
             return BaseResult.ok(logFileNames);
         }
 
-        MiddlewareClusterDTO middlewareClusterDTO = clusterService.findById(logQuery.getClusterId());
-        RestHighLevelClient client = esService.getEsClient(middlewareClusterDTO);
+        RestHighLevelClient client = esService.getEsClient(logQuery.getClusterId());
 
         if (StringUtils.isBlank(logQuery.getContainer()) || StringUtils.isBlank(logQuery.getPod())) {
             logFileNames.addAll(this.listLogFileNames(logQuery, client, true));
@@ -448,7 +445,7 @@ public class LogServiceImpl implements LogService {
         MiddlewareClusterDTO middlewareClusterDTO = clusterService.findById(clusterId);
         List<String> existIndexes = null;
         try {
-            existIndexes = esService.getIndexes(middlewareClusterDTO);
+            existIndexes = esService.getIndexes(clusterId);
         } catch (ConnectionClosedException e) {
             log.error("连接elasticsearch出错了", e);
             throw new BusinessException(ErrorMessage.ELASTICSEARCH_CONNECT_FAILED);

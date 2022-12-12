@@ -130,8 +130,7 @@ public class MysqlServiceImpl implements MysqlService {
 
     @Override
     public PageObject<MysqlLogDTO> slowsql(MysqlLogQuery slowLogQuery) throws Exception {
-        MiddlewareClusterDTO cluster = clusterService.findById(slowLogQuery.getClusterId());
-        PageObject<MysqlLogDTO> slowSqlDTOS = esComponentService.getSlowSql(cluster, slowLogQuery);
+        PageObject<MysqlLogDTO> slowSqlDTOS = esComponentService.getSlowSql(slowLogQuery.getClusterId(), slowLogQuery);
         return slowSqlDTOS;
     }
 
@@ -161,10 +160,9 @@ public class MysqlServiceImpl implements MysqlService {
 
     @Override
     public PageObject<MysqlLogDTO> auditSql(MysqlLogQuery auditLogQuery) {
-        MiddlewareClusterDTO cluster = clusterService.findById(auditLogQuery.getClusterId());
         PageObject<MysqlLogDTO> slowSqlDTOS = null;
         try {
-            slowSqlDTOS = esComponentService.getAuditSql(cluster, auditLogQuery);
+            slowSqlDTOS = esComponentService.getAuditSql(auditLogQuery.getClusterId(), auditLogQuery);
         } catch (Exception e) {
             e.printStackTrace();
         }
