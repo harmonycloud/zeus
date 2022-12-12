@@ -146,20 +146,28 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         Service patroniService = serviceWrapper.get(middleware.getClusterId(), middleware.getNamespace(), patroniName);
 
         if (patroniService == null) {
-            throw new BusinessException(DictEnum.SERVICE, patroniName, ErrorMessage.NOT_EXIST);
+            log.error("无法找到patroni服务");
+            return null;
         }
         // 获取pod列表
-        List<Status.Condition> conditions = middlewareCRService.getStatus(middleware.getClusterId()
-                , middleware.getNamespace(), MiddlewareTypeEnum.POSTGRESQL.getType(), middleware.getName()).getConditions();
+        Status status = middlewareCRService.getStatus(middleware.getClusterId()
+                , middleware.getNamespace(), MiddlewareTypeEnum.POSTGRESQL.getType(), middleware.getName());
+        List<Status.Condition> conditions = status.getConditions();
         if (CollectionUtil.isEmpty(conditions)) {
-            return true;
+            return null;
         }
         // pod执行命令
         String execCommand = MessageFormat.format(
                 "kubectl exec {0} -n {1} -c postgres --server={2} --token={3} --insecure-skip-tls-verify=true " +
                         "-- bash  -c \"curl -s http://{4}:8008/patroni | jq .\"",
                 conditions.get(0).getName(), middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(), patroniName);
-        List<String> resList = CmdExecUtil.runCmd(execCommand);
+        List<String> resList;
+        try {
+            resList = CmdExecUtil.runCmd(execCommand);
+        } catch (Exception e) {
+            log.error("查询自动切换失败", e);
+            return null;
+        }
         // 查看pause
         StringBuilder sb = new StringBuilder();
         resList.forEach(sb::append);
