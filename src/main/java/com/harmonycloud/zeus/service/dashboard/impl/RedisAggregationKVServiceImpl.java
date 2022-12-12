@@ -15,10 +15,12 @@ import com.harmonycloud.zeus.util.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -106,11 +108,11 @@ public class RedisAggregationKVServiceImpl implements RedisKVService {
         return scanResult;
     }
 
-    private boolean scanAndConvert(String shard, Integer db, String keyword, Integer cursor, Integer count, ScanResult scanResult) {
-        JSONObject res = redisClient.scan(shard, port, db, keyword, cursor, count - scanResult.getKeys().size());
+    private boolean scanAndConvert(String pod, Integer db, String keyword, Integer cursor, Integer count, ScanResult scanResult) {
+        JSONObject res = redisClient.scan(pod, port, db, keyword, cursor, count - scanResult.getKeys().size());
         ScanResult result = RedisUtil.convertScanResult(res);
         scanResult.getKeys().addAll(result.getKeys());
-        scanResult.setShard(shard);
+        scanResult.setPod(pod);
         scanResult.setCursor(result.getCursor());
         return scanResult.getKeys().size() != count;
     }
