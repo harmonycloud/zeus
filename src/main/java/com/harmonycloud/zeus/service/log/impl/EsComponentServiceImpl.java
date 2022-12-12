@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.constants.CoreConstant;
 import com.harmonycloud.caas.common.constants.DateStyle;
+import com.harmonycloud.caas.common.constants.LogConstant;
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
 import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
@@ -149,7 +150,7 @@ public class EsComponentServiceImpl implements EsComponentService {
         }
         BoolQueryBuilder query = this.getSearchRequestBuilder(slowLogQuery);
         //根据时间范围判断落在哪几个索引
-        List<String> indexNameList = getExistIndexNames(esClient, clusterId, slowLogQuery.getStartTime(), slowLogQuery.getEndTime());
+        List<String> indexNameList = getExistIndexNames(esClient, clusterId, slowLogQuery.getStartTime(), slowLogQuery.getEndTime(), LogConstant.MYSQL_SLOW_SQL);
         if (CollectionUtils.isEmpty(indexNameList)) {
             return new PageObject<>(new ArrayList<>(), CommonConstant.NUM_ZERO);
         }
@@ -171,7 +172,7 @@ public class EsComponentServiceImpl implements EsComponentService {
         }
         BoolQueryBuilder query = this.getAuditSearchRequestBuilder(auditLogQuery);
         // 获取SQL审计所有索引
-        List<String> indexNameList = getExistAuditIndexNames(esClient, clusterId);
+        List<String> indexNameList = getExistIndexNames(esClient, clusterId, auditLogQuery.getStartTime(),  auditLogQuery.getEndTime(), LogConstant.MYSQL_AUDIT_SQL);
         if (CollectionUtils.isEmpty(indexNameList)) {
             return new PageObject<>(new ArrayList<>(), CommonConstant.NUM_ZERO);
         }
@@ -297,7 +298,7 @@ public class EsComponentServiceImpl implements EsComponentService {
         return query;
     }
 
-    private List<String> getExistIndexNames(RestHighLevelClient esClient, String clusterId, String startTime, String endTime) throws Exception {
+    private List<String> getExistIndexNames(RestHighLevelClient esClient, String clusterId, String startTime, String endTime,String indexPrefix) throws Exception {
         List<String> indexNameList = new ArrayList<>();
         if (StringUtils.isNotBlank(startTime) && StringUtils.isNotBlank(endTime)) {
             Date startDate = DateUtils.parseUTCDate(startTime);
@@ -323,7 +324,7 @@ public class EsComponentServiceImpl implements EsComponentService {
         }
         indexNameList = CollectionUtils.isNotEmpty(indexNameList) ? indexNameList : Arrays.asList(generateIndexName());
         // 取得已存在的索引
-        String result = resultByGetRestClient(esClient, clusterId, "/_cat/indices?format=json");
+        String result = resultByGetRestClient(esClient, clusterId, "/_cat/indices/" + indexPrefix + "-*?format=json");
         List<String> indices = new ArrayList<>();
         if (StringUtils.isNotEmpty(result)) {
             List<Map<String, String>> indexMap = JsonUtil.jsonToPojo(result, ArrayList.class);
@@ -333,19 +334,6 @@ public class EsComponentServiceImpl implements EsComponentService {
         }
         indexNameList.retainAll(indices);
         return indexNameList;
-    }
-
-    private List<String> getExistAuditIndexNames(RestHighLevelClient esClient, String clusterId) throws Exception {
-        // 取得所有索引
-        String result = resultByGetRestClient(esClient, clusterId, "/_cat/indices/mysqlaudit-*?format=json");
-        List<String> indices = new ArrayList<>();
-        if (StringUtils.isNotEmpty(result)) {
-            List<Map<String, String>> indexMap = JsonUtil.jsonToPojo(result, ArrayList.class);
-            if (CollectionUtils.isNotEmpty(indexMap)) {
-                indices = indexMap.stream().map(indexs -> indexs.get("index")).collect(Collectors.toList());
-            }
-        }
-        return indices;
     }
 
     private String generateIndexName() {
