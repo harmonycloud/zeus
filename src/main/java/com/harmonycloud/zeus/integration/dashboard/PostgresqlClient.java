@@ -447,14 +447,14 @@ public interface PostgresqlClient {
      * 取消赋权用户table
      */
     @Delete(
-            url = "/postgresql/{path}/port/{port}/user/{username}/database/{database}/schema/{schema}/table/{table}")
+            url = "/postgresql/{path}/port/{port}/user/{username}/database/{database}/schema/{schema}/table/{table}?privileges={privileges}")
     JSONObject revokeUserTable(@Var("path") String path,
                               @Var("port") String port,
                               @Var("username") String username,
                               @Var("database") String database,
                               @Var("schema") String schema,
                               @Var("table") String table,
-                              @Body("privileges") String privileges);
+                              @Var("privileges") String privileges);
 
     /**
      * 启用/禁用用户
