@@ -1163,12 +1163,13 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             tableList = tableList.stream()
                 .filter(table -> userSchemaAuthorityList.stream()
                     .anyMatch(schemaAuthority -> table.get("nspname").equals(schemaAuthority.getSchema())
-                        && schemaAuthority.getDatabase().equals(databaseSchema.getAuthority())))
+                        && schemaAuthority.getDatabase().equals(databaseSchema.getDatabase())))
                 .collect(Collectors.toList());
             tableList.forEach(table -> {
                 MiddlewareUserAuthority tableAuthority = new MiddlewareUserAuthority();
                 tableAuthority.setDatabase(databaseSchema.getDatabase());
                 tableAuthority.setSchema(table.get("nspname"));
+                tableAuthority.setTable(table.get("relname"));
                 if (table.get("relowner").equals(oid)) {
                     tableAuthority.setAuthority("owner");
                 } else {
