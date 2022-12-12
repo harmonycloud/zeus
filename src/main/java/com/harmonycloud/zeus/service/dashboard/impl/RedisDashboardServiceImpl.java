@@ -124,7 +124,10 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
     @Override
     public ScanResult scan(String clusterId, String namespace, String middlewareName, Integer db, String keyword, Integer cursor, Integer count, String pod) {
         RedisKVService redisKVService = getKVService(clusterId, namespace, middlewareName);
-        return redisKVService.scan(clusterId, namespace, middlewareName, db, keyword, cursor, count, pod);
+        ScanResult scanResult = redisKVService.scan(clusterId, namespace, middlewareName, db, keyword, cursor, count, pod);
+        scanResult.setPreCursor(cursor);
+        scanResult.setPod(pod);
+        return scanResult;
     }
 
     @Override
