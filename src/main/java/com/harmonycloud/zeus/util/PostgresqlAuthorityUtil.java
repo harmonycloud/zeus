@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.util;
 
 import com.harmonycloud.caas.common.enums.middleware.PostgresqlAuthorityEnum;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,11 +22,17 @@ public class PostgresqlAuthorityUtil {
                 authority = a.split("/")[0].replace(username + "=", "");
                 break;
             }
+            if (a.startsWith("=") && StringUtils.isEmpty(authority)){
+                authority = a.split("/")[0].replace("=", "");
+            }
         }
         StringBuilder sb =new StringBuilder();
         // 根据*号判断是否可传递权限
         if (authority.contains("*")){
             sb.append("*");
+        }
+        if (StringUtils.isEmpty(authority)){
+            return null;
         }
         if (authority.contains(PostgresqlAuthorityEnum.INSERT.getAuthority())
             || authority.contains(PostgresqlAuthorityEnum.UPDATE.getAuthority())

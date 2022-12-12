@@ -1119,14 +1119,15 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             } else {
                 String datAcl = database.get("datacl");
                 String authority = PostgresqlAuthorityUtil.checkAuthority(datAcl, username);
-                if (authority.contains("*")) {
+                if (StringUtils.isNotEmpty(authority) && authority.contains("*")) {
                     databaseAuthority.setGrantAble(true);
                     authority = authority.replace("*", "");
                 }
                 databaseAuthority.setAuthority(authority);
             }
             return databaseAuthority;
-        }).filter(database -> !database.getDatabase().equals(TEMPLATE0) && !database.getDatabase().equals(TEMPLATE1))
+        }).filter(database -> StringUtils.isNotEmpty(database.getAuthority())
+            && !database.getDatabase().equals(TEMPLATE0) && !database.getDatabase().equals(TEMPLATE1))
             .collect(Collectors.toList());
         // 获取模式权限
         List<MiddlewareUserAuthority> userSchemaAuthorityList = new ArrayList<>();
@@ -1142,6 +1143,9 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
                 } else {
                     String nspAcl = schema.get("nspacl");
                     String authority = PostgresqlAuthorityUtil.checkAuthority(nspAcl, username);
+                    if (StringUtils.isEmpty(authority)){
+                        return;
+                    }
                     if (authority.contains("*")) {
                         schemaAuthority.setGrantAble(true);
                         authority = authority.replace("*", "");
@@ -1170,6 +1174,9 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
                 } else {
                     String relAcl = table.get("relacl");
                     String authority = PostgresqlAuthorityUtil.checkAuthority(relAcl, username);
+                    if (StringUtils.isEmpty(authority)){
+                        return;
+                    }
                     if (authority.contains("*")) {
                         tableAuthority.setGrantAble(true);
                         authority = authority.replace("*", "");
