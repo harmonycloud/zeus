@@ -301,8 +301,8 @@ public class EsComponentServiceImpl implements EsComponentService {
     private List<String> getExistIndexNames(RestHighLevelClient esClient, String clusterId, String startTime, String endTime,String indexPrefix) throws Exception {
         List<String> indexNameList = new ArrayList<>();
         if (StringUtils.isNotBlank(startTime) && StringUtils.isNotBlank(endTime)) {
-            Date startDate = DateUtils.parseUTCDate(startTime);
-            Date endDate = DateUtils.parseUTCDate(endTime);
+            Date startDate = DateUtils.parseUTCSDate(startTime);
+            Date endDate = DateUtils.parseUTCSDate(endTime);
 
             Calendar dayc1 = new GregorianCalendar();
             Calendar dayc2 = new GregorianCalendar();
@@ -313,7 +313,7 @@ public class EsComponentServiceImpl implements EsComponentService {
                 String s = (dayc1.get(Calendar.YEAR) + "年" +
                         (dayc1.get(Calendar.MONTH) + 1) + "月" + dayc1.get(Calendar.DATE)) + "日";
                 indexNameList.add(
-                        CoreConstant.ES_INDEX_MYSQL_SLOW_LOG + CommonConstant.LINE +
+                        indexPrefix + CommonConstant.LINE +
                                 dayc1.get(Calendar.YEAR) + CommonConstant.DOT +
                                 String.format("%02d", (dayc1.get(Calendar.MONTH) + 1)) + CommonConstant.DOT +
                                 String.format("%02d", dayc1.get(Calendar.DATE))
@@ -322,7 +322,7 @@ public class EsComponentServiceImpl implements EsComponentService {
                 dayc1.add(Calendar.DAY_OF_YEAR, CommonConstant.NUM_ONE); //加1天
             }
         }
-        indexNameList = CollectionUtils.isNotEmpty(indexNameList) ? indexNameList : Arrays.asList(generateIndexName());
+        indexNameList = CollectionUtils.isNotEmpty(indexNameList) ? indexNameList : Arrays.asList(generateIndexName(indexPrefix));
         // 取得已存在的索引
         String result = resultByGetRestClient(esClient, clusterId, "/_cat/indices/" + indexPrefix + "-*?format=json");
         List<String> indices = new ArrayList<>();
@@ -336,10 +336,10 @@ public class EsComponentServiceImpl implements EsComponentService {
         return indexNameList;
     }
 
-    private String generateIndexName() {
+    private String generateIndexName(String indexPrefix) {
         Date now = DateUtils.getCurrentUtcTime();
         String date = DateUtils.DateToString(now, DateStyle.YYYY_MM_DOT);
-        String indexName = CoreConstant.ES_INDEX_MYSQL_SLOW_LOG + CommonConstant.LINE + date;
+        String indexName = indexPrefix + CommonConstant.LINE + date;
         return indexName;
     }
 
