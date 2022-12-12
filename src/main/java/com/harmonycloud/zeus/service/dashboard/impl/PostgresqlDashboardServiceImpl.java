@@ -1126,8 +1126,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
                 databaseAuthority.setAuthority(authority);
             }
             return databaseAuthority;
-        }).filter(database -> StringUtils.isNotEmpty(database.getAuthority())
-            && !database.getDatabase().equals(TEMPLATE0) && !database.getDatabase().equals(TEMPLATE1))
+        }).filter(database -> !database.getDatabase().equals(TEMPLATE0) && !database.getDatabase().equals(TEMPLATE1))
             .collect(Collectors.toList());
         // 获取模式权限
         List<MiddlewareUserAuthority> userSchemaAuthorityList = new ArrayList<>();
@@ -1160,11 +1159,6 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         for (MiddlewareUserAuthority databaseSchema : userDatabaseAuthorityList) {
             JSONObject listTables = postgresqlClient.listAllTables(path, port, databaseSchema.getDatabase());
             List<Map<String, String>> tableList = convertColumn(listTables);
-            tableList = tableList.stream()
-                .filter(table -> userSchemaAuthorityList.stream()
-                    .anyMatch(schemaAuthority -> table.get("nspname").equals(schemaAuthority.getSchema())
-                        && schemaAuthority.getDatabase().equals(databaseSchema.getDatabase())))
-                .collect(Collectors.toList());
             tableList.forEach(table -> {
                 MiddlewareUserAuthority tableAuthority = new MiddlewareUserAuthority();
                 tableAuthority.setDatabase(databaseSchema.getDatabase());
@@ -1189,7 +1183,8 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         }
         // 汇总权限
         List<MiddlewareUserAuthority> userAuthorityList = new ArrayList<>();
-        userAuthorityList.addAll(userDatabaseAuthorityList);
+        userAuthorityList.addAll(userDatabaseAuthorityList.stream()
+            .filter(da -> StringUtils.isNotEmpty(da.getAuthority())).collect(Collectors.toList()));
         userAuthorityList.addAll(userSchemaAuthorityList);
         userAuthorityList.addAll(userTableAuthorityList);
         userAuthorityList.sort(Comparator.comparing(MiddlewareUserAuthority::getDatabase));

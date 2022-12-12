@@ -22,9 +22,6 @@ public class PostgresqlAuthorityUtil {
                 authority = a.split("/")[0].replace(username + "=", "");
                 break;
             }
-            if (a.startsWith("=") && StringUtils.isEmpty(authority)){
-                authority = a.split("/")[0].replace("=", "");
-            }
         }
         StringBuilder sb =new StringBuilder();
         // 根据*号判断是否可传递权限
