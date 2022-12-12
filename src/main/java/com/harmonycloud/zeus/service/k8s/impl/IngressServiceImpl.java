@@ -10,22 +10,19 @@ import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
 import com.harmonycloud.caas.common.model.IngressComponentDto;
 import com.harmonycloud.caas.common.model.TraefikPort;
-import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
+import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.tool.uuid.UUIDUtils;
-import com.harmonycloud.zeus.bean.BeanIngressComponents;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
-import com.harmonycloud.zeus.dao.BeanIngressComponentsMapper;
 import com.harmonycloud.zeus.dao.BeanMiddlewareInfoMapper;
 import com.harmonycloud.zeus.integration.cluster.ConfigMapWrapper;
 import com.harmonycloud.zeus.integration.cluster.IngressRouteTCPWrapper;
 import com.harmonycloud.zeus.integration.cluster.IngressWrapper;
 import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
-import com.harmonycloud.zeus.operator.BaseOperator;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
-import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.service.user.UserService;
@@ -47,9 +44,7 @@ import java.util.stream.Collectors;
 
 import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_ONE;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
-import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.HELM_RELEASE_ANNOTATION_KEY;
-import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.HELM_RELEASE_LABEL_KEY;
-import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.HELM_RELEASE_LABEL_VALUE;
+import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.*;
 
 /**
  * @author dengyulong
@@ -90,8 +85,6 @@ public class IngressServiceImpl implements IngressService {
     private BeanMiddlewareInfoMapper middlewareInfoMapper;
     @Autowired
     private PodService podService;
-    @Autowired
-    private BeanIngressComponentsMapper beanIngressComponentsMapper;
     @Autowired
     private IngressRouteTCPWrapper ingressRouteTCPWrapper;
     @Autowired
@@ -344,23 +337,6 @@ public class IngressServiceImpl implements IngressService {
         return portSet;
     }
 
-//    @Override
-//    public void createIngressTcp(MiddlewareClusterDTO cluster, String namespace, List<ServiceDTO> serviceList,
-//                                 boolean checkPort) {
-//        if (CollectionUtils.isEmpty(serviceList)) {
-//            return;
-//        }
-//        if (checkPort) {
-//            checkServiceTcpPort(cluster, serviceList);
-//        }
-//        // 转换Ingress TCP配置文件
-//        IngressDTO ingressDTO = new IngressDTO();
-//        ingressDTO.setServiceList(serviceList);
-//        ConfigMap configMap = covertTcpConfig(cluster, namespace, ingressDTO);
-//        // 更新配置文件
-//        configMapWrapper.update(cluster.getId(), getIngressTcpNamespace(cluster, null), configMap);
-//    }
-
     @Override
     public void delete(String clusterId, String namespace, String middlewareName, String name, IngressDTO ingressDTO) {
         if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_INGRESS)) {
@@ -502,32 +478,6 @@ public class IngressServiceImpl implements IngressService {
         return get(clusterId, namespace, type, middlewareName).stream().
                 filter(ingressDTO -> ingressDTO.getServicePurpose() != null && !"null".equals(ingressDTO.getServicePurpose())).
                 collect(Collectors.toList());
-    }
-
-    @Override
-    public IngressDTO get(String clusterId, String namespace, String type, String middlewareName, String name, String exposeType, String protocol) {
-        /*if (StringUtils.equals(exposeType, MIDDLEWARE_EXPOSE_INGRESS)) {
-            if (StringUtils.equals(protocol, Protocol.HTTP.getValue())) {
-                Ingress ingress = ingressWrapper.get(clusterId, namespace, name);
-                return convertDto(ingress);
-            } else if (StringUtils.equals(protocol, Protocol.TCP.getValue())) {
-                MiddlewareCRD crd = middlewareCRDService.getCR(clusterId, namespace, type, middlewareName);
-                MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-                if (cluster.getIngress().getTcp() == null || !cluster.getIngress().getTcp().isEnabled()) {
-                    return null;
-                }
-                ConfigMap configMap = configMapWrapper.get(clusterId, getIngressTcpNamespace(cluster),
-                    cluster.getIngress().getTcp().getConfigMapName());
-                Map<String, List<ServiceDTO>> tcpRoutineMap = getTcpRoutineMap(configMap);
-                return getTcpRoutineDetail(clusterId, namespace, crd, name, tcpRoutineMap);
-            }
-        } else if (StringUtils.equals(exposeType, MIDDLEWARE_EXPOSE_NODEPORT)) {
-            io.fabric8.kubernetes.api.model.Service service = serviceWrapper.get(clusterId, namespace, name);
-            MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-            return dealNodePortRoutine(clusterId, namespace, cluster.getIngress().getAddress(), service);
-        }*/
-
-        return null;
     }
 
     @Override
