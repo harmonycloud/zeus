@@ -116,11 +116,13 @@ configmap:
   checkDir: |-
     #!/bin/sh
     set -eu
-    ls "$VOL_DIR"
+    if [ ! -d "$VOL_DIR" ]; then echo "The $VOL_DIR directory does not exist"; exit 1; fi
+    num=$(du -s "$VOL_DIR"|awk '{print $1}')
+    if [ $num -gt 0 ]; then echo "Data already exists in the $VOL_DIR directory"; exit 1; fi
   cleanDir: |-
     #!/bin/sh
     set -eu
-    rm -rf "$VOL_DIR"/*
+    cd "$VOL_DIR" && rm -rf $(ls -A)
 
 # Number of provisioner worker threads to call provision/delete simultaneously.
 # workerThreads: 4

@@ -14,7 +14,7 @@ global:
     nodeSelector: {}
   middlewarebackup_controller:
     image: middlewarebackup-controller
-    tag: v1.2.12-2
+    tag: v1.2.14
     resources:
       limits:
         cpu: 200m
@@ -36,11 +36,11 @@ global:
       tag: v1.0.4-common
     job_pgsql_backup:
       image: middleware-backup-operator
-      tag: v1.0.6-pgsql
+      tag: v1.0.8-pgsql
     job_mysql_backup:
       image: middleware-backup-operator
-      tag: v1.0.5-mysql
-      mysql8tag: v1.0.5-mysql8
+      tag: v1.0.7-mysql
+      mysql8tag: v1.0.7-mysql8
   kubectl:
     installCRDs: true
     tag: 1.21
@@ -54,6 +54,29 @@ global:
     nodeSelector: {}
     tolerations: []
     affinity: {}
+  middleware_api:
+    image: middleware-api
+    tag: v0.1.0
+    pullPolicy: Always
+    replicaCount: 1
+    podAnnotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+    serviceAccount:
+      create: true
+      annotations: {}
+      name: ""
+    service:
+      type: ClusterIP
+      port: 8080
+    nodeSelector: {}
 
 podAntiAffinityTopologKey: "kubernetes.io/hostname"
 

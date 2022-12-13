@@ -1,0 +1,119 @@
+{{- if .Values.global.middleware_api.serviceAccount.create -}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: middleware-api
+  labels:
+    {{- include "middleware-platform-controller.labels" . | nindent 4 }}
+  {{- with .Values.global.middleware_api.serviceAccount.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: middleware-api
+  labels:
+    {{- include "middleware-platform-controller.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.global.middleware_api.service.type }}
+  ports:
+    - port: {{ .Values.global.middleware_api.service.port }}
+      targetPort: {{ .Values.global.middleware_api.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/instance: middleware-api
+    app.kubernetes.io/name: middleware-api
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: middleware-api
+  labels:
+    control-plane: middleware-api
+spec:
+  replicas: {{ .Values.global.middleware_api.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: middleware-api
+      app.kubernetes.io/name: middleware-api
+  template:
+    metadata:
+    {{- with .Values.global.middleware_api.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        app.kubernetes.io/instance: middleware-api
+        app.kubernetes.io/name: middleware-api
+    spec:
+      {{- with .Values.global.middleware_api.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.global.middleware_api.podSecurityContext | nindent 8 }}
+      containers:
+        - name: middleware-api
+          securityContext:
+            {{- toYaml .Values.global.middleware_api.securityContext | nindent 12 }}
+          image: "{{ .Values.global.repository }}/{{ .Values.global.middleware_api.image }}:{{ .Values.global.middleware_api.tag }}"
+          imagePullPolicy: {{ .Values.global.middleware_api.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: http
+          resources:
+            {{- toYaml .Values.global.middleware_api.resources | nindent 12 }}
+      {{- with .Values.global.middleware_api.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      affinity:
+        {{- if eq .Values.podAntiAffinity "hard"}}
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: control-plane
+                    operator: In
+                    values:
+                      - middleware-api
+              topologyKey: {{ .Values.podAntiAffinityTopologKey }}
+        {{- else if eq .Values.podAntiAffinity "soft"}}
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: {{ .Values.podAntiAffinityTopologKey }}
+                labelSelector:
+                  matchExpressions:
+                    - key: control-plane
+                      operator: In
+                      values:
+                        - middleware-api
+        {{- end}}
+        {{- with .Values.nodeAffinity }}
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: 10
