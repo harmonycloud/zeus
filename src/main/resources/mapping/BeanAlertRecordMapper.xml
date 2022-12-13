@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.harmonycloud.zeus.dao.BeanAlertRecordMapper">
+<mapper namespace="com.middleware.zeus.dao.BeanAlertRecordMapper">
 
     <select id="queryByTimeAndLevel" resultType="map">
         SELECT count(`time`) num,date_format(`time`,'%Y-%m-%d %H:00:00') alerttime FROM middleware_platform.alert_record

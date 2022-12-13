@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.harmonycloud.zeus.dao.BeanMiddlewareInfoMapper">
+<mapper namespace="com.middleware.zeus.dao.BeanMiddlewareInfoMapper">
 
-    <select id="listInstalledWithMiddlewareDetail" resultType="com.harmonycloud.zeus.bean.BeanMiddlewareInfo" parameterType="list">
+    <select id="listInstalledWithMiddlewareDetail" resultType="com.middleware.zeus.bean.BeanMiddlewareInfo" parameterType="list">
         SELECT m.id,m.`name`,m.description,m.`type`,m.version,m.image_path,m.chart_name,m.chart_version,m.grafana_id,m.official,m.operator_name,c.cluster_id
         FROM cluster_middleware_info c
         LEFT JOIN middleware_info m ON c.chart_name=m.chart_name AND c.chart_version=m.chart_version
