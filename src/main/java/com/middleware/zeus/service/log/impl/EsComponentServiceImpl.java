@@ -6,10 +6,7 @@ import com.middleware.caas.common.constants.CommonConstant;
 import com.middleware.caas.common.constants.CoreConstant;
 import com.middleware.caas.common.constants.DateStyle;
 import com.middleware.caas.common.constants.LogConstant;
-import com.middleware.caas.common.enums.ComponentsEnum;
-import com.middleware.caas.common.enums.DictEnum;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.enums.EsSearchTypeEnum;
+import com.middleware.caas.common.enums.*;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.ClusterComponentsDto;
 import com.middleware.tool.api.client.ElasticSearchClient;
@@ -20,6 +17,7 @@ import com.middleware.zeus.bean.BeanOperationAudit;
 import com.middleware.zeus.service.k8s.ClusterComponentService;
 import com.middleware.zeus.service.log.EsComponentService;
 import com.middleware.zeus.service.middleware.EsService;
+import com.middleware.zeus.util.DateUtil;
 import com.middleware.zeus.util.EsIndexUtil;
 import com.middleware.caas.common.model.middleware.MysqlLogDTO;
 import com.middleware.caas.common.model.middleware.MysqlLogQuery;
@@ -37,6 +35,7 @@ import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.*;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -53,9 +52,13 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.ConnectException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+
+import static com.middleware.caas.common.constants.CommonConstant.DEFAULT_LOG_QUERY_TIME;
+import static com.middleware.caas.common.constants.CommonConstant.TIME_UNIT_MINUTES;
 
 @Slf4j
 @Service
@@ -284,7 +287,9 @@ public class EsComponentServiceImpl implements EsComponentService {
      * 根据查询条件设置SearchRequestBuilder
      */
     private BoolQueryBuilder getAuditSearchRequestBuilder(MysqlLogQuery auditLogQuery) {
-        BoolQueryBuilder query = QueryBuilders.boolQuery();
+        QueryBuilder timeFilter = QueryBuilders.rangeQuery("@timestamp").from(auditLogQuery.getStartTime())
+                .to(auditLogQuery.getEndTime());
+        BoolQueryBuilder query = QueryBuilders.boolQuery().filter(timeFilter);
         query.must(QueryBuilders.matchQuery("k8s_pod_namespace", auditLogQuery.getNamespace()));
         query.must(QueryBuilders.matchQuery("middleware_name", auditLogQuery.getMiddlewareName()));
         if (StringUtils.isNotBlank(auditLogQuery.getSearchWord())) {
