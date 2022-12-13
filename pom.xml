@@ -257,7 +257,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- harmonycloud -->
         <dependency>
             <groupId>com.middleware.caas</groupId>
             <artifactId>common</artifactId>
