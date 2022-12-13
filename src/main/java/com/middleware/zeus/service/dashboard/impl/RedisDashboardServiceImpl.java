@@ -126,7 +126,7 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
         RedisKVService redisKVService = getKVService(clusterId, namespace, middlewareName);
         ScanResult scanResult = redisKVService.scan(clusterId, namespace, middlewareName, db, keyword, cursor, count, pod);
         scanResult.setPreCursor(cursor);
-        scanResult.setPod(pod);
+        scanResult.setPrePod(pod);
         return scanResult;
     }
 
