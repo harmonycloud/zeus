@@ -3,7 +3,7 @@ package com.middleware.zeus.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.harmonycloud.caas.filters.feign.FeignBasicAuthRequestInterceptor;
+import com.middleware.caas.filters.feign.FeignBasicAuthRequestInterceptor;
 
 import feign.RequestInterceptor;
 

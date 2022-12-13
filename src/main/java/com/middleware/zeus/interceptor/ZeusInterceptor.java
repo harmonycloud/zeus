@@ -9,7 +9,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.middleware.caas.common.base.CurrentLanguage;
-import com.harmonycloud.caas.filters.enumm.LanguageEnum;
+import com.middleware.caas.filters.enumm.LanguageEnum;
 
 /**
  * @author dengyulong

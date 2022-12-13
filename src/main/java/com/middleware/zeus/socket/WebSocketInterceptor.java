@@ -13,8 +13,8 @@ import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
-import com.harmonycloud.caas.filters.user.CurrentUser;
-import com.harmonycloud.caas.filters.user.CurrentUserRepository;
+import com.middleware.caas.filters.user.CurrentUser;
+import com.middleware.caas.filters.user.CurrentUserRepository;
 
 /**
  * @author dengyulong

@@ -9,7 +9,7 @@ import com.middleware.caas.common.base.BaseResult;
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.exception.CaasRuntimeException;
-import com.harmonycloud.caas.filters.exception.AuthRuntimeException;
+import com.middleware.caas.filters.exception.AuthRuntimeException;
 
 import lombok.extern.slf4j.Slf4j;
 

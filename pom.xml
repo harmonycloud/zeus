@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
-    <groupId>com.harmonycloud.zeus</groupId>
+    <groupId>com.middleware.zeus</groupId>
     <artifactId>zeus</artifactId>
     <version>0.2.1</version>
     <name>zeus</name>
@@ -37,9 +37,8 @@
         <evosuite.version>1.0.6</evosuite.version>
         <junit.version>4.12</junit.version>
 
-        <!-- harmonycloud -->
         <caas.version>3.0.1-middleware</caas.version>
-        <harmonycloud.tools.version>1.0.1-middleware</harmonycloud.tools.version>
+        <middleware.tools.version>1.0.1-middleware</middleware.tools.version>
         <auth0.jwt.version>3.8.3</auth0.jwt.version>
 
         <elasticsearch.version>7.17.1</elasticsearch.version>
@@ -260,14 +259,14 @@
 
         <!-- harmonycloud -->
         <dependency>
-            <groupId>com.harmonycloud.caas</groupId>
+            <groupId>com.middleware.caas</groupId>
             <artifactId>common</artifactId>
             <version>${caas.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.harmonycloud</groupId>
+            <groupId>com.middleware</groupId>
             <artifactId>tools</artifactId>
-            <version>${harmonycloud.tools.version}</version>
+            <version>${middleware.tools.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.squareup.okhttp3</groupId>
@@ -290,7 +289,7 @@
             <version>${auth0.jwt.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.harmonycloud.caas</groupId>
+            <groupId>com.middleware.caas</groupId>
             <artifactId>filters</artifactId>
             <version>3.0.0</version>
         </dependency>

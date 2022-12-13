@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import static com.harmonycloud.caas.filters.base.GlobalKey.SET_TOKEN;
+import static com.middleware.caas.filters.base.GlobalKey.SET_TOKEN;
 
 /**
  * @author liyinlong

@@ -17,7 +17,7 @@ import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.user.UserDto;
 import com.middleware.caas.common.model.user.UserRole;
-import com.harmonycloud.caas.filters.user.CurrentUserRepository;
+import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.zeus.bean.user.BeanRoleAuthority;
 import com.middleware.zeus.service.user.RoleAuthorityService;
 import com.middleware.zeus.service.user.UserRoleService;
@@ -45,7 +45,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.base.BaseResult;
 import com.middleware.caas.common.constants.CommonConstant;
-import com.harmonycloud.caas.filters.token.JwtTokenComponent;
+import com.middleware.caas.filters.token.JwtTokenComponent;
 import com.middleware.tool.api.util.HttpMethod;
 
 import io.swagger.annotations.Api;

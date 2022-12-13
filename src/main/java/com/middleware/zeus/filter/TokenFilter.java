@@ -1,11 +1,11 @@
 package com.middleware.zeus.filter;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.filters.base.BaseResult;
-import com.harmonycloud.caas.filters.exception.AuthRuntimeException;
-import com.harmonycloud.caas.filters.token.JwtTokenComponent;
-import com.harmonycloud.caas.filters.user.CurrentUser;
-import com.harmonycloud.caas.filters.user.CurrentUserRepository;
+import com.middleware.caas.filters.base.BaseResult;
+import com.middleware.caas.filters.exception.AuthRuntimeException;
+import com.middleware.caas.filters.token.JwtTokenComponent;
+import com.middleware.caas.filters.user.CurrentUser;
+import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.zeus.skyviewservice.client.Skyview2UserServiceClient;
 import com.middleware.zeus.util.ApplicationContextGetBeanHelper;
 import com.middleware.zeus.util.ApplicationUtil;
@@ -22,7 +22,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.harmonycloud.caas.filters.base.GlobalKey.USER_TOKEN;
+import static com.middleware.caas.filters.base.GlobalKey.USER_TOKEN;
 
 /**
  * @author xutianhong

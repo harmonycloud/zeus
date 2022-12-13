@@ -5,7 +5,7 @@ import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.LdapConfigDto;
 import com.middleware.caas.common.model.user.UserDto;
-import com.harmonycloud.caas.filters.token.JwtTokenComponent;
+import com.middleware.caas.filters.token.JwtTokenComponent;
 import com.middleware.tool.date.DateUtils;
 import com.middleware.tool.encrypt.PasswordUtils;
 import com.middleware.tool.encrypt.RSAUtils;
@@ -24,8 +24,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Date;
 
-import static com.harmonycloud.caas.filters.base.GlobalKey.SET_TOKEN;
-import static com.harmonycloud.caas.filters.base.GlobalKey.USER_TOKEN;
+import static com.middleware.caas.filters.base.GlobalKey.SET_TOKEN;
+import static com.middleware.caas.filters.base.GlobalKey.USER_TOKEN;
 
 /**
  * @author dengyulong

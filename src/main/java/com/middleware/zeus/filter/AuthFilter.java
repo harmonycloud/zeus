@@ -1,7 +1,7 @@
 package com.middleware.zeus.filter;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.filters.base.BaseResult;
+import com.middleware.caas.filters.base.BaseResult;
 import com.middleware.zeus.config.InitMiddlewareImage;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
