@@ -55,4 +55,9 @@ public class SingleRedisKVServiceImpl implements RedisKVService {
         return RedisUtil.convertScanResult(res);
     }
 
+    @Override
+    public JSONObject execCMD(String clusterId, String namespace, String middlewareName, Integer db, String cmd) {
+        return redisClient.execCMD(K8sServiceNameUtil.getServicePath(namespace, middlewareName), port, db, cmd);
+    }
+
 }

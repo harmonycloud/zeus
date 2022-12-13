@@ -99,7 +99,7 @@ public interface RedisClient {
      * 执行命令
      */
     @Post(url = "/redis/db/{db}/exec")
-    JSONObject execCMD(@Var("db") Integer db, @Body("cmd") String cmd);
+    JSONObject execCMD(@Query("host") String host, @Query("port") String port, @Var("db") Integer db, @Body("cmd") String cmd);
 
     /**
      * 渐进式遍历

@@ -68,8 +68,8 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
     })
-    @GetMapping("/{middlewareName}/switchInfo")
-    @Authority
+    @GetMapping("/{middlewareName}/switch")
+    @Authority(power = 1)
     public BaseResult<SwitchInfo> autoSwitch(@PathVariable("clusterId") String clusterId,
                                              @PathVariable("namespace") String namespace,
                                              @PathVariable("middlewareName") String name,
