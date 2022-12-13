@@ -287,9 +287,12 @@ public class EsComponentServiceImpl implements EsComponentService {
      * 根据查询条件设置SearchRequestBuilder
      */
     private BoolQueryBuilder getAuditSearchRequestBuilder(MysqlLogQuery auditLogQuery) {
-        QueryBuilder timeFilter = QueryBuilders.rangeQuery("@timestamp").from(auditLogQuery.getStartTime())
-                .to(auditLogQuery.getEndTime());
-        BoolQueryBuilder query = QueryBuilders.boolQuery().filter(timeFilter);
+        BoolQueryBuilder query = QueryBuilders.boolQuery();
+        if (StringUtils.isNotEmpty(auditLogQuery.getStartTime()) && StringUtils.isNotEmpty(auditLogQuery.getEndTime())) {
+            QueryBuilder timeFilter = QueryBuilders.rangeQuery("@timestamp").from(auditLogQuery.getStartTime())
+                    .to(auditLogQuery.getEndTime());
+            query.filter(timeFilter);
+        }
         query.must(QueryBuilders.matchQuery("k8s_pod_namespace", auditLogQuery.getNamespace()));
         query.must(QueryBuilders.matchQuery("middleware_name", auditLogQuery.getMiddlewareName()));
         if (StringUtils.isNotBlank(auditLogQuery.getSearchWord())) {
@@ -324,7 +327,7 @@ public class EsComponentServiceImpl implements EsComponentService {
                 dayc1.add(Calendar.DAY_OF_YEAR, CommonConstant.NUM_ONE); //加1天
             }
         }
-        indexNameList = CollectionUtils.isNotEmpty(indexNameList) ? indexNameList : Arrays.asList(generateIndexName(indexPrefix));
+        indexNameList = CollectionUtils.isNotEmpty(indexNameList) ? indexNameList : generateIndexName(indexPrefix);
         // 取得已存在的索引
         String result = resultByGetRestClient(esClient, clusterId, "/_cat/indices/" + indexPrefix + "-*?format=json");
         List<String> indices = new ArrayList<>();
@@ -338,11 +341,13 @@ public class EsComponentServiceImpl implements EsComponentService {
         return indexNameList;
     }
 
-    private String generateIndexName(String indexPrefix) {
+    private List<String> generateIndexName(String indexPrefix) {
+        List<String> indexList = new ArrayList<>();
         Date now = DateUtils.getCurrentUtcTime();
-        String date = DateUtils.DateToString(now, DateStyle.YYYY_MM_DOT);
+        String date = DateUtils.DateToString(now, DateStyle.YYYY_MM_DD_DOT);
         String indexName = indexPrefix + CommonConstant.LINE + date;
-        return indexName;
+        indexList.add(indexName);
+        return indexList;
     }
 
     @Override
