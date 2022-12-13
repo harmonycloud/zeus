@@ -3,6 +3,8 @@ package com.middleware.zeus.integration.cluster.bean;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.Data;
 
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.HARMONY_CLOUD_CN_V1;
+
 /**
  * @author liyinlong
  * @since 2021/9/15 5:04 下午
@@ -10,7 +12,7 @@ import lombok.Data;
 @Data
 public class MiddlewareRestoreCR {
 
-    private String apiVersion = "harmonycloud.cn/v1";
+    private String apiVersion = HARMONY_CLOUD_CN_V1;
 
     private String kind = "MiddlewareRestore";
 

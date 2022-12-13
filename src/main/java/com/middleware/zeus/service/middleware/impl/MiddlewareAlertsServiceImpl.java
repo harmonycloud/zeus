@@ -190,7 +190,6 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                             List<MiddlewareAlertsDTO> middlewareAlertsDTOList) {
         //告警规则入库
         middlewareAlertsDTOList.stream().forEach(middlewareAlertsDTO -> {
-            //String prometheusRulesName = "postgresql".equals(middlewareAlertsDTO.getType()) ? "harmonycloud-" + middlewareName : middlewareName;
             middlewareAlertsDTO.setAlert(middlewareAlertsDTO.getAlert() + "-" + UUIDUtils.get8UUID());
             updateServiceAlerts2Prometheus(clusterId, namespace, middlewareName, middlewareName, middlewareAlertsDTO);
             addAlerts2Sql(clusterId, namespace, middlewareName, middlewareAlertsDTO);
@@ -202,10 +201,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         QueryWrapper<AlertRuleId> wrapper = new QueryWrapper<>();
         wrapper.eq("alert_id", analysisID(alertRuleId));
         AlertRuleId info = alertRuleIdMapper.selectOne(wrapper);
-/*        // 特殊处理pg
-        if ("postgresql".equals(info.getType())){
-            middlewareName = "harmonycloud-" + middlewareName;
-        }*/
+
         // 获取cr
         PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, namespace, middlewareName);
         prometheusRule.getSpec().getGroups().forEach(prometheusRuleGroups -> {
@@ -227,8 +223,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         wrapper.eq("alert_id", analysisID(middlewareAlertsDTO.getAlertId()));
         AlertRuleId info = alertRuleIdMapper.selectOne(wrapper);
         String group = middlewareAlertsDTO.getAnnotations().get("group");
-        // 特殊处理pg
-        //String prometheusRulesName = "postgresql".equals(info.getType()) ? "harmonycloud-" + middlewareName : middlewareName;
+
         updateServiceAlerts2Prometheus(clusterId, namespace, middlewareName, middlewareName, middlewareAlertsDTO);
         updateAlerts2Mysql(clusterId, namespace, middlewareName, middlewareAlertsDTO);
     }

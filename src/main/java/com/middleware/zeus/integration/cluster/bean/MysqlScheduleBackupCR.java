@@ -4,6 +4,8 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MYSQL_CLUSTER_API_VERSION;
+
 /**
  * @author xutianhong
  * @Date 2021/4/2 2:36 下午
@@ -12,7 +14,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class MysqlScheduleBackupCR {
 
-    private String apiVersion = "mysql.middleware.harmonycloud.cn/v1alpha1";
+    private String apiVersion = MYSQL_CLUSTER_API_VERSION;
 
     private String kind;
 

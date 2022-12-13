@@ -113,7 +113,6 @@ public class SwaggerConfig {
         return new ApiInfoBuilder()
                 .title("谐云 中间件平台 OpenAPI")
                 .description("谐云 中间件平台 OpenAPI")
-                .termsOfServiceUrl("http://www.harmonycloud.cn/")
                 .version("1.0.0")
                 .build();
     }
