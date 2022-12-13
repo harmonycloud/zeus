@@ -4,6 +4,8 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MYSQL_CLUSTER_API_VERSION;
+
 /**
  * mysql灾备crd
  * @author  liyinlong
@@ -13,7 +15,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class MysqlReplicateCR {
 
-    private String apiVersion = "mysql.middleware.harmonycloud.cn/v1alpha1";
+    private String apiVersion = MYSQL_CLUSTER_API_VERSION;
 
     private String kind;
 
