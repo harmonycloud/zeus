@@ -85,7 +85,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         userPasswords.put("postgres", middleware.getPassword());
         values.put("userPasswords", userPasswords);
         // 替换版本
-        values.put("pgsqlVersion", middleware.getVersion() + MIDDLEWARE_VERSION_PLACEHOLDER_STRING);
+        values.put("pgsqlVersion", middleware.getVersion());
         // 主机网络配置
         if (middleware.getPostgresqlParam() != null && middleware.getPostgresqlParam().getHostNetwork() != null) {
             values.put("hostNetwork", middleware.getPostgresqlParam().getHostNetwork());
@@ -344,9 +344,5 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             k8sExecService.exec(execCommand);
     }
 
-    @Override
-    public String replaceSingleQuotes(String valueYaml){
-        return valueYaml.replace(MIDDLEWARE_VERSION_PLACEHOLDER_STRING, "");
-    }
 }
 

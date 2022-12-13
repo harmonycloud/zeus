@@ -180,7 +180,6 @@ public abstract class AbstractBaseOperator {
         // map to yaml
         String newValuesYaml = yaml.dumpAsMap(values);
         // deal with 'version'
-        newValuesYaml = replaceSingleQuotes(newValuesYaml);
         helmChart.setValueYaml(newValuesYaml);
         // write to local file
         helmChartService.coverYamlFile(helmChart);
@@ -1328,10 +1327,6 @@ public abstract class AbstractBaseOperator {
      */
     public Boolean checkUserAuthority(String type){
         return roleAuthorityService.checkOps(null, type);
-    }
-
-    public String replaceSingleQuotes(String valueYaml){
-        return valueYaml;
     }
 
 }
