@@ -1,10 +1,7 @@
 package com.middleware.zeus.operator;
 
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.model.middleware.CustomConfig;
-import com.middleware.caas.common.model.middleware.IngressDTO;
-import com.middleware.caas.common.model.middleware.Middleware;
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.model.middleware.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 
 import java.util.List;
@@ -35,6 +32,14 @@ public interface BaseOperator {
      * @return
      */
     Middleware detail(Middleware middleware);
+
+    /**
+     * 查询中间件切换信息
+     *
+     * @param middleware 中间件信息
+     * @return
+     */
+    SwitchInfo getAutoSwitch(Middleware middleware);
 
     /**
      * 根据helm chart转换

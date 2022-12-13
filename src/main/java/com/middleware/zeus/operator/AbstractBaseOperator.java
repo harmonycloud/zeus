@@ -50,7 +50,6 @@ import com.middleware.caas.common.util.ThreadPoolExecutorFactory;
 import com.middleware.tool.collection.JsonUtils;
 import com.middleware.tool.numeric.ResourceCalculationUtil;
 import com.middleware.tool.uuid.UUIDUtils;
-import com.middleware.zeus.bean.*;
 import com.middleware.zeus.dao.BeanAlertRuleMapper;
 import com.middleware.zeus.integration.cluster.PvcWrapper;
 import com.middleware.zeus.integration.cluster.ServiceWrapper;
@@ -58,8 +57,6 @@ import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRule;
 import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRuleGroups;
 import com.middleware.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.middleware.zeus.schedule.MiddlewareManageTask;
-import com.middleware.zeus.service.k8s.*;
-import com.middleware.zeus.service.middleware.*;
 import com.middleware.zeus.util.K8sConvert;
 
 import cn.hutool.json.JSONUtil;
@@ -157,6 +154,10 @@ public abstract class AbstractBaseOperator {
         }
         mw.setNamespaceAliasName(namespaceService.get(mw.getClusterId(), mw.getNamespace()).getAliasName());
         return convertByHelmChart(mw, cluster);
+    }
+
+    public SwitchInfo getAutoSwitch(Middleware middleware) {
+        return null;
     }
 
     public void create(Middleware middleware, MiddlewareClusterDTO cluster) {

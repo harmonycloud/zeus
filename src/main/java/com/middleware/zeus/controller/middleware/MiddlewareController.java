@@ -1,10 +1,7 @@
 package com.middleware.zeus.controller.middleware;
 
 import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.model.middleware.Middleware;
-import com.middleware.caas.common.model.middleware.MiddlewareBriefInfoDTO;
-import com.middleware.caas.common.model.middleware.MiddlewareTopologyDTO;
-import com.middleware.caas.common.model.middleware.MonitorDto;
+import com.middleware.caas.common.model.middleware.*;
 import com.middleware.zeus.annotation.Authority;
 import com.middleware.zeus.service.middleware.MiddlewareService;
 import io.swagger.annotations.Api;
@@ -62,6 +59,22 @@ public class MiddlewareController {
                                          @PathVariable("middlewareName") String name,
                                          @RequestParam("type") String type) {
         return BaseResult.ok(middlewareService.detail(clusterId, namespace, name, type));
+    }
+
+    @ApiOperation(value = "查询中间件切换信息", notes = "查询中间件切换信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("/{middlewareName}/switchInfo")
+    @Authority
+    public BaseResult<SwitchInfo> autoSwitch(@PathVariable("clusterId") String clusterId,
+                                             @PathVariable("namespace") String namespace,
+                                             @PathVariable("middlewareName") String name,
+                                             @RequestParam("type") String type) {
+        return BaseResult.ok(middlewareService.autoSwitch(clusterId, namespace, name, type));
     }
 
     @ApiOperation(value = "创建中间件", notes = "创建中间件")
