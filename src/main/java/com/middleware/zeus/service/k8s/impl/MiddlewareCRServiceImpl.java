@@ -116,8 +116,8 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
             return middlewareWrapper.get(clusterId, namespace, crdName);
         } else {
             List<MiddlewareCR> middlewareCRList = middlewareWrapper.list(clusterId, namespace, null);
-            middlewareCRList = middlewareCRList.stream().filter(mwCRD -> mwCRD.getSpec().getName().equals(name)
-                || mwCRD.getSpec().getName().equals("harmonycloud-" + name)).collect(Collectors.toList());
+            middlewareCRList = middlewareCRList.stream().filter(mwCRD -> mwCRD.getSpec().getName().equals(name))
+                .collect(Collectors.toList());
             if (CollectionUtils.isEmpty(middlewareCRList)) {
                 throw new BusinessException(DictEnum.MIDDLEWARE, name, ErrorMessage.NOT_EXIST);
             }
@@ -222,8 +222,7 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
             return null;
         }
         Middleware middleware = new Middleware()
-            .setName(mw.getSpec().getName().startsWith("harmonycloud-")
-                ? mw.getSpec().getName().replace("harmonycloud-", "") : mw.getSpec().getName())
+            .setName(mw.getSpec().getName())
             .setNamespace(mw.getMetadata().getNamespace())
             .setType(middlewareCrTypeService.findTypeByCrType(mw.getSpec().getType()))
             .setCreateTime(DateUtils.parseUTCDate(mw.getMetadata().getCreationTimestamp())).setPodNum(getPodNum(mw))

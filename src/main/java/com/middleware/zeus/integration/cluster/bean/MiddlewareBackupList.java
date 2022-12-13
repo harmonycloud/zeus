@@ -6,6 +6,8 @@ import lombok.experimental.Accessors;
 
 import java.util.List;
 
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.HARMONY_CLOUD_CN_V1;
+
 /**
  * 中间件备份记录list
  * @author  liyinlong
@@ -15,7 +17,7 @@ import java.util.List;
 @Accessors(chain = true)
 public class MiddlewareBackupList {
 
-    private String apiVersion = "harmonycloud.cn/v1";
+    private String apiVersion = HARMONY_CLOUD_CN_V1;
 
     private String kind;
 
