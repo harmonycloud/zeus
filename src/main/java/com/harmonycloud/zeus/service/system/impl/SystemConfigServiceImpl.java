@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.CONFIG_NAME;
+import static com.middleware.caas.common.constants.NameConstant.CONFIG_NAME;
 
 /**
  * @author xutianhong

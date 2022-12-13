@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.SENTINEL;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_NODEPORT;
+import static com.middleware.caas.common.constants.NameConstant.SENTINEL;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_NODEPORT;
 import static com.harmonycloud.zeus.util.RedisUtil.getRedisSentinelIsOk;
 
 import java.util.*;
@@ -10,24 +10,24 @@ import java.util.stream.Collectors;
 import cn.hutool.core.collection.CollectionUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.enums.DictEnum;
-import com.harmonycloud.caas.common.model.Node;
-import com.harmonycloud.caas.common.model.middleware.*;
+import com.middleware.caas.common.enums.DictEnum;
+import com.middleware.caas.common.model.Node;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.NodeService;
+import com.middleware.caas.common.model.middleware.*;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import com.harmonycloud.caas.common.constants.RedisConstant;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.RedisAccessInfo;
-import com.harmonycloud.caas.common.model.RedisDbDTO;
+import com.middleware.caas.common.constants.RedisConstant;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.RedisAccessInfo;
+import com.middleware.caas.common.model.RedisDbDTO;
 import com.harmonycloud.zeus.operator.impl.RedisOperatorImpl;
 import com.harmonycloud.zeus.service.k8s.IngressService;
 import com.harmonycloud.zeus.service.k8s.impl.ServiceServiceImpl;

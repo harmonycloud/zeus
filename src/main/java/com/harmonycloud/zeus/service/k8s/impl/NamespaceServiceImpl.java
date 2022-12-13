@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.constants.NamespaceConstant;
+import com.middleware.caas.common.constants.NamespaceConstant;
 import com.harmonycloud.zeus.bean.user.BeanProjectNamespace;
 import com.harmonycloud.zeus.dao.user.BeanProjectNamespaceMapper;
 import com.harmonycloud.zeus.service.user.ProjectService;
@@ -11,35 +11,24 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.middleware.Namespace;
-import com.harmonycloud.caas.common.model.middleware.ResourceQuotaDTO;
-import com.harmonycloud.tool.date.DateUtils;
-import com.harmonycloud.zeus.bean.user.BeanProjectNamespace;
-import com.harmonycloud.zeus.dao.user.BeanProjectNamespaceMapper;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.middleware.Namespace;
+import com.middleware.caas.common.model.middleware.ResourceQuotaDTO;
+import com.middleware.tool.date.DateUtils;
 import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
-import com.harmonycloud.zeus.service.k8s.AbstractNamespaceService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
-import com.harmonycloud.zeus.service.user.ProjectService;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-import com.harmonycloud.caas.common.constants.NamespaceConstant;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import org.springframework.util.ObjectUtils;
 
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
 
 /**
  * @author dengyulong

@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.controller.middleware;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.middleware.ImageRepositoryDTO;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.middleware.ImageRepositoryDTO;
 import com.harmonycloud.zeus.service.middleware.ImageRepositoryService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;

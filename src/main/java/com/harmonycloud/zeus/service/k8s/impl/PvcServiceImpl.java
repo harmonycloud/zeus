@@ -1,10 +1,9 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
-import com.harmonycloud.caas.common.model.PersistentVolumeClaim;
+import com.middleware.caas.common.model.PersistentVolumeClaim;
 import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
 import com.harmonycloud.zeus.service.k8s.PvcService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

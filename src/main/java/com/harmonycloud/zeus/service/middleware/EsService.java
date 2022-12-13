@@ -1,9 +1,8 @@
 package com.harmonycloud.zeus.service.middleware;
 
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.MysqlLogDTO;
-import com.harmonycloud.caas.common.model.middleware.MysqlLogQuery;
-import com.harmonycloud.tool.page.PageObject;
+import com.middleware.caas.common.model.middleware.MysqlLogDTO;
+import com.middleware.caas.common.model.middleware.MysqlLogQuery;
+import com.middleware.tool.page.PageObject;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 

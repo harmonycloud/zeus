@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.controller.system;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.enums.ErrorMessage;
 import com.harmonycloud.zeus.annotation.ExcludeAuditMethod;
 import com.harmonycloud.zeus.bean.OperationAuditQueryDto;
 import com.harmonycloud.zeus.service.system.OperationAuditService;

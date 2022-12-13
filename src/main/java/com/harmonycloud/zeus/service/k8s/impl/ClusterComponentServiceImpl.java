@@ -1,20 +1,19 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.enums.ComponentsEnum;
-import com.harmonycloud.caas.common.model.ClusterComponentsDto;
-import com.harmonycloud.caas.common.model.MultipleComponentsInstallDto;
-import com.harmonycloud.caas.common.model.middleware.*;
-import com.harmonycloud.caas.common.model.registry.HelmChartFile;
-import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
-import com.harmonycloud.tool.date.DateUtils;
+import com.middleware.caas.common.enums.ComponentsEnum;
+import com.middleware.caas.common.model.ClusterComponentsDto;
+import com.middleware.caas.common.model.MultipleComponentsInstallDto;
+import com.middleware.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.util.ThreadPoolExecutorFactory;
+import com.middleware.tool.date.DateUtils;
 import com.harmonycloud.zeus.bean.BeanClusterComponents;
 import com.harmonycloud.zeus.dao.BeanClusterComponentsMapper;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.service.components.api.LoggingService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareManagerService;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,8 +33,8 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.*;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
+import static com.middleware.caas.common.constants.CommonConstant.*;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
 
 /**
  * @author dengyulong

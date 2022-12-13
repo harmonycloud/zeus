@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.service.user;
 
-import com.harmonycloud.caas.common.model.LdapConfigDto;
+import com.middleware.caas.common.model.LdapConfigDto;
 import com.harmonycloud.zeus.bean.BeanSystemConfig;
 
 /**

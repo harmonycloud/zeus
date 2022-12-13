@@ -10,10 +10,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.CaasRuntimeException;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.tool.file.FileUtil;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.CaasRuntimeException;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.tool.file.FileUtil;
 import com.harmonycloud.zeus.service.k8s.ClusterCertService;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;

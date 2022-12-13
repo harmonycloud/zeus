@@ -1,16 +1,16 @@
 package com.harmonycloud.zeus.integration.registry.client;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.ADMIN;
+import static com.middleware.caas.common.constants.NameConstant.ADMIN;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.harmonycloud.caas.common.enums.registry.RegistryType;
-import com.harmonycloud.caas.common.exception.CaasRuntimeException;
-import com.harmonycloud.caas.common.model.middleware.Registry;
-import com.harmonycloud.tool.api.client.BaseClient;
+import com.middleware.caas.common.enums.registry.RegistryType;
+import com.middleware.caas.common.exception.CaasRuntimeException;
+import com.middleware.caas.common.model.middleware.Registry;
+import com.middleware.tool.api.client.BaseClient;
 
 /**
  * @author dengyulong

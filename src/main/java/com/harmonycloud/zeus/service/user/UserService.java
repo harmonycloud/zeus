@@ -1,10 +1,9 @@
 package com.harmonycloud.zeus.service.user;
 
-import com.harmonycloud.caas.common.model.MailUserDTO;
-import com.harmonycloud.caas.common.model.UploadImageFileDto;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareAlertsDTO;
-import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
-import com.harmonycloud.caas.common.model.user.UserDto;
+import com.middleware.caas.common.model.MailUserDTO;
+import com.middleware.caas.common.model.UploadImageFileDto;
+import com.middleware.caas.common.model.user.ResourceMenuDto;
+import com.middleware.caas.common.model.user.UserDto;
 import com.harmonycloud.zeus.bean.PersonalizedConfiguration;
 import com.harmonycloud.zeus.bean.user.BeanUser;
 import org.springframework.web.multipart.MultipartFile;

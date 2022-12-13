@@ -1,13 +1,12 @@
 package com.harmonycloud.zeus.service.mysql.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.constants.MysqlConstant;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.MysqlDbDTO;
-import com.harmonycloud.caas.common.model.MysqlDbDetail;
-import com.harmonycloud.caas.common.model.MysqlDbPrivilege;
+import com.middleware.caas.common.constants.MysqlConstant;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.MysqlDbDTO;
+import com.middleware.caas.common.model.MysqlDbDetail;
+import com.middleware.caas.common.model.MysqlDbPrivilege;
 import com.harmonycloud.zeus.bean.BeanMysqlDb;
 import com.harmonycloud.zeus.bean.BeanMysqlDbPriv;
 import com.harmonycloud.zeus.dao.BeanMysqlDbMapper;

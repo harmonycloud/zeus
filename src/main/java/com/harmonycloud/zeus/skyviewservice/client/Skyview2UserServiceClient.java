@@ -3,7 +3,7 @@ package com.harmonycloud.zeus.skyviewservice.client;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.dtflys.forest.annotation.*;
-import com.harmonycloud.caas.common.base.CaasResult;
+import com.middleware.caas.common.base.CaasResult;
 import com.harmonycloud.zeus.config.ForestSuccessCondition;
 import com.harmonycloud.zeus.config.ForestUnauthrizedSuccessCondition;
 import com.harmonycloud.zeus.config.SkyviewAddressSource;

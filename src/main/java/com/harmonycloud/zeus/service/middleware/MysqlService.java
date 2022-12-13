@@ -1,9 +1,9 @@
 package com.harmonycloud.zeus.service.middleware;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.middleware.MysqlLogDTO;
-import com.harmonycloud.caas.common.model.middleware.MysqlLogQuery;
-import com.harmonycloud.tool.page.PageObject;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.middleware.MysqlLogDTO;
+import com.middleware.caas.common.model.middleware.MysqlLogQuery;
+import com.middleware.tool.page.PageObject;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

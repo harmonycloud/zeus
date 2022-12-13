@@ -1,11 +1,7 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.QuestionYaml;
-import com.harmonycloud.caas.common.model.registry.HelmChartFile;
-import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
-import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
+import com.middleware.caas.common.model.middleware.QuestionYaml;
+import com.middleware.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareDynamicFormService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
@@ -13,10 +9,6 @@ import com.harmonycloud.zeus.service.registry.HelmChartService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author xutianhong

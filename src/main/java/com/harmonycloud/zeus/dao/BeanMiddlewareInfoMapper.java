@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.dao;
 
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import feign.Param;

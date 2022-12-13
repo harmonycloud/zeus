@@ -4,14 +4,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.harmonycloud.caas.common.constants.NamespaceConstant;
+import com.middleware.caas.common.constants.NamespaceConstant;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.middleware.Namespace;
-import com.harmonycloud.caas.filters.enumm.LanguageEnum;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.middleware.Namespace;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
 
 import io.swagger.annotations.Api;

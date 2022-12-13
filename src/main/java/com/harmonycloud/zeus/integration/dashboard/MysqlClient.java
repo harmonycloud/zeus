@@ -2,10 +2,10 @@ package com.harmonycloud.zeus.integration.dashboard;
 
 import com.alibaba.fastjson.JSONObject;
 import com.dtflys.forest.annotation.*;
-import com.harmonycloud.caas.common.model.dashboard.SqlQuery;
-import com.harmonycloud.caas.common.model.dashboard.mysql.*;
+import com.middleware.caas.common.model.dashboard.SqlQuery;
 import com.harmonycloud.zeus.interceptor.MiddlewareApiInterceptor;
 import com.harmonycloud.zeus.interceptor.MysqlDashboardInterceptor;
+import com.middleware.caas.common.model.dashboard.mysql.*;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

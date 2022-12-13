@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.controller.dashboard;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.base.BaseResult;
+import com.middleware.caas.common.base.BaseResult;
 import com.harmonycloud.zeus.service.middleware.MiddlewareDashboardAuthService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;

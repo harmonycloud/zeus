@@ -8,13 +8,13 @@ import com.harmonycloud.zeus.integration.cluster.bean.prometheus.GrafanaApiKey;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitorInfo;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterMonitorInfo;
 import com.harmonycloud.zeus.integration.cluster.api.GrafanaApi;
 import com.harmonycloud.zeus.integration.cluster.client.GrafanaClient;
 import com.harmonycloud.zeus.util.ExceptionUtils;
-import com.harmonycloud.tool.api.common.ApiException;
+import com.middleware.tool.api.common.ApiException;
 
 /**
  * @author dengyulong

@@ -1,10 +1,10 @@
 package com.harmonycloud.zeus.service.prometheus.impl;
 
-import com.harmonycloud.caas.common.constants.NameConstant;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.PrometheusResponse;
-import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.middleware.caas.common.constants.NameConstant;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.PrometheusResponse;
+import com.middleware.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.integration.cluster.PrometheusWrapper;
 import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
 import lombok.extern.slf4j.Slf4j;

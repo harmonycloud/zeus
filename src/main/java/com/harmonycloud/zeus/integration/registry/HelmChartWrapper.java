@@ -5,13 +5,13 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.middleware.Registry;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.middleware.Registry;
 import com.harmonycloud.zeus.integration.registry.api.harbor.V1HelmChartApi;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.V1HelmChartVersion;
 import com.harmonycloud.zeus.integration.registry.client.RegistryClientFactory;
 import com.harmonycloud.zeus.util.ExceptionUtils;
-import com.harmonycloud.tool.api.common.ApiException;
+import com.middleware.tool.api.common.ApiException;
 
 /**
  * @author dengyulong

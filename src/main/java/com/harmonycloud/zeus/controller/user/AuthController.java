@@ -1,9 +1,9 @@
 package com.harmonycloud.zeus.controller.user;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.base.BaseResult;
+import com.middleware.caas.common.base.BaseResult;
 import com.harmonycloud.zeus.service.user.AuthService;
-import com.harmonycloud.tool.encrypt.RSAUtils;
+import com.middleware.tool.encrypt.RSAUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;

@@ -1,10 +1,10 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.*;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.HARMONY_CLOUD;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
-import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.ICON_SVG;
-import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.SVG;
+import static com.middleware.caas.common.constants.CommonConstant.*;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.HARMONY_CLOUD;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
+import static com.middleware.caas.common.constants.registry.HelmChartConstant.ICON_SVG;
+import static com.middleware.caas.common.constants.registry.HelmChartConstant.SVG;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,8 +18,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
-import com.harmonycloud.caas.common.model.middleware.*;
+import com.middleware.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
@@ -28,6 +27,7 @@ import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.ChartVersionUtil;
 import com.harmonycloud.zeus.util.MiddlewareVersionUtil;
+import com.middleware.caas.common.model.middleware.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -38,9 +38,9 @@ import org.springframework.util.CollectionUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.registry.HelmChartFile;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.dao.BeanMiddlewareInfoMapper;

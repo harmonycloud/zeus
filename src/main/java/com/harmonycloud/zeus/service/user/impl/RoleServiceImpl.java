@@ -3,12 +3,11 @@ package com.harmonycloud.zeus.service.user.impl;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.harmonycloud.caas.common.model.user.UserDto;
+import com.middleware.caas.common.model.user.UserDto;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.bean.user.BeanRoleAuthority;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.user.*;
-import com.harmonycloud.zeus.util.RequestUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,22 +17,18 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
-import com.harmonycloud.caas.common.model.user.RoleDto;
-import com.harmonycloud.caas.common.model.user.UserRole;
-import com.harmonycloud.caas.filters.token.JwtTokenComponent;
-import com.harmonycloud.caas.filters.user.CurrentUser;
-import com.harmonycloud.caas.filters.user.CurrentUserRepository;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.user.ResourceMenuDto;
+import com.middleware.caas.common.model.user.RoleDto;
+import com.middleware.caas.common.model.user.UserRole;
 import com.harmonycloud.zeus.bean.user.BeanResourceMenuRole;
 import com.harmonycloud.zeus.bean.user.BeanRole;
 import com.harmonycloud.zeus.dao.user.BeanRoleMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.*;
-
+import static com.middleware.caas.common.constants.CommonConstant.*;
 /**
  * @author xutianhong
  * @Date 2021/7/27 2:54 下午

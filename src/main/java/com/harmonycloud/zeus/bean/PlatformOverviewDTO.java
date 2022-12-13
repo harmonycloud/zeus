@@ -1,10 +1,10 @@
 package com.harmonycloud.zeus.bean;
 
 import com.github.pagehelper.PageInfo;
-import com.harmonycloud.caas.common.model.AlertSummaryDTO;
-import com.harmonycloud.caas.common.model.middleware.ClusterQuotaDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareBriefInfoDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareOperatorDTO;
+import com.middleware.caas.common.model.AlertSummaryDTO;
+import com.middleware.caas.common.model.middleware.ClusterQuotaDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareBriefInfoDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareOperatorDTO;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

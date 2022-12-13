@@ -1,21 +1,19 @@
 package com.harmonycloud.zeus.operator.impl;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.*;
-
+import static com.middleware.caas.common.constants.NameConstant.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.harmonycloud.caas.common.model.middleware.*;
-import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
-import com.harmonycloud.zeus.util.MathUtil;
+import com.middleware.tool.numeric.ResourceCalculationUtil;
+import com.middleware.caas.common.model.middleware.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.enums.middleware.ElasticSearchRoleEnum;
-import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
-import com.harmonycloud.caas.common.model.StorageDto;
-import com.harmonycloud.tool.encrypt.PasswordUtils;
+import com.middleware.caas.common.enums.middleware.ElasticSearchRoleEnum;
+import com.middleware.caas.common.enums.middleware.StorageClassProvisionerEnum;
+import com.middleware.caas.common.model.StorageDto;
+import com.middleware.tool.encrypt.PasswordUtils;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.operator.api.EsOperator;
 import com.harmonycloud.zeus.operator.miiddleware.AbstractEsOperator;

@@ -3,9 +3,7 @@ package com.harmonycloud.zeus.service.k8s;
 import java.util.List;
 import java.util.Map;
 
-import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.model.middleware.Middleware;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.integration.cluster.bean.Status;
 

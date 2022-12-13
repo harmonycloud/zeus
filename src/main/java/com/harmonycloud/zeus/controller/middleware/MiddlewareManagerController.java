@@ -1,15 +1,13 @@
 package com.harmonycloud.zeus.controller.middleware;
 
 import java.io.File;
-import java.util.List;
 
-import com.harmonycloud.caas.common.model.middleware.MiddlewareStatusDto;
 import com.harmonycloud.zeus.service.middleware.MiddlewareManagerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.harmonycloud.caas.common.base.BaseResult;
+import com.middleware.caas.common.base.BaseResult;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;

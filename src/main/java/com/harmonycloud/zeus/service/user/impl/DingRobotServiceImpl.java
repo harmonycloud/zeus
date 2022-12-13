@@ -1,13 +1,13 @@
 package com.harmonycloud.zeus.service.user.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.constants.CommonConstant;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.DingRobotDTO;
-import com.harmonycloud.caas.common.model.SendResult;
-import com.harmonycloud.caas.common.model.TextMessage;
-import com.harmonycloud.caas.common.model.middleware.AlertInfoDto;
+import com.middleware.caas.common.constants.CommonConstant;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.DingRobotDTO;
+import com.middleware.caas.common.model.SendResult;
+import com.middleware.caas.common.model.TextMessage;
+import com.middleware.caas.common.model.middleware.AlertInfoDto;
 import com.harmonycloud.zeus.bean.DingRobotInfo;
 import com.harmonycloud.zeus.dao.DingRobotMapper;
 import com.harmonycloud.zeus.service.user.DingRobotService;

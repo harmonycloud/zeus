@@ -2,16 +2,16 @@ package com.harmonycloud.zeus.service.user.skyviewimpl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.base.CaasResult;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
-import com.harmonycloud.caas.common.model.ClusterDTO;
-import com.harmonycloud.caas.common.model.ProjectDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
-import com.harmonycloud.caas.common.model.middleware.Namespace;
-import com.harmonycloud.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
-import com.harmonycloud.caas.common.model.user.ProjectDto;
-import com.harmonycloud.caas.common.model.user.RoleDto;
-import com.harmonycloud.caas.common.model.user.UserDto;
+import com.middleware.caas.common.base.CaasResult;
+import com.middleware.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
+import com.middleware.caas.common.model.ClusterDTO;
+import com.middleware.caas.common.model.ProjectDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareResourceInfo;
+import com.middleware.caas.common.model.middleware.Namespace;
+import com.middleware.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
+import com.middleware.caas.common.model.user.ProjectDto;
+import com.middleware.caas.common.model.user.RoleDto;
+import com.middleware.caas.common.model.user.UserDto;
 import com.harmonycloud.caas.filters.token.JwtTokenComponent;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
@@ -40,7 +40,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-import static com.harmonycloud.caas.common.constants.user.UserConstant.USERNAME;
+import static com.middleware.caas.common.constants.user.UserConstant.USERNAME;
 
 /**
  * @author liyinlong

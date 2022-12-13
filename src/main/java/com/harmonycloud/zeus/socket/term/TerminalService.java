@@ -30,9 +30,9 @@ import org.springframework.web.socket.WebSocketSession;
 
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.harmonycloud.caas.common.enums.DictEnum;
-import com.harmonycloud.caas.common.model.middleware.LogQueryDto;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.enums.DictEnum;
+import com.middleware.caas.common.model.middleware.LogQueryDto;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.pty4j.PtyProcess;
 import com.pty4j.WinSize;
 

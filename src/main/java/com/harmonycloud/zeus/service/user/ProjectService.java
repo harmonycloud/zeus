@@ -1,16 +1,13 @@
 package com.harmonycloud.zeus.service.user;
 
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
-import com.harmonycloud.caas.common.model.middleware.Namespace;
-import com.harmonycloud.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
-import com.harmonycloud.caas.common.model.user.ProjectDto;
-import com.harmonycloud.caas.common.model.user.UserDto;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.model.middleware.Namespace;
+import com.middleware.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
+import com.middleware.caas.common.model.user.ProjectDto;
+import com.middleware.caas.common.model.user.UserDto;
 import com.harmonycloud.zeus.bean.user.BeanProject;
-import com.harmonycloud.zeus.bean.user.BeanProjectNamespace;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author xutianhong

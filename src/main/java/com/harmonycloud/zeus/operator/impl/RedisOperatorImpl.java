@@ -1,25 +1,24 @@
 package com.harmonycloud.zeus.operator.impl;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.*;
-import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_INGRESS;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.NODE_AFFINITY;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PREDIXY;
+import static com.middleware.caas.common.constants.NameConstant.*;
+import static com.middleware.caas.common.constants.NameConstant.MEMORY;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_INGRESS;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.NODE_AFFINITY;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.PREDIXY;
 
 
 import cn.hutool.core.collection.CollectionUtil;
 import com.alibaba.fastjson.JSONArray;
-import com.harmonycloud.caas.common.enums.DictEnum;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.Protocol;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.model.AffinityDTO;
-import com.harmonycloud.caas.common.model.IngressComponentDto;
-import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
-import com.harmonycloud.caas.common.model.middleware.*;
-import com.harmonycloud.tool.collection.JsonUtils;
-import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.middleware.caas.common.enums.DictEnum;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.enums.Protocol;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.caas.common.model.AffinityDTO;
+import com.middleware.caas.common.model.IngressComponentDto;
+import com.middleware.caas.common.model.MiddlewareServiceNameIndex;
+import com.middleware.tool.collection.JsonUtils;
+import com.middleware.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.service.k8s.IngressComponentService;
 import com.harmonycloud.zeus.service.k8s.K8sExecService;
@@ -29,6 +28,7 @@ import com.harmonycloud.zeus.service.middleware.impl.MiddlewareServiceImpl;
 import com.harmonycloud.zeus.util.K8sConvert;
 import com.harmonycloud.zeus.util.RedisUtil;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
+import com.middleware.caas.common.model.middleware.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.NodeAffinity;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +38,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.operator.api.RedisOperator;
 import com.harmonycloud.zeus.operator.miiddleware.AbstractRedisOperator;
-import com.harmonycloud.tool.encrypt.PasswordUtils;
+import com.middleware.tool.encrypt.PasswordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 

@@ -3,17 +3,16 @@ package com.harmonycloud.zeus.service.k8s.impl;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.enums.*;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.exception.CaasRuntimeException;
-import com.harmonycloud.caas.common.model.IngressComponentDto;
-import com.harmonycloud.caas.common.model.TraefikPort;
-import com.harmonycloud.caas.common.model.middleware.Namespace;
-import com.harmonycloud.caas.common.model.middleware.*;
-import com.harmonycloud.tool.encrypt.PasswordUtils;
-import com.harmonycloud.tool.uuid.UUIDUtils;
+import com.middleware.caas.common.enums.*;
+import com.middleware.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
+import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.exception.CaasRuntimeException;
+import com.middleware.caas.common.model.IngressComponentDto;
+import com.middleware.caas.common.model.TraefikPort;
+import com.middleware.caas.common.model.middleware.*;
+import com.middleware.tool.encrypt.PasswordUtils;
+import com.middleware.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.dao.BeanMiddlewareInfoMapper;
 import com.harmonycloud.zeus.integration.cluster.ConfigMapWrapper;
@@ -28,6 +27,7 @@ import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.service.user.UserService;
 import com.harmonycloud.zeus.util.DateUtil;
 import com.harmonycloud.zeus.util.MiddlewareServicePurposeUtil;
+import com.middleware.caas.common.model.middleware.Namespace;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.*;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -42,9 +42,9 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_ONE;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
-import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.*;
+import static com.middleware.caas.common.constants.CommonConstant.NUM_ONE;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
+import static com.middleware.caas.common.constants.registry.HelmChartConstant.*;
 
 /**
  * @author dengyulong

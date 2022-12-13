@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.integration.cluster.client;
 
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitorInfo;
-import com.harmonycloud.tool.api.client.BaseClient;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterMonitorInfo;
+import com.middleware.tool.api.client.BaseClient;
 
 /**
  * @author dengyulong

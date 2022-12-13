@@ -1,9 +1,8 @@
 package com.harmonycloud.zeus.service.k8s;
 
-import com.harmonycloud.caas.common.model.ClusterComponentsDto;
-import com.harmonycloud.caas.common.model.MultipleComponentsInstallDto;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareInfoDTO;
+import com.middleware.caas.common.model.ClusterComponentsDto;
+import com.middleware.caas.common.model.MultipleComponentsInstallDto;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
 
 import java.util.List;
 

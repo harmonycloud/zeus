@@ -1,8 +1,8 @@
 package com.harmonycloud.zeus.util;
 
-import com.harmonycloud.caas.common.constants.DateStyle;
-import com.harmonycloud.caas.common.enums.DateType;
-import com.harmonycloud.tool.date.DateUtils;
+import com.middleware.caas.common.constants.DateStyle;
+import com.middleware.caas.common.enums.DateType;
+import com.middleware.tool.date.DateUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,14 +10,12 @@ import org.slf4j.LoggerFactory;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_NINE;
-import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_TEN;
+import static com.middleware.caas.common.constants.CommonConstant.NUM_NINE;
+import static com.middleware.caas.common.constants.CommonConstant.NUM_TEN;
 
 public class DateUtil {
 

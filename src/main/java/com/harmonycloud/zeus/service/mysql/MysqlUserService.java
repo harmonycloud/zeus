@@ -1,9 +1,8 @@
 package com.harmonycloud.zeus.service.mysql;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.MysqlDbPrivilege;
-import com.harmonycloud.caas.common.model.MysqlUserDTO;
-import com.harmonycloud.caas.common.model.MysqlUserDetail;
+import com.middleware.caas.common.model.MysqlDbPrivilege;
+import com.middleware.caas.common.model.MysqlUserDTO;
+import com.middleware.caas.common.model.MysqlUserDetail;
 import com.harmonycloud.zeus.bean.BeanMysqlUser;
 import org.springframework.stereotype.Service;
 

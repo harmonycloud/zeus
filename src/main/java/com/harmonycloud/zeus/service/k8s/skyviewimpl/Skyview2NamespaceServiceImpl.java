@@ -2,8 +2,8 @@ package com.harmonycloud.zeus.service.k8s.skyviewimpl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.base.CaasResult;
-import com.harmonycloud.caas.common.model.middleware.Namespace;
+import com.middleware.caas.common.base.CaasResult;
+import com.middleware.caas.common.model.middleware.Namespace;
 import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.impl.NamespaceServiceImpl;

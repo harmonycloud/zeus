@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.service.ingress;
 
-import com.harmonycloud.caas.common.model.IngressComponentDto;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareValues;
+import com.middleware.caas.common.model.IngressComponentDto;
+import com.middleware.caas.common.model.middleware.MiddlewareValues;
 import com.harmonycloud.zeus.bean.BeanIngressComponents;
 
 import java.util.List;

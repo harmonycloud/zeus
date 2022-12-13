@@ -1,34 +1,30 @@
 package com.harmonycloud.zeus.service.ingress.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.IngressEnum;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.AffinityDTO;
-import com.harmonycloud.caas.common.model.ClusterComponentsDto;
-import com.harmonycloud.caas.common.model.IngressComponentDto;
-import com.harmonycloud.caas.common.model.TraefikPort;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareValues;
-import com.harmonycloud.caas.common.model.middleware.PodInfo;
-import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
-import com.harmonycloud.tool.cmd.CmdExecUtil;
-import com.harmonycloud.tool.cmd.HelmChartUtil;
-import com.harmonycloud.tool.collection.JsonUtils;
-import com.harmonycloud.tool.file.FileUtil;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.enums.IngressEnum;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.AffinityDTO;
+import com.middleware.caas.common.model.ClusterComponentsDto;
+import com.middleware.caas.common.model.IngressComponentDto;
+import com.middleware.caas.common.model.TraefikPort;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareValues;
+import com.middleware.caas.common.model.middleware.PodInfo;
+import com.middleware.caas.common.util.ThreadPoolExecutorFactory;
+import com.middleware.tool.cmd.CmdExecUtil;
+import com.middleware.tool.cmd.HelmChartUtil;
+import com.middleware.tool.collection.JsonUtils;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.bean.BeanIngressComponents;
-import com.harmonycloud.zeus.dao.BeanIngressComponentsMapper;
 import com.harmonycloud.zeus.service.ingress.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.ingress.api.TraefikIngressService;
 import com.harmonycloud.zeus.service.k8s.IngressService;
 import com.harmonycloud.zeus.util.K8sConvert;
 import io.fabric8.kubernetes.api.model.NodeAffinity;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,12 +34,11 @@ import org.springframework.util.CollectionUtils;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.RESOURCE_ALREADY_EXISTED;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
+import static com.middleware.caas.common.constants.CommonConstant.RESOURCE_ALREADY_EXISTED;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
 
 /**
  * @author liyinlong

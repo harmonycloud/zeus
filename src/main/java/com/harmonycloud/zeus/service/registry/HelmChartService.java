@@ -1,11 +1,11 @@
 package com.harmonycloud.zeus.service.registry;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.QuestionYaml;
-import com.harmonycloud.caas.common.model.middleware.Registry;
-import com.harmonycloud.caas.common.model.registry.HelmChartFile;
+import com.middleware.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.model.middleware.QuestionYaml;
+import com.middleware.caas.common.model.middleware.Registry;
+import com.middleware.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.V1HelmChartVersion;
 

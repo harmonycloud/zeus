@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.util;
 
-import com.harmonycloud.caas.common.enums.MysqlPrivilegeEnum;
+import com.middleware.caas.common.enums.MysqlPrivilegeEnum;
 import org.springframework.util.StringUtils;
 
 import java.util.regex.Matcher;

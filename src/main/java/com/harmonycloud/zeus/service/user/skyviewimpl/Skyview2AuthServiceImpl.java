@@ -1,11 +1,11 @@
 package com.harmonycloud.zeus.service.user.skyviewimpl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.base.CaasResult;
-import com.harmonycloud.caas.common.enums.CaasErrorMessage;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.tool.encrypt.RSAUtils;
+import com.middleware.caas.common.base.CaasResult;
+import com.middleware.caas.common.enums.CaasErrorMessage;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.tool.encrypt.RSAUtils;
 import com.harmonycloud.zeus.service.user.impl.AuthServiceImpl;
 import com.harmonycloud.zeus.skyviewservice.Skyview2UserService;
 import com.harmonycloud.zeus.skyviewservice.client.Skyview2UserServiceClient;

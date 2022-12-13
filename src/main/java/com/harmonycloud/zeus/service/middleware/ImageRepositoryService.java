@@ -1,8 +1,8 @@
 package com.harmonycloud.zeus.service.middleware;
 
 import com.github.pagehelper.PageInfo;
-import com.harmonycloud.caas.common.model.middleware.ImageRepositoryDTO;
-import com.harmonycloud.caas.common.model.middleware.Registry;
+import com.middleware.caas.common.model.middleware.ImageRepositoryDTO;
+import com.middleware.caas.common.model.middleware.Registry;
 import com.harmonycloud.zeus.bean.BeanImageRepository;
 import io.fabric8.kubernetes.api.model.Secret;
 

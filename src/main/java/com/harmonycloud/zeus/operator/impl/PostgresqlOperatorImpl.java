@@ -1,8 +1,8 @@
 package com.harmonycloud.zeus.operator.impl;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.*;
-import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ARGS;
+import static com.middleware.caas.common.constants.CommonConstant.*;
+import static com.middleware.caas.common.constants.NameConstant.RESOURCES;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.ARGS;
 
 import java.text.MessageFormat;
 import java.util.Base64;
@@ -11,18 +11,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.middleware.caas.common.model.middleware.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.enums.DictEnum;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.middleware.*;
-import com.harmonycloud.tool.cmd.CmdExecUtil;
-import com.harmonycloud.tool.encrypt.PasswordUtils;
+import com.middleware.caas.common.enums.DictEnum;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.middleware.*;
+import com.middleware.tool.cmd.CmdExecUtil;
+import com.middleware.tool.encrypt.PasswordUtils;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupCR;

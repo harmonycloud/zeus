@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.controller.k8s;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.middleware.Middleware;
 import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.k8s.PodService;
 import io.swagger.annotations.Api;

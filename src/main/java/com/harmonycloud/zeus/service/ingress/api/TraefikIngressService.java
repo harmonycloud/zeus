@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.service.ingress.api;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.model.TraefikPort;
+import com.middleware.caas.common.model.TraefikPort;
 import com.harmonycloud.zeus.service.ingress.BaseIngressService;
 
 import java.util.List;

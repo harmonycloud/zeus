@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.controller.k8s;
 
-import com.harmonycloud.caas.common.base.BaseResult;
+import com.middleware.caas.common.base.BaseResult;
 import com.harmonycloud.zeus.service.k8s.SecretService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;

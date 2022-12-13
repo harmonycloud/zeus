@@ -1,9 +1,9 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.middleware.Middleware;
 import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
 import com.harmonycloud.zeus.dao.BeanCacheMiddlewareMapper;
 import com.harmonycloud.zeus.service.middleware.CacheMiddlewareService;
@@ -11,7 +11,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.ObjectUtils;
 
 import java.util.ArrayList;
 import java.util.List;

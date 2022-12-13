@@ -1,10 +1,10 @@
 package com.harmonycloud.zeus.controller.dashboard;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.dashboard.DatabaseDto;
-import com.harmonycloud.caas.common.model.dashboard.redis.KeyValueDto;
-import com.harmonycloud.caas.common.model.dashboard.redis.ScanResult;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.dashboard.DatabaseDto;
+import com.middleware.caas.common.model.dashboard.redis.KeyValueDto;
+import com.middleware.caas.common.model.dashboard.redis.ScanResult;
 import com.harmonycloud.zeus.service.dashboard.RedisDashboardService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;

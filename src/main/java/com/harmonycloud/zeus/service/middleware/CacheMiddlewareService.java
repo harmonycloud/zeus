@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.service.middleware;
 
-import com.harmonycloud.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.model.middleware.Middleware;
 import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
 
 import java.util.List;

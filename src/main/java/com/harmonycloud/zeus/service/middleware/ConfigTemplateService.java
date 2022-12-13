@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.service.middleware;
 
-import com.harmonycloud.caas.common.model.middleware.CustomConfig;
-import com.harmonycloud.caas.common.model.middleware.CustomConfigTemplateDTO;
+import com.middleware.caas.common.model.middleware.CustomConfig;
+import com.middleware.caas.common.model.middleware.CustomConfigTemplateDTO;
 
 import java.util.List;
 

@@ -1,8 +1,8 @@
 package com.harmonycloud.zeus.integration.cluster;
 
-import com.harmonycloud.caas.common.enums.DictEnum;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
+import com.middleware.caas.common.enums.DictEnum;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
 import com.harmonycloud.zeus.util.K8sClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -13,7 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
 
 /**
  * @description statefulset

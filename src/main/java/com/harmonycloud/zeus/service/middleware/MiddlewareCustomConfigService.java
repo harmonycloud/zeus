@@ -2,10 +2,10 @@ package com.harmonycloud.zeus.service.middleware;
 
 import java.util.List;
 
-import com.harmonycloud.caas.common.model.middleware.CustomConfig;
-import com.harmonycloud.caas.common.model.middleware.CustomConfigHistoryDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareCustomConfig;
-import com.harmonycloud.caas.common.model.registry.HelmChartFile;
+import com.middleware.caas.common.model.middleware.CustomConfig;
+import com.middleware.caas.common.model.middleware.CustomConfigHistoryDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareCustomConfig;
+import com.middleware.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.zeus.bean.BeanCustomConfig;
 
 /**

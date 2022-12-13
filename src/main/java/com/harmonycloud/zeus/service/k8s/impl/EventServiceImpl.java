@@ -1,12 +1,12 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
-import com.harmonycloud.caas.common.model.EventDetail;
-import com.harmonycloud.caas.common.model.ObjectReference;
+import com.middleware.caas.common.model.EventDetail;
+import com.middleware.caas.common.model.ObjectReference;
 import com.harmonycloud.zeus.integration.cluster.EventWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.service.k8s.EventService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
-import com.harmonycloud.tool.date.DateUtils;
+import com.middleware.tool.date.DateUtils;
 import io.fabric8.kubernetes.api.model.Event;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;

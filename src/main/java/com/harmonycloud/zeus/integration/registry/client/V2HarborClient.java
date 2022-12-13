@@ -1,9 +1,9 @@
 package com.harmonycloud.zeus.integration.registry.client;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.ADMIN;
+import static com.middleware.caas.common.constants.NameConstant.ADMIN;
 
-import com.harmonycloud.caas.common.model.middleware.Registry;
-import com.harmonycloud.tool.api.client.BaseClient;
+import com.middleware.caas.common.model.middleware.Registry;
+import com.middleware.tool.api.client.BaseClient;
 
 /**
  * @author dengyulong

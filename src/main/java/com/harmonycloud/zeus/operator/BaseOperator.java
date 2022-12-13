@@ -1,7 +1,10 @@
 package com.harmonycloud.zeus.operator;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.model.middleware.*;
+import com.middleware.caas.common.model.middleware.CustomConfig;
+import com.middleware.caas.common.model.middleware.IngressDTO;
+import com.middleware.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 
 import java.util.List;

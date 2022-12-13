@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.service.user.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
+import com.middleware.caas.common.model.user.ResourceMenuDto;
 import com.harmonycloud.zeus.bean.user.BeanResourceMenuRole;
 import com.harmonycloud.zeus.dao.user.BeanResourceMenuRoleMapper;
 import com.harmonycloud.zeus.service.user.ResourceMenuRoleService;

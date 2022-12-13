@@ -1,16 +1,14 @@
 package com.harmonycloud.zeus.integration.cluster.bean;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.model.ClusterCert;
-import com.harmonycloud.caas.common.model.middleware.*;
+import com.middleware.caas.common.model.ClusterCert;
+import com.middleware.caas.common.model.middleware.*;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author dengyulong

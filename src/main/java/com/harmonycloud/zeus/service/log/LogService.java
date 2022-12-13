@@ -1,8 +1,8 @@
 package com.harmonycloud.zeus.service.log;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.middleware.LogQuery;
-import com.harmonycloud.caas.common.model.middleware.LogQueryDto;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.middleware.LogQuery;
+import com.middleware.caas.common.model.middleware.LogQueryDto;
 
 import javax.servlet.http.HttpServletResponse;
 

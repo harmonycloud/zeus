@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.service.middleware;
 
-import com.harmonycloud.caas.common.model.middleware.MiddlewareCustomConfig;
+import com.middleware.caas.common.model.middleware.MiddlewareCustomConfig;
 import com.harmonycloud.zeus.bean.BeanCustomConfigHistory;
 
 import java.util.List;

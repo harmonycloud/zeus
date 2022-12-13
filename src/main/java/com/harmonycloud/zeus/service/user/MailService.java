@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.service.user;
 
-import com.harmonycloud.caas.common.model.middleware.AlertInfoDto;
+import com.middleware.caas.common.model.middleware.AlertInfoDto;
 import com.harmonycloud.zeus.bean.MailInfo;
 import com.harmonycloud.zeus.bean.user.BeanUser;
 

@@ -1,9 +1,9 @@
 package com.harmonycloud.zeus.integration.registry.api.harbor;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.ADMIN;
-import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.CHART_REPO_DIR_NAME;
-import static com.harmonycloud.tool.api.util.HttpMethod.GET;
-import static com.harmonycloud.tool.api.util.HttpMethod.POST;
+import static com.middleware.caas.common.constants.NameConstant.ADMIN;
+import static com.middleware.caas.common.constants.registry.HelmChartConstant.CHART_REPO_DIR_NAME;
+import static com.middleware.tool.api.util.HttpMethod.GET;
+import static com.middleware.tool.api.util.HttpMethod.POST;
 
 import java.io.File;
 import java.util.List;
@@ -12,12 +12,12 @@ import com.harmonycloud.zeus.integration.registry.bean.harbor.V1HelmChartVersion
 import org.springframework.http.HttpStatus;
 
 import com.alibaba.fastjson.TypeReference;
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.tool.api.AbstractApi;
-import com.harmonycloud.tool.api.client.BaseClient;
-import com.harmonycloud.tool.api.common.ApiException;
-import com.harmonycloud.tool.api.common.ApiResponse;
-import com.harmonycloud.tool.api.common.RequestParams;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.tool.api.AbstractApi;
+import com.middleware.tool.api.client.BaseClient;
+import com.middleware.tool.api.common.ApiException;
+import com.middleware.tool.api.common.ApiResponse;
+import com.middleware.tool.api.common.RequestParams;
 
 import okhttp3.Call;
 

@@ -1,10 +1,10 @@
 package com.harmonycloud.zeus.controller.middleware;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareBriefInfoDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareTopologyDTO;
-import com.harmonycloud.caas.common.model.middleware.MonitorDto;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.model.middleware.MiddlewareBriefInfoDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareTopologyDTO;
+import com.middleware.caas.common.model.middleware.MonitorDto;
 import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import io.swagger.annotations.Api;
@@ -14,7 +14,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.ASTERISK;
+import static com.middleware.caas.common.constants.CommonConstant.ASTERISK;
 
 /**
  * @author dengyulong

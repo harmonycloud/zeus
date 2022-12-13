@@ -1,12 +1,11 @@
 package com.harmonycloud.zeus.service.user.impl;
 
-import com.harmonycloud.caas.common.constants.LdapConfigConstant;
-import com.harmonycloud.caas.common.enums.DictEnum;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.LdapConfigDto;
-import com.harmonycloud.caas.common.model.user.UserDto;
-import com.harmonycloud.tool.encrypt.PasswordUtils;
+import com.middleware.caas.common.enums.DictEnum;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.LdapConfigDto;
+import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.tool.encrypt.PasswordUtils;
 import com.harmonycloud.zeus.bean.user.BeanUser;
 import com.harmonycloud.zeus.service.user.AuthManager4Ldap;
 import com.harmonycloud.zeus.service.user.UserService;
@@ -30,8 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.harmonycloud.caas.common.constants.LdapConfigConstant.*;
-
+import static com.middleware.caas.common.constants.LdapConfigConstant.*;
 
 /**
  * @author liyinlong

@@ -1,8 +1,8 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.model.middleware.CustomConfig;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareCustomConfig;
+import com.middleware.caas.common.model.middleware.CustomConfig;
+import com.middleware.caas.common.model.middleware.MiddlewareCustomConfig;
 import com.harmonycloud.zeus.bean.BeanCustomConfigHistory;
 import com.harmonycloud.zeus.dao.BeanCustomConfigHistoryMapper;
 import com.harmonycloud.zeus.service.middleware.CustomConfigHistoryService;

@@ -1,8 +1,8 @@
 package com.harmonycloud.zeus.util;
 
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.tool.api.common.ApiException;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.tool.api.common.ApiException;
 
 /**
  * @author chwetion

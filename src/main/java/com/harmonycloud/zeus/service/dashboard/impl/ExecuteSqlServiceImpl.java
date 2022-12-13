@@ -4,8 +4,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.harmonycloud.caas.common.model.SqlRecordQueryDto;
-import com.harmonycloud.caas.common.model.dashboard.ExecuteSqlDto;
+import com.middleware.caas.common.model.SqlRecordQueryDto;
+import com.middleware.caas.common.model.dashboard.ExecuteSqlDto;
 import com.harmonycloud.zeus.bean.BeanSqlExecuteRecord;
 import com.harmonycloud.zeus.dao.BeanSqlExecuteRecordMapper;
 import com.harmonycloud.zeus.service.dashboard.ExecuteSqlService;
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ASCEND;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.ASCEND;
 
 /**
  * @author xutianhong

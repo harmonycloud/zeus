@@ -9,27 +9,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.harmonycloud.caas.common.enums.ComponentsEnum;
-import com.harmonycloud.caas.common.model.middleware.PodInfo;
+import com.middleware.caas.common.enums.ComponentsEnum;
 import com.harmonycloud.zeus.integration.cluster.PodWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.service.k8s.*;
 import io.fabric8.kubernetes.api.model.Pod;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.enums.ActiveAreaEnum;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.ActiveAreaDto;
-import com.harmonycloud.caas.common.model.ActivePoolDto;
-import com.harmonycloud.caas.common.model.ClusterNodeResourceDto;
-import com.harmonycloud.caas.common.model.Node;
-import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.middleware.caas.common.enums.ActiveAreaEnum;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.ActiveAreaDto;
+import com.middleware.caas.common.model.ActivePoolDto;
+import com.middleware.caas.common.model.ClusterNodeResourceDto;
+import com.middleware.caas.common.model.Node;
+import com.middleware.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.bean.BeanActiveArea;
 import com.harmonycloud.zeus.dao.BeanActiveAreaMapper;
 import com.harmonycloud.zeus.integration.cluster.NodeWrapper;
@@ -99,7 +97,7 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
 
     @Override
     public ActivePoolDto getPoolNode(String clusterId) {
-        List<com.harmonycloud.caas.common.model.Node> nodeList = nodeService.list(clusterId);
+        List<Node> nodeList = nodeService.list(clusterId);
         nodeList = nodeList.stream()
             .filter(
                 node -> node.getLabels().containsKey("type") && "active-active".equals(node.getLabels().get("type")))

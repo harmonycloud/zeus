@@ -1,8 +1,7 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.DISK;
-import static com.harmonycloud.caas.common.constants.NameConstant.STORAGE;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.STORAGE_PROVISIONER;
+import static com.middleware.caas.common.constants.NameConstant.STORAGE;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.STORAGE_PROVISIONER;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,8 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
-import com.harmonycloud.caas.common.model.StorageClassDTO;
+import com.middleware.caas.common.model.StorageClassDTO;
 import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
@@ -21,13 +19,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.StorageClass;
+import com.middleware.caas.common.model.middleware.StorageClass;
 import com.harmonycloud.zeus.integration.cluster.StorageClassWrapper;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.StorageClassService;
-import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 
 import org.springframework.util.CollectionUtils;
 

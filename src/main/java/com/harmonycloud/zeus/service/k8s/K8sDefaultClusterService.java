@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.service.k8s;
 
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.zeus.bean.BeanK8sDefaultCluster;
 
 /**

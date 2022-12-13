@@ -1,9 +1,9 @@
 package com.harmonycloud.zeus.integration.cluster;
 
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_CLUSTER_GROUP;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_CLUSTER_PLURAL;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_CLUSTER_VERSION;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.NAMESPACED;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_CLUSTER_GROUP;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_CLUSTER_PLURAL;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_CLUSTER_VERSION;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.NAMESPACED;
 
 import java.io.IOException;
 import java.util.ArrayList;

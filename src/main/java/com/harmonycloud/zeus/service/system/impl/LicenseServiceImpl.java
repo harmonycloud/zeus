@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.service.system.impl;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.*;
+import static com.middleware.caas.common.constants.NameConstant.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -17,18 +17,18 @@ import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.LicenseInfoDto;
-import com.harmonycloud.caas.common.model.MonitorResourceQuotaBase;
-import com.harmonycloud.caas.common.model.Secret;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.Namespace;
-import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
-import com.harmonycloud.tool.encrypt.Base64Utils;
-import com.harmonycloud.tool.encrypt.RSAUtils;
-import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.LicenseInfoDto;
+import com.middleware.caas.common.model.MonitorResourceQuotaBase;
+import com.middleware.caas.common.model.Secret;
+import com.middleware.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.model.middleware.Namespace;
+import com.middleware.caas.common.util.ThreadPoolExecutorFactory;
+import com.middleware.tool.encrypt.Base64Utils;
+import com.middleware.tool.encrypt.RSAUtils;
+import com.middleware.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.bean.BeanSystemConfig;
 import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;

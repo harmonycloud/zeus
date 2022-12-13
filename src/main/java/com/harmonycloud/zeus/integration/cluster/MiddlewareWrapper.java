@@ -1,9 +1,9 @@
 package com.harmonycloud.zeus.integration.cluster;
 
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_CLUSTER_GROUP;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_CLUSTER_VERSION;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_PLURAL;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.NAMESPACED;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_CLUSTER_GROUP;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_CLUSTER_VERSION;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_PLURAL;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.NAMESPACED;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,9 +15,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.enums.DictEnum;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
+import com.middleware.caas.common.enums.DictEnum;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareList;
 import com.harmonycloud.zeus.util.K8sClient;

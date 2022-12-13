@@ -6,11 +6,11 @@ import com.harmonycloud.zeus.annotation.Authority;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.middleware.CustomConfig;
-import com.harmonycloud.caas.common.model.middleware.CustomConfigHistoryDTO;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareCustomConfig;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.middleware.CustomConfig;
+import com.middleware.caas.common.model.middleware.CustomConfigHistoryDTO;
+import com.middleware.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.model.middleware.MiddlewareCustomConfig;
 import com.harmonycloud.zeus.service.middleware.MiddlewareCustomConfigService;
 
 import io.swagger.annotations.Api;

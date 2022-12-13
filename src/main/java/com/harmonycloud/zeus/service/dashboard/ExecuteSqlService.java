@@ -1,11 +1,9 @@
 package com.harmonycloud.zeus.service.dashboard;
 
 import com.github.pagehelper.PageInfo;
-import com.harmonycloud.caas.common.model.SqlRecordQueryDto;
-import com.harmonycloud.caas.common.model.dashboard.ExecuteSqlDto;
+import com.middleware.caas.common.model.SqlRecordQueryDto;
+import com.middleware.caas.common.model.dashboard.ExecuteSqlDto;
 import com.harmonycloud.zeus.bean.BeanSqlExecuteRecord;
-
-import java.util.List;
 
 /**
  * @author xutianhong

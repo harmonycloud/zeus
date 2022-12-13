@@ -4,35 +4,29 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-import com.harmonycloud.caas.common.model.MiddlewareIncBackupDto;
+import com.middleware.caas.common.model.MiddlewareIncBackupDto;
+import com.middleware.caas.common.model.middleware.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.ObjectUtils;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.enums.BackupType;
-import com.harmonycloud.caas.common.enums.DateType;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
-import com.harmonycloud.caas.common.model.middleware.*;
-import com.harmonycloud.tool.date.DateUtils;
-import com.harmonycloud.tool.uuid.UUIDUtils;
+import com.middleware.caas.common.enums.BackupType;
+import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.caas.common.model.MiddlewareBackupDTO;
+import com.middleware.tool.date.DateUtils;
+import com.middleware.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.bean.BeanMiddlewareBackupName;
 import com.harmonycloud.zeus.dao.BeanMiddlewareBackupNameMapper;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
-import com.harmonycloud.zeus.operator.BaseOperator;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.middleware.BackupService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareBackupAddressService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
 import com.harmonycloud.zeus.service.middleware.MysqlScheduleBackupService;
 import com.harmonycloud.zeus.util.CronUtils;
-import com.harmonycloud.zeus.util.DateUtil;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
@@ -63,7 +57,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public List<MiddlewareBackupRecord> listBackup(String clusterId, String namespace, String middlewareName,
-        String type) {
+                                                   String type) {
         List<Backup> backupList = backupService.listBackup(clusterId, namespace);
         return convertMysqlBackupDto(backupList, clusterId);
     }

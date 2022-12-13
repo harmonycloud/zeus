@@ -1,21 +1,19 @@
 package com.harmonycloud.zeus.operator.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.middleware.*;
-import com.harmonycloud.tool.uuid.UUIDUtils;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.operator.api.KafkaOperator;
 import com.harmonycloud.zeus.operator.miiddleware.AbstractKafkaOperator;
+import com.middleware.caas.common.model.middleware.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.units.qual.K;
 import org.springframework.util.ObjectUtils;
 
 import java.util.*;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
+import static com.middleware.caas.common.constants.NameConstant.RESOURCES;
 
 /**
  * 处理Kafka逻辑

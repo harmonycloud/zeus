@@ -2,8 +2,8 @@ package com.harmonycloud.zeus.service.k8s.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.model.middleware.PortDetailDTO;
-import com.harmonycloud.caas.common.model.middleware.ServicePortDTO;
+import com.middleware.caas.common.model.middleware.PortDetailDTO;
+import com.middleware.caas.common.model.middleware.ServicePortDTO;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.dao.BeanMiddlewareInfoMapper;
 import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
@@ -27,8 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.EXPORTER;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.HEADLESS;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.EXPORTER;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.HEADLESS;
 
 /**
  * @author tangtx

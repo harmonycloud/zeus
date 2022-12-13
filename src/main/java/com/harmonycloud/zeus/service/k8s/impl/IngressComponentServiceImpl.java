@@ -2,19 +2,18 @@ package com.harmonycloud.zeus.service.k8s.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.IngressEnum;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.IngressComponentDto;
-import com.harmonycloud.caas.common.model.middleware.IngressDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareValues;
-import com.harmonycloud.caas.common.model.middleware.PodInfo;
-import com.harmonycloud.tool.date.DateUtils;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.enums.IngressEnum;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.IngressComponentDto;
+import com.middleware.caas.common.model.middleware.IngressDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareValues;
+import com.middleware.caas.common.model.middleware.PodInfo;
+import com.middleware.tool.date.DateUtils;
 import com.harmonycloud.zeus.bean.BeanIngressComponents;
 import com.harmonycloud.zeus.dao.BeanIngressComponentsMapper;
 import com.harmonycloud.zeus.integration.cluster.ConfigMapWrapper;
-import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
 import com.harmonycloud.zeus.service.AbstractBaseService;
 import com.harmonycloud.zeus.service.ingress.BaseIngressService;
 import com.harmonycloud.zeus.service.ingress.api.TraefikIngressService;
@@ -33,8 +32,8 @@ import org.yaml.snakeyaml.Yaml;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_TWO;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
+import static com.middleware.caas.common.constants.CommonConstant.NUM_TWO;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
 
 /**
  * @author xutianhong

@@ -1,11 +1,10 @@
 package com.harmonycloud.zeus.service.dashboard;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.model.dashboard.redis.DataDto;
-import com.harmonycloud.caas.common.model.dashboard.redis.DatabaseDto;
-import com.harmonycloud.caas.common.model.dashboard.redis.KeyValueDto;
-import com.harmonycloud.caas.common.model.dashboard.redis.ScanResult;
-import com.harmonycloud.zeus.bean.BeanSqlExecuteRecord;
+import com.middleware.caas.common.model.dashboard.redis.DataDto;
+import com.middleware.caas.common.model.dashboard.redis.DatabaseDto;
+import com.middleware.caas.common.model.dashboard.redis.KeyValueDto;
+import com.middleware.caas.common.model.dashboard.redis.ScanResult;
 
 import java.util.List;
 

@@ -1,10 +1,9 @@
 package com.harmonycloud.zeus.controller.dashboard;
 
 import com.github.pagehelper.PageInfo;
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.SqlRecordQueryDto;
-import com.harmonycloud.caas.common.model.dashboard.DatabaseDto;
-import com.harmonycloud.caas.common.model.dashboard.ExecuteSqlDto;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.SqlRecordQueryDto;
+import com.middleware.caas.common.model.dashboard.ExecuteSqlDto;
 import com.harmonycloud.zeus.bean.BeanSqlExecuteRecord;
 import com.harmonycloud.zeus.service.dashboard.ExecuteSqlService;
 import io.swagger.annotations.Api;
@@ -13,8 +12,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * @author xutianhong

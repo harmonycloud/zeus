@@ -1,9 +1,9 @@
 package com.harmonycloud.zeus.integration.cluster;
 
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MYSQL_CLUSTER_GROUP;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MYSQL_CLUSTER_PLURAL;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MYSQL_CLUSTER_VERSION;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.NAMESPACED;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MYSQL_CLUSTER_GROUP;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MYSQL_CLUSTER_PLURAL;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MYSQL_CLUSTER_VERSION;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.NAMESPACED;
 
 import java.io.IOException;
 import java.util.Map;
@@ -14,7 +14,7 @@ import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.zeus.util.K8sClient;
-import com.harmonycloud.tool.collection.MapUtils;
+import com.middleware.tool.collection.MapUtils;
 
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 

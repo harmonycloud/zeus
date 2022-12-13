@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.util;
 
-import com.harmonycloud.caas.common.model.middleware.IngressDTO;
+import com.middleware.caas.common.model.middleware.IngressDTO;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 

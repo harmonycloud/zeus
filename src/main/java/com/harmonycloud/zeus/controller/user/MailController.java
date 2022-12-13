@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.controller.user;
 
-import com.harmonycloud.caas.common.base.BaseResult;
+import com.middleware.caas.common.base.BaseResult;
 import com.harmonycloud.zeus.bean.MailInfo;
 import com.harmonycloud.zeus.service.user.MailService;
 import io.swagger.annotations.Api;

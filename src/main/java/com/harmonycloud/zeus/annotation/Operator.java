@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 
 import org.springframework.stereotype.Component;
 
-import com.harmonycloud.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.model.middleware.Middleware;
 
 /**
  * @author dengyulong

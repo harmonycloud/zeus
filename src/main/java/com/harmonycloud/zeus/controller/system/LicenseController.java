@@ -1,13 +1,8 @@
 package com.harmonycloud.zeus.controller.system;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.LicenseInfoDto;
-import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
-import com.harmonycloud.tool.file.FileUtil;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.LicenseInfoDto;
 import com.harmonycloud.zeus.service.system.LicenseService;
-import io.fabric8.kubernetes.client.ConfigBuilder;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;

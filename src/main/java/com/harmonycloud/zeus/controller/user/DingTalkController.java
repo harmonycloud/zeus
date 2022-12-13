@@ -1,8 +1,6 @@
 package com.harmonycloud.zeus.controller.user;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.SendResult;
-import com.harmonycloud.caas.common.model.middleware.AlertInfoDto;
+import com.middleware.caas.common.base.BaseResult;
 import com.harmonycloud.zeus.bean.DingRobotInfo;
 import com.harmonycloud.zeus.service.user.DingRobotService;
 import io.swagger.annotations.Api;

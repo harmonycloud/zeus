@@ -1,8 +1,8 @@
 package com.harmonycloud.zeus.util;
 
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.caas.common.model.MiddlewareServiceNameIndex;
+import com.middleware.caas.common.model.middleware.Middleware;
 
 /**
  * 中间件服务名称转换工具类

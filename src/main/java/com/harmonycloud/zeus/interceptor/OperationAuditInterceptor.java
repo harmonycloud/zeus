@@ -13,13 +13,12 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.user.UserDto;
-import com.harmonycloud.caas.common.model.user.UserRole;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.caas.common.model.user.UserRole;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.zeus.bean.user.BeanRoleAuthority;
-import com.harmonycloud.zeus.bean.user.BeanUser;
 import com.harmonycloud.zeus.service.user.RoleAuthorityService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
 import com.harmonycloud.zeus.service.user.UserService;
@@ -41,10 +40,10 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.constants.CommonConstant;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.filters.token.JwtTokenComponent;
-import com.harmonycloud.tool.api.util.HttpMethod;
+import com.middleware.tool.api.util.HttpMethod;
 import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.bean.BeanOperationAudit;
 import com.harmonycloud.zeus.service.system.OperationAuditService;
@@ -53,7 +52,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.*;
+import static com.middleware.caas.common.constants.CommonConstant.*;
 
 /**
  * 操作审计拦截器

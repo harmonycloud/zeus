@@ -1,11 +1,11 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.enums.DictEnum;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.ClusterCert;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.enums.DictEnum;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.ClusterCert;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.zeus.bean.BeanKubeConfig;
 import com.harmonycloud.zeus.dao.BeanKubeConfigMapper;
 import com.harmonycloud.zeus.integration.cluster.ConfigMapWrapper;
@@ -13,8 +13,7 @@ import com.harmonycloud.zeus.integration.cluster.RbacWrapper;
 import com.harmonycloud.zeus.integration.cluster.SecretWrapper;
 import com.harmonycloud.zeus.integration.cluster.ServiceAccountWrapper;
 import com.harmonycloud.zeus.service.k8s.ClusterCertService;
-import com.harmonycloud.zeus.util.K8sClient;
-import com.harmonycloud.tool.file.FileUtil;
+import com.middleware.tool.file.FileUtil;
 import com.harmonycloud.zeus.util.YamlUtil;
 import io.fabric8.kubernetes.api.model.AuthInfo;
 import io.fabric8.kubernetes.api.model.Cluster;
@@ -34,19 +33,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.ObjectUtils;
-import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.KUBE_SYSTEM;
+import static com.middleware.caas.common.constants.NameConstant.KUBE_SYSTEM;
 
 /**
  * @author dengyulong

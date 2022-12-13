@@ -2,8 +2,8 @@ package com.harmonycloud.zeus.service.dashboard.impl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.model.dashboard.redis.ScanResult;
+import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.caas.common.model.dashboard.redis.ScanResult;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.harmonycloud.zeus.integration.dashboard.RedisClient;
 import com.harmonycloud.zeus.service.dashboard.RedisKVService;

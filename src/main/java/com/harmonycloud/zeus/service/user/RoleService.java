@@ -2,10 +2,9 @@ package com.harmonycloud.zeus.service.user;
 
 import java.util.List;
 
-import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
-import com.harmonycloud.caas.common.model.user.RoleDto;
-import com.harmonycloud.caas.common.model.user.UserDto;
-import com.harmonycloud.zeus.bean.user.BeanRole;
+import com.middleware.caas.common.model.user.ResourceMenuDto;
+import com.middleware.caas.common.model.user.RoleDto;
+import com.middleware.caas.common.model.user.UserDto;
 
 /**
  * @author xutianhong

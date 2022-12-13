@@ -1,10 +1,10 @@
 package com.harmonycloud.zeus.util;
 
-import com.harmonycloud.caas.common.enums.CtsCodeMessage;
-import com.harmonycloud.caas.common.enums.DictEnum;
-import com.harmonycloud.caas.common.enums.ErrorCodeMessage;
-import com.harmonycloud.caas.common.enums.MicroServiceCodeMessage;
-import com.harmonycloud.caas.common.exception.CaasRuntimeException;
+import com.middleware.caas.common.enums.CtsCodeMessage;
+import com.middleware.caas.common.enums.DictEnum;
+import com.middleware.caas.common.enums.ErrorCodeMessage;
+import com.middleware.caas.common.enums.MicroServiceCodeMessage;
+import com.middleware.caas.common.exception.CaasRuntimeException;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;

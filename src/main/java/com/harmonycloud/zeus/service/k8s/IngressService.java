@@ -1,8 +1,9 @@
 package com.harmonycloud.zeus.service.k8s;
 
-import com.harmonycloud.caas.common.model.middleware.*;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
+import com.middleware.caas.common.model.middleware.IngressDTO;
+import com.middleware.caas.common.model.middleware.IngressRuleDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.model.middleware.ServiceDTO;
 
 import java.util.List;
 import java.util.Set;

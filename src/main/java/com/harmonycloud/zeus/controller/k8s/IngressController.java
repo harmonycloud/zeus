@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.controller.k8s;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.middleware.IngressDTO;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.middleware.IngressDTO;
 import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.k8s.IngressService;
 import com.harmonycloud.zeus.service.k8s.NodeService;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.ASTERISK;
+import static com.middleware.caas.common.constants.CommonConstant.ASTERISK;
 
 /**
  * @author dengyulong

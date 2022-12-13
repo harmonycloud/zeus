@@ -6,8 +6,8 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
-import com.harmonycloud.caas.common.model.dashboard.*;
-import com.harmonycloud.caas.common.model.dashboard.mysql.QueryInfo;
+import com.middleware.caas.common.model.dashboard.*;
+import com.middleware.caas.common.model.dashboard.mysql.QueryInfo;
 
 /**
  * @author xutianhong

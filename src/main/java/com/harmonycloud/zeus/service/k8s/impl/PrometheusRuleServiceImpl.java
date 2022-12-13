@@ -3,8 +3,8 @@ package com.harmonycloud.zeus.service.k8s.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.CaasRuntimeException;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.CaasRuntimeException;
 import com.harmonycloud.zeus.integration.cluster.PrometheusRuleWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.prometheus.PrometheusRule;
 import com.harmonycloud.zeus.service.k8s.PrometheusRuleService;

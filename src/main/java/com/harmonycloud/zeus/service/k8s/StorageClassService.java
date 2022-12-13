@@ -1,16 +1,11 @@
 package com.harmonycloud.zeus.service.k8s;
 
-import com.harmonycloud.caas.common.model.StorageClassDTO;
-import com.harmonycloud.caas.common.model.middleware.StorageClass;
+import com.middleware.caas.common.model.StorageClassDTO;
+import com.middleware.caas.common.model.middleware.StorageClass;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
-import org.springframework.util.CollectionUtils;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static com.harmonycloud.caas.common.constants.NameConstant.STORAGE;
 
 /**
  * @author dengyulong

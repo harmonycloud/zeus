@@ -1,8 +1,7 @@
 package com.harmonycloud.zeus.controller.user;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.user.RoleDto;
-import com.harmonycloud.zeus.bean.user.BeanRole;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.user.RoleDto;
 import com.harmonycloud.zeus.service.user.RoleService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;

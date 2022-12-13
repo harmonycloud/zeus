@@ -3,7 +3,7 @@ package com.harmonycloud.zeus.service.middleware;
 import java.util.List;
 import java.util.Map;
 
-import com.harmonycloud.caas.common.model.RedisDbDTO;
+import com.middleware.caas.common.model.RedisDbDTO;
 
 /**
  * @author dengyulong

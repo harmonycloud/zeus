@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.controller.prometheus;
 
-import com.harmonycloud.caas.common.base.BaseResult;
+import com.middleware.caas.common.base.BaseResult;
 import com.harmonycloud.zeus.annotation.ExcludeAuditMethod;
 import com.harmonycloud.zeus.service.prometheus.PrometheusWebhookService;
 import io.swagger.annotations.Api;

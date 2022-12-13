@@ -1,15 +1,13 @@
 package com.harmonycloud.zeus.service.user.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.Namespace;
-import com.harmonycloud.caas.common.model.user.RoleDto;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.model.middleware.Namespace;
 import com.harmonycloud.zeus.bean.user.BeanClusterRole;
 import com.harmonycloud.zeus.dao.user.BeanClusterRoleMapper;
 import com.harmonycloud.zeus.service.user.ClusterRoleService;
-import com.harmonycloud.zeus.service.user.RoleService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

@@ -1,16 +1,14 @@
 package com.harmonycloud.zeus.service.user.impl;
 
-import static com.harmonycloud.caas.common.constants.user.UserConstant.USERNAME;
+import static com.middleware.caas.common.constants.user.UserConstant.USERNAME;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.harmonycloud.caas.common.enums.ComponentsEnum;
-import com.harmonycloud.caas.common.model.middleware.*;
-import com.harmonycloud.zeus.bean.BeanImageRepository;
-import com.harmonycloud.zeus.dao.BeanImageRepositoryMapper;
+import com.middleware.caas.common.enums.ComponentsEnum;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.ImageRepositoryService;
+import com.middleware.caas.common.model.middleware.*;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.ServiceAccount;
 import org.apache.commons.lang3.StringUtils;
@@ -24,17 +22,17 @@ import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.enums.DictEnum;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.user.ProjectDto;
-import com.harmonycloud.caas.common.model.user.UserDto;
-import com.harmonycloud.caas.common.model.user.UserRole;
+import com.middleware.caas.common.enums.DictEnum;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.user.ProjectDto;
+import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.caas.common.model.user.UserRole;
 import com.harmonycloud.caas.filters.token.JwtTokenComponent;
 import com.harmonycloud.caas.filters.user.CurrentUser;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
-import com.harmonycloud.tool.uuid.UUIDUtils;
+import com.middleware.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.bean.user.BeanProject;

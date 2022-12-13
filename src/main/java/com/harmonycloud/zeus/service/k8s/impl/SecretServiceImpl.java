@@ -3,13 +3,13 @@ package com.harmonycloud.zeus.service.k8s.impl;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.harmonycloud.caas.common.model.Secret;
+import com.middleware.caas.common.model.Secret;
 import com.harmonycloud.zeus.integration.cluster.SecretWrapper;
 import com.harmonycloud.zeus.service.k8s.SecretService;
 

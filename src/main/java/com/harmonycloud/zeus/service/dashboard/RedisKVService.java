@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.service.dashboard;
 
 import com.alibaba.fastjson.JSONArray;
-import com.harmonycloud.caas.common.model.dashboard.redis.ScanResult;
+import com.middleware.caas.common.model.dashboard.redis.ScanResult;
 
 /**
  * @author liyinlong

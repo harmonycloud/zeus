@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitorInfo;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterMonitorInfo;
 import com.harmonycloud.zeus.integration.cluster.GrafanaWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.prometheus.GrafanaApiKey;
 import com.harmonycloud.zeus.service.k8s.GrafanaService;

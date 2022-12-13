@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.integration.cluster.MiddlewareWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
@@ -16,22 +15,23 @@ import com.harmonycloud.zeus.integration.cluster.bean.Status;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.PodService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
+import com.middleware.caas.common.model.middleware.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import com.harmonycloud.caas.common.constants.NameConstant;
-import com.harmonycloud.caas.common.enums.DictEnum;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.tool.date.DateUtils;
+import com.middleware.caas.common.constants.NameConstant;
+import com.middleware.caas.common.enums.DictEnum;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.tool.date.DateUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
 /**
  * @author xutianhong

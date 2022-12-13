@@ -1,10 +1,10 @@
 package com.harmonycloud.zeus.service.middleware;
 
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareInfoDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareOperatorDTO;
-import com.harmonycloud.caas.common.model.registry.HelmChartFile;
+import com.middleware.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareInfoDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareOperatorDTO;
+import com.middleware.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 
 import java.io.File;

@@ -2,9 +2,9 @@ package com.harmonycloud.zeus.service.dashboard.impl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.dashboard.redis.ScanResult;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.dashboard.redis.ScanResult;
 import com.harmonycloud.zeus.integration.dashboard.RedisClient;
 import com.harmonycloud.zeus.service.dashboard.RedisKVService;
 import com.harmonycloud.zeus.util.K8sServiceNameUtil;
@@ -12,11 +12,6 @@ import com.harmonycloud.zeus.util.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author liyinlong

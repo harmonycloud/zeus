@@ -5,13 +5,12 @@ import java.util.List;
 import java.util.Map;
 
 import com.github.pagehelper.PageInfo;
-import com.harmonycloud.caas.common.model.dashboard.mysql.QueryInfo;
+import com.middleware.caas.common.model.dashboard.*;
+import com.middleware.caas.common.model.dashboard.mysql.QueryInfo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.dashboard.*;
+import com.middleware.caas.common.base.BaseResult;
 import com.harmonycloud.zeus.service.dashboard.PostgresqlDashboardService;
 
 import io.swagger.annotations.Api;
@@ -19,7 +18,6 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
@@ -44,10 +42,10 @@ public class PostgresqlDashboardController {
     })
     @PostMapping("/databases/{databaseName}/sql")
     public BaseResult<ExecuteSqlDto> executeSql(@PathVariable("clusterId") String clusterId,
-                                                      @PathVariable("namespace") String namespace,
-                                                      @PathVariable("name") String name,
-                                                      @PathVariable("databaseName") String databaseName,
-                                                      @RequestParam("sql") String sql) {
+                                                @PathVariable("namespace") String namespace,
+                                                @PathVariable("name") String name,
+                                                @PathVariable("databaseName") String databaseName,
+                                                @RequestParam("sql") String sql) {
         return BaseResult.ok(postgresqlDashboardService.executeSql(clusterId, namespace, name, databaseName, sql));
     }
 
@@ -153,9 +151,9 @@ public class PostgresqlDashboardController {
     })
     @GetMapping("/databases/{databaseName}/schemas")
     public BaseResult<List<SchemaDto>> listSchema(@PathVariable("clusterId") String clusterId,
-                                 @PathVariable("namespace") String namespace,
-                                 @PathVariable("name") String name,
-                                 @PathVariable("databaseName") String databaseName) {
+                                                  @PathVariable("namespace") String namespace,
+                                                  @PathVariable("name") String name,
+                                                  @PathVariable("databaseName") String databaseName) {
         return BaseResult.ok(postgresqlDashboardService.listSchemas(clusterId, namespace, name, databaseName));
     }
 
@@ -244,10 +242,10 @@ public class PostgresqlDashboardController {
     })
     @GetMapping("/databases/{databaseName}/schemas/{schemaName}/tables")
     public BaseResult<List<TableDto>> listTables(@PathVariable("clusterId") String clusterId,
-                                 @PathVariable("namespace") String namespace,
-                                 @PathVariable("name") String name,
-                                 @PathVariable("databaseName") String databaseName,
-                                 @PathVariable("schemaName") String schemaName) {
+                                                 @PathVariable("namespace") String namespace,
+                                                 @PathVariable("name") String name,
+                                                 @PathVariable("databaseName") String databaseName,
+                                                 @PathVariable("schemaName") String schemaName) {
         return BaseResult.ok(postgresqlDashboardService.listTables(clusterId, namespace, name, databaseName, schemaName));
     }
 

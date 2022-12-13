@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.skyviewservice;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.base.CaasResult;
+import com.middleware.caas.common.base.CaasResult;
 
 /**
  * @author xutianhong

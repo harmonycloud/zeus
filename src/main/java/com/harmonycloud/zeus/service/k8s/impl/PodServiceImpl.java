@@ -2,20 +2,20 @@ package com.harmonycloud.zeus.service.k8s.impl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.constants.DateStyle;
-import com.harmonycloud.caas.common.enums.DictEnum;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.ContainerWithStatus;
-import com.harmonycloud.caas.common.model.Node;
-import com.harmonycloud.caas.common.model.StorageClassDTO;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareQuota;
-import com.harmonycloud.caas.common.model.middleware.PodInfo;
-import com.harmonycloud.caas.common.model.middleware.PodInfoGroup;
-import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.middleware.caas.common.constants.DateStyle;
+import com.middleware.caas.common.enums.DictEnum;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.caas.common.enums.middleware.ResourceUnitEnum;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.ContainerWithStatus;
+import com.middleware.caas.common.model.Node;
+import com.middleware.caas.common.model.StorageClassDTO;
+import com.middleware.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.model.middleware.MiddlewareQuota;
+import com.middleware.caas.common.model.middleware.PodInfo;
+import com.middleware.caas.common.model.middleware.PodInfoGroup;
+import com.middleware.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.bean.BeanActiveArea;
 import com.harmonycloud.zeus.integration.cluster.PodWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
@@ -46,10 +46,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.CPU;
-import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
+import static com.middleware.caas.common.constants.NameConstant.CPU;
+import static com.middleware.caas.common.constants.NameConstant.MEMORY;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
 /**
  * @author dengyulong

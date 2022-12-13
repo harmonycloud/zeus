@@ -1,8 +1,8 @@
 package com.harmonycloud.zeus.util;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.model.SendResult;
-import com.harmonycloud.caas.common.model.TextMessage;
+import com.middleware.caas.common.model.SendResult;
+import com.middleware.caas.common.model.TextMessage;
 import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.commons.net.smtp.SMTPReply;
 import org.apache.http.HttpResponse;

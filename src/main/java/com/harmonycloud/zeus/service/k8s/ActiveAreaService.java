@@ -1,8 +1,8 @@
 package com.harmonycloud.zeus.service.k8s;
 
-import com.harmonycloud.caas.common.model.ActiveAreaDto;
-import com.harmonycloud.caas.common.model.ActivePoolDto;
-import com.harmonycloud.caas.common.model.ClusterNodeResourceDto;
+import com.middleware.caas.common.model.ActiveAreaDto;
+import com.middleware.caas.common.model.ActivePoolDto;
+import com.middleware.caas.common.model.ClusterNodeResourceDto;
 import com.harmonycloud.zeus.bean.BeanActiveArea;
 
 import java.util.List;

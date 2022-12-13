@@ -1,12 +1,11 @@
 package com.harmonycloud.zeus.service.user;
 
-import com.harmonycloud.caas.common.model.DingRobotDTO;
-import com.harmonycloud.caas.common.model.SendResult;
-import com.harmonycloud.caas.common.model.middleware.AlertInfoDto;
+import com.middleware.caas.common.model.DingRobotDTO;
+import com.middleware.caas.common.model.SendResult;
+import com.middleware.caas.common.model.middleware.AlertInfoDto;
 import com.harmonycloud.zeus.bean.DingRobotInfo;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;

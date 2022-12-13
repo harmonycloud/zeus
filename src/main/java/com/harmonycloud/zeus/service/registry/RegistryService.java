@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.service.registry;
 
-import com.harmonycloud.caas.common.model.middleware.Registry;
+import com.middleware.caas.common.model.middleware.Registry;
 
 /**
  * @author dengyulong

@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.controller.middleware;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.middleware.QuestionYaml;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.middleware.QuestionYaml;
 import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.middleware.MiddlewareDynamicFormService;
 import io.swagger.annotations.Api;

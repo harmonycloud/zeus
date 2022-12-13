@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.service.prometheus;
 
-import com.harmonycloud.caas.common.model.PrometheusResponse;
+import com.middleware.caas.common.model.PrometheusResponse;
 
 import java.util.Map;
 

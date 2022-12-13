@@ -1,17 +1,14 @@
 package com.harmonycloud.zeus.service.mysql.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.constants.MysqlConstant;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.MysqlPrivilegeEnum;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.MysqlAccessInfo;
-import com.harmonycloud.caas.common.model.MysqlDbPrivilege;
-import com.harmonycloud.caas.common.model.MysqlUserDTO;
-import com.harmonycloud.caas.common.model.MysqlUserDetail;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.constants.MysqlConstant;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.enums.MysqlPrivilegeEnum;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.MysqlAccessInfo;
+import com.middleware.caas.common.model.MysqlDbPrivilege;
+import com.middleware.caas.common.model.MysqlUserDTO;
+import com.middleware.caas.common.model.MysqlUserDetail;
 import com.harmonycloud.zeus.bean.BeanMysqlDbPriv;
 import com.harmonycloud.zeus.bean.BeanMysqlUser;
 import com.harmonycloud.zeus.dao.BeanMysqlUserMapper;
@@ -38,7 +35,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ROOT;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.ROOT;
 import static com.harmonycloud.zeus.util.MysqlConnectionUtil.*;
 
 /**

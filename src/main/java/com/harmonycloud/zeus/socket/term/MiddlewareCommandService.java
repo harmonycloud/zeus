@@ -1,14 +1,13 @@
 package com.harmonycloud.zeus.socket.term;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.zeus.service.k8s.ClusterService;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ARGS;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MYSQL_ARGS;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.ARGS;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MYSQL_ARGS;
 
 /**
  * @author xutianhong

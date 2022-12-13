@@ -1,17 +1,16 @@
 package com.harmonycloud.zeus.controller.k8s;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.IngressComponentDto;
-import com.harmonycloud.caas.common.model.middleware.IngressDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareValues;
-import com.harmonycloud.caas.common.model.middleware.PodInfo;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.IngressComponentDto;
+import com.middleware.caas.common.model.middleware.IngressDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareValues;
+import com.middleware.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.service.k8s.IngressComponentService;
 import com.harmonycloud.zeus.service.k8s.NodeService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
-import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

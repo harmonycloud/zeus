@@ -1,11 +1,10 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.YamlCheck;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.YamlCheck;
 import com.harmonycloud.zeus.integration.cluster.ConfigMapWrapper;
 import com.harmonycloud.zeus.service.k8s.YamlService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareConfigYamlService;

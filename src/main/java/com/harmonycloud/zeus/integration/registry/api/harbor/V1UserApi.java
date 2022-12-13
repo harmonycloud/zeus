@@ -1,13 +1,13 @@
 package com.harmonycloud.zeus.integration.registry.api.harbor;
 
 import com.harmonycloud.zeus.integration.registry.bean.harbor.V1CurrentUser;
-import com.harmonycloud.tool.api.AbstractApi;
-import com.harmonycloud.tool.api.client.BaseClient;
-import com.harmonycloud.tool.api.common.ApiException;
+import com.middleware.tool.api.AbstractApi;
+import com.middleware.tool.api.client.BaseClient;
+import com.middleware.tool.api.common.ApiException;
 import okhttp3.Call;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.ADMIN;
-import static com.harmonycloud.tool.api.util.HttpMethod.GET;
+import static com.middleware.caas.common.constants.NameConstant.ADMIN;
+import static com.middleware.tool.api.util.HttpMethod.GET;
 
 /**
  * @author dengyulong

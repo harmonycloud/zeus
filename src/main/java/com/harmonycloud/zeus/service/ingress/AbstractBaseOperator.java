@@ -2,16 +2,16 @@ package com.harmonycloud.zeus.service.ingress;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.ClusterComponentsDto;
-import com.harmonycloud.caas.common.model.IngressComponentDto;
-import com.harmonycloud.caas.common.model.middleware.ImageRepositoryDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareValues;
-import com.harmonycloud.caas.common.model.middleware.PodInfo;
-import com.harmonycloud.tool.cmd.CmdExecUtil;
-import com.harmonycloud.tool.file.FileUtil;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.ClusterComponentsDto;
+import com.middleware.caas.common.model.IngressComponentDto;
+import com.middleware.caas.common.model.middleware.ImageRepositoryDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareValues;
+import com.middleware.caas.common.model.middleware.PodInfo;
+import com.middleware.tool.cmd.CmdExecUtil;
+import com.middleware.tool.file.FileUtil;
 import com.harmonycloud.zeus.bean.BeanClusterComponents;
 import com.harmonycloud.zeus.bean.BeanIngressComponents;
 import com.harmonycloud.zeus.dao.BeanClusterComponentsMapper;
@@ -36,7 +36,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.function.Function;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.*;
+import static com.middleware.caas.common.constants.CommonConstant.*;
 
 /**
  * @description

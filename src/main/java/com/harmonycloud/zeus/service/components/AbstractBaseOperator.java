@@ -1,13 +1,12 @@
 package com.harmonycloud.zeus.service.components;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.enums.ComponentsEnum;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.ClusterComponentsDto;
-import com.harmonycloud.caas.common.model.middleware.ImageRepositoryDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.PodInfo;
+import com.middleware.caas.common.enums.ComponentsEnum;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.ClusterComponentsDto;
+import com.middleware.caas.common.model.middleware.ImageRepositoryDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.bean.BeanClusterComponents;
 import com.harmonycloud.zeus.dao.BeanClusterComponentsMapper;
 import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
@@ -23,7 +22,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.*;
+import static com.middleware.caas.common.constants.CommonConstant.*;
 
 /**
  * @author xutianhong

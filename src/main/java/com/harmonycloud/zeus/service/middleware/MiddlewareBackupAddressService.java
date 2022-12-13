@@ -1,9 +1,6 @@
 package com.harmonycloud.zeus.service.middleware;
 
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.extension.service.IService;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterBackupAddressDTO;
-import com.harmonycloud.zeus.bean.BeanMiddlewareBackupAddress;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterBackupAddressDTO;
 
 import java.util.List;
 

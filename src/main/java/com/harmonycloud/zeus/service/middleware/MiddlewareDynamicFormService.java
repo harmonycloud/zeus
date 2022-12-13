@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.service.middleware;
 
-import com.harmonycloud.caas.common.model.middleware.QuestionYaml;
+import com.middleware.caas.common.model.middleware.QuestionYaml;
 
 /**
  * @author xutianhong

@@ -3,8 +3,8 @@ package com.harmonycloud.zeus.controller.middleware;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareInfoDTO;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.middleware.MiddlewareInfoDTO;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 
 import io.swagger.annotations.Api;

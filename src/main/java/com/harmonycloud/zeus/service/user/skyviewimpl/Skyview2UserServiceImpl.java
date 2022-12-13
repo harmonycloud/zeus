@@ -2,12 +2,11 @@ package com.harmonycloud.zeus.service.user.skyviewimpl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.base.CaasResult;
-import com.harmonycloud.caas.common.model.ProjectDTO;
-import com.harmonycloud.caas.common.model.user.RoleDto;
-import com.harmonycloud.caas.common.model.user.UserDto;
-import com.harmonycloud.caas.common.model.user.UserRole;
+import com.middleware.caas.common.base.CaasResult;
+import com.middleware.caas.common.model.ProjectDTO;
+import com.middleware.caas.common.model.user.RoleDto;
+import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.caas.common.model.user.UserRole;
 import com.harmonycloud.zeus.bean.user.BeanUserRole;
 import com.harmonycloud.zeus.service.user.ProjectService;
 import com.harmonycloud.zeus.service.user.RoleService;

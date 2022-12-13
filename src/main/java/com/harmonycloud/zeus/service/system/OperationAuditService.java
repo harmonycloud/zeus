@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.service.system;
 
-import com.harmonycloud.caas.common.base.BaseResult;
+import com.middleware.caas.common.base.BaseResult;
 import com.harmonycloud.zeus.bean.BeanOperationAudit;
 import com.harmonycloud.zeus.bean.OperationAuditQueryDto;
 

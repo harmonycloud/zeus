@@ -2,13 +2,13 @@ package com.harmonycloud.zeus.controller.middleware;
 
 import java.util.List;
 
-import com.harmonycloud.caas.common.model.middleware.CustomConfig;
+import com.middleware.caas.common.model.middleware.CustomConfig;
 import com.harmonycloud.zeus.annotation.Authority;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.middleware.CustomConfigTemplateDTO;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.middleware.CustomConfigTemplateDTO;
 import com.harmonycloud.zeus.service.middleware.ConfigTemplateService;
 
 import io.swagger.annotations.Api;

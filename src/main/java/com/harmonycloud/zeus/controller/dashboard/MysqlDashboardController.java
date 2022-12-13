@@ -1,12 +1,12 @@
 package com.harmonycloud.zeus.controller.dashboard;
 
 import com.github.pagehelper.PageInfo;
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.dashboard.ExecResult;
-import com.harmonycloud.caas.common.model.dashboard.mysql.*;
-import com.harmonycloud.caas.common.model.middleware.MysqlLogDTO;
-import com.harmonycloud.caas.common.model.middleware.MysqlLogQuery;
-import com.harmonycloud.tool.page.PageObject;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.dashboard.ExecResult;
+import com.middleware.caas.common.model.dashboard.mysql.*;
+import com.middleware.caas.common.model.middleware.MysqlLogDTO;
+import com.middleware.caas.common.model.middleware.MysqlLogQuery;
+import com.middleware.tool.page.PageObject;
 import com.harmonycloud.zeus.service.dashboard.MysqlDashboardService;
 import com.harmonycloud.zeus.service.middleware.MysqlService;
 import io.swagger.annotations.Api;
@@ -81,8 +81,8 @@ public class MysqlDashboardController {
     })
     @GetMapping("/databases")
     public BaseResult<List<DatabaseDto>> listDatabase(@PathVariable("clusterId") String clusterId,
-                                   @PathVariable("namespace") String namespace,
-                                   @PathVariable("middlewareName") String middlewareName) {
+                                                      @PathVariable("namespace") String namespace,
+                                                      @PathVariable("middlewareName") String middlewareName) {
         return BaseResult.ok(mysqlDashboardService.listDatabases(clusterId, namespace, middlewareName));
     }
 
@@ -143,8 +143,8 @@ public class MysqlDashboardController {
     })
     @GetMapping("/engines")
     public BaseResult<List<MysqlEngineDto>> listEngines(@PathVariable("clusterId") String clusterId,
-                                                @PathVariable("namespace") String namespace,
-                                                @PathVariable("middlewareName") String middlewareName) {
+                                                        @PathVariable("namespace") String namespace,
+                                                        @PathVariable("middlewareName") String middlewareName) {
         return BaseResult.ok(mysqlDashboardService.listEngines(clusterId, namespace, middlewareName));
     }
 
@@ -395,9 +395,9 @@ public class MysqlDashboardController {
     })
     @GetMapping("/users")
     public BaseResult<List<UserDto>> listUser(@PathVariable("clusterId") String clusterId,
-                                           @PathVariable("namespace") String namespace,
-                                           @PathVariable("middlewareName") String middlewareName,
-                                           @RequestParam(value = "keyword", defaultValue = "") String keyword) {
+                                              @PathVariable("namespace") String namespace,
+                                              @PathVariable("middlewareName") String middlewareName,
+                                              @RequestParam(value = "keyword", defaultValue = "") String keyword) {
         return BaseResult.ok(mysqlDashboardService.listUser(clusterId, namespace, middlewareName, keyword));
     }
 

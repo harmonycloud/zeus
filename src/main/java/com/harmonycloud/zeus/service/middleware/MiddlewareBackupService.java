@@ -1,11 +1,8 @@
 package com.harmonycloud.zeus.service.middleware;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
-import com.harmonycloud.caas.common.model.MiddlewareBackupScheduleConfig;
-import com.harmonycloud.caas.common.model.MiddlewareIncBackupDto;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupNameDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
+import com.middleware.caas.common.model.MiddlewareBackupDTO;
+import com.middleware.caas.common.model.MiddlewareIncBackupDto;
+import com.middleware.caas.common.model.middleware.MiddlewareBackupRecord;
 
 import java.util.List;
 

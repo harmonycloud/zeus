@@ -2,20 +2,20 @@ package com.harmonycloud.zeus.service.log.impl;
 
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.enums.*;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.exception.CaasRuntimeException;
-import com.harmonycloud.caas.common.model.middleware.LogQuery;
-import com.harmonycloud.caas.common.model.middleware.LogQueryDto;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.enums.*;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.exception.CaasRuntimeException;
+import com.middleware.caas.common.model.middleware.LogQuery;
+import com.middleware.caas.common.model.middleware.LogQueryDto;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.zeus.bean.BeanLogMsg;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.log.LogService;
 import com.harmonycloud.zeus.service.middleware.EsService;
 import com.harmonycloud.zeus.util.AssertUtil;
 import com.harmonycloud.zeus.util.DateUtil;
-import com.harmonycloud.tool.date.DateUtils;
+import com.middleware.tool.date.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.ConnectionClosedException;
@@ -49,7 +49,7 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.*;
+import static com.middleware.caas.common.constants.CommonConstant.*;
 
 /**
  * @description 日志service实现类

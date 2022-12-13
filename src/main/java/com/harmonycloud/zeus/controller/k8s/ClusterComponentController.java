@@ -5,10 +5,9 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.ClusterComponentsDto;
-import com.harmonycloud.caas.common.model.MultipleComponentsInstallDto;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.ClusterComponentsDto;
+import com.middleware.caas.common.model.MultipleComponentsInstallDto;
 import com.harmonycloud.zeus.service.k8s.ClusterComponentService;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 

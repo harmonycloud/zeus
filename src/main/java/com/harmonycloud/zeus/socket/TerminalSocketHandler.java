@@ -14,8 +14,8 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.harmonycloud.caas.common.constants.NameConstant;
-import com.harmonycloud.caas.common.model.middleware.LogQueryDto;
+import com.middleware.caas.common.constants.NameConstant;
+import com.middleware.caas.common.model.middleware.LogQueryDto;
 import com.harmonycloud.caas.filters.user.CurrentUser;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.zeus.socket.term.TerminalService;

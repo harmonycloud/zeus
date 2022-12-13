@@ -1,16 +1,11 @@
 package com.harmonycloud.zeus.service.mysql;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.MysqlDbDTO;
-import com.harmonycloud.caas.common.model.MysqlDbDetail;
-import com.harmonycloud.caas.common.model.MysqlDbPrivilege;
-import com.harmonycloud.caas.common.model.MysqlUserDetail;
+import com.middleware.caas.common.model.MysqlDbDTO;
+import com.middleware.caas.common.model.MysqlDbDetail;
+import com.middleware.caas.common.model.MysqlDbPrivilege;
 import com.harmonycloud.zeus.bean.BeanMysqlDb;
-import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.handlers.BeanHandler;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 
 /**

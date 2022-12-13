@@ -3,7 +3,7 @@ package com.harmonycloud.zeus.service.k8s;
 import java.util.List;
 import java.util.Map;
 
-import com.harmonycloud.caas.common.model.middleware.Namespace;
+import com.middleware.caas.common.model.middleware.Namespace;
 
 /**
  * @author dengyulong

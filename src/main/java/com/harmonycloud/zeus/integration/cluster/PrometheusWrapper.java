@@ -2,9 +2,9 @@ package com.harmonycloud.zeus.integration.cluster;
 
 import java.util.Map;
 
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.ClusterComponentsDto;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.zeus.integration.cluster.api.PrometheusApi;
 import com.harmonycloud.zeus.integration.cluster.client.PrometheusClient;
 import com.harmonycloud.zeus.service.k8s.ClusterComponentService;
@@ -14,15 +14,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.harmonycloud.caas.common.enums.Protocol;
-import com.harmonycloud.caas.common.model.PrometheusRulesResponse;
-import com.harmonycloud.caas.common.model.PrometheusResponse;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterMonitorInfo;
+import com.middleware.caas.common.enums.Protocol;
+import com.middleware.caas.common.model.PrometheusRulesResponse;
+import com.middleware.caas.common.model.PrometheusResponse;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterMonitorInfo;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import org.springframework.util.CollectionUtils;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.ADMIN;
+import static com.middleware.caas.common.constants.NameConstant.ADMIN;
 
 /**
  * @author xutianhong

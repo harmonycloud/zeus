@@ -1,10 +1,10 @@
 package com.harmonycloud.zeus.controller.middleware;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.AlertDTO;
-import com.harmonycloud.caas.common.model.middleware.ClusterQuotaDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareBriefInfoDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareOperatorDTO;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.AlertDTO;
+import com.middleware.caas.common.model.middleware.ClusterQuotaDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareBriefInfoDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareOperatorDTO;
 import com.harmonycloud.zeus.bean.AlertMessageDTO;
 import com.harmonycloud.zeus.bean.BeanOperationAudit;
 import com.harmonycloud.zeus.bean.PlatformOverviewDTO;

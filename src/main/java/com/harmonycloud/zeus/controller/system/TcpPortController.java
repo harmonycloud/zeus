@@ -1,7 +1,6 @@
 package com.harmonycloud.zeus.controller.system;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.LdapConfigDto;
+import com.middleware.caas.common.base.BaseResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Value;

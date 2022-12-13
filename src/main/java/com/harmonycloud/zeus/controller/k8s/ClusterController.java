@@ -9,13 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.ClusterNamespaceResourceDto;
-import com.harmonycloud.caas.common.model.ClusterNodeResourceDto;
-import com.harmonycloud.caas.common.model.middleware.ClusterQuotaDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
-import com.harmonycloud.caas.common.model.middleware.Registry;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.ClusterNamespaceResourceDto;
+import com.middleware.caas.common.model.ClusterNodeResourceDto;
+import com.middleware.caas.common.model.middleware.ClusterQuotaDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareResourceInfo;
+import com.middleware.caas.common.model.middleware.Registry;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 
 import io.swagger.annotations.Api;

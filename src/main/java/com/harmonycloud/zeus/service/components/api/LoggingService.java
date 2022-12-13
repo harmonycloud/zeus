@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.service.components.api;
 
-import com.harmonycloud.caas.common.model.ClusterComponentsDto;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.model.ClusterComponentsDto;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.zeus.service.components.BaseComponentsService;
 
 /**

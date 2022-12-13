@@ -1,12 +1,12 @@
 package com.harmonycloud.zeus.service.middleware;
 
 import com.github.pagehelper.PageInfo;
-import com.harmonycloud.caas.common.model.AlertDTO;
-import com.harmonycloud.caas.common.model.MiddlewareDTO;
-import com.harmonycloud.caas.common.model.middleware.*;
+import com.middleware.caas.common.model.AlertDTO;
+import com.middleware.caas.common.model.MiddlewareDTO;
 import com.harmonycloud.zeus.bean.AlertMessageDTO;
 import com.harmonycloud.zeus.bean.BeanOperationAudit;
 import com.harmonycloud.zeus.bean.PlatformOverviewDTO;
+import com.middleware.caas.common.model.middleware.*;
 
 import java.util.List;
 import java.util.Map;
@@ -41,8 +41,8 @@ public interface OverviewService {
      *            结束时间
      * @return List<MiddlewareMonitorDto>
      */
-    List<MiddlewareMonitorDto> getMonitorInfo(String clusterId, String namespace, String name,String type, String startTime,
-        String endTime) throws Exception;
+    List<MiddlewareMonitorDto> getMonitorInfo(String clusterId, String namespace, String name, String type, String startTime,
+                                              String endTime) throws Exception;
 
     /**
      * 获取告警记录

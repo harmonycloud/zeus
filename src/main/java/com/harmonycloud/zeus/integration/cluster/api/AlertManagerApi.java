@@ -1,15 +1,14 @@
 package com.harmonycloud.zeus.integration.cluster.api;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.tool.api.AbstractApi;
-import com.harmonycloud.tool.api.client.BaseClient;
+import com.middleware.tool.api.AbstractApi;
+import com.middleware.tool.api.client.BaseClient;
 import okhttp3.Call;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Map;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.ADMIN;
-import static com.harmonycloud.tool.api.util.HttpMethod.POST;
+import static com.middleware.tool.api.util.HttpMethod.POST;
 
 /**
  * @author xutianhong

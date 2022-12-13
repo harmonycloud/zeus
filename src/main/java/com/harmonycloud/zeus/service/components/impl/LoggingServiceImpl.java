@@ -1,28 +1,29 @@
 package com.harmonycloud.zeus.service.components.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.enums.ComponentsEnum;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.model.ClusterComponentsDto;
-import com.harmonycloud.caas.common.model.middleware.*;
+import com.middleware.caas.common.enums.ComponentsEnum;
+import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.caas.common.model.ClusterComponentsDto;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.bean.BeanClusterComponents;
 import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
-import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.LoggingService;
-import com.harmonycloud.zeus.service.k8s.ClusterComponentService;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.EsService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareManagerService;
+import com.middleware.caas.common.model.middleware.IngressDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.model.middleware.PodInfo;
+import com.middleware.caas.common.model.middleware.ServiceDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
+import static com.middleware.caas.common.constants.CommonConstant.SIMPLE;
 
 import java.io.File;
 import java.util.ArrayList;

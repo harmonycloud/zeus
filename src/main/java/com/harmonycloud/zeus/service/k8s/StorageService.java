@@ -1,10 +1,7 @@
 package com.harmonycloud.zeus.service.k8s;
 
-import com.harmonycloud.caas.common.model.StorageDto;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareStorageInfoDto;
-import com.harmonycloud.caas.common.model.middleware.PodInfo;
+import com.middleware.caas.common.model.StorageDto;
+import com.middleware.caas.common.model.middleware.MiddlewareStorageInfoDto;
 
 import java.util.List;
 

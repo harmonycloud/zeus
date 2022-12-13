@@ -1,10 +1,10 @@
 package com.harmonycloud.zeus.util;
 
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.MysqlAccessInfo;
-import com.harmonycloud.caas.common.model.MysqlDbDTO;
-import com.harmonycloud.caas.common.model.MysqlUserDTO;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.MysqlAccessInfo;
+import com.middleware.caas.common.model.MysqlDbDTO;
+import com.middleware.caas.common.model.MysqlUserDTO;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

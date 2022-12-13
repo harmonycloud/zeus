@@ -1,14 +1,14 @@
 package com.harmonycloud.zeus.service.user.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.LdapConfigDto;
-import com.harmonycloud.caas.common.model.user.UserDto;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.LdapConfigDto;
+import com.middleware.caas.common.model.user.UserDto;
 import com.harmonycloud.caas.filters.token.JwtTokenComponent;
-import com.harmonycloud.tool.date.DateUtils;
-import com.harmonycloud.tool.encrypt.PasswordUtils;
-import com.harmonycloud.tool.encrypt.RSAUtils;
+import com.middleware.tool.date.DateUtils;
+import com.middleware.tool.encrypt.PasswordUtils;
+import com.middleware.tool.encrypt.RSAUtils;
 import com.harmonycloud.zeus.service.user.AuthManager4Ldap;
 import com.harmonycloud.zeus.service.user.AuthService;
 import com.harmonycloud.zeus.service.user.LdapService;

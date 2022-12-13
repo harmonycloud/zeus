@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.controller.system;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.LdapConfigDto;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.LdapConfigDto;
 import com.harmonycloud.zeus.service.user.LdapService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

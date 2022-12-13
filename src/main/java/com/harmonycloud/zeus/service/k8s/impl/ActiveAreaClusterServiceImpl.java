@@ -1,10 +1,9 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
-import com.harmonycloud.caas.common.model.ActiveAreaClusterDto;
+import com.middleware.caas.common.model.ActiveAreaClusterDto;
 import com.harmonycloud.zeus.service.k8s.ActiveAreaClusterService;
 import com.harmonycloud.zeus.service.k8s.ActiveAreaService;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
-import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

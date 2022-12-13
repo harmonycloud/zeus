@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.zeus.bean.BeanK8sDefaultCluster;
 import com.harmonycloud.zeus.dao.BeanK8sDefaultClusterMapper;
 import com.harmonycloud.zeus.service.k8s.K8sDefaultClusterService;

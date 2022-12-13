@@ -1,9 +1,9 @@
 package com.harmonycloud.zeus.service.registry.impl;
 
-import static com.harmonycloud.caas.common.constants.CommonConstant.RESOURCE_ALREADY_EXISTED;
-import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
-import static com.harmonycloud.caas.common.constants.registry.HelmChartConstant.*;
-import static com.harmonycloud.caas.common.constants.MirrorImageConstant.*;
+import static com.middleware.caas.common.constants.CommonConstant.RESOURCE_ALREADY_EXISTED;
+import static com.middleware.caas.common.constants.CommonConstant.SIMPLE;
+import static com.middleware.caas.common.constants.registry.HelmChartConstant.*;
+import static com.middleware.caas.common.constants.MirrorImageConstant.*;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.harmonycloud.caas.common.model.middleware.*;
+import com.middleware.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.bean.BeanImageRepository;
 import com.harmonycloud.zeus.integration.registry.HelmChartWrapper;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
@@ -23,8 +23,7 @@ import com.harmonycloud.zeus.service.middleware.ImageRepositoryService;
 import com.harmonycloud.zeus.service.registry.AbstractRegistryService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.YamlUtil;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import org.apache.commons.io.FileUtils;
+import com.middleware.caas.common.model.middleware.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,19 +33,19 @@ import org.springframework.util.ObjectUtils;
 import org.yaml.snakeyaml.Yaml;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.registry.RegistryType;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.exception.CaasRuntimeException;
-import com.harmonycloud.caas.common.model.registry.HelmChartFile;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.enums.registry.RegistryType;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.exception.CaasRuntimeException;
+import com.middleware.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.service.k8s.ClusterCertService;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
-import com.harmonycloud.tool.cmd.CmdExecUtil;
-import com.harmonycloud.tool.cmd.HelmChartUtil;
-import com.harmonycloud.tool.file.FileUtil;
+import com.middleware.tool.cmd.CmdExecUtil;
+import com.middleware.tool.cmd.HelmChartUtil;
+import com.middleware.tool.file.FileUtil;
 
 import lombok.extern.slf4j.Slf4j;
 

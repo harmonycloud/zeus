@@ -1,15 +1,11 @@
 package com.harmonycloud.zeus.controller.user;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
-import com.harmonycloud.caas.common.model.middleware.Namespace;
-import com.harmonycloud.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
-import com.harmonycloud.caas.common.model.user.ProjectDto;
-import com.harmonycloud.caas.common.model.user.UserDto;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.model.middleware.Namespace;
+import com.middleware.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
+import com.middleware.caas.common.model.user.ProjectDto;
+import com.middleware.caas.common.model.user.UserDto;
 import com.harmonycloud.zeus.service.user.ProjectService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -17,11 +13,9 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author xutianhong

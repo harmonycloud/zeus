@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.operator.miiddleware;
 
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.caas.common.model.middleware.Middleware;
 import com.harmonycloud.zeus.operator.AbstractBaseOperator;
 
 /**

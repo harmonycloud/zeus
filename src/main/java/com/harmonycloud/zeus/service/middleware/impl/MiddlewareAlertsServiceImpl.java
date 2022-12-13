@@ -6,17 +6,17 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.pagehelper.PageInfo;
-import com.harmonycloud.caas.common.constants.NameConstant;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.exception.CaasRuntimeException;
-import com.harmonycloud.caas.common.model.*;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareAlertsDTO;
-import com.harmonycloud.caas.common.model.registry.HelmChartFile;
-import com.harmonycloud.caas.common.model.user.UserDto;
-import com.harmonycloud.tool.date.DateUtils;
-import com.harmonycloud.tool.uuid.UUIDUtils;
+import com.middleware.caas.common.constants.NameConstant;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.caas.common.exception.CaasRuntimeException;
+import com.middleware.caas.common.model.*;
+import com.middleware.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.model.middleware.MiddlewareAlertsDTO;
+import com.middleware.caas.common.model.registry.HelmChartFile;
+import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.tool.date.DateUtils;
+import com.middleware.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.bean.AlertRuleId;
 import com.harmonycloud.zeus.bean.BeanAlertRule;
 import com.harmonycloud.zeus.bean.BeanAlertSetting;
@@ -50,7 +50,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.harmonycloud.caas.common.constants.AlertConstant.*;
+import static com.middleware.caas.common.constants.AlertConstant.*;
 
 /**
  * @author xutianhong

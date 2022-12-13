@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.service.k8s;
 
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.PodInfo;
+import com.middleware.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 
 import java.util.List;

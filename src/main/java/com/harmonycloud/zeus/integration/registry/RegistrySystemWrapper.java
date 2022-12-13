@@ -2,12 +2,12 @@ package com.harmonycloud.zeus.integration.registry;
 
 import org.springframework.stereotype.Component;
 
-import com.harmonycloud.caas.common.model.middleware.Registry;
+import com.middleware.caas.common.model.middleware.Registry;
 import com.harmonycloud.zeus.integration.registry.api.harbor.V1SystemApi;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.V1SystemInfo;
 import com.harmonycloud.zeus.integration.registry.client.RegistryClientFactory;
 import com.harmonycloud.zeus.util.ExceptionUtils;
-import com.harmonycloud.tool.api.common.ApiException;
+import com.middleware.tool.api.common.ApiException;
 
 /**
  * @author dengyulong

@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.util;
 
-import com.harmonycloud.caas.common.base.CaasResult;
-import com.harmonycloud.caas.common.enums.CaasErrorMessage;
+import com.middleware.caas.common.base.CaasResult;
+import com.middleware.caas.common.enums.CaasErrorMessage;
 
 /**
  * @author liyinlong

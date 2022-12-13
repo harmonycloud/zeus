@@ -1,10 +1,9 @@
 package com.harmonycloud.zeus.service.k8s;
 
-import com.harmonycloud.caas.common.model.IngressComponentDto;
-import com.harmonycloud.caas.common.model.middleware.IngressDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareValues;
-import com.harmonycloud.caas.common.model.middleware.PodInfo;
+import com.middleware.caas.common.model.IngressComponentDto;
+import com.middleware.caas.common.model.middleware.IngressDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareValues;
+import com.middleware.caas.common.model.middleware.PodInfo;
 
 import java.util.List;
 

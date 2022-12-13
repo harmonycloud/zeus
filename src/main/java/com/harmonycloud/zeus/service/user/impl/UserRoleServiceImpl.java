@@ -5,10 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.harmonycloud.caas.common.model.user.RoleDto;
+import com.middleware.caas.common.model.user.RoleDto;
 import com.harmonycloud.zeus.bean.user.*;
 import com.harmonycloud.zeus.dao.user.BeanProjectMapper;
-import com.harmonycloud.zeus.service.user.RoleAuthorityService;
 import com.harmonycloud.zeus.service.user.RoleService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
 import org.apache.commons.lang3.StringUtils;
@@ -19,10 +18,10 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.user.UserDto;
-import com.harmonycloud.caas.common.model.user.UserRole;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.caas.common.model.user.UserRole;
 import com.harmonycloud.zeus.dao.user.BeanUserRoleMapper;
 
 /**

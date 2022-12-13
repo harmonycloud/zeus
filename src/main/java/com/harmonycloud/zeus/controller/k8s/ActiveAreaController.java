@@ -1,9 +1,8 @@
 package com.harmonycloud.zeus.controller.k8s;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.ActiveAreaDto;
-import com.harmonycloud.caas.common.model.ActivePoolDto;
-import com.harmonycloud.caas.common.model.ClusterNodeResourceDto;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.ActiveAreaDto;
+import com.middleware.caas.common.model.ClusterNodeResourceDto;
 import com.harmonycloud.zeus.service.k8s.ActiveAreaService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;

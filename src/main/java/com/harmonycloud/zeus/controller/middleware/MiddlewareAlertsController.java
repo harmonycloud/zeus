@@ -1,10 +1,10 @@
 package com.harmonycloud.zeus.controller.middleware;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.AlertSettingDTO;
-import com.harmonycloud.caas.common.model.AlertUserDTO;
-import com.harmonycloud.caas.common.model.AlertsUserDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareAlertsDTO;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.AlertSettingDTO;
+import com.middleware.caas.common.model.AlertUserDTO;
+import com.middleware.caas.common.model.AlertsUserDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareAlertsDTO;
 import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.middleware.MiddlewareAlertsService;
 import io.swagger.annotations.Api;

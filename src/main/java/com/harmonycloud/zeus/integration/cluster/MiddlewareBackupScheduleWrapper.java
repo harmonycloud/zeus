@@ -12,7 +12,7 @@ import org.springframework.util.CollectionUtils;
 import java.io.IOException;
 import java.util.Map;
 
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
 
 /**
  * @description 中间件备份

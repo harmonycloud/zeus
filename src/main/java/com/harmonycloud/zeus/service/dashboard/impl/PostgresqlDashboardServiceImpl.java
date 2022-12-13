@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.middleware.caas.common.model.dashboard.*;
+import com.middleware.caas.common.model.dashboard.mysql.ColumnDto;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,16 +21,15 @@ import org.springframework.util.CollectionUtils;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.dtflys.forest.http.ForestResponse;
-import com.harmonycloud.caas.common.enums.EncodingEnum;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.enums.PostgresqlPrivilegeEnum;
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.enums.middleware.PostgresqlCollateEnum;
-import com.harmonycloud.caas.common.enums.middleware.PostgresqlDataTypeEnum;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.dashboard.*;
-import com.harmonycloud.caas.common.model.dashboard.mysql.QueryInfo;
-import com.harmonycloud.caas.common.model.middleware.ServicePortDTO;
+import com.middleware.caas.common.enums.EncodingEnum;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.enums.PostgresqlPrivilegeEnum;
+import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.caas.common.enums.middleware.PostgresqlCollateEnum;
+import com.middleware.caas.common.enums.middleware.PostgresqlDataTypeEnum;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.dashboard.mysql.QueryInfo;
+import com.middleware.caas.common.model.middleware.ServicePortDTO;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.bean.BeanSqlExecuteRecord;
 import com.harmonycloud.zeus.integration.dashboard.PostgresqlClient;
@@ -41,8 +42,8 @@ import com.harmonycloud.zeus.util.PostgresqlAuthorityUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.harmonycloud.caas.common.constants.middleware.PostgresqlDashboardConstant.TEMPLATE0;
-import static com.harmonycloud.caas.common.constants.middleware.PostgresqlDashboardConstant.TEMPLATE1;
+import static com.middleware.caas.common.constants.middleware.PostgresqlDashboardConstant.TEMPLATE0;
+import static com.middleware.caas.common.constants.middleware.PostgresqlDashboardConstant.TEMPLATE1;
 
 /**
  * @author xutianhong
@@ -477,7 +478,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         Map<String, String> columnComment = new HashMap<>();
         StringBuilder pk = new StringBuilder();
         // 构造column sql语句
-        for (ColumnDto columnDto : tableDto.getColumnDtoList()) {
+        for (com.middleware.caas.common.model.dashboard.ColumnDto columnDto : tableDto.getColumnDtoList()) {
             if (columnDto.getPrimaryKey() != null && columnDto.getPrimaryKey()) {
                 pk.append(columnDto.getColumn()).append(",");
             }
@@ -658,7 +659,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         StringBuilder sb = new StringBuilder();
         sb.append("create table ").append(tableDto.getTableName()).append(" (\n");
         for (int i = 0; i < tableDto.getColumnDtoList().size(); ++i) {
-            ColumnDto columnDto = tableDto.getColumnDtoList().get(i);
+            com.middleware.caas.common.model.dashboard.ColumnDto columnDto = tableDto.getColumnDtoList().get(i);
             sb.append(columnDto.getColumn()).append(" ").append(columnDto.getDataType());
             if (StringUtils.isNotEmpty(columnDto.getSize()) && !"0".equals(columnDto.getSize())) {
                 sb.append("(").append(columnDto.getSize()).append(")");
@@ -687,11 +688,11 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     public void getTableExcel(String clusterId, String namespace, String middlewareName, String databaseName,
         String schemaName, String tableName, HttpServletResponse response) {
         try {
-            List<ColumnDto> columnDtoList =
+            List<com.middleware.caas.common.model.dashboard.ColumnDto> columnDtoList =
                 listColumns(clusterId, namespace, middlewareName, databaseName, schemaName, tableName);
             ExcelUtil.createTableExcel(uploadPath, tableName, columnDtoList.stream().map(columnDto -> {
-                com.harmonycloud.caas.common.model.dashboard.mysql.ColumnDto column =
-                    new com.harmonycloud.caas.common.model.dashboard.mysql.ColumnDto();
+                ColumnDto column =
+                    new ColumnDto();
                 BeanUtils.copyProperties(columnDto, column);
                 column.setColumnDefault(columnDto.getDefaultValue());
                 return column;
@@ -705,14 +706,14 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     @Override
-    public List<ColumnDto> listColumns(String clusterId, String namespace, String middlewareName, String databaseName,
-        String schemaName, String table) {
+    public List<com.middleware.caas.common.model.dashboard.ColumnDto> listColumns(String clusterId, String namespace, String middlewareName, String databaseName,
+                                                                                  String schemaName, String table) {
         String path = getPath(middlewareName, namespace);
         setPort(clusterId, namespace, middlewareName);
         JSONObject listColumns = postgresqlClient.listColumns(path, port, databaseName, schemaName, table);
         List<Map<String, String>> columnList = convertColumn(listColumns);
         return columnList.stream().map(column -> {
-            ColumnDto columnDto = new ColumnDto();
+            com.middleware.caas.common.model.dashboard.ColumnDto columnDto = new com.middleware.caas.common.model.dashboard.ColumnDto();
             columnDto.setDatabaseName(databaseName);
             columnDto.setSchemaName(schemaName);
             columnDto.setTableName(table);
@@ -748,20 +749,20 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     @Override
     public void updateColumns(String clusterId, String namespace, String middlewareName, String databaseName,
         String schemaName, String tableName, TableDto tableDto) {
-        List<ColumnDto> newColumnList = tableDto.getColumnDtoList();
+        List<com.middleware.caas.common.model.dashboard.ColumnDto> newColumnList = tableDto.getColumnDtoList();
         // 查询列信息
         String path = getPath(middlewareName, namespace);
 
-        List<ColumnDto> columnDtoList =
+        List<com.middleware.caas.common.model.dashboard.ColumnDto> columnDtoList =
             listColumns(clusterId, namespace, middlewareName, databaseName, schemaName, tableName);
-        Map<String, ColumnDto> columnDtoMap =
-            columnDtoList.stream().collect(Collectors.toMap(ColumnDto::getNum, columnDto -> columnDto));
+        Map<String, com.middleware.caas.common.model.dashboard.ColumnDto> columnDtoMap =
+            columnDtoList.stream().collect(Collectors.toMap(com.middleware.caas.common.model.dashboard.ColumnDto::getNum, columnDto -> columnDto));
         // 比较列信息 根据内容进行修改
         Map<String, Map<String, String>> change = new HashMap<>();
         // 获取新增或修改内容
         for (int i = 0; i < newColumnList.size(); ++i) {
             Map<String, String> anchor = new HashMap<>();
-            ColumnDto newColumn = newColumnList.get(i);
+            com.middleware.caas.common.model.dashboard.ColumnDto newColumn = newColumnList.get(i);
             String num = newColumn.getNum();
             if (!columnDtoMap.containsKey(num)) {
                 // 新增列
@@ -771,7 +772,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
                 continue;
             }
             // 比较列不同
-            ColumnDto column = columnDtoMap.get(num);
+            com.middleware.caas.common.model.dashboard.ColumnDto column = columnDtoMap.get(num);
             // 比较是否开关数组/修改数据类型、修改数据长度
             if (!column.getArray().equals(newColumn.getArray()) || !column.getDataType().equals(newColumn.getDataType())
                 || !column.getSize().equals(newColumn.getSize())) {
@@ -1285,7 +1286,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         return res;
     }
 
-    public String turnColumnToSql(ColumnDto columnDto) {
+    public String turnColumnToSql(com.middleware.caas.common.model.dashboard.ColumnDto columnDto) {
         StringBuilder sb = new StringBuilder();
         sb.append("\"").append(columnDto.getColumn()).append("\" ");
         if (columnDto.getInc() != null && columnDto.getInc()) {

@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.controller.middleware;
 
-import com.harmonycloud.caas.common.base.BaseResult;
+import com.middleware.caas.common.base.BaseResult;
 import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.middleware.MiddlewareConfigYamlService;
 import io.swagger.annotations.Api;

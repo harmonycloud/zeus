@@ -1,14 +1,12 @@
 package com.harmonycloud.zeus.skyviewservice.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.base.CaasResult;
+import com.middleware.caas.common.base.CaasResult;
 import com.harmonycloud.zeus.skyviewservice.Skyview2UserService;
 import com.harmonycloud.zeus.skyviewservice.client.Skyview2UserServiceClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 /**

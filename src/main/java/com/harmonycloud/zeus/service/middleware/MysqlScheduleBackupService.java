@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.service.middleware;
 
-import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
-import com.harmonycloud.caas.common.model.middleware.ScheduleBackup;
+import com.middleware.caas.common.model.middleware.MiddlewareBackupRecord;
+import com.middleware.caas.common.model.middleware.ScheduleBackup;
 import com.harmonycloud.zeus.integration.cluster.bean.MysqlScheduleBackupCR;
 
 import java.util.List;

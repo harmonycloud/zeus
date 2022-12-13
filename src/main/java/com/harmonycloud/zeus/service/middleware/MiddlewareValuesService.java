@@ -1,7 +1,6 @@
 package com.harmonycloud.zeus.service.middleware;
 
-import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareValues;
+import com.middleware.caas.common.model.middleware.MiddlewareValues;
 
 /**
  * @author xutianhong

@@ -1,8 +1,8 @@
 package com.harmonycloud.zeus.service.log;
 
-import com.harmonycloud.caas.common.model.middleware.MysqlLogDTO;
-import com.harmonycloud.caas.common.model.middleware.MysqlLogQuery;
-import com.harmonycloud.tool.page.PageObject;
+import com.middleware.caas.common.model.middleware.MysqlLogDTO;
+import com.middleware.caas.common.model.middleware.MysqlLogQuery;
+import com.middleware.tool.page.PageObject;
 import com.harmonycloud.zeus.bean.BeanOperationAudit;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.RestClient;

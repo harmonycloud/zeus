@@ -1,9 +1,9 @@
 package com.harmonycloud.zeus.operator.impl;
 
-import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.model.middleware.CustomConfig;
-import com.harmonycloud.caas.common.model.middleware.IngressDTO;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.caas.common.model.middleware.CustomConfig;
+import com.middleware.caas.common.model.middleware.IngressDTO;
+import com.middleware.caas.common.model.middleware.Middleware;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.operator.AbstractBaseOperator;
 import com.harmonycloud.zeus.operator.BaseOperator;

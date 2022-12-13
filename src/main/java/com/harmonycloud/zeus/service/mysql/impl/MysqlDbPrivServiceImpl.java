@@ -1,7 +1,7 @@
 package com.harmonycloud.zeus.service.mysql.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.harmonycloud.caas.common.constants.MysqlConstant;
+import com.middleware.caas.common.constants.MysqlConstant;
 import com.harmonycloud.zeus.bean.BeanMysqlDbPriv;
 import com.harmonycloud.zeus.dao.BeanMysqlDbPrivMapper;
 import com.harmonycloud.zeus.service.mysql.MysqlDbPrivService;

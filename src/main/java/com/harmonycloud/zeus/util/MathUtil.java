@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.util;
 
-import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.middleware.tool.numeric.ResourceCalculationUtil;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

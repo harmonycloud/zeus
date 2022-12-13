@@ -1,8 +1,7 @@
 package com.harmonycloud.zeus.controller.k8s;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.Node;
-import com.harmonycloud.caas.common.model.YamlCheck;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.YamlCheck;
 import com.harmonycloud.zeus.service.k8s.YamlService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -10,8 +9,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * @author xutianhong

@@ -1,9 +1,9 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.CPU;
-import static com.harmonycloud.caas.common.constants.NameConstant.DISK;
-import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
-import static com.harmonycloud.caas.common.constants.NameConstant.STORAGE;
+import static com.middleware.caas.common.constants.NameConstant.CPU;
+import static com.middleware.caas.common.constants.NameConstant.DISK;
+import static com.middleware.caas.common.constants.NameConstant.MEMORY;
+import static com.middleware.caas.common.constants.NameConstant.STORAGE;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,10 +17,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
-import com.harmonycloud.caas.common.model.middleware.ResourceQuotaDTO;
+import com.middleware.caas.common.enums.middleware.ResourceUnitEnum;
+import com.middleware.caas.common.model.middleware.ResourceQuotaDTO;
 import com.harmonycloud.zeus.integration.cluster.ResourceQuotaWrapper;
-import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.middleware.tool.numeric.ResourceCalculationUtil;
 
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ResourceQuota;

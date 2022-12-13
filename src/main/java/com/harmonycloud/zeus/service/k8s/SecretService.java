@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.service.k8s;
 
-import com.harmonycloud.caas.common.model.Secret;
+import com.middleware.caas.common.model.Secret;
 
 import java.util.List;
 

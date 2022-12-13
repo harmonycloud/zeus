@@ -1,8 +1,8 @@
 package com.harmonycloud.zeus.integration.minio;
 
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.exception.CaasRuntimeException;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.exception.CaasRuntimeException;
 import com.harmonycloud.zeus.integration.cluster.bean.Minio;
 import io.minio.*;
 import io.minio.errors.MinioException;

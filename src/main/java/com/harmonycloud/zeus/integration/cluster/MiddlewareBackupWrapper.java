@@ -1,8 +1,8 @@
 package com.harmonycloud.zeus.integration.cluster;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupList;
 import com.harmonycloud.zeus.util.K8sClient;
@@ -14,7 +14,7 @@ import org.springframework.util.CollectionUtils;
 import java.io.IOException;
 import java.util.Map;
 
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
 
 /**
  * @description 中间件备份记录

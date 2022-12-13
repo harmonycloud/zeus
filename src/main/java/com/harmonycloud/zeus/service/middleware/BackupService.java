@@ -2,8 +2,8 @@ package com.harmonycloud.zeus.service.middleware;
 
 import java.util.List;
 
-import com.harmonycloud.caas.common.model.middleware.Backup;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.model.middleware.Backup;
+import com.middleware.caas.common.model.middleware.Middleware;
 import com.harmonycloud.zeus.integration.cluster.bean.BackupCR;
 import com.harmonycloud.zeus.integration.cluster.bean.BackupStorageProvider;
 

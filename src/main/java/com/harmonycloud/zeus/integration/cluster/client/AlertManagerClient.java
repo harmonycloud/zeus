@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.integration.cluster.client;
 
-import com.harmonycloud.tool.api.client.BaseClient;
+import com.middleware.tool.api.client.BaseClient;
 
 /**
  * @author xutianhong

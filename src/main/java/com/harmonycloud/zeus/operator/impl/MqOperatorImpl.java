@@ -1,20 +1,18 @@
 package com.harmonycloud.zeus.operator.impl;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.CLUSTER;
-import static com.harmonycloud.caas.common.constants.NameConstant.MODE;
-import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ARGS;
+import static com.middleware.caas.common.constants.NameConstant.CLUSTER;
+import static com.middleware.caas.common.constants.NameConstant.MODE;
+import static com.middleware.caas.common.constants.NameConstant.RESOURCES;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.ARGS;
 
 import com.alibaba.fastjson.JSONArray;
-import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
-import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.service.k8s.PodService;
-import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
+import com.middleware.caas.common.model.middleware.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import org.apache.commons.lang3.StringUtils;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.enums.middleware.RocketMQModeEnum;
+import com.middleware.caas.common.enums.middleware.RocketMQModeEnum;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.operator.api.MqOperator;
 import com.harmonycloud.zeus.operator.miiddleware.AbstractMqOperator;

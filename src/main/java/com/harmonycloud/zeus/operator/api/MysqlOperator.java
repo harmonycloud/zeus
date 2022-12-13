@@ -1,6 +1,6 @@
 package com.harmonycloud.zeus.operator.api;
 
-import com.harmonycloud.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.model.middleware.Middleware;
 import com.harmonycloud.zeus.operator.BaseOperator;
 
 /**

@@ -1,11 +1,11 @@
 package com.harmonycloud.zeus.controller.middleware;
 
-import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.MysqlDbDTO;
-import com.harmonycloud.caas.common.model.MysqlUserDTO;
-import com.harmonycloud.caas.common.model.middleware.MysqlLogDTO;
-import com.harmonycloud.caas.common.model.middleware.MysqlLogQuery;
-import com.harmonycloud.tool.page.PageObject;
+import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.MysqlDbDTO;
+import com.middleware.caas.common.model.MysqlUserDTO;
+import com.middleware.caas.common.model.middleware.MysqlLogDTO;
+import com.middleware.caas.common.model.middleware.MysqlLogQuery;
+import com.middleware.tool.page.PageObject;
 import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.middleware.MysqlService;
 import com.harmonycloud.zeus.service.mysql.MysqlDbService;

@@ -1,11 +1,11 @@
 package com.harmonycloud.zeus.integration.registry.api.harbor;
 
-import static com.harmonycloud.tool.api.util.HttpMethod.GET;
+import static com.middleware.tool.api.util.HttpMethod.GET;
 
 import com.harmonycloud.zeus.integration.registry.bean.harbor.V1SystemInfo;
-import com.harmonycloud.tool.api.AbstractApi;
-import com.harmonycloud.tool.api.client.BaseClient;
-import com.harmonycloud.tool.api.common.ApiException;
+import com.middleware.tool.api.AbstractApi;
+import com.middleware.tool.api.client.BaseClient;
+import com.middleware.tool.api.common.ApiException;
 
 import okhttp3.Call;
 
