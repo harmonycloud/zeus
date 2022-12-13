@@ -64,9 +64,6 @@ public class EsComponentServiceImpl implements EsComponentService {
     private Map<String, RestHighLevelClient> esClients = new ConcurrentHashMap<>();
 
     @Autowired
-    private ClusterService clusterService;
-
-    @Autowired
     private EsService esService;
 
     @Autowired

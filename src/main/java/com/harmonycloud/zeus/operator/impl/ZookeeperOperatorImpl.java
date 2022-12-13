@@ -54,6 +54,11 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
             }
             values.put("annotations", ann);
         }
+        // pod serviceAccount设置default
+        JSONObject pod = values.getJSONObject("pod");
+        if (pod != null && pod.containsKey("serviceAccountName")) {
+            pod.put("serviceAccountName", "default");
+        }
     }
 
     @Override
