@@ -5,10 +5,7 @@ import static com.middleware.caas.common.constants.NameConstant.RESOURCES;
 import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.ARGS;
 
 import java.text.MessageFormat;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.middleware.caas.common.model.middleware.*;
@@ -128,16 +125,19 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
 
         middleware.setIsAllLvmStorage(true);
         middleware.setVersion(values.getString("pgsqlVersion"));
-        if (checkUserAuthority(MiddlewareTypeEnum.POSTGRESQL.getType())){
+        if (checkUserAuthority(MiddlewareTypeEnum.POSTGRESQL.getType())) {
             middleware.setPassword(values.getJSONObject("userPasswords").getString("postgres"));
         }
         middleware.setPassword(values.getJSONObject("userPasswords").getString("postgres"));
 
-        // 是否自动切换
-        middleware.setAutoSwitch(getAutoSwitch(middleware, cluster));
-
         middleware.setPostgresqlParam(new PostgresqlParam().setHostNetwork(values.getBoolean("hostNetwork")));
         return middleware;
+    }
+
+    @Override
+    public SwitchInfo getAutoSwitch(Middleware middleware) {
+        MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
+        return new SwitchInfo().setIsAuto(getAutoSwitch(middleware, cluster));
     }
 
     public Boolean getAutoSwitch(Middleware middleware, MiddlewareClusterDTO cluster) {

@@ -24,7 +24,6 @@ import com.middleware.caas.common.model.middleware.*;
 import com.middleware.zeus.operator.BaseOperator;
 import com.middleware.zeus.operator.api.MysqlOperator;
 import com.middleware.zeus.operator.miiddleware.AbstractMysqlOperator;
-import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.middleware.BackupService;
 import com.middleware.zeus.service.middleware.MysqlScheduleBackupService;
 import com.middleware.zeus.service.middleware.impl.MiddlewareServiceImpl;
@@ -46,7 +45,6 @@ import com.middleware.tool.date.DateUtils;
 import com.middleware.tool.encrypt.PasswordUtils;
 import com.middleware.zeus.annotation.Operator;
 import com.middleware.zeus.integration.cluster.MysqlClusterWrapper;
-import com.middleware.zeus.integration.cluster.bean.*;
 import com.middleware.zeus.util.DateUtil;
 import com.middleware.zeus.util.ServiceNameConvertUtil;
 
@@ -232,12 +230,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                     }
                 }
             }
-            // 是否自动切换
-            MysqlCluster mysqlCluster = mysqlClusterWrapper.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
-            middleware.setAutoSwitch(mysqlCluster.getSpec().getPassiveSwitched() == null || !mysqlCluster.getSpec().getPassiveSwitched());
-            if (mysqlCluster.getStatus() != null && mysqlCluster.getStatus().getLastChangeMaster() != null){
-                middleware.setLastAutoSwitchTime(DateUtils.parseUTCDate(mysqlCluster.getStatus().getLastChangeMaster()));
-            }
             // 读写分离
             if (values.containsKey("proxy")){
                 ReadWriteProxy readWriteProxy = new ReadWriteProxy();
@@ -246,6 +238,17 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             }
         }
         return middleware;
+    }
+
+    @Override
+    public SwitchInfo getAutoSwitch(Middleware middleware) {
+        SwitchInfo autoSwitchInfo = new SwitchInfo();
+        MysqlCluster mysqlCluster = mysqlClusterWrapper.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
+        autoSwitchInfo.setIsAuto(mysqlCluster.getSpec().getPassiveSwitched() == null || !mysqlCluster.getSpec().getPassiveSwitched());
+        if (mysqlCluster.getStatus() != null && mysqlCluster.getStatus().getLastChangeMaster() != null) {
+            autoSwitchInfo.setLastAutoSwitchTime(DateUtils.parseUTCDate(mysqlCluster.getStatus().getLastChangeMaster()));
+        }
+        return autoSwitchInfo;
     }
 
     @Override

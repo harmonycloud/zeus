@@ -39,8 +39,6 @@ import com.middleware.zeus.service.user.UserRoleService;
 import com.middleware.zeus.util.ChartVersionUtil;
 import com.middleware.zeus.util.ServiceNameConvertUtil;
 import com.middleware.zeus.util.YamlUtil;
-import com.middleware.zeus.service.k8s.*;
-import com.middleware.zeus.service.middleware.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -180,6 +178,13 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         Middleware middleware =
                 new Middleware().setClusterId(clusterId).setNamespace(namespace).setType(type).setName(name);
         return getOperator(BaseOperator.class, BaseOperator.class, middleware).detail(middleware);
+    }
+
+    @Override
+    public SwitchInfo autoSwitch(String clusterId, String namespace, String name, String type) {
+        Middleware middleware =
+                new Middleware().setClusterId(clusterId).setNamespace(namespace).setType(type).setName(name);
+        return getOperator(BaseOperator.class, BaseOperator.class, middleware).getAutoSwitch(middleware);
     }
 
     @Override

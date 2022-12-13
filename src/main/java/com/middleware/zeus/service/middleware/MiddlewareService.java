@@ -46,6 +46,17 @@ public interface MiddlewareService {
     Middleware detail(String clusterId, String namespace, String name, String type);
 
     /**
+     * 查询中间件切换信息
+     *
+     * @param clusterId 集群id
+     * @param namespace 命名空间
+     * @param name      中间件名称
+     * @param type      中间件类型
+     * @return
+     */
+    SwitchInfo autoSwitch(String clusterId, String namespace, String name, String type);
+
+    /**
      * 创建中间件
      *
      * @param middleware 中间件信息
