@@ -1,6 +1,7 @@
 package com.middleware.zeus.service.dashboard;
 
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.model.dashboard.redis.ScanResult;
 
 /**
@@ -16,5 +17,7 @@ public interface RedisKVService {
     Integer dbSize(String clusterId, String namespace, String middlewareName, Integer db);
 
     ScanResult scan(String clusterId, String namespace, String middlewareName, Integer db, String keyword, Integer cursor, Integer count, String shard);
+
+    JSONObject execCMD(String clusterId, String namespace, String middlewareName, Integer db, String cmd);
 
 }

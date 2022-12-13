@@ -108,6 +108,46 @@ public class RedisAggregationKVServiceImpl implements RedisKVService {
         return scanResult;
     }
 
+    @Override
+    public JSONObject execCMD(String clusterId, String namespace, String middlewareName, Integer db, String cmd) {
+        String firstCMD = cmd.trim().split(" ")[0];
+        if (firstCMD.equalsIgnoreCase("keys")) {
+            return execKeysCMD(clusterId, namespace, middlewareName, db, cmd);
+        } else if(firstCMD.equalsIgnoreCase("dbsize")){
+            return execDBSizeCMD(clusterId, namespace, middlewareName, db);
+        }else{
+            return redisClient.execCMD(K8sServiceNameUtil.getServicePath(namespace, middlewareName), port, db, cmd);
+        }
+    }
+
+    private JSONObject execKeysCMD(String clusterId, String namespace, String middlewareName, Integer db, String cmd) {
+        List<String> paths = listServicePath(clusterId, namespace, middlewareName, true);
+        JSONObject res = new JSONObject();
+        List<String> keys = new ArrayList<>();
+        AtomicInteger time = new AtomicInteger();
+        paths.forEach(path -> {
+            try {
+                JSONObject resObj = redisClient.execCMD(K8sServiceNameUtil.getServicePath(namespace, middlewareName), port, db, cmd);
+                JSONArray data = resObj.getJSONArray("data");
+                time.getAndAdd(resObj.getInteger("execTime"));
+                keys.addAll(data.stream().map(Object::toString).collect(Collectors.toList()));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        res.put("execTime", time.get());
+        res.put("data", keys);
+        return res;
+    }
+
+    private JSONObject execDBSizeCMD(String clusterId, String namespace, String middlewareName, Integer db) {
+        Integer size = this.dbSize(clusterId, namespace, middlewareName, db);
+        JSONObject res = new JSONObject();
+        res.put("execTime", "0");
+        res.put("data", size);
+        return res;
+    }
+
     private boolean scanAndConvert(String pod, Integer db, String keyword, Integer cursor, Integer count, ScanResult scanResult) {
         JSONObject res = redisClient.scan(pod, port, db, keyword, cursor, count - scanResult.getKeys().size());
         ScanResult result = RedisUtil.convertScanResult(res);

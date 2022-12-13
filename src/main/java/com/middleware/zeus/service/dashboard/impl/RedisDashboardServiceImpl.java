@@ -208,7 +208,8 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
 
     @Override
     public JSONObject execCMD(String clusterId, String namespace, String middlewareName, Integer db, String cmd) {
-        JSONObject res = redisClient.execCMD(db, cmd);
+        RedisKVService redisKVService = getKVService(clusterId, namespace, middlewareName);
+        JSONObject res = redisKVService.execCMD(clusterId, namespace, middlewareName, db, cmd);
         BeanSqlExecuteRecord record = new BeanSqlExecuteRecord();
         String err = res.getString("err");
         record.setClusterId(clusterId);
