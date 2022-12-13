@@ -141,6 +141,12 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
     }
 
     public Boolean getAutoSwitch(Middleware middleware, MiddlewareClusterDTO cluster) {
+        // 获取服务状态
+        Status status = middlewareCRService.getStatus(middleware.getClusterId()
+                , middleware.getNamespace(), MiddlewareTypeEnum.POSTGRESQL.getType(), middleware.getName());
+        if (!"Running".equals(status.getPhase())) {
+            return null;
+        }
         // 获取patroniService
         String patroniName = middleware.getName() + "-patroni";
         Service patroniService = serviceWrapper.get(middleware.getClusterId(), middleware.getNamespace(), patroniName);
@@ -150,8 +156,6 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             return null;
         }
         // 获取pod列表
-        Status status = middlewareCRService.getStatus(middleware.getClusterId()
-                , middleware.getNamespace(), MiddlewareTypeEnum.POSTGRESQL.getType(), middleware.getName());
         List<Status.Condition> conditions = status.getConditions();
         if (CollectionUtil.isEmpty(conditions)) {
             return null;
