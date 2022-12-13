@@ -47,10 +47,7 @@ public class LocalPathServiceImpl extends AbstractBaseOperator implements LocalP
 
     @Override
     protected String getValues(String repository, MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
-        return "image.repository=" + repository + "/local-path-provisioner" +
-                ",storage.storageClassName=" + "local-path" +
-                ",helperImage.repository=" + repository + "/busybox" +
-                ",localPath.path=" + "/opt/local-path-provisioner";
+        return "image.repository=" + repository;
     }
 
     @Override
