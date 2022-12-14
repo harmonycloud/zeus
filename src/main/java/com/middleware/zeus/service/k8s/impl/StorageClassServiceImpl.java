@@ -125,13 +125,14 @@ public class StorageClassServiceImpl implements StorageClassService {
     }
 
     @Override
-    public StorageClassDTO fuzzySearchStorageClass(Map<String, StorageClassDTO> scMap, String keyword) {
-        AtomicReference<StorageClassDTO> sc = new AtomicReference<>();
+    public List<StorageClassDTO> fuzzySearchStorageClass(Map<String, StorageClassDTO> scMap, String keyword) {
+        List<StorageClassDTO> list = new ArrayList<>();
         scMap.forEach((k, v) -> {
             if (k.contains(keyword)) {
-                sc.set(v);
+                list.add(v);
             }
         });
-        return sc.get();
+        return list;
     }
+
 }

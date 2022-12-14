@@ -48,5 +48,5 @@ public interface StorageClassService {
      * @param keyword sc名称的关键词
      * @return
      */
-    StorageClassDTO fuzzySearchStorageClass(Map<String, StorageClassDTO> scMap, String keyword);
+    List<StorageClassDTO> fuzzySearchStorageClass(Map<String, StorageClassDTO> scMap, String keyword);
 }

@@ -24,6 +24,7 @@ import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.util.DateUtil;
+import com.middleware.zeus.util.MathUtil;
 import com.middleware.zeus.util.RedisUtil;
 import com.middleware.zeus.service.k8s.*;
 import io.fabric8.kubernetes.api.model.Container;
@@ -407,16 +408,31 @@ public class PodServiceImpl implements PodService {
         }
         List<MiddlewareInfo> pvcInfos = mw.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
         Map<String, StorageClassDTO> scMap = storageClassService.convertStorageClass(pvcInfos, clusterId, namespace);
-        AtomicReference<Boolean> isAllLvmStorage = new AtomicReference<>(true);
         // 给pod设置存储
         List<PodInfo> podInfoList = listMiddlewarePods(mw, clusterId, namespace, middlewareName, type);
         for (PodInfo pi : podInfoList) {
             // storage
-            StorageClassDTO scDTO = storageClassService.fuzzySearchStorageClass(scMap, pi.getPodName());
-            if (scDTO != null) {
-                pi.getResources().setStorageClassQuota(scDTO.getStorage()).setStorageClassName(scDTO.getStorageClassName())
-                        .setIsLvmStorage(scDTO.getIsLvmStorage()).setProvisioner(scDTO.getProvisioner());
-                isAllLvmStorage.set(isAllLvmStorage.get() & scDTO.getIsLvmStorage());
+            List<StorageClassDTO> scDTOList = storageClassService.fuzzySearchStorageClass(scMap, pi.getPodName());
+            if (!CollectionUtils.isEmpty(scDTOList)) {
+                Map<String, MiddlewareQuota> quotaMap = new HashMap<>();
+                for (StorageClassDTO storageClassDTO : scDTOList) {
+                    MiddlewareQuota resource = quotaMap.get(storageClassDTO.getStorageClassName());
+                    if (resource == null) {
+                        resource = new MiddlewareQuota();
+                        resource.setStorageClassName(storageClassDTO.getStorageClassName());
+                        resource.setProvisioner(storageClassDTO.getProvisioner());
+                        resource.setStorageClassQuota(storageClassDTO.getStorage());
+                        resource.setStorageClassQuotaValue(MathUtil.extractDigital(storageClassDTO.getStorage()) + resource.getStorageClassQuotaValue());
+                        quotaMap.put(storageClassDTO.getStorageClassName(), resource);
+                    } else {
+                        resource.setStorageClassQuotaValue(MathUtil.extractDigital(storageClassDTO.getStorage()) + resource.getStorageClassQuotaValue());
+                        resource.getStorageClassQuota();
+                    }
+                }
+                quotaMap.values().forEach(middlewareQuota -> {
+                    middlewareQuota.setStorageClassQuota(middlewareQuota.getStorageClassQuotaValue() + MathUtil.extractUnit(middlewareQuota.getStorageClassQuota()));
+                });
+                pi.setStorageResources(new ArrayList<>(quotaMap.values()));
                 // 给pod设置绑定的pvc
                 setPodPvc(pi, pvcInfos);
             }
@@ -427,7 +443,6 @@ public class PodServiceImpl implements PodService {
         podInfoList = addPodExtraRole(clusterId, namespace, middlewareName, type, podInfoList, mw);
         // 设置pod所在可用区
         this.setPodArea(clusterId, podInfoList);
-        middleware.setIsAllLvmStorage(isAllLvmStorage.get());
         middleware.setPodInfoGroup(convertPodListToGroup(podInfoList));
         middleware.setPods(podInfoList);
         return middleware;

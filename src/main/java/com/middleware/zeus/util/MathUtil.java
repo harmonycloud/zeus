@@ -8,6 +8,8 @@ import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author liyinlong
@@ -124,5 +126,26 @@ public class MathUtil {
         }
         return r;
     }
+
+    public static float extractDigital(String str) {
+        String reg3 = "[0-9]+([.]{1}[0-9]+){0,1}";
+        Pattern p3 = Pattern.compile(reg3);
+        Matcher m3 = p3.matcher(str);
+        if (m3.find()) {
+            return Float.parseFloat(m3.group());
+        }
+        return 0;
+    }
+
+    public static String extractUnit(String str) {
+        String reg3 = "[a-zA-Z]+";
+        Pattern p3 = Pattern.compile(reg3);
+        Matcher m3 = p3.matcher(str);
+        if (m3.find()) {
+            return m3.group();
+        }
+        return "";
+    }
+
 
 }
