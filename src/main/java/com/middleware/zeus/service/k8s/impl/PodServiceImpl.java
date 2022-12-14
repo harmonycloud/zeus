@@ -11,10 +11,8 @@ import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.ContainerWithStatus;
 import com.middleware.caas.common.model.Node;
 import com.middleware.caas.common.model.StorageClassDTO;
-import com.middleware.caas.common.model.middleware.Middleware;
-import com.middleware.caas.common.model.middleware.MiddlewareQuota;
-import com.middleware.caas.common.model.middleware.PodInfo;
-import com.middleware.caas.common.model.middleware.PodInfoGroup;
+import com.middleware.caas.common.model.StorageDto;
+import com.middleware.caas.common.model.middleware.*;
 import com.middleware.tool.numeric.ResourceCalculationUtil;
 import com.middleware.zeus.bean.BeanActiveArea;
 import com.middleware.zeus.integration.cluster.PodWrapper;
@@ -79,6 +77,8 @@ public class PodServiceImpl implements PodService {
     private HelmChartService helmChartService;
     @Autowired
     private ClusterService clusterService;
+    @Autowired
+    private StorageService storageService;
 
     @Override
     public Middleware list(String clusterId, String namespace, String middlewareName, String type) {
@@ -408,6 +408,12 @@ public class PodServiceImpl implements PodService {
         }
         List<MiddlewareInfo> pvcInfos = mw.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
         Map<String, StorageClassDTO> scMap = storageClassService.convertStorageClass(pvcInfos, clusterId, namespace);
+        List<StorageDto> storageDtoList = storageService.list(clusterId, true);
+        Map<String, String> scAliasNameMap = new HashMap<>();
+        storageDtoList.forEach(storageDto -> {
+            String aliasName = StringUtils.isNotBlank(storageDto.getAliasName()) ? storageDto.getAliasName() : storageDto.getName();
+            scAliasNameMap.put(storageDto.getName(), aliasName);
+        });
         // 给pod设置存储
         List<PodInfo> podInfoList = listMiddlewarePods(mw, clusterId, namespace, middlewareName, type);
         for (PodInfo pi : podInfoList) {
@@ -423,6 +429,7 @@ public class PodServiceImpl implements PodService {
                         resource.setProvisioner(storageClassDTO.getProvisioner());
                         resource.setStorageClassQuota(storageClassDTO.getStorage());
                         resource.setStorageClassQuotaValue(MathUtil.extractDigital(storageClassDTO.getStorage()) + resource.getStorageClassQuotaValue());
+                        resource.setStorageClassAliasName(scAliasNameMap.get(storageClassDTO.getStorageClassName()));
                         quotaMap.put(storageClassDTO.getStorageClassName(), resource);
                     } else {
                         resource.setStorageClassQuotaValue(MathUtil.extractDigital(storageClassDTO.getStorage()) + resource.getStorageClassQuotaValue());

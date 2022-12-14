@@ -16,7 +16,7 @@ public interface RedisDashboardService extends BaseMiddlewareApiService{
 
     List<KeyValueDto> getAllKeys(String clusterId, String namespace, String middlewareName, Integer db, String keyword);
 
-    ScanResult scan(String clusterId, String namespace, String middlewareName, Integer db, String keyword, Integer cursor, Integer count, String pod);
+    ScanResult scan(String clusterId, String namespace, String middlewareName, Integer db, String keyword, Integer cursor, Integer count, String pod, Integer preCursor, String prePod);
 
     List<DatabaseDto> getDBList(String clusterId, String namespace, String middlewareName);
 

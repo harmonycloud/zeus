@@ -33,7 +33,11 @@ public class RedisDashboardController {
             @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = Integer.class),
-            @ApiImplicitParam(name = "keyword", value = "key关键词", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "cursor", value = "下一页游标", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "count", value = "每页数量", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "pod", value = "下一页pod", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "preCursor", value = "上一页游标", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "prePod", value = "上一页pod", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/databases/{database}/keys")
     public BaseResult<ScanResult> scanKeys(@PathVariable("clusterId") String clusterId,
@@ -43,8 +47,10 @@ public class RedisDashboardController {
                                            @RequestParam(value = "keyword", defaultValue = "") String keyword,
                                            @RequestParam(value = "cursor", defaultValue = "0") Integer cursor,
                                            @RequestParam(value = "count", defaultValue = "10") Integer count,
-                                           @RequestParam(value = "pod", defaultValue = "") String pod) {
-        return BaseResult.ok(redisDashboardService.scan(clusterId, namespace, middlewareName, database, keyword, cursor, count, pod));
+                                           @RequestParam(value = "pod", defaultValue = "") String pod,
+                                           @RequestParam(value = "preCursor", defaultValue = "0") Integer preCursor,
+                                           @RequestParam(value = "prePod", defaultValue = "") String prePod) {
+        return BaseResult.ok(redisDashboardService.scan(clusterId, namespace, middlewareName, database, keyword, cursor, count, pod, preCursor, prePod));
     }
 
     @ApiOperation(value = "获取全部库", notes = "获取全部库")
