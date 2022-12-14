@@ -1349,6 +1349,7 @@ public abstract class AbstractBaseOperator {
             String scName = values.getString("storageClassName");
             MiddlewareQuota middlewareQuota = new MiddlewareQuota();
             middlewareQuota.setStorageClassName(scName);
+            middlewareQuota.setStorageClassAliasName(scAliasNameMap.get(scName));
             storageList.add(middlewareQuota);
         }
         return storageList;
