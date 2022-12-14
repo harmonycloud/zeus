@@ -29,7 +29,7 @@ public class MiddlewareBackupWrapper {
      * MiddlewareBackup的context
      */
     private static final CustomResourceDefinitionContext CONTEXT = new CustomResourceDefinitionContext.Builder()
-            .withGroup(HARMONY_CLOUD_CN)
+            .withGroup(CR_GROUP)
             .withVersion(V1)
             .withScope(NAMESPACED)
             .withPlural(MIDDLEWAREBACKUP)

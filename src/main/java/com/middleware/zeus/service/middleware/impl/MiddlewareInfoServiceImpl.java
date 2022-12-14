@@ -1,8 +1,7 @@
 package com.middleware.zeus.service.middleware.impl;
 
 import static com.middleware.caas.common.constants.CommonConstant.*;
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.HARMONY_CLOUD;
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
 import static com.middleware.caas.common.constants.registry.HelmChartConstant.ICON_SVG;
 import static com.middleware.caas.common.constants.registry.HelmChartConstant.SVG;
 
@@ -270,7 +269,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         if(!CollectionUtils.isEmpty(helmChartFile.getDependency())){
             middlewareInfo.setOperatorName(helmChartFile.getDependency().get("alias"));
         }
-        middlewareInfo.setOfficial(HARMONY_CLOUD.equals(helmChartFile.getOfficial()));
+        middlewareInfo.setOfficial(OFFICIAL_TAG.equals(helmChartFile.getOfficial()));
         middlewareInfo.setUpdateTime(new Date());
         List<Path> iconFiles = searchFiles(file.getParent() + File.separator + helmChartFile.getTarFileName(), ICON_SVG);
         if (!CollectionUtils.isEmpty(iconFiles)) {

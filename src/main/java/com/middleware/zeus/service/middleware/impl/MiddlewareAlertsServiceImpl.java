@@ -51,6 +51,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.middleware.caas.common.constants.AlertConstant.*;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.OFFICIAL_TAG;
 
 /**
  * @author xutianhong
@@ -239,7 +240,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             // 写入创建时间
             middlewareAlertsDTO.getAnnotations().put("createTime",
                     DateUtils.dateToString(new Date(), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
-            middlewareAlertsDTO.getAnnotations().put("product", "harmonycloud");
+            middlewareAlertsDTO.getAnnotations().put("product", OFFICIAL_TAG);
             middlewareAlertsDTO.getAnnotations().put("group", SYSTEM_ALERT);
             middlewareAlertsDTO.getAnnotations().put("name", SYSTEM_ALERT);
             middlewareAlertsDTO.getAnnotations().put("message",middlewareAlertsDTO.getContent());

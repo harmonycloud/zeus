@@ -3,7 +3,7 @@ package com.middleware.zeus.integration.cluster.bean;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.Data;
 
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.HARMONY_CLOUD_CN_V1;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.CR_API_VERSION;
 
 /**
  * @author liyinlong
@@ -12,7 +12,7 @@ import static com.middleware.caas.common.constants.middleware.MiddlewareConstant
 @Data
 public class MiddlewareRestoreCR {
 
-    private String apiVersion = HARMONY_CLOUD_CN_V1;
+    private String apiVersion = CR_API_VERSION;
 
     private String kind = "MiddlewareRestore";
 

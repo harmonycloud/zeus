@@ -6,7 +6,7 @@ import lombok.experimental.Accessors;
 
 import java.util.List;
 
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.HARMONY_CLOUD_CN_V1;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.CR_API_VERSION;
 
 /**
  * @author dengyulong
@@ -16,7 +16,7 @@ import static com.middleware.caas.common.constants.middleware.MiddlewareConstant
 @Data
 public class MiddlewareClusterList {
 
-    private String apiVersion = HARMONY_CLOUD_CN_V1;
+    private String apiVersion = CR_API_VERSION;
 
     private String kind = "MiddlewareCluster";
 
