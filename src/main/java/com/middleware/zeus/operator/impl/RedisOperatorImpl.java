@@ -205,6 +205,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         convertCommonByHelmChart(middleware, values);
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
         convertRegistry(middleware, cluster);
+        convertCustomVolumesByHelmChart(middleware, values);
 
         // 处理redis特有参数
         if (values != null) {
