@@ -1,16 +1,15 @@
 package com.middleware.zeus.operator.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.middleware.caas.common.model.middleware.CustomConfig;
-import com.middleware.caas.common.model.middleware.IngressDTO;
-import com.middleware.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.model.middleware.*;
 import com.middleware.zeus.annotation.Operator;
 import com.middleware.zeus.operator.AbstractBaseOperator;
 import com.middleware.zeus.operator.BaseOperator;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import org.springframework.util.CollectionUtils;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author dengyulong
@@ -49,5 +48,4 @@ public class BaseOperatorImpl extends AbstractBaseOperator implements BaseOperat
     public List<IngressDTO> listHostNetworkAddress(String clusterId, String namespace, String middlewareName, String type) {
         return null;
     }
-
 }

@@ -167,5 +167,4 @@ public interface BaseOperator {
      * 查询中间件hostnetwork访问地址
      */
     List<IngressDTO> listHostNetworkAddress(String clusterId, String namespace, String middlewareName, String type);
-
 }

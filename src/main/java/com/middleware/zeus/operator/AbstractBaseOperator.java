@@ -1330,4 +1330,28 @@ public abstract class AbstractBaseOperator {
         return roleAuthorityService.checkOps(null, type);
     }
 
+    public List<MiddlewareQuota> getMiddlewareStorageClasses(String clusterId, Middleware middleware, JSONObject values) {
+        Map<String, String> scAliasNameMap = storageService.listStorageMap(clusterId, true);
+        Map<String, CustomVolume> customVolumes = middleware.getCustomVolumes();
+        List<MiddlewareQuota> storageList = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(customVolumes)) {
+            Set<String> scSet = new HashSet<>();
+            customVolumes.forEach((k, v) -> {
+                scSet.add(v.getStorageClass());
+            });
+            scSet.forEach(scName -> {
+                MiddlewareQuota middlewareQuota = new MiddlewareQuota();
+                middlewareQuota.setStorageClassName(scName);
+                middlewareQuota.setStorageClassAliasName(scAliasNameMap.get(scName));
+                storageList.add(middlewareQuota);
+            });
+        } else {
+            String scName = values.getString("storageClassName");
+            MiddlewareQuota middlewareQuota = new MiddlewareQuota();
+            middlewareQuota.setStorageClassName(scName);
+            storageList.add(middlewareQuota);
+        }
+        return storageList;
+    }
+
 }

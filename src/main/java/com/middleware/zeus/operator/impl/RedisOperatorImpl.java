@@ -14,9 +14,7 @@ import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.enums.Protocol;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.middleware.caas.common.model.AffinityDTO;
-import com.middleware.caas.common.model.IngressComponentDto;
-import com.middleware.caas.common.model.MiddlewareServiceNameIndex;
+import com.middleware.caas.common.model.*;
 import com.middleware.tool.collection.JsonUtils;
 import com.middleware.tool.numeric.ResourceCalculationUtil;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
@@ -246,7 +244,9 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             redisParam.setHostNetwork(predixy.getBoolean("hostNetwork"));
         }
         middleware.setRedisParam(redisParam);
-
+        // 设置存储类型
+        List<MiddlewareQuota> storageClasses = getMiddlewareStorageClasses(cluster.getId(), middleware, values);
+        middleware.setStorageResource(storageClasses);
         return middleware;
     }
 

@@ -408,12 +408,7 @@ public class PodServiceImpl implements PodService {
         }
         List<MiddlewareInfo> pvcInfos = mw.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
         Map<String, StorageClassDTO> scMap = storageClassService.convertStorageClass(pvcInfos, clusterId, namespace);
-        List<StorageDto> storageDtoList = storageService.list(clusterId, true);
-        Map<String, String> scAliasNameMap = new HashMap<>();
-        storageDtoList.forEach(storageDto -> {
-            String aliasName = StringUtils.isNotBlank(storageDto.getAliasName()) ? storageDto.getAliasName() : storageDto.getName();
-            scAliasNameMap.put(storageDto.getName(), aliasName);
-        });
+        Map<String, String> scAliasNameMap = storageService.listStorageMap(clusterId, true);
         // 给pod设置存储
         List<PodInfo> podInfoList = listMiddlewarePods(mw, clusterId, namespace, middlewareName, type);
         for (PodInfo pi : podInfoList) {

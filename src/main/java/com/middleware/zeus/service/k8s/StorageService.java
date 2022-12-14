@@ -4,6 +4,7 @@ import com.middleware.caas.common.model.StorageDto;
 import com.middleware.caas.common.model.middleware.MiddlewareStorageInfoDto;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author xutianhong
@@ -79,5 +80,7 @@ public interface StorageService {
      */
     List<MiddlewareStorageInfoDto> middlewares(String clusterId, String storageName);
 
+
+    Map<String,String> listStorageMap(String clusterId, Boolean all);
 
 }

@@ -316,6 +316,17 @@ public class StorageServiceImpl implements StorageService {
         return mwStorageInfoList;
     }
 
+    @Override
+    public Map<String, String> listStorageMap(String clusterId, Boolean all) {
+        List<StorageDto> storageDtoList = list(clusterId, all);
+        Map<String, String> scAliasNameMap = new HashMap<>();
+        storageDtoList.forEach(storageDto -> {
+            String aliasName = StringUtils.isNotBlank(storageDto.getAliasName()) ? storageDto.getAliasName() : storageDto.getName();
+            scAliasNameMap.put(storageDto.getName(), aliasName);
+        });
+        return scAliasNameMap;
+    }
+
     /**
      * 封装业务对象
      */
