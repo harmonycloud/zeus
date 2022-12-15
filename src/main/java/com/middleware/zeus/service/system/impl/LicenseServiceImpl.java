@@ -53,6 +53,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LicenseServiceImpl implements LicenseService {
 
+    @Value("${system.license.enable: true}")
+    private String enable;
+
     @Autowired
     private MiddlewareClusterService clusterService;
     @Autowired
@@ -158,6 +161,9 @@ public class LicenseServiceImpl implements LicenseService {
 
     @Override
     public Boolean check(String clusterId) {
+        if (!Boolean.parseBoolean(enable)){
+            return true;
+        }
         JSONObject license = getLicense();
         List<MiddlewareClusterDTO> clusterList = clusterService.listClusterDtos();
         clusterList =
@@ -175,6 +181,9 @@ public class LicenseServiceImpl implements LicenseService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void refreshMiddlewareResource() throws Exception {
+        if (!Boolean.parseBoolean(enable)){
+            return;
+        }
         BeanSystemConfig produceConfig = systemConfigService.getConfigForUpdate(PRODUCE);
         BeanSystemConfig testConfig = systemConfigService.getConfigForUpdate(TEST);
         if (produceConfig == null || testConfig == null) {

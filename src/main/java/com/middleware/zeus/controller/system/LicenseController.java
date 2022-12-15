@@ -8,7 +8,9 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -20,6 +22,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/license")
 @Slf4j
 public class LicenseController {
+
+    @Value("${system.license.enable: true}")
+    private String enable;
 
     @Autowired
     private LicenseService licenseService;
@@ -40,6 +45,14 @@ public class LicenseController {
     @GetMapping
     public BaseResult<LicenseInfoDto> info() throws Exception {
         return BaseResult.ok(licenseService.info());
+    }
+
+    @ApiOperation(value = "查询license使用信息", notes = "查询license使用信息")
+    @ApiImplicitParams({
+    })
+    @GetMapping("/enable")
+    public BaseResult<String> enable() throws Exception {
+        return BaseResult.ok(enable);
     }
 
     @ApiOperation(value = "发布中间件能力校验", notes = "发布中间件能力校验")
