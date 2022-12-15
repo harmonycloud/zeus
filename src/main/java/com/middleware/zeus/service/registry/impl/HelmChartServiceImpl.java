@@ -526,7 +526,6 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         String cmd = String.format("helm upgrade --install %s %s --set %s -n %s --kube-apiserver %s --kubeconfig %s ",
                 name, chartUrl, setValues, namespace, cluster.getAddress(),
                 clusterCertService.getKubeConfigFilePath(cluster.getId()));
-        namespace = "lyl";
         if (enablePrivateRegistry) {
             cmd = String.format("helm upgrade --install %s %s --set %s --set imagePullSecrets[0].name %s -n %s --kube-apiserver %s --kubeconfig %s ",
                     name, chartUrl, setValues, imagePullSecret, namespace, cluster.getAddress(),
@@ -607,7 +606,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             if (operatorDir.exists()) {
                 // 创建operator
                 this.editOperatorChart(clusterId, path, type);
-                this.install(helmChartFile.getDependency().get("alias"), "lyl",
+                this.install(helmChartFile.getDependency().get("alias"), "middleware-operator",
                     helmChartFile.getChartName(), helmChartFile.getChartVersion(), path, cluster);
             } else {
                 log.error("中间件{} operator包不存在", helmChartFile.getChartName());
