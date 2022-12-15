@@ -210,24 +210,8 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
     @Override
     public void createImagePullSecret(String clusterId, String namespace, List<ImageRepositoryDTO> imageRepositoryDTOS) {
         for (ImageRepositoryDTO repositoryDTO : imageRepositoryDTOS) {
-            Secret secret = secretWrapper.get(clusterId, namespace, registryLabelKey, repositoryDTO.getId().toString());
-            if (secret == null) {
-                Map<String, String> data = new HashMap<>();
-                data.put(".dockerconfigjson", encryptRegistry(repositoryDTO));
-                secret = new Secret();
-                secret.setKind(MiddlewareConstant.SECRET);
-                secret.setApiVersion(MiddlewareConstant.V1);
-                secret.setType("kubernetes.io/dockerconfigjson");
-                secret.setData(data);
-                ObjectMeta objectMeta = new ObjectMeta();
-                objectMeta.setNamespace(namespace);
-                objectMeta.setName("middleware-registry-" + UUIDUtils.get8UUID());
-                Map<String, String> labels = new HashMap<>();
-                labels.put(registryLabelKey, repositoryDTO.getId().toString());
-                objectMeta.setLabels(labels);
-                secret.setMetadata(objectMeta);
-                secretWrapper.create(clusterId, namespace, secret);
-            }
+            String sa = "middleware-registry-" + UUIDUtils.get8UUID();
+
         }
     }
 
@@ -240,6 +224,28 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         List<ImageRepositoryDTO> imageRepositoryDTOS = new ArrayList<>();
         imageRepositoryDTOS.add(imageRepositoryDTO);
         createImagePullSecret(clusterId, namespace, imageRepositoryDTOS);
+    }
+
+    @Override
+    public void createImagePullSecret(String clusterId, String namespace, Integer registryId, String secretName) {
+        Secret secret = secretWrapper.get(clusterId, namespace, registryLabelKey);
+        if (secret == null) {
+            Map<String, String> data = new HashMap<>();
+            data.put(".dockerconfigjson", encryptRegistry(registryId));
+            secret = new Secret();
+            secret.setKind(MiddlewareConstant.SECRET);
+            secret.setApiVersion(MiddlewareConstant.V1);
+            secret.setType("kubernetes.io/dockerconfigjson");
+            secret.setData(data);
+            ObjectMeta objectMeta = new ObjectMeta();
+            objectMeta.setNamespace(namespace);
+            objectMeta.setName(secretName);
+            Map<String, String> labels = new HashMap<>();
+            labels.put(registryLabelKey, registryId.toString());
+            objectMeta.setLabels(labels);
+            secret.setMetadata(objectMeta);
+            secretWrapper.create(clusterId, namespace, secret);
+        }
     }
 
     @Override
@@ -265,10 +271,12 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
 
     /**
      * 加密制品仓库信息
-     * @param registry
+     * @param registryId
      * @return
      */
-    private String encryptRegistry(ImageRepositoryDTO registry) {
+    private String encryptRegistry(Integer registryId) {
+        ImageRepositoryDTO registry = detailById(registryId);
+
         String host = registry.getHostAddress();
         Integer port = registry.getPort();
         String user = registry.getUsername();

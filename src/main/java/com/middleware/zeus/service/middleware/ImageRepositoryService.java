@@ -103,6 +103,11 @@ public interface ImageRepositoryService {
     void createImagePullSecret(String clusterId, String namespace, Integer registryId);
 
     /**
+     * 创建imagePullSecret
+     */
+    void createImagePullSecret(String clusterId, String namespace, Integer registryId,String secretName);
+
+    /**
      * 查询分区下所有中间件平台的imagePullSecret
      */
     List<Secret> listImagePullSecret(String clusterId, String namespace);
