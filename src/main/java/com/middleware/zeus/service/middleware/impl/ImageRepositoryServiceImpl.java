@@ -252,6 +252,17 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         return secretWrapper.get(clusterId, namespace, registryLabelKey, registryId);
     }
 
+    @Override
+    public BeanImageRepository findByAddress(String address) {
+        QueryWrapper<BeanImageRepository> wrapper = new QueryWrapper<>();
+        wrapper.eq("address", address);
+        List<BeanImageRepository> repositories = beanImageRepositoryMapper.selectList(wrapper);
+        if (!CollectionUtils.isEmpty(repositories)) {
+            return repositories.get(0);
+        }
+        return null;
+    }
+
     /**
      * 加密制品仓库信息
      * @param registry

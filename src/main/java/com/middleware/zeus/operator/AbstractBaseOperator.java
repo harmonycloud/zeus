@@ -129,6 +129,8 @@ public abstract class AbstractBaseOperator {
     private BeanMiddlewareInfoMapper middlewareInfoMapper;
     @Autowired
     private RoleAuthorityService roleAuthorityService;
+    @Autowired
+    private ImageRepositoryService imageRepositoryService;
 
     /**
      * 是否支持该中间件
@@ -1183,16 +1185,15 @@ public abstract class AbstractBaseOperator {
     /**
      * 非自定义中间件镜像仓库信息转换
      */
-    protected void convertRegistry(Middleware middleware, MiddlewareClusterDTO middlewareClusterDTO) {
-        if (!ObjectUtils.isEmpty(middlewareClusterDTO.getRegistry())) {
-            Registry registry = middlewareClusterDTO.getRegistry();
-            StringBuilder path = new StringBuilder();
-            path.append(registry.getAddress());
-            if (registry.getPort() != null) {
-                path.append(":").append(registry.getPort());
+    protected void convertRegistry(Middleware middleware, JSONObject values) {
+        if (values != null && values.getJSONObject("image") != null) {
+            JSONObject image = values.getJSONObject("image");
+            String repository = image.getString("repository");
+            middleware.setMirrorImage(repository);
+            BeanImageRepository beanImageRepository = imageRepositoryService.findByAddress(repository);
+            if (beanImageRepository != null) {
+                middleware.setMirrorImageId(beanImageRepository.getId().toString());
             }
-            path.append("/").append(registry.getChartRepo());
-            middleware.setMirrorImage(path.toString());
         }
     }
 

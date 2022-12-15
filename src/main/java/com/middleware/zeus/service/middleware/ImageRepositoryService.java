@@ -107,6 +107,17 @@ public interface ImageRepositoryService {
      */
     List<Secret> listImagePullSecret(String clusterId, String namespace);
 
+    /**
+     * 根据镜像仓库id查询imagePullSecret
+     * @return
+     */
     Secret getImagePullSecret(String clusterId, String namespace, String registryId);
+
+    /**
+     * 根据镜像仓库地址查找镜像仓库bean
+     * @param address
+     * @return
+     */
+    BeanImageRepository findByAddress(String address);
 
 }
