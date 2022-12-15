@@ -23,6 +23,7 @@ import com.middleware.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.system.LicenseService;
 import com.middleware.zeus.service.user.RoleAuthorityService;
+import com.middleware.zeus.util.MathUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.BeanUtils;
@@ -664,7 +665,7 @@ public abstract class AbstractBaseOperator {
                     ArrayList<String> targetContainers = (ArrayList<String>) obj.get("targetContainers");
                     customVolume.setTargetContainers(targetContainers);
                     customVolume.setStorageClass(obj.get("storageClass").toString());
-                    customVolume.setVolumeSize(obj.get("volumeSize").toString());
+                    customVolume.setVolumeSize(String.valueOf(MathUtil.extractDigital(obj.get("volumeSize").toString())));
                     customVolume.setHostPath(obj.get("hostPath").toString());
                 } catch (Exception e) {
                     e.printStackTrace();
