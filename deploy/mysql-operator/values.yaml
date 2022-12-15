@@ -41,8 +41,9 @@ replicaCount: 2
 
 image:
   repository: harbor.middleware.com/middleware
-  middlewareImageTag: v5.7.35-hc.4
-  middlewareImageTag_8: v8.0.26-hc.3
+  middlewareImageTag_5_7_35: v5.7.35-hc.4
+  middlewareImageTag_5_7_39: v5.7.39-hc.1
+  middlewareImageTag_8_0_26: v8.0.26-hc.3
   initImageTag: 1.1.2
   initImageTag_8: 1.0.6-8.0
   monitorImageTag: v0.12.1
