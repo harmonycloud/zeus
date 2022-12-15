@@ -99,7 +99,7 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
     public Middleware convertByHelmChart(Middleware middleware, MiddlewareClusterDTO cluster) {
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
         convertCommonByHelmChart(middleware, values);
-        convertRegistry(middleware, cluster);
+        convertRegistry(middleware, values);
 
         // 处理es特有参数
         if (values != null) {

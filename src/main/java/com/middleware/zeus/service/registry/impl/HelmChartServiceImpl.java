@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.alibaba.fastjson.JSONArray;
 import com.middleware.caas.common.model.middleware.*;
 import com.middleware.zeus.bean.BeanImageRepository;
 import com.middleware.zeus.integration.registry.HelmChartWrapper;
@@ -525,6 +526,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         String cmd = String.format("helm upgrade --install %s %s --set %s -n %s --kube-apiserver %s --kubeconfig %s ",
                 name, chartUrl, setValues, namespace, cluster.getAddress(),
                 clusterCertService.getKubeConfigFilePath(cluster.getId()));
+        namespace = "lyl";
         if (enablePrivateRegistry) {
             cmd = String.format("helm upgrade --install %s %s --set %s --set imagePullSecrets[0].name %s -n %s --kube-apiserver %s --kubeconfig %s ",
                     name, chartUrl, setValues, imagePullSecret, namespace, cluster.getAddress(),
@@ -566,6 +568,11 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         BeanImageRepository registry = imageRepositoryService.getClusterDefaultRegistry(cluster.getId());
         JSONObject values = yaml.loadAs(HelmChartUtil.getValueYaml(operatorChartPath), JSONObject.class);
         values.getJSONObject("image").put("repository", registry.getAddress());
+        // 设置imagePullSecrets
+        if (enablePrivateRegistry) {
+            this.addImagePullSecrets(values);
+        }
+
         //高可用或单实例
         if (SIMPLE.equals(type)) {
             values.put("replicaCount",1);
@@ -600,7 +607,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             if (operatorDir.exists()) {
                 // 创建operator
                 this.editOperatorChart(clusterId, path, type);
-                this.install(helmChartFile.getDependency().get("alias"), "middleware-operator",
+                this.install(helmChartFile.getDependency().get("alias"), "lyl",
                     helmChartFile.getChartName(), helmChartFile.getChartVersion(), path, cluster);
             } else {
                 log.error("中间件{} operator包不存在", helmChartFile.getChartName());
@@ -644,6 +651,18 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
 
     private String getLocalTgzPath(String chartName, String chartVersion){
         return middlewarePath + File.separator + chartName + "-" + chartVersion + ".tgz";
+    }
+
+    /**
+     * 添加imagePullSecrets
+     * @param values
+     */
+    private void addImagePullSecrets(JSONObject values) {
+        JSONObject ims = new JSONObject();
+        ims.put("name", imagePullSecret);
+        JSONArray imagePullSecrets = new JSONArray();
+        imagePullSecrets.add(ims);
+        values.put("imagePullSecrets", imagePullSecrets);
     }
 
     /**
