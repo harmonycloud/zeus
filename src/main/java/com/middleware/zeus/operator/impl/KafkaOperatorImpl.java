@@ -58,7 +58,7 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
         convertCommonByHelmChart(middleware, values);
         convertResourcesByHelmChart(middleware, middleware.getType(), values.getJSONObject(RESOURCES));
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
-        convertRegistry(middleware, cluster);
+        convertRegistry(middleware, values);
 
         // 处理kafka的特有参数
         if (values != null && values.getJSONObject("zookeeper") != null) {

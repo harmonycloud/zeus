@@ -202,7 +202,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
         convertCommonByHelmChart(middleware, values);
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
-        convertRegistry(middleware, cluster);
+        convertRegistry(middleware, values);
         convertCustomVolumesByHelmChart(middleware, values);
 
         // 处理redis特有参数

@@ -120,7 +120,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         convertCommonByHelmChart(middleware, values);
         convertResourcesByHelmChart(middleware, middleware.getType(), values.getJSONObject(RESOURCES));
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
-        convertRegistry(middleware, cluster);
+        convertRegistry(middleware, values);
         convertCustomVolumesByHelmChart(middleware, values);
 
         middleware.setIsAllLvmStorage(true);
