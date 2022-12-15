@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class LicenseController {
 
-    @Value("${system.license.enable: true}")
+    @Value("${system.license.enable:true}")
     private String enable;
 
     @Autowired
