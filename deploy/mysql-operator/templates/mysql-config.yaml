@@ -46,6 +46,9 @@ data:
     max_user_connections            ={{ .Values.args.max_user_connections | default $maxUserConnections }}
     {{- end }}
     max_connect_errors              ={{ .Values.args.max_connect_errors | default 100000 }}
+    {{- if (default .Values.args.skip_ssl false)}}
+    skip-ssl
+    {{ end }}
     #************** sql timeout & limits ***************
     max_execution_time              ={{ .Values.args.max_execution_time | default 10000 }}
     group_concat_max_len            ={{ .Values.args.group_concat_max_len | default 1048576 }}

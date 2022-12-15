@@ -9,8 +9,8 @@ dependencies:
   condition: elasticsearch-operator.enabled
   name: elasticsearch-operator
   repository: file://./charts/elasticsearch-operator
-  version: 1.7.9-3
+  version: 1.7.9-4
 description: Elasticsearch by Harmonycloud
 name: elasticsearch
 type: application
-version: 1.7.9-3
+version: 1.7.9-4

@@ -7,6 +7,7 @@ args:
   sql_mode: NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,ERROR_FOR_DIVISION_BY_ZERO
   server_port: 3306
   slow_query_log: "ON"
+  skip_ssl: false
   #max_connections: 600
   #innodb_buffer_pool_size: 1G
   #slave_parallel_workers: 8

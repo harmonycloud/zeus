@@ -9,8 +9,8 @@ dependencies:
   condition: mysql-operator.enabled
   name: mysql-operator
   repository: file://./charts/mysql-operator
-  version: 1.8.18
+  version: 1.8.18-1
 description: mysql instance chart
 name: mysql
 type: application
-version: 1.8.18
+version: 1.8.18-1
