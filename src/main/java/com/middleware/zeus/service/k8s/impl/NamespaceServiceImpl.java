@@ -61,11 +61,11 @@ public class NamespaceServiceImpl implements NamespaceService {
         protectNamespaceList.addAll(Arrays.asList(protectNamespaces.split(",")));
     }
 
-    @Value("${k8s.namespace.label:middleware=true}")
+    @Value("${k8s.namespace.label:middleware=middleware}")
     private void setLabel(String l) {
         String[] labelArr = l.split("=");
         labelKey = labelArr[0];
-        labelValue = labelArr[0];
+        labelValue = labelArr[1];
     }
 
     @Override
