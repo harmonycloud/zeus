@@ -81,6 +81,12 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
 
+    @Value("${system.privateRegistry.enable:false}")
+    private boolean enablePrivateRegistry;
+
+    @Value("${system.privateRegistry.imagePullSecret:middleware-zeus-secret}")
+    private String imagePullSecret;
+
     @Deprecated
     @Override
     public List<V1HelmChartVersion> listHelmChartVersions(Registry registry, String chartName) {
@@ -517,8 +523,13 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     public void installComponents(String name, String namespace, String setValues, String chartUrl,
                                   MiddlewareClusterDTO cluster) {
         String cmd = String.format("helm upgrade --install %s %s --set %s -n %s --kube-apiserver %s --kubeconfig %s ",
-            name, chartUrl, setValues, namespace, cluster.getAddress(),
-            clusterCertService.getKubeConfigFilePath(cluster.getId()));
+                name, chartUrl, setValues, namespace, cluster.getAddress(),
+                clusterCertService.getKubeConfigFilePath(cluster.getId()));
+        if (enablePrivateRegistry) {
+            cmd = String.format("helm upgrade --install %s %s --set %s --set imagePullSecrets[0].name %s -n %s --kube-apiserver %s --kubeconfig %s ",
+                    name, chartUrl, setValues, imagePullSecret, namespace, cluster.getAddress(),
+                    clusterCertService.getKubeConfigFilePath(cluster.getId()));
+        }
         execCmd(cmd, null);
     }
 
