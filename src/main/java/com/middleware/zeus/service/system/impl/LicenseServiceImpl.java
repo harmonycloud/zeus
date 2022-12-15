@@ -4,6 +4,7 @@ import static com.middleware.caas.common.constants.NameConstant.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
@@ -154,7 +155,7 @@ public class LicenseServiceImpl implements LicenseService {
         info.setUser(license.getString(USER));
         String uid = license.getString(UID);
         if (StringUtils.isNotEmpty(uid)){
-            info.setCode(Arrays.toString(Base64Utils.decode(uid)));
+            info.setCode(Base64.getEncoder().encodeToString(uid.getBytes(StandardCharsets.UTF_8)));
         }
         return info;
     }
