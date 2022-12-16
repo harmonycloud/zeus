@@ -283,7 +283,6 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         }
         if (values.containsKey("hostNetwork") && values.getBoolean("hostNetwork")) {
             List<PodInfo> podInfoList = podService.listMiddlewarePods(clusterId, namespace, middlewareName, MiddlewareTypeEnum.POSTGRESQL.getType());
-            podInfoList = podInfoList.stream().filter(podInfo -> "master".equals(podInfo.getRole())).collect(Collectors.toList());
             return podInfoList.stream().map(podInfo -> {
                 IngressDTO ingressDTO = new IngressDTO();
                 ingressDTO.setServicePurpose(podInfo.getPodName());
