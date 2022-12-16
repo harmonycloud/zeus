@@ -527,7 +527,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
                 name, chartUrl, setValues, namespace, cluster.getAddress(),
                 clusterCertService.getKubeConfigFilePath(cluster.getId()));
         if (enablePrivateRegistry) {
-            cmd = String.format("helm upgrade --install %s %s --set %s --set imagePullSecrets[0].name %s -n %s --kube-apiserver %s --kubeconfig %s ",
+            cmd = String.format("helm upgrade --install %s %s --set %s --set imagePullSecrets[0].name=%s -n %s --kube-apiserver %s --kubeconfig %s ",
                     name, chartUrl, setValues, imagePullSecret, namespace, cluster.getAddress(),
                     clusterCertService.getKubeConfigFilePath(cluster.getId()));
         }
