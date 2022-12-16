@@ -587,6 +587,9 @@ public class ProjectServiceImpl implements ProjectService {
 
     private void checkAndBindImagePullSecret(String clusterId, String namespace) {
         ServiceAccount serviceAccount = serviceAccountService.get(clusterId, namespace, middlewareServiceAccount);
+        if (serviceAccount == null) {
+            return;
+        }
         List<ImageRepositoryDTO> imageRepositoryDTOS = imageRepositoryService.list(clusterId);
         imageRepositoryService.createImagePullSecret(clusterId, namespace, imageRepositoryDTOS);
         List<Secret> allImagePullSecret = imageRepositoryService.listImagePullSecret(clusterId, namespace);

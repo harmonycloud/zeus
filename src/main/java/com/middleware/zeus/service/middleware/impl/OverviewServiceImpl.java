@@ -824,6 +824,7 @@ public class OverviewServiceImpl implements OverviewService {
         recordQueryWrapper.ne("cluster_id", "");
         recordQueryWrapper.ne("namespace", "");
         recordQueryWrapper.ne("name", "");
+        recordQueryWrapper.ne("type", null);
         recordQueryWrapper.eq("lay", "service");
         recordQueryWrapper.ge("time", beginTime);
         recordQueryWrapper.le("time", endTime);
