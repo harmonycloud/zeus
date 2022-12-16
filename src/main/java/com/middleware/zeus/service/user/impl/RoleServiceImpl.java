@@ -224,7 +224,5 @@ public class RoleServiceImpl implements RoleService {
 
     public void initResourceMenuRole(RoleDto roleDto){
         resourceMenuRoleService.init(roleDto.getId());
-        resourceMenuRoleService.add(roleDto.getId(), 3, true);
-        resourceMenuRoleService.add(roleDto.getId(), 4, true);
     }
 }

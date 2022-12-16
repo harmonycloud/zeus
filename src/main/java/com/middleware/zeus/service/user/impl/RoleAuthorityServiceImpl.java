@@ -9,10 +9,10 @@ import com.middleware.zeus.service.user.RoleAuthorityService;
 import com.middleware.zeus.service.user.UserRoleService;
 import com.middleware.zeus.util.RequestUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -84,23 +84,27 @@ public class RoleAuthorityServiceImpl implements RoleAuthorityService {
     public Boolean checkOps(String roleId, String type) {
         boolean flag = false;
         String projectId = RequestUtil.getProjectId();
-        if (StringUtils.isEmpty(projectId)){
+        if (StringUtils.isEmpty(projectId)) {
             return false;
         }
         if (StringUtils.isEmpty(roleId)) {
             String username = CurrentUserRepository.getUser().getUsername();
             Integer rid = userRoleService.getRoleId(username, projectId);
-            if (rid == null && userRoleService.checkAdmin(username)){
+            if (rid == null && userRoleService.checkAdmin(username)) {
                 return true;
             }
             roleId = String.valueOf(rid);
         }
-        QueryWrapper<BeanRoleAuthority> wrapper =
-            new QueryWrapper<BeanRoleAuthority>().eq("role_id", roleId).eq("type", type);
+        QueryWrapper<BeanRoleAuthority> wrapper = new QueryWrapper<BeanRoleAuthority>().eq("role_id", roleId);
+        if (StringUtils.isNotEmpty(type)) {
+            wrapper.eq("type", type);
+        }
+
+        // 判断是否拥有运维权限
         List<BeanRoleAuthority> beanRoleAuthorityList = beanRoleAuthorityMapper.selectList(wrapper);
         if (!CollectionUtils.isEmpty(beanRoleAuthorityList)) {
-            BeanRoleAuthority roleAuthority = beanRoleAuthorityList.get(0);
-            if (Integer.parseInt(roleAuthority.getPower().split("")[1]) == 1) {
+            if (beanRoleAuthorityList.stream()
+                .anyMatch(roleAuthority -> Integer.parseInt(roleAuthority.getPower().split("")[1]) == 1)) {
                 flag = true;
             }
         }

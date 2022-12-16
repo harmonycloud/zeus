@@ -6,11 +6,13 @@ import com.middleware.zeus.bean.user.BeanResourceMenuRole;
 import com.middleware.zeus.dao.user.BeanResourceMenuRoleMapper;
 import com.middleware.zeus.service.user.ResourceMenuRoleService;
 import com.middleware.zeus.service.user.ResourceMenuService;
+import com.middleware.zeus.service.user.RoleAuthorityService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.Arrays;
 import java.util.List;
@@ -32,6 +34,8 @@ public class ResourceMenuRoleServiceImpl implements ResourceMenuRoleService {
     private BeanResourceMenuRoleMapper beanResourceMenuRoleMapper;
     @Autowired
     private ResourceMenuService resourceMenuService;
+    @Autowired
+    private RoleAuthorityService roleAuthorityService;
 
     @Override
     public void init(Integer roleId) {
@@ -50,6 +54,12 @@ public class ResourceMenuRoleServiceImpl implements ResourceMenuRoleService {
             new QueryWrapper<BeanResourceMenuRole>().eq("available", 1);
         if (StringUtils.isNotEmpty(roleId)){
             rmRoleWrapper.eq("role_id", roleId);
+        }
+        List<BeanResourceMenuRole> list = beanResourceMenuRoleMapper.selectList(rmRoleWrapper);
+        if (CollectionUtils.isEmpty(list)){
+            Integer intRoleId = Integer.parseInt(roleId);
+            init(intRoleId);
+            updateOpsMenu(intRoleId, roleAuthorityService.checkOps(roleId, null));
         }
         return beanResourceMenuRoleMapper.selectList(rmRoleWrapper);
     }
