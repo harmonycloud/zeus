@@ -123,15 +123,17 @@ public class NamespaceServiceImpl implements NamespaceService {
         if (exist && checkAliasNameExist(namespace.getClusterId(), namespace.getAliasName())){
             throw new BusinessException(ErrorMessage.NAMESPACE_ALIAS_NAME_EXIST);
         }
+        // create ns
         Map<String, String> annotations = new HashMap<>();
         if (StringUtils.isNotEmpty(namespace.getAliasName())) {
             annotations.put("alias_name", namespace.getAliasName());
         }
+        save(namespace.getClusterId(), namespace.getName(), label, annotations);
+        // bind project
         if (StringUtils.isNotEmpty(namespace.getProjectId())) {
             annotations.put("project_id", namespace.getProjectId());
             projectService.bindNamespace(namespace);
         }
-        save(namespace.getClusterId(), namespace.getName(), label, annotations);
     }
 
     @Override
