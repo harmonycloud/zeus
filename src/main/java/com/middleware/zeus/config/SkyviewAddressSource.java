@@ -16,9 +16,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class SkyviewAddressSource implements AddressSource {
 
-    @Value("${system.skyview.host}")
+    @Value("${system.skyview.host:caas-gateway-svc.caas-system}")
     private String host;
-    @Value("${system.skyview.port}")
+    @Value("${system.skyview.port:8081}")
     private int port;
 
     @Override
