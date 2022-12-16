@@ -118,9 +118,6 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
             helmChartService.uninstall(cluster, "logging", ES_NAME);
             helmChartService.uninstall(cluster, "logging", "log");
         }
-        if (cluster.getLogging().getElasticSearch() != null){
-            cluster.getLogging().setElasticSearch(null);
-        }
         clusterService.update(cluster);
     }
 
