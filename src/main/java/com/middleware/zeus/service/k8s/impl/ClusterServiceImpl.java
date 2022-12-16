@@ -181,6 +181,14 @@ public class ClusterServiceImpl implements ClusterService {
                         }
                         // 判断集群是否可删除
                         cluster.setRemovable(checkDelete(cluster.getId()));
+                        // 设置监控组件
+                        ClusterComponentsDto alertManager = clusterComponentService.get(cluster.getId(), ComponentsEnum.ALERTMANAGER.getName());
+                        if (alertManager != null) {
+                            MiddlewareClusterMonitor monitor = new MiddlewareClusterMonitor();
+                            MiddlewareClusterMonitorInfo middlewareClusterMonitorInfo = new MiddlewareClusterMonitorInfo();
+                            BeanUtils.copyProperties(alertManager, middlewareClusterMonitorInfo);
+                            monitor.setAlertManager(middlewareClusterMonitorInfo);
+                        }
                     } catch (Exception ignored) {
                     } finally {
                         clusterCountDownLatch.countDown();
