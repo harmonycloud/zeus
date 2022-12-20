@@ -83,8 +83,8 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         userPasswords.put("postgres", middleware.getPassword());
         values.put("userPasswords", userPasswords);
         // 替换版本
-        if (ChartVersionUtil.compare(middleware.getChartVersion(), "2.0.12") < 0) {
-            values.put("pgsqlVersion", middleware.getVersion().split("\\.")[1]);
+        if (ChartVersionUtil.compare(middleware.getChartVersion(), "2.0.12") > 0) {
+            values.put("pgsqlVersion", middleware.getVersion().split("\\.")[0]);
         } else {
             values.put("pgsqlVersion", middleware.getVersion());
         }
