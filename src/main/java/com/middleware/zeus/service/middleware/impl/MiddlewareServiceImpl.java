@@ -575,8 +575,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             if (currentImage.getString("repository") != null) {
                 upgradeImage.put("repository", currentImage.getString("repository"));
             }
-            JSONObject resImage = YamlUtil.jsonMerge(upgradeImage, currentImage);
-            resValues.put("image", resImage);
+            resValues.put("image", upgradeImage);
         }else if (type.equals(MiddlewareTypeEnum.POSTGRESQL.getType())){
             // 新版本pg的升级问题
             JSONObject operatorValues = helmChartService.getInstalledValues("postgresql-operator", MIDDLEWARE_OPERATOR, cluster);
@@ -585,10 +584,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         }
         resValues.put("chart-version", upgradeChartVersion);
         // 执行升级
-        Middleware middleware = detail(clusterId, namespace, name, type);
+        Middleware middleware = new Middleware();
         middleware.setChartName(chartName);
         middleware.setChartVersion(upgradeChartVersion);
-        helmChartService.upgrade(middleware, currentValues, upgradeValues, cluster);
+        middleware.setName(name);
+        middleware.setNamespace(namespace);
+        helmChartService.upgrade(middleware, currentValues, resValues, cluster);
         return BaseResult.ok();
     }
 
