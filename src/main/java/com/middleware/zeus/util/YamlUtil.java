@@ -198,7 +198,6 @@ public class YamlUtil {
         Object tolerations = upgradeValues.get("tolerations");
         if (tolerations instanceof JSONObject) {
             JSONArray tolerationsArray = new JSONArray();
-            tolerationsArray.add(tolerations);
             upgradeValues.put("tolerations", tolerationsArray);
         }
     }
