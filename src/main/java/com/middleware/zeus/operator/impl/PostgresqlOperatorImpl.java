@@ -14,6 +14,7 @@ import com.middleware.zeus.operator.miiddleware.AbstractPostgresqlOperator;
 import com.middleware.zeus.service.k8s.K8sExecService;
 import com.middleware.zeus.service.k8s.MiddlewareBackupCRService;
 import com.middleware.zeus.service.k8s.PodService;
+import com.middleware.zeus.util.ChartVersionUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -82,7 +83,11 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         userPasswords.put("postgres", middleware.getPassword());
         values.put("userPasswords", userPasswords);
         // 替换版本
-        values.put("pgsqlVersion", middleware.getVersion());
+        if (ChartVersionUtil.compare(middleware.getChartVersion(), "2.0.12") < 0) {
+            values.put("pgsqlVersion", middleware.getVersion().split("\\.")[1]);
+        } else {
+            values.put("pgsqlVersion", middleware.getVersion());
+        }
         // 主机网络配置
         if (middleware.getPostgresqlParam() != null && middleware.getPostgresqlParam().getHostNetwork() != null) {
             values.put("hostNetwork", middleware.getPostgresqlParam().getHostNetwork());
