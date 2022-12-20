@@ -62,8 +62,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.LVM_PROVISIONER;
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.PODS;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
 
 /**
  * @author dengyulong
@@ -552,7 +551,9 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         HelmChartFile helmChart = helmChartService.getHelmChartFromMysql(chartName, upgradeChartVersion);
         JSONObject upgradeValues = YamlUtil.convertYamlAsNormalJsonObject(helmChart.getValueYaml());
         YamlUtil.convertToStandardJsonObject(upgradeValues);
-        JSONObject currentValues = helmChartService.getInstalledValuesAsNormalJson(name, namespace, clusterService.findById(clusterId));
+
+        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+        JSONObject currentValues = helmChartService.getInstalledValuesAsNormalJson(name, namespace, cluster);
 
         String currentChartVersion = currentValues.getString("chart-version");
         String compatibleVersions = upgradeValues.getString("compatibleVersions");
@@ -576,13 +577,18 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             }
             JSONObject resImage = YamlUtil.jsonMerge(upgradeImage, currentImage);
             resValues.put("image", resImage);
+        }else if (type.equals(MiddlewareTypeEnum.POSTGRESQL.getType())){
+            // 新版本pg的升级问题
+            JSONObject operatorValues = helmChartService.getInstalledValues("postgresql-operator", MIDDLEWARE_OPERATOR, cluster);
+            upgradeImage.put("repository", operatorValues.getJSONObject("image").getString("repository"));
+            resValues.put("image", upgradeImage);
         }
         resValues.put("chart-version", upgradeChartVersion);
         // 执行升级
         Middleware middleware = detail(clusterId, namespace, name, type);
         middleware.setChartName(chartName);
         middleware.setChartVersion(upgradeChartVersion);
-        helmChartService.upgrade(middleware, currentValues, upgradeValues, clusterService.findById(clusterId));
+        helmChartService.upgrade(middleware, currentValues, upgradeValues, cluster);
         return BaseResult.ok();
     }
 
