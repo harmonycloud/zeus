@@ -490,8 +490,8 @@ public abstract class AbstractBaseOperator {
             }
 
             // 设置服务备份状态
-            middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(middleware.getClusterId(),
-                middleware.getNamespace(), middleware.getType(), middleware.getName()));
+            /*middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(middleware.getClusterId(),
+                middleware.getNamespace(), middleware.getType(), middleware.getName()));*/
 
             // 设置中间件图片
             // setImagePath(middleware, values);

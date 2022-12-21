@@ -84,7 +84,7 @@ public class PodServiceImpl implements PodService {
     public Middleware list(String clusterId, String namespace, String middlewareName, String type) {
         MiddlewareCR mw = middlewareCRService.getCR(clusterId, namespace, type, middlewareName);
         Middleware middleware = listPodsWithMiddleware(mw, clusterId, namespace, middlewareName, type);
-        middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(clusterId, middleware.getNamespace(), middleware.getType(), middleware.getName()));
+        //middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(clusterId, middleware.getNamespace(), middleware.getType(), middleware.getName()));
         return middleware;
     }
 
@@ -439,7 +439,7 @@ public class PodServiceImpl implements PodService {
                 setPodPvc(pi, pvcInfos);
             }
             // 设置pod备份状态
-            setPodBackupStatus(clusterId, namespace, type, middlewareName, pi);
+            //setPodBackupStatus(clusterId, namespace, type, middlewareName, pi);
         }
         // 添加pod额外角色类型
         podInfoList = addPodExtraRole(clusterId, namespace, middlewareName, type, podInfoList, mw);
