@@ -143,11 +143,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         // 记录当前数据
         Map<String, String> oldDate = new HashMap<>(data);
         // 更新配置，并记录是否重启
-        boolean restart = false;
         for (CustomConfig customConfig : config.getCustomConfigList()) {
-            if (customConfig.getRestart()) {
-                restart = true;
-            }
             // 确认正则匹配
             if (!checkPattern(customConfig)) {
                 log.error("集群{} 分区{} 中间件{} 参数{} 正则校验失败", config.getClusterId(), config.getNamespace(), config.getName(),
@@ -156,8 +152,8 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             }
             data.put(customConfig.getName(), customConfig.getValue());
         }
-        // mysql和redis在不需要重启时，手动执行set global
-        if ((config.getType().equals(MiddlewareTypeEnum.MYSQL.getType()) || config.getType().equals(MiddlewareTypeEnum.REDIS.getType())) && !restart) {
+        // mysql和redis手动执行set global
+        if ((config.getType().equals(MiddlewareTypeEnum.MYSQL.getType()) || config.getType().equals(MiddlewareTypeEnum.REDIS.getType()))) {
                 doUpdateCustomConfig(config, cluster, config.getType());
         }
 
