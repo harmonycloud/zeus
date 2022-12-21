@@ -640,17 +640,16 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             return middlewareIncBackupDto;
         }
         // 获取时间
-        if (cr.getStatus() == null || cr.getStatus().getStorageProvider() == null) {
-            throw new BusinessException(ErrorMessage.INC_BACKUP_SCHEDULE_ERROR);
-        }
-        JSONObject storageProvider = cr.getStatus().getStorageProvider();
-        String type = middlewareCrTypeService.findTypeByCrType(cr.getSpec().getType());
-        JSONObject time = storageProvider.getJSONObject(type);
+        if (cr.getStatus() != null && cr.getStatus().getStorageProvider() != null) {
+            JSONObject storageProvider = cr.getStatus().getStorageProvider();
+            String type = middlewareCrTypeService.findTypeByCrType(cr.getSpec().getType());
+            JSONObject time = storageProvider.getJSONObject(type);
 
-        if (time != null && time.containsKey("startTime") && time.containsKey("endTime")) {
-            Date startTime = DateUtils.parseUTCDate(time.getString("startTime"));
-            Date endTime = DateUtils.parseUTCDate(time.getString("endTime"));
-            middlewareIncBackupDto.setStartTime(startTime).setEndTime(endTime);
+            if (time != null && time.containsKey("startTime") && time.containsKey("endTime")) {
+                Date startTime = DateUtils.parseUTCDate(time.getString("startTime"));
+                Date endTime = DateUtils.parseUTCDate(time.getString("endTime"));
+                middlewareIncBackupDto.setStartTime(startTime).setEndTime(endTime);
+            }
         }
         // 封装数据
         middlewareIncBackupDto.setPause(cr.getSpec().getPause())
