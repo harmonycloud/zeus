@@ -386,7 +386,9 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         StringBuilder sb = new StringBuilder();
         sb.append("'");
         config.getCustomConfigList().forEach(customConfig -> {
-            sb.append("config set ").append(customConfig.getName()).append(" ").append("\\\"").append(customConfig.getValue()).append("\\\"").append("\\n");
+            if (!customConfig.getRestart()) {
+                sb.append("config set ").append(customConfig.getName()).append(" ").append("\\\"").append(customConfig.getValue()).append("\\\"").append("\\n");
+            }
         });
         sb.append("'");
         // 主从节点执行命令
@@ -418,11 +420,13 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         // 拼接数据库语句
         StringBuilder sb = new StringBuilder();
         config.getCustomConfigList().forEach(customConfig -> {
-            sb.append("set global ").append(customConfig.getName()).append("=");
-            if (isNum(customConfig.getValue())) {
-                sb.append(customConfig.getValue()).append(";");
-            } else {
-                sb.append("'").append(customConfig.getValue()).append("'").append(";");
+            if (!customConfig.getRestart()) {
+                sb.append("set global ").append(customConfig.getName()).append("=");
+                if (isNum(customConfig.getValue())) {
+                    sb.append(customConfig.getValue()).append(";");
+                } else {
+                    sb.append("'").append(customConfig.getValue()).append("'").append(";");
+                }
             }
         });
         // 主从节点执行命令
