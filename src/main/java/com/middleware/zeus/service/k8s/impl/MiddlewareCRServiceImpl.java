@@ -218,22 +218,13 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
 
     @Override
     public Middleware simpleConvert(MiddlewareCR mw) {
-        if (mw == null) {
-            return null;
-        }
-        Middleware middleware = new Middleware()
-            .setName(mw.getSpec().getName())
-            .setNamespace(mw.getMetadata().getNamespace())
-            .setType(middlewareCrTypeService.findTypeByCrType(mw.getSpec().getType()))
-            .setCreateTime(DateUtils.parseUTCDate(mw.getMetadata().getCreationTimestamp())).setPodNum(getPodNum(mw))
-            .setPods(getPodName(mw));
-        if (mw.getStatus() != null) {
-            middleware.setStatus(mw.getStatus().getPhase());
-            if (StringUtils.isNotEmpty(mw.getStatus().getReason()) && !"unknow".equals(mw.getStatus().getReason())) {
-                middleware.setReason(mw.getStatus().getReason());
-            }
-        }
-        return middleware;
+        return mw == null ? null
+            : new Middleware().setName(mw.getSpec().getName()).setNamespace(mw.getMetadata().getNamespace())
+                .setType(middlewareCrTypeService.findTypeByCrType(mw.getSpec().getType()))
+                .setStatus(mw.getStatus() != null ? mw.getStatus().getPhase() : "")
+                .setReason(mw.getStatus() != null ? mw.getStatus().getReason() : "")
+                .setCreateTime(DateUtils.parseUTCDate(mw.getMetadata().getCreationTimestamp())).setPodNum(getPodNum(mw))
+                .setPods(getPodName(mw));
     }
 
     @Override
