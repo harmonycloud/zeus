@@ -1,39 +1,6 @@
 package com.middleware.zeus.operator;
 
-import static com.middleware.caas.common.constants.CommonConstant.FALSE;
-import static com.middleware.caas.common.constants.CommonConstant.TRUE;
-import static com.middleware.caas.common.constants.registry.HelmChartConstant.CHART_YAML_NAME;
-import static com.middleware.caas.common.constants.NameConstant.*;
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import com.middleware.caas.common.enums.CustomVolumeEnum;
-import com.middleware.caas.common.model.middleware.*;
-import com.middleware.zeus.bean.*;
-import com.middleware.zeus.dao.AlertRuleIdMapper;
-import com.middleware.zeus.dao.BeanMiddlewareInfoMapper;
-import com.middleware.zeus.service.aspect.AspectService;
-import com.middleware.zeus.service.k8s.*;
-import com.middleware.zeus.service.middleware.*;
-import com.middleware.zeus.service.middleware.impl.MiddlewareAlertsServiceImpl;
-import com.middleware.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
-import com.middleware.zeus.service.registry.HelmChartService;
-import com.middleware.zeus.service.system.LicenseService;
-import com.middleware.zeus.service.user.RoleAuthorityService;
-import com.middleware.zeus.util.MathUtil;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.ObjectUtils;
-import org.yaml.snakeyaml.Yaml;
-
+import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -47,26 +14,56 @@ import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.AffinityDTO;
 import com.middleware.caas.common.model.MiddlewareServiceNameIndex;
 import com.middleware.caas.common.model.StorageDto;
+import com.middleware.caas.common.model.middleware.*;
 import com.middleware.caas.common.model.registry.HelmChartFile;
 import com.middleware.caas.common.util.ThreadPoolExecutorFactory;
 import com.middleware.tool.collection.JsonUtils;
 import com.middleware.tool.numeric.ResourceCalculationUtil;
 import com.middleware.tool.uuid.UUIDUtils;
+import com.middleware.zeus.bean.*;
+import com.middleware.zeus.dao.AlertRuleIdMapper;
 import com.middleware.zeus.dao.BeanAlertRuleMapper;
+import com.middleware.zeus.dao.BeanMiddlewareInfoMapper;
 import com.middleware.zeus.integration.cluster.PvcWrapper;
 import com.middleware.zeus.integration.cluster.ServiceWrapper;
 import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRule;
 import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRuleGroups;
 import com.middleware.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.middleware.zeus.schedule.MiddlewareManageTask;
+import com.middleware.zeus.service.aspect.AspectService;
+import com.middleware.zeus.service.k8s.*;
+import com.middleware.zeus.service.middleware.*;
+import com.middleware.zeus.service.middleware.impl.MiddlewareAlertsServiceImpl;
+import com.middleware.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
+import com.middleware.zeus.service.registry.HelmChartService;
+import com.middleware.zeus.service.system.LicenseService;
+import com.middleware.zeus.service.user.RoleAuthorityService;
 import com.middleware.zeus.util.K8sConvert;
-
-import cn.hutool.json.JSONUtil;
+import com.middleware.zeus.util.MathUtil;
 import io.fabric8.kubernetes.api.model.NodeAffinity;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.Service;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
+import org.yaml.snakeyaml.Yaml;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.middleware.caas.common.constants.CommonConstant.FALSE;
+import static com.middleware.caas.common.constants.CommonConstant.TRUE;
+import static com.middleware.caas.common.constants.NameConstant.*;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
+import static com.middleware.caas.common.constants.registry.HelmChartConstant.CHART_YAML_NAME;
 
 /**
  * @author dengyulong
