@@ -11,6 +11,7 @@ import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.middleware.caas.common.enums.CustomVolumeEnum;
 import com.middleware.caas.common.model.middleware.*;
 import com.middleware.zeus.bean.*;
 import com.middleware.zeus.dao.AlertRuleIdMapper;
@@ -1310,17 +1311,19 @@ public abstract class AbstractBaseOperator {
      */
     private JSONArray convertCustomVolumes(Map<String, CustomVolume> customVolumes) {
         JSONArray array = new JSONArray();
-        customVolumes.forEach((name, customVolume)->{
-            JSONObject item = new JSONObject();
-            item.put("name", name);
-            item.put("mountPath", customVolume.getMountPath());
-            item.put("storageClass", customVolume.getStorageClass());
-            item.put("volumeSize", customVolume.getVolumeSize() + "Gi");
-            item.put("hostPath", customVolume.getHostPath());
-            JSONArray containers = new JSONArray();
-            containers.addAll(customVolume.getTargetContainers());
-            item.put("targetContainers", containers);
-            array.add(item);
+        customVolumes.forEach((name, customVolume) -> {
+            if (StringUtils.isNotEmpty(customVolume.getHostPath())) {
+                JSONObject item = new JSONObject();
+                item.put("name", name);
+                item.put("mountPath", customVolume.getMountPath());
+                item.put("storageClass", customVolume.getStorageClass());
+                item.put("volumeSize", customVolume.getVolumeSize() + "Gi");
+                item.put("hostPath", customVolume.getHostPath());
+                JSONArray containers = new JSONArray();
+                containers.addAll(customVolume.getTargetContainers());
+                item.put("targetContainers", containers);
+                array.add(item);
+            }
         });
         return array;
     }
