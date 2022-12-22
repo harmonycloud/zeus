@@ -17,6 +17,10 @@ CREATE TABLE `active_area` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='可用区';
 
+-- 2022.9.23 liyinlong
+-- personal_config表添加
+ALTER TABLE `personal_config` ADD COLUMN `platform_alias_name` VARCHAR(256) DEFAULT "中间件平台";
+
 -- 2022.09.14 xutianhong
 -- menu更新
 DELETE FROM resource_menu;
