@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
+import com.middleware.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.middleware.zeus.service.k8s.*;
 import com.middleware.caas.common.model.middleware.*;
 import com.middleware.zeus.service.AbstractBaseService;
@@ -391,20 +392,23 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             }
         });
         sb.append("'");
+        // 没有要更新的则不执行
+        if ("''".equals(sb.toString())) {
+            return;
+        }
         // 主从节点执行命令
         if (middlewareCr.getStatus() == null || middlewareCr.getStatus().getInclude() == null
                 || !middlewareCr.getStatus().getInclude().containsKey("pods")) {
             throw new BusinessException(ErrorMessage.FIND_POD_IN_MIDDLEWARE_FAIL);
         }
+        String serviceName = middlewareCr.getStatus().getInclude().get("services").get(0).getName();
         middlewareCr.getStatus().getInclude().get("pods").forEach(pods -> {
             if ("master".equals(pods.getType()) || "slave".equals(pods.getType())) {
-                // 获取host
-                String host = pods.getName().substring(0, pods.getName().lastIndexOf("-"));
                 String execCommand = MessageFormat.format(
                         "kubectl exec {0} -n {1} -c redis-cluster --server={2} --token={3} --insecure-skip-tls-verify=true " +
-                                "-- bash -c \"echo -en {4} | redis-cli -h {5} -p {6} -a {7} --pipe\"",
+                                "-- bash -c \"echo -en {4} | redis-cli -h {5}.{6} -p {7} -a {8} --pipe\"",
                         pods.getName(), config.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
-                        sb.toString(), host, port, password);
+                        sb.toString(), pods.getName(), serviceName, port, password);
                 k8sExecService.exec(execCommand);
             }
         });
