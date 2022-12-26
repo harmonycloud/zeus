@@ -740,6 +740,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             columnDto.setNum(column.get("ordinal_position"));
             columnDto.setSize(column.get("character_maximum_length"));
             columnDto.setComment(column.get("col_description"));
+            columnDto.setCollate(column.get("collation_name"));
             if (column.get("contype") != null && "p".equals(column.get("contype"))) {
                 columnDto.setPrimaryKey(true);
             } else {
@@ -1312,7 +1313,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             sb.append("not null ");
         }
         if (StringUtils.isNotEmpty(columnDto.getCollate())) {
-            sb.append("COLLATE ").append(columnDto.getCollate());
+            sb.append("COLLATE ").append("\"").append(columnDto.getCollate()).append("\"");
         }
         return sb.toString();
     }
