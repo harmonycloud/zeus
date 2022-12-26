@@ -1216,7 +1216,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         JSONObject enableUser = postgresqlClient.enableUser(path, port, username, enable);
         JSONObject err = enableUser.getJSONObject("err");
         if (err != null) {
-            throw new BusinessException(ErrorMessage.POSTGRESQL_DELETE_USER_FAILED, err.getString("Message"));
+            throw new BusinessException(ErrorMessage.POSTGRESQL_UPDATE_USER_FAILED, err.getString("Message"));
         }
     }
 
