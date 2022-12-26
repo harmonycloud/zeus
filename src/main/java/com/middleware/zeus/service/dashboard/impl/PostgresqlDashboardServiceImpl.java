@@ -478,6 +478,9 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         Map<String, String> columnComment = new HashMap<>();
         StringBuilder pk = new StringBuilder();
         // 构造column sql语句
+        if (CollectionUtils.isEmpty(tableDto.getColumnDtoList())){
+            throw new BusinessException(ErrorMessage.POSTGRESQL_ADD_TABLE_COLUMN_IS_NULL);
+        }
         for (com.middleware.caas.common.model.dashboard.ColumnDto columnDto : tableDto.getColumnDtoList()) {
             if (columnDto.getPrimaryKey() != null && columnDto.getPrimaryKey()) {
                 pk.append(columnDto.getColumn()).append(",");
