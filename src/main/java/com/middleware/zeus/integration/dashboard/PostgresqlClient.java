@@ -423,23 +423,23 @@ public interface PostgresqlClient {
     /**
      * 取消赋权用户database
      */
-    @Delete(url = "/postgresql/{path}/port/{port}/user/{username}/database/{database}")
+    @Delete(url = "/postgresql/{path}/port/{port}/user/{username}/database/{database}?privileges={privileges}")
     JSONObject revokeUserDatabase(@Var("path") String path,
                                  @Var("port") String port,
                                  @Var("username") String username,
                                  @Var("database") String database,
-                                 @Body("privileges") String privileges);
+                                 @Var("privileges") String privileges);
 
     /**
      * 取消赋权用户schema
      */
-    @Delete(url = "/postgresql/{path}/port/{port}/user/{username}/database/{database}/schema/{schema}")
+    @Delete(url = "/postgresql/{path}/port/{port}/user/{username}/database/{database}/schema/{schema}?privileges={privileges}")
     JSONObject revokeUserSchema(@Var("path") String path,
                                @Var("port") String port,
                                @Var("username") String username,
                                @Var("database") String database,
                                @Var("schema") String schema,
-                               @Body("privileges") String privileges);
+                               @Var("privileges") String privileges);
 
     /**
      * 取消赋权用户table
