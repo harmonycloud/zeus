@@ -211,7 +211,7 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
     public void createImagePullSecret(String clusterId, String namespace, List<ImageRepositoryDTO> imageRepositoryDTOS) {
         for (ImageRepositoryDTO repositoryDTO : imageRepositoryDTOS) {
             String sa = "middleware-registry-" + UUIDUtils.get8UUID();
-
+            createImagePullSecret(clusterId, namespace, repositoryDTO.getId(), sa);
         }
     }
 
