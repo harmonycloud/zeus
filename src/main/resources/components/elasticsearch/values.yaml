@@ -11,18 +11,18 @@ storage:
   coldSize: 5Gi
 hostNetwork: false
 
-# 默认使用es6.8版本; 如需使用7.16版本，则值改为7.16
+# 默认使用es6.8.22版本; 如需使用7.16.3版本，则值改为7.16.3
 version: "6.8"
 
 image:
   repository: harbor.middleware.com/middleware
   pullPolicy: IfNotPresent
   busyImageTag: "1.0"
-  kibanaImageTag: 6.8.10
-  kibanaImageTag_7: 7.16.3
+  kibanaImageTag_6_8_10: 6.8.10
+  kibanaImageTag_7_16_3: 7.16.3
   initImageTag: 1.5.1
-  elasticImageTag: 6.8.22-3
-  elasticImageTag_7: 7.16.3-1
+  elasticImageTag_6_8_22: 6.8.22-3
+  elasticImageTag_7_16_3: 7.16.3-1
   exporterImageTag: 1.1.0rc1
   testImageTag: v0.3
 

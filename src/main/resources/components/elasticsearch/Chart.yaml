@@ -1,7 +1,7 @@
 annotations:
   owner: harmonycloud
   type: db
-  version: 6.8,7.16
+  version: 6.8.22,7.16.3
 apiVersion: v2
 appVersion: 6.8.22
 dependencies:
@@ -9,8 +9,8 @@ dependencies:
   condition: elasticsearch-operator.enabled
   name: elasticsearch-operator
   repository: file://./charts/elasticsearch-operator
-  version: 1.7.9-4
+  version: 1.7.9-5
 description: Elasticsearch by Harmonycloud
 name: elasticsearch
 type: application
-version: 1.7.9-4
+version: 1.7.9-5
