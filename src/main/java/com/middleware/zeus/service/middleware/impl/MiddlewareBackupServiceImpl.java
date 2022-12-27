@@ -601,7 +601,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         setTaskName(recordList, clusterId, null);
         // 根据关键词进行过滤
         if (StringUtils.isNotEmpty(keyword)) {
-            recordList = recordList.stream().filter(record -> record.getTaskName().equals(keyword))
+            recordList = recordList.stream().filter(record -> record.getTaskName().contains(keyword))
                 .collect(Collectors.toList());
         }
         // 根据中间件名称进行过滤
