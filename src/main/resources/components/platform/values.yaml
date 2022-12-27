@@ -14,7 +14,7 @@ global:
     nodeSelector: {}
   middlewarebackup_controller:
     image: middlewarebackup-controller
-    tag: v1.2.15
+    tag: v1.2.16
     resources:
       limits:
         cpu: 200m
@@ -33,10 +33,10 @@ global:
       tag: v1.0.3
     common_path_backup:
       image: middleware-backup-operator
-      tag: v1.0.4-common
+      tag: v1.0.5-common
     job_pgsql_backup:
       image: middleware-backup-operator
-      tag: v1.0.8-pgsql
+      tag: v1.0.9-pgsql
     job_mysql_backup:
       image: middleware-backup-operator
       tag: v1.0.7-mysql

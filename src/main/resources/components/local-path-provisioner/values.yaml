@@ -10,7 +10,7 @@ replicaCount: 1
 
 image:
   repository: harbor.middleware.com/middleware
-  tag: v0.0.24-1.0.1
+  tag: v0.0.24-1.0.3
   pullPolicy: IfNotPresent
 
 helperImage:
@@ -117,8 +117,8 @@ configmap:
     #!/bin/sh
     set -eu
     if [ ! -d "$VOL_DIR" ]; then echo "The $VOL_DIR directory does not exist"; exit 1; fi
-    num=$(du -s "$VOL_DIR"|awk '{print $1}')
-    if [ $num -gt 0 ]; then echo "Data already exists in the $VOL_DIR directory"; exit 1; fi
+    num=$(ls -a "$VOL_DIR"|wc -l)
+    if [ $num -gt 2 ]; then echo "Data already exists in the $VOL_DIR directory"; exit 1; fi
   cleanDir: |-
     #!/bin/sh
     set -eu
