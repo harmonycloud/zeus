@@ -10,7 +10,7 @@ replicaCount: 1
 
 image:
   repository: harbor.middleware.com/middleware
-  tag: v0.0.24-1.0.3
+  tag: v0.0.24-1.0.1
   pullPolicy: IfNotPresent
 
 helperImage:
