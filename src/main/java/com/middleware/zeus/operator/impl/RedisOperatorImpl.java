@@ -557,6 +557,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             }
             return podInfoList.stream().map(podInfo -> {
                 IngressDTO ingressDTO = new IngressDTO();
+                ingressDTO.setExposeType(podInfo.getRole());
                 ingressDTO.setServicePurpose(podInfo.getPodName());
                 ingressDTO.setExposeIP(podInfo.getHostIp());
                 ingressDTO.setExposePort(RedisUtil.getServicePort(podInfo.getRole()));
