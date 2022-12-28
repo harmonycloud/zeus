@@ -554,6 +554,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         JSONObject currentValues = helmChartService.getInstalledValuesAsNormalJson(name, namespace, cluster);
+        YamlUtil.convertToStandardJsonObject(currentValues);
 
         String currentChartVersion = currentValues.getString("chart-version");
         String compatibleVersions = upgradeValues.getString("compatibleVersions");
