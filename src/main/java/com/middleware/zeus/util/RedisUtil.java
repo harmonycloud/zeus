@@ -196,6 +196,8 @@ public class RedisUtil {
     public static String getServicePort(String podType) {
         if ("proxy".equals(podType)) {
             return "7617";
+        } else if ("sentinel".equals(podType)) {
+            return "26379";
         }
         return "6379";
     }

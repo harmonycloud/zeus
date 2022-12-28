@@ -547,14 +547,12 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             List<PodInfo> podInfoList = podService.listMiddlewarePods(clusterId, namespace, middlewareName, MiddlewareTypeEnum.REDIS.getType());
             String deployMod = RedisUtil.getRedisDeployMod(values);
             switch (deployMod) {
+                case "sentinel":
                 case "cluster":
                     break;
                 case "clusterProxy":
                 case "sentinelProxy":
                     podInfoList = podInfoList.stream().filter(podInfo -> "proxy".equals(podInfo.getRole())).collect(Collectors.toList());
-                    break;
-                case "sentinel":
-                    podInfoList = podInfoList.stream().filter(podInfo -> "sentinel".equals(podInfo.getRole())).collect(Collectors.toList());
                     break;
             }
             return podInfoList.stream().map(podInfo -> {
