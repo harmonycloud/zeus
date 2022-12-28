@@ -152,7 +152,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         // 获取服务状态
         Status status = middlewareCRService.getStatus(middleware.getClusterId()
                 , middleware.getNamespace(), MiddlewareTypeEnum.POSTGRESQL.getType(), middleware.getName());
-        if (!"Running".equals(status.getPhase())) {
+        if (status == null || !"Running".equals(status.getPhase())) {
             return null;
         }
         // 获取patroniService
