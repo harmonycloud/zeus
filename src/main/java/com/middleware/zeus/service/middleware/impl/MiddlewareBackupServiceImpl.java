@@ -653,7 +653,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
         // 封装数据
         middlewareIncBackupDto.setPause(cr.getSpec().getPause())
-            .setTime(CronUtils.convertCronToTime(cr.getSpec().getSchedule().getCron()));
+            .setTime(CronUtils.convertCronToTime(cr.getSpec().getSchedule().getCron()))
+            .setBackupName(cr.getMetadata().getName());
         return middlewareIncBackupDto;
     }
 
