@@ -134,8 +134,11 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             middleware.setPassword(values.getJSONObject("userPasswords").getString("postgres"));
         }
         middleware.setPassword(values.getJSONObject("userPasswords").getString("postgres"));
-
         middleware.setPostgresqlParam(new PostgresqlParam().setHostNetwork(values.getBoolean("hostNetwork")));
+
+        if (middleware.getQuota() != null && middleware.getQuota().containsKey(middleware.getType())){
+            middleware.getQuota().get(middleware.getType()).setNum(values.getInteger("instances") - 1);
+        }
 
         List<MiddlewareQuota> storageClasses = getMiddlewareStorageClasses(cluster.getId(), middleware, values);
         middleware.setStorageResource(storageClasses);
