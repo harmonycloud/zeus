@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import com.middleware.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
+import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.middleware.zeus.bean.BeanMiddlewareCluster;
 import com.middleware.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.middleware.zeus.service.k8s.ClusterService;
@@ -489,10 +490,17 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     public Map<String, List<String>> version(String type, String chartVersion) {
         BeanMiddlewareInfo mwInfo = get(type, chartVersion);
         String version = mwInfo.getVersion();
-        if (StringUtils.isEmpty(version)){
+        if (StringUtils.isEmpty(version)) {
             return null;
         }
-        return MiddlewareVersionUtil.convertVersion(version);
+        Map<String, List<String>> res;
+        if (type.equals(MiddlewareTypeEnum.POSTGRESQL.getType())) {
+            res = new TreeMap<>(Comparator.comparing(key -> Integer.valueOf(key.toString())).reversed());
+        } else {
+            res = new TreeMap<>();
+        }
+        res.putAll(MiddlewareVersionUtil.convertVersion(version));
+        return res;
     }
 
     @Override
