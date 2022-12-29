@@ -113,10 +113,13 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private LicenseService licenseService;
     @Autowired
     private ClusterComponentService clusterComponentService;
-    @Value("${system.privateRegistry.middlewareServiceAccount:default}")
-    private String middlewareServiceAccount;
     @Autowired
     private ServiceAccountService serviceAccountService;
+    @Value("${system.privateRegistry.middlewareServiceAccount:default}")
+    private String middlewareServiceAccount;
+
+    @Value("${system.wrongTypeKeys:tolerations,customVolumes}")
+    private String wrongTypeKeys;
 
     @Override
     public List<Middleware> simpleList(String clusterId, String namespace, String type, String keyword) {
@@ -550,11 +553,11 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     public BaseResult upgradeChart(String clusterId, String namespace, String name, String type, String chartName, String upgradeChartVersion) {
         HelmChartFile helmChart = helmChartService.getHelmChartFromMysql(chartName, upgradeChartVersion);
         JSONObject upgradeValues = YamlUtil.convertYamlAsNormalJsonObject(helmChart.getValueYaml());
-        YamlUtil.convertToStandardJsonObject(upgradeValues);
+        convertToStandardJsonObject(upgradeValues);
 
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         JSONObject currentValues = helmChartService.getInstalledValuesAsNormalJson(name, namespace, cluster);
-        YamlUtil.convertToStandardJsonObject(currentValues);
+        convertToStandardJsonObject(currentValues);
 
         String currentChartVersion = currentValues.getString("chart-version");
         String compatibleVersions = upgradeValues.getString("compatibleVersions");
@@ -612,6 +615,13 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             return operatorCheckRes;
         }
         return BaseResult.ok();
+    }
+
+    private void convertToStandardJsonObject(JSONObject values) {
+        String[] ary = wrongTypeKeys.split(",");
+        for (String key : ary) {
+            YamlUtil.convertToStandardJsonObject(values, key);
+        }
     }
 
     private void checkAndBindImagePullSecret(String clusterId, String namespace, String registryId) {

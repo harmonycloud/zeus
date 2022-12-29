@@ -105,7 +105,11 @@ public class YamlUtil {
                     JSONArray valueArray = (JSONArray) value;
                     for (int i = 0; i < valueArray.size(); i++) {
                         JSONObject obj = (JSONObject) valueArray.get(i);
-                        JSONObject targetValue = jsonMerge(obj, (JSONObject) target.getJSONArray(key).get(i));
+                        JSONObject targetValue = obj;
+                        Object targetObj = target.get(key);
+                        if (targetObj instanceof JSONArray && target.getJSONArray(key).size() >= i + 1) {
+                            targetValue = jsonMerge(obj, (JSONObject) target.getJSONArray(key).get(i));
+                        }
                         target.getJSONArray(key).set(i, targetValue);
                     }
                 } else {
@@ -194,11 +198,11 @@ public class YamlUtil {
      *
      * @param upgradeValues
      */
-    public static void convertToStandardJsonObject(JSONObject upgradeValues) {
-        Object tolerations = upgradeValues.get("tolerations");
+    public static void convertToStandardJsonObject(JSONObject upgradeValues, String key) {
+        Object tolerations = upgradeValues.get(key);
         if (tolerations instanceof JSONObject) {
             JSONArray tolerationsArray = new JSONArray();
-            upgradeValues.put("tolerations", tolerationsArray);
+            upgradeValues.put(key, tolerationsArray);
         }
     }
 
