@@ -109,8 +109,10 @@ public class YamlUtil {
                         Object targetObj = target.get(key);
                         if (targetObj instanceof JSONArray && target.getJSONArray(key).size() >= i + 1) {
                             targetValue = jsonMerge(obj, (JSONObject) target.getJSONArray(key).get(i));
+                            target.getJSONArray(key).set(i, targetValue);
+                        } else {
+                            target.getJSONArray(key).add(i, targetValue);
                         }
-                        target.getJSONArray(key).set(i, targetValue);
                     }
                 } else {
                     target.put(key, value);
@@ -199,10 +201,13 @@ public class YamlUtil {
      * @param upgradeValues
      */
     public static void convertToStandardJsonObject(JSONObject upgradeValues, String key) {
-        Object tolerations = upgradeValues.get(key);
-        if (tolerations instanceof JSONObject) {
-            JSONArray tolerationsArray = new JSONArray();
-            upgradeValues.put(key, tolerationsArray);
+        Object obj = upgradeValues.get(key);
+        if (obj == null) {
+            upgradeValues.put(key, new JSONArray());
+            return;
+        }
+        if (obj instanceof JSONObject) {
+            upgradeValues.put(key, new JSONArray());
         }
     }
 
