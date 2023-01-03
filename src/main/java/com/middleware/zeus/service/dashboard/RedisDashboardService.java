@@ -36,6 +36,6 @@ public interface RedisDashboardService extends BaseMiddlewareApiService{
 
     JSONObject execCMD(String clusterId, String namespace, String middlewareName, Integer db, String cmd);
 
-    boolean exists(String clusterId, String namespace, String middlewareName, Integer db, String key);
+    boolean checkKeyExists(String clusterId, String namespace, String middlewareName, Integer db, String key);
 
 }

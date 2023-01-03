@@ -67,7 +67,7 @@ public class RedisDashboardController {
                              @PathVariable("middlewareName") String middlewareName,
                              @PathVariable("database") Integer database,
                              @PathVariable("key") String key) {
-        return BaseResult.ok(redisDashboardService.exists(clusterId, namespace, middlewareName, database, key));
+        return BaseResult.ok(redisDashboardService.checkKeyExists(clusterId, namespace, middlewareName, database, key));
     }
 
     @ApiOperation(value = "获取全部库", notes = "获取全部库")
@@ -100,7 +100,7 @@ public class RedisDashboardController {
         return BaseResult.ok(redisDashboardService.getKeyValue(clusterId, namespace, middlewareName, database, key));
     }
 
-    @ApiOperation(value = "保存key-value", notes = "保存key-value")
+    @ApiOperation(value = "创建key-value", notes = "创建key-value")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),

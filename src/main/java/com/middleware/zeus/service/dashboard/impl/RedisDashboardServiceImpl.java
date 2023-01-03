@@ -155,6 +155,9 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
 
     @Override
     public void setKeyValue(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto) {
+        if (checkKeyExists(clusterId, namespace, middlewareName, db, key)) {
+            throw new BusinessException(ErrorMessage.KEY_ALREADY_EXISTS);
+        }
         keyValueDto.setValue(keyValueDto.wrapValue());
         // 给过期时间添加时间单位：秒
         if (!StringUtils.isEmpty(keyValueDto.getExpiration())) {
@@ -236,7 +239,7 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
     }
 
     @Override
-    public boolean exists(String clusterId, String namespace, String middlewareName, Integer db, String key) {
+    public boolean checkKeyExists(String clusterId, String namespace, String middlewareName, Integer db, String key) {
         DataDto keyValue = getKeyValue(clusterId, namespace, middlewareName, db, key);
         return keyValue != null && !"none".equals(keyValue.getKeyType());
     }
