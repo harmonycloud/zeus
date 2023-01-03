@@ -235,6 +235,12 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
         return res;
     }
 
+    @Override
+    public boolean exists(String clusterId, String namespace, String middlewareName, Integer db, String key) {
+        DataDto keyValue = getKeyValue(clusterId, namespace, middlewareName, db, key);
+        return keyValue != null && !"none".equals(keyValue.getKeyType());
+    }
+
     /**
      * 获取redis集群连接地址
      * @param clusterId

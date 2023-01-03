@@ -53,6 +53,23 @@ public class RedisDashboardController {
         return BaseResult.ok(redisDashboardService.scan(clusterId, namespace, middlewareName, database, keyword, cursor, count, pod, preCursor, prePod));
     }
 
+    @ApiOperation(value = "检查key是否已存在", notes = "检查key是否已存在")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "database", value = "数据库名称", paramType = "path", dataTypeClass = Integer.class),
+            @ApiImplicitParam(name = "key", value = "key", paramType = "path", dataTypeClass = String.class)
+    })
+    @GetMapping("/databases/{database}/keys/{key}/exists")
+    public BaseResult exists(@PathVariable("clusterId") String clusterId,
+                             @PathVariable("namespace") String namespace,
+                             @PathVariable("middlewareName") String middlewareName,
+                             @PathVariable("database") Integer database,
+                             @PathVariable("key") String key) {
+        return BaseResult.ok(redisDashboardService.exists(clusterId, namespace, middlewareName, database, key));
+    }
+
     @ApiOperation(value = "获取全部库", notes = "获取全部库")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
