@@ -42,12 +42,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.harmonycloud.caas.common.constants.CommonConstant.*;
 
@@ -73,6 +75,8 @@ public class LogServiceImpl implements LogService {
     private String shellStarter;
     @Value("${es.scroll.time:600000}")
     private String scrollTime;
+    @Value("${es.log.keep:30}")
+    private Integer keepDays;
 
     @Autowired
     private ClusterService clusterService;
@@ -435,6 +439,18 @@ public class LogServiceImpl implements LogService {
         return logQuery;
     }
 
+    @Override
+    public void cleanHistoryLog() throws Exception {
+        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
+        for (MiddlewareClusterDTO cluster : clusterList){
+            if (cluster.getLogging() != null && cluster.getLogging().getElasticSearch() != null &&
+            cluster.getLogging().getElasticSearch().getLogKeepDays() != null){
+                keepDays = cluster.getLogging().getElasticSearch().getLogKeepDays();
+            }
+            dealIndex(cluster, keepDays);
+        }
+    }
+
     /**
      * 根据查询的时间区间 返回该时间段内es的索引列表
      *
@@ -572,8 +588,28 @@ public class LogServiceImpl implements LogService {
                 return true;
             }
         }
-
         return false;
+    }
+
+    /**
+     * 处理过期日志
+     */
+    public void dealIndex(MiddlewareClusterDTO cluster, Integer keepDays) throws Exception{
+        log.info("delete log indices. clusterId:{},logKeepDays:{}", cluster.getId(), keepDays);
+        Calendar logCalendar = Calendar.getInstance();
+        logCalendar.add(Calendar.DATE, -keepDays);
+        String indexDate = new SimpleDateFormat("yyyy.MM.dd").format(logCalendar.getTime());
+        // 查询所有索引名称
+        List<String> indicesList = esService.getIndexes(cluster);
+        // 循环比较删除超出保留时间的索引
+        for (String index : indicesList){
+            boolean delete = Arrays.stream(EsTemplateEnum.values())
+                .anyMatch(est -> index.startsWith(est.getName()) && index.compareTo(est.getName() + indexDate) < 0);
+            if (delete){
+                esService.deleteIndex(index, cluster);
+            }
+        }
+
     }
 
 }

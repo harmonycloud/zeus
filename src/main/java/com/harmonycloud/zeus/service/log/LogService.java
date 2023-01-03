@@ -68,4 +68,11 @@ public interface LogService {
      */
     LogQuery transLogQuery(LogQueryDto logQueryDto) throws Exception;
 
+    /**
+     * 清理历史日志
+     *
+     * @throws Exception 查询条件转换失败异常
+     */
+    void cleanHistoryLog() throws Exception;
+
 }

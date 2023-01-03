@@ -469,26 +469,6 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
     }
 
     /**
-     * 初始化操作审计索引模板
-     * @author liyinlong
-     * @date 2021/7/21 9:30 上午
-     * @param esClient
-     */
-    public void initAuditIndexTemplate(RestHighLevelClient esClient){
-        try {
-            PutIndexTemplateRequest request = new PutIndexTemplateRequest(EsTemplateEnum.AUDIT.getName());
-            JSONObject codeJson = JSONObject.parseObject(EsTemplateEnum.AUDIT.getCode());
-            setCommonTemplate(request, codeJson);
-            JSONObject mappings = codeJson.getJSONObject("mappings").getJSONObject("user_op_audit");
-            request.mapping(mappings.toString(), XContentType.JSON);
-            esClient.indices().putTemplate(request, RequestOptions.DEFAULT);
-            log.info("操作审计索引模板初始化成功");
-        } catch (IOException e) {
-            log.error("操作审计索引模板初始化失败", e);
-        }
-    }
-
-    /**
      * 初始化标准输出日志索引模板
      * @author liyinlong
      * @date 2021/8/11 4:54 下午
