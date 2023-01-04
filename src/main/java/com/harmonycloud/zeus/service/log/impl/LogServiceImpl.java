@@ -604,7 +604,7 @@ public class LogServiceImpl implements LogService {
         // 循环比较删除超出保留时间的索引
         for (String index : indicesList){
             boolean delete = Arrays.stream(EsTemplateEnum.values())
-                .anyMatch(est -> index.startsWith(est.getName()) && index.compareTo(est.getName() + indexDate) < 0);
+                .anyMatch(est -> index.startsWith(est.getName()) && index.compareTo(est.getName() + LINE + indexDate) < 0);
             if (delete){
                 esService.deleteIndex(index, cluster);
             }
