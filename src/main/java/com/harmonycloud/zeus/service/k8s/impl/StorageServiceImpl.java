@@ -352,7 +352,7 @@ public class StorageServiceImpl implements StorageService {
         if (provisionerEnum != null) {
             type = provisionerEnum.getType();
         }
-        storageDto.setVolumeType(type == null ? "unknown" : type);
+        storageDto.setVolumeType(type == null ? storageClass.getProvisioner() : type);
 
         return storageDto;
     }
