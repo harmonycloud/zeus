@@ -143,6 +143,8 @@ public class NamespaceServiceImpl implements NamespaceService {
             projectService.bindNamespace(namespace);
         }
         save(namespace.getClusterId(), namespace.getName(), label, annotations);
+        // 创建资源配额
+        resourceQuotaService.create(namespace.getClusterId(), namespace.getName(), namespace.getQuotas());
     }
 
     @Override

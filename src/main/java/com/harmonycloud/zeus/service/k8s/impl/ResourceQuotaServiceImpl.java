@@ -1,9 +1,7 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.CPU;
-import static com.harmonycloud.caas.common.constants.NameConstant.DISK;
-import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
-import static com.harmonycloud.caas.common.constants.NameConstant.STORAGE;
+import static com.harmonycloud.caas.common.constants.CommonConstant.DOT;
+import static com.harmonycloud.caas.common.constants.NameConstant.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,23 +9,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.harmonycloud.caas.common.model.QuotaBase;
-import com.harmonycloud.caas.common.model.ResourceQuotaDo;
-import com.harmonycloud.caas.common.model.StorageQuota;
-import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
+import com.harmonycloud.caas.common.model.QuotaBase;
+import com.harmonycloud.caas.common.model.ResourceQuotaDo;
+import com.harmonycloud.caas.common.model.StorageQuota;
 import com.harmonycloud.caas.common.model.middleware.ResourceQuotaDTO;
-import com.harmonycloud.zeus.integration.cluster.ResourceQuotaWrapper;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.harmonycloud.zeus.integration.cluster.ResourceQuotaWrapper;
+import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
 
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ResourceQuota;
-import org.springframework.util.ObjectUtils;
+import io.fabric8.kubernetes.api.model.ResourceQuotaSpec;
 
 /**
  * @author dengyulong
@@ -38,6 +38,46 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
 
     @Autowired
     private ResourceQuotaWrapper resourceQuotaWrapper;
+
+    @Override
+    public void create(String clusterId, String namespace, ResourceQuotaDo resourceQuotaDo) {
+
+        ResourceQuota resourceQuota = new ResourceQuota();
+
+        ObjectMeta meta = new ObjectMeta();
+        meta.setName(namespace + "quota");
+        meta.setNamespace(namespace);
+
+        ResourceQuotaSpec spec = new ResourceQuotaSpec();
+        Map<String, Quantity> hard = new HashMap<>();
+        // 设置cpu配额
+        if (resourceQuotaDo.getCpu() != null && resourceQuotaDo.getCpu().getRequest() != null){
+            Quantity quantity = new Quantity();
+            quantity.setAmount(String.valueOf(resourceQuotaDo.getCpu().getRequest()));
+            hard.put(CPU, quantity);
+        }
+        // 设置memory配额
+        if (resourceQuotaDo.getMemory() != null && resourceQuotaDo.getMemory().getRequest() != null){
+            Quantity quantity = new Quantity();
+            quantity.setAmount(String.valueOf(resourceQuotaDo.getMemory().getRequest()));
+            hard.put(MEMORY, quantity);
+        }
+        // 设置storage配额
+        if (!CollectionUtils.isEmpty(resourceQuotaDo.getStorageList())){
+            for (StorageQuota storageQuota : resourceQuotaDo.getStorageList()){
+                if (StringUtils.isNotEmpty(storageQuota.getName()) && storageQuota.getStorage() != null && storageQuota.getStorage().getRequest() != null){
+                    Quantity quantity = new Quantity();
+                    quantity.setAmount(String.valueOf(storageQuota.getStorage().getRequest()));
+                    hard.put(storageQuota.getName() + DOT + STORAGE_CLASS_STORAGE_K8s_IO_REQUESTS_STORAGE, quantity);
+                }
+            }
+        }
+
+        spec.setHard(hard);
+        resourceQuota.setMetadata(meta);
+        resourceQuota.setSpec(spec);
+        resourceQuotaWrapper.create(clusterId, resourceQuota);
+    }
 
     @Override
     public List<ResourceQuotaDTO> list(String clusterId) {
@@ -130,7 +170,7 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
                 rqMap.put(MEMORY, quota);*/
                 QuotaBase memory = new QuotaBase().setRequest(hardMemory).setUsed(usedMemory);
                 quota.setMemory(memory);
-            } else if (k.endsWith(STORAGE)) {
+            } else if (k.endsWith(STORAGE_CLASS_STORAGE_K8s_IO_REQUESTS_STORAGE)) {
                 double hardStorage =
                     ResourceCalculationUtil.getResourceValue(v.toString(), DISK, ResourceUnitEnum.GI.getUnit());
                 double usedStorage = ResourceCalculationUtil.getResourceValue(used.get(k).toString(), DISK,
