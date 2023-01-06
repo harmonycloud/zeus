@@ -238,6 +238,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         alertsUserDTO.getMiddlewareAlertsDTOList().forEach(middlewareAlertsDTO -> {
             //构建执行规则
             String expr = buildExpr(middlewareAlertsDTO);
+            middlewareAlertsDTO.setAlert(middlewareAlertsDTO.getAlert() + "-" + UUIDUtils.get8UUID());
             middlewareAlertsDTO.setExpr(expr);
             // 写入通道沉默时间
             middlewareAlertsDTO.getAnnotations().put("silence", middlewareAlertsDTO.getSilence());
@@ -757,7 +758,10 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     }
 
     public String replaceValue(String str) {
-        return str.replace("{{`", "").replace("`}}", "");
+        if (StringUtils.isNotEmpty(str)) {
+            return str.replace("{{`", "").replace("`}}", "");
+        }
+        return str;
     }
 
     /**
