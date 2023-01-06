@@ -822,6 +822,7 @@ public class OverviewServiceImpl implements OverviewService {
         recordQueryWrapper.ne("namespace", "");
         recordQueryWrapper.ne("name", "");
         recordQueryWrapper.eq("lay", "service");
+        recordQueryWrapper.ne("type", null);
         recordQueryWrapper.ge("time", beginTime);
         recordQueryWrapper.le("time", endTime);
         recordQueryWrapper.orderByDesc("time");
