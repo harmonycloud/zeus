@@ -61,6 +61,7 @@ data:
         version: v1.2.4
       user:
         expire: 1
+        passwordExpire: 90
       usercenter: zeus
       skyview:
         encryptPassword: true

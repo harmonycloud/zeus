@@ -43,6 +43,8 @@ public class AuthServiceImpl implements AuthService {
     private AuthManager4Ldap authManager4Ldap;
     @Autowired
     private LdapService ldapService;
+    @Value("${system.user.passwordExpire:90}")
+    private Double passwordExpire;
 
     @Override
     public JSONObject login(String userName, String password, HttpServletResponse response) throws Exception {
@@ -81,7 +83,7 @@ public class AuthServiceImpl implements AuthService {
         //校验密码日期
         if (userDto.getPasswordTime() != null) {
             long passwordTime = DateUtils.getIntervalDays(new Date(), userDto.getPasswordTime()) / 3600 / 24 / 1000;
-            if (passwordTime > 165) {
+            if (passwordTime > passwordExpire) {
                 res.put("rePassword", passwordTime);
             }
         }
