@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.service.k8s;
 import java.util.List;
 import java.util.Map;
 
+import com.harmonycloud.caas.common.model.ResourceQuotaDo;
 import com.harmonycloud.caas.common.model.middleware.ResourceQuotaDTO;
 
 /**
@@ -25,7 +26,7 @@ public interface ResourceQuotaService {
      * @param clusterId 集群id
      * @return
      */
-    Map<String, List<String>> statistics(String clusterId);
+    ResourceQuotaDo statistics(String clusterId);
 
     /**
      * 查询resource quota
@@ -34,7 +35,7 @@ public interface ResourceQuotaService {
      * @param namespace 命名空间
      * @return
      */
-    Map<String, List<String>> list(String clusterId, String namespace);
+    ResourceQuotaDo list(String clusterId, String namespace);
 
     /**
      * 查询resource quota
@@ -44,5 +45,5 @@ public interface ResourceQuotaService {
      * @param name      名称
      * @return
      */
-    Map<String, List<String>> get(String clusterId, String namespace, String name);
+    ResourceQuotaDo get(String clusterId, String namespace, String name);
 }

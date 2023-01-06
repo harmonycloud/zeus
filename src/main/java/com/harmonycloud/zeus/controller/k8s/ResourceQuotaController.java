@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.controller.k8s;
 
+import com.harmonycloud.caas.common.model.ResourceQuotaDo;
 import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,8 +33,8 @@ public class ResourceQuotaController {
             @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class)
     })
     @GetMapping("/{namespace}/quota")
-    public BaseResult list(@PathVariable("clusterId") String clusterId,
-                           @PathVariable("namespace") String namespace) {
+    public BaseResult<ResourceQuotaDo> list(@PathVariable("clusterId") String clusterId,
+                                            @PathVariable("namespace") String namespace) {
         return BaseResult.ok(resourceQuotaService.list(clusterId, namespace));
     }
 

@@ -1,6 +1,5 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.DISK;
 import static com.harmonycloud.caas.common.constants.NameConstant.STORAGE;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.STORAGE_PROVISIONER;
 
@@ -9,27 +8,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
-import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
-import com.harmonycloud.caas.common.model.StorageClassDTO;
-import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
-import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.StorageClass;
-import com.harmonycloud.zeus.integration.cluster.StorageClassWrapper;
-import com.harmonycloud.zeus.service.k8s.ClusterService;
-import com.harmonycloud.zeus.service.k8s.StorageClassService;
-import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
-
 import org.springframework.util.CollectionUtils;
+
+import com.harmonycloud.caas.common.model.ResourceQuotaDo;
+import com.harmonycloud.caas.common.model.StorageClassDTO;
+import com.harmonycloud.caas.common.model.StorageQuota;
+import com.harmonycloud.caas.common.model.middleware.StorageClass;
+import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
+import com.harmonycloud.zeus.integration.cluster.StorageClassWrapper;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
+import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
+import com.harmonycloud.zeus.service.k8s.StorageClassService;
+
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 
 /**
  * @author dengyulong
@@ -38,8 +35,6 @@ import org.springframework.util.CollectionUtils;
 @Service
 public class StorageClassServiceImpl implements StorageClassService {
 
-    @Autowired
-    private ClusterService clusterService;
     @Autowired
     private StorageClassWrapper scWrapper;
     @Autowired
@@ -59,11 +54,11 @@ public class StorageClassServiceImpl implements StorageClassService {
         List<StorageClass> list = new ArrayList<>();
 
         // 取出存储配额
-        Map<String, List<String>> rqMap;
+        ResourceQuotaDo resourceQuotaDo;
         if (StringUtils.isNotBlank(namespace)) {
-            rqMap = resourceQuotaService.get(clusterId, namespace, namespace + "quota");
+            resourceQuotaDo = resourceQuotaService.get(clusterId, namespace, namespace + "quota");
         } else {
-            rqMap = resourceQuotaService.statistics(clusterId);
+            resourceQuotaDo = resourceQuotaService.statistics(clusterId);
         }
 
         for (io.fabric8.kubernetes.api.model.storage.StorageClass sc : scList) {
@@ -72,11 +67,14 @@ public class StorageClassServiceImpl implements StorageClassService {
                 .setProvisioner(sc.getProvisioner()).setReclaimPolicy(sc.getReclaimPolicy())
                 .setVolumeBindingMode(sc.getVolumeBindingMode());
 
-            List<String> quotas = rqMap.get(s.getName());
-            if (!CollectionUtils.isEmpty(quotas)) {
-                s.setStorageQuota(quotas.get(1));
-                s.setStorageUsed(quotas.get(2));
+            if (!CollectionUtils.isEmpty(resourceQuotaDo.getStorageList())){
+                List<StorageQuota> storageQuotaList = resourceQuotaDo.getStorageList().stream().filter(storageQuota -> storageQuota.getName().equals(s.getName())).collect(Collectors.toList());
+                if (!CollectionUtils.isEmpty(storageQuotaList)){
+                    s.setStorageQuota(String.valueOf(storageQuotaList.get(0).getStorage().getRequest()));
+                    s.setStorageUsed(String.valueOf(storageQuotaList.get(0).getStorage().getUsed()));
+                }
             }
+
             list.add(s);
         }
         return list;

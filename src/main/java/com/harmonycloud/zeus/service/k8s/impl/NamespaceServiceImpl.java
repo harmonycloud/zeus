@@ -292,7 +292,7 @@ public class NamespaceServiceImpl implements NamespaceService {
         }
         for (Namespace ns : namespaces) {
             if (rqMap != null && rqMap.get(ns.getName()) != null) {
-                ns.setQuotas(rqMap.get(ns.getName()).getQuotas());
+                ns.setQuotas(rqMap.get(ns.getName()).getResourceQuotaDo());
             }
         }
         return namespaces;

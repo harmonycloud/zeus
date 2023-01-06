@@ -9,7 +9,7 @@ import com.harmonycloud.caas.common.enums.middleware.MiddlewareGrafanaNameEnum;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.MonitorResourceQuota;
-import com.harmonycloud.caas.common.model.MonitorResourceQuotaBase;
+import com.harmonycloud.caas.common.model.QuotaBase;
 import com.harmonycloud.caas.common.model.PrometheusResponse;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
@@ -43,7 +43,6 @@ import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -766,7 +765,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
                     String num = podInfo.getPodName().substring(podInfo.getPodName().length() - 1);
                     if (result.containsKey(num)) {
-                        MonitorResourceQuotaBase cpu = new MonitorResourceQuotaBase();
+                        QuotaBase cpu = new QuotaBase();
                         cpu.setTotal(result.get(num));
                         podInfo.getMonitorResourceQuota().getStorage().setTotal(result.get(num));
                     }
