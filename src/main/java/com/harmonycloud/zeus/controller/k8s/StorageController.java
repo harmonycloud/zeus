@@ -71,10 +71,10 @@ public class StorageController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "storageName", value = "存储名称", paramType = "query", dataTypeClass = String.class)
     })
-    @DeleteMapping("/{storageName}")
+    @DeleteMapping("/{aliasName}")
     public BaseResult delete(@PathVariable("clusterId") String clusterId,
-                             @PathVariable("storageName") String storageName) {
-        storageService.delete(clusterId, storageName);
+                             @PathVariable("aliasName") String aliasName) {
+        storageService.delete(clusterId, aliasName);
         return BaseResult.ok();
     }
 

@@ -14,6 +14,7 @@ import com.harmonycloud.caas.common.model.middleware.MiddlewareStorageInfoDto;
 import com.harmonycloud.caas.common.model.user.ProjectDto;
 import com.harmonycloud.zeus.service.user.ProjectService;
 import com.harmonycloud.zeus.util.DateUtil;
+import io.fabric8.kubernetes.api.model.TopologySelectorTerm;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -102,10 +103,23 @@ public class StorageServiceImpl implements StorageService {
         List<StorageDto> result = new ArrayList<>();
         for (MiddlewareClusterDTO cluster : clusterList) {
             List<StorageClass> storageClassList = storageClassWrapper.list(cluster.getId());
+
             List<StorageDto> storageDtoList = storageClassList.stream().filter(storageClass -> {
                 boolean flag = CollectionUtils.isEmpty(storageClass.getMetadata().getAnnotations())
-                    || !storageClass.getMetadata().getAnnotations().containsKey(MIDDLEWARE);
-                return all == flag;
+                        || !storageClass.getMetadata().getAnnotations().containsKey(MIDDLEWARE);
+                // 双活只保留zoneA避免重复
+                boolean isZoneA = true;
+                if (storageClass.getMetadata().getAnnotations().containsKey(ACTIVE_ACTIVE) && !CollectionUtils.isEmpty(storageClass.getAllowedTopologies())) {
+                    isZoneA = storageClass.getAllowedTopologies().stream()
+                            .anyMatch(tst -> tst.getMatchLabelExpressions().stream().
+                                    anyMatch(tslr -> tslr.getKey().equals("topology.kubernetes.io/zone") && tslr.getValues().get(0).equals("zoneA")));
+                    String activeName = storageClass.getMetadata().getAnnotations().get(ACTIVE_ACTIVE);
+                    if (storageClassWrapper.get(cluster.getId(), activeName) == null) {
+                        delete(cluster.getId(), storageClass.getMetadata().getAnnotations().get(ALIAS_NAME));
+                        return false;
+                    }
+                }
+                return all == flag && isZoneA;
             }).map(storageClass -> {
                 // 初始化业务对象
                     return all ? convert(cluster.getId(), storageClass) : detail(cluster.getId(), storageClass);
@@ -116,7 +130,7 @@ public class StorageServiceImpl implements StorageService {
                     return true;
                 }).filter(storageDto -> {
                     if (StringUtils.isNotEmpty(type)) {
-                        return storageDto.getVolumeType().equals(type);
+                        return storageDto.getStorageClassList().stream().anyMatch(sc -> type.equals(sc.getType()));
                     }
                     return true;
                 }).collect(Collectors.toList());
@@ -129,49 +143,65 @@ public class StorageServiceImpl implements StorageService {
     public void addOrUpdate(StorageDto storageDto) {
         List<StorageClass> storageClassList = storageClassWrapper.list(storageDto.getClusterId());
         // 校验该存储是否存在
-        if (CollectionUtils.isEmpty(storageClassList) || storageClassList.stream()
-            .noneMatch(storageClass -> storageClass.getMetadata().getName().equals(storageDto.getName()))) {
+        if (CollectionUtils.isEmpty(storageClassList) || storageDto.getStorageClassList().stream()
+                .anyMatch(sc -> storageClassWrapper.get(storageDto.getClusterId(), sc.getName()) == null)) {
             throw new BusinessException(ErrorMessage.STORAGE_CLASS_NOT_FOUND);
         }
+
         // 校验中文名称
         checkAliasName(storageDto, storageClassList);
 
-        StorageClass storageClass = storageClassList.stream()
-            .filter(sc -> sc.getMetadata().getName().equals(storageDto.getName())).collect(Collectors.toList()).get(0);
-        // 获取annotationss
-        Map<String, String> annotations = storageClass.getMetadata().getAnnotations();
-        if (annotations == null) {
-            annotations = new HashMap<>();
+        List<StorageClass> scList = storageDto.getStorageClassList().stream().map(sc -> storageClassWrapper.get(storageDto.getClusterId(), sc.getName())).collect(Collectors.toList());
+
+        Date integrateTime = null;
+        for (StorageClass sc : scList) {
+            //获取annotations
+            Map<String, String> annotations = sc.getMetadata().getAnnotations();
+            if (annotations == null) {
+                annotations = new HashMap<>();
+            }
+            annotations.put(MIDDLEWARE, TRUE);
+            annotations.put(ALIAS_NAME, storageDto.getAliasName());
+            if (!annotations.containsKey(INTEGRATE_TIME)) {
+                if (integrateTime == null) {
+                    integrateTime = new Date();
+                }
+                annotations.put(INTEGRATE_TIME,
+                        DateUtils.DateToString(integrateTime, DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue()));
+            }
+            if (storageDto.getIsActiveActive()) {
+                String active = scList.stream().filter(storageClass -> !storageClass.getMetadata().getName().equals(sc.getMetadata().getName()))
+                        .collect(Collectors.toList()).get(0).getMetadata().getName();
+                annotations.put(ACTIVE_ACTIVE, active);
+            }
+            sc.getMetadata().setAnnotations(annotations);
+            storageClassWrapper.update(storageDto.getClusterId(), sc);
         }
-        annotations.put(MIDDLEWARE, TRUE);
-        annotations.put(ALIAS_NAME, storageDto.getAliasName());
-        if (!annotations.containsKey(INTEGRATE_TIME)) {
-            annotations.put(INTEGRATE_TIME,
-                DateUtils.DateToString(new Date(), DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue()));
-        }
-        storageClass.getMetadata().setAnnotations(annotations);
-        storageClassWrapper.update(storageDto.getClusterId(), storageClass);
+
     }
 
     @Override
-    public void delete(String clusterId, String storageName) {
-        StorageClass storageClass = storageClassWrapper.get(clusterId, storageName);
-        if (storageClass == null){
+    public void delete(String clusterId, String aliasName) {
+        List<StorageClass> storageClassList = storageClassWrapper.list(clusterId);
+        List<StorageClass> scList = storageClassList.stream()
+                .filter(storageClass -> aliasName.equals(storageClass.getMetadata().getAnnotations().get(ALIAS_NAME))).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(scList)) {
             throw new BusinessException(ErrorMessage.STORAGE_CLASS_NOT_FOUND);
         }
         // 查询存储
         List<PersistentVolumeClaim> pvcList = pvcService.list(clusterId, null);
         pvcList = pvcList.stream().filter(pvc -> StringUtils.isNotEmpty(pvc.getStorageClassName())
-                && pvc.getStorageClassName().equals(storageName)).collect(Collectors.toList());
-        if (!CollectionUtils.isEmpty(pvcList)){
+                && scList.stream().anyMatch(sc -> pvc.getStorageClassName().equals(sc.getMetadata().getName()))).collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(pvcList)) {
             throw new BusinessException(ErrorMessage.STORAGE_CLASS_IS_BEING_USED);
         }
-        Map<String, String> annotations = storageClass.getMetadata().getAnnotations();
-        if (annotations != null){
+        for (StorageClass sc : scList) {
+            Map<String, String> annotations = sc.getMetadata().getAnnotations();
             annotations.remove(MIDDLEWARE);
             annotations.remove(ALIAS_NAME);
             annotations.remove(INTEGRATE_TIME);
-            storageClassWrapper.update(clusterId, storageClass);
+            annotations.remove(ACTIVE_ACTIVE);
+            storageClassWrapper.update(clusterId, sc);
         }
     }
 
@@ -187,7 +217,7 @@ public class StorageServiceImpl implements StorageService {
         // 查询存储
         List<PersistentVolumeClaim> pvcList = pvcService.list(clusterId, null);
         pvcList = pvcList.stream().filter(pvc -> StringUtils.isNotEmpty(pvc.getStorageClassName())
-            && pvc.getStorageClassName().equals(storageDto.getName())).collect(Collectors.toList());
+            && storageDto.getStorageClassList().stream().anyMatch(sc -> pvc.getStorageClassName().equals(sc.getName()))).collect(Collectors.toList());
 
         StringBuilder sb = new StringBuilder();
         for (PersistentVolumeClaim pvc : pvcList){
@@ -336,25 +366,39 @@ public class StorageServiceImpl implements StorageService {
         if (annotations.containsKey(INTEGRATE_TIME)){
             storageDto.setCreateTime(DateUtil.StringToDate(annotations.get(INTEGRATE_TIME), DateType.YYYY_MM_DD_T_HH_MM_SS_Z));
         }
-        // 获取vg_name
-        if (storageClass.getParameters() != null && storageClass.getParameters().containsKey(VG_NAME)){
-            storageDto.setVgName(storageClass.getParameters().get(VG_NAME));
+        storageDto.setClusterId(clusterId);
+        storageDto.setClusterAliasName(cluster.getNickname());
+        storageDto.setIsActiveActive(false);
+        storageDto.getStorageClassList().add(convertSc(storageClass));
+
+        // 双活配置
+        if (annotations.containsKey(ACTIVE_ACTIVE)){
+            storageDto.setIsActiveActive(true);
+            // 获取双活添加的其他sc
+            String activeName = annotations.get(ACTIVE_ACTIVE);
+            StorageClass activeSc = storageClassWrapper.get(clusterId, activeName);
+            storageDto.getStorageClassList().add(convertSc(activeSc));
         }
 
-        storageDto.setClusterId(clusterId);
-        storageDto.setName(storageClass.getMetadata().getName());
-        storageDto.setProvisioner(storageClass.getProvisioner());
-        storageDto.setClusterAliasName(cluster.getNickname());
+        return storageDto;
+    }
 
+    public com.harmonycloud.caas.common.model.middleware.StorageClass convertSc(StorageClass storageClass) {
+        com.harmonycloud.caas.common.model.middleware.StorageClass sc = new com.harmonycloud.caas.common.model.middleware.StorageClass();
+        // 获取vg_name
+        if (storageClass.getParameters() != null && storageClass.getParameters().containsKey(VG_NAME)){
+            sc.setVgName(storageClass.getParameters().get(VG_NAME));
+        }
+        sc.setName(storageClass.getMetadata().getName());
+        sc.setProvisioner(storageClass.getProvisioner());
         // 获取类型
         StorageClassProvisionerEnum provisionerEnum = StorageClassProvisionerEnum.findByProvisioner(storageClass.getProvisioner());
         String type = null;
         if (provisionerEnum != null) {
             type = provisionerEnum.getType();
         }
-        storageDto.setVolumeType(type == null ? storageClass.getProvisioner() : type);
-
-        return storageDto;
+        sc.setType(type == null ? storageClass.getProvisioner() : type);
+        return sc;
     }
 
     /**
@@ -367,7 +411,7 @@ public class StorageServiceImpl implements StorageService {
                 return;
             }
             if (annotations.containsKey(ALIAS_NAME) && annotations.get(ALIAS_NAME).equals(storageDto.getAliasName())
-                && !storageClass.getMetadata().getName().equals(storageDto.getName())) {
+                && storageDto.getStorageClassList().stream().noneMatch(sc -> storageClass.getMetadata().getName().equals(sc.getName()))) {
                 throw new BusinessException(ErrorMessage.STORAGE_CLASS_NAME_EXIST);
             }
         }
