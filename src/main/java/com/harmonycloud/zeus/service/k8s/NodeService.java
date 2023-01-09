@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.service.k8s;
 import com.harmonycloud.caas.common.model.ActiveAreaDto;
 import com.harmonycloud.caas.common.model.ClusterNodeResourceDto;
 import com.harmonycloud.caas.common.model.Node;
+import com.harmonycloud.caas.common.model.ResourceQuotaDo;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public interface NodeService {
      * @return
      */
     List<Node> list(String clusterId);
+
 
     /**
      * 查询节点列表
@@ -84,5 +86,13 @@ public interface NodeService {
      * @return
      */
     String getNodeIp(String clusterId);
+
+    /**
+     * 查询节点资源配额
+     *
+     * @param clusterId 集群id
+     * @return ResourceQuotaDo
+     */
+    ResourceQuotaDo getResourceQuota(String clusterId);
 
 }

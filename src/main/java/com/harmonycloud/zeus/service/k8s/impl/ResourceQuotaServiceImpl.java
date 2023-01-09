@@ -107,6 +107,29 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
         return calculateQuota(resourceQuota);
     }
 
+    @Override
+    public ResourceQuotaDo getQuota(String clusterId) {
+        double cpu = 0.0;
+        double memory = 0.0;
+        // todo 获取已分配storage
+        List<ResourceQuotaDTO> resourceQuotaDTOList = this.list(clusterId);
+        for (ResourceQuotaDTO resourceQuotaDTO : resourceQuotaDTOList){
+            ResourceQuotaDo quota = resourceQuotaDTO.getResourceQuotaDo();
+            if (quota != null){
+                if (quota.getCpu() != null && quota.getCpu().getRequest() != null){
+                    cpu += quota.getCpu().getRequest();
+                }
+                if (quota.getMemory() != null && quota.getMemory().getRequest() != null){
+                    memory += quota.getMemory().getRequest();
+                }
+            }
+        }
+        ResourceQuotaDo resourceQuotaDo = new ResourceQuotaDo();
+        resourceQuotaDo.getCpu().setRequest(cpu);
+        resourceQuotaDo.getMemory().setRequest(memory);
+        return resourceQuotaDo;
+    }
+
     private ResourceQuotaDo calculateQuotaList(List<ResourceQuota> list) {
         ResourceQuotaDo resQuota = new ResourceQuotaDo();
         list.forEach(rq -> {

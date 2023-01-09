@@ -528,7 +528,7 @@ public class OverviewServiceImpl implements OverviewService {
             if (CollectionUtils.isEmpty(namespaces)) {
                 return;
             }
-            Map<String, OverviewNamespaceInfo> namespaceMap = namespaces.stream().filter(Namespace::isRegistered).map(namespace -> {
+            Map<String, OverviewNamespaceInfo> namespaceMap = namespaces.stream().filter(Namespace::getRegistered).map(namespace -> {
                 OverviewNamespaceInfo overviewNSInfo = new OverviewNamespaceInfo();
                 BeanUtils.copyProperties(namespace, overviewNSInfo);
                 // 累计集群的注册命名空间数
@@ -696,7 +696,7 @@ public class OverviewServiceImpl implements OverviewService {
             }
 
             //获取已注册分区
-            List<Namespace> registeredNamespace = namespaces.stream().filter(Namespace::isRegistered).collect(Collectors.toList());
+            List<Namespace> registeredNamespace = namespaces.stream().filter(Namespace::getRegistered).collect(Collectors.toList());
             registeredNamespace.forEach(namespace -> {
                 //获取分区下所有实例
                 List<MiddlewareCR> middlewareCRS = middlewareCRService.listCR(clusterDTO.getId(), namespace.getName(), null);

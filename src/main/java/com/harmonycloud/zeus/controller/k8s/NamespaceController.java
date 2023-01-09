@@ -79,7 +79,7 @@ public class NamespaceController {
         return BaseResult.ok();
     }
 
-    @ApiOperation(value = "注册命名空间", notes = "注册命名空间")
+    @ApiOperation(value = "更新分区信息", notes = "更新分区信息")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "name", value = "分区名称", paramType = "path", dataTypeClass = String.class),

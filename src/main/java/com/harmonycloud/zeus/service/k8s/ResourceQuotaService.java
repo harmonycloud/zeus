@@ -64,4 +64,12 @@ public interface ResourceQuotaService {
      * @return
      */
     ResourceQuotaDo get(String clusterId, String namespace, String name);
+
+    /**
+     * 查询集群内quota分配情况
+     *
+     * @param clusterId 集群id
+     * @return
+     */
+    ResourceQuotaDo getQuota(String clusterId);
 }

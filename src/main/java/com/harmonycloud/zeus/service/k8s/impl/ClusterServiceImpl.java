@@ -101,8 +101,6 @@ public class ClusterServiceImpl implements ClusterService {
     @Autowired
     private PrometheusResourceMonitorService prometheusResourceMonitorService;
     @Autowired
-    private MiddlewareService middlewareService;
-    @Autowired
     private ClusterComponentService clusterComponentService;
     @Autowired
     private IngressComponentService ingressComponentService;
@@ -117,9 +115,11 @@ public class ClusterServiceImpl implements ClusterService {
     @Autowired
     private MiddlewareAlertsService middlewareAlertsService;
     @Autowired
-    private NodeWrapper nodeWrapper;
-    @Autowired
     private BeanActiveAreaMapper activeAreaMapper;
+    @Autowired
+    private ResourceQuotaService resourceQuotaService;
+    @Autowired
+    private StorageService storageService;
 
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
@@ -983,7 +983,7 @@ public class ClusterServiceImpl implements ClusterService {
             return Collections.emptyList();
         }
         List<Namespace> namespaces = namespaceService.list(clusterId, false, false, false, null, projectId);
-        return namespaces.stream().filter(namespace -> namespace.isRegistered()).collect(Collectors.toList());
+        return namespaces.stream().filter(Namespace::getRegistered).collect(Collectors.toList());
     }
 
     @Override
@@ -1009,6 +1009,49 @@ public class ClusterServiceImpl implements ClusterService {
             clusterResource(cluster);
         }
         return cluster.getClusterQuotaDTO();
+    }
+
+    @Override
+    public ResourceQuotaDo getResourceQuotaInfo(String clusterId, Boolean allocatable) {
+        ResourceQuotaDo resourceQuotaDo = new ResourceQuotaDo();
+        if (allocatable){
+            // 获取节点资源总额
+            ResourceQuotaDo nodeQuota = nodeService.getResourceQuota(clusterId);
+            // 获取分区配额分配情况
+            ResourceQuotaDo namespaceRequestQuota = resourceQuotaService.getQuota(clusterId);
+            double cpu = nodeQuota.getCpu().getTotal();
+            double memory = nodeQuota.getMemory().getTotal();
+            if (namespaceRequestQuota != null){
+                if (namespaceRequestQuota.getCpu() != null && resourceQuotaDo.getCpu().getRequest() != null){
+                    cpu = cpu - resourceQuotaDo.getCpu().getRequest();
+                }
+                if (namespaceRequestQuota.getMemory() != null && resourceQuotaDo.getMemory().getRequest() != null){
+                    memory = memory - resourceQuotaDo.getMemory().getRequest();
+                }
+            }
+            // todo 获取存储资源总额
+            List<StorageDto> storageDtoList = storageService.list(clusterId, null, null, false);
+            //Map<String, Double> storageQuotaMap = storageDtoList.stream().collect(Collectors.toMap(StorageDto::getName, StorageDto::getTotalStorage));
+
+            List<StorageQuota> storageQuotaList = storageDtoList.stream().map(storageDto -> {
+                StorageQuota storageQuota = new StorageQuota();
+
+                QuotaBase storage = new QuotaBase();
+                storage.setTotal(storageDto.getTotalStorage());
+
+                storageQuota.setName(storageDto.getAliasName());
+                storageQuota.setStorageClass(storageDto.getStorageClassList().stream().map(StorageClass::getName).collect(Collectors.toList()));
+                storageQuota.setStorage(storage);
+                return storageQuota;
+            }).collect(Collectors.toList());
+
+
+            resourceQuotaDo.getCpu().setTotal(cpu);
+            resourceQuotaDo.getMemory().setTotal(memory);
+            resourceQuotaDo.setStorageList(storageQuotaList);
+        }
+        // 获取其他数据例如 配额使用量等
+        return resourceQuotaDo;
     }
 
     public Map<Map<String, String>, List<String>> getResultMap(PrometheusResponse response) {
@@ -1055,7 +1098,7 @@ public class ClusterServiceImpl implements ClusterService {
             return new ArrayList();
         }
         List<Namespace> namespaces = namespaceService.list(clusterDTO.getId(), false, false, false, null, null);
-        return namespaces.stream().filter(namespace -> namespace.isRegistered()).collect(Collectors.toList());
+        return namespaces.stream().filter(Namespace::getRegistered).collect(Collectors.toList());
     }
 
     private void createMiddlewareCrd(MiddlewareClusterDTO middlewareClusterDTO) {
