@@ -112,7 +112,7 @@ public class StorageServiceImpl implements StorageService {
                 if (storageClass.getMetadata().getAnnotations().containsKey(ACTIVE_ACTIVE) && !CollectionUtils.isEmpty(storageClass.getAllowedTopologies())) {
                     isZoneA = storageClass.getAllowedTopologies().stream()
                             .anyMatch(tst -> tst.getMatchLabelExpressions().stream().
-                                    anyMatch(tslr -> tslr.getKey().equals("topology.kubernetes.io/zone") && tslr.getValues().get(0).equals("zoneA")));
+                                    anyMatch(tslr -> tslr.getKey().equals(STORAGE_ZONE) && tslr.getValues().get(0).equals("zoneA")));
                     String activeName = storageClass.getMetadata().getAnnotations().get(ACTIVE_ACTIVE);
                     if (storageClassWrapper.get(cluster.getId(), activeName) == null) {
                         delete(cluster.getId(), storageClass.getMetadata().getAnnotations().get(ALIAS_NAME));

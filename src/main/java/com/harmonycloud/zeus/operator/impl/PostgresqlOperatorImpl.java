@@ -5,24 +5,28 @@ import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_ZERO;
 import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ARGS;
 
+import java.text.MessageFormat;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import cn.hutool.core.collection.CollectionUtil;
+import com.alibaba.fastjson.JSONArray;
+import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupCR;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupSpec;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupStatus;
+import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.tool.cmd.CmdExecUtil;
+import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
+import com.harmonycloud.zeus.integration.cluster.bean.*;
+import com.harmonycloud.zeus.service.k8s.K8sExecService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareBackupCRService;
+import io.fabric8.kubernetes.api.model.Service;
 import org.apache.commons.lang3.StringUtils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.model.middleware.CustomConfig;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareQuota;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.operator.api.PostgresqlOperator;
@@ -41,7 +45,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implements PostgresqlOperator {
 
     @Autowired
+    public ServiceWrapper serviceWrapper;
+
+    @Autowired
     private MiddlewareBackupCRService middlewareBackupCRService;
+
+    @Autowired
+    private K8sExecService k8sExecService;
 
     @Override
     public boolean support(Middleware middleware) {
@@ -148,6 +158,52 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         helmChartService.upgrade(middleware, sb.toString(), cluster);
     }
 
+    @Override
+    public SwitchInfo getAutoSwitch(Middleware middleware) {
+        MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
+        return new SwitchInfo().setIsAuto(getAutoSwitch(middleware, cluster));
+    }
+
+    public Boolean getAutoSwitch(Middleware middleware, MiddlewareClusterDTO cluster) {
+        // 获取服务状态
+        Status status = middlewareCRService.getStatus(middleware.getClusterId()
+                , middleware.getNamespace(), MiddlewareTypeEnum.POSTGRESQL.getType(), middleware.getName());
+        if (status == null || !"Running".equals(status.getPhase())) {
+            return null;
+        }
+        // 获取patroniService
+        String patroniName = middleware.getName() + "-patroni";
+        Service patroniService = serviceWrapper.get(middleware.getClusterId(), middleware.getNamespace(), patroniName);
+
+        if (patroniService == null) {
+            log.error("无法找到patroni服务");
+            return null;
+        }
+        // 获取pod列表
+        List<Status.Condition> conditions = status.getConditions();
+        if (CollectionUtil.isEmpty(conditions)) {
+            return null;
+        }
+        // pod执行命令
+        String execCommand = MessageFormat.format(
+                "kubectl exec {0} -n {1} -c postgres --server={2} --token={3} --insecure-skip-tls-verify=true " +
+                        "-- bash  -c \"curl -s http://{4}:8008/patroni | jq .\"",
+                conditions.get(0).getName(), middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(), patroniName);
+        List<String> resList;
+        try {
+            resList = CmdExecUtil.runCmd(execCommand);
+        } catch (Exception e) {
+            log.error("查询自动切换失败", e);
+            return null;
+        }
+        // 查看pause
+        StringBuilder sb = new StringBuilder();
+        resList.forEach(sb::append);
+        JSONObject resJSON = JSONObject.parseObject(sb.toString());
+        return resJSON.getBoolean("pause") == null || !resJSON.getBoolean("pause");
+    }
+
+
     /**
      * 检查是否是双活分区并设置双活配置字段
      */
@@ -157,6 +213,80 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             super.setActiveActiveConfig(null, values);
             super.setActiveActiveToleration(middleware, values);
         }
+    }
+
+    @Override
+    public void switchMiddleware(Middleware middleware) {
+        MiddlewareCR cr = middlewareCRService.getCR(middleware.getClusterId(), middleware.getNamespace(),
+                MiddlewareTypeEnum.POSTGRESQL.getType(), middleware.getName());
+        if (cr==null){
+            throw new BusinessException(DictEnum.MIDDLEWARE,middleware.getName(),ErrorMessage.NOT_EXIST);
+        }
+        if (!"Running".equals(cr.getStatus().getPhase())){
+            throw new BusinessException(ErrorMessage.MIDDLEWARE_CLUSTER_IS_NOT_RUNNING);
+        }
+        // null手动切换， true/false更改自动切换状态
+        if (middleware.getAutoSwitch()!=null){
+            autoSwitch(middleware,cr);
+        }else{
+            handSwitch(middleware,cr);
+        }
+
+    }
+
+    private void autoSwitch(Middleware middleware, MiddlewareCR cr) {
+        MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
+        // 获取patroniService
+        String patroniName = middleware.getName() + "-patroni";
+        Service patroniService = serviceWrapper.get(middleware.getClusterId(), middleware.getNamespace(), patroniName);
+        if (patroniService == null) {
+            throw new BusinessException(DictEnum.SERVICE, patroniName, ErrorMessage.NOT_EXIST);
+        }
+        // 获取执行pod
+        JSONArray conditions = JSONObject.parseObject(cr.getMetadata().getAnnotations().get("status")).getJSONArray("conditions");
+        if (CollectionUtil.isEmpty(conditions)){
+            throw new BusinessException(DictEnum.POD,ErrorMessage.NOT_FOUND);
+        }
+        JSONObject pod = (JSONObject) conditions.get(0);
+
+        String execCommand = MessageFormat.format(
+                "kubectl exec {0} -n {1} -c postgres --server={2} --token={3} --insecure-skip-tls-verify=true " +
+                        "-- bash -c \"curl -s -X PATCH -d '''{\\\"pause\\\": '{4}' }''' http://{5}:8008/config | jq .\"",
+                pod.getString("name"), middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
+                !middleware.getAutoSwitch(), patroniName);
+        k8sExecService.exec(execCommand);
+    }
+
+
+
+
+    private void handSwitch(Middleware middleware, MiddlewareCR cr) {
+        MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
+        // 获取patroniService
+        String patroniName = middleware.getName() + "-patroni";
+        Service patroniService = serviceWrapper.get(middleware.getClusterId(), middleware.getNamespace(), patroniName);
+        if (patroniService == null) {
+            throw new BusinessException(DictEnum.SERVICE, patroniName, ErrorMessage.NOT_EXIST);
+        }
+        // 获取执行pod
+        JSONArray conditions = JSONObject.parseObject(cr.getMetadata().getAnnotations().get("status")).getJSONArray("conditions");
+        if (CollectionUtil.isEmpty(conditions)){
+            throw new BusinessException(DictEnum.POD,ErrorMessage.NOT_FOUND);
+        }
+        List<Object> syncSlavePods = conditions.stream().filter(condition -> {
+            JSONObject con = (JSONObject) condition;
+            return "sync_slave".equals(con.getString("type"));
+        }).collect(Collectors.toList());
+        if (CollectionUtil.isEmpty(syncSlavePods)){
+            throw new BusinessException(DictEnum.POD,ErrorMessage.NOT_FOUND);
+        }
+        JSONObject syncSlavePod = (JSONObject) syncSlavePods.get(0);
+        String execCommand = MessageFormat.format(
+                "kubectl exec {0} -n {1} -c postgres --server={2} --token={3} --insecure-skip-tls-verify=true " +
+                        "-- bash -c \"curl -s -X POST http://{4}:8008/failover -d '''{\\\"candidate\\\": \\\"'{5}'\\\"}'''\"",
+                syncSlavePod.getString("name"), middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
+                patroniName,syncSlavePod.getString("name"));
+        k8sExecService.exec(execCommand);
     }
 
     @Override

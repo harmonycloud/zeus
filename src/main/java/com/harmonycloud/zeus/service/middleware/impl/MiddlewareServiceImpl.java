@@ -167,6 +167,15 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
+    public SwitchInfo autoSwitch(String clusterId, String namespace, String name, String type) {
+        Middleware middleware =
+                new Middleware().setClusterId(clusterId).setNamespace(namespace).setType(type).setName(name);
+        return getOperator(BaseOperator.class, BaseOperator.class, middleware).getAutoSwitch(middleware);
+    }
+
+
+
+    @Override
     public Middleware create(Middleware middleware) {
         checkBaseParam(middleware);
         BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
@@ -255,9 +264,16 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public void switchMiddleware(String clusterId, String namespace, String name, String type, Boolean isAuto) {
+    public void switchMiddleware(String clusterId, String namespace, String name, String type, String slaveName, Boolean isAuto) {
         Middleware middleware = new Middleware(clusterId, namespace, name, type).setAutoSwitch(isAuto);
-        getOperator(BaseOperator.class, BaseOperator.class, middleware).switchMiddleware(middleware);
+        BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
+        // redis分片内单独切换主从
+        if (MiddlewareTypeEnum.REDIS.getType().equals(type)){
+            operator.switchMiddleware(middleware, slaveName);
+        }else {
+            operator.switchMiddleware(middleware);
+        }
+
     }
 
     @Override

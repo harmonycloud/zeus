@@ -33,6 +33,14 @@ public interface BaseOperator {
     Middleware detail(Middleware middleware);
 
     /**
+     * 查询中间件切换信息
+     *
+     * @param middleware 中间件信息
+     * @return
+     */
+    SwitchInfo getAutoSwitch(Middleware middleware);
+
+    /**
      * 根据helm chart转换
      *
      * @param middleware 中间件信息
@@ -93,6 +101,14 @@ public interface BaseOperator {
      * @param middleware 中间件信息
      */
     void switchMiddleware(Middleware middleware);
+
+    /**
+     * 指定从节点手动切换主从
+     *
+     * @param middleware 中间件信息
+     * @param slaveName 从节点名称
+     */
+    void switchMiddleware(Middleware middleware, String slaveName);
 
     /**
      * pvc扩缩容

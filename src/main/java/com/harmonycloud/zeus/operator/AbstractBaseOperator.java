@@ -264,6 +264,10 @@ public abstract class AbstractBaseOperator {
         cacheMiddlewareService.updateValuesToNull(middleware);
     }
 
+    public SwitchInfo getAutoSwitch(Middleware middleware) {
+        return null;
+    }
+
     /**
      * 更新自定义中间件
      */
@@ -390,6 +394,9 @@ public abstract class AbstractBaseOperator {
 
     }
 
+    public void switchMiddleware(Middleware middleware, String slaveName) {
+
+    }
     /**
      * 从helm chart转回middleware
      */
