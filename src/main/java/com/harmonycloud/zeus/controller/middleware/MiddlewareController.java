@@ -167,6 +167,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "slaveName", value = "从节点名称", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "isAuto", value = "true开启/false关闭自动切换，不传/传null都为手动切换", paramType = "query", dataTypeClass = Boolean.class),
     })
     @PutMapping("/{middlewareName}/switch")
@@ -175,10 +176,12 @@ public class MiddlewareController {
                                        @PathVariable("namespace") String namespace,
                                        @PathVariable("middlewareName") String name,
                                        @RequestParam("type") String type,
+                                       @RequestParam(value = "slaveName", required = false) String slaveName,
                                        @RequestParam(value = "isAuto", required = false) Boolean isAuto) {
-        middlewareService.switchMiddleware(clusterId, namespace, name, type, isAuto);
+        middlewareService.switchMiddleware(clusterId, namespace, name, type, slaveName, isAuto);
         return BaseResult.ok();
     }
+
 
     @ApiOperation(value = "性能监控", notes = "性能监控")
     @ApiImplicitParams({
