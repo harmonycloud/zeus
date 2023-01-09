@@ -33,6 +33,14 @@ public interface BaseOperator {
     Middleware detail(Middleware middleware);
 
     /**
+     * 查询中间件切换信息
+     *
+     * @param middleware 中间件信息
+     * @return
+     */
+    SwitchInfo getAutoSwitch(Middleware middleware);
+
+    /**
      * 根据helm chart转换
      *
      * @param middleware 中间件信息

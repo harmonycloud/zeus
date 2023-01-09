@@ -5,24 +5,27 @@ import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_ZERO;
 import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ARGS;
 
+import java.text.MessageFormat;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.tool.cmd.CmdExecUtil;
+import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupSpec;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupStatus;
+import com.harmonycloud.zeus.integration.cluster.bean.Status;
 import com.harmonycloud.zeus.service.k8s.MiddlewareBackupCRService;
+import io.fabric8.kubernetes.api.model.Service;
 import org.apache.commons.lang3.StringUtils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.harmonycloud.caas.common.model.middleware.CustomConfig;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareQuota;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.operator.api.PostgresqlOperator;
@@ -39,6 +42,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Slf4j
 @Operator(paramTypes4One = Middleware.class)
 public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implements PostgresqlOperator {
+
+    @Autowired
+    public ServiceWrapper serviceWrapper;
 
     @Autowired
     private MiddlewareBackupCRService middlewareBackupCRService;
@@ -147,6 +153,52 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         // 更新helm
         helmChartService.upgrade(middleware, sb.toString(), cluster);
     }
+
+    @Override
+    public SwitchInfo getAutoSwitch(Middleware middleware) {
+        MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
+        return new SwitchInfo().setIsAuto(getAutoSwitch(middleware, cluster));
+    }
+
+    public Boolean getAutoSwitch(Middleware middleware, MiddlewareClusterDTO cluster) {
+        // 获取服务状态
+        Status status = middlewareCRService.getStatus(middleware.getClusterId()
+                , middleware.getNamespace(), MiddlewareTypeEnum.POSTGRESQL.getType(), middleware.getName());
+        if (status == null || !"Running".equals(status.getPhase())) {
+            return null;
+        }
+        // 获取patroniService
+        String patroniName = middleware.getName() + "-patroni";
+        Service patroniService = serviceWrapper.get(middleware.getClusterId(), middleware.getNamespace(), patroniName);
+
+        if (patroniService == null) {
+            log.error("无法找到patroni服务");
+            return null;
+        }
+        // 获取pod列表
+        List<Status.Condition> conditions = status.getConditions();
+        if (CollectionUtil.isEmpty(conditions)) {
+            return null;
+        }
+        // pod执行命令
+        String execCommand = MessageFormat.format(
+                "kubectl exec {0} -n {1} -c postgres --server={2} --token={3} --insecure-skip-tls-verify=true " +
+                        "-- bash  -c \"curl -s http://{4}:8008/patroni | jq .\"",
+                conditions.get(0).getName(), middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(), patroniName);
+        List<String> resList;
+        try {
+            resList = CmdExecUtil.runCmd(execCommand);
+        } catch (Exception e) {
+            log.error("查询自动切换失败", e);
+            return null;
+        }
+        // 查看pause
+        StringBuilder sb = new StringBuilder();
+        resList.forEach(sb::append);
+        JSONObject resJSON = JSONObject.parseObject(sb.toString());
+        return resJSON.getBoolean("pause") == null || !resJSON.getBoolean("pause");
+    }
+
 
     /**
      * 检查是否是双活分区并设置双活配置字段

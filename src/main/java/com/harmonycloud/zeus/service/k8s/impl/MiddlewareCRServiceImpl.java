@@ -7,10 +7,12 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.integration.cluster.MiddlewareWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
+import com.harmonycloud.zeus.integration.cluster.bean.Status;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.PodService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
@@ -233,6 +235,13 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
             }
         }
         return middleware;
+    }
+
+    @Override
+    public Status getStatus(String clusterId, String namespace, String type, String middlewareName) {
+        MiddlewareCR cr = getCR(clusterId, namespace, type, middlewareName);
+        JSONObject statusJSON = JSONObject.parseObject(cr.getMetadata().getAnnotations().get("status"), JSONObject.class);
+        return JSONObject.toJavaObject(statusJSON, Status.class);
     }
 
     @Override
