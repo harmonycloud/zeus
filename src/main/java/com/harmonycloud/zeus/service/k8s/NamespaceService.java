@@ -107,9 +107,8 @@ public interface NamespaceService {
      *
      * @param clusterId 集群id
      * @param name 分区名称
-     * @param registered 是否注册
      */
-    void registry(String clusterId, String name, Boolean registered);
+    void update(String clusterId, String name, Namespace namespace);
 
     /**
      * 修改分区可用域启用状态

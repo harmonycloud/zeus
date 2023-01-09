@@ -22,6 +22,15 @@ public interface ResourceQuotaService {
     void create(String clusterId, String namespace, ResourceQuotaDo resourceQuotaDo);
 
     /**
+     * add resource quota
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param resourceQuotaDo 资源配额对象
+     */
+    void update(String clusterId, String namespace, ResourceQuotaDo resourceQuotaDo);
+
+    /**
      * 查询resource quota
      *
      * @param clusterId 集群id

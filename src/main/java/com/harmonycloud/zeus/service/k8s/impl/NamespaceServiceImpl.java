@@ -138,10 +138,6 @@ public class NamespaceServiceImpl implements NamespaceService {
         if (StringUtils.isNotEmpty(namespace.getAliasName())) {
             annotations.put("alias_name", namespace.getAliasName());
         }
-        if (StringUtils.isNotEmpty(namespace.getProjectId())) {
-            annotations.put("project_id", namespace.getProjectId());
-            projectService.bindNamespace(namespace);
-        }
         save(namespace.getClusterId(), namespace.getName(), label, annotations);
         // 创建资源配额
         resourceQuotaService.create(namespace.getClusterId(), namespace.getName(), namespace.getQuotas());
@@ -182,33 +178,13 @@ public class NamespaceServiceImpl implements NamespaceService {
     }
 
     @Override
-    public void registry(String clusterId, String name, Boolean registered) {
-        List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId).stream()
-                .filter(ns -> ns.getMetadata().getName().equals(name)).collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(nsList)) {
-            throw new BusinessException(ErrorMessage.NAMESPACE_NOT_FOUND);
+    public void update(String clusterId, String name, Namespace namespace) {
+        // 修改分区注册状态
+        if (namespace.getRegistered() != null){
+            register(clusterId, name, namespace.getRegistered());
         }
-        io.fabric8.kubernetes.api.model.Namespace ns = nsList.get(0);
-        if (registered) {
-            if (ns.getMetadata().getLabels() == null) {
-                ns.getMetadata().setLabels(new HashMap<>());
-            }
-            ns.getMetadata().getLabels().put(labelKey, labelValue);
-        } else {
-            // 校验是否绑定项目
-            QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<BeanProjectNamespace>().eq("namespace", name);
-            List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
-            if (!CollectionUtils.isEmpty(beanProjectNamespaceList)) {
-                throw new BusinessException(ErrorMessage.PROJECT_NAMESPACE_ALREADY_BIND);
-            }
-            ns.getMetadata().getLabels().remove(labelKey);
-        }
-        try {
-            namespaceWrapper.save(clusterId, ns);
-        } catch (Exception e) {
-            log.error("分区{}  注册失败", name);
-            throw new BusinessException(ErrorMessage.NAMESPACE_REGISTRY_FAILED);
-        }
+        // 修改资源配额
+        resourceQuotaService.update(clusterId, name, namespace.getQuotas());
     }
 
     @Override
@@ -329,6 +305,38 @@ public class NamespaceServiceImpl implements NamespaceService {
             }
         }
         return false;
+    }
+
+    /**
+     * 修改分区注册状态
+     */
+    public void register(String clusterId, String name, Boolean registered){
+        List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId).stream()
+                .filter(ns -> ns.getMetadata().getName().equals(name)).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(nsList)) {
+            throw new BusinessException(ErrorMessage.NAMESPACE_NOT_FOUND);
+        }
+        io.fabric8.kubernetes.api.model.Namespace ns = nsList.get(0);
+        if (registered) {
+            if (ns.getMetadata().getLabels() == null) {
+                ns.getMetadata().setLabels(new HashMap<>());
+            }
+            ns.getMetadata().getLabels().put(labelKey, labelValue);
+        } else {
+            // 校验是否绑定项目
+            QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<BeanProjectNamespace>().eq("namespace", name);
+            List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
+            if (!CollectionUtils.isEmpty(beanProjectNamespaceList)) {
+                throw new BusinessException(ErrorMessage.PROJECT_NAMESPACE_ALREADY_BIND);
+            }
+            ns.getMetadata().getLabels().remove(labelKey);
+        }
+        try {
+            namespaceWrapper.save(clusterId, ns);
+        } catch (Exception e) {
+            log.error("分区{}  注册失败", name);
+            throw new BusinessException(ErrorMessage.NAMESPACE_REGISTRY_FAILED);
+        }
     }
 
 }
