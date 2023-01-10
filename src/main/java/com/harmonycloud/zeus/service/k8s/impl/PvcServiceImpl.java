@@ -1,6 +1,9 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
+import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
 import com.harmonycloud.caas.common.model.PersistentVolumeClaim;
+import com.harmonycloud.tool.date.DateUtils;
+import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
 import com.harmonycloud.zeus.service.k8s.PvcService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +13,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
 
 /**
  * @author dengyulong
@@ -47,6 +52,14 @@ public class PvcServiceImpl implements PvcService {
             .collect(Collectors.toList());
     }
 
+    @Override
+    public List<PersistentVolumeClaim> listWithLabels(String clusterId, String namespace, Map<String, String> labels) {
+        List<io.fabric8.kubernetes.api.model.PersistentVolumeClaim> pvcList =
+                pvcWrapper.listWithLabels(clusterId, namespace, labels);
+        return pvcList.stream().map(pvc -> convert(pvc).setClusterId(clusterId).setNamespace(namespace))
+                .collect(Collectors.toList());
+    }
+
     /**
      * 封装pvc
      */
@@ -54,10 +67,12 @@ public class PvcServiceImpl implements PvcService {
         PersistentVolumeClaim persistentVolumeClaim =
             new PersistentVolumeClaim().setName(pvc.getMetadata().getName()).setLabels(pvc.getMetadata().getLabels())
                 .setAccessModes(pvc.getSpec().getAccessModes()).setStorageClassName(pvc.getSpec().getStorageClassName())
-                .setVolumeMode(pvc.getSpec().getVolumeMode()).setPhase(pvc.getStatus().getPhase());
+                .setVolumeMode(pvc.getSpec().getVolumeMode()).setPhase(pvc.getStatus().getPhase())
+                .setCreateTime(DateUtils.parseUTCDate(pvc.getMetadata().getCreationTimestamp()));
         if (pvc.getSpec().getResources().getRequests() != null
             && pvc.getSpec().getResources().getRequests().containsKey("storage")) {
-            persistentVolumeClaim.setRequest(pvc.getSpec().getResources().getRequests().get("storage").toString());
+            double request = ResourceCalculationUtil.getResourceValue(pvc.getSpec().getResources().getRequests().get("storage").toString(), MEMORY, ResourceUnitEnum.GI.getUnit());
+            persistentVolumeClaim.setRequest(request);
         }
         return persistentVolumeClaim;
     }

@@ -9,6 +9,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author xutianhong
@@ -20,6 +21,14 @@ public class EventWrapper {
     public List<Event> list(String clusterId, String namespace) {
         KubernetesClient client = K8sClient.getClient(clusterId);
         EventList list = client.events().inNamespace(namespace).list();
+        if (list == null || CollectionUtils.isEmpty(list.getItems())) {
+            return new ArrayList<>(0);
+        }
+        return list.getItems();
+    }
+
+    public List<Event> listByFields(String clusterId, Map<String, String> fields){
+        EventList list = K8sClient.getClient(clusterId).v1().events().withFields(fields).list();
         if (list == null || CollectionUtils.isEmpty(list.getItems())) {
             return new ArrayList<>(0);
         }

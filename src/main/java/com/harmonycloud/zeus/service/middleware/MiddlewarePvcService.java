@@ -1,0 +1,46 @@
+package com.harmonycloud.zeus.service.middleware;
+
+import com.harmonycloud.caas.common.model.EventDetail;
+import com.harmonycloud.caas.common.model.middleware.Backup;
+import com.harmonycloud.caas.common.model.middleware.MiddlewarePvcDto;
+
+import java.util.List;
+
+/**
+ * @author xutianhong
+ * @Date 2023/1/10 10:13 上午
+ */
+public interface MiddlewarePvcService {
+
+    /**
+     * 查询中间件存储信息
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param type 中间件类型
+     */
+    List<MiddlewarePvcDto> list(String clusterId, String namespace, String middlewareName, String type);
+
+    /**
+     * 查询中间件存储信息
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param pvcName pvc名称
+     */
+    List<EventDetail> getEvent(String clusterId, String namespace, String middlewareName, String pvcName);
+
+    /**
+     * 查询备份列表
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param pvcName pvc名称
+     * @param targetStorage 目标存储大小
+     */
+    void scalePvc(String clusterId, String namespace, String middlewareName, String pvcName, Double targetStorage);
+
+}
