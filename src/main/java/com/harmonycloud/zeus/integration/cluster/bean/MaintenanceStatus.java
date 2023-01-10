@@ -16,6 +16,6 @@ public class MaintenanceStatus {
 
     private String phase;
 
-    List<Map<String, String>> conditions;
+    private List<Map<String, String>> conditions;
 
 }

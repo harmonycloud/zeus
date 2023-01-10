@@ -18,4 +18,8 @@ public class Maintenance {
 
     private ObjectMeta metadata;
 
+    private MaintenanceSpec spec;
+
+    private MaintenanceStatus status;
+
 }

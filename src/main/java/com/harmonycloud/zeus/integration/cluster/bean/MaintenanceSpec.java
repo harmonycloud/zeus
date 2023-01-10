@@ -24,8 +24,6 @@ public class MaintenanceSpec {
 
     private Map<String, String> param;
 
-    private MaintenanceStatus status;
-
 
 
 }
