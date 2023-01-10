@@ -1,14 +1,12 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.CONTAINER_RUNTIME_VERSION;
-import static com.harmonycloud.caas.common.constants.NameConstant.KUBELET_VERSION;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.constants.NameConstant;
+import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.*;
 import com.harmonycloud.tool.date.DateUtils;
@@ -30,6 +28,8 @@ import com.harmonycloud.zeus.integration.cluster.NodeWrapper;
 
 import io.fabric8.kubernetes.api.model.NodeSystemInfo;
 import lombok.extern.slf4j.Slf4j;
+
+import static com.harmonycloud.caas.common.constants.NameConstant.*;
 
 /**
  * @author dengyulong
@@ -236,6 +236,21 @@ public class NodeServiceImpl implements NodeService {
             return nodeAddresses.get(0).getAddress();
         }
         return "";
+    }
+
+    @Override
+    public ResourceQuotaDo getResourceQuota(String clusterId) {
+        double cpu = 0.0;
+        double memory = 0.0;
+        List<Node> nodeList = this.list(clusterId);
+        for (Node node : nodeList){
+            cpu += Double.parseDouble(node.getCpu().getTotal());
+            memory += ResourceCalculationUtil.getResourceValue(node.getMemory().getAllocated(), MEMORY, ResourceUnitEnum.GI.getUnit());
+        }
+        ResourceQuotaDo resourceQuotaDo = new ResourceQuotaDo();
+        resourceQuotaDo.getCpu().setTotal(cpu);
+        resourceQuotaDo.getMemory().setTotal(memory);
+        return resourceQuotaDo;
     }
 
     public Map<String, Double> nodeQuery(String clusterId, String query){

@@ -1,10 +1,7 @@
 package com.harmonycloud.zeus.service.k8s;
 
 import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.ClusterDTO;
-import com.harmonycloud.caas.common.model.ClusterNamespaceResourceDto;
-import com.harmonycloud.caas.common.model.ClusterNodeResourceDto;
-import com.harmonycloud.caas.common.model.Node;
+import com.harmonycloud.caas.common.model.*;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -211,5 +208,14 @@ public interface ClusterService {
      * @return
      */
     ClusterQuotaDTO monitoring(String clusterId);
+
+    /**
+     * 根据集群下资源配额情况
+     *
+     * @param clusterId 集群id
+     * @param allocatable 是否查询可分配资源
+     * @return ResourceQuotaDo
+     */
+    ResourceQuotaDo getResourceQuotaInfo(String clusterId, Boolean allocatable);
 
 }

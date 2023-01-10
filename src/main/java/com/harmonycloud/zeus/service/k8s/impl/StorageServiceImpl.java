@@ -1,8 +1,8 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
 import static com.harmonycloud.caas.common.constants.CommonConstant.*;
-import static com.harmonycloud.caas.common.constants.NameConstant.INTEGRATE_TIME;
-import static com.harmonycloud.caas.common.constants.NameConstant.VG_NAME;
+import static com.harmonycloud.caas.common.constants.NameConstant.*;
+import static com.harmonycloud.caas.common.constants.NameConstant.TRUE;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
 
 import java.util.*;
@@ -365,6 +365,10 @@ public class StorageServiceImpl implements StorageService {
         // 获取接入时间
         if (annotations.containsKey(INTEGRATE_TIME)){
             storageDto.setCreateTime(DateUtil.StringToDate(annotations.get(INTEGRATE_TIME), DateType.YYYY_MM_DD_T_HH_MM_SS_Z));
+        }
+        // 获取配额总额
+        if (annotations.containsKey(TOTAL_STORAGE)){
+            storageDto.setTotalStorage(Double.parseDouble(annotations.get(TOTAL_STORAGE)));
         }
         storageDto.setClusterId(clusterId);
         storageDto.setClusterAliasName(cluster.getNickname());

@@ -79,17 +79,17 @@ public class NamespaceController {
         return BaseResult.ok();
     }
 
-    @ApiOperation(value = "注册命名空间", notes = "注册命名空间")
+    @ApiOperation(value = "更新分区信息", notes = "更新分区信息")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "name", value = "分区名称", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "query", dataTypeClass = Namespace.class),
     })
     @PutMapping("/{name}")
-    public BaseResult registry(@PathVariable("clusterId") String clusterId,
-                               @PathVariable("name") String name,
-                               @RequestParam Boolean registered){
-        namespaceService.registry(clusterId, name, registered);
+    public BaseResult update(@PathVariable("clusterId") String clusterId,
+                             @PathVariable("name") String name,
+                             @RequestBody Namespace namespace){
+        namespaceService.update(clusterId, name, namespace);
         return BaseResult.ok();
     }
 

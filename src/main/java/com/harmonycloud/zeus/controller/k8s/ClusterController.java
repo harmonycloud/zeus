@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.harmonycloud.caas.common.model.middleware.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -12,10 +13,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.ClusterNamespaceResourceDto;
 import com.harmonycloud.caas.common.model.ClusterNodeResourceDto;
-import com.harmonycloud.caas.common.model.middleware.ClusterQuotaDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
-import com.harmonycloud.caas.common.model.middleware.Registry;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 
 import io.swagger.annotations.Api;
@@ -195,6 +192,18 @@ public class ClusterController {
     @GetMapping("/{clusterId}/monitoring")
     public BaseResult<ClusterQuotaDTO> monitoring(@PathVariable(value = "clusterId") String clusterId) {
         return BaseResult.ok(clusterService.monitoring(clusterId));
+    }
+
+    @ApiOperation(value = "查询集群下资源配额情况", notes = "查询集群下资源配额情况")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "allocatable", value = "是否查询可分配资源", paramType = "query", dataTypeClass = Boolean.class),
+    })
+    @GetMapping("/{clusterId}/quota")
+    public BaseResult getResourceQuotaInfo(@PathVariable("clusterId") String clusterId,
+                                           @RequestParam("allocatable") Boolean allocatable){
+        clusterService.getResourceQuotaInfo(clusterId, allocatable);
+        return BaseResult.ok();
     }
 
     /**
