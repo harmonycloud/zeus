@@ -111,12 +111,13 @@ public class NamespaceController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "name", value = "分区名称", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "projectId", required = false, value = "项目id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "aliasName", value = "分区中文名", paramType = "query", dataTypeClass = String.class),
     })
     @PutMapping("/{name}/project")
     public BaseResult update(@PathVariable("clusterId") String clusterId,
                              @PathVariable("name") String name,
-                             @RequestParam("projectId") String projectId,
+                             @RequestParam(value = "projectId",required = false) String projectId,
                              @RequestParam("aliasName") String aliasName) {
         namespaceService.bindProject(clusterId, name, aliasName, projectId);
         return BaseResult.ok();
