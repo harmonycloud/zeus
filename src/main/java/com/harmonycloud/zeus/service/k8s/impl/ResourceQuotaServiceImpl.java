@@ -215,17 +215,17 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
         // 设置memory配额
         if (resourceQuotaDo.getMemory() != null && resourceQuotaDo.getMemory().getRequest() != null){
             Quantity quantity = new Quantity();
-            quantity.setAmount(String.valueOf(resourceQuotaDo.getMemory().getRequest()));
+            quantity.setAmount(resourceQuotaDo.getMemory().getRequest() + ResourceUnitEnum.GI.getUnit());
             hard.put(MEMORY, quantity);
         }
         // 设置storage配额
         if (!CollectionUtils.isEmpty(resourceQuotaDo.getStorageList())) {
             for (StorageQuota storageQuota : resourceQuotaDo.getStorageList()) {
-                if (CollectionUtils.isEmpty(storageQuota.getStorageClass()) && storageQuota.getStorage() != null
+                if (!CollectionUtils.isEmpty(storageQuota.getStorageClass()) && storageQuota.getStorage() != null
                     && storageQuota.getStorage().getRequest() != null) {
                     for (String storageClass : storageQuota.getStorageClass()) {
                         Quantity quantity = new Quantity();
-                        quantity.setAmount(String.valueOf(storageQuota.getStorage().getRequest()));
+                        quantity.setAmount(storageQuota.getStorage().getRequest() + ResourceUnitEnum.GI.getUnit());
                         hard.put(storageClass + DOT + STORAGE_CLASS_STORAGE_K8s_IO_REQUESTS_STORAGE, quantity);
                     }
                 }
