@@ -6,15 +6,13 @@ import static com.harmonycloud.caas.common.constants.NameConstant.TRUE;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
 
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.enums.DateType;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareStorageInfoDto;
+import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.user.ProjectDto;
 import com.harmonycloud.zeus.service.user.ProjectService;
 import com.harmonycloud.zeus.util.DateUtil;
-import io.fabric8.kubernetes.api.model.TopologySelectorTerm;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,9 +25,6 @@ import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.MonitorResourceQuota;
 import com.harmonycloud.caas.common.model.PersistentVolumeClaim;
 import com.harmonycloud.caas.common.model.StorageDto;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.integration.cluster.StorageClassWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
@@ -103,34 +98,34 @@ public class StorageServiceImpl implements StorageService {
         List<StorageDto> result = new ArrayList<>();
         for (MiddlewareClusterDTO cluster : clusterList) {
             List<StorageClass> storageClassList = storageClassWrapper.list(cluster.getId());
-
+            Set<String> aliasNameSet = new HashSet<>();
             List<StorageDto> storageDtoList = storageClassList.stream().filter(storageClass -> {
                 boolean flag = CollectionUtils.isEmpty(storageClass.getMetadata().getAnnotations())
                         || !storageClass.getMetadata().getAnnotations().containsKey(MIDDLEWARE);
-                // 双活只保留zoneA避免重复
-                boolean isZoneA = true;
-                if (storageClass.getMetadata().getAnnotations().containsKey(ACTIVE_ACTIVE) && !CollectionUtils.isEmpty(storageClass.getAllowedTopologies())) {
-                    isZoneA = storageClass.getAllowedTopologies().stream()
-                            .anyMatch(tst -> tst.getMatchLabelExpressions().stream().
-                                    anyMatch(tslr -> tslr.getKey().equals(STORAGE_ZONE) && tslr.getValues().get(0).equals("zoneA")));
+                // 双活只保留一个避免重复
+                if (!flag && all == flag) {
+                    if (!aliasNameSet.add(storageClass.getMetadata().getAnnotations().get(ALIAS_NAME))) {
+                        return false;
+                    }
                     String activeName = storageClass.getMetadata().getAnnotations().get(ACTIVE_ACTIVE);
-                    if (storageClassWrapper.get(cluster.getId(), activeName) == null) {
+                    // 没有
+                    if (activeName != null && storageClassWrapper.get(cluster.getId(), activeName) == null) {
                         delete(cluster.getId(), storageClass.getMetadata().getAnnotations().get(ALIAS_NAME));
                         return false;
                     }
                 }
-                return all == flag && isZoneA;
+                return all == flag;
             }).map(storageClass -> {
                 // 初始化业务对象
                     return all ? convert(cluster.getId(), storageClass) : detail(cluster.getId(), storageClass);
                 }).filter(storageDto -> {
                     if (StringUtils.isNotEmpty(key)) {
-                        return storageDto.getAliasName().contains(key) || storageDto.getName().contains(key);
+                        return storageDto.getAliasName().contains(key) || storageDto.getStorageClassList().stream().anyMatch(sc -> sc.getName().contains(key));
                     }
                     return true;
                 }).filter(storageDto -> {
                     if (StringUtils.isNotEmpty(type)) {
-                        return storageDto.getStorageClassList().stream().anyMatch(sc -> type.equals(sc.getType()));
+                        return storageDto.getStorageClassList().stream().anyMatch(sc -> type.equals(sc.getVolumeType()));
                     }
                     return true;
                 }).collect(Collectors.toList());
@@ -169,6 +164,7 @@ public class StorageServiceImpl implements StorageService {
                 annotations.put(INTEGRATE_TIME,
                         DateUtils.DateToString(integrateTime, DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue()));
             }
+            // 双活配置
             if (storageDto.getIsActiveActive()) {
                 String active = scList.stream().filter(storageClass -> !storageClass.getMetadata().getName().equals(sc.getMetadata().getName()))
                         .collect(Collectors.toList()).get(0).getMetadata().getName();
@@ -387,8 +383,8 @@ public class StorageServiceImpl implements StorageService {
         return storageDto;
     }
 
-    public com.harmonycloud.caas.common.model.middleware.StorageClass convertSc(StorageClass storageClass) {
-        com.harmonycloud.caas.common.model.middleware.StorageClass sc = new com.harmonycloud.caas.common.model.middleware.StorageClass();
+    public StorageClassInfo convertSc(StorageClass storageClass) {
+        StorageClassInfo sc = new StorageClassInfo();
         // 获取vg_name
         if (storageClass.getParameters() != null && storageClass.getParameters().containsKey(VG_NAME)){
             sc.setVgName(storageClass.getParameters().get(VG_NAME));
@@ -401,7 +397,7 @@ public class StorageServiceImpl implements StorageService {
         if (provisionerEnum != null) {
             type = provisionerEnum.getType();
         }
-        sc.setType(type == null ? storageClass.getProvisioner() : type);
+        sc.setVolumeType(type == null ? storageClass.getProvisioner() : type);
         return sc;
     }
 

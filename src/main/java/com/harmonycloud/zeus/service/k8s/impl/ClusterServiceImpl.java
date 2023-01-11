@@ -20,8 +20,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.*;
 import com.harmonycloud.zeus.bean.BeanActiveArea;
 import com.harmonycloud.zeus.dao.BeanActiveAreaMapper;
-import com.harmonycloud.zeus.integration.cluster.NodeWrapper;
-import io.fabric8.kubernetes.api.model.NodeCondition;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -1047,7 +1045,7 @@ public class ClusterServiceImpl implements ClusterService {
                     storage.setTotal(total);
 
                     storageQuota.setName(storageDto.getAliasName());
-                    storageQuota.setStorageClass(storageDto.getStorageClassList().stream().map(StorageClass::getName)
+                    storageQuota.setStorageClass(storageDto.getStorageClassList().stream().map(StorageClassInfo::getName)
                         .collect(Collectors.toList()));
                     storageQuota.setStorage(storage);
                     return storageQuota;
