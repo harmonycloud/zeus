@@ -17,4 +17,6 @@ public class MaintenancePvc {
 
     private String targetRequestSize;
 
+    private String rollBackRequestSize;
+
 }

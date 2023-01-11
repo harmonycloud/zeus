@@ -54,23 +54,44 @@ public class MiddlewarePvcController {
                                                        @RequestParam("namespace") String namespace,
                                                        @PathVariable("middlewareName") String middlewareName,
                                                        @PathVariable("pvcName") String pvcName) {
-        return BaseResult.ok(middlewarePvcService.list(clusterId, namespace, middlewareName, pvcName));
+        return BaseResult.ok(middlewarePvcService.getEvent(clusterId, namespace, middlewareName, pvcName));
     }
 
     @ApiOperation(value = "中间件存储扩容", notes = "中间件存储扩容")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "pvcName", value = "pvc名称", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "storage", value = "当前存储大小", paramType = "query", dataTypeClass = Double.class),
+            @ApiImplicitParam(name = "targetStorage", value = "目标存储大小", paramType = "query", dataTypeClass = Double.class),
     })
     @Authority(power = 1)
     @PutMapping("/{pvcName}/scale")
-    public BaseResult switchDisasterRecovery(@PathVariable("clusterId") String clusterId,
-                                             @RequestParam("namespace") String namespace,
-                                             @PathVariable("middlewareName") String middlewareName,
-                                             @PathVariable("pvcName") String pvcName,
-                                             @RequestParam("targetStorage") Double targetStorage) {
-        middlewarePvcService.scalePvc(clusterId, namespace, middlewareName, pvcName, targetStorage);
+    public BaseResult scalePvc(@PathVariable("clusterId") String clusterId,
+                               @RequestParam("namespace") String namespace,
+                               @PathVariable("middlewareName") String middlewareName,
+                               @PathVariable("pvcName") String pvcName,
+                               @RequestParam("storage") Double storage,
+                               @RequestParam("targetStorage") Double targetStorage) {
+        middlewarePvcService.scalePvc(clusterId, namespace, middlewareName, pvcName, storage, targetStorage);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "中间件存储回滚", notes = "中间件存储回滚")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "pvcName", value = "pvc名称", paramType = "query", dataTypeClass = String.class),
+    })
+    @Authority(power = 1)
+    @PutMapping("/{pvcName}/rollBack")
+    public BaseResult rollBackPvc(@PathVariable("clusterId") String clusterId,
+                                  @RequestParam("namespace") String namespace,
+                                  @PathVariable("middlewareName") String middlewareName,
+                                  @PathVariable("pvcName") String pvcName) {
+        middlewarePvcService.rollback(clusterId, namespace, middlewareName, pvcName);
         return BaseResult.ok();
     }
 

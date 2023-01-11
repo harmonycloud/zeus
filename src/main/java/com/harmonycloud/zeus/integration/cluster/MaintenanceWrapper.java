@@ -3,8 +3,11 @@ package com.harmonycloud.zeus.integration.cluster;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
 
 import java.io.IOException;
+import java.util.Map;
 
+import com.harmonycloud.zeus.integration.cluster.bean.MaintenanceList;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.zeus.integration.cluster.bean.Maintenance;
@@ -25,6 +28,21 @@ public class MaintenanceWrapper {
             .withScope(NAMESPACED)
             .withPlural(MAINTENANCES)
             .build();
+
+    /**
+     * 根据labels查询运维组件
+     *
+     * @param clusterId
+     * @param namespace
+     * @param labels
+     */
+    public MaintenanceList listByLabels(String clusterId, String namespace, Map<String, String> labels) {
+        Map<String, Object> map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace, labels);
+        if (CollectionUtils.isEmpty(map)){
+            return null;
+        }
+        return JSONObject.parseObject(JSONObject.toJSONString(map), MaintenanceList.class);
+    }
 
     /**
      * 创建运维组件

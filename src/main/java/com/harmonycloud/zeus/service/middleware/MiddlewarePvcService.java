@@ -39,8 +39,19 @@ public interface MiddlewarePvcService {
      * @param namespace 分区
      * @param middlewareName 中间件名称
      * @param pvcName pvc名称
+     * @param storage 当前存储大小
      * @param targetStorage 目标存储大小
      */
-    void scalePvc(String clusterId, String namespace, String middlewareName, String pvcName, Double targetStorage);
+    void scalePvc(String clusterId, String namespace, String middlewareName, String pvcName, Double storage, Double targetStorage);
+
+    /**
+     * 查询备份列表
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param pvcName pvc名称
+     */
+    void rollback(String clusterId, String namespace, String middlewareName, String pvcName);
 
 }
