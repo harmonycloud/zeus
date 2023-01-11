@@ -128,8 +128,10 @@ public class NamespaceServiceImpl implements NamespaceService {
         Map<String, ProjectNamespaceDo> projectNamespaceMap = projectNamespaceList.stream()
             .collect(Collectors.toMap(ProjectNamespaceDo::getNamespace, projectNamespaceDo -> projectNamespaceDo));
         list.forEach(ns -> {
-            ns.setProjectId(projectNamespaceMap.get(ns.getName()).getProjectId());
-            ns.setProjectName(projectNamespaceMap.get(ns.getName()).getProjectName());
+            if (projectNamespaceMap.containsKey(ns.getName())){
+                ns.setProjectId(projectNamespaceMap.get(ns.getName()).getProjectId());
+                ns.setProjectName(projectNamespaceMap.get(ns.getName()).getProjectName());
+            }
         });
 
         return list;
