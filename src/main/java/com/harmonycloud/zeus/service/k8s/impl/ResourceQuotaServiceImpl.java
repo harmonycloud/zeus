@@ -111,8 +111,8 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
     public ResourceQuotaDo getQuota(String clusterId) {
         double cpu = 0.0;
         double memory = 0.0;
-        // todo 获取已分配storage
         List<ResourceQuotaDTO> resourceQuotaDTOList = this.list(clusterId);
+        Map<String, Double> storageMap = new HashMap<>();
         for (ResourceQuotaDTO resourceQuotaDTO : resourceQuotaDTOList){
             ResourceQuotaDo quota = resourceQuotaDTO.getResourceQuotaDo();
             if (quota != null){
@@ -122,11 +122,34 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
                 if (quota.getMemory() != null && quota.getMemory().getRequest() != null){
                     memory += quota.getMemory().getRequest();
                 }
+                // 获取已分配storage
+                if (!CollectionUtils.isEmpty(quota.getStorageList())){
+                    for (StorageQuota storageQuota : quota.getStorageList()){
+                        if (storageMap.containsKey(storageQuota.getName())){
+                            Double request = storageMap.get(storageQuota.getName());
+                            storageMap.put(storageQuota.getName(), request + storageQuota.getStorage().getRequest());
+                        }else {
+                            storageMap.put(storageQuota.getName(), storageQuota.getStorage().getRequest());
+                        }
+                    }
+                }
             }
         }
         ResourceQuotaDo resourceQuotaDo = new ResourceQuotaDo();
         resourceQuotaDo.getCpu().setRequest(cpu);
         resourceQuotaDo.getMemory().setRequest(memory);
+        // 设置storage quota
+        List<StorageQuota> storageList = new ArrayList<>();
+        for (String key : storageMap.keySet()){
+            StorageQuota storageQuota = new StorageQuota();
+            storageQuota.setName(key);
+            QuotaBase storage = new QuotaBase();
+            storage.setRequest(storageMap.get(key));
+            storageQuota.setStorage(storage);
+            storageList.add(storageQuota);
+        }
+        resourceQuotaDo.setStorageList(storageList);
+
         return resourceQuotaDo;
     }
 

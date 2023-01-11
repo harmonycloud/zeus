@@ -1021,6 +1021,7 @@ public class ClusterServiceImpl implements ClusterService {
             ResourceQuotaDo namespaceRequestQuota = resourceQuotaService.getQuota(clusterId);
             double cpu = nodeQuota.getCpu().getTotal();
             double memory = nodeQuota.getMemory().getTotal();
+            Map<String, Double> storageMap = new HashMap<>();
             if (namespaceRequestQuota != null){
                 if (namespaceRequestQuota.getCpu() != null && resourceQuotaDo.getCpu().getRequest() != null){
                     cpu = cpu - resourceQuotaDo.getCpu().getRequest();
@@ -1028,16 +1029,17 @@ public class ClusterServiceImpl implements ClusterService {
                 if (namespaceRequestQuota.getMemory() != null && resourceQuotaDo.getMemory().getRequest() != null){
                     memory = memory - resourceQuotaDo.getMemory().getRequest();
                 }
+                if (!CollectionUtils.isEmpty(namespaceRequestQuota.getStorageList())){
+                    storageMap.putAll(namespaceRequestQuota.getStorageList().stream().collect(Collectors.toMap(StorageQuota::getName, storageQuota -> storageQuota.getStorage().getRequest())));
+                }
             }
-            // todo 获取存储资源总额
+            // 获取存储资源总额
             List<StorageDto> storageDtoList = storageService.list(clusterId, null, null, false);
-            //Map<String, Double> storageQuotaMap = storageDtoList.stream().collect(Collectors.toMap(StorageDto::getName, StorageDto::getTotalStorage));
-
             List<StorageQuota> storageQuotaList = storageDtoList.stream().map(storageDto -> {
                 StorageQuota storageQuota = new StorageQuota();
 
                 QuotaBase storage = new QuotaBase();
-                storage.setTotal(storageDto.getTotalStorage());
+                storage.setTotal(storageDto.getTotalStorage() - storageMap.get(storageQuota.getStorageClass().get(0)));
 
                 storageQuota.setName(storageDto.getAliasName());
                 storageQuota.setStorageClass(storageDto.getStorageClassList().stream().map(StorageClass::getName).collect(Collectors.toList()));
