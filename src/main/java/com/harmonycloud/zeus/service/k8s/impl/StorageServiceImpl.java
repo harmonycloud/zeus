@@ -13,6 +13,8 @@ import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.user.ProjectDto;
 import com.harmonycloud.zeus.service.user.ProjectService;
 import com.harmonycloud.zeus.util.DateUtil;
+import io.fabric8.kubernetes.api.model.TopologySelectorLabelRequirement;
+import io.fabric8.kubernetes.api.model.TopologySelectorTerm;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -398,6 +400,16 @@ public class StorageServiceImpl implements StorageService {
             type = provisionerEnum.getType();
         }
         sc.setVolumeType(type == null ? storageClass.getProvisioner() : type);
+        // 获取双活分区
+        loop :for (TopologySelectorTerm tst: storageClass.getAllowedTopologies()) {
+            List<TopologySelectorLabelRequirement> matchLabelExpressions = tst.getMatchLabelExpressions();
+            for (TopologySelectorLabelRequirement tsr:matchLabelExpressions) {
+                if (STORAGE_ZONE.equals(tsr.getKey())) {
+                    sc.setActiveZone(tsr.getValues().get(0));
+                    break loop;
+                }
+            }
+        }
         return sc;
     }
 
