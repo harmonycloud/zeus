@@ -202,8 +202,7 @@ public class ClusterController {
     @GetMapping("/{clusterId}/quota")
     public BaseResult getResourceQuotaInfo(@PathVariable("clusterId") String clusterId,
                                            @RequestParam("allocatable") Boolean allocatable){
-        clusterService.getResourceQuotaInfo(clusterId, allocatable);
-        return BaseResult.ok();
+        return BaseResult.ok(clusterService.getResourceQuotaInfo(clusterId, allocatable));
     }
 
     /**

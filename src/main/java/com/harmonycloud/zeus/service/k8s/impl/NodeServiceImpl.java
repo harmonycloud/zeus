@@ -245,11 +245,11 @@ public class NodeServiceImpl implements NodeService {
         List<Node> nodeList = this.list(clusterId);
         for (Node node : nodeList){
             cpu += Double.parseDouble(node.getCpu().getTotal());
-            memory += ResourceCalculationUtil.getResourceValue(node.getMemory().getAllocated(), MEMORY, ResourceUnitEnum.GI.getUnit());
+            memory += ResourceCalculationUtil.getResourceValue(node.getMemory().getAllocated() + "Ki", MEMORY, ResourceUnitEnum.GI.getUnit());
         }
         ResourceQuotaDo resourceQuotaDo = new ResourceQuotaDo();
-        resourceQuotaDo.getCpu().setTotal(cpu);
-        resourceQuotaDo.getMemory().setTotal(memory);
+        resourceQuotaDo.getCpu().setTotal(ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(cpu), 0, RoundingMode.CEILING));
+        resourceQuotaDo.getMemory().setTotal(ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(memory), 0, RoundingMode.CEILING));
         return resourceQuotaDo;
     }
 

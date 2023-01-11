@@ -1035,17 +1035,23 @@ public class ClusterServiceImpl implements ClusterService {
             }
             // 获取存储资源总额
             List<StorageDto> storageDtoList = storageService.list(clusterId, null, null, false);
-            List<StorageQuota> storageQuotaList = storageDtoList.stream().map(storageDto -> {
-                StorageQuota storageQuota = new StorageQuota();
+            List<StorageQuota> storageQuotaList =
+                storageDtoList.stream().filter(storageDto -> storageDto.getTotalStorage() != null).map(storageDto -> {
+                    StorageQuota storageQuota = new StorageQuota();
+                    QuotaBase storage = new QuotaBase();
+                    // 设置存储可用总额
+                    Double total = storageDto.getTotalStorage();
+                    if (storageMap.containsKey(storageDto.getStorageClassList().get(0).getName())) {
+                        total = total - storageMap.get(storageDto.getStorageClassList().get(0).getName());
+                    }
+                    storage.setTotal(total);
 
-                QuotaBase storage = new QuotaBase();
-                storage.setTotal(storageDto.getTotalStorage() - storageMap.get(storageQuota.getStorageClass().get(0)));
-
-                storageQuota.setName(storageDto.getAliasName());
-                storageQuota.setStorageClass(storageDto.getStorageClassList().stream().map(StorageClass::getName).collect(Collectors.toList()));
-                storageQuota.setStorage(storage);
-                return storageQuota;
-            }).collect(Collectors.toList());
+                    storageQuota.setName(storageDto.getAliasName());
+                    storageQuota.setStorageClass(storageDto.getStorageClassList().stream().map(StorageClass::getName)
+                        .collect(Collectors.toList()));
+                    storageQuota.setStorage(storage);
+                    return storageQuota;
+                }).collect(Collectors.toList());
 
 
             resourceQuotaDo.getCpu().setTotal(cpu);
