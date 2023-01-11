@@ -196,7 +196,9 @@ public class NamespaceServiceImpl implements NamespaceService {
             register(clusterId, name, namespace.getRegistered());
         }
         // 修改资源配额
-        resourceQuotaService.update(clusterId, name, namespace.getQuotas());
+        if (namespace.getQuotas() != null){
+            resourceQuotaService.update(clusterId, name, namespace.getQuotas());
+        }
     }
 
     @Override
