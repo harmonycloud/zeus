@@ -20,10 +20,6 @@ public class MaintenanceSpec {
 
     private MaintenanceSpecRule nodeRule;
 
-    private MaintenanceSpecRule podRule;
-
     private Map<String, String> param;
-
-
 
 }
