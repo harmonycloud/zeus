@@ -142,4 +142,11 @@ public interface NamespaceService {
      */
     void createMiddlewareOperator(String clusterId);
 
+    /**
+     * 绑定/解绑分区
+     *
+     * @param clusterId 集群id
+     */
+    void bindProject(String clusterId, String namespace, String aliasName, String projectId);
+
 }

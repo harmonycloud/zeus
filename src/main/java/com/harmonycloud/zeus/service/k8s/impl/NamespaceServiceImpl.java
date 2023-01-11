@@ -213,6 +213,17 @@ public class NamespaceServiceImpl implements NamespaceService {
     }
 
     @Override
+    public void bindProject(String clusterId, String name, String aliasName, String projectId) {
+        if (StringUtils.isNotEmpty(projectId)){
+            Namespace namespace = new Namespace();
+            namespace.setClusterId(clusterId).setName(name).setAliasName(aliasName).setProjectId(projectId);
+            projectService.bindNamespace(namespace);
+        }else {
+            projectService.unBindNamespace(null, clusterId, name);
+        }
+    }
+
+    @Override
     public void updateAvailableDomain(String clusterId, String name, boolean availableDomain) {
         io.fabric8.kubernetes.api.model.Namespace namespace = namespaceWrapper.get(clusterId, name);
         if (namespace.getMetadata().getLabels() == null) {
