@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import io.fabric8.kubernetes.api.model.storage.StorageClass;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +20,7 @@ import org.springframework.util.CollectionUtils;
 import com.harmonycloud.caas.common.model.ResourceQuotaDo;
 import com.harmonycloud.caas.common.model.StorageClassDTO;
 import com.harmonycloud.caas.common.model.StorageQuota;
-import com.harmonycloud.caas.common.model.middleware.StorageClass;
+import com.harmonycloud.caas.common.model.middleware.StorageClassInfo;
 import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
 import com.harmonycloud.zeus.integration.cluster.StorageClassWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
@@ -49,9 +50,9 @@ public class StorageClassServiceImpl implements StorageClassService {
     private List<String> storageTypes;
 
     @Override
-    public List<StorageClass> list(String clusterId, String namespace, boolean onlyMiddleware) {
-        List<io.fabric8.kubernetes.api.model.storage.StorageClass> scList = scWrapper.list(clusterId);
-        List<StorageClass> list = new ArrayList<>();
+    public List<StorageClassInfo> list(String clusterId, String namespace, boolean onlyMiddleware) {
+        List<StorageClass> scList = scWrapper.list(clusterId);
+        List<StorageClassInfo> list = new ArrayList<>();
 
         // 取出存储配额
         ResourceQuotaDo resourceQuotaDo;
@@ -61,8 +62,8 @@ public class StorageClassServiceImpl implements StorageClassService {
             resourceQuotaDo = resourceQuotaService.statistics(clusterId);
         }
 
-        for (io.fabric8.kubernetes.api.model.storage.StorageClass sc : scList) {
-            StorageClass s = new StorageClass().setName(sc.getMetadata().getName())
+        for (StorageClass sc : scList) {
+            StorageClassInfo s = new StorageClassInfo().setName(sc.getMetadata().getName())
                 .setLabels(sc.getMetadata().getLabels()).setParameters(sc.getParameters())
                 .setProvisioner(sc.getProvisioner()).setReclaimPolicy(sc.getReclaimPolicy())
                 .setVolumeBindingMode(sc.getVolumeBindingMode());
@@ -88,9 +89,9 @@ public class StorageClassServiceImpl implements StorageClassService {
         if (!storageTypeCheck) {
             return true;
         }
-        List<StorageClass> list = list(clusterId, namespace, true);
+        List<StorageClassInfo> list = list(clusterId, namespace, true);
         boolean isLvm = false;
-        for (StorageClass sc : list) {
+        for (StorageClassInfo sc : list) {
             if (!storageClassName.equals(sc.getName())) {
                 continue;
             }

@@ -1,16 +1,11 @@
 package com.harmonycloud.zeus.service.k8s;
 
 import com.harmonycloud.caas.common.model.StorageClassDTO;
-import com.harmonycloud.caas.common.model.middleware.StorageClass;
+import com.harmonycloud.caas.common.model.middleware.StorageClassInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
-import org.springframework.util.CollectionUtils;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static com.harmonycloud.caas.common.constants.NameConstant.STORAGE;
 
 /**
  * @author dengyulong
@@ -26,7 +21,7 @@ public interface StorageClassService {
      * @param onlyMiddleware 是否只返回支持中间件的存储
      * @return
      */
-    List<StorageClass> list(String clusterId, String namespace, boolean onlyMiddleware);
+    List<StorageClassInfo> list(String clusterId, String namespace, boolean onlyMiddleware);
 
     /**
      * 根据存储类型名称判断判断存储类型是否是LVM
