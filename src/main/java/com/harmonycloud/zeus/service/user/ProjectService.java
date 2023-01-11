@@ -5,6 +5,7 @@ import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.user.ProjectDto;
+import com.harmonycloud.caas.common.model.user.ProjectNamespaceDo;
 import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.zeus.bean.user.BeanProject;
 import com.harmonycloud.zeus.bean.user.BeanProjectNamespace;
@@ -51,6 +52,12 @@ public interface ProjectService {
      * @return
      */
     List<Namespace> getNamespace(String projectId);
+
+    /**
+     * 查询分区所属项目
+     * @return List<BeanProjectNamespace>
+     */
+    List<ProjectNamespaceDo> listNamespace();
 
     /**
      * 查询项目下分区

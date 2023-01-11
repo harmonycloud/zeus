@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
+import com.harmonycloud.caas.common.model.user.ProjectNamespaceDo;
 import com.harmonycloud.zeus.service.k8s.ClusterComponentService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import org.apache.commons.lang3.StringUtils;
@@ -488,6 +489,30 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public List<Namespace> getNamespace(String projectId) {
         return getNamespace(projectId, null, false);
+    }
+
+    @Override
+    public List<ProjectNamespaceDo> listNamespace() {
+        // 获取分区项目绑定关系
+        QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<>();
+        List<BeanProjectNamespace> projectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
+        Map<String, String> projectNamespaceMap = projectNamespaceList.stream().collect(Collectors.toMap(BeanProjectNamespace::getNamespace, BeanProjectNamespace::getProjectId));
+
+        // 获取项目信息
+        QueryWrapper<BeanProject> pjWrapper = new QueryWrapper<>();
+        List<BeanProject> beanProjectList = beanProjectMapper.selectList(pjWrapper);
+        Map<String, String> projectNameMap = beanProjectList.stream().collect(Collectors.toMap(BeanProject::getProjectId, BeanProject::getAliasName));
+
+        List<ProjectNamespaceDo> projectNamespaceDoList = new ArrayList<>();
+        for (String key : projectNamespaceMap.keySet()){
+            ProjectNamespaceDo projectNamespaceDo = new ProjectNamespaceDo();
+            projectNamespaceDo.setNamespace(key);
+            projectNamespaceDo.setProjectId(projectNamespaceMap.get(key));
+            projectNamespaceDo.setProjectName(projectNameMap.get(projectNamespaceDo.getProjectId()));
+
+            projectNamespaceDoList.add(projectNamespaceDo);
+        }
+        return projectNamespaceDoList;
     }
 
     @Override
