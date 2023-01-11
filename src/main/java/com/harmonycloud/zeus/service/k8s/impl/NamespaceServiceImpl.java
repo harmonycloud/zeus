@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.k8s.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.constants.NamespaceConstant;
+import com.harmonycloud.caas.common.model.user.ProjectNamespaceDo;
 import com.harmonycloud.zeus.bean.user.BeanProjectNamespace;
 import com.harmonycloud.zeus.dao.user.BeanProjectNamespaceMapper;
 import com.harmonycloud.zeus.service.user.ProjectService;
@@ -97,22 +98,22 @@ public class NamespaceServiceImpl implements NamespaceService {
 
     @Override
     public List<Namespace> list(String clusterId, boolean all, boolean withQuota, boolean withMiddleware,
-                                String keyword, String projectId) {
+        String keyword, String projectId) {
         List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId);
         List<Namespace> list = nsList.stream()
-                .filter(ns -> (all || ns.getMetadata().getLabels() != null
-                        && StringUtils.equals(ns.getMetadata().getLabels().get(labelKey), labelValue))
-                        && !protectNamespaceList.contains(ns.getMetadata().getName())
-                        && (StringUtils.isBlank(keyword) || (ns.getMetadata().getAnnotations() != null
-                        && ns.getMetadata().getAnnotations().containsKey(KEY_NAMESPACE_CHINESE)
-                        && ns.getMetadata().getAnnotations().get(KEY_NAMESPACE_CHINESE).contains(keyword))))
-                .map(ns -> convertNamespace(clusterId, ns)).collect(Collectors.toList());
+            .filter(ns -> (all || ns.getMetadata().getLabels() != null
+                && StringUtils.equals(ns.getMetadata().getLabels().get(labelKey), labelValue))
+                && !protectNamespaceList.contains(ns.getMetadata().getName())
+                && (StringUtils.isBlank(keyword) || (ns.getMetadata().getAnnotations() != null
+                    && ns.getMetadata().getAnnotations().containsKey(KEY_NAMESPACE_CHINESE)
+                    && ns.getMetadata().getAnnotations().get(KEY_NAMESPACE_CHINESE).contains(keyword))))
+            .map(ns -> convertNamespace(clusterId, ns)).collect(Collectors.toList());
 
         if (StringUtils.isNotEmpty(projectId)) {
             List<Namespace> alNsList = projectService.getNamespace(projectId).stream()
-                    .filter(ns -> ns.getClusterId().equals(clusterId)).collect(Collectors.toList());
+                .filter(ns -> ns.getClusterId().equals(clusterId)).collect(Collectors.toList());
             list = list.stream().filter(ns -> alNsList.stream().anyMatch(alNs -> alNs.getName().equals(ns.getName())))
-                    .collect(Collectors.toList());
+                .collect(Collectors.toList());
         }
 
         if (withQuota) {
@@ -121,6 +122,15 @@ public class NamespaceServiceImpl implements NamespaceService {
         if (withMiddleware) {
             listNamespaceWithMiddleware(list, clusterId);
         }
+
+        // 设置分区所属项目
+        List<ProjectNamespaceDo> projectNamespaceList = projectService.listNamespace();
+        Map<String, ProjectNamespaceDo> projectNamespaceMap = projectNamespaceList.stream()
+            .collect(Collectors.toMap(ProjectNamespaceDo::getNamespace, projectNamespaceDo -> projectNamespaceDo));
+        list.forEach(ns -> {
+            ns.setProjectId(projectNamespaceMap.get(ns.getName()).getProjectId());
+            ns.setProjectName(projectNamespaceMap.get(ns.getName()).getProjectName());
+        });
 
         return list;
     }
