@@ -13,7 +13,9 @@ public interface BackupServerService {
 
     List<BackupServerDTO> list(String clusterId, String keyword);
 
-    List<BackupServerDTO> listByProjectId(String projectId);
+    List<BackupServerDTO> listBackupPosition(String projectId);
+
+    List<BackupServerDTO> listProjectEnableBackupServer(String projectId);
 
     BeanBackupServer get(Integer id);
 

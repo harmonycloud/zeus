@@ -10,6 +10,8 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
  * @author liyinlong
  * @since 2023/1/9 2:25 下午
@@ -28,18 +30,18 @@ public class BackupServerController {
             @ApiImplicitParam(name = "keyword", value = "搜索关键词", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping
-    public BaseResult list(@RequestParam(value = "clusterId", required = false) String clusterId,
+    public BaseResult<List<BackupServerDTO>> list(@RequestParam(value = "clusterId", required = false) String clusterId,
                            @RequestParam(value = "keyword", required = false) String keyword) {
         return BaseResult.ok(backupServerService.list(clusterId, keyword));
     }
 
-    @ApiOperation(value = "查询项目可用服务器", notes = "查询项目可用服务器")
+    @ApiOperation(value = "查询项目可用备份服务器(1个备份服务器只能被1个项目创建1个备份位置)", notes = "查询项目可用备份服务器")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
     })
-    @GetMapping("/project/{projectId}")
-    public BaseResult listByProjectId(@RequestParam("projectId") String projectId) {
-        return BaseResult.ok(backupServerService.listByProjectId(projectId));
+    @GetMapping("/project/{projectId}/enable")
+    public BaseResult<List<BackupServerDTO>> listProjectEnableBackupServer(@RequestParam("projectId") String projectId) {
+        return BaseResult.ok(backupServerService.listProjectEnableBackupServer(projectId));
     }
 
     @ApiOperation(value = "创建备份服务器", notes = "创建备份服务器")

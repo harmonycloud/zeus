@@ -32,6 +32,11 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     @Autowired
     private BackupServerService backupServerService;
 
+    /**
+     * 查询指定备份服务器的全部备份位置
+     * @param backupServerId
+     * @return
+     */
     @Override
     public List<BackupPositionDTO> selectBackupPositionDTOList(Integer backupServerId) {
         QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
@@ -40,6 +45,11 @@ public class BackupPositionServiceImpl implements BackupPositionService {
         return convert(beanBackupPositions);
     }
 
+    /**
+     * 查询指定项目的全部备份位置
+     * @param projectId
+     * @return
+     */
     @Override
     public List<BackupPositionDTO> selectBackupPositionDTOList(String projectId) {
         QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
@@ -48,9 +58,14 @@ public class BackupPositionServiceImpl implements BackupPositionService {
         return convert(beanBackupPositions);
     }
 
+    /**
+     * 查询项目备份位置列表
+     * @param projectId
+     * @return
+     */
     @Override
     public List<BackupServerDTO> selectBackupServerDTOList(String projectId) {
-        return backupServerService.listByProjectId(projectId);
+        return backupServerService.listBackupPosition(projectId);
     }
 
     @Override
