@@ -12,8 +12,6 @@ import com.harmonycloud.caas.common.model.middleware.BackupServerDetailDTO;
 import com.harmonycloud.zeus.bean.BeanBackupServer;
 import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
 import com.harmonycloud.zeus.dao.BeanBackupServerMapper;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCluster;
-import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import com.harmonycloud.zeus.service.middleware.BackupPositionService;
 import com.harmonycloud.zeus.service.middleware.BackupServerDetailService;
@@ -142,7 +140,7 @@ public class BackupServerServiceImpl implements BackupServerService {
     @Override
     public Map<String, Integer> getBackupServerCountInfo() {
         Map<String, Integer> clusterBackupServerNumMap = new HashMap<>();
-        clusterBackupServerNumMap.put("all", getBackupServerCount(null));
+        clusterBackupServerNumMap.put("all", getBackupServerCount("dsfasdf"));
         List<BeanMiddlewareCluster> clusters = middlewareClusterService.listClustersByClusterId(null);
         for (BeanMiddlewareCluster cluster : clusters) {
             Integer backupServerCount = getBackupServerCount(cluster.getClusterId());

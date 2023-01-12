@@ -2,11 +2,16 @@ package com.harmonycloud.zeus.service.middleware.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.BackupPositionDTO;
 import com.harmonycloud.caas.common.model.BackupServerDTO;
+import com.harmonycloud.caas.common.model.user.ProjectNamespaceDo;
 import com.harmonycloud.zeus.bean.BeanBackupPosition;
+import com.harmonycloud.zeus.bean.BeanBackupServer;
 import com.harmonycloud.zeus.bean.user.BeanProject;
 import com.harmonycloud.zeus.dao.BeanBackupPositionMapper;
+import com.harmonycloud.zeus.dao.user.BeanProjectNamespaceMapper;
 import com.harmonycloud.zeus.service.middleware.BackupPositionService;
 import com.harmonycloud.zeus.service.middleware.BackupServerService;
 import com.harmonycloud.zeus.service.user.ProjectService;
@@ -14,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,6 +40,7 @@ public class BackupPositionServiceImpl implements BackupPositionService {
 
     /**
      * 查询指定备份服务器的全部备份位置
+     *
      * @param backupServerId
      * @return
      */
@@ -47,6 +54,7 @@ public class BackupPositionServiceImpl implements BackupPositionService {
 
     /**
      * 查询指定项目的全部备份位置
+     *
      * @param projectId
      * @return
      */
@@ -60,16 +68,32 @@ public class BackupPositionServiceImpl implements BackupPositionService {
 
     /**
      * 查询项目备份位置列表
+     *
      * @param projectId
      * @return
      */
     @Override
-    public List<BackupServerDTO> selectBackupServerDTOList(String projectId) {
+    public List<BackupServerDTO> listBackupServerDTO(String projectId) {
         return backupServerService.listBackupPosition(projectId);
     }
 
     @Override
+    public List<BackupPositionDTO> list(String clusterId, String namespace) {
+        String projectId = projectService.getProjectId(clusterId, namespace);
+        List<BackupPositionDTO> backupPositionDTOS = selectBackupPositionDTOList(projectId);
+        for (BackupPositionDTO backupPositionDTO : backupPositionDTOS) {
+            BeanBackupServer beanBackupServer = backupServerService.get(backupPositionDTO.getBackupServerId());
+            backupPositionDTO.setBackupServerName(beanBackupServer.getName());
+        }
+        return backupPositionDTOS;
+    }
+
+    @Override
     public void create(BackupPositionDTO backupPositionDTO) {
+        // 校验该项目是否已使用该备份服务器创建备份位置
+        if (this.get(backupPositionDTO.getBackupServerId(), backupPositionDTO.getProjectId()) != null) {
+            throw new BusinessException(ErrorMessage.BACKUP_SERVER_ALREADY_USED);
+        }
         BeanBackupPosition backupPosition = new BeanBackupPosition();
         BeanUtil.copyProperties(backupPositionDTO, backupPosition);
         backupPositionMapper.insert(backupPosition);
@@ -85,6 +109,15 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     @Override
     public void delete(Integer id) {
         backupPositionMapper.deleteById(id);
+    }
+
+    @Override
+    public BeanBackupPosition get(Integer backupServerId, String projectId) {
+        QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
+        wrapper.eq("backup_server_id", backupServerId);
+        wrapper.eq("project_id", projectId);
+        List<BeanBackupPosition> beanBackupPositions = backupPositionMapper.selectList(wrapper);
+        return beanBackupPositions.get(0);
     }
 
     // 转换数据类型

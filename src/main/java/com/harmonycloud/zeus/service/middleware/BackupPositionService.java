@@ -16,12 +16,16 @@ public interface BackupPositionService {
 
     List<BackupPositionDTO> selectBackupPositionDTOList(String projectId);
 
-    List<BackupServerDTO> selectBackupServerDTOList(String projectId);
+    List<BackupServerDTO> listBackupServerDTO(String projectId);
+
+    List<BackupPositionDTO> list(String clusterId, String namespace);
 
     void create(BackupPositionDTO backupPositionDTO);
 
     void update(BackupPositionDTO backupPositionDTO);
 
     void delete(Integer id);
+
+    BeanBackupPosition get(Integer backupServerId, String projectId);
 
 }
