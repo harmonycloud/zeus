@@ -99,6 +99,16 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
     }
 
     @Override
+    public ResourceQuotaDo list(String clusterId, String namespace, String storageClass) {
+        ResourceQuotaDo resourceQuotaDo = list(clusterId, namespace);
+        if (StringUtils.isNotEmpty(storageClass) && !CollectionUtils.isEmpty(resourceQuotaDo.getStorageList())) {
+            resourceQuotaDo.setStorageList(resourceQuotaDo.getStorageList().stream()
+                .filter(storageQuota -> storageQuota.getName().equals(storageClass)).collect(Collectors.toList()));
+        }
+        return resourceQuotaDo;
+    }
+
+    @Override
     public ResourceQuotaDo get(String clusterId, String namespace, String name) {
         ResourceQuota resourceQuota = resourceQuotaWrapper.get(clusterId, namespace, name);
         if (resourceQuota == null) {

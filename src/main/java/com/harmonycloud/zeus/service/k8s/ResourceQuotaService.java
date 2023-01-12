@@ -60,6 +60,16 @@ public interface ResourceQuotaService {
      *
      * @param clusterId 集群id
      * @param namespace 命名空间
+     * @param storageClass 存储类型
+     * @return
+     */
+    ResourceQuotaDo list(String clusterId, String namespace, String storageClass);
+
+    /**
+     * 查询resource quota
+     *
+     * @param clusterId 集群id
+     * @param namespace 命名空间
      * @param name      名称
      * @return
      */
