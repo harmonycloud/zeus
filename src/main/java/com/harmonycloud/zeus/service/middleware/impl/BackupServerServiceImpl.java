@@ -8,29 +8,17 @@ import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.BackupPositionDTO;
 import com.harmonycloud.caas.common.model.BackupServerDTO;
 import com.harmonycloud.caas.common.model.middleware.BackupServerDetailDTO;
-import com.harmonycloud.zeus.bean.BeanBackupPosition;
 import com.harmonycloud.zeus.bean.BeanBackupServer;
-import com.harmonycloud.zeus.bean.BeanBackupServerDetail;
-import com.harmonycloud.zeus.dao.BeanBackupPositionMapper;
-import com.harmonycloud.zeus.dao.BeanBackupServerDetailMapper;
 import com.harmonycloud.zeus.dao.BeanBackupServerMapper;
 import com.harmonycloud.zeus.service.middleware.BackupPositionService;
 import com.harmonycloud.zeus.service.middleware.BackupServerDetailService;
 import com.harmonycloud.zeus.service.middleware.BackupServerService;
-import com.harmonycloud.zeus.service.middleware.ProjectBackupServerService;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.beanutils.BeanUtils;
-import org.joda.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -64,7 +52,7 @@ public class BackupServerServiceImpl implements BackupServerService {
                 BackupServerDTO backupServerDTO = new BackupServerDTO();
                 BeanUtil.copyProperties(backupServer, backupServerDTO);
                 backupServerDTO.setPositionList(backupPositionService.selectBackupPositionDTOList(backupServer.getId()));
-                backupServerDTO.setServerDetailList(backupServerDetailService.selectBackupServerDetailDTOByServerId(backupServer.getId()));
+                backupServerDTO.setServerDetailList(backupServerDetailService.selectBackupServerDetailDTOSByServerId(backupServer.getId()));
                 return backupServerDTO;
             }).collect(Collectors.toList());
         }
@@ -73,10 +61,13 @@ public class BackupServerServiceImpl implements BackupServerService {
 
     @Override
     public List<BackupServerDTO> listByProjectId(String projectId) {
-//        QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
-//        wrapper.eq("project_id", projectId);
-//        List<BeanBackupServer> serverList = backupServerMapper.selectList(wrapper);
-        return null;
+        List<BackupPositionDTO> backupPositionDTOS = backupPositionService.selectBackupPositionDTOList(projectId);
+        return backupPositionDTOS.stream().map(backupPositionDTO -> {
+            BackupServerDTO backupServerDTO = new BackupServerDTO();
+            backupServerDTO.setServerDetailList(backupServerDetailService.selectBackupServerDetailDTOSByServerId(backupServerDTO.getId()));
+            backupServerDTO.setPositionList(Collections.singletonList(backupPositionDTO));
+            return backupServerDTO;
+        }).collect(Collectors.toList());
     }
 
     @Override

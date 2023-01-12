@@ -48,8 +48,8 @@ public class BackupPositionController {
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
     })
     @GetMapping("/project/{projectId}")
-    public BaseResult list(@PathVariable(value = "projectId", required = false) String projectId) {
-        return BaseResult.ok();
+    public BaseResult list(@PathVariable("projectId") String projectId) {
+        return BaseResult.ok(backupPositionService.selectBackupServerDTOList(projectId));
     }
 
 }

@@ -31,7 +31,7 @@ public class BackupServerDetailServiceImpl implements BackupServerDetailService 
     private BeanBackupServerDetailMapper backupServerDetailMapper;
 
     @Override
-    public List<BackupServerDetailDTO> selectBackupServerDetailDTOByServerId(Integer backupServerId) {
+    public List<BackupServerDetailDTO> selectBackupServerDetailDTOSByServerId(Integer backupServerId) {
         QueryWrapper<BeanBackupServerDetail> wrapper = new QueryWrapper<>();
         wrapper.eq("backup_server_id", backupServerId);
         List<BeanBackupServerDetail> serverDetails = backupServerDetailMapper.selectList(wrapper);

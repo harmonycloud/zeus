@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.middleware;
 
 import com.harmonycloud.caas.common.model.BackupPositionDTO;
+import com.harmonycloud.caas.common.model.BackupServerDTO;
 import com.harmonycloud.zeus.bean.BeanBackupPosition;
 
 import java.util.List;
@@ -13,8 +14,12 @@ public interface BackupPositionService {
 
     List<BackupPositionDTO> selectBackupPositionDTOList(Integer backupServerId);
 
+    List<BackupPositionDTO> selectBackupPositionDTOList(String projectId);
+
+    List<BackupServerDTO> selectBackupServerDTOList(String projectId);
+
     void create(BackupPositionDTO backupPositionDTO);
 
     void delete(Integer id);
-    
+
 }

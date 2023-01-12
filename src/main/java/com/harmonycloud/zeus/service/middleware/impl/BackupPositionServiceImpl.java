@@ -3,10 +3,12 @@ package com.harmonycloud.zeus.service.middleware.impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.model.BackupPositionDTO;
+import com.harmonycloud.caas.common.model.BackupServerDTO;
 import com.harmonycloud.zeus.bean.BeanBackupPosition;
 import com.harmonycloud.zeus.bean.user.BeanProject;
 import com.harmonycloud.zeus.dao.BeanBackupPositionMapper;
 import com.harmonycloud.zeus.service.middleware.BackupPositionService;
+import com.harmonycloud.zeus.service.middleware.BackupServerService;
 import com.harmonycloud.zeus.service.user.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,19 +29,28 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     private BeanBackupPositionMapper backupPositionMapper;
     @Autowired
     private ProjectService projectService;
+    @Autowired
+    private BackupServerService backupServerService;
 
     @Override
     public List<BackupPositionDTO> selectBackupPositionDTOList(Integer backupServerId) {
         QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
         wrapper.eq("backup_server_id", backupServerId);
         List<BeanBackupPosition> beanBackupPositions = backupPositionMapper.selectList(wrapper);
-        return beanBackupPositions.stream().map(beanBackupPosition -> {
-            BackupPositionDTO backupPositionDTO = new BackupPositionDTO();
-            BeanUtil.copyProperties(beanBackupPosition, backupPositionDTO);
-            BeanProject beanProject = projectService.get(beanBackupPosition.getProjectId());
-            backupPositionDTO.setProjectName(beanProject.getName());
-            return backupPositionDTO;
-        }).collect(Collectors.toList());
+        return convert(beanBackupPositions);
+    }
+
+    @Override
+    public List<BackupPositionDTO> selectBackupPositionDTOList(String projectId) {
+        QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
+        wrapper.eq("project_id", projectId);
+        List<BeanBackupPosition> beanBackupPositions = backupPositionMapper.selectList(wrapper);
+        return convert(beanBackupPositions);
+    }
+
+    @Override
+    public List<BackupServerDTO> selectBackupServerDTOList(String projectId) {
+        return backupServerService.listByProjectId(projectId);
     }
 
     @Override
@@ -52,6 +63,17 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     @Override
     public void delete(Integer id) {
         backupPositionMapper.deleteById(id);
+    }
+
+    // 转换数据类型
+    private List<BackupPositionDTO> convert(List<BeanBackupPosition> beanBackupPositions) {
+        return beanBackupPositions.stream().map(beanBackupPosition -> {
+            BackupPositionDTO backupPositionDTO = new BackupPositionDTO();
+            BeanUtil.copyProperties(beanBackupPosition, backupPositionDTO);
+            BeanProject beanProject = projectService.get(beanBackupPosition.getProjectId());
+            backupPositionDTO.setProjectName(beanProject.getName());
+            return backupPositionDTO;
+        }).collect(Collectors.toList());
     }
 
 }

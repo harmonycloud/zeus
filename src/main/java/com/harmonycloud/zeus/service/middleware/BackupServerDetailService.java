@@ -10,7 +10,7 @@ import java.util.List;
  */
 public interface BackupServerDetailService {
 
-    List<BackupServerDetailDTO> selectBackupServerDetailDTOByServerId(Integer serverId);
+    List<BackupServerDetailDTO> selectBackupServerDetailDTOSByServerId(Integer serverId);
 
     void create(int serverId, List<BackupServerDetailDTO> serverDetailDTOS);
 
