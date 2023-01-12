@@ -1,41 +1,31 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import com.harmonycloud.caas.common.model.MiddlewareIncBackupDto;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.ObjectUtils;
-
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.BackupType;
-import com.harmonycloud.caas.common.enums.DateType;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
+import com.harmonycloud.caas.common.model.MiddlewareIncBackupDto;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.bean.BeanMiddlewareBackupName;
 import com.harmonycloud.zeus.dao.BeanMiddlewareBackupNameMapper;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
-import com.harmonycloud.zeus.operator.BaseOperator;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.middleware.BackupService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareBackupAddressService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
 import com.harmonycloud.zeus.service.middleware.MysqlScheduleBackupService;
 import com.harmonycloud.zeus.util.CronUtils;
-import com.harmonycloud.zeus.util.DateUtil;
-
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * mysql备份
@@ -56,8 +46,6 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     private MysqlScheduleBackupService mysqlScheduleBackupService;
     @Autowired
     private MiddlewareServiceImpl middlewareService;
-    @Autowired
-    private MiddlewareBackupAddressService middlewareBackupAddressService;
     @Autowired
     private BeanMiddlewareBackupNameMapper middlewareBackupNameMapper;
 
@@ -323,12 +311,12 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     public Minio getMinio(String addressId) {
-        List<MiddlewareClusterBackupAddressDTO> backupAddressDTOS =
-            middlewareBackupAddressService.listBackupAddress(addressId, null);
+//        List<MiddlewareClusterBackupAddressDTO> backupAddressDTOS =
+//            middlewareBackupAddressService.listBackupAddress(addressId, null);
         Minio minio = new Minio();
-        if (!CollectionUtils.isEmpty(backupAddressDTOS)) {
-            BeanUtils.copyProperties(backupAddressDTOS.get(0), minio);
-        }
+//        if (!CollectionUtils.isEmpty(backupAddressDTOS)) {
+//            BeanUtils.copyProperties(backupAddressDTOS.get(0), minio);
+//        }
         if (minio.getBucketName().indexOf("/") == 0) {
             minio.setBucketName(minio.getBucketName().substring(1));
         }
