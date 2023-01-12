@@ -86,5 +86,10 @@ public class BackupServerController {
         return BaseResult.ok();
     }
 
+    @ApiOperation(value = "查询备份服务器数量信息", notes = "查询备份服务器数量信息")
+    @GetMapping("/count")
+    public BaseResult getServerCountInfo() {
+        return BaseResult.ok(backupServerService.getBackupServerCountInfo());
+    }
 
 }

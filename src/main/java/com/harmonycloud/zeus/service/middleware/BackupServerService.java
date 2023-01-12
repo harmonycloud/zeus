@@ -4,6 +4,7 @@ import com.harmonycloud.caas.common.model.BackupServerDTO;
 import com.harmonycloud.zeus.bean.BeanBackupServer;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author liyinlong
@@ -27,4 +28,7 @@ public interface BackupServerService {
 
     void delete(Integer id);
 
+    Map<String,Integer> getBackupServerCountInfo();
+
+    Integer getBackupServerCount(String clusterId);
 }

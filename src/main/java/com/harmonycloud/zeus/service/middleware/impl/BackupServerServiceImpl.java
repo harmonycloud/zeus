@@ -10,7 +10,11 @@ import com.harmonycloud.caas.common.model.BackupServerDTO;
 import com.harmonycloud.caas.common.model.ProjectBackupServerDTO;
 import com.harmonycloud.caas.common.model.middleware.BackupServerDetailDTO;
 import com.harmonycloud.zeus.bean.BeanBackupServer;
+import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
 import com.harmonycloud.zeus.dao.BeanBackupServerMapper;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCluster;
+import com.harmonycloud.zeus.service.k8s.ClusterService;
+import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import com.harmonycloud.zeus.service.middleware.BackupPositionService;
 import com.harmonycloud.zeus.service.middleware.BackupServerDetailService;
 import com.harmonycloud.zeus.service.middleware.BackupServerService;
@@ -39,6 +43,8 @@ public class BackupServerServiceImpl implements BackupServerService {
     private BackupPositionService backupPositionService;
     @Autowired
     private ProjectBackupServerService projectBackupServerService;
+    @Autowired
+    private MiddlewareClusterService middlewareClusterService;
 
     @Override
     public List<BackupServerDTO> list(String clusterId, String keyword) {
@@ -131,6 +137,29 @@ public class BackupServerServiceImpl implements BackupServerService {
         wrapper.eq("id", id);
         backupServerMapper.delete(wrapper);
         backupServerDetailService.deleteByServerId(id);
+    }
+
+    @Override
+    public Map<String, Integer> getBackupServerCountInfo() {
+        Map<String, Integer> clusterBackupServerNumMap = new HashMap<>();
+        clusterBackupServerNumMap.put("all", getBackupServerCount(null));
+        List<BeanMiddlewareCluster> clusters = middlewareClusterService.listClustersByClusterId(null);
+        for (BeanMiddlewareCluster cluster : clusters) {
+            Integer backupServerCount = getBackupServerCount(cluster.getClusterId());
+            if (backupServerCount != 0) {
+                clusterBackupServerNumMap.put(cluster.getClusterId(), backupServerCount);
+            }
+        }
+        return clusterBackupServerNumMap;
+    }
+
+    @Override
+    public Integer getBackupServerCount(String clusterId) {
+        QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
+        if (StringUtil.isNotEmpty(clusterId)) {
+            wrapper.eq("cluster_id", clusterId);
+        }
+        return backupServerMapper.selectList(wrapper).size();
     }
 
     // 转换
