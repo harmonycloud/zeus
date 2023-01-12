@@ -159,6 +159,7 @@ public class StorageServiceImpl implements StorageService {
             }
             annotations.put(MIDDLEWARE, TRUE);
             annotations.put(ALIAS_NAME, storageDto.getAliasName());
+            annotations.put(TOTAL_STORAGE, storageDto.getTotalStorage().toString());
             if (!annotations.containsKey(INTEGRATE_TIME)) {
                 if (integrateTime == null) {
                     integrateTime = new Date();
