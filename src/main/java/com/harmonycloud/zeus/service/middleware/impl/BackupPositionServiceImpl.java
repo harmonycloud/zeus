@@ -76,6 +76,13 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     }
 
     @Override
+    public void update(BackupPositionDTO backupPositionDTO) {
+        BeanBackupPosition backupPosition = new BeanBackupPosition();
+        BeanUtil.copyProperties(backupPositionDTO, backupPosition);
+        backupPositionMapper.updateById(backupPosition);
+    }
+
+    @Override
     public void delete(Integer id) {
         backupPositionMapper.deleteById(id);
     }

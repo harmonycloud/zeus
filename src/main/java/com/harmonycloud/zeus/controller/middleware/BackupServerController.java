@@ -31,7 +31,7 @@ public class BackupServerController {
     })
     @GetMapping
     public BaseResult<List<BackupServerDTO>> list(@RequestParam(value = "clusterId", required = false) String clusterId,
-                           @RequestParam(value = "keyword", required = false) String keyword) {
+                                                  @RequestParam(value = "keyword", required = false) String keyword) {
         return BaseResult.ok(backupServerService.list(clusterId, keyword));
     }
 

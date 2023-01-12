@@ -20,6 +20,8 @@ public interface BackupPositionService {
 
     void create(BackupPositionDTO backupPositionDTO);
 
+    void update(BackupPositionDTO backupPositionDTO);
+
     void delete(Integer id);
 
 }

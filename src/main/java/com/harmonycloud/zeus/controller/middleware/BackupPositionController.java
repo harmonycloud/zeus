@@ -43,6 +43,16 @@ public class BackupPositionController {
         return BaseResult.ok();
     }
 
+    @ApiOperation(value = "更新备份位置", notes = "更新备份位置")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "backupPositionDTO", value = "备份位置", paramType = "query", dataTypeClass = BackupPositionDTO.class),
+    })
+    @PutMapping
+    public BaseResult update(@RequestBody BackupPositionDTO backupPositionDTO) {
+        backupPositionService.update(backupPositionDTO);
+        return BaseResult.ok();
+    }
+
     @ApiOperation(value = "查询项目备份位置列表", notes = "查询项目备份位置列表")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
