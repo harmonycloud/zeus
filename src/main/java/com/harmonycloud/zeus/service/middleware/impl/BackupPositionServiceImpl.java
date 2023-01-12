@@ -1,13 +1,19 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.model.BackupPositionDTO;
 import com.harmonycloud.zeus.bean.BeanBackupPosition;
+import com.harmonycloud.zeus.bean.user.BeanProject;
 import com.harmonycloud.zeus.dao.BeanBackupPositionMapper;
 import com.harmonycloud.zeus.service.middleware.BackupPositionService;
+import com.harmonycloud.zeus.service.user.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author liyinlong
@@ -19,6 +25,22 @@ public class BackupPositionServiceImpl implements BackupPositionService {
 
     @Autowired
     private BeanBackupPositionMapper backupPositionMapper;
+    @Autowired
+    private ProjectService projectService;
+
+    @Override
+    public List<BackupPositionDTO> selectBackupPositionDTOList(Integer backupServerId) {
+        QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
+        wrapper.eq("backup_server_id", backupServerId);
+        List<BeanBackupPosition> beanBackupPositions = backupPositionMapper.selectList(wrapper);
+        return beanBackupPositions.stream().map(beanBackupPosition -> {
+            BackupPositionDTO backupPositionDTO = new BackupPositionDTO();
+            BeanUtil.copyProperties(beanBackupPosition, backupPositionDTO);
+            BeanProject beanProject = projectService.get(beanBackupPosition.getProjectId());
+            backupPositionDTO.setProjectName(beanProject.getName());
+            return backupPositionDTO;
+        }).collect(Collectors.toList());
+    }
 
     @Override
     public void create(BackupPositionDTO backupPositionDTO) {

@@ -28,7 +28,7 @@ public class BackupPositionController {
             @ApiImplicitParam(name = "backupPositionDTO", value = "备份位置", paramType = "query", dataTypeClass = BackupPositionDTO.class),
     })
     @PostMapping
-    public BaseResult create(@RequestBody BackupPositionDTO backupPositionDTO){
+    public BaseResult create(@RequestBody BackupPositionDTO backupPositionDTO) {
         backupPositionService.create(backupPositionDTO);
         return BaseResult.ok();
     }

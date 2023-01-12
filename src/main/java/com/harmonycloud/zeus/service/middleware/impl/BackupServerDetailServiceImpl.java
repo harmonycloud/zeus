@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author liyinlong
@@ -28,6 +29,18 @@ public class BackupServerDetailServiceImpl implements BackupServerDetailService 
 
     @Autowired
     private BeanBackupServerDetailMapper backupServerDetailMapper;
+
+    @Override
+    public List<BackupServerDetailDTO> selectBackupServerDetailDTOByServerId(Integer backupServerId) {
+        QueryWrapper<BeanBackupServerDetail> wrapper = new QueryWrapper<>();
+        wrapper.eq("backup_server_id", backupServerId);
+        List<BeanBackupServerDetail> serverDetails = backupServerDetailMapper.selectList(wrapper);
+        return serverDetails.stream().map(beanBackupServerDetail -> {
+            BackupServerDetailDTO backupServerDetailDTO = new BackupServerDetailDTO();
+            BeanUtil.copyProperties(beanBackupServerDetail, backupServerDetailDTO);
+            return backupServerDetailDTO;
+        }).collect(Collectors.toList());
+    }
 
     @Override
     public void create(int serverId, List<BackupServerDetailDTO> serverDetailDTOS) {

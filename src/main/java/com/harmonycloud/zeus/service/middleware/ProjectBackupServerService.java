@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.middleware;
 
+import com.harmonycloud.caas.common.model.ProjectBackupServerDTO;
 import com.harmonycloud.zeus.bean.BeanProjectBackupServer;
 
 import java.util.List;
@@ -11,5 +12,11 @@ import java.util.List;
 public interface ProjectBackupServerService {
 
     List<BeanProjectBackupServer> listByBackupServerId(Integer serverId);
+
+    List<ProjectBackupServerDTO> listByProjectId(String projectId);
+
+    void save(String projectId, List<ProjectBackupServerDTO> projectBackupServerDTOList);
+
+    void deleteByProjectId(String projectId);
 
 }

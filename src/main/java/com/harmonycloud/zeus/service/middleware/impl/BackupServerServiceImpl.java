@@ -2,14 +2,19 @@ package com.harmonycloud.zeus.service.middleware.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.github.pagehelper.util.StringUtil;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.BackupPositionDTO;
 import com.harmonycloud.caas.common.model.BackupServerDTO;
 import com.harmonycloud.caas.common.model.middleware.BackupServerDetailDTO;
+import com.harmonycloud.zeus.bean.BeanBackupPosition;
 import com.harmonycloud.zeus.bean.BeanBackupServer;
 import com.harmonycloud.zeus.bean.BeanBackupServerDetail;
+import com.harmonycloud.zeus.dao.BeanBackupPositionMapper;
 import com.harmonycloud.zeus.dao.BeanBackupServerDetailMapper;
 import com.harmonycloud.zeus.dao.BeanBackupServerMapper;
+import com.harmonycloud.zeus.service.middleware.BackupPositionService;
 import com.harmonycloud.zeus.service.middleware.BackupServerDetailService;
 import com.harmonycloud.zeus.service.middleware.BackupServerService;
 import com.harmonycloud.zeus.service.middleware.ProjectBackupServerService;
@@ -20,10 +25,13 @@ import org.joda.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author liyinlong
@@ -38,11 +46,36 @@ public class BackupServerServiceImpl implements BackupServerService {
     @Autowired
     private BackupServerDetailService backupServerDetailService;
     @Autowired
-    private ProjectBackupServerService projectBackupServerService;
+    private BackupPositionService backupPositionService;
 
     @Override
-    public List<BackupServerDTO> list(String clusterId) {
+    public List<BackupServerDTO> list(String clusterId, String keyword) {
+        QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
+        if (StringUtil.isNotEmpty(clusterId)) {
+            wrapper.eq("cluster_id", clusterId);
+        }
+        if (StringUtil.isNotEmpty(keyword)) {
+            wrapper.like("name", "%" + keyword + "%");
+        }
+        List<BeanBackupServer> serverList = backupServerMapper.selectList(wrapper);
+        List<BackupServerDTO> serverDTOList = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(serverList)) {
+            serverDTOList = serverList.stream().map(backupServer -> {
+                BackupServerDTO backupServerDTO = new BackupServerDTO();
+                BeanUtil.copyProperties(backupServer, backupServerDTO);
+                backupServerDTO.setPositionList(backupPositionService.selectBackupPositionDTOList(backupServer.getId()));
+                backupServerDTO.setServerDetailList(backupServerDetailService.selectBackupServerDetailDTOByServerId(backupServer.getId()));
+                return backupServerDTO;
+            }).collect(Collectors.toList());
+        }
+        return serverDTOList;
+    }
 
+    @Override
+    public List<BackupServerDTO> listByProjectId(String projectId) {
+//        QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
+//        wrapper.eq("project_id", projectId);
+//        List<BeanBackupServer> serverList = backupServerMapper.selectList(wrapper);
         return null;
     }
 

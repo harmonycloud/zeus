@@ -11,7 +11,9 @@ import java.util.List;
  */
 public interface BackupServerService {
 
-    List<BackupServerDTO> list(String clusterId);
+    List<BackupServerDTO> list(String clusterId, String keyword);
+
+    List<BackupServerDTO> listByProjectId(String projectId);
 
     BeanBackupServer get(Integer id);
 

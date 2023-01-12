@@ -25,10 +25,21 @@ public class BackupServerController {
     @ApiOperation(value = "查询备份服务器列表", notes = "查询备份服务器列表")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "keyword", value = "搜索关键词", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping
-    public BaseResult list(@RequestParam(value = "clusterId", required = false) String clusterId) {
-        return BaseResult.ok(backupServerService.list(clusterId));
+    public BaseResult list(@RequestParam(value = "clusterId", required = false) String clusterId,
+                           @RequestParam(value = "keyword", required = false) String keyword) {
+        return BaseResult.ok(backupServerService.list(clusterId, keyword));
+    }
+
+    @ApiOperation(value = "查询项目可用服务器", notes = "查询项目可用服务器")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("/project/{projectId}")
+    public BaseResult listByProjectId(@RequestParam("projectId") String projectId) {
+        return BaseResult.ok(backupServerService.listByProjectId(projectId));
     }
 
     @ApiOperation(value = "创建备份服务器", notes = "创建备份服务器")
@@ -36,7 +47,7 @@ public class BackupServerController {
             @ApiImplicitParam(name = "backupServerDTO", value = "备份服务器", paramType = "query", dataTypeClass = BackupServerDTO.class),
     })
     @PostMapping
-    public BaseResult create(@RequestBody BackupServerDTO backupServerDTO){
+    public BaseResult create(@RequestBody BackupServerDTO backupServerDTO) {
         backupServerService.create(backupServerDTO);
         return BaseResult.ok();
     }
@@ -46,7 +57,7 @@ public class BackupServerController {
             @ApiImplicitParam(name = "backupServerDTO", value = "备份服务器", paramType = "query", dataTypeClass = BackupServerDTO.class),
     })
     @PutMapping
-    public BaseResult update(@RequestBody BackupServerDTO backupServerDTO){
+    public BaseResult update(@RequestBody BackupServerDTO backupServerDTO) {
         backupServerService.update(backupServerDTO);
         return BaseResult.ok();
     }
@@ -72,7 +83,6 @@ public class BackupServerController {
         backupServerService.delete(backupServerId);
         return BaseResult.ok();
     }
-
 
 
 }

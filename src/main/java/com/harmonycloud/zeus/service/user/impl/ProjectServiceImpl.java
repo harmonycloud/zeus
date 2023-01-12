@@ -9,6 +9,7 @@ import com.harmonycloud.caas.common.enums.ComponentsEnum;
 import com.harmonycloud.caas.common.model.user.ProjectNamespaceDo;
 import com.harmonycloud.zeus.service.k8s.ClusterComponentService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
+import com.harmonycloud.zeus.service.middleware.ProjectBackupServerService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,6 +82,8 @@ public class ProjectServiceImpl implements ProjectService {
     private ClusterComponentService clusterComponentService;
     @Autowired
     private NamespaceService namespaceService;
+    @Autowired
+    private ProjectBackupServerService projectBackupServerService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -107,6 +110,8 @@ public class ProjectServiceImpl implements ProjectService {
                 }
             });
         }
+        // 绑定项目可用备份服务器
+        projectBackupServerService.save(projectId, projectDto.getBackupServerList());
     }
 
     @Override
@@ -171,6 +176,10 @@ public class ProjectServiceImpl implements ProjectService {
                 .collect(Collectors.toList());
         }
 
+        // 获取项目可用备份服务器
+        for (ProjectDto projectDto : projectDtoList) {
+            projectDto.setBackupServerList(projectBackupServerService.listByProjectId(projectDto.getProjectId()));
+        }
         return projectDtoList;
     }
 
@@ -270,6 +279,8 @@ public class ProjectServiceImpl implements ProjectService {
         beanProject.setAliasName(projectDto.getAliasName());
         beanProject.setDescription(projectDto.getDescription());
         beanProjectMapper.updateById(beanProject);
+        // 绑定项目可用备份服务器
+        projectBackupServerService.save(projectDto.getProjectId(), projectDto.getBackupServerList());
     }
 
     @Override
