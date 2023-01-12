@@ -23,6 +23,10 @@ public class WebSocketConfig implements WebSocketConfigurer {
             .setAllowedOrigins("*");
         registry.addHandler(terminalSocketHandler(), "/terminal").addInterceptors(webSocketInterceptor())
             .setAllowedOrigins("*").withSockJS();
+        registry.addHandler(pvcScaleSocketHandler(), "/pvcScale").addInterceptors(webSocketInterceptor())
+                .setAllowedOrigins("*");
+        registry.addHandler(pvcScaleSocketHandler(), "/pvcScale").addInterceptors(webSocketInterceptor())
+                .setAllowedOrigins("*").withSockJS();
     }
 
     @Bean
@@ -33,6 +37,11 @@ public class WebSocketConfig implements WebSocketConfigurer {
     @Bean
     public WebSocketHandler terminalSocketHandler() {
         return new PerConnectionWebSocketHandler(TerminalSocketHandler.class);
+    }
+    
+    @Bean
+    public WebSocketHandler pvcScaleSocketHandler() {
+        return new PerConnectionWebSocketHandler(PvcScaleSocketHandler.class);
     }
 
 }
