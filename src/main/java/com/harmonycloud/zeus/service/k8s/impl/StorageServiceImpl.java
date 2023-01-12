@@ -251,7 +251,14 @@ public class StorageServiceImpl implements StorageService {
         middlewareCRList = middlewareCRList.stream().filter(middlewareCR ->
                 !namespaceService.isNamespacceProtected(middlewareCR.getMetadata().getNamespace())).collect(Collectors.toList());
 
-        List<String> storageNameList = Arrays.stream(storageName.split(",")).collect(Collectors.toList());
+        List<String> storageNameList = new ArrayList<>();
+        StorageClass storageClass = storageClassWrapper.get(clusterId, storageName);
+        storageNameList.add(storageClass.getMetadata().getName());
+        Map<String, String> annotations = storageClass.getMetadata().getAnnotations();
+        if (!CollectionUtils.isEmpty(annotations) && annotations.get(ACTIVE_ACTIVE) != null) {
+            StorageClass activeStorageClass = storageClassWrapper.get(clusterId, annotations.get(ACTIVE_ACTIVE));
+            storageNameList.add(activeStorageClass.getMetadata().getName());
+        }
         // 查询存储
         List<PersistentVolumeClaim> all = pvcService.list(clusterId, null);
         List<PersistentVolumeClaim> pvcList = all.stream().filter(
