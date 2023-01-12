@@ -73,6 +73,11 @@ public class NamespaceServiceImpl implements NamespaceService {
         protectNamespaceList.addAll(Arrays.asList(protectNamespaces.split(",")));
     }
 
+    @Override
+    public boolean isNamespacceProtected(String namespace) {
+        return protectNamespaceList.contains(namespace);
+    }
+
     @Value("${k8s.namespace.label:middleware=true}")
     private void setLabel(String l) {
         String[] labelArr = l.split("=");

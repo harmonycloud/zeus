@@ -21,6 +21,13 @@ public interface NamespaceService {
     Namespace get(String clusterId, String namespace);
 
     /**
+     *
+     * @param namespace 命名空间
+     * @return
+     */
+    boolean isNamespacceProtected (String namespace);
+
+    /**
      * 查询命名空间列表
      *
      * @param clusterId 集群id

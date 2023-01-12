@@ -247,10 +247,15 @@ public class StorageServiceImpl implements StorageService {
         // 获取所有中间件cr
         List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(clusterId, null, null);
 
+        // 过滤受保护的分区
+        middlewareCRList = middlewareCRList.stream().filter(middlewareCR ->
+                !namespaceService.isNamespacceProtected(middlewareCR.getMetadata().getNamespace())).collect(Collectors.toList());
+
+        List<String> storageNameList = Arrays.stream(storageName.split(",")).collect(Collectors.toList());
         // 查询存储
         List<PersistentVolumeClaim> all = pvcService.list(clusterId, null);
         List<PersistentVolumeClaim> pvcList = all.stream().filter(
-            pvc -> StringUtils.isNotEmpty(pvc.getStorageClassName()) && pvc.getStorageClassName().equals(storageName))
+            pvc -> StringUtils.isNotEmpty(pvc.getStorageClassName()) && storageNameList.contains(pvc.getStorageClassName()))
             .collect(Collectors.toList());
 
         // 过滤获取到使用了该存储的中间件
@@ -259,9 +264,9 @@ public class StorageServiceImpl implements StorageService {
             if (CollectionUtils.isEmpty(include) || !include.containsKey(PERSISTENT_VOLUME_CLAIMS)) {
                 return false;
             }
-            List<MiddlewareInfo> middlewareInfoList = include.get(PERSISTENT_VOLUME_CLAIMS);
-            return pvcList.stream().anyMatch(pvc -> middlewareInfoList.stream()
-                .anyMatch(middlewareInfo -> middlewareInfo.getName().equals(pvc.getName())));
+            List<MiddlewareInfo> middlewarePvcList = include.get(PERSISTENT_VOLUME_CLAIMS);
+            return middlewarePvcList.stream().anyMatch(middlewarePvc ->
+                    pvcList.stream().anyMatch(pvc -> middlewarePvc.getName().equals(pvc.getName())));
         }).collect(Collectors.toList());
 
         List<MiddlewareStorageInfoDto> mwStorageInfoList = new ArrayList<>();
