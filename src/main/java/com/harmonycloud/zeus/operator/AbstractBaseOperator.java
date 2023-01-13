@@ -49,6 +49,7 @@ import com.harmonycloud.zeus.util.MiddlewareResourceCalculateUtil;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.BeanUtils;
@@ -72,7 +73,6 @@ import com.harmonycloud.zeus.integration.cluster.bean.prometheus.PrometheusRule;
 import com.harmonycloud.tool.collection.JsonUtils;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 
-import io.fabric8.kubernetes.api.model.NodeAffinity;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -1194,6 +1194,19 @@ public abstract class AbstractBaseOperator {
      * @param middleware
      */
     public void checkAndSetActiveActive(JSONObject values, Middleware middleware) {
+    }
+
+    /**
+     * 获取双活注解
+     * @param clusterId
+     * @param namespace
+     * @param type 中间件类型
+     * @param middlewareName
+     * @param area 可用区 A：可用区A，B：可用区B
+     * @return
+     */
+    public Map<String, String> getActiveActiveAnnotations(String clusterId, String namespace, String type, String middlewareName, String area) {
+        return null;
     }
 
     /**
