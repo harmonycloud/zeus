@@ -35,7 +35,7 @@ public class MiddlewarePvcController {
     @Authority
     @GetMapping
     public BaseResult<List<MiddlewarePvcDto>> list(@PathVariable("clusterId") String clusterId,
-                                                   @RequestParam("namespace") String namespace,
+                                                   @PathVariable("namespace") String namespace,
                                                    @PathVariable("middlewareName") String middlewareName,
                                                    @RequestParam("type") String type) {
         return BaseResult.ok(middlewarePvcService.list(clusterId, namespace, middlewareName, type));
@@ -51,7 +51,7 @@ public class MiddlewarePvcController {
     @Authority
     @GetMapping("/{pvcName}/event")
     public BaseResult<List<MiddlewarePvcDto>> getEvent(@PathVariable("clusterId") String clusterId,
-                                                       @RequestParam("namespace") String namespace,
+                                                       @PathVariable("namespace") String namespace,
                                                        @PathVariable("middlewareName") String middlewareName,
                                                        @PathVariable("pvcName") String pvcName) {
         return BaseResult.ok(middlewarePvcService.getEvent(clusterId, namespace, middlewareName, pvcName));
@@ -69,7 +69,7 @@ public class MiddlewarePvcController {
     @Authority(power = 1)
     @PutMapping("/{pvcName}/scale")
     public BaseResult scalePvc(@PathVariable("clusterId") String clusterId,
-                               @RequestParam("namespace") String namespace,
+                               @PathVariable("namespace") String namespace,
                                @PathVariable("middlewareName") String middlewareName,
                                @PathVariable("pvcName") String pvcName,
                                @RequestParam("storage") Double storage,
@@ -88,7 +88,7 @@ public class MiddlewarePvcController {
     @Authority(power = 1)
     @PutMapping("/{pvcName}/rollBack")
     public BaseResult rollBackPvc(@PathVariable("clusterId") String clusterId,
-                                  @RequestParam("namespace") String namespace,
+                                  @PathVariable("namespace") String namespace,
                                   @PathVariable("middlewareName") String middlewareName,
                                   @PathVariable("pvcName") String pvcName) {
         middlewarePvcService.rollback(clusterId, namespace, middlewareName, pvcName);
