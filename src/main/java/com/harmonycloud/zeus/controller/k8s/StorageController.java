@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.controller.k8s;
 
 import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.model.QuotaBase;
 import com.harmonycloud.caas.common.model.StorageClassDTO;
 import com.harmonycloud.caas.common.model.StorageDto;
 import com.harmonycloud.caas.common.model.middleware.*;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author xutianhong
@@ -100,9 +102,9 @@ public class StorageController {
             @ApiImplicitParam(name = "storageName", value = "存储名称", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/{storageName}")
-    public BaseResult<StorageDto> detail(@PathVariable("clusterId") String clusterId,
+    public BaseResult<StorageDto> get(@PathVariable("clusterId") String clusterId,
                                          @PathVariable("storageName") String storageName) {
-        return BaseResult.ok(storageService.detail(clusterId, storageName));
+        return BaseResult.ok(storageService.get(clusterId, storageName));
     }
 
     @ApiOperation(value = "获取中间件存储使用情况", notes = "获取中间件存储使用情况")
@@ -114,6 +116,15 @@ public class StorageController {
     public BaseResult<List<MiddlewareStorageInfoDto>> middlewares(@PathVariable("clusterId") String clusterId,
                                                                   @PathVariable("storageName") String storageName) {
         return BaseResult.ok(storageService.middlewares(clusterId, storageName));
+    }
+
+    @ApiOperation(value = "获取存储资源", notes = "获取存储资源")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+    })
+    @GetMapping("/monitor")
+    public BaseResult<Map<String, Map<String, QuotaBase>>> monitor(@PathVariable("clusterId") String clusterId) {
+        return BaseResult.ok(storageService.monitorStorageQuota(clusterId));
     }
 
 }
