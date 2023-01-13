@@ -8,9 +8,7 @@ import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareGrafanaNameEnum;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.MonitorResourceQuota;
-import com.harmonycloud.caas.common.model.QuotaBase;
-import com.harmonycloud.caas.common.model.PrometheusResponse;
+import com.harmonycloud.caas.common.model.*;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
@@ -28,6 +26,7 @@ import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.operator.BaseOperator;
 import com.harmonycloud.zeus.service.AbstractBaseService;
 import com.harmonycloud.zeus.service.k8s.*;
+import com.harmonycloud.zeus.service.k8s.IngressService;
 import com.harmonycloud.zeus.service.middleware.*;
 import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
@@ -35,6 +34,7 @@ import com.harmonycloud.zeus.service.user.ProjectService;
 import com.harmonycloud.zeus.service.user.RoleAuthorityService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
 import com.harmonycloud.zeus.util.ChartVersionUtil;
+import com.harmonycloud.zeus.util.MiddlewareResourceCalculateUtil;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import com.harmonycloud.zeus.util.YamlUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -56,6 +56,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static com.harmonycloud.caas.common.constants.NameConstant.CPU;
+import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.LVM_PROVISIONER;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
@@ -104,6 +106,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private BeanMiddlewareInfoMapper middlewareInfoMapper;
     @Autowired
     private PvcService pvcService;
+    @Autowired
+    private ResourceQuotaService resourceQuotaService;
 
     @Override
     public List<Middleware> simpleList(String clusterId, String namespace, String type, String keyword) {
@@ -935,6 +939,37 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             return "";
         }
         return beanMiddlewareInfo.getImagePath();
+    }
+
+    @Override
+    public Boolean middlewareResourceCheck(Middleware middleware) {
+        boolean cpu = true;
+        boolean memory = true;
+        boolean storage = true;
+        try {
+            ResourceQuotaDo resourceQuotaDo = resourceQuotaService.list(middleware.getClusterId(), middleware.getNamespace());
+            Map<String, Double> map = MiddlewareResourceCalculateUtil.middlewareResourceCalculate(middleware);
+            if (resourceQuotaDo.getCpu() != null && resourceQuotaDo.getCpu().getRequest() != null && resourceQuotaDo.getCpu().getUsed() != null){
+                cpu = map.get(CPU) >= resourceQuotaDo.getCpu().getRequest() - resourceQuotaDo.getCpu().getUsed();
+            }
+            if (resourceQuotaDo.getCpu() != null && resourceQuotaDo.getCpu().getRequest() != null && resourceQuotaDo.getCpu().getUsed() != null){
+                memory = map.get(MEMORY) >= resourceQuotaDo.getMemory().getRequest() - resourceQuotaDo.getMemory().getUsed();
+            }
+            for (String key : map.keySet()){
+                if (key.equals(CPU) || key.equals(MEMORY)){
+                    continue;
+                }
+                if (!CollectionUtils.isEmpty(resourceQuotaDo.getStorageList())){
+                    Map<String, QuotaBase> storageQuota = resourceQuotaDo.getStorageList().stream().collect(Collectors.toMap(StorageQuota::getName, sq -> sq.getStorage()));
+                    if (storageQuota.containsKey(key) && storage){
+                        storage = map.get(key) >= storageQuota.get(key).getRequest() - storageQuota.get(key).getUsed();
+                    }
+                }
+            }
+        } catch (Exception e){
+            log.error("检查中间件{} 资源配额情况失败", middleware.getName(), e);
+        }
+        return cpu && memory && storage;
     }
 
     /**

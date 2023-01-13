@@ -209,6 +209,13 @@ public interface MiddlewareService {
      */
     String middlewareImage(String type, String version);
 
+    /**
+     * 中间件分区配额校验
+     * @param middleware 中间件对象
+     * @return
+     */
+    Boolean middlewareResourceCheck(Middleware middleware);
+
 
 
 }

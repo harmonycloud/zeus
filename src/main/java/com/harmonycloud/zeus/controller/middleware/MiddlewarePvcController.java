@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.controller.middleware;
 
 import com.harmonycloud.caas.common.base.BaseResult;
+import com.harmonycloud.caas.common.model.EventDetail;
 import com.harmonycloud.caas.common.model.middleware.MiddlewarePvcDto;
 import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.middleware.MiddlewarePvcService;
@@ -50,10 +51,10 @@ public class MiddlewarePvcController {
     })
     @Authority
     @GetMapping("/{pvcName}/event")
-    public BaseResult<List<MiddlewarePvcDto>> getEvent(@PathVariable("clusterId") String clusterId,
-                                                       @PathVariable("namespace") String namespace,
-                                                       @PathVariable("middlewareName") String middlewareName,
-                                                       @PathVariable("pvcName") String pvcName) {
+    public BaseResult<List<EventDetail>> getEvent(@PathVariable("clusterId") String clusterId,
+                                                  @PathVariable("namespace") String namespace,
+                                                  @PathVariable("middlewareName") String middlewareName,
+                                                  @PathVariable("pvcName") String pvcName) {
         return BaseResult.ok(middlewarePvcService.getEvent(clusterId, namespace, middlewareName, pvcName));
     }
 

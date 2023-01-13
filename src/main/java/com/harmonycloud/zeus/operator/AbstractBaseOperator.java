@@ -18,6 +18,7 @@ import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
+import com.harmonycloud.caas.common.model.ResourceQuotaDo;
 import com.harmonycloud.caas.common.model.StorageDto;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.tool.uuid.UUIDUtils;
@@ -44,6 +45,7 @@ import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.service.user.RoleAuthorityService;
 import com.harmonycloud.zeus.service.user.UserService;
 import com.harmonycloud.zeus.util.K8sConvert;
+import com.harmonycloud.zeus.util.MiddlewareResourceCalculateUtil;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.Service;
@@ -567,6 +569,10 @@ public abstract class AbstractBaseOperator {
         // 数据仍未清清除
         if (!ObjectUtils.isEmpty(cacheMiddlewareService.get(middleware))){
             throw new BusinessException(ErrorMessage.SAME_NAME_MIDDLEWARE_STORAGE_EXIST);
+        }
+        // 分区配额校验
+        if (!middlewareService.middlewareResourceCheck(middleware)){
+            throw new BusinessException(ErrorMessage.NAMESPACE_QUOTA_NOT_ENOUGH);
         }
     }
 
@@ -1210,10 +1216,6 @@ public abstract class AbstractBaseOperator {
         values.put("podAntiAffinity", "soft");
     }
 
-    public String calculateProxyResource(String num){
-        BigDecimal bd = new BigDecimal(num).divide(new BigDecimal("4"));
-        return bd.setScale(2, RoundingMode.UP).toString();
-    }
 
     /**
      * 校验用户权限

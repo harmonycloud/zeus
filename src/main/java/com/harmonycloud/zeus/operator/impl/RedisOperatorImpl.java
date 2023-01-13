@@ -24,6 +24,7 @@ import com.harmonycloud.zeus.service.k8s.K8sExecService;
 import com.harmonycloud.zeus.service.k8s.ServiceService;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareServiceImpl;
 import com.harmonycloud.zeus.util.K8sConvert;
+import com.harmonycloud.zeus.util.MiddlewareResourceCalculateUtil;
 import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.NodeAffinity;
@@ -376,7 +377,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         JSONObject limits = new JSONObject();
 
         MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
-        String memory = calculateProxyResource(quota.getMemory().replace("Gi", ""));
+        String memory = MiddlewareResourceCalculateUtil.calculateProxyResource(quota.getMemory().replace("Gi", ""));
         if (Double.parseDouble(memory) < 0.256) {
             memory = String.valueOf(0.256);
         } else if (Double.parseDouble(memory) > 2) {

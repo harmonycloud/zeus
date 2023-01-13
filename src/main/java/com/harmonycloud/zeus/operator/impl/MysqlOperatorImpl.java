@@ -22,8 +22,7 @@ import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.mysql.MysqlDbPrivService;
 import com.harmonycloud.zeus.service.mysql.MysqlDbService;
 import com.harmonycloud.zeus.service.mysql.MysqlUserService;
-import com.harmonycloud.zeus.util.K8sConvert;
-import com.harmonycloud.zeus.util.MysqlConnectionUtil;
+import com.harmonycloud.zeus.util.*;
 import io.fabric8.kubernetes.api.model.NodeAffinity;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,8 +50,6 @@ import com.harmonycloud.zeus.service.middleware.BackupService;
 import com.harmonycloud.zeus.service.middleware.MysqlScheduleBackupService;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareServiceImpl;
 import com.harmonycloud.zeus.service.middleware.impl.MysqlBackupServiceImpl;
-import com.harmonycloud.zeus.util.DateUtil;
-import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 
 import cn.hutool.json.JSONUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -615,8 +612,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         JSONObject limits = new JSONObject();
 
         MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
-        String cpu = calculateProxyResource(quota.getCpu());
-        String memory = calculateProxyResource(quota.getMemory().replace("Gi", ""));
+        String cpu = MiddlewareResourceCalculateUtil.calculateProxyResource(quota.getCpu());
+        String memory = MiddlewareResourceCalculateUtil.calculateProxyResource(quota.getMemory().replace("Gi", ""));
         if (Double.parseDouble(memory) < 0.256){
             memory = String.valueOf(0.256);
         }
