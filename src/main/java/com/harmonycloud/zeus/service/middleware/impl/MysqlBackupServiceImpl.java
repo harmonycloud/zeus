@@ -11,6 +11,7 @@ import com.harmonycloud.zeus.bean.BeanMiddlewareBackupName;
 import com.harmonycloud.zeus.dao.BeanMiddlewareBackupNameMapper;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
+import com.harmonycloud.zeus.service.middleware.BackupPositionService;
 import com.harmonycloud.zeus.service.middleware.BackupService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
 import com.harmonycloud.zeus.service.middleware.MysqlScheduleBackupService;
@@ -48,6 +49,8 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     private MiddlewareServiceImpl middlewareService;
     @Autowired
     private BeanMiddlewareBackupNameMapper middlewareBackupNameMapper;
+    @Autowired
+    private BackupPositionService backupPositionService;
 
     @Override
     public List<MiddlewareBackupRecord> listBackup(String clusterId, String namespace, String middlewareName,
@@ -107,9 +110,9 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public void createBackup(MiddlewareBackupDTO backupDTO) {
         if (StringUtils.isBlank(backupDTO.getCron())) {
-            createNormalBackup(backupDTO);
+            createNormalBackup(backupDTO, null);
         } else {
-            createBackupSchedule(backupDTO);
+            createBackupSchedule(backupDTO, null);
         }
     }
 
@@ -144,12 +147,12 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
      * @param backupDTO
      */
     @Override
-    public void createBackupSchedule(MiddlewareBackupDTO backupDTO) {
+    public void createBackupSchedule(MiddlewareBackupDTO backupDTO,String serverUsage) {
         // 校验是否运行中
         Middleware middleware = convertBackupToMiddleware(backupDTO);
         middlewareCRService.getCRAndCheckRunning(middleware);
 
-        Minio minio = getMinio(backupDTO.getBackupPositionId());
+        Minio minio = backupPositionService.getMinio(backupDTO.getBackupPositionId(), serverUsage);
         BackupTemplate backupTemplate = new BackupTemplate().setClusterName(backupDTO.getMiddlewareName())
             .setStorageProvider(new BackupStorageProvider().setMinio(minio));
 
@@ -162,7 +165,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         labels.put("controllername", "backup-schedule-controller");
         String backupId = UUIDUtils.get16UUID();
         labels.put("backupId", backupId);
-        labels.put("addressId", backupDTO.getBackupPositionId());
+        labels.put("addressId", backupDTO.getBackupPositionId().toString());
         labels.put("type", backupDTO.getType());
         metaData.setLabels(labels);
         metaData.setNamespace(backupDTO.getNamespace());
@@ -171,7 +174,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         MysqlScheduleBackupCR mysqlScheduleBackupCR =
             new MysqlScheduleBackupCR().setKind("MysqlBackupSchedule").setSpec(spec).setMetadata(metaData);
         mysqlScheduleBackupService.create(backupDTO.getClusterId(), mysqlScheduleBackupCR);
-        createBackupName(backupDTO.getClusterId(), backupDTO.getTaskName(), backupId, "schedule");
+        saveBackupName(backupDTO.getClusterId(), backupDTO.getTaskName(), backupId, "schedule");
     }
 
     /**
@@ -180,24 +183,25 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
      * @param backupDTO
      */
     @Override
-    public void createNormalBackup(MiddlewareBackupDTO backupDTO) {
+    public void createNormalBackup(MiddlewareBackupDTO backupDTO, String serverUsage) {
         middlewareCRService.getCRAndCheckRunning(convertBackupToMiddleware(backupDTO));
+        Minio minio = backupPositionService.getMinio(backupDTO.getBackupPositionId(), serverUsage);
         BackupSpec spec = new BackupSpec().setClusterName(backupDTO.getMiddlewareName())
-            .setStorageProvider(new BackupStorageProvider().setMinio(getMinio(backupDTO.getBackupPositionId())));
+            .setStorageProvider(new BackupStorageProvider().setMinio(minio));
         ObjectMeta metaData = new ObjectMeta();
         metaData.setName(backupDTO.getMiddlewareName() + "-" + UUIDUtils.get8UUID());
         Map<String, String> labels = new HashMap<>(1);
         labels.put("controllername", "backup-controller");
         String backupId = UUIDUtils.get16UUID();
         labels.put("backupId", backupId);
-        labels.put("addressId", backupDTO.getBackupPositionId());
+        labels.put("addressId", backupDTO.getBackupPositionId().toString());
         labels.put("type", backupDTO.getType());
         metaData.setLabels(labels);
         metaData.setNamespace(backupDTO.getNamespace());
         metaData.setClusterName(backupDTO.getMiddlewareName());
         BackupCR backupCR = new BackupCR().setKind("MysqlBackup").setSpec(spec).setMetadata(metaData);
         backupService.create(backupDTO.getClusterId(), backupCR);
-        createBackupName(backupDTO.getClusterId(), backupDTO.getTaskName(), backupId, "normal");
+        saveBackupName(backupDTO.getClusterId(), backupDTO.getTaskName(), backupId, "normal");
     }
 
     @Override
@@ -281,7 +285,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void createBackupName(String clusterId, String taskName, String backupId, String backupType) {
+    public void saveBackupName(String clusterId, String taskName, String backupId, String backupType) {
         BeanMiddlewareBackupName backupName = new BeanMiddlewareBackupName();
         backupName.setBackupName(taskName);
         backupName.setBackupId(backupId);
@@ -308,19 +312,6 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
                 log.error("mysql恢复创建失败", e);
             }
         }
-    }
-
-    public Minio getMinio(String addressId) {
-//        List<MiddlewareClusterBackupAddressDTO> backupAddressDTOS =
-//            middlewareBackupAddressService.listBackupAddress(addressId, null);
-        Minio minio = new Minio();
-//        if (!CollectionUtils.isEmpty(backupAddressDTOS)) {
-//            BeanUtils.copyProperties(backupAddressDTOS.get(0), minio);
-//        }
-        if (minio.getBucketName().indexOf("/") == 0) {
-            minio.setBucketName(minio.getBucketName().substring(1));
-        }
-        return minio;
     }
 
     /**

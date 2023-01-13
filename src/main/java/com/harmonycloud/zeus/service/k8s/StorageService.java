@@ -82,4 +82,11 @@ public interface StorageService {
      */
     Map<String, Map<String, QuotaBase>> monitorStorageQuota(String clusterId);
 
+    /**
+     *
+     * @param clusterId 集群id
+     * @param storageName 存储名
+     * @return
+     */
+    String getAliasName(String clusterId, String storageName);
 }

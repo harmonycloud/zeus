@@ -526,20 +526,10 @@ public abstract class AbstractBaseOperator {
 
         // 获取存储中文名
         try {
-            if (storageClass.contains(",")){
-                String[] storageClasses = storageClass.split(",");
-                StringBuilder sb = new StringBuilder();
-                for (String aClass : storageClasses) {
-                    StorageDto storageDto = storageService.get(middleware.getClusterId(), aClass);
-                    sb.append(storageDto.getAliasName()).append(",");
-                }
-                sb.deleteCharAt(sb.length() - 1);
-                quota.setStorageClassAliasName(sb.toString());
-            }else {
-                StorageDto storageDto = storageService.get(middleware.getClusterId(), storageClass);
-                quota.setStorageClassAliasName(storageDto.getAliasName());
-            }
-        } catch (Exception e){
+            String aStorageName = storageClass.split(",")[0];
+            String aliasName = storageService.getAliasName(middleware.getClusterId(), aStorageName);
+            quota.setStorageClassAliasName(aliasName);
+        } catch (Exception e) {
             log.error("中间件{}, 获取存储中文名失败", middleware.getName());
         }
     }

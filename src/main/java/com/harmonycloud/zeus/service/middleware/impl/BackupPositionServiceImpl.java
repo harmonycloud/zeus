@@ -2,21 +2,25 @@ package com.harmonycloud.zeus.service.middleware.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.dtflys.forest.utils.StringUtils;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.BackupPositionDTO;
 import com.harmonycloud.caas.common.model.BackupServerDTO;
 import com.harmonycloud.zeus.bean.BeanBackupPosition;
 import com.harmonycloud.zeus.bean.BeanBackupServer;
+import com.harmonycloud.zeus.bean.BeanBackupServerDetail;
 import com.harmonycloud.zeus.bean.user.BeanProject;
 import com.harmonycloud.zeus.dao.BeanBackupPositionMapper;
 import com.harmonycloud.zeus.integration.cluster.bean.Minio;
 import com.harmonycloud.zeus.service.middleware.BackupPositionService;
+import com.harmonycloud.zeus.service.middleware.BackupServerDetailService;
 import com.harmonycloud.zeus.service.middleware.BackupServerService;
 import com.harmonycloud.zeus.service.user.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,6 +39,8 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     private ProjectService projectService;
     @Autowired
     private BackupServerService backupServerService;
+    @Autowired
+    private BackupServerDetailService backupServerDetailService;
 
     /**
      * 查询指定备份服务器的全部备份位置
@@ -89,7 +95,7 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     @Override
     public void create(BackupPositionDTO backupPositionDTO) {
         // 校验该项目是否已使用该备份服务器创建备份位置
-        if (this.get(backupPositionDTO.getBackupServerId(), backupPositionDTO.getProjectId()) != null) {
+        if (this.getBackupPosition(backupPositionDTO.getBackupServerId(), backupPositionDTO.getProjectId()) != null) {
             throw new BusinessException(ErrorMessage.BACKUP_SERVER_ALREADY_USED);
         }
         BeanBackupPosition backupPosition = new BeanBackupPosition();
@@ -110,7 +116,7 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     }
 
     @Override
-    public BeanBackupPosition get(Integer backupServerId, String projectId) {
+    public BeanBackupPosition getBackupPosition(Integer backupServerId, String projectId) {
         QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
         wrapper.eq("backup_server_id", backupServerId);
         wrapper.eq("project_id", projectId);
@@ -119,7 +125,7 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     }
 
     @Override
-    public BeanBackupPosition get(Integer positionId) {
+    public BeanBackupPosition getBackupPosition(Integer positionId) {
         QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
         wrapper.eq("id", positionId);
         List<BeanBackupPosition> beanBackupPositions = backupPositionMapper.selectList(wrapper);
@@ -127,10 +133,18 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     }
 
     @Override
-    public Minio getMinio(Integer positionId) {
-        BeanBackupPosition backupPosition = get(positionId);
+    public Minio getMinio(Integer positionId, String serverUsage) {
+        BeanBackupPosition backupPosition = getBackupPosition(positionId);
         BeanBackupServer beanBackupServer = backupServerService.get(backupPosition.getBackupServerId());
-        return null;
+        BeanBackupServerDetail backupServerDetail = backupServerDetailService.getBackupServerDetail(beanBackupServer.getId(), serverUsage);
+        Minio minio = new Minio();
+        String port = StringUtils.isEmpty(backupServerDetail.getPort()) ? "" : ":" + backupServerDetail.getPort();
+        String endPoint = backupServerDetail.getProtocol() + "://" + backupServerDetail.getHost() + port;
+        minio.setBucketName(backupPosition.getBackupPosition());
+        minio.setAccessKeyId(backupServerDetail.getUsername());
+        minio.setSecretAccessKey(backupServerDetail.getPassword());
+        minio.setEndpoint(endPoint);
+        return minio;
     }
 
     // 转换数据类型

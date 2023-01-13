@@ -154,6 +154,15 @@ public interface BaseOperator {
     @Deprecated
     void updateConfigData(ConfigMap configMap, List<String> data);
 
-
+    /**
+     * 查询中间件指定可用区的双活备份annotation
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param middlewareName
+     * @param serverUsage
+     * @return
+     */
+    Map<String, String> getActiveActiveAnnotations(String clusterId, String namespace, String type, String middlewareName, String serverUsage);
 
 }

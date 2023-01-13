@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.harmonycloud.caas.common.enums.DateType;
+import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.model.QuotaBase;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.user.ProjectDto;
@@ -108,18 +109,7 @@ public class StorageServiceImpl implements StorageService {
                 boolean flag = CollectionUtils.isEmpty(storageClass.getMetadata().getAnnotations())
                         || !storageClass.getMetadata().getAnnotations().containsKey(MIDDLEWARE);
                 // 双活只保留一个避免重复
-                if (!flag && all == flag) {
-                    if (!aliasNameSet.add(storageClass.getMetadata().getAnnotations().get(ALIAS_NAME))) {
-                        return false;
-                    }
-                    String activeName = storageClass.getMetadata().getAnnotations().get(ACTIVE_ACTIVE);
-                    // 没有
-                    if (activeName != null && storageClassWrapper.get(cluster.getId(), activeName) == null) {
-                        delete(cluster.getId(), storageClass.getMetadata().getAnnotations().get(ALIAS_NAME));
-                        return false;
-                    }
-                }
-                return all == flag;
+                return all == flag && !aliasNameSet.add(storageClass.getMetadata().getAnnotations().get(ALIAS_NAME));
             }).map(storageClass -> {
                 // 初始化业务对象
                     return  convert(cluster.getId(), storageClass);
@@ -413,6 +403,10 @@ public class StorageServiceImpl implements StorageService {
             // 获取双活添加的其他sc
             String activeName = annotations.get(ACTIVE_ACTIVE);
             StorageClass activeSc = storageClassWrapper.get(clusterId, activeName);
+            if (activeSc == null) {
+                log.error("双活存储{}缺少对应StorageClass，平台将移除该存储",storageDto.getAliasName());
+                delete(clusterId, storageDto.getAliasName());
+            }
             storageDto.getStorageClassList().add(convertSc(activeSc));
         }
 
@@ -463,4 +457,17 @@ public class StorageServiceImpl implements StorageService {
         }
     }
 
+    @Override
+    public String getAliasName(String clusterId, String storageName) {
+
+        StorageClass storageClass = storageClassWrapper.get(clusterId, storageName);
+        if (storageClass == null) {
+            throw new BusinessException(DictEnum.STORAGE_CLASS, storageName, ErrorMessage.NOT_FOUND);
+        }
+        Map<String, String> annotations = storageClass.getMetadata().getAnnotations();
+        if (CollectionUtils.isEmpty(annotations) || !annotations.containsKey(ALIAS_NAME)) {
+            return null;
+        }
+        return annotations.get(ALIAS_NAME);
+    }
 }

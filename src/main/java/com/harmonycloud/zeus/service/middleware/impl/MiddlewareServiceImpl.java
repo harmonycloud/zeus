@@ -942,6 +942,14 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
+    public Map<String, String> getActiveActiveAnnotations(String clusterId, String namespace, String type, String middlewareName, String serverUsage) {
+        Middleware middleware = new Middleware();
+        middleware.setType(type);
+        BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
+        return operator.getActiveActiveAnnotations(clusterId, namespace, type, middlewareName, serverUsage);
+    }
+
+    @Override
     public Boolean middlewareResourceCheck(Middleware middleware) {
         boolean cpu = true;
         boolean memory = true;

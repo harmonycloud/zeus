@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.middleware;
 
 import com.harmonycloud.caas.common.model.middleware.BackupServerDetailDTO;
+import com.harmonycloud.zeus.bean.BeanBackupServerDetail;
 
 import java.util.List;
 
@@ -10,12 +11,16 @@ import java.util.List;
  */
 public interface BackupServerDetailService {
 
-    List<BackupServerDetailDTO> selectBackupServerDetailDTOSByServerId(Integer serverId);
+    List<BackupServerDetailDTO> listBackupServerDetailDTOS(Integer backupServerId);
+
+    List<BeanBackupServerDetail> listByBackupServerId(Integer backupServerId);
 
     void create(int serverId, List<BackupServerDetailDTO> serverDetailDTOS);
 
     void update(List<BackupServerDetailDTO> serverDetailDTOS);
 
     void deleteByServerId(Integer serverId);
+
+    BeanBackupServerDetail getBackupServerDetail(Integer serverId, String usage);
 
 }

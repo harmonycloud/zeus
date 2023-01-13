@@ -11,9 +11,7 @@ import com.harmonycloud.caas.common.model.ProjectBackupServerDTO;
 import com.harmonycloud.caas.common.model.middleware.BackupServerDetailDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.zeus.bean.BeanBackupServer;
-import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
 import com.harmonycloud.zeus.dao.BeanBackupServerMapper;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCluster;
 import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import com.harmonycloud.zeus.service.middleware.BackupPositionService;
 import com.harmonycloud.zeus.service.middleware.BackupServerDetailService;
@@ -74,7 +72,7 @@ public class BackupServerServiceImpl implements BackupServerService {
         List<BackupPositionDTO> backupPositionDTOS = backupPositionService.selectBackupPositionDTOList(projectId);
         return backupPositionDTOS.stream().map(backupPositionDTO -> {
             BackupServerDTO backupServerDTO = new BackupServerDTO();
-            backupServerDTO.setServerDetailList(backupServerDetailService.selectBackupServerDetailDTOSByServerId(backupServerDTO.getId()));
+            backupServerDTO.setServerDetailList(backupServerDetailService.listBackupServerDetailDTOS(backupServerDTO.getId()));
             backupServerDTO.setPositionList(Collections.singletonList(backupPositionDTO));
             return backupServerDTO;
         }).collect(Collectors.toList());
@@ -176,7 +174,7 @@ public class BackupServerServiceImpl implements BackupServerService {
             BackupServerDTO backupServerDTO = new BackupServerDTO();
             BeanUtil.copyProperties(backupServer, backupServerDTO);
             backupServerDTO.setPositionList(backupPositionService.selectBackupPositionDTOList(backupServer.getId()));
-            backupServerDTO.setServerDetailList(backupServerDetailService.selectBackupServerDetailDTOSByServerId(backupServer.getId()));
+            backupServerDTO.setServerDetailList(backupServerDetailService.listBackupServerDetailDTOS(backupServer.getId()));
             return backupServerDTO;
         }).collect(Collectors.toList());
     }
