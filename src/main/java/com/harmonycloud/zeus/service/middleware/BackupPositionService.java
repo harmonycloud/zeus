@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.service.middleware;
 import com.harmonycloud.caas.common.model.BackupPositionDTO;
 import com.harmonycloud.caas.common.model.BackupServerDTO;
 import com.harmonycloud.zeus.bean.BeanBackupPosition;
+import com.harmonycloud.zeus.integration.cluster.bean.Minio;
 
 import java.util.List;
 
@@ -27,5 +28,9 @@ public interface BackupPositionService {
     void delete(Integer id);
 
     BeanBackupPosition get(Integer backupServerId, String projectId);
+
+    BeanBackupPosition get(Integer positionId);
+
+    Minio getMinio(Integer positionId);
 
 }

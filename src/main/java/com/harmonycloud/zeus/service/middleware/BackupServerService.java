@@ -28,7 +28,7 @@ public interface BackupServerService {
 
     void delete(Integer id);
 
-    Map<String,Integer> getBackupServerCountInfo();
+    List<Map<String, String>> getBackupServerCountInfo();
 
     Integer getBackupServerCount(String clusterId);
 }

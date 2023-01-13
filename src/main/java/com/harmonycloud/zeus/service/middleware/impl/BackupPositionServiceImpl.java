@@ -6,12 +6,11 @@ import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.BackupPositionDTO;
 import com.harmonycloud.caas.common.model.BackupServerDTO;
-import com.harmonycloud.caas.common.model.user.ProjectNamespaceDo;
 import com.harmonycloud.zeus.bean.BeanBackupPosition;
 import com.harmonycloud.zeus.bean.BeanBackupServer;
 import com.harmonycloud.zeus.bean.user.BeanProject;
 import com.harmonycloud.zeus.dao.BeanBackupPositionMapper;
-import com.harmonycloud.zeus.dao.user.BeanProjectNamespaceMapper;
+import com.harmonycloud.zeus.integration.cluster.bean.Minio;
 import com.harmonycloud.zeus.service.middleware.BackupPositionService;
 import com.harmonycloud.zeus.service.middleware.BackupServerService;
 import com.harmonycloud.zeus.service.user.ProjectService;
@@ -19,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -118,6 +116,21 @@ public class BackupPositionServiceImpl implements BackupPositionService {
         wrapper.eq("project_id", projectId);
         List<BeanBackupPosition> beanBackupPositions = backupPositionMapper.selectList(wrapper);
         return beanBackupPositions.get(0);
+    }
+
+    @Override
+    public BeanBackupPosition get(Integer positionId) {
+        QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
+        wrapper.eq("id", positionId);
+        List<BeanBackupPosition> beanBackupPositions = backupPositionMapper.selectList(wrapper);
+        return beanBackupPositions.get(0);
+    }
+
+    @Override
+    public Minio getMinio(Integer positionId) {
+        BeanBackupPosition backupPosition = get(positionId);
+        BeanBackupServer beanBackupServer = backupServerService.get(backupPosition.getBackupServerId());
+        return null;
     }
 
     // 转换数据类型

@@ -9,9 +9,11 @@ import com.harmonycloud.caas.common.model.BackupPositionDTO;
 import com.harmonycloud.caas.common.model.BackupServerDTO;
 import com.harmonycloud.caas.common.model.ProjectBackupServerDTO;
 import com.harmonycloud.caas.common.model.middleware.BackupServerDetailDTO;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.zeus.bean.BeanBackupServer;
 import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
 import com.harmonycloud.zeus.dao.BeanBackupServerMapper;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCluster;
 import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import com.harmonycloud.zeus.service.middleware.BackupPositionService;
 import com.harmonycloud.zeus.service.middleware.BackupServerDetailService;
@@ -138,17 +140,25 @@ public class BackupServerServiceImpl implements BackupServerService {
     }
 
     @Override
-    public Map<String, Integer> getBackupServerCountInfo() {
-        Map<String, Integer> clusterBackupServerNumMap = new HashMap<>();
-        clusterBackupServerNumMap.put("all", getBackupServerCount("dsfasdf"));
-        List<BeanMiddlewareCluster> clusters = middlewareClusterService.listClustersByClusterId(null);
-        for (BeanMiddlewareCluster cluster : clusters) {
-            Integer backupServerCount = getBackupServerCount(cluster.getClusterId());
+    public List<Map<String, String>> getBackupServerCountInfo() {
+        List<Map<String, String>> groupList = new ArrayList<>();
+        Map<String, String> clusterBackupServerNumMap = new HashMap<>();
+        clusterBackupServerNumMap.put("clusterId", "");
+        clusterBackupServerNumMap.put("clusterName", "全部");
+        clusterBackupServerNumMap.put("clusterServerCount", getBackupServerCount(null).toString());
+        groupList.add(clusterBackupServerNumMap);
+        List<MiddlewareClusterDTO> clusterDTOS = middlewareClusterService.listClusterDtos();
+        for (MiddlewareClusterDTO cluster : clusterDTOS) {
+            Integer backupServerCount = getBackupServerCount(cluster.getId());
             if (backupServerCount != 0) {
-                clusterBackupServerNumMap.put(cluster.getClusterId(), backupServerCount);
+                clusterBackupServerNumMap = new HashMap<>();
+                clusterBackupServerNumMap.put("clusterId", cluster.getId());
+                clusterBackupServerNumMap.put("clusterName", cluster.getNickname());
+                clusterBackupServerNumMap.put("clusterServerCount", getBackupServerCount(null).toString());
+                groupList.add(clusterBackupServerNumMap);
             }
         }
-        return clusterBackupServerNumMap;
+        return groupList;
     }
 
     @Override

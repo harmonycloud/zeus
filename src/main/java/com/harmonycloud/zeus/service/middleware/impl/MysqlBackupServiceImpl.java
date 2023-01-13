@@ -149,7 +149,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         Middleware middleware = convertBackupToMiddleware(backupDTO);
         middlewareCRService.getCRAndCheckRunning(middleware);
 
-        Minio minio = getMinio(backupDTO.getAddressId());
+        Minio minio = getMinio(backupDTO.getBackupPositionId());
         BackupTemplate backupTemplate = new BackupTemplate().setClusterName(backupDTO.getMiddlewareName())
             .setStorageProvider(new BackupStorageProvider().setMinio(minio));
 
@@ -162,7 +162,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         labels.put("controllername", "backup-schedule-controller");
         String backupId = UUIDUtils.get16UUID();
         labels.put("backupId", backupId);
-        labels.put("addressId", backupDTO.getAddressId());
+        labels.put("addressId", backupDTO.getBackupPositionId());
         labels.put("type", backupDTO.getType());
         metaData.setLabels(labels);
         metaData.setNamespace(backupDTO.getNamespace());
@@ -183,14 +183,14 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     public void createNormalBackup(MiddlewareBackupDTO backupDTO) {
         middlewareCRService.getCRAndCheckRunning(convertBackupToMiddleware(backupDTO));
         BackupSpec spec = new BackupSpec().setClusterName(backupDTO.getMiddlewareName())
-            .setStorageProvider(new BackupStorageProvider().setMinio(getMinio(backupDTO.getAddressId())));
+            .setStorageProvider(new BackupStorageProvider().setMinio(getMinio(backupDTO.getBackupPositionId())));
         ObjectMeta metaData = new ObjectMeta();
         metaData.setName(backupDTO.getMiddlewareName() + "-" + UUIDUtils.get8UUID());
         Map<String, String> labels = new HashMap<>(1);
         labels.put("controllername", "backup-controller");
         String backupId = UUIDUtils.get16UUID();
         labels.put("backupId", backupId);
-        labels.put("addressId", backupDTO.getAddressId());
+        labels.put("addressId", backupDTO.getBackupPositionId());
         labels.put("type", backupDTO.getType());
         metaData.setLabels(labels);
         metaData.setNamespace(backupDTO.getNamespace());
