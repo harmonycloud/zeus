@@ -7,10 +7,13 @@ import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConsta
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.harmonycloud.caas.common.enums.DateType;
+import com.harmonycloud.caas.common.model.QuotaBase;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.user.ProjectDto;
+import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
 import com.harmonycloud.zeus.service.user.ProjectService;
 import com.harmonycloud.zeus.util.DateUtil;
 import io.fabric8.kubernetes.api.model.TopologySelectorLabelRequirement;
@@ -75,9 +78,9 @@ public class StorageServiceImpl implements StorageService {
     }
 
     @Override
-    public StorageDto get(String clusterId, String name, Boolean detail) {
+    public StorageDto get(String clusterId, String name) {
         StorageClass storageClass = storageClassWrapper.get(clusterId, name);
-        return detail ? detail(clusterId,  storageClass) : convert(clusterId, storageClass);
+        return convert(clusterId, storageClass);
     }
 
     @Override
@@ -119,7 +122,7 @@ public class StorageServiceImpl implements StorageService {
                 return all == flag;
             }).map(storageClass -> {
                 // 初始化业务对象
-                    return all ? convert(cluster.getId(), storageClass) : detail(cluster.getId(), storageClass);
+                    return  convert(cluster.getId(), storageClass);
                 }).filter(storageDto -> {
                     if (StringUtils.isNotEmpty(key)) {
                         return storageDto.getAliasName().contains(key) || storageDto.getStorageClassList().stream().anyMatch(sc -> sc.getName().contains(key));
@@ -204,42 +207,60 @@ public class StorageServiceImpl implements StorageService {
         }
     }
 
+
     @Override
-    public StorageDto detail(String clusterId, String storageName) {
-        StorageClass storageClass = storageClassWrapper.get(clusterId, storageName);
-        return detail(clusterId, storageClass);
-
-    }
-
-    public StorageDto detail(String clusterId, StorageClass storageClass){
-        StorageDto storageDto = convert(clusterId, storageClass);
-        // 查询存储
-        List<PersistentVolumeClaim> pvcList = pvcService.list(clusterId, null);
-        pvcList = pvcList.stream().filter(pvc -> StringUtils.isNotEmpty(pvc.getStorageClassName())
-            && storageDto.getStorageClassList().stream().anyMatch(sc -> pvc.getStorageClassName().equals(sc.getName()))).collect(Collectors.toList());
-
-        StringBuilder sb = new StringBuilder();
-        for (PersistentVolumeClaim pvc : pvcList){
-            sb.append(pvc.getName()).append("|");
+    public Map<String, Map<String, QuotaBase>> monitorStorageQuota(String clusterId) {
+        // 获取要查询的集群
+        List<MiddlewareClusterDTO> clusterList = new ArrayList<>();
+        if (clusterId.equals(ASTERISK)) {
+            clusterList = clusterService.listClusters();
+        } else {
+            clusterList.add(clusterService.findById(clusterId));
         }
-        // 查询申请配额
-        String requestQuery = "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{persistentvolumeclaim=~\""
-                + sb.toString() + "\"})/1024/1024/1024";
-        double request = prometheusResourceMonitorService.queryAndConvert(clusterId, requestQuery);
+        Map<String, Map<String, QuotaBase>> result = new HashMap<>();
+        clusterList.forEach(cluster -> {
+            List<PersistentVolumeClaim> allPvc = pvcService.list(cluster.getId(), null);
+            Map<String, StringBuilder> aliasPvcMap = new HashMap<>();
+            // 对所有pvc按aliasName分类
+            for (PersistentVolumeClaim pvc : allPvc) {
+                StorageClass storageClass = storageClassWrapper.get(cluster.getId(), pvc.getStorageClassName());
+                if (storageClass == null) {
+                    continue;
+                }
+                Map<String, String> annotations = storageClass.getMetadata().getAnnotations();
+                if (CollectionUtils.isEmpty(annotations) || !annotations.containsKey(MIDDLEWARE)) {
+                    continue;
+                }
+                String aliasName = annotations.get(ALIAS_NAME);
+                if (aliasPvcMap.containsKey(aliasName)) {
+                    aliasPvcMap.get(aliasName).append("|").append(pvc.getName());
+                } else {
+                    aliasPvcMap.put(aliasName, new StringBuilder().append(pvc));
+                }
+            }
+            Map<String, QuotaBase> aliasQuotaMap = new HashMap<>();
+            // 查询Quota
+            for (String aliasName : aliasPvcMap.keySet()) {
+                StringBuilder sb = aliasPvcMap.get(aliasName);
+                // 查询申请配额
+                String requestQuery = "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{persistentvolumeclaim=~\""
+                        + sb.toString() + "\"})/1024/1024/1024";
+                double request = prometheusResourceMonitorService.queryAndConvert(cluster.getId(), requestQuery);
 
-        // 查询使用量
-        String usedQuery = "sum(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\""
-                + sb.toString() + "\",endpoint!=\"\"}) /1024/1024/1024";
-        double used = prometheusResourceMonitorService.queryAndConvert(clusterId, usedQuery);
+                // 查询使用量
+                String usedQuery = "sum(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\""
+                        + sb.toString() + "\",endpoint!=\"\"}) /1024/1024/1024";
+                double used = prometheusResourceMonitorService.queryAndConvert(cluster.getId(), usedQuery);
 
-        MonitorResourceQuota monitorResourceQuota = storageDto.getMonitorResourceQuota();
-        if (monitorResourceQuota == null){
-            monitorResourceQuota = new MonitorResourceQuota();
-        }
-        monitorResourceQuota.getStorage().setRequest(request);
-        monitorResourceQuota.getStorage().setUsed(used);
-        storageDto.setMonitorResourceQuota(monitorResourceQuota);
-        return storageDto;
+                // 封装数据
+                QuotaBase quotaBase = new QuotaBase();
+                quotaBase.setRequest(request);
+                quotaBase.setUsed(used);
+                aliasQuotaMap.put(aliasName, quotaBase);
+            }
+            result.put(cluster.getId(), aliasQuotaMap);
+        });
+        return result;
     }
 
     @Override

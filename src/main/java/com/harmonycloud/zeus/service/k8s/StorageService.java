@@ -1,12 +1,15 @@
 package com.harmonycloud.zeus.service.k8s;
 
+import com.harmonycloud.caas.common.model.QuotaBase;
 import com.harmonycloud.caas.common.model.StorageDto;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareStorageInfoDto;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
+import io.fabric8.kubernetes.api.model.storage.StorageClass;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author xutianhong
@@ -24,10 +27,9 @@ public interface StorageService {
      *
      * @param clusterId 集群id
      * @param name 存储名称
-     * @param detail  是否详情
      * @return List<StorageDto>
      */
-    StorageDto get(String clusterId, String name, Boolean detail);
+    StorageDto get(String clusterId, String name);
 
     /**
      * 查询存储列表
@@ -65,15 +67,6 @@ public interface StorageService {
     void delete(String clusterId, String storageName);
 
     /**
-     * 查询存储详情
-     *
-     * @param clusterId   集群id
-     * @param storageName 存储名称
-     * @return StorageDto
-     */
-    StorageDto detail(String clusterId, String storageName);
-
-    /**
      * 查询中间件存储使用情况
      *
      * @param clusterId   集群id
@@ -82,5 +75,11 @@ public interface StorageService {
      */
     List<MiddlewareStorageInfoDto> middlewares(String clusterId, String storageName);
 
+    /**
+     *
+     * @param clusterId 集群id
+     * @return
+     */
+    Map<String, Map<String, QuotaBase>> monitorStorageQuota(String clusterId);
 
 }

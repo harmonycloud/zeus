@@ -164,4 +164,12 @@ public interface ProjectService {
      */
     BeanProject get(String projectId);
 
+    /**
+     * 查询指定集群分区所绑定的项目id
+     * @param clusterId
+     * @param namespace
+     * @return
+     */
+    String getProjectId(String clusterId, String namespace);
+
 }

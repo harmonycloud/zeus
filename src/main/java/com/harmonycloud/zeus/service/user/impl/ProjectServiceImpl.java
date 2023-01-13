@@ -460,6 +460,18 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    public String getProjectId(String clusterId, String namespace) {
+        QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<>();
+        wrapper.eq("cluster_id", clusterId);
+        wrapper.eq("namespace", namespace);
+        List<BeanProjectNamespace> beanProjectNamespaces = beanProjectNamespaceMapper.selectList(wrapper);
+        if (!CollectionUtils.isEmpty(beanProjectNamespaces)) {
+            return beanProjectNamespaces.get(0).getProjectId();
+        }
+        return null;
+    }
+
+    @Override
     public void bindNamespace(Namespace namespace) {
         QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<BeanProjectNamespace>()
             .eq("namespace", namespace.getName()).eq("cluster_id", namespace.getClusterId());

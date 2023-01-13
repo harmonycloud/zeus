@@ -2,7 +2,6 @@ package com.harmonycloud.zeus.controller.middleware;
 
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.BackupPositionDTO;
-import com.harmonycloud.caas.common.model.BackupServerDTO;
 import com.harmonycloud.zeus.service.middleware.BackupPositionService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -10,6 +9,8 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * @author liyinlong
@@ -59,7 +60,18 @@ public class BackupPositionController {
     })
     @GetMapping("/project/{projectId}")
     public BaseResult list(@PathVariable("projectId") String projectId) {
-        return BaseResult.ok(backupPositionService.selectBackupServerDTOList(projectId));
+        return BaseResult.ok(backupPositionService.listBackupServerDTO(projectId));
+    }
+
+    @ApiOperation(value = "查询集群分区可用备份位置列表", notes = "查询集群分区可用备份位置列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
+    })
+    @GetMapping("/clusters/{clusterId}/namespaces/{namespace}")
+    public BaseResult<List<BackupPositionDTO>> listByNamespace(@PathVariable("clusterId") String clusterId,
+                                                               @PathVariable("namespace") String namespace) {
+        return BaseResult.ok(backupPositionService.list(clusterId, namespace));
     }
 
 }
