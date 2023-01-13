@@ -57,7 +57,7 @@ public interface ProjectService {
      * 查询分区所属项目
      * @return List<BeanProjectNamespace>
      */
-    List<ProjectNamespaceDo> listNamespace();
+    List<ProjectNamespaceDo> listNamespace(String clusterId);
 
     /**
      * 查询项目下分区

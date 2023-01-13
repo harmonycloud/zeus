@@ -515,9 +515,9 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<ProjectNamespaceDo> listNamespace() {
+    public List<ProjectNamespaceDo> listNamespace(String clusterId) {
         // 获取分区项目绑定关系
-        QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<>();
+        QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<BeanProjectNamespace>().eq("cluster_id", clusterId);
         List<BeanProjectNamespace> projectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
         Map<String, String> projectNamespaceMap = projectNamespaceList.stream().collect(Collectors.toMap(BeanProjectNamespace::getNamespace, BeanProjectNamespace::getProjectId));
 

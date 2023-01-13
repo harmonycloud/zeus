@@ -129,7 +129,7 @@ public class NamespaceServiceImpl implements NamespaceService {
         }
 
         // 设置分区所属项目
-        List<ProjectNamespaceDo> projectNamespaceList = projectService.listNamespace();
+        List<ProjectNamespaceDo> projectNamespaceList = projectService.listNamespace(clusterId);
         Map<String, ProjectNamespaceDo> projectNamespaceMap = projectNamespaceList.stream()
             .collect(Collectors.toMap(ProjectNamespaceDo::getNamespace, projectNamespaceDo -> projectNamespaceDo));
         list.forEach(ns -> {
