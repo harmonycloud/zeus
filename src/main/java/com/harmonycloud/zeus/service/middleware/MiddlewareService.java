@@ -10,6 +10,7 @@ import com.harmonycloud.tool.page.PageObject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author dengyulong
@@ -209,6 +210,15 @@ public interface MiddlewareService {
      */
     String middlewareImage(String type, String version);
 
-
+    /**
+     * 获取指定可用区双活注解
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param middlewareName
+     * @param serverUsage 服务器用途(即可用区A或B)
+     * @return
+     */
+    Map<String, String> getActiveActiveAnnotations(String clusterId, String namespace, String type, String middlewareName, String serverUsage);
 
 }

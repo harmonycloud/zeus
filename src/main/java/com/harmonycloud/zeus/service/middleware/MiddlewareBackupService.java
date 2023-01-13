@@ -26,7 +26,6 @@ public interface MiddlewareBackupService {
     /**
      * 创建增量备份
      *
-     * @param middlewareBackupDTO 备份信息
      */
     void createIncBackup(String clusterId, String namespace, String backupName, String time);
 
@@ -44,7 +43,7 @@ public interface MiddlewareBackupService {
      * @param backupDTO
      * @return
      */
-    void createBackupSchedule(MiddlewareBackupDTO backupDTO);
+    void createBackupSchedule(MiddlewareBackupDTO backupDTO, String serverUsage);
 
     /**
      * 立即备份
@@ -52,7 +51,7 @@ public interface MiddlewareBackupService {
      * @param backupDTO
      * @return
      */
-    void createNormalBackup(MiddlewareBackupDTO backupDTO);
+    void createNormalBackup(MiddlewareBackupDTO backupDTO, String serverUsage);
 
     /**
      * 查询备份规则列表
@@ -196,7 +195,7 @@ public interface MiddlewareBackupService {
      * @param taskName
      * @param backupId
      */
-    void createBackupName(String clusterId, String taskName, String backupId, String backupType);
+    void saveBackupName(String clusterId, String taskName, String backupId, String backupType);
 
     /**
      * 删除备份任务名称映射信息

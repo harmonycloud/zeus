@@ -11,10 +11,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONObject;
+import com.harmonycloud.caas.common.enums.BackupServerUsageEnum;
 import com.harmonycloud.caas.common.enums.BackupTackTypeEnum;
 import com.harmonycloud.caas.common.model.MiddlewareIncBackupDto;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.service.k8s.*;
+import com.harmonycloud.zeus.service.middleware.BackupPositionService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -37,7 +40,6 @@ import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
 import com.harmonycloud.zeus.util.CronUtils;
-import com.harmonycloud.zeus.util.DateUtil;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
@@ -69,6 +71,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private BeanMiddlewareBackupNameMapper middlewareBackupNameMapper;
     @Autowired
     private NamespaceService namespaceService;
+    @Autowired
+    private BackupPositionService backupPositionService;
+    @Autowired
+    private MiddlewareService middlewareService;
 
     @Override
     public List<MiddlewareBackupRecord> listBackup(String clusterId, String namespace, String middlewareName,
@@ -98,15 +104,34 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         // 设置备份任务类型(普通备份任务或双活备份任务)
         setBackupTaskType(backupDTO);
         // 创建备份任务
+        checkBackupTypeAndCreateBackup(backupDTO);
+        // 保存备份任务名称到数据库
         if (StringUtils.isEmpty(backupDTO.getCron())) {
-            createNormalBackup(backupDTO);
             backupType = "normal";
         } else {
-            createBackupSchedule(backupDTO);
             backupType = "schedule";
         }
-        createBackupName(backupDTO.getClusterId(), backupDTO.getTaskName(), backupDTO.getLabels().get("backupId"),
-            backupType);
+        saveBackupName(backupDTO.getClusterId(), backupDTO.getTaskName(), backupDTO.getLabels().get("backupId"),
+                backupType);
+    }
+
+    private void checkBackupTypeAndCreateBackup(MiddlewareBackupDTO backupDTO) {
+        if (BackupTackTypeEnum.ACTIVE_ACTIVE.getType().equals(backupDTO.getTaskType())) {
+            // 双活备份
+            createBackupTask(backupDTO, BackupServerUsageEnum.zoneA.name());
+            createBackupTask(backupDTO, BackupServerUsageEnum.zoneB.name());
+        } else {
+            // 普通备份
+            createBackupTask(backupDTO, null);
+        }
+    }
+
+    private void createBackupTask(MiddlewareBackupDTO backupDTO, String usage) {
+        if (StringUtils.isEmpty(backupDTO.getCron())) {
+            createNormalBackup(backupDTO, usage);
+        } else {
+            createBackupSchedule(backupDTO, usage);
+        }
     }
 
     @Override
@@ -217,12 +242,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * @return
      */
     @Override
-    public void createBackupSchedule(MiddlewareBackupDTO backupDTO) {
+    public void createBackupSchedule(MiddlewareBackupDTO backupDTO, String serverUsage) {
         checkBackupScheduleExist(backupDTO);
-        Minio minio = mysqlAdapterService.getMinio(backupDTO.getBackupPositionId());
+        Minio minio = backupPositionService.getMinio(backupDTO.getBackupPositionId(), serverUsage);
         MiddlewareBackupScheduleCR crd = new MiddlewareBackupScheduleCR();
-        ObjectMeta meta =
-            getMiddlewareBackupMeta(backupDTO.getNamespace(), backupDTO.getMiddlewareName(), backupDTO.getLabels());
+        // TODO 获取meta
+        ObjectMeta meta = getMiddlewareBackupMeta(backupDTO);
         crd.setMetadata(meta);
 
         // 将minio账号密码转换为base64
@@ -268,12 +293,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * @param backupDTO
      */
     @Override
-    public void createNormalBackup(MiddlewareBackupDTO backupDTO) {
+    public void createNormalBackup(MiddlewareBackupDTO backupDTO, String serverUsage) {
         MiddlewareBackupCR middlewareBackupCR = new MiddlewareBackupCR();
-        ObjectMeta meta =
-            getMiddlewareBackupMeta(backupDTO.getNamespace(), backupDTO.getMiddlewareName(), backupDTO.getLabels());
+        // TODO 设置metadata
+        ObjectMeta meta = getMiddlewareBackupMeta(backupDTO);
         middlewareBackupCR.setMetadata(meta);
-        Minio minio = mysqlAdapterService.getMinio(backupDTO.getBackupPositionId());
+        // 获取minio
+        Minio minio = backupPositionService.getMinio(backupDTO.getBackupPositionId(), serverUsage);
         // 将minio账号密码转换为base64
         String base64AccessKeyId =
             Base64.getEncoder().encodeToString(minio.getAccessKeyId().getBytes(StandardCharsets.UTF_8));
@@ -306,7 +332,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     // 创建备份任务
     private void setBackupTaskType(MiddlewareBackupDTO backupDTO) {
-        String namespace = backupDTO.getNamespace();
         // 校验是否是双活分区，如果是双活分区，则是双活备份
         if (namespaceService.checkAvailableDomain(backupDTO.getClusterId(), backupDTO.getNamespace())) {
             backupDTO.setTaskType(BackupTackTypeEnum.ACTIVE_ACTIVE.getType());
@@ -372,20 +397,30 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     /**
-     * 获取中间件备份Meta
-     *
-     * @param middlewareName
-     *            服务名称
-     * @param namespace
-     *            命名空间
+     * 设置中间件备份meta
+     * @param backupDTO
      * @return
      */
-    public ObjectMeta getMiddlewareBackupMeta(String namespace, String middlewareName, Map<String, String> labels) {
+    public ObjectMeta getMiddlewareBackupMeta(MiddlewareBackupDTO backupDTO) {
         ObjectMeta metaData = new ObjectMeta();
-        metaData.setNamespace(namespace);
-        metaData.setName(middlewareName + "-" + UUIDUtils.get8UUID());
-        metaData.setLabels(labels);
+        metaData.setNamespace(backupDTO.getNamespace());
+        metaData.setName(backupDTO.getMiddlewareName() + "-" + UUIDUtils.get8UUID());
+        metaData.setLabels(backupDTO.getLabels());
+        // 如果是双活备份则设置双活annotation
+        if (BackupTackTypeEnum.ACTIVE_ACTIVE.getType().equals(backupDTO.getTaskType())) {
+            setActiveActiveAnnotation(backupDTO, metaData);
+        }
         return metaData;
+    }
+
+    /**
+     * 设置双活annotation
+     * @param backupDTO
+     * @param metaData
+     */
+    private void setActiveActiveAnnotation(MiddlewareBackupDTO backupDTO, ObjectMeta metaData) {
+
+        metaData.setAnnotations(null);
     }
 
     /**
@@ -723,7 +758,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void createBackupName(String clusterId, String taskName, String backupId, String backupType) {
+    public void saveBackupName(String clusterId, String taskName, String backupId, String backupType) {
         BeanMiddlewareBackupName backupName = new BeanMiddlewareBackupName();
         backupName.setBackupName(taskName);
         backupName.setBackupId(backupId);
@@ -778,7 +813,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         Map<String, String> backupLabel = getBackupLabel(middlewareName, type);
         String backupId = UUIDUtils.get16UUID();
         backupLabel.put("backupId", backupId);
-        backupLabel.put("addressId", backupDTO.getBackupPositionId());
+        backupLabel.put("addressId", backupDTO.getBackupPositionId().toString());
         backupLabel.put("type", backupDTO.getType());
         backupLabel.put("unit", backupDTO.getDateUnit());
         backupDTO.setLabels(backupLabel);

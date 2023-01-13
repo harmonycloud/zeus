@@ -481,4 +481,11 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         k8sExecService.exec(execCommand);
 
     }
+
+    @Override
+    public Map<String, String> getActiveActiveAnnotations(String clusterId, String namespace, String type, String middlewareName, String area) {
+        return super.getActiveActiveAnnotations(clusterId, namespace, type, middlewareName, area);
+    }
+
+
 }

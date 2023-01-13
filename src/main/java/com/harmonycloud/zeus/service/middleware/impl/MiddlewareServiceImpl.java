@@ -937,6 +937,14 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         return beanMiddlewareInfo.getImagePath();
     }
 
+    @Override
+    public Map<String, String> getActiveActiveAnnotations(String clusterId, String namespace, String type, String middlewareName, String serverUsage) {
+        Middleware middleware = new Middleware();
+        middleware.setType(type);
+        BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
+        return operator.getActiveActiveAnnotations(clusterId, namespace, type, middlewareName, serverUsage);
+    }
+
     /**
      * 服务排序类，按服务数量进行排序
      */

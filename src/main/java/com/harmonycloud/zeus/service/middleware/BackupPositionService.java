@@ -27,10 +27,16 @@ public interface BackupPositionService {
 
     void delete(Integer id);
 
-    BeanBackupPosition get(Integer backupServerId, String projectId);
+    BeanBackupPosition getBackupPosition(Integer backupServerId, String projectId);
 
-    BeanBackupPosition get(Integer positionId);
+    BeanBackupPosition getBackupPosition(Integer positionId);
 
-    Minio getMinio(Integer positionId);
+    /**
+     * 获取minio
+     * @param positionId 备份位置id
+     * @param serverUsage 服务器用途，A:可用区A，B可用区B nulL或""：普通minio
+     * @return
+     */
+    Minio getMinio(Integer positionId, String serverUsage);
 
 }

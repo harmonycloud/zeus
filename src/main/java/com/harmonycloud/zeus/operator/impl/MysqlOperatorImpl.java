@@ -852,4 +852,10 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         mysqlDbPrivService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
     }
 
+    @Override
+    public Map<String, String> getActiveActiveAnnotations(String clusterId, String namespace, String type, String middlewareName, String area) {
+        // TODO 返回双活注解
+        return super.getActiveActiveAnnotations(clusterId, namespace, type, middlewareName, area);
+    }
+
 }

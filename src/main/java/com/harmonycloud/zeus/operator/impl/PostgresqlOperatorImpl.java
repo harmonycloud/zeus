@@ -309,6 +309,11 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
 
     }
 
+    @Override
+    public Map<String, String> getActiveActiveAnnotations(String clusterId, String namespace, String type, String middlewareName, String area) {
+        return super.getActiveActiveAnnotations(clusterId, namespace, type, middlewareName, area);
+    }
+
     public void buildClone(Middleware middleware, JSONObject values){
         middlewareBackupCRService.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getBackupFileName());
     }
