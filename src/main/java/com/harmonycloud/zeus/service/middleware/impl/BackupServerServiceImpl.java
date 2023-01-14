@@ -117,7 +117,8 @@ public class BackupServerServiceImpl implements BackupServerService {
         BeanBackupServer beanBackupServer = new BeanBackupServer();
         BeanUtil.copyProperties(backupServerDTO, beanBackupServer);
         backupServerMapper.updateById(beanBackupServer);
-
+        List<BackupServerDetailDTO> serverDetailList = backupServerDTO.getServerDetailList();
+        backupServerDetailService.update(serverDetailList);
     }
 
     @Override
@@ -134,7 +135,9 @@ public class BackupServerServiceImpl implements BackupServerService {
         QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
         wrapper.eq("id", id);
         backupServerMapper.delete(wrapper);
+        // 删除备份服务器详细信息
         backupServerDetailService.deleteByServerId(id);
+        // TODO 删除备份位置等，需要软删除
     }
 
     @Override

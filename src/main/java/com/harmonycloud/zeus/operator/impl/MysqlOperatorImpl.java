@@ -4,24 +4,21 @@ import static com.harmonycloud.caas.common.constants.NameConstant.*;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
 
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.alibaba.fastjson.JSON;
 import com.harmonycloud.caas.common.enums.Protocol;
-import com.harmonycloud.caas.common.model.AffinityDTO;
+import com.harmonycloud.caas.common.model.ActiveAreaAnnotationDto;
 import com.harmonycloud.caas.common.model.IngressComponentDto;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
-import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
 import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
 import com.harmonycloud.zeus.bean.BeanMysqlUser;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.mysql.MysqlDbPrivService;
 import com.harmonycloud.zeus.service.mysql.MysqlDbService;
 import com.harmonycloud.zeus.service.mysql.MysqlUserService;
+import com.harmonycloud.zeus.util.MysqlConnectionUtil;
 import com.harmonycloud.zeus.util.*;
 import io.fabric8.kubernetes.api.model.NodeAffinity;
 import org.apache.commons.lang3.StringUtils;
@@ -356,7 +353,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
      */
     @Override
     public void checkAndSetActiveActive(JSONObject values, Middleware middleware) {
-        if (namespaceService.checkAvailableDomain(middleware.getClusterId(), middleware.getNamespace())) {
+        if (namespaceService.isOpenAvailableDomain(middleware.getClusterId(), middleware.getNamespace())) {
             super.setActiveActiveConfig(null, values);
             super.setActiveActiveToleration(middleware, values);
         }
@@ -850,9 +847,9 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     }
 
     @Override
-    public Map<String, String> getActiveActiveAnnotations(String clusterId, String namespace, String type, String middlewareName, String area) {
+    public ActiveAreaAnnotationDto getActiveAreaAnnotation(String clusterId, String namespace, String type, String middlewareName) {
         // TODO 返回双活注解
-        return super.getActiveActiveAnnotations(clusterId, namespace, type, middlewareName, area);
+        return null;
     }
 
 }

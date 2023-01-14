@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.operator;
 
+import com.harmonycloud.caas.common.model.ActiveAreaAnnotationDto;
 import com.harmonycloud.caas.common.model.middleware.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 
@@ -160,9 +161,8 @@ public interface BaseOperator {
      * @param namespace
      * @param type
      * @param middlewareName
-     * @param serverUsage
      * @return
      */
-    Map<String, String> getActiveActiveAnnotations(String clusterId, String namespace, String type, String middlewareName, String serverUsage);
+    ActiveAreaAnnotationDto getActiveAreaAnnotation(String clusterId, String namespace, String type, String middlewareName);
 
 }

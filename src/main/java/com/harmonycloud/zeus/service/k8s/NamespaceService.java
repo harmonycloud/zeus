@@ -140,7 +140,7 @@ public interface NamespaceService {
      * @param name 分区名称
      * @return
      */
-    boolean checkAvailableDomain(String clusterId, String name);
+    boolean isOpenAvailableDomain(String clusterId, String name);
 
     /**
      * 创建middleware-operator分区

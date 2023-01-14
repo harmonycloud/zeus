@@ -8,6 +8,10 @@ import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareGrafanaNameEnum;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.ActiveAreaAnnotationDto;
+import com.harmonycloud.caas.common.model.MonitorResourceQuota;
+import com.harmonycloud.caas.common.model.QuotaBase;
+import com.harmonycloud.caas.common.model.PrometheusResponse;
 import com.harmonycloud.caas.common.model.*;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
@@ -942,11 +946,11 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public Map<String, String> getActiveActiveAnnotations(String clusterId, String namespace, String type, String middlewareName, String serverUsage) {
+    public ActiveAreaAnnotationDto getActiveAreaAnnotation(String clusterId, String namespace, String type, String middlewareName) {
         Middleware middleware = new Middleware();
         middleware.setType(type);
         BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
-        return operator.getActiveActiveAnnotations(clusterId, namespace, type, middlewareName, serverUsage);
+        return operator.getActiveAreaAnnotation(clusterId, namespace, type, middlewareName);
     }
 
     @Override

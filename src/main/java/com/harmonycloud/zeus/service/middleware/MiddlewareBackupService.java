@@ -1,11 +1,9 @@
 package com.harmonycloud.zeus.service.middleware;
 
-import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
-import com.harmonycloud.caas.common.model.MiddlewareBackupScheduleConfig;
 import com.harmonycloud.caas.common.model.MiddlewareIncBackupDto;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupNameDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
+import com.harmonycloud.zeus.integration.cluster.bean.Minio;
 
 import java.util.List;
 
@@ -41,17 +39,19 @@ public interface MiddlewareBackupService {
      * 创建备份规则
      *
      * @param backupDTO
+     * @param minio
      * @return
      */
-    void createBackupSchedule(MiddlewareBackupDTO backupDTO, String serverUsage);
+    void createBackupSchedule(MiddlewareBackupDTO backupDTO, Minio minio);
 
     /**
      * 立即备份
      *
      * @param backupDTO
+     * @param minio
      * @return
      */
-    void createNormalBackup(MiddlewareBackupDTO backupDTO, String serverUsage);
+    void createNormalBackup(MiddlewareBackupDTO backupDTO, Minio minio);
 
     /**
      * 查询备份规则列表

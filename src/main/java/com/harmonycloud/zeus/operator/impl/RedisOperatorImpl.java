@@ -13,6 +13,7 @@ import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.Protocol;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.ActiveAreaAnnotationDto;
 import com.harmonycloud.caas.common.model.AffinityDTO;
 import com.harmonycloud.caas.common.model.IngressComponentDto;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
@@ -438,7 +439,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
 
     @Override
     public void checkAndSetActiveActive(JSONObject values, Middleware middleware) {
-        if (namespaceService.checkAvailableDomain(middleware.getClusterId(), middleware.getNamespace())) {
+        if (namespaceService.isOpenAvailableDomain(middleware.getClusterId(), middleware.getNamespace())) {
             super.setActiveActiveConfig("redis", values);
             super.setActiveActiveToleration(middleware, values);
         }
@@ -484,8 +485,8 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
     }
 
     @Override
-    public Map<String, String> getActiveActiveAnnotations(String clusterId, String namespace, String type, String middlewareName, String area) {
-        return super.getActiveActiveAnnotations(clusterId, namespace, type, middlewareName, area);
+    public ActiveAreaAnnotationDto getActiveAreaAnnotation(String clusterId, String namespace, String type, String middlewareName) {
+        return null;
     }
 
 

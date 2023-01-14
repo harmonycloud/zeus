@@ -109,7 +109,9 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public void createBackup(MiddlewareBackupDTO backupDTO) {
+        Minio minio = backupPositionService.getMinio(backupDTO.getBackupPositionId(), null);
         if (StringUtils.isBlank(backupDTO.getCron())) {
+            // 获取minio
             createNormalBackup(backupDTO, null);
         } else {
             createBackupSchedule(backupDTO, null);
@@ -143,16 +145,15 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
 
     /**
      * 创建mysql备份(定时/周期)
-     * 
+     *
      * @param backupDTO
+     * @param minio
      */
     @Override
-    public void createBackupSchedule(MiddlewareBackupDTO backupDTO,String serverUsage) {
+    public void createBackupSchedule(MiddlewareBackupDTO backupDTO, Minio minio) {
         // 校验是否运行中
         Middleware middleware = convertBackupToMiddleware(backupDTO);
         middlewareCRService.getCRAndCheckRunning(middleware);
-
-        Minio minio = backupPositionService.getMinio(backupDTO.getBackupPositionId(), serverUsage);
         BackupTemplate backupTemplate = new BackupTemplate().setClusterName(backupDTO.getMiddlewareName())
             .setStorageProvider(new BackupStorageProvider().setMinio(minio));
 
@@ -179,13 +180,13 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
 
     /**
      * 创建mysql备份
-     * 
+     *
      * @param backupDTO
+     * @param minio
      */
     @Override
-    public void createNormalBackup(MiddlewareBackupDTO backupDTO, String serverUsage) {
+    public void createNormalBackup(MiddlewareBackupDTO backupDTO, Minio minio) {
         middlewareCRService.getCRAndCheckRunning(convertBackupToMiddleware(backupDTO));
-        Minio minio = backupPositionService.getMinio(backupDTO.getBackupPositionId(), serverUsage);
         BackupSpec spec = new BackupSpec().setClusterName(backupDTO.getMiddlewareName())
             .setStorageProvider(new BackupStorageProvider().setMinio(minio));
         ObjectMeta metaData = new ObjectMeta();

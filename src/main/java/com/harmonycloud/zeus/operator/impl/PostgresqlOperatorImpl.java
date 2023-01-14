@@ -16,6 +16,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.ActiveAreaAnnotationDto;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.cmd.CmdExecUtil;
 import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
@@ -209,7 +210,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
      */
     @Override
     public void checkAndSetActiveActive(JSONObject values, Middleware middleware) {
-        if (namespaceService.checkAvailableDomain(middleware.getClusterId(), middleware.getNamespace())) {
+        if (namespaceService.isOpenAvailableDomain(middleware.getClusterId(), middleware.getNamespace())) {
             super.setActiveActiveConfig(null, values);
             super.setActiveActiveToleration(middleware, values);
         }
@@ -310,8 +311,8 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
     }
 
     @Override
-    public Map<String, String> getActiveActiveAnnotations(String clusterId, String namespace, String type, String middlewareName, String area) {
-        return super.getActiveActiveAnnotations(clusterId, namespace, type, middlewareName, area);
+    public ActiveAreaAnnotationDto getActiveAreaAnnotation(String clusterId, String namespace, String type, String middlewareName) {
+        return null;
     }
 
     public void buildClone(Middleware middleware, JSONObject values){

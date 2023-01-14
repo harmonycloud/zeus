@@ -1,16 +1,10 @@
 package com.harmonycloud.zeus.service.middleware;
 
-import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.base.BaseResult;
-import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
+import com.harmonycloud.caas.common.model.ActiveAreaAnnotationDto;
 import com.harmonycloud.caas.common.model.middleware.*;
-import com.harmonycloud.caas.common.model.user.ResourceMenuDto;
-import com.harmonycloud.tool.page.PageObject;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author dengyulong
@@ -216,10 +210,10 @@ public interface MiddlewareService {
      * @param namespace
      * @param type
      * @param middlewareName
-     * @param serverUsage 服务器用途(即可用区A或B)
      * @return
      */
-    Map<String, String> getActiveActiveAnnotations(String clusterId, String namespace, String type, String middlewareName, String serverUsage);
+    ActiveAreaAnnotationDto getActiveAreaAnnotation(String clusterId, String namespace, String type, String middlewareName);
+
     /**
      * 中间件分区配额校验
      * @param middleware 中间件对象

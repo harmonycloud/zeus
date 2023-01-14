@@ -11,8 +11,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONObject;
-import com.harmonycloud.caas.common.enums.BackupServerUsageEnum;
 import com.harmonycloud.caas.common.enums.BackupTackTypeEnum;
+import com.harmonycloud.caas.common.enums.ServerUsageEnum;
+import com.harmonycloud.caas.common.model.ActiveAreaAnnotationDto;
 import com.harmonycloud.caas.common.model.MiddlewareIncBackupDto;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.service.k8s.*;
@@ -100,12 +101,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         // check name exist
         checkBackupJobName(backupDTO);
         convertMiddlewareBackup(backupDTO);
-        String backupType;
-        // 设置备份任务类型(普通备份任务或双活备份任务)
-        setBackupTaskType(backupDTO);
-        // 创建备份任务
-        checkBackupTypeAndCreateBackup(backupDTO);
+        // 根据备份任务类型并创建备份任务
+        createBackupByTaskType(backupDTO);
         // 保存备份任务名称到数据库
+        String backupType;
         if (StringUtils.isEmpty(backupDTO.getCron())) {
             backupType = "normal";
         } else {
@@ -115,22 +114,37 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 backupType);
     }
 
-    private void checkBackupTypeAndCreateBackup(MiddlewareBackupDTO backupDTO) {
-        if (BackupTackTypeEnum.ACTIVE_ACTIVE.getType().equals(backupDTO.getTaskType())) {
+    /**
+     * 根据备份任务类型（是否双活）创建备份任务
+     * @param backupDTO
+     */
+    private void createBackupByTaskType(MiddlewareBackupDTO backupDTO) {
+        if (namespaceService.isOpenAvailableDomain(backupDTO.getClusterId(), backupDTO.getNamespace())) {
             // 双活备份
-            createBackupTask(backupDTO, BackupServerUsageEnum.zoneA.name());
-            createBackupTask(backupDTO, BackupServerUsageEnum.zoneB.name());
+            // 获取可用区annotation
+            ActiveAreaAnnotationDto activeAreaAnnotation = middlewareService.getActiveAreaAnnotation(backupDTO.getClusterId(),
+                    backupDTO.getNamespace(), backupDTO.getType(), backupDTO.getMiddlewareName());
+
+            // 创建A可用区备份任务
+            createBackupTask(backupDTO, backupPositionService.getMinio(backupDTO.getBackupPositionId(), ServerUsageEnum.zoneA.getName()));
+            // 创建B可用区备份任务
+            createBackupTask(backupDTO, backupPositionService.getMinio(backupDTO.getBackupPositionId(), ServerUsageEnum.zoneB.getName()));
         } else {
             // 普通备份
-            createBackupTask(backupDTO, null);
+            createBackupTask(backupDTO, backupPositionService.getMinio(backupDTO.getBackupPositionId(), null));
         }
     }
 
-    private void createBackupTask(MiddlewareBackupDTO backupDTO, String usage) {
+    /**
+     * 创建备份任务
+     * @param backupDTO
+     * @param minio
+     */
+    private void createBackupTask(MiddlewareBackupDTO backupDTO, Minio minio) {
         if (StringUtils.isEmpty(backupDTO.getCron())) {
-            createNormalBackup(backupDTO, usage);
+            createNormalBackup(backupDTO, minio);
         } else {
-            createBackupSchedule(backupDTO, usage);
+            createBackupSchedule(backupDTO, minio);
         }
     }
 
@@ -239,17 +253,15 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * 创建通用备份(定时/周期)
      * 
      * @param backupDTO
+     * @param minio
      * @return
      */
     @Override
-    public void createBackupSchedule(MiddlewareBackupDTO backupDTO, String serverUsage) {
+    public void createBackupSchedule(MiddlewareBackupDTO backupDTO, Minio minio) {
         checkBackupScheduleExist(backupDTO);
-        Minio minio = backupPositionService.getMinio(backupDTO.getBackupPositionId(), serverUsage);
         MiddlewareBackupScheduleCR crd = new MiddlewareBackupScheduleCR();
-        // TODO 获取meta
         ObjectMeta meta = getMiddlewareBackupMeta(backupDTO);
         crd.setMetadata(meta);
-
         // 将minio账号密码转换为base64
         String base64AccessKeyId =
             Base64.getEncoder().encodeToString(minio.getAccessKeyId().getBytes(StandardCharsets.UTF_8));
@@ -289,17 +301,16 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     /**
      * 创建通用备份
-     * 
+     *
      * @param backupDTO
+     * @param minio
      */
     @Override
-    public void createNormalBackup(MiddlewareBackupDTO backupDTO, String serverUsage) {
+    public void createNormalBackup(MiddlewareBackupDTO backupDTO, Minio minio) {
         MiddlewareBackupCR middlewareBackupCR = new MiddlewareBackupCR();
         // TODO 设置metadata
         ObjectMeta meta = getMiddlewareBackupMeta(backupDTO);
         middlewareBackupCR.setMetadata(meta);
-        // 获取minio
-        Minio minio = backupPositionService.getMinio(backupDTO.getBackupPositionId(), serverUsage);
         // 将minio账号密码转换为base64
         String base64AccessKeyId =
             Base64.getEncoder().encodeToString(minio.getAccessKeyId().getBytes(StandardCharsets.UTF_8));
@@ -333,7 +344,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     // 创建备份任务
     private void setBackupTaskType(MiddlewareBackupDTO backupDTO) {
         // 校验是否是双活分区，如果是双活分区，则是双活备份
-        if (namespaceService.checkAvailableDomain(backupDTO.getClusterId(), backupDTO.getNamespace())) {
+        if (namespaceService.isOpenAvailableDomain(backupDTO.getClusterId(), backupDTO.getNamespace())) {
             backupDTO.setTaskType(BackupTackTypeEnum.ACTIVE_ACTIVE.getType());
         } else {
             backupDTO.setTaskType(BackupTackTypeEnum.NORMAL.getType());
@@ -406,10 +417,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         metaData.setNamespace(backupDTO.getNamespace());
         metaData.setName(backupDTO.getMiddlewareName() + "-" + UUIDUtils.get8UUID());
         metaData.setLabels(backupDTO.getLabels());
-        // 如果是双活备份则设置双活annotation
-        if (BackupTackTypeEnum.ACTIVE_ACTIVE.getType().equals(backupDTO.getTaskType())) {
-            setActiveActiveAnnotation(backupDTO, metaData);
-        }
+        metaData.setAnnotations(backupDTO.getAnnotations());
         return metaData;
     }
 

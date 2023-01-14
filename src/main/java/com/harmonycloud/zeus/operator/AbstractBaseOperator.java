@@ -17,6 +17,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
+import com.harmonycloud.caas.common.model.ActiveAreaAnnotationDto;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.ResourceQuotaDo;
 import com.harmonycloud.caas.common.model.StorageDto;
@@ -43,7 +44,6 @@ import com.harmonycloud.zeus.service.middleware.impl.MiddlewareAlertsServiceImpl
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.service.user.RoleAuthorityService;
-import com.harmonycloud.zeus.service.user.UserService;
 import com.harmonycloud.zeus.util.K8sConvert;
 import com.harmonycloud.zeus.util.MiddlewareResourceCalculateUtil;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
@@ -1202,10 +1202,9 @@ public abstract class AbstractBaseOperator {
      * @param namespace
      * @param type 中间件类型
      * @param middlewareName
-     * @param area 可用区 A：可用区A，B：可用区B
      * @return
      */
-    public Map<String, String> getActiveActiveAnnotations(String clusterId, String namespace, String type, String middlewareName, String area) {
+    public ActiveAreaAnnotationDto getActiveAreaAnnotation(String clusterId, String namespace, String type, String middlewareName) {
         return null;
     }
 

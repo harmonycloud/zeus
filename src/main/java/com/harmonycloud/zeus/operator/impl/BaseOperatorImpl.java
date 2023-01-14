@@ -43,4 +43,7 @@ public class BaseOperatorImpl extends AbstractBaseOperator implements BaseOperat
     public void editConfigMapData(CustomConfig customConfig, List<String> data) {
 
     }
+
+
+
 }
