@@ -3,9 +3,13 @@ package com.harmonycloud.zeus.integration.cluster;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
+import com.harmonycloud.zeus.integration.cluster.bean.BackupList;
 import com.harmonycloud.zeus.integration.cluster.bean.MaintenanceList;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -20,6 +24,7 @@ import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
  * @Date 2023/1/10 3:55 下午
  */
 @Component
+@Slf4j
 public class MaintenanceWrapper {
 
     private static final CustomResourceDefinitionContext CONTEXT = new CustomResourceDefinitionContext.Builder()
@@ -54,6 +59,25 @@ public class MaintenanceWrapper {
     public void create(String clusterId, Maintenance maintenance) throws IOException {
         K8sClient.getClient(clusterId).customResource(CONTEXT).createOrReplace(maintenance.getMetadata().getNamespace(),
             JSONObject.parseObject(JSONObject.toJSONString(maintenance)));
+    }
+
+    public List<Maintenance> list(String clusterId, String namespace) {
+        try {
+            Map<String, Object> map;
+            if ("*".equals(namespace)) {
+                map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(null);
+            } else {
+                map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace);
+            }
+            MaintenanceList maintenanceList = JSONObject.parseObject(JSONObject.toJSONString(map), MaintenanceList.class);
+            if (maintenanceList == null || CollectionUtils.isEmpty(maintenanceList.getItems())){
+                return new ArrayList<>();
+            }
+            return maintenanceList.getItems();
+        } catch (Exception e){
+            log.error("查询mysql备份失败", e);
+        }
+        return new ArrayList<>();
     }
 
 }

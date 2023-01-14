@@ -80,7 +80,7 @@ public class PodServiceImpl implements PodService {
         if (CollectionUtils.isEmpty(list)) {
             return new ArrayList<>(0);
         }
-        return list.stream().map(this::convertPodInfo).collect(Collectors.toList());
+        return list.stream().map(pod -> convertPodInfo(clusterId, pod)).collect(Collectors.toList());
     }
 
     @Override
@@ -90,7 +90,7 @@ public class PodServiceImpl implements PodService {
         if (CollectionUtils.isEmpty(list)) {
             return new ArrayList<>(0);
         }
-        return list.stream().map(this::convertPodInfo).collect(Collectors.toList());
+        return list.stream().map(pod -> convertPodInfo(clusterId, pod)).collect(Collectors.toList());
     }
 
     @Override
@@ -99,7 +99,7 @@ public class PodServiceImpl implements PodService {
         if (CollectionUtils.isEmpty(list)) {
             return new ArrayList<>(0);
         }
-        List<PodInfo> podInfoList = list.stream().map(this::convertPodInfo).collect(Collectors.toList());
+        List<PodInfo> podInfoList = list.stream().map(pod -> convertPodInfo(clusterId, pod)).collect(Collectors.toList());
         podInfoList.forEach(podInfo -> {
             podInfo.setCreateTime(DateUtil.utc2Local(podInfo.getCreateTime(), "yyyy-MM-dd HH:mm:ss", DateStyle.YYYY_MM_DD_HH_MM_SS));
         });
@@ -112,7 +112,7 @@ public class PodServiceImpl implements PodService {
         if (CollectionUtils.isEmpty(list)) {
             return new ArrayList<>(0);
         }
-        return list.stream().map(this::convertPodInfo).collect(Collectors.toList());
+        return list.stream().map(pod -> convertPodInfo(clusterId, pod)).collect(Collectors.toList());
     }
 
     /**
@@ -188,7 +188,7 @@ public class PodServiceImpl implements PodService {
         return pod.getStatus().getPhase();
     }
 
-    private PodInfo convertPodInfo(Pod pod) {
+    private PodInfo convertPodInfo(String clusterId, Pod pod) {
         PodInfo pi = new PodInfo()
                 .setPodName(pod.getMetadata().getName())
                 .setPodIp(pod.getStatus().getPodIP())
@@ -199,6 +199,7 @@ public class PodServiceImpl implements PodService {
                 .setHostIp(pod.getStatus().getHostIP());
         // set pod status
         pi.setStatus(getPodRealState(pod));
+        checkMigrate(clusterId, pi);
 
         // restart count and time
         for (ContainerStatus containerStatus : pod.getStatus().getContainerStatuses()) {
@@ -274,6 +275,33 @@ public class PodServiceImpl implements PodService {
         resource.setLimitMemory(String
             .valueOf(ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(limitMemory), 2, RoundingMode.CEILING)));
         return pi.setResources(resource);
+    }
+
+    private void checkMigrate(String clusterId, PodInfo pi) {
+        List<Maintenance> maintenanceList = maintenanceWrapper.list(clusterId, pi.getNamespace())
+                .stream().filter(maintenance -> MIGRATE.equals(maintenance.getSpec().getAction())
+                        && pi.getPodName().equals(maintenance.getSpec().getParam().get(POD))
+                ).collect(Collectors.toList());
+        for (Maintenance m : maintenanceList) {
+            MaintenanceStatus status = m.getStatus();
+            if (status == null ) {
+                break;
+            }
+            List<Map<String, String>> conditions = status.getConditions();
+            if (CollectionUtils.isEmpty(conditions)) {
+                break;
+            }
+            Map<String, String> conMap = conditions.get(0);
+            String migrateStatus = conMap.get(STATUS);
+            if (migrateStatus == null) {
+                break;
+            } else if (migrateStatus.equalsIgnoreCase("Running")) {
+                pi.setStatus("Migrating");
+            } else if (migrateStatus.equalsIgnoreCase("Failed")) {
+                pi.setStatus("MigrateFailed");
+                pi.setMigrateFailedReason(conMap.get("reason"));
+            }
+        }
     }
 
     @Override
@@ -429,7 +457,7 @@ public class PodServiceImpl implements PodService {
             if (pod == null) {
                 continue;
             }
-            PodInfo pi = convertPodInfo(pod)
+            PodInfo pi = convertPodInfo(clusterId, pod)
                     .setRole(StringUtils.isBlank(po.getType()) ? null : po.getType().toLowerCase());
             // storage
             StorageClassDTO scDTO = storageClassService.fuzzySearchStorageClass(scMap, po.getName());
