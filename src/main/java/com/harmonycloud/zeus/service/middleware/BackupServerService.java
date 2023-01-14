@@ -12,11 +12,11 @@ import java.util.Map;
  */
 public interface BackupServerService {
 
-    List<BackupServerDTO> list(String clusterId, String keyword);
+    List<BackupServerDTO> list(List<String> clusterIds, String keyword, Boolean withDetail);
 
     List<BackupServerDTO> listBackupPosition(String projectId);
 
-    List<BackupServerDTO> listProjectEnableBackupServer(String projectId);
+    List<BackupServerDTO> listProjectBackupServer(String projectId);
 
     BeanBackupServer get(Integer id);
 

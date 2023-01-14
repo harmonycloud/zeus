@@ -45,18 +45,19 @@ public class BackupServerServiceImpl implements BackupServerService {
     private MiddlewareClusterService middlewareClusterService;
 
     @Override
-    public List<BackupServerDTO> list(String clusterId, String keyword) {
+    public List<BackupServerDTO> list(List<String> clusterIds, String keyword, Boolean withDetail) {
         QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
-        if (StringUtil.isNotEmpty(clusterId)) {
-            wrapper.eq("cluster_id", clusterId);
+        if (!CollectionUtils.isEmpty(clusterIds)) {
+            wrapper.in("cluster_id", clusterIds);
         }
         if (StringUtil.isNotEmpty(keyword)) {
             wrapper.like("name", "%" + keyword + "%");
         }
         List<BeanBackupServer> serverList = backupServerMapper.selectList(wrapper);
         List<BackupServerDTO> serverDTOList = new ArrayList<>();
+        // TODO 待优化 withDetail为false时不需要查询备份服务器详细信息
         if (!CollectionUtils.isEmpty(serverList)) {
-            serverDTOList = convert(serverList);
+            serverDTOList = addDetail(serverList, null);
         }
         return serverDTOList;
     }
@@ -70,22 +71,27 @@ public class BackupServerServiceImpl implements BackupServerService {
     @Override
     public List<BackupServerDTO> listBackupPosition(String projectId) {
         List<BackupPositionDTO> backupPositionDTOS = backupPositionService.selectBackupPositionDTOList(projectId);
-        return backupPositionDTOS.stream().map(backupPositionDTO -> {
-            BackupServerDTO backupServerDTO = new BackupServerDTO();
-            backupServerDTO.setServerDetailList(backupServerDetailService.listBackupServerDetailDTOS(backupServerDTO.getId()));
-            backupServerDTO.setPositionList(Collections.singletonList(backupPositionDTO));
-            return backupServerDTO;
-        }).collect(Collectors.toList());
+        List<BackupServerDTO> backupServerDTOS = new ArrayList<>();
+        for (BackupPositionDTO backupPositionDTO : backupPositionDTOS) {
+            List<BackupServerDetailDTO> backupServerDetailDTOS = backupServerDetailService.listBackupServerDetailDTOS(backupPositionDTO.getId());
+            if (!CollectionUtils.isEmpty(backupPositionDTOS)) {
+                BackupServerDTO backupServerDTO = new BackupServerDTO();
+                backupServerDTO.setServerDetailList(backupServerDetailDTOS);
+                backupServerDTO.setPositionList(Collections.singletonList(backupPositionDTO));
+                backupServerDTOS.add(backupServerDTO);
+            }
+        }
+        return backupServerDTOS;
     }
 
     @Override
-    public List<BackupServerDTO> listProjectEnableBackupServer(String projectId) {
+    public List<BackupServerDTO> listProjectBackupServer(String projectId) {
         List<ProjectBackupServerDTO> projectBackupServerDTOS = projectBackupServerService.listByProjectId(projectId);
         List<Integer> backupServerIds = projectBackupServerDTOS.stream().
                 map(ProjectBackupServerDTO::getBackupServerId).collect(Collectors.toList());
         QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
-        wrapper.notIn("id", backupServerIds);
-        return convert(backupServerMapper.selectList(wrapper));
+        wrapper.in("id", backupServerIds);
+        return addDetail(backupServerMapper.selectList(wrapper), projectId);
     }
 
     @Override
@@ -95,6 +101,7 @@ public class BackupServerServiceImpl implements BackupServerService {
 
     @Override
     public void create(BackupServerDTO backupServerDTO) {
+        // TODO 检查名称是否已存在
         BeanBackupServer backupServer = new BeanBackupServer();
         backupServer.setName(backupServerDTO.getName());
         backupServer.setType(backupServerDTO.getType());
@@ -171,12 +178,12 @@ public class BackupServerServiceImpl implements BackupServerService {
         return backupServerMapper.selectList(wrapper).size();
     }
 
-    // 转换
-    private List<BackupServerDTO> convert(List<BeanBackupServer> serverList) {
+    // 添加备份位置和备份服务器信息
+    private List<BackupServerDTO> addDetail(List<BeanBackupServer> serverList, String projectId) {
         return serverList.stream().map(backupServer -> {
             BackupServerDTO backupServerDTO = new BackupServerDTO();
             BeanUtil.copyProperties(backupServer, backupServerDTO);
-            backupServerDTO.setPositionList(backupPositionService.selectBackupPositionDTOList(backupServer.getId()));
+            backupServerDTO.setPositionList(backupPositionService.selectBackupPositionDTOList(backupServer.getId(), projectId));
             backupServerDTO.setServerDetailList(backupServerDetailService.listBackupServerDetailDTOS(backupServer.getId()));
             return backupServerDTO;
         }).collect(Collectors.toList());

@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.controller.middleware;
 
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.BackupServerDTO;
+import com.harmonycloud.caas.common.model.BackupServerQueryDto;
 import com.harmonycloud.zeus.service.middleware.BackupServerService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -10,6 +11,8 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -26,22 +29,29 @@ public class BackupServerController {
 
     @ApiOperation(value = "查询备份服务器列表", notes = "查询备份服务器列表")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "keyword", value = "搜索关键词", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupServerQueryDto", value = "查询信息", paramType = "query", dataTypeClass = BackupServerQueryDto.class),
     })
-    @GetMapping
-    public BaseResult<List<BackupServerDTO>> list(@RequestParam(value = "clusterId", required = false) String clusterId,
-                                                  @RequestParam(value = "keyword", required = false) String keyword) {
-        return BaseResult.ok(backupServerService.list(clusterId, keyword));
+    @GetMapping()
+    public BaseResult<List<BackupServerDTO>> list(@RequestBody BackupServerQueryDto backupServerQueryDto) {
+        return BaseResult.ok(backupServerService.list(backupServerQueryDto.getClusterIds(), backupServerQueryDto.getKeyword(), backupServerQueryDto.getWithDetail()));
     }
 
-    @ApiOperation(value = "查询项目可用备份服务器(1个备份服务器只能被1个项目创建1个备份位置)", notes = "查询项目可用备份服务器")
+    @ApiOperation(value = "查询项目备份服务器列表", notes = "查询项目备份服务器列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("/project/{projectId}")
+    public BaseResult<List<BackupServerDTO>> listProjectBackupServer(@PathVariable("projectId") String projectId) {
+        return BaseResult.ok(backupServerService.listProjectBackupServer(projectId));
+    }
+
+    @ApiOperation(value = "查询项目可创建备份位置的备份服务器列表", notes = "查询项目可创建备份位置的备份服务器列表")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/project/{projectId}/enable")
-    public BaseResult<List<BackupServerDTO>> listProjectEnableBackupServer(@RequestParam("projectId") String projectId) {
-        return BaseResult.ok(backupServerService.listProjectEnableBackupServer(projectId));
+    public BaseResult<List<BackupServerDTO>> listProjectEnableBackupServer(@PathVariable("projectId") String projectId) {
+        return BaseResult.ok(backupServerService.listProjectBackupServer(projectId));
     }
 
     @ApiOperation(value = "创建备份服务器", notes = "创建备份服务器")

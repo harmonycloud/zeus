@@ -13,7 +13,7 @@ import java.util.List;
  */
 public interface BackupPositionService {
 
-    List<BackupPositionDTO> selectBackupPositionDTOList(Integer backupServerId);
+    List<BackupPositionDTO> selectBackupPositionDTOList(Integer backupServerId, String projectId);
 
     List<BackupPositionDTO> selectBackupPositionDTOList(String projectId);
 

@@ -20,7 +20,6 @@ import com.harmonycloud.zeus.service.user.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,12 +45,16 @@ public class BackupPositionServiceImpl implements BackupPositionService {
      * 查询指定备份服务器的全部备份位置
      *
      * @param backupServerId
+     * @param projectId
      * @return
      */
     @Override
-    public List<BackupPositionDTO> selectBackupPositionDTOList(Integer backupServerId) {
+    public List<BackupPositionDTO> selectBackupPositionDTOList(Integer backupServerId, String projectId) {
         QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
         wrapper.eq("backup_server_id", backupServerId);
+        if (StringUtils.isNotEmpty(projectId)) {
+            wrapper.eq("project_id", projectId);
+        }
         List<BeanBackupPosition> beanBackupPositions = backupPositionMapper.selectList(wrapper);
         return convert(beanBackupPositions);
     }
