@@ -172,4 +172,11 @@ public interface ProjectService {
      */
     String getProjectId(String clusterId, String namespace);
 
+    /**
+     * 查询项目关联的集群
+     * @param projectId
+     * @return
+     */
+    List<MiddlewareClusterDTO> getRelationClusters(String projectId);
+
 }

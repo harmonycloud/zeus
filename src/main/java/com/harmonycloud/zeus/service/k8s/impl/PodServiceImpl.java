@@ -50,6 +50,8 @@ public class PodServiceImpl implements PodService {
 
     @Value("${active-active.label.key:topology.kubernetes.io/zone}")
     private String zoneKey;
+    @Value("${active-active.label.zoneCodeKey:zone}")
+    private String zoneCodeKey;
 
     @Autowired
     private PodWrapper podWrapper;
@@ -373,6 +375,13 @@ public class PodServiceImpl implements PodService {
         }
     }
 
+    @Override
+    public List<PodInfo> listPods(String clusterId, String namespace, String middlewareName, String type) {
+        MiddlewareCR middlewareCR = middlewareCRService.getCR(clusterId, namespace, middlewareName, type);
+        Middleware middleware = listPods(middlewareCR, clusterId, namespace, middlewareName, type);
+        return middleware.getPods();
+    }
+
     public void checkExist(String clusterId, String namespace, String podName) {
         Pod pod = podWrapper.get(clusterId, namespace, podName);
         if (pod == null) {
@@ -425,6 +434,7 @@ public class PodServiceImpl implements PodService {
                     podInfo.setNodeZone(areaName);
                 } else {
                     podInfo.setNodeZone(beanActiveArea.getAliasName());
+                    podInfo.setZone(node.getLabels().get(zoneCodeKey));
                 }
             } else {
                 podInfo.setNodeZone("");

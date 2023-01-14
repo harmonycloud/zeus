@@ -8,6 +8,7 @@ import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConsta
 
 import cn.hutool.core.collection.CollectionUtil;
 import com.alibaba.fastjson.JSONArray;
+import com.harmonycloud.caas.common.constants.ActiveAreaConstant;
 import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.Protocol;
@@ -486,7 +487,11 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
 
     @Override
     public ActiveAreaAnnotationDto getActiveAreaAnnotation(String clusterId, String namespace, String type, String middlewareName) {
-        return null;
+        Map<String,String> zoneAAnnotation = new HashMap<>();
+        Map<String,String> zoneBAnnotation = new HashMap<>();
+        zoneAAnnotation.put(ActiveAreaConstant.KEY_NODE_SELECTOR, "select(.metadata.labels.\"topology.kubernetes.io/zone\"==\"zoneA\")");
+        zoneBAnnotation.put(ActiveAreaConstant.KEY_NODE_SELECTOR, "select(.metadata.labels.\"topology.kubernetes.io/zone\"==\"zoneB\")");
+        return new ActiveAreaAnnotationDto(zoneAAnnotation, zoneBAnnotation);
     }
 
 

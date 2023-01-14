@@ -20,6 +20,7 @@ import com.harmonycloud.zeus.service.user.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -124,7 +125,10 @@ public class BackupPositionServiceImpl implements BackupPositionService {
         wrapper.eq("backup_server_id", backupServerId);
         wrapper.eq("project_id", projectId);
         List<BeanBackupPosition> beanBackupPositions = backupPositionMapper.selectList(wrapper);
-        return beanBackupPositions.get(0);
+        if (!CollectionUtils.isEmpty(beanBackupPositions)) {
+            return beanBackupPositions.get(0);
+        }
+        return null;
     }
 
     @Override

@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.enums.ComponentsEnum;
+import com.harmonycloud.caas.common.model.ProjectBackupServerDTO;
 import com.harmonycloud.caas.common.model.user.ProjectNamespaceDo;
 import com.harmonycloud.zeus.service.k8s.ClusterComponentService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
@@ -178,7 +179,11 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 获取项目可用备份服务器
         for (ProjectDto projectDto : projectDtoList) {
-            projectDto.setBackupServerList(projectBackupServerService.listByProjectId(projectDto.getProjectId()));
+            List<ProjectBackupServerDTO> serverDTOS = projectBackupServerService.listByProjectId(projectDto.getProjectId());
+            if (!CollectionUtils.isEmpty(serverDTOS)) {
+                List<Integer> serverIds = serverDTOS.stream().map(ProjectBackupServerDTO::getBackupServerId).collect(Collectors.toList());
+                projectDto.setBackupServerList(serverIds);
+            }
         }
         return projectDtoList;
     }
@@ -569,6 +574,13 @@ public class ProjectServiceImpl implements ProjectService {
             return namespaces;
         }
         return setAvailableDomainStatus(namespaces, clusterId);
+    }
+
+    @Override
+    public List<MiddlewareClusterDTO> getRelationClusters(String projectId) {
+        List<String> clusters = getClusters(projectId);
+        List<MiddlewareClusterDTO> clusterDTOS = clusterService.listClusters();
+        return clusterDTOS.stream().filter(clusterDTO -> clusters.contains(clusterDTO.getId())).collect(Collectors.toList());
     }
 
     public void checkParam(ProjectDto projectDto){

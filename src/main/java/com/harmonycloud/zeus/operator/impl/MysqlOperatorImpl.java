@@ -1,30 +1,6 @@
 package com.harmonycloud.zeus.operator.impl;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.*;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
-
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import com.harmonycloud.caas.common.enums.Protocol;
-import com.harmonycloud.caas.common.model.ActiveAreaAnnotationDto;
-import com.harmonycloud.caas.common.model.IngressComponentDto;
-import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
-import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
-import com.harmonycloud.zeus.bean.BeanMysqlUser;
-import com.harmonycloud.zeus.service.k8s.*;
-import com.harmonycloud.zeus.service.mysql.MysqlDbPrivService;
-import com.harmonycloud.zeus.service.mysql.MysqlDbService;
-import com.harmonycloud.zeus.service.mysql.MysqlUserService;
-import com.harmonycloud.zeus.util.MysqlConnectionUtil;
-import com.harmonycloud.zeus.util.*;
-import io.fabric8.kubernetes.api.model.NodeAffinity;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
-
+import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.constants.MysqlConstant;
@@ -32,26 +8,49 @@ import com.harmonycloud.caas.common.constants.NameConstant;
 import com.harmonycloud.caas.common.enums.DateType;
 import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.Protocol;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.ActiveAreaAnnotationDto;
+import com.harmonycloud.caas.common.model.IngressComponentDto;
+import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.zeus.annotation.Operator;
+import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
+import com.harmonycloud.zeus.bean.BeanMysqlUser;
 import com.harmonycloud.zeus.integration.cluster.MysqlClusterWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.operator.BaseOperator;
 import com.harmonycloud.zeus.operator.api.MysqlOperator;
 import com.harmonycloud.zeus.operator.miiddleware.AbstractMysqlOperator;
+import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.BackupService;
 import com.harmonycloud.zeus.service.middleware.MysqlScheduleBackupService;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareServiceImpl;
 import com.harmonycloud.zeus.service.middleware.impl.MysqlBackupServiceImpl;
-
-import cn.hutool.json.JSONUtil;
+import com.harmonycloud.zeus.service.mysql.MysqlDbPrivService;
+import com.harmonycloud.zeus.service.mysql.MysqlDbService;
+import com.harmonycloud.zeus.service.mysql.MysqlUserService;
+import com.harmonycloud.zeus.util.DateUtil;
+import com.harmonycloud.zeus.util.MiddlewareResourceCalculateUtil;
+import com.harmonycloud.zeus.util.MysqlConnectionUtil;
+import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.harmonycloud.caas.common.constants.NameConstant.*;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_INGRESS;
 
 /**
  * @author dengyulong
@@ -848,8 +847,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
 
     @Override
     public ActiveAreaAnnotationDto getActiveAreaAnnotation(String clusterId, String namespace, String type, String middlewareName) {
-        // TODO 返回双活注解
-        return null;
+        return super.getActiveAreaAnnotation(clusterId, namespace, type, middlewareName);
     }
 
 }

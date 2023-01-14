@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.harmonycloud.caas.common.constants.ActiveAreaConstant;
 import com.harmonycloud.caas.common.constants.CommonConstant;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
@@ -137,6 +138,9 @@ public abstract class AbstractBaseOperator {
     private BeanMiddlewareInfoMapper middlewareInfoMapper;
     @Autowired
     private RoleAuthorityService roleAuthorityService;
+    @Autowired
+    private PodService podService;
+
     /**
      * 是否支持该中间件
      */
@@ -1205,7 +1209,30 @@ public abstract class AbstractBaseOperator {
      * @return
      */
     public ActiveAreaAnnotationDto getActiveAreaAnnotation(String clusterId, String namespace, String type, String middlewareName) {
-        return null;
+        List<PodInfo> podInfoList = podService.listPods(clusterId, namespace, type, middlewareName);
+        List<String> zoneAPodList = new ArrayList<>();
+        List<String> zoneBPodList = new ArrayList<>();
+        for (PodInfo podInfo : podInfoList) {
+            String podName = podInfo.getPodName();
+            switch (podInfo.getZone()){
+                case "zoneA":
+                    zoneAPodList.add(podName);
+                    break;
+                case "zoneB":
+                    zoneBPodList.add(podName);
+                    break;
+                default:
+            }
+        }
+        Arrays.sort(zoneAPodList.toArray());
+        Arrays.sort(zoneBPodList.toArray());
+        String zoneAPod = zoneAPodList.get(0);
+        String zoneBPod = zoneBPodList.get(0);
+        Map<String,String> zoneAAnnotation = new HashMap<>();
+        Map<String,String> zoneBAnnotation = new HashMap<>();
+        zoneAAnnotation.put(ActiveAreaConstant.KEY_POD_SELECTOR, "[.status.conditions[]|select(.name==\" " + zoneAPod + " \")|.name]");
+        zoneBAnnotation.put(ActiveAreaConstant.KEY_POD_SELECTOR, "[.status.conditions[]|select(.name==\" " + zoneBPod + " \")|.name]");
+        return new ActiveAreaAnnotationDto(zoneAAnnotation, zoneBAnnotation);
     }
 
     /**

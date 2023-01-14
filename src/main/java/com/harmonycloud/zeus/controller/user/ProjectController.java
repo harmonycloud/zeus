@@ -186,4 +186,14 @@ public class ProjectController {
     public BaseResult<List<ProjectDto>> getMiddlewareCount() {
         return BaseResult.ok(projectService.getMiddlewareCount(null));
     }
+
+    @ApiOperation(value = "获取项目关联的集群", notes = "获取项目关联的集群")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
+    })
+    @GetMapping("/{projectId}/clusters")
+    public BaseResult<List<MiddlewareClusterDTO>> getRelationCluster(@PathVariable("projectId") String projectId) {
+        return BaseResult.ok(projectService.getRelationClusters(projectId));
+    }
+
 }

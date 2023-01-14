@@ -312,7 +312,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
 
     @Override
     public ActiveAreaAnnotationDto getActiveAreaAnnotation(String clusterId, String namespace, String type, String middlewareName) {
-        return null;
+        return super.getActiveAreaAnnotation(clusterId, namespace, type, middlewareName);
     }
 
     public void buildClone(Middleware middleware, JSONObject values){

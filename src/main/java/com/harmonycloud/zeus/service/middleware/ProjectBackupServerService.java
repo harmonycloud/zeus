@@ -15,7 +15,7 @@ public interface ProjectBackupServerService {
 
     List<ProjectBackupServerDTO> listByProjectId(String projectId);
 
-    void save(String projectId, List<ProjectBackupServerDTO> projectBackupServerDTOList);
+    void save(String projectId, List<Integer> backupServerIds);
 
     void deleteByProjectId(String projectId);
 

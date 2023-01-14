@@ -119,4 +119,15 @@ public interface PodService {
      * @param podMigrateDTO 迁移信息
      */
     void migrate(PodMigrateDTO podMigrateDTO);
+
+    /**
+     * 查询pod列表
+     * @param clusterId
+     * @param namespace
+     * @param middlewareName
+     * @param type
+     * @return
+     */
+    List<PodInfo> listPods(String clusterId, String namespace, String middlewareName, String type);
+
 }
