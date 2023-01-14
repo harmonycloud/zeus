@@ -89,6 +89,9 @@ public class BackupServerServiceImpl implements BackupServerService {
         List<ProjectBackupServerDTO> projectBackupServerDTOS = projectBackupServerService.listByProjectId(projectId);
         List<Integer> backupServerIds = projectBackupServerDTOS.stream().
                 map(ProjectBackupServerDTO::getBackupServerId).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(backupServerIds)) {
+            return Collections.emptyList();
+        }
         QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
         wrapper.in("id", backupServerIds);
         return addDetail(backupServerMapper.selectList(wrapper), projectId);
