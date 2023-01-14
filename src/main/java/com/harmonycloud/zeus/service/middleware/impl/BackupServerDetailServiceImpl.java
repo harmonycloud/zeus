@@ -64,7 +64,7 @@ public class BackupServerDetailServiceImpl implements BackupServerDetailService 
     public void update(List<BackupServerDetailDTO> serverDetailDTOS) {
         for (BackupServerDetailDTO serverDetailDTO : serverDetailDTOS) {
             BeanBackupServerDetail serverDetail = new BeanBackupServerDetail();
-            BeanUtil.copyProperties(serverDetail, serverDetailDTO);
+            BeanUtil.copyProperties(serverDetailDTO, serverDetail);
             backupServerDetailMapper.updateById(serverDetail);
         }
     }
