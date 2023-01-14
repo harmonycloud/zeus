@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.k8s;
 
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
+import com.harmonycloud.caas.common.model.middleware.PodMigrateDTO;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
 
 import java.util.List;
@@ -113,4 +114,9 @@ public interface PodService {
      */
     String yaml(String clusterId, String namespace, String podName);
 
+    /**
+     * pod迁移
+     * @param podMigrateDTO 迁移信息
+     */
+    void migrate(PodMigrateDTO podMigrateDTO);
 }

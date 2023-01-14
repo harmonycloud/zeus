@@ -8,22 +8,18 @@ import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.ContainerWithStatus;
 import com.harmonycloud.caas.common.model.Node;
 import com.harmonycloud.caas.common.model.StorageClassDTO;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareQuota;
-import com.harmonycloud.caas.common.model.middleware.PodInfo;
-import com.harmonycloud.caas.common.model.middleware.PodInfoGroup;
+import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
+import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.bean.BeanActiveArea;
+import com.harmonycloud.zeus.integration.cluster.MaintenanceWrapper;
 import com.harmonycloud.zeus.integration.cluster.PodWrapper;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
+import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import com.harmonycloud.zeus.util.DateUtil;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.ContainerStatus;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.ResourceRequirements;
+import io.fabric8.kubernetes.api.model.*;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.yaml.snakeyaml.Yaml;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -40,16 +37,15 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.CPU;
-import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
+import static com.harmonycloud.caas.common.constants.NameConstant.*;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
 
 /**
  * @author dengyulong
  * @date 2021/03/23
  */
 @Service
+@Slf4j
 public class PodServiceImpl implements PodService {
 
     @Value("${active-active.label.key:topology.kubernetes.io/zone}")
@@ -67,6 +63,8 @@ public class PodServiceImpl implements PodService {
     private NodeService nodeService;
     @Autowired
     private ActiveAreaService activeAreaService;
+    @Autowired
+    private MaintenanceWrapper maintenanceWrapper;
 
     @Override
     public Middleware list(String clusterId, String namespace, String middlewareName, String type) {
@@ -315,6 +313,36 @@ public class PodServiceImpl implements PodService {
     public String yaml(String clusterId, String namespace, String podName) {
         Yaml yaml = new Yaml();
         return yaml.dumpAsMap(podWrapper.get(clusterId, namespace, podName));
+    }
+
+    @Override
+    public void migrate(PodMigrateDTO podMigrateDTO) {
+        Maintenance maintenance = new Maintenance();
+        String name = podMigrateDTO.getPodName() + "-" + MIGRATE + "-" + UUIDUtils.get8UUID();
+        // 设置metadata
+        ObjectMeta objectMeta = new ObjectMeta();
+        objectMeta.setNamespace(podMigrateDTO.getNameSpace());
+        objectMeta.setName(name);
+        maintenance.setMetadata(objectMeta);
+
+        // 设置spec
+
+        Map<String, String> param = new HashMap<>();
+        param.put(MIGRATE_ENABLE, TRUE);
+        param.put(POD, podMigrateDTO.getPodName());
+        param.put(NAMESPACE, podMigrateDTO.getNameSpace());
+        Map<String, String> selector = new HashMap<>();
+        selector.put(KUBERNETES_IO_HOSTNAME, podMigrateDTO.getTargetHost());
+        MaintenanceSpec spec = new MaintenanceSpec().setAction(MIGRATE)
+                .setNodeRule(new MaintenanceSpecRule().setSelector(selector))
+                .setParam(param);
+        maintenance.setSpec(spec);
+        try {
+            maintenanceWrapper.create(podMigrateDTO.getClusterId(), maintenance);
+        } catch (IOException e) {
+            log.error("节点迁移失败");
+            throw new BusinessException(ErrorMessage.POD_MIGRATE_FAILED);
+        }
     }
 
     public void checkExist(String clusterId, String namespace, String podName) {
