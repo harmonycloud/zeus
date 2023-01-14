@@ -31,7 +31,7 @@ public class BackupServerController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "backupServerQueryDto", value = "查询信息", paramType = "query", dataTypeClass = BackupServerQueryDto.class),
     })
-    @GetMapping()
+    @PostMapping("/list")
     public BaseResult<List<BackupServerDTO>> list(@RequestBody BackupServerQueryDto backupServerQueryDto) {
         return BaseResult.ok(backupServerService.list(backupServerQueryDto.getClusterIds(), backupServerQueryDto.getKeyword(), backupServerQueryDto.getWithDetail()));
     }
