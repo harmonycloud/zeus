@@ -14,10 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.harmonycloud.caas.common.constants.NameConstant.*;
@@ -87,10 +84,22 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
         labels.put(ACTION, SCALE_UP_PV);
         labels.put(PVC, pvcName);
 
-        Maintenance maintenance = maintenanceService.get(clusterId, namespace, labels);
-        if (maintenance == null){
-            // todo
-            throw new BusinessException(ErrorMessage.NOT_EXIST);
+        List<Maintenance> maintenanceList = maintenanceService.list(clusterId, namespace, labels);
+        if (CollectionUtils.isEmpty(maintenanceList)){
+            throw new BusinessException(ErrorMessage.MIDDLEWARE_MAINTENANCE_SCALE_UP_NOT_FOUND);
+        }
+
+        // 获取时间上最新的maintenance
+        maintenanceList.sort(Comparator.comparing(maintenance -> maintenance.getMetadata().getCreationTimestamp()));
+        Maintenance maintenance = maintenanceList.get(maintenanceList.size() - 1);
+        // 判断maintenance是否符合条件
+        if (maintenance.getStatus() == null || CollectionUtils.isEmpty(maintenance.getStatus().getConditions())){
+            throw new BusinessException(ErrorMessage.MAINTENANCE_STATUS_ERROR);
+        }
+        Map<String, String> pvcMap = maintenance.getStatus().getConditions().get(0);
+        if (!pvcMap.containsKey(PVC) || !pvcMap.containsKey(STATUS) || !pvcMap.get(PVC).equals(pvcName) || !pvcMap.get(STATUS).equals(FAILED)){
+            log.error("maintenance状态条件匹配失败");
+            throw new BusinessException(ErrorMessage.MIDDLEWARE_MAINTENANCE_SCALE_UP_NOT_FOUND);
         }
 
         // 获取回滚pvc容量
@@ -106,8 +115,9 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
     
     /**
      * 创建运维组件
-     * */
-    public void createMaintenance(String clusterId, String namespace, String middlewareName, String pvcName, Double storage, Double targetStorage, String action){
+     */
+    public void createMaintenance(String clusterId, String namespace, String middlewareName, String pvcName,
+        Double storage, Double targetStorage, String action) {
         // 拼接pvc name
         List<String> pvcNameList = new ArrayList<>();
         pvcNameList.add(pvcName);
@@ -120,7 +130,11 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
         labels.put(PVC, pvcName);
 
         // 创建maintenance
-        maintenanceService.scaleStorage(clusterId, namespace, middlewareName, pvcNameList, targetStorage, labels);
+        if (action.equals(SCALE_UP_PV)) {
+            maintenanceService.scaleStorage(clusterId, namespace, middlewareName, pvcNameList, targetStorage, labels);
+        } else if (action.equals(SCALE_UP_PV_ROLL_BACK)) {
+            maintenanceService.rollBack(clusterId, namespace, middlewareName, pvcNameList, storage, labels);
+        }
     }
 
     /**

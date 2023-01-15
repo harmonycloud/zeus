@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,12 +37,12 @@ public class MaintenanceServiceImpl implements MaintenanceService {
     private MaintenanceWrapper maintenanceWrapper;
 
     @Override
-    public Maintenance get(String clusterId, String namespace, Map<String, String> labels) {
+    public List<Maintenance> list(String clusterId, String namespace, Map<String, String> labels) {
         MaintenanceList maintenanceList = maintenanceWrapper.listByLabels(clusterId, namespace, labels);
         if (CollectionUtils.isEmpty(maintenanceList.getItems())){
-            return null;
+            return new ArrayList<>();
         }
-        return maintenanceList.getItems().get(0);
+        return maintenanceList.getItems();
     }
 
     @Override

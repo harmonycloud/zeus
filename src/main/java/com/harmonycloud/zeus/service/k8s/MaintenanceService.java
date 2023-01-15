@@ -18,7 +18,7 @@ public interface MaintenanceService {
      * @param namespace 分区
      * @param labels 标签
      */
-    Maintenance get(String clusterId, String namespace, Map<String, String> labels);
+    List<Maintenance> list(String clusterId, String namespace, Map<String, String> labels);
 
     /**
      * 查询Maintenance
