@@ -94,4 +94,18 @@ public class PodController {
         podService.migrate(podMigrateDTO, middlewareName);
         return BaseResult.ok();
     }
+
+    @ApiOperation(value = "获取迁移信息", notes = "获取迁移信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class)
+    })
+    @GetMapping("/migrate")
+    public BaseResult migrateStatus(@PathVariable("clusterId") String clusterId,
+                              @PathVariable("namespace") String namespace,
+                              @PathVariable("middlewareName") String middlewareName) {
+        return BaseResult.ok(podService.migrateStatus(clusterId, namespace, middlewareName));
+    }
 }

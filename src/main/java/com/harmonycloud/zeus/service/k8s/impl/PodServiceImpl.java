@@ -30,10 +30,8 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.ParseException;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -201,7 +199,6 @@ public class PodServiceImpl implements PodService {
                 .setHostIp(pod.getStatus().getHostIP());
         // set pod status
         pi.setStatus(getPodRealState(pod));
-        checkMigrate(clusterId, pi);
 
         // restart count and time
         for (ContainerStatus containerStatus : pod.getStatus().getContainerStatuses()) {
@@ -277,33 +274,6 @@ public class PodServiceImpl implements PodService {
         resource.setLimitMemory(String
             .valueOf(ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(limitMemory), 2, RoundingMode.CEILING)));
         return pi.setResources(resource);
-    }
-
-    private void checkMigrate(String clusterId, PodInfo pi) {
-        List<Maintenance> maintenanceList = maintenanceWrapper.list(clusterId, pi.getNamespace())
-                .stream().filter(maintenance -> MIGRATE.equals(maintenance.getSpec().getAction())
-                        && pi.getPodName().equals(maintenance.getSpec().getParam().get(POD))
-                ).collect(Collectors.toList());
-        for (Maintenance m : maintenanceList) {
-            MaintenanceStatus status = m.getStatus();
-            if (status == null ) {
-                break;
-            }
-            List<Map<String, String>> conditions = status.getConditions();
-            if (CollectionUtils.isEmpty(conditions)) {
-                break;
-            }
-            Map<String, String> conMap = conditions.get(0);
-            String migrateStatus = conMap.get(STATUS);
-            if (migrateStatus == null) {
-                break;
-            } else if (migrateStatus.equalsIgnoreCase("Running")) {
-                pi.setStatus("Migrating");
-            } else if (migrateStatus.equalsIgnoreCase("Failed")) {
-                pi.setStatus("MigrateFailed");
-                pi.setMigrateFailedReason(conMap.get("reason"));
-            }
-        }
     }
 
     @Override
@@ -489,4 +459,33 @@ public class PodServiceImpl implements PodService {
         return middleware;
     }
 
+    @Override
+    public Map<String, MigrateInfo> migrateStatus(String clusterId, String namespace, String middlewareName) {
+        List<Maintenance> maintenanceList = maintenanceWrapper.list(clusterId, namespace);
+        maintenanceList = maintenanceList.stream().filter(mt -> mt.getMetadata().getName().startsWith(middlewareName + "-" + MIGRATE)).collect(Collectors.toList());
+        HashMap<String, MigrateInfo> resultMap = new HashMap<>();
+        maintenanceList.forEach(mt -> {
+            if (mt.getStatus() != null && !CollectionUtils.isEmpty(mt.getStatus().getConditions())) {
+                Map<String, String> conMap = mt.getStatus().getConditions().get(0);
+                if (!"Succeed".equals(conMap.get(STATUS))) {
+                    Date mtTime;
+                    try {
+                        mtTime = DateUtil.UTC_FORMAT.parse(conMap.get("migrateTimestamp"));
+                    } catch (ParseException e) {
+                        log.error("获取{}迁移时间失败",mt.getMetadata().getName());
+                        return;
+                    }
+                    MigrateInfo migrateInfo = resultMap.get(conMap.get(POD));
+                    if (migrateInfo == null || migrateInfo.getMigrateTimestamp().before(mtTime)) {
+                        MigrateInfo mtInfo = new MigrateInfo()
+                                .setStatus(conMap.get(STATUS).equalsIgnoreCase("Running") ? MIGRATING : MIGRATE_FAILED)
+                                .setMigrateTimestamp(mtTime)
+                                .setReason(conMap.get("reason"));
+                        resultMap.put(conMap.get(POD), mtInfo);
+                    }
+                }
+            }
+        });
+        return resultMap;
+    }
 }
