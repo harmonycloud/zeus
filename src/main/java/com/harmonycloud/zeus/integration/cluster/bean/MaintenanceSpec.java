@@ -20,6 +20,6 @@ public class MaintenanceSpec {
 
     private MaintenanceSpecRule nodeRule;
 
-    private Map<String, String> param;
+    private Map<String, Object> param;
 
 }

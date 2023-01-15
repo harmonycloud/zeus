@@ -356,9 +356,8 @@ public class PodServiceImpl implements PodService {
         maintenance.setMetadata(objectMeta);
 
         // 设置spec
-
-        Map<String, String> param = new HashMap<>();
-        param.put(MIGRATE_ENABLE, TRUE);
+        Map<String, Object> param = new HashMap<>();
+        param.put(MIGRATE_ENABLE, true);
         param.put(POD, podMigrateDTO.getPodName());
         param.put(NAMESPACE, podMigrateDTO.getNameSpace());
         Map<String, String> selector = new HashMap<>();
