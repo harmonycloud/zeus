@@ -140,6 +140,8 @@ public abstract class AbstractBaseOperator {
     private RoleAuthorityService roleAuthorityService;
     @Autowired
     private PodService podService;
+    @Autowired
+    private MaintenanceService maintenanceService;
 
     /**
      * 是否支持该中间件
@@ -264,6 +266,9 @@ public abstract class AbstractBaseOperator {
         BeanCacheMiddleware beanCacheMiddleware = cacheMiddlewareService.get(middleware);
         deletePvc(beanCacheMiddleware);
         deleteCustomConfigHistory(middleware);
+        // 删除Maintenance
+        maintenanceService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
+        // 删除备份相关
         middlewareBackupService.deleteMiddlewareBackupInfo(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
         removeSql(middleware);
         // 设置values.yaml为null

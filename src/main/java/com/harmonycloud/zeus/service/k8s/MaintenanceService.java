@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.k8s;
 
+import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.zeus.integration.cluster.bean.Maintenance;
 
 import java.util.List;
@@ -55,8 +56,12 @@ public interface MaintenanceService {
     void rollBack(String clusterId, String namespace, String middlewareName, List<String> pvcNameList, Double targetStorage, Map<String, String> labels);
 
     /**
-     * 删除
+     * 删除中间件相关Maintenance
+     *
+     * @param clusterId 集群
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
      */
-    void delete();
+    void delete(String clusterId, String namespace, String middlewareName);
 
 }

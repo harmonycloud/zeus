@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.service.k8s.impl;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
+import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.integration.cluster.MaintenanceWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.Maintenance;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.harmonycloud.caas.common.constants.CommonConstant.LINE;
 import static com.harmonycloud.caas.common.constants.NameConstant.*;
 
 /**
@@ -38,11 +40,7 @@ public class MaintenanceServiceImpl implements MaintenanceService {
 
     @Override
     public List<Maintenance> list(String clusterId, String namespace, Map<String, String> labels) {
-        MaintenanceList maintenanceList = maintenanceWrapper.listByLabels(clusterId, namespace, labels);
-        if (CollectionUtils.isEmpty(maintenanceList.getItems())){
-            return new ArrayList<>();
-        }
-        return maintenanceList.getItems();
+        return maintenanceWrapper.listByLabels(clusterId, namespace, labels);
     }
 
     @Override
@@ -52,7 +50,7 @@ public class MaintenanceServiceImpl implements MaintenanceService {
         if (StringUtils.isNotEmpty(action)){
             labels.put(ACTION, action);
         }
-        return maintenanceWrapper.listByLabels(clusterId, namespace, labels).getItems();
+        return maintenanceWrapper.listByLabels(clusterId, namespace, labels);
     }
 
     @Override
@@ -62,7 +60,7 @@ public class MaintenanceServiceImpl implements MaintenanceService {
         // 元数据
         ObjectMeta meta = new ObjectMeta();
         meta.setNamespace(namespace);
-        meta.setName(middlewareName + UUIDUtils.get8UUID());
+        meta.setName(middlewareName + LINE + UUIDUtils.get8UUID());
 
         // 标签
         if (!CollectionUtils.isEmpty(labels)){
@@ -99,7 +97,7 @@ public class MaintenanceServiceImpl implements MaintenanceService {
         // 元数据
         ObjectMeta meta = new ObjectMeta();
         meta.setNamespace(namespace);
-        meta.setName(middlewareName + UUIDUtils.get8UUID());
+        meta.setName(middlewareName + LINE + UUIDUtils.get8UUID());
 
         // 标签
         if (!CollectionUtils.isEmpty(labels)){
@@ -132,7 +130,20 @@ public class MaintenanceServiceImpl implements MaintenanceService {
     }
 
     @Override
-    public void delete() {
-        // todo 中间件删除时清除cr
+    public void delete(String clusterId, String namespace, String middlewareName) {
+        // 中间件删除时清除cr
+        Map<String, String> labels = new HashMap<>();
+        labels.put(APP, middlewareName);
+
+        List<Maintenance> maintenanceList = maintenanceWrapper.listByLabels(clusterId, namespace, labels);
+        if (!CollectionUtils.isEmpty(maintenanceList)){
+            for (Maintenance maintenance : maintenanceList){
+                try {
+                    maintenanceWrapper.delete(clusterId, namespace, maintenance.getMetadata().getName());
+                } catch (Exception e){
+                    log.error("集群:{} 分区:{} Maintenance:{} 删除失败", clusterId, namespace, maintenance.getMetadata().getName());
+                }
+            }
+        }
     }
 }

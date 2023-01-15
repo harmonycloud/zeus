@@ -72,6 +72,8 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
 
     @Override
     public void scalePvc(String clusterId, String namespace, String middlewareName, String pvcName, Double storage, Double targetStorage) {
+        // todo 校验存储大小
+
         // 扩容
         createMaintenance(clusterId, namespace, middlewareName, pvcName, storage, targetStorage, SCALE_UP_PV);
     }

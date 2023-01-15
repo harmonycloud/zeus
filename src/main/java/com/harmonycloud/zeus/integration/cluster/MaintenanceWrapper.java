@@ -41,12 +41,16 @@ public class MaintenanceWrapper {
      * @param namespace
      * @param labels
      */
-    public MaintenanceList listByLabels(String clusterId, String namespace, Map<String, String> labels) {
+    public List<Maintenance> listByLabels(String clusterId, String namespace, Map<String, String> labels) {
         Map<String, Object> map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace, labels);
         if (CollectionUtils.isEmpty(map)){
             return null;
         }
-        return JSONObject.parseObject(JSONObject.toJSONString(map), MaintenanceList.class);
+        MaintenanceList maintenanceList = JSONObject.parseObject(JSONObject.toJSONString(map), MaintenanceList.class);
+        if (CollectionUtils.isEmpty(maintenanceList.getItems())){
+            return new ArrayList<>();
+        }
+        return maintenanceList.getItems();
     }
 
     /**
@@ -75,9 +79,13 @@ public class MaintenanceWrapper {
             }
             return maintenanceList.getItems();
         } catch (Exception e){
-            log.error("查询mysql备份失败", e);
+            log.error("查询Maintenance失败", e);
         }
         return new ArrayList<>();
+    }
+
+    public void delete(String clusterId, String namespace, String name) throws IOException {
+        K8sClient.getClient(clusterId).customResource(CONTEXT).delete(namespace, name);
     }
 
 }
