@@ -346,9 +346,9 @@ public class PodServiceImpl implements PodService {
     }
 
     @Override
-    public void migrate(PodMigrateDTO podMigrateDTO) {
+    public void migrate(PodMigrateDTO podMigrateDTO, String middlewareName) {
         Maintenance maintenance = new Maintenance();
-        String name = podMigrateDTO.getPodName() + "-" + MIGRATE + "-" + UUIDUtils.get8UUID();
+        String name = middlewareName + "-" + MIGRATE + "-" + UUIDUtils.get8UUID();
         // 设置metadata
         ObjectMeta objectMeta = new ObjectMeta();
         objectMeta.setNamespace(podMigrateDTO.getNameSpace());
@@ -357,7 +357,7 @@ public class PodServiceImpl implements PodService {
 
         // 设置spec
         Map<String, Object> param = new HashMap<>();
-        param.put(MIGRATE_ENABLE, true);
+        param.put(MIGRATE_ENABLE, Boolean.TRUE);
         param.put(POD, podMigrateDTO.getPodName());
         param.put(NAMESPACE, podMigrateDTO.getNameSpace());
         Map<String, String> selector = new HashMap<>();

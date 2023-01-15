@@ -91,7 +91,7 @@ public class PodController {
                               @RequestBody PodMigrateDTO podMigrateDTO) {
         podMigrateDTO.setClusterId(clusterId);
         podMigrateDTO.setNameSpace(namespace);
-        podService.migrate(podMigrateDTO);
+        podService.migrate(podMigrateDTO, middlewareName);
         return BaseResult.ok();
     }
 }

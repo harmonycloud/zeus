@@ -115,10 +115,11 @@ public interface PodService {
     String yaml(String clusterId, String namespace, String podName);
 
     /**
-     * pod迁移
+     *
      * @param podMigrateDTO 迁移信息
+     * @param middlewareName 服务名称
      */
-    void migrate(PodMigrateDTO podMigrateDTO);
+    void migrate(PodMigrateDTO podMigrateDTO, String middlewareName);
 
     /**
      * 查询pod列表
