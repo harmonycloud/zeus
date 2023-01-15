@@ -54,7 +54,7 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
 
         resourceQuota.setMetadata(meta);
         resourceQuota.setSpec(spec);
-        resourceQuotaWrapper.createOrReplace(clusterId, resourceQuota);
+        resourceQuotaWrapper.createOrReplace(clusterId, namespace, resourceQuota);
     }
 
     @Override
@@ -67,7 +67,7 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
         // 封装资源配额数据
         ResourceQuotaSpec spec = convertDoToResourceQuotaSpec(resourceQuotaDo);
         resourceQuota.setSpec(spec);
-        resourceQuotaWrapper.createOrReplace(clusterId, resourceQuota);
+        resourceQuotaWrapper.createOrReplace(clusterId, namespace, resourceQuota);
     }
 
     @Override

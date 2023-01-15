@@ -16,8 +16,8 @@ import java.util.List;
 @Component
 public class ResourceQuotaWrapper {
 
-    public void createOrReplace(String clusterId, ResourceQuota resourceQuota){
-        K8sClient.getClient(clusterId).resourceQuotas().createOrReplace(resourceQuota);
+    public void createOrReplace(String clusterId, String namespace, ResourceQuota resourceQuota){
+        K8sClient.getClient(clusterId).resourceQuotas().inNamespace(namespace).createOrReplace(resourceQuota);
     }
 
     public List<ResourceQuota> list(String clusterId) {
