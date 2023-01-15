@@ -962,10 +962,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             ResourceQuotaDo resourceQuotaDo = resourceQuotaService.list(middleware.getClusterId(), middleware.getNamespace());
             Map<String, Double> map = MiddlewareResourceCalculateUtil.middlewareResourceCalculate(middleware);
             if (resourceQuotaDo.getCpu() != null && resourceQuotaDo.getCpu().getRequest() != null && resourceQuotaDo.getCpu().getUsed() != null){
-                cpu = map.get(CPU) >= resourceQuotaDo.getCpu().getRequest() - resourceQuotaDo.getCpu().getUsed();
+                cpu = map.get(CPU) <= resourceQuotaDo.getCpu().getRequest() - resourceQuotaDo.getCpu().getUsed();
             }
             if (resourceQuotaDo.getCpu() != null && resourceQuotaDo.getCpu().getRequest() != null && resourceQuotaDo.getCpu().getUsed() != null){
-                memory = map.get(MEMORY) >= resourceQuotaDo.getMemory().getRequest() - resourceQuotaDo.getMemory().getUsed();
+                memory = map.get(MEMORY) <= resourceQuotaDo.getMemory().getRequest() - resourceQuotaDo.getMemory().getUsed();
             }
             for (String key : map.keySet()){
                 if (key.equals(CPU) || key.equals(MEMORY)){
@@ -974,7 +974,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 if (!CollectionUtils.isEmpty(resourceQuotaDo.getStorageList())){
                     Map<String, QuotaBase> storageQuota = resourceQuotaDo.getStorageList().stream().collect(Collectors.toMap(StorageQuota::getName, sq -> sq.getStorage()));
                     if (storageQuota.containsKey(key) && storage){
-                        storage = map.get(key) >= storageQuota.get(key).getRequest() - storageQuota.get(key).getUsed();
+                        storage = map.get(key) <= storageQuota.get(key).getRequest() - storageQuota.get(key).getUsed();
                     }
                 }
             }
