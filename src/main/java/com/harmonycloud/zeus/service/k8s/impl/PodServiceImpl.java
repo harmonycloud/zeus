@@ -462,7 +462,10 @@ public class PodServiceImpl implements PodService {
     @Override
     public Map<String, MigrateInfo> migrateStatus(String clusterId, String namespace, String middlewareName) {
         List<Maintenance> maintenanceList = maintenanceWrapper.list(clusterId, namespace);
-        maintenanceList = maintenanceList.stream().filter(mt -> mt.getMetadata().getName().startsWith(middlewareName + "-" + MIGRATE)).collect(Collectors.toList());
+        maintenanceList = maintenanceList.stream().filter(mt ->
+                mt.getSpec().getAction().equals(MIGRATE)
+                && mt.getMetadata().getName().startsWith(middlewareName + "-" + MIGRATE))
+                .collect(Collectors.toList());
         HashMap<String, MigrateInfo> resultMap = new HashMap<>();
         maintenanceList.forEach(mt -> {
             if (mt.getStatus() != null && !CollectionUtils.isEmpty(mt.getStatus().getConditions())) {
