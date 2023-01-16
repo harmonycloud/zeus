@@ -1,14 +1,20 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
 import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.EventDetail;
 import com.harmonycloud.caas.common.model.PersistentVolumeClaim;
+import com.harmonycloud.caas.common.model.StorageDto;
 import com.harmonycloud.caas.common.model.k8s.PvDo;
 import com.harmonycloud.caas.common.model.middleware.MiddlewarePvcDto;
+import com.harmonycloud.zeus.integration.cluster.StorageClassWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.Maintenance;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.MiddlewarePvcService;
+import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService;
+import com.harmonycloud.zeus.util.PrometheusQueryUtil;
+import io.fabric8.kubernetes.api.model.storage.StorageClass;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,6 +41,10 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
     private EventService eventService;
     @Autowired
     private MaintenanceService maintenanceService;
+    @Autowired
+    private StorageClassWrapper storageClassWrapper;
+    @Autowired
+    private PrometheusResourceMonitorService prometheusResourceMonitorService;
 
     @Override
     public List<MiddlewarePvcDto> list(String clusterId, String namespace, String middlewareName, String type) {
@@ -71,9 +81,10 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
     }
 
     @Override
-    public void scalePvc(String clusterId, String namespace, String middlewareName, String pvcName, Double storage, Double targetStorage) {
-        // todo 校验存储大小
-
+    public void scalePvc(String clusterId, String namespace, String middlewareName, String pvcName, String storageClass,
+        Double storage, Double targetStorage) {
+        // 校验存储大小
+        checkStorage(clusterId, storageClass, targetStorage - storage);
         // 扩容
         createMaintenance(clusterId, namespace, middlewareName, pvcName, storage, targetStorage, SCALE_UP_PV);
     }
@@ -184,5 +195,26 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
                 }
             }
         }
+    }
+
+    public void checkStorage(String clusterId, String storageClassName, Double queryStorage){
+        StorageClass storageClass = storageClassWrapper.get(clusterId, storageClassName);
+        if (storageClass.getProvisioner().equals(StorageClassProvisionerEnum.HITACHI.getProvisioner())
+            && !CollectionUtils.isEmpty(storageClass.getParameters())) {
+            Map<String, String> params = storageClass.getParameters();
+            if (params.containsKey("poolID") && params.containsKey("serialNumber")) {
+                String query = PrometheusQueryUtil.queryHitachiFree(storageClassName, params.get("serialNumber"), params.get("poolID"));
+                try {
+                    Double free = prometheusResourceMonitorService.queryAndConvert(clusterId, query);
+                    if (queryStorage > free){
+                        throw new BusinessException(ErrorMessage.STORAGE_NOT_ENOUGH);
+                    }
+                }catch (Exception e){
+                    log.error("检验hitachi存储内容失败", e);
+                }
+
+            }
+        }
+
     }
 }

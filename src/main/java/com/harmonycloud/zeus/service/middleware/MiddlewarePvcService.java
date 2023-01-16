@@ -43,7 +43,7 @@ public interface MiddlewarePvcService {
      * @param storage 当前存储大小
      * @param targetStorage 目标存储大小
      */
-    void scalePvc(String clusterId, String namespace, String middlewareName, String pvcName, Double storage, Double targetStorage);
+    void scalePvc(String clusterId, String namespace, String middlewareName, String pvcName, String storageClass, Double storage, Double targetStorage);
 
     /**
      * 查询备份列表

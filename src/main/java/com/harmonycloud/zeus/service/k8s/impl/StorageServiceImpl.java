@@ -441,6 +441,7 @@ public class StorageServiceImpl implements StorageService {
                 }
             }
         }
+        sc.setParameters(storageClass.getParameters());
         return sc;
     }
 
