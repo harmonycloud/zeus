@@ -1021,11 +1021,11 @@ public class ClusterServiceImpl implements ClusterService {
             double memory = nodeQuota.getMemory().getTotal();
             Map<String, Double> storageMap = new HashMap<>();
             if (namespaceRequestQuota != null){
-                if (namespaceRequestQuota.getCpu() != null && resourceQuotaDo.getCpu().getRequest() != null){
-                    cpu = cpu - resourceQuotaDo.getCpu().getRequest();
+                if (namespaceRequestQuota.getCpu() != null && namespaceRequestQuota.getCpu().getRequest() != null){
+                    cpu = cpu - namespaceRequestQuota.getCpu().getRequest();
                 }
-                if (namespaceRequestQuota.getMemory() != null && resourceQuotaDo.getMemory().getRequest() != null){
-                    memory = memory - resourceQuotaDo.getMemory().getRequest();
+                if (namespaceRequestQuota.getMemory() != null && namespaceRequestQuota.getMemory().getRequest() != null){
+                    memory = memory - namespaceRequestQuota.getMemory().getRequest();
                 }
                 if (!CollectionUtils.isEmpty(namespaceRequestQuota.getStorageList())){
                     storageMap.putAll(namespaceRequestQuota.getStorageList().stream().collect(Collectors.toMap(StorageQuota::getName, storageQuota -> storageQuota.getStorage().getRequest())));
