@@ -109,6 +109,9 @@ public class StorageServiceImpl implements StorageService {
                 boolean flag = CollectionUtils.isEmpty(storageClass.getMetadata().getAnnotations())
                         || !storageClass.getMetadata().getAnnotations().containsKey(MIDDLEWARE);
                 // 双活只保留一个避免重复
+                if (storageClass.getMetadata().getAnnotations().get(ALIAS_NAME) == null) {
+                    return all == flag;
+                }
                 return all == flag && aliasNameSet.add(storageClass.getMetadata().getAnnotations().get(ALIAS_NAME));
             }).map(storageClass -> {
                 // 初始化业务对象

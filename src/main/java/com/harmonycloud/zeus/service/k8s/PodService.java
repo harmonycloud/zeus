@@ -4,6 +4,7 @@ import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.PodInfo;
 import com.harmonycloud.caas.common.model.middleware.PodMigrateDTO;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
+import com.harmonycloud.zeus.integration.cluster.bean.MigrateInfo;
 
 import java.util.List;
 import java.util.Map;
@@ -131,4 +132,11 @@ public interface PodService {
      */
     List<PodInfo> listPods(String clusterId, String namespace, String middlewareName, String type);
 
+    /**
+     *
+     * @param clusterId      集群id
+     * @param namespace      命名空间
+     * @param middlewareName 中间件名称
+     */
+    Map<String, MigrateInfo> migrateStatus(String clusterId, String namespace, String middlewareName);
 }
