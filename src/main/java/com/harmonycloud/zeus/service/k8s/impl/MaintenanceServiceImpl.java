@@ -18,10 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.harmonycloud.caas.common.constants.CommonConstant.LINE;
@@ -37,6 +34,22 @@ public class MaintenanceServiceImpl implements MaintenanceService {
 
     @Autowired
     private MaintenanceWrapper maintenanceWrapper;
+
+    @Override
+    public Maintenance getScaleUp(String clusterId, String namespace, String middlewareName, String pvcName) {
+        Map<String, String> labels = new HashMap<>();
+        labels.put(APP, middlewareName);
+        labels.put(ACTION, SCALE_UP_PV);
+        labels.put(PVC, pvcName);
+
+        List<Maintenance> maintenanceList = maintenanceWrapper.listByLabels(clusterId, namespace, labels);
+        if (CollectionUtils.isEmpty(maintenanceList)){
+            return null;
+        }
+        // 获取时间上最新的maintenance
+        maintenanceList.sort(Comparator.comparing(maintenance -> maintenance.getMetadata().getCreationTimestamp()));
+        return maintenanceList.get(maintenanceList.size() - 1);
+    }
 
     @Override
     public List<Maintenance> list(String clusterId, String namespace, Map<String, String> labels) {

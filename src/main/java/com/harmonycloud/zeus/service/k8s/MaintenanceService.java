@@ -17,6 +17,16 @@ public interface MaintenanceService {
      *
      * @param clusterId 集群id
      * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param pvcName pvc名称
+     */
+    Maintenance getScaleUp(String clusterId, String namespace, String middlewareName, String pvcName);
+
+    /**
+     * 查询Maintenance
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
      * @param labels 标签
      */
     List<Maintenance> list(String clusterId, String namespace, Map<String, String> labels);

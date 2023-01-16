@@ -80,20 +80,11 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
 
     @Override
     public void rollback(String clusterId, String namespace, String middlewareName, String pvcName) {
-        // 设置标签
-        Map<String, String> labels = new HashMap<>();
-        labels.put(APP, middlewareName);
-        labels.put(ACTION, SCALE_UP_PV);
-        labels.put(PVC, pvcName);
-
-        List<Maintenance> maintenanceList = maintenanceService.list(clusterId, namespace, labels);
-        if (CollectionUtils.isEmpty(maintenanceList)){
+        // 获取时间上最新的maintenance
+        Maintenance maintenance = maintenanceService.getScaleUp(clusterId, namespace, middlewareName, pvcName);
+        if (maintenance == null){
             throw new BusinessException(ErrorMessage.MIDDLEWARE_MAINTENANCE_SCALE_UP_NOT_FOUND);
         }
-
-        // 获取时间上最新的maintenance
-        maintenanceList.sort(Comparator.comparing(maintenance -> maintenance.getMetadata().getCreationTimestamp()));
-        Maintenance maintenance = maintenanceList.get(maintenanceList.size() - 1);
         // 判断maintenance是否符合条件
         if (maintenance.getStatus() == null || CollectionUtils.isEmpty(maintenance.getStatus().getConditions())){
             throw new BusinessException(ErrorMessage.MAINTENANCE_STATUS_ERROR);
@@ -103,7 +94,6 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
             log.error("maintenance状态条件匹配失败");
             throw new BusinessException(ErrorMessage.MIDDLEWARE_MAINTENANCE_SCALE_UP_NOT_FOUND);
         }
-
         // 获取回滚pvc容量
         Map<String, String> mainLabels = maintenance.getMetadata().getLabels();
         if (CollectionUtils.isEmpty(mainLabels)){

@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.service.middleware;
 import com.harmonycloud.caas.common.model.EventDetail;
 import com.harmonycloud.caas.common.model.middleware.Backup;
 import com.harmonycloud.caas.common.model.middleware.MiddlewarePvcDto;
+import com.harmonycloud.zeus.integration.cluster.bean.Maintenance;
 
 import java.util.List;
 
