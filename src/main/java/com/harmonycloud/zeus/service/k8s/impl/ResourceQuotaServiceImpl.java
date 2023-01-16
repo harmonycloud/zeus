@@ -190,7 +190,9 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
                 double hardCpu = ResourceCalculationUtil.getResourceValue(v.toString(), CPU, "");
                 double usedCpu = ResourceCalculationUtil.getResourceValue(used.get(k).toString(), CPU, "");
                 QuotaBase cpu = new QuotaBase().setRequest(hardCpu).setUsed(usedCpu);
-                cpu.setUsage(CalculateUtil.division(usedCpu, hardCpu, 4) * 100);
+                if (hardCpu != 0){
+                    cpu.setUsage(CalculateUtil.division(usedCpu, hardCpu, 4) * 100);
+                }
                 quota.setCpu(cpu);
             } else if (MEMORY.equals(k) || "requests.memory".equals(k)) {
                 double hardMemory =
@@ -198,7 +200,9 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
                 double usedMemory = ResourceCalculationUtil.getResourceValue(used.get(k).toString(), MEMORY,
                     ResourceUnitEnum.GI.getUnit());
                 QuotaBase memory = new QuotaBase().setRequest(hardMemory).setUsed(usedMemory);
-                memory.setUsage(CalculateUtil.division(usedMemory, hardMemory, 4) * 100);
+                if(hardMemory != 0){
+                    memory.setUsage(CalculateUtil.division(usedMemory, hardMemory, 4) * 100);
+                }
                 quota.setMemory(memory);
             } else if (k.endsWith(STORAGE_CLASS_STORAGE_K8s_IO_REQUESTS_STORAGE)) {
                 double hardStorage =
