@@ -115,8 +115,8 @@ public class LogController {
     @ApiOperation(value = "查询审计日志", notes = "查询审计日志")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "auditLogQuery", value = "中间件日志查询", paramType = "query", dataTypeClass = MiddlewareLogQuery.class),
     })
     @PostMapping("/audit")
