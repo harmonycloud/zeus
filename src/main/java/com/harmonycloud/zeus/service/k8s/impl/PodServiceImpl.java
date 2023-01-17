@@ -493,10 +493,12 @@ public class PodServiceImpl implements PodService {
             }
         });
         // 检查pod当前状态
-        for (String k : resultMap.keySet()) {
+        Iterator<String> it = resultMap.keySet().iterator();
+        while (it.hasNext()) {
+            String k = it.next();
             Pod pod = podWrapper.get(clusterId, namespace, k);
             if (RUNNING.equalsIgnoreCase(pod.getStatus().getPhase())) {
-                resultMap.remove(k);
+                it.remove();
             }
         }
         return resultMap;
