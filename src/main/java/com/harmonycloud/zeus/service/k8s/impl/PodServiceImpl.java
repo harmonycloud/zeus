@@ -464,24 +464,27 @@ public class PodServiceImpl implements PodService {
         List<Maintenance> maintenanceList = maintenanceWrapper.list(clusterId, namespace);
         maintenanceList = maintenanceList.stream().filter(mt ->
                 mt.getSpec().getAction().equals(MIGRATE)
-                && mt.getMetadata().getName().startsWith(middlewareName + "-" + MIGRATE))
+                        && mt.getMetadata().getName().startsWith(middlewareName + "-" + MIGRATE))
                 .collect(Collectors.toList());
         HashMap<String, MigrateInfo> resultMap = new HashMap<>();
         maintenanceList.forEach(mt -> {
             if (mt.getStatus() != null && !CollectionUtils.isEmpty(mt.getStatus().getConditions())) {
+                if (mt.getStatus() == null || CollectionUtils.isEmpty(mt.getStatus().getConditions())) {
+                    return;
+                }
                 Map<String, String> conMap = mt.getStatus().getConditions().get(0);
-                if (!"Succeed".equals(conMap.get(STATUS))) {
+                if (!"Succeed".equalsIgnoreCase(conMap.get(STATUS))) {
                     Date mtTime;
                     try {
                         mtTime = DateUtil.UTC_FORMAT.parse(conMap.get("migrateTimestamp"));
                     } catch (ParseException e) {
-                        log.error("获取{}迁移时间失败",mt.getMetadata().getName());
+                        log.error("获取{}迁移时间失败", mt.getMetadata().getName());
                         return;
                     }
                     MigrateInfo migrateInfo = resultMap.get(conMap.get(POD));
                     if (migrateInfo == null || migrateInfo.getMigrateTimestamp().before(mtTime)) {
                         MigrateInfo mtInfo = new MigrateInfo()
-                                .setStatus(conMap.get(STATUS).equalsIgnoreCase("Running") ? MIGRATING : MIGRATE_FAILED)
+                                .setStatus(RUNNING.equalsIgnoreCase(conMap.get(STATUS)) ? MIGRATING : MIGRATE_FAILED)
                                 .setMigrateTimestamp(mtTime)
                                 .setReason(conMap.get("reason"));
                         resultMap.put(conMap.get(POD), mtInfo);
@@ -489,6 +492,13 @@ public class PodServiceImpl implements PodService {
                 }
             }
         });
+        // 检查pod当前状态
+        for (String k : resultMap.keySet()) {
+            Pod pod = podWrapper.get(clusterId, namespace, k);
+            if (RUNNING.equalsIgnoreCase(pod.getStatus().getPhase())) {
+                resultMap.remove(k);
+            }
+        }
         return resultMap;
     }
 }
