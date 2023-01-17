@@ -4,7 +4,7 @@ import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.MysqlDbDTO;
 import com.harmonycloud.caas.common.model.MysqlUserDTO;
 import com.harmonycloud.caas.common.model.middleware.MysqlLogDTO;
-import com.harmonycloud.caas.common.model.middleware.MysqlLogQuery;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareLogQuery;
 import com.harmonycloud.tool.page.PageObject;
 import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.middleware.MysqlService;
@@ -91,7 +91,7 @@ public class MysqlController {
                               @RequestParam(value = "searchType", required = false) String searchType,
                               @RequestParam(value = "searchWord", required = false) String searchWord,
                               @RequestParam(value = "size", required = false, defaultValue = "10") Integer size) throws Exception {
-        MysqlLogQuery slowLogQuery = new MysqlLogQuery();
+        MiddlewareLogQuery slowLogQuery = new MiddlewareLogQuery();
         slowLogQuery.setStartTime(startTime);
         slowLogQuery.setEndTime(endTime);
         slowLogQuery.setCurrent(current);
@@ -127,7 +127,7 @@ public class MysqlController {
                              @RequestParam(value = "searchType", required = false) String searchType,
                              @RequestParam(value = "searchWord", required = false) String searchWord,
                              HttpServletRequest request, HttpServletResponse response) throws Exception {
-        MysqlLogQuery slowLogQuery = new MysqlLogQuery();
+        MiddlewareLogQuery slowLogQuery = new MiddlewareLogQuery();
         slowLogQuery.setStartTime(startTime);
         slowLogQuery.setEndTime(endTime);
         slowLogQuery.setClusterId(clusterId);
@@ -262,7 +262,7 @@ public class MysqlController {
     @ApiOperation(value = "查询审计日志", notes = "查询审计日志")
     @PostMapping("/queryAuditSql")
     @Authority(power = 1)
-    public BaseResult queryAuditSql(@RequestBody MysqlLogQuery auditLogQuery) {
+    public BaseResult queryAuditSql(@RequestBody MiddlewareLogQuery auditLogQuery) {
         return BaseResult.ok(mysqlService.auditSql(auditLogQuery));
     }
 

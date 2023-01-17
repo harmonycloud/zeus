@@ -136,7 +136,7 @@ public class EsComponentServiceImpl implements EsComponentService {
     }
 
     @Override
-    public PageObject<MysqlLogDTO> getSlowSql(MiddlewareClusterDTO cluster, MysqlLogQuery slowLogQuery) throws Exception {
+    public PageObject<MysqlLogDTO> getSlowSql(MiddlewareClusterDTO cluster, MiddlewareLogQuery slowLogQuery) throws Exception {
         if (cluster == null) {
             return new PageObject<>(new ArrayList<>(), CommonConstant.NUM_ZERO);
         }
@@ -156,7 +156,7 @@ public class EsComponentServiceImpl implements EsComponentService {
     }
 
     @Override
-    public PageObject<MysqlLogDTO> getAuditSql(MiddlewareClusterDTO cluster, MysqlLogQuery auditLogQuery) throws Exception {
+    public PageObject<MysqlLogDTO> getAuditSql(MiddlewareClusterDTO cluster, MiddlewareLogQuery auditLogQuery) throws Exception {
         if (cluster == null) {
             return new PageObject<>(new ArrayList<>(), CommonConstant.NUM_ZERO);
         }
@@ -242,7 +242,7 @@ public class EsComponentServiceImpl implements EsComponentService {
     /**
      * 根据查询条件设置SearchRequestBuilder
      */
-    private BoolQueryBuilder getSearchRequestBuilder(MysqlLogQuery slowLogQuery) {
+    private BoolQueryBuilder getSearchRequestBuilder(MiddlewareLogQuery slowLogQuery) {
 
         String startTime = slowLogQuery.getStartTime();
         String endTime = slowLogQuery.getEndTime();
@@ -287,7 +287,7 @@ public class EsComponentServiceImpl implements EsComponentService {
     /**
      * 根据查询条件设置SearchRequestBuilder
      */
-    private BoolQueryBuilder getAuditSearchRequestBuilder(MysqlLogQuery auditLogQuery) {
+    private BoolQueryBuilder getAuditSearchRequestBuilder(MiddlewareLogQuery auditLogQuery) {
         BoolQueryBuilder query = QueryBuilders.boolQuery();
         query.must(QueryBuilders.matchQuery("k8s_pod_namespace", auditLogQuery.getNamespace()));
         query.must(QueryBuilders.matchQuery("middleware_name", auditLogQuery.getMiddlewareName()));

@@ -20,7 +20,6 @@ import com.harmonycloud.zeus.service.k8s.NodeService;
 import com.harmonycloud.zeus.service.k8s.impl.ServiceServiceImpl;
 import com.harmonycloud.zeus.service.log.EsComponentService;
 import com.harmonycloud.zeus.service.middleware.MysqlService;
-import com.harmonycloud.zeus.service.mysql.MysqlDbService;
 import com.harmonycloud.zeus.service.mysql.MysqlUserService;
 import com.harmonycloud.zeus.util.MyAESUtil;
 import com.harmonycloud.zeus.util.MysqlConnectionUtil;
@@ -34,9 +33,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_NODEPORT;
 
 /**
  * @author dengyulong
@@ -129,14 +125,14 @@ public class MysqlServiceImpl implements MysqlService {
     }
 
     @Override
-    public PageObject<MysqlLogDTO> slowsql(MysqlLogQuery slowLogQuery) throws Exception {
+    public PageObject<MysqlLogDTO> slowsql(MiddlewareLogQuery slowLogQuery) throws Exception {
         MiddlewareClusterDTO cluster = clusterService.findById(slowLogQuery.getClusterId());
         PageObject<MysqlLogDTO> slowSqlDTOS = esComponentService.getSlowSql(cluster, slowLogQuery);
         return slowSqlDTOS;
     }
 
     @Override
-    public void slowsqlExcel(MysqlLogQuery slowLogQuery, HttpServletResponse response, HttpServletRequest request) throws Exception {
+    public void slowsqlExcel(MiddlewareLogQuery slowLogQuery, HttpServletResponse response, HttpServletRequest request) throws Exception {
         slowLogQuery.setCurrent(1);
         slowLogQuery.setSize(CommonConstant.NUM_ONE_THOUSAND);
         PageObject<MysqlLogDTO> slowsql = slowsql(slowLogQuery);
@@ -160,7 +156,7 @@ public class MysqlServiceImpl implements MysqlService {
     }
 
     @Override
-    public PageObject<MysqlLogDTO> auditSql(MysqlLogQuery auditLogQuery) {
+    public PageObject<MysqlLogDTO> auditSql(MiddlewareLogQuery auditLogQuery) {
         MiddlewareClusterDTO cluster = clusterService.findById(auditLogQuery.getClusterId());
         PageObject<MysqlLogDTO> slowSqlDTOS = null;
         try {

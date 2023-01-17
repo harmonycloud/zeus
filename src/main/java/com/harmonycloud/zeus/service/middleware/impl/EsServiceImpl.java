@@ -1,6 +1,5 @@
 package com.harmonycloud.zeus.service.middleware.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.harmonycloud.caas.common.constants.CommonConstant;
@@ -17,15 +16,12 @@ import com.harmonycloud.tool.json.JsonUtil;
 import com.harmonycloud.tool.page.PageObject;
 import com.harmonycloud.zeus.httpservice.HttpServiceClient;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
-import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import com.harmonycloud.zeus.service.middleware.AbstractMiddlewareService;
 import com.harmonycloud.zeus.service.middleware.EsService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
-import org.elasticsearch.action.admin.cluster.settings.ClusterGetSettingsRequest;
-import org.elasticsearch.action.admin.cluster.settings.ClusterGetSettingsResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsRequest;
@@ -152,7 +148,7 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
     }
 
     @Override
-    public PageObject<MysqlLogDTO> getSlowSql(MiddlewareClusterDTO cluster, MysqlLogQuery slowLogQuery) throws Exception {
+    public PageObject<MysqlLogDTO> getSlowSql(MiddlewareClusterDTO cluster, MiddlewareLogQuery slowLogQuery) throws Exception {
         if (cluster == null) {
             return new PageObject<>(new ArrayList<>(), CommonConstant.NUM_ZERO);
         }
@@ -229,7 +225,7 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
     /**
      * 根据查询条件设置SearchRequestBuilder
      */
-    private BoolQueryBuilder getSearchRequestBuilder(MysqlLogQuery slowLogQuery) {
+    private BoolQueryBuilder getSearchRequestBuilder(MiddlewareLogQuery slowLogQuery) {
 
         String startTime = slowLogQuery.getStartTime();
         String endTime = slowLogQuery.getEndTime();
