@@ -114,14 +114,23 @@ data:
           document_type =>"_doc"
         }
       }
-     else if [index] == "mysqlaudit"{
+      else if [index] == "mysqlaudit"{
         elasticsearch {
-        hosts => ["kubernetes-logging-master:9200"]
-        index => "mysqlaudit-%{+YYYY.MM.dd}"
-        user => "elastic"
-        password => "Hc@Cloud01"
-        document_type =>"_doc"
-       }
+          hosts => ["kubernetes-logging-master:9200"]
+          index => "mysqlaudit-%{+YYYY.MM.dd}"
+          user => "elastic"
+          password => "Hc@Cloud01"
+          document_type =>"_doc"
+        }
+      }
+      else if [index] == "postgresqlaudit"{
+        elasticsearch {
+          hosts => ["kubernetes-logging-master:9200"]
+          index => "postgresqlaudit-%{+YYYY.MM.dd}"
+          user => "elastic"
+          password => "Hc@Cloud01"
+          document_type =>"_doc"
+        }
       }
       else {
         elasticsearch {
