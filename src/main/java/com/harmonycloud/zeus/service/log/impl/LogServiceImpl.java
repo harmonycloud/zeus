@@ -6,11 +6,11 @@ import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.enums.*;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
-import com.harmonycloud.caas.common.model.middleware.LogQuery;
-import com.harmonycloud.caas.common.model.middleware.LogQueryDto;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.tool.page.PageObject;
 import com.harmonycloud.zeus.bean.BeanLogMsg;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
+import com.harmonycloud.zeus.service.log.EsComponentService;
 import com.harmonycloud.zeus.service.log.LogService;
 import com.harmonycloud.zeus.service.middleware.EsService;
 import com.harmonycloud.zeus.util.AssertUtil;
@@ -82,6 +82,8 @@ public class LogServiceImpl implements LogService {
     private ClusterService clusterService;
     @Autowired
     private EsService esService;
+    @Autowired
+    private EsComponentService esComponentService;
 
     @Override
     public void exportLog(LogQuery logQuery, HttpServletResponse response) throws Exception {
@@ -449,6 +451,18 @@ public class LogServiceImpl implements LogService {
             }
             dealIndex(cluster, keepDays);
         }
+    }
+
+    @Override
+    public PageObject<MysqlLogDTO> andit(MiddlewareLogQuery middlewareLogQuery) throws Exception {
+        MiddlewareClusterDTO cluster = clusterService.findById(middlewareLogQuery.getClusterId());
+        PageObject<MysqlLogDTO> slowSqlDTOS = null;
+        try {
+            slowSqlDTOS = esComponentService.getAuditSql(cluster, middlewareLogQuery);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return slowSqlDTOS;
     }
 
     /**

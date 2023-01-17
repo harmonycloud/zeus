@@ -436,6 +436,8 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
                 initLogstashIndexTemplate(esClient, esVersion);
                 //初始化mysql SQL审计模版
                 initAuditSqlTemplate(esClient, esVersion);
+                //初始化postgresql SQL审计模版
+                initPostgresqlAuditSqlTemplate(esClient, esVersion);
                 log.info("集群:{}索引模板初始化完成", cluster.getName());
                 return true;
             } catch (Exception e) {
@@ -512,6 +514,25 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
         try {
             PutIndexTemplateRequest request = new PutIndexTemplateRequest(EsTemplateEnum.MYSQL_AUDIT_SQL.getName());
             JSONObject codeJson = JSONObject.parseObject(EsTemplateEnum.MYSQL_AUDIT_SQL.getCode());
+            setCommonTemplate(request, codeJson);
+            JSONObject mappings = getMappings(codeJson, esVersion);
+            request.mapping(mappings.toString(), XContentType.JSON);
+            esClient.indices().putTemplate(request, RequestOptions.DEFAULT);
+            log.info("SQL审计索引模板mysqlaudit初始化成功");
+        } catch (Exception e) {
+            log.error("SQL审计索引模板mysqlaudit初始化失败", e);
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 初始化mysql sql审计索引模板
+     * @param esClient
+     */
+    public void initPostgresqlAuditSqlTemplate(RestHighLevelClient esClient, int esVersion) {
+        try {
+            PutIndexTemplateRequest request = new PutIndexTemplateRequest(EsTemplateEnum.POSTGRESQL_AUDIT_SQL.getName());
+            JSONObject codeJson = JSONObject.parseObject(EsTemplateEnum.POSTGRESQL_AUDIT_SQL.getCode());
             setCommonTemplate(request, codeJson);
             JSONObject mappings = getMappings(codeJson, esVersion);
             request.mapping(mappings.toString(), XContentType.JSON);

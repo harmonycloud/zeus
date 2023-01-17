@@ -3,12 +3,14 @@ package com.harmonycloud.zeus.controller.log;
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.model.middleware.LogQuery;
-import com.harmonycloud.caas.common.model.middleware.LogQueryDto;
+import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.tool.page.PageObject;
 import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.annotation.ExcludeAuditMethod;
 import com.harmonycloud.zeus.service.log.LogService;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,6 +111,25 @@ public class LogController {
             return BaseResult.error(ErrorMessage.ELASTICSEARCH_CONNECT_FAILED);
         }
     }
+
+    @ApiOperation(value = "查询审计日志", notes = "查询审计日志")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "auditLogQuery", value = "中间件日志查询", paramType = "query", dataTypeClass = MiddlewareLogQuery.class),
+    })
+    @PostMapping("/audit")
+    @Authority(power = 1)
+    public BaseResult<PageObject<MysqlLogDTO>> queryAuditSql(@PathVariable("clusterId") String clusterId,
+                                                             @PathVariable("namespace") String namespace,
+                                                             @PathVariable("middlewareName") String middlewareName,
+                                                             @RequestBody MiddlewareLogQuery auditLogQuery) throws Exception {
+        auditLogQuery.setClusterId(clusterId).setNamespace(namespace).setMiddlewareName(middlewareName);
+        return BaseResult.ok(logService.andit(auditLogQuery));
+    }
+
+
 
 
 }

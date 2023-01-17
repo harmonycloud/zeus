@@ -3,6 +3,9 @@ package com.harmonycloud.zeus.service.log;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.middleware.LogQuery;
 import com.harmonycloud.caas.common.model.middleware.LogQueryDto;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareLogQuery;
+import com.harmonycloud.caas.common.model.middleware.MysqlLogDTO;
+import com.harmonycloud.tool.page.PageObject;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -74,5 +77,12 @@ public interface LogService {
      * @throws Exception 查询条件转换失败异常
      */
     void cleanHistoryLog() throws Exception;
+
+    /**
+     * 清理历史日志
+     *
+     * @throws Exception 查询条件转换失败异常
+     */
+    PageObject<MysqlLogDTO> andit(MiddlewareLogQuery middlewareLogQuery) throws Exception;
 
 }

@@ -8,6 +8,7 @@ import com.harmonycloud.caas.common.constants.DateStyle;
 import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.enums.EsSearchTypeEnum;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.api.client.ElasticSearchClient;
@@ -173,7 +174,7 @@ public class EsComponentServiceImpl implements EsComponentService {
         }
         BoolQueryBuilder query = this.getAuditSearchRequestBuilder(auditLogQuery);
         // 获取SQL审计所有索引
-        List<String> indexNameList = getExistAuditIndexNames(esClient, cluster);
+        List<String> indexNameList = getExistAuditIndexNames(esClient, cluster, auditLogQuery.getType());
         if (CollectionUtils.isEmpty(indexNameList)) {
             return new PageObject<>(new ArrayList<>(), CommonConstant.NUM_ZERO);
         }
@@ -337,9 +338,9 @@ public class EsComponentServiceImpl implements EsComponentService {
         return indexNameList;
     }
 
-    private List<String> getExistAuditIndexNames(RestHighLevelClient esClient, MiddlewareClusterDTO cluster) throws Exception {
+    private List<String> getExistAuditIndexNames(RestHighLevelClient esClient, MiddlewareClusterDTO cluster, String type) throws Exception {
         // 取得所有索引
-        String result = resultByGetRestClient(esClient, cluster, "/_cat/indices/mysqlaudit-*?format=json");
+        String result = resultByGetRestClient(esClient, cluster, "/_cat/indices/" + type + "audit-*?format=json");
         List<String> indices = new ArrayList<>();
         if (StringUtils.isNotEmpty(result)) {
             List<Map<String, String>> indexMap = JsonUtil.jsonToPojo(result, ArrayList.class);
