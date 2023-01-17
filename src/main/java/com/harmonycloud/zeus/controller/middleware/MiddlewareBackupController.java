@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.controller.middleware;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
 import com.harmonycloud.caas.common.model.MiddlewareIncBackupDto;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecordGroup;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
@@ -86,12 +87,12 @@ public class MiddlewareBackupController {
     })
     @GetMapping
     @Authority(power = 1)
-    public BaseResult listRecord(@PathVariable("clusterId") String clusterId,
-                                 @PathVariable("namespace") String namespace,
-                                 @RequestParam(value = "type", required = false) String type,
-                                 @RequestParam(value = "middlewareName", required = false) String middlewareName,
-                                 @RequestParam(value = "keyword", required = false) String keyword) {
-        return BaseResult.ok(middlewareBackupService.backupTaskList(clusterId, namespace, middlewareName, type, keyword));
+    public BaseResult<List<MiddlewareBackupRecordGroup>> listRecord(@PathVariable("clusterId") String clusterId,
+                                                                    @PathVariable("namespace") String namespace,
+                                                                    @RequestParam(value = "type", required = false) String type,
+                                                                    @RequestParam(value = "middlewareName", required = false) String middlewareName,
+                                                                    @RequestParam(value = "keyword", required = false) String keyword) {
+        return BaseResult.ok(middlewareBackupService.backupTaskGroupList(clusterId, namespace, middlewareName, type, keyword));
     }
 
     @ApiOperation(value = "查询增量备份信息", notes = "查询增量备份信息")

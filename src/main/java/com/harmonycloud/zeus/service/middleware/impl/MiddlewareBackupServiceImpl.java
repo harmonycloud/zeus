@@ -14,6 +14,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.*;
 import com.harmonycloud.caas.common.model.ActiveAreaAnnotationDto;
 import com.harmonycloud.caas.common.model.MiddlewareIncBackupDto;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecordGroup;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.BackupPositionService;
@@ -348,10 +349,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         Map<String, String> annotations = backupDTO.getAnnotations();
         if (annotations == null) {
             annotations = new HashMap<>();
+            backupDTO.setAnnotations(annotations);
         }
         Map<String, String> labels = backupDTO.getLabels();
         if (labels == null) {
             labels = new HashMap<>();
+            backupDTO.setLabels(labels);
         }
         if (serverUsage.equals(ServerUsageEnum.zoneA.getName())) {
             annotations.putAll(activeAreaAnnotationDto.getZoneAAnnotation());
@@ -636,10 +639,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     /**
      * 查询所有的备份任务
+     * @return
      */
     @Override
     public List<MiddlewareBackupRecord> backupTaskList(String clusterId, String namespace, String middlewareName,
-        String type, String keyword) {
+                                                       String type, String keyword) {
         List<MiddlewareBackupRecord> recordList = new ArrayList<>();
         // 获取立即备份任务
         List<MiddlewareBackupRecord> backupRecords = listBackup(clusterId, namespace, middlewareName, type);
@@ -687,6 +691,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         recordList.sort((o1, o2) -> o1.getBackupTime() == null ? -1
             : o2.getBackupTime() == null ? -1 : o2.getBackupTime().compareTo(o1.getBackupTime()));
         return recordList;
+    }
+
+    @Override
+    public List<MiddlewareBackupRecordGroup> backupTaskGroupList(String clusterId, String namespace, String middlewareName, String type, String keyword) {
+        List<MiddlewareBackupRecord> records = backupTaskList(clusterId, namespace, middlewareName, type, keyword);
+        return groupByBackupId(records);
     }
 
     @Override
@@ -1054,13 +1064,71 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         return flag;
     }
 
-    public void checkBackupScheduleExist(MiddlewareBackupDTO backupDTO){
+    public void checkBackupScheduleExist(MiddlewareBackupDTO backupDTO) {
+        String backupId = backupDTO.getLabels().get("backupId");
         MiddlewareBackupScheduleList list = backupScheduleCRDService.list(backupDTO.getClusterId(), backupDTO.getNamespace());
-        if (list != null && !CollectionUtils.isEmpty(list.getItems())){
+        if (list != null && !CollectionUtils.isEmpty(list.getItems())) {
             List<MiddlewareBackupScheduleCR> items = list.getItems();
-            if (items.stream().anyMatch(item -> item.getSpec().getName().equals(backupDTO.getMiddlewareName()))){
+            items = items.stream().filter(cr ->
+                    !cr.getMetadata().getLabels().getOrDefault("backupId", backupId).equals(backupDTO.getBackupName())).collect(Collectors.toList());
+            boolean exists = items.stream().anyMatch(item -> item.getSpec().getName().equals(backupDTO.getMiddlewareName()));
+            if (exists) {
                 throw new BusinessException(ErrorMessage.MIDDLEWARE_BACKUP_SCHEDULE_EXIST);
             }
+        }
+    }
+
+    // 根据backupId进行分组
+    public List<MiddlewareBackupRecordGroup> groupByBackupId(List<MiddlewareBackupRecord> recordList) {
+        Map<String, List<MiddlewareBackupRecord>> backupIdRecordMap = new HashMap<>();
+        for (MiddlewareBackupRecord record : recordList) {
+            if (backupIdRecordMap.containsKey(record.getBackupId())) {
+                List<MiddlewareBackupRecord> records = backupIdRecordMap.get(record.getBackupId());
+                records.add(record);
+            } else {
+                List<MiddlewareBackupRecord> records = new ArrayList<>();
+                records.add(record);
+                backupIdRecordMap.put(record.getBackupId(), records);
+            }
+        }
+        List<MiddlewareBackupRecordGroup> recordGroups = new ArrayList<>();
+        backupIdRecordMap.forEach((backupId, records) -> {
+            MiddlewareBackupRecord record = records.get(0);
+            MiddlewareBackupRecordGroup recordGroup = new MiddlewareBackupRecordGroup();
+            recordGroup.setMiddlewareBackupRecords(records);
+            recordGroup.setTaskName(record.getTaskName());
+            recordGroup.setBackupMode(record.getBackupMode());
+            recordGroup.setNamespace(record.getNamespace());
+            recordGroup.setSourceName(record.getSourceName());
+            recordGroup.setPhrase(getTaskPhrase(records));
+            recordGroup.setTaskType(getTaskType(records));
+            recordGroups.add(recordGroup);
+        });
+        return recordGroups;
+    }
+
+    /**
+     * 获取备份任务状态
+     * @param records
+     * @return
+     */
+    private String getTaskPhrase(List<MiddlewareBackupRecord> records) {
+        if (records.size() == 1) {
+            return records.get(0).getPhrase();
+        }
+        return "";
+    }
+
+    /**
+     * 获取备份任务类型（1：普通备份，2：双活备份）
+     * @param records
+     * @return
+     */
+    private Integer getTaskType(List<MiddlewareBackupRecord> records){
+        if (records.size() > 1) {
+            return BackupTackTypeEnum.ACTIVE_ACTIVE.getType();
+        } else {
+            return BackupTackTypeEnum.NORMAL.getType();
         }
     }
 

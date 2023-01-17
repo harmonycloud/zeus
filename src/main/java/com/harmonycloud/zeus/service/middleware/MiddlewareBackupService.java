@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.service.middleware;
 import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
 import com.harmonycloud.caas.common.model.MiddlewareIncBackupDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecordGroup;
 import com.harmonycloud.zeus.integration.cluster.bean.Minio;
 
 import java.util.List;
@@ -148,6 +149,17 @@ public interface MiddlewareBackupService {
      * @return
      */
     List<MiddlewareBackupRecord> backupTaskList(String clusterId, String namespace, String middlewareName, String type, String keyword);
+
+    /**
+     * 获取备份任务组列表
+     * @param clusterId
+     * @param namespace
+     * @param middlewareName
+     * @param type
+     * @param keyword
+     * @return
+     */
+    List<MiddlewareBackupRecordGroup> backupTaskGroupList(String clusterId, String namespace, String middlewareName, String type, String keyword);
 
     /**
      * 备份任务详情

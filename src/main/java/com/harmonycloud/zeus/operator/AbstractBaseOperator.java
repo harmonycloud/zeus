@@ -1236,8 +1236,8 @@ public abstract class AbstractBaseOperator {
         String zoneBPod = zoneBPodList.get(0);
         Map<String,String> zoneAAnnotation = new HashMap<>();
         Map<String,String> zoneBAnnotation = new HashMap<>();
-        zoneAAnnotation.put(ActiveAreaConstant.KEY_POD_SELECTOR, "[.status.conditions[]|select(.name==\" " + zoneAPod + " \")|.name]");
-        zoneBAnnotation.put(ActiveAreaConstant.KEY_POD_SELECTOR, "[.status.conditions[]|select(.name==\" " + zoneBPod + " \")|.name]");
+        zoneAAnnotation.put(ActiveAreaConstant.KEY_POD_SELECTOR, "[.status.conditions[]|select(.name==\"" + zoneAPod + "\")|.name]");
+        zoneBAnnotation.put(ActiveAreaConstant.KEY_POD_SELECTOR, "[.status.conditions[]|select(.name==\"" + zoneBPod + "\")|.name]");
         return new ActiveAreaAnnotationDto(zoneAAnnotation, zoneBAnnotation);
     }
 

@@ -82,7 +82,7 @@ public class BackupServerDetailServiceImpl implements BackupServerDetailService 
         if (CollectionUtils.isEmpty(serverDetails)) {
             throw new BusinessException(ErrorMessage.BACKUP_SERVER_NOT_FOUND);
         }
-        if (StringUtils.isEmpty(usage)) {
+        if (StringUtils.isEmpty(usage) || (serverDetails.size() == 1)) {
             return serverDetails.get(0);
         }
         serverDetails = serverDetails.stream().filter(beanBackupServerDetail ->
