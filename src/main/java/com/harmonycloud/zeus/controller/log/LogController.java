@@ -25,7 +25,7 @@ import javax.servlet.http.HttpServletResponse;
  * @description 应用日志相关控制器
  * @date 2021/6/17 5:48 下午
  */
-@Controller
+@RestController
 @Api(tags = {"监控告警", "日志详情"}, value = "应用日志")
 @RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/middlewares/{middlewareName}/applogs")
 public class LogController {
@@ -42,8 +42,7 @@ public class LogController {
      */
     @ExcludeAuditMethod
     @ApiOperation(value = "查询日志", notes = "查询日志")
-    @ResponseBody
-    @RequestMapping(method = RequestMethod.POST)
+    @PostMapping
     @Authority(power = 1)
     public BaseResult queryLog(@PathVariable("clusterId") String clusterId,
                                @PathVariable("namespace") String namespace,
@@ -71,7 +70,7 @@ public class LogController {
      * @date 2021/6/21 5:05 下午
      */
     @ApiOperation(value = "导出日志", notes = "导出查询日志")
-    @RequestMapping(value = "/export", method = RequestMethod.GET)
+    @GetMapping("/export")
     @Authority(power = 1)
     public void exportLog(@PathVariable("clusterId") String clusterId,
                           @PathVariable("namespace") String namespace,
@@ -92,8 +91,7 @@ public class LogController {
      * @date 2021/6/21 5:05 下午
      */
     @ApiOperation(value = "查询pod日志文件列表", notes = "从es获取pod的日志文件列表")
-    @ResponseBody
-    @RequestMapping(value = "/filenames", method = RequestMethod.POST)
+    @PostMapping("/filenames")
     @Authority(power = 1)
     public BaseResult listLogFilenames(@PathVariable("clusterId") String clusterId,
                                        @PathVariable("namespace") String namespace,
@@ -119,8 +117,8 @@ public class LogController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "auditLogQuery", value = "中间件日志查询", paramType = "query", dataTypeClass = MiddlewareLogQuery.class),
     })
-    @PostMapping("/audit")
     @Authority(power = 1)
+    @PostMapping("/audit")
     public BaseResult<PageObject<MysqlLogDTO>> queryAuditSql(@PathVariable("clusterId") String clusterId,
                                                              @PathVariable("namespace") String namespace,
                                                              @PathVariable("middlewareName") String middlewareName,
