@@ -467,6 +467,7 @@ public class PodServiceImpl implements PodService {
         Map<String, String> labels = new HashMap<>();
         labels.put(APP, middlewareName);
         List<Maintenance> maintenanceList = maintenanceWrapper.listByLabels(clusterId, namespace, labels);
+        maintenanceList = maintenanceList.stream().filter(mt -> MIGRATE.equals(mt.getSpec().getAction())).collect(Collectors.toList());
         HashMap<String, MigrateInfo> resultMap = new HashMap<>();
         maintenanceList.forEach(mt -> {
             if (mt.getStatus() != null && !CollectionUtils.isEmpty(mt.getStatus().getConditions())) {
