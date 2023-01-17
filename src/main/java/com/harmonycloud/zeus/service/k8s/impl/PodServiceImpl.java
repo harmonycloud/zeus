@@ -323,6 +323,9 @@ public class PodServiceImpl implements PodService {
         ObjectMeta objectMeta = new ObjectMeta();
         objectMeta.setNamespace(podMigrateDTO.getNameSpace());
         objectMeta.setName(name);
+        Map<String, String> labels = new HashMap<>();
+        labels.put(APP, middlewareName);
+        objectMeta.setLabels(labels);
         maintenance.setMetadata(objectMeta);
 
         // 设置spec
@@ -461,11 +464,9 @@ public class PodServiceImpl implements PodService {
 
     @Override
     public Map<String, MigrateInfo> migrateStatus(String clusterId, String namespace, String middlewareName) {
-        List<Maintenance> maintenanceList = maintenanceWrapper.list(clusterId, namespace);
-        maintenanceList = maintenanceList.stream().filter(mt ->
-                mt.getSpec().getAction().equals(MIGRATE)
-                        && mt.getMetadata().getName().startsWith(middlewareName + "-" + MIGRATE))
-                .collect(Collectors.toList());
+        Map<String, String> labels = new HashMap<>();
+        labels.put(APP, middlewareName);
+        List<Maintenance> maintenanceList = maintenanceWrapper.listByLabels(clusterId, namespace, labels);
         HashMap<String, MigrateInfo> resultMap = new HashMap<>();
         maintenanceList.forEach(mt -> {
             if (mt.getStatus() != null && !CollectionUtils.isEmpty(mt.getStatus().getConditions())) {
