@@ -259,7 +259,12 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public List<MiddlewareBackupRecord> backupTaskList(String clusterId, String namespace, String middlewareName,
-        String type, String keyword) {
+                                                       String type, String keyword) {
+        return null;
+    }
+
+    @Override
+    public List<MiddlewareBackupRecordGroup> backupTaskGroupList(String clusterId, String namespace, String middlewareName, String type, String keyword) {
         return null;
     }
 

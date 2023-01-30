@@ -1,8 +1,11 @@
 package com.harmonycloud.zeus.service.k8s.impl;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.constants.DateStyle;
 import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.enums.middleware.ResourceUnitEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.ContainerWithStatus;
@@ -17,7 +20,9 @@ import com.harmonycloud.zeus.integration.cluster.PodWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
+import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.util.DateUtil;
+import com.harmonycloud.zeus.util.RedisUtil;
 import io.fabric8.kubernetes.api.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -32,6 +37,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.ParseException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -48,8 +54,6 @@ public class PodServiceImpl implements PodService {
 
     @Value("${active-active.label.key:topology.kubernetes.io/zone}")
     private String zoneKey;
-    @Value("${active-active.label.zoneCodeKey:zone}")
-    private String zoneCodeKey;
 
     @Autowired
     private PodWrapper podWrapper;
@@ -65,6 +69,10 @@ public class PodServiceImpl implements PodService {
     private ActiveAreaService activeAreaService;
     @Autowired
     private MaintenanceWrapper maintenanceWrapper;
+    @Autowired
+    private HelmChartService helmChartService;
+    @Autowired
+    private ClusterService clusterService;
 
     @Override
     public Middleware list(String clusterId, String namespace, String middlewareName, String type) {
@@ -323,6 +331,9 @@ public class PodServiceImpl implements PodService {
         ObjectMeta objectMeta = new ObjectMeta();
         objectMeta.setNamespace(podMigrateDTO.getNameSpace());
         objectMeta.setName(name);
+        Map<String, String> labels = new HashMap<>();
+        labels.put(APP, middlewareName);
+        objectMeta.setLabels(labels);
         maintenance.setMetadata(objectMeta);
 
         // 设置spec
@@ -399,11 +410,11 @@ public class PodServiceImpl implements PodService {
             if (node != null && node.getLabels() != null && node.getLabels().containsKey(zoneKey)) {
                 String areaName = node.getLabels().get(zoneKey);
                 BeanActiveArea beanActiveArea = activeAreaService.get(clusterId, areaName);
+                podInfo.setZone(areaName);
                 if (beanActiveArea == null) {
                     podInfo.setNodeZone(areaName);
                 } else {
                     podInfo.setNodeZone(beanActiveArea.getAliasName());
-                    podInfo.setZone(node.getLabels().get(zoneCodeKey));
                 }
             } else {
                 podInfo.setNodeZone("");
@@ -451,6 +462,8 @@ public class PodServiceImpl implements PodService {
             setPodBackupStatus(clusterId, namespace, type, middlewareName, pi);
             podInfoList.add(pi);
         }
+        // 添加pod额外角色类型
+        podInfoList = addPodExtraRole(clusterId, namespace, middlewareName, type, podInfoList, mw);
         // 设置pod所在可用区
         this.setPodArea(clusterId, podInfoList);
         middleware.setIsAllLvmStorage(isAllLvmStorage.get());
@@ -461,11 +474,10 @@ public class PodServiceImpl implements PodService {
 
     @Override
     public Map<String, MigrateInfo> migrateStatus(String clusterId, String namespace, String middlewareName) {
-        List<Maintenance> maintenanceList = maintenanceWrapper.list(clusterId, namespace);
-        maintenanceList = maintenanceList.stream().filter(mt ->
-                mt.getSpec().getAction().equals(MIGRATE)
-                        && mt.getMetadata().getName().startsWith(middlewareName + "-" + MIGRATE))
-                .collect(Collectors.toList());
+        Map<String, String> labels = new HashMap<>();
+        labels.put(APP, middlewareName);
+        List<Maintenance> maintenanceList = maintenanceWrapper.listByLabels(clusterId, namespace, labels);
+        maintenanceList = maintenanceList.stream().filter(mt -> MIGRATE.equals(mt.getSpec().getAction())).collect(Collectors.toList());
         HashMap<String, MigrateInfo> resultMap = new HashMap<>();
         maintenanceList.forEach(mt -> {
             if (mt.getStatus() != null && !CollectionUtils.isEmpty(mt.getStatus().getConditions())) {
@@ -493,12 +505,75 @@ public class PodServiceImpl implements PodService {
             }
         });
         // 检查pod当前状态
-        for (String k : resultMap.keySet()) {
+        Iterator<String> it = resultMap.keySet().iterator();
+        while (it.hasNext()) {
+            String k = it.next();
             Pod pod = podWrapper.get(clusterId, namespace, k);
             if (RUNNING.equalsIgnoreCase(pod.getStatus().getPhase())) {
-                resultMap.remove(k);
+                it.remove();
             }
         }
         return resultMap;
+    }
+
+    private List<PodInfo> addPodExtraRole(String clusterId, String namespace, String middlewareName, String type, List<PodInfo> podInfoList, MiddlewareCR mw) {
+        if (MiddlewareTypeEnum.REDIS.getType().equals(type)) {
+            return addRedisPodExtraRole(clusterId, namespace, middlewareName, podInfoList, mw);
+        }
+        return podInfoList;
+    }
+
+
+    private List<PodInfo> addRedisPodExtraRole(String clusterId, String namespace, String middlewareName, List<PodInfo> podInfoList, MiddlewareCR mw) {
+        String deployMod = RedisUtil.getRedisDeployMod(helmChartService.getInstalledValues(middlewareName, namespace, clusterService.findById(clusterId)));
+        // 哨兵模式通过name判断分片，集群模式通过slave的masterNodeId判断分片
+        if (deployMod.contains("sentinel")) {
+            podInfoList.forEach(podInfo -> {
+                String shardIndex = RedisUtil.extractShardIndex(podInfo.getPodName());
+                if (StringUtils.isNotBlank(shardIndex)) {
+                    podInfo.setGroup("shard-" + shardIndex);
+                }
+            });
+        } else {
+            String status = mw.getMetadata().getAnnotations().get("status");
+            if (StringUtils.isNotBlank(status)) {
+                Map<String, PodInfo> podInfoMap = new HashMap<>();
+                podInfoList.forEach(podInfo -> {
+                    podInfoMap.put(podInfo.getPodName(), podInfo);
+                });
+
+                JSONObject statusObj = JSONObject.parseObject(status);
+                JSONArray conditions = statusObj.getJSONArray("conditions");
+                if (CollectionUtils.isEmpty(conditions)) {
+                    return podInfoList;
+                }
+                Map<String, String> podStatusMap = new HashMap<>();
+                Map<String, String> podNodeIdMap = new HashMap<>();
+                conditions.forEach(condition -> {
+                    JSONObject single = (JSONObject) condition;
+                    podStatusMap.put(single.getString("name"), single.getString("masterNodeId"));
+                    podNodeIdMap.put(single.getString("nodeId"), single.getString("name"));
+                });
+
+                AtomicInteger groupIdIndex = new AtomicInteger();
+                conditions.forEach(condition -> {
+                    JSONObject single = (JSONObject) condition;
+                    String podName = single.getString("name");
+                    String podType = single.getString("type");
+                    if ("slave".equals(podType)) {
+                        String group = "shard-" + groupIdIndex;
+                        PodInfo slavePodInfo = podInfoMap.get(podName);
+                        slavePodInfo.setGroup(group);
+                        String masterNodeId = podStatusMap.get(podName);
+                        String masterPodName = podNodeIdMap.get(masterNodeId);
+                        PodInfo masterPodInfo = podInfoMap.get(masterPodName);
+                        masterPodInfo.setGroup(group);
+                        groupIdIndex.getAndIncrement();
+                    }
+                });
+                return new ArrayList<>(podInfoMap.values());
+            }
+        }
+        return podInfoList;
     }
 }

@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.util;
 
+import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.RedisAccessInfo;
@@ -13,6 +14,8 @@ import redis.clients.jedis.*;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author yushuaikang
@@ -149,6 +152,39 @@ public class RedisUtil {
 //            }
 //        });
         return new JedisCluster(nodes,1000,1000,1,redisAccessInfo.getPassword(),config);
+    }
+
+    /**
+     * 获取redis部署模式
+     * @param installedValues
+     * @return type:cluster/sentinel
+     */
+    public static String getRedisDeployMod(JSONObject installedValues) {
+        String type = installedValues.getString("type");
+        JSONObject predixy = installedValues.getJSONObject("predixy");
+        if (predixy != null) {
+            Boolean enableProxy = predixy.getBoolean("enableProxy");
+            if (enableProxy) {
+                return type + "Proxy";
+            } else {
+                return type;
+            }
+        } else {
+            return type;
+        }
+    }
+
+    public static String extractShardIndex(String podName) {
+        if (org.springframework.util.StringUtils.isEmpty(podName)) {
+            return null;
+        }
+        String reg3 = "(?<=shard\\-)[\\s\\S]*(?=\\-)";
+        Pattern p3 = Pattern.compile(reg3);
+        Matcher m3 = p3.matcher(podName);
+        if (m3.find()) {
+            return m3.group();
+        }
+        return "";
     }
 
 }
