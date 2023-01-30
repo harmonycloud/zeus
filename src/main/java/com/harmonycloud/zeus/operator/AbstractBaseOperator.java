@@ -16,6 +16,7 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.constants.ActiveAreaConstant;
 import com.harmonycloud.caas.common.constants.CommonConstant;
+import com.harmonycloud.caas.common.constants.MysqlConstant;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.harmonycloud.caas.common.model.ActiveAreaAnnotationDto;
@@ -728,6 +729,7 @@ public abstract class AbstractBaseOperator {
     }
 
     protected void replaceLog(Middleware middleware, JSONObject values){
+        // 标准日志和文件日志
         JSONObject logging = new JSONObject();
         JSONObject collection = new JSONObject();
 
@@ -740,6 +742,28 @@ public abstract class AbstractBaseOperator {
         collection.put("stdout", stdout);
         logging.put("collection", collection);
         values.put("logging", logging);
+
+        // 审计日志
+        if (middleware.getAudit() != null){
+            JSONObject features = values.getJSONObject("features");
+            checkAndSetAuditSqlStatus(features, middleware);
+        }
+    }
+
+    /**
+     * 检查SQL审计采集开关，若支持SQL审计，则默认设置为开
+     */
+    private void checkAndSetAuditSqlStatus(JSONObject features, Middleware middleware) {
+        if (features == null) {
+            return;
+        }
+        if (features.getJSONObject(MysqlConstant.KEY_FEATURES_AUDITLOG) != null) {
+            if (middleware.getAudit() != null) {
+                features.getJSONObject(MysqlConstant.KEY_FEATURES_AUDITLOG).put("enabled", middleware.getAudit());
+            } else {
+                features.getJSONObject(MysqlConstant.KEY_FEATURES_AUDITLOG).put("enabled", false);
+            }
+        }
     }
 
     protected void replaceToleration(Middleware middleware, JSONObject values){

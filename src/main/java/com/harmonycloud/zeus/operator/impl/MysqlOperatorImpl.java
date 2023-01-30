@@ -49,6 +49,9 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.harmonycloud.caas.common.constants.CommonConstant.OFF;
+import static com.harmonycloud.caas.common.constants.CommonConstant.ON;
+import static com.harmonycloud.caas.common.constants.MysqlConstant.SLOW_QUERY_LOG;
 import static com.harmonycloud.caas.common.constants.NameConstant.*;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_INGRESS;
 
@@ -118,7 +121,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
 
         // mysql参数
         JSONObject mysqlArgs = values.getJSONObject("args");
-        JSONObject features = values.getJSONObject("features");
         if (StringUtils.isBlank(middleware.getPassword())) {
             middleware.setPassword(PasswordUtils.generateCommonPassword(10));
         }
@@ -147,11 +149,12 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             if (StringUtils.isNotBlank(mysqlDTO.getType())) {
                 values.put(MysqlConstant.SPEC_TYPE, mysqlDTO.getType());
             }
-            if (StringUtils.isNotBlank(middleware.getVersion()) && !("8.0".equals(middleware.getVersion()))) {
-                //设置SQL审计开关
-                checkAndSetAuditSqlStatus(features, mysqlDTO);
-            }
         }
+        // 配置开启/关闭 审计日志和慢日志
+        if(middleware.getSlowSql() != null){
+            mysqlArgs.put(SLOW_QUERY_LOG, middleware.getSlowSql() ? ON : OFF);
+        }
+
         //配置mysql环境变量
         if (!CollectionUtils.isEmpty(middleware.getEnvironment())) {
             middleware.getEnvironment().forEach(mysqlEnviroment -> mysqlArgs.put(mysqlEnviroment.getName(), mysqlEnviroment.getValue()));
@@ -327,23 +330,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         middlewareManageTask.asyncCreateMysqlOpenService(this, middleware);
     }
 
-    /**
-     * 检查并设置mysql SQL审计采集开关，若支持SQL审计，则默认设置为开
-     * @param features
-     * @param mysqlDTO
-     */
-    private void checkAndSetAuditSqlStatus(JSONObject features, MysqlDTO mysqlDTO) {
-        if (features == null) {
-            return;
-        }
-        if (features.getJSONObject(MysqlConstant.KEY_FEATURES_AUDITLOG) != null) {
-            if (mysqlDTO.getAuditSqlEnabled() != null) {
-                features.getJSONObject(MysqlConstant.KEY_FEATURES_AUDITLOG).put("enabled", mysqlDTO.getAuditSqlEnabled());
-            } else {
-                features.getJSONObject(MysqlConstant.KEY_FEATURES_AUDITLOG).put("enabled", true);
-            }
-        }
-    }
 
     /**
      * 检查是否是双活分区并设置双活配置字段
