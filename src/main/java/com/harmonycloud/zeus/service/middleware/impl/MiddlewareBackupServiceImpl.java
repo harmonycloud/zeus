@@ -97,19 +97,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     public void createBackup(MiddlewareBackupDTO backupDTO) {
         middlewareCRService.getCRAndCheckRunning(convertBackupToMiddleware(backupDTO));
         // check name exist
-        checkBackupJobName(backupDTO);
-        convertMiddlewareBackup(backupDTO);
-        // 根据备份任务类型并创建备份任务
-        createBackupByTaskType(backupDTO);
+        this.checkBackupJobName(backupDTO);
+        this.convertMiddlewareBackup(backupDTO);
+        // 根据备份任务类型创建备份任务
+        this.createBackupByTaskType(backupDTO);
         // 保存备份任务名称到数据库
-        String backupType;
-        if (StringUtils.isEmpty(backupDTO.getCron())) {
-            backupType = "normal";
-        } else {
-            backupType = "schedule";
-        }
-        saveBackupName(backupDTO.getClusterId(), backupDTO.getTaskName(), backupDTO.getLabels().get("backupId"),
-                backupType);
+        this.saveBackupName(backupDTO);
     }
 
     @Override
@@ -322,6 +315,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             createBackupTask(backupDTO, backupPositionService.getMinio(backupDTO.getBackupPositionId(), ServerUsageEnum.zoneB.getName()));
         } else {
             // 普通备份
+            System.out.println();
             createBackupTask(backupDTO, backupPositionService.getMinio(backupDTO.getBackupPositionId(), null));
         }
     }
@@ -862,6 +856,21 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private Middleware convertBackupToMiddleware(MiddlewareBackupDTO backupDTO) {
         return new Middleware().setClusterId(backupDTO.getClusterId()).setNamespace(backupDTO.getNamespace())
             .setType(backupDTO.getType()).setName(backupDTO.getMiddlewareName());
+    }
+
+    /**
+     * 保存备份任务名称到数据库
+     * @param backupDTO
+     */
+    private void saveBackupName(MiddlewareBackupDTO backupDTO) {
+        String backupType;
+        if (StringUtils.isEmpty(backupDTO.getCron())) {
+            backupType = "normal";
+        } else {
+            backupType = "schedule";
+        }
+        saveBackupName(backupDTO.getClusterId(), backupDTO.getTaskName(), backupDTO.getLabels().get("backupId"),
+                backupType);
     }
 
     /**
