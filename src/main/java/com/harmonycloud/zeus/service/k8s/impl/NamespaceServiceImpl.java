@@ -2,9 +2,13 @@ package com.harmonycloud.zeus.service.k8s.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.constants.NamespaceConstant;
+import com.harmonycloud.caas.common.model.ResourceQuotaDo;
+import com.harmonycloud.caas.common.model.StorageDto;
+import com.harmonycloud.caas.common.model.StorageQuota;
 import com.harmonycloud.caas.common.model.user.ProjectNamespaceDo;
 import com.harmonycloud.zeus.bean.user.BeanProjectNamespace;
 import com.harmonycloud.zeus.dao.user.BeanProjectNamespaceMapper;
+import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.user.ProjectService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +25,6 @@ import com.harmonycloud.zeus.bean.user.BeanProjectNamespace;
 import com.harmonycloud.zeus.dao.user.BeanProjectNamespaceMapper;
 import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
-import com.harmonycloud.zeus.service.k8s.AbstractNamespaceService;
-import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
-import com.harmonycloud.zeus.service.k8s.NamespaceService;
-import com.harmonycloud.zeus.service.k8s.ResourceQuotaService;
 import com.harmonycloud.zeus.service.user.ProjectService;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
@@ -67,6 +67,8 @@ public class NamespaceServiceImpl implements NamespaceService {
     public MiddlewareCRService middlewareCRService;
     @Autowired
     private ResourceQuotaService resourceQuotaService;
+    @Autowired
+    private StorageService storageService;
 
     @Value("${k8s.namespace.protect:default,kube-system,kube-public,cluster-top,cicd,caas-system,kube-federation-system,harbor-system,logging,monitoring,velero,middleware-system}")
     private void setProtectNamespaceList(String protectNamespaces) {
@@ -228,6 +230,28 @@ public class NamespaceServiceImpl implements NamespaceService {
         }else {
             projectService.unBindNamespace(null, clusterId, name);
         }
+    }
+
+    @Override
+    public List<StorageDto> storage(String clusterId, String namespace) {
+        // 查询已接入的存储服务
+        List<StorageDto> storageDtoList = storageService.list(clusterId, null, null, false);
+        if (CollectionUtils.isEmpty(storageDtoList)){
+            return new ArrayList<>();
+        }
+        ResourceQuotaDo resourceQuotaDo = resourceQuotaService.get(clusterId, namespace, namespace + "quota");
+        List<StorageQuota> storageQuotaList = resourceQuotaDo.getStorageList();
+        if (CollectionUtils.isEmpty(storageDtoList)){
+            return new ArrayList<>();
+        }
+        
+        storageDtoList = storageDtoList.stream()
+            .filter(storageDto -> storageDto.getStorageClassList().stream()
+                .anyMatch(storageClassInfo -> storageQuotaList.stream()
+                    .anyMatch(storageQuota -> storageQuota.getName().equals(storageClassInfo.getName()))))
+            .collect(Collectors.toList());
+
+        return storageDtoList;
     }
 
     @Override

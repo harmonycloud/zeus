@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.service.k8s;
 import java.util.List;
 import java.util.Map;
 
+import com.harmonycloud.caas.common.model.StorageDto;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
 
 /**
@@ -153,7 +154,20 @@ public interface NamespaceService {
      * 绑定/解绑分区
      *
      * @param clusterId 集群id
+     * @param namespace 分区
+     * @param aliasName 分区别名
+     * @param projectId 项目id
      */
     void bindProject(String clusterId, String namespace, String aliasName, String projectId);
+
+    /**
+     * 绑定/解绑分区
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     *
+     * @return List<StorageDto>
+     */
+    List<StorageDto> storage(String clusterId, String namespace);
 
 }
