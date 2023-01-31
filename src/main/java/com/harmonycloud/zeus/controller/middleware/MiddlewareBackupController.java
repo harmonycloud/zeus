@@ -4,7 +4,6 @@ import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
 import com.harmonycloud.caas.common.model.MiddlewareIncBackupDto;
 import com.harmonycloud.caas.common.model.MiddlewareTaskDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecordGroup;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.zeus.annotation.Authority;
