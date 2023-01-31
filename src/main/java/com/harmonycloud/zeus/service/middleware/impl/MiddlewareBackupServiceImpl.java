@@ -906,11 +906,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             String sourceType = recordGroup.getSourceType();
             String sourceName = recordGroup.getSourceName();
             String namespace = recordGroup.getNamespace();
-            MiddlewareCR middlewareCR = middlewareCRService.getCR(clusterId, namespace, sourceType, sourceName);
-            if (middlewareCR == null) {
-                recordGroup.setSourceStatus(MiddlewareStatusEnum.DELETED.getStatus());
-            } else {
+            if (middlewareCRService.checkIfExist(clusterId, namespace, sourceType, sourceName)) {
                 recordGroup.setSourceStatus(MiddlewareStatusEnum.RUNNING.getStatus());
+            } else {
+                recordGroup.setSourceStatus(MiddlewareStatusEnum.DELETED.getStatus());
             }
         });
     }
