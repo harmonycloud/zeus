@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.integration.cluster;
 
+import static com.harmonycloud.caas.common.constants.NameConstant.FOUR_ZERO_FOUR;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
 
 import java.io.IOException;
@@ -7,9 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.harmonycloud.caas.common.enums.ErrorMessage;
+import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.zeus.integration.cluster.bean.BackupList;
 import com.harmonycloud.zeus.integration.cluster.bean.MaintenanceList;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -42,7 +46,16 @@ public class MaintenanceWrapper {
      * @param labels
      */
     public List<Maintenance> listByLabels(String clusterId, String namespace, Map<String, String> labels) {
-        Map<String, Object> map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace, labels);
+        Map<String, Object> map = null;
+        try {
+            map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace, labels);
+        } catch (Exception e){
+            if (StringUtils.isNotEmpty(e.getMessage()) && e.getMessage().contains(FOUR_ZERO_FOUR)) {
+                log.error("Maintenance crd未部署");
+            } else {
+                throw e;
+            }
+        }
         if (CollectionUtils.isEmpty(map)){
             return null;
         }
