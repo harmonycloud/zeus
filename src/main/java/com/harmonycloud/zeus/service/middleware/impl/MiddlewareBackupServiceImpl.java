@@ -753,7 +753,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public List<MiddlewareBackupRecordGroup> backupTaskGroupList(String clusterId, String namespace, String middlewareName, String type, String keyword) {
         List<MiddlewareBackupRecord> records = backupTaskList(clusterId, namespace, middlewareName, type, keyword);
-        List<MiddlewareBackupRecordGroup> recordGroups = groupByBackupId(records);
+        List<MiddlewareBackupRecordGroup> recordGroups = groupByBackupId(clusterId,records);
         setMiddlewareStatus(clusterId,recordGroups);
         return recordGroups;
     }
@@ -1193,7 +1193,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     // 根据backupId进行分组
-    public List<MiddlewareBackupRecordGroup> groupByBackupId(List<MiddlewareBackupRecord> recordList) {
+    public List<MiddlewareBackupRecordGroup> groupByBackupId(String clusterId, List<MiddlewareBackupRecord> recordList) {
         Map<String, List<MiddlewareBackupRecord>> backupIdRecordMap = new HashMap<>();
         for (MiddlewareBackupRecord record : recordList) {
             if (backupIdRecordMap.containsKey(record.getBackupId())) {
@@ -1212,6 +1212,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             recordGroup.setMiddlewareBackupRecords(records);
             recordGroup.setTaskName(record.getTaskName());
             recordGroup.setBackupMode(record.getBackupMode());
+            recordGroup.setClusterId(clusterId);
             recordGroup.setNamespace(record.getNamespace());
             recordGroup.setSourceName(record.getSourceName());
             recordGroup.setSourceType(record.getSourceType());
