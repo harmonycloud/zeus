@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.service.middleware;
 import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
 import com.harmonycloud.caas.common.model.MiddlewareIncBackup;
 import com.harmonycloud.caas.common.model.MiddlewareIncBackupDto;
+import com.harmonycloud.caas.common.model.MiddlewareTaskDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecordGroup;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupScheduleCR;
@@ -200,14 +201,9 @@ public interface MiddlewareBackupService {
 
     /**
      * 删除备份任务
-     * @param clusterId
-     * @param namespace
-     * @param type
-     * @param backupName
-     * @param backupId
-     * @param cron
+     * @param taskDTO
      */
-    void deleteBackUpTask(String clusterId, String namespace, String type, String backupName, String backupId, Boolean cron);
+    void deleteBackUpTask(MiddlewareTaskDTO taskDTO);
 
     /**
      * 删除备份记录
