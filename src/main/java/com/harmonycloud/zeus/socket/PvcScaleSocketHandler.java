@@ -37,12 +37,13 @@ import static com.harmonycloud.caas.common.constants.NameConstant.*;
 public class PvcScaleSocketHandler extends TextWebSocketHandler {
 
     private final MiddlewarePvcService middlewarePvcService;
-    private final MaintenanceService maintenanceService = new MaintenanceServiceImpl();
+    private final MaintenanceService maintenanceService;
     private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 
     @Autowired
-    public PvcScaleSocketHandler(MiddlewarePvcService middlewarePvcService){
+    public PvcScaleSocketHandler(MiddlewarePvcService middlewarePvcService, MaintenanceService maintenanceService){
         this.middlewarePvcService = middlewarePvcService;
+        this.maintenanceService = maintenanceService;
     }
 
 
@@ -65,7 +66,7 @@ public class PvcScaleSocketHandler extends TextWebSocketHandler {
 
                 // 查询Maintenance信息  直至成功/失败
                 Maintenance maintenance = maintenanceService.getScaleUp(clusterId, namespace, middlewareName, pvcName);
-                if (maintenance != null && maintenance.getStatus() != null && CollectionUtils.isEmpty(maintenance.getStatus().getConditions())){
+                if (maintenance != null && maintenance.getStatus() != null && !CollectionUtils.isEmpty(maintenance.getStatus().getConditions())){
                     Map<String, String> conditions = maintenance.getStatus().getConditions().get(0);
                     if (conditions.containsKey(PVC) && conditions.get(PVC).equals(pvcName) && conditions.containsKey(STATUS)){
                         List<String> text2 = new ArrayList<>();
@@ -115,7 +116,6 @@ public class PvcScaleSocketHandler extends TextWebSocketHandler {
         super.handleTransportError(session, exception);
         // stop
         executor.shutdown();
-        log.info("线程关闭");
     }
 
     @Override
@@ -123,7 +123,6 @@ public class PvcScaleSocketHandler extends TextWebSocketHandler {
         super.afterConnectionClosed(session, status);
         // stop
         executor.shutdown();
-        log.info("线程关闭");
     }
 
 }
