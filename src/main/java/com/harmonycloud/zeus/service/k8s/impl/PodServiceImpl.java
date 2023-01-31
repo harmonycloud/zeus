@@ -128,11 +128,12 @@ public class PodServiceImpl implements PodService {
      * @param podInfoList
      * @return
      */
-    private PodInfoGroup convertListToGroup(List<PodInfo> podInfoList) {
+    private PodInfoGroup convertPodListToGroup(List<PodInfo> podInfoList) {
         PodInfoGroup podInfoGroup = new PodInfoGroup();
         Map<String, List<PodInfo>> podMap = new HashMap<>();
+        // 根据pod role进行分组，k、v分别为节点角色、相同角色节点列表
         podInfoList.forEach(podInfo -> {
-            String role = podInfo.getRole();
+            String role = StringUtils.isNotBlank(podInfo.getGroup()) ? podInfo.getGroup() : podInfo.getRole();
             List<PodInfo> infoList;
             if (role == null) {
                 infoList = podMap.get("default");
@@ -150,6 +151,7 @@ public class PodServiceImpl implements PodService {
             infoList.add(podInfo);
         });
 
+        // 转为列表
         if (podMap.keySet().size() > 1) {
             List<PodInfoGroup> list = new ArrayList<>();
             podMap.forEach((k, v) -> {
@@ -163,9 +165,14 @@ public class PodServiceImpl implements PodService {
             podInfoGroup.setListChildGroup(list);
         } else {
             podMap.forEach((k, v) -> {
-                podInfoGroup.setRole(k);
-                podInfoGroup.setPods(v);
-                podInfoGroup.setHasChildGroup(false);
+                List<PodInfoGroup> list = new ArrayList<>();
+                PodInfoGroup tempGroup = new PodInfoGroup();
+                tempGroup.setRole(k);
+                tempGroup.setPods(v);
+                tempGroup.setHasChildGroup(false);
+                list.add(tempGroup);
+                podInfoGroup.setListChildGroup(list);
+                podInfoGroup.setHasChildGroup(true);
             });
         }
         return podInfoGroup;
@@ -467,7 +474,7 @@ public class PodServiceImpl implements PodService {
         // 设置pod所在可用区
         this.setPodArea(clusterId, podInfoList);
         middleware.setIsAllLvmStorage(isAllLvmStorage.get());
-        middleware.setPodInfoGroup(convertListToGroup(podInfoList));
+        middleware.setPodInfoGroup(convertPodListToGroup(podInfoList));
         middleware.setPods(podInfoList);
         return middleware;
     }
