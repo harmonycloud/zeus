@@ -185,13 +185,21 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
                     Map<String, String> map = maintenance.getStatus().getConditions().stream()
                         .collect(Collectors.toMap(con -> con.get("pvc"), con -> con.get("status")));
                     for (MiddlewarePvcDto middlewarePvcDto : middlewarePvcDtoList) {
-                        if (map.containsKey(middlewarePvcDto.getPvcName())
-                            && "Running".equals(map.get(middlewarePvcDto.getPvcName()))) {
-                            if (maintenance.getMetadata().getLabels().get(ACTION).equals(SCALE_UP_PV)) {
-                                middlewarePvcDto.setStatus(SCALE_UP_PV);
-                            } else if (maintenance.getMetadata().getLabels().get(ACTION)
-                                .equals(SCALE_UP_PV_ROLL_BACK)) {
-                                middlewarePvcDto.setStatus(SCALE_UP_PV_ROLL_BACK);
+                        if (map.containsKey(middlewarePvcDto.getPvcName())) {
+                            if ("Running".equals(map.get(middlewarePvcDto.getPvcName()))){
+                                if (maintenance.getMetadata().getLabels().get(ACTION).equals(SCALE_UP_PV)) {
+                                    middlewarePvcDto.setStatus(SCALE_UP_PV);
+                                } else if (maintenance.getMetadata().getLabels().get(ACTION)
+                                        .equals(SCALE_UP_PV_ROLL_BACK)) {
+                                    middlewarePvcDto.setStatus(SCALE_UP_PV_ROLL_BACK);
+                                }
+                            }else if (FAILED.equals(map.get(middlewarePvcDto.getPvcName()))){
+                                if (maintenance.getMetadata().getLabels().get(ACTION).equals(SCALE_UP_PV)) {
+                                    middlewarePvcDto.setStatus(SCALE_UP_PV_FAILED);
+                                } else if (maintenance.getMetadata().getLabels().get(ACTION)
+                                        .equals(SCALE_UP_PV_ROLL_BACK)) {
+                                    middlewarePvcDto.setStatus(SCALE_UP_PV_ROLL_BACK_FAILED);
+                                }
                             }
                         }
                     }
