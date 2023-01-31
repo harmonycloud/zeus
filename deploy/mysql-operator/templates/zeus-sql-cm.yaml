@@ -588,44 +588,6 @@ data:
     UNLOCK TABLES;
 
     --
-    -- Table structure for table `middleware_backup_address`
-    --
-
-    DROP TABLE IF EXISTS `middleware_backup_address`;
-    /*!40101 SET @saved_cs_client     = @@character_set_client */;
-    /*!50503 SET character_set_client = utf8mb4 */;
-    CREATE TABLE `middleware_backup_address` (
-      `id` int NOT NULL AUTO_INCREMENT,
-      `address_id` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '标识',
-      `name` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '中文名称',
-      `type` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '类型',
-      `bucket_name` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT 'bucket名称',
-      `access_key_id` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '用户ID',
-      `secret_access_key` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '密码',
-      `endpoint` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '地址',
-      `ftp_host` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT 'FTP主机服务器',
-      `ftp_user` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT 'FTP登录用户名',
-      `ftp_password` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT 'FTP登录密码',
-      `ftp_port` int DEFAULT NULL COMMENT 'FTP端口',
-      `server_host` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '服务器地址',
-      `server_user` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '服务器用户名',
-      `server_password` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '服务器密码',
-      `server_port` int DEFAULT NULL COMMENT '服务器端口',
-      `create_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
-      PRIMARY KEY (`id`)
-    ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-    /*!40101 SET character_set_client = @saved_cs_client */;
-
-    --
-    -- Dumping data for table `middleware_backup_address`
-    --
-
-    LOCK TABLES `middleware_backup_address` WRITE;
-    /*!40000 ALTER TABLE `middleware_backup_address` DISABLE KEYS */;
-    /*!40000 ALTER TABLE `middleware_backup_address` ENABLE KEYS */;
-    UNLOCK TABLES;
-
-    --
     -- Table structure for table `middleware_cluster`
     --
 
@@ -993,7 +955,7 @@ data:
     INSERT INTO `resource_menu` VALUES (10,'disasterBackup','灾备中心','disasterBackup',10,'icon-rongzaibeifen',0,NULL);
     INSERT INTO `resource_menu` VALUES (11,'systemManagement','系统管理','systemManagement',11,'icon-shezhi01',0,NULL);
     INSERT INTO `resource_menu` VALUES (12,'backupTask','备份任务','backupService/backupTask',81,'icon-fuwutiaokuan',8,NULL);
-    INSERT INTO `resource_menu` VALUES (13,'backupPosition','备份位置','backupService/backupPosition',82,'icon-fuwutiaokuan',8,NULL);
+    INSERT INTO `resource_menu` VALUES (13,'backupPosition','备份服务器','backupService/backupServer',82,'icon-fuwutiaokuan',8,NULL);
     INSERT INTO `resource_menu` VALUES (14,'dataMonitor','数据监控','monitorAlarm/dataMonitor',91,NULL,9,NULL);
     INSERT INTO `resource_menu` VALUES (15,'logDetail','日志详情','monitorAlarm/logDetail',892,NULL,9,NULL);
     INSERT INTO `resource_menu` VALUES (16,'alarmCenter','服务告警','monitorAlarm/alarmCenter',93,NULL,9,NULL);
@@ -1299,22 +1261,68 @@ data:
     --
 
     LOCK TABLES `user` WRITE;
-    /*!40000 ALTER TABLE `user` DISABLE KEYS */;
     INSERT INTO `user` VALUES (1,'admin','超级管理员','6DA05F9A0ED31ABEEFD41C768B2E7233',NULL,NULL,NULL,NULL,NULL);
-    /*!40000 ALTER TABLE `user` ENABLE KEYS */;
     UNLOCK TABLES;
-    /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
-    /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-    /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-    /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-    /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-    /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-    /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-    /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+    --
+    -- Table structure for table `backup_server_detail`
+    --
 
-    -- Dump completed on 2022-07-20 13:47:48
+    DROP TABLE IF EXISTS `backup_server_detail`;
+    CREATE TABLE `backup_server_detail` (
+    `id`               int(11) NOT NULL AUTO_INCREMENT,
+    `backup_server_id` int(11) NOT NULL COMMENT '备份服务器id',
+    `server_usage`     varchar(32) COLLATE utf8_bin  DEFAULT NULL COMMENT '用途：A可用区A,B:可用区B',
+    `type`             int(11)                       DEFAULT NULL COMMENT '类型：1: S3. 2: ftp: 3: server',
+    `protocol`         varchar(45) COLLATE utf8_bin  DEFAULT NULL COMMENT '协议',
+    `host`             varchar(256) COLLATE utf8_bin DEFAULT NULL COMMENT '主机',
+    `port`             varchar(45) COLLATE utf8_bin  DEFAULT NULL COMMENT '端口',
+    `username`         varchar(256) COLLATE utf8_bin DEFAULT NULL COMMENT '用户名',
+    `password`         varchar(256) COLLATE utf8_bin DEFAULT NULL COMMENT '密码',
+    `create_time`      varchar(45) COLLATE utf8_bin  DEFAULT NULL COMMENT '创建时间',
+    PRIMARY KEY (`id`)
+    ) ENGINE = InnoDB AUTO_INCREMENT = 17 DEFAULT CHARSET = utf8 COLLATE = utf8_bin COMMENT ='备份服务器详情';
 
+    --
+    -- Table structure for table `backup_server`
+    --
+
+    DROP TABLE IF EXISTS `backup_server`;
+    CREATE TABLE `backup_server`(
+    `id`          int(11)                       NOT NULL AUTO_INCREMENT,
+    `name`        varchar(512) COLLATE utf8_bin NOT NULL COMMENT '备份服务器名称',
+    `cluster_id`  varchar(256) COLLATE utf8_bin      DEFAULT NULL COMMENT '所属集群',
+    `type`        int(11)                       NOT NULL COMMENT '备份服务器类型（1:普通，2:双活）',
+    `create_time` timestamp                     NULL DEFAULT NULL COMMENT '创建时间',
+    PRIMARY KEY (`id`)
+    ) ENGINE = InnoDB AUTO_INCREMENT = 13 DEFAULT CHARSET = utf8 COLLATE = utf8_bin COMMENT ='备份服务器';
+
+    --
+    -- Table structure for table `project_backup_server`
+    --
+
+    DROP TABLE IF EXISTS `project_backup_server`;
+    CREATE TABLE `project_backup_server`(
+    `id`               int(11)                       NOT NULL AUTO_INCREMENT,
+    `project_id`       varchar(128) COLLATE utf8_bin NOT NULL COMMENT '项目id',
+    `backup_server_id` int(11)                       NOT NULL COMMENT '备份服务器id',
+    PRIMARY KEY (`id`)
+    ) ENGINE = InnoDB AUTO_INCREMENT = 9 DEFAULT CHARSET = utf8 COLLATE = utf8_bin COMMENT ='项目备份服务器关联表';
+
+    --
+    -- Table structure for table `backup_position`
+    --
+
+    DROP TABLE IF EXISTS `backup_position`;
+    CREATE TABLE `backup_position`(
+    `id`               int(11)                       NOT NULL AUTO_INCREMENT,
+    `name`             varchar(512) COLLATE utf8_bin NOT NULL COMMENT '备份位置名称',
+    `project_id`       varchar(128) COLLATE utf8_bin NOT NULL COMMENT '项目id',
+    `backup_server_id` int(11)                       NOT NULL COMMENT '备份服务器id',
+    `backup_position`  varchar(512) COLLATE utf8_bin NOT NULL COMMENT '备份路径（对于minio则是bucket）',
+    `create_time`      timestamp                     NULL DEFAULT NULL COMMENT '创建时间',
+    PRIMARY KEY (`id`)
+    ) ENGINE = InnoDB AUTO_INCREMENT = 5 DEFAULT CHARSET = utf8 COLLATE = utf8_bin COMMENT ='备份位置表';
 
 kind: ConfigMap
 metadata:
