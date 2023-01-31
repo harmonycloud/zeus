@@ -133,7 +133,7 @@ public class BackupServerServiceImpl implements BackupServerService {
 
     @Override
     public void allocate(Integer id, String clusterId) {
-        // TODO 先校验改备份服务器是否已被项目关联，若已关联项目，则需要先解除关联
+        // TODO 先校验该备份服务器是否已被项目关联，若已关联项目，则需要先解除关联
         BeanBackupServer beanBackupServer = get(id);
         beanBackupServer.setClusterId(clusterId);
         backupServerMapper.updateById(beanBackupServer);
@@ -165,7 +165,7 @@ public class BackupServerServiceImpl implements BackupServerService {
                 clusterBackupServerNumMap = new HashMap<>();
                 clusterBackupServerNumMap.put("clusterId", cluster.getId());
                 clusterBackupServerNumMap.put("clusterName", cluster.getNickname());
-                clusterBackupServerNumMap.put("clusterServerCount", getBackupServerCount(null).toString());
+                clusterBackupServerNumMap.put("clusterServerCount", backupServerCount.toString());
                 groupList.add(clusterBackupServerNumMap);
             }
         }
