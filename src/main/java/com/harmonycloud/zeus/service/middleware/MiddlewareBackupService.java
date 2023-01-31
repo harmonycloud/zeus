@@ -1,10 +1,13 @@
 package com.harmonycloud.zeus.service.middleware;
 
 import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
+import com.harmonycloud.caas.common.model.MiddlewareIncBackup;
 import com.harmonycloud.caas.common.model.MiddlewareIncBackupDto;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecordGroup;
+import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupScheduleCR;
 import com.harmonycloud.zeus.integration.cluster.bean.Minio;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 
 import java.util.List;
 
@@ -29,6 +32,12 @@ public interface MiddlewareBackupService {
     void createIncBackup(String clusterId, String namespace, String backupName, String time);
 
     /**
+     * 创建增量备份
+     *
+     */
+    void createIncBackup(String clusterId, String namespace, String backupName, String time, MiddlewareBackupScheduleCR scheduleCR);
+
+    /**
      * 更新备份规则
      *
      * @param middlewareBackupDTO
@@ -41,18 +50,27 @@ public interface MiddlewareBackupService {
      *
      * @param backupDTO
      * @param minio
+     * @param objectMeta
      * @return
      */
-    void createBackupSchedule(MiddlewareBackupDTO backupDTO, Minio minio);
+    void createBackupSchedule(MiddlewareBackupDTO backupDTO, Minio minio, ObjectMeta objectMeta);
 
     /**
      * 立即备份
      *
      * @param backupDTO
      * @param minio
+     * @param objectMeta
      * @return
      */
-    void createNormalBackup(MiddlewareBackupDTO backupDTO, Minio minio);
+    void createNormalBackup(MiddlewareBackupDTO backupDTO, Minio minio, ObjectMeta objectMeta);
+
+    /**
+     * 创建增量备份任务
+     * @param middlewareIncBackup
+     * @param objectMeta
+     */
+    void createIncBackupSchedule(MiddlewareIncBackup middlewareIncBackup, ObjectMeta objectMeta);
 
     /**
      * 查询备份规则列表
