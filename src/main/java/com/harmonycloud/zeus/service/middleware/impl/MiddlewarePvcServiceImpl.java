@@ -169,6 +169,9 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
         List<MiddlewarePvcDto> middlewarePvcDtoList) {
         // 获取该中间件相关的运维cr
         List<Maintenance> maintenanceList = maintenanceService.list(clusterId, namespace, middlewareName, null);
+        if (CollectionUtils.isEmpty(maintenanceList)){
+            return;
+        }
         // 过滤获取扩容/回滚相关
         maintenanceList = maintenanceList.stream()
             .filter(maintenance -> maintenance.getMetadata().getLabels().containsKey(ACTION)
