@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.middleware.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.dtflys.forest.utils.StringUtils;
 import com.github.pagehelper.util.StringUtil;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
@@ -12,6 +13,7 @@ import com.harmonycloud.caas.common.model.middleware.BackupServerDetailDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.zeus.bean.BeanBackupServer;
 import com.harmonycloud.zeus.dao.BeanBackupServerMapper;
+import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import com.harmonycloud.zeus.service.middleware.BackupPositionService;
 import com.harmonycloud.zeus.service.middleware.BackupServerDetailService;
@@ -43,6 +45,8 @@ public class BackupServerServiceImpl implements BackupServerService {
     private ProjectBackupServerService projectBackupServerService;
     @Autowired
     private MiddlewareClusterService middlewareClusterService;
+    @Autowired
+    private ClusterService clusterService;
 
     @Override
     public List<BackupServerDTO> list(List<String> clusterIds, String keyword, Boolean withDetail) {
@@ -59,6 +63,13 @@ public class BackupServerServiceImpl implements BackupServerService {
         if (!CollectionUtils.isEmpty(serverList)) {
             serverDTOList = addDetail(serverList, null);
         }
+        // 添加集群别名
+        serverDTOList.forEach(backupServerDTO -> {
+            if (StringUtils.isNotEmpty(backupServerDTO.getClusterId())) {
+                MiddlewareClusterDTO clusterDTO = clusterService.findById(backupServerDTO.getClusterId());
+                backupServerDTO.setClusterNickName(clusterDTO.getNickname());
+            }
+        });
         return serverDTOList;
     }
 
