@@ -70,7 +70,7 @@ public class PvcScaleSocketHandler extends TextWebSocketHandler {
                     && !CollectionUtils.isEmpty(maintenance.getStatus().getConditions())) {
                     Map<String, String> conditions = maintenance.getStatus().getConditions().get(0);
                     if (conditions.containsKey(PVC) && conditions.get(PVC).equals(pvcName)
-                        && conditions.containsKey(STATUS)) {
+                        && conditions.containsKey(STATUS) && !"Running".equals(conditions.get(STATUS))) {
                         List<String> text2 = new ArrayList<>();
                         if (maintenance.getMetadata().getLabels().get(ACTION).equals(SCALE_UP_PV)) {
                             if (conditions.get(STATUS).equals(SUCCEED)) {
