@@ -13,6 +13,7 @@ import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.AlertManagerService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
@@ -30,6 +31,9 @@ import java.util.Map;
 @Operator(paramTypes4One = String.class)
 @Slf4j
 public class AlertManagerServiceImpl extends AbstractBaseOperator implements AlertManagerService {
+
+    @Value("${system.alert.silent:1h}")
+    private String silentTime;
 
     @Override
     public boolean support(String name) {
@@ -100,7 +104,7 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
     @Override
     public void updateCluster(MiddlewareClusterDTO cluster){
         MiddlewareClusterMonitorInfo alertManager = new MiddlewareClusterMonitorInfo();
-        alertManager.setProtocol("http").setPort("31902").setHost(cluster.getHost());
+        alertManager.setProtocol("http").setPort("31902").setHost(cluster.getHost()).setSilentTime(silentTime);
         if (cluster.getMonitor() == null){
             cluster.setMonitor(new MiddlewareClusterMonitor());
         }

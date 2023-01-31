@@ -7,14 +7,17 @@ import java.util.*;
 
 import com.harmonycloud.caas.common.constants.AlertConstant;
 import com.harmonycloud.caas.common.model.AlertSettingDTO;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.zeus.bean.DingRobotInfo;
 import com.harmonycloud.zeus.bean.BeanMailToUser;
 import com.harmonycloud.zeus.bean.user.BeanUser;
 import com.harmonycloud.zeus.dao.*;
 import com.harmonycloud.zeus.dao.user.BeanUserMapper;
+import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareAlertsService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson.JSON;
@@ -48,6 +51,9 @@ import javax.mail.MessagingException;
 @Slf4j
 public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
 
+    @Value("${system.alert.silent:1h}")
+    private String silentTime;
+
     @Autowired
     private BeanAlertRecordMapper beanAlertRecordMapper;
     @Autowired
@@ -57,17 +63,15 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
     @Autowired
     private AlertRuleIdMapper alertRuleIdMapper;
     @Autowired
-    private MiddlewareAlertsServiceImpl middlewareAlertsServiceImpl;
-    @Autowired
     private AlertManagerWrapper alertManagerWrapper;
-    @Autowired
-    private BeanMailToUserMapper beanMailToUserMapper;
     @Autowired
     private DingRobotMapper dingRobotMapper;
     @Autowired
     private BeanUserMapper beanUserMapper;
     @Autowired
     private MiddlewareAlertsService middlewareAlertsService;
+    @Autowired
+    private ClusterService clusterService;
 
     @Override
     public void alert(String json) throws Exception {
@@ -119,7 +123,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             String lay = beanAlertRecord.getLay();
             beanAlertRecordMapper.insert(beanAlertRecord);
             // 设置通道沉默时间
-            if (annotations.containsKey("silence") && StringUtils.isNotEmpty(clusterId)) {
+            if (StringUtils.isNotEmpty(clusterId)) {
                 setSilence(alert, clusterId);
             }
             if (ObjectUtils.isEmpty(alertInfo)) {
@@ -219,7 +223,19 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
         body.put("createdBy", "admin");
         body.put("comment", "silence");
         body.put("startsAt", DateUtils.dateToString(now, DateStyle.YYYY_MM_DD_T_HH_MM_SS_Z_SSS));
-        String silence = alert.getJSONObject("annotations").getString("silence");
+        // 获取静默时间
+        String silence;
+        if (alert.getJSONObject("annotations").containsKey("silence")) {
+            silence = alert.getJSONObject("annotations").getString("silence");
+        } else {
+            MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+            if (cluster.getMonitor() != null && cluster.getMonitor().getAlertManager() != null
+                && StringUtils.isNotEmpty(cluster.getMonitor().getAlertManager().getSilentTime())) {
+                silence = cluster.getMonitor().getAlertManager().getSilentTime();
+            } else {
+                silence = silentTime;
+            }
+        }
         body.put("endsAt",
             DateUtils.dateToString(calculateEndTime(now, silence), DateStyle.YYYY_MM_DD_T_HH_MM_SS_Z_SSS));
         alertManagerWrapper.setSilence(clusterId, NameConstant.ALERT_MANAGER_API_VERSION_SILENCES, body);
