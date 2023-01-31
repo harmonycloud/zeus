@@ -77,6 +77,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private BackupPositionService backupPositionService;
     @Autowired
     private MiddlewareService middlewareService;
+    @Autowired
+    private ActiveAreaService activeAreaService;
 
     @Override
     public List<MiddlewareBackupRecord> listBackup(String clusterId, String namespace, String middlewareName,
@@ -717,6 +719,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         recordList.addAll(backupSchedules);
         // 设置备份任务可用区别名
         setAreaAliasName(clusterId, recordList);
+        // 设置备份任务对应的中间件状态
+
         // 获取任务对应的中文名称
         setTaskName(recordList, clusterId, null);
         // 根据关键词进行过滤
@@ -754,7 +758,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public List<MiddlewareBackupRecordGroup> backupTaskGroupList(String clusterId, String namespace, String middlewareName, String type, String keyword) {
         List<MiddlewareBackupRecord> records = backupTaskList(clusterId, namespace, middlewareName, type, keyword);
-        return groupByBackupId(records);
+        List<MiddlewareBackupRecordGroup> recordGroups = groupByBackupId(records);
+        setMiddlewareStatus(clusterId,recordGroups);
+        return recordGroups;
     }
 
     @Override
@@ -876,8 +882,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         });
     }
 
-    @Autowired
-    private ActiveAreaService activeAreaService;
+
     /**
      * 设置备份任务所属可用区别名
      */
@@ -886,6 +891,25 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             if (StringUtils.isNotEmpty(record.getActiveArea())) {
                 BeanActiveArea activeArea = activeAreaService.get(clusterId, record.getActiveArea());
                 record.setAreaAliasName(activeArea.getAliasName());
+            }
+        });
+    }
+
+    /**
+     * 设置中间件状态
+     * @param clusterId
+     * @param recordGroups
+     */
+    private void setMiddlewareStatus(String clusterId, List<MiddlewareBackupRecordGroup> recordGroups) {
+        recordGroups.forEach(recordGroup -> {
+            String sourceType = recordGroup.getSourceType();
+            String sourceName = recordGroup.getSourceName();
+            String namespace = recordGroup.getNamespace();
+            MiddlewareCR middlewareCR = middlewareCRService.getCR(clusterId, namespace, sourceType, sourceName);
+            if (middlewareCR == null) {
+                recordGroup.setSourceStatus(MiddlewareStatusEnum.DELETED.getStatus());
+            } else {
+                recordGroup.setSourceStatus(MiddlewareStatusEnum.RUNNING.getStatus());
             }
         });
     }
@@ -1189,6 +1213,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             recordGroup.setBackupMode(record.getBackupMode());
             recordGroup.setNamespace(record.getNamespace());
             recordGroup.setSourceName(record.getSourceName());
+            recordGroup.setSourceType(record.getSourceType());
             recordGroup.setPhrase(getTaskPhrase(records));
             recordGroup.setTaskType(getTaskType(records));
             recordGroups.add(recordGroup);
