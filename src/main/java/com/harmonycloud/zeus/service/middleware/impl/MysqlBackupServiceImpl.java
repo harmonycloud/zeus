@@ -5,6 +5,7 @@ import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
 import com.harmonycloud.caas.common.model.MiddlewareIncBackup;
 import com.harmonycloud.caas.common.model.MiddlewareIncBackupDto;
+import com.harmonycloud.caas.common.model.MiddlewareTaskDTO;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.uuid.UUIDUtils;
@@ -293,8 +294,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void deleteBackUpTask(String clusterId, String namespace, String type, String backupName, String backupId,
-                                 Boolean schedule) {
+    public void deleteBackUpTask(MiddlewareTaskDTO taskDTO) {
 
     }
 

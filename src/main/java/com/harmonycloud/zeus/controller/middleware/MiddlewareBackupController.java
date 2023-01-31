@@ -3,6 +3,8 @@ package com.harmonycloud.zeus.controller.middleware;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
 import com.harmonycloud.caas.common.model.MiddlewareIncBackupDto;
+import com.harmonycloud.caas.common.model.MiddlewareTaskDTO;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecordGroup;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.zeus.annotation.Authority;
@@ -110,20 +112,15 @@ public class MiddlewareBackupController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "backupName", value = "备份规则名称", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "backupId", value = "备份任务ID", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "schedule", value = "schedule", paramType = "query", dataTypeClass = Boolean.class)
+            @ApiImplicitParam(name = "taskDTO", value = "备份任务信息", paramType = "query", dataTypeClass = Boolean.class)
     })
     @DeleteMapping
     @Authority(power = 1)
     public BaseResult deleteSchedule(@PathVariable("clusterId") String clusterId,
                                      @PathVariable("namespace") String namespace,
-                                     @RequestParam("type") String type,
-                                     @RequestParam("backupName") String backupName,
-                                     @RequestParam(value = "backupId", required = false) String backupId,
-                                     @RequestParam("schedule") Boolean schedule){
-        middlewareBackupService.deleteBackUpTask(clusterId, namespace, type, backupName, backupId, schedule);
+                                     @RequestBody MiddlewareTaskDTO taskDTO){
+        taskDTO.setClusterId(clusterId).setNamespace(namespace);
+        middlewareBackupService.deleteBackUpTask(taskDTO);
         return BaseResult.ok();
     }
 

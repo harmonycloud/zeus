@@ -13,9 +13,7 @@ import java.util.stream.Collectors;
 import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.constants.ActiveAreaConstant;
 import com.harmonycloud.caas.common.enums.*;
-import com.harmonycloud.caas.common.model.ActiveAreaAnnotationDto;
-import com.harmonycloud.caas.common.model.MiddlewareIncBackup;
-import com.harmonycloud.caas.common.model.MiddlewareIncBackupDto;
+import com.harmonycloud.caas.common.model.*;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecordGroup;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.bean.BeanActiveArea;
@@ -31,7 +29,6 @@ import org.springframework.util.ObjectUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.MiddlewareBackupDTO;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
 import com.harmonycloud.tool.uuid.UUIDUtils;
@@ -719,8 +716,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         recordList.addAll(backupSchedules);
         // 设置备份任务可用区别名
         setAreaAliasName(clusterId, recordList);
-        // 设置备份任务对应的中间件状态
-
         // 获取任务对应的中文名称
         setTaskName(recordList, clusterId, null);
         // 根据关键词进行过滤
@@ -758,7 +753,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public List<MiddlewareBackupRecordGroup> backupTaskGroupList(String clusterId, String namespace, String middlewareName, String type, String keyword) {
         List<MiddlewareBackupRecord> records = backupTaskList(clusterId, namespace, middlewareName, type, keyword);
-        List<MiddlewareBackupRecordGroup> recordGroups = groupByBackupId(records);
+        List<MiddlewareBackupRecordGroup> recordGroups = groupByBackupId(clusterId,records);
         setMiddlewareStatus(clusterId,recordGroups);
         return recordGroups;
     }
@@ -818,13 +813,19 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void deleteBackUpTask(String clusterId, String namespace, String type, String backupName, String backupId,
-        Boolean schedule) {
-        if (schedule) {
-            deleteSchedule(clusterId, namespace, type, backupName);
-        } else {
-            deleteRecord(clusterId, namespace, type, backupName);
-        }
+    public void deleteBackUpTask(MiddlewareTaskDTO taskDTO) {
+        String clusterId = taskDTO.getClusterId();
+        String namespace = taskDTO.getNamespace();
+        String type = taskDTO.getType();
+        String backupId = taskDTO.getBackupId();
+        List<String> backupNameList = taskDTO.getBackupNameList();
+        backupNameList.forEach(backupName ->{
+            if (taskDTO.getSchedule()) {
+                deleteSchedule(clusterId, namespace, type, backupName);
+            } else {
+                deleteRecord(clusterId, namespace, type, backupName);
+            }
+        });
         if (StringUtils.isNotEmpty(backupId)){
             deleteBackupName(clusterId, backupId, null);
         }
@@ -905,11 +906,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             String sourceType = recordGroup.getSourceType();
             String sourceName = recordGroup.getSourceName();
             String namespace = recordGroup.getNamespace();
-            MiddlewareCR middlewareCR = middlewareCRService.getCR(clusterId, namespace, sourceType, sourceName);
-            if (middlewareCR == null) {
-                recordGroup.setSourceStatus(MiddlewareStatusEnum.DELETED.getStatus());
-            } else {
+            if (middlewareCRService.checkIfExist(clusterId, namespace, sourceType, sourceName)) {
                 recordGroup.setSourceStatus(MiddlewareStatusEnum.RUNNING.getStatus());
+            } else {
+                recordGroup.setSourceStatus(MiddlewareStatusEnum.DELETED.getStatus());
             }
         });
     }
@@ -1192,7 +1192,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     // 根据backupId进行分组
-    public List<MiddlewareBackupRecordGroup> groupByBackupId(List<MiddlewareBackupRecord> recordList) {
+    public List<MiddlewareBackupRecordGroup> groupByBackupId(String clusterId, List<MiddlewareBackupRecord> recordList) {
         Map<String, List<MiddlewareBackupRecord>> backupIdRecordMap = new HashMap<>();
         for (MiddlewareBackupRecord record : recordList) {
             if (backupIdRecordMap.containsKey(record.getBackupId())) {
@@ -1211,11 +1211,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             recordGroup.setMiddlewareBackupRecords(records);
             recordGroup.setTaskName(record.getTaskName());
             recordGroup.setBackupMode(record.getBackupMode());
+            recordGroup.setClusterId(clusterId);
             recordGroup.setNamespace(record.getNamespace());
             recordGroup.setSourceName(record.getSourceName());
             recordGroup.setSourceType(record.getSourceType());
             recordGroup.setPhrase(getTaskPhrase(records));
             recordGroup.setTaskType(getTaskType(records));
+            recordGroup.setBackupId(record.getBackupId());
             recordGroups.add(recordGroup);
         });
         return recordGroups;
