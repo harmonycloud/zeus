@@ -820,7 +820,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         String backupId = taskDTO.getBackupId();
         List<String> backupNameList = taskDTO.getBackupNameList();
         backupNameList.forEach(backupName ->{
-            if (taskDTO.getSchedule()) {
+            if ("period".equals(taskDTO.getBackupMode())) {
                 deleteSchedule(clusterId, namespace, type, backupName);
             } else {
                 deleteRecord(clusterId, namespace, type, backupName);
