@@ -58,7 +58,7 @@ data:
       images:
         path: /usr/local/zeus-pv/images/middleware
       platform:
-        version: v1.2.4
+        version: v1.2.6
       user:
         expire: 1
         passwordExpire: 90
