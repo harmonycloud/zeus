@@ -2,6 +2,7 @@ package com.harmonycloud.zeus.service.k8s.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.constants.NamespaceConstant;
+import com.harmonycloud.caas.common.model.QuotaBase;
 import com.harmonycloud.caas.common.model.ResourceQuotaDo;
 import com.harmonycloud.caas.common.model.StorageDto;
 import com.harmonycloud.caas.common.model.StorageQuota;
@@ -240,16 +241,19 @@ public class NamespaceServiceImpl implements NamespaceService {
             return new ArrayList<>();
         }
         ResourceQuotaDo resourceQuotaDo = resourceQuotaService.get(clusterId, namespace, namespace + "quota");
-        List<StorageQuota> storageQuotaList = resourceQuotaDo.getStorageList();
+        Map<String, QuotaBase> storageQuotaMap = resourceQuotaDo.getStorageList().stream().collect(Collectors.toMap(StorageQuota::getName, StorageQuota::getStorage));
         if (CollectionUtils.isEmpty(storageDtoList)){
             return new ArrayList<>();
         }
         
         storageDtoList = storageDtoList.stream()
             .filter(storageDto -> storageDto.getStorageClassList().stream()
-                .anyMatch(storageClassInfo -> storageQuotaList.stream()
-                    .anyMatch(storageQuota -> storageQuota.getName().equals(storageClassInfo.getName()))))
+                .anyMatch(storageClassInfo -> storageQuotaMap.containsKey(storageClassInfo.getName())))
             .collect(Collectors.toList());
+
+        for (StorageDto storageDto : storageDtoList){
+            storageDto.setQuota(storageQuotaMap.get(storageDto.getStorageClassList().get(0).getName()));
+        }
 
         return storageDtoList;
     }
