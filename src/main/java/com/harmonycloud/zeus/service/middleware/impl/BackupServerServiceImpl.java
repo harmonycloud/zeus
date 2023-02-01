@@ -206,8 +206,22 @@ public class BackupServerServiceImpl implements BackupServerService {
             BeanUtil.copyProperties(backupServer, backupServerDTO);
             backupServerDTO.setPositionList(backupPositionService.selectBackupPositionDTOList(backupServer.getId(), projectId));
             backupServerDTO.setServerDetailList(backupServerDetailService.listBackupServerDetailDTOS(backupServer.getId()));
+            backupServerDTO.setServerType(getServerType(backupServerDTO.getServerDetailList()));
             return backupServerDTO;
         }).collect(Collectors.toList());
+    }
+
+    /**
+     * 获取全部备份服务器介质类型
+     * @param detailDTOS
+     * @return
+     */
+    private String getServerType(List<BackupServerDetailDTO> detailDTOS) {
+        Set<Integer> types = detailDTOS.stream().map(backupServerDetailDTO -> {
+            return backupServerDetailDTO.getType();
+        }).collect(Collectors.toSet());
+        String str = Arrays.toString(types.toArray());
+        return str.substring(1, str.length() - 1);
     }
 
 }
