@@ -66,8 +66,13 @@ public class BackupServerServiceImpl implements BackupServerService {
         // 添加集群别名
         serverDTOList.forEach(backupServerDTO -> {
             if (StringUtils.isNotEmpty(backupServerDTO.getClusterId())) {
-                MiddlewareClusterDTO clusterDTO = clusterService.findById(backupServerDTO.getClusterId());
-                backupServerDTO.setClusterNickName(clusterDTO.getNickname());
+                MiddlewareClusterDTO clusterDTO = null;
+                try {
+                    clusterDTO = clusterService.findById(backupServerDTO.getClusterId());
+                    backupServerDTO.setClusterNickName(clusterDTO.getNickname());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         });
         return serverDTOList;
