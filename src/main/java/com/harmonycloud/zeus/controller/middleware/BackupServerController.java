@@ -33,7 +33,7 @@ public class BackupServerController {
     })
     @PostMapping("/list")
     public BaseResult<List<BackupServerDTO>> list(@RequestBody BackupServerQueryDto backupServerQueryDto) {
-        return BaseResult.ok(backupServerService.list(backupServerQueryDto.getClusterIds(), backupServerQueryDto.getKeyword(), backupServerQueryDto.getWithDetail()));
+        return BaseResult.ok(backupServerService.list(backupServerQueryDto.getClustersIds(), backupServerQueryDto.getKeyword(), backupServerQueryDto.getWithDetail()));
     }
 
     @ApiOperation(value = "查询项目备份服务器列表", notes = "查询项目备份服务器列表")
