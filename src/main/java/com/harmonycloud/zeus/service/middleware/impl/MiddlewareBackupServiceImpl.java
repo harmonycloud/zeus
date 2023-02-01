@@ -473,8 +473,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
         metaData.setNamespace(backupDTO.getNamespace());
         metaData.setName(backupDTO.getMiddlewareName() + "-" + UUIDUtils.get8UUID());
-        metaData.getLabels().putAll(backupDTO.getLabels());
-        metaData.getAnnotations().putAll(backupDTO.getAnnotations());
+        if (backupDTO.getLabels() != null) {
+            metaData.getLabels().putAll(backupDTO.getLabels());
+        }
+        if (backupDTO.getAnnotations() != null) {
+            metaData.getAnnotations().putAll(backupDTO.getAnnotations());
+        }
         return metaData;
     }
 
