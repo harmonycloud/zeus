@@ -217,10 +217,7 @@ public class BackupServerServiceImpl implements BackupServerService {
      * @return
      */
     private String getServerType(List<BackupServerDetailDTO> detailDTOS) {
-        Set<Integer> types = detailDTOS.stream().map(backupServerDetailDTO -> {
-            return backupServerDetailDTO.getType();
-        }).collect(Collectors.toSet());
-        String str = Arrays.toString(types.toArray());
+        String str = Arrays.toString(detailDTOS.stream().map(BackupServerDetailDTO::getType).distinct().toArray());
         return str.substring(1, str.length() - 1);
     }
 
