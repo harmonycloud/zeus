@@ -64,36 +64,27 @@ public class PvcScaleSocketHandler extends TextWebSocketHandler {
                 List<String> text = eventDetails.stream().map(EventDetail::getMessage).collect(Collectors.toList());
                 sendMessage(text, session);
 
-                // 查询Maintenance信息 直至成功/失败
-                Maintenance maintenance = maintenanceService.getScaleUp(clusterId, namespace, middlewareName, pvcName);
-                if (maintenance != null && maintenance.getStatus() != null
-                    && !CollectionUtils.isEmpty(maintenance.getStatus().getConditions())) {
-                    Map<String, String> conditions = maintenance.getStatus().getConditions().get(0);
-                    if (conditions.containsKey(PVC) && conditions.get(PVC).equals(pvcName)
-                        && conditions.containsKey(STATUS) && !"Running".equals(conditions.get(STATUS))) {
-                        List<String> text2 = new ArrayList<>();
-                        if (maintenance.getMetadata().getLabels().get(ACTION).equals(SCALE_UP_PV)) {
-                            if (conditions.get(STATUS).equals(SUCCEED)) {
-                                text2.add("scale succeed");
-                            } else if (conditions.get(STATUS).equals(FAILED)) {
-                                text2.add("scale failed");
-                                if (conditions.containsKey(REASON)) {
-                                    text2.add(conditions.get(REASON));
-                                }
-                            }
-                        } else if (maintenance.getMetadata().getLabels().get(ACTION).equals(SCALE_UP_PV_ROLL_BACK)) {
-                            if (conditions.get(STATUS).equals(SUCCEED)) {
-                                text2.add("rollBack succeed");
-                            } else if (conditions.get(STATUS).equals(FAILED)) {
-                                text2.add("rollBack failed");
-                                if (conditions.containsKey(REASON)) {
-                                    text2.add(conditions.get(REASON));
-                                }
-                            }
-                        }
-                        sendMessage(text2, session);
-                        executor.shutdown();
-                    }
+                // 查询当前正在执行的maintenances状态 知道成功或者失败
+                List<String> text2 = new ArrayList<>();
+                String status = middlewarePvcService.getPvcStatus(clusterId, namespace, middlewareName, pvcName);
+                switch (status){
+                    case SCALE_UP_PV_SUCCESS:
+                        text2.add("scale succeed");
+                        break;
+                    case SCALE_UP_PV_ROLL_BACK_SUCCESS:
+                        text2.add("rollBack succeed");
+                        break;
+                    case SCALE_UP_PV_FAILED:
+                        text2.add("scale failed");
+                        break;
+                    case SCALE_UP_PV_ROLL_BACK_FAILED:
+                        text2.add("rollBack failed");
+                        break;
+                    default:
+                }
+                if(!CollectionUtils.isEmpty(text2)){
+                    sendMessage(text2, session);
+                    executor.shutdown();
                 }
             }, 0, 2000, TimeUnit.MILLISECONDS);
         }

@@ -55,4 +55,16 @@ public interface MiddlewarePvcService {
      */
     void rollback(String clusterId, String namespace, String middlewareName, String pvcName);
 
+    /**
+     * 查询备份列表
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param pvcName pvc名称
+     *
+     * @return String
+     */
+    String getPvcStatus(String clusterId, String namespace, String middlewareName, String pvcName);
+
 }

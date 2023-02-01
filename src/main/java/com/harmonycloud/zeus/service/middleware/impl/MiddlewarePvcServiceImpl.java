@@ -16,6 +16,7 @@ import com.harmonycloud.zeus.service.prometheus.PrometheusResourceMonitorService
 import com.harmonycloud.zeus.util.PrometheusQueryUtil;
 import io.fabric8.kubernetes.api.model.storage.StorageClass;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -115,7 +116,30 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
         // 回滚
         createMaintenance(clusterId, namespace, middlewareName, pvcName, storage, storage, SCALE_UP_PV_ROLL_BACK);
     }
-    
+
+    @Override
+    public String getPvcStatus(String clusterId, String namespace, String middlewareName, String pvcName) {
+        // 查询该pvc的运维cr
+        Map<String, String> labels = new HashMap<>();
+        labels.put(APP, middlewareName);
+        labels.put(PVC, pvcName);
+        List<Maintenance> maintenanceList = maintenanceService.list(clusterId, namespace, labels);
+        if (CollectionUtils.isEmpty(maintenanceList)) {
+            return null;
+        }
+        // 过滤获取扩容/回滚相关
+        maintenanceList = maintenanceList.stream()
+                .filter(maintenance -> maintenance.getMetadata().getLabels() != null
+                        && maintenance.getMetadata().getLabels().containsKey(ACTION)
+                        && (maintenance.getMetadata().getLabels().get(ACTION).equals(SCALE_UP_PV)
+                        || maintenance.getMetadata().getLabels().get(ACTION).equals(SCALE_UP_PV_ROLL_BACK)))
+                .collect(Collectors.toList());
+        // 根据创建时间排序，获取最新的状态
+        maintenanceList.sort(Comparator.comparing(maintenance -> maintenance.getMetadata().getCreationTimestamp()));
+        // 封装状态
+        return convertStatus(maintenanceList.get(0), pvcName);
+    }
+
     /**
      * 创建运维组件
      */
@@ -169,43 +193,52 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
         List<MiddlewarePvcDto> middlewarePvcDtoList) {
         // 获取该中间件相关的运维cr
         List<Maintenance> maintenanceList = maintenanceService.list(clusterId, namespace, middlewareName, null);
-        if (CollectionUtils.isEmpty(maintenanceList)){
+        if (CollectionUtils.isEmpty(maintenanceList)) {
             return;
         }
         // 过滤获取扩容/回滚相关
         maintenanceList = maintenanceList.stream()
-            .filter(maintenance -> maintenance.getMetadata().getLabels().containsKey(ACTION)
+            .filter(maintenance -> maintenance.getMetadata().getLabels() != null
+                && maintenance.getMetadata().getLabels().containsKey(ACTION)
                 && (maintenance.getMetadata().getLabels().get(ACTION).equals(SCALE_UP_PV)
                     || maintenance.getMetadata().getLabels().get(ACTION).equals(SCALE_UP_PV_ROLL_BACK)))
             .collect(Collectors.toList());
-        for (Maintenance maintenance : maintenanceList) {
-            if (maintenance != null && maintenance.getStatus() != null && maintenance.getStatus().getPhase() != null
-                && !maintenance.getStatus().getPhase().equals(DONE)) {
-                if (!CollectionUtils.isEmpty(maintenance.getStatus().getConditions())) {
-                    Map<String, String> map = maintenance.getStatus().getConditions().stream()
-                        .collect(Collectors.toMap(con -> con.get("pvc"), con -> con.get("status")));
-                    for (MiddlewarePvcDto middlewarePvcDto : middlewarePvcDtoList) {
-                        if (map.containsKey(middlewarePvcDto.getPvcName())) {
-                            if ("Running".equals(map.get(middlewarePvcDto.getPvcName()))){
-                                if (maintenance.getMetadata().getLabels().get(ACTION).equals(SCALE_UP_PV)) {
-                                    middlewarePvcDto.setStatus(SCALE_UP_PV);
-                                } else if (maintenance.getMetadata().getLabels().get(ACTION)
-                                        .equals(SCALE_UP_PV_ROLL_BACK)) {
-                                    middlewarePvcDto.setStatus(SCALE_UP_PV_ROLL_BACK);
-                                }
-                            }else if (FAILED.equals(map.get(middlewarePvcDto.getPvcName()))){
-                                if (maintenance.getMetadata().getLabels().get(ACTION).equals(SCALE_UP_PV)) {
-                                    middlewarePvcDto.setStatus(SCALE_UP_PV_FAILED);
-                                } else if (maintenance.getMetadata().getLabels().get(ACTION)
-                                        .equals(SCALE_UP_PV_ROLL_BACK)) {
-                                    middlewarePvcDto.setStatus(SCALE_UP_PV_ROLL_BACK_FAILED);
-                                }
-                            }
-                        }
-                    }
-                }
+
+        // 设置状态
+        for (MiddlewarePvcDto middlewarePvcDto : middlewarePvcDtoList) {
+            // 过滤获取该pvc的运维组件
+            List<Maintenance> pvcMainList = maintenanceList.stream()
+                .filter(maintenance -> maintenance.getMetadata().getLabels().containsKey(PVC)
+                    && maintenance.getMetadata().getLabels().get(PVC).equals(middlewarePvcDto.getPvcName()))
+                .collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(pvcMainList)){
+                continue;
+            }
+
+            // 根据创建时间排序，获取最新的状态
+            pvcMainList.sort(Comparator.comparing(maintenance -> maintenance.getMetadata().getCreationTimestamp()));
+            // 封装状态
+            String status = convertStatus(pvcMainList.get(pvcMainList.size() - 1), middlewarePvcDto.getPvcName());
+            if (StringUtils.isNotEmpty(status) && !status.contains("Success")){
+                middlewarePvcDto.setStatus(status);
             }
         }
+    }
+    
+    public String convertStatus(Maintenance maintenance, String pvcName) {
+        Map<String, String> map = maintenance.getStatus().getConditions().stream()
+            .collect(Collectors.toMap(con -> con.get("pvc"), con -> con.get("status")));
+        if (map.containsKey(pvcName)) {
+            String action = maintenance.getMetadata().getLabels().get(ACTION);
+            if (map.get(pvcName).equalsIgnoreCase(RUNNING)) {
+                return action.equals(SCALE_UP_PV) ? SCALE_UP_PV : SCALE_UP_PV_ROLL_BACK;
+            } else if (map.get(pvcName).equals(FAILED)) {
+                return action.equals(SCALE_UP_PV) ? SCALE_UP_PV_FAILED : SCALE_UP_PV_ROLL_BACK_FAILED;
+            } else if (map.get(pvcName).equalsIgnoreCase(SUCCEED)) {
+                return action.equals(SCALE_UP_PV) ? SCALE_UP_PV_SUCCESS : SCALE_UP_PV_ROLL_BACK_SUCCESS;
+            }
+        }
+        return null;
     }
 
     public void checkStorage(String clusterId, String storageClassName, Double queryStorage){
