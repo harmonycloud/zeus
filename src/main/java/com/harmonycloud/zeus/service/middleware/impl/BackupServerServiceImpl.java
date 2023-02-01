@@ -66,8 +66,13 @@ public class BackupServerServiceImpl implements BackupServerService {
         // 添加集群别名
         serverDTOList.forEach(backupServerDTO -> {
             if (StringUtils.isNotEmpty(backupServerDTO.getClusterId())) {
-                MiddlewareClusterDTO clusterDTO = clusterService.findById(backupServerDTO.getClusterId());
-                backupServerDTO.setClusterNickName(clusterDTO.getNickname());
+                MiddlewareClusterDTO clusterDTO = null;
+                try {
+                    clusterDTO = clusterService.findById(backupServerDTO.getClusterId());
+                    backupServerDTO.setClusterNickName(clusterDTO.getNickname());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         });
         return serverDTOList;
@@ -158,6 +163,8 @@ public class BackupServerServiceImpl implements BackupServerService {
         backupServerMapper.delete(wrapper);
         // 删除备份服务器详细信息
         backupServerDetailService.deleteByServerId(id);
+        // 删除项目备份服务器关联信息
+        projectBackupServerService.deleteByServerId(id);
         // TODO 删除备份位置等，需要软删除
     }
 
