@@ -72,4 +72,12 @@ public class ProjectBackupServerServiceImpl implements ProjectBackupServerServic
         wrapper.eq("project_id", projectId);
         projectBackupServerMapper.delete(wrapper);
     }
+
+    @Override
+    public void deleteByServerId(Integer serverId) {
+        QueryWrapper<BeanProjectBackupServer> wrapper  = new QueryWrapper<>();
+        wrapper.eq("backup_server_id", serverId);
+        projectBackupServerMapper.delete(wrapper);
+    }
+
 }

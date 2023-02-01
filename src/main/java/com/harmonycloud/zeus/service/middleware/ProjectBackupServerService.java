@@ -19,4 +19,6 @@ public interface ProjectBackupServerService {
 
     void deleteByProjectId(String projectId);
 
+    void deleteByServerId(Integer serverId);
+
 }
