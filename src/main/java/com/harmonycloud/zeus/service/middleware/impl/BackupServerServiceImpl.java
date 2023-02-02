@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.dtflys.forest.utils.StringUtils;
 import com.github.pagehelper.util.StringUtil;
+import com.harmonycloud.caas.common.enums.BackupServerTypeEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.BackupPositionDTO;
@@ -217,7 +218,8 @@ public class BackupServerServiceImpl implements BackupServerService {
      * @return
      */
     private String getServerType(List<BackupServerDetailDTO> detailDTOS) {
-        String str = Arrays.toString(detailDTOS.stream().map(BackupServerDetailDTO::getType).distinct().toArray());
+        String str = Arrays.toString(detailDTOS.stream().
+                map(backupServerDetailDTO -> BackupServerTypeEnum.findByType(backupServerDetailDTO.getType())).distinct().toArray());
         return str.substring(1, str.length() - 1);
     }
 
