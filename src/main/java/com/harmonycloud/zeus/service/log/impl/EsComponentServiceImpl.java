@@ -54,6 +54,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import static org.elasticsearch.search.sort.SortOrder.ASC;
+import static org.elasticsearch.search.sort.SortOrder.DESC;
+
 @Slf4j
 @Service
 public class EsComponentServiceImpl implements EsComponentService {
@@ -152,7 +155,7 @@ public class EsComponentServiceImpl implements EsComponentService {
         if (CollectionUtils.isEmpty(indexNameList)) {
             return new PageObject<>(new ArrayList<>(), CommonConstant.NUM_ZERO);
         }
-        PageObject<MysqlLogDTO> mysqlSlowSqlDTOPageObject = searchFromIndex(esClient, query, slowLogQuery.getCurrent(), slowLogQuery.getSize(), indexNameList);
+        PageObject<MysqlLogDTO> mysqlSlowSqlDTOPageObject = searchFromIndex(esClient, query, slowLogQuery, indexNameList);
         return mysqlSlowSqlDTOPageObject;
     }
 
@@ -178,7 +181,7 @@ public class EsComponentServiceImpl implements EsComponentService {
         if (CollectionUtils.isEmpty(indexNameList)) {
             return new PageObject<>(new ArrayList<>(), CommonConstant.NUM_ZERO);
         }
-        PageObject<MysqlLogDTO> mysqlSlowSqlDTOPageObject = searchFromIndex(esClient, query, auditLogQuery.getCurrent(), auditLogQuery.getSize(), indexNameList);
+        PageObject<MysqlLogDTO> mysqlSlowSqlDTOPageObject = searchFromIndex(esClient, query, auditLogQuery, indexNameList);
         mysqlSlowSqlDTOPageObject.getData().forEach(item -> {
             item.setQueryDate(DateUtils.parseUTCSDate(item.getTimestampMysql()));
         });
@@ -394,9 +397,17 @@ public class EsComponentServiceImpl implements EsComponentService {
     }
 
 
-    private PageObject<MysqlLogDTO> searchFromIndex(RestHighLevelClient esClient, BoolQueryBuilder query, Integer current, Integer size, List<String> indexNameList) throws IOException {
+    private PageObject<MysqlLogDTO> searchFromIndex(RestHighLevelClient esClient, BoolQueryBuilder query,MiddlewareLogQuery logQuery, List<String> indexNameList) throws IOException {
+        int current = logQuery.getCurrent();
+        int size = logQuery.getSize();
+        // 设置排序规则
+        SortOrder sortOrder = DESC;
+        if (StringUtils.isNotEmpty(logQuery.getSortOrder()) && logQuery.getSortOrder().equals(ASC.toString())){
+            sortOrder = ASC;
+        }
         SortBuilder sortBuilder = SortBuilders.fieldSort("@timestamp")
-                .order(SortOrder.DESC).unmappedType("integer");
+                .order(sortOrder).unmappedType("integer");
+
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.query(query).sort(sortBuilder).from((current - CommonConstant.NUM_ONE) * size).size(size).explain(true);
         SearchRequest request = multiIndexSearch(searchSourceBuilder, indexNameList);
