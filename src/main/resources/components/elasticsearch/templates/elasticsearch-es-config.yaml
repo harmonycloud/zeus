@@ -11,7 +11,7 @@ data:
     http.port: 9200
     transport.tcp.port: 9300
     node.attr.box_type: {BoxType}
-  {{- if eq .Values.version "6.8" }}
+  {{- if contains "6.8" .Values.version }}
     discovery.zen.ping.unicast.hosts: {discoveryZenPingUnicastHosts}
   {{- else }}
     discovery.seed_hosts: {discoveryZenPingUnicastHosts}
@@ -235,7 +235,7 @@ data:
     logger.index_indexing_slowlog.level = trace
     logger.index_indexing_slowlog.appenderRef.index_indexing_slowlog_rolling.ref = index_indexing_slowlog_rolling
     logger.index_indexing_slowlog.additivity = false
-    {{- if eq .Values.version "7.16" }}
+    {{- if contains "7.16" .Values.version }}
     ingest.geoip.downloader.enabled: false
     {{- end }}
 kind: ConfigMap
