@@ -17,20 +17,29 @@ tolerations:
 {{- end }}
 {{- end }}
 
+{{- define "middlware.whenUnsatisfiable" }}
+{{- if eq .Values.podAntiAffinity "hard"}}
+  whenUnsatisfiable: DoNotSchedule
+{{- else if eq .Values.podAntiAffinity "soft"}}
+  whenUnsatisfiable: ScheduleAnyway
+{{- end }}
+{{- end }}
+
+
 {{- define "middlware.topologySpreadConstraints" }}
 {{- if eq (semverCompare ">= 1.19-0" .Capabilities.KubeVersion.Version) true }}
 topologySpreadConstraints:
 {{- if ne .Values.podAntiAffinityTopologKey "kubernetes.io/hostname"}}
 - maxSkew: 1
   topologyKey: {{ .Values.podAntiAffinityTopologKey | default "" }}
-  whenUnsatisfiable: DoNotSchedule
+  {{- include "middlware.whenUnsatisfiable" . }}
   labelSelector:
       matchLabels:
         {{ include "middleware.key" . }}: {{ include "middleware.name" . }}
 {{- end }}
 - maxSkew: 1
   topologyKey: "kubernetes.io/hostname"
-  whenUnsatisfiable: DoNotSchedule
+  {{- include "middlware.whenUnsatisfiable" . }}
   labelSelector:
       matchLabels:
         {{ include "middleware.key" . }}: {{ include "middleware.name" . }}
