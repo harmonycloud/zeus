@@ -89,11 +89,14 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     public List<BackupPositionDTO> list(String clusterId, String namespace) {
         String projectId = projectService.getProjectId(clusterId, namespace);
         List<BackupPositionDTO> backupPositionDTOS = selectBackupPositionDTOList(projectId);
-        for (BackupPositionDTO backupPositionDTO : backupPositionDTOS) {
+        return backupPositionDTOS.stream().filter(backupPositionDTO -> {
             BeanBackupServer beanBackupServer = backupServerService.get(backupPositionDTO.getBackupServerId());
-            backupPositionDTO.setBackupServerName(beanBackupServer.getName());
-        }
-        return backupPositionDTOS;
+            if (beanBackupServer != null) {
+                backupPositionDTO.setBackupServerName(beanBackupServer.getName());
+                return true;
+            }
+            return false;
+        }).collect(Collectors.toList());
     }
 
     @Override
