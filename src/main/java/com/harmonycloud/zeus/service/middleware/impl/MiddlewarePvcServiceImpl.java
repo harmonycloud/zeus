@@ -137,7 +137,7 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
         // 根据创建时间排序，获取最新的状态
         maintenanceList.sort(Comparator.comparing(maintenance -> maintenance.getMetadata().getCreationTimestamp()));
         // 封装状态
-        return convertStatus(maintenanceList.get(0), pvcName);
+        return convertStatus(maintenanceList.get(maintenanceList.size() - 1), pvcName);
     }
 
     /**
