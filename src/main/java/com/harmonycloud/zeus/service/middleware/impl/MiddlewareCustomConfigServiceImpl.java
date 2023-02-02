@@ -192,11 +192,8 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         }
         // 过滤时间
         if (StringUtils.isNotEmpty(startTime) && StringUtils.isNotEmpty(endTime)) {
-            Date start = DateUtils.addInteger(DateUtils.parseDate(startTime, DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z),
-                Calendar.HOUR_OF_DAY, -8);
-            Date end = DateUtils.addInteger(DateUtils
-                .addInteger(DateUtils.parseDate(endTime, DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z), Calendar.DAY_OF_MONTH, 1),
-                Calendar.HOUR_OF_DAY, -8);
+            Date start = DateUtils.parseUTCDate(startTime);
+            Date end = DateUtils.parseUTCDate(endTime);
             beanCustomConfigHistoryList = beanCustomConfigHistoryList.stream()
                 .filter(beanCustomConfigHistory -> beanCustomConfigHistory.getDate().after(start)
                     && beanCustomConfigHistory.getDate().before(end))
