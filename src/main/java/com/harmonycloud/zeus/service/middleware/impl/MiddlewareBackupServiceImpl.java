@@ -365,24 +365,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
     }
 
-    private void createIncBackupByTaskType(MiddlewareBackupDTO backupDTO) {
-        if (namespaceService.isOpenAvailableDomain(backupDTO.getClusterId(), backupDTO.getNamespace())) {
-            // 双活备份
-            // 获取可用区annotation
-            ActiveAreaAnnotationDto activeAreaAnnotation = middlewareService.getActiveAreaAnnotation(backupDTO.getClusterId(),
-                    backupDTO.getNamespace(), backupDTO.getType(), backupDTO.getMiddlewareName());
-            // 创建A可用区增量备份
-            createBackupTask(backupDTO, backupPositionService.getMinio(backupDTO.getBackupPositionId(), ServerUsageEnum.zoneA.getName()),
-                    getActiveAreaObjectMeta(activeAreaAnnotation, ServerUsageEnum.zoneA.getName()));
-            // 创建B可用区增量备份;
-            createBackupTask(backupDTO, backupPositionService.getMinio(backupDTO.getBackupPositionId(), ServerUsageEnum.zoneB.getName()),
-                    getActiveAreaObjectMeta(activeAreaAnnotation, ServerUsageEnum.zoneB.getName()));
-        } else {
-            // 普通增量备份
-            createBackupTask(backupDTO, backupPositionService.getMinio(backupDTO.getBackupPositionId(), null), new ObjectMeta());
-        }
-    }
-
     /**
      * 创建备份任务
      * @param backupDTO
@@ -483,10 +465,20 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (metaData == null) {
             metaData = new ObjectMeta();
         }
+        if (metaData.getLabels() == null) {
+            metaData.setLabels(new HashMap<>());
+        }
+        if (metaData.getAnnotations() == null) {
+            metaData.setAnnotations(new HashMap<>());
+        }
         metaData.setNamespace(backupDTO.getNamespace());
         metaData.setName(backupDTO.getMiddlewareName() + "-" + UUIDUtils.get8UUID());
-        metaData.setLabels(backupDTO.getLabels());
-        metaData.setAnnotations(backupDTO.getAnnotations());
+        if (backupDTO.getLabels() != null) {
+            metaData.getLabels().putAll(backupDTO.getLabels());
+        }
+        if (backupDTO.getAnnotations() != null) {
+            metaData.getAnnotations().putAll(backupDTO.getAnnotations());
+        }
         return metaData;
     }
 

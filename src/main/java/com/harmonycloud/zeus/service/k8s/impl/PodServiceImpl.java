@@ -484,7 +484,7 @@ public class PodServiceImpl implements PodService {
         Map<String, String> labels = new HashMap<>();
         labels.put(APP, middlewareName);
         List<Maintenance> maintenanceList = maintenanceWrapper.listByLabels(clusterId, namespace, labels);
-        if(maintenanceList == null){
+        if (maintenanceList == null) {
             maintenanceList = new ArrayList<>();
         }
         maintenanceList = maintenanceList.stream().filter(mt -> MIGRATE.equals(mt.getSpec().getAction())).collect(Collectors.toList());
@@ -495,34 +495,31 @@ public class PodServiceImpl implements PodService {
                     return;
                 }
                 Map<String, String> conMap = mt.getStatus().getConditions().get(0);
-                if (!"Succeed".equalsIgnoreCase(conMap.get(STATUS))) {
-                    Date mtTime;
-                    try {
-                        mtTime = DateUtil.UTC_FORMAT.parse(conMap.get("migrateTimestamp"));
-                    } catch (ParseException e) {
-                        log.error("获取{}迁移时间失败", mt.getMetadata().getName());
-                        return;
+                Date mtTime;
+                try {
+                    mtTime = DateUtil.UTC_FORMAT.parse(conMap.get("migrateTimestamp"));
+                } catch (ParseException e) {
+                    log.error("获取{}迁移时间失败", mt.getMetadata().getName());
+                    return;
+                }
+                MigrateInfo migrateInfo = resultMap.get(conMap.get(POD));
+                if (migrateInfo == null || migrateInfo.getMigrateTimestamp().before(mtTime)) {
+                    MigrateInfo mtInfo = new MigrateInfo()
+                            .setMigrateTimestamp(mtTime)
+                            .setReason(conMap.get("reason"));
+                    if (RUNNING.equalsIgnoreCase(conMap.get(STATUS))) {
+                        mtInfo.setStatus(MIGRATING);
+                    } else if (FAILED.equalsIgnoreCase(conMap.get(STATUS))) {
+                        mtInfo.setStatus(MIGRATE_FAILED);
+                    } else if (SUCCEED.equalsIgnoreCase(conMap.get(STATUS))) {
+                        mtInfo.setStatus(MIGRATE_SUCCEED);
+                    } else {
+                        mtInfo.setStatus("Unknown");
                     }
-                    MigrateInfo migrateInfo = resultMap.get(conMap.get(POD));
-                    if (migrateInfo == null || migrateInfo.getMigrateTimestamp().before(mtTime)) {
-                        MigrateInfo mtInfo = new MigrateInfo()
-                                .setStatus(RUNNING.equalsIgnoreCase(conMap.get(STATUS)) ? MIGRATING : MIGRATE_FAILED)
-                                .setMigrateTimestamp(mtTime)
-                                .setReason(conMap.get("reason"));
-                        resultMap.put(conMap.get(POD), mtInfo);
-                    }
+                    resultMap.put(conMap.get(POD), mtInfo);
                 }
             }
         });
-        // 检查pod当前状态
-        Iterator<String> it = resultMap.keySet().iterator();
-        while (it.hasNext()) {
-            String k = it.next();
-            Pod pod = podWrapper.get(clusterId, namespace, k);
-            if (RUNNING.equalsIgnoreCase(pod.getStatus().getPhase())) {
-                it.remove();
-            }
-        }
         return resultMap;
     }
 

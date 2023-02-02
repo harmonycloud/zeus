@@ -147,7 +147,7 @@ public class BackupPositionServiceImpl implements BackupPositionService {
         Minio minio = new Minio();
         String port = StringUtils.isEmpty(backupServerDetail.getPort()) ? "" : ":" + backupServerDetail.getPort();
         String endPoint = backupServerDetail.getProtocol() + "://" + backupServerDetail.getHost() + port;
-        minio.setBucketName(backupPosition.getBackupPosition());
+        minio.setBucketName(backupPosition.getBackupPosition().replace("/",""));
         minio.setAccessKeyId(backupServerDetail.getUsername());
         minio.setSecretAccessKey(backupServerDetail.getPassword());
         minio.setEndpoint(endPoint);
