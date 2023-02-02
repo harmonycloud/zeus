@@ -19,7 +19,7 @@ import io.swagger.annotations.ApiOperation;
 @RequestMapping("/system/disasterRecovery")
 public class DisasterRecoveryController {
 
-    @Value("${system.disasterRecovery:true}")
+    @Value("${system.disasterRecovery.enable:true}")
     private String enable;
 
     @ApiOperation(value = "灾备是否启用", notes = "灾备是否启用")
