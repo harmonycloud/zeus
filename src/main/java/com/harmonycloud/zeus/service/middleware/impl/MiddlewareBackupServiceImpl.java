@@ -312,7 +312,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (objectMeta.getAnnotations() == null) {
             objectMeta.setAnnotations(new HashMap<>());
         }
-        objectMeta.getAnnotations().putAll(annotations);
+        if (annotations != null) {
+            objectMeta.getAnnotations().putAll(annotations);
+        }
         // 获取labels
         Map<String, String> backupLabel = objectMeta.getLabels();
         if (backupLabel == null) {
