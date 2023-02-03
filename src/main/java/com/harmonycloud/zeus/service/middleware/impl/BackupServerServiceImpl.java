@@ -66,8 +66,9 @@ public class BackupServerServiceImpl implements BackupServerService {
         }
         // 添加集群别名
         serverDTOList.forEach(backupServerDTO -> {
-            if (StringUtils.isNotEmpty(backupServerDTO.getClusterId())) {
-                MiddlewareClusterDTO clusterDTO = null;
+            String clusterId = backupServerDTO.getClusterId();
+            if (StringUtils.isNotEmpty(clusterId)) {
+                MiddlewareClusterDTO clusterDTO;
                 try {
                     clusterDTO = clusterService.findById(backupServerDTO.getClusterId());
                     backupServerDTO.setClusterNickName(clusterDTO.getNickname());
@@ -157,6 +158,19 @@ public class BackupServerServiceImpl implements BackupServerService {
         backupServerMapper.updateById(beanBackupServer);
     }
 
+    /**
+     * 删除备份服务器和集群的关联关系
+     * @param clusterId
+     */
+    @Override
+    public void unbinding(String clusterId) {
+        List<BeanBackupServer> beanBackupServers = listByClusterId(clusterId);
+        for (BeanBackupServer beanBackupServer : beanBackupServers) {
+            beanBackupServer.setClusterId("");
+            backupServerMapper.updateById(beanBackupServer);
+        }
+    }
+
     @Override
     public void delete(Integer id) {
         QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
@@ -176,16 +190,16 @@ public class BackupServerServiceImpl implements BackupServerService {
         Map<String, String> clusterBackupServerNumMap = new HashMap<>();
         clusterBackupServerNumMap.put("clusterId", "");
         clusterBackupServerNumMap.put("clusterName", "全部");
-        clusterBackupServerNumMap.put("clusterServerCount", getBackupServerCount(null).toString());
+        clusterBackupServerNumMap.put("clusterServerCount", listByClusterId(null).toString());
         groupList.add(clusterBackupServerNumMap);
         List<MiddlewareClusterDTO> clusterDTOS = middlewareClusterService.listClusterDtos();
         for (MiddlewareClusterDTO cluster : clusterDTOS) {
-            Integer backupServerCount = getBackupServerCount(cluster.getId());
+            int backupServerCount = listByClusterId(cluster.getId()).size();
             if (backupServerCount != 0) {
                 clusterBackupServerNumMap = new HashMap<>();
                 clusterBackupServerNumMap.put("clusterId", cluster.getId());
                 clusterBackupServerNumMap.put("clusterName", cluster.getNickname());
-                clusterBackupServerNumMap.put("clusterServerCount", backupServerCount.toString());
+                clusterBackupServerNumMap.put("clusterServerCount", Integer.toString(backupServerCount));
                 groupList.add(clusterBackupServerNumMap);
             }
         }
@@ -193,12 +207,12 @@ public class BackupServerServiceImpl implements BackupServerService {
     }
 
     @Override
-    public Integer getBackupServerCount(String clusterId) {
+    public List<BeanBackupServer> listByClusterId(String clusterId) {
         QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
         if (StringUtil.isNotEmpty(clusterId)) {
             wrapper.eq("cluster_id", clusterId);
         }
-        return backupServerMapper.selectList(wrapper).size();
+        return backupServerMapper.selectList(wrapper);
     }
 
     // 添加备份位置和备份服务器信息

@@ -26,9 +26,11 @@ public interface BackupServerService {
 
     void allocate(Integer id, String clusterId);
 
+    void unbinding(String clusterId);
+
     void delete(Integer id);
 
     List<Map<String, String>> getBackupServerCountInfo();
 
-    Integer getBackupServerCount(String clusterId);
+    List<BeanBackupServer> listByClusterId(String clusterId);
 }
