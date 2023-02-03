@@ -179,7 +179,7 @@ public class BackupServerServiceImpl implements BackupServerService {
         Map<String, String> clusterBackupServerNumMap = new HashMap<>();
         clusterBackupServerNumMap.put("clusterId", "");
         clusterBackupServerNumMap.put("clusterName", "全部");
-        clusterBackupServerNumMap.put("clusterServerCount", listByClusterId(null).toString());
+        clusterBackupServerNumMap.put("clusterServerCount", Integer.toString(listByClusterId(null).size()));
         groupList.add(clusterBackupServerNumMap);
         List<MiddlewareClusterDTO> clusterDTOS = middlewareClusterService.listClusterDtos();
         for (MiddlewareClusterDTO cluster : clusterDTOS) {
