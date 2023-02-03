@@ -71,6 +71,8 @@ public class StorageServiceImpl implements StorageService {
     private ProjectService projectService;
     @Autowired
     private NamespaceService namespaceService;
+    @Autowired
+    private StorageService storageService;
 
     @Override
     public List<String> getType() {
@@ -214,9 +216,11 @@ public class StorageServiceImpl implements StorageService {
         clusterList.forEach(cluster -> {
             List<PersistentVolumeClaim> allPvc = pvcService.list(cluster.getId(), null);
             Map<String, StringBuilder> aliasPvcMap = new HashMap<>();
+            List<StorageClass> scList = storageClassWrapper.list(cluster.getId());
+            Map<String, StorageClass> scMap = scList.stream().collect(Collectors.toMap(sc -> sc.getMetadata().getName(), sc -> sc));
             // 对所有pvc按aliasName分类
             for (PersistentVolumeClaim pvc : allPvc) {
-                StorageClass storageClass = storageClassWrapper.get(cluster.getId(), pvc.getStorageClassName());
+                StorageClass storageClass = scMap.get(pvc.getStorageClassName());
                 if (storageClass == null) {
                     continue;
                 }
