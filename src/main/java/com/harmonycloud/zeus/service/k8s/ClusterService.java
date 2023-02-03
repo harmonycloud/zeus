@@ -218,4 +218,11 @@ public interface ClusterService {
      */
     ResourceQuotaDo getResourceQuotaInfo(String clusterId, Boolean allocatable);
 
+    /**
+     * 检查集群是否存在
+     * @param clusterId
+     * @return
+     */
+    boolean checkIfExists(String clusterId);
+
 }

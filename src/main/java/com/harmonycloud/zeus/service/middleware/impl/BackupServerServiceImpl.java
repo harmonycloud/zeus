@@ -59,23 +59,13 @@ public class BackupServerServiceImpl implements BackupServerService {
             wrapper.like("name", "%" + keyword + "%");
         }
         List<BeanBackupServer> serverList = backupServerMapper.selectList(wrapper);
-        List<BackupServerDTO> serverDTOList = new ArrayList<>();
-        // TODO 待优化 withDetail为false时不需要查询备份服务器详细信息
-        if (!CollectionUtils.isEmpty(serverList)) {
-            serverDTOList = addDetail(serverList, null);
+        if (CollectionUtils.isEmpty(serverList)) {
+            return Collections.emptyList();
         }
+        // TODO 待优化 withDetail为false时不需要查询备份服务器详细信息
+        List<BackupServerDTO> serverDTOList = convertToBackupServerDTO(serverList, null, withDetail);
         // 添加集群别名
-        serverDTOList.forEach(backupServerDTO -> {
-            if (StringUtils.isNotEmpty(backupServerDTO.getClusterId())) {
-                MiddlewareClusterDTO clusterDTO = null;
-                try {
-                    clusterDTO = clusterService.findById(backupServerDTO.getClusterId());
-                    backupServerDTO.setClusterNickName(clusterDTO.getNickname());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+        addClusterNickName(serverDTOList);
         return serverDTOList;
     }
 
@@ -111,7 +101,7 @@ public class BackupServerServiceImpl implements BackupServerService {
         }
         QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
         wrapper.in("id", backupServerIds);
-        return addDetail(backupServerMapper.selectList(wrapper), projectId);
+        return convertToBackupServerDTO(backupServerMapper.selectList(wrapper), projectId, true);
     }
 
     @Override
@@ -121,7 +111,9 @@ public class BackupServerServiceImpl implements BackupServerService {
 
     @Override
     public void create(BackupServerDTO backupServerDTO) {
-        // TODO 检查名称是否已存在
+        if (checkNameExists(backupServerDTO.getName())) {
+            throw new BusinessException(ErrorMessage.SERVER_NAME_ALREADY_EXISTS);
+        }
         BeanBackupServer backupServer = new BeanBackupServer();
         backupServer.setName(backupServerDTO.getName());
         backupServer.setType(backupServerDTO.getType());
@@ -150,15 +142,26 @@ public class BackupServerServiceImpl implements BackupServerService {
 
     @Override
     public void allocate(Integer id, String clusterId) {
-        // TODO 先校验该备份服务器是否已被项目关联，若已关联项目，则需要先解除关联
         BeanBackupServer beanBackupServer = get(id);
         beanBackupServer.setClusterId(clusterId);
         backupServerMapper.updateById(beanBackupServer);
     }
 
+    /**
+     * 删除备份服务器和集群的关联关系
+     * @param clusterId
+     */
+    @Override
+    public void unbinding(String clusterId) {
+        List<BeanBackupServer> beanBackupServers = listByClusterId(clusterId);
+        for (BeanBackupServer beanBackupServer : beanBackupServers) {
+            beanBackupServer.setClusterId("");
+            backupServerMapper.updateById(beanBackupServer);
+        }
+    }
+
     @Override
     public void delete(Integer id) {
-        // TODO 删除备份服务器之前需要先是否有校验关联的备份位置
         QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
         wrapper.eq("id", id);
         backupServerMapper.delete(wrapper);
@@ -166,7 +169,8 @@ public class BackupServerServiceImpl implements BackupServerService {
         backupServerDetailService.deleteByServerId(id);
         // 删除项目备份服务器关联信息
         projectBackupServerService.deleteByServerId(id);
-        // TODO 删除备份位置等，需要软删除
+        // 删除备份位置
+        backupPositionService.deleteByBackupServer(id);
     }
 
     @Override
@@ -175,16 +179,16 @@ public class BackupServerServiceImpl implements BackupServerService {
         Map<String, String> clusterBackupServerNumMap = new HashMap<>();
         clusterBackupServerNumMap.put("clusterId", "");
         clusterBackupServerNumMap.put("clusterName", "全部");
-        clusterBackupServerNumMap.put("clusterServerCount", getBackupServerCount(null).toString());
+        clusterBackupServerNumMap.put("clusterServerCount", listByClusterId(null).toString());
         groupList.add(clusterBackupServerNumMap);
         List<MiddlewareClusterDTO> clusterDTOS = middlewareClusterService.listClusterDtos();
         for (MiddlewareClusterDTO cluster : clusterDTOS) {
-            Integer backupServerCount = getBackupServerCount(cluster.getId());
+            int backupServerCount = listByClusterId(cluster.getId()).size();
             if (backupServerCount != 0) {
                 clusterBackupServerNumMap = new HashMap<>();
                 clusterBackupServerNumMap.put("clusterId", cluster.getId());
                 clusterBackupServerNumMap.put("clusterName", cluster.getNickname());
-                clusterBackupServerNumMap.put("clusterServerCount", backupServerCount.toString());
+                clusterBackupServerNumMap.put("clusterServerCount", Integer.toString(backupServerCount));
                 groupList.add(clusterBackupServerNumMap);
             }
         }
@@ -192,22 +196,29 @@ public class BackupServerServiceImpl implements BackupServerService {
     }
 
     @Override
-    public Integer getBackupServerCount(String clusterId) {
+    public List<BeanBackupServer> listByClusterId(String clusterId) {
         QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
         if (StringUtil.isNotEmpty(clusterId)) {
             wrapper.eq("cluster_id", clusterId);
         }
-        return backupServerMapper.selectList(wrapper).size();
+        return backupServerMapper.selectList(wrapper);
     }
 
-    // 添加备份位置和备份服务器信息
-    private List<BackupServerDTO> addDetail(List<BeanBackupServer> serverList, String projectId) {
+    /**
+     * 添加备份位置和备份服务器信息
+     * @param serverList
+     * @param projectId
+     * @return
+     */
+    private List<BackupServerDTO> convertToBackupServerDTO(List<BeanBackupServer> serverList, String projectId, Boolean withDetail) {
         return serverList.stream().map(backupServer -> {
             BackupServerDTO backupServerDTO = new BackupServerDTO();
             BeanUtil.copyProperties(backupServer, backupServerDTO);
-            backupServerDTO.setPositionList(backupPositionService.selectBackupPositionDTOList(backupServer.getId(), projectId));
-            backupServerDTO.setServerDetailList(backupServerDetailService.listBackupServerDetailDTOS(backupServer.getId()));
-            backupServerDTO.setServerType(getServerType(backupServerDTO.getServerDetailList()));
+            if (withDetail) {
+                backupServerDTO.setPositionList(backupPositionService.selectBackupPositionDTOList(backupServer.getId(), projectId));
+                backupServerDTO.setServerDetailList(backupServerDetailService.listBackupServerDetailDTOS(backupServer.getId()));
+                backupServerDTO.setServerType(getServerType(backupServerDTO.getServerDetailList()));
+            }
             return backupServerDTO;
         }).collect(Collectors.toList());
     }
@@ -221,6 +232,37 @@ public class BackupServerServiceImpl implements BackupServerService {
         String str = Arrays.toString(detailDTOS.stream().
                 map(backupServerDetailDTO -> BackupServerTypeEnum.findByType(backupServerDetailDTO.getType())).distinct().toArray());
         return str.substring(1, str.length() - 1);
+    }
+
+    /**
+     * 检查备份服务器名称是否已存在
+     * @param name
+     * @return 存在则返回true，否则返回false
+     */
+    public boolean checkNameExists(String name) {
+        QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
+        wrapper.eq("name", name);
+        List<BeanBackupServer> beanBackupServers = backupServerMapper.selectList(wrapper);
+        return !CollectionUtils.isEmpty(beanBackupServers);
+    }
+
+    /**
+     * 添加集群别名
+     * @param servers
+     */
+    private void addClusterNickName(List<BackupServerDTO> servers) {
+        servers.forEach(backupServerDTO -> {
+            String clusterId = backupServerDTO.getClusterId();
+            if (StringUtils.isNotEmpty(clusterId)) {
+                MiddlewareClusterDTO clusterDTO;
+                try {
+                    clusterDTO = clusterService.findById(backupServerDTO.getClusterId());
+                    backupServerDTO.setClusterNickName(clusterDTO.getNickname());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
 }

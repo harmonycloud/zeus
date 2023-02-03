@@ -123,6 +123,13 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     }
 
     @Override
+    public void deleteByBackupServer(Integer backupServerId) {
+        QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
+        wrapper.eq("backup_server_id", backupServerId);
+        backupPositionMapper.delete(wrapper);
+    }
+
+    @Override
     public BeanBackupPosition getBackupPosition(Integer backupServerId, String projectId) {
         QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
         wrapper.eq("backup_server_id", backupServerId);
