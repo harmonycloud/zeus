@@ -121,7 +121,9 @@ public class BackupServerServiceImpl implements BackupServerService {
 
     @Override
     public void create(BackupServerDTO backupServerDTO) {
-        // TODO 检查名称是否已存在
+        if (checkNameExists(backupServerDTO.getName())) {
+            throw new BusinessException(ErrorMessage.SERVER_NAME_ALREADY_EXISTS);
+        }
         BeanBackupServer backupServer = new BeanBackupServer();
         backupServer.setName(backupServerDTO.getName());
         backupServer.setType(backupServerDTO.getType());
@@ -150,7 +152,6 @@ public class BackupServerServiceImpl implements BackupServerService {
 
     @Override
     public void allocate(Integer id, String clusterId) {
-        // TODO 先校验该备份服务器是否已被项目关联，若已关联项目，则需要先解除关联
         BeanBackupServer beanBackupServer = get(id);
         beanBackupServer.setClusterId(clusterId);
         backupServerMapper.updateById(beanBackupServer);
@@ -158,7 +159,6 @@ public class BackupServerServiceImpl implements BackupServerService {
 
     @Override
     public void delete(Integer id) {
-        // TODO 删除备份服务器之前需要先是否有校验关联的备份位置
         QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
         wrapper.eq("id", id);
         backupServerMapper.delete(wrapper);
@@ -166,7 +166,8 @@ public class BackupServerServiceImpl implements BackupServerService {
         backupServerDetailService.deleteByServerId(id);
         // 删除项目备份服务器关联信息
         projectBackupServerService.deleteByServerId(id);
-        // TODO 删除备份位置等，需要软删除
+        // 删除备份位置
+        backupPositionService.deleteByBackupServer(id);
     }
 
     @Override
@@ -221,6 +222,18 @@ public class BackupServerServiceImpl implements BackupServerService {
         String str = Arrays.toString(detailDTOS.stream().
                 map(backupServerDetailDTO -> BackupServerTypeEnum.findByType(backupServerDetailDTO.getType())).distinct().toArray());
         return str.substring(1, str.length() - 1);
+    }
+
+    /**
+     * 检查备份服务器名称是否已存在
+     * @param name
+     * @return 存在则返回true，否则返回false
+     */
+    public boolean checkNameExists(String name) {
+        QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
+        wrapper.eq("name", name);
+        List<BeanBackupServer> beanBackupServers = backupServerMapper.selectList(wrapper);
+        return !CollectionUtils.isEmpty(beanBackupServers);
     }
 
 }
