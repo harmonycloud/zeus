@@ -19,7 +19,9 @@ import java.util.stream.Collectors;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.*;
 import com.harmonycloud.zeus.bean.BeanActiveArea;
+import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
 import com.harmonycloud.zeus.dao.BeanActiveAreaMapper;
+import com.harmonycloud.zeus.dao.BeanMiddlewareClusterMapper;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -118,6 +120,10 @@ public class ClusterServiceImpl implements ClusterService {
     private ResourceQuotaService resourceQuotaService;
     @Autowired
     private StorageService storageService;
+    @Autowired
+    private BeanMiddlewareClusterMapper middlewareClusterMapper;
+    @Autowired
+    private BackupServerService backupServerService;
 
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
@@ -452,6 +458,8 @@ public class ClusterServiceImpl implements ClusterService {
         activeAreaService.delete(cluster.getId());
         // 移除项目下分区绑定关系
         projectService.unBindNamespace(null, cluster.getId(), null);
+        // 删除集群和备份服务器的关联关系
+        backupServerService.unbinding(cluster.getId());
     }
 
     private void checkClusterExistent(MiddlewareClusterDTO cluster, boolean expectExisting) {
@@ -1058,6 +1066,14 @@ public class ClusterServiceImpl implements ClusterService {
         }
         // 获取其他数据例如 配额使用量等
         return resourceQuotaDo;
+    }
+
+    @Override
+    public boolean checkIfExists(String clusterId) {
+        QueryWrapper<BeanMiddlewareCluster> wrapper   = new QueryWrapper<>();
+        wrapper.eq("cluster_id", clusterId);
+        List<BeanMiddlewareCluster> clusters = middlewareClusterMapper.selectList(wrapper);
+        return !CollectionUtils.isEmpty(clusters);
     }
 
     public Map<Map<String, String>, List<String>> getResultMap(PrometheusResponse response) {

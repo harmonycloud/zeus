@@ -241,6 +241,10 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 readWriteProxy.setEnabled(values.getJSONObject("proxy").getBoolean("enable"));
                 middleware.setReadWriteProxy(readWriteProxy);
             }
+            // 慢日志开关
+            if (args.containsKey("slow_query_log") && args.getString("slow_query_log").equals(ON)){
+                middleware.setSlowSql(true);
+            }
         }
         return middleware;
     }
@@ -276,10 +280,19 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             if (StringUtils.isNotBlank(quota.getCpu())) {
                 sb.append("resources.requests.cpu=").append(quota.getCpu()).append(",resources.limits.cpu=")
                         .append(quota.getLimitCpu()).append(",");
+                // 修改proxy cpu参数规格
+                String proxyCpu = MiddlewareResourceCalculateUtil.calculateProxyResource(quota.getCpu());
+                sb.append("proxy.resources.requests.cpu=").append(proxyCpu).append(",proxy.resources.limits.cpu=").append(proxyCpu).append(",");
             }
             if (StringUtils.isNotBlank(quota.getMemory())) {
                 sb.append("resources.requests.memory=").append(quota.getMemory()).append(",resources.limits.memory=")
                         .append(quota.getLimitMemory()).append(",");
+                // 修改proxy memory参数规格
+                String proxyMem = MiddlewareResourceCalculateUtil.calculateProxyResource(quota.getMemory().replace("Gi", ""));
+                if (Double.parseDouble(proxyMem) < 0.256){
+                    proxyMem = String.valueOf(0.256);
+                }
+                sb.append("proxy.resources.requests.memory=").append(proxyMem).append(",proxy.resources.limits.memory=").append(proxyMem).append(",");
             }
         }
 
@@ -304,6 +317,11 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
 
         if (mysqlDTO != null && mysqlDTO.getType() != null) {
             sb.append(String.format("%s=%s,", MysqlConstant.SPEC_TYPE, mysqlDTO.getType()));
+        }
+
+        // 慢日志更新
+        if (middleware.getSlowSql() != null){
+            sb.append("args.slow_query_log=").append(middleware.getSlowSql() ? ON : OFF).append(",");
         }
 
         // 更新通用字段

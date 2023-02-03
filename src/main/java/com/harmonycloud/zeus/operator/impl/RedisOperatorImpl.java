@@ -256,6 +256,15 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
                 // 计算pod最大内存
                 String mem = calculateMem(quota.getLimitMemory(), "0.8", "mb");
                 sb.append("redisMaxMemory=").append(mem).append(",");
+
+                // 修改proxy memory参数规格
+                String proxyMem = MiddlewareResourceCalculateUtil.calculateProxyResource(quota.getMemory().replace("Gi", ""));
+                if (Double.parseDouble(proxyMem) < 0.256) {
+                    proxyMem = String.valueOf(0.256);
+                } else if (Double.parseDouble(proxyMem) > 2) {
+                    proxyMem = String.valueOf(2);
+                }
+                sb.append("predixy.resources.requests.memory=").append(proxyMem).append("predixy.resources.limits.memory=").append(proxyMem).append(",");
             }
             // 实例模式扩容
             if (quota.getNum() != null) {

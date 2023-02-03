@@ -33,6 +33,8 @@ public class BackupServerController {
     })
     @PostMapping("/list")
     public BaseResult<List<BackupServerDTO>> list(@RequestBody BackupServerQueryDto backupServerQueryDto) {
+        // TODO 查询详情暂时固定设置为true
+        backupServerQueryDto.setWithDetail(true);
         return BaseResult.ok(backupServerService.list(backupServerQueryDto.getClustersIds(), backupServerQueryDto.getKeyword(), backupServerQueryDto.getWithDetail()));
     }
 
