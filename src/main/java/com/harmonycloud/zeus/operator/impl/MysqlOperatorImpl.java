@@ -241,6 +241,10 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 readWriteProxy.setEnabled(values.getJSONObject("proxy").getBoolean("enable"));
                 middleware.setReadWriteProxy(readWriteProxy);
             }
+            // 慢日志开关
+            if (args.containsKey("slow_query_log") && args.getString("slow_query_log").equals(ON)){
+                middleware.setSlowSql(true);
+            }
         }
         return middleware;
     }

@@ -491,6 +491,13 @@ public abstract class AbstractBaseOperator {
                 middleware.setStdoutEnabled(stdoutEnabled);
             }
 
+            // audit
+            if (values.containsKey("features")){
+                JSONObject features = values.getJSONObject("features");
+                if (features.getJSONObject(MysqlConstant.KEY_FEATURES_AUDITLOG) != null) {
+                    middleware.setAudit(features.getJSONObject(MysqlConstant.KEY_FEATURES_AUDITLOG).getBoolean("enabled"));
+                }
+            }
             // 设置服务备份状态
             middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(middleware.getClusterId(),middleware.getNamespace(),middleware.getType(),middleware.getName()));
 
