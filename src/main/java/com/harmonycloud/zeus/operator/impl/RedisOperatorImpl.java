@@ -264,7 +264,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
                 } else if (Double.parseDouble(proxyMem) > 2) {
                     proxyMem = String.valueOf(2);
                 }
-                sb.append("predixy.resources.requests.memory=").append(proxyMem).append("predixy.resources.limits.memory=").append(proxyMem).append(",");
+                sb.append("predixy.resources.requests.memory=").append(proxyMem).append("Gi,predixy.resources.limits.memory=").append(proxyMem).append("Gi,");
             }
             // 实例模式扩容
             if (quota.getNum() != null) {

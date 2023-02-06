@@ -292,7 +292,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 if (Double.parseDouble(proxyMem) < 0.256){
                     proxyMem = String.valueOf(0.256);
                 }
-                sb.append("proxy.resources.requests.memory=").append(proxyMem).append(",proxy.resources.limits.memory=").append(proxyMem).append(",");
+                sb.append("proxy.resources.requests.memory=").append(proxyMem).append(",proxy.resources.limits.memory=").append(proxyMem).append("Gi,");
             }
         }
 
