@@ -1,15 +1,15 @@
 spring:
   datasource:
     username: root # change this
-    password: root # change this
-    url: jdbc:mysql://127.0.0.1:3306/middleware_platform?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC # change this
+    password: ZeuS@Middleware01 # change this
+    url: jdbc:mysql://10.10.102.52:31221/middleware_platform?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC # change this
     driver-class-name: com.mysql.cj.jdbc.Driver
   servlet:
     multipart:
       max-file-size: 10GB
       max-request-size: 10GB
   resources:
-    static-locations: file:/MyPath/upload,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/ # change this
+    static-locations: file:/home/wpl/xieyun/upload,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/ # change this
   jackson:
     time-zone: GMT+8
     date-format: yyyy-MM-dd HH:mm:ss
@@ -50,14 +50,14 @@ k8s:
     label: middleware=true
   token:
     # debug时填写本地的token文件路径，有默认值，仅开发使用
-    path: /MyPath/kube-token # change this
+    path: /home/wpl/xieyun/kube-token # change this
   service:
     # 默认kubernetes fabric8客户端的地址，有默认值，仅开发使用
     host: 127.0.0.1
     port: 6443
   kubeconfig:
     # debug时填写本地的kube config文件路径，有默认值，仅开发使用
-    path: /MyPath/upload # change this
+    path: /home/wpl/xieyun/upload # change this
 
 #分页pageHelper
 pagehelper:
@@ -68,9 +68,9 @@ pagehelper:
 system:
   upload:
     # debug时填写自己本地的一个可访问的目录，仅开发使用，默认值：/usr/local/Zeus-pv/upload
-    path: /MyPath/upload
+    path: /home/wpl/xieyun/upload
   images:
-    path: /MyPath/upload/images
+    path: /home/wpl/xieyun/upload/images
   user:
     username: admin
     # 密码Ab123456!
@@ -95,7 +95,7 @@ system:
 #ssl
 server:
   http:
-    port: 8080
+    port: 8888
   ssl:
     key-alias: zeushttps
     key-store-password: Ab123456
