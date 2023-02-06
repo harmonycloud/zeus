@@ -108,6 +108,9 @@ public class StorageServiceImpl implements StorageService {
             List<StorageClass> storageClassList = storageClassWrapper.list(cluster.getId());
             Set<String> aliasNameSet = new HashSet<>();
             List<StorageDto> storageDtoList = storageClassList.stream().filter(storageClass -> {
+                if (storageClass.getMetadata() == null || storageClass.getMetadata().getAnnotations() == null) {
+                    return all;
+                }
                 boolean flag = CollectionUtils.isEmpty(storageClass.getMetadata().getAnnotations())
                         || !storageClass.getMetadata().getAnnotations().containsKey(MIDDLEWARE);
                 // 双活只保留一个避免重复
@@ -117,18 +120,18 @@ public class StorageServiceImpl implements StorageService {
                 return all == flag && aliasNameSet.add(storageClass.getMetadata().getAnnotations().get(ALIAS_NAME));
             }).map(storageClass -> {
                 // 初始化业务对象
-                    return  convert(cluster.getId(), storageClass);
-                }).filter(storageDto -> {
-                    if (StringUtils.isNotEmpty(key)) {
-                        return storageDto.getAliasName().contains(key) || storageDto.getStorageClassList().stream().anyMatch(sc -> sc.getName().contains(key));
-                    }
-                    return true;
-                }).filter(storageDto -> {
-                    if (StringUtils.isNotEmpty(type)) {
-                        return storageDto.getStorageClassList().stream().anyMatch(sc -> type.equals(sc.getVolumeType()));
-                    }
-                    return true;
-                }).collect(Collectors.toList());
+                return convert(cluster.getId(), storageClass);
+            }).filter(storageDto -> {
+                if (StringUtils.isNotEmpty(key)) {
+                    return storageDto.getAliasName().contains(key) || storageDto.getStorageClassList().stream().anyMatch(sc -> sc.getName().contains(key));
+                }
+                return true;
+            }).filter(storageDto -> {
+                if (StringUtils.isNotEmpty(type)) {
+                    return storageDto.getStorageClassList().stream().anyMatch(sc -> type.equals(sc.getVolumeType()));
+                }
+                return true;
+            }).collect(Collectors.toList());
             result.addAll(storageDtoList);
         }
         return result;
@@ -198,6 +201,7 @@ public class StorageServiceImpl implements StorageService {
             annotations.remove(ALIAS_NAME);
             annotations.remove(INTEGRATE_TIME);
             annotations.remove(ACTIVE_ACTIVE);
+            annotations.remove(TOTAL_STORAGE);
             storageClassWrapper.update(clusterId, sc);
         }
     }
