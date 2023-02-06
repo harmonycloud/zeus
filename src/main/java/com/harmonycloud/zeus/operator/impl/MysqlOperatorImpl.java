@@ -15,6 +15,7 @@ import com.harmonycloud.caas.common.model.ActiveAreaAnnotationDto;
 import com.harmonycloud.caas.common.model.IngressComponentDto;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.tool.cmd.CmdExecUtil;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.zeus.annotation.Operator;
@@ -42,10 +43,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.harmonycloud.caas.common.constants.CmdConstant.MYSQL_HAND_SWITCH;
 import static com.harmonycloud.caas.common.constants.CommonConstant.OFF;
 import static com.harmonycloud.caas.common.constants.CommonConstant.ON;
 import static com.harmonycloud.caas.common.constants.MysqlConstant.SLOW_QUERY_LOG;
@@ -476,12 +479,21 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     }
 
     private void switchByCurl(Middleware middleware, MysqlCluster mysqlCluster) {
+        MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
         // 先判断有没有sync_slave
         List<Status.Condition> conditions = mysqlCluster.getStatus().getConditions();
-        if (conditions.stream().noneMatch(con -> con.getType().equals(SYNC_SLAVE))) {
-            throw new BusinessException(ErrorMessage.SYNC_SLAVE_NOT_FOUND);
+        List<Status.Condition> syncList = conditions.stream().filter(con -> con.getType().equals(SYNC_SLAVE)).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(syncList)) {
+            throw new BusinessException(DictEnum.ROLE,SYNC_SLAVE,ErrorMessage.NOT_FOUND);
         }
-        // todo mysql的curl手动切换等待底座实现
+        // 获取同步节点名称
+        String syncName = syncList.get(0).getName();
+        String execCommand = MessageFormat.format(MYSQL_HAND_SWITCH,
+                syncName, middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
+                syncName, middleware.getNamespace(), mysqlCluster.getMetadata().getName());
+        List<String> results = CmdExecUtil.runCmd(execCommand);
+        // 判断结果
+        parseHandSwitchResult(results);
     }
 
     private void switchByChangeCr(Middleware middleware, MysqlCluster mysqlCluster){

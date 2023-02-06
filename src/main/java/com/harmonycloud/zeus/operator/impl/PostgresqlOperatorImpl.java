@@ -287,14 +287,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
                 patroniName,syncSlavePod.getString("name"));
         List<String> results = CmdExecUtil.runCmd(execCommand);
         // 判断结果
-        if (!"200".equals(results.get(1)) && !"202".equals(results.get(1))) {
-            String errorMessage = results.get(0);
-            if (errorMessage.startsWith("Not failed over, because this instance is delay")) {
-                throw new BusinessException(ErrorMessage.SWITCH_FAILD_BECAUSE_DELAY);
-            } else {
-                throw new BusinessException(ErrorMessage.SWITCH_FAILED);
-            }
-        }
+        parseHandSwitchResult(results);
     }
 
     @Override
