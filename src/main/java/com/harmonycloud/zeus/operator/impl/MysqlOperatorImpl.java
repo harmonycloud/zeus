@@ -33,10 +33,7 @@ import com.harmonycloud.zeus.service.middleware.impl.MysqlBackupServiceImpl;
 import com.harmonycloud.zeus.service.mysql.MysqlDbPrivService;
 import com.harmonycloud.zeus.service.mysql.MysqlDbService;
 import com.harmonycloud.zeus.service.mysql.MysqlUserService;
-import com.harmonycloud.zeus.util.DateUtil;
-import com.harmonycloud.zeus.util.MiddlewareResourceCalculateUtil;
-import com.harmonycloud.zeus.util.MysqlConnectionUtil;
-import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
+import com.harmonycloud.zeus.util.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +51,7 @@ import static com.harmonycloud.caas.common.constants.CommonConstant.ON;
 import static com.harmonycloud.caas.common.constants.MysqlConstant.SLOW_QUERY_LOG;
 import static com.harmonycloud.caas.common.constants.NameConstant.*;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_INGRESS;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.SYNC_SLAVE;
 
 /**
  * @author dengyulong
@@ -467,6 +465,26 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             // false为无需切换，true为已切换
             return false;
         }
+
+        // 判断版本
+        if (ChartVersionUtil.compare(middleware.getChartVersion(), "1.8.18") < 0) {
+            switchByChangeCr(middleware, mysqlCluster);
+        } else {
+            switchByCurl(middleware, mysqlCluster);
+        }
+        return true;
+    }
+
+    private void switchByCurl(Middleware middleware, MysqlCluster mysqlCluster) {
+        // 先判断有没有sync_slave
+        List<Status.Condition> conditions = mysqlCluster.getStatus().getConditions();
+        if (conditions.stream().noneMatch(con -> con.getType().equals(SYNC_SLAVE))) {
+            throw new BusinessException(ErrorMessage.SYNC_SLAVE_NOT_FOUND);
+        }
+        // todo mysql的curl手动切换等待底座实现
+    }
+
+    private void switchByChangeCr(Middleware middleware, MysqlCluster mysqlCluster){
         String masterName = null;
         String slaveName = null;
         for (Status.Condition cond : mysqlCluster.getStatus().getConditions()) {
@@ -487,7 +505,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                     middleware.getName(), e);
             throw new BusinessException(DictEnum.MYSQL_CLUSTER, middleware.getName(), ErrorMessage.SWITCH_FAILED);
         }
-        return true;
     }
 
     /**
