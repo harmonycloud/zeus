@@ -201,6 +201,7 @@ public class StorageServiceImpl implements StorageService {
             annotations.remove(ALIAS_NAME);
             annotations.remove(INTEGRATE_TIME);
             annotations.remove(ACTIVE_ACTIVE);
+            annotations.remove(TOTAL_STORAGE);
             storageClassWrapper.update(clusterId, sc);
         }
     }
