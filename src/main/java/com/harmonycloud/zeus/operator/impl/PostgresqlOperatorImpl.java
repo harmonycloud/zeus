@@ -5,6 +5,7 @@ import static com.harmonycloud.caas.common.constants.CommonConstant.DOT;
 import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_ZERO;
 import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ARGS;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.SYNC_SLAVE;
 
 import java.text.MessageFormat;
 import java.util.Base64;
@@ -271,20 +272,29 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         // 获取执行pod
         JSONArray conditions = JSONObject.parseObject(cr.getMetadata().getAnnotations().get("status")).getJSONArray("conditions");
         if (CollectionUtil.isEmpty(conditions)){
-            throw new BusinessException(DictEnum.POD,ErrorMessage.NOT_FOUND);
+            throw new BusinessException(DictEnum.ROLE,SYNC_SLAVE,ErrorMessage.NOT_FOUND);
         }
         List<Object> syncSlavePods = conditions.stream().filter(condition -> {
             JSONObject con = (JSONObject) condition;
             return "sync_slave".equals(con.getString("type"));
         }).collect(Collectors.toList());
         if (CollectionUtil.isEmpty(syncSlavePods)){
-            throw new BusinessException(DictEnum.POD,ErrorMessage.NOT_FOUND);
+            throw new BusinessException(DictEnum.ROLE,SYNC_SLAVE,ErrorMessage.NOT_FOUND);
         }
         JSONObject syncSlavePod = (JSONObject) syncSlavePods.get(0);
         String execCommand = MessageFormat.format(POSTGRESQL_HAND_SWITCH,
                 syncSlavePod.getString("name"), middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
                 patroniName,syncSlavePod.getString("name"));
-        k8sExecService.exec(execCommand);
+        List<String> results = CmdExecUtil.runCmd(execCommand);
+        // 判断结果
+        if (!"200".equals(results.get(1)) && !"202".equals(results.get(1))) {
+            String errorMessage = results.get(0);
+            if (errorMessage.startsWith("Not failed over, because this instance is delay")) {
+                throw new BusinessException(ErrorMessage.SWITCH_FAILD_BECAUSE_DELAY);
+            } else {
+                throw new BusinessException(ErrorMessage.SWITCH_FAILED);
+            }
+        }
     }
 
     @Override
