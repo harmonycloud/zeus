@@ -154,9 +154,6 @@ public class BackupPositionServiceImpl implements BackupPositionService {
         QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
         wrapper.eq("id", positionId);
         List<BeanBackupPosition> beanBackupPositions = backupPositionMapper.selectList(wrapper);
-        if(CollectionUtils.isEmpty(beanBackupPositions)){
-            // todo 备份位置不存在
-        }
         return beanBackupPositions.get(0);
     }
 

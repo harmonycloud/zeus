@@ -351,7 +351,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * @param backupDTO
      */
     private void createBackupByTaskType(MiddlewareBackupDTO backupDTO) {
-        if (namespaceService.isOpenAvailableDomain(backupDTO.getClusterId(), backupDTO.getNamespace())) {
+        if (activeActiveBackupCheck(backupDTO)) {
             // 双活备份
             // 获取可用区annotation
             ActiveAreaAnnotationDto activeAreaAnnotation = middlewareService.getActiveAreaAnnotation(backupDTO.getClusterId(),
@@ -359,7 +359,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             // 创建A可用区增量备份
             createBackupTask(backupDTO, backupPositionService.getMinio(backupDTO.getBackupPositionId(), ServerUsageEnum.zoneA.getName()),
                     getActiveAreaObjectMeta(activeAreaAnnotation, ServerUsageEnum.zoneA.getName()));
-            // 创建B可用区增量备份;
+            // 创建B可用区增量备份
             createBackupTask(backupDTO, backupPositionService.getMinio(backupDTO.getBackupPositionId(), ServerUsageEnum.zoneB.getName()),
                     getActiveAreaObjectMeta(activeAreaAnnotation, ServerUsageEnum.zoneB.getName()));
         } else {
@@ -401,6 +401,19 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             labels.put("activeArea", ActiveAreaEnum.zoneB.getName());
         }
         return objectMeta;
+    }
+
+    /**
+     * 检查是否是双活备份任务
+     * @param backupDTO
+     * @return
+     */
+    private boolean activeActiveBackupCheck(MiddlewareBackupDTO backupDTO) {
+        if (namespaceService.isOpenAvailableDomain(backupDTO.getClusterId(), backupDTO.getNamespace())) {
+            String type = backupDTO.getType();
+            return type.equals(MiddlewareTypeEnum.MYSQL.getType()) || type.equals(MiddlewareTypeEnum.POSTGRESQL.getType()) || type.equals(MiddlewareTypeEnum.REDIS.getType());
+        }
+        return false;
     }
 
     private Integer calRetentionTime(MiddlewareBackupDTO backupDTO) {
