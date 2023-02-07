@@ -7,12 +7,14 @@ import com.harmonycloud.caas.common.model.MiddlewareTaskDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecordGroup;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.zeus.annotation.Authority;
+import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
 import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,8 +28,9 @@ import java.util.List;
 @RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/backup")
 public class MiddlewareBackupController {
 
+    @Qualifier("middlewareBackupServiceImpl")
     @Autowired
-    private MiddlewareBackupServiceImpl middlewareBackupService;
+    private MiddlewareBackupService middlewareBackupService;
 
     @ApiOperation(value = "创建全量备份", notes = "创建备份")
     @ApiImplicitParams({
