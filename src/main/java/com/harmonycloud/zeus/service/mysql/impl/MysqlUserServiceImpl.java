@@ -277,13 +277,13 @@ public class MysqlUserServiceImpl implements MysqlUserService {
         MysqlAccessInfo accessInfo = mysqlService.getAccessInfo(clusterId, namespace, middlewareName);
         Connection con = getDBConnection(accessInfo);
         try {
-            List<MysqlUserDetail> userList = qr.query(con, generateDbQuerySql(user, keyword), new BeanListHandler<>(MysqlUserDetail.class));
+            List<MysqlUserDetail> userList = qr.query(con, generateDbQuerySql(user, null), new BeanListHandler<>(MysqlUserDetail.class));
             userList = userList.stream().filter(item -> !INITIAL_USER.contains(item.getUser())).collect(Collectors.toList());
             // 查询每个用户所拥有的数据库及权限
             userList.forEach(userDetail -> {
                 String mysqlQualifiedName = getMysqlQualifiedName(clusterId, namespace, middlewareName);
                 List<MysqlDbPrivilege> privileges =
-                    nativeListUserDb(con, userDetail.getUser(), mysqlQualifiedName, keyword);
+                    nativeListUserDb(con, userDetail.getUser(), mysqlQualifiedName, null);
                 userDetail.setDbs(privileges);
                 // 查询平台存储的用户信息
                 BeanMysqlUser beanMysqlUser = select(mysqlQualifiedName, userDetail.getUser());
@@ -300,6 +300,13 @@ public class MysqlUserServiceImpl implements MysqlUserService {
                         Date.from(beanMysqlUser.getCreatetime().atZone(ZoneId.systemDefault()).toInstant()));
                 }
             });
+            // 关键词过滤
+            if (StringUtils.isNotEmpty(keyword)) {
+                userList = userList.stream()
+                    .filter(userDetail -> userDetail.getUser().contains(keyword)
+                        || userDetail.getDbs().stream().anyMatch(db -> db.getDb().contains(keyword)))
+                    .collect(Collectors.toList());
+            }
             userList.sort((o1, o2) -> {
                 if (o1.getCreateTime() == null) {
                     return 0;
