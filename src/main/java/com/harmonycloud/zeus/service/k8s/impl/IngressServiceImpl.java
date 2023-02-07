@@ -1694,7 +1694,7 @@ public class IngressServiceImpl implements IngressService {
                     .filter(key -> power.get(key).split("")[1].equals(String.valueOf(NUM_ONE))).collect(Collectors.toSet());
             ingressDTOLists = ingressDTOLists.stream()
                     .filter(ingress -> typeSet.stream().anyMatch(key -> {
-                        log.info("ingress信息：{}", ingress);
+                        //log.info("ingress信息：{}", ingress);
                         if (ingress.getMiddlewareType() != null) {
                             return ingress.getMiddlewareType().equals(key);
                         }
