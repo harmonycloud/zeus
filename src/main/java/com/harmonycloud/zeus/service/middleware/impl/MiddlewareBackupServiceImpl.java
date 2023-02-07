@@ -17,9 +17,10 @@ import com.harmonycloud.caas.common.model.*;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecordGroup;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.bean.BeanActiveArea;
+import com.harmonycloud.zeus.bean.BeanBackupPosition;
+import com.harmonycloud.zeus.bean.BeanBackupServer;
 import com.harmonycloud.zeus.service.k8s.*;
-import com.harmonycloud.zeus.service.middleware.BackupPositionService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareService;
+import com.harmonycloud.zeus.service.middleware.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,8 +37,6 @@ import com.harmonycloud.zeus.annotation.MiddlewareBackup;
 import com.harmonycloud.zeus.bean.BeanMiddlewareBackupName;
 import com.harmonycloud.zeus.dao.BeanMiddlewareBackupNameMapper;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
-import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
 import com.harmonycloud.zeus.util.CronUtils;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -76,6 +75,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private MiddlewareService middlewareService;
     @Autowired
     private ActiveAreaService activeAreaService;
+    @Autowired
+    private BackupServerService backupServerService;
 
     @Override
     public List<MiddlewareBackupRecord> listBackup(String clusterId, String namespace, String middlewareName,
@@ -747,6 +748,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public List<MiddlewareBackupRecordGroup> backupTaskGroupList(String clusterId, String namespace, String middlewareName, String type, String keyword) {
         List<MiddlewareBackupRecord> records = backupTaskList(clusterId, namespace, middlewareName, type, keyword);
+        // 设置备份地址
+        setBackupPosition(records);
         List<MiddlewareBackupRecordGroup> recordGroups = groupByBackupId(clusterId,records);
         setMiddlewareStatus(clusterId,recordGroups);
         return recordGroups;
@@ -909,6 +912,20 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     /**
+     * 设置备份地址
+     */
+    private void setBackupPosition(List<MiddlewareBackupRecord> records) {
+        records.forEach(record -> {
+            String positionId = record.getPositionId();
+            BeanBackupPosition backupPosition = backupPositionService.getBackupPosition(Integer.parseInt(positionId));
+            if (backupPosition != null) {
+                BeanBackupServer beanBackupServer = backupServerService.get(backupPosition.getBackupServerId());
+                record.setPosition(beanBackupServer.getName() + " - " + backupPosition.getName() + record.getPosition());
+            }
+        });
+    }
+
+    /**
      * 转换备份信息
      *
      * @param backupDTO
@@ -922,7 +939,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         Map<String, String> backupLabel = getBackupLabel(middlewareName, type);
         String backupId = UUIDUtils.get16UUID();
         backupLabel.put("backupId", backupId);
-        backupLabel.put("addressId", backupDTO.getBackupPositionId().toString());
+        backupLabel.put("positionId", backupDTO.getBackupPositionId().toString());
         backupLabel.put("type", backupDTO.getType());
         backupLabel.put("unit", backupDTO.getDateUnit());
         backupDTO.setLabels(backupLabel);
@@ -998,11 +1015,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         backupRecord.setNamespace(schedule.getMetadata().getNamespace());
         backupRecord.setBackupName(schedule.getMetadata().getName());
         backupRecord.setSchedule(true);
+        // 获取备份地址id
+        backupRecord.setPositionId(schedule.getMetadata().getLabels().get("positionId"));
         // 获取备份位置
         MiddlewareBackupScheduleSpec spec = schedule.getSpec();
         MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination.MiddlewareBackupParameters parameters =
                 spec.getBackupDestination().getParameters();
-        String position = spec.getBackupDestination().getDestinationType() + "(" + parameters.getUrl() + "/"
+        String position = "(" + parameters.getUrl() + "/"
                 + parameters.getBucket() + ")";
         backupRecord.setPosition(position);
         // 获取备份状态
@@ -1066,6 +1085,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
         // 获取备份id
         backupRecord.setBackupId(labels.get("backupId"));
+
+        // 获取备份地址id
+        backupRecord.setPositionId(labels.get("positionId"));
 
         // 获取备份时间
         Date creationTime = DateUtils.parseUTCDate(backup.getMetadata().getCreationTimestamp());
@@ -1212,6 +1234,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             recordGroup.setPhrase(getTaskPhrase(records));
             recordGroup.setTaskType(getTaskType(records));
             recordGroup.setBackupId(record.getBackupId());
+            recordGroup.setBackupId(record.getPositionId());
             recordGroups.add(recordGroup);
         });
         return recordGroups;
