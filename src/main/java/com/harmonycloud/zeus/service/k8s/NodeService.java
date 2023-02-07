@@ -63,6 +63,13 @@ public interface NodeService {
     List<Node> convertToDto(List<io.fabric8.kubernetes.api.model.Node> nodes);
 
     /**
+     * 封装node普通信息
+     * @param nodes 节点k8s对象
+     * @return nodeList
+     */
+    List<Node> simpleConvertToDto(List<io.fabric8.kubernetes.api.model.Node> nodes);
+
+    /**
      * 查询节点资源
      * @param clusterId 集群id
      * @param nodes 节点列表
@@ -95,4 +102,11 @@ public interface NodeService {
      */
     ResourceQuotaDo getResourceQuota(String clusterId);
 
+    /**
+     * 查询可用区下节点列表
+     * @param clusterId 集群id
+     * @param zone 可用区
+     * @return
+     */
+    List<Node> listActive(String clusterId, String zone);
 }
