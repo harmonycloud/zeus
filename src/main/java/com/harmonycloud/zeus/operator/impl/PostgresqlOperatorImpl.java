@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.operator.impl;
 
+import static com.harmonycloud.caas.common.constants.CmdConstant.*;
 import static com.harmonycloud.caas.common.constants.CommonConstant.DOT;
 import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_ZERO;
 import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
@@ -36,6 +37,8 @@ import com.harmonycloud.zeus.operator.miiddleware.AbstractPostgresqlOperator;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import com.harmonycloud.caas.common.constants.CmdConstant.*;
 
 /**
  * @author xutianhong
@@ -186,9 +189,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             return null;
         }
         // pod执行命令
-        String execCommand = MessageFormat.format(
-                "kubectl exec {0} -n {1} -c postgres --server={2} --token={3} --insecure-skip-tls-verify=true " +
-                        "-- bash  -c \"curl -s http://{4}:8008/patroni | jq .\"",
+        String execCommand = MessageFormat.format(POSTGRESQL_AUTO_SWITCH_STATUS,
                 conditions.get(0).getName(), middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(), patroniName);
         List<String> resList;
         try {
@@ -250,9 +251,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         }
         JSONObject pod = (JSONObject) conditions.get(0);
 
-        String execCommand = MessageFormat.format(
-                "kubectl exec {0} -n {1} -c postgres --server={2} --token={3} --insecure-skip-tls-verify=true " +
-                        "-- bash -c \"curl -s -X PATCH -d '''{\\\"pause\\\": '{4}' }''' http://{5}:8008/config | jq .\"",
+        String execCommand = MessageFormat.format(POSTGRESQL_AUTO_SWITCH,
                 pod.getString("name"), middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
                 !middleware.getAutoSwitch(), patroniName);
         k8sExecService.exec(execCommand);
@@ -282,9 +281,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             throw new BusinessException(DictEnum.POD,ErrorMessage.NOT_FOUND);
         }
         JSONObject syncSlavePod = (JSONObject) syncSlavePods.get(0);
-        String execCommand = MessageFormat.format(
-                "kubectl exec {0} -n {1} -c postgres --server={2} --token={3} --insecure-skip-tls-verify=true " +
-                        "-- bash -c \"curl -s -X POST http://{4}:8008/failover -d '''{\\\"candidate\\\": \\\"'{5}'\\\"}'''\"",
+        String execCommand = MessageFormat.format(POSTGRESQL_HAND_SWITCH,
                 syncSlavePod.getString("name"), middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
                 patroniName,syncSlavePod.getString("name"));
         k8sExecService.exec(execCommand);
