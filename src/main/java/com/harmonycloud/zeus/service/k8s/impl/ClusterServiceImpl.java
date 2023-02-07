@@ -72,7 +72,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ClusterServiceImpl implements ClusterService {
 
     private static final Map<String, MiddlewareClusterDTO> CLUSTER_MAP = new ConcurrentHashMap<>();
-    private static boolean run = true;
+    private static boolean RUN = true;
     @Value("${system.upload.path:/usr/local/zeus-pv/upload}")
     private String uploadPath;
 
@@ -1180,29 +1180,28 @@ public class ClusterServiceImpl implements ClusterService {
     }
 
     public void refresh(String clusterId) {
-        if (run) {
+        if (RUN) {
             ThreadPoolExecutorFactory.executor.execute(() -> {
-                run = false;
-                synchronized (this) {
-                    List<MiddlewareClusterDTO> clusterList = listClusters().stream()
-                        .filter(clusterDTO -> clusterDTO.getId().equals(clusterId)).collect(Collectors.toList());
-                    if (CollectionUtils.isEmpty(clusterList)) {
-                        log.error("刷新集群信息失败，未找到集群:{}", clusterId);
-                    }
-                    MiddlewareClusterDTO dto = clusterList.get(0);
-                    CLUSTER_MAP.put(clusterId, SerializationUtils.clone(dto));
-                    try {
-                        log.info("刷新集群信息成功，将静默10s");
-                        Thread.sleep(10000);
-                        log.info("静默完成，可再次刷新");
-                        run = true;
-                    } catch (InterruptedException e) {
-                        log.error("线程休眠异常", e);
-                    }
+                RUN = false;
+                List<MiddlewareClusterDTO> clusterList = listClusters().stream()
+                    .filter(clusterDTO -> clusterDTO.getId().equals(clusterId)).collect(Collectors.toList());
+                if (CollectionUtils.isEmpty(clusterList)) {
+                    log.error("刷新集群信息失败，未找到集群:{}", clusterId);
+                }
+                MiddlewareClusterDTO dto = clusterList.get(0);
+                CLUSTER_MAP.put(clusterId, SerializationUtils.clone(dto));
+                try {
+                    log.info("刷新集群信息成功，将静默10s");
+                    Thread.sleep(10000);
+                    log.info("静默完成，可再次刷新");
+                    RUN = true;
+                } catch (InterruptedException e) {
+                    log.error("线程休眠异常", e);
                 }
             });
         }
     }
+
     /**
      * 设置集群状态，当所有节点都ready时，集群状态即为正常
      * @param clusterDTO
