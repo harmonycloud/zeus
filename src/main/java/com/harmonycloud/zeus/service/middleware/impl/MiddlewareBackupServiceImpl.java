@@ -928,14 +928,17 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * 设置备份地址
      */
     private void setBackupPosition(List<MiddlewareBackupRecord> records) {
-        records.forEach(record -> {
+        for (MiddlewareBackupRecord record : records) {
+            if (StringUtils.isEmpty(record.getPositionId())) {
+                continue;
+            }
             String positionId = record.getPositionId();
             BeanBackupPosition backupPosition = backupPositionService.getBackupPosition(Integer.parseInt(positionId));
             if (backupPosition != null) {
                 BeanBackupServer beanBackupServer = backupServerService.get(backupPosition.getBackupServerId());
                 record.setPosition(beanBackupServer.getName() + " - " + backupPosition.getName() + record.getPosition());
             }
-        });
+        }
     }
 
     /**
@@ -1100,7 +1103,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         backupRecord.setBackupId(labels.get("backupId"));
 
         // 获取备份地址id
-        backupRecord.setPositionId(labels.get("positionId"));
+        String positionId = StringUtils.isNotEmpty(labels.get("positionId")) ? labels.get("positionId") : labels.get("addressId");
+        backupRecord.setPositionId(positionId);
 
         // 获取备份时间
         Date creationTime = DateUtils.parseUTCDate(backup.getMetadata().getCreationTimestamp());

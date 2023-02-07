@@ -154,6 +154,9 @@ public class BackupPositionServiceImpl implements BackupPositionService {
         QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
         wrapper.eq("id", positionId);
         List<BeanBackupPosition> beanBackupPositions = backupPositionMapper.selectList(wrapper);
+        if (CollectionUtils.isEmpty(beanBackupPositions)) {
+            return null;
+        }
         return beanBackupPositions.get(0);
     }
 
