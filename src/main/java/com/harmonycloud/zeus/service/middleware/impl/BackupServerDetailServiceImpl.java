@@ -5,18 +5,17 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.middleware.BackupServerDetailDTO;
+import com.harmonycloud.zeus.bean.BeanBackupServer;
 import com.harmonycloud.zeus.bean.BeanBackupServerDetail;
 import com.harmonycloud.zeus.dao.BeanBackupServerDetailMapper;
-import com.harmonycloud.zeus.dao.BeanBackupServerMapper;
 import com.harmonycloud.zeus.service.middleware.BackupServerDetailService;
+import com.harmonycloud.zeus.service.middleware.BackupServerService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.beanutils.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,6 +30,8 @@ public class BackupServerDetailServiceImpl implements BackupServerDetailService 
 
     @Autowired
     private BeanBackupServerDetailMapper backupServerDetailMapper;
+    @Autowired
+    private BackupServerService backupServerService;
 
     @Override
     public List<BackupServerDetailDTO> listBackupServerDetailDTOS(Integer backupServerId) {
@@ -91,6 +92,21 @@ public class BackupServerDetailServiceImpl implements BackupServerDetailService 
             throw new BusinessException(ErrorMessage.BACKUP_SERVER_NOT_FOUND);
         }
         return serverDetails.get(0);
+    }
+
+    @Override
+    public List<BeanBackupServerDetail> findByAddress(String protocol, String host, String port, Integer serverType) {
+        QueryWrapper<BeanBackupServerDetail> wrapper = new QueryWrapper();
+        wrapper.eq("protocol", protocol);
+        wrapper.eq("host", host);
+        if (com.dtflys.forest.utils.StringUtils.isNotEmpty(port)) {
+            wrapper.eq("port", port);
+        }
+        List<BeanBackupServerDetail> serverDetails = backupServerDetailMapper.selectList(wrapper);
+        return serverDetails.stream().filter(serverDetail -> {
+            BeanBackupServer backupServer = backupServerService.get(serverDetail.getBackupServerId());
+            return backupServer.getType().equals(serverType);
+        }).collect(Collectors.toList());
     }
 
 }

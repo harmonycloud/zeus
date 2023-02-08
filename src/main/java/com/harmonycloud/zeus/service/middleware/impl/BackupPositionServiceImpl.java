@@ -154,6 +154,9 @@ public class BackupPositionServiceImpl implements BackupPositionService {
         QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
         wrapper.eq("id", positionId);
         List<BeanBackupPosition> beanBackupPositions = backupPositionMapper.selectList(wrapper);
+        if (CollectionUtils.isEmpty(beanBackupPositions)) {
+            return null;
+        }
         return beanBackupPositions.get(0);
     }
 
@@ -178,7 +181,7 @@ public class BackupPositionServiceImpl implements BackupPositionService {
             BackupPositionDTO backupPositionDTO = new BackupPositionDTO();
             BeanUtil.copyProperties(beanBackupPosition, backupPositionDTO);
             BeanProject beanProject = projectService.get(beanBackupPosition.getProjectId());
-            backupPositionDTO.setProjectName(beanProject.getName());
+            backupPositionDTO.setProjectName(beanProject.getAliasName());
             return backupPositionDTO;
         }).collect(Collectors.toList());
     }

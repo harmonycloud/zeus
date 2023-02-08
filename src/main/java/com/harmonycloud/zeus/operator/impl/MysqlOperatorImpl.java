@@ -15,6 +15,7 @@ import com.harmonycloud.caas.common.model.ActiveAreaAnnotationDto;
 import com.harmonycloud.caas.common.model.IngressComponentDto;
 import com.harmonycloud.caas.common.model.MiddlewareServiceNameIndex;
 import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.tool.cmd.CmdExecUtil;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.tool.encrypt.PasswordUtils;
 import com.harmonycloud.zeus.annotation.Operator;
@@ -33,10 +34,7 @@ import com.harmonycloud.zeus.service.middleware.impl.MysqlBackupServiceImpl;
 import com.harmonycloud.zeus.service.mysql.MysqlDbPrivService;
 import com.harmonycloud.zeus.service.mysql.MysqlDbService;
 import com.harmonycloud.zeus.service.mysql.MysqlUserService;
-import com.harmonycloud.zeus.util.DateUtil;
-import com.harmonycloud.zeus.util.MiddlewareResourceCalculateUtil;
-import com.harmonycloud.zeus.util.MysqlConnectionUtil;
-import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
+import com.harmonycloud.zeus.util.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
@@ -45,15 +43,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
+import static com.harmonycloud.caas.common.constants.CmdConstant.MYSQL_HAND_SWITCH;
 import static com.harmonycloud.caas.common.constants.CommonConstant.OFF;
 import static com.harmonycloud.caas.common.constants.CommonConstant.ON;
 import static com.harmonycloud.caas.common.constants.MysqlConstant.SLOW_QUERY_LOG;
 import static com.harmonycloud.caas.common.constants.NameConstant.*;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_INGRESS;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.SYNC_SLAVE;
 
 /**
  * @author dengyulong
@@ -94,7 +96,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     private IngressService ingressService;
     @Autowired
     private NamespaceService namespaceService;
-
     @Override
     public boolean support(Middleware middleware) {
         return MiddlewareTypeEnum.MYSQL == MiddlewareTypeEnum.findByType(middleware.getType());
@@ -467,6 +468,35 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             // false为无需切换，true为已切换
             return false;
         }
+
+        // 判断版本
+        if (ChartVersionUtil.compare(middleware.getChartVersion(), "1.8.18-3") < 0) {
+            switchByChangeCr(middleware, mysqlCluster);
+        } else {
+            switchByCurl(middleware, mysqlCluster);
+        }
+        return true;
+    }
+
+    private void switchByCurl(Middleware middleware, MysqlCluster mysqlCluster) {
+        MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
+        // 先判断有没有sync_slave
+        List<Status.Condition> conditions = mysqlCluster.getStatus().getConditions();
+        List<Status.Condition> syncList = conditions.stream().filter(con -> con.getType().equals("SyncSlave")).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(syncList)) {
+            throw new BusinessException(DictEnum.ROLE,SYNC_SLAVE,ErrorMessage.NOT_FOUND);
+        }
+        // 获取同步节点名称
+        String syncName = syncList.get(0).getName();
+        String execCommand = MessageFormat.format(MYSQL_HAND_SWITCH,
+                syncName, middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
+                syncName, middleware.getNamespace(), mysqlCluster.getMetadata().getName());
+        List<String> results = CmdExecUtil.runCmd(execCommand);
+        // 判断结果
+        parseHandSwitchResult(results);
+    }
+
+    private void switchByChangeCr(Middleware middleware, MysqlCluster mysqlCluster){
         String masterName = null;
         String slaveName = null;
         for (Status.Condition cond : mysqlCluster.getStatus().getConditions()) {
@@ -487,7 +517,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                     middleware.getName(), e);
             throw new BusinessException(DictEnum.MYSQL_CLUSTER, middleware.getName(), ErrorMessage.SWITCH_FAILED);
         }
-        return true;
     }
 
     /**

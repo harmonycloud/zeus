@@ -430,6 +430,17 @@ public abstract class AbstractBaseOperator {
     public void switchMiddleware(Middleware middleware, String slaveName) {
 
     }
+
+    public void parseHandSwitchResult(List<String> results){
+        if (!"200".equals(results.get(1)) && !"202".equals(results.get(1))) {
+            String errorMessage = results.get(0);
+            if (errorMessage.startsWith("Not failed over, because this instance is delay")) {
+                throw new BusinessException(ErrorMessage.SWITCH_FAILD_BECAUSE_DELAY);
+            } else {
+                throw new BusinessException(ErrorMessage.SWITCH_FAILED);
+            }
+        }
+    }
     /**
      * 从helm chart转回middleware
      */
