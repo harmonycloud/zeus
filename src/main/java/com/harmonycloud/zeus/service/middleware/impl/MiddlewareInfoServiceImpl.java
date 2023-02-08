@@ -445,7 +445,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
             List<Namespace> listRegisteredNamespace = clusterService.listRegisteredNamespace(cluster.getClusterId(), null);
             List<Middleware> middlewares;
             try{
-                middlewares = middlewareService.simpleList(cluster.getClusterId(), null, null, null);
+                middlewares = middlewareService.simpleList(cluster.getClusterId(), null, type, null);
             }catch (Exception e){
                 log.error("集群{}, 查询middleware失败", cluster.getClusterId());
                 return;
@@ -457,17 +457,12 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
             if (middlewares.isEmpty()) {
                 return;
             }
-            if (StringUtils.isEmpty(keyword) && StringUtils.isEmpty(type)) {
+            if (StringUtils.isEmpty(keyword)) {
                 middlewareList.addAll(middlewares);
             } else {
-                if (StringUtils.isNotEmpty(keyword)) {
                     middlewareList.addAll(middlewares.stream()
                             .filter(middleware -> middleware.getType().equals(type) && middleware.getName().contains(keyword))
                             .collect(Collectors.toList()));
-                } else {
-                    middlewareList.addAll(middlewares.stream().filter(middleware -> middleware.getType().equals(type))
-                            .collect(Collectors.toList()));
-                }
             }
         });
         return middlewareList;
