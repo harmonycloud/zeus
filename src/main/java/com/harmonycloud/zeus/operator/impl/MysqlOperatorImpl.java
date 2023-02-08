@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import static com.harmonycloud.caas.common.constants.CmdConstant.MYSQL_HAND_SWITCH;
@@ -95,7 +96,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     private IngressService ingressService;
     @Autowired
     private NamespaceService namespaceService;
-
     @Override
     public boolean support(Middleware middleware) {
         return MiddlewareTypeEnum.MYSQL == MiddlewareTypeEnum.findByType(middleware.getType());
@@ -470,7 +470,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
 
         // 判断版本
-        if (ChartVersionUtil.compare(middleware.getChartVersion(), "1.8.18") < 0) {
+        if (ChartVersionUtil.compare(middleware.getChartVersion(), "1.8.18-3") < 0) {
             switchByChangeCr(middleware, mysqlCluster);
         } else {
             switchByCurl(middleware, mysqlCluster);
@@ -482,7 +482,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
         // 先判断有没有sync_slave
         List<Status.Condition> conditions = mysqlCluster.getStatus().getConditions();
-        List<Status.Condition> syncList = conditions.stream().filter(con -> con.getType().equals(SYNC_SLAVE)).collect(Collectors.toList());
+        List<Status.Condition> syncList = conditions.stream().filter(con -> con.getType().equals("SyncSlave")).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(syncList)) {
             throw new BusinessException(DictEnum.ROLE,SYNC_SLAVE,ErrorMessage.NOT_FOUND);
         }
