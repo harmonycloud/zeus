@@ -13,6 +13,7 @@ import com.harmonycloud.caas.common.model.ProjectBackupServerDTO;
 import com.harmonycloud.caas.common.model.middleware.BackupServerDetailDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.zeus.bean.BeanBackupServer;
+import com.harmonycloud.zeus.bean.BeanBackupServerDetail;
 import com.harmonycloud.zeus.dao.BeanBackupServerMapper;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
@@ -114,6 +115,9 @@ public class BackupServerServiceImpl implements BackupServerService {
     public void create(BackupServerDTO backupServerDTO) {
         if (checkNameExists(backupServerDTO.getName())) {
             throw new BusinessException(ErrorMessage.SERVER_NAME_ALREADY_EXISTS);
+        }
+        if (checkAddressExists(backupServerDTO)) {
+            throw new BusinessException(ErrorMessage.SERVER_ADDRESS_ALREADY_EXISTS);
         }
         BeanBackupServer backupServer = new BeanBackupServer();
         backupServer.setName(backupServerDTO.getName());
@@ -248,6 +252,26 @@ public class BackupServerServiceImpl implements BackupServerService {
     }
 
     /**
+     * 校验备份地址是否已存在
+     * @param backupServerDTO
+     * @return
+     */
+    public boolean checkAddressExists(BackupServerDTO backupServerDTO) {
+        QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
+        List<BackupServerDetailDTO> serverDetailList = backupServerDTO.getServerDetailList();
+        for (BackupServerDetailDTO serverDetail : serverDetailList) {
+            List<BeanBackupServerDetail> serverDetails = backupServerDetailService.findByAddress(serverDetail.getProtocol(),
+                    serverDetail.getHost(), serverDetail.getPort(), serverDetail.getType());
+            if(!CollectionUtils.isEmpty(serverDetails)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+
+    /**
      * 添加集群别名
      * @param servers
      */
@@ -257,6 +281,7 @@ public class BackupServerServiceImpl implements BackupServerService {
             if (StringUtils.isNotEmpty(clusterId)) {
                 MiddlewareClusterDTO clusterDTO;
                 try {
+                    // todo
                     clusterDTO = clusterService.findById(backupServerDTO.getClusterId());
                     backupServerDTO.setClusterNickName(clusterDTO.getNickname());
                 } catch (Exception e) {

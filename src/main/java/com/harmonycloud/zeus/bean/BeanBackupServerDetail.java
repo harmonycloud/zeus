@@ -82,5 +82,10 @@ public class BeanBackupServerDetail implements Serializable {
     @TableField("create_time")
     private Date createTime;
 
+    /**
+     * 服务器类型：1:普通，2:双活
+     */
+    @TableField(exist = false)
+    private Integer serverType;
 
 }

@@ -23,4 +23,6 @@ public interface BackupServerDetailService {
 
     BeanBackupServerDetail getBackupServerDetail(Integer serverId, String usage);
 
+    List<BeanBackupServerDetail> findByAddress(String protocol, String host, String port, Integer serverType);
+
 }

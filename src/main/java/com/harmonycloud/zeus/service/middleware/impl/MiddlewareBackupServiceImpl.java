@@ -356,10 +356,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             // 获取可用区annotation
             ActiveAreaAnnotationDto activeAreaAnnotation = middlewareService.getActiveAreaAnnotation(backupDTO.getClusterId(),
                     backupDTO.getNamespace(), backupDTO.getType(), backupDTO.getMiddlewareName());
-            // 创建A可用区增量备份
+            // 创建A可用区备份
             createBackupTask(backupDTO, backupPositionService.getMinio(backupDTO.getBackupPositionId(), ServerUsageEnum.zoneA.getName()),
                     getActiveAreaObjectMeta(activeAreaAnnotation, ServerUsageEnum.zoneA.getName()));
-            // 创建B可用区增量备份
+            // 创建B可用区备份
             createBackupTask(backupDTO, backupPositionService.getMinio(backupDTO.getBackupPositionId(), ServerUsageEnum.zoneB.getName()),
                     getActiveAreaObjectMeta(activeAreaAnnotation, ServerUsageEnum.zoneB.getName()));
         } else {
