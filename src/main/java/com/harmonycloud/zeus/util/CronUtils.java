@@ -1,9 +1,6 @@
 package com.harmonycloud.zeus.util;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import com.harmonycloud.caas.common.enums.DateType;
@@ -138,9 +135,9 @@ public class CronUtils {
         return String.valueOf(res);
     }
 
-    private static void sycWeek(String[] cron, boolean add){
+    private static void sycWeek(String[] cron, boolean add) {
         String[] week = cron[4].split(",");
-        StringBuilder sb = new StringBuilder();
+        Set<Integer> set = new HashSet<>();
         for (String s : week) {
             int wk = Integer.parseInt(s);
             if (add) {
@@ -154,9 +151,13 @@ public class CronUtils {
                     wk = 6;
                 }
             }
+            set.add(wk);
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int wk : set) {
             sb.append(wk).append(",");
         }
-        if (sb.length() != 0){
+        if (sb.length() != 0) {
             sb.deleteCharAt(sb.length() - 1);
         }
         cron[4] = sb.toString();
