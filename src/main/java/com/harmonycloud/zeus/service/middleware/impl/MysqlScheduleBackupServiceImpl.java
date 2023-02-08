@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import com.harmonycloud.tool.date.DateUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -39,6 +40,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupService {
+
+    @Value("${system.cron.timezone: 0}")
+    private Integer timezone;
 
     @Autowired
     private MysqlScheduleBackupWrapper mysqlScheduleBackupWrapper;
@@ -129,7 +133,7 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
             backupRecord.setBackupId(backupId);
             backupRecord.setTaskName(getBackupAliasName(clusterId, backupId));
             backupRecord.setAddressId(schedule.getMetadata().getLabels().get("addressId"));
-            backupRecord.setCron(CronUtils.parseLocalCron(schedule.getSpec().getSchedule()));
+            backupRecord.setCron(CronUtils.parseCron(schedule.getSpec().getSchedule(), -timezone + 8));
             if (schedule.getSpec().getKeepBackups() == null) {
                 backupRecord.setBackupMode("single");
             } else {

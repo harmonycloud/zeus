@@ -22,6 +22,7 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -40,6 +41,9 @@ import java.util.Map;
 @Slf4j
 @Service
 public class MysqlBackupServiceImpl implements MiddlewareBackupService {
+
+    @Value("${system.cron.timezone: 0}")
+    private Integer timezone;
 
     @Autowired
     private BackupService backupService;
@@ -135,7 +139,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         MysqlScheduleBackupCR backupCRD = mysqlScheduleBackupService.get(backupDTO.getClusterId(),
                 backupDTO.getNamespace(), backupDTO.getBackupName());
         MysqlScheduleBackupSpec spec = backupCRD.getSpec();
-        spec.setSchedule(CronUtils.parseUtcCron(backupDTO.getCron()));
+        spec.setSchedule(CronUtils.parseCron(backupDTO.getCron(), -8 + timezone));
         spec.setKeepBackups(backupDTO.getLimitRecord());
         mysqlScheduleBackupService.update(backupDTO.getClusterId(), backupCRD);
     }
@@ -166,7 +170,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
                 .setStorageProvider(new BackupStorageProvider().setMinio(minio));
 
         MysqlScheduleBackupSpec spec =
-                new MysqlScheduleBackupSpec().setSchedule(CronUtils.parseUtcCron(backupDTO.getCron()))
+                new MysqlScheduleBackupSpec().setSchedule(CronUtils.parseCron(backupDTO.getCron(), -8 + timezone))
                         .setBackupTemplate(backupTemplate).setKeepBackups(backupDTO.getLimitRecord());
         ObjectMeta metaData = new ObjectMeta();
         metaData.setName(backupDTO.getMiddlewareName() + UUIDUtils.get8UUID());

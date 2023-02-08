@@ -1,16 +1,15 @@
 package com.harmonycloud.zeus.util;
 
-import com.harmonycloud.caas.common.enums.DateType;
-import com.harmonycloud.tool.date.DateUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.joda.time.DateTimeUtils;
-
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.harmonycloud.caas.common.enums.DateType;
+import com.harmonycloud.tool.date.DateUtils;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author liyinlong
@@ -85,16 +84,16 @@ public class CronUtils {
         return time;
     }
 
+    public static String parseCron(String cron, Integer timezone){
+        String[] newCron = cron.split(" ");
+        convertCronTimezone(newCron, timezone);
+        return getCron(newCron);
+    }
+
     public static String parseUtcCron(String cron) {
         String[] newCron = cron.split(" ");
         newCron[1] = getUtcHour(newCron[1]);
         return getCron(newCron);
-    }
-
-    public static String parseMysqlUtcCron(String cron) {
-        String[] items = cron.split(" ");
-        items[1] = getUtcHour(items[1]);
-        return getCron(items);
     }
 
     public static String parseLocalCron(String cron) {
@@ -137,5 +136,41 @@ public class CronUtils {
             res = temp;
         }
         return String.valueOf(res);
+    }
+
+    private static void sycWeek(String[] cron, boolean add){
+        String[] week = cron[4].split(",");
+        StringBuilder sb = new StringBuilder();
+        for (String s : week) {
+            int wk = Integer.parseInt(s);
+            if (add) {
+                wk = wk + 1;
+                if (wk == 7) {
+                    wk = 0;
+                }
+            } else {
+                wk = wk - 1;
+                if (wk == -1) {
+                    wk = 6;
+                }
+            }
+            sb.append(wk).append(",");
+        }
+        if (sb.length() != 0){
+            sb.deleteCharAt(sb.length() - 1);
+        }
+        cron[4] = sb.toString();
+    }
+    
+    public static void convertCronTimezone(String[] cron, Integer timezone){
+        int h = Integer.parseInt(cron[1]) + timezone;
+        if (h < 0){
+            sycWeek(cron, false);
+            h += 24;
+        }else if (h > 23){
+            sycWeek(cron, true);
+            h -= 24;
+        }
+        cron[1] = String.valueOf(h);
     }
 }

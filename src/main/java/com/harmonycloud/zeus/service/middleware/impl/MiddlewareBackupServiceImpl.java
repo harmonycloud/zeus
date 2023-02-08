@@ -22,7 +22,9 @@ import com.harmonycloud.zeus.bean.BeanBackupServer;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.*;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.core.util.CronExpression;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -52,6 +54,9 @@ import lombok.extern.slf4j.Slf4j;
 @MiddlewareBackup
 @Service
 public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
+
+    @Value("${system.cron.timezone: 0}")
+    private Integer timezone;
 
     @Autowired
     private MiddlewareBackupScheduleCRDService backupScheduleCRDService;
@@ -145,7 +150,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             MiddlewareBackupScheduleSpec spec = middlewareBackupScheduleCR.getSpec();
             // 更新cron表达式
             if (StringUtils.isNotEmpty(backupDTO.getCron())) {
-                spec.getSchedule().setCron(CronUtils.parseUtcCron(backupDTO.getCron()));
+                spec.getSchedule().setCron(CronUtils.parseCron(backupDTO.getCron(), -8 + timezone));
             }
             // 更新备份保留时间
             if (backupDTO.getRetentionTime() != null && StringUtils.isNotEmpty(backupDTO.getDateUnit())) {
@@ -238,9 +243,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         env.put(ENV, envList);
         customBackups.add(env);
 
-        MiddlewareBackupScheduleSpec spec = new MiddlewareBackupScheduleSpec(destination, customBackups,
-            backupDTO.getMiddlewareName(), backupDTO.getCrdType(), "off", CronUtils.parseUtcCron(backupDTO.getCron()),
-            backupDTO.getLimitRecord(), calRetentionTime(backupDTO));
+        MiddlewareBackupScheduleSpec spec =
+            new MiddlewareBackupScheduleSpec(destination, customBackups, backupDTO.getMiddlewareName(),
+                backupDTO.getCrdType(), "off", CronUtils.parseCron(backupDTO.getCron(), -8 + timezone),
+                backupDTO.getLimitRecord(), calRetentionTime(backupDTO));
         crd.setSpec(spec);
         try {
             backupScheduleCRDService.create(backupDTO.getClusterId(), crd);
@@ -1044,7 +1050,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
         // 转换cron表达式
         try {
-            backupRecord.setCron(CronUtils.parseLocalCron(schedule.getSpec().getSchedule().getCron()));
+            backupRecord.setCron(CronUtils.parseCron(schedule.getSpec().getSchedule().getCron(), -timezone + 8));
         }catch (Exception e){
             log.error("定时备份{} 转换cron表达式失败", backupRecord.getBackupName());
             return;
