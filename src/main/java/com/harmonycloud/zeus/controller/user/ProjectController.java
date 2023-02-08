@@ -83,8 +83,9 @@ public class ProjectController {
     @GetMapping("/{projectId}/namespace")
     public BaseResult<List<Namespace>> getNamespace(@PathVariable("projectId") String projectId,
                                                     @RequestParam(value = "clusterId", required = false) String clusterId,
-                                                    @RequestParam(value = "withQuota", required = false, defaultValue = "false") Boolean withQuota) {
-        return BaseResult.ok(projectService.getNamespace(projectId, clusterId, withQuota));
+                                                    @RequestParam(value = "withQuota", required = false, defaultValue = "false") Boolean withQuota,
+                                                    @RequestParam(value = "withMiddleware", required = false, defaultValue = "false") Boolean withMiddleware) {
+        return BaseResult.ok(projectService.getNamespace(projectId, clusterId, withQuota, withMiddleware));
     }
 
     @ApiOperation(value = "获取项目下可分配分区", notes = "获取项目下可分配分区")

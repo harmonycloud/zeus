@@ -510,13 +510,13 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public List<String> getClusters(String projectId) {
-        List<Namespace> namespaceList = this.getNamespace(projectId, null, false);
+        List<Namespace> namespaceList = this.getNamespace(projectId, null, false, false);
         return namespaceList.stream().map(Namespace::getClusterId).collect(Collectors.toList());
     }
 
     @Override
     public List<Namespace> getNamespace(String projectId) {
-        return getNamespace(projectId, null, false);
+        return getNamespace(projectId, null, false, false);
     }
 
     @Override
@@ -544,7 +544,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<Namespace> getNamespace(String projectId, String clusterId, Boolean withQuota) {
+    public List<Namespace> getNamespace(String projectId, String clusterId, Boolean withQuota, Boolean withMiddleware) {
         QueryWrapper<BeanProjectNamespace> wrapper =
             new QueryWrapper<BeanProjectNamespace>().eq("project_id", projectId);
         if (!StringUtils.isEmpty(clusterId)) {
@@ -567,6 +567,14 @@ public class ProjectServiceImpl implements ProjectService {
                 namespaces.stream().collect(Collectors.groupingBy(Namespace::getClusterId));
             for (String key : namespaceMap.keySet()) {
                 namespaceService.listNamespaceWithQuota(namespaceMap.get(key), key);
+            }
+        }
+        // with middleware
+        if (withMiddleware){
+            Map<String, List<Namespace>> namespaceMap =
+                    namespaces.stream().collect(Collectors.groupingBy(Namespace::getClusterId));
+            for (String key : namespaceMap.keySet()) {
+                namespaceService.listNamespaceWithMiddleware(namespaceMap.get(key), key);
             }
         }
 

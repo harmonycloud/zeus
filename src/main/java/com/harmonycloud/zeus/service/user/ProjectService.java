@@ -44,7 +44,7 @@ public interface ProjectService {
      * @param clusterId 集群id
      * @return List<Namespace>
      */
-    List<Namespace> getNamespace(String projectId, String clusterId, Boolean withQuota);
+    List<Namespace> getNamespace(String projectId, String clusterId, Boolean withQuota, Boolean withMiddleware);
 
     /**
      * 查询项目下分区
