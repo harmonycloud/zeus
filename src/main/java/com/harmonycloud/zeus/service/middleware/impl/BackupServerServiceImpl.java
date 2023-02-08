@@ -80,6 +80,7 @@ public class BackupServerServiceImpl implements BackupServerService {
         List<BackupPositionDTO> backupPositionDTOS = backupPositionService.selectBackupPositionDTOList(projectId);
         List<BackupServerDTO> backupServerDTOS = new ArrayList<>();
         for (BackupPositionDTO backupPositionDTO : backupPositionDTOS) {
+            // 查询使用该备份位置的备份记录数
             List<BackupServerDetailDTO> backupServerDetailDTOS = backupServerDetailService.listBackupServerDetailDTOS(backupPositionDTO.getId());
             if (!CollectionUtils.isEmpty(backupPositionDTOS)) {
                 BackupServerDTO backupServerDTO = new BackupServerDTO();

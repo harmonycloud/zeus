@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.service.middleware.impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.dtflys.forest.utils.StringUtils;
+import com.harmonycloud.caas.common.enums.BackupServerTypeEnum;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.BackupPositionDTO;
@@ -13,6 +14,7 @@ import com.harmonycloud.zeus.bean.BeanBackupServerDetail;
 import com.harmonycloud.zeus.bean.user.BeanProject;
 import com.harmonycloud.zeus.dao.BeanBackupPositionMapper;
 import com.harmonycloud.zeus.integration.cluster.bean.Minio;
+import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.middleware.BackupPositionService;
 import com.harmonycloud.zeus.service.middleware.BackupServerDetailService;
 import com.harmonycloud.zeus.service.middleware.BackupServerService;
@@ -41,6 +43,8 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     private BackupServerService backupServerService;
     @Autowired
     private BackupServerDetailService backupServerDetailService;
+    @Autowired
+    private NamespaceService namespaceService;
 
     /**
      * 查询指定备份服务器的全部备份位置
@@ -89,8 +93,12 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     public List<BackupPositionDTO> list(String clusterId, String namespace) {
         String projectId = projectService.getProjectId(clusterId, namespace);
         List<BackupPositionDTO> backupPositionDTOS = selectBackupPositionDTOList(projectId);
+        boolean openAvailableDomain = namespaceService.isOpenAvailableDomain(clusterId, namespace);
         return backupPositionDTOS.stream().filter(backupPositionDTO -> {
             BeanBackupServer beanBackupServer = backupServerService.get(backupPositionDTO.getBackupServerId());
+            if(!openAvailableDomain && beanBackupServer.getType() == 2){
+                return false;
+            }
             if (beanBackupServer != null) {
                 backupPositionDTO.setBackupServerName(beanBackupServer.getName());
                 return true;
@@ -146,6 +154,9 @@ public class BackupPositionServiceImpl implements BackupPositionService {
         QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
         wrapper.eq("id", positionId);
         List<BeanBackupPosition> beanBackupPositions = backupPositionMapper.selectList(wrapper);
+        if (CollectionUtils.isEmpty(beanBackupPositions)) {
+            return null;
+        }
         return beanBackupPositions.get(0);
     }
 
@@ -170,7 +181,7 @@ public class BackupPositionServiceImpl implements BackupPositionService {
             BackupPositionDTO backupPositionDTO = new BackupPositionDTO();
             BeanUtil.copyProperties(beanBackupPosition, backupPositionDTO);
             BeanProject beanProject = projectService.get(beanBackupPosition.getProjectId());
-            backupPositionDTO.setProjectName(beanProject.getName());
+            backupPositionDTO.setProjectName(beanProject.getAliasName());
             return backupPositionDTO;
         }).collect(Collectors.toList());
     }

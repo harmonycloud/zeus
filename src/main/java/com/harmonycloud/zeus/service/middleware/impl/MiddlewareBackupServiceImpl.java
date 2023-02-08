@@ -17,9 +17,10 @@ import com.harmonycloud.caas.common.model.*;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecordGroup;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.bean.BeanActiveArea;
+import com.harmonycloud.zeus.bean.BeanBackupPosition;
+import com.harmonycloud.zeus.bean.BeanBackupServer;
 import com.harmonycloud.zeus.service.k8s.*;
-import com.harmonycloud.zeus.service.middleware.BackupPositionService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareService;
+import com.harmonycloud.zeus.service.middleware.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,8 +37,6 @@ import com.harmonycloud.zeus.annotation.MiddlewareBackup;
 import com.harmonycloud.zeus.bean.BeanMiddlewareBackupName;
 import com.harmonycloud.zeus.dao.BeanMiddlewareBackupNameMapper;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
-import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
-import com.harmonycloud.zeus.service.middleware.MiddlewareCrTypeService;
 import com.harmonycloud.zeus.util.CronUtils;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -76,6 +75,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private MiddlewareService middlewareService;
     @Autowired
     private ActiveAreaService activeAreaService;
+    @Autowired
+    private BackupServerService backupServerService;
 
     @Override
     public List<MiddlewareBackupRecord> listBackup(String clusterId, String namespace, String middlewareName,
@@ -350,7 +351,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * @param backupDTO
      */
     private void createBackupByTaskType(MiddlewareBackupDTO backupDTO) {
-        if (namespaceService.isOpenAvailableDomain(backupDTO.getClusterId(), backupDTO.getNamespace())) {
+        if (activeActiveBackupCheck(backupDTO)) {
             // 双活备份
             // 获取可用区annotation
             ActiveAreaAnnotationDto activeAreaAnnotation = middlewareService.getActiveAreaAnnotation(backupDTO.getClusterId(),
@@ -358,7 +359,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             // 创建A可用区增量备份
             createBackupTask(backupDTO, backupPositionService.getMinio(backupDTO.getBackupPositionId(), ServerUsageEnum.zoneA.getName()),
                     getActiveAreaObjectMeta(activeAreaAnnotation, ServerUsageEnum.zoneA.getName()));
-            // 创建B可用区增量备份;
+            // 创建B可用区增量备份
             createBackupTask(backupDTO, backupPositionService.getMinio(backupDTO.getBackupPositionId(), ServerUsageEnum.zoneB.getName()),
                     getActiveAreaObjectMeta(activeAreaAnnotation, ServerUsageEnum.zoneB.getName()));
         } else {
@@ -400,6 +401,19 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             labels.put("activeArea", ActiveAreaEnum.zoneB.getName());
         }
         return objectMeta;
+    }
+
+    /**
+     * 检查是否是双活备份任务
+     * @param backupDTO
+     * @return
+     */
+    private boolean activeActiveBackupCheck(MiddlewareBackupDTO backupDTO) {
+        if (namespaceService.isOpenAvailableDomain(backupDTO.getClusterId(), backupDTO.getNamespace())) {
+            String type = backupDTO.getType();
+            return type.equals(MiddlewareTypeEnum.MYSQL.getType()) || type.equals(MiddlewareTypeEnum.POSTGRESQL.getType()) || type.equals(MiddlewareTypeEnum.REDIS.getType());
+        }
+        return false;
     }
 
     private Integer calRetentionTime(MiddlewareBackupDTO backupDTO) {
@@ -714,7 +728,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         setTaskName(recordList, clusterId, null);
         // 根据关键词进行过滤
         if (StringUtils.isNotEmpty(keyword)) {
-            recordList = recordList.stream().filter(record -> record.getTaskName().equals(keyword))
+            recordList = recordList.stream().filter(record -> record.getTaskName().contains(keyword))
                 .collect(Collectors.toList());
         }
         // 根据中间件名称进行过滤
@@ -747,6 +761,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public List<MiddlewareBackupRecordGroup> backupTaskGroupList(String clusterId, String namespace, String middlewareName, String type, String keyword) {
         List<MiddlewareBackupRecord> records = backupTaskList(clusterId, namespace, middlewareName, type, keyword);
+        // 设置备份地址
+        setBackupPosition(records);
         List<MiddlewareBackupRecordGroup> recordGroups = groupByBackupId(clusterId,records);
         setMiddlewareStatus(clusterId,recordGroups);
         return recordGroups;
@@ -909,6 +925,23 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     /**
+     * 设置备份地址
+     */
+    private void setBackupPosition(List<MiddlewareBackupRecord> records) {
+        for (MiddlewareBackupRecord record : records) {
+            if (StringUtils.isEmpty(record.getPositionId())) {
+                continue;
+            }
+            String positionId = record.getPositionId();
+            BeanBackupPosition backupPosition = backupPositionService.getBackupPosition(Integer.parseInt(positionId));
+            if (backupPosition != null) {
+                BeanBackupServer beanBackupServer = backupServerService.get(backupPosition.getBackupServerId());
+                record.setPosition(beanBackupServer.getName() + " - " + backupPosition.getName() + record.getPosition());
+            }
+        }
+    }
+
+    /**
      * 转换备份信息
      *
      * @param backupDTO
@@ -922,7 +955,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         Map<String, String> backupLabel = getBackupLabel(middlewareName, type);
         String backupId = UUIDUtils.get16UUID();
         backupLabel.put("backupId", backupId);
-        backupLabel.put("addressId", backupDTO.getBackupPositionId().toString());
+        backupLabel.put("positionId", backupDTO.getBackupPositionId().toString());
         backupLabel.put("type", backupDTO.getType());
         backupLabel.put("unit", backupDTO.getDateUnit());
         backupDTO.setLabels(backupLabel);
@@ -998,11 +1031,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         backupRecord.setNamespace(schedule.getMetadata().getNamespace());
         backupRecord.setBackupName(schedule.getMetadata().getName());
         backupRecord.setSchedule(true);
+        // 获取备份地址id
+        backupRecord.setPositionId(schedule.getMetadata().getLabels().get("positionId"));
         // 获取备份位置
         MiddlewareBackupScheduleSpec spec = schedule.getSpec();
         MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination.MiddlewareBackupParameters parameters =
                 spec.getBackupDestination().getParameters();
-        String position = spec.getBackupDestination().getDestinationType() + "(" + parameters.getUrl() + "/"
+        String position = "(" + parameters.getUrl() + "/"
                 + parameters.getBucket() + ")";
         backupRecord.setPosition(position);
         // 获取备份状态
@@ -1066,6 +1101,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
         // 获取备份id
         backupRecord.setBackupId(labels.get("backupId"));
+
+        // 获取备份地址id
+        String positionId = StringUtils.isNotEmpty(labels.get("positionId")) ? labels.get("positionId") : labels.get("addressId");
+        backupRecord.setPositionId(positionId);
 
         // 获取备份时间
         Date creationTime = DateUtils.parseUTCDate(backup.getMetadata().getCreationTimestamp());
@@ -1212,6 +1251,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             recordGroup.setPhrase(getTaskPhrase(records));
             recordGroup.setTaskType(getTaskType(records));
             recordGroup.setBackupId(record.getBackupId());
+            recordGroup.setBackupId(record.getPositionId());
             recordGroups.add(recordGroup);
         });
         return recordGroups;

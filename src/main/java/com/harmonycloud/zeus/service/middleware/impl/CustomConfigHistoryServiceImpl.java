@@ -35,11 +35,16 @@ public class CustomConfigHistoryServiceImpl implements CustomConfigHistoryServic
             beanCustomConfigHistory.setClusterId(middlewareCustomConfig.getClusterId());
             beanCustomConfigHistory.setNamespace(middlewareCustomConfig.getNamespace());
             beanCustomConfigHistory.setName(middlewareName);
-            beanCustomConfigHistory.setLast(oldData.get(customConfig.getName()));
             beanCustomConfigHistory.setAfter(customConfig.getValue());
             beanCustomConfigHistory.setDate(now);
             beanCustomConfigHistory.setRestart(customConfig.getRestart());
             beanCustomConfigHistory.setStatus(false);
+            // 当前值不存在，选择默认值
+            if (oldData.containsKey(customConfig.getName())) {
+                beanCustomConfigHistory.setLast(oldData.get(customConfig.getName()));
+            } else {
+                beanCustomConfigHistory.setLast(customConfig.getDefaultValue());
+            }
             beanCustomConfigHistoryMapper.insert(beanCustomConfigHistory);
         }
     }

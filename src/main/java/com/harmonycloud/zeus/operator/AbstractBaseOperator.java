@@ -25,15 +25,13 @@ import com.harmonycloud.caas.common.model.ResourceQuotaDo;
 import com.harmonycloud.caas.common.model.StorageDto;
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.tool.uuid.UUIDUtils;
-import com.harmonycloud.zeus.bean.BeanAlertRule;
-import com.harmonycloud.zeus.bean.AlertRuleId;
+import com.harmonycloud.zeus.bean.*;
+import com.harmonycloud.zeus.dao.BeanAlertRecordMapper;
 import com.harmonycloud.zeus.dao.BeanAlertRuleMapper;
 import com.harmonycloud.zeus.dao.AlertRuleIdMapper;
 import com.harmonycloud.zeus.dao.BeanMiddlewareInfoMapper;
 import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.prometheus.PrometheusRuleGroups;
-import com.harmonycloud.zeus.bean.BeanCacheMiddleware;
-import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
 import com.harmonycloud.zeus.service.aspect.AspectService;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.integration.cluster.PvcWrapper;
@@ -70,7 +68,6 @@ import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.model.AffinityDTO;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.common.model.registry.HelmChartFile;
-import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.prometheus.PrometheusRule;
 import com.harmonycloud.tool.collection.JsonUtils;
 import com.harmonycloud.tool.numeric.ResourceCalculationUtil;
@@ -143,6 +140,8 @@ public abstract class AbstractBaseOperator {
     private PodService podService;
     @Autowired
     private MaintenanceService maintenanceService;
+    @Autowired
+    private BeanAlertRecordMapper alertRecordMapper;
 
     /**
      * 是否支持该中间件
@@ -215,6 +214,8 @@ public abstract class AbstractBaseOperator {
         //5. 修改prometheusRules添加集群
         updateAlerts(middleware);
         add2sql(middleware);
+        //6. 删除告警记录
+        deleteRecord(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
     }
 
 
@@ -400,6 +401,22 @@ public abstract class AbstractBaseOperator {
         } catch (Exception e) {
             log.error("集群{} 分区{} 中间件{} 自定义参数修改历史删除失败: {}", mw.getClusterId(), mw.getNamespace(), mw.getName(), e);
         }
+    }
+
+    /**
+     * 删除告警记录
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param middlewareName
+     */
+    private void deleteRecord(String clusterId, String namespace, String type, String middlewareName) {
+        QueryWrapper<BeanAlertRecord> wrapper = new QueryWrapper<>();
+        wrapper.eq("cluster_id", clusterId);
+        wrapper.eq("namespace", namespace);
+        wrapper.eq("type", type);
+        wrapper.eq("name", middlewareName);
+        alertRecordMapper.delete(wrapper);
     }
 
     public void deleteMiddlewareBackupInfo(Middleware mw){

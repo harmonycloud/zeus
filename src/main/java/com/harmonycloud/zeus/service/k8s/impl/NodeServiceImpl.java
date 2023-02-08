@@ -28,8 +28,10 @@ import com.harmonycloud.zeus.integration.cluster.NodeWrapper;
 
 import io.fabric8.kubernetes.api.model.NodeSystemInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.StringUtils;
 
 import static com.harmonycloud.caas.common.constants.NameConstant.*;
+import static com.harmonycloud.caas.common.constants.CommonConstant.ZONE;
 
 /**
  * @author dengyulong
@@ -56,6 +58,16 @@ public class NodeServiceImpl implements NodeService {
     public List<Node> list(String clusterId, Map<String, String> labels){
         List<io.fabric8.kubernetes.api.model.Node> nodes = nodeWrapper.list(clusterId, labels);
         return convertToDto(nodes);
+    }
+
+    @Override
+    public List<Node> listActive(String clusterId, String zone) {
+        HashMap<String, String> label = new HashMap<>();
+        if (!StringUtils.isEmpty(zone)) {
+            label.put(ZONE, zone);
+        }
+        List<io.fabric8.kubernetes.api.model.Node> nodes = nodeWrapper.list(clusterId, label);
+        return simpleConvertToDto(nodes);
     }
 
     @Override
@@ -144,6 +156,11 @@ public class NodeServiceImpl implements NodeService {
                     DateUtils.parseDate(no.getMetadata().getCreationTimestamp(), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
             return node;
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Node> simpleConvertToDto(List<io.fabric8.kubernetes.api.model.Node> nodes) {
+        return nodes.stream().map(node -> new Node().setName(node.getMetadata().getName())).collect(Collectors.toList());
     }
 
     @Override

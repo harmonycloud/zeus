@@ -307,8 +307,7 @@ public class NamespaceServiceImpl implements NamespaceService {
         namespace.setRegistered(ns.getMetadata().getLabels() != null
                 && StringUtils.equals(ns.getMetadata().getLabels().get(labelKey), labelValue));
         // 创建时间
-        namespace.setCreateTime(
-                DateUtils.parseDate(ns.getMetadata().getCreationTimestamp(), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
+        namespace.setCreateTime(DateUtils.parseUTCDate(ns.getMetadata().getCreationTimestamp()));
         // 状态
         namespace.setPhase(ns.getStatus().getPhase());
         // 如果没有中文名称，则设置英文名称为中文名称
