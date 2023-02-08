@@ -177,8 +177,9 @@ public class MiddlewareController {
                                        @PathVariable("middlewareName") String name,
                                        @RequestParam("type") String type,
                                        @RequestParam(value = "slaveName", required = false) String slaveName,
-                                       @RequestParam(value = "isAuto", required = false) Boolean isAuto) {
-        middlewareService.switchMiddleware(clusterId, namespace, name, type, slaveName, isAuto);
+                                       @RequestParam(value = "isAuto", required = false) Boolean isAuto,
+                                       @RequestParam(value = "chartVersion", required = false) String chartVersion) {
+        middlewareService.switchMiddleware(clusterId, namespace, name, type, slaveName, isAuto, chartVersion);
         return BaseResult.ok();
     }
 

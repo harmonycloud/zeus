@@ -102,8 +102,9 @@ public interface MiddlewareService {
      * @param type      中间件类型
      * @param slaveName 从节点名称
      * @param isAuto    是否自动切换
+     * @param chartVersion chart包版本
      */
-    void switchMiddleware(String clusterId, String namespace, String name, String type, String slaveName, Boolean isAuto);
+    void switchMiddleware(String clusterId, String namespace, String name, String type, String slaveName, Boolean isAuto, String chartVersion);
 
     /**
      * 性能监控
