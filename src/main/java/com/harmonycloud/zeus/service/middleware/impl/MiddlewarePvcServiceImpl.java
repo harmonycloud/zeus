@@ -226,6 +226,9 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
     }
     
     public String convertStatus(Maintenance maintenance, String pvcName) {
+        if (maintenance.getStatus() == null || CollectionUtils.isEmpty(maintenance.getStatus().getConditions())){
+            return null;
+        }
         Map<String, String> map = maintenance.getStatus().getConditions().stream()
             .collect(Collectors.toMap(con -> con.get("pvc"), con -> con.get("status")));
         if (map.containsKey(pvcName)) {
