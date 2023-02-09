@@ -140,6 +140,8 @@ public class BackupServerServiceImpl implements BackupServerService {
 
     @Override
     public void update(BackupServerDTO backupServerDTO) {
+        // 校验备份服务器用户名和密码
+        checkServerAuthorization(backupServerDTO.getServerDetailList());
         QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
         wrapper.eq("id", backupServerDTO.getId());
         BeanBackupServer beanBackupServer = new BeanBackupServer();
