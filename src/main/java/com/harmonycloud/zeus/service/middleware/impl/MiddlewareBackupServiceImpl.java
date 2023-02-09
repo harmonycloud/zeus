@@ -940,8 +940,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             }
             String positionId = record.getPositionId();
             BeanBackupPosition backupPosition = backupPositionService.getBackupPosition(Integer.parseInt(positionId));
+            if (backupPosition == null) {
+                continue;
+            }
             BeanBackupServer beanBackupServer = backupServerService.get(backupPosition.getBackupServerId());
-            if (backupPosition != null && beanBackupServer != null) {
+            if (beanBackupServer != null) {
                 record.setPosition(beanBackupServer.getName() + " - " + backupPosition.getName() + record.getPosition());
             }
         }

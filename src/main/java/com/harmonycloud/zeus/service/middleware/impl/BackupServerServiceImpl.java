@@ -17,10 +17,7 @@ import com.harmonycloud.zeus.bean.BeanBackupServerDetail;
 import com.harmonycloud.zeus.dao.BeanBackupServerMapper;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
-import com.harmonycloud.zeus.service.middleware.BackupPositionService;
-import com.harmonycloud.zeus.service.middleware.BackupServerDetailService;
-import com.harmonycloud.zeus.service.middleware.BackupServerService;
-import com.harmonycloud.zeus.service.middleware.ProjectBackupServerService;
+import com.harmonycloud.zeus.service.middleware.*;
 import com.harmonycloud.zeus.util.MinioUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +47,8 @@ public class BackupServerServiceImpl implements BackupServerService {
     private MiddlewareClusterService middlewareClusterService;
     @Autowired
     private ClusterService clusterService;
+    @Autowired
+    private MiddlewareBackupNameService middlewareBackupNameService;
 
     @Override
     public List<BackupServerDTO> list(List<String> clusterIds, String keyword, Boolean withDetail) {
@@ -316,7 +315,6 @@ public class BackupServerServiceImpl implements BackupServerService {
      * 检查服务器关联的地址是否已被备份任务使用
      */
     private void serverPositionDeleteCheck(Integer serverId,String clusterId){
-
     }
 
 }
