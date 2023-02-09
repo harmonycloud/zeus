@@ -21,6 +21,7 @@ import com.harmonycloud.zeus.service.middleware.BackupPositionService;
 import com.harmonycloud.zeus.service.middleware.BackupServerDetailService;
 import com.harmonycloud.zeus.service.middleware.BackupServerService;
 import com.harmonycloud.zeus.service.middleware.ProjectBackupServerService;
+import com.harmonycloud.zeus.util.MinioUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -119,6 +120,9 @@ public class BackupServerServiceImpl implements BackupServerService {
         if (checkAddressExists(backupServerDTO)) {
             throw new BusinessException(ErrorMessage.SERVER_ADDRESS_ALREADY_EXISTS);
         }
+        // 校验备份服务器用户名和密码
+        checkServerAuthorization(backupServerDTO.getServerDetailList());
+
         BeanBackupServer backupServer = new BeanBackupServer();
         backupServer.setName(backupServerDTO.getName());
         backupServer.setType(backupServerDTO.getType());
@@ -167,6 +171,9 @@ public class BackupServerServiceImpl implements BackupServerService {
 
     @Override
     public void delete(Integer id) {
+        // 校验服务器关联的备份位置是否已被使用
+
+
         QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
         wrapper.eq("id", id);
         backupServerMapper.delete(wrapper);
@@ -256,12 +263,11 @@ public class BackupServerServiceImpl implements BackupServerService {
      * @param backupServerDTO
      * @return
      */
-    public boolean checkAddressExists(BackupServerDTO backupServerDTO) {
-        QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
+    private boolean checkAddressExists(BackupServerDTO backupServerDTO) {
         List<BackupServerDetailDTO> serverDetailList = backupServerDTO.getServerDetailList();
         for (BackupServerDetailDTO serverDetail : serverDetailList) {
             List<BeanBackupServerDetail> serverDetails = backupServerDetailService.findByAddress(serverDetail.getProtocol(),
-                    serverDetail.getHost(), serverDetail.getPort(), serverDetail.getType());
+                    serverDetail.getHost(), serverDetail.getPort(), backupServerDTO.getType());
             if(!CollectionUtils.isEmpty(serverDetails)){
                 return true;
             }
@@ -269,7 +275,20 @@ public class BackupServerServiceImpl implements BackupServerService {
         return false;
     }
 
-
+    /**
+     * 校验服务器用户名或密码
+     * @param servers
+     */
+    private void checkServerAuthorization(List<BackupServerDetailDTO> servers) {
+        for (BackupServerDetailDTO server : servers) {
+            int code = MinioUtils.checkConnection(server.getProtocol(), server.getHost(), server.getPort(), server.getUsername(), server.getPassword());
+            String portStr = StringUtils.isNotEmpty(server.getPort()) ? ":" + server.getPort() : "";
+            String url = server.getProtocol() + "://" + server.getHost() + portStr;
+            if (code == 2) {
+                throw new BusinessException(ErrorMessage.AUTHORIZATION_FAILED, "服务器: " + url + " 用户名或密码错误");
+            }
+        }
+    }
 
     /**
      * 添加集群别名
@@ -289,6 +308,13 @@ public class BackupServerServiceImpl implements BackupServerService {
                 }
             }
         });
+    }
+
+    /**
+     * 检查服务器关联的地址是否已被备份任务使用
+     */
+    private void serverPositionDeleteCheck(Integer serverId,String clusterId){
+
     }
 
 }
