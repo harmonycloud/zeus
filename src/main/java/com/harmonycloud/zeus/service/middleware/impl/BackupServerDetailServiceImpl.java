@@ -105,7 +105,7 @@ public class BackupServerDetailServiceImpl implements BackupServerDetailService 
         List<BeanBackupServerDetail> serverDetails = backupServerDetailMapper.selectList(wrapper);
         return serverDetails.stream().filter(serverDetail -> {
             BeanBackupServer backupServer = backupServerService.get(serverDetail.getBackupServerId());
-            return backupServer.getType().equals(serverType);
+            return backupServer != null && serverType.equals(backupServer.getType());
         }).collect(Collectors.toList());
     }
 
