@@ -14,6 +14,8 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -72,7 +74,8 @@ import lombok.extern.slf4j.Slf4j;
 public class ClusterServiceImpl implements ClusterService {
 
     private static final Map<String, MiddlewareClusterDTO> CLUSTER_MAP = new ConcurrentHashMap<>();
-    private static boolean RUN = true;
+    private final ReentrantLock lock = new ReentrantLock();
+
     @Value("${system.upload.path:/usr/local/zeus-pv/upload}")
     private String uploadPath;
 
@@ -233,7 +236,11 @@ public class ClusterServiceImpl implements ClusterService {
             }
             CLUSTER_MAP.put(clusterId, SerializationUtils.clone(dto));
         }
-        refresh(clusterId);
+        try {
+            refresh(clusterId);
+        } catch (Exception e){
+            log.error("刷新集群信息出现异常", e);
+        }
         return CLUSTER_MAP.get(clusterId);
     }
 
@@ -1180,26 +1187,35 @@ public class ClusterServiceImpl implements ClusterService {
     }
 
     public void refresh(String clusterId) {
-        if (RUN) {
-            ThreadPoolExecutorFactory.executor.execute(() -> {
-                RUN = false;
-                List<MiddlewareClusterDTO> clusterList = listClusters().stream()
-                    .filter(clusterDTO -> clusterDTO.getId().equals(clusterId)).collect(Collectors.toList());
-                if (CollectionUtils.isEmpty(clusterList)) {
-                    log.error("刷新集群信息失败，未找到集群:{}", clusterId);
+        ThreadPoolExecutorFactory.executor.execute(() -> {
+            try {
+                if (lock.tryLock(1, TimeUnit.SECONDS)) {
+                    try {
+                        List<MiddlewareClusterDTO> clusterList = listClusters().stream()
+                                .filter(clusterDTO -> clusterDTO.getId().equals(clusterId)).collect(Collectors.toList());
+                        if (CollectionUtils.isEmpty(clusterList)) {
+                            log.error("刷新集群信息失败，未找到集群:{}", clusterId);
+                        }
+                        MiddlewareClusterDTO dto = clusterList.get(0);
+                        CLUSTER_MAP.put(clusterId, SerializationUtils.clone(dto));
+                        try {
+                            log.info("刷新集群信息成功，将静默10s");
+                            Thread.sleep(10000);
+                            log.info("静默完成，可再次刷新");
+                        } catch (InterruptedException e) {
+                            log.error("线程休眠异常", e);
+                        }
+                    } catch (Exception e){
+                        e.printStackTrace();
+                    } finally {
+                        lock.unlock();
+                    }
                 }
-                MiddlewareClusterDTO dto = clusterList.get(0);
-                CLUSTER_MAP.put(clusterId, SerializationUtils.clone(dto));
-                try {
-                    log.info("刷新集群信息成功，将静默10s");
-                    Thread.sleep(10000);
-                    log.info("静默完成，可再次刷新");
-                    RUN = true;
-                } catch (InterruptedException e) {
-                    log.error("线程休眠异常", e);
-                }
-            });
-        }
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        });
+
     }
 
     /**
