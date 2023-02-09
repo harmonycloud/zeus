@@ -160,7 +160,12 @@ public class NodeServiceImpl implements NodeService {
 
     @Override
     public List<Node> simpleConvertToDto(List<io.fabric8.kubernetes.api.model.Node> nodes) {
-        return nodes.stream().map(node -> new Node().setName(node.getMetadata().getName())).collect(Collectors.toList());
+        return nodes.stream().map(node -> {
+            String nodeName = node.getMetadata().getName();
+            String IP = node.getStatus().getAddresses().stream().filter(
+                    add -> "InternalIP".equals(add.getType())).collect(Collectors.toList()).get(0).getAddress();
+            return new Node().setName(nodeName).setIp(IP);
+        }).collect(Collectors.toList());
     }
 
     @Override

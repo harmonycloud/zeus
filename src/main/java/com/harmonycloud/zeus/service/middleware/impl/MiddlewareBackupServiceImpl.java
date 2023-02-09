@@ -22,7 +22,6 @@ import com.harmonycloud.zeus.bean.BeanBackupServer;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.*;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.core.util.CronExpression;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -858,12 +857,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void saveBackupName(String clusterId, String taskName, String backupId, String backupType) {
+    public void saveBackupName(String clusterId, String taskName, String backupId, String backupType, Integer positionId) {
         BeanMiddlewareBackupName backupName = new BeanMiddlewareBackupName();
         backupName.setBackupName(taskName);
         backupName.setBackupId(backupId);
         backupName.setClusterId(clusterId);
         backupName.setBackupType(backupType);
+        backupName.setPositionId(positionId);
         middlewareBackupNameMapper.insert(backupName);
     }
 
@@ -940,8 +940,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             }
             String positionId = record.getPositionId();
             BeanBackupPosition backupPosition = backupPositionService.getBackupPosition(Integer.parseInt(positionId));
-            if (backupPosition != null) {
-                BeanBackupServer beanBackupServer = backupServerService.get(backupPosition.getBackupServerId());
+            if (backupPosition == null) {
+                continue;
+            }
+            BeanBackupServer beanBackupServer = backupServerService.get(backupPosition.getBackupServerId());
+            if (beanBackupServer != null) {
                 record.setPosition(beanBackupServer.getName() + " - " + backupPosition.getName() + record.getPosition());
             }
         }
@@ -1005,7 +1008,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             backupType = "schedule";
         }
         saveBackupName(backupDTO.getClusterId(), backupDTO.getTaskName(), backupDTO.getLabels().get("backupId"),
-                backupType);
+                backupType, backupDTO.getBackupPositionId());
     }
 
     /**

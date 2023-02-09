@@ -12,15 +12,14 @@ import com.harmonycloud.caas.common.model.BackupServerDTO;
 import com.harmonycloud.caas.common.model.ProjectBackupServerDTO;
 import com.harmonycloud.caas.common.model.middleware.BackupServerDetailDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.harmonycloud.zeus.bean.BeanBackupPosition;
 import com.harmonycloud.zeus.bean.BeanBackupServer;
 import com.harmonycloud.zeus.bean.BeanBackupServerDetail;
+import com.harmonycloud.zeus.bean.BeanMiddlewareBackupName;
 import com.harmonycloud.zeus.dao.BeanBackupServerMapper;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
-import com.harmonycloud.zeus.service.middleware.BackupPositionService;
-import com.harmonycloud.zeus.service.middleware.BackupServerDetailService;
-import com.harmonycloud.zeus.service.middleware.BackupServerService;
-import com.harmonycloud.zeus.service.middleware.ProjectBackupServerService;
+import com.harmonycloud.zeus.service.middleware.*;
 import com.harmonycloud.zeus.util.MinioUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +49,8 @@ public class BackupServerServiceImpl implements BackupServerService {
     private MiddlewareClusterService middlewareClusterService;
     @Autowired
     private ClusterService clusterService;
+    @Autowired
+    private MiddlewareBackupNameService middlewareBackupNameService;
 
     @Override
     public List<BackupServerDTO> list(List<String> clusterIds, String keyword, Boolean withDetail) {
@@ -140,6 +141,8 @@ public class BackupServerServiceImpl implements BackupServerService {
 
     @Override
     public void update(BackupServerDTO backupServerDTO) {
+        // 校验备份服务器用户名和密码
+        checkServerAuthorization(backupServerDTO.getServerDetailList());
         QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
         wrapper.eq("id", backupServerDTO.getId());
         BeanBackupServer beanBackupServer = new BeanBackupServer();
@@ -172,8 +175,7 @@ public class BackupServerServiceImpl implements BackupServerService {
     @Override
     public void delete(Integer id) {
         // 校验服务器关联的备份位置是否已被使用
-
-
+        backupServerDeletionCheck(id);
         QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
         wrapper.eq("id", id);
         backupServerMapper.delete(wrapper);
@@ -313,8 +315,14 @@ public class BackupServerServiceImpl implements BackupServerService {
     /**
      * 检查服务器关联的地址是否已被备份任务使用
      */
-    private void serverPositionDeleteCheck(Integer serverId,String clusterId){
-
+    private void backupServerDeletionCheck(Integer backupServerId){
+        List<BeanBackupPosition> beanBackupPositions = backupPositionService.listByBackupServerId(backupServerId);
+        for (BeanBackupPosition position : beanBackupPositions) {
+            List<BeanMiddlewareBackupName> middlewareBackupNames = middlewareBackupNameService.listByPositionId(position.getId());
+            if(!CollectionUtils.isEmpty(middlewareBackupNames)){
+                throw new BusinessException(ErrorMessage.FAILED_TO_DELETE_BACKUP_SERVER);
+            }
+        }
     }
 
 }

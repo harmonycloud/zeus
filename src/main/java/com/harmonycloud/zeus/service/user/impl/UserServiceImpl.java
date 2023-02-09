@@ -146,8 +146,7 @@ public class UserServiceImpl implements UserService {
                     .filter(userDto -> StringUtils.containsIgnoreCase(userDto.getUserName(), keyword)
                             || StringUtils.containsIgnoreCase(userDto.getAliasName(), keyword)
                             || StringUtils.containsIgnoreCase(userDto.getEmail(), keyword)
-                            || StringUtils.containsIgnoreCase(userDto.getPhone(), keyword)
-                            || StringUtils.containsIgnoreCase(userDto.getRoleName(), keyword))
+                            || StringUtils.containsIgnoreCase(userDto.getPhone(), keyword))
                     .collect(Collectors.toList());
         }
         return userDtoList;

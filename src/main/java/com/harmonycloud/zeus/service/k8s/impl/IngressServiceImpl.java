@@ -1779,9 +1779,6 @@ public class IngressServiceImpl implements IngressService {
             if (StringUtils.isNotBlank(ingressDTO.getMiddlewareNickName()) && ingressDTO.getMiddlewareNickName().contains(keyword)) {
                 return true;
             }
-            if (StringUtils.isNotBlank(ingressDTO.getName()) && ingressDTO.getName().contains(keyword)) {
-                return true;
-            }
             return false;
         }).collect(Collectors.toList());
         return ingressDTOList;

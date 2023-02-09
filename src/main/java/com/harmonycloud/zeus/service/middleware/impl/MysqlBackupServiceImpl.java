@@ -187,7 +187,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         MysqlScheduleBackupCR mysqlScheduleBackupCR =
                 new MysqlScheduleBackupCR().setKind("MysqlBackupSchedule").setSpec(spec).setMetadata(metaData);
         mysqlScheduleBackupService.create(backupDTO.getClusterId(), mysqlScheduleBackupCR);
-        saveBackupName(backupDTO.getClusterId(), backupDTO.getTaskName(), backupId, "schedule");
+        saveBackupName(backupDTO.getClusterId(), backupDTO.getTaskName(), backupId, "schedule", backupDTO.getBackupPositionId());
     }
 
     /**
@@ -215,7 +215,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         metaData.setClusterName(backupDTO.getMiddlewareName());
         BackupCR backupCR = new BackupCR().setKind("MysqlBackup").setSpec(spec).setMetadata(metaData);
         backupService.create(backupDTO.getClusterId(), backupCR);
-        saveBackupName(backupDTO.getClusterId(), backupDTO.getTaskName(), backupId, "normal");
+        saveBackupName(backupDTO.getClusterId(), backupDTO.getTaskName(), backupId, "normal", backupDTO.getBackupPositionId());
     }
 
     @Override
@@ -308,7 +308,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void saveBackupName(String clusterId, String taskName, String backupId, String backupType) {
+    public void saveBackupName(String clusterId, String taskName, String backupId, String backupType, Integer positionId) {
         BeanMiddlewareBackupName backupName = new BeanMiddlewareBackupName();
         backupName.setBackupName(taskName);
         backupName.setBackupId(backupId);

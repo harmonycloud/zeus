@@ -220,8 +220,9 @@ public interface MiddlewareBackupService {
      * @param clusterId
      * @param taskName
      * @param backupId
+     * @param positionId
      */
-    void saveBackupName(String clusterId, String taskName, String backupId, String backupType);
+    void saveBackupName(String clusterId, String taskName, String backupId, String backupType, Integer positionId);
 
     /**
      * 删除备份任务名称映射信息

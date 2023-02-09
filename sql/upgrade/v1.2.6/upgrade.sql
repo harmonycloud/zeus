@@ -12,6 +12,8 @@ set alias_name = "备份服务器",
     `name`="backupServer",
     `url`      = "backupService/backupServer"
 where id = 13;
+-- 修改backup_name表，添加备份位置id
+ALTER TABLE `backup_name` ADD COLUMN `position_id` INT(11) COMMENT '备份位置id';
 -- 新增表
 DROP TABLE IF EXISTS `backup_server_detail`;
 CREATE TABLE `backup_server_detail` (
