@@ -11,6 +11,7 @@ import com.harmonycloud.caas.common.model.BackupServerDTO;
 import com.harmonycloud.zeus.bean.BeanBackupPosition;
 import com.harmonycloud.zeus.bean.BeanBackupServer;
 import com.harmonycloud.zeus.bean.BeanBackupServerDetail;
+import com.harmonycloud.zeus.bean.BeanMiddlewareBackupName;
 import com.harmonycloud.zeus.bean.user.BeanProject;
 import com.harmonycloud.zeus.dao.BeanBackupPositionMapper;
 import com.harmonycloud.zeus.dao.BeanMiddlewareBackupNameMapper;
@@ -112,6 +113,13 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     }
 
     @Override
+    public List<BeanBackupPosition> listByBackupServerId(Integer backupServerId) {
+        QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
+        wrapper.eq("server_id", backupServerId);
+        return backupPositionMapper.selectList(wrapper);
+    }
+
+    @Override
     public void create(BackupPositionDTO backupPositionDTO) {
         // 校验该项目是否已使用该备份服务器创建备份位置
         if (this.getBackupPosition(backupPositionDTO.getBackupServerId(), backupPositionDTO.getProjectId()) != null) {
@@ -131,6 +139,8 @@ public class BackupPositionServiceImpl implements BackupPositionService {
 
     @Override
     public void delete(Integer id) {
+        // 检查备份位置是否已被备份任务使用
+        backupPositionDeletionCheck(id);
         backupPositionMapper.deleteById(id);
     }
 
@@ -189,6 +199,17 @@ public class BackupPositionServiceImpl implements BackupPositionService {
             backupPositionDTO.setBackupTaskNum(middlewareBackupNameService.listByPositionId(beanBackupPosition.getId()).size());
             return backupPositionDTO;
         }).collect(Collectors.toList());
+    }
+
+    /**
+     * 检查指定备份位置是否已被备份任务使用
+     * @param positionId
+     */
+    private void backupPositionDeletionCheck(Integer positionId) {
+        List<BeanMiddlewareBackupName> middlewareBackupNames = middlewareBackupNameService.listByPositionId(positionId);
+        if (!CollectionUtils.isEmpty(middlewareBackupNames)) {
+            throw new BusinessException(ErrorMessage.FAILED_TO_DELETE_BACKUP_SERVER);
+        }
     }
 
 }

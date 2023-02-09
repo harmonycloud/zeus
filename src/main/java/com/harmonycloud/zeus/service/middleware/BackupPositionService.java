@@ -21,6 +21,8 @@ public interface BackupPositionService {
 
     List<BackupPositionDTO> list(String clusterId, String namespace);
 
+    List<BeanBackupPosition> listByBackupServerId(Integer backupServerId);
+
     void create(BackupPositionDTO backupPositionDTO);
 
     void update(BackupPositionDTO backupPositionDTO);
