@@ -46,14 +46,14 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
     private StorageClassWrapper storageClassWrapper;
     @Autowired
     private PrometheusResourceMonitorService prometheusResourceMonitorService;
+    @Autowired
+    private MiddlewareCRService middlewareCRService;
 
     @Override
     public List<MiddlewarePvcDto> list(String clusterId, String namespace, String middlewareName, String type) {
-        // 获取pvc信息
-        Map<String, String> labels = new HashMap<>(1);
-        labels.put("app", middlewareName);
-        List<PersistentVolumeClaim> pvcList =  pvcService.listWithLabels(clusterId, namespace, labels);
 
+        // 获取pvc列表
+        List<PersistentVolumeClaim> pvcList = listMiddlewarePvc(clusterId, namespace, middlewareName, type);
         // 封装middlewarePvcDto对象
         List<MiddlewarePvcDto> middlewarePvcDtoList = pvcList.stream().map(this::convertToDto).collect(Collectors.toList());
 
@@ -138,6 +138,26 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
         maintenanceList.sort(Comparator.comparing(maintenance -> maintenance.getMetadata().getCreationTimestamp()));
         // 封装状态
         return convertStatus(maintenanceList.get(maintenanceList.size() - 1), pvcName);
+    }
+
+    /**
+     * 查询中间件pvc列表
+     * */
+    public List<PersistentVolumeClaim> listMiddlewarePvc(String clusterId, String namespace, String middlewareName,
+        String type) {
+        // 查询中间件pvc名称
+        List<String> pvcNameList = middlewareCRService.getPvc(clusterId, namespace, type, middlewareName);
+        // 查询分区下所有pvc
+        List<PersistentVolumeClaim> pvcList = pvcService.list(clusterId, namespace);
+
+        if (CollectionUtils.isEmpty(pvcNameList) || CollectionUtils.isEmpty(pvcList)) {
+            return new ArrayList<>();
+        }
+        // 根据指定名称过滤
+        pvcList =
+            pvcList.stream().filter(pvc -> pvcNameList.stream().allMatch(pvcName -> pvcName.equals(pvc.getName())))
+                .collect(Collectors.toList());
+        return pvcList;
     }
 
     /**
@@ -262,6 +282,5 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
 
             }
         }
-
     }
 }
