@@ -115,7 +115,7 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     @Override
     public List<BeanBackupPosition> listByBackupServerId(Integer backupServerId) {
         QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
-        wrapper.eq("server_id", backupServerId);
+        wrapper.eq("backup_server_id", backupServerId);
         return backupPositionMapper.selectList(wrapper);
     }
 
