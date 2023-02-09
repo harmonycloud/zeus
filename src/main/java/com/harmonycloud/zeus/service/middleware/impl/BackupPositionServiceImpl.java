@@ -13,11 +13,13 @@ import com.harmonycloud.zeus.bean.BeanBackupServer;
 import com.harmonycloud.zeus.bean.BeanBackupServerDetail;
 import com.harmonycloud.zeus.bean.user.BeanProject;
 import com.harmonycloud.zeus.dao.BeanBackupPositionMapper;
+import com.harmonycloud.zeus.dao.BeanMiddlewareBackupNameMapper;
 import com.harmonycloud.zeus.integration.cluster.bean.Minio;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
 import com.harmonycloud.zeus.service.middleware.BackupPositionService;
 import com.harmonycloud.zeus.service.middleware.BackupServerDetailService;
 import com.harmonycloud.zeus.service.middleware.BackupServerService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareBackupNameService;
 import com.harmonycloud.zeus.service.user.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -45,6 +47,8 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     private BackupServerDetailService backupServerDetailService;
     @Autowired
     private NamespaceService namespaceService;
+    @Autowired
+    private MiddlewareBackupNameService middlewareBackupNameService;
 
     /**
      * 查询指定备份服务器的全部备份位置
@@ -182,6 +186,7 @@ public class BackupPositionServiceImpl implements BackupPositionService {
             BeanUtil.copyProperties(beanBackupPosition, backupPositionDTO);
             BeanProject beanProject = projectService.get(beanBackupPosition.getProjectId());
             backupPositionDTO.setProjectName(beanProject.getAliasName());
+            backupPositionDTO.setBackupTaskNum(middlewareBackupNameService.listByPositionId(beanBackupPosition.getId()).size());
             return backupPositionDTO;
         }).collect(Collectors.toList());
     }
