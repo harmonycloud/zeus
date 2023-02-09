@@ -155,7 +155,7 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
         }
         // 根据指定名称过滤
         pvcList =
-            pvcList.stream().filter(pvc -> pvcNameList.stream().allMatch(pvcName -> pvcName.equals(pvc.getName())))
+            pvcList.stream().filter(pvc -> pvcNameList.stream().anyMatch(pvcName -> pvcName.equals(pvc.getName())))
                 .collect(Collectors.toList());
         return pvcList;
     }
