@@ -208,7 +208,7 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     private void backupPositionDeletionCheck(Integer positionId) {
         List<BeanMiddlewareBackupName> middlewareBackupNames = middlewareBackupNameService.listByPositionId(positionId);
         if (!CollectionUtils.isEmpty(middlewareBackupNames)) {
-            throw new BusinessException(ErrorMessage.FAILED_TO_DELETE_BACKUP_SERVER);
+            throw new BusinessException(ErrorMessage.FAILED_TO_DELETE_BACKUP_POSITION);
         }
     }
 
