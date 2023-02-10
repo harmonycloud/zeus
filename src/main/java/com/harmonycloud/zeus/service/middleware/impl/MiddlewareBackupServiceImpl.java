@@ -907,7 +907,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         recordList.forEach(record -> {
             if (StringUtils.isNotEmpty(record.getActiveArea())) {
                 BeanActiveArea activeArea = activeAreaService.get(clusterId, record.getActiveArea());
-                record.setAreaAliasName(activeArea.getAliasName());
+                if (activeArea != null) {
+                    record.setAreaAliasName(activeArea.getAliasName());
+                }
             }
         });
     }
