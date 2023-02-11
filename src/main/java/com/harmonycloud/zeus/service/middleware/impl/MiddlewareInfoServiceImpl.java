@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
+import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
@@ -485,11 +486,19 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     public Map<String, List<String>> version(String type, String chartVersion) {
         BeanMiddlewareInfo mwInfo = get(type, chartVersion);
         String version = mwInfo.getVersion();
-        if (StringUtils.isEmpty(version)){
+        if (StringUtils.isEmpty(version)) {
             return null;
         }
-        return MiddlewareVersionUtil.convertVersion(version);
+        Map<String, List<String>> res;
+        if (type.equals(MiddlewareTypeEnum.POSTGRESQL.getType())) {
+            res = new TreeMap<>(Comparator.comparing(key -> Integer.valueOf(key.toString())).reversed());
+        } else {
+            res = new TreeMap<>();
+        }
+        res.putAll(MiddlewareVersionUtil.convertVersion(version));
+        return res;
     }
+
 
     @Override
     public List<BeanMiddlewareInfo> listInstalledByClusters(List<MiddlewareClusterDTO> clusterList) {
