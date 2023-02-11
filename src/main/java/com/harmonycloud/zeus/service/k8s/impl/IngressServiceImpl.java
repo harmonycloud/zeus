@@ -151,6 +151,8 @@ public class IngressServiceImpl implements IngressService {
             if (StringUtils.isBlank(namespace)) {
                 namespace = ingressDTO.getNamespace();
             }
+            setMiddlewareImage(ingressDTO);
+            ingressDTO.setMiddlewareOfficialName(MiddlewareOfficialNameEnum.findByChartName(ingressDTO.getMiddlewareType()));
             JSONObject values = helmChartService.getInstalledValues(ingressDTO.getMiddlewareName(), namespace, cluster);
             if (values == null) {
                 continue;
@@ -158,8 +160,6 @@ public class IngressServiceImpl implements IngressService {
             ingressDTO.setChartVersion(values.getOrDefault("chart-version", "").toString());
             ingressDTO.setMiddlewareMode(values.getOrDefault("mode", "").toString());
             ingressDTO.setMiddlewareNickName(values.getOrDefault("aliasName", "").toString());
-            setMiddlewareImage(ingressDTO);
-            ingressDTO.setMiddlewareOfficialName(MiddlewareOfficialNameEnum.findByChartName(ingressDTO.getMiddlewareType()));
         }
 
         boolean filter = StringUtils.isNotBlank(keyword);
