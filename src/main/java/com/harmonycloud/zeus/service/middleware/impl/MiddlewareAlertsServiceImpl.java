@@ -418,11 +418,11 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
 
     private String buildSummary(MiddlewareAlertsDTO middlewareAlertsDTO) {
         String summary = "";
-        if (CPU_USING_RATE.equals(middlewareAlertsDTO.getAlert())) {
+        if (middlewareAlertsDTO.getAlert().contains(CPU_USING_RATE)) {
             summary = "node CPU alert warning";
-        } else if (MEMORY_USING_RATE.equals(middlewareAlertsDTO.getAlert())) {
+        } else if (middlewareAlertsDTO.getAlert().contains(MEMORY_USING_RATE)) {
             summary = "node memory alert warning";
-        } else if (PVC_USING_RATE.equals(middlewareAlertsDTO.getAlert())) {
+        } else if (middlewareAlertsDTO.getAlert().contains(PVC_USING_RATE)) {
             summary = "node pv alert warning";
         }
         return summary;
