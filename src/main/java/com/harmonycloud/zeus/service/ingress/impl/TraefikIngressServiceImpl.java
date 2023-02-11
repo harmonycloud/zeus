@@ -256,7 +256,9 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
         if (values == null) {
             return ingressComponentDto;
         }
-        ingressComponentDto.setSkipPortConflict(Boolean.valueOf(values.getOrDefault("skipPortConflict", false).toString()));
+        if (values.getBoolean("skipPortConflict") != null) {
+            ingressComponentDto.setSkipPortConflict(values.getBoolean("skipPortConflict"));
+        }
         JSONObject ports = values.getJSONObject("ports");
         ingressComponentDto.setHttpPort(ports.getJSONObject("web").getString("port"));
         ingressComponentDto.setHttpsPort(ports.getJSONObject("websecure").getString("port"));
