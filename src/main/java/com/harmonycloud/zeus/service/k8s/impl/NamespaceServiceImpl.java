@@ -41,6 +41,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import org.springframework.util.ObjectUtils;
 
+import static com.harmonycloud.caas.common.constants.CommonConstant.ALIAS_NAME;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
 
 /**
@@ -199,14 +200,25 @@ public class NamespaceServiceImpl implements NamespaceService {
 
     @Override
     public void update(String clusterId, String name, Namespace namespace) {
+        // 修改中文名
+        io.fabric8.kubernetes.api.model.Namespace ns = namespaceWrapper.get(clusterId, name);
+        if (ns == null) {
+            throw new BusinessException(ErrorMessage.NAMESPACE_NOT_FOUND);
+        }
+        if (ns.getMetadata().getAnnotations() == null) {
+            ns.getMetadata().setAnnotations(new HashMap<>());
+        }
+        ns.getMetadata().getAnnotations().put("alias_name", namespace.getAliasName());
+        namespaceWrapper.save(clusterId, ns);
         // 修改分区注册状态
-        if (namespace.getRegistered() != null){
-            register(clusterId, name, namespace.getRegistered());
+        if (namespace.getRegistered() != null) {
+            register(clusterId, name, namespace.getRegistered(), ns);
         }
         // 修改资源配额
-        if (namespace.getQuotas() != null){
+        if (namespace.getQuotas() != null) {
             resourceQuotaService.update(clusterId, name, namespace.getQuotas());
         }
+        namespaceWrapper.save(clusterId, ns);
     }
 
     @Override
@@ -367,13 +379,7 @@ public class NamespaceServiceImpl implements NamespaceService {
     /**
      * 修改分区注册状态
      */
-    public void register(String clusterId, String name, Boolean registered){
-        List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId).stream()
-                .filter(ns -> ns.getMetadata().getName().equals(name)).collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(nsList)) {
-            throw new BusinessException(ErrorMessage.NAMESPACE_NOT_FOUND);
-        }
-        io.fabric8.kubernetes.api.model.Namespace ns = nsList.get(0);
+    public void register(String clusterId, String name, Boolean registered, io.fabric8.kubernetes.api.model.Namespace ns){
         if (registered) {
             if (ns.getMetadata().getLabels() == null) {
                 ns.getMetadata().setLabels(new HashMap<>());

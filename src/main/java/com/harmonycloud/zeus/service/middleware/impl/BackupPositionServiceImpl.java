@@ -101,21 +101,22 @@ public class BackupPositionServiceImpl implements BackupPositionService {
         boolean openAvailableDomain = namespaceService.isOpenAvailableDomain(clusterId, namespace);
         return backupPositionDTOS.stream().filter(backupPositionDTO -> {
             BeanBackupServer beanBackupServer = backupServerService.get(backupPositionDTO.getBackupServerId());
-            if(!openAvailableDomain && beanBackupServer.getType() == 2){
+            if (beanBackupServer == null) {
                 return false;
             }
-            if (beanBackupServer != null) {
-                backupPositionDTO.setBackupServerName(beanBackupServer.getName());
-                return true;
+            backupPositionDTO.setBackupServerName(beanBackupServer.getName());
+            if (openAvailableDomain) {
+                return beanBackupServer.getType() == 2;
+            } else {
+                return beanBackupServer.getType() == 1;
             }
-            return false;
         }).collect(Collectors.toList());
     }
 
     @Override
     public List<BeanBackupPosition> listByBackupServerId(Integer backupServerId) {
         QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
-        wrapper.eq("server_id", backupServerId);
+        wrapper.eq("backup_server_id", backupServerId);
         return backupPositionMapper.selectList(wrapper);
     }
 

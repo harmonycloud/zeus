@@ -497,7 +497,7 @@ public class PodServiceImpl implements PodService {
                 Map<String, String> conMap = mt.getStatus().getConditions().get(0);
                 Date mtTime;
                 try {
-                    mtTime = DateUtil.UTC_FORMAT.parse(conMap.get("migrateTimestamp"));
+                    mtTime = DateUtil.timeFormat.parse(conMap.get("migrateTimestamp"));
                 } catch (ParseException e) {
                     log.error("获取{}迁移时间失败", mt.getMetadata().getName());
                     return;
