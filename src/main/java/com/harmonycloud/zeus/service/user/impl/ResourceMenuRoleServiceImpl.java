@@ -25,7 +25,7 @@ public class ResourceMenuRoleServiceImpl implements ResourceMenuRoleService {
 
     @Value("${system.user.admin.role-id:1}")
     private String adminRoleId;
-    @Value("${system.user.role.resource-menu:5,8,9,10,12,14,15,16}")
+    @Value("${system.user.role.resource-menu:8,9,10,12,14,15,16}")
     private String opsIds;
 
     @Autowired
