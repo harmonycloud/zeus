@@ -14,7 +14,6 @@ import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.bean.BeanIngressComponents;
 import com.harmonycloud.zeus.dao.BeanIngressComponentsMapper;
 import com.harmonycloud.zeus.integration.cluster.ConfigMapWrapper;
-import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
 import com.harmonycloud.zeus.service.AbstractBaseService;
 import com.harmonycloud.zeus.service.ingress.BaseIngressService;
 import com.harmonycloud.zeus.service.ingress.api.TraefikIngressService;
@@ -126,7 +125,7 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
             BeanUtils.copyProperties(ingress, ic);
             //查询traefik起始端口
             if (IngressEnum.TRAEFIK.getName().equals(ic.getType())) {
-                setTraefikStartPort(ic);
+                setTraefikInfo(ic);
             }
             if (ic.getStatus() == NUM_TWO) {
                 ic.setSeconds(DateUtils.getIntervalDays(new Date(), ic.getCreateTime()));
@@ -243,13 +242,17 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
         return MathUtil.convert(conflictPortList);
     }
 
-    private void setTraefikStartPort(IngressComponentDto ingressComponentDto) {
+    private void setTraefikInfo(IngressComponentDto ingressComponentDto) {
         BeanIngressComponents ingressComponents = getAndCheckExists(ingressComponentDto.getClusterId(),
                 ingressComponentDto.getIngressClassName());
         JSONObject values = helmChartService.getInstalledValues(ingressComponents.getName(),
                 ingressComponents.getNamespace(), clusterService.findById(ingressComponents.getClusterId()));
         if (values != null) {
             ingressComponentDto.setTraefikPortList(traefikIngressService.getTraefikPort(values));
+            Boolean skipPortConflict = values.getBoolean("skipPortConflict");
+            if (skipPortConflict != null) {
+                ingressComponentDto.setSkipPortConflict(skipPortConflict);
+            }
         }
     }
 
