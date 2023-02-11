@@ -4,6 +4,7 @@ import static com.harmonycloud.caas.common.constants.CmdConstant.*;
 import static com.harmonycloud.caas.common.constants.CommonConstant.DOT;
 import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_ZERO;
 import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
+import static com.harmonycloud.caas.common.constants.NameConstant.RUNNING;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ARGS;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.SYNC_SLAVE;
 
@@ -25,6 +26,7 @@ import com.harmonycloud.zeus.integration.cluster.ServiceWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.service.k8s.K8sExecService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareBackupCRService;
+import com.harmonycloud.zeus.service.k8s.PodService;
 import io.fabric8.kubernetes.api.model.Service;
 import org.apache.commons.lang3.StringUtils;
 
@@ -57,6 +59,9 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
 
     @Autowired
     private K8sExecService k8sExecService;
+
+    @Autowired
+    private PodService podService;
 
     @Override
     public boolean support(Middleware middleware) {
@@ -170,10 +175,10 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
     }
 
     public Boolean getAutoSwitch(Middleware middleware, MiddlewareClusterDTO cluster) {
-        // 获取服务状态
-        Status status = middlewareCRService.getStatus(middleware.getClusterId()
-                , middleware.getNamespace(), MiddlewareTypeEnum.POSTGRESQL.getType(), middleware.getName());
-        if (status == null || !"Running".equals(status.getPhase())) {
+        // 获取pod列表
+        List<PodInfo> podInfos = podService.listPods(cluster.getId(), middleware.getNamespace(), MiddlewareTypeEnum.POSTGRESQL.getType(), middleware.getName());
+        List<PodInfo> runningPods = podInfos.stream().filter(podInfo -> RUNNING.equalsIgnoreCase(podInfo.getStatus())).collect(Collectors.toList());
+        if (CollectionUtil.isEmpty(runningPods)){
             return null;
         }
         // 获取patroniService
@@ -184,14 +189,9 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             log.error("无法找到patroni服务");
             return null;
         }
-        // 获取pod列表
-        List<Status.Condition> conditions = status.getConditions();
-        if (CollectionUtil.isEmpty(conditions)) {
-            return null;
-        }
         // pod执行命令
         String execCommand = MessageFormat.format(POSTGRESQL_AUTO_SWITCH_STATUS,
-                conditions.get(0).getName(), middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(), patroniName);
+                runningPods.get(0).getPodName(), middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(), patroniName);
         List<String> resList;
         try {
             resList = CmdExecUtil.runCmd(execCommand);
@@ -203,6 +203,9 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         StringBuilder sb = new StringBuilder();
         resList.forEach(sb::append);
         JSONObject resJSON = JSONObject.parseObject(sb.toString());
+        if (resJSON == null) {
+            return null;
+        }
         return resJSON.getBoolean("pause") == null || !resJSON.getBoolean("pause");
     }
 

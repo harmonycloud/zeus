@@ -28,8 +28,6 @@ public class IngressComponentController {
     
     @Autowired
     private IngressComponentService ingressComponentService;
-    @Autowired
-    private NodeService nodeService;
 
     @ApiOperation(value = "添加集群ingress", notes = "添加集群ingress")
     @ApiImplicitParams({
