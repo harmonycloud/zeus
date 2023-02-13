@@ -105,11 +105,10 @@ public class BackupPositionServiceImpl implements BackupPositionService {
                 return false;
             }
             backupPositionDTO.setBackupServerName(beanBackupServer.getName());
-            if (openAvailableDomain) {
-                return beanBackupServer.getType() == 2;
-            } else {
+            if (!openAvailableDomain) {
                 return beanBackupServer.getType() == 1;
             }
+            return true;
         }).collect(Collectors.toList());
     }
 
@@ -188,6 +187,13 @@ public class BackupPositionServiceImpl implements BackupPositionService {
         minio.setSecretAccessKey(backupServerDetail.getPassword());
         minio.setEndpoint(endPoint);
         return minio;
+    }
+
+    @Override
+    public BeanBackupServer getBackupServer(Integer positionId) {
+        BeanBackupPosition backupPosition = getBackupPosition(positionId);
+        BeanBackupServer beanBackupServer = backupServerService.get(backupPosition.getBackupServerId());
+        return beanBackupServer;
     }
 
     // 转换数据类型

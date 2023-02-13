@@ -409,12 +409,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     /**
-     * 检查是否是双活备份任务
+     * 检查是否是双活备份任务,当且仅当分区为双活分区，并且是pg、redis、mysql，并且是双活备份位置的时候才是双活备份任务
      * @param backupDTO
      * @return
      */
     private boolean activeActiveBackupCheck(MiddlewareBackupDTO backupDTO) {
-        if (namespaceService.isOpenAvailableDomain(backupDTO.getClusterId(), backupDTO.getNamespace())) {
+        boolean activeActiveNamespace = namespaceService.isOpenAvailableDomain(backupDTO.getClusterId(), backupDTO.getNamespace());
+        BeanBackupServer backupServer = backupPositionService.getBackupServer(backupDTO.getBackupPositionId());
+        if (activeActiveNamespace && backupServer.getType() == 2) {
             String type = backupDTO.getType();
             return type.equals(MiddlewareTypeEnum.MYSQL.getType()) || type.equals(MiddlewareTypeEnum.POSTGRESQL.getType()) || type.equals(MiddlewareTypeEnum.REDIS.getType());
         }

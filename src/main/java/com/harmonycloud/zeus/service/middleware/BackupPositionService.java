@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.service.middleware;
 import com.harmonycloud.caas.common.model.BackupPositionDTO;
 import com.harmonycloud.caas.common.model.BackupServerDTO;
 import com.harmonycloud.zeus.bean.BeanBackupPosition;
+import com.harmonycloud.zeus.bean.BeanBackupServer;
 import com.harmonycloud.zeus.integration.cluster.bean.Minio;
 
 import java.util.List;
@@ -42,5 +43,12 @@ public interface BackupPositionService {
      * @return
      */
     Minio getMinio(Integer positionId, String serverUsage);
+
+    /**
+     * 获取备份位置所属的备份服务器
+     * @param positionId
+     * @return
+     */
+    BeanBackupServer getBackupServer(Integer positionId);
 
 }
