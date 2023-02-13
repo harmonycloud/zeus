@@ -179,7 +179,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         List<PodInfo> podInfos = podService.listPods(cluster.getId(), middleware.getNamespace(), MiddlewareTypeEnum.POSTGRESQL.getType(), middleware.getName());
         List<PodInfo> runningPods = podInfos.stream().filter(podInfo -> RUNNING.equalsIgnoreCase(podInfo.getStatus())).collect(Collectors.toList());
         if (CollectionUtil.isEmpty(runningPods)){
-            return null;
+            throw new BusinessException(ErrorMessage.MIDDLEWARE_CLUSTER_IS_NOT_RUNNING);
         }
         // 获取patroniService
         String patroniName = middleware.getName() + "-patroni";
@@ -187,7 +187,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
 
         if (patroniService == null) {
             log.error("无法找到patroni服务");
-            return null;
+            throw new BusinessException(DictEnum.SERVICE,patroniName,ErrorMessage.NOT_FOUND);
         }
         // pod执行命令
         String execCommand = MessageFormat.format(POSTGRESQL_AUTO_SWITCH_STATUS,
@@ -197,14 +197,14 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             resList = CmdExecUtil.runCmd(execCommand);
         } catch (Exception e) {
             log.error("查询自动切换失败", e);
-            return null;
+            throw new BusinessException(ErrorMessage.GET_AUTOSWITCH_FAILED);
         }
         // 查看pause
         StringBuilder sb = new StringBuilder();
         resList.forEach(sb::append);
         JSONObject resJSON = JSONObject.parseObject(sb.toString());
         if (resJSON == null) {
-            return null;
+            throw new BusinessException(ErrorMessage.GET_AUTOSWITCH_FAILED);
         }
         return resJSON.getBoolean("pause") == null || !resJSON.getBoolean("pause");
     }
