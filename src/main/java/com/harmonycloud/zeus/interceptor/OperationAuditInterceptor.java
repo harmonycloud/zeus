@@ -291,7 +291,7 @@ public class OperationAuditInterceptor {
     public JSONObject getParams(String[] paramNames, Object[] args) {
         JSONObject params = new JSONObject();
         for (int i = 0; i < paramNames.length; ++i) {
-            if (args[i] instanceof String) {
+            if (args[i] instanceof String || args[i] instanceof Integer) {
                 params.put(paramNames[i], args[i]);
             } else {
                 params.put(paramNames[i], JSONObject.parseObject(JSONObject.toJSONString(args[i])));
