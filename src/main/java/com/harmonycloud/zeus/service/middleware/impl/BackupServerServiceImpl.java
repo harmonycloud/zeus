@@ -18,7 +18,6 @@ import com.harmonycloud.zeus.bean.BeanBackupServerDetail;
 import com.harmonycloud.zeus.bean.BeanMiddlewareBackupName;
 import com.harmonycloud.zeus.dao.BeanBackupServerMapper;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
-import com.harmonycloud.zeus.service.k8s.MiddlewareBackupScheduleCRDService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import com.harmonycloud.zeus.service.middleware.*;
 import com.harmonycloud.zeus.util.MinioUtils;
@@ -313,13 +312,11 @@ public class BackupServerServiceImpl implements BackupServerService {
         });
     }
 
-    private MiddlewareBackupScheduleCRDService backupScheduleCRDService;
     /**
      * 检查服务器关联的地址是否已被备份任务使用
      */
     private void backupServerDeletionCheck(Integer backupServerId){
         List<BeanBackupPosition> beanBackupPositions = backupPositionService.listByBackupServerId(backupServerId);
-
         for (BeanBackupPosition position : beanBackupPositions) {
             List<BeanMiddlewareBackupName> middlewareBackupNames = middlewareBackupNameService.listByPositionId(position.getId());
             if(!CollectionUtils.isEmpty(middlewareBackupNames)){
