@@ -190,7 +190,6 @@ public class RoleServiceImpl implements RoleService {
         }
     }
 
-
     /**
      * 校验角色名是否存在
      */

@@ -15,12 +15,17 @@ import com.harmonycloud.caas.common.constants.ActiveAreaConstant;
 import com.harmonycloud.caas.common.enums.*;
 import com.harmonycloud.caas.common.model.*;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecordGroup;
+import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.bean.BeanActiveArea;
 import com.harmonycloud.zeus.bean.BeanBackupPosition;
 import com.harmonycloud.zeus.bean.BeanBackupServer;
+import com.harmonycloud.zeus.bean.user.BeanUserRole;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.*;
+import com.harmonycloud.zeus.service.user.RoleAuthorityService;
+import com.harmonycloud.zeus.service.user.UserRoleService;
+import com.harmonycloud.zeus.util.RequestUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -81,6 +86,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private ActiveAreaService activeAreaService;
     @Autowired
     private BackupServerService backupServerService;
+    @Autowired
+    private RoleAuthorityService roleAuthorityService;
+    @Autowired
+    private UserRoleService userRoleService;
 
     @Override
     public List<MiddlewareBackupRecord> listBackup(String clusterId, String namespace, String middlewareName,
@@ -768,6 +777,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public List<MiddlewareBackupRecordGroup> backupTaskGroupList(String clusterId, String namespace, String middlewareName, String type, String keyword) {
         List<MiddlewareBackupRecord> records = backupTaskList(clusterId, namespace, middlewareName, type, keyword);
+        // 根据项目过滤中间件
+        records = filterByProject(records);
         // 设置备份地址
         setBackupPosition(records);
         List<MiddlewareBackupRecordGroup> recordGroups = groupByBackupId(clusterId,records);
@@ -1364,6 +1375,19 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             labels.put("activeArea", scheduleLabels.get("activeArea"));
         }
         return labels;
+    }
+
+    /**
+     * 根据项目过滤
+     * @param records
+     */
+    private List<MiddlewareBackupRecord> filterByProject(List<MiddlewareBackupRecord> records) {
+        // 查询用户在当前项目下所有可见的中间件类型
+        String username = CurrentUserRepository.getUser().getUsername();
+        BeanUserRole beanUserRole = userRoleService.get(username, RequestUtil.getProjectId());
+        // 根据中间件类型类型过滤
+        Set<String> middlewares = roleAuthorityService.listOpsMiddleware(beanUserRole.getRoleId());
+        return records.stream().filter(record -> middlewares.contains(record.getSourceType())).collect(Collectors.toList());
     }
 
 }
