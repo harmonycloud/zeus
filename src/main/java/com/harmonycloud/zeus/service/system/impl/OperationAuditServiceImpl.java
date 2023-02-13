@@ -111,7 +111,8 @@ public class OperationAuditServiceImpl implements OperationAuditService {
                 queryWrapper.orderByDesc("status");
             }
         }
-
+        queryWrapper.select(BeanOperationAudit.class, tableFieldInfo
+                -> !tableFieldInfo.getColumn().equals("request_params") && !tableFieldInfo.getColumn().equals("response"));
         Page<BeanOperationAudit> page = new Page<>(operationAuditQueryDto.getCurrent(), operationAuditQueryDto.getSize());
         Page<BeanOperationAudit> beanOperationAuditPage = operationAuditMapper.selectPage(page, queryWrapper);
         return BaseResult.ok(beanOperationAuditPage);
@@ -195,4 +196,16 @@ public class OperationAuditServiceImpl implements OperationAuditService {
         Page<BeanOperationAudit> beanOperationAuditPage = operationAuditMapper.selectPage(page, queryWrapper);
         return beanOperationAuditPage.getRecords();
     }
+
+    @Override
+    public BeanOperationAudit get(Integer id) {
+        QueryWrapper<BeanOperationAudit> wrapper = new QueryWrapper<>();
+        wrapper.eq("id", id);
+        List<BeanOperationAudit> beanOperationAudits = operationAuditMapper.selectList(wrapper);
+        if(CollectionUtils.isEmpty(beanOperationAudits)){
+            return null;
+        }
+        return beanOperationAudits.get(0);
+    }
+
 }

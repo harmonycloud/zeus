@@ -6,6 +6,8 @@ import com.harmonycloud.zeus.annotation.ExcludeAuditMethod;
 import com.harmonycloud.zeus.bean.OperationAuditQueryDto;
 import com.harmonycloud.zeus.service.system.OperationAuditService;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,6 +72,14 @@ public class OperationAuditController {
         }
     }
 
-
+    @ApiOperation(value = "查询操作审计详情", notes = "查询操作审计详情")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "auditId", value = "审计id", paramType = "path", dataTypeClass = String.class),
+    })
+    @ResponseBody
+    @GetMapping("/{auditId}")
+    public BaseResult get(@PathVariable("auditId") Integer auditId) {
+        return BaseResult.ok(operationAuditService.get(auditId));
+    }
 
 }
