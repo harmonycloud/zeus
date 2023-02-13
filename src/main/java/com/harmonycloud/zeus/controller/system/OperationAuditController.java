@@ -3,6 +3,7 @@ package com.harmonycloud.zeus.controller.system;
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.enums.ErrorMessage;
 import com.harmonycloud.zeus.annotation.ExcludeAuditMethod;
+import com.harmonycloud.zeus.bean.BeanOperationAudit;
 import com.harmonycloud.zeus.bean.OperationAuditQueryDto;
 import com.harmonycloud.zeus.service.system.OperationAuditService;
 import io.swagger.annotations.Api;
@@ -77,8 +78,8 @@ public class OperationAuditController {
             @ApiImplicitParam(name = "auditId", value = "审计id", paramType = "path", dataTypeClass = String.class),
     })
     @ResponseBody
-    @GetMapping("/{auditId}")
-    public BaseResult get(@PathVariable("auditId") Integer auditId) {
+    @RequestMapping(value = "/{auditId}",method = RequestMethod.GET)
+    public BaseResult<BeanOperationAudit> get(@PathVariable("auditId") Integer auditId) {
         return BaseResult.ok(operationAuditService.get(auditId));
     }
 
