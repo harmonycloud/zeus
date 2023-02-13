@@ -2,12 +2,12 @@ package com.harmonycloud.zeus.service.k8s.impl;
 
 import com.harmonycloud.zeus.integration.cluster.MiddlewareBackupWrapper;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupCR;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupList;
 import com.harmonycloud.zeus.service.k8s.MiddlewareBackupCRService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -32,12 +32,12 @@ public class MiddlewareBackupCRServiceImpl implements MiddlewareBackupCRService 
     }
 
     @Override
-    public MiddlewareBackupList list(String clusterId, String namespace, Map<String, String> labels) {
+    public List<MiddlewareBackupCR> list(String clusterId, String namespace, Map<String, String> labels) {
         return middlewareBackupWrapper.list(clusterId, namespace, labels);
     }
 
     @Override
-    public MiddlewareBackupList list(String clusterId, String namespace) {
+    public List<MiddlewareBackupCR> list(String clusterId, String namespace) {
         return middlewareBackupWrapper.list(clusterId, namespace);
     }
 
