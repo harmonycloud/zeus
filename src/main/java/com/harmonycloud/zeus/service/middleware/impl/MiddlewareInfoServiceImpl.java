@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.harmonycloud.caas.common.model.MiddlewareVersionDto;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
@@ -483,7 +484,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     }
 
     @Override
-    public Map<String, List<String>> version(String type, String chartVersion) {
+    public List<MiddlewareVersionDto> version(String type, String chartVersion) {
         BeanMiddlewareInfo mwInfo = get(type, chartVersion);
         String version = mwInfo.getVersion();
         if (StringUtils.isEmpty(version)) {
@@ -496,7 +497,15 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
             res = new TreeMap<>();
         }
         res.putAll(MiddlewareVersionUtil.convertVersion(version));
-        return res;
+
+        List<MiddlewareVersionDto> versionList = new ArrayList<>();
+        for (String key : res.keySet()){
+            MiddlewareVersionDto versionDto = new MiddlewareVersionDto();
+            versionDto.setMasterVersion(key);
+            versionDto.setSlaveVersion(res.get(key));
+            versionList.add(versionDto);
+        }
+        return versionList;
     }
 
 

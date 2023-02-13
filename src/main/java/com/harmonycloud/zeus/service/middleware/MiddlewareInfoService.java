@@ -1,5 +1,6 @@
 package com.harmonycloud.zeus.service.middleware;
 
+import com.harmonycloud.caas.common.model.MiddlewareVersionDto;
 import com.harmonycloud.caas.common.model.middleware.Middleware;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareInfoDTO;
@@ -136,7 +137,8 @@ public interface MiddlewareInfoService {
      * 查询指定中间件发布时可指定版本
      *
      * @param type 类型
-     * @return Map<String, List<String>>
+     * @param chartVersion 中间件chart版本
+     * @return List<MiddlewareVersionDto>
      */
-    Map<String, List<String>> version(String type, String chartVersion);
+    List<MiddlewareVersionDto> version(String type, String chartVersion);
 }
