@@ -1385,6 +1385,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         // 查询用户在当前项目下所有可见的中间件类型
         String username = CurrentUserRepository.getUser().getUsername();
         BeanUserRole beanUserRole = userRoleService.get(username, RequestUtil.getProjectId());
+        if (beanUserRole == null) {
+            return records;
+        }
         // 根据中间件类型类型过滤
         Set<String> middlewares = roleAuthorityService.listOpsMiddleware(beanUserRole.getRoleId());
         return records.stream().filter(record -> middlewares.contains(record.getSourceType())).collect(Collectors.toList());
