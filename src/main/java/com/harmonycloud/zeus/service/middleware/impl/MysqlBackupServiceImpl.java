@@ -318,8 +318,8 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void deleteBackupName(String clusterId, String taskName, String backupType) {
-
+    public List<MiddlewareBackupRecord> listBackupTask(String clusterId, String namespace, Map<String, String> labels) {
+        return null;
     }
 
     private void tryCreateMiddleware(String clusterId, String namespace, String type, String middlewareName,

@@ -1,9 +1,9 @@
 package com.harmonycloud.zeus.service.k8s;
 
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupCR;
-import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareBackupList;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -37,7 +37,7 @@ public interface MiddlewareBackupCRService {
      * @param labels
      * @return
      */
-    MiddlewareBackupList list(String clusterId, String namespace, Map<String,String> labels);
+    List<MiddlewareBackupCR> list(String clusterId, String namespace, Map<String,String> labels);
 
     /**
      * 查询备份列表
@@ -45,7 +45,7 @@ public interface MiddlewareBackupCRService {
      * @param namespace
      * @return
      */
-    MiddlewareBackupList list(String clusterId, String namespace);
+    List<MiddlewareBackupCR> list(String clusterId, String namespace);
 
     /**
      * 根据备份名称查询备份

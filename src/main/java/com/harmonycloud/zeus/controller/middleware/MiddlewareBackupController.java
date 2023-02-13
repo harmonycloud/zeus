@@ -8,7 +8,6 @@ import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecordGroup
 import com.harmonycloud.caas.common.util.ThreadPoolExecutorFactory;
 import com.harmonycloud.zeus.annotation.Authority;
 import com.harmonycloud.zeus.service.middleware.MiddlewareBackupService;
-import com.harmonycloud.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;

@@ -3,23 +3,21 @@ package com.harmonycloud.zeus.service.user.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.zeus.bean.user.BeanRoleAuthority;
-import com.harmonycloud.zeus.dao.user.BeanResourceMenuRoleMapper;
 import com.harmonycloud.zeus.dao.user.BeanRoleAuthorityMapper;
 import com.harmonycloud.zeus.service.user.ResourceMenuRoleService;
 import com.harmonycloud.zeus.service.user.RoleAuthorityService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
-import com.harmonycloud.zeus.service.user.UserService;
 import com.harmonycloud.zeus.util.RequestUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author xutianhong
@@ -110,4 +108,13 @@ public class RoleAuthorityServiceImpl implements RoleAuthorityService {
         }
         return flag;
     }
+
+    @Override
+    public Set<String> listOpsMiddleware(Integer roleId) {
+        List<BeanRoleAuthority> authorities = list(roleId);
+        return authorities.stream().map(BeanRoleAuthority::getType).
+                filter(type -> checkOps(String.valueOf(roleId), type)).
+                collect(Collectors.toSet());
+    }
+
 }

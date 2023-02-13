@@ -140,16 +140,19 @@ public class StorageServiceImpl implements StorageService {
     @Override
     public void addOrUpdate(StorageDto storageDto) {
         List<StorageClass> storageClassList = storageClassWrapper.list(storageDto.getClusterId());
-        // 校验该存储是否存在
-        if (CollectionUtils.isEmpty(storageClassList) || storageDto.getStorageClassList().stream()
-                .anyMatch(sc -> storageClassWrapper.get(storageDto.getClusterId(), sc.getName()) == null)) {
-            throw new BusinessException(ErrorMessage.STORAGE_CLASS_NOT_FOUND);
-        }
+        Map<String, StorageClass> scMap = storageClassList.stream().collect(Collectors.toMap(s -> s.getMetadata().getName(), sc -> sc));
 
         // 校验中文名称
         checkAliasName(storageDto, storageClassList);
 
-        List<StorageClass> scList = storageDto.getStorageClassList().stream().map(sc -> storageClassWrapper.get(storageDto.getClusterId(), sc.getName())).collect(Collectors.toList());
+        List<StorageClass> scList = storageDto.getStorageClassList().stream().map(sc -> {
+            StorageClass storageClass = scMap.get(sc.getName());
+            // 校验该存储是否存在
+            if (storageClass == null) {
+                throw new BusinessException(DictEnum.STORAGE_CLASS,sc.getName(),ErrorMessage.NOT_EXIST);
+            }
+            return storageClass;
+        }).collect(Collectors.toList());
 
         Date integrateTime = null;
         for (StorageClass sc : scList) {

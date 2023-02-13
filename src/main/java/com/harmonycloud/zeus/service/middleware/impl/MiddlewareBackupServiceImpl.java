@@ -15,12 +15,17 @@ import com.harmonycloud.caas.common.constants.ActiveAreaConstant;
 import com.harmonycloud.caas.common.enums.*;
 import com.harmonycloud.caas.common.model.*;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecordGroup;
+import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.bean.BeanActiveArea;
 import com.harmonycloud.zeus.bean.BeanBackupPosition;
 import com.harmonycloud.zeus.bean.BeanBackupServer;
+import com.harmonycloud.zeus.bean.user.BeanUserRole;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.*;
+import com.harmonycloud.zeus.service.user.RoleAuthorityService;
+import com.harmonycloud.zeus.service.user.UserRoleService;
+import com.harmonycloud.zeus.util.RequestUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -81,6 +86,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private ActiveAreaService activeAreaService;
     @Autowired
     private BackupServerService backupServerService;
+    @Autowired
+    private RoleAuthorityService roleAuthorityService;
+    @Autowired
+    private UserRoleService userRoleService;
 
     @Override
     public List<MiddlewareBackupRecord> listBackup(String clusterId, String namespace, String middlewareName,
@@ -595,9 +604,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             }
         });
         // 删除立即备份
-        MiddlewareBackupList backupList = backupCRDService.list(clusterId, namespace, labels);
-        if (backupList != null && !CollectionUtils.isEmpty(backupList.getItems())) {
-            backupList.getItems().forEach(item -> {
+        List<MiddlewareBackupCR> backupCRList = backupCRDService.list(clusterId, namespace, labels);
+        if (!CollectionUtils.isEmpty(backupCRList)) {
+            backupCRList.forEach(item -> {
                 try {
                     backupCRDService.delete(clusterId, namespace, item.getMetadata().getName());
                 } catch (IOException e) {
@@ -768,6 +777,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public List<MiddlewareBackupRecordGroup> backupTaskGroupList(String clusterId, String namespace, String middlewareName, String type, String keyword) {
         List<MiddlewareBackupRecord> records = backupTaskList(clusterId, namespace, middlewareName, type, keyword);
+        // 根据项目过滤中间件
+        records = filterByProject(records);
         // 设置备份地址
         setBackupPosition(records);
         List<MiddlewareBackupRecordGroup> recordGroups = groupByBackupId(clusterId,records);
@@ -844,7 +855,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             }
         });
         if (StringUtils.isNotEmpty(backupId)){
-            deleteBackupName(clusterId, backupId, null);
+            deleteBackupName(clusterId, backupId);
         }
     }
 
@@ -854,7 +865,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         deleteRecord(clusterId, namespace, type, backupName);
         // 删除对应数据库记录
         if (StringUtils.isNotEmpty(backupId)){
-            deleteBackupName(clusterId, backupId, "normal");
+            deleteBackupName(clusterId, backupId);
         }
     }
 
@@ -869,14 +880,32 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         middlewareBackupNameMapper.insert(backupName);
     }
 
-    @Override
-    public void deleteBackupName(String clusterId, String backupId, String backupType) {
+    public void deleteBackupName(String clusterId, String backupId) {
         QueryWrapper<BeanMiddlewareBackupName> wrapper = new QueryWrapper<>();
-        if (StringUtils.isNotEmpty(backupType)) {
-            wrapper.eq("backup_type", backupType);
-        }
         wrapper.eq("cluster_id", clusterId).eq("backup_id", backupId);
         middlewareBackupNameMapper.delete(wrapper);
+    }
+
+    @Override
+    public List<MiddlewareBackupRecord> listBackupTask(String clusterId, String namespace, Map<String, String> labels) {
+        List<MiddlewareBackupRecord> records = new ArrayList<>();
+        List<MiddlewareBackupScheduleCR> scheduleCRS = backupScheduleCRDService.listByLabels(clusterId, namespace, labels);
+        if (!CollectionUtils.isEmpty(scheduleCRS)) {
+            for (MiddlewareBackupScheduleCR scheduleCR : scheduleCRS) {
+                MiddlewareBackupRecord record = new MiddlewareBackupRecord();
+                convertBackupScheduleToRecord(scheduleCR, record);
+                records.add(record);
+            }
+        }
+        List<MiddlewareBackupCR> backupCRList = backupCRDService.list(clusterId, namespace, labels);
+        if (!CollectionUtils.isEmpty(backupCRList)) {
+            for (MiddlewareBackupCR backupCR : backupCRList) {
+                MiddlewareBackupRecord record = new MiddlewareBackupRecord();
+                convertBackupToRecord(backupCR, record);
+                records.add(record);
+            }
+        }
+        return records;
     }
 
     /**
@@ -982,19 +1011,16 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         String type) {
         List<MiddlewareBackupCR> resList = new ArrayList<>();
         // 查询所有即时备份创建的备份记录
-        MiddlewareBackupList backupList;
         if (StringUtils.isEmpty(middlewareName) && StringUtils.isEmpty(type)) {
-            backupList = backupCRDService.list(clusterId, namespace);
+            resList.addAll(backupCRDService.list(clusterId, namespace));
         } else {
             Map<String, String> labels = new HashMap<>();
             labels.put("middleware", getRealMiddlewareName(type, middlewareName));
-            backupList = backupCRDService.list(clusterId, namespace, labels);
-        }
-        if (backupList != null && !CollectionUtils.isEmpty(backupList.getItems())) {
-            resList.addAll(backupList.getItems());
+            resList.addAll(backupCRDService.list(clusterId, namespace, labels));
         }
         return resList;
     }
+
     private Middleware convertBackupToMiddleware(MiddlewareBackupDTO backupDTO) {
         return new Middleware().setClusterId(backupDTO.getClusterId()).setNamespace(backupDTO.getNamespace())
             .setType(backupDTO.getType()).setName(backupDTO.getMiddlewareName());
@@ -1237,7 +1263,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
     }
 
-    // 根据backupId进行分组
+    /**
+     * 根据backupId进行分组
+     * @param clusterId
+     * @param recordList
+     * @return
+     */
     public List<MiddlewareBackupRecordGroup> groupByBackupId(String clusterId, List<MiddlewareBackupRecord> recordList) {
         Map<String, List<MiddlewareBackupRecord>> backupIdRecordMap = new HashMap<>();
         for (MiddlewareBackupRecord record : recordList) {
@@ -1264,7 +1295,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             recordGroup.setPhrase(getTaskPhrase(records));
             recordGroup.setTaskType(getTaskType(records));
             recordGroup.setBackupId(record.getBackupId());
-            recordGroup.setBackupId(record.getPositionId());
             recordGroups.add(recordGroup);
         });
         return recordGroups;
@@ -1345,6 +1375,19 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             labels.put("activeArea", scheduleLabels.get("activeArea"));
         }
         return labels;
+    }
+
+    /**
+     * 根据项目过滤
+     * @param records
+     */
+    private List<MiddlewareBackupRecord> filterByProject(List<MiddlewareBackupRecord> records) {
+        // 查询用户在当前项目下所有可见的中间件类型
+        String username = CurrentUserRepository.getUser().getUsername();
+        BeanUserRole beanUserRole = userRoleService.get(username, RequestUtil.getProjectId());
+        // 根据中间件类型类型过滤
+        Set<String> middlewares = roleAuthorityService.listOpsMiddleware(beanUserRole.getRoleId());
+        return records.stream().filter(record -> middlewares.contains(record.getSourceType())).collect(Collectors.toList());
     }
 
 }

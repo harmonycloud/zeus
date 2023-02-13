@@ -11,6 +11,7 @@ import com.harmonycloud.zeus.integration.cluster.bean.Minio;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author dengyulong
@@ -190,10 +191,10 @@ public interface MiddlewareBackupService {
     MiddlewareIncBackupDto getIncBackupInfo(String clusterId, String namespace, String backupName);
 
     /**
-     * 备份记录
+     * 查询备份记录列表
      * @param clusterId
      * @param namespace
-     * @param middlewareName
+     * @param backupName
      * @param type
      * @return
      */
@@ -225,10 +226,12 @@ public interface MiddlewareBackupService {
     void saveBackupName(String clusterId, String taskName, String backupId, String backupType, Integer positionId);
 
     /**
-     * 删除备份任务名称映射信息
+     * 根据备份位置id查询备份任务(含单次备份和周期备份)
      * @param clusterId
-     * @param taskName
-     * @param backupType
+     * @param namespace
+     * @param labels
+     * @return
      */
-    void deleteBackupName(String clusterId, String taskName, String backupType);
+    List<MiddlewareBackupRecord> listBackupTask(String clusterId, String namespace, Map<String, String> labels);
+
 }
