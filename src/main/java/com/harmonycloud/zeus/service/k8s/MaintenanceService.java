@@ -47,11 +47,12 @@ public interface MaintenanceService {
      * @param clusterId 集群id
      * @param namespace 分区
      * @param middlewareName 中间件名称
+     * @param type 中间件类型
      * @param pvcNameList  pvc名称列表
      * @param targetStorage 目标存储大小
      * @param labels 标签
      */
-    void scaleStorage(String clusterId, String namespace, String middlewareName, List<String> pvcNameList, Double targetStorage, Map<String, String> labels);
+    void scaleStorage(String clusterId, String namespace, String middlewareName, String type, List<String> pvcNameList, Double targetStorage, Map<String, String> labels);
 
     /**
      * 存储扩容

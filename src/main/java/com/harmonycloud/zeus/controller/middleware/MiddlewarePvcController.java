@@ -64,6 +64,7 @@ public class MiddlewarePvcController {
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "pvcName", value = "pvc名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "storageClass", value = "存储类型", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "storage", value = "当前存储大小", paramType = "query", dataTypeClass = Double.class),
             @ApiImplicitParam(name = "targetStorage", value = "目标存储大小", paramType = "query", dataTypeClass = Double.class),
@@ -74,10 +75,11 @@ public class MiddlewarePvcController {
                                @PathVariable("namespace") String namespace,
                                @PathVariable("middlewareName") String middlewareName,
                                @PathVariable("pvcName") String pvcName,
+                               @RequestParam("type") String type,
                                @RequestParam("storageClass") String storageClass,
                                @RequestParam("storage") Double storage,
                                @RequestParam("targetStorage") Double targetStorage) {
-        middlewarePvcService.scalePvc(clusterId, namespace, middlewareName, pvcName, storageClass, storage, targetStorage);
+        middlewarePvcService.scalePvc(clusterId, namespace, middlewareName, pvcName, type, storageClass, storage, targetStorage);
         return BaseResult.ok();
     }
 

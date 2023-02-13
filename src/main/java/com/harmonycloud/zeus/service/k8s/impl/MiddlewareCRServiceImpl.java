@@ -258,6 +258,22 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
     }
 
     @Override
+    public List<String> getPod(String clusterId, String namespace, String type, String name) {
+        // query middleware cr
+        MiddlewareCR mw = this.getCR(clusterId, namespace, type, name);
+        if (mw == null || mw.getStatus() == null || mw.getStatus().getInclude() == null
+                || !mw.getStatus().getInclude().containsKey(PODS)){
+            return new ArrayList<>();
+        }
+        List<MiddlewareInfo> pods = mw.getStatus().getInclude().get(PODS);
+        List<String> podNameList = new ArrayList<>();
+        for (MiddlewareInfo pod : pods) {
+            podNameList.add(pod.getName());
+        }
+        return podNameList;
+    }
+
+    @Override
     public List<String> getPvc(MiddlewareCR mw) {
         if (mw == null || mw.getStatus() == null || mw.getStatus().getInclude() == null
                 || !mw.getStatus().getInclude().containsKey(PERSISTENT_VOLUME_CLAIMS)) {

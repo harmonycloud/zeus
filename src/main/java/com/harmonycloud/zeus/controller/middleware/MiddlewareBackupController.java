@@ -170,7 +170,7 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "backupName", value = "备份记录名称", paramType = "query", dataTypeClass = String.class),
     })
     @PostMapping("/restore")
-    @Authority(power = 1)
+    @Authority(power = 2)
     public BaseResult createRestore(@PathVariable("clusterId") String clusterId,
                                     @PathVariable("namespace") String namespace,
                                     @RequestParam("type") String type,

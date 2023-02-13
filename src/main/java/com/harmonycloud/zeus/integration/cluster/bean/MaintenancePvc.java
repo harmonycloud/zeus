@@ -19,4 +19,6 @@ public class MaintenancePvc {
 
     private String rollBackRequestSize;
 
+    private String pod;
+
 }

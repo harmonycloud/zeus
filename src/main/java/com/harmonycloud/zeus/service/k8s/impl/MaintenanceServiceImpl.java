@@ -11,6 +11,7 @@ import com.harmonycloud.zeus.integration.cluster.bean.MaintenanceList;
 import com.harmonycloud.zeus.integration.cluster.bean.MaintenancePvc;
 import com.harmonycloud.zeus.integration.cluster.bean.MaintenanceSpec;
 import com.harmonycloud.zeus.service.k8s.MaintenanceService;
+import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -34,6 +35,8 @@ public class MaintenanceServiceImpl implements MaintenanceService {
 
     @Autowired
     private MaintenanceWrapper maintenanceWrapper;
+    @Autowired
+    private MiddlewareCRService middlewareCRService;
 
     @Override
     public Maintenance getScaleUp(String clusterId, String namespace, String middlewareName, String pvcName) {
@@ -67,7 +70,7 @@ public class MaintenanceServiceImpl implements MaintenanceService {
     }
 
     @Override
-    public void scaleStorage(String clusterId, String namespace, String middlewareName, List<String> pvcNameList,
+    public void scaleStorage(String clusterId, String namespace, String middlewareName, String type, List<String> pvcNameList,
         Double targetStorage, Map<String, String> labels) {
 
         // 元数据
@@ -80,12 +83,17 @@ public class MaintenanceServiceImpl implements MaintenanceService {
             meta.setLabels(labels);
         }
 
+        // 查询pod列表
+        List<String> podList = middlewareCRService.getPod(clusterId, namespace, type, middlewareName);
         // pvc扩容数据
         List<MaintenancePvc> maintenancePvcList = pvcNameList.stream().map(pvcName -> {
             MaintenancePvc maintenancePvc = new MaintenancePvc();
             maintenancePvc.setPvc(pvcName);
             maintenancePvc.setNamespace(namespace);
             maintenancePvc.setTargetRequestSize(targetStorage + ResourceUnitEnum.GI.getUnit());
+            if (podList.stream().anyMatch(pvcName::contains)) {
+                maintenancePvc.setPod(podList.stream().filter(pvcName::contains).collect(Collectors.toList()).get(0));
+            }
             return maintenancePvc;
         }).collect(Collectors.toList());
 
@@ -96,7 +104,7 @@ public class MaintenanceServiceImpl implements MaintenanceService {
         Maintenance maintenance = new Maintenance();
         maintenance.setMetadata(meta);
         maintenance.setSpec(spec);
-
+        
         try {
             maintenanceWrapper.create(clusterId, maintenance);
         } catch (Exception e) {

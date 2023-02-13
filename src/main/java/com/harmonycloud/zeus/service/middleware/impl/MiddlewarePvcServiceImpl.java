@@ -82,12 +82,12 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
     }
 
     @Override
-    public void scalePvc(String clusterId, String namespace, String middlewareName, String pvcName, String storageClass,
+    public void scalePvc(String clusterId, String namespace, String middlewareName, String pvcName, String type, String storageClass,
         Double storage, Double targetStorage) {
         // 校验存储大小
         checkStorage(clusterId, storageClass, targetStorage - storage);
         // 扩容
-        createMaintenance(clusterId, namespace, middlewareName, pvcName, storage, targetStorage, SCALE_UP_PV);
+        createMaintenance(clusterId, namespace, middlewareName, type, pvcName, storage, targetStorage, SCALE_UP_PV);
     }
 
     @Override
@@ -114,7 +114,7 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
 
         Double storage = Double.parseDouble(mainLabels.get(STORAGE));
         // 回滚
-        createMaintenance(clusterId, namespace, middlewareName, pvcName, storage, storage, SCALE_UP_PV_ROLL_BACK);
+        createMaintenance(clusterId, namespace, middlewareName, null, pvcName, storage, storage, SCALE_UP_PV_ROLL_BACK);
     }
 
     @Override
@@ -163,7 +163,7 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
     /**
      * 创建运维组件
      */
-    public void createMaintenance(String clusterId, String namespace, String middlewareName, String pvcName,
+    public void createMaintenance(String clusterId, String namespace, String middlewareName, String type, String pvcName,
         Double storage, Double targetStorage, String action) {
         // 拼接pvc name
         List<String> pvcNameList = new ArrayList<>();
@@ -178,7 +178,7 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
 
         // 创建maintenance
         if (action.equals(SCALE_UP_PV)) {
-            maintenanceService.scaleStorage(clusterId, namespace, middlewareName, pvcNameList, targetStorage, labels);
+            maintenanceService.scaleStorage(clusterId, namespace, middlewareName, type, pvcNameList, targetStorage, labels);
         } else if (action.equals(SCALE_UP_PV_ROLL_BACK)) {
             maintenanceService.rollBack(clusterId, namespace, middlewareName, pvcNameList, storage, labels);
         }
