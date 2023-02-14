@@ -234,4 +234,14 @@ public interface MiddlewareBackupService {
      */
     List<MiddlewareBackupRecord> listBackupTask(String clusterId, String namespace, Map<String, String> labels);
 
+    /**
+     * 检查中间件是否已创建周期备份任务
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param middlewareName
+     * @return
+     */
+    boolean checkSchedule(String clusterId, String namespace, String type, String middlewareName);
+
 }

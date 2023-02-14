@@ -908,6 +908,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         return records;
     }
 
+    @Override
+    public boolean checkSchedule(String clusterId, String namespace, String type, String middlewareName) {
+        return checkBackupScheduleExist(clusterId, namespace, middlewareName, null);
+    }
+
     /**
      * 查询数据库记录的备份任务名称
      */
@@ -1249,18 +1254,36 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         return flag;
     }
 
+    /**
+     * 校验备份任务是否已存在
+     * @param backupDTO
+     */
     public void checkBackupScheduleExist(MiddlewareBackupDTO backupDTO) {
         String backupId = backupDTO.getLabels().get("backupId");
-        MiddlewareBackupScheduleList list = backupScheduleCRDService.list(backupDTO.getClusterId(), backupDTO.getNamespace());
+        if (checkBackupScheduleExist(backupDTO.getClusterId(),  backupDTO.getNamespace(), backupDTO.getMiddlewareName(), backupId)) {
+            throw new BusinessException(ErrorMessage.MIDDLEWARE_BACKUP_SCHEDULE_EXIST);
+        }
+    }
+
+    /**
+     * 校验备份任务是否已存在
+     * @param clusterId
+     * @param namespace
+     * @param middlewareName
+     * @param backupId
+     * @return
+     */
+    public boolean checkBackupScheduleExist(String clusterId, String namespace, String middlewareName, String backupId) {
+        MiddlewareBackupScheduleList list = backupScheduleCRDService.list(clusterId, namespace);
         if (list != null && !CollectionUtils.isEmpty(list.getItems())) {
             List<MiddlewareBackupScheduleCR> items = list.getItems();
-            items = items.stream().filter(cr ->
-                    !cr.getMetadata().getLabels().getOrDefault("backupId", backupId).equals(backupDTO.getLabels().get("backupId"))).collect(Collectors.toList());
-            boolean exists = items.stream().anyMatch(item -> item.getSpec().getName().equals(backupDTO.getMiddlewareName()));
-            if (exists) {
-                throw new BusinessException(ErrorMessage.MIDDLEWARE_BACKUP_SCHEDULE_EXIST);
+            if (StringUtils.isNotEmpty(backupId)) {
+                items = items.stream().filter(cr ->
+                        !cr.getMetadata().getLabels().getOrDefault("backupId", backupId).equals(backupId)).collect(Collectors.toList());
             }
+            return items.stream().anyMatch(item -> item.getSpec().getName().equals(middlewareName));
         }
+        return false;
     }
 
     /**
