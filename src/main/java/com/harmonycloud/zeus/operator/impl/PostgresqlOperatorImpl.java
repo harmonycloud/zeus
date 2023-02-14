@@ -228,9 +228,6 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         if (cr==null){
             throw new BusinessException(DictEnum.MIDDLEWARE,middleware.getName(),ErrorMessage.NOT_EXIST);
         }
-        if (!"Running".equals(cr.getStatus().getPhase())){
-            throw new BusinessException(ErrorMessage.MIDDLEWARE_CLUSTER_IS_NOT_RUNNING);
-        }
         // null手动切换， true/false更改自动切换状态
         if (middleware.getAutoSwitch()!=null){
             autoSwitch(middleware,cr);

@@ -393,9 +393,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         if (mysqlCluster == null) {
             throw new BusinessException(DictEnum.MYSQL_CLUSTER, middleware.getName(), ErrorMessage.NOT_EXIST);
         }
-        if (!NameConstant.RUNNING.equalsIgnoreCase(mysqlCluster.getStatus().getPhase())) {
-            throw new BusinessException(ErrorMessage.MIDDLEWARE_CLUSTER_IS_NOT_RUNNING);
-        }
         // 手动切换
         if (handSwitch(middleware, mysqlCluster)) {
             return;
