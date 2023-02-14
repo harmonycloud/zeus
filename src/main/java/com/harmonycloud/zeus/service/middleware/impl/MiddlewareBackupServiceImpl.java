@@ -1161,7 +1161,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         // 获取备份位置
         MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters parameters =
             backup.getSpec().getBackupDestination().getParameters();
-        String position = backup.getSpec().getBackupDestination().getDestinationType() + "(" + parameters.getUrl() + "/"
+        String position = "(" + parameters.getUrl() + "/"
             + parameters.getBucket() + ")";
         backupRecord.setPosition(position);
 
