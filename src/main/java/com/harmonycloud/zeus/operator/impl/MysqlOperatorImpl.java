@@ -467,7 +467,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
 
         // 判断版本
-        if (ChartVersionUtil.compare(middleware.getChartVersion(), "1.8.18-3") < 0) {
+        if (ChartVersionUtil.compare(middleware.getChartVersion(), "1.8.18-3") > 0) {
             switchByChangeCr(middleware, mysqlCluster);
         } else {
             switchByCurl(middleware, mysqlCluster);
