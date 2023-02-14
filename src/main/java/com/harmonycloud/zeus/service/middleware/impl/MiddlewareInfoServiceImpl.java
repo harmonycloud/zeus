@@ -453,9 +453,6 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
                 return;
             }
             middlewares = middlewares.stream().filter(middleware -> listRegisteredNamespace.stream().anyMatch(ns ->middleware.getNamespace().equals(ns.getName()))).collect(Collectors.toList());
-            if (!middlewares.isEmpty()) {
-                middlewares = checkIsLvm(middlewares);
-            }
             if (middlewares.isEmpty()) {
                 return;
             }
