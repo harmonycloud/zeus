@@ -10,4 +10,12 @@ public class PrometheusQueryUtil {
         return String.format("sum(spc_sc_pool_free_capacity{storageclass=\"%s\",serial_id=\"%s\",pool_id=\"%s\"})", storageClass, serialId, poolId);
     }
 
+    public static String queryHitachiPodTotal(String serialId, String poolId, String namespace, String pvc){
+        return String .format("sum(spc_volume_total_capacity{serial_id=\"%s\",pool_id=\"%s\",namespace=\"%s\",persistentvolumeclaim=\"%s\"})", serialId, poolId, namespace, pvc);
+    }
+
+    public static String queryHitachiPodUsed(String serialId, String poolId, String namespace, String pvc){
+        return String .format("sum(spc_volume_used_capacity{serial_id=\"%s\",pool_id=\"%s\",namespace=\"%s\",persistentvolumeclaim=\"%s\"})", serialId, poolId, namespace, pvc);
+    }
+
 }

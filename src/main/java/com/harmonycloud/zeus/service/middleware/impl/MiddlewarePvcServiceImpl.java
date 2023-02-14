@@ -43,11 +43,11 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
     @Autowired
     private MaintenanceService maintenanceService;
     @Autowired
-    private StorageClassWrapper storageClassWrapper;
-    @Autowired
     private PrometheusResourceMonitorService prometheusResourceMonitorService;
     @Autowired
     private MiddlewareCRService middlewareCRService;
+    @Autowired
+    private StorageService storageService;
 
     @Override
     public List<MiddlewarePvcDto> list(String clusterId, String namespace, String middlewareName, String type) {
@@ -264,22 +264,20 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
         return null;
     }
 
-    public void checkStorage(String clusterId, String storageClassName, Double queryStorage){
-        StorageClass storageClass = storageClassWrapper.get(clusterId, storageClassName);
-        if (storageClass.getProvisioner().equals(StorageClassProvisionerEnum.HITACHI.getProvisioner())
-            && !CollectionUtils.isEmpty(storageClass.getParameters())) {
-            Map<String, String> params = storageClass.getParameters();
+    public void checkStorage(String clusterId, String storageClassName, Double queryStorage) {
+        Map<String, String> params = storageService.checkHitachiAndGetParams(clusterId, storageClassName);
+        if (params.containsKey("poolID") && params.containsKey("serialNumber")) {
             if (params.containsKey("poolID") && params.containsKey("serialNumber")) {
-                String query = PrometheusQueryUtil.queryHitachiFree(storageClassName, params.get("serialNumber"), params.get("poolID"));
+                String query = PrometheusQueryUtil.queryHitachiFree(storageClassName, params.get("serialNumber"),
+                    params.get("poolID"));
                 try {
                     Double free = prometheusResourceMonitorService.queryAndConvert(clusterId, query);
-                    if (queryStorage > free){
+                    if (queryStorage > free) {
                         throw new BusinessException(ErrorMessage.STORAGE_NOT_ENOUGH);
                     }
-                }catch (Exception e){
+                } catch (Exception e) {
                     log.error("检验hitachi存储内容失败", e);
                 }
-
             }
         }
     }

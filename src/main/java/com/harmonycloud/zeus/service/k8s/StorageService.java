@@ -89,4 +89,13 @@ public interface StorageService {
      * @return
      */
     String getAliasName(String clusterId, String storageName);
+
+    /**
+     * 校验是否为hitachi存储并获取参数
+     *
+     * @param clusterId 集群id
+     * @param storageName 存储名
+     * @return Map<String, String>
+     */
+    Map<String, String> checkHitachiAndGetParams(String clusterId, String storageName);
 }

@@ -485,4 +485,22 @@ public class StorageServiceImpl implements StorageService {
         }
         return annotations.get(ALIAS_NAME);
     }
+
+    @Override
+    public Map<String, String> checkHitachiAndGetParams(String clusterId, String storageName) {
+        if (storageName.contains(",")){
+            storageName = storageName.split(",")[0];
+        }else if (storageName.contains("/")){
+            storageName = storageName.split("/")[0];
+        }
+        Map<String, String> params = new HashMap<>();
+        StorageClass storageClass = storageClassWrapper.get(clusterId, storageName);
+        if (storageClass.getProvisioner().equals(StorageClassProvisionerEnum.HITACHI.getProvisioner())
+                && !CollectionUtils.isEmpty(storageClass.getParameters())){
+            params = storageClass.getParameters();
+        }
+        return params;
+    }
+
+
 }

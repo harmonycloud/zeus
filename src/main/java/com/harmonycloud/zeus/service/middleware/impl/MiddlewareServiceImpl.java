@@ -37,10 +37,7 @@ import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.service.user.ProjectService;
 import com.harmonycloud.zeus.service.user.RoleAuthorityService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
-import com.harmonycloud.zeus.util.ChartVersionUtil;
-import com.harmonycloud.zeus.util.MiddlewareResourceCalculateUtil;
-import com.harmonycloud.zeus.util.ServiceNameConvertUtil;
-import com.harmonycloud.zeus.util.YamlUtil;
+import com.harmonycloud.zeus.util.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.SerializationUtils;
@@ -112,6 +109,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private PvcService pvcService;
     @Autowired
     private ResourceQuotaService resourceQuotaService;
+    @Autowired
+    private StorageService storageService;
 
     @Override
     public List<Middleware> simpleList(String clusterId, String namespace, String type, String keyword) {
@@ -777,13 +776,21 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         List<String> pvcList = middlewareCRService.getPvc(clusterId, namespace, type, name);
         StringBuilder pvcs = new StringBuilder();
         pvcList.forEach(pvc -> pvcs.append(pvc).append("|"));
+        // 判断存储类型
+        Map<String, String> params = storageService.checkHitachiAndGetParams(clusterId, middlewareTopologyDTO.getStorageClassName());
         // 查询total storage
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
-                String totalStorageQuery =
-                    "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{persistentvolumeclaim=~\""
-                        + pvcs.toString() + "\",namespace=\"" + namespace
-                        + "\"}) by (persistentvolumeclaim) /1024/1024/1024";
+                String totalStorageQuery;
+                if (params.containsKey("poolID") && params.containsKey("serialNumber")) {
+                    totalStorageQuery = PrometheusQueryUtil.queryHitachiPodTotal(params.get("poolID"),
+                        params.get("serialNumber"), namespace, pvcs.toString());
+                } else {
+                    totalStorageQuery =
+                        "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{persistentvolumeclaim=~\""
+                            + pvcs.toString() + "\",namespace=\"" + namespace
+                            + "\"}) by (persistentvolumeclaim) /1024/1024/1024";
+                }
                 PrometheusResponse totalStorage = prometheusResourceMonitorService.query(clusterId, totalStorageQuery);
                 Map<String, Double> result = convertResponse(totalStorage);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
@@ -803,10 +810,15 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // 查询used storage
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
-                String usedStorageQuery =
-                    "sum(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\""
-                        + pvcs.toString() + "\",namespace=\"" + namespace
+                String usedStorageQuery;
+                if (params.containsKey("poolID") && params.containsKey("serialNumber")) {
+                    usedStorageQuery = PrometheusQueryUtil.queryHitachiPodUsed(params.get("poolID"),
+                        params.get("serialNumber"), namespace, pvcs.toString());
+                } else {
+                    usedStorageQuery = "sum(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\"" + pvcs.toString()
+                        + "\",namespace=\"" + namespace
                         + "\",endpoint!=\"\"}) by (persistentvolumeclaim) /1024/1024/1024";
+                }
                 PrometheusResponse usedStorage = prometheusResourceMonitorService.query(clusterId, usedStorageQuery);
                 Map<String, Double> result = convertResponse(usedStorage);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
