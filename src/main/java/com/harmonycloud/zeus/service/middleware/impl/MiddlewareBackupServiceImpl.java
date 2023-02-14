@@ -14,16 +14,14 @@ import com.alibaba.fastjson.JSONObject;
 import com.harmonycloud.caas.common.constants.ActiveAreaConstant;
 import com.harmonycloud.caas.common.enums.*;
 import com.harmonycloud.caas.common.model.*;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecordGroup;
-import com.harmonycloud.caas.common.model.middleware.Namespace;
+import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.date.DateUtils;
-import com.harmonycloud.zeus.bean.BeanActiveArea;
-import com.harmonycloud.zeus.bean.BeanBackupPosition;
-import com.harmonycloud.zeus.bean.BeanBackupServer;
+import com.harmonycloud.zeus.bean.*;
 import com.harmonycloud.zeus.bean.user.BeanUserRole;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.*;
+import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.service.user.ProjectService;
 import com.harmonycloud.zeus.service.user.RoleAuthorityService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
@@ -38,11 +36,8 @@ import org.springframework.util.ObjectUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.exception.BusinessException;
-import com.harmonycloud.caas.common.model.middleware.Middleware;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecord;
 import com.harmonycloud.tool.uuid.UUIDUtils;
 import com.harmonycloud.zeus.annotation.MiddlewareBackup;
-import com.harmonycloud.zeus.bean.BeanMiddlewareBackupName;
 import com.harmonycloud.zeus.dao.BeanMiddlewareBackupNameMapper;
 import com.harmonycloud.zeus.integration.cluster.bean.*;
 import com.harmonycloud.zeus.util.CronUtils;
@@ -94,6 +89,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private UserRoleService userRoleService;
     @Autowired
     private ProjectService projectService;
+    @Autowired
+    private HelmChartService helmChartService;
+    @Autowired
+    private ClusterService clusterService;
+    @Autowired
+    private MiddlewareInfoService middlewareInfoService;
 
     @Override
     public List<MiddlewareBackupRecord> listBackup(String clusterId, String namespace, String middlewareName,
@@ -960,16 +961,33 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * @param recordGroups
      */
     private void setMiddlewareStatus(String clusterId, List<MiddlewareBackupRecordGroup> recordGroups) {
+        MiddlewareClusterDTO clusterDTO = clusterService.findById(clusterId);
         recordGroups.forEach(recordGroup -> {
-            String sourceType = recordGroup.getSourceType();
             String sourceName = recordGroup.getSourceName();
             String namespace = recordGroup.getNamespace();
-            if (middlewareCRService.checkIfExist(clusterId, namespace, sourceType, sourceName)) {
+            JSONObject values = helmChartService.getInstalledValues(sourceName, namespace, clusterDTO);
+            if (values != null) {
+                recordGroup.setImagePath(getImagePath(values));
                 recordGroup.setSourceStatus(MiddlewareStatusEnum.RUNNING.getStatus());
             } else {
                 recordGroup.setSourceStatus(MiddlewareStatusEnum.DELETED.getStatus());
             }
         });
+    }
+
+    /**
+     * 获取指定版本chart包的图片路径
+     * @param values
+     * @return
+     */
+    private String getImagePath(JSONObject values) {
+        String chartName = values.getString("chart_name");
+        String chartVersion = values.getString("chart_version");
+        BeanMiddlewareInfo beanMiddlewareInfo = middlewareInfoService.get(chartName, chartVersion);
+        if (beanMiddlewareInfo != null) {
+            return beanMiddlewareInfo.getImagePath();
+        }
+        return "";
     }
 
     /**
