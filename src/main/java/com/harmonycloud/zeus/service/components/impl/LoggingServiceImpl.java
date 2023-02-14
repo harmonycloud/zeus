@@ -87,6 +87,14 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
         existCluster.setLogging(cluster.getLogging());
         clusterService.update(existCluster);
+        if (cluster.getLogging().getElasticSearch().getLogCollect() != null){
+            boolean logCollect = cluster.getLogging().getElasticSearch().getLogCollect();
+            if (!checkLogExist(cluster) && logCollect){
+                logPilot(cluster, new ClusterComponentsDto().setType(SIMPLE));
+            }else if (checkLogExist(cluster) && !logCollect){
+                helmChartService.uninstall(cluster, "logging", "log");
+            }
+        }
     }
 
     @Override
@@ -142,6 +150,15 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         logging.setElasticSearch(es);
         cluster.setLogging(logging);
         clusterService.update(cluster);
+    }
+
+    @Override
+    public void updateStatus(MiddlewareClusterDTO cluster, BeanClusterComponents beanClusterComponents) {
+        super.updateStatus(cluster, beanClusterComponents);
+        boolean logCollect =  checkLogExist(cluster);
+        if (cluster.getLogging() != null && cluster.getLogging().getElasticSearch() != null){
+            cluster.getLogging().getElasticSearch().setLogCollect(logCollect);
+        }
     }
 
     @Override
@@ -216,5 +233,10 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
                 cluster.getLogging().getElasticSearch().getProtocol())) {
             clusterComponentsDto.setStatus(7);
         }
+    }
+
+    public Boolean checkLogExist(MiddlewareClusterDTO cluster){
+        List<HelmListInfo> infoList = helmChartService.listHelm("logging", "log", cluster);
+        return !CollectionUtils.isEmpty(infoList);
     }
 }
