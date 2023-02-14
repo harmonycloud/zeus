@@ -1,7 +1,7 @@
 -- 2023.01.10 wangpenglei
 -- 修改命名空间长度
 ALTER TABLE alert_record modify namespace VARCHAR(128) null comment '分区';
-ALTER TABLE alert_rule_id modify namespace VARCHAR(64) null comment '命名空间';
+ALTER TABLE alert_rule_id modify namespace VARCHAR(128) null comment '命名空间';
 
 -- 2023.01.31 liyinlong
 -- 删除备份服务器地址表
