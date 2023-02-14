@@ -15,6 +15,7 @@ import com.harmonycloud.caas.common.constants.ActiveAreaConstant;
 import com.harmonycloud.caas.common.enums.*;
 import com.harmonycloud.caas.common.model.*;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareBackupRecordGroup;
+import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.tool.date.DateUtils;
 import com.harmonycloud.zeus.bean.BeanActiveArea;
@@ -23,6 +24,7 @@ import com.harmonycloud.zeus.bean.BeanBackupServer;
 import com.harmonycloud.zeus.bean.user.BeanUserRole;
 import com.harmonycloud.zeus.service.k8s.*;
 import com.harmonycloud.zeus.service.middleware.*;
+import com.harmonycloud.zeus.service.user.ProjectService;
 import com.harmonycloud.zeus.service.user.RoleAuthorityService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
 import com.harmonycloud.zeus.util.RequestUtil;
@@ -90,6 +92,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private RoleAuthorityService roleAuthorityService;
     @Autowired
     private UserRoleService userRoleService;
+    @Autowired
+    private ProjectService projectService;
 
     @Override
     public List<MiddlewareBackupRecord> listBackup(String clusterId, String namespace, String middlewareName,
@@ -1407,13 +1411,27 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private List<MiddlewareBackupRecord> filterByProject(List<MiddlewareBackupRecord> records) {
         // 查询用户在当前项目下所有可见的中间件类型
         String username = CurrentUserRepository.getUser().getUsername();
-        BeanUserRole beanUserRole = userRoleService.get(username, RequestUtil.getProjectId());
+        String projectId = RequestUtil.getProjectId();
+        BeanUserRole beanUserRole = userRoleService.get(username, projectId);
+        // 因为超级管理员在项目下没有角色信息，所以超级管理员可以查看所有中间件的备份任务
         if (beanUserRole == null) {
             return records;
         }
         // 根据中间件类型类型过滤
-        Set<String> middlewares = roleAuthorityService.listOpsMiddleware(beanUserRole.getRoleId());
-        return records.stream().filter(record -> middlewares.contains(record.getSourceType())).collect(Collectors.toList());
+        Set<String> middlewareSet = roleAuthorityService.listOpsMiddleware(beanUserRole.getRoleId());
+        if (!CollectionUtils.isEmpty(middlewareSet)) {
+            records = records.stream().filter(record -> middlewareSet.contains(record.getSourceType())).collect(Collectors.toList());
+        } else {
+            return Collections.emptyList();
+        }
+        // 根据分区过滤
+        List<Namespace> namespaces = projectService.getNamespace(projectId);
+        if (!CollectionUtils.isEmpty(namespaces)) {
+            Set<String> namespaceSet = namespaces.stream().map(Namespace::getName).collect(Collectors.toSet());
+            return records.stream().filter(record -> namespaceSet.contains(record.getNamespace())).collect(Collectors.toList());
+        } else {
+            return Collections.emptyList();
+        }
     }
 
 }
