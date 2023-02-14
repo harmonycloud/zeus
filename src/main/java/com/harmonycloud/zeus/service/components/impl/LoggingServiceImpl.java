@@ -11,7 +11,6 @@ import com.harmonycloud.zeus.bean.BeanClusterMiddlewareInfo;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.LoggingService;
-import com.harmonycloud.zeus.service.k8s.ClusterComponentService;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.middleware.ClusterMiddlewareInfoService;
 import com.harmonycloud.zeus.service.middleware.EsService;
@@ -89,10 +88,11 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         clusterService.update(existCluster);
         if (cluster.getLogging().getElasticSearch().getLogCollect() != null){
             boolean logCollect = cluster.getLogging().getElasticSearch().getLogCollect();
-            if (!checkLogExist(cluster) && logCollect){
-                logPilot(cluster, new ClusterComponentsDto().setType(SIMPLE));
-            }else if (checkLogExist(cluster) && !logCollect){
-                helmChartService.uninstall(cluster, "logging", "log");
+            boolean exist = checkLogExist(existCluster);
+            if (!exist && logCollect){
+                logPilot(existCluster, new ClusterComponentsDto().setType(SIMPLE));
+            }else if (exist && !logCollect){
+                helmChartService.uninstall(existCluster, "logging", "log");
             }
         }
     }
