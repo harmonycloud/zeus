@@ -951,7 +951,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         Map<String, String> backupNameMap = beanMiddlewareBackupNameList.stream()
             .collect(Collectors.toMap(BeanMiddlewareBackupName::getBackupId, BeanMiddlewareBackupName::getBackupName));
         // 设置备份任务名称
-        recordList.forEach(record -> {
+        for (MiddlewareBackupRecord record : recordList) {
+            if (StringUtils.isNotEmpty(record.getTaskName())) {
+                continue;
+            }
             if (StringUtils.isNotEmpty(record.getBackupId()) && backupNameMap.containsKey(record.getBackupId())) {
                 record.setTaskName(backupNameMap.get(record.getBackupId()));
             } else if (StringUtils.isNotEmpty(backupId) && backupNameMap.containsKey(backupId)) {
@@ -959,7 +962,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             } else {
                 record.setTaskName(record.getBackupName());
             }
-        });
+        }
     }
 
 
@@ -1050,6 +1053,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         backupLabel.put("type", backupDTO.getType());
         backupLabel.put("unit", backupDTO.getDateUnit());
         backupDTO.setLabels(backupLabel);
+        Map<String,String> annotations = new HashMap<>();
+        annotations.put("taskName", backupDTO.getBackupName());
+        backupDTO.setAnnotations(annotations);
         backupDTO.setCrdType(middlewareCrdType);
     }
 
@@ -1140,12 +1146,17 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         backupRecord.setSourceType(middlewareCrTypeService.findTypeByCrType(spec.getType()));
         // 获取labels参数
         Map<String, String> labels = schedule.getMetadata().getLabels();
+        Map<String, String> annotations = schedule.getMetadata().getLabels();
         if (!CollectionUtils.isEmpty(labels)){
             backupRecord.setDateUnit(labels.get("unit"));
             backupRecord.setAddressId(labels.get("addressId"));
             backupRecord.setBackupId(labels.get("backupId"));
             backupRecord.setActiveArea(labels.get("activeArea"));
         }
+        if (!CollectionUtils.isEmpty(schedule.getMetadata().getAnnotations())) {
+            annotations.putAll(schedule.getMetadata().getAnnotations());
+        }
+        backupRecord.setTaskName(annotations.getOrDefault("taskName", ""));
         // 转换cron表达式
         try {
             backupRecord.setCron(CronUtils.parseCron(schedule.getSpec().getSchedule().getCron(), -timezone + 8));
@@ -1183,9 +1194,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
         MiddlewareBackupStatus backupStatus = backup.getStatus();
         Map<String, String> labels = new HashMap<>();
+        Map<String, String> annotations = new HashMap<>();
         if (!CollectionUtils.isEmpty(backup.getMetadata().getLabels())) {
             labels.putAll(backup.getMetadata().getLabels());
         }
+        if (!CollectionUtils.isEmpty(backup.getMetadata().getAnnotations())) {
+            annotations.putAll(backup.getMetadata().getAnnotations());
+        }
+        backupRecord.setTaskName(annotations.getOrDefault("taskName", ""));
 
         // 获取备份id
         backupRecord.setBackupId(labels.get("backupId"));
