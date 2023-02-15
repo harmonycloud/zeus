@@ -116,7 +116,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public void createBackup(MiddlewareBackupDTO backupDTO) {
-        if (backupDTO.getIncrement()) {
+        if (backupDTO.getIncrement() != null && backupDTO.getIncrement()) {
             checkTimeLawful(backupDTO);
         }
         middlewareCRService.getCRAndCheckRunning(convertBackupToMiddleware(backupDTO));
