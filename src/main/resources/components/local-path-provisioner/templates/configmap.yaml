@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configmap.name }}
+  labels:
+{{ include "local-path-provisioner.labels" . | indent 4 }}
+data:
+  config.json: |-
+    {
+      "nodePathMap": {{ .Values.nodePathMap | toPrettyJson | nindent 8 }}
+    }
+  setup: |-
+    {{ .Values.configmap.setup | nindent 4 }}
+  teardown: |-
+    {{ .Values.configmap.teardown | nindent 4 }}
+  checkDir: |-
+    {{ .Values.configmap.checkDir | nindent 4 }}
+  cleanDir: |-
+    {{ .Values.configmap.cleanDir | nindent 4 }}
+  helperPod.yaml: |-
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: helper-pod
+    spec:
+      containers:
+        - name: helper-pod
+          {{- if and .Values.privateRegistry .Values.privateRegistry.registryUrl }}
+          image: {{ .Values.privateRegistry.registryUrl }}/{{ .Values.helperImage.name }}:{{ .Values.helperImage.tag }}
+          {{- else }}
+          image: {{ .Values.image.repository }}/{{ .Values.helperImage.name }}:{{ .Values.helperImage.tag }}
+          {{- end }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
