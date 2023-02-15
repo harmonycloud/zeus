@@ -65,7 +65,7 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
         convertResourcesByHelmChart(middleware, middleware.getType(),
             values.getJSONObject(POD.getEnPhrase()).getJSONObject(RESOURCES));
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
-        convertRegistry(middleware, cluster);
+        convertRegistry(middleware, values);
         return middleware;
     }
 

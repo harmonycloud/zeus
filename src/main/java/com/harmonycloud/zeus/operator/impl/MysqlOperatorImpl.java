@@ -174,7 +174,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
         convertCommonByHelmChart(middleware, values);
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
-        convertRegistry(middleware, cluster);
+        convertRegistry(middleware, values);
         // 处理mysql的特有参数
         if (values != null) {
             convertResourcesByHelmChart(middleware, middleware.getType(), values.getJSONObject(RESOURCES));

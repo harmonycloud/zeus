@@ -1185,11 +1185,11 @@ public abstract class AbstractBaseOperator {
     /**
      * 非自定义中间件镜像仓库信息转换
      */
-    protected void convertRegistry(Middleware middleware, MiddlewareClusterDTO middlewareClusterDTO) {
-        if (!ObjectUtils.isEmpty(middlewareClusterDTO.getRegistry())) {
-            Registry registry = middlewareClusterDTO.getRegistry();
-            String path = registry.getAddress() + ":" + registry.getPort() + "/" + registry.getChartRepo();
-            middleware.setMirrorImage(path);
+    protected void convertRegistry(Middleware middleware, JSONObject values) {
+        // image
+        JSONObject image = values.getJSONObject("image");
+        if (image != null) {
+            middleware.setMirrorImage(image.getString("repository"));
         }
     }
 
