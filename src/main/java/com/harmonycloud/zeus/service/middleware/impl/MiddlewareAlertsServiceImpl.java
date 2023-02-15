@@ -636,17 +636,21 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         prometheusRules.getLabels().put("alertname", middlewareAlertsDTO.getAlert());
         // 构造expr
         String expr = "";
-        if ("kafka".equals(middlewareAlertsDTO.getType())) {
+        if (MiddlewareTypeEnum.KAFKA.getType().equals(middlewareAlertsDTO.getType())) {
             expr = middlewareAlertsDTO.getExpr().replace(
-                    "{{ include \"" + middlewareAlertsDTO.getType() + "-hc" + ".fullname\" . }}", middlewareAlertsDTO.getName());
+                "{{ include \"" + middlewareAlertsDTO.getType() + "-hc" + ".fullname\" . }}",
+                middlewareAlertsDTO.getName());
+        } else if (MiddlewareTypeEnum.POSTGRESQL.getType().equals(middlewareAlertsDTO.getType())) {
+            expr = middlewareAlertsDTO.getExpr().replace("{{ include \"pgsql.fullname\" . }}",
+                middlewareAlertsDTO.getName());
         } else {
             expr = middlewareAlertsDTO.getExpr().replace(
-                    "{{ include \"" + middlewareAlertsDTO.getType() + ".fullname\" . }}", middlewareAlertsDTO.getName());
+                "{{ include \"" + middlewareAlertsDTO.getType() + ".fullname\" . }}", middlewareAlertsDTO.getName());
         }
-                String symbol = getSymbol(expr);
+        String symbol = getSymbol(expr);
         String threshold = getThreshold(expr);
         expr = expr.replace(symbol, middlewareAlertsDTO.getSymbol()).replace(threshold,
-                middlewareAlertsDTO.getThreshold());
+            middlewareAlertsDTO.getThreshold());
         prometheusRules.setExpr(expr);
         return prometheusRules;
     }
