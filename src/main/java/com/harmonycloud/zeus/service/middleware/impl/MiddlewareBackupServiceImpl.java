@@ -1054,7 +1054,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         backupLabel.put("unit", backupDTO.getDateUnit());
         backupDTO.setLabels(backupLabel);
         Map<String,String> annotations = new HashMap<>();
-        annotations.put("taskName", backupDTO.getBackupName());
+        annotations.put("taskName", backupDTO.getTaskName());
         backupDTO.setAnnotations(annotations);
         backupDTO.setCrdType(middlewareCrdType);
     }
