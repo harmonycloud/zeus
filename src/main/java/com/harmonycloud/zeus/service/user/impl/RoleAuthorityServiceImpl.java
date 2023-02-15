@@ -116,5 +116,4 @@ public class RoleAuthorityServiceImpl implements RoleAuthorityService {
                 filter(type -> checkOps(String.valueOf(roleId), type)).
                 collect(Collectors.toSet());
     }
-
 }
