@@ -22,14 +22,20 @@ import com.harmonycloud.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.harmonycloud.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.harmonycloud.caas.common.model.MiddlewareVersionDto;
 import com.harmonycloud.caas.common.model.middleware.*;
+import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
+import com.harmonycloud.zeus.bean.user.BeanRoleAuthority;
+import com.harmonycloud.zeus.bean.user.BeanUserRole;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
 import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.service.registry.HelmChartService;
+import com.harmonycloud.zeus.service.user.RoleAuthorityService;
+import com.harmonycloud.zeus.service.user.UserRoleService;
 import com.harmonycloud.zeus.util.ChartVersionUtil;
 import com.harmonycloud.zeus.util.MiddlewareVersionUtil;
+import com.harmonycloud.zeus.util.RequestUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -78,6 +84,10 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     private MiddlewareClusterService middlewareClusterService;
     @Autowired
     private MiddlewareService middlewareService;
+    @Autowired
+    private RoleAuthorityService roleAuthorityService;
+    @Autowired
+    private UserRoleService  userRoleService;
 
     @Override
     public List<BeanMiddlewareInfo> list(Boolean all) {
@@ -516,6 +526,20 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         List<MiddlewareClusterDTO> clusterDTOS = new ArrayList<>();
         clusterDTOS.add(clusterDTO);
         return middlewareInfoMapper.listInstalledWithMiddlewareDetail(clusterDTOS);
+    }
+
+    @Override
+    public List<MiddlewareInfoDTO> listUsersOperator(String clusterId) {
+        List<MiddlewareInfoDTO> infoDTOList = list(clusterId);
+        String username = CurrentUserRepository.getUser().getUsername();
+        String projectId = RequestUtil.getProjectId();
+        BeanUserRole beanUserRole = userRoleService.get(username, projectId);
+        // 因为超级管理员在项目下没有角色信息，所以超级管理员可以查看所有中间件的备份任务
+        if (beanUserRole == null) {
+            return infoDTOList;
+        }
+        Set<String> middlewareSet = roleAuthorityService.listOpsMiddleware(beanUserRole.getRoleId());
+        return infoDTOList.stream().filter(middlewareInfoDTO -> middlewareSet.contains(middlewareInfoDTO.getChartName())).collect(Collectors.toList());
     }
 
     public void compareChartVersion(List<BeanMiddlewareInfo> mwInfoList){

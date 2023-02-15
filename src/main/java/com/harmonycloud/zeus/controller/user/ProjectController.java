@@ -2,11 +2,12 @@ package com.harmonycloud.zeus.controller.user;
 
 import com.harmonycloud.caas.common.base.BaseResult;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
+import com.harmonycloud.caas.common.model.middleware.MiddlewareInfoDTO;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.user.ProjectDto;
 import com.harmonycloud.caas.common.model.user.UserDto;
+import com.harmonycloud.zeus.service.middleware.MiddlewareInfoService;
 import com.harmonycloud.zeus.service.user.ProjectService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -17,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author xutianhong
@@ -31,6 +31,8 @@ public class ProjectController {
 
     @Autowired
     private ProjectService projectService;
+    @Autowired
+    private MiddlewareInfoService middlewareInfoService;
 
     @ApiOperation(value = "创建项目", notes = "创建项目")
     @ApiImplicitParams({
@@ -195,6 +197,15 @@ public class ProjectController {
     @GetMapping("/{projectId}/clusters")
     public BaseResult<List<MiddlewareClusterDTO>> getRelationCluster(@PathVariable("projectId") String projectId) {
         return BaseResult.ok(projectService.getRelationClusters(projectId));
+    }
+
+    @ApiOperation(value = "查询用户在指定项目下拥有运维权限的operator", notes = "查询用户在指定项目下拥有运维权限的operator")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("/operator")
+    public BaseResult<List<MiddlewareInfoDTO>> getMiddlewareOperator(@RequestParam("clusterId") String clusterId) {
+        return BaseResult.ok(middlewareInfoService.listUsersOperator(clusterId));
     }
 
 }

@@ -10,7 +10,6 @@ import com.harmonycloud.zeus.bean.BeanMiddlewareInfo;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author dengyulong
@@ -141,4 +140,12 @@ public interface MiddlewareInfoService {
      * @return List<MiddlewareVersionDto>
      */
     List<MiddlewareVersionDto> version(String type, String chartVersion);
+
+    /**
+     * 查询用户在指定项目下可见的operator
+     * @param clusterId
+     * @return
+     */
+    List<MiddlewareInfoDTO> listUsersOperator(String clusterId);
+
 }
