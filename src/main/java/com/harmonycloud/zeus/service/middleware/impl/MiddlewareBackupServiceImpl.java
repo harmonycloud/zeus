@@ -116,6 +116,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public void createBackup(MiddlewareBackupDTO backupDTO) {
+        if (backupDTO.getIncrement()) {
+            checkTimeLawful(backupDTO);
+        }
         middlewareCRService.getCRAndCheckRunning(convertBackupToMiddleware(backupDTO));
         // check name exist
         this.checkBackupJobName(backupDTO);
@@ -124,6 +127,25 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         this.createBackupByTaskType(backupDTO);
         // 保存备份任务名称到数据库
         this.saveBackupName(backupDTO);
+    }
+
+    private void checkTimeLawful(MiddlewareBackupDTO backupDTO) {
+        String cronStr = backupDTO.getCron();
+        String[] crons = cronStr.split(" ");
+        String weekStr = crons[crons.length - 1];
+        String[] _weeks = weekStr.split(",");
+        Integer[] week = new Integer[_weeks.length];
+        for (int i = 0; i < _weeks.length; i++) {
+            week[i] = Integer.valueOf(_weeks[i]);
+        }
+        int max = week[0] - week[week.length - 1] + 7;
+        for (int i = 1; i < week.length; i++) {
+            int j = week[i] - week[i - 1];
+            max = Math.max(max, j);
+        }
+        if (max > backupDTO.getRetentionTime()) {
+            throw new BusinessException(ErrorMessage.MIDDLEWARE_BACKUP_CRON_ILLEGAL);
+        }
     }
 
     @Override
