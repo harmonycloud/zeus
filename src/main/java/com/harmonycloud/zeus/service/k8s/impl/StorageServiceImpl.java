@@ -187,7 +187,8 @@ public class StorageServiceImpl implements StorageService {
     public void delete(String clusterId, String aliasName) {
         List<StorageClass> storageClassList = storageClassWrapper.list(clusterId);
         List<StorageClass> scList = storageClassList.stream()
-                .filter(storageClass -> aliasName.equals(storageClass.getMetadata().getAnnotations().get(ALIAS_NAME))).collect(Collectors.toList());
+                .filter(storageClass -> !CollectionUtils.isEmpty(storageClass.getMetadata().getAnnotations())
+                        && aliasName.equals(storageClass.getMetadata().getAnnotations().get(ALIAS_NAME))).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(scList)) {
             throw new BusinessException(ErrorMessage.STORAGE_CLASS_NOT_FOUND);
         }

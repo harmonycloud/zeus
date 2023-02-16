@@ -5,8 +5,8 @@ import static com.harmonycloud.caas.common.constants.CommonConstant.DOT;
 import static com.harmonycloud.caas.common.constants.CommonConstant.NUM_ZERO;
 import static com.harmonycloud.caas.common.constants.NameConstant.RESOURCES;
 import static com.harmonycloud.caas.common.constants.NameConstant.RUNNING;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ARGS;
-import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.SYNC_SLAVE;
+import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.*;
+import static com.harmonycloud.caas.common.enums.DictEnum.ROLE;
 
 import java.text.MessageFormat;
 import java.util.Base64;
@@ -245,15 +245,14 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         if (patroniService == null) {
             throw new BusinessException(DictEnum.SERVICE, patroniName, ErrorMessage.NOT_EXIST);
         }
-        // 获取执行pod
-        JSONArray conditions = JSONObject.parseObject(cr.getMetadata().getAnnotations().get("status")).getJSONArray("conditions");
-        if (CollectionUtil.isEmpty(conditions)){
-            throw new BusinessException(DictEnum.POD,ErrorMessage.NOT_FOUND);
+        // 获取pod列表
+        List<PodInfo> podInfos = podService.listPods(cluster.getId(), middleware.getNamespace(), MiddlewareTypeEnum.POSTGRESQL.getType(), middleware.getName());
+        List<PodInfo> runningPods = podInfos.stream().filter(podInfo -> RUNNING.equalsIgnoreCase(podInfo.getStatus())).collect(Collectors.toList());
+        if (CollectionUtil.isEmpty(runningPods)){
+            throw new BusinessException(ErrorMessage.MIDDLEWARE_CLUSTER_IS_NOT_RUNNING);
         }
-        JSONObject pod = (JSONObject) conditions.get(0);
-
         String execCommand = MessageFormat.format(POSTGRESQL_AUTO_SWITCH,
-                pod.getString("name"), middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
+                runningPods.get(0).getPodName(), middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
                 !middleware.getAutoSwitch(), patroniName);
         k8sExecService.exec(execCommand);
     }
@@ -270,21 +269,15 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             throw new BusinessException(DictEnum.SERVICE, patroniName, ErrorMessage.NOT_EXIST);
         }
         // 获取执行pod
-        JSONArray conditions = JSONObject.parseObject(cr.getMetadata().getAnnotations().get("status")).getJSONArray("conditions");
-        if (CollectionUtil.isEmpty(conditions)){
-            throw new BusinessException(DictEnum.ROLE,SYNC_SLAVE,ErrorMessage.NOT_FOUND);
+        List<PodInfo> podInfos = podService.listPods(cluster.getId(), middleware.getNamespace(), MiddlewareTypeEnum.POSTGRESQL.getType(), middleware.getName());
+        List<PodInfo> runningPods = podInfos.stream().filter(podInfo -> RUNNING.equalsIgnoreCase(podInfo.getStatus())
+                && SYNC_SLAVE.equalsIgnoreCase(podInfo.getRole())).collect(Collectors.toList());
+        if (CollectionUtil.isEmpty(runningPods)) {
+            throw new BusinessException(ROLE, SYNC_SLAVE, ErrorMessage.NOT_EXIST_OR_NOT_RUNNING);
         }
-        List<Object> syncSlavePods = conditions.stream().filter(condition -> {
-            JSONObject con = (JSONObject) condition;
-            return "sync_slave".equals(con.getString("type"));
-        }).collect(Collectors.toList());
-        if (CollectionUtil.isEmpty(syncSlavePods)){
-            throw new BusinessException(DictEnum.ROLE,SYNC_SLAVE,ErrorMessage.NOT_FOUND);
-        }
-        JSONObject syncSlavePod = (JSONObject) syncSlavePods.get(0);
         String execCommand = MessageFormat.format(POSTGRESQL_HAND_SWITCH,
-                syncSlavePod.getString("name"), middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
-                patroniName,syncSlavePod.getString("name"));
+                runningPods.get(0).getPodName(), middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
+                patroniName, runningPods.get(0).getPodName());
         List<String> results = CmdExecUtil.runCmd(execCommand);
         // 判断结果
         parseHandSwitchResult(results);
