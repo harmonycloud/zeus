@@ -556,9 +556,7 @@ public class ProjectServiceImpl implements ProjectService {
             BeanUtils.copyProperties(beanProjectNamespace, namespace);
             namespace.setClusterAliasName(clusterService.findById(namespace.getClusterId()).getNickname());
             namespace.setName(beanProjectNamespace.getNamespace());
-            if (StringUtils.isEmpty(namespace.getAliasName())) {
-                namespace.setAliasName(beanProjectNamespace.getNamespace());
-            }
+            setNamespaceAliasName(namespace);
             return namespace;
         }).collect(Collectors.toList());
         // 查询quota
@@ -597,6 +595,15 @@ public class ProjectServiceImpl implements ProjectService {
         if (!CollectionUtils.isEmpty(beanProjectList)){
             throw new BusinessException(ErrorMessage.PROJECT_NAME_EXIST);
         }
+    }
+
+    /**
+     * 设置分区别名
+     * @param namespace
+     */
+    private void setNamespaceAliasName(Namespace namespace){
+        Namespace ns = namespaceService.get(namespace.getClusterId(), namespace.getName());
+        namespace.setAliasName(ns.getAliasName());
     }
 
     /**
