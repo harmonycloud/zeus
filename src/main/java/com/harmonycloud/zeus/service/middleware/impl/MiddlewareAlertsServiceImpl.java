@@ -95,19 +95,13 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             }
         }
         if (StringUtils.isNotEmpty(keyword)) {
-            String alertID = keyword.replaceAll("GJ","");
-            if (isNumeric(alertID)) {
-                queryWrapper.and(wrapper ->
-                        wrapper.like("alert_id",Integer.parseInt(alertID)).or().like("alert_expr",keyword));
-            } else {
-                queryWrapper.and(wrapper ->
-                        wrapper.or().eq("alert",keyword).or().eq("symbol",keyword)
-                                .or().like("threshold",keyword)
-                                .or().eq("alert_time",keyword).or().eq("alert_times",keyword)
-                                .or().eq("content",keyword).or().eq("description",keyword)
-                                .or().like("alert_expr",keyword)
-                );
-            }
+            queryWrapper.and(wrapper ->
+                    wrapper.or().eq("alert",keyword).or().eq("symbol",keyword)
+                            .or().like("threshold",keyword)
+                            .or().eq("alert_time",keyword).or().eq("alert_times",keyword)
+                            .or().eq("description",keyword)
+                            .or().like("alert_expr",keyword)
+            );
         }
         List<AlertRuleId> alertInfos = alertRuleIdMapper.selectList(queryWrapper);
         PageInfo<MiddlewareAlertsDTO> alertsDTOPageInfo = new PageInfo<>();
