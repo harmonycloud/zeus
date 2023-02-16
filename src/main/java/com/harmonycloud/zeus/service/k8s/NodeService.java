@@ -23,6 +23,12 @@ public interface NodeService {
      */
     List<Node> list(String clusterId);
 
+    /**
+     * 随机获取一个节点正常的node的ip
+     * @param clusterId
+     * @return
+     */
+    String getAvailableNodeIP(String clusterId);
 
     /**
      * 查询节点列表

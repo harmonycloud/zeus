@@ -117,7 +117,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public void createBackup(MiddlewareBackupDTO backupDTO) {
         if (backupDTO.getIncrement() != null && backupDTO.getIncrement()) {
-            checkTimeLawful(backupDTO);
+            checkTimeLawful(backupDTO.getCron(), backupDTO.getRetentionTime());
         }
         middlewareCRService.getCRAndCheckRunning(convertBackupToMiddleware(backupDTO));
         // check name exist
@@ -129,8 +129,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         this.saveBackupName(backupDTO);
     }
 
-    private void checkTimeLawful(MiddlewareBackupDTO backupDTO) {
-        String cronStr = backupDTO.getCron();
+    private void checkTimeLawful(String cronStr, Integer retentionTime) {
+        if (cronStr == null) {
+            throw new BusinessException(DictEnum.BACKUP_SCHEDULE_CRON, ErrorMessage.NOT_FOUND);
+        }
+        if (retentionTime == null) {
+            throw new BusinessException(DictEnum.BACKUP_RETENTION_TIME, ErrorMessage.NOT_FOUND);
+        }
         String[] crons = cronStr.split(" ");
         String weekStr = crons[crons.length - 1];
         String[] _weeks = weekStr.split(",");
@@ -143,13 +148,21 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             int j = week[i] - week[i - 1];
             max = Math.max(max, j);
         }
-        if (max > backupDTO.getRetentionTime()) {
+        if (max > retentionTime) {
             throw new BusinessException(ErrorMessage.MIDDLEWARE_BACKUP_CRON_ILLEGAL);
         }
     }
 
     @Override
     public void createIncBackup(String clusterId, String namespace, String backupName, String time) {
+        // 校验备份周期和保留时间
+        MiddlewareBackupScheduleCR baks = backupScheduleCRDService.get(clusterId, namespace, backupName);
+        if (baks == null || baks.getSpec() == null || baks.getSpec().getSchedule() == null) {
+            throw new BusinessException(ErrorMessage.FIND_BACKUP_SCHEDULE_CRON_FAILED);
+        }
+        String cron = baks.getSpec().getSchedule().getCron();
+        Integer retentionTime = baks.getSpec().getSchedule().getRetentionTime();
+        checkTimeLawful(cron, retentionTime);
         createIncBackup(clusterId, namespace, backupName, time, null);
     }
 
@@ -1468,26 +1481,27 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         // 查询用户在当前项目下所有可见的中间件类型
         String username = CurrentUserRepository.getUser().getUsername();
         String projectId = RequestUtil.getProjectId();
-        BeanUserRole beanUserRole = userRoleService.get(username, projectId);
-        // 因为超级管理员在项目下没有角色信息，所以超级管理员可以查看所有中间件的备份任务
-        if (beanUserRole == null) {
-            return records;
-        }
-        // 根据中间件类型类型过滤
-        Set<String> middlewareSet = roleAuthorityService.listOpsMiddleware(beanUserRole.getRoleId());
-        if (!CollectionUtils.isEmpty(middlewareSet)) {
-            records = records.stream().filter(record -> middlewareSet.contains(record.getSourceType())).collect(Collectors.toList());
-        } else {
-            return Collections.emptyList();
-        }
+
         // 根据分区过滤
         List<Namespace> namespaces = projectService.getNamespace(projectId);
         if (!CollectionUtils.isEmpty(namespaces)) {
             Set<String> namespaceSet = namespaces.stream().map(Namespace::getName).collect(Collectors.toSet());
-            return records.stream().filter(record -> namespaceSet.contains(record.getNamespace())).collect(Collectors.toList());
+            records = records.stream().filter(record -> namespaceSet.contains(record.getNamespace())).collect(Collectors.toList());
         } else {
             return Collections.emptyList();
         }
+        BeanUserRole beanUserRole = userRoleService.get(username, projectId);
+        // 超级管理员在项目下没有角色，所以只有当用户为非超级管理员时才按中间件类型过滤
+        if (beanUserRole != null) {
+            // 根据用户拥有运维权限当中间件类型类型过滤
+            Set<String> middlewareSet = roleAuthorityService.listOpsMiddleware(beanUserRole.getRoleId());
+            if (!CollectionUtils.isEmpty(middlewareSet)) {
+                records = records.stream().filter(record -> middlewareSet.contains(record.getSourceType())).collect(Collectors.toList());
+            } else {
+                records = Collections.emptyList();
+            }
+        }
+        return records;
     }
 
 }

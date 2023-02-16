@@ -188,10 +188,7 @@ public class MysqlServiceImpl implements MysqlService {
                 exposeIP = ingressService.getIngressIp(clusterId, ingressDTO.getIngressClassName());
             } else {
                 ingressDTO = serviceDTOS.get(0);
-                List<Node> nodeList = nodeService.list(clusterId);
-                if(!CollectionUtils.isEmpty(nodeList)){
-                    exposeIP = nodeList.get(0).getIp();
-                }
+                exposeIP = nodeService.getAvailableNodeIP(clusterId);
             }
             List<ServiceDTO> serviceList = ingressDTO.getServiceList();
             if (!CollectionUtils.isEmpty(serviceList)) {

@@ -55,6 +55,16 @@ public class NodeServiceImpl implements NodeService {
     }
 
     @Override
+    public String getAvailableNodeIP(String clusterId) {
+        List<Node> nodes = list(clusterId);
+        nodes = nodes.stream().filter(node -> "True".equals(node.getStatus())).collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(nodes)) {
+            return nodes.get(0).getIp();
+        }
+        return "";
+    }
+
+    @Override
     public List<Node> list(String clusterId, Map<String, String> labels){
         List<io.fabric8.kubernetes.api.model.Node> nodes = nodeWrapper.list(clusterId, labels);
         return convertToDto(nodes);
