@@ -117,7 +117,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public void createBackup(MiddlewareBackupDTO backupDTO) {
         if (backupDTO.getIncrement() != null && backupDTO.getIncrement()) {
-            checkTimeLawful(backupDTO);
+            checkTimeLawful(backupDTO.getCron(), backupDTO.getRetentionTime());
         }
         middlewareCRService.getCRAndCheckRunning(convertBackupToMiddleware(backupDTO));
         // check name exist
@@ -129,8 +129,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         this.saveBackupName(backupDTO);
     }
 
-    private void checkTimeLawful(MiddlewareBackupDTO backupDTO) {
-        String cronStr = backupDTO.getCron();
+    private void checkTimeLawful(String cronStr, Integer retentionTime) {
+        if (cronStr == null) {
+            throw new BusinessException(DictEnum.BACKUP_SCHEDULE_CRON, ErrorMessage.NOT_FOUND);
+        }
+        if (retentionTime == null) {
+            throw new BusinessException(DictEnum.BACKUP_RETENTION_TIME, ErrorMessage.NOT_FOUND);
+        }
         String[] crons = cronStr.split(" ");
         String weekStr = crons[crons.length - 1];
         String[] _weeks = weekStr.split(",");
@@ -143,13 +148,21 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             int j = week[i] - week[i - 1];
             max = Math.max(max, j);
         }
-        if (max > backupDTO.getRetentionTime()) {
+        if (max > retentionTime) {
             throw new BusinessException(ErrorMessage.MIDDLEWARE_BACKUP_CRON_ILLEGAL);
         }
     }
 
     @Override
     public void createIncBackup(String clusterId, String namespace, String backupName, String time) {
+        // 校验备份周期和保留时间
+        MiddlewareBackupScheduleCR baks = backupScheduleCRDService.get(clusterId, namespace, backupName);
+        if (baks == null || baks.getSpec() == null || baks.getSpec().getSchedule() == null) {
+            throw new BusinessException(ErrorMessage.FIND_BACKUP_SCHEDULE_CRON_FAILED);
+        }
+        String cron = baks.getSpec().getSchedule().getCron();
+        Integer retentionTime = baks.getSpec().getSchedule().getRetentionTime();
+        checkTimeLawful(cron, retentionTime);
         createIncBackup(clusterId, namespace, backupName, time, null);
     }
 
