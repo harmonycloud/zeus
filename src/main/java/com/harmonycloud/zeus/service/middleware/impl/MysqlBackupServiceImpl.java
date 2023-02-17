@@ -65,6 +65,11 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         return convertMysqlBackupDto(backupList, clusterId);
     }
 
+    @Override
+    public MiddlewareBackupRecord getBackup(String clusterId, String namespace, String backupName, String backupMode) {
+        return null;
+    }
+
     private List<MiddlewareBackupRecord> convertMysqlBackupDto(List<Backup> backupList, String clusterId) {
         List<MiddlewareBackupRecord> list = new ArrayList<>();
         for (Backup backup : backupList) {

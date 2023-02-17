@@ -14,8 +14,11 @@ import com.harmonycloud.caas.common.enums.DictEnum;
 import com.harmonycloud.caas.common.model.Node;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareCR;
+import com.harmonycloud.zeus.operator.api.RedisOperator;
 import com.harmonycloud.zeus.service.k8s.MiddlewareCRService;
 import com.harmonycloud.zeus.service.k8s.NodeService;
+import com.harmonycloud.zeus.service.k8s.ServiceService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,11 +54,11 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
     @Autowired
     private IngressService ingressService;
     @Autowired
-    private MiddlewareServiceImpl middlewareService;
+    private MiddlewareService middlewareService;
     @Autowired
-    private ServiceServiceImpl serviceService;
+    private ServiceService serviceService;
     @Autowired
-    private RedisOperatorImpl redisOperator;
+    private RedisOperator redisOperator;
     @Autowired
     private NodeService nodeService;
     @Autowired

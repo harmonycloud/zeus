@@ -217,22 +217,17 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
     }
 
     @Override
-    public void switchMiddleware(Middleware middleware) {
+    public SwitchInfo switchMiddleware(Middleware middleware) {
         MiddlewareCR cr = middlewareCRService.getCR(middleware.getClusterId(), middleware.getNamespace(),
                 MiddlewareTypeEnum.POSTGRESQL.getType(), middleware.getName());
         if (cr==null){
             throw new BusinessException(DictEnum.MIDDLEWARE,middleware.getName(),ErrorMessage.NOT_EXIST);
         }
         // null手动切换， true/false更改自动切换状态
-        if (middleware.getAutoSwitch()!=null){
-            autoSwitch(middleware,cr);
-        }else{
-            handSwitch(middleware,cr);
-        }
-
+        return middleware.getAutoSwitch() == null ? handSwitch(middleware,cr): autoSwitch(middleware,cr);
     }
 
-    private void autoSwitch(Middleware middleware, MiddlewareCR cr) {
+    private SwitchInfo autoSwitch(Middleware middleware, MiddlewareCR cr) {
         MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
         // 获取patroniService
         String patroniName = middleware.getName() + "-patroni";
@@ -250,12 +245,13 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
                 runningPods.get(0).getPodName(), middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
                 !middleware.getAutoSwitch(), patroniName);
         k8sExecService.exec(execCommand);
+        return null;
     }
 
 
 
 
-    private void handSwitch(Middleware middleware, MiddlewareCR cr) {
+    private SwitchInfo handSwitch(Middleware middleware, MiddlewareCR cr) {
         MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
         // 获取patroniService
         String patroniName = middleware.getName() + "-patroni";
@@ -270,12 +266,14 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         if (CollectionUtil.isEmpty(runningPods)) {
             throw new BusinessException(ROLE, SYNC_SLAVE, ErrorMessage.NOT_EXIST_OR_NOT_RUNNING);
         }
+        String newMasterName = runningPods.get(0).getPodName();
         String execCommand = MessageFormat.format(POSTGRESQL_HAND_SWITCH,
-                runningPods.get(0).getPodName(), middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
-                patroniName, runningPods.get(0).getPodName());
+                newMasterName, middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
+                patroniName, newMasterName);
         List<String> results = CmdExecUtil.runCmd(execCommand);
         // 判断结果
         parseHandSwitchResult(results);
+        return new SwitchInfo().setNewMasterName(newMasterName);
     }
 
     @Override

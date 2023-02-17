@@ -118,6 +118,16 @@ public interface MiddlewareBackupService {
     List<MiddlewareBackupRecord> listBackup(String clusterId, String namespace, String middlewareName, String type);
 
     /**
+     * 查询备份任务详情
+     * @param clusterId
+     * @param namespace
+     * @param backupName 备份任务名称
+     * @param backupMode 备份任务类型 period:周期备份 single:单次备份
+     * @return
+     */
+    MiddlewareBackupRecord getBackup(String clusterId, String namespace,String backupName,String backupMode);
+
+    /**
      * 创建恢复
      *
      * @param clusterId      集群id

@@ -115,6 +115,19 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
+    public MiddlewareBackupRecord getBackup(String clusterId, String namespace, String backupName, String backupMode) {
+        MiddlewareBackupRecord record = new MiddlewareBackupRecord();
+        if (BackupMode.PERIOD.getMode().equals(backupMode)) {
+            MiddlewareBackupScheduleCR scheduleCR = backupScheduleCRDService.get(clusterId, namespace, backupName);
+            convertBackupScheduleToRecord(scheduleCR, record);
+        } else {
+            MiddlewareBackupCR backupCR = backupCRDService.get(clusterId, namespace, backupName);
+            convertBackupToRecord(backupCR, record);
+        }
+        return record;
+    }
+
+    @Override
     public void createBackup(MiddlewareBackupDTO backupDTO) {
         if (backupDTO.getIncrement() != null && backupDTO.getIncrement()) {
             checkTimeLawful(backupDTO.getCron(), backupDTO.getRetentionTime());
@@ -1130,6 +1143,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * 对象封装: MiddlewareBackupScheduleCR -> MiddlewareBackupRecord
      */
     public void convertBackupScheduleToRecord(MiddlewareBackupScheduleCR schedule, MiddlewareBackupRecord backupRecord){
+        if (schedule == null) {
+            throw new BusinessException(ErrorMessage.BACKUP_NOT_EXISTS);
+        }
         MiddlewareBackupScheduleStatus backupStatus = schedule.getStatus();
         // 获取备份创建时间
         Date creationTime = DateUtils.parseUTCDate(schedule.getMetadata().getCreationTimestamp());
@@ -1204,7 +1220,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * 对象封装: MiddlewareBackupCR -> MiddlewareBackupRecord
      */
     public void convertBackupToRecord(MiddlewareBackupCR backup, MiddlewareBackupRecord backupRecord) {
-
+        if (backup == null) {
+            throw new BusinessException(ErrorMessage.BACKUP_NOT_EXISTS);
+        }
         MiddlewareBackupStatus backupStatus = backup.getStatus();
         Map<String, String> labels = new HashMap<>();
         Map<String, String> annotations = new HashMap<>();

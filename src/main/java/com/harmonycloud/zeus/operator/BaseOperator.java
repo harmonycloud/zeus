@@ -101,7 +101,7 @@ public interface BaseOperator {
      *
      * @param middleware 中间件信息
      */
-    void switchMiddleware(Middleware middleware);
+    SwitchInfo switchMiddleware(Middleware middleware);
 
     /**
      * 指定从节点手动切换主从
@@ -109,7 +109,7 @@ public interface BaseOperator {
      * @param middleware 中间件信息
      * @param slaveName 从节点名称
      */
-    void switchMiddleware(Middleware middleware, String slaveName);
+    SwitchInfo switchMiddleware(Middleware middleware, String slaveName);
 
     /**
      * pvc扩缩容

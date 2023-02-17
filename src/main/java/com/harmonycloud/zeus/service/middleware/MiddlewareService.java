@@ -104,7 +104,7 @@ public interface MiddlewareService {
      * @param isAuto    是否自动切换
      * @param chartVersion chart包版本
      */
-    void switchMiddleware(String clusterId, String namespace, String name, String type, String slaveName, Boolean isAuto, String chartVersion);
+    SwitchInfo switchMiddleware(String clusterId, String namespace, String name, String type, String slaveName, Boolean isAuto, String chartVersion);
 
     /**
      * 性能监控

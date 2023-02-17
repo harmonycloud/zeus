@@ -95,6 +95,21 @@ public class MiddlewareBackupController {
         return BaseResult.ok(middlewareBackupService.backupTaskGroupList(clusterId, namespace, middlewareName, type, keyword));
     }
 
+    @ApiOperation(value = "查询备份任务详情", notes = "查询备份任务详情")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupName", value = "备份任务名称", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupMode", value = "备份任务类型", paramType = "query", dataTypeClass = String.class)
+    })
+    @GetMapping("/detail")
+    public BaseResult<List<MiddlewareBackupRecordGroup>> get(@PathVariable("clusterId") String clusterId,
+                                                             @PathVariable("namespace") String namespace,
+                                                             @RequestParam("backupName") String backupName,
+                                                             @RequestParam("backupMode") String backupMode) {
+        return BaseResult.ok(middlewareBackupService.getBackup(clusterId, namespace, backupName, backupMode));
+    }
+
     @ApiOperation(value = "检查中间件是否已创建周期备份", notes = "检查中间件是否已创建周期备份")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
