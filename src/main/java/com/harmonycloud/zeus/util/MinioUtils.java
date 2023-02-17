@@ -24,7 +24,7 @@ public class MinioUtils {
                 .endpoint(url)
                 .credentials(username, password)
                 .build();
-
+        minioClient.setTimeout(3000, 1000, 1000);
         try {
             minioClient.listBuckets();
         } catch (ConnectException e) {
