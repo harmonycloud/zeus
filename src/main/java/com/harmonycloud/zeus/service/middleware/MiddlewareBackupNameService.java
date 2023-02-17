@@ -17,4 +17,11 @@ public interface MiddlewareBackupNameService {
      */
     List<BeanMiddlewareBackupName> listByPositionId(Integer positionId);
 
+    /**
+     * 根据backupId查询备份任务名称信息
+     * @param backupId
+     * @return
+     */
+    BeanMiddlewareBackupName getByBackupId(String backupId);
+
 }

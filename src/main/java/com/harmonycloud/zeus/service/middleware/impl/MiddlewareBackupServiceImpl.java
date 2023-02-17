@@ -95,6 +95,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private ClusterService clusterService;
     @Autowired
     private MiddlewareInfoService middlewareInfoService;
+    @Autowired
+    private MiddlewareBackupNameService backupNameService;
 
     @Override
     public List<MiddlewareBackupRecord> listBackup(String clusterId, String namespace, String middlewareName,
@@ -1378,7 +1380,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             MiddlewareBackupRecord record = records.get(0);
             MiddlewareBackupRecordGroup recordGroup = new MiddlewareBackupRecordGroup();
             recordGroup.setMiddlewareBackupRecords(records);
-            recordGroup.setTaskName(record.getTaskName());
             recordGroup.setBackupMode(record.getBackupMode());
             recordGroup.setClusterId(clusterId);
             recordGroup.setNamespace(record.getNamespace());
@@ -1387,6 +1388,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             recordGroup.setPhrase(getTaskPhrase(records));
             recordGroup.setTaskType(getTaskType(records));
             recordGroup.setBackupId(record.getBackupId());
+            BeanMiddlewareBackupName backupName = backupNameService.getByBackupId(record.getBackupId());
+            if (backupName != null) {
+                recordGroup.setTaskName(backupName.getBackupName());
+            } else {
+                recordGroup.setTaskName(record.getBackupName());
+            }
             recordGroups.add(recordGroup);
         });
         return recordGroups;

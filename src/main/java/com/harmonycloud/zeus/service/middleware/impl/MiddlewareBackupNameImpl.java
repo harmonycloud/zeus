@@ -7,6 +7,7 @@ import com.harmonycloud.zeus.dao.BeanProjectBackupServerMapper;
 import com.harmonycloud.zeus.service.middleware.MiddlewareBackupNameService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
@@ -25,6 +26,17 @@ public class MiddlewareBackupNameImpl implements MiddlewareBackupNameService {
         QueryWrapper<BeanMiddlewareBackupName> wrapper = new QueryWrapper<>();
         wrapper.eq("position_id", positionId);
         return middlewareBackupNameMapper.selectList(wrapper);
+    }
+
+    @Override
+    public BeanMiddlewareBackupName getByBackupId(String backupId) {
+        QueryWrapper<BeanMiddlewareBackupName> wrapper = new QueryWrapper<>();
+        wrapper.eq("backup_id", backupId);
+        List<BeanMiddlewareBackupName> backupNames = middlewareBackupNameMapper.selectList(wrapper);
+        if (!CollectionUtils.isEmpty(backupNames)) {
+            return backupNames.get(0);
+        }
+        return null;
     }
 
 }
