@@ -423,12 +423,12 @@ public abstract class AbstractBaseOperator {
 
     }
 
-    public void switchMiddleware(Middleware middleware) {
-
+    public SwitchInfo switchMiddleware(Middleware middleware) {
+        return null;
     }
 
-    public void switchMiddleware(Middleware middleware, String slaveName) {
-
+    public SwitchInfo switchMiddleware(Middleware middleware, String slaveName) {
+        return null;
     }
 
     public void parseHandSwitchResult(List<String> results){

@@ -172,15 +172,14 @@ public class MiddlewareController {
     })
     @PutMapping("/{middlewareName}/switch")
     @Authority(power = 1)
-    public BaseResult switchMiddleware(@PathVariable("clusterId") String clusterId,
+    public BaseResult<SwitchInfo> switchMiddleware(@PathVariable("clusterId") String clusterId,
                                        @PathVariable("namespace") String namespace,
                                        @PathVariable("middlewareName") String name,
                                        @RequestParam("type") String type,
                                        @RequestParam(value = "slaveName", required = false) String slaveName,
                                        @RequestParam(value = "isAuto", required = false) Boolean isAuto,
-                                       @RequestParam(value = "chartVersion", required = false) String chartVersion) {
-        middlewareService.switchMiddleware(clusterId, namespace, name, type, slaveName, isAuto, chartVersion);
-        return BaseResult.ok();
+                                       @RequestParam(value = "chartVersion", required = false) String chartVersion) { ;
+        return BaseResult.ok(middlewareService.switchMiddleware(clusterId, namespace, name, type, slaveName, isAuto, chartVersion));
     }
 
 

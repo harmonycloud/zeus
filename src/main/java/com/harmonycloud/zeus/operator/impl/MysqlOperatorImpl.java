@@ -388,18 +388,12 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     }
 
     @Override
-    public void switchMiddleware(Middleware middleware) {
+    public SwitchInfo switchMiddleware(Middleware middleware) {
         MysqlCluster mysqlCluster = mysqlClusterWrapper.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
         if (mysqlCluster == null) {
             throw new BusinessException(DictEnum.MYSQL_CLUSTER, middleware.getName(), ErrorMessage.NOT_EXIST);
         }
-        // 手动切换
-        if (handSwitch(middleware, mysqlCluster)) {
-            return;
-        }
-        // 自动切换
-        autoSwitch(middleware, mysqlCluster);
-
+        return middleware.getAutoSwitch() == null ? handSwitch(middleware, mysqlCluster) : autoSwitch(middleware, mysqlCluster);
     }
 
     @Override
@@ -459,23 +453,17 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     /**
      * 手动切换
      */
-    private boolean handSwitch(Middleware middleware, MysqlCluster mysqlCluster) {
-        // 不等于null，自动切换，无需处理
-        if (middleware.getAutoSwitch() != null) {
-            // false为无需切换，true为已切换
-            return false;
-        }
-
+    private SwitchInfo handSwitch(Middleware middleware, MysqlCluster mysqlCluster) {
         // 判断版本
         if (ChartVersionUtil.compare(middleware.getChartVersion(), "1.8.20") > 0) {
             switchByChangeCr(middleware, mysqlCluster);
+            return null;
         } else {
-            switchByCurl(middleware, mysqlCluster);
+            return switchByCurl(middleware, mysqlCluster);
         }
-        return true;
     }
 
-    private void switchByCurl(Middleware middleware, MysqlCluster mysqlCluster) {
+    private SwitchInfo switchByCurl(Middleware middleware, MysqlCluster mysqlCluster) {
         MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
         // 先判断有没有sync_slave
         List<Status.Condition> conditions = mysqlCluster.getStatus().getConditions();
@@ -491,6 +479,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         List<String> results = CmdExecUtil.runCmd(execCommand);
         // 判断结果
         parseHandSwitchResult(results);
+        return new SwitchInfo().setNewMasterName(syncName);
     }
 
     private void switchByChangeCr(Middleware middleware, MysqlCluster mysqlCluster){
@@ -519,7 +508,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     /**
      * 自动切换
      */
-    private void autoSwitch(Middleware middleware, MysqlCluster mysqlCluster) {
+    private SwitchInfo autoSwitch(Middleware middleware, MysqlCluster mysqlCluster) {
         boolean changeStatus = false;
         if (mysqlCluster.getSpec().getPassiveSwitched() == null) {
             if (!middleware.getAutoSwitch()) {
@@ -539,6 +528,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 throw new BusinessException(DictEnum.MYSQL_CLUSTER, middleware.getName(), ErrorMessage.SWITCH_FAILED);
             }
         }
+        return null;
     }
 
     /**

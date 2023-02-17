@@ -115,6 +115,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         }
     }
 
+    @Override
     public void createOpenService(Middleware middleware) {
         boolean success = false;
         ReadWriteProxy readWriteProxy = middleware.getReadWriteProxy();
@@ -456,7 +457,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
     }
 
     @Override
-    public void switchMiddleware(Middleware middleware, String slaveName) {
+    public SwitchInfo switchMiddleware(Middleware middleware, String slaveName) {
         MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
         // 获取数据库密码
         JSONObject values = helmChartService.getInstalledValues(middleware.getName(), middleware.getNamespace(), cluster);
@@ -491,7 +492,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
                 slaveName, middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
                 slaveIP, password);
         k8sExecService.exec(execCommand);
-
+        return null;
     }
 
     @Override
