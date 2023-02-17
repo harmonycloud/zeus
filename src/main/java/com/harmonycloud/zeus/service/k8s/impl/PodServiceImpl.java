@@ -533,6 +533,9 @@ public class PodServiceImpl implements PodService {
 
     private List<PodInfo> addRedisPodExtraRole(String clusterId, String namespace, String middlewareName, List<PodInfo> podInfoList, MiddlewareCR mw) {
         String deployMod = RedisUtil.getRedisDeployMod(helmChartService.getInstalledValues(middlewareName, namespace, clusterService.findById(clusterId)));
+        if (StringUtils.isEmpty(deployMod)) {
+            return podInfoList;
+        }
         // 哨兵模式通过name判断分片，集群模式通过slave的masterNodeId判断分片
         if (deployMod.contains("sentinel")) {
             podInfoList.forEach(podInfo -> {

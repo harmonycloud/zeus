@@ -791,10 +791,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
         recordList.addAll(backupRecords);
         recordList.addAll(backupSchedules);
-        // 设置备份任务可用区别名
-        setAreaAliasName(clusterId, recordList);
-        // 获取任务对应的中文名称
-        setTaskName(recordList, clusterId, null);
         // 根据关键词进行过滤
         if (StringUtils.isNotEmpty(keyword)) {
             recordList = recordList.stream().filter(record -> record.getTaskName().contains(keyword))
@@ -805,25 +801,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             recordList = recordList.stream().filter(record -> middlewareName.equals(record.getSourceName()))
                 .collect(Collectors.toList());
         }
-        // 获取运行中备份实例状态
-        List<MiddlewareCR> middlewareCrList = middlewareCRService.listCR(clusterId, null, null);
-        recordList.forEach(record -> {
-            try {
-                if (middlewareCrList.stream()
-                    .noneMatch(mw -> record.getNamespace().equals(mw.getMetadata().getNamespace())
-                        && record.getSourceName().equals(mw.getSpec().getName()))) {
-                    record.setStatus(null);
-                } else {
-                    record.setStatus("Running");
-                }
-            } catch (Exception e) {
-                log.error("集群{} 备份记录{} 获取运行中实例状态失败", clusterId, record.getBackupName());
-                e.printStackTrace();
-            }
-        });
-        // 根据时间降序
-        recordList.sort((o1, o2) -> o1.getBackupTime() == null ? -1
-            : o2.getBackupTime() == null ? -1 : o2.getBackupTime().compareTo(o1.getBackupTime()));
+
         return recordList;
     }
 
@@ -1520,6 +1498,39 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             }
         }
         return records;
+    }
+
+    /**
+     * 添加备份任务其他信息
+     * @param clusterId
+     * @param recordList
+     * @return
+     */
+    private List<MiddlewareBackupRecord> addOtherBackupInfo(String clusterId, List<MiddlewareBackupRecord> recordList) {
+        // 设置备份任务可用区别名
+        setAreaAliasName(clusterId, recordList);
+        // 获取任务对应的中文名称
+        setTaskName(recordList, clusterId, null);
+        // 获取运行中备份实例状态
+        List<MiddlewareCR> middlewareCrList = middlewareCRService.listCR(clusterId, null, null);
+        recordList.forEach(record -> {
+            try {
+                if (middlewareCrList.stream()
+                        .noneMatch(mw -> record.getNamespace().equals(mw.getMetadata().getNamespace())
+                                && record.getSourceName().equals(mw.getSpec().getName()))) {
+                    record.setStatus(null);
+                } else {
+                    record.setStatus("Running");
+                }
+            } catch (Exception e) {
+                log.error("集群{} 备份记录{} 获取运行中实例状态失败", clusterId, record.getBackupName());
+                e.printStackTrace();
+            }
+        });
+        // 根据时间降序
+        recordList.sort((o1, o2) -> o1.getBackupTime() == null ? -1
+                : o2.getBackupTime() == null ? -1 : o2.getBackupTime().compareTo(o1.getBackupTime()));
+        return recordList;
     }
 
 }
