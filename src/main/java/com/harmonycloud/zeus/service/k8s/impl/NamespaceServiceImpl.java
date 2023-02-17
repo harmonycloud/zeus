@@ -210,7 +210,6 @@ public class NamespaceServiceImpl implements NamespaceService {
             ns.getMetadata().setAnnotations(new HashMap<>());
         }
         ns.getMetadata().getAnnotations().put("alias_name", namespace.getAliasName());
-        namespaceWrapper.save(clusterId, ns);
         // 修改分区注册状态
         if (namespace.getRegistered() != null) {
             register(clusterId, name, namespace.getRegistered(), ns);
