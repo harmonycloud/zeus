@@ -3,7 +3,7 @@ global:
   crdGroup: harmonycloud
   middleware_controller:
     image: middleware-controller
-    tag: v1.2.10
+    tag: v1.2.11
     resources:
       limits:
         cpu: 200m
@@ -14,7 +14,7 @@ global:
     nodeSelector: {}
   middlewarebackup_controller:
     image: middlewarebackup-controller
-    tag: v1.3.0
+    tag: v1.3.1
     resources:
       limits:
         cpu: 200m
