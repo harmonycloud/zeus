@@ -167,7 +167,8 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         updateValues(middleware, data, cluster, values);
         // 添加修改历史
         customConfigHistoryService.insert(config.getName(), oldDate, config);
-        if (restart && !config.getType().equals(MiddlewareTypeEnum.POSTGRESQL.getType())) {
+        if (restart && !config.getType().equals(MiddlewareTypeEnum.POSTGRESQL.getType())
+            && !config.getType().equals(MiddlewareTypeEnum.REDIS.getType())) {
             // 重启pod
             Middleware ware =
                 podService.list(config.getClusterId(), config.getNamespace(), config.getName(), config.getType());
