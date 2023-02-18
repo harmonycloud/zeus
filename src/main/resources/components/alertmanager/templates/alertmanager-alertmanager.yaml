@@ -10,30 +10,6 @@ spec:
   nodeSelector:
     {{- toYaml . | nindent 8 }}
   {{- end }}
-  affinity:
-  {{- if eq .Values.podAntiAffinity "hard"}}
-  podAntiAffinity:
-    requiredDuringSchedulingIgnoredDuringExecution:
-      - labelSelector:
-          matchExpressions:
-            - key: alertmanager
-              operator: In
-              values:
-                - main
-        topologyKey: {{ .Values.podAntiAffinityTopologKey }}
-  {{- else if eq .Values.podAntiAffinity "soft"}}
-  podAntiAffinity:
-    preferredDuringSchedulingIgnoredDuringExecution:
-      - weight: 100
-        podAffinityTerm:
-          topologyKey: {{ .Values.podAntiAffinityTopologKey }}
-          labelSelector:
-            matchExpressions:
-              - key: alertmanager
-                operator: In
-                values:
-                  - main
-  {{- end}}
   {{- with .Values.nodeAffinity }}
   nodeAffinity:
     {{- toYaml . | nindent 6 }}
