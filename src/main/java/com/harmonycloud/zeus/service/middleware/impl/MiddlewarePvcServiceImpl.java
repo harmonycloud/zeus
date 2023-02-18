@@ -239,7 +239,7 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
             pvcMainList.sort(Comparator.comparing(maintenance -> maintenance.getMetadata().getCreationTimestamp()));
             // 封装状态
             Map<String, String> status = convertStatus(pvcMainList.get(pvcMainList.size() - 1), middlewarePvcDto.getPvcName());
-            if (CollectionUtils.isEmpty(status) && status.containsKey(STATUS) && !status.get(STATUS).contains("Success")){
+            if (!CollectionUtils.isEmpty(status) && status.containsKey(STATUS) && !status.get(STATUS).contains("Success")){
                 middlewarePvcDto.setStatus(status.get(STATUS));
             }
         }
