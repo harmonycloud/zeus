@@ -98,7 +98,7 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
             if (activeComponents) {
                 Map<String, String> map = HelmChartUtil.getActiveValues(path);
                 if (map.containsKey("values-active-active")) {
-                    JSONObject active = JSONObject.parseObject(map.get("values-active-active"));
+                    JSONObject active = yaml.loadAs(map.get("values-active-active"), JSONObject.class);
                     jsonValues.putAll(active);
                 }
             }
