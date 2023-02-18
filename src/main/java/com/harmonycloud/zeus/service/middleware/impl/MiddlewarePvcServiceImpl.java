@@ -118,7 +118,7 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
     }
 
     @Override
-    public String getPvcStatus(String clusterId, String namespace, String middlewareName, String pvcName) {
+    public Map<String, String> getPvcStatus(String clusterId, String namespace, String middlewareName, String pvcName) {
         // 查询该pvc的运维cr
         Map<String, String> labels = new HashMap<>();
         labels.put(APP, middlewareName);
@@ -238,27 +238,33 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
             // 根据创建时间排序，获取最新的状态
             pvcMainList.sort(Comparator.comparing(maintenance -> maintenance.getMetadata().getCreationTimestamp()));
             // 封装状态
-            String status = convertStatus(pvcMainList.get(pvcMainList.size() - 1), middlewarePvcDto.getPvcName());
-            if (StringUtils.isNotEmpty(status) && !status.contains("Success")){
-                middlewarePvcDto.setStatus(status);
+            Map<String, String> status = convertStatus(pvcMainList.get(pvcMainList.size() - 1), middlewarePvcDto.getPvcName());
+            if (CollectionUtils.isEmpty(status) && status.containsKey(STATUS) && !status.get(STATUS).contains("Success")){
+                middlewarePvcDto.setStatus(status.get(STATUS));
             }
         }
     }
-    
-    public String convertStatus(Maintenance maintenance, String pvcName) {
-        if (maintenance.getStatus() == null || CollectionUtils.isEmpty(maintenance.getStatus().getConditions())){
+
+    public Map<String, String> convertStatus(Maintenance maintenance, String pvcName) {
+        Map<String, String> res = new HashMap<>();
+        if (maintenance.getStatus() == null || CollectionUtils.isEmpty(maintenance.getStatus().getConditions())) {
             return null;
         }
-        Map<String, String> map = maintenance.getStatus().getConditions().stream()
-            .collect(Collectors.toMap(con -> con.get("pvc"), con -> con.get("status")));
-        if (map.containsKey(pvcName)) {
+        Map<String, Map<String, String>> condition = maintenance.getStatus().getConditions().stream()
+            .collect(Collectors.toMap(con -> con.get("pvc"), con -> con));
+        if (condition.containsKey(pvcName)) {
             String action = maintenance.getMetadata().getLabels().get(ACTION);
-            if (map.get(pvcName).equalsIgnoreCase(RUNNING)) {
-                return action.equals(SCALE_UP_PV) ? SCALE_UP_PV : SCALE_UP_PV_ROLL_BACK;
-            } else if (map.get(pvcName).equals(FAILED)) {
-                return action.equals(SCALE_UP_PV) ? SCALE_UP_PV_FAILED : SCALE_UP_PV_ROLL_BACK_FAILED;
-            } else if (map.get(pvcName).equalsIgnoreCase(SUCCEED)) {
-                return action.equals(SCALE_UP_PV) ? SCALE_UP_PV_SUCCESS : SCALE_UP_PV_ROLL_BACK_SUCCESS;
+            String status = condition.get(pvcName).get(STATUS);
+            if (status.equalsIgnoreCase(RUNNING)) {
+                res.put(STATUS, action.equals(SCALE_UP_PV) ? SCALE_UP_PV : SCALE_UP_PV_ROLL_BACK);
+            } else if (status.equals(FAILED)) {
+                res.put(STATUS, action.equals(SCALE_UP_PV) ? SCALE_UP_PV_FAILED : SCALE_UP_PV_ROLL_BACK_FAILED);
+                if (condition.get(pvcName).containsKey(REASON)
+                    && StringUtils.isNotEmpty(condition.get(pvcName).get(REASON))) {
+                    res.put(REASON, condition.get(pvcName).get(REASON));
+                }
+            } else if (status.equalsIgnoreCase(SUCCEED)) {
+                res.put(STATUS, action.equals(SCALE_UP_PV) ? SCALE_UP_PV_SUCCESS : SCALE_UP_PV_ROLL_BACK_SUCCESS);
             }
         }
         return null;

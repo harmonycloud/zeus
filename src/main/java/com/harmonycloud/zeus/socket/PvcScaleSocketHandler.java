@@ -65,25 +65,40 @@ public class PvcScaleSocketHandler extends TextWebSocketHandler {
                 sendMessage(text, session);
 
                 // 查询当前正在执行的maintenances状态 知道成功或者失败
-                List<String> text2 = new ArrayList<>();
-                String status = middlewarePvcService.getPvcStatus(clusterId, namespace, middlewareName, pvcName);
-                switch (status){
-                    case SCALE_UP_PV_SUCCESS:
-                        text2.add("scale succeed");
-                        break;
-                    case SCALE_UP_PV_ROLL_BACK_SUCCESS:
-                        text2.add("rollBack succeed");
-                        break;
-                    case SCALE_UP_PV_FAILED:
-                        text2.add("scale failed");
-                        break;
-                    case SCALE_UP_PV_ROLL_BACK_FAILED:
-                        text2.add("rollBack failed");
-                        break;
-                    default:
+                List<String> statusMessage = new ArrayList<>();
+                List<String> reasonMessage = new ArrayList<>();
+                Map<String, String> map = middlewarePvcService.getPvcStatus(clusterId, namespace, middlewareName, pvcName);
+                if(!CollectionUtils.isEmpty(map) && map.containsKey(STATUS)){
+                    String status = map.get(STATUS);
+                    switch (status){
+                        case SCALE_UP_PV_SUCCESS:
+                            statusMessage.add("scale succeed");
+                            break;
+                        case SCALE_UP_PV_ROLL_BACK_SUCCESS:
+                            statusMessage.add("rollBack succeed");
+                            break;
+                        case SCALE_UP_PV_FAILED:
+                            statusMessage.add("scale failed");
+                            if (map.containsKey(REASON)){
+                                reasonMessage.add(map.get(REASON));
+                            }
+                            break;
+                        case SCALE_UP_PV_ROLL_BACK_FAILED:
+                            statusMessage.add("rollBack failed");
+                            if (map.containsKey(REASON)){
+                                reasonMessage.add(map.get(REASON));
+                            }
+                            break;
+                        default:
+                    }
                 }
-                if(!CollectionUtils.isEmpty(text2)){
-                    sendMessage(text2, session);
+                if(!CollectionUtils.isEmpty(statusMessage)){
+                    // 如果失败，先发送失败原因
+                    if (!CollectionUtils.isEmpty(reasonMessage)){
+                        sendMessage(reasonMessage, session);
+                    }
+                    // 发送状态
+                    sendMessage(statusMessage, session);
                     executor.shutdown();
                 }
             }, 0, 2000, TimeUnit.MILLISECONDS);

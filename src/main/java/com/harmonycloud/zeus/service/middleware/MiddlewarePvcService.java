@@ -6,6 +6,7 @@ import com.harmonycloud.caas.common.model.middleware.MiddlewarePvcDto;
 import com.harmonycloud.zeus.integration.cluster.bean.Maintenance;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author xutianhong
@@ -66,6 +67,6 @@ public interface MiddlewarePvcService {
      *
      * @return String
      */
-    String getPvcStatus(String clusterId, String namespace, String middlewareName, String pvcName);
+    Map<String, String> getPvcStatus(String clusterId, String namespace, String middlewareName, String pvcName);
 
 }
