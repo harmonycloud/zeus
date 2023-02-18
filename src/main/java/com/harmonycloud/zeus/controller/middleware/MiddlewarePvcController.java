@@ -80,6 +80,11 @@ public class MiddlewarePvcController {
                                @RequestParam("storage") Double storage,
                                @RequestParam("targetStorage") Double targetStorage) {
         middlewarePvcService.scalePvc(clusterId, namespace, middlewareName, pvcName, type, storageClass, storage, targetStorage);
+        // 避免因k8s资源状态加载过慢导致的后续接口信息获取错误，此处沉睡1s
+        try {
+            Thread.sleep(1000);
+        } catch (Exception ignored){
+        }
         return BaseResult.ok();
     }
 
@@ -97,6 +102,11 @@ public class MiddlewarePvcController {
                                   @PathVariable("middlewareName") String middlewareName,
                                   @PathVariable("pvcName") String pvcName) {
         middlewarePvcService.rollback(clusterId, namespace, middlewareName, pvcName);
+        // 避免因k8s资源状态加载过慢导致的后续接口信息获取错误，此处沉睡1s
+        try {
+            Thread.sleep(1000);
+        } catch (Exception ignored){
+        }
         return BaseResult.ok();
     }
 
