@@ -677,7 +677,8 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         return ComponentsEnum.ALERTMANAGER.getName().equals(name)
             || ComponentsEnum.MIDDLEWARE_CONTROLLER.getName().equals(name)
             || ComponentsEnum.GRAFANA.getName().equals(name) || "kubernetes-logging".equals(name) || "log".equals(name)
-            || ComponentsEnum.PROMETHEUS.getName().equals(name) || ComponentsEnum.MINIO.getName().equals(name);
+            || ComponentsEnum.PROMETHEUS.getName().equals(name) || ComponentsEnum.MINIO.getName().equals(name)
+            || ComponentsEnum.LOCAL_PATH.getName().equals(name);
     }
 
 }
