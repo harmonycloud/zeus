@@ -158,6 +158,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         boolean logCollect =  checkLogExist(cluster);
         if (cluster.getLogging() != null && cluster.getLogging().getElasticSearch() != null){
             cluster.getLogging().getElasticSearch().setLogCollect(logCollect);
+            clusterService.update(cluster);
         }
     }
 
