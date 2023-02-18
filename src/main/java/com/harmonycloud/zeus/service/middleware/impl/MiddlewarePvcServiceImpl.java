@@ -266,6 +266,7 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
             } else if (status.equalsIgnoreCase(SUCCEED)) {
                 res.put(STATUS, action.equals(SCALE_UP_PV) ? SCALE_UP_PV_SUCCESS : SCALE_UP_PV_ROLL_BACK_SUCCESS);
             }
+            return res;
         }
         return null;
     }
