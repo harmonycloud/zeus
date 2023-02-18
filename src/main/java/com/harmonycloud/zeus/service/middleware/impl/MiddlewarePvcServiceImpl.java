@@ -59,8 +59,11 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
 
         // 获取名称list
         List<String> pvcNameList = pvcList.stream().map(PersistentVolumeClaim::getName).collect(Collectors.toList());
-        // 获取pv列表
-        List<PvDo> pvList = pvService.listPv(clusterId, namespace, pvcNameList);
+        // 获取pv列表(过滤已释放的同名pv)
+        List<PvDo> pvList = pvService.listPv(clusterId, namespace, pvcNameList).stream()
+            .filter(pvDo -> StringUtils.isEmpty(pvDo.getStatus()) || !"Released".equals(pvDo.getStatus()))
+            .collect(Collectors.toList());
+
         // 设置回收策略
         Map<String, String> reclaimPolicyMap = pvList.stream().collect(Collectors.toMap(PvDo::getPvcName, PvDo::getReclaimPolicy));
         for (MiddlewarePvcDto dto : middlewarePvcDtoList){

@@ -48,6 +48,7 @@ public class PvServiceImpl implements PvService {
         pvDo.setPvName(pv.getMetadata().getName());
         pvDo.setPvcName(pv.getSpec().getClaimRef().getName());
         pvDo.setReclaimPolicy(pv.getSpec().getPersistentVolumeReclaimPolicy());
+        pvDo.setStatus(pv.getStatus() == null ? null : pv.getStatus().getPhase());
         return pvDo;
     }
 }
