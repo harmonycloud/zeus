@@ -387,6 +387,9 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             if (errorMsg.contains("PodSecurityPolicy is deprecated")){
                 return errorMsg;
             }
+            if (errorMsg.contains("CSIDriver is deprecated")){
+                return errorMsg;
+            }
             throw new RuntimeException(errorMsg);
         };
     }
