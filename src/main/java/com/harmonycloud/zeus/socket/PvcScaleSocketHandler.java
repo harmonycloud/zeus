@@ -62,11 +62,10 @@ public class PvcScaleSocketHandler extends TextWebSocketHandler {
                 List<EventDetail> eventDetails =
                     middlewarePvcService.getEvent(clusterId, namespace, middlewareName, pvcName);
                 List<String> text = eventDetails.stream().map(EventDetail::getMessage).collect(Collectors.toList());
-                sendMessage(text, session);
+
 
                 // 查询当前正在执行的maintenances状态 知道成功或者失败
                 List<String> statusMessage = new ArrayList<>();
-                List<String> reasonMessage = new ArrayList<>();
                 Map<String, String> map = middlewarePvcService.getPvcStatus(clusterId, namespace, middlewareName, pvcName);
                 if(!CollectionUtils.isEmpty(map) && map.containsKey(STATUS)){
                     String status = map.get(STATUS);
@@ -80,23 +79,21 @@ public class PvcScaleSocketHandler extends TextWebSocketHandler {
                         case SCALE_UP_PV_FAILED:
                             statusMessage.add("scale failed");
                             if (map.containsKey(REASON)){
-                                reasonMessage.add(map.get(REASON));
+                                text.add(map.get(REASON));
                             }
                             break;
                         case SCALE_UP_PV_ROLL_BACK_FAILED:
                             statusMessage.add("rollBack failed");
                             if (map.containsKey(REASON)){
-                                reasonMessage.add(map.get(REASON));
+                                text.add(map.get(REASON));
                             }
                             break;
                         default:
                     }
                 }
+                // 发送event
+                sendMessage(text, session);
                 if(!CollectionUtils.isEmpty(statusMessage)){
-                    // 如果失败，先发送失败原因
-                    if (!CollectionUtils.isEmpty(reasonMessage)){
-                        sendMessage(reasonMessage, session);
-                    }
                     // 发送状态
                     sendMessage(statusMessage, session);
                     executor.shutdown();
