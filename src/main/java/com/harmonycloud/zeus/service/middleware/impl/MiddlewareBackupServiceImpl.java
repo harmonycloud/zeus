@@ -1414,7 +1414,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             if (backupName != null) {
                 recordGroup.setTaskName(backupName.getBackupName());
             } else {
-                recordGroup.setTaskName(record.getBackupName());
+                recordGroup.setTaskName(record.getTaskName());
             }
             recordGroups.add(recordGroup);
         });
