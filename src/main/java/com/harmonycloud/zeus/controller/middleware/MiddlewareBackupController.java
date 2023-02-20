@@ -82,6 +82,7 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "keyword", value = "关键词", paramType = "query", dataTypeClass = String.class)
     })
@@ -89,10 +90,11 @@ public class MiddlewareBackupController {
     @Authority(power = 1)
     public BaseResult<List<MiddlewareBackupRecordGroup>> listRecord(@PathVariable("clusterId") String clusterId,
                                                                     @PathVariable("namespace") String namespace,
+                                                                    @RequestParam("projectId") String projectId,
                                                                     @RequestParam(value = "type", required = false) String type,
                                                                     @RequestParam(value = "middlewareName", required = false) String middlewareName,
                                                                     @RequestParam(value = "keyword", required = false) String keyword) {
-        return BaseResult.ok(middlewareBackupService.backupTaskGroupList(clusterId, namespace, middlewareName, type, keyword));
+        return BaseResult.ok(middlewareBackupService.backupTaskGroupList(clusterId, namespace, middlewareName, projectId, type, keyword));
     }
 
     @ApiOperation(value = "查询备份任务详情", notes = "查询备份任务详情")

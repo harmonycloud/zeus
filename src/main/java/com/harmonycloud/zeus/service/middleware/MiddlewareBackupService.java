@@ -185,11 +185,12 @@ public interface MiddlewareBackupService {
      * @param clusterId
      * @param namespace
      * @param middlewareName
+     * @param projectId
      * @param type
      * @param keyword
      * @return
      */
-    List<MiddlewareBackupRecordGroup> backupTaskGroupList(String clusterId, String namespace, String middlewareName, String type, String keyword);
+    List<MiddlewareBackupRecordGroup> backupTaskGroupList(String clusterId, String namespace, String middlewareName, String projectId, String type, String keyword);
 
     /**
      * 备份任务详情
