@@ -358,6 +358,9 @@ public class StorageServiceImpl implements StorageService {
 
             mwStoInfo.setMonitorResourceQuota(middlewareQuota);
             JSONObject values = helmChartService.getInstalledValues(middleware, clusterService.findById(clusterId));
+            if (values == null) {
+                continue;
+            }
             if (values.containsKey("chart-version")){
                 mwStoInfo.setImagePath(middleware.getType() + "-" + values.getString("chart-version") + ".svg");
             }

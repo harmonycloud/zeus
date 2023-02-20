@@ -160,6 +160,9 @@ public class RedisUtil {
      * @return type:cluster/sentinel
      */
     public static String getRedisDeployMod(JSONObject installedValues) {
+        if (installedValues == null) {
+            return "";
+        }
         String type = installedValues.getString("type");
         JSONObject predixy = installedValues.getJSONObject("predixy");
         if (predixy != null) {

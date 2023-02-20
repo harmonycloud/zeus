@@ -1,0 +1,20 @@
+tolerations:
+- operator: Exists
+
+nodeAffinity:
+  preferredDuringSchedulingIgnoredDuringExecution:
+  - weight: 100
+    preference:
+      matchExpressions:
+      - key: system
+        operator: In
+        values:
+        - "true"
+
+imagePullSecrets:
+- name: registrysecret
+
+#取值[hard|soft] hard:强制反亲和 soft:非强制反亲和
+podAntiAffinity: "soft"
+podAntiAffinityTopologKey: "zone"
+

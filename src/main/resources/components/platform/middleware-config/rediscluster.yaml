@@ -32,8 +32,8 @@ sysDynamicVariable:
   partition:
     default: "{POD_NAME}"
     objectType: middleware
-    jsonPath: 'def GetClusterPartition($pod): .status as {conditions: $root}|.status.conditions[]|select(.name==$pod)|if .type=="master" then .slots else . as{masterNodeId: $masterNodeId} |$root|.[]|select(.nodeId==$masterNodeId)|.slots end; def GetSetinesPartition($pod): .status.conditions[]| select(.name==$pod)|.name; if .spec.type=="cluster" then GetClusterPartition("{POD_NAME}") else GetSetinesPartition("{POD_NAME}") end'
-    regexp: ".*?-(\\d)-\\d|.+?-(\\d)|(.*)"
+    jsonPath: 'def GetClusterPartition($pod): .status as {conditions: $root}|.status.conditions[]|select(.name==$pod)|if .type=="master" then .slots else . as{masterNodeId: $masterNodeId} |$root|.[]|select(.nodeId==$masterNodeId)|.slots end; def GetSetinesPartition($pod): if  .spec.predixy==null then "0" else .status.conditions[]| select(.name==$pod)|.name end; if .spec.type=="cluster" then GetClusterPartition("{POD_NAME}") else GetSetinesPartition("{POD_NAME}") end'
+    regexp: "^.+-(\\d)-\\d$|((^[1-9]\\d+|0)-[1-9]\\d+$)|(^0$)"
     scope: pod
   replicas:
     objectType: middleware

@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.enums.ComponentsEnum;
 import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.zeus.integration.registry.HelmChartWrapper;
 import com.harmonycloud.zeus.integration.registry.bean.harbor.HelmListInfo;
@@ -81,6 +82,8 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     private String uploadPath;
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
+    @Value("${system.components.active:false}")
+    private Boolean activeComponents;
 
     @Deprecated
     @Override
@@ -384,6 +387,9 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             if (errorMsg.contains("PodSecurityPolicy is deprecated")){
                 return errorMsg;
             }
+            if (errorMsg.contains("CSIDriver is deprecated")){
+                return errorMsg;
+            }
             throw new RuntimeException(errorMsg);
         };
     }
@@ -516,10 +522,18 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
 
     @Override
     public void installComponents(String name, String namespace, String setValues, String chartUrl,
-                                  MiddlewareClusterDTO cluster) {
-        String cmd = String.format("helm upgrade --install %s %s --set %s -n %s --kube-apiserver %s --kubeconfig %s ",
-            name, chartUrl, setValues, namespace, cluster.getAddress(),
-            clusterCertService.getKubeConfigFilePath(cluster.getId()));
+        MiddlewareClusterDTO cluster) {
+        String cmd;
+        if (activeComponents && filterComponents(name)) {
+            cmd = String.format(
+                "helm upgrade --install %s %s --set %s -f %s/values.yaml -f %s/values-active-active.yaml -n %s --kube-apiserver %s --kubeconfig %s ",
+                name, chartUrl, setValues, chartUrl, chartUrl, namespace, cluster.getAddress(),
+                clusterCertService.getKubeConfigFilePath(cluster.getId()));
+        } else {
+            cmd = String.format("helm upgrade --install %s %s --set %s -n %s --kube-apiserver %s --kubeconfig %s ",
+                name, chartUrl, setValues, namespace, cluster.getAddress(),
+                clusterCertService.getKubeConfigFilePath(cluster.getId()));
+        }
         execCmd(cmd, null);
     }
 
@@ -660,6 +674,14 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             sb.append(values.get(i)).append("\n");
         }
         return sb.toString();
+    }
+
+    public boolean filterComponents(String name) {
+        return ComponentsEnum.ALERTMANAGER.getName().equals(name)
+            || ComponentsEnum.MIDDLEWARE_CONTROLLER.getName().equals(name)
+            || ComponentsEnum.GRAFANA.getName().equals(name) || "kubernetes-logging".equals(name) || "log".equals(name)
+            || ComponentsEnum.PROMETHEUS.getName().equals(name) || ComponentsEnum.MINIO.getName().equals(name)
+            || ComponentsEnum.LOCAL_PATH.getName().equals(name);
     }
 
 }

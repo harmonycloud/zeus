@@ -11,13 +11,16 @@ import com.harmonycloud.tool.cmd.HelmChartUtil;
 import com.harmonycloud.zeus.annotation.Operator;
 import com.harmonycloud.zeus.service.components.AbstractBaseOperator;
 import com.harmonycloud.zeus.service.components.api.GrafanaService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
 import static com.harmonycloud.caas.common.constants.CommonConstant.SIMPLE;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author xutianhong
@@ -25,9 +28,12 @@ import java.util.List;
  */
 @Service
 @Operator(paramTypes4One = String.class)
+@Slf4j
 public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implements GrafanaService {
 
     public static final String GRAFANA = "grafana";
+    @Value("${system.components.active:false}")
+    private Boolean activeComponents;
 
     @Override
     public boolean support(String name) {
@@ -85,8 +91,22 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
         } else {
             jsonValues.put("replicas", 3);
         }
+        // 生成文件路径
+        String path = componentsPath + File.separator + "grafana";
+        // 生成双活参数
+        try {
+            if (activeComponents) {
+                Map<String, String> map = HelmChartUtil.getActiveValues(path);
+                if (map.containsKey("values-active-active")) {
+                    JSONObject active = yaml.loadAs(map.get("values-active-active"), JSONObject.class);
+                    jsonValues.putAll(active);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Grafana组件，设置双活参数失败");
+        }
         //发布组件
-        helmChartService.installComponents(ComponentsEnum.GRAFANA.getName(), "monitoring", componentsPath + File.separator + "grafana",
+        helmChartService.installComponents(ComponentsEnum.GRAFANA.getName(), "monitoring", path,
                 yaml.loadAs(values, JSONObject.class), jsonValues, cluster);
         //更新middlewareCluster
         updateCluster(cluster);

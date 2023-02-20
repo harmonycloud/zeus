@@ -6,5 +6,8 @@ image:
   imagePullPolicy: "Always"
 
 
+podAntiAffinityTopologKey: "zone"
 
+#取值[hard|soft] hard:强制反亲和 soft:非强制反亲和
+podAntiAffinity: "soft"
 
