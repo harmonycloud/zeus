@@ -76,6 +76,7 @@ public class MysqlClusterSpec {
         private String imagePullPolicy;
         private String initImage;
         private String middlewareImage;
+        private String logrotateImage;
         private String monitorImage;
         private MiddlewareResources resources;
         private Integer serverPort;
