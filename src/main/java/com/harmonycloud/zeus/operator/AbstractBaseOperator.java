@@ -326,11 +326,16 @@ public abstract class AbstractBaseOperator {
     protected void updateCommonValues(StringBuilder sb, Middleware middleware){
         // 备注
         if (middleware.getDescription() != null) {
-            // 处理特殊字符 \
-            if (middleware.getDescription().contains("\\")){
+            // 处理特殊字符 \ ,
+            String desc = middleware.getDescription();
+            if (desc.contains("\\")) {
+                desc = desc.replace("\\", "\\\\");
                 middleware.setDescription(middleware.getDescription().replace("\\", "\\\\"));
             }
-            sb.append("middleware-desc=\'").append(middleware.getDescription()).append("\',");
+            if (desc.contains(",")) {
+                desc = desc.replace(",", "\\,");
+            }
+            sb.append("middleware-desc=\'").append(desc).append("\',");
         }
 
         // 日志开关
