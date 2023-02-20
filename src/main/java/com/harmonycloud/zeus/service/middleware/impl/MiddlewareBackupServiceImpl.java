@@ -116,7 +116,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public void createBackup(MiddlewareBackupDTO backupDTO) {
-        if (backupDTO.getIncrement() != null && backupDTO.getIncrement()) {
+        if (backupDTO.getIncrement() != null && backupDTO.getIncrement() && "day".equalsIgnoreCase(backupDTO.getDateUnit())) {
             checkTimeLawful(backupDTO.getCron(), backupDTO.getRetentionTime());
         }
         middlewareCRService.getCRAndCheckRunning(convertBackupToMiddleware(backupDTO));
@@ -162,7 +162,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
         String cron = baks.getSpec().getSchedule().getCron();
         Integer retentionTime = baks.getSpec().getSchedule().getRetentionTime();
-        checkTimeLawful(cron, retentionTime);
+        if ("day".equalsIgnoreCase(baks.getMetadata().getLabels().get("unit"))) {
+            checkTimeLawful(cron, retentionTime);
+        }
         createIncBackup(clusterId, namespace, backupName, time, null);
     }
 
