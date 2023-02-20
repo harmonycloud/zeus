@@ -836,7 +836,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     public List<MiddlewareBackupRecordGroup> backupTaskGroupList(String clusterId, String namespace, String middlewareName, String projectId, String type, String keyword) {
         List<MiddlewareBackupRecord> records = backupTaskList(clusterId, namespace, middlewareName, type, keyword);
         // 根据项目过滤中间件
-        records = filterByProject(records, projectId);
+        if (StringUtils.isNotEmpty(projectId)) {
+            records = filterByProject(records, projectId);
+        }
         // 设置备份地址
         setBackupPosition(records);
         List<MiddlewareBackupRecordGroup> recordGroups = groupByBackupId(clusterId,records);
