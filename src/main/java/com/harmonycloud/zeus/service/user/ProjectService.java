@@ -1,17 +1,15 @@
 package com.harmonycloud.zeus.service.user;
 
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.middleware.Namespace;
 import com.harmonycloud.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
 import com.harmonycloud.caas.common.model.user.ProjectDto;
 import com.harmonycloud.caas.common.model.user.ProjectNamespaceDo;
 import com.harmonycloud.caas.common.model.user.UserDto;
 import com.harmonycloud.zeus.bean.user.BeanProject;
-import com.harmonycloud.zeus.bean.user.BeanProjectNamespace;
 
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 /**
  * @author xutianhong
@@ -140,7 +138,7 @@ public interface ProjectService {
      * 查询项目列表
      * @return List<ProjectDto>
      */
-    List<String> getClusters(String projectId);
+    Set<String> getRelationClusterIds(String projectId);
 
     /**
      * 查询项目列表

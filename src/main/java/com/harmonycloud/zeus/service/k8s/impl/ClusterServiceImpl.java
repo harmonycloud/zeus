@@ -22,8 +22,10 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harmonycloud.caas.common.enums.*;
 import com.harmonycloud.zeus.bean.BeanActiveArea;
 import com.harmonycloud.zeus.bean.BeanMiddlewareCluster;
+import com.harmonycloud.zeus.bean.user.BeanProjectNamespace;
 import com.harmonycloud.zeus.dao.BeanActiveAreaMapper;
 import com.harmonycloud.zeus.dao.BeanMiddlewareClusterMapper;
+import com.harmonycloud.zeus.dao.user.BeanProjectNamespaceMapper;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -127,6 +129,8 @@ public class ClusterServiceImpl implements ClusterService {
     private BeanMiddlewareClusterMapper middlewareClusterMapper;
     @Autowired
     private BackupServerService backupServerService;
+    @Autowired
+    private BeanProjectNamespaceMapper projectNamespaceMapper;
 
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
@@ -197,7 +201,7 @@ public class ClusterServiceImpl implements ClusterService {
         List<MiddlewareClusterDTO> res = clusters;
         // 根据项目进行过滤
         if (StringUtils.isNotEmpty(projectId)) {
-            List<String> availableClusterList = projectService.getClusters(projectId);
+            Set<String> availableClusterList = projectService.getRelationClusterIds(projectId);
             res = clusters.stream()
                 .filter(cluster -> availableClusterList.stream().anyMatch(ac -> ac.equals(cluster.getId())))
                 .collect(Collectors.toList());
@@ -1022,6 +1026,14 @@ public class ClusterServiceImpl implements ClusterService {
             clusterResource(cluster);
         }
         return cluster.getClusterQuotaDTO();
+    }
+
+    @Override
+    public Set<String> listClusterIds(String projectId) {
+        QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<>();
+        wrapper.eq("project_id", projectId);
+        List<BeanProjectNamespace> projectNamespaceList = projectNamespaceMapper.selectList(wrapper);
+        return projectNamespaceList.stream().map(BeanProjectNamespace::getClusterId).collect(Collectors.toSet());
     }
 
     @Override

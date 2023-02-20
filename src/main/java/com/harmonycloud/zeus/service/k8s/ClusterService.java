@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author dengyulong
@@ -208,6 +209,13 @@ public interface ClusterService {
      * @return
      */
     ClusterQuotaDTO monitoring(String clusterId);
+
+    /**
+     * 查询项目下集群id列表
+     * @param projectId
+     * @return
+     */
+    Set<String> listClusterIds(String projectId);
 
     /**
      * 根据集群下资源配额情况
