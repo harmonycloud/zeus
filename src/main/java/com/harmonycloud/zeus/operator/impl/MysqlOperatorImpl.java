@@ -456,8 +456,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     private SwitchInfo handSwitch(Middleware middleware, MysqlCluster mysqlCluster) {
         // 判断版本
         if (ChartVersionUtil.compare(middleware.getChartVersion(), "1.8.20") > 0) {
-            switchByChangeCr(middleware, mysqlCluster);
-            return null;
+            return switchByChangeCr(middleware, mysqlCluster);
         } else {
             return switchByCurl(middleware, mysqlCluster);
         }
@@ -482,7 +481,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         return new SwitchInfo().setNewMasterName(syncName);
     }
 
-    private void switchByChangeCr(Middleware middleware, MysqlCluster mysqlCluster){
+    private SwitchInfo switchByChangeCr(Middleware middleware, MysqlCluster mysqlCluster){
         String masterName = null;
         String slaveName = null;
         for (Status.Condition cond : mysqlCluster.getStatus().getConditions()) {
@@ -503,6 +502,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                     middleware.getName(), e);
             throw new BusinessException(DictEnum.MYSQL_CLUSTER, middleware.getName(), ErrorMessage.SWITCH_FAILED);
         }
+        return new SwitchInfo().setNewMasterName(slaveName);
     }
 
     /**
