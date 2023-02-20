@@ -832,10 +832,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public List<MiddlewareBackupRecordGroup> backupTaskGroupList(String clusterId, String namespace, String middlewareName, String type, String keyword) {
+    public List<MiddlewareBackupRecordGroup> backupTaskGroupList(String clusterId, String namespace, String middlewareName, String projectId, String type, String keyword) {
         List<MiddlewareBackupRecord> records = backupTaskList(clusterId, namespace, middlewareName, type, keyword);
         // 根据项目过滤中间件
-        records = filterByProject(records);
+        records = filterByProject(records, projectId);
         // 设置备份地址
         setBackupPosition(records);
         List<MiddlewareBackupRecordGroup> recordGroups = groupByBackupId(clusterId,records);
@@ -1053,8 +1053,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             if (StringUtils.isEmpty(record.getPositionId())) {
                 continue;
             }
-            String positionId = record.getPositionId();
-            BeanBackupPosition backupPosition = backupPositionService.getBackupPosition(Integer.parseInt(positionId));
+            String positionIdStr = record.getPositionId();
+            BeanBackupPosition backupPosition = null;
+            try {
+                int positionId = Integer.parseInt(positionIdStr);
+                backupPosition = backupPositionService.getBackupPosition(positionId);
+            } catch (NumberFormatException e) {
+                log.error("查询备份地址出错了");
+            }
             if (backupPosition == null) {
                 continue;
             }
@@ -1504,10 +1510,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * 根据项目过滤
      * @param records
      */
-    private List<MiddlewareBackupRecord> filterByProject(List<MiddlewareBackupRecord> records) {
+    private List<MiddlewareBackupRecord> filterByProject(List<MiddlewareBackupRecord> records, String projectId) {
         // 查询用户在当前项目下所有可见的中间件类型
         String username = CurrentUserRepository.getUser().getUsername();
-        String projectId = RequestUtil.getProjectId();
 
         // 根据分区过滤
         List<Namespace> namespaces = projectService.getNamespace(projectId);
