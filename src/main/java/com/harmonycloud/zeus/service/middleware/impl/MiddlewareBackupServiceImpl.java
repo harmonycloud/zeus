@@ -25,6 +25,7 @@ import com.harmonycloud.zeus.service.registry.HelmChartService;
 import com.harmonycloud.zeus.service.user.ProjectService;
 import com.harmonycloud.zeus.service.user.RoleAuthorityService;
 import com.harmonycloud.zeus.service.user.UserRoleService;
+import com.harmonycloud.zeus.util.MathUtil;
 import com.harmonycloud.zeus.util.RequestUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1055,11 +1056,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             }
             String positionIdStr = record.getPositionId();
             BeanBackupPosition backupPosition = null;
-            try {
-                int positionId = Integer.parseInt(positionIdStr);
-                backupPosition = backupPositionService.getBackupPosition(positionId);
-            } catch (NumberFormatException e) {
-                log.error("查询备份地址出错了");
+            if (MathUtil.isDigit(positionIdStr)) {
+                backupPosition = backupPositionService.getBackupPosition(Integer.parseInt(positionIdStr));
             }
             if (backupPosition == null) {
                 continue;
