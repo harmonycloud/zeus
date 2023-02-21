@@ -19,7 +19,7 @@ public class RequestUtil {
                     ((ServletRequestAttributes)RequestContextHolder.getRequestAttributes()).getRequest();
             return request.getHeader("projectId");
         } catch (Exception e){
-            log.error("查询projectId 失败");
+            log.debug("查询projectId 失败");
         }
         return null;
     }
