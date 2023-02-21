@@ -207,6 +207,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public void updateBackupSchedule(MiddlewareBackupDTO backupDTO) {
+        if ("day".equalsIgnoreCase(backupDTO.getDateUnit())) {
+            checkTimeLawful(backupDTO.getCron(), backupDTO.getRetentionTime());
+        }
         // 是否为mysqlBackup
         if (backupDTO.getMysqlBackup() != null && backupDTO.getMysqlBackup()) {
             mysqlAdapterService.updateBackupSchedule(backupDTO);
