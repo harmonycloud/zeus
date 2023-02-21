@@ -524,3 +524,6 @@ securityContext:
 podSecurityContext:
   fsGroup: 65532
 
+podAntiAffinity: "soft"
+podAntiAffinityTopologKey: "zone"
+

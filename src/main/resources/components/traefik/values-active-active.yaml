@@ -11,6 +11,7 @@ nodeAffinity:
             values:
               - "true"
 
+podAntiAffinity: "soft"
 podAntiAffinityTopologKey: "zone"
 
 imagePullSecrets:
