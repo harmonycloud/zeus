@@ -124,7 +124,7 @@ public class NodeServiceImpl implements NodeService {
                         sbf.append(taint.getValue());
                     }
                     sbf.append(":").append(taint.getEffect());
-                    log.info("node {} taints {}", node.getIp(), sbf);
+                    log.debug("node {} taints {}", node.getIp(), sbf);
                     taintsSet.add(sbf.toString());
                 });
             }
