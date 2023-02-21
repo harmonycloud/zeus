@@ -175,6 +175,6 @@ public interface ProjectService {
      * @param projectId
      * @return
      */
-    List<MiddlewareClusterDTO> getRelationClusters(String projectId);
+    Set<String> getRelationClusters(String projectId);
 
 }

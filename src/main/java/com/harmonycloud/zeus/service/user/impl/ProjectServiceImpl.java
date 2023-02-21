@@ -582,10 +582,8 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<MiddlewareClusterDTO> getRelationClusters(String projectId) {
-        Set<String> clusters = getRelationClusterIds(projectId);
-        List<MiddlewareClusterDTO> clusterDTOS = clusterService.listClusters();
-        return clusterDTOS.stream().filter(clusterDTO -> clusters.contains(clusterDTO.getId())).collect(Collectors.toList());
+    public Set<String> getRelationClusters(String projectId) {
+        return getRelationClusterIds(projectId);
     }
 
     public void checkParam(ProjectDto projectDto){
