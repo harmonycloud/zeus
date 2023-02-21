@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author xutianhong
@@ -195,7 +196,7 @@ public class ProjectController {
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
     })
     @GetMapping("/{projectId}/clusters")
-    public BaseResult<List<MiddlewareClusterDTO>> getRelationCluster(@PathVariable("projectId") String projectId) {
+    public BaseResult<Set<String>> getRelationCluster(@PathVariable("projectId") String projectId) {
         return BaseResult.ok(projectService.getRelationClusters(projectId));
     }
 
