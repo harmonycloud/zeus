@@ -90,7 +90,7 @@ public class MiddlewareBackupController {
     @Authority(power = 1)
     public BaseResult<List<MiddlewareBackupRecordGroup>> listRecord(@PathVariable("clusterId") String clusterId,
                                                                     @PathVariable("namespace") String namespace,
-                                                                    @RequestParam("projectId") String projectId,
+                                                                    @RequestParam(value = "projectId", required = false) String projectId,
                                                                     @RequestParam(value = "type", required = false) String type,
                                                                     @RequestParam(value = "middlewareName", required = false) String middlewareName,
                                                                     @RequestParam(value = "keyword", required = false) String keyword) {

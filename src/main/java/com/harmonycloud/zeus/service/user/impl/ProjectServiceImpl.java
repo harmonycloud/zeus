@@ -509,9 +509,8 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<String> getClusters(String projectId) {
-        List<Namespace> namespaceList = this.getNamespace(projectId, null, false, false);
-        return namespaceList.stream().map(Namespace::getClusterId).collect(Collectors.toList());
+    public Set<String> getRelationClusterIds(String projectId) {
+        return clusterService.listClusterIds(projectId);
     }
 
     @Override
@@ -583,10 +582,8 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<MiddlewareClusterDTO> getRelationClusters(String projectId) {
-        List<String> clusters = getClusters(projectId);
-        List<MiddlewareClusterDTO> clusterDTOS = clusterService.listClusters();
-        return clusterDTOS.stream().filter(clusterDTO -> clusters.contains(clusterDTO.getId())).collect(Collectors.toList());
+    public Set<String> getRelationClusters(String projectId) {
+        return getRelationClusterIds(projectId);
     }
 
     public void checkParam(ProjectDto projectDto){

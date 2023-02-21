@@ -207,6 +207,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public void updateBackupSchedule(MiddlewareBackupDTO backupDTO) {
+        if ("day".equalsIgnoreCase(backupDTO.getDateUnit())) {
+            checkTimeLawful(backupDTO.getCron(), backupDTO.getRetentionTime());
+        }
         // 是否为mysqlBackup
         if (backupDTO.getMysqlBackup() != null && backupDTO.getMysqlBackup()) {
             mysqlAdapterService.updateBackupSchedule(backupDTO);
@@ -836,7 +839,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     public List<MiddlewareBackupRecordGroup> backupTaskGroupList(String clusterId, String namespace, String middlewareName, String projectId, String type, String keyword) {
         List<MiddlewareBackupRecord> records = backupTaskList(clusterId, namespace, middlewareName, type, keyword);
         // 根据项目过滤中间件
-        records = filterByProject(records, projectId);
+        if (StringUtils.isNotEmpty(projectId)) {
+            records = filterByProject(records, projectId);
+        }
         // 设置备份地址
         setBackupPosition(records);
         List<MiddlewareBackupRecordGroup> recordGroups = groupByBackupId(clusterId,records);
