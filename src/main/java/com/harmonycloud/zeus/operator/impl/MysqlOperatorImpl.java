@@ -477,12 +477,14 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 syncName, middleware.getNamespace(), mysqlCluster.getMetadata().getName());
         List<String> results = new ArrayList<>(2);
         // 411状态重发
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i <= 10; i++) {
+            if (i > 0) {
+                log.error("411异常重发请求，进行第{}次重发", i);
+            }
             results = CmdExecUtil.runCmd(execCommand);
             if (!"411".equals(results.get(1)) || !results.get(0).endsWith("please apply your changes to the latest version and try again")) {
                 break;
             }
-            log.error("411异常重发请求，进行第{}次重发", i + 1);
         }
         // 判断结果
         parseHandSwitchResult(results);

@@ -445,9 +445,11 @@ public abstract class AbstractBaseOperator {
             String errorMessage = results.get(0);
             if (errorMessage.startsWith("Not failed over, because this instance is delay")) {
                 throw new BusinessException(ErrorMessage.SWITCH_FAILD_BECAUSE_DELAY);
+            } else if ("411".equals(results.get(1)) && results.get(0).endsWith("please apply your changes to the latest version and try again")) {
+                throw new BusinessException(ErrorMessage.SWITCH_FAILED, "," + results.get(0));
             } else {
-                log.error("切换结果: {}",results.get(0));
-                log.error("切换状态: {}",results.get(1));
+                log.error("切换结果: {}", results.get(0));
+                log.error("切换状态: {}", results.get(1));
                 throw new BusinessException(ErrorMessage.SWITCH_FAILED);
             }
         }
