@@ -1323,7 +1323,7 @@ public abstract class AbstractBaseOperator {
      */
     public void setActiveActiveConfig(String activeActiveKey, JSONObject values) {
         values.put("podAntiAffinityTopologKey", zoneKey);
-        values.put("podAntiAffinity", "soft");
+        values.put("podAntiAffinity", "hard");
     }
 
 
