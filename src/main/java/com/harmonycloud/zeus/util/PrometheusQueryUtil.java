@@ -12,13 +12,13 @@ public class PrometheusQueryUtil {
 
     public static String queryHitachiPodTotal(String serialId, String poolId, String namespace, String pvc) {
         return String.format(
-            "sum(spc_volume_total_capacity{serial_id=\"%s\",pool_id=\"%s\",namespace=\"%s\",persistentvolumeclaim=\"%s\"}) by (persistentvolumeclaim) /1024/1024/1024 ",
+            "sum(spc_volume_total_capacity{serial_id=\"%s\",pool_id=\"%s\",namespace=\"%s\",persistentvolumeclaim=~\"%s\"}) by (persistentvolumeclaim) /1024/1024/1024 ",
             serialId, poolId, namespace, pvc);
     }
 
     public static String queryHitachiPodUsed(String serialId, String poolId, String namespace, String pvc) {
         return String.format(
-            "sum(spc_volume_used_capacity{serial_id=\"%s\",pool_id=\"%s\",namespace=\"%s\",persistentvolumeclaim=\"%s\"}) by (persistentvolumeclaim) /1024/1024/1024",
+            "sum(spc_volume_used_capacity{serial_id=\"%s\",pool_id=\"%s\",namespace=\"%s\",persistentvolumeclaim=~\"%s\"}) by (persistentvolumeclaim) /1024/1024/1024",
             serialId, poolId, namespace, pvc);
     }
 

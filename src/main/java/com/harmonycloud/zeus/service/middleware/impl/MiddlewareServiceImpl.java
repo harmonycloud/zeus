@@ -787,8 +787,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             try {
                 String totalStorageQuery;
                 if (params.containsKey("poolID") && params.containsKey("serialNumber")) {
-                    totalStorageQuery = PrometheusQueryUtil.queryHitachiPodTotal(params.get("poolID"),
-                        params.get("serialNumber"), namespace, pvcs.toString());
+                    totalStorageQuery = PrometheusQueryUtil.queryHitachiPodTotal(params.get("serialNumber"),
+                        params.get("poolID"), namespace, pvcs.toString());
                 } else {
                     totalStorageQuery =
                         "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{persistentvolumeclaim=~\""
@@ -816,11 +816,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             try {
                 String usedStorageQuery;
                 if (params.containsKey("poolID") && params.containsKey("serialNumber")) {
-                    usedStorageQuery = PrometheusQueryUtil.queryHitachiPodUsed(params.get("poolID"),
-                        params.get("serialNumber"), namespace, pvcs.toString());
+                    usedStorageQuery = PrometheusQueryUtil.queryHitachiPodUsed(params.get("serialNumber"),
+                        params.get("poolID"), namespace, pvcs.toString());
                 } else {
                     usedStorageQuery = "sum(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\"" + pvcs.toString()
-                        + "\",namespace=\"" + namespace
+                        + "\",namespace=\""
+                        + namespace
                         + "\",endpoint!=\"\"}) by (persistentvolumeclaim) /1024/1024/1024";
                 }
                 PrometheusResponse usedStorage = prometheusResourceMonitorService.query(clusterId, usedStorageQuery);
