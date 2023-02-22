@@ -57,8 +57,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static com.harmonycloud.caas.common.constants.NameConstant.CPU;
-import static com.harmonycloud.caas.common.constants.NameConstant.MEMORY;
+import static com.harmonycloud.caas.common.constants.NameConstant.*;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.LVM_PROVISIONER;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
@@ -685,7 +684,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             }
             middlewareTopologyDTO.setStorageClassName(sb.toString());
         } else {
-            middlewareTopologyDTO.setStorageClassName(values.getOrDefault("storageClassName", "").toString());
+            if (MiddlewareTypeEnum.ZOOKEEPER.getType().equals(type)) {
+                JSONObject persistence = values.getJSONObject(PERSISTENCE);
+                middlewareTopologyDTO.setStorageClassName(persistence.getOrDefault("storageClassName", "").toString());
+            } else {
+                middlewareTopologyDTO.setStorageClassName(values.getOrDefault("storageClassName", "").toString());
+            }
         }
 
         StringBuilder pods = new StringBuilder();
