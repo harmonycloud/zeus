@@ -586,6 +586,9 @@ public abstract class AbstractBaseOperator {
         // 获取存储信息
         try {
             // 查询sc
+            if(storageClass.contains(CommonConstant.COMMA)){
+                storageClass = storageClass.split(CommonConstant.COMMA)[0];
+            }
             StorageDto storageDto = storageService.get(middleware.getClusterId(), storageClass);
             // 设置是否lvm
             quota.setIsLvmStorage(storageClassService.checkLVMStorage(storageDto));
