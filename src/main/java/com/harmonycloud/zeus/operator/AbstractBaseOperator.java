@@ -583,16 +583,22 @@ public abstract class AbstractBaseOperator {
         MiddlewareQuota quota = checkMiddlewareQuota(middleware, quotaKey);
         quota.setStorageClassName(storageClass)
             .setStorageClassQuota(values.getString("storageSize"));
-        quota.setIsLvmStorage(storageClassService.checkLVMStorage(middleware.getClusterId(), middleware.getNamespace(),
-                values.getString("storageClassName")));
-
-        // 获取存储中文名
+        // 获取存储信息
         try {
-            String aStorageName = storageClass.split(",")[0];
-            String aliasName = storageService.getAliasName(middleware.getClusterId(), aStorageName);
-            quota.setStorageClassAliasName(aliasName);
+            // 查询sc
+            StorageDto storageDto = storageService.get(middleware.getClusterId(), storageClass);
+            // 设置是否lvm
+            quota.setIsLvmStorage(storageClassService.checkLVMStorage(storageDto));
+            // 设置中文名称
+            if (StringUtils.isNotEmpty(storageDto.getAliasName())){
+                quota.setStorageClassAliasName(storageDto.getAliasName());
+            }
+            // 设置provisioner
+            if (CollectionUtils.isEmpty(storageDto.getStorageClassList())){
+                quota.setProvisioner(storageDto.getStorageClassList().get(0).getProvisioner());
+            }
         } catch (Exception e) {
-            log.error("中间件{}, 获取存储中文名失败", middleware.getName());
+            log.debug("中间件{}, 设置存储信息失败", middleware.getName());
         }
     }
 

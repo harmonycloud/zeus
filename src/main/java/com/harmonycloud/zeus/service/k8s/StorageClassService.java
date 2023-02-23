@@ -1,6 +1,7 @@
 package com.harmonycloud.zeus.service.k8s;
 
 import com.harmonycloud.caas.common.model.StorageClassDTO;
+import com.harmonycloud.caas.common.model.StorageDto;
 import com.harmonycloud.caas.common.model.middleware.StorageClassInfo;
 import com.harmonycloud.zeus.integration.cluster.bean.MiddlewareInfo;
 
@@ -31,6 +32,13 @@ public interface StorageClassService {
      * @return
      */
     boolean checkLVMStorage(String clusterId, String namespace, String storageClassName);
+
+    /**
+     * 根据存储类型名称判断判断存储类型是否是LVM
+     * @param storageDto
+     * @return
+     */
+    boolean checkLVMStorage(StorageDto storageDto);
 
     /**
      * 将从middleware中取出的pvc信息，转换为以pod的pvc名称为key,StorageClass sc为value的map,

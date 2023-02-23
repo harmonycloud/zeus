@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import com.harmonycloud.caas.common.model.StorageDto;
 import io.fabric8.kubernetes.api.model.storage.StorageClass;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -101,6 +102,21 @@ public class StorageClassServiceImpl implements StorageClassService {
             }
         }
         return isLvm;
+    }
+
+    @Override
+    public boolean checkLVMStorage(StorageDto storageDto) {
+        if (!storageTypeCheck) {
+            return true;
+        }
+        if (!CollectionUtils.isEmpty(storageDto.getStorageClassList())){
+            StorageClassInfo sc = storageDto.getStorageClassList().get(0);
+            if (StringUtils.isNotEmpty(sc.getProvisioner())
+                    && storageTypes.contains(sc.getProvisioner())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
