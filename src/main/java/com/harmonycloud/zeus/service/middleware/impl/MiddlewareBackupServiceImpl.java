@@ -853,8 +853,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     public MiddlewareIncBackupDto getIncBackupInfo(String clusterId, String namespace, String backupName) {
         MiddlewareBackupScheduleCR cr = backupScheduleCRDService.get(clusterId, namespace, backupName + "-incr");
         MiddlewareIncBackupDto middlewareIncBackupDto = new MiddlewareIncBackupDto();
+        middlewareIncBackupDto.setBackupName(backupName + "-incr");
         if (cr == null) {
-            middlewareIncBackupDto.setBackupName(backupName + "-incr");
             return middlewareIncBackupDto;
         }
         // 获取时间
