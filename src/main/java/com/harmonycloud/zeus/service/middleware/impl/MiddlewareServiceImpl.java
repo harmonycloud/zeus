@@ -658,11 +658,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             new MiddlewareTopologyDTO().setClusterId(clusterId).setNamespace(namespace).setName(name).setType(type)
                 .setStatus(middleware.getStatus()).setPods(middleware.getPods())
                 .setPodInfoGroup(middleware.getPodInfoGroup()).setMonitorResourceQuota(new MonitorResourceQuota());
-        // 设置 LVM_PROVISIONER
-        if (middleware.getPods().stream()
-            .anyMatch(podInfo -> StringUtils.isNotEmpty(podInfo.getResources().getProvisioner())
-                && podInfo.getResources().getProvisioner().equals(LVM_PROVISIONER))) {
-            middlewareTopologyDTO.setProvisioner(LVM_PROVISIONER);
+        // 设置 PROVISIONER
+        if (!CollectionUtils.isEmpty(middleware.getPods())) {
+            middlewareTopologyDTO.setProvisioner(middleware.getPods().stream()
+                .filter(podInfo -> podInfo.getResources() != null
+                    && StringUtils.isNotEmpty(podInfo.getResources().getProvisioner()))
+                .collect(Collectors.toList()).get(0).getResources().getProvisioner());
         }
         // 获取alias name
         JSONObject values = helmChartService.getInstalledValues(name, namespace, clusterService.findById(clusterId));
