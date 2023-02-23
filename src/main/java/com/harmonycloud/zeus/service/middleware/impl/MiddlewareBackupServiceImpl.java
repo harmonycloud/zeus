@@ -132,7 +132,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public void createBackup(MiddlewareBackupDTO backupDTO) {
-        if (backupDTO.getIncrement() != null && backupDTO.getIncrement() && "day".equalsIgnoreCase(backupDTO.getDateUnit())) {
+        if (backupDTO.getIncrement() != null && backupDTO.getIncrement() && backupDTO.getIncrement() && "day".equalsIgnoreCase(backupDTO.getDateUnit())) {
             checkTimeLawful(backupDTO.getCron(), backupDTO.getRetentionTime());
         }
         middlewareCRService.getCRAndCheckRunning(convertBackupToMiddleware(backupDTO));
@@ -207,7 +207,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public void updateBackupSchedule(MiddlewareBackupDTO backupDTO) {
-        if ("day".equalsIgnoreCase(backupDTO.getDateUnit())) {
+        if ("day".equalsIgnoreCase(backupDTO.getDateUnit()) && backupDTO.getIncrement() != null && backupDTO.getIncrement()) {
             checkTimeLawful(backupDTO.getCron(), backupDTO.getRetentionTime());
         }
         // 是否为mysqlBackup
