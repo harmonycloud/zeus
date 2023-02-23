@@ -594,7 +594,7 @@ public abstract class AbstractBaseOperator {
                 quota.setStorageClassAliasName(storageDto.getAliasName());
             }
             // 设置provisioner
-            if (CollectionUtils.isEmpty(storageDto.getStorageClassList())){
+            if (!CollectionUtils.isEmpty(storageDto.getStorageClassList())){
                 quota.setProvisioner(storageDto.getStorageClassList().get(0).getProvisioner());
             }
         } catch (Exception e) {
