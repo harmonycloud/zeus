@@ -86,6 +86,11 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
         existCluster.setLogging(cluster.getLogging());
         clusterService.update(existCluster);
+        try {
+            esService.resetEsClient(existCluster);
+        } catch (Exception e) {
+            log.error("更新日志组件缓存出错了", e);
+        }
         if (cluster.getLogging().getElasticSearch().getLogCollect() != null){
             boolean logCollect = cluster.getLogging().getElasticSearch().getLogCollect();
             boolean exist = checkLogExist(existCluster);
