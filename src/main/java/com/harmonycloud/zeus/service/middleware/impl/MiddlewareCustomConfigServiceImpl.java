@@ -40,6 +40,8 @@ import com.harmonycloud.zeus.service.registry.HelmChartService;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.harmonycloud.caas.common.constants.NameConstant.PROXY;
+import static com.harmonycloud.caas.common.constants.NameConstant.SENTINEL;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.ASCEND;
 import static com.harmonycloud.caas.common.constants.middleware.MiddlewareConstant.DESCEND;
 
@@ -304,6 +306,10 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
                     // 获取pod列表
                     Middleware middleware = podService.list(clusterId, namespace, middlewareName, type);
                     for (PodInfo podInfo : middleware.getPods()) {
+                        if (StringUtils.isNotEmpty(podInfo.getRole())
+                            && (podInfo.getRole().equals(SENTINEL) || podInfo.getRole().equals(PROXY))) {
+                            continue;
+                        }
                         Date date =
                             DateUtils.addInteger(DateUtils.parseDate(StringUtils.isEmpty(podInfo.getLastRestartTime())
                                 ? podInfo.getCreateTime() : podInfo.getLastRestartTime(),
