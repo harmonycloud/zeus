@@ -1139,7 +1139,9 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
      * @return
      */
     public boolean rebootCheck(Middleware middleware) {
-        if (middleware.getStdoutEnabled() != null || middleware.getFilelogEnabled() != null) {
+        if (!MiddlewareTypeEnum.POSTGRESQL.getType().equals(middleware.getType())
+            && !MiddlewareTypeEnum.MYSQL.getType().equals(middleware.getType())
+            && (middleware.getStdoutEnabled() != null || middleware.getFilelogEnabled() != null)) {
             return true;
         }
         return false;
