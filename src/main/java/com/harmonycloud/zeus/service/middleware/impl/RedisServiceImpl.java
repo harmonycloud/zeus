@@ -501,7 +501,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
                     String name = con.getString("name");
                     String burstName = name.substring(0, name.lastIndexOf("-"));
                     JSONObject master = conditionMap.get(burstName);
-                    if (master != null) {
+                    if (master != null && master.containsKey("name")) {
                         burstMap.put(master.getString("name"), con.getString("name"));
                     }
                 }
@@ -515,7 +515,7 @@ public class RedisServiceImpl extends AbstractMiddlewareService implements Redis
                 JSONObject con = (JSONObject) condition;
                 if ("slave".equals(con.getString("type"))) {
                     JSONObject masterNode = conditionMap.get(con.getString("masterNodeId"));
-                    if (masterNode != null) {
+                    if (masterNode != null && masterNode.containsKey("name")) {
                         burstMap.put(masterNode.getString("name"), con.getString("name"));
                     }
                 }
