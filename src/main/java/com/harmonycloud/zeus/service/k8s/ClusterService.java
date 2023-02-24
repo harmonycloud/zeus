@@ -233,4 +233,12 @@ public interface ClusterService {
      */
     boolean checkIfExists(String clusterId);
 
+    /**
+     * 根据集群id查询集群
+     *
+     * @param clusterId 集群id
+     * @return
+     */
+    boolean checkWithInCluster(String clusterId);
+
 }

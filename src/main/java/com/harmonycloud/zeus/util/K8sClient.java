@@ -1,29 +1,29 @@
 package com.harmonycloud.zeus.util;
 
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
+
 import com.harmonycloud.caas.common.enums.ErrorMessage;
-import com.harmonycloud.caas.common.exception.BusinessException;
 import com.harmonycloud.caas.common.exception.CaasRuntimeException;
 import com.harmonycloud.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.harmonycloud.zeus.bean.BeanK8sDefaultCluster;
+import com.harmonycloud.tool.file.FileUtil;
 import com.harmonycloud.zeus.service.k8s.ClusterCertService;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
 import com.harmonycloud.zeus.service.k8s.K8sDefaultClusterService;
 import com.harmonycloud.zeus.service.k8s.MiddlewareClusterService;
-import com.harmonycloud.zeus.service.middleware.EsService;
+
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.ObjectUtils;
-
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author dengyulong
@@ -35,9 +35,11 @@ public class K8sClient {
 
     private static final Map<String, KubernetesClient> K8S_CLIENT_MAP = new ConcurrentHashMap<>();
 
-    private static String url;
+    @Value("${k8s.master.url:https://10.96.0.1:443}")
+    private String url;
+    @Value("${k8s.master.sa:/var/run/secrets/kubernetes.io/serviceaccount/token}")
+    private String SERVICE_ACCOUNT_PATH;
 
-    private static String token;
 
     public static final String DEFAULT_CLIENT = "defaultClient";
 
@@ -92,20 +94,29 @@ public class K8sClient {
             addK8sClients(middlewareClusters);
             clusterService.initClusterAttributes(middlewareClusters);
         }
+        try {
+            initDefaultClient();
+        }catch (Exception e){
+            log.debug("默认集群初始化失败");
+        }
     }
 
     /**
      * 获取默认集群信息
      */
-    public KubernetesClient initDefaultClient(){
-        BeanK8sDefaultCluster defaultCluster = k8SDefaultClusterService.get();
-        if (ObjectUtils.isEmpty(defaultCluster)){
-            throw new BusinessException(ErrorMessage.CLUSTER_NOT_REGISTERED);
+    public KubernetesClient initDefaultClient() {
+        try {
+            String token = FileUtil.readFile(SERVICE_ACCOUNT_PATH);
+            KubernetesClient client = new DefaultKubernetesClient(
+                    new ConfigBuilder().withMasterUrl(url).withTrustCerts(true).withOauthToken(token).build());
+            K8S_CLIENT_MAP.put(DEFAULT_CLIENT, client);
+            return client;
+        } catch (Exception e) {
+            log.error("初始化默认集群失败");
         }
-        K8sClient.url = defaultCluster.getUrl();
-        K8sClient.token = defaultCluster.getToken();
-        return InstanceHolder.KUBERNETES_CLIENT;
+        return null;
     }
+
 
     /**
      * 添加k8s客户端
@@ -237,19 +248,12 @@ public class K8sClient {
     /**
      * 内部类来保证单例的线程安全
      */
-    private static class InstanceHolder {
+    /*private static class InstanceHolder {
         private static final KubernetesClient KUBERNETES_CLIENT = new DefaultKubernetesClient(new ConfigBuilder()
             .withMasterUrl(url).withTrustCerts(true).withOauthToken(token).withNamespace(null).build());
         static {
             K8S_CLIENT_MAP.put(DEFAULT_CLIENT, KUBERNETES_CLIENT);
         }
-    }
+    }*/
 
-    public static String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        K8sClient.url = url;
-    }
 }

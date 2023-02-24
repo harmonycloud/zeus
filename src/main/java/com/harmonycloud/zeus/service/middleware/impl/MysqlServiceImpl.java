@@ -177,7 +177,9 @@ public class MysqlServiceImpl implements MysqlService {
         ).collect(Collectors.toList());
 
         MysqlAccessInfo mysqlAccessInfo = new MysqlAccessInfo();
-        if (!CollectionUtils.isEmpty(serviceDTOS)) {
+        boolean withInCluster = clusterService.checkWithInCluster(clusterId);
+        mysqlAccessInfo.setWithInCluster(withInCluster);
+        if (!withInCluster && !CollectionUtils.isEmpty(serviceDTOS)) {
             // 优先使用ingress暴露的服务
             List<IngressDTO> ingressDTOS = serviceDTOS.stream().filter(ingressDTO ->
                     !StringUtils.isEmpty(ingressDTO.getIngressClassName())).collect(Collectors.toList());
@@ -236,7 +238,7 @@ public class MysqlServiceImpl implements MysqlService {
 
     public MysqlAccessInfo checkAndGetDbManageAccessInfo(String clusterId, String namespace, String middlewareName) {
         MysqlAccessInfo mysqlAccessInfo = queryBasicAccessInfo(clusterId, namespace, middlewareName, null);
-        if (mysqlAccessInfo.isOpenService()) {
+        if (mysqlAccessInfo.isOpenService() || mysqlAccessInfo.getWithInCluster()) {
             return mysqlAccessInfo;
         } else {
             Middleware middleware = new Middleware();

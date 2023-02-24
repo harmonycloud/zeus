@@ -26,6 +26,7 @@ import com.harmonycloud.zeus.bean.user.BeanProjectNamespace;
 import com.harmonycloud.zeus.dao.BeanActiveAreaMapper;
 import com.harmonycloud.zeus.dao.BeanMiddlewareClusterMapper;
 import com.harmonycloud.zeus.dao.user.BeanProjectNamespaceMapper;
+import com.harmonycloud.zeus.integration.cluster.NamespaceWrapper;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -131,6 +132,8 @@ public class ClusterServiceImpl implements ClusterService {
     private BackupServerService backupServerService;
     @Autowired
     private BeanProjectNamespaceMapper projectNamespaceMapper;
+    @Autowired
+    private NamespaceWrapper namespaceWrapper;
 
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
@@ -1093,6 +1096,14 @@ public class ClusterServiceImpl implements ClusterService {
         wrapper.eq("cluster_id", clusterId);
         List<BeanMiddlewareCluster> clusters = middlewareClusterMapper.selectList(wrapper);
         return !CollectionUtils.isEmpty(clusters);
+    }
+
+    @Override
+    public boolean checkWithInCluster(String clusterId) {
+        io.fabric8.kubernetes.api.model.Namespace targetNs = namespaceWrapper.get(clusterId, KUBE_SYSTEM);
+        io.fabric8.kubernetes.api.model.Namespace defaultNs =
+            namespaceWrapper.get(K8sClient.DEFAULT_CLIENT, KUBE_SYSTEM);
+        return targetNs.getMetadata().getUid().equals(defaultNs.getMetadata().getUid());
     }
 
     public Map<Map<String, String>, List<String>> getResultMap(PrometheusResponse response) {
