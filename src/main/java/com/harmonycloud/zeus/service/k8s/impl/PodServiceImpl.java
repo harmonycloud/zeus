@@ -364,7 +364,7 @@ public class PodServiceImpl implements PodService {
 
     @Override
     public List<PodInfo> listPods(String clusterId, String namespace, String middlewareName, String type) {
-        MiddlewareCR middlewareCR = middlewareCRService.getCR(clusterId, namespace, middlewareName, type);
+        MiddlewareCR middlewareCR = middlewareCRService.getCR(clusterId, namespace, type, middlewareName);
         Middleware middleware = listPods(middlewareCR, clusterId, namespace, middlewareName, type);
         return middleware.getPods();
     }

@@ -10,9 +10,11 @@ import com.harmonycloud.caas.common.model.middleware.*;
 import com.harmonycloud.tool.page.PageObject;
 import com.harmonycloud.zeus.bean.BeanLogMsg;
 import com.harmonycloud.zeus.service.k8s.ClusterService;
+import com.harmonycloud.zeus.service.k8s.PodService;
 import com.harmonycloud.zeus.service.log.EsComponentService;
 import com.harmonycloud.zeus.service.log.LogService;
 import com.harmonycloud.zeus.service.middleware.EsService;
+import com.harmonycloud.zeus.service.middleware.MiddlewareService;
 import com.harmonycloud.zeus.util.AssertUtil;
 import com.harmonycloud.zeus.util.DateUtil;
 import com.harmonycloud.tool.date.DateUtils;
@@ -31,6 +33,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortOrder;
@@ -77,6 +80,8 @@ public class LogServiceImpl implements LogService {
     private String scrollTime;
     @Value("${es.log.keep:30}")
     private Integer keepDays;
+    @Autowired
+    private PodService podService;
 
     @Autowired
     private ClusterService clusterService;
@@ -283,9 +288,10 @@ public class LogServiceImpl implements LogService {
         while (it.hasNext()) {
             SearchHit sh = it.next();
         }
+        Set<String> podNames = getMiddlewarePodNames(logQuery);
         for (Terms.Bucket bucket : podTerms.getBuckets()) {
             String bucketPodName = bucket.getKey().toString();
-            if (!bucketPodName.startsWith(logQuery.getMiddlewareName())) {
+            if (!podNames.contains(bucketPodName)) {
                 continue;
             }
             Terms logDirTerms = bucket.getAggregations().get("source");
@@ -306,6 +312,20 @@ public class LogServiceImpl implements LogService {
         return logFileNames;
     }
 
+    /**
+     * 获取中间件pod名称列表
+     * @param logQuery
+     * @return
+     */
+    private Set<String> getMiddlewarePodNames(LogQuery logQuery){
+        List<PodInfo> pods = podService.listPods(logQuery.getClusterId(), logQuery.getNamespace(),
+                logQuery.getMiddlewareName(), logQuery.getMiddlewareType());
+        Set<String> podNames = new HashSet<>();
+        if (!CollectionUtils.isEmpty(pods)) {
+            podNames = pods.stream().map(PodInfo::getPodName).collect(Collectors.toSet());
+        }
+        return podNames;
+    }
 
     /**
      * 根据查询条件设置SearchRequestBuilder
@@ -420,6 +440,7 @@ public class LogServiceImpl implements LogService {
         logQuery.setPodLog(logQueryDto.isPodLog());
         logQuery.setLogDateStart(fromDate);
         logQuery.setLogDateEnd(toDate);
+        logQuery.setAppType(logQueryDto.getAppType());
         //获取查询时间段对应的索引列表
         Date startDate = DateUtil.StringToDate(fromDate, style);
         Date endDate = DateUtil.StringToDate(toDate, style);
