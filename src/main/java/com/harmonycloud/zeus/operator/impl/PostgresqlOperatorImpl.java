@@ -171,7 +171,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
 
     public Boolean getAutoSwitch(Middleware middleware, MiddlewareClusterDTO cluster) {
         // 获取pod列表
-        List<PodInfo> podInfos = podService.listPods(cluster.getId(), middleware.getNamespace(), MiddlewareTypeEnum.POSTGRESQL.getType(), middleware.getName());
+        List<PodInfo> podInfos = podService.listPods(cluster.getId(), middleware.getNamespace(), middleware.getName(), MiddlewareTypeEnum.POSTGRESQL.getType());
         List<PodInfo> runningPods = podInfos.stream().filter(podInfo -> RUNNING.equalsIgnoreCase(podInfo.getStatus())).collect(Collectors.toList());
         if (CollectionUtil.isEmpty(runningPods)){
             throw new BusinessException(ErrorMessage.MIDDLEWARE_CLUSTER_IS_NOT_RUNNING);
@@ -236,7 +236,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             throw new BusinessException(DictEnum.SERVICE, patroniName, ErrorMessage.NOT_EXIST);
         }
         // 获取pod列表
-        List<PodInfo> podInfos = podService.listPods(cluster.getId(), middleware.getNamespace(), MiddlewareTypeEnum.POSTGRESQL.getType(), middleware.getName());
+        List<PodInfo> podInfos = podService.listPods(cluster.getId(), middleware.getNamespace(), middleware.getName(), MiddlewareTypeEnum.POSTGRESQL.getType());
         List<PodInfo> runningPods = podInfos.stream().filter(podInfo -> RUNNING.equalsIgnoreCase(podInfo.getStatus())).collect(Collectors.toList());
         if (CollectionUtil.isEmpty(runningPods)){
             throw new BusinessException(ErrorMessage.MIDDLEWARE_CLUSTER_IS_NOT_RUNNING);
@@ -260,7 +260,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             throw new BusinessException(DictEnum.SERVICE, patroniName, ErrorMessage.NOT_EXIST);
         }
         // 获取执行pod
-        List<PodInfo> podInfos = podService.listPods(cluster.getId(), middleware.getNamespace(), MiddlewareTypeEnum.POSTGRESQL.getType(), middleware.getName());
+        List<PodInfo> podInfos = podService.listPods(cluster.getId(), middleware.getNamespace(), middleware.getName(), MiddlewareTypeEnum.POSTGRESQL.getType());
         List<PodInfo> runningPods = podInfos.stream().filter(podInfo -> RUNNING.equalsIgnoreCase(podInfo.getStatus())
                 && SYNC_SLAVE.equalsIgnoreCase(podInfo.getRole())).collect(Collectors.toList());
         if (CollectionUtil.isEmpty(runningPods)) {
