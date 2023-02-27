@@ -34,6 +34,18 @@ data:
           remove_field => ["message","offset"]
         }
       }
+      else if [index] == "mysqlaudit" {
+        if [cmd] != "create_db" and [cmd] != "create_table" and [cmd] != "create_user" and [cmd] != "create_index"
+          and [cmd] != "drop_db" and [cmd] != "drop_table" and [cmd] != "drop_user" and [cmd] != "drop_index"
+          and [cmd] != "alter_user" and [cmd] != "alert_table"
+          and [cmd] != "truncate"
+          and [cmd] != "revoke"
+          and [cmd] != "rename_table"
+          and [cmd] != "select" and [cmd] != "insert" and [cmd] != "update" and [cmd] != "delete" and [cmd] != "lock_tables" and [cmd] != "unlock_tables"
+        {
+          drop{}
+        }
+      }
       else if [index] == "mysqlslow" {
         json {
           source => "message"
