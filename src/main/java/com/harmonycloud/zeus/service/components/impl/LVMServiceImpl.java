@@ -64,8 +64,11 @@ public class LVMServiceImpl extends AbstractBaseOperator implements LVMService {
     public void delete(MiddlewareClusterDTO cluster, Integer status) {
         helmChartService.uninstall(cluster, "middleware-operator", ComponentsEnum.LVM.getName());
         List<MiddlewareClusterStorageSupport> support = cluster.getStorage().getSupport();
-        support = support.stream().filter(st -> !"lvm".equals(st.getType())).collect(Collectors.toList());
-        cluster.getStorage().setSupport(support);
+        if (!CollectionUtils.isEmpty(support)) {
+            support = support.stream().filter(st -> !ComponentsEnum.LVM.getName().equals(st.getType()))
+                .collect(Collectors.toList());
+            cluster.getStorage().setSupport(support);
+        }
         clusterService.update(cluster);
     }
 
