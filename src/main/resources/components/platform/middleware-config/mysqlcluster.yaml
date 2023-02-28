@@ -82,7 +82,7 @@ restoreDynamicVariable:
   OPERATION_TYPE:
     default: 'restore'
     type: env
-    jsonPath: '.metadata.annotations."middlewarebackup.type.job"| if .=="restore" then "restore" else "restore-point-in-time" end'
+    jsonPath: '.metadata.annotations."middlewarebackup.job.type"| if .=="restore" then "restore" else "restore-point-in-time" end'
   # 删除backupNamespace、backupResultName、mode参数
   backupNamespace:
     value: ""

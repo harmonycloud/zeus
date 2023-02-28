@@ -13,6 +13,8 @@ spec:
     kind: MiddlewareBackup
     listKind: MiddlewareBackupList
     plural: middlewarebackups
+    shortNames:
+    - bak
     singular: middlewarebackup
   scope: Namespaced
   versions:
@@ -28,9 +30,6 @@ spec:
       type: string
     - jsonPath: .metadata.creationTimestamp
       name: createtime
-      type: string
-    - jsonPath: .status.reason
-      name: reason
       type: string
     - jsonPath: .spec.customBackups[0].env[0].value
       name: backup-type
