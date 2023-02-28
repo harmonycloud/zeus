@@ -66,8 +66,8 @@ affinity:
   {{- if eq .Values.proxy.podAntiAffinity "hard"}}
   podAntiAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:
-    - labelSelector:
-        topologyKey: {{ .Values.podAntiAffinityTopologKey }}
+    - topologyKey: {{ .Values.podAntiAffinityTopologKey }}
+      labelSelector:
         matchExpressions:
         - key: {{ include "middleware.proxy.key" . }}
           operator: In

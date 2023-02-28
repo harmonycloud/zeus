@@ -199,10 +199,17 @@ data:
     {{- end }}
 
     {{- if .Values.features.auditLog.enabled }}
+    {{- if eq $bigVersion "5" }}
     plugin-load-add=libaudit_plugin.so
     audit_json_log_file             =/data/mysql/DBNAME/elog/mysql-audit.json
     audit_whitelist_users           =operator,healthchecker,replic,zabbixjk,boot,skip-grants user
     audit_json_file                 =ON
+    {{- else}}
+    loose-plugin-load-add=libaudit_plugin.so
+    loose-audit_json_log_file       =/data/mysql/DBNAME/elog/mysql-audit.json
+    loose-audit_whitelist_users     =operator,healthchecker,replic,zabbixjk,boot,skip-grants user
+    loose-audit_json_file           =ON
+    {{- end}}
     {{- end }}
 
 kind: ConfigMap
