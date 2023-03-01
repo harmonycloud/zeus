@@ -10,6 +10,7 @@ import com.harmonycloud.caas.common.model.ProjectBackupServerDTO;
 import com.harmonycloud.caas.common.model.user.ProjectNamespaceDo;
 import com.harmonycloud.zeus.service.k8s.ClusterComponentService;
 import com.harmonycloud.zeus.service.k8s.NamespaceService;
+import com.harmonycloud.zeus.service.middleware.BackupPositionService;
 import com.harmonycloud.zeus.service.middleware.ProjectBackupServerService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -85,6 +86,8 @@ public class ProjectServiceImpl implements ProjectService {
     private NamespaceService namespaceService;
     @Autowired
     private ProjectBackupServerService projectBackupServerService;
+    @Autowired
+    private BackupPositionService backupPositionService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -276,6 +279,8 @@ public class ProjectServiceImpl implements ProjectService {
         unBindNamespace(projectId, null, null);
         // 解绑项目下用户
         unbindUser(projectId, null);
+        // 解绑项目下备份位置
+        unBindBackupPosition(projectId);
     }
 
     @Override
@@ -584,6 +589,14 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public Set<String> getRelationClusters(String projectId) {
         return getRelationClusterIds(projectId);
+    }
+
+    /**
+     * 删除项目关联的备份位置
+     * @param projectId
+     */
+    private void unBindBackupPosition(String projectId){
+        backupPositionService.deleteByProjectId(projectId);
     }
 
     public void checkParam(ProjectDto projectDto){

@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -152,6 +153,13 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     }
 
     @Override
+    public void deleteByProjectId(String projectId) {
+        QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
+        wrapper.eq("project_id", projectId);
+        backupPositionMapper.delete(wrapper);
+    }
+
+    @Override
     public BeanBackupPosition getBackupPosition(Integer backupServerId, String projectId) {
         QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
         wrapper.eq("backup_server_id", backupServerId);
@@ -198,14 +206,18 @@ public class BackupPositionServiceImpl implements BackupPositionService {
 
     // 转换数据类型
     private List<BackupPositionDTO> convert(List<BeanBackupPosition> beanBackupPositions) {
-        return beanBackupPositions.stream().map(beanBackupPosition -> {
+        List<BackupPositionDTO> positionList = new ArrayList<>();
+        for (BeanBackupPosition beanBackupPosition : beanBackupPositions) {
             BackupPositionDTO backupPositionDTO = new BackupPositionDTO();
             BeanUtil.copyProperties(beanBackupPosition, backupPositionDTO);
             BeanProject beanProject = projectService.get(beanBackupPosition.getProjectId());
-            backupPositionDTO.setProjectName(beanProject.getAliasName());
-            backupPositionDTO.setBackupTaskNum(middlewareBackupNameService.listByPositionId(beanBackupPosition.getId()).size());
-            return backupPositionDTO;
-        }).collect(Collectors.toList());
+            if (beanProject != null) {
+                backupPositionDTO.setProjectName(beanProject.getAliasName());
+                backupPositionDTO.setBackupTaskNum(middlewareBackupNameService.listByPositionId(beanBackupPosition.getId()).size());
+                positionList.add(backupPositionDTO);
+            }
+        }
+        return positionList;
     }
 
     /**
