@@ -309,14 +309,6 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
             request.setOptions(build);
         }
 
-        log.info("打印es访问信息: ");
-        log.info("endPoint: {}", request.getEndpoint());
-        log.info("entity: {}", request.getEntity());
-        log.info("method: {}", request.getMethod());
-        log.info("options: {}", request.getOptions());
-        log.info("parameters: {}", request.getParameters());
-        log.info(elasticSearch.toString());
-
         RestClient restClient = client.getLowLevelClient();
         Response response = restClient.performRequest(request);
         if (response == null || Objects.isNull(response.getEntity())) {
