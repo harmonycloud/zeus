@@ -281,6 +281,8 @@ public class ProjectServiceImpl implements ProjectService {
         unbindUser(projectId, null);
         // 解绑项目下备份位置
         unBindBackupPosition(projectId);
+        // 解绑项目下备份服务器
+        unBindBackupServer(projectId);
     }
 
     @Override
@@ -597,6 +599,14 @@ public class ProjectServiceImpl implements ProjectService {
      */
     private void unBindBackupPosition(String projectId){
         backupPositionService.deleteByProjectId(projectId);
+    }
+
+    /**
+     * 删除项目关联的备份服务器
+     * @param projectId
+     */
+    private void unBindBackupServer(String projectId){
+        projectBackupServerService.deleteByProjectId(projectId);
     }
 
     public void checkParam(ProjectDto projectDto){
