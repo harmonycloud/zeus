@@ -32,6 +32,8 @@ public interface BackupPositionService {
 
     void deleteByBackupServer(Integer backupServerId);
 
+    void deleteByProjectId(String projectId);
+
     BeanBackupPosition getBackupPosition(Integer backupServerId, String projectId);
 
     BeanBackupPosition getBackupPosition(Integer positionId);
