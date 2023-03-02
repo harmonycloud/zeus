@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
-    <groupId>com.harmonycloud.zeus</groupId>
+    <groupId>com.middleware.zeus</groupId>
     <artifactId>zeus</artifactId>
     <version>0.2.1</version>
     <name>zeus</name>

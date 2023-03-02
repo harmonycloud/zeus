@@ -1,0 +1,15 @@
+package com.middleware.zeus.service.k8s;
+
+import com.middleware.caas.common.model.Secret;
+
+import java.util.List;
+
+/**
+ * @author xutianhong
+ * @since 2021/6/23 10:55 上午
+ */
+public interface SecretService {
+
+    List<Secret> list(String clusterId, String namespace);
+
+}
