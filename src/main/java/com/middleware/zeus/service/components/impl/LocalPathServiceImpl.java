@@ -5,15 +5,18 @@ import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.ClusterComponentsDto;
 import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterStorageSupport;
 import com.middleware.caas.common.model.middleware.PodInfo;
 import com.middleware.zeus.annotation.Operator;
 import com.middleware.zeus.service.components.AbstractBaseOperator;
 import com.middleware.zeus.service.components.api.LocalPathService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author xutianhong
@@ -41,13 +44,36 @@ public class LocalPathServiceImpl extends AbstractBaseOperator implements LocalP
     }
 
     @Override
+    public void integrate(MiddlewareClusterDTO cluster) {
+        MiddlewareClusterDTO existCluster = clusterService.findById(cluster.getId());
+        if (existCluster.getStorage().getSupport() == null) {
+            existCluster.getStorage().setSupport(new ArrayList<>());
+        }
+        List<MiddlewareClusterStorageSupport> existSupport = existCluster.getStorage().getSupport();
+        List<MiddlewareClusterStorageSupport> support = cluster.getStorage().getSupport();
+        existSupport = existSupport.stream().filter(st -> !ComponentsEnum.LOCAL_PATH.getName().equals(st.getType()))
+            .collect(Collectors.toList());
+        existSupport.addAll(support);
+        existCluster.getStorage().setSupport(existSupport);
+        clusterService.update(existCluster);
+    }
+
+    @Override
     public void delete(MiddlewareClusterDTO cluster, Integer status) {
         helmChartService.uninstall(cluster, "middleware-operator", ComponentsEnum.LOCAL_PATH.getName());
+        List<MiddlewareClusterStorageSupport> support = cluster.getStorage().getSupport();
+        if (!CollectionUtils.isEmpty(support)) {
+            support = support.stream().filter(st -> !ComponentsEnum.LOCAL_PATH.getName().equals(st.getType()))
+                    .collect(Collectors.toList());
+            cluster.getStorage().setSupport(support);
+        }
+        clusterService.update(cluster);
     }
 
     @Override
     protected String getValues(String repository, MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
-        return "image.repository=" + repository;
+        return "image.repository=" + repository +
+                ",storageClass.name=" + "local-path";
     }
 
     @Override
@@ -57,8 +83,18 @@ public class LocalPathServiceImpl extends AbstractBaseOperator implements LocalP
     }
 
     @Override
-    public void initAddress(ClusterComponentsDto clusterComponentsDto, MiddlewareClusterDTO cluster){
-
+    protected void updateCluster(MiddlewareClusterDTO cluster) {
+        if (CollectionUtils.isEmpty(cluster.getStorage().getSupport())) {
+            cluster.getStorage().setSupport(new ArrayList<>());
+        }
+        MiddlewareClusterStorageSupport support = new MiddlewareClusterStorageSupport();
+        support.setName(ComponentsEnum.LOCAL_PATH.getName());
+        support.setType(ComponentsEnum.LOCAL_PATH.getName());
+        support.setNamespace("middleware-operator");
+        List<MiddlewareClusterStorageSupport> list = new ArrayList<>();
+        list.add(support);
+        cluster.getStorage().setSupport(list);
+        clusterService.update(cluster);
     }
 
     @Override

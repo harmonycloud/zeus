@@ -228,6 +228,13 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
     }
 
     @Override
+    public Status getStatus(String clusterId, String namespace, String type, String middlewareName) {
+        MiddlewareCR cr = getCR(clusterId, namespace, type, middlewareName);
+        JSONObject statusJSON = JSONObject.parseObject(cr.getMetadata().getAnnotations().get("status"), JSONObject.class);
+        return JSONObject.toJavaObject(statusJSON, Status.class);
+    }
+
+    @Override
     public boolean checkIfExist(String clusterId, String namespace, String type, String middlewareName) {
         String crdName = middlewareCrTypeService.findByType(type) + "-" + middlewareName;
         return middlewareWrapper.checkIfExist(clusterId, namespace, crdName);
@@ -245,6 +252,22 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
         // query middleware cr
         MiddlewareCR mw = this.getCR(clusterId, namespace, type, name);
         return getPvc(mw);
+    }
+
+    @Override
+    public List<String> getPod(String clusterId, String namespace, String type, String name) {
+        // query middleware cr
+        MiddlewareCR mw = this.getCR(clusterId, namespace, type, name);
+        if (mw == null || mw.getStatus() == null || mw.getStatus().getInclude() == null
+                || !mw.getStatus().getInclude().containsKey(PODS)){
+            return new ArrayList<>();
+        }
+        List<MiddlewareInfo> pods = mw.getStatus().getInclude().get(PODS);
+        List<String> podNameList = new ArrayList<>();
+        for (MiddlewareInfo pod : pods) {
+            podNameList.add(pod.getName());
+        }
+        return podNameList;
     }
 
     @Override

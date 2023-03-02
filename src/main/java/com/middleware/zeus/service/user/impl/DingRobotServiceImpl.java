@@ -57,7 +57,7 @@ public class DingRobotServiceImpl implements DingRobotService {
      * @return
      */
     @Override
-    public SendResult send(AlertInfoDto alertInfoDto,DingRobotInfo dingRobotInfo) {
+    public SendResult send(AlertInfoDto alertInfoDto, DingRobotInfo dingRobotInfo) {
         SendResult sendResult = null;
         if (ObjectUtils.isEmpty(dingRobotInfo) || ObjectUtils.isEmpty(alertInfoDto) ) {
             return sendResult;

@@ -3,17 +3,21 @@ package com.middleware.zeus.controller.log;
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.base.BaseResult;
 import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.tool.page.PageObject;
 import com.middleware.caas.common.model.middleware.LogQuery;
 import com.middleware.caas.common.model.middleware.LogQueryDto;
+import com.middleware.caas.common.model.middleware.MiddlewareLogQuery;
+import com.middleware.caas.common.model.middleware.MysqlLogDTO;
 import com.middleware.zeus.annotation.Authority;
 import com.middleware.zeus.annotation.ExcludeAuditMethod;
 import com.middleware.zeus.service.log.LogService;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -23,7 +27,7 @@ import javax.servlet.http.HttpServletResponse;
  * @description 应用日志相关控制器
  * @date 2021/6/17 5:48 下午
  */
-@Controller
+@RestController
 @Api(tags = {"监控告警", "日志详情"}, value = "应用日志")
 @RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/middlewares/{middlewareName}/applogs")
 public class LogController {
@@ -40,8 +44,7 @@ public class LogController {
      */
     @ExcludeAuditMethod
     @ApiOperation(value = "查询日志", notes = "查询日志")
-    @ResponseBody
-    @RequestMapping(method = RequestMethod.POST)
+    @PostMapping
     @Authority(power = 1)
     public BaseResult queryLog(@PathVariable("clusterId") String clusterId,
                                @PathVariable("namespace") String namespace,
@@ -69,7 +72,7 @@ public class LogController {
      * @date 2021/6/21 5:05 下午
      */
     @ApiOperation(value = "导出日志", notes = "导出查询日志")
-    @RequestMapping(value = "/export", method = RequestMethod.GET)
+    @GetMapping("/export")
     @Authority(power = 1)
     public void exportLog(@PathVariable("clusterId") String clusterId,
                           @PathVariable("namespace") String namespace,
@@ -90,8 +93,7 @@ public class LogController {
      * @date 2021/6/21 5:05 下午
      */
     @ApiOperation(value = "查询pod日志文件列表", notes = "从es获取pod的日志文件列表")
-    @ResponseBody
-    @RequestMapping(value = "/filenames", method = RequestMethod.POST)
+    @PostMapping("/filenames")
     @Authority(power = 1)
     public BaseResult listLogFilenames(@PathVariable("clusterId") String clusterId,
                                        @PathVariable("namespace") String namespace,
@@ -109,6 +111,25 @@ public class LogController {
             return BaseResult.error(ErrorMessage.ELASTICSEARCH_CONNECT_FAILED);
         }
     }
+
+    @ApiOperation(value = "查询审计日志", notes = "查询审计日志")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "auditLogQuery", value = "中间件日志查询", paramType = "query", dataTypeClass = MiddlewareLogQuery.class),
+    })
+    @Authority(power = 1)
+    @PostMapping("/audit")
+    public BaseResult<PageObject<MysqlLogDTO>> queryAuditSql(@PathVariable("clusterId") String clusterId,
+                                                             @PathVariable("namespace") String namespace,
+                                                             @PathVariable("middlewareName") String middlewareName,
+                                                             @RequestBody MiddlewareLogQuery auditLogQuery) throws Exception {
+        auditLogQuery.setClusterId(clusterId).setNamespace(namespace).setMiddlewareName(middlewareName);
+        return BaseResult.ok(logService.andit(auditLogQuery));
+    }
+
+
 
 
 }

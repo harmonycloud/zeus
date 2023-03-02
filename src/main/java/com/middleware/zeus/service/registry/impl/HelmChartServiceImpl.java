@@ -81,6 +81,8 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     private String uploadPath;
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
+    @Value("${system.components.active:false}")
+    private Boolean activeComponents;
 
     @Value("${system.privateRegistry.enable:false}")
     private boolean enablePrivateRegistry;
@@ -390,6 +392,9 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             if (errorMsg.contains("PodSecurityPolicy is deprecated")){
                 return errorMsg;
             }
+            if (errorMsg.contains("CSIDriver is deprecated")){
+                return errorMsg;
+            }
             throw new RuntimeException(errorMsg);
         };
     }
@@ -684,6 +689,14 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             sb.append(values.get(i)).append("\n");
         }
         return sb.toString();
+    }
+
+    public boolean filterComponents(String name) {
+        return ComponentsEnum.ALERTMANAGER.getName().equals(name)
+            || ComponentsEnum.MIDDLEWARE_CONTROLLER.getName().equals(name)
+            || ComponentsEnum.GRAFANA.getName().equals(name) || "kubernetes-logging".equals(name) || "log".equals(name)
+            || ComponentsEnum.PROMETHEUS.getName().equals(name) || ComponentsEnum.MINIO.getName().equals(name)
+            || ComponentsEnum.LOCAL_PATH.getName().equals(name);
     }
 
 }

@@ -2,7 +2,9 @@ package com.middleware.zeus.service.k8s;
 
 import com.middleware.caas.common.model.middleware.Middleware;
 import com.middleware.caas.common.model.middleware.PodInfo;
+import com.middleware.caas.common.model.middleware.PodMigrateDTO;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
+import com.middleware.zeus.integration.cluster.bean.MigrateInfo;
 
 import java.util.List;
 import java.util.Map;
@@ -125,4 +127,28 @@ public interface PodService {
      */
     String yaml(String clusterId, String namespace, String podName);
 
+    /**
+     *
+     * @param podMigrateDTO 迁移信息
+     * @param middlewareName 服务名称
+     */
+    void migrate(PodMigrateDTO podMigrateDTO, String middlewareName);
+
+    /**
+     * 查询pod列表
+     * @param clusterId
+     * @param namespace
+     * @param middlewareName
+     * @param type
+     * @return
+     */
+    List<PodInfo> listPods(String clusterId, String namespace, String middlewareName, String type);
+
+    /**
+     *
+     * @param clusterId      集群id
+     * @param namespace      命名空间
+     * @param middlewareName 中间件名称
+     */
+    Map<String, MigrateInfo> migrateStatus(String clusterId, String namespace, String middlewareName);
 }

@@ -205,7 +205,6 @@ public class TerminalService {
         map.put("text", text);
 
         String message = new ObjectMapper().writeValueAsString(map);
-        System.out.println(message);
         webSocketSession.sendMessage(new TextMessage(message));
 
     }

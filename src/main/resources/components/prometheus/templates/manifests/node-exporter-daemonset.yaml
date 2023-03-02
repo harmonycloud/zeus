@@ -77,6 +77,10 @@ spec:
       serviceAccountName: node-exporter
       tolerations:
       - operator: Exists
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       volumes:
       - hostPath:
           path: /proc

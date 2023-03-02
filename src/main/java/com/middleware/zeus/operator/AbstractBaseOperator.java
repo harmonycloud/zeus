@@ -45,6 +45,7 @@ import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.Service;
 import lombok.extern.slf4j.Slf4j;
+import io.fabric8.kubernetes.api.model.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.BeanUtils;
@@ -129,6 +130,12 @@ public abstract class AbstractBaseOperator {
     @Autowired
     private RoleAuthorityService roleAuthorityService;
     @Autowired
+    private PodService podService;
+    @Autowired
+    private MaintenanceService maintenanceService;
+    @Autowired
+    private BeanAlertRecordMapper alertRecordMapper;
+    @Autowired
     private ImageRepositoryService imageRepositoryService;
 
     /**
@@ -207,6 +214,9 @@ public abstract class AbstractBaseOperator {
         // 5. 修改prometheusRules添加集群
         updateAlerts(middleware);
         add2sql(middleware);
+        //6. 删除告警记录
+        deleteRecord(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
+    }
 
         licenseService.addMiddlewareResource(cluster.getType(), calculateCpuRequest(values));
     }
@@ -260,11 +270,17 @@ public abstract class AbstractBaseOperator {
         BeanCacheMiddleware beanCacheMiddleware = cacheMiddlewareService.get(middleware);
         deletePvc(beanCacheMiddleware);
         deleteCustomConfigHistory(middleware);
-        middlewareBackupService.deleteMiddlewareBackupInfo(middleware.getClusterId(), middleware.getNamespace(),
-            middleware.getType(), middleware.getName());
+        // 删除Maintenance
+        maintenanceService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
+        // 删除备份相关
+        middlewareBackupService.deleteMiddlewareBackupInfo(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
         removeSql(middleware);
         // 设置values.yaml为null
         cacheMiddlewareService.updateValuesToNull(middleware);
+    }
+
+    public SwitchInfo getAutoSwitch(Middleware middleware) {
+        return null;
     }
 
     /**
@@ -312,7 +328,16 @@ public abstract class AbstractBaseOperator {
     protected void updateCommonValues(StringBuilder sb, Middleware middleware) {
         // 备注
         if (middleware.getDescription() != null) {
-            sb.append("middleware-desc=\"").append(middleware.getDescription()).append("\",");
+            // 处理特殊字符 \ ,
+            String desc = middleware.getDescription();
+            if (desc.contains("\\")) {
+                desc = desc.replace("\\", "\\\\");
+                middleware.setDescription(middleware.getDescription().replace("\\", "\\\\"));
+            }
+            if (desc.contains(",")) {
+                desc = desc.replace(",", "\\,");
+            }
+            sb.append("middleware-desc=\'").append(desc).append("\',");
         }
 
         // 日志开关
@@ -321,6 +346,10 @@ public abstract class AbstractBaseOperator {
         }
         if (null != middleware.getStdoutEnabled()) {
             sb.append("logging.collection.stdout.enabled=").append(middleware.getStdoutEnabled()).append(",");
+        }
+        // 添加sql审计开关
+        if (middleware.getAudit() != null){
+            sb.append("features.auditLog.enabled=").append(middleware.getAudit()).append(",");
         }
     }
 
@@ -395,18 +424,48 @@ public abstract class AbstractBaseOperator {
         }
     }
 
-    public void deleteMiddlewareBackupInfo(Middleware mw) {
+    /**
+     * 删除告警记录
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param middlewareName
+     */
+    private void deleteRecord(String clusterId, String namespace, String type, String middlewareName) {
+        QueryWrapper<BeanAlertRecord> wrapper = new QueryWrapper<>();
+        wrapper.eq("cluster_id", clusterId);
+        wrapper.eq("namespace", namespace);
+        wrapper.eq("type", type);
+        wrapper.eq("name", middlewareName);
+        alertRecordMapper.delete(wrapper);
+    }
+
+    public void deleteMiddlewareBackupInfo(Middleware mw){
 
     }
 
-    public void switchMiddleware(Middleware middleware) {
-
+    public SwitchInfo switchMiddleware(Middleware middleware) {
+        return null;
     }
 
-    public void switchMiddleware(Middleware middleware, String slaveName) {
-
+    public SwitchInfo switchMiddleware(Middleware middleware, String slaveName) {
+        return null;
     }
 
+    public void parseHandSwitchResult(List<String> results){
+        if (!"200".equals(results.get(1)) && !"202".equals(results.get(1))) {
+            String errorMessage = results.get(0);
+            if (errorMessage.startsWith("Not failed over, because this instance is delay")) {
+                throw new BusinessException(ErrorMessage.SWITCH_FAILD_BECAUSE_DELAY);
+            } else if ("411".equals(results.get(1)) && results.get(0).endsWith("please apply your changes to the latest version and try again")) {
+                throw new BusinessException(ErrorMessage.SWITCH_FAILED, "," + results.get(0));
+            } else {
+                log.error("切换结果: {}", results.get(0));
+                log.error("切换状态: {}", results.get(1));
+                throw new BusinessException(ErrorMessage.SWITCH_FAILED);
+            }
+        }
+    }
     /**
      * 从helm chart转回middleware
      */
@@ -487,6 +546,13 @@ public abstract class AbstractBaseOperator {
                 middleware.setStdoutEnabled(stdoutEnabled);
             }
 
+            // audit
+            if (values.containsKey("features")){
+                JSONObject features = values.getJSONObject("features");
+                if (features.getJSONObject(MysqlConstant.KEY_FEATURES_AUDITLOG) != null) {
+                    middleware.setAudit(features.getJSONObject(MysqlConstant.KEY_FEATURES_AUDITLOG).getBoolean("enabled"));
+                }
+            }
             // 设置服务备份状态
             /*middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(middleware.getClusterId(),
                 middleware.getNamespace(), middleware.getType(), middleware.getName()));*/
@@ -528,27 +594,27 @@ public abstract class AbstractBaseOperator {
         }
         String storageClass = values.getString("storageClassName");
         MiddlewareQuota quota = checkMiddlewareQuota(middleware, quotaKey);
-        quota.setStorageClassName(storageClass).setStorageClassQuota(values.getString("storageSize"));
-        quota.setIsLvmStorage(storageClassService.checkLVMStorage(middleware.getClusterId(), middleware.getNamespace(),
-            values.getString("storageClassName")));
-
-        // 获取存储中文名
+        quota.setStorageClassName(storageClass)
+            .setStorageClassQuota(values.getString("storageSize"));
+        // 获取存储信息
         try {
-            if (storageClass.contains(",")) {
-                String[] storageClasses = storageClass.split(",");
-                StringBuilder sb = new StringBuilder();
-                for (String aClass : storageClasses) {
-                    StorageDto storageDto = storageService.get(middleware.getClusterId(), aClass, false);
-                    sb.append(storageDto.getAliasName()).append(",");
-                }
-                sb.deleteCharAt(sb.length() - 1);
-                quota.setStorageClassAliasName(sb.toString());
-            } else {
-                StorageDto storageDto = storageService.get(middleware.getClusterId(), storageClass, false);
+            // 查询sc
+            if(storageClass.contains(CommonConstant.COMMA)){
+                storageClass = storageClass.split(CommonConstant.COMMA)[0];
+            }
+            StorageDto storageDto = storageService.get(middleware.getClusterId(), storageClass);
+            // 设置是否lvm
+            quota.setIsLvmStorage(storageClassService.checkLVMStorage(storageDto));
+            // 设置中文名称
+            if (StringUtils.isNotEmpty(storageDto.getAliasName())){
                 quota.setStorageClassAliasName(storageDto.getAliasName());
             }
+            // 设置provisioner
+            if (!CollectionUtils.isEmpty(storageDto.getStorageClassList())){
+                quota.setProvisioner(storageDto.getStorageClassList().get(0).getProvisioner());
+            }
         } catch (Exception e) {
-            log.error("中间件{}, 获取存储中文名失败", middleware.getName());
+            log.debug("中间件{}, 设置存储信息失败", middleware.getName());
         }
     }
 
@@ -576,6 +642,10 @@ public abstract class AbstractBaseOperator {
         // 数据仍未清清除
         if (!ObjectUtils.isEmpty(cacheMiddlewareService.get(middleware))) {
             throw new BusinessException(ErrorMessage.SAME_NAME_MIDDLEWARE_STORAGE_EXIST);
+        }
+        // 分区配额校验
+        if (!middlewareService.middlewareResourceCheck(middleware)){
+            throw new BusinessException(ErrorMessage.NAMESPACE_QUOTA_NOT_ENOUGH);
         }
     }
 
@@ -759,7 +829,8 @@ public abstract class AbstractBaseOperator {
         }
     }
 
-    protected void replaceLog(Middleware middleware, JSONObject values) {
+    protected void replaceLog(Middleware middleware, JSONObject values){
+        // 标准日志和文件日志
         JSONObject logging = new JSONObject();
         JSONObject collection = new JSONObject();
 
@@ -772,6 +843,28 @@ public abstract class AbstractBaseOperator {
         collection.put("stdout", stdout);
         logging.put("collection", collection);
         values.put("logging", logging);
+
+        // 审计日志
+        if (middleware.getAudit() != null){
+            JSONObject features = values.getJSONObject("features");
+            checkAndSetAuditSqlStatus(features, middleware);
+        }
+    }
+
+    /**
+     * 检查SQL审计采集开关，若支持SQL审计，则默认设置为开
+     */
+    private void checkAndSetAuditSqlStatus(JSONObject features, Middleware middleware) {
+        if (features == null) {
+            return;
+        }
+        if (features.getJSONObject(MysqlConstant.KEY_FEATURES_AUDITLOG) != null) {
+            if (middleware.getAudit() != null) {
+                features.getJSONObject(MysqlConstant.KEY_FEATURES_AUDITLOG).put("enabled", middleware.getAudit());
+            } else {
+                features.getJSONObject(MysqlConstant.KEY_FEATURES_AUDITLOG).put("enabled", false);
+            }
+        }
     }
 
     protected void replaceToleration(Middleware middleware, JSONObject values) {
@@ -1273,6 +1366,41 @@ public abstract class AbstractBaseOperator {
     public void checkAndSetActiveActive(JSONObject values, Middleware middleware) {}
 
     /**
+     * 获取双活注解
+     * @param clusterId
+     * @param namespace
+     * @param type 中间件类型
+     * @param middlewareName
+     * @return
+     */
+    public ActiveAreaAnnotationDto getActiveAreaAnnotation(String clusterId, String namespace, String type, String middlewareName) {
+        List<PodInfo> podInfoList = podService.listPods(clusterId, namespace, middlewareName, type);
+        List<String> zoneAPodList = new ArrayList<>();
+        List<String> zoneBPodList = new ArrayList<>();
+        for (PodInfo podInfo : podInfoList) {
+            String podName = podInfo.getPodName();
+            switch (podInfo.getZone()){
+                case "zoneA":
+                    zoneAPodList.add(podName);
+                    break;
+                case "zoneB":
+                    zoneBPodList.add(podName);
+                    break;
+                default:
+            }
+        }
+        Arrays.sort(zoneAPodList.toArray());
+        Arrays.sort(zoneBPodList.toArray());
+        String zoneAPod = zoneAPodList.get(0);
+        String zoneBPod = zoneBPodList.get(0);
+        Map<String,String> zoneAAnnotation = new HashMap<>();
+        Map<String,String> zoneBAnnotation = new HashMap<>();
+        zoneAAnnotation.put(ActiveAreaConstant.KEY_POD_SELECTOR, "[.status.conditions[]|select(.name==\"" + zoneAPod + "\")|.name]");
+        zoneBAnnotation.put(ActiveAreaConstant.KEY_POD_SELECTOR, "[.status.conditions[]|select(.name==\"" + zoneBPod + "\")|.name]");
+        return new ActiveAreaAnnotationDto(zoneAAnnotation, zoneBAnnotation);
+    }
+
+    /**
      * 设置双活参数
      *
      * @param values
@@ -1280,13 +1408,9 @@ public abstract class AbstractBaseOperator {
      */
     public void setActiveActiveConfig(String activeActiveKey, JSONObject values) {
         values.put("podAntiAffinityTopologKey", zoneKey);
-        values.put("podAntiAffinity", "soft");
+        values.put("podAntiAffinity", "hard");
     }
 
-    public String calculateProxyResource(String num){
-        BigDecimal bd = new BigDecimal(num).divide(new BigDecimal("4"));
-        return bd.setScale(2, RoundingMode.UP).toString();
-    }
 
     public Double calculateCpuRequest(JSONObject values) {
         JSONObject resources = values.getJSONObject(RESOURCES);

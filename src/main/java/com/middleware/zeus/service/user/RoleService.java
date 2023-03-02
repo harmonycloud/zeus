@@ -66,5 +66,4 @@ public interface RoleService {
      */
     void initMiddlewareAuthority(String type);
 
-
 }

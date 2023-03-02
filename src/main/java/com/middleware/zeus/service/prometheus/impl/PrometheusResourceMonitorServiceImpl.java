@@ -40,7 +40,7 @@ public class PrometheusResourceMonitorServiceImpl implements PrometheusResourceM
                     RoundingMode.CEILING);
             }
         } catch (Exception e) {
-            log.error("集群:{} 执行语句:{} 失败", clusterId, query, e);
+            log.debug("集群:{} 执行语句:{} 失败", clusterId, query, e);
         }
         return res;
     }
@@ -57,7 +57,7 @@ public class PrometheusResourceMonitorServiceImpl implements PrometheusResourceM
                 });
             });
         } catch (Exception e) {
-            log.error("集群:{} 执行语句:{} 失败", clusterId, query, e);
+            log.debug("集群:{} 执行语句:{} 失败", clusterId, query, e);
         }
         return map;
     }
@@ -66,13 +66,13 @@ public class PrometheusResourceMonitorServiceImpl implements PrometheusResourceM
     public PrometheusResponse query(String clusterId, String query) throws Exception {
         Map<String, String> map = new HashMap<>();
         map.put("query", query);
-        log.info("开始执行语句: {}" , query);
+        log.debug("开始执行语句: {}" , query);
         PrometheusResponse response = prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, map);
         if (CollectionUtils.isEmpty(response.getData().getResult())){
-            log.error("查询prometheus结果为空");
+            log.debug("查询prometheus结果为空");
             throw new BusinessException(ErrorMessage.EMPTY_RESULT);
         }
-        log.info("执行语句: {} 成功", query);
+        log.debug("执行语句: {} 成功", query);
         return response;
     }
 }

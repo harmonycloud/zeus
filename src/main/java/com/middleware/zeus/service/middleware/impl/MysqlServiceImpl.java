@@ -7,12 +7,13 @@ import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.middleware.caas.common.model.MysqlAccessInfo;
 import com.middleware.caas.common.model.MysqlDbDTO;
 import com.middleware.caas.common.model.MysqlUserDTO;
-import com.middleware.caas.common.model.Node;
 import com.middleware.tool.date.DateUtils;
 import com.middleware.tool.excel.ExcelUtil;
 import com.middleware.tool.page.PageObject;
+import com.middleware.caas.common.model.middleware.*;
 import com.middleware.zeus.bean.BeanMysqlUser;
 import com.middleware.zeus.operator.api.MysqlOperator;
+import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.k8s.IngressService;
 import com.middleware.zeus.service.k8s.NodeService;
 import com.middleware.zeus.service.k8s.impl.ServiceServiceImpl;
@@ -21,7 +22,6 @@ import com.middleware.zeus.service.middleware.MysqlService;
 import com.middleware.zeus.service.mysql.MysqlUserService;
 import com.middleware.zeus.util.MyAESUtil;
 import com.middleware.zeus.util.MysqlConnectionUtil;
-import com.middleware.caas.common.model.middleware.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -115,13 +115,14 @@ public class MysqlServiceImpl implements MysqlService {
     }
 
     @Override
-    public PageObject<MysqlLogDTO> slowsql(MysqlLogQuery slowLogQuery) throws Exception {
-        PageObject<MysqlLogDTO> slowSqlDTOS = esComponentService.getSlowSql(slowLogQuery.getClusterId(), slowLogQuery);
+    public PageObject<MysqlLogDTO> slowsql(MiddlewareLogQuery slowLogQuery) throws Exception {
+        MiddlewareClusterDTO cluster = clusterService.findById(slowLogQuery.getClusterId());
+        PageObject<MysqlLogDTO> slowSqlDTOS = esComponentService.getSlowSql(cluster, slowLogQuery);
         return slowSqlDTOS;
     }
 
     @Override
-    public void slowsqlExcel(MysqlLogQuery slowLogQuery, HttpServletResponse response, HttpServletRequest request) throws Exception {
+    public void slowsqlExcel(MiddlewareLogQuery slowLogQuery, HttpServletResponse response, HttpServletRequest request) throws Exception {
         slowLogQuery.setCurrent(1);
         slowLogQuery.setSize(CommonConstant.NUM_ONE_THOUSAND);
         PageObject<MysqlLogDTO> slowsql = slowsql(slowLogQuery);
@@ -145,7 +146,8 @@ public class MysqlServiceImpl implements MysqlService {
     }
 
     @Override
-    public PageObject<MysqlLogDTO> auditSql(MysqlLogQuery auditLogQuery) {
+    public PageObject<MysqlLogDTO> auditSql(MiddlewareLogQuery auditLogQuery) {
+        MiddlewareClusterDTO cluster = clusterService.findById(auditLogQuery.getClusterId());
         PageObject<MysqlLogDTO> slowSqlDTOS = null;
         try {
             slowSqlDTOS = esComponentService.getAuditSql(auditLogQuery.getClusterId(), auditLogQuery);
@@ -165,7 +167,9 @@ public class MysqlServiceImpl implements MysqlService {
         ).collect(Collectors.toList());
 
         MysqlAccessInfo mysqlAccessInfo = new MysqlAccessInfo();
-        if (!CollectionUtils.isEmpty(serviceDTOS)) {
+        boolean withInCluster = clusterService.checkWithInCluster(clusterId);
+        mysqlAccessInfo.setWithInCluster(withInCluster);
+        if (!withInCluster && !CollectionUtils.isEmpty(serviceDTOS)) {
             // 优先使用ingress暴露的服务
             List<IngressDTO> ingressDTOS = serviceDTOS.stream().filter(ingressDTO ->
                     !StringUtils.isEmpty(ingressDTO.getIngressClassName())).collect(Collectors.toList());
@@ -176,10 +180,7 @@ public class MysqlServiceImpl implements MysqlService {
                 exposeIP = ingressService.getIngressIp(clusterId, ingressDTO.getIngressClassName());
             } else {
                 ingressDTO = serviceDTOS.get(0);
-                List<Node> nodeList = nodeService.list(clusterId);
-                if(!CollectionUtils.isEmpty(nodeList)){
-                    exposeIP = nodeList.get(0).getIp();
-                }
+                exposeIP = nodeService.getAvailableNodeIP(clusterId);
             }
             List<ServiceDTO> serviceList = ingressDTO.getServiceList();
             if (!CollectionUtils.isEmpty(serviceList)) {
@@ -226,7 +227,7 @@ public class MysqlServiceImpl implements MysqlService {
 
     public MysqlAccessInfo checkAndGetDbManageAccessInfo(String clusterId, String namespace, String middlewareName) {
         MysqlAccessInfo mysqlAccessInfo = queryBasicAccessInfo(clusterId, namespace, middlewareName, null);
-        if (mysqlAccessInfo.isOpenService()) {
+        if (mysqlAccessInfo.isOpenService() || mysqlAccessInfo.getWithInCluster()) {
             return mysqlAccessInfo;
         } else {
             Middleware middleware = new Middleware();

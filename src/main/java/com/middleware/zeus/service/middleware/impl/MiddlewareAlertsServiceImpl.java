@@ -96,19 +96,13 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             }
         }
         if (StringUtils.isNotEmpty(keyword)) {
-            String alertID = keyword.replaceAll("GJ","");
-            if (isNumeric(alertID)) {
-                queryWrapper.and(wrapper ->
-                        wrapper.like("alert_id",Integer.parseInt(alertID)).or().like("alert_expr",keyword));
-            } else {
-                queryWrapper.and(wrapper ->
-                        wrapper.or().eq("alert",keyword).or().eq("symbol",keyword)
-                                .or().like("threshold",keyword)
-                                .or().eq("alert_time",keyword).or().eq("alert_times",keyword)
-                                .or().eq("content",keyword).or().eq("description",keyword)
-                                .or().like("alert_expr",keyword)
-                );
-            }
+            queryWrapper.and(wrapper ->
+                    wrapper.or().eq("alert",keyword).or().eq("symbol",keyword)
+                            .or().like("threshold",keyword)
+                            .or().eq("alert_time",keyword).or().eq("alert_times",keyword)
+                            .or().eq("description",keyword)
+                            .or().like("alert_expr",keyword)
+            );
         }
         List<AlertRuleId> alertInfos = alertRuleIdMapper.selectList(queryWrapper);
         PageInfo<MiddlewareAlertsDTO> alertsDTOPageInfo = new PageInfo<>();
@@ -414,11 +408,11 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
 
     private String buildSummary(MiddlewareAlertsDTO middlewareAlertsDTO) {
         String summary = "";
-        if (CPU_USING_RATE.equals(middlewareAlertsDTO.getAlert())) {
+        if (middlewareAlertsDTO.getAlert().contains(CPU_USING_RATE)) {
             summary = "node CPU alert warning";
-        } else if (MEMORY_USING_RATE.equals(middlewareAlertsDTO.getAlert())) {
+        } else if (middlewareAlertsDTO.getAlert().contains(MEMORY_USING_RATE)) {
             summary = "node memory alert warning";
-        } else if (PVC_USING_RATE.equals(middlewareAlertsDTO.getAlert())) {
+        } else if (middlewareAlertsDTO.getAlert().contains(PVC_USING_RATE)) {
             summary = "node pv alert warning";
         }
         return summary;
@@ -632,17 +626,21 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         prometheusRules.getLabels().put("alertname", middlewareAlertsDTO.getAlert());
         // 构造expr
         String expr = "";
-        if ("kafka".equals(middlewareAlertsDTO.getType())) {
+        if (MiddlewareTypeEnum.KAFKA.getType().equals(middlewareAlertsDTO.getType())) {
             expr = middlewareAlertsDTO.getExpr().replace(
-                    "{{ include \"" + middlewareAlertsDTO.getType() + "-hc" + ".fullname\" . }}", middlewareAlertsDTO.getName());
+                "{{ include \"" + middlewareAlertsDTO.getType() + "-hc" + ".fullname\" . }}",
+                middlewareAlertsDTO.getName());
+        } else if (MiddlewareTypeEnum.POSTGRESQL.getType().equals(middlewareAlertsDTO.getType())) {
+            expr = middlewareAlertsDTO.getExpr().replace("{{ include \"pgsql.fullname\" . }}",
+                middlewareAlertsDTO.getName());
         } else {
             expr = middlewareAlertsDTO.getExpr().replace(
-                    "{{ include \"" + middlewareAlertsDTO.getType() + ".fullname\" . }}", middlewareAlertsDTO.getName());
+                "{{ include \"" + middlewareAlertsDTO.getType() + ".fullname\" . }}", middlewareAlertsDTO.getName());
         }
-                String symbol = getSymbol(expr);
+        String symbol = getSymbol(expr);
         String threshold = getThreshold(expr);
         expr = expr.replace(symbol, middlewareAlertsDTO.getSymbol()).replace(threshold,
-                middlewareAlertsDTO.getThreshold());
+            middlewareAlertsDTO.getThreshold());
         prometheusRules.setExpr(expr);
         return prometheusRules;
     }

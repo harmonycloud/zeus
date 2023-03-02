@@ -4,11 +4,13 @@ import com.middleware.caas.common.base.BaseResult;
 import com.middleware.caas.common.model.ClusterDTO;
 import com.middleware.caas.common.model.ClusterNamespaceResourceDto;
 import com.middleware.caas.common.model.ClusterNodeResourceDto;
-import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
+import com.middleware.caas.common.model.ResourceQuotaDo;
 import com.middleware.caas.common.model.middleware.*;
+import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author dengyulong
@@ -209,5 +211,36 @@ public interface ClusterService {
      * @return
      */
     ClusterQuotaDTO monitoring(String clusterId);
+
+    /**
+     * 查询项目下集群id列表
+     * @param projectId
+     * @return
+     */
+    Set<String> listClusterIds(String projectId);
+
+    /**
+     * 根据集群下资源配额情况
+     *
+     * @param clusterId 集群id
+     * @param allocatable 是否查询可分配资源
+     * @return ResourceQuotaDo
+     */
+    ResourceQuotaDo getResourceQuotaInfo(String clusterId, Boolean allocatable);
+
+    /**
+     * 检查集群是否存在
+     * @param clusterId
+     * @return
+     */
+    boolean checkIfExists(String clusterId);
+
+    /**
+     * 根据集群id查询集群
+     *
+     * @param clusterId 集群id
+     * @return
+     */
+    boolean checkWithInCluster(String clusterId);
 
 }

@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.middleware.tool.date.DateUtils;
-import com.middleware.zeus.service.middleware.MysqlScheduleBackupService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -26,6 +26,7 @@ import com.middleware.zeus.integration.cluster.bean.Minio;
 import com.middleware.zeus.integration.cluster.bean.MysqlScheduleBackupCR;
 import com.middleware.zeus.integration.cluster.bean.MysqlScheduleBackupSpec;
 import com.middleware.zeus.integration.cluster.bean.MysqlScheduleBackupStatus;
+import com.middleware.zeus.service.middleware.MysqlScheduleBackupService;
 import com.middleware.zeus.util.CronUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupService {
+
+    @Value("${system.cron.timezone: 0}")
+    private Integer timezone;
 
     @Autowired
     private MysqlScheduleBackupWrapper mysqlScheduleBackupWrapper;
@@ -127,7 +131,7 @@ public class MysqlScheduleBackupServiceImpl implements MysqlScheduleBackupServic
             backupRecord.setBackupId(backupId);
             backupRecord.setTaskName(getBackupAliasName(clusterId, backupId));
             backupRecord.setAddressId(schedule.getMetadata().getLabels().get("addressId"));
-            backupRecord.setCron(CronUtils.parseLocalCron(schedule.getSpec().getSchedule()));
+            backupRecord.setCron(CronUtils.parseCron(schedule.getSpec().getSchedule(), -timezone + 8));
             if (schedule.getSpec().getKeepBackups() == null) {
                 backupRecord.setBackupMode("single");
             } else {

@@ -116,6 +116,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         }
     }
 
+    @Override
     public void createOpenService(Middleware middleware) {
         boolean success = false;
         ReadWriteProxy readWriteProxy = middleware.getReadWriteProxy();
@@ -277,6 +278,15 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
                 // 计算pod最大内存
                 String mem = calculateMem(quota.getLimitMemory(), "0.8", "mb");
                 sb.append("redisMaxMemory=").append(mem).append(",");
+
+                // 修改proxy memory参数规格
+                String proxyMem = MiddlewareResourceCalculateUtil.calculateProxyResource(quota.getMemory().replace("Gi", ""));
+                if (Double.parseDouble(proxyMem) < 0.256) {
+                    proxyMem = String.valueOf(0.256);
+                } else if (Double.parseDouble(proxyMem) > 2) {
+                    proxyMem = String.valueOf(2);
+                }
+                sb.append("predixy.resources.requests.memory=").append(proxyMem).append("Gi,predixy.resources.limits.memory=").append(proxyMem).append("Gi,");
             }
             // 实例模式扩容
             if (quota.getNum() != null) {
@@ -400,7 +410,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         JSONObject limits = new JSONObject();
 
         MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
-        String memory = calculateProxyResource(quota.getMemory().replace("Gi", ""));
+        String memory = MiddlewareResourceCalculateUtil.calculateProxyResource(quota.getMemory().replace("Gi", ""));
         if (Double.parseDouble(memory) < 0.256) {
             memory = String.valueOf(0.256);
         } else if (Double.parseDouble(memory) > 2) {
@@ -461,11 +471,60 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
 
     @Override
     public void checkAndSetActiveActive(JSONObject values, Middleware middleware) {
-        if (namespaceService.checkAvailableDomain(middleware.getClusterId(), middleware.getNamespace())) {
+        if (namespaceService.isOpenAvailableDomain(middleware.getClusterId(), middleware.getNamespace())) {
             super.setActiveActiveConfig("redis", values);
             super.setActiveActiveToleration(middleware, values);
         }
     }
+
+    @Override
+    public SwitchInfo switchMiddleware(Middleware middleware, String slaveName) {
+        MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
+        // 获取数据库密码
+        JSONObject values = helmChartService.getInstalledValues(middleware.getName(), middleware.getNamespace(), cluster);
+        String password = values.getString("redisPassword");
+        // 获取端口
+        String port = values.getString("redisServicePort");
+        MiddlewareCR cr = middlewareCRService.getCR(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
+
+        //获取从节点信息
+        JSONObject status = JSONObject.parseObject(cr.getMetadata().getAnnotations().get("status"));
+        JSONArray conditions = status.getJSONArray("conditions");
+        if (CollectionUtil.isEmpty(conditions)) {
+            throw new BusinessException(DictEnum.POD, ErrorMessage.NOT_FOUND);
+        }
+        JSONObject slavePod = null;
+        for (Object condition : conditions) {
+            JSONObject con = (JSONObject) condition;
+            if (slaveName.equals(con.getString("name")) && "slave".equals(con.getString("type"))) {
+                slavePod = con;
+                break;
+            }
+        }
+        if (slavePod == null) {
+            throw new BusinessException(ErrorMessage.NODE_NOT_FOUND);
+        }
+        // 获取slaveIP
+        String slaveIP = slavePod.getString("instance").split(":")[0];
+        //从节点执行命令
+        String execCommand = MessageFormat.format(
+                "kubectl exec {0} -n {1} -c redis-cluster --server={2} --token={3} --insecure-skip-tls-verify=true " +
+                        "-- bash -c \"redis-cli -h {4} -a {5} cluster failover\"",
+                slaveName, middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
+                slaveIP, password);
+        k8sExecService.exec(execCommand);
+        return null;
+    }
+
+    @Override
+    public ActiveAreaAnnotationDto getActiveAreaAnnotation(String clusterId, String namespace, String type, String middlewareName) {
+        Map<String,String> zoneAAnnotation = new HashMap<>();
+        Map<String,String> zoneBAnnotation = new HashMap<>();
+        zoneAAnnotation.put(ActiveAreaConstant.KEY_NODE_SELECTOR, "select(.metadata.labels.\"topology.kubernetes.io/zone\"==\"zoneA\")");
+        zoneBAnnotation.put(ActiveAreaConstant.KEY_NODE_SELECTOR, "select(.metadata.labels.\"topology.kubernetes.io/zone\"==\"zoneB\")");
+        return new ActiveAreaAnnotationDto(zoneAAnnotation, zoneBAnnotation);
+    }
+
 
     @Override
     public Double calculateCpuRequest(JSONObject values) {

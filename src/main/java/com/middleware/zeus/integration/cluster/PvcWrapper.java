@@ -42,6 +42,15 @@ public class PvcWrapper {
         return list.getItems();
     }
 
+    public List<PersistentVolumeClaim> listWithLabels(String clusterId, String namespace, Map<String, String> labels){
+        PersistentVolumeClaimList list =
+                K8sClient.getClient(clusterId).persistentVolumeClaims().inNamespace(namespace).withLabels(labels).list();
+        if (list == null || CollectionUtils.isEmpty(list.getItems())) {
+            return new ArrayList<>(0);
+        }
+        return list.getItems();
+    }
+
     public PersistentVolumeClaim get(String clusterId, String namespace, String name) {
         return K8sClient.getClient(clusterId).persistentVolumeClaims().inNamespace(namespace).withName(name).get();
     }

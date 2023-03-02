@@ -16,6 +16,8 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author xutianhong
@@ -109,5 +111,13 @@ public class RoleAuthorityServiceImpl implements RoleAuthorityService {
             }
         }
         return flag;
+    }
+
+    @Override
+    public Set<String> listOpsMiddleware(Integer roleId) {
+        List<BeanRoleAuthority> authorities = list(roleId);
+        return authorities.stream().map(BeanRoleAuthority::getType).
+                filter(type -> checkOps(String.valueOf(roleId), type)).
+                collect(Collectors.toSet());
     }
 }

@@ -8,6 +8,7 @@ import com.middleware.caas.common.model.user.UserDto;
 import com.middleware.zeus.bean.user.BeanProject;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author xutianhong
@@ -40,7 +41,7 @@ public interface ProjectService {
      * @param clusterId 集群id
      * @return List<Namespace>
      */
-    List<Namespace> getNamespace(String projectId, String clusterId, Boolean withQuota);
+    List<Namespace> getNamespace(String projectId, String clusterId, Boolean withQuota, Boolean withMiddleware);
 
     /**
      * 查询项目下分区
@@ -48,6 +49,12 @@ public interface ProjectService {
      * @return
      */
     List<Namespace> getNamespace(String projectId);
+
+    /**
+     * 查询分区所属项目
+     * @return List<BeanProjectNamespace>
+     */
+    List<ProjectNamespaceDo> listNamespace(String clusterId);
 
     /**
      * 查询项目下分区
@@ -141,7 +148,7 @@ public interface ProjectService {
      * 查询项目列表
      * @return List<ProjectDto>
      */
-    List<String> getClusters(String projectId);
+    Set<String> getRelationClusterIds(String projectId);
 
     /**
      * 查询项目列表
@@ -164,5 +171,20 @@ public interface ProjectService {
      * @return
      */
     BeanProject get(String projectId);
+
+    /**
+     * 查询指定集群分区所绑定的项目id
+     * @param clusterId
+     * @param namespace
+     * @return
+     */
+    String getProjectId(String clusterId, String namespace);
+
+    /**
+     * 查询项目关联的集群
+     * @param projectId
+     * @return
+     */
+    Set<String> getRelationClusters(String projectId);
 
 }

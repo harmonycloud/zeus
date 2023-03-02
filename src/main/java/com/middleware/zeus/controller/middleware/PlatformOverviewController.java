@@ -5,6 +5,7 @@ import com.middleware.caas.common.model.AlertDTO;
 import com.middleware.caas.common.model.middleware.ClusterQuotaDTO;
 import com.middleware.caas.common.model.middleware.MiddlewareBriefInfoDTO;
 import com.middleware.caas.common.model.middleware.MiddlewareOperatorDTO;
+import com.middleware.zeus.annotation.Authority;
 import com.middleware.zeus.bean.AlertMessageDTO;
 import com.middleware.zeus.bean.BeanOperationAudit;
 import com.middleware.zeus.bean.PlatformOverviewDTO;
@@ -106,6 +107,7 @@ public class PlatformOverviewController {
             @ApiImplicitParam(name = "keyword", value = "关键词", paramType = "query", required = false, dataTypeClass = String.class),
     })
     @GetMapping("/alerts")
+    @Authority(power = 1)
     public BaseResult<List<AlertDTO>> getAlertsRecord(@RequestParam(value = "clusterId", required = false) String clusterId,
                                                       @RequestParam(value = "namespace", required = false) String namespace,
                                                       @RequestParam(value = "current", required = false) Integer current,
@@ -113,7 +115,8 @@ public class PlatformOverviewController {
                                                       @RequestParam(value = "middlewareName", required = false) String middlewareName,
                                                       @RequestParam(value = "level", required = false) String level,
                                                       @RequestParam(value = "lay") String lay,
-                                                      @RequestParam(value = "keyword", required = false) String keyword) {
+                                                      @RequestParam(value = "keyword", required = false) String keyword,
+                                                      @RequestParam(value = "type", required = false) String type) {
         return BaseResult.ok(overviewService.getAlertRecord(clusterId, namespace, middlewareName, current, size,level, keyword, lay));
     }
 

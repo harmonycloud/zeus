@@ -1,0 +1,72 @@
+group: es.middleware.hc.cn
+version: v1alpha1
+kind: ESCluster
+# 备份工具设置特定的环境变量
+backupTool: restic
+isCommbakcup: true
+operatorImage:
+  "": {{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.common_path_backup.image }}:{{ .Values.global.middlewarebackup_controller.common_path_backup.tag }}
+
+
+######中间件中挂载信息############
+# 默认数据路径
+defaultDataPath: /data/elastic/{NAME}/{POD_NAME}/data/nodes/0/indices
+# 默认挂载路径
+defaultMountPath: /data/elastic/{NAME}
+# pvc格式
+pvcFormat: es-data-{POD_NAME}
+
+
+# 静态环境变量
+envs:
+  TZ: "Asia/Shanghai"
+
+
+sysDynamicVariable:
+  partition:
+    default: "{POD_NAME}"
+    objectType: middleware
+    regexp: ".*?-(\\d)"
+    scope: pod
+  elasticPassword:
+    jsonPath: ".spec.elasticPass"
+    objectType: middleware
+  masterService:
+    default: "{NAME}"
+    objectType: middleware
+    format: "%s-master"
+  elasticHttpPort:
+    jsonPath: ".spec.esHttpPort"
+    objectType: middleware
+
+backupDynamicVariable:
+  clusterName:
+    jsonPath: .metadata.name
+    objectType: middleware
+    type: arg
+  podName:
+    default: "{POD_NAME}"
+    scope: pod
+    type: arg
+  pvcName:
+    jsonPath: '.spec.customBackups[].commonPathBackupObjects[]|select(.pod=="{POD_NAME}")|.pvcObjects[0].pvc'
+    type: arg
+    scope: pod
+  paths:
+    jsonPath: ".spec.customBackups[].commonPathBackupObjects[]|select(.pod==\"{POD_NAME}\")|.pvcObjects[].paths"
+    scope: pod
+    type: arg
+  clusterType:
+    jsonPath: .spec.type
+    type: arg
+
+# pod选择器
+defaultSelector: "[.status.conditions[]|select(.type==\"data\")|.name]"
+# 中间件过滤器
+defaultFilterMiddleware: ".status|select(.phase==\"Running\" or .phase==\"running\")"
+# pod过滤器
+defaultFilterPod: ""
+# node过滤器
+defaultFilterNode: ""
+#defaultFilterNode: "select(.metadata.labels.\"topology.kubernetes.io/zone\"==\"zoneA\")"
+

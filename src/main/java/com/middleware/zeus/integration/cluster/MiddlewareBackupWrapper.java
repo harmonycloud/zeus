@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
@@ -68,11 +70,11 @@ public class MiddlewareBackupWrapper {
      * @param labels
      * @return
      */
-    public MiddlewareBackupList list(String clusterId, String namespace, Map<String,String> labels){
+    public List<MiddlewareBackupCR> list(String clusterId, String namespace, Map<String, String> labels) {
         Map<String, Object> map;
         try {
-            if ("*".equals(namespace)) {
-                map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(null);
+            if ("*".equals(namespace) || null == namespace) {
+                map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(null, labels);
             } else {
                 map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace, labels);
             }
@@ -83,10 +85,14 @@ public class MiddlewareBackupWrapper {
         if (CollectionUtils.isEmpty(map)) {
             return null;
         }
-        return JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareBackupList.class);
+        MiddlewareBackupList middlewareBackupList = JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareBackupList.class);
+        if (middlewareBackupList != null && middlewareBackupList.getItems().size() > 0) {
+            return middlewareBackupList.getItems();
+        }
+        return Collections.emptyList();
     }
 
-    public MiddlewareBackupList list(String clusterId, String namespace){
+    public List<MiddlewareBackupCR> list(String clusterId, String namespace){
         Map<String, Object> map = null;
         try {
             if ("*".equals(namespace)) {
@@ -96,12 +102,16 @@ public class MiddlewareBackupWrapper {
             }
         } catch (Exception e) {
             log.error("查询MiddlewareBackupList出错了", e);
-            return null;
+            return Collections.emptyList();
         }
         if (CollectionUtils.isEmpty(map)) {
-            return null;
+            return Collections.emptyList();
         }
-        return JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareBackupList.class);
+        MiddlewareBackupList middlewareBackupList = JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareBackupList.class);
+        if(middlewareBackupList != null && !CollectionUtils.isEmpty(middlewareBackupList.getItems())){
+            return middlewareBackupList.getItems();
+        }
+        return Collections.emptyList();
     }
 
     public MiddlewareBackupCR get(String clusterId, String namespace, String name){

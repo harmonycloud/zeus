@@ -12,6 +12,8 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 
+import java.util.List;
+
 /**
  * @author dengyulong
  * @date 2021/03/23
@@ -89,8 +91,8 @@ public class MiddlewareInfoController {
             @ApiImplicitParam(name = "chartVersion", value = "chart版本", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/{type}/version")
-    public BaseResult version(@PathVariable("type") String type,
-                              @RequestParam("chartVersion") String chartVersion) {
+    public BaseResult<List<MiddlewareVersionDto>> version(@PathVariable("type") String type,
+                                                          @RequestParam("chartVersion") String chartVersion) {
         return BaseResult.ok(middlewareInfoService.version(type, chartVersion));
     }
 }

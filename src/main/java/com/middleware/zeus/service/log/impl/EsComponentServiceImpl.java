@@ -5,22 +5,20 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.middleware.caas.common.constants.CommonConstant;
 import com.middleware.caas.common.constants.CoreConstant;
 import com.middleware.caas.common.constants.DateStyle;
-import com.middleware.caas.common.constants.LogConstant;
-import com.middleware.caas.common.enums.*;
+import com.middleware.caas.common.enums.DictEnum;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.enums.EsSearchTypeEnum;
 import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.ClusterComponentsDto;
 import com.middleware.tool.api.client.ElasticSearchClient;
 import com.middleware.tool.date.DateUtils;
 import com.middleware.tool.json.JsonUtil;
 import com.middleware.tool.page.PageObject;
+import com.middleware.caas.common.model.middleware.*;
 import com.middleware.zeus.bean.BeanOperationAudit;
-import com.middleware.zeus.service.k8s.ClusterComponentService;
+import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.log.EsComponentService;
 import com.middleware.zeus.service.middleware.EsService;
-import com.middleware.zeus.util.DateUtil;
 import com.middleware.zeus.util.EsIndexUtil;
-import com.middleware.caas.common.model.middleware.MysqlLogDTO;
-import com.middleware.caas.common.model.middleware.MysqlLogQuery;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.util.EntityUtils;
@@ -143,7 +141,11 @@ public class EsComponentServiceImpl implements EsComponentService {
     }
 
     @Override
-    public PageObject<MysqlLogDTO> getSlowSql(String clusterId, MysqlLogQuery slowLogQuery) throws Exception {
+    public PageObject<MysqlLogDTO> getSlowSql(MiddlewareClusterDTO cluster, MiddlewareLogQuery slowLogQuery) throws Exception {
+        if (cluster == null) {
+            return new PageObject<>(new ArrayList<>(), CommonConstant.NUM_ZERO);
+        }
+        String clusterId = cluster.getId();
         RestHighLevelClient esClient = esClients.get(clusterId);
         if (esClient == null) {
             esClient = this.getEsClient(clusterId);
@@ -154,12 +156,16 @@ public class EsComponentServiceImpl implements EsComponentService {
         if (CollectionUtils.isEmpty(indexNameList)) {
             return new PageObject<>(new ArrayList<>(), CommonConstant.NUM_ZERO);
         }
-        PageObject<MysqlLogDTO> mysqlSlowSqlDTOPageObject = searchFromIndex(esClient, query, slowLogQuery.getCurrent(), slowLogQuery.getSize(), indexNameList);
+        PageObject<MysqlLogDTO> mysqlSlowSqlDTOPageObject = searchFromIndex(esClient, query, slowLogQuery, indexNameList);
         return mysqlSlowSqlDTOPageObject;
     }
 
     @Override
-    public PageObject<MysqlLogDTO> getAuditSql(String clusterId, MysqlLogQuery auditLogQuery) throws Exception {
+    public PageObject<MysqlLogDTO> getAuditSql(MiddlewareClusterDTO cluster, MiddlewareLogQuery auditLogQuery) throws Exception {
+        if (cluster == null) {
+            return new PageObject<>(new ArrayList<>(), CommonConstant.NUM_ZERO);
+        }
+        String clusterId = cluster.getId();
         RestHighLevelClient esClient = esClients.get(clusterId);
         if (esClient == null) {
             esClient = this.getEsClient(clusterId);
@@ -172,11 +178,11 @@ public class EsComponentServiceImpl implements EsComponentService {
         }
         BoolQueryBuilder query = this.getAuditSearchRequestBuilder(auditLogQuery);
         // 获取SQL审计所有索引
-        List<String> indexNameList = getExistIndexNames(esClient, clusterId, auditLogQuery.getStartTime(),  auditLogQuery.getEndTime(), LogConstant.MYSQL_AUDIT_SQL);
+        List<String> indexNameList = getExistAuditIndexNames(esClient, cluster, auditLogQuery.getType());
         if (CollectionUtils.isEmpty(indexNameList)) {
             return new PageObject<>(new ArrayList<>(), CommonConstant.NUM_ZERO);
         }
-        PageObject<MysqlLogDTO> mysqlSlowSqlDTOPageObject = searchFromIndex(esClient, query, auditLogQuery.getCurrent(), auditLogQuery.getSize(), indexNameList);
+        PageObject<MysqlLogDTO> mysqlSlowSqlDTOPageObject = searchFromIndex(esClient, query, auditLogQuery, indexNameList);
         mysqlSlowSqlDTOPageObject.getData().forEach(item -> {
             item.setQueryDate(DateUtils.parseUTCSDate(item.getTimestampMysql()));
         });
@@ -241,7 +247,7 @@ public class EsComponentServiceImpl implements EsComponentService {
     /**
      * 根据查询条件设置SearchRequestBuilder
      */
-    private BoolQueryBuilder getSearchRequestBuilder(MysqlLogQuery slowLogQuery) {
+    private BoolQueryBuilder getSearchRequestBuilder(MiddlewareLogQuery slowLogQuery) {
 
         String startTime = slowLogQuery.getStartTime();
         String endTime = slowLogQuery.getEndTime();
@@ -286,7 +292,7 @@ public class EsComponentServiceImpl implements EsComponentService {
     /**
      * 根据查询条件设置SearchRequestBuilder
      */
-    private BoolQueryBuilder getAuditSearchRequestBuilder(MysqlLogQuery auditLogQuery) {
+    private BoolQueryBuilder getAuditSearchRequestBuilder(MiddlewareLogQuery auditLogQuery) {
         BoolQueryBuilder query = QueryBuilders.boolQuery();
         if (StringUtils.isNotEmpty(auditLogQuery.getStartTime()) && StringUtils.isNotEmpty(auditLogQuery.getEndTime())) {
             QueryBuilder timeFilter = QueryBuilders.rangeQuery("@timestamp").from(auditLogQuery.getStartTime())
@@ -341,8 +347,20 @@ public class EsComponentServiceImpl implements EsComponentService {
         return indexNameList;
     }
 
-    private List<String> generateIndexName(String indexPrefix) {
-        List<String> indexList = new ArrayList<>();
+    private List<String> getExistAuditIndexNames(RestHighLevelClient esClient, MiddlewareClusterDTO cluster, String type) throws Exception {
+        // 取得所有索引
+        String result = resultByGetRestClient(esClient, cluster, "/_cat/indices/" + type + "audit-*?format=json");
+        List<String> indices = new ArrayList<>();
+        if (StringUtils.isNotEmpty(result)) {
+            List<Map<String, String>> indexMap = JsonUtil.jsonToPojo(result, ArrayList.class);
+            if (CollectionUtils.isNotEmpty(indexMap)) {
+                indices = indexMap.stream().map(indexs -> indexs.get("index")).collect(Collectors.toList());
+            }
+        }
+        return indices;
+    }
+
+    private String generateIndexName() {
         Date now = DateUtils.getCurrentUtcTime();
         String date = DateUtils.DateToString(now, DateStyle.YYYY_MM_DD_DOT);
         String indexName = indexPrefix + CommonConstant.LINE + date;
@@ -383,9 +401,17 @@ public class EsComponentServiceImpl implements EsComponentService {
     }
 
 
-    private PageObject<MysqlLogDTO> searchFromIndex(RestHighLevelClient esClient, BoolQueryBuilder query, Integer current, Integer size, List<String> indexNameList) throws IOException {
+    private PageObject<MysqlLogDTO> searchFromIndex(RestHighLevelClient esClient, BoolQueryBuilder query,MiddlewareLogQuery logQuery, List<String> indexNameList) throws IOException {
+        int current = logQuery.getCurrent();
+        int size = logQuery.getSize();
+        // 设置排序规则
+        SortOrder sortOrder = DESC;
+        if (StringUtils.isNotEmpty(logQuery.getSortOrder()) && logQuery.getSortOrder().equals(ASC.toString())){
+            sortOrder = ASC;
+        }
         SortBuilder sortBuilder = SortBuilders.fieldSort("@timestamp")
-                .order(SortOrder.DESC).unmappedType("integer");
+                .order(sortOrder).unmappedType("integer");
+
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.query(query).sort(sortBuilder).from((current - CommonConstant.NUM_ONE) * size).size(size).explain(true);
         SearchRequest request = multiIndexSearch(searchSourceBuilder, indexNameList);

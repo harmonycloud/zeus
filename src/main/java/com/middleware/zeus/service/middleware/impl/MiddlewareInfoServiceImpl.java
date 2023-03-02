@@ -76,6 +76,10 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     private MiddlewareClusterService middlewareClusterService;
     @Autowired
     private MiddlewareService middlewareService;
+    @Autowired
+    private RoleAuthorityService roleAuthorityService;
+    @Autowired
+    private UserRoleService  userRoleService;
 
     @Override
     public List<BeanMiddlewareInfo> list(Boolean all) {
@@ -445,29 +449,21 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
             List<Namespace> listRegisteredNamespace = clusterService.listRegisteredNamespace(cluster.getClusterId(), null);
             List<Middleware> middlewares;
             try{
-                middlewares = middlewareService.simpleList(cluster.getClusterId(), null, null, null);
+                middlewares = middlewareService.simpleList(cluster.getClusterId(), null, type, null);
             }catch (Exception e){
                 log.error("集群{}, 查询middleware失败", cluster.getClusterId());
                 return;
             }
             middlewares = middlewares.stream().filter(middleware -> listRegisteredNamespace.stream().anyMatch(ns ->middleware.getNamespace().equals(ns.getName()))).collect(Collectors.toList());
-            if (!middlewares.isEmpty()) {
-                middlewares = checkIsLvm(middlewares);
-            }
             if (middlewares.isEmpty()) {
                 return;
             }
-            if (StringUtils.isEmpty(keyword) && StringUtils.isEmpty(type)) {
+            if (StringUtils.isEmpty(keyword)) {
                 middlewareList.addAll(middlewares);
             } else {
-                if (StringUtils.isNotEmpty(keyword)) {
                     middlewareList.addAll(middlewares.stream()
                             .filter(middleware -> middleware.getType().equals(type) && middleware.getName().contains(keyword))
                             .collect(Collectors.toList()));
-                } else {
-                    middlewareList.addAll(middlewares.stream().filter(middleware -> middleware.getType().equals(type))
-                            .collect(Collectors.toList()));
-                }
             }
         });
         return middlewareList;
@@ -487,7 +483,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     }
 
     @Override
-    public Map<String, List<String>> version(String type, String chartVersion) {
+    public List<MiddlewareVersionDto> version(String type, String chartVersion) {
         BeanMiddlewareInfo mwInfo = get(type, chartVersion);
         String version = mwInfo.getVersion();
         if (StringUtils.isEmpty(version)) {
@@ -500,8 +496,17 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
             res = new TreeMap<>();
         }
         res.putAll(MiddlewareVersionUtil.convertVersion(version));
-        return res;
+
+        List<MiddlewareVersionDto> versionList = new ArrayList<>();
+        for (String key : res.keySet()){
+            MiddlewareVersionDto versionDto = new MiddlewareVersionDto();
+            versionDto.setMasterVersion(key);
+            versionDto.setSlaveVersion(res.get(key));
+            versionList.add(versionDto);
+        }
+        return versionList;
     }
+
 
     @Override
     public List<BeanMiddlewareInfo> listInstalledByClusters(List<MiddlewareClusterDTO> clusterList) {
@@ -513,6 +518,20 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         List<MiddlewareClusterDTO> clusterDTOS = new ArrayList<>();
         clusterDTOS.add(clusterDTO);
         return middlewareInfoMapper.listInstalledWithMiddlewareDetail(clusterDTOS);
+    }
+
+    @Override
+    public List<MiddlewareInfoDTO> listUsersOperator(String clusterId) {
+        List<MiddlewareInfoDTO> infoDTOList = list(clusterId);
+        String username = CurrentUserRepository.getUser().getUsername();
+        String projectId = RequestUtil.getProjectId();
+        BeanUserRole beanUserRole = userRoleService.get(username, projectId);
+        // 因为超级管理员在项目下没有角色信息，所以超级管理员可以查看所有中间件的备份任务
+        if (beanUserRole == null) {
+            return infoDTOList;
+        }
+        Set<String> middlewareSet = roleAuthorityService.listOpsMiddleware(beanUserRole.getRoleId());
+        return infoDTOList.stream().filter(middlewareInfoDTO -> middlewareSet.contains(middlewareInfoDTO.getChartName())).collect(Collectors.toList());
     }
 
     public void compareChartVersion(List<BeanMiddlewareInfo> mwInfoList){

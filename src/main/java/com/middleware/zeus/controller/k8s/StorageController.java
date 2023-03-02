@@ -1,9 +1,10 @@
 package com.middleware.zeus.controller.k8s;
 
 import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.QuotaBase;
 import com.middleware.caas.common.model.StorageDto;
-import com.middleware.zeus.service.k8s.StorageService;
 import com.middleware.caas.common.model.middleware.MiddlewareStorageInfoDto;
+import com.middleware.zeus.service.k8s.StorageService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author xutianhong
@@ -68,25 +70,25 @@ public class StorageController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "storageName", value = "存储名称", paramType = "query", dataTypeClass = String.class)
     })
-    @DeleteMapping("/{storageName}")
+    @DeleteMapping("/{aliasName}")
     public BaseResult delete(@PathVariable("clusterId") String clusterId,
-                             @PathVariable("storageName") String storageName) {
-        storageService.delete(clusterId, storageName);
+                             @PathVariable("aliasName") String aliasName) {
+        storageService.delete(clusterId, aliasName);
         return BaseResult.ok();
     }
 
     @ApiOperation(value = "更新存储信息", notes = "更新存储信息")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "storageName", value = "存储名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "aliasName", value = "存储中文名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "storageDto", value = "存储业务对象", paramType = "query", dataTypeClass = StorageDto.class)
     })
-    @PutMapping("/{storageName}")
+    @PutMapping("/{aliasName}")
     public BaseResult update(@PathVariable("clusterId") String clusterId,
-                             @PathVariable("storageName") String storageName,
+                             @PathVariable("aliasName") String aliasName,
                              @RequestBody StorageDto storageDto) {
         storageDto.setClusterId(clusterId);
-        storageDto.setName(storageName);
+        storageDto.setAliasName(aliasName);
         storageService.addOrUpdate(storageDto);
         return BaseResult.ok();
     }
@@ -97,9 +99,9 @@ public class StorageController {
             @ApiImplicitParam(name = "storageName", value = "存储名称", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/{storageName}")
-    public BaseResult<StorageDto> detail(@PathVariable("clusterId") String clusterId,
+    public BaseResult<StorageDto> get(@PathVariable("clusterId") String clusterId,
                                          @PathVariable("storageName") String storageName) {
-        return BaseResult.ok(storageService.detail(clusterId, storageName));
+        return BaseResult.ok(storageService.get(clusterId, storageName));
     }
 
     @ApiOperation(value = "获取中间件存储使用情况", notes = "获取中间件存储使用情况")
@@ -111,6 +113,15 @@ public class StorageController {
     public BaseResult<List<MiddlewareStorageInfoDto>> middlewares(@PathVariable("clusterId") String clusterId,
                                                                   @PathVariable("storageName") String storageName) {
         return BaseResult.ok(storageService.middlewares(clusterId, storageName));
+    }
+
+    @ApiOperation(value = "获取存储资源", notes = "获取存储资源")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+    })
+    @GetMapping("/monitor")
+    public BaseResult<Map<String, Map<String, QuotaBase>>> monitor(@PathVariable("clusterId") String clusterId) {
+        return BaseResult.ok(storageService.monitorStorageQuota(clusterId));
     }
 
 }

@@ -8,7 +8,7 @@ import com.middleware.zeus.bean.BeanMysqlDbPriv;
  */
 public interface MysqlDbPrivService {
 
-    BeanMysqlDbPriv select(String mysqlQualifiedName, String user,String db);
+    BeanMysqlDbPriv select(String mysqlQualifiedName, String user, String db);
 
     void createOrUpdate(BeanMysqlDbPriv beanMysqlDbPriv);
 

@@ -1,7 +1,8 @@
 package com.middleware.zeus.service.middleware;
 
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.caas.common.model.middleware.MysqlLogDTO;
-import com.middleware.caas.common.model.middleware.MysqlLogQuery;
+import com.middleware.caas.common.model.middleware.MiddlewareLogQuery;
 import com.middleware.tool.page.PageObject;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -57,7 +58,7 @@ public interface EsService {
      */
     boolean deleteIndex(String indexName, String clusterId) throws Exception;
 
-    PageObject<MysqlLogDTO> getSlowSql(String clusterId, MysqlLogQuery slowLogQuery) throws Exception;
+    PageObject<MysqlLogDTO> getSlowSql(MiddlewareClusterDTO cluster, MiddlewareLogQuery slowLogQuery) throws Exception;
 
     /**
      * 校验es

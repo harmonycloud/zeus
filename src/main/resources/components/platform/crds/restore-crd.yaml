@@ -1,251 +1,357 @@
+
+---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.1
+  creationTimestamp: null
   name: middlewarerestores.harmonycloud.cn
 spec:
-  conversion:
-    strategy: None
   group: harmonycloud.cn
   names:
     kind: MiddlewareRestore
     listKind: MiddlewareRestoreList
     plural: middlewarerestores
-    singular: middlewarerestore
     shortNames:
-      - rst
+    - restore
+    singular: middlewarerestore
   scope: Namespaced
   versions:
-    - name: v1
-      schema:
-        openAPIV3Schema:
-          description: MiddlewareBackup is the Schema for the middlewarebackups API
-          properties:
-            apiVersion:
-              description: 'APIVersion defines the versioned schema of this representation
+  - additionalPrinterColumns:
+    - jsonPath: .spec.type
+      name: middleware-type
+      type: string
+    - jsonPath: .spec.name
+      name: middleware-name
+      type: string
+    - jsonPath: .status.phase
+      name: phase
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: createtime
+      type: string
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: MiddlewareRestore is the Schema for the MiddlewareRestores API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
               of an object. Servers should convert recognized schemas to the latest
               internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-              type: string
-            kind:
-              description: 'Kind is a string value representing the REST resource this
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
               object represents. Servers may infer this from the endpoint the client
               submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-              type: string
-            metadata:
-              type: object
-            spec:
-              description: MiddlewareRestoreSpec defines the desired state of MiddlewareRestore
-              properties:
-                name:
-                  type: string
-                type:
-                  type: string
-                backupDestination:
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: MiddlewareRestoreSpec defines the desired state of MiddlewareRestore
+            properties:
+              backupDestination:
+                properties:
+                  destinationType:
+                    type: string
+                  parameters:
+                    properties:
+                      backupPassword:
+                        type: string
+                      bucket:
+                        type: string
+                      bucketSubPath:
+                        type: string
+                      url:
+                        type: string
+                      userId:
+                        type: string
+                      userKey:
+                        type: string
+                    type: object
+                type: object
+              backupName:
+                type: string
+              customRestores:
+                items:
                   properties:
-                    destinationType:
+                    args:
+                      items:
+                        type: string
+                      type: array
+                    commonPathRestoreObjects:
+                      items:
+                        properties:
+                          backupPodName:
+                            type: string
+                          nodeName:
+                            type: string
+                          pvcObjects:
+                            items:
+                              properties:
+                                excludeFiles:
+                                  type: string
+                                mountPath:
+                                  description: 挂载目录
+                                  type: string
+                                paths:
+                                  type: string
+                                pvc:
+                                  type: string
+                              type: object
+                            type: array
+                          restorePodName:
+                            type: string
+                        type: object
+                      type: array
+                    env:
+                      items:
+                        description: EnvVar represents an environment variable present
+                          in a Container.
+                        properties:
+                          name:
+                            description: Name of the environment variable. Must be
+                              a C_IDENTIFIER.
+                            type: string
+                          value:
+                            description: 'Variable references $(VAR_NAME) are expanded
+                              using the previous defined environment variables in
+                              the container and any service environment variables.
+                              If a variable cannot be resolved, the reference in the
+                              input string will be unchanged. The $(VAR_NAME) syntax
+                              can be escaped with a double $$, ie: $$(VAR_NAME). Escaped
+                              references will never be expanded, regardless of whether
+                              the variable exists or not. Defaults to "".'
+                            type: string
+                          valueFrom:
+                            description: Source for the environment variable's value.
+                              Cannot be used if value is not empty.
+                            properties:
+                              configMapKeyRef:
+                                description: Selects a key of a ConfigMap.
+                                properties:
+                                  key:
+                                    description: The key to select.
+                                    type: string
+                                  name:
+                                    description: 'Name of the referent. More info:
+                                      https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                      TODO: Add other useful fields. apiVersion, kind,
+                                      uid?'
+                                    type: string
+                                  optional:
+                                    description: Specify whether the ConfigMap or
+                                      its key must be defined
+                                    type: boolean
+                                required:
+                                - key
+                                type: object
+                              fieldRef:
+                                description: 'Selects a field of the pod: supports
+                                  metadata.name, metadata.namespace, `metadata.labels[''<KEY>'']`,
+                                  `metadata.annotations[''<KEY>'']`, spec.nodeName,
+                                  spec.serviceAccountName, status.hostIP, status.podIP,
+                                  status.podIPs.'
+                                properties:
+                                  apiVersion:
+                                    description: Version of the schema the FieldPath
+                                      is written in terms of, defaults to "v1".
+                                    type: string
+                                  fieldPath:
+                                    description: Path of the field to select in the
+                                      specified API version.
+                                    type: string
+                                required:
+                                - fieldPath
+                                type: object
+                              resourceFieldRef:
+                                description: 'Selects a resource of the container:
+                                  only resources limits and requests (limits.cpu,
+                                  limits.memory, limits.ephemeral-storage, requests.cpu,
+                                  requests.memory and requests.ephemeral-storage)
+                                  are currently supported.'
+                                properties:
+                                  containerName:
+                                    description: 'Container name: required for volumes,
+                                      optional for env vars'
+                                    type: string
+                                  divisor:
+                                    anyOf:
+                                    - type: integer
+                                    - type: string
+                                    description: Specifies the output format of the
+                                      exposed resources, defaults to "1"
+                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                    x-kubernetes-int-or-string: true
+                                  resource:
+                                    description: 'Required: resource to select'
+                                    type: string
+                                required:
+                                - resource
+                                type: object
+                              secretKeyRef:
+                                description: Selects a key of a secret in the pod's
+                                  namespace
+                                properties:
+                                  key:
+                                    description: The key of the secret to select from.  Must
+                                      be a valid secret key.
+                                    type: string
+                                  name:
+                                    description: 'Name of the referent. More info:
+                                      https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                      TODO: Add other useful fields. apiVersion, kind,
+                                      uid?'
+                                    type: string
+                                  optional:
+                                    description: Specify whether the Secret or its
+                                      key must be defined
+                                    type: boolean
+                                required:
+                                - key
+                                type: object
+                            type: object
+                        required:
+                        - name
+                        type: object
+                      type: array
+                    image:
                       type: string
-                    parameters:
+                    middlewareClusterGvrObject:
                       properties:
-                        bucket:
+                        group:
                           type: string
-                        url:
+                        resource:
                           type: string
-                        bucketSubPath:
-                          type: string
-                        userId:
-                          type: string
-                        userKey:
-                          type: string
-                        backupPassword:
+                        version:
                           type: string
                       type: object
+                    replicasFieldNames:
+                      items:
+                        type: string
+                      type: array
+                    restoreObject:
+                      properties:
+                        pod:
+                          type: string
+                        pvcs:
+                          items:
+                            type: string
+                          type: array
+                      type: object
                   type: object
-                backupName:
-                  type: string
-                restoreObjects:
-                  items:
-                    properties:
-                      pod:
-                        type: string
-                      pvc:
-                        type: string
-                      volumeSnapshot:
-                        type: string
-                    type: object
-                  type: array
-                customRestores:
-                  items:
-                    properties:
-                      restoreObject:
+                type: array
+              name:
+                type: string
+              restoreObjects:
+                description: "MiddlewarePods []string          `json:\"pods,omitempty\"
+                  yaml:\"pods,omitempty\" validate:\"omitempty\"` \tRestoreBind    map[string]string
+                  `json:\"restoreBind\" yaml:\"restoreBind,omitempty\"`"
+                items:
+                  properties:
+                    pod:
+                      type: string
+                    pvc:
+                      type: string
+                    volumeSnapshot:
+                      type: string
+                  type: object
+                type: array
+              stsName:
+                type: string
+              type:
+                type: string
+            required:
+            - name
+            type: object
+          status:
+            description: MiddlewareStatus defines the observed state of Middleware
+            properties:
+              creationTimestamp:
+                format: date-time
+                type: string
+              middlewareClusterReplicasObjects:
+                items:
+                  properties:
+                    replicas:
+                      format: int32
+                      type: integer
+                    replicasFieldName:
+                      type: string
+                  type: object
+                type: array
+              phase:
+                type: string
+              podKinds:
+                items:
+                  properties:
+                    ownerKind:
+                      type: string
+                    ownerName:
+                      type: string
+                    replicas:
+                      format: int32
+                      type: integer
+                  type: object
+                type: array
+              reason:
+                type: string
+              records:
+                items:
+                  properties:
+                    creationTimestamp:
+                      format: date-time
+                      type: string
+                  type: object
+                type: array
+              restoreResults:
+                items:
+                  description: MiddlewareRestoreResultSpec defines the desired state
+                    of MiddlewareRestoreResult
+                  properties:
+                    creationTimestamp:
+                      format: date-time
+                      type: string
+                    pod:
+                      type: string
+                    pvc:
+                      type: string
+                    snapshotResults:
+                      items:
                         properties:
+                          backupId:
+                            type: string
+                          creationTimestamp:
+                            format: date-time
+                            type: string
+                          path:
+                            type: string
                           pod:
                             type: string
-                          pvcs:
-                            items:
-                              type: string
-                            type: array
-                        type: object
-                      replicasFieldNames:
-                        items:
-                          type: string
-                        type: array
-                      middlewareClusterGvrObject:
-                        properties:
-                          group:
+                          pvc:
                             type: string
-                          version:
+                          repository:
                             type: string
-                          resource:
+                          size:
                             type: string
                         type: object
-                      commonPathRestoreObjects:
-                        items:
-                          properties:
-                            backupPodName:
-                              type: string
-                            restorePodName:
-                              type: string
-                            nodeName:
-                              type: string
-                            pvcObjects:
-                              items:
-                                properties:
-                                  pvc:
-                                    type: string
-                                  paths:
-                                    type: string
-                                  excludeFiles:
-                                    type: string
-                                type: object
-                              type: array
-                          type: object
-                        type: array
-                      image:
-                        type: string
-                      args:
-                        items:
-                          type: string
-                        type: array
-                      env:
-                        items:
-                          properties:
-                            name:
-                              type: string
-                            value:
-                              type: string
-                          type: object
-                        type: array
-                    type: object
-                  type: array
-              type: object
-            status:
-              description: MiddlewareBackupStatus defines the observed state of MiddlewareBackup
-              properties:
-                creationTimestamp:
-                  format: date-time
-                  type: string
-                #                records:
-                #                  description: MiddlewareBackupRecords defines the observed state of MiddlewareBackupStatus
-                #                  items:
-                #                    properties:
-                #                      creationTimestamp:
-                #                        format: date-time
-                #                        type: string
-                #                      details:
-                #                        items:
-                #                          properties:
-                #                            name:
-                #                              type: string
-                #                            pod:
-                #                              type: string
-                #                            pvc:
-                #                              type: string
-                #                            volumeSnapshot:
-                #                              type: string
-                #                            phase:
-                #                              type: string
-                #                            reason:
-                #                              type: string
-                #                          type: object
-                #                        type: array
-                #                    type: object
-                #                  type: array
-                phase:
-                  type: string
-                reason:
-                  type: string
-                restoreResults:
-                  items:
-                    properties:
-                      creationTimestamp:
-                        format: date-time
-                        type: string
-                      snapshotResults:
-                        items:
-                          properties:
-                            backupId:
-                              type: string
-                            pod:
-                              type: string
-                            pvc:
-                              type: string
-                            path:
-                              type: string
-                            repository:
-                              type: string
-                            size:
-                              type: string
-                            creationTimestamp:
-                              format: date-time
-                              type: string
-                          type: object
-                        type: array
-                    type: object
-                  type: array
-                podKinds:
-                  items:
-                    properties:
-                      creationTimestamp:
-                        format: date-time
-                        type: string
-                      ownerKind:
-                        type: string
-                      ownerName:
-                        type: string
-                      replicas:
-                        format: int32
-                        type: integer
-                    type: object
-                  type: array
-                middlewareClusterReplicasObjects:
-                  items:
-                    properties:
-                      creationTimestamp:
-                        format: date-time
-                        type: string
-                      replicasFieldName:
-                        type: string
-                      replicas:
-                        format: int32
-                        type: integer
-                    type: object
-                  type: array
-                records:
-                  items:
-                    properties:
-                      creationTimestamp:
-                        format: date-time
-                        type: string
-                      pod:
-                        type: string
-                      pvc:
-                        type: string
-                      name:
-                        type: string
-                    type: object
-                  type: array
-              type: object
-          type: object
-      served: true
-      storage: true
-      subresources:
-        status: { }
+                      type: array
+                    type:
+                      type: string
+                  required:
+                  - type
+                  type: object
+                type: array
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

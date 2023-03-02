@@ -3,10 +3,7 @@ package com.middleware.zeus.controller.k8s;
 import com.middleware.caas.common.model.Node;
 import com.middleware.zeus.service.k8s.NodeService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.middleware.caas.common.base.BaseResult;
 
@@ -36,6 +33,17 @@ public class NodeController {
     @GetMapping
     public BaseResult<List<Node>> list(@PathVariable("clusterId") String clusterId) {
         return BaseResult.ok(nodeService.list(clusterId));
+    }
+
+    @ApiOperation(value = "查询可用区节点列表", notes = "查询可用区节点列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "zone", value = "可用区", paramType = "path", dataTypeClass = String.class)
+    })
+    @GetMapping("/zone")
+    public BaseResult<List<Node>> listActive(@PathVariable("clusterId") String clusterId,
+                                             @RequestParam(value = "zone", required = false) String zone) {
+        return BaseResult.ok(nodeService.listActive(clusterId, zone));
     }
 
     @ApiOperation(value = "获取可分配可用区的节点", notes = "获取可分配可用区的节点")

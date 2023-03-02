@@ -3,14 +3,17 @@ package com.middleware.zeus.controller.middleware;
 import com.middleware.caas.common.base.BaseResult;
 import com.middleware.caas.common.model.MiddlewareBackupDTO;
 import com.middleware.caas.common.model.MiddlewareIncBackupDto;
+import com.middleware.caas.common.model.MiddlewareTaskDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareBackupRecordGroup;
 import com.middleware.caas.common.util.ThreadPoolExecutorFactory;
 import com.middleware.zeus.annotation.Authority;
-import com.middleware.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
+import com.middleware.zeus.service.middleware.MiddlewareBackupService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -22,8 +25,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/backup")
 public class MiddlewareBackupController {
 
+    @Qualifier("middlewareBackupServiceImpl")
     @Autowired
-    private MiddlewareBackupServiceImpl middlewareBackupService;
+    private MiddlewareBackupService middlewareBackupService;
 
     @ApiOperation(value = "创建全量备份", notes = "创建备份")
     @ApiImplicitParams({
@@ -76,17 +80,49 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "keyword", value = "关键词", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping
     @Authority(power = 1)
-    public BaseResult listRecord(@PathVariable("clusterId") String clusterId,
-                                 @PathVariable("namespace") String namespace,
-                                 @RequestParam(value = "type", required = false) String type,
-                                 @RequestParam(value = "middlewareName", required = false) String middlewareName,
-                                 @RequestParam(value = "keyword", required = false) String keyword) {
-        return BaseResult.ok(middlewareBackupService.backupTaskList(clusterId, namespace, middlewareName, type, keyword));
+    public BaseResult<List<MiddlewareBackupRecordGroup>> listRecord(@PathVariable("clusterId") String clusterId,
+                                                                    @PathVariable("namespace") String namespace,
+                                                                    @RequestParam(value = "projectId", required = false) String projectId,
+                                                                    @RequestParam(value = "type", required = false) String type,
+                                                                    @RequestParam(value = "middlewareName", required = false) String middlewareName,
+                                                                    @RequestParam(value = "keyword", required = false) String keyword) {
+        return BaseResult.ok(middlewareBackupService.backupTaskGroupList(clusterId, namespace, middlewareName, projectId, type, keyword));
+    }
+
+    @ApiOperation(value = "查询备份任务详情", notes = "查询备份任务详情")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupName", value = "备份任务名称", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupMode", value = "备份任务类型", paramType = "query", dataTypeClass = String.class)
+    })
+    @GetMapping("/detail")
+    public BaseResult<List<MiddlewareBackupRecordGroup>> get(@PathVariable("clusterId") String clusterId,
+                                                             @PathVariable("namespace") String namespace,
+                                                             @RequestParam("backupName") String backupName,
+                                                             @RequestParam("backupMode") String backupMode) {
+        return BaseResult.ok(middlewareBackupService.getBackup(clusterId, namespace, backupName, backupMode));
+    }
+
+    @ApiOperation(value = "检查中间件是否已创建周期备份", notes = "检查中间件是否已创建周期备份")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class)
+    })
+    @GetMapping("/checkSchedule")
+    public BaseResult checkSchedule(@PathVariable("clusterId") String clusterId,
+                                    @PathVariable("namespace") String namespace,
+                                    @RequestParam("type") String type,
+                                    @RequestParam("middlewareName") String middlewareName) {
+        return BaseResult.ok(middlewareBackupService.checkSchedule(clusterId, namespace, type, middlewareName));
     }
 
     @ApiOperation(value = "查询增量备份信息", notes = "查询增量备份信息")
@@ -107,20 +143,15 @@ public class MiddlewareBackupController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "backupName", value = "备份规则名称", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "backupId", value = "备份任务ID", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "schedule", value = "schedule", paramType = "query", dataTypeClass = Boolean.class)
+            @ApiImplicitParam(name = "taskDTO", value = "备份任务信息", paramType = "query", dataTypeClass = Boolean.class)
     })
     @DeleteMapping
     @Authority(power = 1)
     public BaseResult deleteSchedule(@PathVariable("clusterId") String clusterId,
                                      @PathVariable("namespace") String namespace,
-                                     @RequestParam("type") String type,
-                                     @RequestParam("backupName") String backupName,
-                                     @RequestParam(value = "backupId", required = false) String backupId,
-                                     @RequestParam("schedule") Boolean schedule){
-        middlewareBackupService.deleteBackUpTask(clusterId, namespace, type, backupName, backupId, schedule);
+                                     @RequestBody MiddlewareTaskDTO taskDTO){
+        taskDTO.setClusterId(clusterId).setNamespace(namespace);
+        middlewareBackupService.deleteBackUpTask(taskDTO);
         return BaseResult.ok();
     }
 
@@ -169,7 +200,7 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "backupName", value = "备份记录名称", paramType = "query", dataTypeClass = String.class),
     })
     @PostMapping("/restore")
-    @Authority(power = 1)
+    @Authority(power = 2)
     public BaseResult createRestore(@PathVariable("clusterId") String clusterId,
                                     @PathVariable("namespace") String namespace,
                                     @RequestParam("type") String type,

@@ -1,5 +1,6 @@
 package com.middleware.zeus.service.middleware;
 
+import com.middleware.caas.common.model.MiddlewareVersionDto;
 import com.middleware.caas.common.model.middleware.Middleware;
 import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.caas.common.model.middleware.MiddlewareInfoDTO;
@@ -9,7 +10,6 @@ import com.middleware.zeus.bean.BeanMiddlewareInfo;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author dengyulong
@@ -136,7 +136,16 @@ public interface MiddlewareInfoService {
      * 查询指定中间件发布时可指定版本
      *
      * @param type 类型
-     * @return Map<String, List<String>>
+     * @param chartVersion 中间件chart版本
+     * @return List<MiddlewareVersionDto>
      */
-    Map<String, List<String>> version(String type, String chartVersion);
+    List<MiddlewareVersionDto> version(String type, String chartVersion);
+
+    /**
+     * 查询用户在指定项目下可见的operator
+     * @param clusterId
+     * @return
+     */
+    List<MiddlewareInfoDTO> listUsersOperator(String clusterId);
+
 }

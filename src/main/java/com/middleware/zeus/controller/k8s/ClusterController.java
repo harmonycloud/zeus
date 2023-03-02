@@ -197,6 +197,17 @@ public class ClusterController {
         return BaseResult.ok(clusterService.monitoring(clusterId));
     }
 
+    @ApiOperation(value = "查询集群下资源配额情况", notes = "查询集群下资源配额情况")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "allocatable", value = "是否查询可分配资源", paramType = "query", dataTypeClass = Boolean.class),
+    })
+    @GetMapping("/{clusterId}/quota")
+    public BaseResult getResourceQuotaInfo(@PathVariable("clusterId") String clusterId,
+                                           @RequestParam("allocatable") Boolean allocatable){
+        return BaseResult.ok(clusterService.getResourceQuotaInfo(clusterId, allocatable));
+    }
+
     /**
      ffx     * 数据脱敏
      */

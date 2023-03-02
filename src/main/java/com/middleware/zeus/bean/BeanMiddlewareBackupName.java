@@ -47,4 +47,10 @@ public class BeanMiddlewareBackupName {
     @TableField(value = "cluster_id")
     private String clusterId;
 
+    /**
+     * 备份位置id
+     */
+    @TableField(value = "position_id")
+    private Integer positionId;
+
 }

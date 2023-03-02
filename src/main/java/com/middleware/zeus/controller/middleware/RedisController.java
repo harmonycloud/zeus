@@ -126,4 +126,5 @@ public class RedisController {
                                 @RequestParam(value = "mode") String mode){
         return BaseResult.ok(redisService.burstList(clusterId, namespace, middlewareName, mode));
     }
+
 }

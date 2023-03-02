@@ -158,7 +158,7 @@ public class RoleServiceImpl implements RoleService {
         }
         // 过滤是否开启灾备服务
         if (!Boolean.parseBoolean(disasterEnable)) {
-            list = list.stream().filter(menuDto -> menuDto.getId() != Integer.parseInt(disasterMenuId))
+            list = list.stream().filter(menuDto -> menuDto.getResourceMenuId() != Integer.parseInt(disasterMenuId))
                 .collect(Collectors.toList());
         }
         List<Integer> ids = list.stream().map(BeanResourceMenuRole::getResourceMenuId).collect(Collectors.toList());
@@ -185,7 +185,6 @@ public class RoleServiceImpl implements RoleService {
             }
         }
     }
-
 
     /**
      * 校验角色名是否存在

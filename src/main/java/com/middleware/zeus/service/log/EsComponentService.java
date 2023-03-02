@@ -1,7 +1,8 @@
 package com.middleware.zeus.service.log;
 
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.caas.common.model.middleware.MysqlLogDTO;
-import com.middleware.caas.common.model.middleware.MysqlLogQuery;
+import com.middleware.caas.common.model.middleware.MiddlewareLogQuery;
 import com.middleware.tool.page.PageObject;
 import com.middleware.zeus.bean.BeanOperationAudit;
 import org.elasticsearch.action.index.IndexResponse;
@@ -16,7 +17,7 @@ public interface EsComponentService {
      * @param cluster 集群信息
      * @return
      */
-    RestHighLevelClient getEsClient(String clusterId) throws Exception;
+    RestHighLevelClient getEsClient(MiddlewareClusterDTO cluster) throws Exception;
 
     /**
      * 重置es客户端（集群信息修改，需要重置）
@@ -24,14 +25,14 @@ public interface EsComponentService {
      * @param cluster 集群信息
      * @return
      */
-    RestHighLevelClient resetEsClient(String clusterId);
+    RestHighLevelClient resetEsClient(MiddlewareClusterDTO cluster);
 
     /**
      * 获取低水平客户端
      *
      * @return
      */
-    RestClient getLowLevelClient(String clusterId);
+    RestClient getLowLevelClient(MiddlewareClusterDTO cluster);
 
     /**
      * 判断某个集群的es组件是否已经存在索引
@@ -41,7 +42,7 @@ public interface EsComponentService {
      * @return
      * @throws Exception
      */
-    boolean isExistIndex(String indexName, String clusterId) throws Exception;
+    boolean isExistIndex(String indexName, MiddlewareClusterDTO cluster) throws Exception;
 
     /**
      * 删除索引
@@ -51,11 +52,11 @@ public interface EsComponentService {
      * @return
      * @throws Exception
      */
-    boolean deleteIndex(String indexName, String clusterId) throws Exception;
+    boolean deleteIndex(String indexName, MiddlewareClusterDTO cluster) throws Exception;
 
-    PageObject<MysqlLogDTO> getSlowSql(String clusterId, MysqlLogQuery slowLogQuery) throws Exception;
+    PageObject<MysqlLogDTO> getSlowSql(MiddlewareClusterDTO cluster, MiddlewareLogQuery slowLogQuery) throws Exception;
 
-    PageObject<MysqlLogDTO> getAuditSql(String clusterId, MysqlLogQuery auditLogQuery) throws Exception;
+    PageObject<MysqlLogDTO> getAuditSql(MiddlewareClusterDTO cluster, MiddlewareLogQuery auditLogQuery) throws Exception;
 
     /**
      * 校验es
@@ -63,9 +64,9 @@ public interface EsComponentService {
      * @param cluster 集群信息
      * @return
      */
-    Boolean checkEsConnection(String clusterId);
+    Boolean checkEsConnection(MiddlewareClusterDTO cluster);
 
-    String resultByGetRestClient(RestHighLevelClient client, String clusterId, String endPoint) throws Exception;
+    String resultByGetRestClient(RestHighLevelClient client, MiddlewareClusterDTO cluster, String endPoint) throws Exception;
 
     IndexResponse saveAuditRepository(BeanOperationAudit beanRequest, String clusterId);
 }

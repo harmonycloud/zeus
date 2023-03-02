@@ -2,6 +2,7 @@ package com.middleware.zeus.service.k8s;
 
 import com.middleware.caas.common.model.ClusterNodeResourceDto;
 import com.middleware.caas.common.model.Node;
+import com.middleware.caas.common.model.ResourceQuotaDo;
 import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
 
 import java.util.List;
@@ -20,6 +21,13 @@ public interface NodeService {
      * @return
      */
     List<Node> list(String clusterId);
+
+    /**
+     * 随机获取一个节点正常的node的ip
+     * @param clusterId
+     * @return
+     */
+    String getAvailableNodeIP(String clusterId);
 
     /**
      * 查询节点列表
@@ -60,6 +68,13 @@ public interface NodeService {
     List<Node> convertToDto(List<io.fabric8.kubernetes.api.model.Node> nodes);
 
     /**
+     * 封装node普通信息
+     * @param nodes 节点k8s对象
+     * @return nodeList
+     */
+    List<Node> simpleConvertToDto(List<io.fabric8.kubernetes.api.model.Node> nodes);
+
+    /**
      * 查询节点资源
      * @param clusterId 集群id
      * @param nodes 节点列表
@@ -84,4 +99,19 @@ public interface NodeService {
      */
     String getNodeIp(String clusterId);
 
+    /**
+     * 查询节点资源配额
+     *
+     * @param clusterId 集群id
+     * @return ResourceQuotaDo
+     */
+    ResourceQuotaDo getResourceQuota(String clusterId);
+
+    /**
+     * 查询可用区下节点列表
+     * @param clusterId 集群id
+     * @param zone 可用区
+     * @return
+     */
+    List<Node> listActive(String clusterId, String zone);
 }

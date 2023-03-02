@@ -1,9 +1,8 @@
 package com.middleware.zeus.service.middleware;
 
-import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.ActiveAreaAnnotationDto;
 import com.middleware.caas.common.model.middleware.*;
-import com.middleware.zeus.integration.cluster.bean.MiddlewareInfo;
 
 import java.util.List;
 
@@ -22,7 +21,7 @@ public interface MiddlewareService {
      * @param projectId 项目id
      * @return
      */
-    List<MiddlewareBriefInfoDTO> list(String clusterId, String namespace,String type, String keyword, String projectId) throws Exception;
+    List<MiddlewareBriefInfoDTO> list(String clusterId, String namespace, String type, String keyword, String projectId) throws Exception;
 
     /**
      * 查询中间件列表
@@ -103,8 +102,9 @@ public interface MiddlewareService {
      * @param type      中间件类型
      * @param slaveName 从节点名称
      * @param isAuto    是否自动切换
+     * @param chartVersion chart包版本
      */
-    void switchMiddleware(String clusterId, String namespace, String name, String type, String slaveName, Boolean isAuto);
+    SwitchInfo switchMiddleware(String clusterId, String namespace, String name, String type, String slaveName, Boolean isAuto, String chartVersion);
 
     /**
      * 性能监控
@@ -210,6 +210,23 @@ public interface MiddlewareService {
      * @return
      */
     String middlewareImage(String type, String version);
+
+    /**
+     * 获取指定可用区双活注解
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param middlewareName
+     * @return
+     */
+    ActiveAreaAnnotationDto getActiveAreaAnnotation(String clusterId, String namespace, String type, String middlewareName);
+
+    /**
+     * 中间件分区配额校验
+     * @param middleware 中间件对象
+     * @return
+     */
+    Boolean middlewareResourceCheck(Middleware middleware);
 
     /**
      * 计算中间件cpu申请使用量

@@ -29,4 +29,11 @@ public interface OperationAuditService {
      * @return
      */
     List<BeanOperationAudit> listRecent(Integer num);
+
+    /**
+     * 查询操作审计详情
+     * @param id
+     * @return
+     */
+    BeanOperationAudit get(Integer id);
 }

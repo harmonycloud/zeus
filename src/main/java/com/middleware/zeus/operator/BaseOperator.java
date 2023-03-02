@@ -1,5 +1,6 @@
 package com.middleware.zeus.operator;
 
+import com.middleware.caas.common.model.ActiveAreaAnnotationDto;
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.model.middleware.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -101,7 +102,15 @@ public interface BaseOperator {
      *
      * @param middleware 中间件信息
      */
-    void switchMiddleware(Middleware middleware);
+    SwitchInfo switchMiddleware(Middleware middleware);
+
+    /**
+     * 指定从节点手动切换主从
+     *
+     * @param middleware 中间件信息
+     * @param slaveName 从节点名称
+     */
+    SwitchInfo switchMiddleware(Middleware middleware, String slaveName);
 
     /**
      * 指定从节点手动切换主从
@@ -162,6 +171,16 @@ public interface BaseOperator {
      */
     @Deprecated
     void updateConfigData(ConfigMap configMap, List<String> data);
+
+    /**
+     * 查询中间件指定可用区的双活备份annotation
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param middlewareName
+     * @return
+     */
+    ActiveAreaAnnotationDto getActiveAreaAnnotation(String clusterId, String namespace, String type, String middlewareName);
 
     /**
      * 查询中间件hostnetwork访问地址

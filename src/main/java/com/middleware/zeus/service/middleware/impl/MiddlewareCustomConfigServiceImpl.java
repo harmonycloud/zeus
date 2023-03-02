@@ -39,6 +39,8 @@ import com.middleware.zeus.dao.BeanMiddlewareParamTopMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.middleware.caas.common.constants.NameConstant.PROXY;
+import static com.middleware.caas.common.constants.NameConstant.SENTINEL;
 import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.ASCEND;
 
 /**
@@ -165,7 +167,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
 
     @Override
     public List<CustomConfigHistoryDTO> getCustomConfigHistory(String clusterId, String namespace,
-        String middlewareName, String type, String item, String startTime, String endTime) {
+                                                               String middlewareName, String type, String item, String startTime, String endTime) {
         // 查询数据库历史
         List<BeanCustomConfigHistory> beanCustomConfigHistoryList =
             customConfigHistoryService.get(clusterId, namespace, middlewareName);
@@ -179,11 +181,8 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         }
         // 过滤时间
         if (StringUtils.isNotEmpty(startTime) && StringUtils.isNotEmpty(endTime)) {
-            Date start = DateUtils.addInteger(DateUtils.parseDate(startTime, DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z),
-                Calendar.HOUR_OF_DAY, -8);
-            Date end = DateUtils.addInteger(DateUtils
-                .addInteger(DateUtils.parseDate(endTime, DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z), Calendar.DAY_OF_MONTH, 1),
-                Calendar.HOUR_OF_DAY, -8);
+            Date start = DateUtils.parseUTCDate(startTime);
+            Date end = DateUtils.parseUTCDate(endTime);
             beanCustomConfigHistoryList = beanCustomConfigHistoryList.stream()
                 .filter(beanCustomConfigHistory -> beanCustomConfigHistory.getDate().after(start)
                     && beanCustomConfigHistory.getDate().before(end))
@@ -293,6 +292,10 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
                     // 获取pod列表
                     Middleware middleware = podService.list(clusterId, namespace, middlewareName, type);
                     for (PodInfo podInfo : middleware.getPods()) {
+                        if (StringUtils.isNotEmpty(podInfo.getRole())
+                            && (podInfo.getRole().equals(SENTINEL) || podInfo.getRole().equals(PROXY))) {
+                            continue;
+                        }
                         Date date =
                             DateUtils.addInteger(DateUtils.parseDate(StringUtils.isEmpty(podInfo.getLastRestartTime())
                                 ? podInfo.getCreateTime() : podInfo.getLastRestartTime(),

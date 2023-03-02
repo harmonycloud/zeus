@@ -7,21 +7,20 @@ import java.util.*;
 
 import com.middleware.caas.common.constants.AlertConstant;
 import com.middleware.caas.common.model.AlertSettingDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.zeus.bean.DingRobotInfo;
 import com.middleware.zeus.bean.user.BeanUser;
 import com.middleware.zeus.dao.*;
+import com.middleware.zeus.dao.AlertRuleIdMapper;
 import com.middleware.zeus.dao.BeanAlertRecordMapper;
-import com.middleware.zeus.dao.BeanMailToUserMapper;
 import com.middleware.zeus.dao.DingRobotMapper;
 import com.middleware.zeus.dao.user.BeanUserMapper;
+import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.middleware.MiddlewareAlertsService;
-import com.middleware.zeus.dao.AlertRuleIdMapper;
-import com.middleware.zeus.service.middleware.impl.MiddlewareAlertsServiceImpl;
-import com.middleware.zeus.service.prometheus.PrometheusWebhookService;
-import com.middleware.zeus.service.user.DingRobotService;
-import com.middleware.zeus.service.user.MailService;
+import com.middleware.zeus.bean.BeanAlertRecord;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson.JSON;
@@ -33,9 +32,11 @@ import com.middleware.caas.common.constants.NameConstant;
 import com.middleware.caas.common.enums.DateUnitEnum;
 import com.middleware.caas.common.model.middleware.AlertInfoDto;
 import com.middleware.tool.date.DateUtils;
-import com.middleware.zeus.bean.BeanAlertRecord;
 import com.middleware.zeus.bean.AlertRuleId;
 import com.middleware.zeus.integration.cluster.AlertManagerWrapper;
+import com.middleware.zeus.service.prometheus.PrometheusWebhookService;
+import com.middleware.zeus.service.user.DingRobotService;
+import com.middleware.zeus.service.user.MailService;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
@@ -51,6 +52,9 @@ import javax.mail.MessagingException;
 @Slf4j
 public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
 
+    @Value("${system.alert.silent:1h}")
+    private String silentTime;
+
     @Autowired
     private BeanAlertRecordMapper beanAlertRecordMapper;
     @Autowired
@@ -60,17 +64,15 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
     @Autowired
     private AlertRuleIdMapper alertRuleIdMapper;
     @Autowired
-    private MiddlewareAlertsServiceImpl middlewareAlertsServiceImpl;
-    @Autowired
     private AlertManagerWrapper alertManagerWrapper;
-    @Autowired
-    private BeanMailToUserMapper beanMailToUserMapper;
     @Autowired
     private DingRobotMapper dingRobotMapper;
     @Autowired
     private BeanUserMapper beanUserMapper;
     @Autowired
     private MiddlewareAlertsService middlewareAlertsService;
+    @Autowired
+    private ClusterService clusterService;
 
     @Override
     public void alert(String json) throws Exception {
@@ -122,7 +124,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             String lay = beanAlertRecord.getLay();
             beanAlertRecordMapper.insert(beanAlertRecord);
             // 设置通道沉默时间
-            if (annotations.containsKey("silence") && StringUtils.isNotEmpty(clusterId)) {
+            if (StringUtils.isNotEmpty(clusterId)) {
                 setSilence(alert, clusterId);
             }
             if (ObjectUtils.isEmpty(alertInfo)) {

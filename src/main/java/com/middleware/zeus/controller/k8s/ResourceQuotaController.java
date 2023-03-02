@@ -1,11 +1,9 @@
 package com.middleware.zeus.controller.k8s;
 
+import com.middleware.caas.common.model.ResourceQuotaDo;
 import com.middleware.zeus.service.k8s.ResourceQuotaService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.middleware.caas.common.base.BaseResult;
 
@@ -29,12 +27,14 @@ public class ResourceQuotaController {
     @ApiOperation(value = "查询分区配额", notes = "查询分区配额")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "storageClass", value = "存储类型", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/{namespace}/quota")
-    public BaseResult list(@PathVariable("clusterId") String clusterId,
-                           @PathVariable("namespace") String namespace) {
-        return BaseResult.ok(resourceQuotaService.list(clusterId, namespace));
+    public BaseResult<ResourceQuotaDo> list(@PathVariable("clusterId") String clusterId,
+                                            @PathVariable("namespace") String namespace,
+                                            @RequestParam(value = "storageClass", required = false) String storageClass) {
+        return BaseResult.ok(resourceQuotaService.list(clusterId, namespace, storageClass));
     }
 
 }

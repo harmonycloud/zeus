@@ -1,0 +1,126 @@
+group: redis.middleware.hc.cn
+version: v1alpha1
+kind: RedisCluster
+resource: redisclusters
+
+isCommbakcup: true
+# 备份工具设置特定的环境变量
+backupTool: restic
+operatorImage:
+  "": {{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.common_path_backup.image }}:{{ .Values.global.middlewarebackup_controller.common_path_backup.tag }}
+
+
+######中间件中挂载信息############
+# 默认数据路径
+defaultDataPath: /data/redis/cluster.local/{NAMESPACE}/{NAME}/{POD_NAME}/data
+# 默认挂载路径
+defaultMountPath: /data/redis/cluster.local/{NAMESPACE}/{NAME}
+# pvc格式
+pvcFormat: redis-data-{POD_NAME}
+# 实例数量资源
+replicasFieldNames:
+- "replicas"
+
+envs:
+  TZ: "Asia/Shanghai"
+
+args:
+  excludeFiles: "*.conf"
+
+# 系统变量
+sysDynamicVariable:
+  partition:
+    default: "{POD_NAME}"
+    objectType: middleware
+    jsonPath: 'def GetClusterPartition($pod): .status as {conditions: $root}|.status.conditions[]|select(.name==$pod)|if .type=="master" then .slots else . as{masterNodeId: $masterNodeId} |$root|.[]|select(.nodeId==$masterNodeId)|.slots end; def GetSetinesPartition($pod): if  .spec.predixy==null then "0" else .status.conditions[]| select(.name==$pod)|.name end; if .spec.type=="cluster" then GetClusterPartition("{POD_NAME}") else GetSetinesPartition("{POD_NAME}") end'
+    regexp: "^.+-(\\d)-\\d$|((^[1-9]\\d+|0)-[1-9]\\d+$)|(^0$)"
+    scope: pod
+  replicas:
+    objectType: middleware
+    jsonPath: '.spec.replicas'
+    scope: pod
+
+
+# 备份变量
+backupDynamicVariable:
+  OPERATION_TYPE:
+    value: backup
+    type: env
+  clusterName:
+    jsonPath: .metadata.name
+    objectType: middleware
+    type: arg
+  namespace:
+    jsonPath: .metadata.namespace
+    type: arg
+  podName:
+    default: "{POD_NAME}"
+    scope: pod
+    type: arg
+  pvcName:
+    jsonPath: .spec.volumes[].persistentVolumeClaim.claimName
+    objectType: pod
+    type: arg
+    scope: pod
+  paths:
+    jsonPath: ".spec.customBackups[].commonPathBackupObjects[]|select(.pod==\"{POD_NAME}\")|.pvcObjects[].paths"
+    objectType: middlewarebackup
+    scope: pod
+    type: arg
+  clusterType:
+    jsonPath: .spec.type
+    objectType: middlewarebackup
+    type: arg
+
+
+# 恢复变量
+restoreDynamicVariable:
+  OPERATION_TYPE:
+    value: restore
+    type: env
+  paths:
+    jsonPath: '.spec.customRestores[].commonPathRestoreObjects[]|select(.restorePodName=="{POD_NAME}")|.pvcObjects[0].paths'
+    scope: pod
+    type: arg
+  restorePodName:
+    default: "{POD_NAME}"
+    type: arg
+    scope: pod
+  backupPodName:
+    jsonPath: '.spec.customRestores[].commonPathRestoreObjects[]|select(.restorePodName=="{POD_NAME}")|.backupPodName'
+    type: arg
+    scope: pod
+  podName:
+    default: "{POD_NAME}"
+    type: arg
+    scope: pod
+  pvcName:
+    jsonPath: '.spec.customRestores[].commonPathRestoreObjects[]|select(.restorePodName=="{POD_NAME}")|.pvcObjects[0].pvc'
+    type: arg
+    scope: pod
+  clusterType:
+    jsonPath: .spec.type
+    type: arg
+    scope: pod
+  namespace:
+    jsonPath: .metadata.namespace
+    type: arg
+  backupNamespace:
+    jsonPath: .metadata.namespace
+    type: arg
+  restoreNamespace:
+    jsonPath: .metadata.namespace
+    type: arg
+  clusterName:
+    jsonPath: .spec.name
+    type: arg
+
+# pod选择器
+defaultSelector: "[.status.conditions[]|select(.type==\"Master\" or .type==\"master\")|.name]"
+# 中间件过滤器
+defaultFilterMiddleware: ".status|select(.phase==\"Running\" or .phase==\"running\")"
+# pod过滤器
+defaultFilterPod: ""
+# node过滤器
+defaultFilterNode: ""
+

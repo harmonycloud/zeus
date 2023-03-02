@@ -71,6 +71,7 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
         JSONObject values = yaml.loadAs(HelmChartUtil.getValueYaml(path), JSONObject.class);
         JSONObject image = values.getJSONObject("image");
         image.put("name", repository + "/traefik");
+        values.put("skipPortConflict", ingressComponentDto.getSkipPortConflict());
 
         JSONArray additionalArguments = values.getJSONArray("additionalArguments");
         List<String> portList = getPortList(cluster, ingressComponentDto.getTraefikPortList(),
@@ -175,8 +176,10 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
                 log.error("负载均衡{} 查询values.yaml失败", ingressComponentDto.getName());
                 throw new BusinessException(ErrorMessage.INGRESS_COMPONENTS_VALUES_NOT_FOUND);
             }
-            JSONArray additionalArguments = new JSONArray();
+            // 更新是否跳过冲突端口
+            values.put("skipPortConflict", ingressComponentDto.getSkipPortConflict());
 
+            JSONArray additionalArguments = new JSONArray();
             // 封装端口组
             List<String> portList = getPortList(cluster, ingressComponentDto.getTraefikPortList(),
                 ingressComponentDto.getIngressClassName(), false);
@@ -247,6 +250,9 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
         BeanUtils.copyProperties(ingressComponents, ingressComponentDto);
         if (values == null) {
             return ingressComponentDto;
+        }
+        if (values.getBoolean("skipPortConflict") != null) {
+            ingressComponentDto.setSkipPortConflict(values.getBoolean("skipPortConflict"));
         }
         JSONObject ports = values.getJSONObject("ports");
         ingressComponentDto.setHttpPort(ports.getJSONObject("web").getString("port"));

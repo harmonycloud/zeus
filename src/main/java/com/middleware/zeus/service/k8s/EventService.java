@@ -3,6 +3,7 @@ package com.middleware.zeus.service.k8s;
 import com.middleware.caas.common.model.EventDetail;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author xutianhong
@@ -32,5 +33,14 @@ public interface EventService {
      */
     List<EventDetail> getEvents(String clusterId, String namespace, String middlewareName, String middlewareType,
                                 String eventType, String kind);
+
+    /**
+     * 获取中间件PVC events
+     *
+     * @param clusterId 集群id
+     * @param fields 过滤条件
+     * @return
+     */
+    List<EventDetail> getEvents(String clusterId, Map<String, String> fields);
 
 }

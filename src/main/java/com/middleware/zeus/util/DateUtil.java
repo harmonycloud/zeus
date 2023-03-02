@@ -40,6 +40,7 @@ public class DateUtil {
      */
     public final static SimpleDateFormat UTC_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
+
     public final static int MILLISECONDS_OF_SECOND = 1000;
     public final static int MILLISECONDS_OF_MINUTE = 60000;
     public final static int MILLISECONDS_OF_HOUR = 3600000;

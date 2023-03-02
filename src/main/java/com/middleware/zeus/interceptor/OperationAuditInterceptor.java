@@ -17,15 +17,13 @@ import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.user.UserDto;
 import com.middleware.caas.common.model.user.UserRole;
-import com.middleware.caas.filters.user.CurrentUserRepository;
+import com.harmonycloud.caas.filters.user.CurrentUserRepository;
 import com.middleware.zeus.bean.user.BeanRoleAuthority;
 import com.middleware.zeus.service.user.RoleAuthorityService;
 import com.middleware.zeus.service.user.UserRoleService;
 import com.middleware.zeus.service.user.UserService;
 import com.middleware.zeus.util.RequestUtil;
-import com.middleware.zeus.annotation.Authority;
 import com.middleware.zeus.bean.BeanOperationAudit;
-import com.middleware.zeus.service.system.OperationAuditService;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -45,8 +43,10 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.base.BaseResult;
 import com.middleware.caas.common.constants.CommonConstant;
-import com.middleware.caas.filters.token.JwtTokenComponent;
+import com.harmonycloud.caas.filters.token.JwtTokenComponent;
 import com.middleware.tool.api.util.HttpMethod;
+import com.middleware.zeus.annotation.Authority;
+import com.middleware.zeus.service.system.OperationAuditService;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -290,7 +290,9 @@ public class OperationAuditInterceptor {
     public JSONObject getParams(String[] paramNames, Object[] args) {
         JSONObject params = new JSONObject();
         for (int i = 0; i < paramNames.length; ++i) {
-            if (args[i] instanceof String) {
+            if (args[i] instanceof String || args[i] instanceof Integer || args[i] instanceof Double
+                    || args[i] instanceof Float || args[i] instanceof Short || args[i] instanceof Byte
+                    || args[i] instanceof Long || args[i] instanceof Boolean ) {
                 params.put(paramNames[i], args[i]);
             } else {
                 params.put(paramNames[i], JSONObject.parseObject(JSONObject.toJSONString(args[i])));

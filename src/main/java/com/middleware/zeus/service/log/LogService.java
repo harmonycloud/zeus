@@ -3,6 +3,9 @@ package com.middleware.zeus.service.log;
 import com.middleware.caas.common.base.BaseResult;
 import com.middleware.caas.common.model.middleware.LogQuery;
 import com.middleware.caas.common.model.middleware.LogQueryDto;
+import com.middleware.caas.common.model.middleware.MiddlewareLogQuery;
+import com.middleware.caas.common.model.middleware.MysqlLogDTO;
+import com.middleware.tool.page.PageObject;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -67,5 +70,19 @@ public interface LogService {
      * @throws Exception 查询条件转换失败异常
      */
     LogQuery transLogQuery(LogQueryDto logQueryDto) throws Exception;
+
+    /**
+     * 清理历史日志
+     *
+     * @throws Exception 查询条件转换失败异常
+     */
+    void cleanHistoryLog() throws Exception;
+
+    /**
+     * 清理历史日志
+     *
+     * @throws Exception 查询条件转换失败异常
+     */
+    PageObject<MysqlLogDTO> andit(MiddlewareLogQuery middlewareLogQuery) throws Exception;
 
 }

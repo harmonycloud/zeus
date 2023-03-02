@@ -4,6 +4,7 @@ import com.middleware.zeus.bean.user.BeanRoleAuthority;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author xutianhong
@@ -58,5 +59,12 @@ public interface RoleAuthorityService {
      * @return Boolean
      */
     Boolean checkOps(String roleId, String type);
+
+    /**
+     * 查询指定角色拥有运维权限的所有中间件
+     * @param roleId
+     * @return
+     */
+    Set<String> listOpsMiddleware(Integer roleId);
 
 }

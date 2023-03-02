@@ -52,6 +52,22 @@ import cn.hutool.json.JSONUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.middleware.caas.common.constants.CmdConstant.MYSQL_HAND_SWITCH;
+import static com.middleware.caas.common.constants.CommonConstant.OFF;
+import static com.middleware.caas.common.constants.CommonConstant.ON;
+import static com.middleware.caas.common.constants.MysqlConstant.SLOW_QUERY_LOG;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_INGRESS;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.SYNC_SLAVE;
 
 /**
  * @author dengyulong
@@ -122,7 +138,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
 
         // mysql参数
         JSONObject mysqlArgs = values.getJSONObject("args");
-        JSONObject features = values.getJSONObject("features");
         if (StringUtils.isBlank(middleware.getPassword())) {
             middleware.setPassword(PasswordUtils.generateCommonPassword(10));
         }
@@ -151,11 +166,12 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             if (StringUtils.isNotBlank(mysqlDTO.getType())) {
                 values.put(MysqlConstant.SPEC_TYPE, mysqlDTO.getType());
             }
-            if (StringUtils.isNotBlank(middleware.getVersion()) && !("8.0".equals(middleware.getVersion()))) {
-                //设置SQL审计开关
-                checkAndSetAuditSqlStatus(features, mysqlDTO);
-            }
         }
+        // 配置开启/关闭 审计日志和慢日志
+        if(middleware.getSlowSql() != null){
+            mysqlArgs.put(SLOW_QUERY_LOG, middleware.getSlowSql() ? ON : OFF);
+        }
+
         //配置mysql环境变量
         if (!CollectionUtils.isEmpty(middleware.getEnvironment())) {
             middleware.getEnvironment().forEach(mysqlEnviroment -> mysqlArgs.put(mysqlEnviroment.getName(), mysqlEnviroment.getValue()));
@@ -236,6 +252,10 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 readWriteProxy.setEnabled(values.getJSONObject("proxy").getBoolean("enable"));
                 middleware.setReadWriteProxy(readWriteProxy);
             }
+            // 慢日志开关
+            if (args.containsKey("slow_query_log") && args.getString("slow_query_log").equals(ON)){
+                middleware.setSlowSql(true);
+            }
         }
         return middleware;
     }
@@ -278,10 +298,19 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             if (StringUtils.isNotBlank(quota.getCpu())) {
                 sb.append("resources.requests.cpu=").append(quota.getCpu()).append(",resources.limits.cpu=")
                         .append(quota.getLimitCpu()).append(",");
+                // 修改proxy cpu参数规格
+                String proxyCpu = MiddlewareResourceCalculateUtil.calculateProxyResource(quota.getCpu());
+                sb.append("proxy.resources.requests.cpu=").append(proxyCpu).append(",proxy.resources.limits.cpu=").append(proxyCpu).append(",");
             }
             if (StringUtils.isNotBlank(quota.getMemory())) {
                 sb.append("resources.requests.memory=").append(quota.getMemory()).append(",resources.limits.memory=")
                         .append(quota.getLimitMemory()).append(",");
+                // 修改proxy memory参数规格
+                String proxyMem = MiddlewareResourceCalculateUtil.calculateProxyResource(quota.getMemory().replace("Gi", ""));
+                if (Double.parseDouble(proxyMem) < 0.256){
+                    proxyMem = String.valueOf(0.256);
+                }
+                sb.append("proxy.resources.requests.memory=").append(proxyMem).append("Gi,proxy.resources.limits.memory=").append(proxyMem).append("Gi,");
             }
         }
 
@@ -308,6 +337,11 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             sb.append(String.format("%s=%s,", MysqlConstant.SPEC_TYPE, mysqlDTO.getType()));
         }
 
+        // 慢日志更新
+        if (middleware.getSlowSql() != null){
+            sb.append("args.slow_query_log=").append(middleware.getSlowSql() ? ON : OFF).append(",");
+        }
+
         // 更新通用字段
         super.updateCommonValues(sb, middleware);
 
@@ -332,23 +366,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         middlewareManageTask.asyncCreateMysqlOpenService(this, middleware);
     }
 
-    /**
-     * 检查并设置mysql SQL审计采集开关，若支持SQL审计，则默认设置为开
-     * @param features
-     * @param mysqlDTO
-     */
-    private void checkAndSetAuditSqlStatus(JSONObject features, MysqlDTO mysqlDTO) {
-        if (features == null) {
-            return;
-        }
-        if (features.getJSONObject(MysqlConstant.KEY_FEATURES_AUDITLOG) != null) {
-            if (mysqlDTO.getAuditSqlEnabled() != null) {
-                features.getJSONObject(MysqlConstant.KEY_FEATURES_AUDITLOG).put("enabled", mysqlDTO.getAuditSqlEnabled());
-            } else {
-                features.getJSONObject(MysqlConstant.KEY_FEATURES_AUDITLOG).put("enabled", true);
-            }
-        }
-    }
 
     /**
      * 检查是否是双活分区并设置双活配置字段
@@ -357,7 +374,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
      */
     @Override
     public void checkAndSetActiveActive(JSONObject values, Middleware middleware) {
-        if (namespaceService.checkAvailableDomain(middleware.getClusterId(), middleware.getNamespace())) {
+        if (namespaceService.isOpenAvailableDomain(middleware.getClusterId(), middleware.getNamespace())) {
             super.setActiveActiveConfig(null, values);
             super.setActiveActiveToleration(middleware, values);
         }
@@ -377,21 +394,23 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     }
 
     @Override
-    public void switchMiddleware(Middleware middleware) {
+    public SwitchInfo getAutoSwitch(Middleware middleware) {
+        SwitchInfo autoSwitchInfo = new SwitchInfo();
+        MysqlCluster mysqlCluster = mysqlClusterWrapper.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
+        autoSwitchInfo.setIsAuto(mysqlCluster.getSpec().getPassiveSwitched() == null || !mysqlCluster.getSpec().getPassiveSwitched());
+        if (mysqlCluster.getStatus() != null && mysqlCluster.getStatus().getLastChangeMaster() != null) {
+            autoSwitchInfo.setLastAutoSwitchTime(DateUtils.parseUTCDate(mysqlCluster.getStatus().getLastChangeMaster()));
+        }
+        return autoSwitchInfo;
+    }
+
+    @Override
+    public SwitchInfo switchMiddleware(Middleware middleware) {
         MysqlCluster mysqlCluster = mysqlClusterWrapper.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
         if (mysqlCluster == null) {
             throw new BusinessException(DictEnum.MYSQL_CLUSTER, middleware.getName(), ErrorMessage.NOT_EXIST);
         }
-        if (!NameConstant.RUNNING.equalsIgnoreCase(mysqlCluster.getStatus().getPhase())) {
-            throw new BusinessException(ErrorMessage.MIDDLEWARE_CLUSTER_IS_NOT_RUNNING);
-        }
-        // 手动切换
-        if (handSwitch(middleware, mysqlCluster)) {
-            return;
-        }
-        // 自动切换
-        autoSwitch(middleware, mysqlCluster);
-
+        return middleware.getAutoSwitch() == null ? handSwitch(middleware, mysqlCluster) : autoSwitch(middleware, mysqlCluster);
     }
 
     @Override
@@ -451,12 +470,45 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     /**
      * 手动切换
      */
-    private boolean handSwitch(Middleware middleware, MysqlCluster mysqlCluster) {
-        // 不等于null，自动切换，无需处理
-        if (middleware.getAutoSwitch() != null) {
-            // false为无需切换，true为已切换
-            return false;
+    private SwitchInfo handSwitch(Middleware middleware, MysqlCluster mysqlCluster) {
+        // 判断版本
+        if (ChartVersionUtil.compare(middleware.getChartVersion(), "1.8.20") > 0) {
+            return switchByChangeCr(middleware, mysqlCluster);
+        } else {
+            return switchByCurl(middleware, mysqlCluster);
         }
+    }
+
+    private SwitchInfo switchByCurl(Middleware middleware, MysqlCluster mysqlCluster) {
+        MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
+        // 先判断有没有sync_slave
+        List<Status.Condition> conditions = mysqlCluster.getStatus().getConditions();
+        List<Status.Condition> syncList = conditions.stream().filter(con -> con.getType().equals("SyncSlave")).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(syncList)) {
+            throw new BusinessException(DictEnum.ROLE,SYNC_SLAVE,ErrorMessage.NOT_FOUND);
+        }
+        // 获取同步节点名称
+        String syncName = syncList.get(0).getName();
+        String execCommand = MessageFormat.format(MYSQL_HAND_SWITCH,
+                syncName, middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
+                syncName, middleware.getNamespace(), mysqlCluster.getMetadata().getName());
+        List<String> results = new ArrayList<>(2);
+        // 411状态重发
+        for (int i = 0; i <= 10; i++) {
+            if (i > 0) {
+                log.error("411异常重发请求，进行第{}次重发", i);
+            }
+            results = CmdExecUtil.runCmd(execCommand);
+            if (!"411".equals(results.get(1)) || !results.get(0).endsWith("please apply your changes to the latest version and try again")) {
+                break;
+            }
+        }
+        // 判断结果
+        parseHandSwitchResult(results);
+        return new SwitchInfo().setNewMasterName(syncName);
+    }
+
+    private SwitchInfo switchByChangeCr(Middleware middleware, MysqlCluster mysqlCluster){
         String masterName = null;
         String slaveName = null;
         for (Status.Condition cond : mysqlCluster.getStatus().getConditions()) {
@@ -477,13 +529,13 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                     middleware.getName(), e);
             throw new BusinessException(DictEnum.MYSQL_CLUSTER, middleware.getName(), ErrorMessage.SWITCH_FAILED);
         }
-        return true;
+        return new SwitchInfo().setNewMasterName(slaveName);
     }
 
     /**
      * 自动切换
      */
-    private void autoSwitch(Middleware middleware, MysqlCluster mysqlCluster) {
+    private SwitchInfo autoSwitch(Middleware middleware, MysqlCluster mysqlCluster) {
         boolean changeStatus = false;
         if (mysqlCluster.getSpec().getPassiveSwitched() == null) {
             if (!middleware.getAutoSwitch()) {
@@ -503,6 +555,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 throw new BusinessException(DictEnum.MYSQL_CLUSTER, middleware.getName(), ErrorMessage.SWITCH_FAILED);
             }
         }
+        return null;
     }
 
     /**
@@ -613,8 +666,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         JSONObject limits = new JSONObject();
 
         MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
-        String cpu = calculateProxyResource(quota.getCpu());
-        String memory = calculateProxyResource(quota.getMemory().replace("Gi", ""));
+        String cpu = MiddlewareResourceCalculateUtil.calculateProxyResource(quota.getCpu());
+        String memory = MiddlewareResourceCalculateUtil.calculateProxyResource(quota.getMemory().replace("Gi", ""));
         if (Double.parseDouble(memory) < 0.256){
             memory = String.valueOf(0.256);
         }
@@ -861,6 +914,11 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         mysqlDbService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
         mysqlUserService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
         mysqlDbPrivService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
+    }
+
+    @Override
+    public ActiveAreaAnnotationDto getActiveAreaAnnotation(String clusterId, String namespace, String type, String middlewareName) {
+        return super.getActiveAreaAnnotation(clusterId, namespace, type, middlewareName);
     }
 
     @Override

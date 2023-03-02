@@ -150,6 +150,8 @@ public class IngressServiceImpl implements IngressService {
             if (StringUtils.isBlank(namespace)) {
                 namespace = ingressDTO.getNamespace();
             }
+            setMiddlewareImage(ingressDTO);
+            ingressDTO.setMiddlewareOfficialName(MiddlewareOfficialNameEnum.findByChartName(ingressDTO.getMiddlewareType()));
             JSONObject values = helmChartService.getInstalledValues(ingressDTO.getMiddlewareName(), namespace, cluster);
             if (values == null) {
                 continue;
@@ -157,8 +159,6 @@ public class IngressServiceImpl implements IngressService {
             ingressDTO.setChartVersion(values.getOrDefault("chart-version", "").toString());
             ingressDTO.setMiddlewareMode(values.getOrDefault("mode", "").toString());
             ingressDTO.setMiddlewareNickName(values.getOrDefault("aliasName", "").toString());
-            setMiddlewareImage(ingressDTO);
-            ingressDTO.setMiddlewareOfficialName(MiddlewareOfficialNameEnum.findByChartName(ingressDTO.getMiddlewareType()));
         }
 
         boolean filter = StringUtils.isNotBlank(keyword);
@@ -1655,7 +1655,7 @@ public class IngressServiceImpl implements IngressService {
                     .filter(key -> power.get(key).split("")[1].equals(String.valueOf(NUM_ONE))).collect(Collectors.toSet());
             ingressDTOLists = ingressDTOLists.stream()
                     .filter(ingress -> typeSet.stream().anyMatch(key -> {
-                        log.info("ingress信息：{}", ingress);
+                        //log.info("ingress信息：{}", ingress);
                         if (ingress.getMiddlewareType() != null) {
                             return ingress.getMiddlewareType().equals(key);
                         }
@@ -1738,9 +1738,6 @@ public class IngressServiceImpl implements IngressService {
                 return true;
             }
             if (StringUtils.isNotBlank(ingressDTO.getMiddlewareNickName()) && ingressDTO.getMiddlewareNickName().contains(keyword)) {
-                return true;
-            }
-            if (StringUtils.isNotBlank(ingressDTO.getName()) && ingressDTO.getName().contains(keyword)) {
                 return true;
             }
             return false;

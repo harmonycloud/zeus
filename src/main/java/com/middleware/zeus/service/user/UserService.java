@@ -126,7 +126,7 @@ public interface UserService {
     /**
      * 个性化配置
      */
-    void insertPersonalConfig(PersonalizedConfiguration configuration,String status) throws Exception;
+    void insertPersonalConfig(PersonalizedConfiguration configuration, String status) throws Exception;
 
     /**
      * 获取个性化配置信息

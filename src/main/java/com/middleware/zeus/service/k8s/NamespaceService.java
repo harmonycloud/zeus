@@ -3,6 +3,7 @@ package com.middleware.zeus.service.k8s;
 import java.util.List;
 import java.util.Map;
 
+import com.middleware.caas.common.model.StorageDto;
 import com.middleware.caas.common.model.middleware.Namespace;
 
 /**
@@ -19,6 +20,13 @@ public interface NamespaceService {
      * @return Namespace
      */
     Namespace get(String clusterId, String namespace);
+
+    /**
+     *
+     * @param namespace 命名空间
+     * @return
+     */
+    boolean isNamespacceProtected (String namespace);
 
     /**
      * 查询命名空间列表
@@ -107,9 +115,8 @@ public interface NamespaceService {
      *
      * @param clusterId 集群id
      * @param name 分区名称
-     * @param registered 是否注册
      */
-    void registry(String clusterId, String name, Boolean registered);
+    void update(String clusterId, String name, Namespace namespace);
 
     /**
      * 修改分区可用域启用状态
@@ -134,7 +141,7 @@ public interface NamespaceService {
      * @param name 分区名称
      * @return
      */
-    boolean checkAvailableDomain(String clusterId, String name);
+    boolean isOpenAvailableDomain(String clusterId, String name);
 
     /**
      * 创建middleware-operator分区
@@ -142,5 +149,25 @@ public interface NamespaceService {
      * @param clusterId 集群id
      */
     void createMiddlewareOperator(String clusterId);
+
+    /**
+     * 绑定/解绑分区
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param aliasName 分区别名
+     * @param projectId 项目id
+     */
+    void bindProject(String clusterId, String namespace, String aliasName, String projectId);
+
+    /**
+     * 绑定/解绑分区
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     *
+     * @return List<StorageDto>
+     */
+    List<StorageDto> storage(String clusterId, String namespace);
 
 }

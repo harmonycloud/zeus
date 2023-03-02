@@ -4,6 +4,8 @@ metadata:
   name:  mysqlclusters.mysql.middleware.harmonycloud.cn
   labels:
     MiddlewareCluster: mysqlcluster
+  annotations:
+    harmonycloud-middleware-status-phase: 'if .metadata.annotations."middleware.maintenance.lock"=="middlewarebackup" then . + {status: (.status +  {"phase": "Recover"})} else . end'
 spec:
   group: mysql.middleware.harmonycloud.cn
   versions:

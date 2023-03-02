@@ -6,11 +6,12 @@ import com.middleware.caas.common.base.BaseResult;
 import com.middleware.caas.common.enums.*;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.exception.CaasRuntimeException;
-import com.middleware.caas.common.model.middleware.LogQuery;
-import com.middleware.caas.common.model.middleware.LogQueryDto;
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.tool.page.PageObject;
+import com.middleware.caas.common.model.middleware.*;
 import com.middleware.zeus.bean.BeanLogMsg;
 import com.middleware.zeus.service.k8s.ClusterService;
+import com.middleware.zeus.service.k8s.PodService;
+import com.middleware.zeus.service.log.EsComponentService;
 import com.middleware.zeus.service.log.LogService;
 import com.middleware.zeus.service.middleware.EsService;
 import com.middleware.zeus.util.AssertUtil;
@@ -42,6 +43,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -50,6 +52,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static com.middleware.caas.common.constants.CommonConstant.*;
+import java.util.stream.Collectors;
 
 /**
  * @description 日志service实现类
@@ -73,11 +76,17 @@ public class LogServiceImpl implements LogService {
     private String shellStarter;
     @Value("${es.scroll.time:600000}")
     private String scrollTime;
+    @Value("${es.log.keep:30}")
+    private Integer keepDays;
+    @Autowired
+    private PodService podService;
 
     @Autowired
     private ClusterService clusterService;
     @Autowired
     private EsService esService;
+    @Autowired
+    private EsComponentService esComponentService;
 
     @Override
     public void exportLog(LogQuery logQuery, HttpServletResponse response) throws Exception {
@@ -274,9 +283,10 @@ public class LogServiceImpl implements LogService {
         while (it.hasNext()) {
             SearchHit sh = it.next();
         }
+        Set<String> podNames = getMiddlewarePodNames(logQuery);
         for (Terms.Bucket bucket : podTerms.getBuckets()) {
             String bucketPodName = bucket.getKey().toString();
-            if (!bucketPodName.startsWith(logQuery.getMiddlewareName())) {
+            if (!podNames.contains(bucketPodName)) {
                 continue;
             }
             Terms logDirTerms = bucket.getAggregations().get("source");
@@ -297,6 +307,20 @@ public class LogServiceImpl implements LogService {
         return logFileNames;
     }
 
+    /**
+     * 获取中间件pod名称列表
+     * @param logQuery
+     * @return
+     */
+    private Set<String> getMiddlewarePodNames(LogQuery logQuery){
+        List<PodInfo> pods = podService.listPods(logQuery.getClusterId(), logQuery.getNamespace(),
+                logQuery.getMiddlewareName(), logQuery.getMiddlewareType());
+        Set<String> podNames = new HashSet<>();
+        if (!CollectionUtils.isEmpty(pods)) {
+            podNames = pods.stream().map(PodInfo::getPodName).collect(Collectors.toSet());
+        }
+        return podNames;
+    }
 
     /**
      * 根据查询条件设置SearchRequestBuilder
@@ -411,6 +435,7 @@ public class LogServiceImpl implements LogService {
         logQuery.setPodLog(logQueryDto.isPodLog());
         logQuery.setLogDateStart(fromDate);
         logQuery.setLogDateEnd(toDate);
+        logQuery.setAppType(logQueryDto.getAppType());
         //获取查询时间段对应的索引列表
         Date startDate = DateUtil.StringToDate(fromDate, style);
         Date endDate = DateUtil.StringToDate(toDate, style);
@@ -430,6 +455,30 @@ public class LogServiceImpl implements LogService {
             throw new CaasRuntimeException(String.valueOf(ErrorCodeMessage.LOG_SEARCH_TYPE_NOT_SUPPORT));
         }
         return logQuery;
+    }
+
+    @Override
+    public void cleanHistoryLog() throws Exception {
+        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
+        for (MiddlewareClusterDTO cluster : clusterList){
+            if (cluster.getLogging() != null && cluster.getLogging().getElasticSearch() != null &&
+            cluster.getLogging().getElasticSearch().getLogKeepDays() != null){
+                keepDays = cluster.getLogging().getElasticSearch().getLogKeepDays();
+            }
+            dealIndex(cluster, keepDays);
+        }
+    }
+
+    @Override
+    public PageObject<MysqlLogDTO> andit(MiddlewareLogQuery middlewareLogQuery) throws Exception {
+        MiddlewareClusterDTO cluster = clusterService.findById(middlewareLogQuery.getClusterId());
+        PageObject<MysqlLogDTO> slowSqlDTOS = null;
+        try {
+            slowSqlDTOS = esComponentService.getAuditSql(cluster, middlewareLogQuery);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return slowSqlDTOS;
     }
 
     /**
@@ -569,8 +618,28 @@ public class LogServiceImpl implements LogService {
                 return true;
             }
         }
-
         return false;
+    }
+
+    /**
+     * 处理过期日志
+     */
+    public void dealIndex(MiddlewareClusterDTO cluster, Integer keepDays) throws Exception{
+        log.info("delete log indices. clusterId:{},logKeepDays:{}", cluster.getId(), keepDays);
+        Calendar logCalendar = Calendar.getInstance();
+        logCalendar.add(Calendar.DATE, -keepDays);
+        String indexDate = new SimpleDateFormat("yyyy.MM.dd").format(logCalendar.getTime());
+        // 查询所有索引名称
+        List<String> indicesList = esService.getIndexes(cluster);
+        // 循环比较删除超出保留时间的索引
+        for (String index : indicesList){
+            boolean delete = Arrays.stream(EsTemplateEnum.values())
+                .anyMatch(est -> index.startsWith(est.getName()) && index.compareTo(est.getName() + LINE + indexDate) < 0);
+            if (delete){
+                esService.deleteIndex(index, cluster);
+            }
+        }
+
     }
 
 }

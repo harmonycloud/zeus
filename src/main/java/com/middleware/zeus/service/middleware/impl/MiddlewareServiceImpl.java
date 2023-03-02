@@ -110,6 +110,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Autowired
     private PvcService pvcService;
     @Autowired
+    private ResourceQuotaService resourceQuotaService;
+    @Autowired
+    private StorageService storageService;
+    @Autowired
     private LicenseService licenseService;
     @Autowired
     private ClusterComponentService clusterComponentService;
@@ -188,6 +192,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 new Middleware().setClusterId(clusterId).setNamespace(namespace).setType(type).setName(name);
         return getOperator(BaseOperator.class, BaseOperator.class, middleware).getAutoSwitch(middleware);
     }
+
+
 
     @Override
     public Middleware create(Middleware middleware) {
@@ -282,14 +288,14 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public void switchMiddleware(String clusterId, String namespace, String name, String type, String slaveName, Boolean isAuto) {
-        Middleware middleware = new Middleware(clusterId, namespace, name, type).setAutoSwitch(isAuto);
+    public SwitchInfo switchMiddleware(String clusterId, String namespace, String name, String type, String slaveName, Boolean isAuto, String chartVersion) {
+        Middleware middleware = new Middleware(clusterId, namespace, name, type).setAutoSwitch(isAuto).setChartVersion(chartVersion);
         BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
         // redis分片内单独切换主从
         if (MiddlewareTypeEnum.REDIS.getType().equals(type)){
-            operator.switchMiddleware(middleware, slaveName);
+            return operator.switchMiddleware(middleware, slaveName);
         }else {
-            operator.switchMiddleware(middleware);
+            return operator.switchMiddleware(middleware);
         }
 
     }
@@ -704,11 +710,15 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             new MiddlewareTopologyDTO().setClusterId(clusterId).setNamespace(namespace).setName(name).setType(type)
                 .setStatus(middleware.getStatus()).setPods(middleware.getPods())
                 .setPodInfoGroup(middleware.getPodInfoGroup()).setMonitorResourceQuota(new MonitorResourceQuota());
-        // 设置 LVM_PROVISIONER
-        if (middleware.getPods().stream()
-            .anyMatch(podInfo -> StringUtils.isNotEmpty(podInfo.getResources().getProvisioner())
-                && podInfo.getResources().getProvisioner().equals(LVM_PROVISIONER))) {
-            middlewareTopologyDTO.setProvisioner(LVM_PROVISIONER);
+        // 设置 PROVISIONER
+        if (!CollectionUtils.isEmpty(middleware.getPods())) {
+            List<PodInfo> infos = middleware.getPods().stream()
+                    .filter(podInfo -> podInfo.getResources() != null
+                            && StringUtils.isNotEmpty(podInfo.getResources().getProvisioner()))
+                    .collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(infos)) {
+                middlewareTopologyDTO.setProvisioner(infos.get(0).getResources().getProvisioner());
+            }
         }
         // 获取alias name
         JSONObject values = helmChartService.getInstalledValues(name, namespace, clusterService.findById(clusterId));
@@ -730,7 +740,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             }
             middlewareTopologyDTO.setStorageClassName(sb.toString());
         } else {
-            middlewareTopologyDTO.setStorageClassName(values.getOrDefault("storageClassName", "").toString());
+            if (MiddlewareTypeEnum.ZOOKEEPER.getType().equals(type)) {
+                JSONObject persistence = values.getJSONObject(PERSISTENCE);
+                middlewareTopologyDTO.setStorageClassName(persistence.getOrDefault("storageClassName", "").toString());
+            } else {
+                middlewareTopologyDTO.setStorageClassName(values.getOrDefault("storageClassName", "").toString());
+            }
         }
 
         StringBuilder pods = new StringBuilder();
@@ -821,19 +836,27 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         List<String> pvcList = middlewareCRService.getPvc(clusterId, namespace, type, name);
         StringBuilder pvcs = new StringBuilder();
         pvcList.forEach(pvc -> pvcs.append(pvc).append("|"));
+        // 判断存储类型
+        Map<String, String> params = storageService.checkHitachiAndGetParams(clusterId, middlewareTopologyDTO.getStorageClassName());
         // 查询total storage
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
-                String totalStorageQuery =
-                    "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{persistentvolumeclaim=~\""
-                        + pvcs.toString() + "\",namespace=\"" + namespace
-                        + "\"}) by (persistentvolumeclaim) /1024/1024/1024";
+                String totalStorageQuery;
+                if (params.containsKey("poolID") && params.containsKey("serialNumber")) {
+                    totalStorageQuery = PrometheusQueryUtil.queryHitachiPodTotal(params.get("serialNumber"),
+                        params.get("poolID"), namespace, pvcs.toString());
+                } else {
+                    totalStorageQuery =
+                        "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{persistentvolumeclaim=~\""
+                            + pvcs.toString() + "\",namespace=\"" + namespace
+                            + "\"}) by (persistentvolumeclaim) /1024/1024/1024";
+                }
                 PrometheusResponse totalStorage = prometheusResourceMonitorService.query(clusterId, totalStorageQuery);
                 Map<String, Double> result = convertResponse(totalStorage);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
                     String num = podInfo.getPodName().substring(podInfo.getPodName().length() - 1);
                     if (result.containsKey(num)) {
-                        MonitorResourceQuotaBase cpu = new MonitorResourceQuotaBase();
+                        QuotaBase cpu = new QuotaBase();
                         cpu.setTotal(result.get(num));
                         podInfo.getMonitorResourceQuota().getStorage().setTotal(result.get(num));
                     }
@@ -847,10 +870,16 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // 查询used storage
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
-                String usedStorageQuery =
-                    "sum(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\""
-                        + pvcs.toString() + "\",namespace=\"" + namespace
+                String usedStorageQuery;
+                if (params.containsKey("poolID") && params.containsKey("serialNumber")) {
+                    usedStorageQuery = PrometheusQueryUtil.queryHitachiPodUsed(params.get("serialNumber"),
+                        params.get("poolID"), namespace, pvcs.toString());
+                } else {
+                    usedStorageQuery = "sum(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\"" + pvcs.toString()
+                        + "\",namespace=\""
+                        + namespace
                         + "\",endpoint!=\"\"}) by (persistentvolumeclaim) /1024/1024/1024";
+                }
                 PrometheusResponse usedStorage = prometheusResourceMonitorService.query(clusterId, usedStorageQuery);
                 Map<String, Double> result = convertResponse(usedStorage);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
@@ -995,6 +1024,45 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             return "";
         }
         return beanMiddlewareInfo.getImagePath();
+    }
+
+    @Override
+    public ActiveAreaAnnotationDto getActiveAreaAnnotation(String clusterId, String namespace, String type, String middlewareName) {
+        Middleware middleware = new Middleware();
+        middleware.setType(type);
+        BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
+        return operator.getActiveAreaAnnotation(clusterId, namespace, type, middlewareName);
+    }
+
+    @Override
+    public Boolean middlewareResourceCheck(Middleware middleware) {
+        boolean cpu = true;
+        boolean memory = true;
+        boolean storage = true;
+        try {
+            ResourceQuotaDo resourceQuotaDo = resourceQuotaService.list(middleware.getClusterId(), middleware.getNamespace());
+            Map<String, Double> map = MiddlewareResourceCalculateUtil.middlewareResourceCalculate(middleware);
+            if (resourceQuotaDo.getCpu() != null && resourceQuotaDo.getCpu().getRequest() != null && resourceQuotaDo.getCpu().getUsed() != null){
+                cpu = map.get(CPU) <= resourceQuotaDo.getCpu().getRequest() - resourceQuotaDo.getCpu().getUsed();
+            }
+            if (resourceQuotaDo.getCpu() != null && resourceQuotaDo.getCpu().getRequest() != null && resourceQuotaDo.getCpu().getUsed() != null){
+                memory = map.get(MEMORY) <= resourceQuotaDo.getMemory().getRequest() - resourceQuotaDo.getMemory().getUsed();
+            }
+            for (String key : map.keySet()){
+                if (key.equals(CPU) || key.equals(MEMORY)){
+                    continue;
+                }
+                if (!CollectionUtils.isEmpty(resourceQuotaDo.getStorageList())){
+                    Map<String, QuotaBase> storageQuota = resourceQuotaDo.getStorageList().stream().collect(Collectors.toMap(StorageQuota::getName, sq -> sq.getStorage()));
+                    if (storageQuota.containsKey(key) && storage){
+                        storage = map.get(key) <= storageQuota.get(key).getRequest() - storageQuota.get(key).getUsed();
+                    }
+                }
+            }
+        } catch (Exception e){
+            log.error("检查中间件{} 资源配额情况失败", middleware.getName(), e);
+        }
+        return cpu && memory && storage;
     }
 
     @Override
@@ -1160,7 +1228,9 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
      * @return
      */
     public boolean rebootCheck(Middleware middleware) {
-        if (middleware.getStdoutEnabled() != null || middleware.getFilelogEnabled() != null) {
+        if (!MiddlewareTypeEnum.POSTGRESQL.getType().equals(middleware.getType())
+            && !MiddlewareTypeEnum.MYSQL.getType().equals(middleware.getType())
+            && (middleware.getStdoutEnabled() != null || middleware.getFilelogEnabled() != null)) {
             return true;
         }
         return false;

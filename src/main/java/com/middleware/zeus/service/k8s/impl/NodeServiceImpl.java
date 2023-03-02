@@ -1,20 +1,19 @@
 package com.middleware.zeus.service.k8s.impl;
 
-import static com.middleware.caas.common.constants.NameConstant.CONTAINER_RUNTIME_VERSION;
-import static com.middleware.caas.common.constants.NameConstant.KUBELET_VERSION;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import com.middleware.caas.common.constants.NameConstant;
+import com.middleware.caas.common.enums.middleware.ResourceUnitEnum;
 import com.middleware.tool.date.DateUtils;
 import com.middleware.tool.numeric.ResourceCalculationUtil;
+import com.middleware.caas.common.model.*;
 import com.middleware.zeus.integration.cluster.PrometheusWrapper;
 import com.middleware.zeus.service.k8s.NodeService;
 import com.middleware.zeus.service.prometheus.PrometheusResourceMonitorService;
-import com.middleware.caas.common.model.*;
+import com.middleware.zeus.integration.cluster.NodeWrapper;
 import io.fabric8.kubernetes.api.model.NodeAddress;
 import io.fabric8.kubernetes.api.model.NodeCondition;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,10 +23,12 @@ import org.springframework.util.CollectionUtils;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.middleware.zeus.integration.cluster.NodeWrapper;
 
 import io.fabric8.kubernetes.api.model.NodeSystemInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.StringUtils;
+
+import static com.middleware.caas.common.constants.CommonConstant.ZONE;
 
 /**
  * @author dengyulong
@@ -51,9 +52,29 @@ public class NodeServiceImpl implements NodeService {
     }
 
     @Override
+    public String getAvailableNodeIP(String clusterId) {
+        List<Node> nodes = list(clusterId);
+        nodes = nodes.stream().filter(node -> "True".equals(node.getStatus())).collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(nodes)) {
+            return nodes.get(0).getIp();
+        }
+        return "";
+    }
+
+    @Override
     public List<Node> list(String clusterId, Map<String, String> labels){
         List<io.fabric8.kubernetes.api.model.Node> nodes = nodeWrapper.list(clusterId, labels);
         return convertToDto(nodes);
+    }
+
+    @Override
+    public List<Node> listActive(String clusterId, String zone) {
+        HashMap<String, String> label = new HashMap<>();
+        if (!StringUtils.isEmpty(zone)) {
+            label.put(ZONE, zone);
+        }
+        List<io.fabric8.kubernetes.api.model.Node> nodes = nodeWrapper.list(clusterId, label);
+        return simpleConvertToDto(nodes);
     }
 
     @Override
@@ -100,7 +121,7 @@ public class NodeServiceImpl implements NodeService {
                         sbf.append(taint.getValue());
                     }
                     sbf.append(":").append(taint.getEffect());
-                    log.info("node {} taints {}", node.getIp(), sbf);
+                    log.debug("node {} taints {}", node.getIp(), sbf);
                     taintsSet.add(sbf.toString());
                 });
             }
@@ -141,6 +162,16 @@ public class NodeServiceImpl implements NodeService {
             node.setCreateTime(
                     DateUtils.parseDate(no.getMetadata().getCreationTimestamp(), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
             return node;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Node> simpleConvertToDto(List<io.fabric8.kubernetes.api.model.Node> nodes) {
+        return nodes.stream().map(node -> {
+            String nodeName = node.getMetadata().getName();
+            String IP = node.getStatus().getAddresses().stream().filter(
+                    add -> "InternalIP".equals(add.getType())).collect(Collectors.toList()).get(0).getAddress();
+            return new Node().setName(nodeName).setIp(IP);
         }).collect(Collectors.toList());
     }
 
@@ -234,6 +265,21 @@ public class NodeServiceImpl implements NodeService {
             return nodeAddresses.get(0).getAddress();
         }
         return "";
+    }
+
+    @Override
+    public ResourceQuotaDo getResourceQuota(String clusterId) {
+        double cpu = 0.0;
+        double memory = 0.0;
+        List<Node> nodeList = this.list(clusterId);
+        for (Node node : nodeList){
+            cpu += Double.parseDouble(node.getCpu().getTotal());
+            memory += ResourceCalculationUtil.getResourceValue(node.getMemory().getAllocated() + "Ki", MEMORY, ResourceUnitEnum.GI.getUnit());
+        }
+        ResourceQuotaDo resourceQuotaDo = new ResourceQuotaDo();
+        resourceQuotaDo.getCpu().setTotal(ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(cpu), 0, RoundingMode.CEILING));
+        resourceQuotaDo.getMemory().setTotal(ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(memory), 0, RoundingMode.CEILING));
+        return resourceQuotaDo;
     }
 
     public Map<String, Double> nodeQuery(String clusterId, String query){

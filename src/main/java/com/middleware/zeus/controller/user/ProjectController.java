@@ -2,10 +2,12 @@ package com.middleware.zeus.controller.user;
 
 import com.middleware.caas.common.base.BaseResult;
 import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareInfoDTO;
 import com.middleware.caas.common.model.middleware.Namespace;
 import com.middleware.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
 import com.middleware.caas.common.model.user.ProjectDto;
 import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.zeus.service.middleware.MiddlewareInfoService;
 import com.middleware.zeus.service.user.ProjectService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -16,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author xutianhong
@@ -29,6 +32,8 @@ public class ProjectController {
 
     @Autowired
     private ProjectService projectService;
+    @Autowired
+    private MiddlewareInfoService middlewareInfoService;
 
     @ApiOperation(value = "创建项目", notes = "创建项目")
     @ApiImplicitParams({
@@ -81,8 +86,9 @@ public class ProjectController {
     @GetMapping("/{projectId}/namespace")
     public BaseResult<List<Namespace>> getNamespace(@PathVariable("projectId") String projectId,
                                                     @RequestParam(value = "clusterId", required = false) String clusterId,
-                                                    @RequestParam(value = "withQuota", required = false, defaultValue = "false") Boolean withQuota) {
-        return BaseResult.ok(projectService.getNamespace(projectId, clusterId, withQuota));
+                                                    @RequestParam(value = "withQuota", required = false, defaultValue = "false") Boolean withQuota,
+                                                    @RequestParam(value = "withMiddleware", required = false, defaultValue = "false") Boolean withMiddleware) {
+        return BaseResult.ok(projectService.getNamespace(projectId, clusterId, withQuota, withMiddleware));
     }
 
     @ApiOperation(value = "获取项目下可分配分区", notes = "获取项目下可分配分区")
@@ -184,4 +190,23 @@ public class ProjectController {
     public BaseResult<List<ProjectDto>> getMiddlewareCount() {
         return BaseResult.ok(projectService.getMiddlewareCount(null));
     }
+
+    @ApiOperation(value = "获取项目关联的集群", notes = "获取项目关联的集群")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
+    })
+    @GetMapping("/{projectId}/clusters")
+    public BaseResult<Set<String>> getRelationCluster(@PathVariable("projectId") String projectId) {
+        return BaseResult.ok(projectService.getRelationClusters(projectId));
+    }
+
+    @ApiOperation(value = "查询用户在指定项目下拥有运维权限的operator", notes = "查询用户在指定项目下拥有运维权限的operator")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("/operator")
+    public BaseResult<List<MiddlewareInfoDTO>> getMiddlewareOperator(@RequestParam("clusterId") String clusterId) {
+        return BaseResult.ok(middlewareInfoService.listUsersOperator(clusterId));
+    }
+
 }

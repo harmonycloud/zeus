@@ -72,4 +72,5 @@ public interface RedisService {
      * @return
      */
     Map<String,String> burstList(String clusterId, String namespace, String middlewareName, String mode);
+
 }

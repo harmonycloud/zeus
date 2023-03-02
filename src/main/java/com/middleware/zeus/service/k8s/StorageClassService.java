@@ -1,7 +1,8 @@
 package com.middleware.zeus.service.k8s;
 
 import com.middleware.caas.common.model.StorageClassDTO;
-import com.middleware.caas.common.model.middleware.StorageClass;
+import com.middleware.caas.common.model.StorageDto;
+import com.middleware.caas.common.model.middleware.StorageClassInfo;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareInfo;
 
 import java.util.List;
@@ -21,7 +22,7 @@ public interface StorageClassService {
      * @param onlyMiddleware 是否只返回支持中间件的存储
      * @return
      */
-    List<StorageClass> list(String clusterId, String namespace, boolean onlyMiddleware);
+    List<StorageClassInfo> list(String clusterId, String namespace, boolean onlyMiddleware);
 
     /**
      * 根据存储类型名称判断判断存储类型是否是LVM
@@ -33,6 +34,13 @@ public interface StorageClassService {
     boolean checkLVMStorage(String clusterId, String namespace, String storageClassName);
 
     /**
+     * 根据存储类型名称判断判断存储类型是否是LVM
+     * @param storageDto
+     * @return
+     */
+    boolean checkLVMStorage(StorageDto storageDto);
+
+    /**
      * 将从middleware中取出的pvc信息，转换为以pod的pvc名称为key,StorageClass sc为value的map,
      * 其中sc.storage表示存储大小，sc.storageClassName表示存储类型名称
      * @param pvcInfos middleware信息中的pvc数组
@@ -40,7 +48,7 @@ public interface StorageClassService {
      * @param namespace 分区
      * @return
      */
-    Map<String, StorageClassDTO> convertStorageClass(List<MiddlewareInfo> pvcInfos, String clusterId,String namespace);
+    Map<String, StorageClassDTO> convertStorageClass(List<MiddlewareInfo> pvcInfos, String clusterId, String namespace);
 
     /**
      * 根据sc的部分名称查找该sc

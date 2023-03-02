@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 public class Skyview2NamespaceServiceImpl extends NamespaceServiceImpl {
 
     @Autowired
-    private Skyview2NamespaceServiceClient  namespaceServiceClient;
+    private Skyview2NamespaceServiceClient namespaceServiceClient;
     @Autowired
     private ProjectService projectService;
     @Autowired

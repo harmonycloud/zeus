@@ -105,13 +105,11 @@ public class YamlUtil {
                     JSONArray valueArray = (JSONArray) value;
                     for (int i = 0; i < valueArray.size(); i++) {
                         JSONObject obj = (JSONObject) valueArray.get(i);
-                        JSONObject targetValue = obj;
-                        Object targetObj = target.get(key);
-                        if (targetObj instanceof JSONArray && target.getJSONArray(key).size() >= i + 1) {
-                            targetValue = jsonMerge(obj, (JSONObject) target.getJSONArray(key).get(i));
-                            target.getJSONArray(key).set(i, targetValue);
+                        if ((target.getJSONArray(key).size() <= i)) {
+                            target.getJSONArray(key).set(i, obj);
                         } else {
-                            target.getJSONArray(key).add(i, targetValue);
+                            JSONObject targetValue = jsonMerge(obj, (JSONObject) target.getJSONArray(key).get(i));
+                            target.getJSONArray(key).set(i, targetValue);
                         }
                     }
                 } else {

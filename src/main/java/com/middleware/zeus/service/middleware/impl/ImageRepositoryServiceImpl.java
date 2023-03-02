@@ -112,8 +112,13 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         }
         BeanImageRepository beanImageRepository = new BeanImageRepository();
         BeanUtils.copyProperties(imageRepositoryDTO, beanImageRepository);
-        String address = imageRepositoryDTO.getHostAddress() + ":" + imageRepositoryDTO.getPort() + "/"
-                + imageRepositoryDTO.getProject();
+        String address;
+        if (imageRepositoryDTO.getPort() != null){
+            address = imageRepositoryDTO.getHostAddress() + ":" + imageRepositoryDTO.getPort() + "/";
+        } else {
+            address = imageRepositoryDTO.getHostAddress() + "/";
+        }
+        address += imageRepositoryDTO.getProject();
         beanImageRepository.setClusterId(clusterId);
         beanImageRepository.setAddress(address);
         beanImageRepository.setUpdateTime(new Date());

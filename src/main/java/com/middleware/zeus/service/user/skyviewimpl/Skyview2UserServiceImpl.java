@@ -83,9 +83,14 @@ public class Skyview2UserServiceImpl extends UserServiceImpl {
 
     @Override
     public List<UserDto> list(String keyword) {
-        CaasResult<JSONArray> userResult = skyviewUserService.listUser(ZeusCurrentUser.getCaasToken(), keyword);
+        CaasResult<JSONArray> userResult = skyviewUserService.listUser(ZeusCurrentUser.getCaasToken(), null);
         JSONArray userData = userResult.getData();
-        return convertUserData(userData);
+        return convertUserData(userData).stream()
+                .filter(userDto -> StringUtils.containsIgnoreCase(userDto.getUserName(), keyword)
+                        || StringUtils.containsIgnoreCase(userDto.getAliasName(), keyword)
+                        || StringUtils.containsIgnoreCase(userDto.getEmail(), keyword)
+                        || StringUtils.containsIgnoreCase(userDto.getPhone(), keyword))
+                .collect(Collectors.toList());
     }
 
 

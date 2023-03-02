@@ -22,6 +22,7 @@ import io.swagger.annotations.ApiOperation;
 @Api(tags = "存储服务", value = "存储服务", description = "存储服务")
 @RestController
 @RequestMapping("/clusters/{clusterId}/storageclasses")
+@Deprecated
 public class StorageClassController {
 
     @Autowired

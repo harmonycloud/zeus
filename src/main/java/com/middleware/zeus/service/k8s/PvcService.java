@@ -40,4 +40,14 @@ public interface PvcService {
      */
     List<PersistentVolumeClaim> listWithFields(String clusterId, String namespace, Map<String, String> fields);
 
+    /**
+     * 查询存储列表
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param labels    关键词过滤
+     * @return List<PersistentVolumeClaim>
+     */
+    List<PersistentVolumeClaim> listWithLabels(String clusterId, String namespace, Map<String, String> labels);
+
 }

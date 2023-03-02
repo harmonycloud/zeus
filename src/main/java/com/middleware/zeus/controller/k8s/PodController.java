@@ -2,6 +2,7 @@ package com.middleware.zeus.controller.k8s;
 
 import com.middleware.caas.common.base.BaseResult;
 import com.middleware.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.model.middleware.PodMigrateDTO;
 import com.middleware.zeus.annotation.Authority;
 import com.middleware.zeus.service.k8s.PodService;
 import io.swagger.annotations.Api;
@@ -74,5 +75,36 @@ public class PodController {
                                        @RequestParam("type") String type,
                                        @PathVariable("podName") String podName) {
         return BaseResult.ok(podService.yaml(clusterId, namespace, middlewareName, type, podName));
+    }
+
+    @ApiOperation(value = "pod主机迁移", notes = "pod主机迁移")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "podMigrateDTO", value = "pod迁移信息", paramType = "query", dataTypeClass = PodMigrateDTO.class)
+    })
+    @PostMapping("/migrate")
+    public BaseResult migrate(@PathVariable("clusterId") String clusterId,
+                              @PathVariable("namespace") String namespace,
+                              @PathVariable("middlewareName") String middlewareName,
+                              @RequestBody PodMigrateDTO podMigrateDTO) {
+        podMigrateDTO.setClusterId(clusterId);
+        podMigrateDTO.setNameSpace(namespace);
+        podService.migrate(podMigrateDTO, middlewareName);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "获取迁移信息", notes = "获取迁移信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class)
+    })
+    @GetMapping("/migrate")
+    public BaseResult migrateStatus(@PathVariable("clusterId") String clusterId,
+                              @PathVariable("namespace") String namespace,
+                              @PathVariable("middlewareName") String middlewareName) {
+        return BaseResult.ok(podService.migrateStatus(clusterId, namespace, middlewareName));
     }
 }

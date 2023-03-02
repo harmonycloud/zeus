@@ -28,4 +28,5 @@ global:
   middlewarebackup_controller:
     job_creator:
       jobServiceAccount: default
+      jobTolerations: harm.cn/type,harm.cn/system
 

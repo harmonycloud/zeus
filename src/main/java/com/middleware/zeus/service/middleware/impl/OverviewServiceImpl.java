@@ -15,6 +15,8 @@ import com.middleware.caas.common.exception.CaasRuntimeException;
 import com.middleware.tool.date.DateUtils;
 import com.middleware.tool.numeric.ResourceCalculationUtil;
 import com.middleware.zeus.bean.*;
+import com.middleware.caas.common.model.*;
+import com.middleware.caas.common.model.middleware.*;
 import com.middleware.zeus.bean.*;
 import com.middleware.zeus.dao.BeanAlertRecordMapper;
 import com.middleware.zeus.dao.BeanClusterComponentsMapper;
@@ -22,6 +24,7 @@ import com.middleware.zeus.integration.cluster.PrometheusWrapper;
 import com.middleware.zeus.integration.cluster.bean.*;
 import com.middleware.zeus.integration.cluster.bean.*;
 import com.middleware.zeus.integration.registry.bean.harbor.HelmListInfo;
+import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.middleware.MiddlewareCrTypeService;
 import com.middleware.zeus.service.middleware.MiddlewareInfoService;
@@ -31,9 +34,6 @@ import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.system.OperationAuditService;
 import com.middleware.zeus.util.AlertDataUtil;
 import com.middleware.zeus.util.DateUtil;
-import com.middleware.caas.common.model.*;
-import com.middleware.caas.common.model.middleware.*;
-import com.middleware.zeus.service.k8s.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -54,7 +54,6 @@ import java.util.stream.Collectors;
 import static com.middleware.caas.common.constants.AlertConstant.SERVICE;
 import static com.middleware.caas.common.constants.CommonConstant.LINE;
 import static com.middleware.caas.common.constants.NameConstant.CPU;
-import static com.middleware.caas.common.constants.NameConstant.MEMORY;
 import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
 import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
@@ -531,7 +530,7 @@ public class OverviewServiceImpl implements OverviewService {
             if (CollectionUtils.isEmpty(namespaces)) {
                 return;
             }
-            Map<String, OverviewNamespaceInfo> namespaceMap = namespaces.stream().filter(Namespace::isRegistered).map(namespace -> {
+            Map<String, OverviewNamespaceInfo> namespaceMap = namespaces.stream().filter(Namespace::getRegistered).map(namespace -> {
                 OverviewNamespaceInfo overviewNSInfo = new OverviewNamespaceInfo();
                 BeanUtils.copyProperties(namespace, overviewNSInfo);
                 // 累计集群的注册命名空间数
@@ -574,12 +573,12 @@ public class OverviewServiceImpl implements OverviewService {
                 OverviewNamespaceInfo overviewNSInfo = namespaceMap.get(middleware.getNamespace());
 
                 // 先检查分区的ResourceQuota是否有配额，没有的话采用所有中间件的配额使用量
-                Map<String, List<String>> resourceQuota
+                ResourceQuotaDo resourceQuota
                         = resourceQuotaService.list(overviewNSInfo.getClusterId(), overviewNSInfo.getName());
                 hasCPUInNSQuota = hasCPUInQuota(resourceQuota);
                 if (hasCPUInNSQuota) {
-                    overviewNSInfo.setCpu(Double.parseDouble(resourceQuota.get(CPU).get(1)));
-                    overviewNSInfo.setMemory(Double.parseDouble(resourceQuota.get(MEMORY).get(1)));
+                    overviewNSInfo.setCpu(resourceQuota.getCpu().getRequest());
+                    overviewNSInfo.setMemory(resourceQuota.getMemory().getRequest());
                 }
 
                 // 累计命名空间实例数
@@ -644,12 +643,11 @@ public class OverviewServiceImpl implements OverviewService {
      * @param resourceQuota
      * @return
      */
-    private boolean hasCPUInQuota(Map<String, List<String>> resourceQuota) {
+    private boolean hasCPUInQuota(ResourceQuotaDo resourceQuota) {
         try {
-            // cpu值列表第二个是配额
-            return !CollectionUtils.isEmpty(resourceQuota)
-                    && resourceQuota.containsKey(CPU)
-                    && Double.parseDouble(resourceQuota.get(CPU).get(1)) > 0.0d;
+            return resourceQuota != null
+                    && resourceQuota.getCpu() != null
+                    && resourceQuota.getCpu().getRequest() > 0.0d;
         } catch (Exception e) {
             log.error(e.getMessage());
             return false;
@@ -700,22 +698,20 @@ public class OverviewServiceImpl implements OverviewService {
             }
 
             //获取已注册分区
-            List<Namespace> registeredNamespace = namespaces.stream().filter(Namespace::isRegistered).collect(Collectors.toList());
+            List<Namespace> registeredNamespace = namespaces.stream().filter(Namespace::getRegistered).collect(Collectors.toList());
             registeredNamespace.forEach(namespace -> {
                 //获取分区下所有实例
                 List<MiddlewareCR> middlewareCRS = middlewareCRService.listCR(clusterDTO.getId(), namespace.getName(), null);
-                Map<String, List<String>> quotas = namespace.getQuotas();
+                ResourceQuotaDo quotas = namespace.getQuotas();
 
                 String namespaceCpu = null;
                 String namespaceMemory = null;
                 if (quotas != null) {
-                    List<String> cpuList = quotas.get("cpu");
-                    if (!CollectionUtils.isEmpty(cpuList)) {
-                        namespaceCpu = cpuList.get(2) + "/" + cpuList.get(1);
+                    if (quotas.getCpu() != null ) {
+                        namespaceCpu = quotas.getCpu().getUsed() + "/" + quotas.getCpu().getRequest();
                     }
-                    List<String> memoryList = quotas.get("memory");
-                    if (!CollectionUtils.isEmpty(memoryList)) {
-                        namespaceMemory = memoryList.get(2) + "/" + memoryList.get(1);
+                    if (quotas.getMemory() != null ) {
+                        namespaceMemory = quotas.getMemory().getUsed() + "/" + quotas.getMemory().getRequest();
                     }
                 }
 
@@ -826,6 +822,7 @@ public class OverviewServiceImpl implements OverviewService {
         recordQueryWrapper.ne("name", "");
         recordQueryWrapper.ne("type", null);
         recordQueryWrapper.eq("lay", "service");
+        recordQueryWrapper.isNotNull("type");
         recordQueryWrapper.ge("time", beginTime);
         recordQueryWrapper.le("time", endTime);
         recordQueryWrapper.orderByDesc("time");

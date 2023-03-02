@@ -1,0 +1,132 @@
+group: mysql.middleware.harmonycloud.cn
+version: v1alpha1
+kind: MysqlCluster
+resource: mysqlclusters
+
+# 备份工具设置特定的环境变量
+backupTool: wal-g
+isCommbakcup: false
+operatorImage:
+  5: {{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.job_mysql_backup.image }}:{{ .Values.global.middlewarebackup_controller.job_mysql_backup.tag }}
+  8: {{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.job_mysql_backup.image }}:{{ .Values.global.middlewarebackup_controller.job_mysql_backup.mysql8tag }}
+
+replicasPath: replicas
+
+######中间件中挂载信息############
+# 默认数据路径
+defaultDataPath: /data/mysql/db_{NAME}/data
+# 默认挂载路径
+defaultMountPath: /data/mysql/db_{NAME}
+# pvc格式
+pvcFormat: mysql-data-{POD_NAME}
+
+# 实例数量资源
+replicasFieldNames:
+  - "replicas"
+
+# 静态环境变量
+envs:
+  CONFIG_FILE: "/conf/my.cnf"
+  TZ: "Asia/Shanghai"
+  USER: "root"
+
+# 系统变量
+sysDynamicVariable:
+  VERSION:
+    jsonPath: .spec.version
+    objectType: middleware
+    regexp: '^(\d)'
+  replicas:
+    objectType: middleware
+    jsonPath: '.spec.replicas'
+    scope: pod
+  partition:
+    objectType: middleware
+    value: "0"
+
+# 动态变量
+# objectType: 变量获取的对象，midleware/bakcup/restore
+# jsonPath: 通过jsonpath从对象中获取变量值
+# type：变量用途，env/arg
+# regexp支持对值的正则获取
+# format: 格式化，也就是调用fmt.sprintf(format,value), 默认会对{NAME}\{NAMESPACE}\{POD_NAME}进行替换
+# scope: 作用域，在哪里进行变量的替换，pod或者整体; 如果是pod则jsonpath中可以使用{POD_NAME}变量
+backupDynamicVariable:
+  PASSWORD:
+    jsonPath: ".spec.statefulset.env[]|select(.name==\"MYSQL_ROOT_PASSWORD\")|.value"
+    objectType: middleware
+    type: env
+  JOB_OWN:
+    type: env
+    value: "mysql"
+  clusterName:
+    jsonPath: .metadata.name
+    objectType: middleware
+    type: arg
+  podName:
+    default: "{POD_NAME}"
+    scope: pod
+    type: arg
+#  owner:
+#    type: arg
+#    jsonPath: '. as {metadata: $metadata}|.metadata.annotations."middlewarebackup.type.job"|if .=="backup-inc" then $metadata.labels.owner else $metadata.name end'
+#
+
+#  job中最终是靠环境变量OPERATION_TYPE判断是什么操作
+#  BackupTag       = "backup"
+#  BackupBinlogTag = "backup-inc"
+#  RestoreTag      = "restore"
+#  RestorePITTag   = "restore-point-in-time"
+restoreDynamicVariable:
+  # 默认为全量恢复，如果设置了OPERATION_TYPE，则以此为准
+  OPERATION_TYPE:
+    default: 'restore'
+    type: env
+    jsonPath: '.metadata.annotations."middlewarebackup.job.type"| if .=="restore" then "restore" else "restore-point-in-time" end'
+  # 删除backupNamespace、backupResultName、mode参数
+  backupNamespace:
+    value: ""
+    type: arg
+  backupResultName:
+    value: ""
+    type: arg
+  mode:
+    value: ""
+    type: arg
+  PASSWORD:
+    jsonPath: ".spec.statefulset.env[]|select(.name==\"MYSQL_ROOT_PASSWORD\")|.value"
+    objectType: middleware
+    type: env
+  JOB_OWN:
+    value: "mysql"
+  clusterName:
+    jsonPath: .metadata.name
+    objectType: middleware
+    type: arg
+  podName:
+    default: "{POD_NAME}"
+    scope: pod
+    type: arg
+  BACKUP_NAME:
+    jsonPath: .status.storageProvider.mysql.backupName
+    objectType: middlewarebackup
+    type: env
+  WALG_S3_PREFIX:
+    jsonPath: .status.storageProvider.mysql.repository
+    objectType: middlewarebackup
+    type: env
+  MYSQL_SIZE:
+    jsonPath: .status.middlewareClusterReplicasObjects[].replicas
+    objectType: middlewarerestore
+    type: env
+
+# pod选择器
+defaultSelector: "[.status.conditions[]|select(.type==\"Master\" or .type==\"master\")|.name]"
+# 中间件过滤器
+defaultFilterMiddleware: ".status|select(.phase==\"Running\" or .phase==\"running\")"
+# pod过滤器
+defaultFilterPod: ""
+# node过滤器
+defaultFilterNode: ""
+#defaultFilterNode: "select(.metadata.labels.\"topology.kubernetes.io/zone\"==\"zoneA\")"
+

@@ -77,17 +77,17 @@ public class NamespaceController {
         return BaseResult.ok();
     }
 
-    @ApiOperation(value = "注册命名空间", notes = "注册命名空间")
+    @ApiOperation(value = "更新分区信息", notes = "更新分区信息")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "name", value = "分区名称", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "query", dataTypeClass = Namespace.class),
     })
     @PutMapping("/{name}")
-    public BaseResult registry(@PathVariable("clusterId") String clusterId,
-                               @PathVariable("name") String name,
-                               @RequestParam Boolean registered){
-        namespaceService.registry(clusterId, name, registered);
+    public BaseResult update(@PathVariable("clusterId") String clusterId,
+                             @PathVariable("name") String name,
+                             @RequestBody Namespace namespace){
+        namespaceService.update(clusterId, name, namespace);
         return BaseResult.ok();
     }
 
@@ -103,6 +103,34 @@ public class NamespaceController {
                              @RequestParam boolean availableDomain) {
         namespaceService.updateAvailableDomain(clusterId, name, availableDomain);
         return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "绑定/解绑项目", notes = "绑定/解绑项目")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "projectId", required = false, value = "项目id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "aliasName", value = "分区中文名", paramType = "query", dataTypeClass = String.class),
+    })
+    @PutMapping("/{namespace}/project")
+    public BaseResult update(@PathVariable("clusterId") String clusterId,
+                             @PathVariable("namespace") String namespace,
+                             @RequestParam(value = "projectId",required = false) String projectId,
+                             @RequestParam("aliasName") String aliasName) {
+        namespaceService. bindProject(clusterId, namespace, aliasName, projectId);
+        return BaseResult.ok();
+    }
+
+
+    @ApiOperation(value = "查询分区下可使用存储信息", notes = "查询分区下可使用存储信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
+    })
+    @GetMapping("/{namespace}/storage")
+    public BaseResult<List<StorageDto>> storage(@PathVariable("clusterId") String clusterId,
+                                                @PathVariable("namespace") String namespace) {
+        return BaseResult.ok(namespaceService.storage(clusterId, namespace));
     }
 
 }

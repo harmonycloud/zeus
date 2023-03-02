@@ -132,7 +132,7 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
                 String[] storageClasses = storageClass.split(",");
                 StringBuilder sb = new StringBuilder();
                 for (String aClass : storageClasses) {
-                    StorageDto storageDto = storageService.get(middleware.getClusterId(), aClass, false);
+                    StorageDto storageDto = storageService.get(middleware.getClusterId(), aClass);
                     sb.append(storageDto.getAliasName()).append(",");
                 }
                 sb.deleteCharAt(sb.length() - 1);

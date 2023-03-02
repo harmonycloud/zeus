@@ -1,10 +1,17 @@
 package com.middleware.zeus.service.middleware;
 
 import com.middleware.caas.common.model.MiddlewareBackupDTO;
+import com.middleware.caas.common.model.MiddlewareIncBackup;
 import com.middleware.caas.common.model.MiddlewareIncBackupDto;
+import com.middleware.caas.common.model.MiddlewareTaskDTO;
 import com.middleware.caas.common.model.middleware.MiddlewareBackupRecord;
+import com.middleware.caas.common.model.middleware.MiddlewareBackupRecordGroup;
+import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupScheduleCR;
+import com.middleware.zeus.integration.cluster.bean.Minio;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author dengyulong
@@ -23,9 +30,14 @@ public interface MiddlewareBackupService {
     /**
      * 创建增量备份
      *
-     * @param middlewareBackupDTO 备份信息
      */
     void createIncBackup(String clusterId, String namespace, String backupName, String time);
+
+    /**
+     * 创建增量备份
+     *
+     */
+    void createIncBackup(String clusterId, String namespace, String backupName, String time, MiddlewareBackupScheduleCR scheduleCR);
 
     /**
      * 更新备份规则
@@ -39,17 +51,28 @@ public interface MiddlewareBackupService {
      * 创建备份规则
      *
      * @param backupDTO
+     * @param minio
+     * @param objectMeta
      * @return
      */
-    void createBackupSchedule(MiddlewareBackupDTO backupDTO);
+    void createBackupSchedule(MiddlewareBackupDTO backupDTO, Minio minio, ObjectMeta objectMeta);
 
     /**
      * 立即备份
      *
      * @param backupDTO
+     * @param minio
+     * @param objectMeta
      * @return
      */
-    void createNormalBackup(MiddlewareBackupDTO backupDTO);
+    void createNormalBackup(MiddlewareBackupDTO backupDTO, Minio minio, ObjectMeta objectMeta);
+
+    /**
+     * 创建增量备份任务
+     * @param middlewareIncBackup
+     * @param objectMeta
+     */
+    void createIncBackupSchedule(MiddlewareIncBackup middlewareIncBackup, ObjectMeta objectMeta);
 
     /**
      * 查询备份规则列表
@@ -93,6 +116,16 @@ public interface MiddlewareBackupService {
      * @return
      */
     List<MiddlewareBackupRecord> listBackup(String clusterId, String namespace, String middlewareName, String type);
+
+    /**
+     * 查询备份任务详情
+     * @param clusterId
+     * @param namespace
+     * @param backupName 备份任务名称
+     * @param backupMode 备份任务类型 period:周期备份 single:单次备份
+     * @return
+     */
+    MiddlewareBackupRecord getBackup(String clusterId, String namespace,String backupName,String backupMode);
 
     /**
      * 创建恢复
@@ -148,6 +181,18 @@ public interface MiddlewareBackupService {
     List<MiddlewareBackupRecord> backupTaskList(String clusterId, String namespace, String middlewareName, String type, String keyword);
 
     /**
+     * 获取备份任务组列表
+     * @param clusterId
+     * @param namespace
+     * @param middlewareName
+     * @param projectId
+     * @param type
+     * @param keyword
+     * @return
+     */
+    List<MiddlewareBackupRecordGroup> backupTaskGroupList(String clusterId, String namespace, String middlewareName, String projectId, String type, String keyword);
+
+    /**
      * 备份任务详情
      * @param clusterId
      * @param namespace
@@ -157,10 +202,10 @@ public interface MiddlewareBackupService {
     MiddlewareIncBackupDto getIncBackupInfo(String clusterId, String namespace, String backupName);
 
     /**
-     * 备份记录
+     * 查询备份记录列表
      * @param clusterId
      * @param namespace
-     * @param middlewareName
+     * @param backupName
      * @param type
      * @return
      */
@@ -168,14 +213,9 @@ public interface MiddlewareBackupService {
 
     /**
      * 删除备份任务
-     * @param clusterId
-     * @param namespace
-     * @param type
-     * @param backupName
-     * @param backupId
-     * @param cron
+     * @param taskDTO
      */
-    void deleteBackUpTask(String clusterId, String namespace, String type, String backupName, String backupId, Boolean cron);
+    void deleteBackUpTask(MiddlewareTaskDTO taskDTO);
 
     /**
      * 删除备份记录
@@ -192,14 +232,27 @@ public interface MiddlewareBackupService {
      * @param clusterId
      * @param taskName
      * @param backupId
+     * @param positionId
      */
-    void createBackupName(String clusterId, String taskName, String backupId, String backupType);
+    void saveBackupName(String clusterId, String taskName, String backupId, String backupType, Integer positionId);
 
     /**
-     * 删除备份任务名称映射信息
+     * 根据备份位置id查询备份任务(含单次备份和周期备份)
      * @param clusterId
-     * @param taskName
-     * @param backupType
+     * @param namespace
+     * @param labels
+     * @return
      */
-    void deleteBackupName(String clusterId, String taskName, String backupType);
+    List<MiddlewareBackupRecord> listBackupTask(String clusterId, String namespace, Map<String, String> labels);
+
+    /**
+     * 检查中间件是否已创建周期备份任务
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param middlewareName
+     * @return
+     */
+    boolean checkSchedule(String clusterId, String namespace, String type, String middlewareName);
+
 }

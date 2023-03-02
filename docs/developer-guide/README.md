@@ -9,7 +9,7 @@
 |── src/                                  
 |   |── main/                                               # 源码目录
 |       |── java/                                           # 源码
-|           |── com.harmonycloud.zeus/           # 基础包名
+|           |── com.middleware.zeus/           # 基础包名
 |               |── annotation/                             # 自定义注解
 |               |── bean/                                   # 数据库实体类
 |               |── config/                                 # 自动装配

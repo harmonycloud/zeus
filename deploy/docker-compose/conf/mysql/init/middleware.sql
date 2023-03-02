@@ -19,7 +19,7 @@ DROP TABLE IF EXISTS `alert_record`;
 CREATE TABLE `alert_record` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '自增id',
   `cluster_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '集群id',
-  `namespace` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '分区',
+  `namespace` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '分区',
   `name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '中间件名称',
   `alert` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '告警名称',
   `summary` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '简讯',
@@ -79,7 +79,7 @@ DROP TABLE IF EXISTS `alert_rule_id`;
 CREATE TABLE `alert_rule_id` (
   `alert_id` int NOT NULL AUTO_INCREMENT COMMENT '规则ID',
   `cluster_id` varchar(32) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '集群ID',
-  `namespace` varchar(32) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '命名空间',
+  `namespace` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '命名空间',
   `middleware_name` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '中间件名称',
   `alert` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '规则名称',
   `name` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL,
@@ -989,7 +989,7 @@ INSERT INTO `resource_menu` VALUES (9,'monitorAlarm','监控告警','monitorAlar
 INSERT INTO `resource_menu` VALUES (10,'disasterBackup','灾备中心','disasterBackup',10,'icon-rongzaibeifen',0,NULL);
 INSERT INTO `resource_menu` VALUES (11,'systemManagement','系统管理','systemManagement',11,'icon-shezhi01',0,NULL);
 INSERT INTO `resource_menu` VALUES (12,'backupTask','备份任务','backupService/backupTask',81,'icon-fuwutiaokuan',8,NULL);
-INSERT INTO `resource_menu` VALUES (13,'backupPosition','备份位置','backupService/backupPosition',82,'icon-fuwutiaokuan',8,NULL);
+INSERT INTO `resource_menu` VALUES (13,'backupServer','备份服务器','backupService/backupServer',82,'icon-fuwutiaokuan',8,NULL);
 INSERT INTO `resource_menu` VALUES (14,'dataMonitor','数据监控','monitorAlarm/dataMonitor',91,NULL,9,NULL);
 INSERT INTO `resource_menu` VALUES (15,'logDetail','日志详情','monitorAlarm/logDetail',892,NULL,9,NULL);
 INSERT INTO `resource_menu` VALUES (16,'alarmCenter','服务告警','monitorAlarm/alarmCenter',93,NULL,9,NULL);
@@ -1050,15 +1050,15 @@ INSERT INTO `resource_menu_role` VALUES (23,2,1,0);
 INSERT INTO `resource_menu_role` VALUES (24,2,2,0);
 INSERT INTO `resource_menu_role` VALUES (25,2,3,1);
 INSERT INTO `resource_menu_role` VALUES (26,2,4,1);
-INSERT INTO `resource_menu_role` VALUES (27,2,5,1);
+INSERT INTO `resource_menu_role` VALUES (27,2,5,0);
 INSERT INTO `resource_menu_role` VALUES (28,2,6,0);
-INSERT INTO `resource_menu_role` VALUES (29,2,7,1);
+INSERT INTO `resource_menu_role` VALUES (29,2,7,0);
 INSERT INTO `resource_menu_role` VALUES (30,2,8,1);
 INSERT INTO `resource_menu_role` VALUES (31,2,9,1);
 INSERT INTO `resource_menu_role` VALUES (32,2,10,1);
 INSERT INTO `resource_menu_role` VALUES (33,2,11,0);
 INSERT INTO `resource_menu_role` VALUES (34,2,12,1);
-INSERT INTO `resource_menu_role` VALUES (35,2,13,1);
+INSERT INTO `resource_menu_role` VALUES (35,2,13,0);
 INSERT INTO `resource_menu_role` VALUES (36,2,14,1);
 INSERT INTO `resource_menu_role` VALUES (37,2,15,1);
 INSERT INTO `resource_menu_role` VALUES (38,2,16,1);
@@ -1072,15 +1072,15 @@ INSERT INTO `resource_menu_role` VALUES (45,3,1,0);
 INSERT INTO `resource_menu_role` VALUES (46,3,2,0);
 INSERT INTO `resource_menu_role` VALUES (47,3,3,1);
 INSERT INTO `resource_menu_role` VALUES (48,3,4,1);
-INSERT INTO `resource_menu_role` VALUES (49,3,5,1);
+INSERT INTO `resource_menu_role` VALUES (49,3,5,0);
 INSERT INTO `resource_menu_role` VALUES (50,3,6,0);
-INSERT INTO `resource_menu_role` VALUES (51,3,7,1);
+INSERT INTO `resource_menu_role` VALUES (51,3,7,0);
 INSERT INTO `resource_menu_role` VALUES (52,3,8,1);
 INSERT INTO `resource_menu_role` VALUES (53,3,9,1);
 INSERT INTO `resource_menu_role` VALUES (54,3,10,1);
 INSERT INTO `resource_menu_role` VALUES (55,3,11,0);
 INSERT INTO `resource_menu_role` VALUES (56,3,12,1);
-INSERT INTO `resource_menu_role` VALUES (57,3,13,1);
+INSERT INTO `resource_menu_role` VALUES (57,3,13,0);
 INSERT INTO `resource_menu_role` VALUES (58,3,14,1);
 INSERT INTO `resource_menu_role` VALUES (59,3,15,1);
 INSERT INTO `resource_menu_role` VALUES (60,3,16,1);

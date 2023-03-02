@@ -15,10 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -71,6 +68,12 @@ public class EventServiceImpl implements EventService {
             }
             return e1.getLastTimestamp().after(e2.getLastTimestamp()) ? -1 : 1;
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<EventDetail> getEvents(String clusterId, Map<String, String> fields) {
+        List<Event> eventList = eventWrapper.listByFields(clusterId, fields);
+        return eventList.stream().map(this::convertEventDetail).collect(Collectors.toList());
     }
 
     private EventDetail convertEventDetail(Event event) {

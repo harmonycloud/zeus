@@ -14,6 +14,8 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import com.middleware.caas.common.model.*;
@@ -77,7 +79,8 @@ import lombok.extern.slf4j.Slf4j;
 public class ClusterServiceImpl implements ClusterService {
 
     private static final Map<String, MiddlewareClusterDTO> CLUSTER_MAP = new ConcurrentHashMap<>();
-    private static boolean run = true;
+    private final ReentrantLock lock = new ReentrantLock();
+
     @Value("${system.upload.path:/usr/local/zeus-pv/upload}")
     private String uploadPath;
     @Value("${k8s.default.dc:default}")
@@ -106,8 +109,6 @@ public class ClusterServiceImpl implements ClusterService {
     @Autowired
     private PrometheusResourceMonitorService prometheusResourceMonitorService;
     @Autowired
-    private MiddlewareService middlewareService;
-    @Autowired
     private ClusterComponentService clusterComponentService;
     @Autowired
     private IngressComponentService ingressComponentService;
@@ -122,9 +123,19 @@ public class ClusterServiceImpl implements ClusterService {
     @Autowired
     private MiddlewareAlertsService middlewareAlertsService;
     @Autowired
-    private NodeWrapper nodeWrapper;
-    @Autowired
     private BeanActiveAreaMapper activeAreaMapper;
+    @Autowired
+    private ResourceQuotaService resourceQuotaService;
+    @Autowired
+    private StorageService storageService;
+    @Autowired
+    private BeanMiddlewareClusterMapper middlewareClusterMapper;
+    @Autowired
+    private BackupServerService backupServerService;
+    @Autowired
+    private BeanProjectNamespaceMapper projectNamespaceMapper;
+    @Autowired
+    private NamespaceWrapper namespaceWrapper;
 
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
@@ -203,7 +214,7 @@ public class ClusterServiceImpl implements ClusterService {
         List<MiddlewareClusterDTO> res = clusters;
         // 根据项目进行过滤
         if (StringUtils.isNotEmpty(projectId)) {
-            List<String> availableClusterList = projectService.getClusters(projectId);
+            Set<String> availableClusterList = projectService.getRelationClusterIds(projectId);
             res = clusters.stream()
                 .filter(cluster -> availableClusterList.stream().anyMatch(ac -> ac.equals(cluster.getId())))
                 .collect(Collectors.toList());
@@ -242,7 +253,11 @@ public class ClusterServiceImpl implements ClusterService {
             }
             CLUSTER_MAP.put(clusterId, SerializationUtils.clone(dto));
         }
-        refresh(clusterId);
+        try {
+            refresh(clusterId);
+        } catch (Exception e){
+            log.error("刷新集群信息出现异常", e);
+        }
         return CLUSTER_MAP.get(clusterId);
     }
 
@@ -407,6 +422,8 @@ public class ClusterServiceImpl implements ClusterService {
         activeAreaService.delete(cluster.getId());
         // 移除项目下分区绑定关系
         projectService.unBindNamespace(null, cluster.getId(), null);
+        // 删除集群和备份服务器的关联关系
+        backupServerService.unbinding(cluster.getId());
     }
 
     private void checkClusterExistent(MiddlewareClusterDTO cluster, boolean expectExisting) {
@@ -928,7 +945,7 @@ public class ClusterServiceImpl implements ClusterService {
             return Collections.emptyList();
         }
         List<Namespace> namespaces = namespaceService.list(clusterId, false, false, false, null, projectId);
-        return namespaces.stream().filter(namespace -> namespace.isRegistered()).collect(Collectors.toList());
+        return namespaces.stream().filter(Namespace::getRegistered).collect(Collectors.toList());
     }
 
     @Override
@@ -955,6 +972,81 @@ public class ClusterServiceImpl implements ClusterService {
             clusterResource(cluster);
         }
         return cluster.getClusterQuotaDTO();
+    }
+
+    @Override
+    public Set<String> listClusterIds(String projectId) {
+        QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<>();
+        wrapper.eq("project_id", projectId);
+        List<BeanProjectNamespace> projectNamespaceList = projectNamespaceMapper.selectList(wrapper);
+        return projectNamespaceList.stream().map(BeanProjectNamespace::getClusterId).collect(Collectors.toSet());
+    }
+
+    @Override
+    public ResourceQuotaDo getResourceQuotaInfo(String clusterId, Boolean allocatable) {
+        ResourceQuotaDo resourceQuotaDo = new ResourceQuotaDo();
+        if (allocatable){
+            // 获取节点资源总额
+            ResourceQuotaDo nodeQuota = nodeService.getResourceQuota(clusterId);
+            // 获取分区配额分配情况
+            ResourceQuotaDo namespaceRequestQuota = resourceQuotaService.getQuota(clusterId);
+            double cpu = nodeQuota.getCpu().getTotal();
+            double memory = nodeQuota.getMemory().getTotal();
+            Map<String, Double> storageMap = new HashMap<>();
+            if (namespaceRequestQuota != null){
+                if (namespaceRequestQuota.getCpu() != null && namespaceRequestQuota.getCpu().getRequest() != null){
+                    cpu = cpu - namespaceRequestQuota.getCpu().getRequest();
+                }
+                if (namespaceRequestQuota.getMemory() != null && namespaceRequestQuota.getMemory().getRequest() != null){
+                    memory = memory - namespaceRequestQuota.getMemory().getRequest();
+                }
+                if (!CollectionUtils.isEmpty(namespaceRequestQuota.getStorageList())){
+                    storageMap.putAll(namespaceRequestQuota.getStorageList().stream().collect(Collectors.toMap(StorageQuota::getName, storageQuota -> storageQuota.getStorage().getRequest())));
+                }
+            }
+            // 获取存储资源总额
+            List<StorageDto> storageDtoList = storageService.list(clusterId, null, null, false);
+            List<StorageQuota> storageQuotaList =
+                storageDtoList.stream().filter(storageDto -> storageDto.getTotalStorage() != null).map(storageDto -> {
+                    StorageQuota storageQuota = new StorageQuota();
+                    QuotaBase storage = new QuotaBase();
+                    // 设置存储可用总额
+                    Double total = storageDto.getTotalStorage();
+                    if (storageMap.containsKey(storageDto.getStorageClassList().get(0).getName())) {
+                        total = total - storageMap.get(storageDto.getStorageClassList().get(0).getName());
+                    }
+                    storage.setTotal(total);
+
+                    storageQuota.setName(storageDto.getAliasName());
+                    storageQuota.setStorageClass(storageDto.getStorageClassList().stream().map(StorageClassInfo::getName)
+                        .collect(Collectors.toList()));
+                    storageQuota.setStorage(storage);
+                    return storageQuota;
+                }).collect(Collectors.toList());
+
+
+            resourceQuotaDo.getCpu().setTotal(cpu);
+            resourceQuotaDo.getMemory().setTotal(memory);
+            resourceQuotaDo.setStorageList(storageQuotaList);
+        }
+        // 获取其他数据例如 配额使用量等
+        return resourceQuotaDo;
+    }
+
+    @Override
+    public boolean checkIfExists(String clusterId) {
+        QueryWrapper<BeanMiddlewareCluster> wrapper   = new QueryWrapper<>();
+        wrapper.eq("cluster_id", clusterId);
+        List<BeanMiddlewareCluster> clusters = middlewareClusterMapper.selectList(wrapper);
+        return !CollectionUtils.isEmpty(clusters);
+    }
+
+    @Override
+    public boolean checkWithInCluster(String clusterId) {
+        io.fabric8.kubernetes.api.model.Namespace targetNs = namespaceWrapper.get(clusterId, KUBE_SYSTEM);
+        io.fabric8.kubernetes.api.model.Namespace defaultNs =
+            namespaceWrapper.get(K8sClient.DEFAULT_CLIENT, KUBE_SYSTEM);
+        return targetNs.getMetadata().getUid().equals(defaultNs.getMetadata().getUid());
     }
 
     public Map<Map<String, String>, List<String>> getResultMap(PrometheusResponse response) {
@@ -1001,7 +1093,7 @@ public class ClusterServiceImpl implements ClusterService {
             return new ArrayList();
         }
         List<Namespace> namespaces = namespaceService.list(clusterDTO.getId(), false, false, false, null, null);
-        return namespaces.stream().filter(namespace -> namespace.isRegistered()).collect(Collectors.toList());
+        return namespaces.stream().filter(Namespace::getRegistered).collect(Collectors.toList());
     }
 
     private void createMiddlewareCrd(MiddlewareClusterDTO middlewareClusterDTO) {
@@ -1061,28 +1153,35 @@ public class ClusterServiceImpl implements ClusterService {
     }
 
     public void refresh(String clusterId) {
-        if (run) {
-            ThreadPoolExecutorFactory.executor.execute(() -> {
-                run = false;
-                synchronized (this) {
-                    List<MiddlewareClusterDTO> clusterList = listClusters().stream()
-                        .filter(clusterDTO -> clusterDTO.getId().equals(clusterId)).collect(Collectors.toList());
-                    if (CollectionUtils.isEmpty(clusterList)) {
-                        log.error("刷新集群信息失败，未找到集群:{}", clusterId);
-                    }
-                    MiddlewareClusterDTO dto = clusterList.get(0);
-                    CLUSTER_MAP.put(clusterId, SerializationUtils.clone(dto));
+        ThreadPoolExecutorFactory.executor.execute(() -> {
+            try {
+                if (lock.tryLock(1, TimeUnit.SECONDS)) {
                     try {
-                        log.info("刷新集群信息成功，将静默10s");
-                        Thread.sleep(10000);
-                        log.info("静默完成，可再次刷新");
-                        run = true;
-                    } catch (InterruptedException e) {
-                        log.error("线程休眠异常", e);
+                        List<MiddlewareClusterDTO> clusterList = listClusters().stream()
+                                .filter(clusterDTO -> clusterDTO.getId().equals(clusterId)).collect(Collectors.toList());
+                        if (CollectionUtils.isEmpty(clusterList)) {
+                            log.error("刷新集群信息失败，未找到集群:{}", clusterId);
+                        }
+                        MiddlewareClusterDTO dto = clusterList.get(0);
+                        CLUSTER_MAP.put(clusterId, SerializationUtils.clone(dto));
+                        try {
+                            log.info("刷新集群信息成功，将静默10s");
+                            Thread.sleep(10000);
+                            log.info("静默完成，可再次刷新");
+                        } catch (InterruptedException e) {
+                            log.error("线程休眠异常", e);
+                        }
+                    } catch (Exception e){
+                        e.printStackTrace();
+                    } finally {
+                        lock.unlock();
                     }
                 }
-            });
-        }
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        });
+
     }
 
     /**

@@ -8,6 +8,20 @@ metadata:
   name: {{ include "mysql.fullname" . }}
 spec:
   groups:
+  - name: mysql-exporter
+    rules:
+    - alert: MySQLExporterDown
+      annotations:
+        alertLevel: critical
+        message: MySQL Exporter is down, This requires immediate action.
+        metric: up
+        product: harmonycloud
+        service: metrics
+        summary: MySQL Exporter is down
+      expr: up{service='{{ include "mysql.fullname" . }}'} == 0
+      for: 2m
+      labels:
+        severity: critical
   - name: mysql-cluster
     rules:
     - expr: mysql_slave_status_seconds_behind_master{service='{{ include "mysql.fullname" . }}'} - mysql_slave_status_sql_delay{service='{{ include "mysql.fullname" . }}'}
@@ -250,4 +264,15 @@ spec:
       for: 1m
       labels:
         severity: warning
+    - alert: MySQLVolumeUsage
+      expr: spc_volume_used_capacity_rate{namespace='{{ .Release.Namespace }}', persistentvolumeclaim=~".*{{ include "mysql.fullname" . }}.*"} > 0.7
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        alertLevel: critical
+        product: harmonycloud
+        summary: "{{`{{ $labels.persistentvolumeclaim }}`}} MySQL volume pressure"
+        message: "{{`{{ $labels.persistentvolumeclaim }}`}} MySQL volume pressure"
+        description: "{{`{{ $labels.persistentvolumeclaim }}`}} MySQL data capacity is insufficient by 30%.\n  current_value={{ `{{ $value }}` }}"
 {{- end }}

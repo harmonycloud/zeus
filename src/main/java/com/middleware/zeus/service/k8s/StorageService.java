@@ -1,5 +1,6 @@
 package com.middleware.zeus.service.k8s;
 
+import com.middleware.caas.common.model.QuotaBase;
 import com.middleware.caas.common.model.StorageDto;
 import com.middleware.caas.common.model.middleware.MiddlewareStorageInfoDto;
 
@@ -22,10 +23,9 @@ public interface StorageService {
      *
      * @param clusterId 集群id
      * @param name 存储名称
-     * @param detail  是否详情
      * @return List<StorageDto>
      */
-    StorageDto get(String clusterId, String name, Boolean detail);
+    StorageDto get(String clusterId, String name);
 
     /**
      * 查询存储列表
@@ -63,15 +63,6 @@ public interface StorageService {
     void delete(String clusterId, String storageName);
 
     /**
-     * 查询存储详情
-     *
-     * @param clusterId   集群id
-     * @param storageName 存储名称
-     * @return StorageDto
-     */
-    StorageDto detail(String clusterId, String storageName);
-
-    /**
      * 查询中间件存储使用情况
      *
      * @param clusterId   集群id
@@ -80,7 +71,29 @@ public interface StorageService {
      */
     List<MiddlewareStorageInfoDto> middlewares(String clusterId, String storageName);
 
+    /**
+     *
+     * @param clusterId 集群id
+     * @return
+     */
+    Map<String, Map<String, QuotaBase>> monitorStorageQuota(String clusterId);
 
     Map<String,String> listStorageMap(String clusterId, Boolean all);
 
+    /**
+     *
+     * @param clusterId 集群id
+     * @param storageName 存储名
+     * @return
+     */
+    String getAliasName(String clusterId, String storageName);
+
+    /**
+     * 校验是否为hitachi存储并获取参数
+     *
+     * @param clusterId 集群id
+     * @param storageName 存储名
+     * @return Map<String, String>
+     */
+    Map<String, String> checkHitachiAndGetParams(String clusterId, String storageName);
 }

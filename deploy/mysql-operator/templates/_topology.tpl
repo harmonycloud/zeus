@@ -59,8 +59,8 @@ affinity:
   {{- if eq .Values.podAntiAffinity "hard"}}
   podAntiAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:
-    - labelSelector:
-        topologyKey: {{ .Values.podAntiAffinityTopologKey }}
+    - topologyKey: {{ .Values.podAntiAffinityTopologKey }}
+      labelSelector:
         matchExpressions:
         - key: {{ include "middleware.key" . }}
           operator: In
