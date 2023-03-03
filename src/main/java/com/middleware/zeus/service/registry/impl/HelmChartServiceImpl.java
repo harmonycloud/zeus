@@ -14,6 +14,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONArray;
+import com.middleware.caas.common.enums.ComponentsEnum;
 import com.middleware.caas.common.model.middleware.*;
 import com.middleware.zeus.bean.BeanImageRepository;
 import com.middleware.zeus.integration.registry.HelmChartWrapper;

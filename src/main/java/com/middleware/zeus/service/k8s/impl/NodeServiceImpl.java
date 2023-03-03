@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 
 import static com.middleware.caas.common.constants.CommonConstant.ZONE;
+import static com.middleware.caas.common.constants.NameConstant.*;
 
 /**
  * @author dengyulong

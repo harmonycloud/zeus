@@ -5,16 +5,19 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.middleware.caas.common.constants.CommonConstant;
 import com.middleware.caas.common.constants.CoreConstant;
 import com.middleware.caas.common.constants.DateStyle;
+import com.middleware.caas.common.enums.ComponentsEnum;
 import com.middleware.caas.common.enums.DictEnum;
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.enums.EsSearchTypeEnum;
 import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.ClusterComponentsDto;
 import com.middleware.tool.api.client.ElasticSearchClient;
 import com.middleware.tool.date.DateUtils;
 import com.middleware.tool.json.JsonUtil;
 import com.middleware.tool.page.PageObject;
 import com.middleware.caas.common.model.middleware.*;
 import com.middleware.zeus.bean.BeanOperationAudit;
+import com.middleware.zeus.service.k8s.ClusterComponentService;
 import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.log.EsComponentService;
 import com.middleware.zeus.service.middleware.EsService;
@@ -57,12 +60,17 @@ import java.util.stream.Collectors;
 
 import static com.middleware.caas.common.constants.CommonConstant.DEFAULT_LOG_QUERY_TIME;
 import static com.middleware.caas.common.constants.CommonConstant.TIME_UNIT_MINUTES;
+import static org.elasticsearch.search.sort.SortOrder.ASC;
+import static org.elasticsearch.search.sort.SortOrder.DESC;
 
 @Slf4j
 @Service
 public class EsComponentServiceImpl implements EsComponentService {
 
     private Map<String, RestHighLevelClient> esClients = new ConcurrentHashMap<>();
+
+    @Autowired
+    private ClusterService clusterService;
 
     @Autowired
     private EsService esService;
@@ -141,18 +149,14 @@ public class EsComponentServiceImpl implements EsComponentService {
     }
 
     @Override
-    public PageObject<MysqlLogDTO> getSlowSql(MiddlewareClusterDTO cluster, MiddlewareLogQuery slowLogQuery) throws Exception {
-        if (cluster == null) {
-            return new PageObject<>(new ArrayList<>(), CommonConstant.NUM_ZERO);
-        }
-        String clusterId = cluster.getId();
+    public PageObject<MysqlLogDTO> getSlowSql(String clusterId, MiddlewareLogQuery slowLogQuery) throws Exception {
         RestHighLevelClient esClient = esClients.get(clusterId);
         if (esClient == null) {
             esClient = this.getEsClient(clusterId);
         }
         BoolQueryBuilder query = this.getSearchRequestBuilder(slowLogQuery);
         //根据时间范围判断落在哪几个索引
-        List<String> indexNameList = getExistIndexNames(esClient, clusterId, slowLogQuery.getStartTime(), slowLogQuery.getEndTime(), LogConstant.MYSQL_SLOW_SQL);
+        List<String> indexNameList = getExistIndexNames(esClient, clusterId, slowLogQuery.getStartTime(), slowLogQuery.getEndTime());
         if (CollectionUtils.isEmpty(indexNameList)) {
             return new PageObject<>(new ArrayList<>(), CommonConstant.NUM_ZERO);
         }
@@ -161,11 +165,7 @@ public class EsComponentServiceImpl implements EsComponentService {
     }
 
     @Override
-    public PageObject<MysqlLogDTO> getAuditSql(MiddlewareClusterDTO cluster, MiddlewareLogQuery auditLogQuery) throws Exception {
-        if (cluster == null) {
-            return new PageObject<>(new ArrayList<>(), CommonConstant.NUM_ZERO);
-        }
-        String clusterId = cluster.getId();
+    public PageObject<MysqlLogDTO> getAuditSql(String clusterId, MiddlewareLogQuery auditLogQuery) throws Exception {
         RestHighLevelClient esClient = esClients.get(clusterId);
         if (esClient == null) {
             esClient = this.getEsClient(clusterId);
@@ -178,7 +178,7 @@ public class EsComponentServiceImpl implements EsComponentService {
         }
         BoolQueryBuilder query = this.getAuditSearchRequestBuilder(auditLogQuery);
         // 获取SQL审计所有索引
-        List<String> indexNameList = getExistAuditIndexNames(esClient, cluster, auditLogQuery.getType());
+        List<String> indexNameList = getExistAuditIndexNames(esClient, clusterId, auditLogQuery.getType());
         if (CollectionUtils.isEmpty(indexNameList)) {
             return new PageObject<>(new ArrayList<>(), CommonConstant.NUM_ZERO);
         }
@@ -294,11 +294,6 @@ public class EsComponentServiceImpl implements EsComponentService {
      */
     private BoolQueryBuilder getAuditSearchRequestBuilder(MiddlewareLogQuery auditLogQuery) {
         BoolQueryBuilder query = QueryBuilders.boolQuery();
-        if (StringUtils.isNotEmpty(auditLogQuery.getStartTime()) && StringUtils.isNotEmpty(auditLogQuery.getEndTime())) {
-            QueryBuilder timeFilter = QueryBuilders.rangeQuery("@timestamp").from(auditLogQuery.getStartTime())
-                    .to(auditLogQuery.getEndTime());
-            query.filter(timeFilter);
-        }
         query.must(QueryBuilders.matchQuery("k8s_pod_namespace", auditLogQuery.getNamespace()));
         query.must(QueryBuilders.matchQuery("middleware_name", auditLogQuery.getMiddlewareName()));
         if (StringUtils.isNotBlank(auditLogQuery.getSearchWord())) {
@@ -309,11 +304,11 @@ public class EsComponentServiceImpl implements EsComponentService {
         return query;
     }
 
-    private List<String> getExistIndexNames(RestHighLevelClient esClient, String clusterId, String startTime, String endTime,String indexPrefix) throws Exception {
+    private List<String> getExistIndexNames(RestHighLevelClient esClient, String clusterId, String startTime, String endTime) throws Exception {
         List<String> indexNameList = new ArrayList<>();
         if (StringUtils.isNotBlank(startTime) && StringUtils.isNotBlank(endTime)) {
-            Date startDate = DateUtils.parseUTCSDate(startTime);
-            Date endDate = DateUtils.parseUTCSDate(endTime);
+            Date startDate = DateUtils.parseUTCDate(startTime);
+            Date endDate = DateUtils.parseUTCDate(endTime);
 
             Calendar dayc1 = new GregorianCalendar();
             Calendar dayc2 = new GregorianCalendar();
@@ -324,7 +319,7 @@ public class EsComponentServiceImpl implements EsComponentService {
                 String s = (dayc1.get(Calendar.YEAR) + "年" +
                         (dayc1.get(Calendar.MONTH) + 1) + "月" + dayc1.get(Calendar.DATE)) + "日";
                 indexNameList.add(
-                        indexPrefix + CommonConstant.LINE +
+                        CoreConstant.ES_INDEX_MYSQL_SLOW_LOG + CommonConstant.LINE +
                                 dayc1.get(Calendar.YEAR) + CommonConstant.DOT +
                                 String.format("%02d", (dayc1.get(Calendar.MONTH) + 1)) + CommonConstant.DOT +
                                 String.format("%02d", dayc1.get(Calendar.DATE))
@@ -333,9 +328,9 @@ public class EsComponentServiceImpl implements EsComponentService {
                 dayc1.add(Calendar.DAY_OF_YEAR, CommonConstant.NUM_ONE); //加1天
             }
         }
-        indexNameList = CollectionUtils.isNotEmpty(indexNameList) ? indexNameList : generateIndexName(indexPrefix);
+        indexNameList = CollectionUtils.isNotEmpty(indexNameList) ? indexNameList : Arrays.asList(generateIndexName());
         // 取得已存在的索引
-        String result = resultByGetRestClient(esClient, clusterId, "/_cat/indices/" + indexPrefix + "-*?format=json");
+        String result = resultByGetRestClient(esClient, clusterId, "/_cat/indices?format=json");
         List<String> indices = new ArrayList<>();
         if (StringUtils.isNotEmpty(result)) {
             List<Map<String, String>> indexMap = JsonUtil.jsonToPojo(result, ArrayList.class);
@@ -347,9 +342,9 @@ public class EsComponentServiceImpl implements EsComponentService {
         return indexNameList;
     }
 
-    private List<String> getExistAuditIndexNames(RestHighLevelClient esClient, MiddlewareClusterDTO cluster, String type) throws Exception {
+    private List<String> getExistAuditIndexNames(RestHighLevelClient esClient, String clusterId, String type) throws Exception {
         // 取得所有索引
-        String result = resultByGetRestClient(esClient, cluster, "/_cat/indices/" + type + "audit-*?format=json");
+        String result = resultByGetRestClient(esClient, clusterId, "/_cat/indices/" + type + "audit-*?format=json");
         List<String> indices = new ArrayList<>();
         if (StringUtils.isNotEmpty(result)) {
             List<Map<String, String>> indexMap = JsonUtil.jsonToPojo(result, ArrayList.class);
@@ -362,10 +357,9 @@ public class EsComponentServiceImpl implements EsComponentService {
 
     private String generateIndexName() {
         Date now = DateUtils.getCurrentUtcTime();
-        String date = DateUtils.DateToString(now, DateStyle.YYYY_MM_DD_DOT);
-        String indexName = indexPrefix + CommonConstant.LINE + date;
-        indexList.add(indexName);
-        return indexList;
+        String date = DateUtils.DateToString(now, DateStyle.YYYY_MM_DOT);
+        String indexName = CoreConstant.ES_INDEX_MYSQL_SLOW_LOG + CommonConstant.LINE + date;
+        return indexName;
     }
 
     @Override
@@ -411,7 +405,6 @@ public class EsComponentServiceImpl implements EsComponentService {
         }
         SortBuilder sortBuilder = SortBuilders.fieldSort("@timestamp")
                 .order(sortOrder).unmappedType("integer");
-
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.query(query).sort(sortBuilder).from((current - CommonConstant.NUM_ONE) * size).size(size).explain(true);
         SearchRequest request = multiIndexSearch(searchSourceBuilder, indexNameList);
@@ -462,5 +455,6 @@ public class EsComponentServiceImpl implements EsComponentService {
         }
         return null;
     }
+
 
 }

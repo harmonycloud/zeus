@@ -1,5 +1,6 @@
 package com.middleware.zeus.util;
 
+import static com.middleware.caas.common.constants.NameConstant.*;
 import static com.middleware.caas.common.enums.middleware.ElasticSearchRoleEnum.KIBANA;
 
 import java.math.BigDecimal;

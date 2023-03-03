@@ -1,10 +1,5 @@
 package com.middleware.zeus.service.k8s.impl;
 
-import static com.middleware.caas.common.constants.NameConstant.CPU;
-import static com.middleware.caas.common.constants.NameConstant.DISK;
-import static com.middleware.caas.common.constants.NameConstant.MEMORY;
-import static com.middleware.caas.common.constants.NameConstant.STORAGE;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -12,7 +7,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.middleware.caas.common.model.QuotaBase;
+import com.middleware.caas.common.model.ResourceQuotaDo;
+import com.middleware.caas.common.model.StorageQuota;
 import com.middleware.zeus.service.k8s.ResourceQuotaService;
+import com.middleware.zeus.util.CalculateUtil;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.ResourceQuotaSpec;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -25,6 +28,9 @@ import com.middleware.tool.numeric.ResourceCalculationUtil;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ResourceQuota;
 
+import static com.middleware.caas.common.constants.CommonConstant.DOT;
+import static com.middleware.caas.common.constants.NameConstant.*;
+
 /**
  * @author dengyulong
  * @date 2021/04/01
@@ -36,6 +42,36 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
     private ResourceQuotaWrapper resourceQuotaWrapper;
 
     @Override
+    public void create(String clusterId, String namespace, ResourceQuotaDo resourceQuotaDo) {
+
+        ResourceQuota resourceQuota = new ResourceQuota();
+
+        ObjectMeta meta = new ObjectMeta();
+        meta.setName(getName(namespace));
+        meta.setNamespace(namespace);
+
+        // 封装资源配额数据
+        ResourceQuotaSpec spec = convertDoToResourceQuotaSpec(resourceQuotaDo);
+
+        resourceQuota.setMetadata(meta);
+        resourceQuota.setSpec(spec);
+        resourceQuotaWrapper.createOrReplace(clusterId, namespace, resourceQuota);
+    }
+
+    @Override
+    public void update(String clusterId, String namespace, ResourceQuotaDo resourceQuotaDo) {
+        ResourceQuota resourceQuota = resourceQuotaWrapper.get(clusterId, namespace, getName(namespace));
+        if (resourceQuota == null){
+            create(clusterId, namespace, resourceQuotaDo);
+            return;
+        }
+        // 封装资源配额数据
+        ResourceQuotaSpec spec = convertDoToResourceQuotaSpec(resourceQuotaDo);
+        resourceQuota.setSpec(spec);
+        resourceQuotaWrapper.createOrReplace(clusterId, namespace, resourceQuota);
+    }
+
+    @Override
     public List<ResourceQuotaDTO> list(String clusterId) {
         List<ResourceQuota> list = resourceQuotaWrapper.list(clusterId);
         if (CollectionUtils.isEmpty(list)) {
@@ -43,83 +79,180 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
         }
         // 按命名空间转成map
         Map<String, List<ResourceQuota>> nsRqMap =
-            list.stream().collect(Collectors.groupingBy(rq -> rq.getMetadata().getNamespace()));
+                list.stream().collect(Collectors.groupingBy(rq -> rq.getMetadata().getNamespace()));
         // 组装返回值
         List<ResourceQuotaDTO> dtoList = new ArrayList<>(nsRqMap.size());
         nsRqMap.forEach(
-            (ns, rqList) -> dtoList.add(new ResourceQuotaDTO().setNamespace(ns).setQuotas(calculateQuotaList(rqList))));
+                (ns, rqList) -> dtoList.add(new ResourceQuotaDTO().setNamespace(ns).setResourceQuotaDo(calculateQuotaList(rqList))));
         return dtoList;
     }
 
     @Override
-    public Map<String, List<String>> statistics(String clusterId) {
+    public ResourceQuotaDo statistics(String clusterId) {
         List<ResourceQuota> list = resourceQuotaWrapper.list(clusterId);
         return calculateQuotaList(list);
     }
 
     @Override
-    public Map<String, List<String>> list(String clusterId, String namespace) {
+    public ResourceQuotaDo list(String clusterId, String namespace) {
         List<ResourceQuota> list = resourceQuotaWrapper.list(clusterId, namespace);
         return calculateQuotaList(list);
     }
 
     @Override
-    public Map<String, List<String>> get(String clusterId, String namespace, String name) {
+    public ResourceQuotaDo list(String clusterId, String namespace, String storageClass) {
+        ResourceQuotaDo resourceQuotaDo = list(clusterId, namespace);
+        if (StringUtils.isNotEmpty(storageClass) && !CollectionUtils.isEmpty(resourceQuotaDo.getStorageList())) {
+            resourceQuotaDo.setStorageList(resourceQuotaDo.getStorageList().stream()
+                    .filter(storageQuota -> storageQuota.getName().equals(storageClass)).collect(Collectors.toList()));
+        }
+        return resourceQuotaDo;
+    }
+
+    @Override
+    public ResourceQuotaDo get(String clusterId, String namespace, String name) {
         ResourceQuota resourceQuota = resourceQuotaWrapper.get(clusterId, namespace, name);
         if (resourceQuota == null) {
-            return new HashMap<>(0);
+            return new ResourceQuotaDo();
         }
         return calculateQuota(resourceQuota);
     }
 
-    private Map<String, List<String>> calculateQuotaList(List<ResourceQuota> list) {
-        Map<String, List<String>> rqMap = new HashMap<>();
-        list.forEach(rq -> {
-            Map<String, List<String>> map = calculateQuota(rq);
-            map.forEach((k, v) -> {
-                List<String> quotas = rqMap.computeIfAbsent(k, f -> new ArrayList<>());
-                if (quotas.size() == 0) {
-                    rqMap.put(k, v);
-                } else {
-                    quotas.set(1, String.valueOf(Double.parseDouble(quotas.get(1)) + Double.parseDouble(v.get(1))));
-                    quotas.set(2, String.valueOf(Double.parseDouble(quotas.get(2)) + Double.parseDouble(v.get(2))));
+    @Override
+    public ResourceQuotaDo getQuota(String clusterId) {
+        double cpu = 0.0;
+        double memory = 0.0;
+        List<ResourceQuotaDTO> resourceQuotaDTOList = this.list(clusterId);
+        Map<String, Double> storageMap = new HashMap<>();
+        for (ResourceQuotaDTO resourceQuotaDTO : resourceQuotaDTOList){
+            ResourceQuotaDo quota = resourceQuotaDTO.getResourceQuotaDo();
+            if (quota != null){
+                if (quota.getCpu() != null && quota.getCpu().getRequest() != null){
+                    cpu += quota.getCpu().getRequest();
                 }
-            });
-        });
-        return rqMap;
+                if (quota.getMemory() != null && quota.getMemory().getRequest() != null){
+                    memory += quota.getMemory().getRequest();
+                }
+                // 获取已分配storage
+                if (!CollectionUtils.isEmpty(quota.getStorageList())){
+                    for (StorageQuota storageQuota : quota.getStorageList()){
+                        if (storageMap.containsKey(storageQuota.getName())){
+                            Double request = storageMap.get(storageQuota.getName());
+                            storageMap.put(storageQuota.getName(), request + storageQuota.getStorage().getRequest());
+                        }else {
+                            storageMap.put(storageQuota.getName(), storageQuota.getStorage().getRequest());
+                        }
+                    }
+                }
+            }
+        }
+        ResourceQuotaDo resourceQuotaDo = new ResourceQuotaDo();
+        resourceQuotaDo.getCpu().setRequest(cpu);
+        resourceQuotaDo.getMemory().setRequest(memory);
+        // 设置storage quota
+        List<StorageQuota> storageList = new ArrayList<>();
+        for (String key : storageMap.keySet()){
+            StorageQuota storageQuota = new StorageQuota();
+            storageQuota.setName(key);
+            QuotaBase storage = new QuotaBase();
+            storage.setRequest(storageMap.get(key));
+            storageQuota.setStorage(storage);
+            storageList.add(storageQuota);
+        }
+        resourceQuotaDo.setStorageList(storageList);
+
+        return resourceQuotaDo;
     }
 
-    private Map<String, List<String>> calculateQuota(ResourceQuota resourceQuota) {
-        Map<String, List<String>> rqMap = new HashMap<>();
+    private ResourceQuotaDo calculateQuotaList(List<ResourceQuota> list) {
+        ResourceQuotaDo resQuota = new ResourceQuotaDo();
+        list.forEach(rq -> {
+            ResourceQuotaDo quotaDo = calculateQuota(rq);
+            if (resQuota.isEmpty()) {
+                BeanUtils.copyProperties(quotaDo, resQuota);
+            } else {
+                resQuota.setCpu(Double.compare(resQuota.getCpu().getRequest(), quotaDo.getCpu().getRequest()) < 0
+                        ? resQuota.getCpu() : quotaDo.getCpu());
+                resQuota
+                        .setMemory(Double.compare(resQuota.getMemory().getRequest(), quotaDo.getMemory().getRequest()) < 0
+                                ? resQuota.getMemory() : quotaDo.getMemory());
+            }
+        });
+        return resQuota;
+    }
+
+    private ResourceQuotaDo calculateQuota(ResourceQuota resourceQuota) {
+        //Map<String, List<String>> rqMap = new HashMap<>();
+        ResourceQuotaDo quota = new ResourceQuotaDo().setStorageList(new ArrayList<>());
         Map<String, Quantity> hard = resourceQuota.getSpec().getHard();
         Map<String, Quantity> used = resourceQuota.getStatus().getUsed();
         hard.forEach((k, v) -> {
             if (CPU.equals(k) || "requests.cpu".equals(k)) {
                 double hardCpu = ResourceCalculationUtil.getResourceValue(v.toString(), CPU, "");
                 double usedCpu = ResourceCalculationUtil.getResourceValue(used.get(k).toString(), CPU, "");
-                // 总量，配额，使用量
-                List<String> quota = Arrays.asList("0", String.valueOf(hardCpu), String.valueOf(usedCpu));
-                rqMap.put(CPU, quota);
+                QuotaBase cpu = new QuotaBase().setRequest(hardCpu).setUsed(usedCpu);
+                if (hardCpu != 0){
+                    cpu.setUsage(CalculateUtil.division(usedCpu, hardCpu, 4) * 100);
+                }
+                quota.setCpu(cpu);
             } else if (MEMORY.equals(k) || "requests.memory".equals(k)) {
                 double hardMemory =
-                    ResourceCalculationUtil.getResourceValue(v.toString(), MEMORY, ResourceUnitEnum.GI.getUnit());
+                        ResourceCalculationUtil.getResourceValue(v.toString(), MEMORY, ResourceUnitEnum.GI.getUnit());
                 double usedMemory = ResourceCalculationUtil.getResourceValue(used.get(k).toString(), MEMORY,
-                    ResourceUnitEnum.GI.getUnit());
-                // 总量，配额，使用量
-                List<String> quota = Arrays.asList("0", String.valueOf(hardMemory), String.valueOf(usedMemory));
-                rqMap.put(MEMORY, quota);
-            } else if (k.endsWith(STORAGE)) {
+                        ResourceUnitEnum.GI.getUnit());
+                QuotaBase memory = new QuotaBase().setRequest(hardMemory).setUsed(usedMemory);
+                if(hardMemory != 0){
+                    memory.setUsage(CalculateUtil.division(usedMemory, hardMemory, 4) * 100);
+                }
+                quota.setMemory(memory);
+            } else if (k.endsWith(STORAGE_CLASS_STORAGE_K8s_IO_REQUESTS_STORAGE)) {
                 double hardStorage =
-                    ResourceCalculationUtil.getResourceValue(v.toString(), DISK, ResourceUnitEnum.GI.getUnit());
+                        ResourceCalculationUtil.getResourceValue(v.toString(), DISK, ResourceUnitEnum.GI.getUnit());
                 double usedStorage = ResourceCalculationUtil.getResourceValue(used.get(k).toString(), DISK,
-                    ResourceUnitEnum.GI.getUnit());
-                // 总量，配额，使用量
-                List<String> quota = Arrays.asList("0", String.valueOf(hardStorage), String.valueOf(usedStorage));
-                //String scName = k.substring(0, k.indexOf(".storageclass"));
-                rqMap.put("storage", quota);
+                        ResourceUnitEnum.GI.getUnit());
+                String scName = k.substring(0, k.indexOf(".storageclass"));
+                StorageQuota storageQuota = new StorageQuota().setName(scName).setStorage(new QuotaBase().setRequest(hardStorage).setUsed(usedStorage));
+                quota.getStorageList().add(storageQuota);
             }
         });
-        return rqMap;
+        return quota;
+    }
+
+    public ResourceQuotaSpec convertDoToResourceQuotaSpec(ResourceQuotaDo resourceQuotaDo){
+        ResourceQuotaSpec spec = new ResourceQuotaSpec();
+        Map<String, Quantity> hard = new HashMap<>();
+        // 设置cpu配额
+        if (resourceQuotaDo.getCpu() != null && resourceQuotaDo.getCpu().getRequest() != null){
+            Quantity quantity = new Quantity();
+            quantity.setAmount(String.valueOf(resourceQuotaDo.getCpu().getRequest()));
+            hard.put(CPU, quantity);
+        }
+        // 设置memory配额
+        if (resourceQuotaDo.getMemory() != null && resourceQuotaDo.getMemory().getRequest() != null){
+            Quantity quantity = new Quantity();
+            quantity.setAmount(resourceQuotaDo.getMemory().getRequest() + ResourceUnitEnum.GI.getUnit());
+            hard.put(MEMORY, quantity);
+        }
+        // 设置storage配额
+        if (!CollectionUtils.isEmpty(resourceQuotaDo.getStorageList())) {
+            for (StorageQuota storageQuota : resourceQuotaDo.getStorageList()) {
+                if (!CollectionUtils.isEmpty(storageQuota.getStorageClass()) && storageQuota.getStorage() != null
+                        && storageQuota.getStorage().getRequest() != null) {
+                    for (String storageClass : storageQuota.getStorageClass()) {
+                        Quantity quantity = new Quantity();
+                        quantity.setAmount(storageQuota.getStorage().getRequest() + ResourceUnitEnum.GI.getUnit());
+                        hard.put(storageClass + DOT + STORAGE_CLASS_STORAGE_K8s_IO_REQUESTS_STORAGE, quantity);
+                    }
+                }
+            }
+        }
+
+        spec.setHard(hard);
+        return spec;
+    }
+
+    public String getName(String namespace){
+        return namespace + QUOTA;
     }
 
 }

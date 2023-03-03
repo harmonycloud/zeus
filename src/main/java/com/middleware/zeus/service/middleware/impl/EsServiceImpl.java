@@ -7,6 +7,7 @@ import com.middleware.caas.common.constants.CoreConstant;
 import com.middleware.caas.common.enums.*;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.ClusterComponentsDto;
+import com.middleware.caas.common.model.middleware.MiddlewareLogQuery;
 import com.middleware.tool.api.client.ElasticSearchClient;
 import com.middleware.tool.date.DateUtils;
 import com.middleware.tool.json.JsonUtil;
@@ -18,7 +19,6 @@ import com.middleware.zeus.service.middleware.AbstractMiddlewareService;
 import com.middleware.zeus.service.middleware.EsService;
 import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.caas.common.model.middleware.MysqlLogDTO;
-import com.middleware.caas.common.model.middleware.MysqlLogQuery;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.util.EntityUtils;
@@ -429,14 +429,13 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
                 initAuditSqlTemplate(esClient, esVersion);
                 //初始化postgresql SQL审计模版
                 initPostgresqlAuditSqlTemplate(esClient, esVersion);
-                log.info("集群:{}索引模板初始化完成", cluster.getName());
+                log.info("集群:{}索引模板初始化完成", clusterId);
                 return true;
             } catch (Exception e) {
-                log.error("集群:{}索引模板初始化失败", cluster.getName(), e);
+                log.error("集群:{}索引模板初始化失败", clusterId, e);
                 return false;
             }
         }
-    }
 
     /**
      * 初始化mysql慢日志索引模板

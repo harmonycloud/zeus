@@ -9,8 +9,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.middleware.caas.common.enums.Protocol;
+import com.middleware.caas.common.model.ActiveAreaAnnotationDto;
 import com.middleware.caas.common.model.IngressComponentDto;
 import com.middleware.caas.common.model.MiddlewareServiceNameIndex;
+import com.middleware.tool.cmd.CmdExecUtil;
 import com.middleware.zeus.bean.BeanCacheMiddleware;
 import com.middleware.zeus.bean.BeanMysqlUser;
 import com.middleware.zeus.service.k8s.*;
@@ -19,7 +21,7 @@ import com.middleware.zeus.service.middleware.ImageRepositoryService;
 import com.middleware.zeus.service.mysql.MysqlDbPrivService;
 import com.middleware.zeus.service.mysql.MysqlDbService;
 import com.middleware.zeus.service.mysql.MysqlUserService;
-import com.middleware.zeus.util.MysqlConnectionUtil;
+import com.middleware.zeus.util.*;
 import com.middleware.caas.common.model.middleware.*;
 import com.middleware.zeus.operator.BaseOperator;
 import com.middleware.zeus.operator.api.MysqlOperator;
@@ -45,8 +47,6 @@ import com.middleware.tool.date.DateUtils;
 import com.middleware.tool.encrypt.PasswordUtils;
 import com.middleware.zeus.annotation.Operator;
 import com.middleware.zeus.integration.cluster.MysqlClusterWrapper;
-import com.middleware.zeus.util.DateUtil;
-import com.middleware.zeus.util.ServiceNameConvertUtil;
 
 import cn.hutool.json.JSONUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -260,16 +260,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         return middleware;
     }
 
-    @Override
-    public SwitchInfo getAutoSwitch(Middleware middleware) {
-        SwitchInfo autoSwitchInfo = new SwitchInfo();
-        MysqlCluster mysqlCluster = mysqlClusterWrapper.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
-        autoSwitchInfo.setIsAuto(mysqlCluster.getSpec().getPassiveSwitched() == null || !mysqlCluster.getSpec().getPassiveSwitched());
-        if (mysqlCluster.getStatus() != null && mysqlCluster.getStatus().getLastChangeMaster() != null) {
-            autoSwitchInfo.setLastAutoSwitchTime(DateUtils.parseUTCDate(mysqlCluster.getStatus().getLastChangeMaster()));
-        }
-        return autoSwitchInfo;
-    }
 
     @Override
     public void create(Middleware middleware, MiddlewareClusterDTO cluster) {

@@ -98,7 +98,6 @@ public interface PodService {
 
     /**
      * 查询中间件所有pod
-     * @param mw
      * @param clusterId
      * @param namespace
      * @param middlewareName
@@ -106,6 +105,7 @@ public interface PodService {
      * @return
      */
     List<PodInfo> listMiddlewarePods(String clusterId, String namespace, String middlewareName, String type);
+
 
     /**
      * 查询pod yaml
@@ -133,16 +133,6 @@ public interface PodService {
      * @param middlewareName 服务名称
      */
     void migrate(PodMigrateDTO podMigrateDTO, String middlewareName);
-
-    /**
-     * 查询pod列表
-     * @param clusterId
-     * @param namespace
-     * @param middlewareName
-     * @param type
-     * @return
-     */
-    List<PodInfo> listPods(String clusterId, String namespace, String middlewareName, String type);
 
     /**
      *

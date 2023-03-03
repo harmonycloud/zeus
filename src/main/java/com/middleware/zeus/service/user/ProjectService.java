@@ -4,6 +4,7 @@ import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.caas.common.model.middleware.Namespace;
 import com.middleware.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
 import com.middleware.caas.common.model.user.ProjectDto;
+import com.middleware.caas.common.model.user.ProjectNamespaceDo;
 import com.middleware.caas.common.model.user.UserDto;
 import com.middleware.zeus.bean.user.BeanProject;
 

@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.middleware.caas.common.constants.CommonConstant.LINE;
+import static com.middleware.caas.common.constants.NameConstant.*;
 
 /**
  * @author xutianhong

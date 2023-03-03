@@ -21,6 +21,8 @@ import org.springframework.util.CollectionUtils;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.middleware.caas.common.constants.NameConstant.*;
+
 /**
  * @author xutianhong
  * @Date 2023/1/10 10:13 上午

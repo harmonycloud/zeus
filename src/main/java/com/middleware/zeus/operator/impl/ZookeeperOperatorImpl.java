@@ -138,7 +138,7 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
                 sb.deleteCharAt(sb.length() - 1);
                 quota.setStorageClassAliasName(sb.toString());
             } else {
-                StorageDto storageDto = storageService.get(middleware.getClusterId(), storageClass, false);
+                StorageDto storageDto = storageService.get(middleware.getClusterId(), storageClass);
                 quota.setStorageClassAliasName(storageDto.getAliasName());
             }
         } catch (Exception e) {

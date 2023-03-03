@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.MiddlewareVersionDto;
 import com.middleware.caas.common.model.middleware.MiddlewareInfoDTO;
 
 import io.swagger.annotations.Api;

@@ -4,8 +4,8 @@ import com.github.pagehelper.PageInfo;
 import com.middleware.caas.common.base.BaseResult;
 import com.middleware.caas.common.model.dashboard.ExecResult;
 import com.middleware.caas.common.model.dashboard.mysql.*;
+import com.middleware.caas.common.model.middleware.MiddlewareLogQuery;
 import com.middleware.caas.common.model.middleware.MysqlLogDTO;
-import com.middleware.caas.common.model.middleware.MysqlLogQuery;
 import com.middleware.tool.page.PageObject;
 import com.middleware.zeus.service.dashboard.MysqlDashboardService;
 import com.middleware.zeus.service.middleware.MysqlService;
@@ -680,7 +680,7 @@ public class MysqlDashboardController {
     public BaseResult<PageObject<MysqlLogDTO>> queryAuditSql(@PathVariable("clusterId") String clusterId,
                                                              @PathVariable("namespace") String namespace,
                                                              @PathVariable("middlewareName") String middlewareName,
-                                                             @RequestBody MysqlLogQuery auditLogQuery) {
+                                                             @RequestBody MiddlewareLogQuery auditLogQuery) {
         auditLogQuery.setClusterId(clusterId);
         auditLogQuery.setNamespace(namespace);
         auditLogQuery.setMiddlewareName(middlewareName);

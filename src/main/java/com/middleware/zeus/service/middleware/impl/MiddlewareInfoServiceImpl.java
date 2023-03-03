@@ -19,18 +19,24 @@ import java.util.stream.Collectors;
 
 import com.middleware.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.caas.common.model.MiddlewareVersionDto;
+import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.zeus.bean.BeanMiddlewareCluster;
+import com.middleware.zeus.bean.user.BeanUserRole;
 import com.middleware.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.k8s.MiddlewareClusterService;
 import com.middleware.zeus.service.middleware.MiddlewareService;
 import com.middleware.zeus.service.registry.HelmChartService;
+import com.middleware.zeus.service.user.RoleAuthorityService;
+import com.middleware.zeus.service.user.UserRoleService;
 import com.middleware.zeus.util.ChartVersionUtil;
 import com.middleware.zeus.util.MiddlewareVersionUtil;
 import com.middleware.caas.common.model.middleware.*;
 import com.middleware.zeus.service.k8s.PodService;
 import com.middleware.zeus.service.middleware.ClusterMiddlewareInfoService;
 import com.middleware.zeus.service.middleware.MiddlewareInfoService;
+import com.middleware.zeus.util.RequestUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -79,7 +85,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     @Autowired
     private RoleAuthorityService roleAuthorityService;
     @Autowired
-    private UserRoleService  userRoleService;
+    private UserRoleService userRoleService;
 
     @Override
     public List<BeanMiddlewareInfo> list(Boolean all) {

@@ -241,13 +241,6 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
     }
 
     @Override
-    public Status getStatus(String clusterId, String namespace, String type, String middlewareName) {
-        MiddlewareCR cr = getCR(clusterId, namespace, type, middlewareName);
-        JSONObject statusJSON = JSONObject.parseObject(cr.getMetadata().getAnnotations().get("status"), JSONObject.class);
-        return JSONObject.toJavaObject(statusJSON, Status.class);
-    }
-
-    @Override
     public List<String> getPvc(String clusterId, String namespace, String type, String name) {
         // query middleware cr
         MiddlewareCR mw = this.getCR(clusterId, namespace, type, name);

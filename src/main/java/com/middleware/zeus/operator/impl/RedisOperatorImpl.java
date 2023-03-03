@@ -9,6 +9,7 @@ import static com.middleware.caas.common.constants.middleware.MiddlewareConstant
 
 import cn.hutool.core.collection.CollectionUtil;
 import com.alibaba.fastjson.JSONArray;
+import com.middleware.caas.common.constants.ActiveAreaConstant;
 import com.middleware.caas.common.enums.DictEnum;
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.enums.Protocol;
@@ -24,6 +25,7 @@ import com.middleware.zeus.service.k8s.PodService;
 import com.middleware.zeus.service.k8s.ServiceService;
 import com.middleware.zeus.service.middleware.impl.MiddlewareServiceImpl;
 import com.middleware.zeus.util.K8sConvert;
+import com.middleware.zeus.util.MiddlewareResourceCalculateUtil;
 import com.middleware.zeus.util.RedisUtil;
 import com.middleware.zeus.util.ServiceNameConvertUtil;
 import com.middleware.caas.common.model.middleware.*;
@@ -128,7 +130,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
 
         for (int i = 0; i < (60 * 10 * 60) && !success; i++) {
             Middleware detail = middlewareService.detail(middleware.getClusterId(), middleware.getNamespace(),
-                middleware.getName(), middleware.getType());
+                    middleware.getName(), middleware.getType());
             log.info("为实例：{}创建对外服务：状态：{},已用时：{}s", detail.getName(), detail.getStatus(), i);
             if (detail != null) {
                 if (detail.getStatus() != null && "Running".equals(detail.getStatus())) {
@@ -143,6 +145,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             }
         }
     }
+
 
     @Override
     public void replaceValues(Middleware middleware, MiddlewareClusterDTO cluster, JSONObject values) {
@@ -554,45 +557,6 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             num *= 2;
         }
         return num;
-    }
-
-    @Override
-    public void switchMiddleware(Middleware middleware, String slaveName) {
-        MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
-        // 获取数据库密码
-        JSONObject values = helmChartService.getInstalledValues(middleware.getName(), middleware.getNamespace(), cluster);
-        String password = values.getString("redisPassword");
-        // 获取端口
-        String port = values.getString("redisServicePort");
-        MiddlewareCR cr = middlewareCRService.getCR(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
-
-        //获取从节点信息
-        JSONObject status = JSONObject.parseObject(cr.getMetadata().getAnnotations().get("status"));
-        JSONArray conditions = status.getJSONArray("conditions");
-        if (CollectionUtil.isEmpty(conditions)) {
-            throw new BusinessException(DictEnum.POD, ErrorMessage.NOT_FOUND);
-        }
-        JSONObject slavePod = null;
-        for (Object condition : conditions) {
-            JSONObject con = (JSONObject) condition;
-            if (slaveName.equals(con.getString("name")) && "slave".equals(con.getString("type"))) {
-                slavePod = con;
-                break;
-            }
-        }
-        if (slavePod == null) {
-            throw new BusinessException(ErrorMessage.NODE_NOT_FOUND);
-        }
-        // 获取slaveIP
-        String slaveIP = slavePod.getString("instance").split(":")[0];
-        //从节点执行命令
-        String execCommand = MessageFormat.format(
-                "kubectl exec {0} -n {1} -c redis-cluster --server={2} --token={3} --insecure-skip-tls-verify=true " +
-                        "-- bash -c \"redis-cli -h {4} -a {5} cluster failover\"",
-                slaveName, middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
-                slaveIP, password);
-        k8sExecService.exec(execCommand);
-
     }
 
     @Override

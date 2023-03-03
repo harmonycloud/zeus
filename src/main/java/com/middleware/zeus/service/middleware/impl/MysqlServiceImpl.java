@@ -55,6 +55,8 @@ public class MysqlServiceImpl implements MysqlService {
     private MysqlUserService mysqlUserService;
     @Autowired
     private NodeService nodeService;
+    @Autowired
+    private ClusterService clusterService;
 
     private final static Map<String, String> titleMap = new HashMap<String, String>(7) {
         {
@@ -116,8 +118,7 @@ public class MysqlServiceImpl implements MysqlService {
 
     @Override
     public PageObject<MysqlLogDTO> slowsql(MiddlewareLogQuery slowLogQuery) throws Exception {
-        MiddlewareClusterDTO cluster = clusterService.findById(slowLogQuery.getClusterId());
-        PageObject<MysqlLogDTO> slowSqlDTOS = esComponentService.getSlowSql(cluster, slowLogQuery);
+        PageObject<MysqlLogDTO> slowSqlDTOS = esComponentService.getSlowSql(slowLogQuery.getClusterId(), slowLogQuery);
         return slowSqlDTOS;
     }
 
@@ -147,7 +148,6 @@ public class MysqlServiceImpl implements MysqlService {
 
     @Override
     public PageObject<MysqlLogDTO> auditSql(MiddlewareLogQuery auditLogQuery) {
-        MiddlewareClusterDTO cluster = clusterService.findById(auditLogQuery.getClusterId());
         PageObject<MysqlLogDTO> slowSqlDTOS = null;
         try {
             slowSqlDTOS = esComponentService.getAuditSql(auditLogQuery.getClusterId(), auditLogQuery);

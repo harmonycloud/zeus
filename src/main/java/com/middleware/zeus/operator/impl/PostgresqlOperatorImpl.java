@@ -1,12 +1,16 @@
 package com.middleware.zeus.operator.impl;
 
+import static com.middleware.caas.common.constants.CmdConstant.*;
 import static com.middleware.caas.common.constants.CommonConstant.NUM_ZERO;
 import static com.middleware.caas.common.constants.NameConstant.RESOURCES;
 import static com.middleware.caas.common.constants.NameConstant.RUNNING;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.ARGS;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.SYNC_SLAVE;
 import static com.middleware.caas.common.enums.DictEnum.ROLE;
 
 import java.text.MessageFormat;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -29,6 +33,7 @@ import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupSpec;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import com.middleware.zeus.operator.api.PostgresqlOperator;
 import com.middleware.zeus.operator.miiddleware.AbstractPostgresqlOperator;
+import com.middleware.zeus.util.ChartVersionUtil;
 import io.fabric8.kubernetes.api.model.Service;
 import org.apache.commons.lang3.StringUtils;
 
@@ -64,13 +69,6 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
     public boolean support(Middleware middleware) {
         return MiddlewareTypeEnum.POSTGRESQL == MiddlewareTypeEnum.findByType(middleware.getType());
     }
-
-    @Autowired
-    public ServiceWrapper serviceWrapper;
-    @Autowired
-    public K8sExecService k8sExecService;
-    @Autowired
-    private PodService podService;
 
     @Override
     public void replaceValues(Middleware middleware, MiddlewareClusterDTO cluster, JSONObject values) {
@@ -164,7 +162,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
 
     public Boolean getAutoSwitch(Middleware middleware, MiddlewareClusterDTO cluster) {
         // 获取pod列表
-        List<PodInfo> podInfos = podService.listPods(cluster.getId(), middleware.getNamespace(), middleware.getName(), MiddlewareTypeEnum.POSTGRESQL.getType());
+        List<PodInfo> podInfos = podService.listMiddlewarePods(cluster.getId(), middleware.getNamespace(), middleware.getName(), MiddlewareTypeEnum.POSTGRESQL.getType());
         List<PodInfo> runningPods = podInfos.stream().filter(podInfo -> RUNNING.equalsIgnoreCase(podInfo.getStatus())).collect(Collectors.toList());
         if (CollectionUtil.isEmpty(runningPods)){
             throw new BusinessException(ErrorMessage.MIDDLEWARE_CLUSTER_IS_NOT_RUNNING);
@@ -229,7 +227,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             throw new BusinessException(DictEnum.SERVICE, patroniName, ErrorMessage.NOT_EXIST);
         }
         // 获取pod列表
-        List<PodInfo> podInfos = podService.listPods(cluster.getId(), middleware.getNamespace(), middleware.getName(), MiddlewareTypeEnum.POSTGRESQL.getType());
+        List<PodInfo> podInfos = podService.listMiddlewarePods(cluster.getId(), middleware.getNamespace(), middleware.getName(), MiddlewareTypeEnum.POSTGRESQL.getType());
         List<PodInfo> runningPods = podInfos.stream().filter(podInfo -> RUNNING.equalsIgnoreCase(podInfo.getStatus())).collect(Collectors.toList());
         if (CollectionUtil.isEmpty(runningPods)){
             throw new BusinessException(ErrorMessage.MIDDLEWARE_CLUSTER_IS_NOT_RUNNING);
@@ -253,7 +251,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             throw new BusinessException(DictEnum.SERVICE, patroniName, ErrorMessage.NOT_EXIST);
         }
         // 获取执行pod
-        List<PodInfo> podInfos = podService.listPods(cluster.getId(), middleware.getNamespace(), middleware.getName(), MiddlewareTypeEnum.POSTGRESQL.getType());
+        List<PodInfo> podInfos = podService.listMiddlewarePods(cluster.getId(), middleware.getNamespace(), middleware.getName(), MiddlewareTypeEnum.POSTGRESQL.getType());
         List<PodInfo> runningPods = podInfos.stream().filter(podInfo -> RUNNING.equalsIgnoreCase(podInfo.getStatus())
                 && SYNC_SLAVE.equalsIgnoreCase(podInfo.getRole())).collect(Collectors.toList());
         if (CollectionUtil.isEmpty(runningPods)) {
@@ -293,6 +291,26 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
     public ActiveAreaAnnotationDto getActiveAreaAnnotation(String clusterId, String namespace, String type, String middlewareName) {
         return super.getActiveAreaAnnotation(clusterId, namespace, type, middlewareName);
     }
+
+    @Override
+    public List<IngressDTO> listHostNetworkAddress(String clusterId, String namespace, String middlewareName, String type) {
+        JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, clusterService.findById(clusterId));
+        if (values == null) {
+            return Collections.emptyList();
+        }
+        if (values.containsKey("hostNetwork") && values.getBoolean("hostNetwork")) {
+            List<PodInfo> podInfoList = podService.listMiddlewarePods(clusterId, namespace, middlewareName, MiddlewareTypeEnum.POSTGRESQL.getType());
+            return podInfoList.stream().map(podInfo -> {
+                IngressDTO ingressDTO = new IngressDTO();
+                ingressDTO.setServicePurpose(podInfo.getPodName());
+                ingressDTO.setExposeIP(podInfo.getHostIp());
+                ingressDTO.setExposePort("5432");
+                return ingressDTO;
+            }).collect(Collectors.toList());
+        }
+        return Collections.emptyList();
+    }
+
 
     public void buildClone(Middleware middleware, JSONObject values){
         middlewareBackupCRService.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getBackupFileName());

@@ -18,7 +18,7 @@ public interface EsService {
     /**
      * 根据集群id查询集群的es组件连接Client
      *
-     * @param cluster 集群信息
+     * @param clusterId 集群信息
      * @return
      */
     RestHighLevelClient getEsClient(String clusterId) throws Exception;
@@ -26,7 +26,7 @@ public interface EsService {
     /**
      * 重置es客户端（集群信息修改，需要重置）
      *
-     * @param cluster 集群信息
+     * @param clusterId 集群信息
      * @return
      */
     RestHighLevelClient resetEsClient(String clusterId);
@@ -42,7 +42,7 @@ public interface EsService {
      * 判断某个集群的es组件是否已经存在索引
      *
      * @param indexName
-     * @param cluster
+     * @param clusterId
      * @return
      * @throws Exception
      */
@@ -52,7 +52,7 @@ public interface EsService {
      * 删除索引
      *
      * @param indexName
-     * @param cluster
+     * @param clusterId
      * @return
      * @throws Exception
      */
@@ -63,7 +63,7 @@ public interface EsService {
     /**
      * 校验es
      *
-     * @param cluster 集群信息
+     * @param clusterId 集群信息
      * @return
      */
     Boolean checkEsConnection(String clusterId);

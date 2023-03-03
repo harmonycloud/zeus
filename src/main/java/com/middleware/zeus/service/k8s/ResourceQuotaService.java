@@ -3,6 +3,7 @@ package com.middleware.zeus.service.k8s;
 import java.util.List;
 import java.util.Map;
 
+import com.middleware.caas.common.model.ResourceQuotaDo;
 import com.middleware.caas.common.model.middleware.ResourceQuotaDTO;
 
 /**
@@ -10,6 +11,24 @@ import com.middleware.caas.common.model.middleware.ResourceQuotaDTO;
  * @date 2021/04/01
  */
 public interface ResourceQuotaService {
+
+    /**
+     * add resource quota
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param resourceQuotaDo 资源配额对象
+     */
+    void create(String clusterId, String namespace, ResourceQuotaDo resourceQuotaDo);
+
+    /**
+     * add resource quota
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param resourceQuotaDo 资源配额对象
+     */
+    void update(String clusterId, String namespace, ResourceQuotaDo resourceQuotaDo);
 
     /**
      * 查询resource quota
@@ -25,7 +44,7 @@ public interface ResourceQuotaService {
      * @param clusterId 集群id
      * @return
      */
-    Map<String, List<String>> statistics(String clusterId);
+    ResourceQuotaDo statistics(String clusterId);
 
     /**
      * 查询resource quota
@@ -34,7 +53,17 @@ public interface ResourceQuotaService {
      * @param namespace 命名空间
      * @return
      */
-    Map<String, List<String>> list(String clusterId, String namespace);
+    ResourceQuotaDo list(String clusterId, String namespace);
+
+    /**
+     * 查询resource quota
+     *
+     * @param clusterId 集群id
+     * @param namespace 命名空间
+     * @param storageClass 存储类型
+     * @return
+     */
+    ResourceQuotaDo list(String clusterId, String namespace, String storageClass);
 
     /**
      * 查询resource quota
@@ -44,5 +73,14 @@ public interface ResourceQuotaService {
      * @param name      名称
      * @return
      */
-    Map<String, List<String>> get(String clusterId, String namespace, String name);
+    ResourceQuotaDo get(String clusterId, String namespace, String name);
+
+    /**
+     * 查询集群内quota分配情况
+     *
+     * @param clusterId 集群id
+     * @return
+     */
+    ResourceQuotaDo getQuota(String clusterId);
 }
+

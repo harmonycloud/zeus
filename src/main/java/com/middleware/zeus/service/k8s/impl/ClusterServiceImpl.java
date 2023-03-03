@@ -20,6 +20,11 @@ import java.util.stream.Collectors;
 
 import com.middleware.caas.common.model.*;
 import com.middleware.caas.common.model.middleware.*;
+import com.middleware.zeus.bean.BeanMiddlewareCluster;
+import com.middleware.zeus.bean.user.BeanProjectNamespace;
+import com.middleware.zeus.dao.BeanMiddlewareClusterMapper;
+import com.middleware.zeus.dao.user.BeanProjectNamespaceMapper;
+import com.middleware.zeus.integration.cluster.NamespaceWrapper;
 import com.middleware.zeus.integration.cluster.bean.*;
 import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.middleware.*;

@@ -112,14 +112,6 @@ public interface BaseOperator {
      */
     SwitchInfo switchMiddleware(Middleware middleware, String slaveName);
 
-    /**
-     * 指定从节点手动切换主从
-     *
-     * @param middleware 中间件信息
-     * @param slaveName 从节点名称
-     */
-    void switchMiddleware(Middleware middleware, String slaveName);
-
 
     /**
      * pvc扩缩容

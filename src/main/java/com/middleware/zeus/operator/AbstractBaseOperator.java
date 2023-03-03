@@ -4,13 +4,16 @@ import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.middleware.caas.common.constants.ActiveAreaConstant;
 import com.middleware.caas.common.constants.CommonConstant;
+import com.middleware.caas.common.constants.MysqlConstant;
 import com.middleware.caas.common.enums.DictEnum;
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.middleware.caas.common.enums.middleware.ResourceUnitEnum;
 import com.middleware.caas.common.enums.middleware.StorageClassProvisionerEnum;
 import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.ActiveAreaAnnotationDto;
 import com.middleware.caas.common.model.AffinityDTO;
 import com.middleware.caas.common.model.MiddlewareServiceNameIndex;
 import com.middleware.caas.common.model.StorageDto;
@@ -22,6 +25,7 @@ import com.middleware.tool.numeric.ResourceCalculationUtil;
 import com.middleware.tool.uuid.UUIDUtils;
 import com.middleware.zeus.bean.*;
 import com.middleware.zeus.dao.AlertRuleIdMapper;
+import com.middleware.zeus.dao.BeanAlertRecordMapper;
 import com.middleware.zeus.dao.BeanAlertRuleMapper;
 import com.middleware.zeus.dao.BeanMiddlewareInfoMapper;
 import com.middleware.zeus.integration.cluster.PvcWrapper;
@@ -216,8 +220,7 @@ public abstract class AbstractBaseOperator {
         add2sql(middleware);
         //6. 删除告警记录
         deleteRecord(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
-    }
-
+        // license资源计算
         licenseService.addMiddlewareResource(cluster.getType(), calculateCpuRequest(values));
     }
 
@@ -279,9 +282,6 @@ public abstract class AbstractBaseOperator {
         cacheMiddlewareService.updateValuesToNull(middleware);
     }
 
-    public SwitchInfo getAutoSwitch(Middleware middleware) {
-        return null;
-    }
 
     /**
      * 更新自定义中间件
@@ -1374,7 +1374,7 @@ public abstract class AbstractBaseOperator {
      * @return
      */
     public ActiveAreaAnnotationDto getActiveAreaAnnotation(String clusterId, String namespace, String type, String middlewareName) {
-        List<PodInfo> podInfoList = podService.listPods(clusterId, namespace, middlewareName, type);
+        List<PodInfo> podInfoList = podService.listMiddlewarePods(clusterId, namespace, middlewareName, type);
         List<String> zoneAPodList = new ArrayList<>();
         List<String> zoneBPodList = new ArrayList<>();
         for (PodInfo podInfo : podInfoList) {

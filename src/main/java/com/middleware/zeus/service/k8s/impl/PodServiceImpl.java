@@ -22,6 +22,7 @@ import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.util.DateUtil;
+import com.middleware.zeus.util.MathUtil;
 import com.middleware.zeus.util.RedisUtil;
 import com.middleware.zeus.integration.cluster.bean.*;
 import com.middleware.zeus.service.k8s.*;
@@ -43,10 +44,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import static com.middleware.caas.common.constants.NameConstant.CPU;
-import static com.middleware.caas.common.constants.NameConstant.MEMORY;
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.PERSISTENT_VOLUME_CLAIMS;
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.PODS;
+import static com.middleware.caas.common.constants.NameConstant.*;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
 
 /**
  * @author dengyulong
@@ -369,13 +368,6 @@ public class PodServiceImpl implements PodService {
         }
     }
 
-    @Override
-    public List<PodInfo> listPods(String clusterId, String namespace, String middlewareName, String type) {
-        MiddlewareCR middlewareCR = middlewareCRService.getCR(clusterId, namespace, type, middlewareName);
-        Middleware middleware = listPods(middlewareCR, clusterId, namespace, middlewareName, type);
-        return middleware.getPods();
-    }
-
     public void checkExist(String clusterId, String namespace, String podName) {
         Pod pod = podWrapper.get(clusterId, namespace, podName);
         if (pod == null) {
@@ -450,14 +442,8 @@ public class PodServiceImpl implements PodService {
         Map<String, StorageClassDTO> scMap = storageClassService.convertStorageClass(pvcInfos, clusterId, namespace);
         Map<String, String> scAliasNameMap = storageService.listStorageMap(clusterId, true);
         // 给pod设置存储
-        List<PodInfo> podInfoList = new ArrayList<>();
-        for (MiddlewareInfo po : pods) {
-            Pod pod = podWrapper.get(clusterId, namespace, po.getName());
-            if (pod == null) {
-                continue;
-            }
-            PodInfo pi = convertPodInfo(clusterId, pod)
-                    .setRole(StringUtils.isBlank(po.getType()) ? null : po.getType().toLowerCase());
+        List<PodInfo> podInfoList = listMiddlewarePods(mw, clusterId, namespace, middlewareName, type);
+        for (PodInfo pi : podInfoList) {
             // storage
             List<StorageClassDTO> scDTOList = storageClassService.fuzzySearchStorageClass(scMap, pi.getPodName());
             if (!CollectionUtils.isEmpty(scDTOList)) {
@@ -491,7 +477,6 @@ public class PodServiceImpl implements PodService {
         podInfoList = addPodExtraRole(clusterId, namespace, middlewareName, type, podInfoList, mw);
         // 设置pod所在可用区
         this.setPodArea(clusterId, podInfoList);
-        middleware.setIsAllLvmStorage(isAllLvmStorage.get());
         middleware.setPodInfoGroup(convertPodListToGroup(podInfoList));
         middleware.setPods(podInfoList);
         return middleware;
@@ -618,72 +603,9 @@ public class PodServiceImpl implements PodService {
             if (pod == null) {
                 continue;
             }
-            PodInfo pi = convertPodInfo(pod)
+            PodInfo pi = convertPodInfo(clusterId, pod)
                     .setRole(StringUtils.isBlank(po.getType()) ? null : po.getType().toLowerCase());
             podInfoList.add(pi);
-        }
-        return podInfoList;
-    }
-
-
-
-    private List<PodInfo> addPodExtraRole(String clusterId, String namespace, String middlewareName, String type, List<PodInfo> podInfoList, MiddlewareCR mw) {
-        if (MiddlewareTypeEnum.REDIS.getType().equals(type)) {
-            return addRedisPodExtraRole(clusterId, namespace, middlewareName, podInfoList, mw);
-        }
-        return podInfoList;
-    }
-
-
-    private List<PodInfo> addRedisPodExtraRole(String clusterId, String namespace, String middlewareName, List<PodInfo> podInfoList, MiddlewareCR mw) {
-        String deployMod = RedisUtil.getRedisDeployMod(helmChartService.getInstalledValues(middlewareName, namespace, clusterService.findById(clusterId)));
-        // 哨兵模式通过name判断分片，集群模式通过slave的masterNodeId判断分片
-        if (deployMod.contains("sentinel")) {
-            podInfoList.forEach(podInfo -> {
-                String shardIndex = RedisUtil.extractShardIndex(podInfo.getPodName());
-                if (StringUtils.isNotBlank(shardIndex)) {
-                    podInfo.setGroup("shard-" + shardIndex);
-                }
-            });
-        } else {
-            String status = mw.getMetadata().getAnnotations().get("status");
-            if (StringUtils.isNotBlank(status)) {
-                Map<String, PodInfo> podInfoMap = new HashMap<>();
-                podInfoList.forEach(podInfo -> {
-                    podInfoMap.put(podInfo.getPodName(), podInfo);
-                });
-
-                JSONObject statusObj = JSONObject.parseObject(status);
-                JSONArray conditions = statusObj.getJSONArray("conditions");
-                if (CollectionUtils.isEmpty(conditions)) {
-                    return podInfoList;
-                }
-                Map<String, String> podStatusMap = new HashMap<>();
-                Map<String, String> podNodeIdMap = new HashMap<>();
-                conditions.forEach(condition -> {
-                    JSONObject single = (JSONObject) condition;
-                    podStatusMap.put(single.getString("name"), single.getString("masterNodeId"));
-                    podNodeIdMap.put(single.getString("nodeId"), single.getString("name"));
-                });
-
-                AtomicInteger groupIdIndex = new AtomicInteger();
-                conditions.forEach(condition -> {
-                    JSONObject single = (JSONObject) condition;
-                    String podName = single.getString("name");
-                    String podType = single.getString("type");
-                    if ("slave".equals(podType)) {
-                        String group = "shard-" + groupIdIndex;
-                        PodInfo slavePodInfo = podInfoMap.get(podName);
-                        slavePodInfo.setGroup(group);
-                        String masterNodeId = podStatusMap.get(podName);
-                        String masterPodName = podNodeIdMap.get(masterNodeId);
-                        PodInfo masterPodInfo = podInfoMap.get(masterPodName);
-                        masterPodInfo.setGroup(group);
-                        groupIdIndex.getAndIncrement();
-                    }
-                });
-                return new ArrayList<>(podInfoMap.values());
-            }
         }
         return podInfoList;
     }

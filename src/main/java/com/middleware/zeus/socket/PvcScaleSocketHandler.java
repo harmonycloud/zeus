@@ -25,6 +25,8 @@ import com.middleware.caas.common.model.EventDetail;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.middleware.caas.common.constants.NameConstant.*;
+
 /**
  * @author xutianhong
  * @Date 2023/1/12 10:30 上午

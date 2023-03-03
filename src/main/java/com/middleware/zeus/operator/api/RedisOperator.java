@@ -1,5 +1,6 @@
 package com.middleware.zeus.operator.api;
 
+import com.middleware.caas.common.model.middleware.Middleware;
 import com.middleware.zeus.operator.BaseOperator;
 
 /**
@@ -8,6 +9,6 @@ import com.middleware.zeus.operator.BaseOperator;
  */
 public interface RedisOperator extends BaseOperator {
 
-
+    void createOpenService(Middleware middleware);
 
 }

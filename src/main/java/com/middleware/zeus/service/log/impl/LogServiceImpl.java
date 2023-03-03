@@ -313,7 +313,7 @@ public class LogServiceImpl implements LogService {
      * @return
      */
     private Set<String> getMiddlewarePodNames(LogQuery logQuery){
-        List<PodInfo> pods = podService.listPods(logQuery.getClusterId(), logQuery.getNamespace(),
+        List<PodInfo> pods = podService.listMiddlewarePods(logQuery.getClusterId(), logQuery.getNamespace(),
                 logQuery.getMiddlewareName(), logQuery.getMiddlewareType());
         Set<String> podNames = new HashSet<>();
         if (!CollectionUtils.isEmpty(pods)) {
@@ -459,22 +459,22 @@ public class LogServiceImpl implements LogService {
 
     @Override
     public void cleanHistoryLog() throws Exception {
+        // todo 重新日志保留时间逻辑
         List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
         for (MiddlewareClusterDTO cluster : clusterList){
             if (cluster.getLogging() != null && cluster.getLogging().getElasticSearch() != null &&
             cluster.getLogging().getElasticSearch().getLogKeepDays() != null){
                 keepDays = cluster.getLogging().getElasticSearch().getLogKeepDays();
             }
-            dealIndex(cluster, keepDays);
+            dealIndex(cluster.getId(), keepDays);
         }
     }
 
     @Override
     public PageObject<MysqlLogDTO> andit(MiddlewareLogQuery middlewareLogQuery) throws Exception {
-        MiddlewareClusterDTO cluster = clusterService.findById(middlewareLogQuery.getClusterId());
         PageObject<MysqlLogDTO> slowSqlDTOS = null;
         try {
-            slowSqlDTOS = esComponentService.getAuditSql(cluster, middlewareLogQuery);
+            slowSqlDTOS = esComponentService.getAuditSql(middlewareLogQuery.getClusterId(), middlewareLogQuery);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -491,7 +491,6 @@ public class LogServiceImpl implements LogService {
     private String[] getIndexes(Date from, Date to, String clusterId, boolean isPodLog) throws Exception {
         Set<String> indexes = new HashSet<>();
         Date indexDate = from;
-        MiddlewareClusterDTO middlewareClusterDTO = clusterService.findById(clusterId);
         List<String> existIndexes = null;
         try {
             existIndexes = esService.getIndexes(clusterId);
@@ -624,19 +623,19 @@ public class LogServiceImpl implements LogService {
     /**
      * 处理过期日志
      */
-    public void dealIndex(MiddlewareClusterDTO cluster, Integer keepDays) throws Exception{
-        log.info("delete log indices. clusterId:{},logKeepDays:{}", cluster.getId(), keepDays);
+    public void dealIndex(String clusterId, Integer keepDays) throws Exception{
+        log.info("delete log indices. clusterId:{},logKeepDays:{}", clusterId, keepDays);
         Calendar logCalendar = Calendar.getInstance();
         logCalendar.add(Calendar.DATE, -keepDays);
         String indexDate = new SimpleDateFormat("yyyy.MM.dd").format(logCalendar.getTime());
         // 查询所有索引名称
-        List<String> indicesList = esService.getIndexes(cluster);
+        List<String> indicesList = esService.getIndexes(clusterId);
         // 循环比较删除超出保留时间的索引
         for (String index : indicesList){
             boolean delete = Arrays.stream(EsTemplateEnum.values())
                 .anyMatch(est -> index.startsWith(est.getName()) && index.compareTo(est.getName() + LINE + indexDate) < 0);
             if (delete){
-                esService.deleteIndex(index, cluster);
+                esService.deleteIndex(index, clusterId);
             }
         }
 
