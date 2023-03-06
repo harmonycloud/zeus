@@ -1,6 +1,7 @@
 package com.middleware.zeus.service.system;
 
 import com.middleware.caas.common.model.LicenseInfoDto;
+import com.middleware.zeus.bean.LicenseInfo;
 
 /**
  * @author xutianhong
@@ -42,5 +43,9 @@ public interface LicenseService {
     void addMiddlewareResource(String type, Double cpu);
 
 
-
+    /**
+     * 查看license功能信息
+     * @return
+     */
+    LicenseInfo getFeatures();
 }

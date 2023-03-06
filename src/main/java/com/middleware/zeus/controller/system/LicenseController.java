@@ -2,6 +2,7 @@ package com.middleware.zeus.controller.system;
 
 import com.middleware.caas.common.base.BaseResult;
 import com.middleware.caas.common.model.LicenseInfoDto;
+import com.middleware.zeus.bean.LicenseInfo;
 import com.middleware.zeus.service.system.LicenseService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -45,6 +46,12 @@ public class LicenseController {
     @GetMapping
     public BaseResult<LicenseInfoDto> info() throws Exception {
         return BaseResult.ok(licenseService.info());
+    }
+
+    @ApiOperation(value = "查看是否开启双活和灾备", notes = "查看是否开启双活和灾备")
+    @GetMapping("/features")
+    public BaseResult<LicenseInfo> getFeatures(){
+        return BaseResult.ok(licenseService.getFeatures());
     }
 
     @ApiOperation(value = "查询license使用信息", notes = "查询license使用信息")

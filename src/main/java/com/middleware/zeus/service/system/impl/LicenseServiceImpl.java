@@ -9,6 +9,7 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
+import com.middleware.zeus.bean.LicenseInfo;
 import com.middleware.zeus.service.k8s.MiddlewareCRService;
 import com.middleware.zeus.service.k8s.MiddlewareClusterService;
 import com.middleware.zeus.service.k8s.NamespaceService;
@@ -138,7 +139,7 @@ public class LicenseServiceImpl implements LicenseService {
     public LicenseInfoDto info() {
         JSONObject license = getLicense();
         if (license == null) {
-            throw new BusinessException(ErrorMessage.NOT_EXIST);
+
         }
         LicenseInfoDto info = new LicenseInfoDto();
         MonitorResourceQuotaBase produce = new MonitorResourceQuotaBase();
@@ -252,6 +253,24 @@ public class LicenseServiceImpl implements LicenseService {
         updateSysConfig(type, String.valueOf(now + cpu));
     }
 
+    @Override
+    public LicenseInfo getFeatures() {
+        LicenseInfo licenseInfo = new LicenseInfo();
+        JSONObject license = getLicense();
+        if (license == null) {
+            throw new BusinessException(ErrorMessage.NOT_EXIST);
+        }
+        JSONArray features = license.getJSONArray(FEATURES);
+        if (features == null){
+            licenseInfo.setActiveActiveEnable(false);
+            licenseInfo.setDisasterRecoveryEnable(false);
+        } else{
+            licenseInfo.setActiveActiveEnable(features.contains("同城双活"));
+            licenseInfo.setDisasterRecoveryEnable(features.contains("灾备服务"));
+        }
+        return licenseInfo;
+    }
+
     public Double calculateCpu(List<Double> cpuList) {
         double total = 0.0;
         if (!CollectionUtils.isEmpty(cpuList)) {
@@ -274,6 +293,10 @@ public class LicenseServiceImpl implements LicenseService {
             license.put(TYPE, "试用版");
             license.put(PRODUCE, 20);
             license.put(TEST, 20);
+            ArrayList<String> features = new ArrayList<>();
+            features.add("同城双活");
+            features.add("灾备服务");
+            license.put(FEATURES,features);
             return license;
         }
         if (!secret.getData().containsKey(LICENSE)) {
