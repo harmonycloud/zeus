@@ -54,6 +54,29 @@ global:
     nodeSelector: {}
     tolerations: []
     affinity: {}
+  middleware_api:
+    image: middleware-api
+    tag: v0.1.0
+    pullPolicy: Always
+    replicaCount: 1
+    podAnnotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+    serviceAccount:
+      create: true
+      annotations: {}
+      name: ""
+    service:
+      type: ClusterIP
+      port: 8080
+    nodeSelector: {}
 
 podAntiAffinityTopologKey: "kubernetes.io/hostname"
 
