@@ -174,6 +174,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
                 BaseComponentsService service =
                     getOperator(BaseComponentsService.class, BaseComponentsService.class, cc.getComponent());
                 service.updateStatus(cluster, cc);
+
             } finally {
                 count.countDown();
             }

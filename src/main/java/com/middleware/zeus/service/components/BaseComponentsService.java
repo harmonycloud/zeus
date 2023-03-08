@@ -56,4 +56,10 @@ public interface BaseComponentsService {
      */
     void record2SystemConfig(ClusterComponentsDto clusterComponentsDto);
 
+    /**
+     * 读取全局参数
+     * @param clusterComponentsDto
+     */
+    void readSystemConfig(ClusterComponentsDto clusterComponentsDto);
+
 }

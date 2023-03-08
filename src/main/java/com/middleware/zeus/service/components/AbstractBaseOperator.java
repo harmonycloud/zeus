@@ -16,6 +16,7 @@ import com.middleware.zeus.service.k8s.NamespaceService;
 import com.middleware.zeus.service.k8s.PodService;
 import com.middleware.zeus.service.middleware.ImageRepositoryService;
 import com.middleware.zeus.service.registry.HelmChartService;
+import org.apache.xmlbeans.impl.xb.xsdschema.Public;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.CollectionUtils;
@@ -108,6 +109,10 @@ public abstract class AbstractBaseOperator {
      * @param clusterComponentsDto
      */
     public void record2SystemConfig(ClusterComponentsDto clusterComponentsDto) {
+
+    }
+
+    public void readSystemConfig(ClusterComponentsDto clusterComponentsDto){
 
     }
 
