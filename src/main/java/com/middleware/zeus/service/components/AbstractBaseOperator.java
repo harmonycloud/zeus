@@ -104,6 +104,14 @@ public abstract class AbstractBaseOperator {
     }
 
     /**
+     * 保存全局参数入数据库
+     * @param clusterComponentsDto
+     */
+    public void record2SystemConfig(ClusterComponentsDto clusterComponentsDto) {
+
+    }
+
+    /**
      * 拼接参数
      *
      * @param repository 仓库地址
@@ -133,4 +141,5 @@ public abstract class AbstractBaseOperator {
      * @param clusterId 集群id
      */
     protected abstract List<PodInfo> getPodInfoList(String clusterId);
+
 }

@@ -50,4 +50,10 @@ public interface BaseComponentsService {
      */
     void setStatus(ClusterComponentsDto clusterComponentsDto);
 
+    /**
+     * 保存全局参数入数据库
+     * @param clusterComponentsDto
+     */
+    void record2SystemConfig(ClusterComponentsDto clusterComponentsDto);
+
 }

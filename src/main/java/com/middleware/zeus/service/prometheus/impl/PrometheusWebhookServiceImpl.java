@@ -8,6 +8,7 @@ import java.util.*;
 import com.middleware.caas.common.constants.AlertConstant;
 import com.middleware.caas.common.model.AlertSettingDTO;
 import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.bean.BeanSystemConfig;
 import com.middleware.zeus.bean.DingRobotInfo;
 import com.middleware.zeus.bean.user.BeanUser;
 import com.middleware.zeus.dao.*;
@@ -73,6 +74,8 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
     private MiddlewareAlertsService middlewareAlertsService;
     @Autowired
     private ClusterService clusterService;
+    @Autowired
+    private BeanSystemConfigMapper beanSystemConfigMapper;
 
     @Override
     public void alert(String json) throws Exception {
@@ -225,6 +228,14 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
         body.put("comment", "silence");
         body.put("startsAt", DateUtils.dateToString(now, DateStyle.YYYY_MM_DD_T_HH_MM_SS_Z_SSS));
         String silence = alert.getJSONObject("annotations").getString("silence");
+        if (silence == null) {
+            QueryWrapper<BeanSystemConfig> wrapper = new QueryWrapper<>();
+            wrapper.eq("config_name", "Alertmanager_SilentTime");
+            List<BeanSystemConfig> beanSystemConfigs = beanSystemConfigMapper.selectList(wrapper);
+            if (!CollectionUtils.isEmpty(beanSystemConfigs)) {
+                silence = beanSystemConfigs.get(0).getConfigValue();
+            }
+        }
         body.put("endsAt",
             DateUtils.dateToString(calculateEndTime(now, silence), DateStyle.YYYY_MM_DD_T_HH_MM_SS_Z_SSS));
         alertManagerWrapper.setSilence(clusterId, NameConstant.ALERT_MANAGER_API_VERSION_SILENCES, body);

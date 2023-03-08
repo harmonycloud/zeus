@@ -11,6 +11,9 @@ import com.middleware.tool.date.DateUtils;
 import com.middleware.zeus.bean.BeanClusterComponents;
 import com.middleware.zeus.dao.BeanClusterComponentsMapper;
 import com.middleware.zeus.integration.registry.bean.harbor.HelmListInfo;
+import com.middleware.zeus.operator.BaseOperator;
+import com.middleware.zeus.service.components.AbstractBaseOperator;
+import com.middleware.zeus.service.components.api.AlertManagerService;
 import com.middleware.zeus.service.components.api.LoggingService;
 import com.middleware.zeus.service.k8s.NamespaceService;
 import com.middleware.zeus.service.middleware.MiddlewareManagerService;
@@ -256,6 +259,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         BeanUtils.copyProperties(componentsDto, cm, "component", "status");
         cm.setCreateTime(new Date());
         beanClusterComponentsMapper.update(cm, wrapper);
+        getOperator(BaseComponentsService.class, BaseComponentsService.class, componentsDto.getComponent()).record2SystemConfig(componentsDto);
     }
 
     /**
