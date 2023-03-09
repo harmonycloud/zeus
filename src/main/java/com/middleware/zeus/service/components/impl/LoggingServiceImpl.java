@@ -4,9 +4,12 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.middleware.caas.common.enums.ComponentsEnum;
 import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.middleware.caas.common.model.ClusterComponentsDto;
+import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.zeus.annotation.Operator;
 import com.middleware.zeus.bean.BeanClusterComponents;
 import com.middleware.zeus.bean.BeanClusterMiddlewareInfo;
+import com.middleware.zeus.bean.BeanSystemConfig;
+import com.middleware.zeus.dao.BeanSystemConfigMapper;
 import com.middleware.zeus.service.components.AbstractBaseOperator;
 import com.middleware.zeus.service.components.api.LoggingService;
 import com.middleware.zeus.service.k8s.ClusterService;
@@ -26,6 +29,7 @@ import org.springframework.util.CollectionUtils;
 import static com.middleware.caas.common.constants.CommonConstant.SIMPLE;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -49,6 +53,8 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
     private ClusterMiddlewareInfoService clusterMiddlewareInfoService;
     @Autowired
     private MiddlewareManagerService middlewareManagerService;
+    @Autowired
+    private BeanSystemConfigMapper beanSystemConfigMapper;
 
     @Override
     public boolean support(String name) {
@@ -210,6 +216,37 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         if (StringUtils.isAnyEmpty(clusterComponentsDto.getProtocol(), clusterComponentsDto.getHost(),
             clusterComponentsDto.getPort())) {
             clusterComponentsDto.setStatus(7);
+        }
+    }
+
+    @Override
+    public void record2SystemConfig(ClusterComponentsDto clusterComponentsDto) {
+        QueryWrapper<BeanSystemConfig> wrapper = new QueryWrapper<>();
+        wrapper.eq("config_name", "Logging_LogSaveTime");
+        List<BeanSystemConfig> beanSystemConfigs = beanSystemConfigMapper.selectList(wrapper);
+        BeanSystemConfig beanSystemConfig;
+        if (!CollectionUtils.isEmpty(beanSystemConfigs)) {
+            beanSystemConfig = beanSystemConfigs.get(0);
+            beanSystemConfig.setConfigValue(clusterComponentsDto.getLogSaveTime());
+            beanSystemConfig.setUpdateUser(CurrentUserRepository.getUser().getUsername());
+            beanSystemConfigMapper.update(beanSystemConfig, wrapper);
+        } else {
+            beanSystemConfig = new BeanSystemConfig();
+            beanSystemConfig.setConfigName("Logging_LogSaveTime");
+            beanSystemConfig.setConfigValue(clusterComponentsDto.getLogSaveTime());
+            beanSystemConfig.setCreateTime(LocalDateTime.now());
+            beanSystemConfig.setCreateUser(CurrentUserRepository.getUser().getUsername());
+            beanSystemConfigMapper.insert(beanSystemConfig);
+        }
+    }
+
+    @Override
+    public void readSystemConfig(ClusterComponentsDto clusterComponentsDto) {
+        QueryWrapper<BeanSystemConfig> wrapper = new QueryWrapper<>();
+        wrapper.eq("config_name", "Logging_LogSaveTime");
+        List<BeanSystemConfig> beanSystemConfigs = beanSystemConfigMapper.selectList(wrapper);
+        if (!CollectionUtils.isEmpty(beanSystemConfigs)) {
+            clusterComponentsDto.setLogSaveTime(beanSystemConfigs.get(0).getConfigValue());
         }
     }
 }
