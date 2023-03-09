@@ -189,6 +189,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
             if (cm.getStatus() == NUM_ONE || cm.getStatus() == NUM_THREE || cm.getStatus() == NUM_FOUR) {
                 getOperator(BaseComponentsService.class, BaseComponentsService.class, dto.getComponent()).setStatus(dto);
             }
+            getOperator(BaseComponentsService.class, BaseComponentsService.class, cm.getComponent()).readSystemConfig(dto);
             return dto;
         }).collect(Collectors.toList());
     }
