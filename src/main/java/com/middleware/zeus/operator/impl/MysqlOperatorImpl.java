@@ -194,6 +194,13 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         // 处理mysql的特有参数
         if (values != null) {
             convertResourcesByHelmChart(middleware, middleware.getType(), values.getJSONObject(RESOURCES));
+            // 设置从节点数量
+            Integer num = values.getInteger("replicaCount");
+            if (num != null) {
+                num = num - 1;
+                middleware.getQuota().get(middleware.getType()).setNum(num);
+            }
+
             JSONObject args = values.getJSONObject("args");
             if (args == null) {
                 args = values.getJSONObject("mysqlArgs");

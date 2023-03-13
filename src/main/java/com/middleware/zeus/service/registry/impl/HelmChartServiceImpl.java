@@ -452,6 +452,15 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     }
 
     @Override
+    public void upgrade(Middleware middleware, String updateValues, String clusterId) {
+        if (StringUtils.isEmpty(clusterId)) {
+            // TODO  throw exception
+        }
+        MiddlewareClusterDTO clusterDTO = clusterService.findById(middleware.getClusterId());
+        this.upgrade(middleware, updateValues, clusterDTO);
+    }
+
+    @Override
     public void upgrade(Middleware middleware, JSONObject values, JSONObject newValues,
         MiddlewareClusterDTO cluster) {
 

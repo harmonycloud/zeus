@@ -34,6 +34,7 @@ import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import com.middleware.zeus.operator.api.PostgresqlOperator;
 import com.middleware.zeus.operator.miiddleware.AbstractPostgresqlOperator;
 import com.middleware.zeus.util.ChartVersionUtil;
+import com.middleware.zeus.util.MiddlewareResourceCalculateUtil;
 import io.fabric8.kubernetes.api.model.Service;
 import org.apache.commons.lang3.StringUtils;
 
@@ -311,9 +312,45 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         return Collections.emptyList();
     }
 
+    @Override
+    public void update(Middleware middleware, MiddlewareClusterDTO cluster) {
+        StringBuilder sb = new StringBuilder();
+        if (middleware.getQuota() != null && middleware.getQuota().get(middleware.getType()) != null) {
+            MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
+            // 设置limit的resources
+            setLimitResources(quota);
+            if (StringUtils.isNotBlank(quota.getCpu())) {
+                sb.append("resources.requests.cpu=").append(quota.getCpu()).append(",resources.limits.cpu=")
+                        .append(quota.getLimitCpu()).append(",");
+            }
+            if (StringUtils.isNotBlank(quota.getMemory())) {
+                sb.append("resources.requests.memory=").append(quota.getMemory()).append(",resources.limits.memory=")
+                        .append(quota.getLimitMemory()).append(",");
+            }
+            // 设置实例数量
+            if (quota.getNum() != null) {
+                checkInstanceNum(quota.getNum());
+                int instance = quota.getNum() + 1;
+                String mod = String.format("1m-%ds", quota.getNum());
+                sb.append("instances=").append(instance).append(",");
+                sb.append("mode=").append(mod);
+            }
+        }
+        helmChartService.upgrade(middleware, sb.toString(), middleware.getClusterId());
+    }
 
     public void buildClone(Middleware middleware, JSONObject values){
         middlewareBackupCRService.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getBackupFileName());
+    }
+
+    /**
+     * 检查从节点数量是否合法,pg的从节点数量范围为：1-3
+     * @param instanceNum
+     */
+    private void checkInstanceNum(int instanceNum){
+        if(instanceNum < 1 || instanceNum > 3){
+            throw new BusinessException(ErrorMessage.ERROR_PG_POD_NUm);
+        }
     }
 
 }
