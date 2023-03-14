@@ -724,8 +724,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         if (MiddlewareTypeEnum.ELASTIC_SEARCH.getType().equals(type)) {
             Set<String> scSet = new HashSet<>();
             middleware.getPods().forEach(pod -> {
-                if (StringUtils.isNotEmpty(pod.getResources().getStorageClassName())) {
-                    scSet.add(pod.getResources().getStorageClassName());
+                if (!CollectionUtils.isEmpty(pod.getStorageResources())) {
+                    for (MiddlewareQuota sr : pod.getStorageResources()) {
+                        if (StringUtils.isNotEmpty(sr.getStorageClassName())) {
+                            scSet.add(sr.getStorageClassName());
+                        }
+                    }
                 }
             });
             StringBuilder sb = new StringBuilder();
