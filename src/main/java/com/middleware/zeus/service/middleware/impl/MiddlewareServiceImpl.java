@@ -709,12 +709,17 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 .setPodInfoGroup(middleware.getPodInfoGroup()).setMonitorResourceQuota(new MonitorResourceQuota());
         // 设置 PROVISIONER
         if (!CollectionUtils.isEmpty(middleware.getPods())) {
-            List<PodInfo> infos = middleware.getPods().stream()
-                    .filter(podInfo -> podInfo.getResources() != null
-                            && StringUtils.isNotEmpty(podInfo.getResources().getProvisioner()))
-                    .collect(Collectors.toList());
-            if (!CollectionUtils.isEmpty(infos)) {
-                middlewareTopologyDTO.setProvisioner(infos.get(0).getResources().getProvisioner());
+            loop:
+            for (PodInfo podInfo : middleware.getPods()) {
+                if (CollectionUtils.isEmpty(podInfo.getStorageResources())) {
+                    continue;
+                }
+                for (MiddlewareQuota scr : podInfo.getStorageResources()) {
+                    if (StringUtils.isNotEmpty(scr.getProvisioner())) {
+                        middlewareTopologyDTO.setProvisioner(scr.getProvisioner());
+                        break loop;
+                    }
+                }
             }
         }
         // 获取alias name
