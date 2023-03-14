@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 import static com.middleware.caas.common.constants.NameConstant.CONFIG_NAME;
 
 /**
@@ -29,6 +31,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
         config.setConfigName(name);
         config.setConfigValue(value);
         config.setCreateUser(username);
+        config.setCreateTime(LocalDateTime.now());
         beanSystemConfigMapper.insert(config);
     }
 
@@ -39,6 +42,16 @@ public class SystemConfigServiceImpl implements SystemConfigService {
         config.setConfigName(name);
         config.setConfigValue(value);
         beanSystemConfigMapper.update(config, wrapper);
+    }
+
+    @Override
+    public void saveConfig(String name, String value) {
+        BeanSystemConfig config = getConfig(name);
+        if (config == null) {
+            addConfig(name, value);
+        } else {
+            updateConfig(name, value);
+        }
     }
 
     @Override
