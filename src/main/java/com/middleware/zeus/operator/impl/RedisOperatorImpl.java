@@ -220,9 +220,12 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             middleware.getQuota().get(middleware.getType()).setNum(redisQuota.getInteger(REPLICAS));
             // 读写分离
             if (values.containsKey("predixy")) {
+                JSONObject predixy = values.getJSONObject("predixy");
                 ReadWriteProxy readWriteProxy = new ReadWriteProxy();
-                readWriteProxy.setEnabled(values.getJSONObject("predixy").getBoolean("enableProxy"));
+                readWriteProxy.setEnabled(predixy.getBoolean("enableProxy"));
                 middleware.setReadWriteProxy(readWriteProxy);
+                convertResourcesByHelmChart(middleware, "proxy", predixy.getJSONObject("resources"));
+                middleware.getQuota().get("proxy").setNum(predixy.getInteger("replicas"));
             } else {
                 ReadWriteProxy readWriteProxy = new ReadWriteProxy();
                 readWriteProxy.setEnabled(false);

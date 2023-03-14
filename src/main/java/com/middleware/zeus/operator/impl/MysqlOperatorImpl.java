@@ -122,11 +122,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         // 替换通用的值
         replaceCommonValues(middleware, cluster, values);
         MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
-        // 如果是克隆，则增加3Gi存储空间，否则集群起不来
-        if (StringUtils.isNotBlank(middleware.getBackupFileName())) {
-            int storageSize = Integer.parseInt(quota.getStorageClassQuota()) + 3;
-            quota.setStorageClassQuota(String.valueOf(storageSize));
-        }
         replaceCommonResources(quota, values.getJSONObject(RESOURCES));
         replaceCommonStorages(quota, values);
 
