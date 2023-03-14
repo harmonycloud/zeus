@@ -92,7 +92,7 @@ public class AuthServiceImpl implements AuthService {
             int passwordRemindCode = getPasswordRemindCode(passwordUsedDay);
             res.put("passwordRemindCode", passwordRemindCode);
             if (passwordRemindCode != 1) {
-                res.put("rePassword", passwordUsedDay);
+                res.put("passwordUsedDay", (int) Math.round(passwordUsedDay));
             }
         }
         return res;
