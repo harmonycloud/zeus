@@ -158,12 +158,12 @@ public interface UserService {
      * 保存密码有效期天数
      * @param days
      */
-    void savePasswordExpiredDate(String days);
+    void savePasswordExpiredDay(String days);
 
     /**
      * 获取密码有效期天数
      * @return
      */
-    SystemConfigDto getPasswordExpiredDate();
+    SystemConfigDto getPasswordExpiredDay();
 
 }

@@ -450,20 +450,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void savePasswordExpiredDate(String days) {
-        systemConfigService.saveConfig(SystemConfigKeyEnum.PASSWORD_EXPIRED_DATE.getNameKey(), days);
-        //TODO 修改用户密码有效期
+    public void savePasswordExpiredDay(String days) {
+        systemConfigService.saveConfig(SystemConfigKeyEnum.PASSWORD_EXPIRED_DAY.getNameKey(), days);
     }
 
     @Override
-    public SystemConfigDto getPasswordExpiredDate() {
-        BeanSystemConfig config = systemConfigService.getConfig(SystemConfigKeyEnum.PASSWORD_EXPIRED_DATE.getNameKey());
+    public SystemConfigDto getPasswordExpiredDay() {
+        BeanSystemConfig config = systemConfigService.getConfig(SystemConfigKeyEnum.PASSWORD_EXPIRED_DAY.getNameKey());
         if (config == null) {
             initDefaultPasswordExpiredDate();
-            config = systemConfigService.getConfig(SystemConfigKeyEnum.PASSWORD_EXPIRED_DATE.getNameKey());
+            config = systemConfigService.getConfig(SystemConfigKeyEnum.PASSWORD_EXPIRED_DAY.getNameKey());
         }
         SystemConfigDto systemConfigDto = new SystemConfigDto();
-        systemConfigDto.setConfigName(SystemConfigKeyEnum.PASSWORD_EXPIRED_DATE.getNameKey());
+        systemConfigDto.setConfigName(SystemConfigKeyEnum.PASSWORD_EXPIRED_DAY.getNameKey());
         systemConfigDto.setConfigValue(config.getConfigValue());
         return systemConfigDto;
     }
@@ -472,7 +471,7 @@ public class UserServiceImpl implements UserService {
      * 初始化密码有效期
      */
     private void initDefaultPasswordExpiredDate() {
-        systemConfigService.saveConfig(SystemConfigKeyEnum.PASSWORD_EXPIRED_DATE.getNameKey(), String.valueOf(defaultPasswordExpiredDate));
+        systemConfigService.saveConfig(SystemConfigKeyEnum.PASSWORD_EXPIRED_DAY.getNameKey(), String.valueOf(defaultPasswordExpiredDate));
     }
 
     /**

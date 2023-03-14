@@ -212,14 +212,14 @@ public class UserController {
     @ApiOperation(value = "保存密码有效期天数", notes = "保存密码有效期天数")
     @PutMapping("/passwordExpiredDate")
     public BaseResult savePasswordExpiredDate(@RequestBody SystemConfigDto systemConfigDto) {
-        userService.savePasswordExpiredDate(systemConfigDto.getConfigValue());
+        userService.savePasswordExpiredDay(systemConfigDto.getConfigValue());
         return BaseResult.ok();
     }
 
     @ApiOperation(value = "获取密码有效期天数", notes = "获取密码有效期天数")
     @GetMapping("/passwordExpiredDate")
     public BaseResult<SystemConfigDto> getPasswordExpiredDate() {
-        return BaseResult.ok(userService.getPasswordExpiredDate());
+        return BaseResult.ok(userService.getPasswordExpiredDay());
     }
 
     /**
