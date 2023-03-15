@@ -2,8 +2,6 @@ package com.middleware.zeus.service.middleware;
 
 import com.alibaba.fastjson.JSONObject;
 
-import javax.servlet.ServletRequest;
-
 /**
  * @author xutianhong
  * @Date 2022/10/11 10:53 上午
@@ -24,6 +22,19 @@ public interface MiddlewareDashboardAuthService {
     JSONObject login(String clusterId, String namespace, String middlewareName, String username, String password, String type);
 
     /**
+     * 登录
+     * @param clusterId
+     * @param namespace
+     * @param middlewareName
+     * @param username
+     * @param password
+     * @param type
+     * @param encryptedPassword 是否解密密码
+     * @return
+     */
+    JSONObject login(String clusterId, String namespace, String middlewareName, String username, String password, String type, Boolean encryptedPassword);
+
+    /**
      * 登出
      *
      * @param clusterId 集群id
@@ -33,5 +44,10 @@ public interface MiddlewareDashboardAuthService {
      * @return JSONObject
      **/
     void logout(String clusterId, String namespace, String middlewareName, String type);
+
+    /**
+     * 手动获取并添加MWToken到header中
+     */
+    void addMWToken(String clusterId, String namespace, String middlewareName, String type);
 
 }

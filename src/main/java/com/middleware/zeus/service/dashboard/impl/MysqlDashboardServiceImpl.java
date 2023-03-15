@@ -17,6 +17,7 @@ import com.middleware.zeus.bean.BeanSqlExecuteRecord;
 import com.middleware.zeus.dao.BeanSqlExecuteRecordMapper;
 import com.middleware.zeus.integration.dashboard.MysqlClient;
 import com.middleware.zeus.service.dashboard.MysqlDashboardService;
+import com.middleware.zeus.service.middleware.MiddlewareDashboardAuthService;
 import com.middleware.zeus.util.ExcelUtil;
 import com.middleware.zeus.util.FileDownloadUtil;
 import com.middleware.zeus.util.MysqlUtil;
@@ -53,11 +54,10 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     @Value("${system.middleware-api.mysql.excelPath:/usr/local/zeus-pv/excel/}")
     private String path;
 
-    @Value("${system.middleware-api.mysql.temppath:10.10.102.52}")
-    private String temppath;
-
     @Autowired
     private BeanSqlExecuteRecordMapper sqlExecuteRecordMapper;
+    @Autowired
+    private MiddlewareDashboardAuthService middlewareDashboardAuthService;
 
     @Override
     public String login(String clusterId, String namespace, String middlewareName, String username, String password) {
@@ -484,7 +484,10 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public List<UserDto> listUser(String clusterId, String namespace, String middlewareName, String keyword) {
+    public List<UserDto> listUser(String clusterId, String namespace, String middlewareName, String keyword, Boolean skipGrant) {
+        if (skipGrant) {
+            middlewareDashboardAuthService.addMWToken(clusterId, namespace, middlewareName, MiddlewareTypeEnum.MYSQL.getType());
+        }
         JSONArray dataAry = mysqlClient.listUser(getPath(middlewareName, namespace), port).getJSONArray("dataAry");
         return dataAry.stream().map(data -> {
             JSONObject obj = (JSONObject) data;
@@ -538,7 +541,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
             throw new BusinessException(ErrorMessage.MYSQL_USER_NOT_EXISTS);
         }
         if (!StringUtils.isEmpty(userDto.getPassword())) {
-            this.updatePassword(clusterId, namespace, middlewareName, username, userDto);
+            this.updatePassword(clusterId, namespace, middlewareName, username, userDto, false);
         }
         if (!StringUtils.isEmpty(userDto.getNewUser())) {
             this.updateUsername(clusterId, namespace, middlewareName, username, userDto);
@@ -554,7 +557,10 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public void updatePassword(String clusterId, String namespace, String middlewareName, String username, UserDto userDto) {
+    public void updatePassword(String clusterId, String namespace, String middlewareName, String username, UserDto userDto, Boolean skipGrant) {
+        if (skipGrant) {
+            middlewareDashboardAuthService.addMWToken(clusterId, namespace, middlewareName, MiddlewareTypeEnum.MYSQL.getType());
+        }
         if (!checkUserExists(namespace, middlewareName, username)) {
             throw new BusinessException(ErrorMessage.MYSQL_USER_NOT_EXISTS);
         }

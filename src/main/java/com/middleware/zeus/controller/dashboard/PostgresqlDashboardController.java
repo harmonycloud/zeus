@@ -598,13 +598,15 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "name", value = "名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "keyword", value = "关键词", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "skipGrant", value = "是否通过mwtoken查询", paramType = "query", dataTypeClass = Boolean.class),
     })
     @GetMapping("/users")
     public BaseResult<List<MiddlewareUserDto>> listUser(@PathVariable("clusterId") String clusterId,
                                                         @PathVariable("namespace") String namespace,
                                                         @PathVariable("name") String name,
-                                                        @RequestParam(value = "keyword", required = false) String keyword) {
-        return BaseResult.ok(postgresqlDashboardService.listUser(clusterId, namespace, name, keyword));
+                                                        @RequestParam(value = "keyword", required = false) String keyword,
+                                                        @RequestParam(value = "skipGrant", required = false, defaultValue = "false") Boolean skipGrant) {
+        return BaseResult.ok(postgresqlDashboardService.listUser(clusterId, namespace, name, keyword, skipGrant));
     }
 
     @ApiOperation(value = "创建用户", notes = "创建用户")
@@ -698,13 +700,15 @@ public class PostgresqlDashboardController {
             @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "name", value = "名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "username", value = "用户名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "skipGrant", value = "是否通过mwtoken查询", paramType = "query", dataTypeClass = Boolean.class),
     })
     @PostMapping("/users/{username}/reset")
     public BaseResult resetPassword(@PathVariable("clusterId") String clusterId,
                                     @PathVariable("namespace") String namespace,
                                     @PathVariable("name") String name,
-                                    @PathVariable("username") String username) {
-        postgresqlDashboardService.resetPassword(clusterId, namespace, name, username);
+                                    @PathVariable("username") String username,
+                                    @RequestParam(value = "skipGrant", required = false, defaultValue = "false") Boolean skipGrant) {
+        postgresqlDashboardService.resetPassword(clusterId, namespace, name, username, skipGrant);
         return BaseResult.ok();
     }
 

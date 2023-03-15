@@ -129,7 +129,7 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
     /**
      * 获取user列表
      */
-    List<UserDto> listUser(String clusterId, String namespace, String middlewareName, String keyword);
+    List<UserDto> listUser(String clusterId, String namespace, String middlewareName, String keyword, Boolean skipGrant);
 
     /**
      * 创建用户
@@ -156,7 +156,7 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
     /**
      * 更新密码
      */
-    void updatePassword(String clusterId, String namespace, String middlewareName, String username, UserDto userDto);
+    void updatePassword(String clusterId, String namespace, String middlewareName, String username, UserDto userDto, Boolean skipGrant);
 
     /**
      * 锁定用户
