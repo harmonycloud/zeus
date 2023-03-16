@@ -647,6 +647,21 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         return null;
     }
 
+    @Override
+    public void updatePassword(String clusterId,String namespace,String middlewareName,String type,String password){
+        JSONObject values = getInstalledValues(middlewareName, namespace, clusterService.findById(clusterId));
+        if(values != null){
+            String chartVersion = getChartVersion(values, type);
+            Middleware middleware = new Middleware();
+            middleware.setClusterId(clusterId);
+            middleware.setNamespace(namespace);
+            middleware.setChartVersion(chartVersion);
+            middleware.setChartName(type);
+            middleware.setPassword(password);
+            middlewareService.update(middleware);
+        }
+    }
+
     private String getUploadPath() {
         return uploadPath + SUB_DIR;
     }

@@ -12,12 +12,17 @@ import com.middleware.caas.common.enums.middleware.MysqlOperationEnum;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.dashboard.ExecResult;
 import com.middleware.caas.common.model.dashboard.SqlQuery;
+import com.middleware.caas.common.model.middleware.Middleware;
+import com.middleware.caas.common.model.middleware.MysqlDTO;
 import com.middleware.zeus.annotation.Operator;
 import com.middleware.zeus.bean.BeanSqlExecuteRecord;
 import com.middleware.zeus.dao.BeanSqlExecuteRecordMapper;
 import com.middleware.zeus.integration.dashboard.MysqlClient;
 import com.middleware.zeus.service.dashboard.MysqlDashboardService;
+import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.middleware.MiddlewareDashboardAuthService;
+import com.middleware.zeus.service.middleware.MiddlewareService;
+import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.util.ExcelUtil;
 import com.middleware.zeus.util.FileDownloadUtil;
 import com.middleware.zeus.util.MysqlUtil;
@@ -58,6 +63,12 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     private BeanSqlExecuteRecordMapper sqlExecuteRecordMapper;
     @Autowired
     private MiddlewareDashboardAuthService middlewareDashboardAuthService;
+    @Autowired
+    private HelmChartService helmChartService;
+    @Autowired
+    private ClusterService clusterService;
+    @Autowired
+    private MiddlewareService middlewareService;
 
     @Override
     public String login(String clusterId, String namespace, String middlewareName, String username, String password) {
@@ -568,6 +579,10 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.FAILED_TO_UPDATE_USER_PASSWORD, res.getString("message"));
         }
+        // 如果是root用户，则修改values.yaml里的密码,即arg.root_password
+        if ("root".equals(username)) {
+            helmChartService.updatePassword(clusterId, namespace, middlewareName, MiddlewareTypeEnum.MYSQL.getType(), userDto.getPassword());
+        }
     }
 
     @Override
@@ -947,5 +962,5 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     private String getPath(String middlewareName, String namespace) {
         return middlewareName + "." + namespace;
     }
-    
+
 }

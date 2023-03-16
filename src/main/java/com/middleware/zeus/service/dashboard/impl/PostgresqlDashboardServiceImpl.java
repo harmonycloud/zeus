@@ -11,10 +11,14 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.middleware.caas.common.model.dashboard.*;
 import com.middleware.caas.common.model.dashboard.mysql.ColumnDto;
+import com.middleware.caas.common.model.middleware.Middleware;
 import com.middleware.zeus.service.dashboard.ExecuteSqlService;
 import com.middleware.zeus.service.dashboard.PostgresqlDashboardService;
+import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.k8s.ServiceService;
 import com.middleware.zeus.service.middleware.MiddlewareDashboardAuthService;
+import com.middleware.zeus.service.middleware.MiddlewareService;
+import com.middleware.zeus.service.registry.HelmChartService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,6 +74,12 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     private ExecuteSqlService executeSqlService;
     @Autowired
     private MiddlewareDashboardAuthService middlewareDashboardAuthService;
+    @Autowired
+    private HelmChartService helmChartService;
+    @Autowired
+    private ClusterService clusterService;
+    @Autowired
+    private MiddlewareService middlewareService;
 
     @Override
     public boolean support(String type) {
@@ -1208,6 +1218,9 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
             middlewareDashboardAuthService.addMWToken(clusterId, namespace, middlewareName, MiddlewareTypeEnum.POSTGRESQL.getType());
         }
         this.updatePassword(clusterId, namespace, middlewareName, username, "zeus123.com");
+        if ("postgres".equals(username)) {
+            helmChartService.updatePassword(clusterId, namespace, middlewareName, MiddlewareTypeEnum.MYSQL.getType(), "zeus123.com");
+        }
     }
 
     @Override

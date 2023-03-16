@@ -246,4 +246,15 @@ public interface HelmChartService {
      * @return String
      */
     String getChartVersion(JSONObject values, String type);
+
+    /**
+     * 更新密码
+     * @param clusterId
+     * @param namespace
+     * @param middlewareName
+     * @param type
+     * @param password 新密码
+     */
+    void updatePassword(String clusterId, String namespace, String middlewareName, String type, String password);
+
 }
