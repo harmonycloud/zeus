@@ -186,8 +186,17 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         }
         values.put("redisPassword", middleware.getPassword());
         // 端口
-        if (middleware.getPort() != null) {
-            values.put("redisServicePort", middleware.getPort());
+        if (middleware.getRedisParam() != null) {
+            RedisParam redisParam = middleware.getRedisParam();
+            if (redisParam.getRedisPort() != null) {
+                values.getJSONObject("redis").put("port", redisParam.getRedisPort());
+            }
+            if (redisParam.getPredixyPort() != null) {
+                values.getJSONObject("predixy").put("port", redisParam.getPredixyPort());
+            }
+            if (redisParam.getSentinelPort() != null) {
+                values.getJSONObject("sentinel").put("port", redisParam.getSentinelPort());
+            }
         }
 
         //主机网络配置
