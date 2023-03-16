@@ -107,7 +107,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
 
         // 端口配置
         JSONObject customEnvs = values.getJSONObject("customEnvs");
-        if (middleware.getPostgresqlParam() != null) {
+        if (middleware.getPostgresqlParam() != null && customEnvs != null) {
             PostgresqlParam pgParam = middleware.getPostgresqlParam();
             if (pgParam.getPgPort() != null) {
                 customEnvs.put("PGPORT", pgParam.getPgPort());

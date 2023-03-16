@@ -99,17 +99,19 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
             // 端口
             EsParam param = middleware.getEsParam();
             JSONObject port = values.getJSONObject("port");
-            if (param.getHttpPort() != null) {
-                port.put("esHttpPort", param.getHttpPort());
-            }
-            if (param.getExportPort() != null) {
-                port.put("esExporterPort", param.getExportPort());
-            }
-            if (param.getKibanaPort() != null) {
-                port.put("esKibanaPort", param.getKibanaPort());
-            }
-            if (param.getTcpPort() != null) {
-                port.put("esTcpPort", param.getTcpPort());
+            if (param != null && port != null) {
+                if (param.getHttpPort() != null) {
+                    port.put("esHttpPort", param.getHttpPort());
+                }
+                if (param.getExportPort() != null) {
+                    port.put("esExporterPort", param.getExportPort());
+                }
+                if (param.getKibanaPort() != null) {
+                    port.put("esKibanaPort", param.getKibanaPort());
+                }
+                if (param.getTcpPort() != null) {
+                    port.put("esTcpPort", param.getTcpPort());
+                }
             }
         }
     }
