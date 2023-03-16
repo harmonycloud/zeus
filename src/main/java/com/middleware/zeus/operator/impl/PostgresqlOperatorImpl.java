@@ -105,6 +105,21 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             values.put("hostNetwork", middleware.getPostgresqlParam().getHostNetwork());
         }
 
+        // 端口配置
+        JSONObject customEnvs = values.getJSONObject("customEnvs");
+        if (middleware.getPostgresqlParam() != null) {
+            PostgresqlParam pgParam = middleware.getPostgresqlParam();
+            if (pgParam.getPgPort() != null) {
+                customEnvs.put("PGPORT", pgParam.getPgPort());
+            }
+            if (pgParam.getApiPort() != null) {
+                customEnvs.put("APIPORT", pgParam.getApiPort());
+            }
+            if (pgParam.getExporterPort() != null) {
+                customEnvs.put("EXPORTERPORT", pgParam.getExporterPort());
+            }
+        }
+
         // 备份恢复
         if (StringUtils.isNotEmpty(middleware.getBackupFileName())){
             try {
