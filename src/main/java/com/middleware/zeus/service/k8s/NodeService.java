@@ -93,7 +93,7 @@ public interface NodeService {
     ClusterNodeResourceDto getSumNodeResource(String clusterId, List<Node> nodes, Boolean all);
 
     /**
-     * 获取一个node ip
+     * 获取一个可用的node ip
      * @param clusterId
      * @return
      */

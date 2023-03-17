@@ -116,6 +116,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private ClusterComponentService clusterComponentService;
     @Autowired
     private ServiceAccountService serviceAccountService;
+    @Autowired
+    private NodeService nodeService;
     @Value("${system.privateRegistry.middlewareServiceAccount:default}")
     private String middlewareServiceAccount;
 
@@ -986,6 +988,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         List<IngressDTO> ingressDTOS = ingressService.get(clusterId, namespace, type, name);
         String servicePort = ServiceNameConvertUtil.getManagePlatformServicePort(type);
         for (IngressDTO ingressDTO : ingressDTOS) {
+            // 如果是ingress7层方式暴露
             if (!CollectionUtils.isEmpty(ingressDTO.getRules())) {
                 List<IngressRuleDTO> rules = ingressDTO.getRules();
                 for (IngressRuleDTO rule : rules) {
@@ -1002,12 +1005,20 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 }
             }
             List<ServiceDTO> serviceList = ingressDTO.getServiceList();
-            String exposeIp = ingressService.getIngressIp(clusterId, ingressDTO.getIngressClassName());
-            if (!CollectionUtils.isEmpty(serviceList)) {
-                for (ServiceDTO serviceDTO : serviceList) {
-                    if (serviceDTO.getServicePort().equals(servicePort)) {
-                        return (StringUtils.isBlank(ingressDTO.getExposeIP()) ? exposeIp : ingressDTO.getExposeIP()) + ":" + serviceDTO.getExposePort();
-                    }
+            if (CollectionUtils.isEmpty(serviceList)) {
+                continue;
+            }
+            String exposeIp = "";
+            if (StringUtils.isNotEmpty(ingressDTO.getIngressClassName())) {
+                // 如果服务暴露方式为ingress
+                exposeIp = ingressService.getIngressIp(clusterId, ingressDTO.getIngressClassName());
+            } else {
+                // 如果暴露方式为nodeport
+                exposeIp = nodeService.getNodeIp(clusterId);
+            }
+            for (ServiceDTO serviceDTO : serviceList) {
+                if (serviceDTO.getServicePort().equals(servicePort)) {
+                    return (StringUtils.isBlank(ingressDTO.getExposeIP()) ? exposeIp : ingressDTO.getExposeIP()) + ":" + serviceDTO.getExposePort();
                 }
             }
         }

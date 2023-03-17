@@ -260,6 +260,20 @@ public class NodeServiceImpl implements NodeService {
     @Override
     public String getNodeIp(String clusterId) {
         List<io.fabric8.kubernetes.api.model.Node> nodes = nodeWrapper.list(clusterId);
+        // 过滤掉不可用的节点
+        nodes = nodes.stream().filter(node -> {
+            if (node.getSpec().getUnschedulable() != null && node.getSpec().getUnschedulable()) {
+                return false;
+            }
+            if (node.getStatus() != null) {
+                List<NodeCondition> nodeConditionList = node.getStatus().getConditions().stream().
+                        filter(nodeCondition -> "Ready".equals(nodeCondition.getType()) && "True".equals(nodeCondition.getStatus())).
+                        collect(Collectors.toList());
+                return !CollectionUtils.isEmpty(nodeConditionList);
+            }
+            return false;
+        }).collect(Collectors.toList());
+
         if (!CollectionUtils.isEmpty(nodes)) {
             List<NodeAddress> addresses = nodes.get(0).getStatus().getAddresses();
             List<NodeAddress> nodeAddresses = addresses.stream().filter(nodeAddress -> "InternalIP".equals(nodeAddress.getType())).collect(Collectors.toList());
