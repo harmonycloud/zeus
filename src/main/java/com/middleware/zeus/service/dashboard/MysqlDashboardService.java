@@ -201,7 +201,7 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
     /**
      * 查询用户详情
      */
-    UserDto showUserDetail(String namespace, String middlewareName, String username);
+    UserDto showUserDetail(String namespace, String middlewareName, String username, String host);
 
     /**
      * 判断数据库是否存在，存在则返回true

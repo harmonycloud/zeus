@@ -424,12 +424,14 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "username", value = "用户名", paramType = "path", dataTypeClass = UserDto.class),
+            @ApiImplicitParam(name = "host", value = "host", paramType = "path", dataTypeClass = UserDto.class),
     })
-    @GetMapping("/users/{username}/detail")
+    @GetMapping("/users/{username}/host/{host}/detail")
     public BaseResult<UserDto> userDetail(@PathVariable("namespace") String namespace,
-                                 @PathVariable("middlewareName") String middlewareName,
-                                 @PathVariable("username") String username) {
-        return BaseResult.ok(mysqlDashboardService.showUserDetail(namespace, middlewareName, username));
+                                          @PathVariable("middlewareName") String middlewareName,
+                                          @PathVariable("username") String username,
+                                          @PathVariable("host") String host) {
+        return BaseResult.ok(mysqlDashboardService.showUserDetail(namespace, middlewareName, username, host));
     }
 
     @ApiOperation(value = "删除用户", notes = "删除用户")

@@ -516,7 +516,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void addUser(String clusterId, String namespace, String middlewareName, UserDto userDto) {
-        if (checkUserExists(namespace, middlewareName, userDto.getUser())) {
+        if (checkUserExists(namespace, middlewareName, userDto.getUser(), userDto.getHost())) {
             throw new BusinessException(ErrorMessage.MYSQL_USER_EXISTS);
         }
         JSONObject res = mysqlClient.createUser(getPath(middlewareName, namespace), port, userDto);
@@ -536,7 +536,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void dropUser(String clusterId, String namespace, String middlewareName, String username, String host) {
-        if (!checkUserExists(namespace, middlewareName, username)) {
+        if (!checkUserExists(namespace, middlewareName, username, host)) {
             throw new BusinessException(ErrorMessage.MYSQL_USER_NOT_EXISTS);
         }
         JSONObject res = mysqlClient.dropUser(getPath(middlewareName,namespace), port, username, host);
@@ -547,7 +547,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void updateUser(String clusterId, String namespace, String middlewareName, String username, UserDto userDto) {
-        if (!checkUserExists(namespace, middlewareName, username)) {
+        if (!checkUserExists(namespace, middlewareName, username, userDto.getHost())) {
             throw new BusinessException(ErrorMessage.MYSQL_USER_NOT_EXISTS);
         }
         if (!StringUtils.isEmpty(userDto.getPassword())) {
@@ -571,7 +571,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         if (skipGrant) {
             middlewareDashboardAuthService.addMWToken(clusterId, namespace, middlewareName, MiddlewareTypeEnum.MYSQL.getType());
         }
-        if (!checkUserExists(namespace, middlewareName, username)) {
+        if (!checkUserExists(namespace, middlewareName, username, userDto.getHost())) {
             throw new BusinessException(ErrorMessage.MYSQL_USER_NOT_EXISTS);
         }
         JSONObject res = mysqlClient.updatePassword(getPath(middlewareName,namespace), port, username, userDto);
@@ -760,8 +760,8 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public UserDto showUserDetail(String namespace, String middlewareName, String username) {
-        JSONArray dataAry = mysqlClient.showUserDetail(getPath(middlewareName, namespace), port, username).getJSONArray("dataAry");
+    public UserDto showUserDetail(String namespace, String middlewareName, String username, String host) {
+        JSONArray dataAry = mysqlClient.showUserDetail(getPath(middlewareName, namespace), port, username, host).getJSONArray("dataAry");
         if (CollectionUtils.isEmpty(dataAry)) {
             return null;
         }
@@ -823,8 +823,8 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
      * @param username
      * @return
      */
-    public boolean checkUserExists(String namespace, String middlewareName, String username) {
-        UserDto userDto = showUserDetail(namespace, middlewareName, username);
+    public boolean checkUserExists(String namespace, String middlewareName, String username, String host) {
+        UserDto userDto = showUserDetail(namespace, middlewareName, username, host);
         return userDto != null;
     }
 

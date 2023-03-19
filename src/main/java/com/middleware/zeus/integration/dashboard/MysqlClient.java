@@ -237,10 +237,11 @@ public interface MysqlClient {
     /**
      * 查询用户详情
      */
-    @Get(url = "/mysql/{path}/port/{port}/users/{user}/detail")
+    @Get(url = "/mysql/{path}/port/{port}/users/{user}/host/{host}/detail")
     JSONObject showUserDetail(@Var("path") String path,
                               @Var("port") String port,
-                              @Var("user") String user);
+                              @Var("user") String user,
+                              @Var("host") String host);
 
     /**
      * 创建用户
