@@ -11,14 +11,39 @@ import java.util.List;
  */
 public interface ProjectBackupServerService {
 
-    List<BeanProjectBackupServer> listByBackupServerId(Integer serverId);
+    /**
+     * 查询备份服务器列表
+     * @param organId 组织id
+     * @param projectId 项目id
+     *
+     * @return List<ProjectBackupServerDTO>
+     */
+    List<ProjectBackupServerDTO> listByProjectId(String organId, String projectId);
 
-    List<ProjectBackupServerDTO> listByProjectId(String projectId);
+    /**
+     * 项目绑定备份服务器
+     * @param organId 组织id
+     * @param projectId 项目id
+     * @param backupServerIds 备份服务器id列表
+     *
+     */
+    void save(String organId, String projectId, List<Integer> backupServerIds);
 
-    void save(String projectId, List<Integer> backupServerIds);
+    /**
+     * 项目解绑备份服务器
+     * @param organId 组织id
+     * @param projectId 项目id
+     *
+     */
+    void deleteByProjectId(String organId, String projectId);
 
-    void deleteByProjectId(String projectId);
-
-    void deleteByServerId(Integer serverId);
+    /**
+     * 项目解绑备份服务器
+     * @param organId 组织id
+     * @param projectId 项目id
+     * @param serverId 备份服务器id
+     *
+     */
+    void delete(String organId, String projectId, Integer serverId);
 
 }

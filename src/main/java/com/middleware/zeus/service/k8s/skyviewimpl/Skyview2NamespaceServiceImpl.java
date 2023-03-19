@@ -65,10 +65,10 @@ public class Skyview2NamespaceServiceImpl extends NamespaceServiceImpl {
 
     @Override
     public List<Namespace> list(String clusterId, boolean all, boolean withQuota, boolean withMiddleware,
-                                String keyword, String projectId) {
+                                String keyword, String organId, String projectId) {
         List<Namespace> namespaceList;
         if (StringUtils.isNotEmpty(projectId)) {
-            namespaceList = projectService.getNamespace(projectId).stream().
+            namespaceList = projectService.getNamespace(organId, projectId).stream().
                     filter(namespace -> clusterId.equals(namespace.getClusterId())).
                     collect(Collectors.toList());
         } else {

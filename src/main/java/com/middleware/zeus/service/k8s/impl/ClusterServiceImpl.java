@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 import com.middleware.caas.common.model.*;
 import com.middleware.caas.common.model.middleware.*;
+import com.middleware.caas.common.model.user.OrganizationDto;
 import com.middleware.zeus.bean.BeanMiddlewareCluster;
 import com.middleware.zeus.bean.user.BeanProjectNamespace;
 import com.middleware.zeus.dao.BeanMiddlewareClusterMapper;
@@ -28,6 +29,8 @@ import com.middleware.zeus.integration.cluster.NamespaceWrapper;
 import com.middleware.zeus.integration.cluster.bean.*;
 import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.middleware.*;
+import com.middleware.zeus.service.user.OrganizationService;
+import com.middleware.zeus.service.user.PlatformQuotaService;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -98,8 +101,6 @@ public class ClusterServiceImpl implements ClusterService {
     @Autowired
     private K8sClient k8sClient;
     @Autowired
-    private RegistryService registryService;
-    @Autowired
     private NodeService nodeService;
     @Autowired
     private NamespaceService namespaceService;
@@ -130,8 +131,6 @@ public class ClusterServiceImpl implements ClusterService {
     @Autowired
     private BeanActiveAreaMapper activeAreaMapper;
     @Autowired
-    private ResourceQuotaService resourceQuotaService;
-    @Autowired
     private StorageService storageService;
     @Autowired
     private BeanMiddlewareClusterMapper middlewareClusterMapper;
@@ -141,6 +140,10 @@ public class ClusterServiceImpl implements ClusterService {
     private BeanProjectNamespaceMapper projectNamespaceMapper;
     @Autowired
     private NamespaceWrapper namespaceWrapper;
+    @Autowired
+    private OrganizationService organizationService;
+    @Autowired
+    private PlatformQuotaService platformQuotaService;
 
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
@@ -161,11 +164,11 @@ public class ClusterServiceImpl implements ClusterService {
 
     @Override
     public List<MiddlewareClusterDTO> listClusters(boolean detail, String key) {
-        return listClusters(detail, key, null);
+        return listClusters(detail, key, null, null);
     }
 
     @Override
-    public List<MiddlewareClusterDTO> listClusters(boolean detail, String key, String projectId) {
+    public List<MiddlewareClusterDTO> listClusters(boolean detail, String key, String organId, String projectId) {
         List<MiddlewareClusterDTO> clusters = middlewareClusterService.listClusterDtos();
         if (clusters.size() <= 0) {
             return new ArrayList<>(0);
@@ -188,7 +191,7 @@ public class ClusterServiceImpl implements ClusterService {
                         initClusterAttributes(cluster);
                         try {
                             List<Namespace> list =
-                                namespaceService.list(cluster.getId(), false, false, false, null, projectId);
+                                namespaceService.list(cluster.getId(), false, false, false, null, organId, projectId);
                             cluster.getAttributes().put(NS_COUNT, list.size());
                             cluster.setNamespaceList(list);
                         } catch (Exception e) {
@@ -219,7 +222,7 @@ public class ClusterServiceImpl implements ClusterService {
         List<MiddlewareClusterDTO> res = clusters;
         // 根据项目进行过滤
         if (StringUtils.isNotEmpty(projectId)) {
-            Set<String> availableClusterList = projectService.getRelationClusterIds(projectId);
+            Set<String> availableClusterList = projectService.getRelationClusterIds(organId, projectId);
             res = clusters.stream()
                 .filter(cluster -> availableClusterList.stream().anyMatch(ac -> ac.equals(cluster.getId())))
                 .collect(Collectors.toList());
@@ -426,7 +429,7 @@ public class ClusterServiceImpl implements ClusterService {
         // 删除可用区初始化状态信息
         activeAreaService.delete(cluster.getId());
         // 移除项目下分区绑定关系
-        projectService.unBindNamespace(null, cluster.getId(), null);
+        projectService.unBindNamespace(null ,null, cluster.getId(), null);
         // 删除集群和备份服务器的关联关系
         backupServerService.unbinding(cluster.getId());
     }
@@ -435,7 +438,7 @@ public class ClusterServiceImpl implements ClusterService {
         // 获取已有集群信息
         List<MiddlewareClusterDTO> clusterList = new ArrayList<>();
         try {
-            clusterList.addAll(listClusters(false, null, null));
+            clusterList.addAll(listClusters(false, null, null, null));
         } catch (Exception e) {
         }
         // 校验内存中集群信息
@@ -945,11 +948,11 @@ public class ClusterServiceImpl implements ClusterService {
     }
 
     @Override
-    public List<Namespace> listRegisteredNamespace(String clusterId, String projectId) {
+    public List<Namespace> listRegisteredNamespace(String clusterId, String organId, String projectId) {
         if (StringUtils.isEmpty(clusterId)) {
             return Collections.emptyList();
         }
-        List<Namespace> namespaces = namespaceService.list(clusterId, false, false, false, null, projectId);
+        List<Namespace> namespaces = namespaceService.list(clusterId, false, false, false, null, organId, projectId);
         return namespaces.stream().filter(Namespace::getRegistered).collect(Collectors.toList());
     }
 
@@ -980,7 +983,7 @@ public class ClusterServiceImpl implements ClusterService {
     }
 
     @Override
-    public Set<String> listClusterIds(String projectId) {
+    public Set<String> listClusterIds(String organId, String projectId) {
         QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<>();
         wrapper.eq("project_id", projectId);
         List<BeanProjectNamespace> projectNamespaceList = projectNamespaceMapper.selectList(wrapper);
@@ -988,54 +991,40 @@ public class ClusterServiceImpl implements ClusterService {
     }
 
     @Override
-    public ResourceQuotaDo getResourceQuotaInfo(String clusterId, Boolean allocatable) {
-        ResourceQuotaDo resourceQuotaDo = new ResourceQuotaDo();
-        if (allocatable){
-            // 获取节点资源总额
-            ResourceQuotaDo nodeQuota = nodeService.getResourceQuota(clusterId);
-            // 获取分区配额分配情况
-            ResourceQuotaDo namespaceRequestQuota = resourceQuotaService.getQuota(clusterId);
-            double cpu = nodeQuota.getCpu().getTotal();
-            double memory = nodeQuota.getMemory().getTotal();
-            Map<String, Double> storageMap = new HashMap<>();
-            if (namespaceRequestQuota != null){
-                if (namespaceRequestQuota.getCpu() != null && namespaceRequestQuota.getCpu().getRequest() != null){
-                    cpu = cpu - namespaceRequestQuota.getCpu().getRequest();
-                }
-                if (namespaceRequestQuota.getMemory() != null && namespaceRequestQuota.getMemory().getRequest() != null){
-                    memory = memory - namespaceRequestQuota.getMemory().getRequest();
-                }
-                if (!CollectionUtils.isEmpty(namespaceRequestQuota.getStorageList())){
-                    storageMap.putAll(namespaceRequestQuota.getStorageList().stream().collect(Collectors.toMap(StorageQuota::getName, storageQuota -> storageQuota.getStorage().getRequest())));
-                }
+    public ResourceQuotaDo getResourceQuotaInfo(String clusterId, Boolean detail) {
+        // 获取节点资源总额
+        ResourceQuotaDo nodeQuota = nodeService.getResourceQuota(clusterId);
+        // 获取存储总额
+        List<StorageDto> storageDtoList = storageService.list(clusterId, null, null, false);
+        List<StorageQuota> storageQuotaList =
+            storageDtoList.stream().filter(storageDto -> storageDto.getTotalStorage() != null).map(storageDto -> {
+                StorageQuota storageQuota = new StorageQuota();
+                // 设置存储总量
+                QuotaBase storage = new QuotaBase();
+                storage.setRequest(storageDto.getTotalStorage());
+                storageQuota.setName(storageDto.getAliasName());
+                storageQuota.setStorageClass(storageDto.getStorageClassList().stream().map(StorageClassInfo::getName)
+                    .collect(Collectors.toList()));
+                storageQuota.setStorage(storage);
+                return storageQuota;
+            }).collect(Collectors.toList());
+        // 分配存储总额
+        nodeQuota.setStorageList(storageQuotaList);
+        // 查询组织分配情况
+        if (detail){
+            List<OrganizationDto> organizationDtoList = organizationService.list(null);
+            List<String> uidList = organizationDtoList.stream().map(OrganizationDto::getOrganId).collect(Collectors.toList());
+            List<ResourceQuotaDo> resourceQuotaDoList = platformQuotaService.getQuota(ORGAN, uidList, CPU, MEMORY, STORAGE).stream().filter(rq -> rq.getClusterId().equals(clusterId)).collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(resourceQuotaDoList)){
+                nodeQuota.setClusterId(clusterId);
+                List<ResourceQuotaDo> clusterResourceQuota = new ArrayList<>();
+                clusterResourceQuota.add(nodeQuota);
+                clusterResourceQuota = platformQuotaService.convertUsedResource(clusterResourceQuota, resourceQuotaDoList);
+
+                nodeQuota = clusterResourceQuota.get(0);
             }
-            // 获取存储资源总额
-            List<StorageDto> storageDtoList = storageService.list(clusterId, null, null, false);
-            List<StorageQuota> storageQuotaList =
-                storageDtoList.stream().filter(storageDto -> storageDto.getTotalStorage() != null).map(storageDto -> {
-                    StorageQuota storageQuota = new StorageQuota();
-                    QuotaBase storage = new QuotaBase();
-                    // 设置存储可用总额
-                    Double total = storageDto.getTotalStorage();
-                    if (storageMap.containsKey(storageDto.getStorageClassList().get(0).getName())) {
-                        total = total - storageMap.get(storageDto.getStorageClassList().get(0).getName());
-                    }
-                    storage.setTotal(total);
-
-                    storageQuota.setName(storageDto.getAliasName());
-                    storageQuota.setStorageClass(storageDto.getStorageClassList().stream().map(StorageClassInfo::getName)
-                        .collect(Collectors.toList()));
-                    storageQuota.setStorage(storage);
-                    return storageQuota;
-                }).collect(Collectors.toList());
-
-
-            resourceQuotaDo.getCpu().setTotal(cpu);
-            resourceQuotaDo.getMemory().setTotal(memory);
-            resourceQuotaDo.setStorageList(storageQuotaList);
         }
-        // 获取其他数据例如 配额使用量等
-        return resourceQuotaDo;
+        return nodeQuota;
     }
 
     @Override
@@ -1097,7 +1086,7 @@ public class ClusterServiceImpl implements ClusterService {
         if (clusterDTO == null) {
             return new ArrayList();
         }
-        List<Namespace> namespaces = namespaceService.list(clusterDTO.getId(), false, false, false, null, null);
+        List<Namespace> namespaces = namespaceService.list(clusterDTO.getId(), false, false, false, null, null, null);
         return namespaces.stream().filter(Namespace::getRegistered).collect(Collectors.toList());
     }
 

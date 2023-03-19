@@ -452,7 +452,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         List<BeanMiddlewareCluster> clusterList = middlewareClusterService.listClustersByClusterId(null);
         List<Middleware> middlewareList = new ArrayList<>();
         clusterList.forEach(cluster -> {
-            List<Namespace> listRegisteredNamespace = clusterService.listRegisteredNamespace(cluster.getClusterId(), null);
+            List<Namespace> listRegisteredNamespace = clusterService.listRegisteredNamespace(cluster.getClusterId(), null, null);
             List<Middleware> middlewares;
             try{
                 middlewares = middlewareService.simpleList(cluster.getClusterId(), null, type, null);
@@ -531,7 +531,8 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         List<MiddlewareInfoDTO> infoDTOList = list(clusterId);
         String username = CurrentUserRepository.getUser().getUsername();
         String projectId = RequestUtil.getProjectId();
-        BeanUserRole beanUserRole = userRoleService.get(username, projectId);
+        String organId = RequestUtil.getOrganId();
+        BeanUserRole beanUserRole = userRoleService.get(username, organId, projectId);
         // 因为超级管理员在项目下没有角色信息，所以超级管理员可以查看所有中间件的备份任务
         if (beanUserRole == null) {
             return infoDTOList;

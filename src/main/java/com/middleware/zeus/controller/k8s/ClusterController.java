@@ -39,13 +39,17 @@ public class ClusterController {
     
     @ApiOperation(value = "查询集群列表", notes = "查询集群列表")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "detail", value = "是否返回集群明细信息", paramType = "query", dataTypeClass = Boolean.class)
+            @ApiImplicitParam(name = "detail", value = "是否返回集群明细信息", paramType = "query", dataTypeClass = Boolean.class),
+            @ApiImplicitParam(name = "key", value = "关键词过滤", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "organId", value = "组织id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping
     public BaseResult<List<MiddlewareClusterDTO>> list(@RequestParam(value = "detail", defaultValue = "false") boolean detail,
                                                        @RequestParam(value = "key", required = false) String key,
+                                                       @RequestParam(value = "organId", required = false) String organId,
                                                        @RequestParam(value = "projectId", required = false) String projectId) {
-        List<MiddlewareClusterDTO> list = clusterService.listClusters(detail, key, projectId);
+        List<MiddlewareClusterDTO> list = clusterService.listClusters(detail, key, organId, projectId);
         list.forEach(this::desensitize);
         return BaseResult.ok(list);
     }
@@ -200,12 +204,12 @@ public class ClusterController {
     @ApiOperation(value = "查询集群下资源配额情况", notes = "查询集群下资源配额情况")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "allocatable", value = "是否查询可分配资源", paramType = "query", dataTypeClass = Boolean.class),
+            @ApiImplicitParam(name = "detail", value = "获取分配情况", paramType = "query", dataTypeClass = Boolean.class),
     })
     @GetMapping("/{clusterId}/quota")
     public BaseResult getResourceQuotaInfo(@PathVariable("clusterId") String clusterId,
-                                           @RequestParam("allocatable") Boolean allocatable){
-        return BaseResult.ok(clusterService.getResourceQuotaInfo(clusterId, allocatable));
+                                           @RequestParam(value = "detail",defaultValue = "false") Boolean detail){
+        return BaseResult.ok(clusterService.getResourceQuotaInfo(clusterId, detail));
     }
 
     /**

@@ -278,8 +278,8 @@ public class NodeServiceImpl implements NodeService {
             memory += ResourceCalculationUtil.getResourceValue(node.getMemory().getAllocated() + "Ki", MEMORY, ResourceUnitEnum.GI.getUnit());
         }
         ResourceQuotaDo resourceQuotaDo = new ResourceQuotaDo();
-        resourceQuotaDo.getCpu().setTotal(ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(cpu), 0, RoundingMode.CEILING));
-        resourceQuotaDo.getMemory().setTotal(ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(memory), 0, RoundingMode.CEILING));
+        resourceQuotaDo.getCpu().setRequest(ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(cpu), 0, RoundingMode.CEILING));
+        resourceQuotaDo.getMemory().setRequest(ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(memory), 0, RoundingMode.CEILING));
         return resourceQuotaDo;
     }
 

@@ -18,7 +18,7 @@ import java.util.List;
  */
 @Api(tags = {"备份服务", "备份位置"}, value = "备份位置")
 @RestController
-@RequestMapping("/backup/position")
+@RequestMapping("/organizations/{organId}/project/{projectId}/backupServer/{backupServerId}/position")
 public class BackupPositionController {
 
     @Autowired
@@ -26,17 +26,29 @@ public class BackupPositionController {
 
     @ApiOperation(value = "创建备份位置", notes = "创建备份位置")
     @ApiImplicitParams({
+            @ApiImplicitParam(name = "organId", value = "组织id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupServerId", value = "备份服务器id", paramType = "path", dataTypeClass = Integer.class),
             @ApiImplicitParam(name = "backupPositionDTO", value = "备份位置", paramType = "query", dataTypeClass = BackupPositionDTO.class),
     })
     @PostMapping
-    public BaseResult create(@RequestBody BackupPositionDTO backupPositionDTO) {
+    public BaseResult create(@PathVariable("organId") String organId,
+                             @PathVariable("projectId") String projectId,
+                             @PathVariable("backupServerId") Integer backupServerId,
+                             @RequestBody BackupPositionDTO backupPositionDTO) {
+        backupPositionDTO.setOrganId(organId);
+        backupPositionDTO.setProjectId(projectId);
+        backupPositionDTO.setBackupServerId(backupServerId);
         backupPositionService.create(backupPositionDTO);
         return BaseResult.ok();
     }
 
     @ApiOperation(value = "删除备份位置", notes = "删除备份位置")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "backupServerId", value = "备份位置id", paramType = "path", dataTypeClass = Integer.class),
+            @ApiImplicitParam(name = "organId", value = "组织id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupServerId", value = "备份位服务器id", paramType = "path", dataTypeClass = Integer.class),
+            @ApiImplicitParam(name = "backupPositionId", value = "备份位置id", paramType = "path", dataTypeClass = Integer.class),
     })
     @DeleteMapping("/{backupPositionId}")
     public BaseResult delete(@PathVariable("backupPositionId") Integer backupPositionId) {
@@ -46,32 +58,49 @@ public class BackupPositionController {
 
     @ApiOperation(value = "更新备份位置", notes = "更新备份位置")
     @ApiImplicitParams({
+            @ApiImplicitParam(name = "organId", value = "组织id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupServerId", value = "备份服务器id", paramType = "path", dataTypeClass = Integer.class),
             @ApiImplicitParam(name = "backupPositionDTO", value = "备份位置", paramType = "query", dataTypeClass = BackupPositionDTO.class),
     })
     @PutMapping
-    public BaseResult update(@RequestBody BackupPositionDTO backupPositionDTO) {
+    public BaseResult update(@PathVariable("organId") String organId,
+                             @PathVariable("projectId") String projectId,
+                             @PathVariable("backupServerId") Integer backupServerId,
+                             @RequestBody BackupPositionDTO backupPositionDTO) {
+        backupPositionDTO.setOrganId(organId);
+        backupPositionDTO.setProjectId(projectId);
+        backupPositionDTO.setBackupServerId(backupServerId);
         backupPositionService.update(backupPositionDTO);
         return BaseResult.ok();
     }
 
     @ApiOperation(value = "查询项目备份位置列表", notes = "查询项目备份位置列表")
     @ApiImplicitParams({
+            @ApiImplicitParam(name = "organId", value = "组织id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupServerId", value = "备份服务器id", paramType = "path", dataTypeClass = Integer.class),
     })
-    @GetMapping("/project/{projectId}")
-    public BaseResult list(@PathVariable("projectId") String projectId) {
-        return BaseResult.ok(backupPositionService.listBackupServerDTO(projectId));
+    @GetMapping
+    public BaseResult<List<BackupPositionDTO>> list(@PathVariable("organId") String organId,
+                                                    @PathVariable("projectId") String projectId,
+                                                    @PathVariable("backupServerId") Integer backupServerId) {
+        return BaseResult.ok(backupPositionService.list(organId, projectId, backupServerId));
     }
 
     @ApiOperation(value = "查询集群分区可用备份位置列表", notes = "查询集群分区可用备份位置列表")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "organId", value = "组织id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "query", dataTypeClass = String.class),
     })
-    @GetMapping("/clusters/{clusterId}/namespaces/{namespace}")
-    public BaseResult<List<BackupPositionDTO>> listByNamespace(@PathVariable("clusterId") String clusterId,
-                                                               @PathVariable("namespace") String namespace) {
-        return BaseResult.ok(backupPositionService.list(clusterId, namespace));
+    @GetMapping("/usable")
+    public BaseResult<List<BackupPositionDTO>> listByNamespace(@PathVariable("organId") String organId,
+                                                               @PathVariable("projectId") String projectId,
+                                                               @RequestParam("clusterId") String clusterId,
+                                                               @RequestParam("namespace") String namespace) {
+        return BaseResult.ok(backupPositionService.usable(organId, projectId, clusterId, namespace));
     }
 
 }

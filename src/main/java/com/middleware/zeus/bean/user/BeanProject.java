@@ -29,6 +29,11 @@ public class BeanProject implements Serializable {
     /**
      * 项目id
      */
+    @TableField("organ_id")
+    private String organId;
+    /**
+     * 项目id
+     */
     @TableField("project_id")
     private String projectId;
     /**

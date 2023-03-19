@@ -27,6 +27,12 @@ public class BeanProjectBackupServer implements Serializable {
     private Integer id;
 
     /**
+     * 组织id
+     */
+    @TableField("organ_id")
+    private String organId;
+
+    /**
      * 项目id
      */
     @TableField("project_id")

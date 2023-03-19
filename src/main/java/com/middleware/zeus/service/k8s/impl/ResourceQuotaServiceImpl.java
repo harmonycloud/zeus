@@ -119,13 +119,11 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
     }
 
     @Override
-    public ResourceQuotaDo getQuota(String clusterId) {
+    public ResourceQuotaDo calculateQuota(List<ResourceQuotaDo> resourceQuotaDoList) {
         double cpu = 0.0;
         double memory = 0.0;
-        List<ResourceQuotaDTO> resourceQuotaDTOList = this.list(clusterId);
         Map<String, Double> storageMap = new HashMap<>();
-        for (ResourceQuotaDTO resourceQuotaDTO : resourceQuotaDTOList){
-            ResourceQuotaDo quota = resourceQuotaDTO.getResourceQuotaDo();
+        for (ResourceQuotaDo quota : resourceQuotaDoList){
             if (quota != null){
                 if (quota.getCpu() != null && quota.getCpu().getRequest() != null){
                     cpu += quota.getCpu().getRequest();

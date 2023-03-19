@@ -120,10 +120,12 @@ public class RoleServiceImpl implements RoleService {
         return beanRoleList.stream().map(beanRole -> {
             RoleDto roleDto = new RoleDto();
             BeanUtils.copyProperties(beanRole, roleDto);
-            roleDto.setPower(beanRoleAuthorityListMap.get(roleDto.getId()).stream()
-                .collect(Collectors.toMap(BeanRoleAuthority::getType, BeanRoleAuthority::getPower)));
+            if (beanRoleAuthorityListMap.containsKey(roleDto.getId())) {
+                roleDto.setPower(beanRoleAuthorityListMap.get(roleDto.getId()).stream()
+                    .collect(Collectors.toMap(BeanRoleAuthority::getType, BeanRoleAuthority::getPower)));
+            }
             return roleDto;
-        }).filter(roleDto -> {
+        }).sorted(Comparator.comparing(RoleDto::getWeight)).filter(roleDto -> {
             if (StringUtils.isNotEmpty(key)) {
                 return roleDto.getName().contains(key) || roleDto.getDescription().contains(key);
             }

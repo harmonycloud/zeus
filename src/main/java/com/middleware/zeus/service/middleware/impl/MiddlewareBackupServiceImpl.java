@@ -838,11 +838,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public List<MiddlewareBackupRecordGroup> backupTaskGroupList(String clusterId, String namespace, String middlewareName, String projectId, String type, String keyword) {
+    public List<MiddlewareBackupRecordGroup> backupTaskGroupList(String clusterId, String namespace, String middlewareName, String organId, String projectId, String type, String keyword) {
         List<MiddlewareBackupRecord> records = backupTaskList(clusterId, namespace, middlewareName, type, keyword);
         // 根据项目过滤中间件
         if (StringUtils.isNotEmpty(projectId)) {
-            records = filterByProject(records, projectId);
+            records = filterByProject(records, organId, projectId);
         }
         // 设置备份地址
         setBackupPosition(records);
@@ -1516,19 +1516,19 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * 根据项目过滤
      * @param records
      */
-    private List<MiddlewareBackupRecord> filterByProject(List<MiddlewareBackupRecord> records, String projectId) {
+    private List<MiddlewareBackupRecord> filterByProject(List<MiddlewareBackupRecord> records, String organId, String projectId) {
         // 查询用户在当前项目下所有可见的中间件类型
         String username = CurrentUserRepository.getUser().getUsername();
 
         // 根据分区过滤
-        List<Namespace> namespaces = projectService.getNamespace(projectId);
+        List<Namespace> namespaces = projectService.getNamespace(organId, projectId);
         if (!CollectionUtils.isEmpty(namespaces)) {
             Set<String> namespaceSet = namespaces.stream().map(Namespace::getName).collect(Collectors.toSet());
             records = records.stream().filter(record -> namespaceSet.contains(record.getNamespace())).collect(Collectors.toList());
         } else {
             return Collections.emptyList();
         }
-        BeanUserRole beanUserRole = userRoleService.get(username, projectId);
+        BeanUserRole beanUserRole = userRoleService.get(username, organId, projectId);
         // 超级管理员在项目下没有角色，所以只有当用户为非超级管理员时才按中间件类型过滤
         if (beanUserRole != null) {
             // 根据用户拥有运维权限当中间件类型类型过滤

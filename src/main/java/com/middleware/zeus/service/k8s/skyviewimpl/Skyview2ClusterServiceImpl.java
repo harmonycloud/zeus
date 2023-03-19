@@ -77,7 +77,7 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
         // 同步集群
         log.info("开始同步集群信息");
         syncCluster();
-        return super.listClusters(false, null, null);
+        return super.listClusters(false, null, null, null);
     }
 
     @Override
@@ -167,6 +167,7 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
             CaasResult<JSONObject> clusterDetail = clusterServiceClient.clusterDetail(token, clusterId);
             ClusterDTO clusterDTO = new ClusterDTO();
             try {
+
                 BeanUtils.copyProperties(clusterDTO, clusterDetail.getData());
             } catch (IllegalAccessException | InvocationTargetException e) {
                 log.error("拷贝集群对象信息出错了", e);
@@ -200,7 +201,7 @@ public class Skyview2ClusterServiceImpl extends ClusterServiceImpl {
         // 查询平台存储的全部集群
         List<BeanMiddlewareCluster> clusters = middlewareClusterService.listClustersByClusterId(null);
         if (!CollectionUtils.isEmpty(clusters)) {
-            clusterDTOS = super.listClusters(false, null, null);
+            clusterDTOS = super.listClusters(false, null, null, null);
         }
         Set<String> clusterHostSet = clusterDTOS.stream().map(MiddlewareClusterDTO::getHost).collect(Collectors.toSet());
         // 保存集群信息

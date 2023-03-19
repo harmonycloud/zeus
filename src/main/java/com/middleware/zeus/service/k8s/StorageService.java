@@ -40,6 +40,15 @@ public interface StorageService {
      * 查询存储列表
      *
      * @param clusterId 集群id
+     * @param storageId 存储id
+     * @return List<StorageDto>
+     */
+    StorageDto getById(String clusterId, String storageId);
+
+    /**
+     * 查询存储列表
+     *
+     * @param clusterId 集群id
      * @param key       关键词检索
      * @param type      存储类型
      * @param all       是否全部(true会过滤掉已添加的存储)
@@ -58,9 +67,9 @@ public interface StorageService {
      * 删除存储
      *
      * @param clusterId   集群id
-     * @param storageName 存储名称
+     * @param storageId 存储id
      */
-    void delete(String clusterId, String storageName);
+    void delete(String clusterId, String storageId);
 
     /**
      * 查询中间件存储使用情况
@@ -96,4 +105,12 @@ public interface StorageService {
      * @return Map<String, String>
      */
     Map<String, String> checkHitachiAndGetParams(String clusterId, String storageName);
+
+    /**
+     * 封装存储名称
+     *
+     * @param clusterId 集群id
+     * @return Map<String, String>
+     */
+    Map<String, String> convertStorageName(String clusterId);
 }

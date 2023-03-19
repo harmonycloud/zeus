@@ -100,7 +100,7 @@ public class IngressServiceImpl implements IngressService {
     private Integer traefikPortLength;
 
     @Override
-    public List<IngressDTO> list(String clusterId, String namespace, String keyword, String projectId) {
+    public List<IngressDTO> list(String clusterId, String namespace, String keyword, String organId, String projectId) {
         List<IngressDTO> ingressDtoList = new ArrayList<>();
 
         // http routing list
@@ -139,7 +139,7 @@ public class IngressServiceImpl implements IngressService {
         }
 
         // 过滤未纳管的分区中的服务
-        List<Namespace> registeredNamespace = clusterService.listRegisteredNamespace(clusterId, projectId);
+        List<Namespace> registeredNamespace = clusterService.listRegisteredNamespace(clusterId, organId, projectId);
         List<String> registeredNamespaceNameList = registeredNamespace.stream().map(Namespace::getName).collect(Collectors.toList());
         ingressDtoList = ingressDtoList.stream().filter(ingressDTO -> {
             return !StringUtils.isEmpty(ingressDTO.getMiddlewareName()) && registeredNamespaceNameList.contains(ingressDTO.getNamespace());
@@ -1639,9 +1639,9 @@ public class IngressServiceImpl implements IngressService {
     }
 
     @Override
-    public List<IngressDTO> listAllIngress(String clusterId, String namespace, String keyword, String projectId) {
+    public List<IngressDTO> listAllIngress(String clusterId, String namespace, String keyword, String organId, String projectId) {
         // 获取所有ingress
-        List<IngressDTO> ingressDTOLists = list(clusterId, namespace, null, projectId);
+        List<IngressDTO> ingressDTOLists = list(clusterId, namespace, null, organId, projectId);
         // 添加ingress pod信息
         setIngressExtralInfo(clusterId, ingressDTOLists);
         // 关键词过滤
@@ -1673,8 +1673,8 @@ public class IngressServiceImpl implements IngressService {
     }
 
     @Override
-    public List<IngressDTO> listAllMiddlewareIngress(String clusterId, String namespace, String keyword, String projectId) {
-        return listAllIngress(clusterId, namespace, keyword, projectId).stream().
+    public List<IngressDTO> listAllMiddlewareIngress(String clusterId, String namespace, String keyword, String organId, String projectId) {
+        return listAllIngress(clusterId, namespace, keyword, organId, projectId).stream().
                 filter(ingressDTO -> !StringUtils.isEmpty(ingressDTO.getServicePurpose())).collect(Collectors.toList());
     }
 

@@ -400,7 +400,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public List<MiddlewareBriefInfoDTO> list(String clusterId, String namespace, String type, String keyword, String projectId)
+    public List<MiddlewareBriefInfoDTO> list(String clusterId, String namespace, String type, String keyword, String organId, String projectId)
         throws Exception {
         // 获取中间件chart包信息
         List<BeanMiddlewareInfo> beanMiddlewareInfoList = middlewareInfoService.list(true);
@@ -485,14 +485,14 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         }
         if (StringUtils.isNotEmpty(projectId)) {
             // 根据项目分区进行过滤
-            List<Namespace> projectNamespaceList = projectService.getNamespace(projectId);
+            List<Namespace> projectNamespaceList = projectService.getNamespace(organId, projectId);
             result = result.stream()
                 .filter(mw -> projectNamespaceList.stream().anyMatch(
                     pn -> pn.getName().equals(mw.getNamespace()) && pn.getClusterId().equals(mw.getClusterId())))
                 .collect(Collectors.toList());
             // 根据类型进行过滤
             if (StringUtils.isEmpty(type)) {
-                Integer roleId = userRoleService.getRoleId(CurrentUserRepository.getUser().getUsername(), projectId);
+                Integer roleId = userRoleService.getRoleId(CurrentUserRepository.getUser().getUsername(), organId, projectId);
                 List<BeanRoleAuthority> power = roleAuthorityService.list(roleId);
                 result = result.stream()
                     .filter(mw -> power.stream()

@@ -50,60 +50,35 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     @Autowired
     private MiddlewareBackupNameService middlewareBackupNameService;
 
-    /**
-     * 查询指定备份服务器的全部备份位置
-     *
-     * @param backupServerId
-     * @param projectId
-     * @return
-     */
     @Override
-    public List<BackupPositionDTO> selectBackupPositionDTOList(Integer backupServerId, String projectId) {
+    public List<BackupPositionDTO> list(String organId, String projectId, Integer backupServerId) {
         QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
-        wrapper.eq("backup_server_id", backupServerId);
+
+        if (StringUtils.isNotEmpty(organId)) {
+            wrapper.eq("organ_id", organId);
+        }
         if (StringUtils.isNotEmpty(projectId)) {
             wrapper.eq("project_id", projectId);
+        }
+        if (backupServerId != null) {
+            wrapper.eq("backup_server_id", backupServerId);
         }
         List<BeanBackupPosition> beanBackupPositions = backupPositionMapper.selectList(wrapper);
         return convert(beanBackupPositions);
     }
 
-    /**
-     * 查询指定项目的全部备份位置
-     *
-     * @param projectId
-     * @return
-     */
     @Override
-    public List<BackupPositionDTO> selectBackupPositionDTOList(String projectId) {
-        QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
-        wrapper.eq("project_id", projectId);
-        List<BeanBackupPosition> beanBackupPositions = backupPositionMapper.selectList(wrapper);
-        return convert(beanBackupPositions);
-    }
-
-    /**
-     * 查询项目备份位置列表
-     *
-     * @param projectId
-     * @return
-     */
-    @Override
-    public List<BackupServerDTO> listBackupServerDTO(String projectId) {
-        return backupServerService.listBackupPosition(projectId);
-    }
-
-    @Override
-    public List<BackupPositionDTO> list(String clusterId, String namespace) {
-        String projectId = projectService.getProjectId(clusterId, namespace);
-        List<BackupPositionDTO> backupPositionDTOS = selectBackupPositionDTOList(projectId);
+    public List<BackupPositionDTO> usable(String organId, String projectId, String clusterId, String namespace) {
+        List<BackupPositionDTO> backupPositionDTOList = this.list(organId, projectId, null);
         boolean openAvailableDomain = namespaceService.isOpenAvailableDomain(clusterId, namespace);
-        return backupPositionDTOS.stream().filter(backupPositionDTO -> {
+
+        return backupPositionDTOList.stream().filter(backupPositionDTO -> {
             BeanBackupServer beanBackupServer = backupServerService.get(backupPositionDTO.getBackupServerId());
             if (beanBackupServer == null) {
                 return false;
             }
             backupPositionDTO.setBackupServerName(beanBackupServer.getName());
+            // 过滤双活备份服务器
             if (!openAvailableDomain) {
                 return beanBackupServer.getType() == 1;
             }
@@ -112,16 +87,9 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     }
 
     @Override
-    public List<BeanBackupPosition> listByBackupServerId(Integer backupServerId) {
-        QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
-        wrapper.eq("backup_server_id", backupServerId);
-        return backupPositionMapper.selectList(wrapper);
-    }
-
-    @Override
     public void create(BackupPositionDTO backupPositionDTO) {
         // 校验该项目是否已使用该备份服务器创建备份位置
-        if (this.getBackupPosition(backupPositionDTO.getBackupServerId(), backupPositionDTO.getProjectId()) != null) {
+        if (this.getBackupPosition(backupPositionDTO.getBackupServerId(), backupPositionDTO.getOrganId(), backupPositionDTO.getProjectId()) != null) {
             throw new BusinessException(ErrorMessage.BACKUP_SERVER_ALREADY_USED);
         }
         BeanBackupPosition backupPosition = new BeanBackupPosition();
@@ -151,16 +119,16 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     }
 
     @Override
-    public void deleteByProjectId(String projectId) {
+    public void deleteByProjectId(String organId, String projectId) {
         QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
-        wrapper.eq("project_id", projectId);
+        wrapper.eq("organ_id", organId).eq("project_id", projectId);
         backupPositionMapper.delete(wrapper);
     }
 
-    @Override
-    public BeanBackupPosition getBackupPosition(Integer backupServerId, String projectId) {
+    public BeanBackupPosition getBackupPosition(Integer backupServerId, String organId, String projectId) {
         QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
         wrapper.eq("backup_server_id", backupServerId);
+        wrapper.eq("organ_id", organId);
         wrapper.eq("project_id", projectId);
         List<BeanBackupPosition> beanBackupPositions = backupPositionMapper.selectList(wrapper);
         if (!CollectionUtils.isEmpty(beanBackupPositions)) {
@@ -211,6 +179,7 @@ public class BackupPositionServiceImpl implements BackupPositionService {
             BeanProject beanProject = projectService.get(beanBackupPosition.getProjectId());
             if (beanProject != null) {
                 backupPositionDTO.setProjectName(beanProject.getAliasName());
+                // todo 修改备份任务引用数量的查询逻辑
                 backupPositionDTO.setBackupTaskNum(middlewareBackupNameService.listByPositionId(beanBackupPosition.getId()).size());
                 positionList.add(backupPositionDTO);
             }

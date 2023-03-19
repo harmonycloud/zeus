@@ -84,8 +84,6 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
     @Override
     public void scalePvc(String clusterId, String namespace, String middlewareName, String pvcName, String type, String storageClass,
         Double storage, Double targetStorage) {
-        //todo check quota
-
         // 校验存储大小
         checkStorage(clusterId, storageClass, targetStorage - storage);
         // 扩容

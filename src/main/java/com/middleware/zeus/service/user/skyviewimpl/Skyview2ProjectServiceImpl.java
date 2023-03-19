@@ -267,9 +267,10 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
      * @return
      */
     public List<Namespace> listUserNamespace() {
+        //todo
         List<ProjectDto> projectDtoList = list(null);
         List<Namespace> namespaceList = new ArrayList<>();
-        projectDtoList.forEach(projectDto -> namespaceList.addAll(getNamespace(projectDto.getProjectId())));
+        projectDtoList.forEach(projectDto -> namespaceList.addAll(getNamespace(null, projectDto.getProjectId())));
         return namespaceList;
     }
 
@@ -290,7 +291,7 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
             project.setCreateTime(projectDTO.getCreateTime());
             project.setMemberCount(projectDTO.getMemberCount());
             project.setNamespaceCount(projectDTO.getNamespaceCount());
-            BeanUserRole beanUserRole = userRoleService.get(ZeusCurrentUser.getUserName(), projectDTO.getProjectId());
+            BeanUserRole beanUserRole = userRoleService.get(ZeusCurrentUser.getUserName(), null, projectDTO.getProjectId());
             projectTenantCache.put(project.getProjectId(), projectDTO.getTenantId());
             if (ZeusCurrentUser.isAdmin()) {
                 projects.add(project);
@@ -310,7 +311,7 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
     }
 
     @Override
-    public List<Namespace> getNamespace(String projectId) {
+    public List<Namespace> getNamespace(String organId, String projectId) {
         String tenantId = projectTenantCache.get(projectId);
         if (StringUtils.isEmpty(tenantId)) {
             listAllTenantProject(ZeusCurrentUser.getCaasToken());
@@ -328,7 +329,7 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
     }
 
     @Override
-    public List<UserDto> getUser(String projectId, Boolean allocatable) { ;
+    public List<UserDto> getUser(String organId, String projectId, Boolean allocatable) { ;
         String tenantId = projectTenantCache.get(projectId);
         if (StringUtils.isEmpty(tenantId)) {
             listAllTenantProject(ZeusCurrentUser.getCaasToken());
@@ -339,10 +340,10 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
     }
 
     @Override
-    public List<ProjectDto> getMiddlewareCount(String projectId) {
+    public List<ProjectDto> getMiddlewareCount(String organId, String projectId) {
         List<Namespace> namespaceList;
         if (org.apache.commons.lang3.StringUtils.isNotEmpty(projectId)) {
-            namespaceList = getNamespace(projectId);
+            namespaceList = getNamespace(null, projectId);
         } else {
             namespaceList = listUserNamespace();
         }
@@ -386,8 +387,8 @@ public class Skyview2ProjectServiceImpl extends ProjectServiceImpl {
     }
 
     @Override
-    public List<ProjectMiddlewareResourceInfo> middlewareResource(String projectId) throws Exception {
-        List<Namespace> namespaceList = getNamespace(projectId);
+    public List<ProjectMiddlewareResourceInfo> middlewareResource(String organId, String projectId) throws Exception {
+        List<Namespace> namespaceList = getNamespace(null, projectId);
         // 获取集群
         Set<String> clusterIdSet = new HashSet<>();
         namespaceList.forEach(beanProjectNamespace -> {

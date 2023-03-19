@@ -23,7 +23,7 @@ public interface MiddlewareService {
      * @param projectId 项目id
      * @return
      */
-    List<MiddlewareBriefInfoDTO> list(String clusterId, String namespace, String type, String keyword, String projectId) throws Exception;
+    List<MiddlewareBriefInfoDTO> list(String clusterId, String namespace, String type, String keyword, String organId, String projectId) throws Exception;
 
     /**
      * 查询中间件列表

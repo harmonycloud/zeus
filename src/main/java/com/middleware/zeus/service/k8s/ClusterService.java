@@ -39,7 +39,7 @@ public interface ClusterService {
      * @param detail 是否返回明细信息
      * @return
      */
-    List<MiddlewareClusterDTO> listClusters(boolean detail, String key, String projectId);
+    List<MiddlewareClusterDTO> listClusters(boolean detail, String key, String organId, String projectId);
 
     /**
      * 设置集群属性
@@ -181,7 +181,7 @@ public interface ClusterService {
      * @param clusterId 集群id
      * @return
      */
-    List<Namespace> listRegisteredNamespace(String clusterId, String projectId);
+    List<Namespace> listRegisteredNamespace(String clusterId, String organId, String projectId);
 
     /**
      * 将观云台clusterid转换为中间件平台clusterid
@@ -217,16 +217,16 @@ public interface ClusterService {
      * @param projectId
      * @return
      */
-    Set<String> listClusterIds(String projectId);
+    Set<String> listClusterIds(String organId, String projectId);
 
     /**
      * 根据集群下资源配额情况
      *
      * @param clusterId 集群id
-     * @param allocatable 是否查询可分配资源
+     * @param detail 获取分配情况w
      * @return ResourceQuotaDo
      */
-    ResourceQuotaDo getResourceQuotaInfo(String clusterId, Boolean allocatable);
+    ResourceQuotaDo getResourceQuotaInfo(String clusterId, Boolean detail);
 
     /**
      * 检查集群是否存在

@@ -37,6 +37,7 @@ public class NamespaceController {
             @ApiImplicitParam(name = "withQuota", value = "是否返回命名空间配额，默认false", paramType = "query", dataTypeClass = Boolean.class),
             @ApiImplicitParam(name = "withMiddleware", value = "是否返回中间件实例信息，默认false", paramType = "query", dataTypeClass = Boolean.class),
             @ApiImplicitParam(name = "keyword", value = "模糊搜索关键词", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "organId", value = "组织id", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping
@@ -45,8 +46,9 @@ public class NamespaceController {
                                             @RequestParam(value = "withQuota", defaultValue = "false") boolean withQuota,
                                             @RequestParam(value = "withMiddleware", defaultValue = "false") boolean withMiddleware,
                                             @RequestParam(value = "keyword", required = false) String keyword,
+                                            @RequestParam(value = "organId", required = false) String organId,
                                             @RequestParam(value = "projectId", required = false) String projectId) {
-        return BaseResult.ok(namespaceService.list(clusterId, all, withQuota, withMiddleware, keyword, projectId));
+        return BaseResult.ok(namespaceService.list(clusterId, all, withQuota, withMiddleware, keyword, organId, projectId));
     }
 
 
@@ -110,15 +112,17 @@ public class NamespaceController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "organId", required = false, value = "组织id", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "projectId", required = false, value = "项目id", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "aliasName", value = "分区中文名", paramType = "query", dataTypeClass = String.class),
     })
     @PutMapping("/{namespace}/project")
     public BaseResult update(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
+                             @RequestParam(value = "organId",required = false) String organId,
                              @RequestParam(value = "projectId",required = false) String projectId,
                              @RequestParam("aliasName") String aliasName) {
-        namespaceService. bindProject(clusterId, namespace, aliasName, projectId);
+        namespaceService.bindProject(clusterId, namespace, aliasName, organId, projectId);
         return BaseResult.ok();
     }
 

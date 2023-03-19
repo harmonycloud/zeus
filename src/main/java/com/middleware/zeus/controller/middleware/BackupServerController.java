@@ -31,28 +31,9 @@ public class BackupServerController {
     })
     @PostMapping("/list")
     public BaseResult<List<BackupServerDTO>> list(@RequestBody BackupServerQueryDto backupServerQueryDto) {
-        // TODO 查询详情暂时固定设置为true
-        backupServerQueryDto.setWithDetail(true);
         return BaseResult.ok(backupServerService.list(backupServerQueryDto.getClustersIds(), backupServerQueryDto.getKeyword(), backupServerQueryDto.getWithDetail()));
     }
 
-    @ApiOperation(value = "查询项目备份服务器列表", notes = "查询项目备份服务器列表")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
-    })
-    @GetMapping("/project/{projectId}")
-    public BaseResult<List<BackupServerDTO>> listProjectBackupServer(@PathVariable("projectId") String projectId) {
-        return BaseResult.ok(backupServerService.listProjectBackupServer(projectId));
-    }
-
-    @ApiOperation(value = "查询项目可创建备份位置的备份服务器列表", notes = "查询项目可创建备份位置的备份服务器列表")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
-    })
-    @GetMapping("/project/{projectId}/enable")
-    public BaseResult<List<BackupServerDTO>> listProjectEnableBackupServer(@PathVariable("projectId") String projectId) {
-        return BaseResult.ok(backupServerService.listProjectBackupServer(projectId));
-    }
 
     @ApiOperation(value = "创建备份服务器", notes = "创建备份服务器")
     @ApiImplicitParams({

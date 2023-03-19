@@ -1,19 +1,23 @@
 package com.middleware.zeus.service.user.impl;
 
+import static com.middleware.caas.common.constants.NameConstant.*;
+import static com.middleware.caas.common.constants.NameConstant.MEMORY;
 import static com.middleware.caas.common.constants.user.UserConstant.USERNAME;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 import com.middleware.caas.common.enums.ComponentsEnum;
-import com.middleware.caas.common.model.ProjectBackupServerDTO;
+import com.middleware.caas.common.model.*;
 import com.middleware.caas.common.model.middleware.*;
-import com.middleware.caas.common.model.user.ProjectNamespaceDo;
+import com.middleware.caas.common.model.user.*;
 import com.middleware.caas.filters.token.JwtTokenComponent;
 import com.middleware.caas.filters.user.CurrentUser;
 import com.middleware.caas.filters.user.CurrentUserRepository;
+import com.middleware.zeus.bean.user.BeanOrganizationBackupServer;
 import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.middleware.*;
+import com.middleware.zeus.service.user.PlatformQuotaService;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.ServiceAccount;
 import org.apache.commons.lang3.StringUtils;
@@ -31,9 +35,6 @@ import com.middleware.caas.common.enums.DictEnum;
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.user.ProjectDto;
-import com.middleware.caas.common.model.user.UserDto;
-import com.middleware.caas.common.model.user.UserRole;
 import com.middleware.tool.uuid.UUIDUtils;
 import com.middleware.zeus.bean.BeanClusterMiddlewareInfo;
 import com.middleware.zeus.bean.BeanMiddlewareInfo;
@@ -88,6 +89,14 @@ public class ProjectServiceImpl implements ProjectService {
     private ProjectBackupServerService projectBackupServerService;
     @Autowired
     private BackupPositionService backupPositionService;
+    @Autowired
+    private PlatformQuotaService platformQuotaService;
+    @Autowired
+    private BackupServerService backupServerService;
+    @Autowired
+    private ResourceQuotaService resourceQuotaService;
+    @Autowired
+    private StorageService storageService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -103,46 +112,45 @@ public class ProjectServiceImpl implements ProjectService {
         beanProjectMapper.insert(beanProject);
         // 绑定用户角色
         if (StringUtils.isNotEmpty(projectDto.getUser())) {
-            userRoleService.insert(projectId, projectDto.getUser(), 2);
+            userRoleService.insert(projectDto.getOrganId(), projectId, projectDto.getUser(), 2);
         }
-        // 绑定分区
-        if (projectDto.getClusterList() != null) {
-            projectDto.getClusterList().forEach(cluster -> {
-                if (cluster.getNamespaceList() != null) {
-                    cluster.getNamespaceList().forEach(namespace -> this
-                        .bindNamespace(namespace.setProjectId(projectId).setClusterId(cluster.getId())));
-                }
-            });
-        }
-        // 绑定项目可用备份服务器
-        projectBackupServerService.save(projectId, projectDto.getBackupServerList());
     }
 
     @Override
-    public List<ProjectDto> list(String keyword) {
+    public List<ProjectDto> list(String organId) {
         QueryWrapper<BeanProject> wrapper = new QueryWrapper<>();
+        wrapper.eq("organ_id", organId);
         List<BeanProject> beanProjectList = beanProjectMapper.selectList(wrapper);
+        return beanProjectList.stream().map(bean -> {
+            ProjectDto projectDto = new ProjectDto();
+            BeanUtils.copyProperties(bean, projectDto);
+            return projectDto;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ProjectDto> list(String organId, String keyword) {
+        // 查询项目列表
+        List<ProjectDto> list = this.list(organId);
+        //获取当前用户
         CurrentUser currentUser = CurrentUserRepository.getUserExistNull();
         JSONObject user = JwtTokenComponent.checkToken(currentUser.getToken()).getValue();
-        // 获取用户角色对应
-        UserDto userDto = userService.list(null).stream().filter(u -> u.getUserName().equals(user.getString(USERNAME)))
-            .collect(Collectors.toList()).get(0);
+        // 获取当前用户所在所有项目内的角色信息
+        UserDto userDto = userService.getUserDto(user.getString(USERNAME));
         Map<String, UserRole> userRoleMap =
-            userDto.getUserRoleList().stream().collect(Collectors.toMap(UserRole::getProjectId, u -> u));
-        // 是否为 admin
-        boolean flag = userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getRoleId() == 1);
-        // 非admin,进行过滤
-        if (!flag) {
-            beanProjectList = beanProjectList.stream()
-                .filter(bp -> userDto.getUserRoleList().stream()
-                    .anyMatch(userRole -> userRole.getProjectId().equals(bp.getProjectId())))
-                .collect(Collectors.toList());
+                userDto.getUserRoleList().stream().collect(Collectors.toMap(UserRole::getProjectId, u -> u));
+        // 判断是否为admin,并进行过滤
+        if (!userDto.getIsAdmin()) {
+            list = list.stream()
+                    .filter(projectDto -> userDto.getUserRoleList().stream()
+                            .anyMatch(userRole -> userRole.getProjectId().equals(projectDto.getProjectId())))
+                    .collect(Collectors.toList());
         }
-        // 获取项目分区
+        // 获取项目下所有分区
         QueryWrapper<BeanProjectNamespace> nsWrapper = new QueryWrapper<>();
         List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(nsWrapper);
         Map<String, List<BeanProjectNamespace>> beanProjectNamespaceListMap =
-            beanProjectNamespaceList.stream().collect(Collectors.groupingBy(BeanProjectNamespace::getProjectId));
+                beanProjectNamespaceList.stream().collect(Collectors.groupingBy(BeanProjectNamespace::getProjectId));
 
         // 获取项目用户列表
         List<UserRole> userRoleList = userRoleService.list().stream()
@@ -150,23 +158,33 @@ public class ProjectServiceImpl implements ProjectService {
         Map<String, List<UserRole>> userRoleListMap =
             userRoleList.stream().collect(Collectors.groupingBy(UserRole::getProjectId));
 
+        // 获取项目可用备份服务器
+        List<ProjectBackupServerDTO> projectBackupServerDTOList =
+            projectBackupServerService.listByProjectId(organId, null);
+        Map<String, List<ProjectBackupServerDTO>> projectBackupServerIdMap =
+            projectBackupServerDTOList.stream().collect(Collectors.groupingBy(ProjectBackupServerDTO::getProjectId));
+
         // 封装数据
         List<ProjectDto> projectDtoList = new ArrayList<>();
-        for (BeanProject beanProject : beanProjectList) {
-            ProjectDto projectDto = new ProjectDto();
-            BeanUtils.copyProperties(beanProject, projectDto);
+        for (ProjectDto projectDto : list) {
             projectDto
-                .setMemberCount(userRoleListMap.getOrDefault(beanProject.getProjectId(), new ArrayList<>()).size());
+                .setMemberCount(userRoleListMap.getOrDefault(projectDto.getProjectId(), new ArrayList<>()).size());
             if (beanProjectNamespaceListMap.containsKey(projectDto.getProjectId())) {
                 projectDto.setNamespaceCount(beanProjectNamespaceListMap.get(projectDto.getProjectId()).size());
             }
-            if (flag) {
+            if (userDto.getIsAdmin()) {
                 projectDto.setRoleId(1);
                 projectDto.setRoleName("超级管理员");
             } else {
                 projectDto.setRoleId(userRoleMap.get(projectDto.getProjectId()).getRoleId());
                 projectDto.setRoleName(userRoleMap.get(projectDto.getProjectId()).getRoleName());
             }
+            // 设置备份服务器
+            if (projectBackupServerIdMap.containsKey(projectDto.getProjectId())) {
+                projectDto.setBackupServerList(projectBackupServerIdMap.get(projectDto.getProjectId()).stream()
+                    .map(ProjectBackupServerDTO::getBackupServerId).collect(Collectors.toList()));
+            }
+
             projectDtoList.add(projectDto);
         }
 
@@ -178,15 +196,6 @@ public class ProjectServiceImpl implements ProjectService {
                     || (StringUtils.isNotEmpty(projectDto.getDescription())
                         && projectDto.getDescription().contains(keyword)))
                 .collect(Collectors.toList());
-        }
-
-        // 获取项目可用备份服务器
-        for (ProjectDto projectDto : projectDtoList) {
-            List<ProjectBackupServerDTO> serverDTOS = projectBackupServerService.listByProjectId(projectDto.getProjectId());
-            if (!CollectionUtils.isEmpty(serverDTOS)) {
-                List<Integer> serverIds = serverDTOS.stream().map(ProjectBackupServerDTO::getBackupServerId).collect(Collectors.toList());
-                projectDto.setBackupServerList(serverIds);
-            }
         }
         return projectDtoList;
     }
@@ -214,8 +223,9 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<UserDto> getUser(String projectId, Boolean allocatable) {
-        checkExist(projectId);
+    public List<UserDto> getUser(String organId, String projectId, Boolean allocatable) {
+        checkExist(organId, projectId);
+        // 修改判断该用户是否可分配的逻辑
         List<UserDto> userDtoList = userService.list(null);
         if (allocatable) {
             // 获取可分配的
@@ -250,49 +260,49 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public void bindUser(ProjectDto projectDto) {
-        checkExist(projectDto.getProjectId());
+        checkExist(projectDto.getOrganId(), projectDto.getProjectId());
         projectDto.getUserDtoList().forEach(
-            userDto -> userRoleService.insert(projectDto.getProjectId(), userDto.getUserName(), userDto.getRoleId()));
+            userDto -> userRoleService.insert(projectDto.getOrganId(), projectDto.getProjectId(), userDto.getUserName(), userDto.getRoleId()));
     }
 
     @Override
-    public void updateUserRole(String projectId, UserDto userDto) {
-        userRoleService.update(userDto, projectId);
+    public void updateUserRole(String organId, String projectId, UserDto userDto) {
+        userRoleService.update(new UserRole().setOrganId(organId).setProjectId(projectId)
+            .setUserName(userDto.getUserName()).setRoleId(userDto.getRoleId()));
     }
 
     @Override
-    public void unbindUser(String projectId, String username) {
-        userRoleService.delete(username, projectId, null);
+    public void unbindUser(String organId, String projectId, String username) {
+        userRoleService.delete(username, organId, projectId, null);
     }
 
     @Override
-    public void delete(String projectId) {
+    public void delete(String organId, String projectId) {
         // 有服务存在不允许删除
-        List<ProjectDto> projectDtoList = getMiddlewareCount(projectId);
+        List<ProjectDto> projectDtoList = getMiddlewareCount(organId, projectId);
         if (!CollectionUtils.isEmpty(projectDtoList) && projectDtoList.get(0).getMiddlewareCount() != 0) {
             throw new BusinessException(ErrorMessage.PROJECT_IS_NOT_EMPTY);
         }
         // 删除项目
-        QueryWrapper<BeanProject> wrapper = new QueryWrapper<BeanProject>().eq("project_id", projectId);
+        QueryWrapper<BeanProject> wrapper =
+            new QueryWrapper<BeanProject>().eq("organ_id", organId).eq("project_id", projectId);
         beanProjectMapper.delete(wrapper);
         // 解绑项目下分区
-        unBindNamespace(projectId, null, null);
+        unBindNamespace(organId, projectId, null, null);
         // 解绑项目下用户
-        unbindUser(projectId, null);
+        unbindUser(organId, projectId, null);
         // 解绑项目下备份位置
-        unBindBackupPosition(projectId);
+        unBindBackupPosition(organId, projectId);
         // 解绑项目下备份服务器
-        unBindBackupServer(projectId);
+        unBindBackupServer(organId, projectId);
     }
 
     @Override
     public void update(ProjectDto projectDto) {
-        BeanProject beanProject = checkExist(projectDto.getProjectId());
+        BeanProject beanProject = checkExist(projectDto.getOrganId(), projectDto.getProjectId());
         beanProject.setAliasName(projectDto.getAliasName());
         beanProject.setDescription(projectDto.getDescription());
         beanProjectMapper.updateById(beanProject);
-        // 绑定项目可用备份服务器
-        projectBackupServerService.save(projectDto.getProjectId(), projectDto.getBackupServerList());
     }
 
     @Override
@@ -301,19 +311,32 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public void unBindNamespace(String projectId, String clusterId, String namespace, Boolean checkExist) {
+    public void addNamespace(Namespace namespace) {
+        // 创建分区
+        Map<String, String> labels = new HashMap<>();
+        labels.put("middleware", "middleware");
+        namespaceService.save(namespace, labels, true);
+        // 绑定项目
+        bindNamespace(namespace);
+    }
+
+    @Override
+    public void unBindNamespace(String organId, String projectId, String clusterId, String namespace, Boolean checkExist) {
         if (checkExist) {
             List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(clusterId, namespace, null);
             if (!CollectionUtils.isEmpty(middlewareCRList)) {
                 throw new BusinessException(ErrorMessage.NAMESPACE_IS_NOT_EMPTY);
             }
         }
-        this.unBindNamespace(projectId, clusterId, namespace);
+        this.unBindNamespace(organId, projectId, clusterId, namespace);
     }
 
     @Override
-    public void unBindNamespace(String projectId, String clusterId, String namespace) {
+    public void unBindNamespace(String organId, String projectId, String clusterId, String namespace) {
         QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<BeanProjectNamespace>();
+        if (StringUtils.isNotEmpty(organId)) {
+            wrapper.eq("organ_id", organId);
+        }
         if (StringUtils.isNotEmpty(projectId)) {
             wrapper.eq("project_id", projectId);
         }
@@ -330,9 +353,9 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<ProjectMiddlewareResourceInfo> middlewareResource(String projectId) throws Exception {
+    public List<ProjectMiddlewareResourceInfo> middlewareResource(String organId, String projectId) throws Exception {
         QueryWrapper<BeanProjectNamespace> wrapper =
-            new QueryWrapper<BeanProjectNamespace>().eq("project_id", projectId);
+            new QueryWrapper<BeanProjectNamespace>().eq("organ_id", organId).eq("project_id", projectId);
         List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
         // 获取集群
         Set<String> clusterIdSet = new HashSet<>();
@@ -392,13 +415,17 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<ProjectDto> getMiddlewareCount(String projectId) {
+    public List<ProjectDto> getMiddlewareCount(String organId, String projectId) {
         QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<>();
+        if(StringUtils.isNotEmpty(organId)){
+            wrapper.eq("organ_id", organId);
+        }
         if (StringUtils.isNotEmpty(projectId)) {
             wrapper.eq("project_id", projectId);
         }
         String username = CurrentUserRepository.getUser().getUsername();
         // 获取项目分区列表
+        // todo
         List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
         // 查询用户信息
         UserDto userDto = userService.getUserDto(username);
@@ -495,6 +522,122 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    public void allocateQuota(ProjectQuota projectQuota) {
+        // 处理cpu\memory\storage
+        if (projectQuota.getQuotas() != null) {
+            platformQuotaService.allocate(PROJECT, projectQuota.getProjectId(), projectQuota.getQuotas());
+        }
+        // 记录备份服务器
+        // todo 校验备份服务器是否已被使用
+        if (!CollectionUtils.isEmpty(projectQuota.getBackupServerDTOList())) {
+            // 删除当前所有绑定关系
+            projectBackupServerService.save(projectQuota.getOrganId(), projectQuota.getProjectId(), projectQuota
+                .getBackupServerDTOList().stream().map(BackupServerDTO::getId).collect(Collectors.toList()));
+        }
+    }
+
+    @Override
+    public List<ResourceQuotaDo> getStorageQuota(String organId, String projectId, boolean detail) {
+        // 获取租户自身存储配额
+        List<ResourceQuotaDo> resourceQuotaDoList = platformQuotaService.getQuota(PROJECT, organId, STORAGE);
+        // 设置存储名称
+        platformQuotaService.convertStorageName(resourceQuotaDoList);
+        if (detail){
+            List<ResourceQuotaDo> namespaceQuotaList = new ArrayList<>();
+            for (ResourceQuotaDo resourceQuotaDo : resourceQuotaDoList){
+                List<Namespace> namespaceList = getNamespace(organId, projectId, resourceQuotaDo.getClusterId(), true, false);
+                ResourceQuotaDo namespaceQuota = resourceQuotaService.calculateQuota(namespaceList.stream().map(Namespace::getQuotas).collect(Collectors.toList()));
+                namespaceQuota.setClusterId(resourceQuotaDo.getClusterId());
+                namespaceQuotaList.add(namespaceQuota);
+            }
+            platformQuotaService.convertUsedResource(resourceQuotaDoList, namespaceQuotaList);
+        }
+        return resourceQuotaDoList;
+    }
+
+    @Override
+    public void removeStorageQuota(String organId, String projectId, String storageId, String clusterId) {
+        StorageDto storageDto = storageService.getById(clusterId, storageId);
+        List<String> storageNameList =
+            storageDto.getStorageClassList().stream().map(StorageClassInfo::getName).collect(Collectors.toList());
+        List<Namespace> namespaceList = getNamespace(organId, projectId, clusterId, true, false);
+        boolean exist = namespaceList.stream().anyMatch(namespace -> {
+            boolean flag = false;
+            ResourceQuotaDo quotaDo = namespace.getQuotas();
+            if (quotaDo != null) {
+                for (StorageQuota storageQuota : quotaDo.getStorageList()) {
+                    flag = storageNameList.stream().anyMatch(scName -> scName.equals(storageQuota.getName()));
+                }
+            }
+            return flag;
+        });
+        if (exist) {
+            throw new BusinessException(ErrorMessage.PROJECT_STORAGE_USING);
+        }
+        // 删除存储
+        platformQuotaService.remove(PROJECT, projectId, storageId, STORAGE);
+    }
+
+    @Override
+    public List<ResourceQuotaDo> getCpuMemoryQuota(String organId, String projectId, boolean detail) {
+        // 获取租户自身cpu memory 配额
+        List<ResourceQuotaDo> resourceQuotaDoList = platformQuotaService.getQuota(PROJECT, organId, CPU, MEMORY);
+        if (detail) {
+            List<ResourceQuotaDo> namespaceQuotaList = new ArrayList<>();
+            for (ResourceQuotaDo resourceQuotaDo : resourceQuotaDoList){
+                List<Namespace> namespaceList = getNamespace(organId, projectId, resourceQuotaDo.getClusterId(), true, false);
+                ResourceQuotaDo namespaceQuota = resourceQuotaService.calculateQuota(namespaceList.stream().map(Namespace::getQuotas).collect(Collectors.toList()));
+                namespaceQuota.setClusterId(resourceQuotaDo.getClusterId());
+                namespaceQuotaList.add(namespaceQuota);
+            }
+            platformQuotaService.convertUsedResource(resourceQuotaDoList, namespaceQuotaList);
+        }
+        return resourceQuotaDoList;
+    }
+
+    @Override
+    public void removeCpuMemoryQuota(String organId, String projectId, String clusterId) {
+        List<Namespace> namespaceList = getNamespace(organId, projectId, clusterId, true, false);
+        boolean exist = namespaceList.stream().anyMatch(namespace -> {
+            boolean flag = false;
+            ResourceQuotaDo quotaDo = namespace.getQuotas();
+            if (quotaDo != null) {
+                if ((quotaDo.getCpu() != null && quotaDo.getCpu().getRequest() != null
+                    && quotaDo.getCpu().getRequest() > 0)
+                    || (quotaDo.getMemory() != null && quotaDo.getMemory().getRequest() != null
+                        && quotaDo.getMemory().getRequest() > 0)) {
+                    flag = true;
+                }
+
+            }
+            return flag;
+        });
+        if (exist) {
+            throw new BusinessException(ErrorMessage.PROJECT_CPU_MEMORY_USING);
+        }
+        // 删除cpu memory
+        platformQuotaService.remove(PROJECT, projectId, null, CPU, MEMORY);
+    }
+
+    @Override
+    public List<BackupServerDTO> getBackupServer(String organId, String projectId) {
+        List<ProjectBackupServerDTO> backupServerDTOList =
+            projectBackupServerService.listByProjectId(organId, projectId);
+        List<Integer> idList =
+            backupServerDTOList.stream().map(ProjectBackupServerDTO::getBackupServerId).collect(Collectors.toList());
+        return backupServerService.list(idList);
+    }
+
+    @Override
+    public void removeBackupServer(String organId, String projectId, Integer backupServerId, String clusterId) {
+        List<BackupPositionDTO> backupPositionDTOList = backupPositionService.list(organId, projectId, backupServerId);
+        if(!CollectionUtils.isEmpty(backupPositionDTOList)){
+            throw new BusinessException(ErrorMessage.PROJECT_BACKUP_SERVER_USING);
+        }
+        projectBackupServerService.delete(organId, projectId, backupServerId);
+    }
+
+    @Override
     public void bindNamespace(Namespace namespace) {
         QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<BeanProjectNamespace>()
             .eq("namespace", namespace.getName()).eq("cluster_id", namespace.getClusterId());
@@ -502,7 +645,8 @@ public class ProjectServiceImpl implements ProjectService {
         if (!CollectionUtils.isEmpty(beanProjectNamespaceList)) {
             throw new BusinessException(ErrorMessage.PROJECT_NAMESPACE_ALREADY_BIND);
         }
-        AssertUtil.notBlank(namespace.getProjectId(), DictEnum.PROJECT_ID);
+        AssertUtil.notBlank(namespace.getOrganId(), DictEnum.PROJECT_ID);
+        AssertUtil.notBlank(namespace.getProjectId(), DictEnum.ORGAN_ID);
         AssertUtil.notBlank(namespace.getName(), DictEnum.NAMESPACE_NAME);
         BeanProjectNamespace beanProjectNamespace = new BeanProjectNamespace();
         BeanUtils.copyProperties(namespace, beanProjectNamespace);
@@ -529,13 +673,13 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public Set<String> getRelationClusterIds(String projectId) {
-        return clusterService.listClusterIds(projectId);
+    public Set<String> getRelationClusterIds(String organId, String projectId) {
+        return clusterService.listClusterIds(organId, projectId);
     }
 
     @Override
-    public List<Namespace> getNamespace(String projectId) {
-        return getNamespace(projectId, null, false, false);
+    public List<Namespace> getNamespace(String organId, String projectId) {
+        return getNamespace(organId, projectId, null, false, false);
     }
 
     @Override
@@ -548,7 +692,7 @@ public class ProjectServiceImpl implements ProjectService {
         // 获取项目信息
         QueryWrapper<BeanProject> pjWrapper = new QueryWrapper<>();
         List<BeanProject> beanProjectList = beanProjectMapper.selectList(pjWrapper);
-        Map<String, String> projectNameMap = beanProjectList.stream().collect(Collectors.toMap(BeanProject::getProjectId, BeanProject::getAliasName));
+        Map<String, String> projectNameMap = beanProjectList.stream().collect(Collectors.toMap(BeanProject::getProjectId, BeanProject::getName));
 
         List<ProjectNamespaceDo> projectNamespaceDoList = new ArrayList<>();
         for (String key : projectNamespaceMap.keySet()){
@@ -563,9 +707,9 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<Namespace> getNamespace(String projectId, String clusterId, Boolean withQuota, Boolean withMiddleware) {
+    public List<Namespace> getNamespace(String organId, String projectId, String clusterId, Boolean withQuota, Boolean withMiddleware) {
         QueryWrapper<BeanProjectNamespace> wrapper =
-            new QueryWrapper<BeanProjectNamespace>().eq("project_id", projectId);
+            new QueryWrapper<BeanProjectNamespace>().eq("organ_id", organId).eq("project_id", projectId);
         if (!StringUtils.isEmpty(clusterId)) {
             wrapper.eq("cluster_id", clusterId);
         }
@@ -601,25 +745,21 @@ public class ProjectServiceImpl implements ProjectService {
         return setAvailableDomainStatus(namespaces, clusterId);
     }
 
-    @Override
-    public Set<String> getRelationClusters(String projectId) {
-        return getRelationClusterIds(projectId);
-    }
-
     /**
      * 删除项目关联的备份位置
      * @param projectId
      */
-    private void unBindBackupPosition(String projectId){
-        backupPositionService.deleteByProjectId(projectId);
+    private void unBindBackupPosition(String organId, String projectId){
+        backupPositionService.deleteByProjectId(organId, projectId);
     }
 
     /**
      * 删除项目关联的备份服务器
-     * @param projectId
+     * @param organId 组织id
+     * @param projectId 项目id
      */
-    private void unBindBackupServer(String projectId){
-        projectBackupServerService.deleteByProjectId(projectId);
+    private void unBindBackupServer(String organId, String projectId){
+        projectBackupServerService.deleteByProjectId(organId, projectId);
     }
 
     public void checkParam(ProjectDto projectDto){
@@ -642,8 +782,8 @@ public class ProjectServiceImpl implements ProjectService {
     /**
      * 校验项目是否存在
      */
-    public BeanProject checkExist(String projectId) {
-        QueryWrapper<BeanProject> wrapper = new QueryWrapper<BeanProject>().eq("project_id", projectId);
+    public BeanProject checkExist(String organId, String projectId) {
+        QueryWrapper<BeanProject> wrapper = new QueryWrapper<BeanProject>().eq("organ_id", organId).eq("project_id", projectId);
         List<BeanProject> beanProjectList = beanProjectMapper.selectList(wrapper);
         if (CollectionUtils.isEmpty(beanProjectList)) {
             throw new BusinessException(ErrorMessage.PROJECT_NOT_EXIST);

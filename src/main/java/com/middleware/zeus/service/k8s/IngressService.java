@@ -21,7 +21,7 @@ public interface IngressService {
      * @param keyword
      * @return
      */
-    List<IngressDTO> list(String clusterId, String namespace, String keyword, String projectId);
+    List<IngressDTO> list(String clusterId, String namespace, String keyword, String organId, String projectId);
 
     /**
      * 创建中间件对外访问
@@ -120,7 +120,7 @@ public interface IngressService {
      * @param keyword
      * @return
      */
-    List<IngressDTO> listAllIngress(String clusterId, String namespace, String keyword, String projectId);
+    List<IngressDTO> listAllIngress(String clusterId, String namespace, String keyword, String organId, String projectId);
 
     /**
      * 查询所有中间件ingress(不同于查询所有ingress,此方法会过滤掉不是通过中间件平台创建的服务暴露信息)
@@ -129,7 +129,7 @@ public interface IngressService {
      * @param keyword
      * @return
      */
-    List<IngressDTO> listAllMiddlewareIngress(String clusterId, String namespace, String keyword, String projectId);
+    List<IngressDTO> listAllMiddlewareIngress(String clusterId, String namespace, String keyword, String organId, String projectId);
 
     /**
      * 获取一个未被占用的ingress端口

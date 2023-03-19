@@ -14,8 +14,7 @@ import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletResponse;
 
-import com.middleware.zeus.service.user.UserRoleService;
-import com.middleware.zeus.service.user.UserService;
+import com.middleware.zeus.service.user.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,8 +48,6 @@ import com.middleware.zeus.dao.BeanMailToUserMapper;
 import com.middleware.zeus.dao.user.BeanUserMapper;
 import com.middleware.zeus.dao.user.PersonalMapper;
 import com.middleware.zeus.service.middleware.ClusterMiddlewareInfoService;
-import com.middleware.zeus.service.user.ProjectService;
-import com.middleware.zeus.service.user.RoleService;
 import com.middleware.zeus.util.ApplicationUtil;
 import com.middleware.zeus.util.RequestUtil;
 
@@ -81,6 +78,8 @@ public class UserServiceImpl implements UserService {
     private ProjectService projectService;
     @Autowired
     private ClusterMiddlewareInfoService clusterMiddlewareInfoService;
+    @Autowired
+    private OrganizationUserService organizationUserService;
 
     public String getUsername() {
         CurrentUser currentUser = CurrentUserRepository.getUser();
@@ -116,6 +115,7 @@ public class UserServiceImpl implements UserService {
         }
         UserDto userDto = new UserDto();
         BeanUtils.copyProperties(beanUser, userDto);
+        // todo
         setUserRoleList(userName, userDto);
         if (!CollectionUtils.isEmpty(userDto.getUserRoleList())) {
             userDto.setIsAdmin(userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getRoleId() == 1));
@@ -128,10 +128,18 @@ public class UserServiceImpl implements UserService {
         QueryWrapper<BeanUser> userWrapper = new QueryWrapper<>();
         // 非超级管理员角色用户 获取创建者为自身的用户
         List<BeanUser> beanUserList = beanUserMapper.selectList(userWrapper);
-        // 获取角色
+        // 获取用户项目下角色
         List<UserRole> userRoleList = userRoleService.list();
         Map<String, List<UserRole>> userRoleMap =
                 userRoleList.stream().collect(Collectors.groupingBy(UserRole::getUserName));
+        // 获取用户组织下角色
+        userRoleList.addAll(organizationUserService.list(null).stream()
+            .filter(organizationUser -> organizationUser.getRoleId() != null).map(organizationUser -> {
+                UserRole userRole = new UserRole();
+                BeanUtils.copyProperties(organizationUser, userRole);
+                userRole.setRoleName("组织管理员");
+                return userRole;
+            }).collect(Collectors.toList()));
         // 封装数据
         List<UserDto> userDtoList = beanUserList.stream().map(beanUser -> {
             UserDto userDto = new UserDto();
@@ -200,9 +208,9 @@ public class UserServiceImpl implements UserService {
         QueryWrapper<BeanUser> wrapper = new QueryWrapper<BeanUser>().eq("username", userName);
         beanUserMapper.delete(wrapper);
         // 删除用户角色关系
-        userRoleService.delete(userName, null, null);
+        userRoleService.delete(userName, null, null, null);
         // 从项目中移除
-        projectService.unbindUser(null, userName);
+        projectService.unbindUser(null, null, userName);
         return true;
     }
 
@@ -259,6 +267,7 @@ public class UserServiceImpl implements UserService {
     public List<ResourceMenuDto> menu(String projectId) {
         CurrentUser currentUser = CurrentUserRepository.getUser();
         String username = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString(USERNAME);
+        // todo 处理user的权限问题(组织)
         UserDto userDto = getUserDto(username);
         List<ResourceMenuDto> resourceMenuDtoList = roleService.listMenuByRoleId(userDto, projectId);
 
@@ -526,9 +535,9 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException(ErrorMessage.NO_AUTHORITY);
         }
         if (userDto.getIsAdmin()) {
-            userRoleService.insert(null, userDto.getUserName(), NUM_ROLE_ADMIN);
+            userRoleService.insert(null, null, userDto.getUserName(), NUM_ROLE_ADMIN);
         } else {
-            userRoleService.delete(userDto.getUserName(), null, NUM_ROLE_ADMIN);
+            userRoleService.delete(userDto.getUserName(), null, null, NUM_ROLE_ADMIN);
         }
     }
 
@@ -539,6 +548,7 @@ public class UserServiceImpl implements UserService {
      * @param userDto
      */
     public void setUserRoleList(String userName, UserDto userDto) {
+        // todo
         List<UserRole> userRoleList = userRoleService.get(userName);
         if (!CollectionUtils.isEmpty(userRoleList)) {
             userDto.setUserRoleList(userRoleList);

@@ -18,7 +18,7 @@ import io.swagger.annotations.ApiOperation;
  */
 @Api(tags = "resourceQuota", value = "命名空间配额", description = "命名空间配额")
 @RestController
-@RequestMapping("/clusters/{clusterId}/namespaces")
+@RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/quota")
 public class ResourceQuotaController {
 
     @Autowired
@@ -30,11 +30,25 @@ public class ResourceQuotaController {
             @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "storageClass", value = "存储类型", paramType = "query", dataTypeClass = String.class),
     })
-    @GetMapping("/{namespace}/quota")
+    @GetMapping
     public BaseResult<ResourceQuotaDo> list(@PathVariable("clusterId") String clusterId,
                                             @PathVariable("namespace") String namespace,
                                             @RequestParam(value = "storageClass", required = false) String storageClass) {
         return BaseResult.ok(resourceQuotaService.list(clusterId, namespace, storageClass));
+    }
+
+    @ApiOperation(value = "创建/修改分区配额", notes = "创建/修改分区配额")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "quotaDo", value = "资源配额", paramType = "query", dataTypeClass = ResourceQuotaDo.class),
+    })
+    @PutMapping
+    public BaseResult update(@PathVariable("clusterId") String clusterId,
+                             @PathVariable("namespace") String namespace,
+                             @RequestBody ResourceQuotaDo quotaDo) {
+        resourceQuotaService.update(clusterId, namespace, quotaDo);
+        return BaseResult.ok();
     }
 
 }

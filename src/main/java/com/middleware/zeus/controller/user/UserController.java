@@ -134,21 +134,27 @@ public class UserController {
     @ApiOperation(value = "获取菜单列表", notes = "获取菜单列表")
     @GetMapping("/menu")
     @ApiImplicitParams({
+            @ApiImplicitParam(name = "organId", value = "组织id", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
     })
-    public BaseResult<List<ResourceMenuDto>> menu(@RequestParam(value = "projectId", required = false) String projectId) throws Exception {
+    public BaseResult<List<ResourceMenuDto>> menu(@RequestParam(value = "organId", required = false) String organId,
+                                                  @RequestParam(value = "projectId", required = false) String projectId) throws Exception {
         log.info("获取菜单列表：{}", projectId);
+        //todo
         return BaseResult.ok(userService.menu(projectId));
     }
 
     @ApiOperation(value = "获取服务列表", notes = "获取服务列表")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "organId", value = "组织id", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/menu/middlewares")
     public BaseResult<List<ResourceMenuDto>> listMiddlewareMenu(@RequestParam("clusterId") String clusterId,
+                                                                @RequestParam("organId") String organId,
                                                                 @RequestParam("projectId") String projectId) {
+        // todo
         return BaseResult.ok(userService.listMiddlewareMenu(clusterId, projectId));
     }
 

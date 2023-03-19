@@ -2,18 +2,21 @@ package com.middleware.zeus.service.middleware.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.middleware.caas.common.model.BackupServerDTO;
 import com.middleware.caas.common.model.ProjectBackupServerDTO;
 import com.middleware.zeus.bean.BeanBackupServer;
 import com.middleware.zeus.bean.BeanProjectBackupServer;
 import com.middleware.zeus.dao.BeanProjectBackupServerMapper;
 import com.middleware.zeus.service.middleware.BackupServerService;
 import com.middleware.zeus.service.middleware.ProjectBackupServerService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -30,30 +33,26 @@ public class ProjectBackupServerServiceImpl implements ProjectBackupServerServic
     private BackupServerService backupServerService;
 
     @Override
-    public List<BeanProjectBackupServer> listByBackupServerId(Integer serverId) {
+    public List<ProjectBackupServerDTO> listByProjectId(String organId, String projectId) {
+        // 查询项目下备份服务器
         QueryWrapper<BeanProjectBackupServer> wrapper = new QueryWrapper<>();
-        wrapper.eq("server_id", serverId);
-        return projectBackupServerMapper.selectList(wrapper);
-    }
-
-    @Override
-    public List<ProjectBackupServerDTO> listByProjectId(String projectId) {
-        QueryWrapper<BeanProjectBackupServer> wrapper = new QueryWrapper<>();
-        wrapper.eq("project_id", projectId);
-        List<BeanProjectBackupServer> backupServerList = projectBackupServerMapper.selectList(wrapper);
-        return backupServerList.stream().map(beanProjectBackupServer -> {
+        wrapper.eq("organ_id", organId);
+        if (StringUtils.isNotEmpty(projectId)) {
+            wrapper.eq("project_id", projectId);
+        }
+        List<BeanProjectBackupServer> projectBackupServerList = projectBackupServerMapper.selectList(wrapper);
+        // 封装数据
+        return projectBackupServerList.stream().map(beanProjectBackupServer -> {
             ProjectBackupServerDTO projectBackupServerDTO = new ProjectBackupServerDTO();
             BeanUtil.copyProperties(beanProjectBackupServer, projectBackupServerDTO);
-            BeanBackupServer beanBackupServer = backupServerService.get(beanProjectBackupServer.getBackupServerId());
-            projectBackupServerDTO.setBackupServerName(beanBackupServer.getName());
             return projectBackupServerDTO;
         }).collect(Collectors.toList());
     }
 
     @Override
-    public void save(String projectId, List<Integer> backupServerIds) {
+    public void save(String organId, String projectId, List<Integer> backupServerIds) {
         // 先删除已有的绑定关系
-        deleteByProjectId(projectId);
+        deleteByProjectId(organId, projectId);
         if (CollectionUtils.isEmpty(backupServerIds)) {
             return;
         }
@@ -67,16 +66,24 @@ public class ProjectBackupServerServiceImpl implements ProjectBackupServerServic
     }
 
     @Override
-    public void deleteByProjectId(String projectId) {
+    public void deleteByProjectId(String organId, String projectId) {
         QueryWrapper<BeanProjectBackupServer> wrapper  = new QueryWrapper<>();
-        wrapper.eq("project_id", projectId);
+        wrapper.eq("organ_id", organId).eq("project_id", projectId);
         projectBackupServerMapper.delete(wrapper);
     }
 
     @Override
-    public void deleteByServerId(Integer serverId) {
+    public void delete(String organId, String projectId, Integer serverId) {
         QueryWrapper<BeanProjectBackupServer> wrapper  = new QueryWrapper<>();
-        wrapper.eq("backup_server_id", serverId);
+        if (StringUtils.isNotEmpty(organId)){
+            wrapper.eq("organ_id", organId);
+        }
+        if (StringUtils.isNotEmpty(projectId)){
+            wrapper.eq("project_id", projectId);
+        }
+        if (serverId != null){
+            wrapper.eq("backup_server_id", serverId);
+        }
         projectBackupServerMapper.delete(wrapper);
     }
 

@@ -14,9 +14,14 @@ public interface BackupServerService {
 
     List<BackupServerDTO> list(List<String> clusterIds, String keyword, Boolean withDetail);
 
-    List<BackupServerDTO> listBackupPosition(String projectId);
+    /**
+     * 查询备份服务器列表
+     * @param ids 备份服务器id列表
+     * @return List<BackupServerDTO>
+     */
+    List<BackupServerDTO> list(List<Integer> ids);
 
-    List<BackupServerDTO> listProjectBackupServer(String projectId);
+    //List<BackupServerDTO> listProjectBackupServer(String projectId);
 
     BeanBackupServer get(Integer id);
 

@@ -94,12 +94,12 @@ public class NamespaceServiceImpl implements NamespaceService {
 
     @Override
     public List<Namespace> list(String clusterId, boolean all, String keyword) {
-        return list(clusterId, all, false, false, keyword, null);
+        return list(clusterId, all, false, false, keyword, null, null);
     }
 
     @Override
     public List<Namespace> list(String clusterId, boolean all, boolean withQuota, boolean withMiddleware,
-        String keyword, String projectId) {
+        String keyword, String organId, String projectId) {
         List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId);
         List<Namespace> list = nsList.stream()
             .filter(ns -> (all || ns.getMetadata().getLabels() != null
@@ -112,7 +112,7 @@ public class NamespaceServiceImpl implements NamespaceService {
             .map(ns -> convertNamespace(clusterId, ns)).collect(Collectors.toList());
 
         if (StringUtils.isNotEmpty(projectId)) {
-            List<Namespace> alNsList = projectService.getNamespace(projectId).stream()
+            List<Namespace> alNsList = projectService.getNamespace(organId, projectId).stream()
                 .filter(ns -> ns.getClusterId().equals(clusterId)).collect(Collectors.toList());
             list = list.stream().filter(ns -> alNsList.stream().anyMatch(alNs -> alNs.getName().equals(ns.getName())))
                 .collect(Collectors.toList());
@@ -155,7 +155,7 @@ public class NamespaceServiceImpl implements NamespaceService {
         }
         save(namespace.getClusterId(), namespace.getName(), label, annotations);
         // 创建资源配额
-        resourceQuotaService.create(namespace.getClusterId(), namespace.getName(), namespace.getQuotas());
+        //resourceQuotaService.create(namespace.getClusterId(), namespace.getName(), namespace.getQuotas());
     }
 
     @Override
@@ -189,7 +189,7 @@ public class NamespaceServiceImpl implements NamespaceService {
         ns.setMetadata(meta);
         namespaceWrapper.delete(clusterId, ns);
         // 解绑分区
-        projectService.unBindNamespace(null, clusterId, name);
+        projectService.unBindNamespace(null, null, clusterId, name);
     }
 
     @Override
@@ -228,13 +228,13 @@ public class NamespaceServiceImpl implements NamespaceService {
     }
 
     @Override
-    public void bindProject(String clusterId, String name, String aliasName, String projectId) {
-        if (StringUtils.isNotEmpty(projectId)){
+    public void bindProject(String clusterId, String name, String aliasName, String organId, String projectId) {
+        if (StringUtils.isNotEmpty(organId) && StringUtils.isNotEmpty(projectId)){
             Namespace namespace = new Namespace();
-            namespace.setClusterId(clusterId).setName(name).setAliasName(aliasName).setProjectId(projectId);
+            namespace.setClusterId(clusterId).setName(name).setAliasName(aliasName).setOrganId(organId).setProjectId(projectId);
             projectService.bindNamespace(namespace);
         }else {
-            projectService.unBindNamespace(null, clusterId, name);
+            projectService.unBindNamespace(null, null, clusterId, name);
         }
     }
 

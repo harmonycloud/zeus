@@ -13,6 +13,7 @@ import com.middleware.caas.common.enums.DictEnum;
 import com.middleware.caas.common.model.QuotaBase;
 import com.middleware.caas.common.model.middleware.*;
 import com.middleware.caas.common.model.user.ProjectDto;
+import com.middleware.tool.uuid.UUIDUtils;
 import com.middleware.zeus.service.user.ProjectService;
 import com.middleware.zeus.util.DateUtil;
 import com.middleware.zeus.service.k8s.*;
@@ -93,6 +94,20 @@ public class StorageServiceImpl implements StorageService {
     }
 
     @Override
+    public StorageDto getById(String clusterId, String storageId) {
+        List<StorageDto> storageDtoList = this.list(clusterId, false);
+        if (CollectionUtils.isEmpty(storageDtoList)) {
+            return null;
+        }
+        storageDtoList = storageDtoList.stream().filter(storageDto -> storageDto.getStorageId().equals(storageId))
+            .collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(storageDtoList)) {
+            return storageDtoList.get(0);
+        }
+        return null;
+    }
+
+    @Override
     public List<StorageDto> list(String clusterId, String key, String type, Boolean all) {
         List<MiddlewareClusterDTO> clusterList = new ArrayList<>();
         if (clusterId.equals(ASTERISK)) {
@@ -151,7 +166,8 @@ public class StorageServiceImpl implements StorageService {
             return storageClass;
         }).collect(Collectors.toList());
 
-        Date integrateTime = null;
+        Date integrateTime = new Date();
+        String storageId = UUIDUtils.get16UUID();
         for (StorageClass sc : scList) {
             //获取annotations
             Map<String, String> annotations = sc.getMetadata().getAnnotations();
@@ -161,12 +177,14 @@ public class StorageServiceImpl implements StorageService {
             annotations.put(MIDDLEWARE, TRUE);
             annotations.put(ALIAS_NAME, storageDto.getAliasName());
             annotations.put(TOTAL_STORAGE, storageDto.getTotalStorage().toString());
+            // 设置接入时间
             if (!annotations.containsKey(INTEGRATE_TIME)) {
-                if (integrateTime == null) {
-                    integrateTime = new Date();
-                }
                 annotations.put(INTEGRATE_TIME,
                         DateUtils.DateToString(integrateTime, DateType.YYYY_MM_DD_T_HH_MM_SS_Z.getValue()));
+            }
+            // 设置存储服务id
+            if (!annotations.containsKey(STORAGE_ID)){
+                annotations.put(STORAGE_ID, storageId);
             }
             // 双活配置
             if (storageDto.getIsActiveActive()) {
@@ -181,11 +199,13 @@ public class StorageServiceImpl implements StorageService {
     }
 
     @Override
-    public void delete(String clusterId, String aliasName) {
+    public void delete(String clusterId, String storageId) {
         List<StorageClass> storageClassList = storageClassWrapper.list(clusterId);
         List<StorageClass> scList = storageClassList.stream()
-                .filter(storageClass -> !CollectionUtils.isEmpty(storageClass.getMetadata().getAnnotations())
-                        && aliasName.equals(storageClass.getMetadata().getAnnotations().get(ALIAS_NAME))).collect(Collectors.toList());
+            .filter(storageClass -> !CollectionUtils.isEmpty(storageClass.getMetadata().getAnnotations())
+                && storageClass.getMetadata().getAnnotations().containsKey(STORAGE_ID)
+                && storageId.equals(storageClass.getMetadata().getAnnotations().get(STORAGE_ID)))
+            .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(scList)) {
             throw new BusinessException(ErrorMessage.STORAGE_CLASS_NOT_FOUND);
         }
@@ -203,6 +223,7 @@ public class StorageServiceImpl implements StorageService {
             annotations.remove(INTEGRATE_TIME);
             annotations.remove(ACTIVE_ACTIVE);
             annotations.remove(TOTAL_STORAGE);
+            annotations.remove(STORAGE_ID);
             storageClassWrapper.update(clusterId, sc);
         }
     }
@@ -419,6 +440,10 @@ public class StorageServiceImpl implements StorageService {
         if (annotations.containsKey(TOTAL_STORAGE)){
             storageDto.setTotalStorage(Double.parseDouble(annotations.get(TOTAL_STORAGE)));
         }
+        // 获取存储id
+        if(annotations.containsKey(STORAGE_ID)){
+            storageDto.setStorageId(annotations.get(STORAGE_ID));
+        }
         storageDto.setClusterId(clusterId);
         storageDto.setClusterAliasName(cluster.getNickname());
         storageDto.setIsActiveActive(false);
@@ -513,6 +538,13 @@ public class StorageServiceImpl implements StorageService {
             params = storageClass.getParameters();
         }
         return params;
+    }
+    @Override
+    public Map<String, String> convertStorageName(String clusterId) {
+        // 查询存储列表
+        List<StorageDto> storageDtoList = this.list(clusterId, false);
+        // 封装获取包含storageClass 和 对应别名的map
+        return storageDtoList.stream().collect(Collectors.toMap(StorageDto::getStorageId, StorageDto::getAliasName));
     }
 
 

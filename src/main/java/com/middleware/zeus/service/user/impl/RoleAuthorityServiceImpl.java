@@ -85,13 +85,14 @@ public class RoleAuthorityServiceImpl implements RoleAuthorityService {
     @Override
     public Boolean checkOps(String roleId, String type) {
         boolean flag = false;
+        String organId = RequestUtil.getOrganId();
         String projectId = RequestUtil.getProjectId();
         if (StringUtils.isEmpty(projectId)) {
             return false;
         }
         if (StringUtils.isEmpty(roleId)) {
             String username = CurrentUserRepository.getUser().getUsername();
-            Integer rid = userRoleService.getRoleId(username, projectId);
+            Integer rid = userRoleService.getRoleId(username, organId, projectId);
             if (rid == null && userRoleService.checkAdmin(username)) {
                 return true;
             }

@@ -66,39 +66,25 @@ public class BackupServerServiceImpl implements BackupServerService {
         if (CollectionUtils.isEmpty(serverList)) {
             return Collections.emptyList();
         }
-        // TODO 待优化 withDetail为false时不需要查询备份服务器详细信息
-        List<BackupServerDTO> serverDTOList = convertToBackupServerDTO(serverList, null, withDetail);
+        List<BackupServerDTO> serverDTOList = convertToBackupServerDTO(serverList, withDetail);
         // 添加集群别名
         addClusterNickName(serverDTOList);
         return serverDTOList;
     }
 
-    /**
-     * 查询项目备份位置列表
-     *
-     * @param projectId
-     * @return
-     */
     @Override
-    public List<BackupServerDTO> listBackupPosition(String projectId) {
-        List<BackupPositionDTO> backupPositionDTOS = backupPositionService.selectBackupPositionDTOList(projectId);
-        List<BackupServerDTO> backupServerDTOS = new ArrayList<>();
-        for (BackupPositionDTO backupPositionDTO : backupPositionDTOS) {
-            // 查询使用该备份位置的备份记录数
-            List<BackupServerDetailDTO> backupServerDetailDTOS = backupServerDetailService.listBackupServerDetailDTOS(backupPositionDTO.getId());
-            if (!CollectionUtils.isEmpty(backupPositionDTOS)) {
-                BackupServerDTO backupServerDTO = new BackupServerDTO();
-                backupServerDTO.setServerDetailList(backupServerDetailDTOS);
-                backupServerDTO.setPositionList(Collections.singletonList(backupPositionDTO));
-                backupServerDTOS.add(backupServerDTO);
-            }
+    public List<BackupServerDTO> list(List<Integer> ids) {
+        QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
+        if (!CollectionUtils.isEmpty(ids)) {
+            wrapper.in("id", ids);
         }
-        return backupServerDTOS;
+        List<BeanBackupServer> serverList = backupServerMapper.selectList(wrapper);
+        return convertToBackupServerDTO(serverList,  false);
     }
 
-    @Override
+/*    @Override
     public List<BackupServerDTO> listProjectBackupServer(String projectId) {
-        List<ProjectBackupServerDTO> projectBackupServerDTOS = projectBackupServerService.listByProjectId(projectId);
+        List<ProjectBackupServerDTO> projectBackupServerDTOS = projectBackupServerService.listByProjectId(null, projectId);
         List<Integer> backupServerIds = projectBackupServerDTOS.stream().
                 map(ProjectBackupServerDTO::getBackupServerId).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(backupServerIds)) {
@@ -107,7 +93,7 @@ public class BackupServerServiceImpl implements BackupServerService {
         QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
         wrapper.in("id", backupServerIds);
         return convertToBackupServerDTO(backupServerMapper.selectList(wrapper), projectId, true);
-    }
+    }*/
 
     @Override
     public BeanBackupServer get(Integer id) {
@@ -183,7 +169,7 @@ public class BackupServerServiceImpl implements BackupServerService {
         // 删除备份服务器详细信息
         backupServerDetailService.deleteByServerId(id);
         // 删除项目备份服务器关联信息
-        projectBackupServerService.deleteByServerId(id);
+        projectBackupServerService.delete(null, null, id);
         // 删除备份位置
         backupPositionService.deleteByBackupServer(id);
     }
@@ -222,17 +208,17 @@ public class BackupServerServiceImpl implements BackupServerService {
     /**
      * 添加备份位置和备份服务器信息
      * @param serverList
-     * @param projectId
+     * @param withDetail
      * @return
      */
-    private List<BackupServerDTO> convertToBackupServerDTO(List<BeanBackupServer> serverList, String projectId, Boolean withDetail) {
+    private List<BackupServerDTO> convertToBackupServerDTO(List<BeanBackupServer> serverList, Boolean withDetail) {
         return serverList.stream().map(backupServer -> {
             BackupServerDTO backupServerDTO = new BackupServerDTO();
             BeanUtil.copyProperties(backupServer, backupServerDTO);
+            backupServerDTO.setServerDetailList(backupServerDetailService.listBackupServerDetailDTOS(backupServer.getId()));
+            backupServerDTO.setServerType(getServerType(backupServerDTO.getServerDetailList()));
             if (withDetail) {
-                backupServerDTO.setPositionList(backupPositionService.selectBackupPositionDTOList(backupServer.getId(), projectId));
-                backupServerDTO.setServerDetailList(backupServerDetailService.listBackupServerDetailDTOS(backupServer.getId()));
-                backupServerDTO.setServerType(getServerType(backupServerDTO.getServerDetailList()));
+                backupServerDTO.setPositionList(backupPositionService.list(null, null, backupServer.getId()));
             }
             return backupServerDTO;
         }).collect(Collectors.toList());
@@ -317,10 +303,9 @@ public class BackupServerServiceImpl implements BackupServerService {
      * 检查服务器关联的地址是否已被备份任务使用
      */
     private void backupServerDeletionCheck(Integer backupServerId){
-        List<BeanBackupPosition> beanBackupPositions = backupPositionService.listByBackupServerId(backupServerId);
-        for (BeanBackupPosition position : beanBackupPositions) {
-            List<BeanMiddlewareBackupName> middlewareBackupNames = middlewareBackupNameService.listByPositionId(position.getId());
-            if(!CollectionUtils.isEmpty(middlewareBackupNames)){
+        List<BackupPositionDTO> backupPositionDTOList = backupPositionService.list(null, null, backupServerId);
+        for (BackupPositionDTO backupPositionDTO : backupPositionDTOList) {
+            if (backupPositionDTO.getBackupTaskNum() != null && backupPositionDTO.getBackupTaskNum() != 0){
                 throw new BusinessException(ErrorMessage.FAILED_TO_DELETE_BACKUP_SERVER);
             }
         }

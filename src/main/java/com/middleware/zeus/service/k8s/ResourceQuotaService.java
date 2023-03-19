@@ -76,11 +76,11 @@ public interface ResourceQuotaService {
     ResourceQuotaDo get(String clusterId, String namespace, String name);
 
     /**
-     * 查询集群内quota分配情况
+     * 统计资源配额
      *
-     * @param clusterId 集群id
+     * @param resourceQuotaDoList 资源配额集合
      * @return
      */
-    ResourceQuotaDo getQuota(String clusterId);
+    ResourceQuotaDo calculateQuota(List<ResourceQuotaDo> resourceQuotaDoList);
 }
 

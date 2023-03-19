@@ -37,10 +37,10 @@ public class BeanRole implements Serializable {
     @TableField("description")
     private String description;
     /**
-     * 父id
+     * 权重
      */
-    @TableField("parent")
-    private Integer parent;
+    @TableField("weight")
+    private Integer weight;
     /**
      * 创建时间
      */

@@ -61,10 +61,11 @@ public class UserRoleServiceImpl implements UserRoleService {
     }
 
     @Override
-    public Integer getRoleId(String userName, String projectId) {
-        QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("username", userName).eq("project_id", projectId);
+    public Integer getRoleId(String userName, String organId, String projectId) {
+        QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("username", userName)
+            .eq("organ_id", organId).eq("project_id", projectId);
         List<BeanUserRole> beanUserRoleList = beanUserRoleMapper.selectList(wrapper);
-        if (!CollectionUtils.isEmpty(beanUserRoleList)){
+        if (!CollectionUtils.isEmpty(beanUserRoleList)) {
             return beanUserRoleList.get(0).getRoleId();
         }
         return null;
@@ -97,8 +98,33 @@ public class UserRoleServiceImpl implements UserRoleService {
             UserRole userRole = new UserRole();
             BeanUtils.copyProperties(beanUser, userRole);
             userRole.setUserName(beanUser.getUserName()).setRoleName(beanSysRoleMap.get(beanUser.getRoleId()));
-            if (StringUtils.isNotEmpty(userRole.getProjectId())) {
+            if (StringUtils.isNotEmpty(userRole.getProjectId()) && beanProjectMap.containsKey(userRole.getProjectId())) {
                 userRole.setProjectName(beanProjectMap.get(userRole.getProjectId()).getAliasName());
+            }
+            return userRole;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<UserRole> list(String organId, String projectId) {
+        QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<>();
+        if (StringUtils.isNotEmpty(organId)) {
+            wrapper.eq("organ_id", organId);
+        }
+        if (StringUtils.isNotEmpty(projectId)) {
+            wrapper.eq("project_id", projectId);
+        }
+        // 获取所有角色信息
+        List<RoleDto> beanRoleList = roleService.list(null);
+        Map<Integer, String> beanSysRoleMap =
+            beanRoleList.stream().collect(Collectors.toMap(RoleDto::getId, RoleDto::getName));
+        List<BeanUserRole> beanUserRoleList = beanUserRoleMapper.selectList(wrapper);
+        return beanUserRoleList.stream().map(beanUser -> {
+            UserRole userRole = new UserRole();
+            BeanUtils.copyProperties(beanUser, userRole);
+            userRole.setUserName(beanUser.getUserName());
+            if (beanSysRoleMap.containsKey(beanUser.getRoleId())) {
+                userRole.setRoleName(beanSysRoleMap.get(beanUser.getRoleId()));
             }
             return userRole;
         }).collect(Collectors.toList());
@@ -119,23 +145,12 @@ public class UserRoleServiceImpl implements UserRoleService {
     }
 
     @Override
-    public List<UserRole> findByProjectId(String projectId) {
-        QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("project_id", projectId);
-        List<BeanUserRole> beanUserRoleList = beanUserRoleMapper.selectList(wrapper);
-        if (CollectionUtils.isEmpty(beanUserRoleList)){
-            return new ArrayList<>();
-        }
-        return beanUserRoleList.stream().map(beanUserRole -> {
-            UserRole userRole = new UserRole();
-            BeanUtils.copyProperties(beanUserRole, userRole);
-            return userRole;
-        }).collect(Collectors.toList());
-    }
-
-    @Override
-    public void insert(String projectId, String username, Integer roleId) {
+    public void insert(String organId, String projectId, String username, Integer roleId) {
         QueryWrapper<BeanUserRole> wrapper =
             new QueryWrapper<BeanUserRole>().eq("username", username);
+        if (StringUtils.isNotEmpty(projectId)){
+            wrapper.eq("organ_id", organId);
+        }
         if (StringUtils.isNotEmpty(projectId)){
             wrapper.eq("project_id", projectId);
         }
@@ -144,6 +159,7 @@ public class UserRoleServiceImpl implements UserRoleService {
             throw new BusinessException(ErrorMessage.USER_ROLE_EXIST);
         }
         BeanUserRole beanUserRole = new BeanUserRole();
+        beanUserRole.setOrganId(organId);
         beanUserRole.setProjectId(projectId);
         beanUserRole.setRoleId(roleId);
         beanUserRole.setUserName(username);
@@ -151,10 +167,13 @@ public class UserRoleServiceImpl implements UserRoleService {
     }
 
     @Override
-    public void delete(String userName, String projectId, Integer roleId) {
+    public void delete(String userName, String organId, String projectId, Integer roleId) {
         QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>();
         if (StringUtils.isNotEmpty(userName)){
             wrapper.eq("username", userName);
+        }
+        if(StringUtils.isNotEmpty(organId)){
+            wrapper.eq("organ_id", organId);
         }
         if(StringUtils.isNotEmpty(projectId)){
             wrapper.eq("project_id", projectId);
@@ -166,15 +185,20 @@ public class UserRoleServiceImpl implements UserRoleService {
     }
 
     @Override
-    public void update(UserDto userDto, String projectId) {
-        QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("username", userDto.getUserName());
+    public void update(UserRole userRole) {
+        String organId = userRole.getOrganId();
+        String projectId = userRole.getProjectId();
+        QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("username", userRole.getUserName());
+        if (StringUtils.isNotEmpty(organId)){
+            wrapper.eq("organ_id", organId);
+        }
         if (StringUtils.isNotEmpty(projectId)){
             wrapper.eq("project_id", projectId);
         }
         List<BeanUserRole> beanUserRoleList = beanUserRoleMapper.selectList(wrapper);
         BeanUserRole beanUserRole = new BeanUserRole();
-        beanUserRole.setUserName(userDto.getUserName());
-        beanUserRole.setRoleId(userDto.getRoleId());
+        beanUserRole.setUserName(userRole.getUserName());
+        beanUserRole.setRoleId(userRole.getRoleId());
         if (StringUtils.isNotEmpty(projectId)){
             beanUserRole.setProjectId(projectId);
         }
@@ -193,8 +217,9 @@ public class UserRoleServiceImpl implements UserRoleService {
     }
 
     @Override
-    public BeanUserRole get(String userName, String projectId) {
-        QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("username", userName).eq("project_id", projectId);
+    public BeanUserRole get(String userName, String organId, String projectId) {
+        QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("username", userName)
+            .eq("organ_id", organId).eq("project_id", projectId);
         List<BeanUserRole> userRoleList = beanUserRoleMapper.selectList(wrapper);
         if (CollectionUtils.isEmpty(userRoleList)) {
             return null;

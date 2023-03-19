@@ -57,7 +57,7 @@ public interface NamespaceService {
      * @param projectId      项目id
      * @return
      */
-    List<Namespace> list(String clusterId, boolean all, boolean withQuota, boolean withMiddleware, String keyword, String projectId);
+    List<Namespace> list(String clusterId, boolean all, boolean withQuota, boolean withMiddleware, String keyword, String organId, String projectId);
 
     /**
      * 查询分区的配额
@@ -158,7 +158,7 @@ public interface NamespaceService {
      * @param aliasName 分区别名
      * @param projectId 项目id
      */
-    void bindProject(String clusterId, String namespace, String aliasName, String projectId);
+    void bindProject(String clusterId, String namespace, String aliasName, String organId, String projectId);
 
     /**
      * 绑定/解绑分区

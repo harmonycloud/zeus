@@ -24,9 +24,11 @@ public interface UserRoleService {
      * 获取角色id
      *
      * @param userName 账户
+     * @param organId 组织id
+     * @param projectId 项目id
      * @return BeanSysRole
      */
-    Integer getRoleId(String userName, String projectId);
+    Integer getRoleId(String userName, String organId, String projectId);
 
     /**
      * 校验是否为超级管理员权限
@@ -45,19 +47,18 @@ public interface UserRoleService {
     List<UserRole> findByRoleId(Integer roleId);
 
     /**
-     * 获取指定项目下的用户角色
+     * 获取用户角色关联关系
      *
-     * @param projectId 项目id
-     * @return BeanSysRole
+     * @return List<BeanSysRole>
      */
-    List<UserRole> findByProjectId(String projectId);
+    List<UserRole> list();
 
     /**
      * 获取用户角色关联关系
      *
      * @return List<BeanSysRole>
      */
-    List<UserRole> list();
+    List<UserRole> list(String organId, String projectId);
 
     /**
      * 创建用户角色关联
@@ -66,21 +67,24 @@ public interface UserRoleService {
      * @param username   用户名
      * @param roleId     角色id
      */
-    void insert(String projectId, String username, Integer roleId);
+    void insert(String organId, String projectId, String username, Integer roleId);
 
     /**
      * 删除用户角色关联
      *
      * @param userName 账户
+     * @param organId 组织id
+     * @param projectId  项目id
+     * @param roleId 角色id
      */
-    void delete(String userName, String projectId, Integer roleId);
+    void delete(String userName, String organId, String projectId, Integer roleId);
 
     /**
-     * 创建用户角色关联
+     * 更新用户角色关联
      *
-     * @param userDto 用户信息
+     * @param userRole 用户角色信息
      */
-    void update(UserDto userDto, String projectId);
+    void update(UserRole userRole);
 
     /**
      * 查询用户是否存在普通角色（即非超级管理员、非项目管理员）
@@ -95,7 +99,7 @@ public interface UserRoleService {
      * @param projectId
      * @return
      */
-    BeanUserRole get(String userName, String projectId);
+    BeanUserRole get(String userName, String organId, String projectId);
 
     /**
      * 删除项目不存在角色信息

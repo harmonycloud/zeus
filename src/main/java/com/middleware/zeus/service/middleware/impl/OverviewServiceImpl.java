@@ -526,7 +526,7 @@ public class OverviewServiceImpl implements OverviewService {
 
             overviewClusterInfo.setNamespaces(new ArrayList<>());
 
-            List<Namespace> namespaces = namespaceService.list(clusterDTO.getId(), false, false, false, null, null);
+            List<Namespace> namespaces = namespaceService.list(clusterDTO.getId(), false, false, false, null, null, null);
             if (CollectionUtils.isEmpty(namespaces)) {
                 return;
             }
@@ -692,7 +692,7 @@ public class OverviewServiceImpl implements OverviewService {
         List<MiddlewareDTO> middlewareDTOList = new ArrayList<>();
         clusterDTOS.forEach(clusterDTO -> {
             //获取所有分区namespaces
-            List<Namespace> namespaces = namespaceService.list(clusterDTO.getId(), true, true, true, null, null);
+            List<Namespace> namespaces = namespaceService.list(clusterDTO.getId(), true, true, true, null, null, null);
             if (CollectionUtils.isEmpty(namespaces)) {
                 return;
             }

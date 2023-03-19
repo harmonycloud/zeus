@@ -168,7 +168,7 @@ public class Skyview2UserServiceImpl extends UserServiceImpl {
                     userRole.setRoleName(roleDto.getName());
                 } else {
                     saveUserProjectRole(projectId, 4, username);
-                    BeanUserRole beanUserRole = userRoleService.get(username, projectId);
+                    BeanUserRole beanUserRole = userRoleService.get(username, null, projectId);
                     RoleDto roleDto = roleService.get(beanUserRole.getRoleId());
                     userRole.setRoleName(roleDto.getName());
                     userRole.setRoleId(roleDto.getId());
@@ -231,20 +231,20 @@ public class Skyview2UserServiceImpl extends UserServiceImpl {
         if (ZeusCurrentUser.isAdmin()) {
             List<UserRole> userRoles = userRoleService.get(username);
             if (CollectionUtils.isEmpty(userRoles)) {
-                userRoleService.insert(null, username, 1);
+                userRoleService.insert(null,null, username, 1);
             } else if (userRoles.size() == 1) {
                 UserRole userRole = userRoles.get(0);
                 if (userRole.getRoleId() != 1) {
-                    userRoleService.delete(username, null, null);
-                    userRoleService.insert(null, username, 1);
+                    userRoleService.delete(username, null, null, null);
+                    userRoleService.insert(null,null, username, 1);
                 }
             } else {
-                userRoleService.delete(username, null, null);
-                userRoleService.insert(null, username, 1);
+                userRoleService.delete(username, null, null, null);
+                userRoleService.insert(null, null, username, 1);
             }
         } else {
             // 删除管理员角色
-            userRoleService.delete(username, null, 1);
+            userRoleService.delete(username, null, null, 1);
             // 删除项目不存在的角色信息
             List<String> projectIds = projects.stream().map(ProjectDTO::getProjectId).collect(Collectors.toList());
             userRoleService.deleteRedundantRole(username, projectIds);
@@ -271,22 +271,22 @@ public class Skyview2UserServiceImpl extends UserServiceImpl {
      * @param username
      */
     public void saveUserProjectRole(String projectId, int userRoleId, String username) {
-        Integer roleId = userRoleService.getRoleId(username, projectId);
+/*        Integer roleId = userRoleService.getRoleId(username, projectId);
         if (roleId == null) {
-            userRoleService.insert(projectId, username, userRoleId);
+            //userRoleService.insert(projectId, username, userRoleId);
             return;
         }
         if (!roleId.equals(userRoleId)) {
             if (userRoleId == 2) {
                 userRoleService.delete(username, projectId, null);
-                userRoleService.insert(projectId, username, userRoleId);
+                //userRoleService.insert(projectId, username, userRoleId);
             } else {
                 userRoleService.delete(username, projectId, 2);
                 if (!userRoleService.checkExistsNormalRole(username)) {
-                    userRoleService.insert(projectId, username, userRoleId);
+                   // userRoleService.insert(projectId, username, userRoleId);
                 }
             }
-        }
+        }*/
     }
 
 

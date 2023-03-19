@@ -68,27 +68,27 @@ public class StorageController {
     @ApiOperation(value = "删除存储", notes = "删除存储")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "storageName", value = "存储名称", paramType = "query", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "storageId", value = "存储名称", paramType = "path", dataTypeClass = String.class)
     })
-    @DeleteMapping("/{aliasName}")
+    @DeleteMapping("/{storageId}")
     public BaseResult delete(@PathVariable("clusterId") String clusterId,
-                             @PathVariable("aliasName") String aliasName) {
-        storageService.delete(clusterId, aliasName);
+                             @PathVariable("storageId") String storageId) {
+        storageService.delete(clusterId, storageId);
         return BaseResult.ok();
     }
 
     @ApiOperation(value = "更新存储信息", notes = "更新存储信息")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "aliasName", value = "存储中文名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "storageId", value = "存储id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "storageDto", value = "存储业务对象", paramType = "query", dataTypeClass = StorageDto.class)
     })
-    @PutMapping("/{aliasName}")
+    @PutMapping("/{storageId}")
     public BaseResult update(@PathVariable("clusterId") String clusterId,
-                             @PathVariable("aliasName") String aliasName,
+                             @PathVariable("storageId") String storageId,
                              @RequestBody StorageDto storageDto) {
         storageDto.setClusterId(clusterId);
-        storageDto.setAliasName(aliasName);
+        storageDto.setStorageId(storageId);
         storageService.addOrUpdate(storageDto);
         return BaseResult.ok();
     }
@@ -100,7 +100,7 @@ public class StorageController {
     })
     @GetMapping("/{storageName}")
     public BaseResult<StorageDto> get(@PathVariable("clusterId") String clusterId,
-                                         @PathVariable("storageName") String storageName) {
+                                      @PathVariable("storageName") String storageName) {
         return BaseResult.ok(storageService.get(clusterId, storageName));
     }
 

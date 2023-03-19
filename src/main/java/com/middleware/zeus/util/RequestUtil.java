@@ -16,5 +16,11 @@ public class RequestUtil {
             ((ServletRequestAttributes)RequestContextHolder.getRequestAttributes()).getRequest();
         return request.getHeader("projectId");
     }
+
+    public static String getOrganId() {
+        HttpServletRequest request =
+                ((ServletRequestAttributes)RequestContextHolder.getRequestAttributes()).getRequest();
+        return request.getHeader("organId");
+    }
     
 }

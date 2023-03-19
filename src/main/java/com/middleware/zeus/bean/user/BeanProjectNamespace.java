@@ -26,6 +26,11 @@ public class BeanProjectNamespace implements Serializable {
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
     /**
+     * 组织id
+     */
+    @TableField("organ_id")
+    private String organId;
+    /**
      * 项目id
      */
     @TableField("project_id")

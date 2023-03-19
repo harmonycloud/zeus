@@ -30,6 +30,7 @@ public class MiddlewareController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "organId", value = "组织id", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping
@@ -38,11 +39,12 @@ public class MiddlewareController {
                                                    @PathVariable("namespace") String namespace,
                                                    @RequestParam(value = "type", required = false) String type,
                                                    @RequestParam(value = "keyword", required = false) String keyword,
+                                                   @RequestParam(value = "organId", required = false) String organId,
                                                    @RequestParam(value = "projectId", required = false) String projectId) throws Exception {
         if (namespace.equals(ASTERISK)){
             namespace = null;
         }
-        return BaseResult.ok(middlewareService.list(clusterId, namespace, type, keyword, projectId));
+        return BaseResult.ok(middlewareService.list(clusterId, namespace, type, keyword, organId, projectId));
     }
 
     @ApiOperation(value = "查询中间件详情", notes = "查询中间件详情")
