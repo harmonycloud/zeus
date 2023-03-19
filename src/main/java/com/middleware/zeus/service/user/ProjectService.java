@@ -252,10 +252,11 @@ public interface ProjectService {
      * 获取项目备份服务器信息
      * @param organId 组织id
      * @param projectId 项目id
+     * @param detail 查询备份服务器使用情况
      *
      * @return  List<BackupServerDTO>
      */
-    List<BackupServerDTO> getBackupServer(String organId, String projectId);
+    List<BackupServerDTO> getBackupServer(String organId, String projectId, boolean detail);
 
     /**
      * 移除项目备份服务器信息

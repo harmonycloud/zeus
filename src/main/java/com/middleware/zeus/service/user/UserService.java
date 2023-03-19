@@ -111,18 +111,20 @@ public interface UserService {
 
     /**
      * 获取菜单栏
+     * @param organId  组织id
      * @param projectId 项目id
      * @return List<ResourceMenuDto>
      */
-    List<ResourceMenuDto> menu(String projectId) ;
+    List<ResourceMenuDto> menu(String organId, String projectId) ;
 
     /**
      * 获取服务列表
      * @param clusterId 集群id
+     * @param organId 组织id
      * @param projectId 项目id
      * @return List<ResourceMenuDto>
      */
-    List<ResourceMenuDto> listMiddlewareMenu(String clusterId, String projectId) ;
+    List<ResourceMenuDto> listMiddlewareMenu(String clusterId, String organId, String projectId) ;
 
     /**
      * 个性化配置

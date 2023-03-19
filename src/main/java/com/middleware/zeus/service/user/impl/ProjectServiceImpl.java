@@ -17,7 +17,7 @@ import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.zeus.bean.user.BeanOrganizationBackupServer;
 import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.middleware.*;
-import com.middleware.zeus.service.user.PlatformQuotaService;
+import com.middleware.zeus.service.user.*;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.ServiceAccount;
 import org.apache.commons.lang3.StringUtils;
@@ -43,9 +43,6 @@ import com.middleware.zeus.bean.user.BeanProjectNamespace;
 import com.middleware.zeus.dao.user.BeanProjectMapper;
 import com.middleware.zeus.dao.user.BeanProjectNamespaceMapper;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
-import com.middleware.zeus.service.user.ProjectService;
-import com.middleware.zeus.service.user.UserRoleService;
-import com.middleware.zeus.service.user.UserService;
 import com.middleware.zeus.util.AssertUtil;
 
 import lombok.extern.slf4j.Slf4j;
@@ -97,11 +94,14 @@ public class ProjectServiceImpl implements ProjectService {
     private ResourceQuotaService resourceQuotaService;
     @Autowired
     private StorageService storageService;
+    @Autowired
+    private OrganizationUserService organizationUserService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void add(ProjectDto projectDto) {
         AssertUtil.notBlank(projectDto.getName(), DictEnum.PROJECT_NAME);
+        projectDto.setAliasName(projectDto.getName());
         checkParam(projectDto);
         String projectId = UUIDUtils.get16UUID();
         BeanProject beanProject = new BeanProject();
@@ -226,7 +226,10 @@ public class ProjectServiceImpl implements ProjectService {
     public List<UserDto> getUser(String organId, String projectId, Boolean allocatable) {
         checkExist(organId, projectId);
         // 修改判断该用户是否可分配的逻辑
-        List<UserDto> userDtoList = userService.list(null);
+        List<UserDto> userDtoList = userService.list(null).stream()
+            .filter(userDto -> userDto.getUserRoleList().stream().anyMatch(
+                userRole -> StringUtils.isNotEmpty(userRole.getOrganId()) && userRole.getOrganId().equals(organId)))
+            .collect(Collectors.toList());
         if (allocatable) {
             // 获取可分配的
             userDtoList = userDtoList.stream()
@@ -300,7 +303,8 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public void update(ProjectDto projectDto) {
         BeanProject beanProject = checkExist(projectDto.getOrganId(), projectDto.getProjectId());
-        beanProject.setAliasName(projectDto.getAliasName());
+        beanProject.setName(projectDto.getName());
+        beanProject.setAliasName(projectDto.getName());
         beanProject.setDescription(projectDto.getDescription());
         beanProjectMapper.updateById(beanProject);
     }
@@ -524,8 +528,10 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public void allocateQuota(ProjectQuota projectQuota) {
         // 处理cpu\memory\storage
-        if (projectQuota.getQuotas() != null) {
-            platformQuotaService.allocate(PROJECT, projectQuota.getProjectId(), projectQuota.getQuotas());
+        if (!CollectionUtils.isEmpty(projectQuota.getQuotaList())) {
+            for (ResourceQuotaDo resourceQuotaDo : projectQuota.getQuotaList()){
+                platformQuotaService.allocate(PROJECT, projectQuota.getProjectId(), resourceQuotaDo);
+            }
         }
         // 记录备份服务器
         // todo 校验备份服务器是否已被使用
@@ -551,6 +557,14 @@ public class ProjectServiceImpl implements ProjectService {
                 namespaceQuotaList.add(namespaceQuota);
             }
             platformQuotaService.convertUsedResource(resourceQuotaDoList, namespaceQuotaList);
+        }
+        // 设置集群名称
+        Map<String, String> clusterNickNameMap = clusterService.getClusterAliasName();
+        for (ResourceQuotaDo resourceQuotaDo : resourceQuotaDoList) {
+            if (StringUtils.isNotEmpty(resourceQuotaDo.getClusterId())
+                && clusterNickNameMap.containsKey(resourceQuotaDo.getClusterId())) {
+                resourceQuotaDo.setClusterNickName(clusterNickNameMap.get(resourceQuotaDo.getClusterId()));
+            }
         }
         return resourceQuotaDoList;
     }
@@ -592,7 +606,14 @@ public class ProjectServiceImpl implements ProjectService {
             }
             platformQuotaService.convertUsedResource(resourceQuotaDoList, namespaceQuotaList);
         }
-        return resourceQuotaDoList;
+        // 设置集群别名
+        Map<String, String> clusterNickNameMap = clusterService.getClusterAliasName();
+        return resourceQuotaDoList.stream().peek(resourceQuotaDo -> {
+            if (StringUtils.isNotEmpty(resourceQuotaDo.getClusterId())
+                && clusterNickNameMap.containsKey(resourceQuotaDo.getClusterId())) {
+                resourceQuotaDo.setClusterNickName(clusterNickNameMap.get(resourceQuotaDo.getClusterId()));
+            }
+        }).collect(Collectors.toList());
     }
 
     @Override
@@ -620,12 +641,31 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<BackupServerDTO> getBackupServer(String organId, String projectId) {
-        List<ProjectBackupServerDTO> backupServerDTOList =
+    public List<BackupServerDTO> getBackupServer(String organId, String projectId, boolean detail) {
+        List<ProjectBackupServerDTO> projectBackupServerDTOList =
             projectBackupServerService.listByProjectId(organId, projectId);
-        List<Integer> idList =
-            backupServerDTOList.stream().map(ProjectBackupServerDTO::getBackupServerId).collect(Collectors.toList());
-        return backupServerService.list(idList);
+        List<Integer> idList = projectBackupServerDTOList.stream().map(ProjectBackupServerDTO::getBackupServerId)
+            .collect(Collectors.toList());
+        List<BackupServerDTO> backupServerDTOList = backupServerService.list(idList);
+
+        // 查询 备份服务器使用情况
+        if (detail) {
+            List<BackupPositionDTO> backupPositionDTOList = backupPositionService.list(organId, projectId, null);
+            for (BackupServerDTO backupServerDTO : backupServerDTOList) {
+                if (backupPositionDTOList.stream().anyMatch(
+                    backupPositionDTO -> backupPositionDTO.getBackupServerId().equals(backupServerDTO.getId()))) {
+                    backupServerDTO.setUsing(true);
+                }
+            }
+        }
+        // 设置集群别名
+        Map<String, String> clusterNickNameMap = clusterService.getClusterAliasName();
+        return backupServerDTOList.stream().peek(backupServerDTO -> {
+            if (StringUtils.isNotEmpty(backupServerDTO.getClusterId())
+                && clusterNickNameMap.containsKey(backupServerDTO.getClusterId())) {
+                backupServerDTO.setClusterNickName(clusterNickNameMap.get(backupServerDTO.getClusterId()));
+            }
+        }).collect(Collectors.toList());
     }
 
     @Override

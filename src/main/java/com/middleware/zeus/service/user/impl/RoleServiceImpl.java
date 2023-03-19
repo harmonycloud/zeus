@@ -148,20 +148,36 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public List<ResourceMenuDto> listMenuByRoleId(UserDto userDto, String projectId) {
-        List<BeanResourceMenuRole> list;
-        if (Boolean.TRUE.equals(!userDto.getIsAdmin()) && StringUtils.isNotEmpty(projectId)) {
-            Integer roleId =
-                userDto.getUserRoleList().stream().filter(userRole -> userRole.getProjectId().equals(projectId))
-                    .collect(Collectors.toList()).get(0).getRoleId();
-            list = resourceMenuRoleService.list(String.valueOf(roleId));
+    public List<ResourceMenuDto> listMenuByRoleId(UserDto userDto, String organId, String projectId) {
+        Set<BeanResourceMenuRole> list;
+        if (userDto.getIsAdmin() || (StringUtils.isEmpty(organId) && StringUtils.isEmpty(projectId))) {
+            list = new HashSet<>(resourceMenuRoleService.listAdminMenu());
         } else {
-            list = resourceMenuRoleService.listAdminMenu();
+            list = new HashSet<>();
+            // 获取组织管理员menu
+            if (StringUtils.isNotEmpty(organId)) {
+                List<UserRole> userRoleList = userDto.getUserRoleList().stream().filter(
+                    userRole -> userRole.getOrganId().equals(organId) && StringUtils.isEmpty(userRole.getProjectId()))
+                    .collect(Collectors.toList());
+                if (!CollectionUtils.isEmpty(userRoleList)) {
+                    list.addAll(resourceMenuRoleService.list(String.valueOf(userRoleList.get(0).getRoleId())));
+                }
+            }
+            // 获取项目管理员menu
+            if (StringUtils.isNotEmpty(organId) && StringUtils.isNotEmpty(projectId)) {
+                List<UserRole> userRoleList = userDto.getUserRoleList().stream()
+                    .filter(userRole -> userRole.getOrganId().equals(organId)
+                        && StringUtils.isNotEmpty(userRole.getProjectId()) && userRole.getProjectId().equals(projectId))
+                    .collect(Collectors.toList());
+                if (!CollectionUtils.isEmpty(userRoleList)) {
+                    list.addAll(resourceMenuRoleService.list(String.valueOf(userRoleList.get(0).getRoleId())));
+                }
+            }
         }
         // 过滤是否开启灾备服务
         if (!Boolean.parseBoolean(disasterEnable)) {
             list = list.stream().filter(menuDto -> menuDto.getResourceMenuId() != Integer.parseInt(disasterMenuId))
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
         }
         List<Integer> ids = list.stream().map(BeanResourceMenuRole::getResourceMenuId).collect(Collectors.toList());
         // 获取菜单信息

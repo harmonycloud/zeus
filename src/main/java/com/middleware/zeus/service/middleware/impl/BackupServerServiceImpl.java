@@ -82,19 +82,6 @@ public class BackupServerServiceImpl implements BackupServerService {
         return convertToBackupServerDTO(serverList,  false);
     }
 
-/*    @Override
-    public List<BackupServerDTO> listProjectBackupServer(String projectId) {
-        List<ProjectBackupServerDTO> projectBackupServerDTOS = projectBackupServerService.listByProjectId(null, projectId);
-        List<Integer> backupServerIds = projectBackupServerDTOS.stream().
-                map(ProjectBackupServerDTO::getBackupServerId).collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(backupServerIds)) {
-            return Collections.emptyList();
-        }
-        QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
-        wrapper.in("id", backupServerIds);
-        return convertToBackupServerDTO(backupServerMapper.selectList(wrapper), projectId, true);
-    }*/
-
     @Override
     public BeanBackupServer get(Integer id) {
         return backupServerMapper.selectById(id);

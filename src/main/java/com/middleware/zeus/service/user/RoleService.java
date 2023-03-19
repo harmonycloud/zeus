@@ -52,11 +52,12 @@ public interface RoleService {
     /**
      * 获取角色
      * @param userDto 用户
+     * @param organId 组织id
      * @param projectId 项目id
      *
      * @return List<ResourceMenuDto>
      */
-    List<ResourceMenuDto> listMenuByRoleId(UserDto userDto, String projectId);
+    List<ResourceMenuDto> listMenuByRoleId(UserDto userDto, String organId, String projectId);
 
 
     /**

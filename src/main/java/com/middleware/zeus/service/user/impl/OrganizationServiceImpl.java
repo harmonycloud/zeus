@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.middleware.caas.common.model.BackupServerDTO;
+import com.middleware.caas.common.model.*;
 import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.caas.common.model.user.*;
 import com.middleware.zeus.bean.user.BeanOrganizationBackupServer;
@@ -15,6 +15,7 @@ import com.middleware.zeus.bean.user.BeanPlatformQuota;
 import com.middleware.zeus.dao.user.BeanOrganizationBackupServerMapper;
 import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.middleware.BackupServerService;
+import com.middleware.zeus.service.middleware.ProjectBackupServerService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +26,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.ResourceQuotaDo;
-import com.middleware.caas.common.model.StorageDto;
-import com.middleware.caas.common.model.StorageQuota;
 import com.middleware.caas.common.model.middleware.StorageClassInfo;
 import com.middleware.caas.filters.token.JwtTokenComponent;
 import com.middleware.caas.filters.user.CurrentUser;
@@ -69,6 +67,8 @@ public class OrganizationServiceImpl implements OrganizationService {
     private StorageService storageService;
     @Autowired
     private ClusterService clusterService;
+    @Autowired
+    private ProjectBackupServerService projectBackupServerService;
 
     @Override
     public void add(OrganizationDto organizationDto) {
@@ -174,8 +174,10 @@ public class OrganizationServiceImpl implements OrganizationService {
     @Override
     public void allocateQuota(OrganizationQuota organizationQuota) {
         // 处理cpu\memory\storage
-        if (organizationQuota.getQuotas() != null) {
-            platformQuotaService.allocate(ORGAN, organizationQuota.getOrganId(), organizationQuota.getQuotas());
+        if (!CollectionUtils.isEmpty(organizationQuota.getQuotaList())) {
+            for (ResourceQuotaDo resourceQuotaDo : organizationQuota.getQuotaList()){
+                platformQuotaService.allocate(ORGAN, organizationQuota.getOrganId(), resourceQuotaDo);
+            }
         }
         // 记录备份服务器
         // todo 校验备份服务器是否已被使用
@@ -211,6 +213,14 @@ public class OrganizationServiceImpl implements OrganizationService {
             organResourceQuotaDoList =
                 platformQuotaService.convertUsedResource(organResourceQuotaDoList, projectResourceQuotaDoList);
         }
+        // 设置集群名称
+        Map<String, String> clusterNickNameMap = clusterService.getClusterAliasName();
+        for (ResourceQuotaDo resourceQuotaDo : organResourceQuotaDoList) {
+            if (StringUtils.isNotEmpty(resourceQuotaDo.getClusterId())
+                && clusterNickNameMap.containsKey(resourceQuotaDo.getClusterId())) {
+                resourceQuotaDo.setClusterNickName(clusterNickNameMap.get(resourceQuotaDo.getClusterId()));
+            }
+        }
         return organResourceQuotaDoList;
     }
 
@@ -243,7 +253,14 @@ public class OrganizationServiceImpl implements OrganizationService {
             resourceQuotaDoList =
                 platformQuotaService.convertUsedResource(resourceQuotaDoList, projectResourceQuotaDoList);
         }
-        return resourceQuotaDoList;
+        // 设置集群别名
+        Map<String, String> clusterNickNameMap = clusterService.getClusterAliasName();
+        return resourceQuotaDoList.stream().peek(resourceQuotaDo -> {
+            if (StringUtils.isNotEmpty(resourceQuotaDo.getClusterId())
+                    && clusterNickNameMap.containsKey(resourceQuotaDo.getClusterId())) {
+                resourceQuotaDo.setClusterNickName(clusterNickNameMap.get(resourceQuotaDo.getClusterId()));
+            }
+        }).collect(Collectors.toList());
     }
 
     @Override
@@ -261,18 +278,32 @@ public class OrganizationServiceImpl implements OrganizationService {
     }
 
     @Override
-    public List<BackupServerDTO> getBackupServer(String organId) {
+    public List<BackupServerDTO> getBackupServer(String organId, boolean detail) {
         QueryWrapper<BeanOrganizationBackupServer> wrapper =
             new QueryWrapper<BeanOrganizationBackupServer>().eq("organ_id", organId);
         List<BeanOrganizationBackupServer> list = beanOrganizationBackupServerMapper.selectList(wrapper);
-        List<Integer> idList = list.stream().map(BeanOrganizationBackupServer::getBackupServerId).collect(Collectors.toList());
+        List<Integer> idList =
+            list.stream().map(BeanOrganizationBackupServer::getBackupServerId).collect(Collectors.toList());
+
+        // 查询备份服务器
+        List<BackupServerDTO> backupServerDTOList = backupServerService.list(idList);
+        // 查询备份服务器 组织下分配情况
+        if (detail) {
+            List<ProjectBackupServerDTO> projectBackupServerDTOList =
+                projectBackupServerService.listByProjectId(organId, null);
+            for (BackupServerDTO backupServerDTO : backupServerDTOList) {
+                if (projectBackupServerDTOList.stream().anyMatch(projectBackupServerDTO -> projectBackupServerDTO
+                    .getBackupServerId().equals(backupServerDTO.getId()))) {
+                    backupServerDTO.setUsing(true);
+                }
+            }
+        }
 
         // 设置集群别名
-        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
-        Map<String, String> clusterNickNameMap = clusterList.stream().collect(Collectors.toMap(MiddlewareClusterDTO::getId, MiddlewareClusterDTO::getNickname));
-
-        return backupServerService.list(idList).stream().peek(backupServerDTO -> {
-            if (StringUtils.isNotEmpty(backupServerDTO.getClusterId()) && clusterNickNameMap.containsKey(backupServerDTO.getClusterId())){
+        Map<String, String> clusterNickNameMap = clusterService.getClusterAliasName();
+        return backupServerDTOList.stream().peek(backupServerDTO -> {
+            if (StringUtils.isNotEmpty(backupServerDTO.getClusterId())
+                && clusterNickNameMap.containsKey(backupServerDTO.getClusterId())) {
                 backupServerDTO.setClusterNickName(clusterNickNameMap.get(backupServerDTO.getClusterId()));
             }
         }).collect(Collectors.toList());
@@ -280,7 +311,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
     @Override
     public void removeBackupServer(String organId, Integer backupServerId, String clusterId) {
-        List<BackupServerDTO> backupServerDTOList = projectService.getBackupServer(organId, null);
+        List<BackupServerDTO> backupServerDTOList = projectService.getBackupServer(organId, null, false);
         if (!CollectionUtils.isEmpty(backupServerDTOList) && backupServerDTOList.stream()
             .anyMatch(backupServerDTO -> backupServerId.equals(backupServerDTO.getId()))) {
             throw new BusinessException(ErrorMessage.ORGANIZATION_BACKUP_SERVER_USING);

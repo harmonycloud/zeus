@@ -10,6 +10,7 @@ import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -242,5 +243,12 @@ public interface ClusterService {
      * @return
      */
     boolean checkWithInCluster(String clusterId);
+
+    /**
+     * 查询集群别名
+     *
+     * @return Map<String, String>
+     */
+    Map<String, String> getClusterAliasName();
 
 }

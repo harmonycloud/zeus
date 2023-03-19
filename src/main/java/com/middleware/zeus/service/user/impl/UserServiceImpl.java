@@ -127,7 +127,7 @@ public class UserServiceImpl implements UserService {
         }
         UserDto userDto = new UserDto();
         BeanUtils.copyProperties(beanUser, userDto);
-        // todo
+        // 设置用户角色权限
         setUserRoleList(userName, userDto);
         if (!CollectionUtils.isEmpty(userDto.getUserRoleList())) {
             userDto.setIsAdmin(userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getRoleId() == 1));
@@ -142,16 +142,18 @@ public class UserServiceImpl implements UserService {
         List<BeanUser> beanUserList = beanUserMapper.selectList(userWrapper);
         // 获取用户项目下角色
         List<UserRole> userRoleList = userRoleService.list();
-        Map<String, List<UserRole>> userRoleMap =
-                userRoleList.stream().collect(Collectors.groupingBy(UserRole::getUserName));
         // 获取用户组织下角色
         userRoleList.addAll(organizationUserService.list(null).stream()
             .filter(organizationUser -> organizationUser.getRoleId() != null).map(organizationUser -> {
                 UserRole userRole = new UserRole();
-                BeanUtils.copyProperties(organizationUser, userRole);
+                userRole.setUserName(organizationUser.getUsername());
                 userRole.setRoleName("组织管理员");
+                userRole.setOrganId(organizationUser.getOrganId());
+                userRole.setRoleId(organizationUser.getRoleId());
                 return userRole;
             }).collect(Collectors.toList()));
+        Map<String, List<UserRole>> userRoleMap =
+                userRoleList.stream().collect(Collectors.groupingBy(UserRole::getUserName));
         // 封装数据
         List<UserDto> userDtoList = beanUserList.stream().map(beanUser -> {
             UserDto userDto = new UserDto();
@@ -276,12 +278,11 @@ public class UserServiceImpl implements UserService {
      * @return
      */
     @Override
-    public List<ResourceMenuDto> menu(String projectId) {
+    public List<ResourceMenuDto> menu(String organId, String projectId) {
         CurrentUser currentUser = CurrentUserRepository.getUser();
         String username = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString(USERNAME);
-        // todo 处理user的权限问题(组织)
         UserDto userDto = getUserDto(username);
-        List<ResourceMenuDto> resourceMenuDtoList = roleService.listMenuByRoleId(userDto, projectId);
+        List<ResourceMenuDto> resourceMenuDtoList = roleService.listMenuByRoleId(userDto, organId, projectId);
 
         Map<Integer, List<ResourceMenuDto>> resourceMenuDtoMap =
                 resourceMenuDtoList.stream().collect(Collectors.groupingBy(ResourceMenuDto::getParentId));
@@ -299,7 +300,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<ResourceMenuDto> listMiddlewareMenu(String clusterId, String projectId) {
+    public List<ResourceMenuDto> listMiddlewareMenu(String clusterId, String organId, String projectId) {
         // 获取集群下所有中间件
         List<BeanClusterMiddlewareInfo> middlewareInfos = clusterMiddlewareInfoService.list(clusterId, false);
         // 过滤状态为未安装的中间件
@@ -310,9 +311,11 @@ public class UserServiceImpl implements UserService {
                 JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue().getString(USERNAME);
         UserDto userDto = getUserDto(username);
         Map<String, String> power = new HashMap<>();
-        if (!userDto.getIsAdmin() && userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getProjectId().equals(projectId))){
-            power.putAll(userDto.getUserRoleList().stream().filter(userRole -> userRole.getProjectId().equals(projectId))
-                    .collect(Collectors.toList()).get(0).getPower());
+        if (!userDto.getIsAdmin() && userDto.getUserRoleList().stream()
+            .anyMatch(userRole -> userRole.getOrganId().equals(organId) && userRole.getProjectId().equals(projectId))) {
+            power.putAll(userDto.getUserRoleList().stream()
+                .filter(userRole -> userRole.getOrganId().equals(organId) && userRole.getProjectId().equals(projectId))
+                .collect(Collectors.toList()).get(0).getPower());
         }
         
         // 过滤获取拥有权限的中间件
@@ -566,11 +569,12 @@ public class UserServiceImpl implements UserService {
      * 绑定或解绑超级管理员
      */
     public void bindAdmin(UserDto userDto) {
-        String username =
+        // 注释权限判断代码   使所有超级管理员用户可操作分配超级管理员角色
+        /*String username =
                 JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue().getString(USERNAME);
         if (!ADMIN.equals(username)) {
             throw new BusinessException(ErrorMessage.NO_AUTHORITY);
-        }
+        }*/
         if (userDto.getIsAdmin()) {
             userRoleService.insert(null, null, userDto.getUserName(), NUM_ROLE_ADMIN);
         } else {
@@ -585,8 +589,18 @@ public class UserServiceImpl implements UserService {
      * @param userDto
      */
     public void setUserRoleList(String userName, UserDto userDto) {
-        // todo
+        // 获取项目下角色
         List<UserRole> userRoleList = userRoleService.get(userName);
+        // 获取用户组织下角色
+        userRoleList.addAll(organizationUserService.listByUsername(userName).stream()
+            .filter(organizationUser -> organizationUser.getRoleId() != null).map(organizationUser -> {
+                UserRole userRole = new UserRole();
+                userRole.setUserName(organizationUser.getUsername());
+                userRole.setRoleName("组织管理员");
+                userRole.setOrganId(organizationUser.getOrganId());
+                userRole.setRoleId(organizationUser.getRoleId());
+                return userRole;
+            }).collect(Collectors.toList()));
         if (!CollectionUtils.isEmpty(userRoleList)) {
             userDto.setUserRoleList(userRoleList);
             userDto.setIsAdmin(userRoleList.stream().anyMatch(userRole -> userRole.getRoleId() == 1));

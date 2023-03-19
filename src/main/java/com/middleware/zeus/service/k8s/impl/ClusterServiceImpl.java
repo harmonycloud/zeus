@@ -1043,6 +1043,16 @@ public class ClusterServiceImpl implements ClusterService {
         return targetNs.getMetadata().getUid().equals(defaultNs.getMetadata().getUid());
     }
 
+    @Override
+    public Map<String, String> getClusterAliasName() {
+        List<MiddlewareClusterDTO> clusterList = this.listClusters();
+        if (CollectionUtils.isEmpty(clusterList)) {
+            return null;
+        }
+        return clusterList.stream()
+            .collect(Collectors.toMap(MiddlewareClusterDTO::getId, MiddlewareClusterDTO::getNickname));
+    }
+
     public Map<Map<String, String>, List<String>> getResultMap(PrometheusResponse response) {
         return response.getData().getResult().stream()
             .collect(Collectors.toMap(PrometheusResult::getMetric, PrometheusResult::getValue));

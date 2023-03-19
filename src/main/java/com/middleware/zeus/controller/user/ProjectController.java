@@ -325,11 +325,13 @@ public class ProjectController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "organId", value = "组织id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "detail", value = "查询备份服务器使用情况", paramType = "query", dataTypeClass = Boolean.class),
     })
     @GetMapping("/{projectId}/backupServer")
     public BaseResult<List<BackupServerDTO>> listBackupServer(@PathVariable("organId") String organId,
-                                                              @PathVariable("projectId") String projectId) {
-        return BaseResult.ok(projectService.getBackupServer(organId, projectId));
+                                                              @PathVariable("projectId") String projectId,
+                                                              @RequestParam(value = "detail", defaultValue = "false") Boolean detail) {
+        return BaseResult.ok(projectService.getBackupServer(organId, projectId, detail));
     }
 
     @ApiOperation(value = "移除备份服务器", notes = "移除备份服务器")

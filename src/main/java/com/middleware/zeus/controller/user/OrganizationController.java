@@ -147,10 +147,12 @@ public class OrganizationController {
     @ApiOperation(value = "查询备份服务器", notes = "查询备份服务器")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "organId", value = "组织id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "detail", value = "查询备份服务器使用情况", paramType = "query", dataTypeClass = Boolean.class),
     })
     @GetMapping("/{organId}/backupServer")
-    public BaseResult<List<BackupServerDTO>> listBackupServer(@PathVariable("organId") String organId) {
-        return BaseResult.ok(organizationService.getBackupServer(organId));
+    public BaseResult<List<BackupServerDTO>> listBackupServer(@PathVariable("organId") String organId,
+                                                              @RequestParam(value = "detail", defaultValue = "false") Boolean detail) {
+        return BaseResult.ok(organizationService.getBackupServer(organId, detail));
     }
 
     @ApiOperation(value = "移除备份服务器", notes = "移除备份服务器")

@@ -94,10 +94,11 @@ public interface OrganizationService {
     /**
      * 获取组织备份服务器信息
      * @param organId 组织id
+     * @param detail 查询备份服务器使用情况
      *
      * @return  List<BackupServerDTO>
      */
-    List<BackupServerDTO> getBackupServer(String organId);
+    List<BackupServerDTO> getBackupServer(String organId, boolean detail);
 
     /**
      * 移除组织备份服务器信息

@@ -41,18 +41,20 @@ public class PlatformQuotaServiceImpl implements PlatformQuotaService {
         String clusterId = resourceQuotaDo.getClusterId();
         // 分配 cpu
         if (resourceQuotaDo.getCpu() != null && resourceQuotaDo.getCpu().getRequest() != null) {
+            remove(type, uid, CPU, CPU);
             this.insert(uid, type, clusterId, CPU, CPU, resourceQuotaDo.getCpu().getRequest());
         }
         // 分配memory
         if (resourceQuotaDo.getMemory() != null && resourceQuotaDo.getMemory().getRequest() != null) {
+            remove(type, uid, MEMORY, MEMORY);
             this.insert(uid, type, clusterId, MEMORY, MEMORY, resourceQuotaDo.getMemory().getRequest());
         }
 
         // 分配存储
         if (!CollectionUtils.isEmpty(resourceQuotaDo.getStorageList())) {
             for (StorageQuota storageQuota : resourceQuotaDo.getStorageList()) {
-                if (!CollectionUtils.isEmpty(storageQuota.getStorageClass()) && storageQuota.getStorage() != null
-                    && storageQuota.getStorage().getRequest() != null) {
+                if ( storageQuota.getStorage() != null && storageQuota.getStorage().getRequest() != null) {
+                    remove(type, uid, storageQuota.getStorageId(), STORAGE);
                     this.insert(uid, type, clusterId, STORAGE, storageQuota.getStorageId(),
                         storageQuota.getStorage().getRequest());
                 }

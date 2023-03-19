@@ -140,9 +140,7 @@ public class UserController {
     })
     public BaseResult<List<ResourceMenuDto>> menu(@RequestParam(value = "organId", required = false) String organId,
                                                   @RequestParam(value = "projectId", required = false) String projectId) throws Exception {
-        log.info("获取菜单列表：{}", projectId);
-        //todo
-        return BaseResult.ok(userService.menu(projectId));
+        return BaseResult.ok(userService.menu(organId, projectId));
     }
 
     @ApiOperation(value = "获取服务列表", notes = "获取服务列表")
@@ -155,8 +153,7 @@ public class UserController {
     public BaseResult<List<ResourceMenuDto>> listMiddlewareMenu(@RequestParam("clusterId") String clusterId,
                                                                 @RequestParam("organId") String organId,
                                                                 @RequestParam("projectId") String projectId) {
-        // todo
-        return BaseResult.ok(userService.listMiddlewareMenu(clusterId, projectId));
+        return BaseResult.ok(userService.listMiddlewareMenu(clusterId, organId, projectId));
     }
 
     @ApiImplicitParams({
