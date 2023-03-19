@@ -296,7 +296,7 @@ public class LicenseServiceImpl implements LicenseService {
             ArrayList<String> features = new ArrayList<>();
             features.add("同城双活");
             features.add("灾备服务");
-            //license.put(FEATURES,features);
+            license.put(FEATURES,features);
             return license;
         }
         if (!secret.getData().containsKey(LICENSE)) {
