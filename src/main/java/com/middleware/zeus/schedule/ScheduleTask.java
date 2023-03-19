@@ -30,11 +30,11 @@ public class ScheduleTask {
 
     @Scheduled(cron = "${es.log.cron:0 0 0 * * ?}")
     public void logCleanSchedule() {
-        try {
-            logService.cleanHistoryLog();
-        } catch (Exception e){
-            log.error("定时清理日志失败", e);
-        }
+//        try {
+//            logService.cleanHistoryLog();
+//        } catch (Exception e){
+//            log.error("定时清理日志失败", e);
+//        }
     }
 
 }

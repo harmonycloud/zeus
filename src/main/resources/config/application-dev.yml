@@ -92,6 +92,8 @@ system:
     port: 8443
     username: admin
     password: Harbor12345
+  log:
+    logSaveTime: 7d
 #ssl
 server:
   http:

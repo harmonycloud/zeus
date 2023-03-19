@@ -81,6 +81,8 @@ data:
       privateRegistry:
         enable: false
         imagePullSecret: middleware-zeus-secret
+      log:
+        logSaveTime: 7d
 
     overview:
       overall:
