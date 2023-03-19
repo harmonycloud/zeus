@@ -345,15 +345,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
     @Override
     public void reboot(String clusterId, String namespace, String name, String type) {
-        try {
-            MiddlewareCR mw = middlewareCRService.getCR(clusterId, namespace, type, name);
-            List<MiddlewareInfo> pods = mw.getStatus().getInclude().get(PODS);
-            if(!CollectionUtils.isEmpty(pods)){
-                pods.forEach(pod -> podService.restart(clusterId, namespace, name, type, pod.getName()));
-            }
-        } catch (Exception e){
-            throw new BusinessException(ErrorMessage.MIDDLEWARE_REBOOT_FAILED);
-        }
+        Middleware middleware =
+                new Middleware().setClusterId(clusterId).setNamespace(namespace).setType(type).setName(name);
+        BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
+        operator.reboot(clusterId, namespace, name, type);
     }
 
     @Override

@@ -22,6 +22,8 @@ import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.ActiveAreaAnnotationDto;
 import com.middleware.tool.cmd.CmdExecUtil;
 import com.middleware.caas.common.model.middleware.*;
+import com.middleware.zeus.integration.cluster.Postgresql;
+import com.middleware.zeus.integration.cluster.PostgresqlWrapper;
 import com.middleware.zeus.integration.cluster.ServiceWrapper;
 import com.middleware.zeus.integration.cluster.bean.*;
 import com.middleware.zeus.service.k8s.K8sExecService;
@@ -46,6 +48,7 @@ import com.middleware.tool.encrypt.PasswordUtils;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.CollectionUtils;
 
 /**
@@ -67,6 +70,12 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
 
     @Autowired
     private PodService podService;
+
+    @Autowired
+    private PostgresqlWrapper postgresqlWrapper;
+
+    @Value("${system.gracefulRestartParam:middleware.maintenance.lock:graceful-restart}")
+    private String gracefulRestartParam;
 
     @Override
     public boolean support(Middleware middleware) {
@@ -389,6 +398,15 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             }
         }
         helmChartService.upgrade(middleware, sb.toString(), middleware.getClusterId());
+    }
+
+    @Override
+    public void reboot(String clusterId, String namespace, String name, String type) {
+        Postgresql postgresql = postgresqlWrapper.get(clusterId, namespace, name);
+        Map<String, String> annotations = postgresql.getMetadata().getAnnotations();
+        String[] params = gracefulRestartParam.split(":");
+        annotations.put(params[0], params[1]);
+        postgresqlWrapper.update(clusterId, namespace, postgresql);
     }
 
     public void buildClone(Middleware middleware, JSONObject values){
