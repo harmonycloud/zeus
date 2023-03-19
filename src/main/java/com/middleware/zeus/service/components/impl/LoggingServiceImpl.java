@@ -1,14 +1,13 @@
 package com.middleware.zeus.service.components.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.enums.ComponentsEnum;
+import com.middleware.caas.common.enums.*;
 import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.middleware.caas.common.model.ClusterComponentsDto;
-import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.zeus.annotation.Operator;
 import com.middleware.zeus.bean.BeanClusterComponents;
 import com.middleware.zeus.bean.BeanClusterMiddlewareInfo;
-import com.middleware.zeus.bean.BeanSystemConfig;
 import com.middleware.zeus.dao.BeanSystemConfigMapper;
 import com.middleware.zeus.service.components.AbstractBaseOperator;
 import com.middleware.zeus.service.components.api.LoggingService;
@@ -22,14 +21,15 @@ import com.middleware.caas.common.model.middleware.PodInfo;
 import com.middleware.caas.common.model.middleware.ServiceDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import static com.middleware.caas.common.constants.CommonConstant.SIMPLE;
 
 import java.io.File;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -45,6 +45,8 @@ import java.util.stream.Collectors;
 public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingService {
 
     private static final String ES_NAME = "kubernetes-logging";
+    @Value("${system.log.logSaveTime:7d}")
+    private String logSaveTime;
     @Autowired
     private EsService esService;
     @Autowired
@@ -87,6 +89,8 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         Executors.newSingleThreadExecutor().execute(() -> {
             tryCreateEsTemplate(cluster, clusterComponentsDto);
         });
+        // 创建初始化生命周期管理，设置默认日志保留时间
+        esService.createOrUpdateLogSaveTime(cluster.getId(),logSaveTime);
     }
 
     @Override
@@ -221,32 +225,12 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
 
     @Override
     public void record2SystemConfig(ClusterComponentsDto clusterComponentsDto) {
-        QueryWrapper<BeanSystemConfig> wrapper = new QueryWrapper<>();
-        wrapper.eq("config_name", "Logging_LogSaveTime");
-        List<BeanSystemConfig> beanSystemConfigs = beanSystemConfigMapper.selectList(wrapper);
-        BeanSystemConfig beanSystemConfig;
-        if (!CollectionUtils.isEmpty(beanSystemConfigs)) {
-            beanSystemConfig = beanSystemConfigs.get(0);
-            beanSystemConfig.setConfigValue(clusterComponentsDto.getLogSaveTime());
-            beanSystemConfig.setUpdateUser(CurrentUserRepository.getUser().getUsername());
-            beanSystemConfigMapper.update(beanSystemConfig, wrapper);
-        } else {
-            beanSystemConfig = new BeanSystemConfig();
-            beanSystemConfig.setConfigName("Logging_LogSaveTime");
-            beanSystemConfig.setConfigValue(clusterComponentsDto.getLogSaveTime());
-            beanSystemConfig.setCreateTime(LocalDateTime.now());
-            beanSystemConfig.setCreateUser(CurrentUserRepository.getUser().getUsername());
-            beanSystemConfigMapper.insert(beanSystemConfig);
-        }
+        esService.createOrUpdateLogSaveTime(clusterComponentsDto.getClusterId(),clusterComponentsDto.getLogSaveTime());
     }
 
     @Override
     public void readSystemConfig(ClusterComponentsDto clusterComponentsDto) {
-        QueryWrapper<BeanSystemConfig> wrapper = new QueryWrapper<>();
-        wrapper.eq("config_name", "Logging_LogSaveTime");
-        List<BeanSystemConfig> beanSystemConfigs = beanSystemConfigMapper.selectList(wrapper);
-        if (!CollectionUtils.isEmpty(beanSystemConfigs)) {
-            clusterComponentsDto.setLogSaveTime(beanSystemConfigs.get(0).getConfigValue());
-        }
+        // 获取日志最大保留时间
+        clusterComponentsDto.setLogSaveTime(esService.getLogSaveTime(clusterComponentsDto.getClusterId()));
     }
 }

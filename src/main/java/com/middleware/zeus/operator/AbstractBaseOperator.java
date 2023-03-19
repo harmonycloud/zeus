@@ -30,6 +30,8 @@ import com.middleware.zeus.dao.BeanAlertRuleMapper;
 import com.middleware.zeus.dao.BeanMiddlewareInfoMapper;
 import com.middleware.zeus.integration.cluster.PvcWrapper;
 import com.middleware.zeus.integration.cluster.ServiceWrapper;
+import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
+import com.middleware.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRule;
 import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRuleGroups;
 import com.middleware.zeus.integration.registry.bean.harbor.HelmListInfo;
@@ -1477,6 +1479,18 @@ public abstract class AbstractBaseOperator {
             storageList.add(middlewareQuota);
         }
         return storageList;
+    }
+
+    public void reboot(String clusterId, String namespace, String name, String type) {
+        try {
+            MiddlewareCR mw = middlewareCRService.getCR(clusterId, namespace, type, name);
+            List<MiddlewareInfo> pods = mw.getStatus().getInclude().get(PODS);
+            if(!CollectionUtils.isEmpty(pods)){
+                pods.forEach(pod -> podService.restart(clusterId, namespace, name, type, pod.getName()));
+            }
+        } catch (Exception e){
+            throw new BusinessException(ErrorMessage.MIDDLEWARE_REBOOT_FAILED);
+        }
     }
 
 }

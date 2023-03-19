@@ -313,6 +313,32 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
         return EntityUtils.toString(response.getEntity());
     }
 
+    @Override
+    public String resultByPutRestClient(RestHighLevelClient client, String clusterId, String endPoint,String body) throws IOException {
+        Request request = new Request("PUT", endPoint);
+        request.setJsonEntity(body);
+        ClusterComponentsDto es = clusterComponentService.get(clusterId, ComponentsEnum.LOGGING.getName());
+        String userName = es.getUsername();
+        String password = es.getPassword();
+        if (StringUtils.isNotEmpty(userName) && StringUtils.isNotEmpty(password)) {
+            RequestOptions.Builder builder = RequestOptions.DEFAULT.toBuilder();
+            builder.addHeader("Authorization", "Basic " + getAuthorization(clusterId)); // (1)
+            builder.setHttpAsyncResponseConsumerFactory(           // (2)
+                    new HttpAsyncResponseConsumerFactory.HeapBufferedResponseConsumerFactory(30 * 1024 * 1024));
+            // 调用build()方法创建对象
+
+            RequestOptions build = builder.build();
+            request.setOptions(build);
+        }
+
+        RestClient restClient = client.getLowLevelClient();
+        Response response = restClient.performRequest(request);
+        if (response == null || Objects.isNull(response.getEntity())) {
+            return null;
+        }
+        return EntityUtils.toString(response.getEntity());
+    }
+
 
     private PageObject<MysqlLogDTO> searchFromIndex(RestHighLevelClient esClient, BoolQueryBuilder query, Integer current, Integer size, List<String> indexNameList) throws IOException {
         SortBuilder sortBuilder = SortBuilders.fieldSort("@timestamp")
@@ -436,6 +462,55 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
                 return false;
             }
         }
+
+    @Override
+    public void createOrUpdateLogSaveTime(String clusterId, String logSaveTime) {
+        RestHighLevelClient esClient = null;
+        try {
+            esClient = getEsClient(clusterId);
+        } catch (Exception e) {
+            log.error("日志组件连接失败");
+            throw new BusinessException(ErrorMessage.ELASTICSEARCH_CONNECT_FAILED);
+        }
+        // 创建/覆盖生命周期模板
+        String endPoint = "/_ilm/policy/" + EsPolicyTemplateEnum.LOG_SAVE_TIME_POLICY.getName();
+        String body = String.format(EsPolicyTemplateEnum.LOG_SAVE_TIME_POLICY.getTemplate(), logSaveTime);
+        try {
+            resultByPutRestClient(esClient, clusterId, endPoint, body);
+            // 绑定模版与索引
+            StringBuilder sb = new StringBuilder();
+            String bd = String.format(EsPolicyTemplateEnum.INDEX_BIND_POLICY.getTemplate(),
+                    EsPolicyTemplateEnum.LOG_SAVE_TIME_POLICY.getName());
+            for (EsTemplateEnum template : EsTemplateEnum.values()) {
+                log.info("向索引{}绑定生命周期策略",template.getName());
+                String ep = "/" + template.getName() + "-*/_settings";
+                try{
+                    resultByPutRestClient(esClient, clusterId, ep, bd);
+                }catch (ResponseException re){
+                    log.error("索引{}不存在",template.getName());
+                }
+            }
+        } catch (IOException e) {
+            throw new BusinessException(ErrorMessage.UPDATE_MAXIMUM_LOG_RETENTION_TIME_FAILED);
+        }
+
+    }
+
+    @Override
+    public String getLogSaveTime(String clusterId) {
+        try {
+            RestHighLevelClient esClient = getEsClient(clusterId);
+            String endPoint = "/_ilm/policy/" + EsPolicyTemplateEnum.LOG_SAVE_TIME_POLICY.getName();
+            String response = resultByGetRestClient(esClient, clusterId, endPoint);
+            JSONObject res = JSONObject.parseObject(response);
+            return res.getJSONObject(EsPolicyTemplateEnum.LOG_SAVE_TIME_POLICY.getName()).getJSONObject("policy")
+                .getJSONObject("phases").getJSONObject("delete").getString("min_age");
+        } catch (Exception e) {
+            log.error("查询日志组件失败");
+            return null;
+        }
+    }
+
 
     /**
      * 初始化mysql慢日志索引模板

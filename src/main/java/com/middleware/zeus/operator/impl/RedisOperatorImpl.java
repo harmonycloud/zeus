@@ -18,6 +18,8 @@ import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.middleware.caas.common.model.*;
 import com.middleware.tool.collection.JsonUtils;
 import com.middleware.tool.numeric.ResourceCalculationUtil;
+import com.middleware.zeus.integration.cluster.RedisCluster;
+import com.middleware.zeus.integration.cluster.RedisClusterWrapper;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import com.middleware.zeus.service.k8s.IngressComponentService;
 import com.middleware.zeus.service.k8s.K8sExecService;
@@ -40,6 +42,7 @@ import com.middleware.zeus.operator.api.RedisOperator;
 import com.middleware.zeus.operator.miiddleware.AbstractRedisOperator;
 import com.middleware.tool.encrypt.PasswordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.CollectionUtils;
 
 import java.text.MessageFormat;
@@ -64,6 +67,10 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
     private K8sExecService k8sExecService;
     @Autowired
     private PodService podService;
+    @Autowired
+    private RedisClusterWrapper redisClusterWrapper;
+    @Value("${system.gracefulRestartParam:middleware.maintenance.lock:graceful-restart}")
+    private String gracefulRestartParam;
 
     public void createIngressService(Middleware middleware) {
         List<IngressComponentDto> ingressComponentList = ingressComponentService.list(middleware.getClusterId());
@@ -600,6 +607,15 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             }).collect(Collectors.toList());
         }
         return Collections.emptyList();
+    }
+
+    @Override
+    public void reboot(String clusterId, String namespace, String name, String type) {
+        RedisCluster rediscluster = redisClusterWrapper.get(clusterId, namespace, name);
+        Map<String, String> annotations = rediscluster.getMetadata().getAnnotations();
+        String[] params = gracefulRestartParam.split(":");
+        annotations.put(params[0], params[1]);
+        redisClusterWrapper.update(clusterId, namespace, rediscluster);
     }
 
 }

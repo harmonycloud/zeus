@@ -12,8 +12,6 @@ import com.middleware.caas.common.enums.middleware.MysqlOperationEnum;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.dashboard.ExecResult;
 import com.middleware.caas.common.model.dashboard.SqlQuery;
-import com.middleware.caas.common.model.middleware.Middleware;
-import com.middleware.caas.common.model.middleware.MysqlDTO;
 import com.middleware.zeus.annotation.Operator;
 import com.middleware.zeus.bean.BeanSqlExecuteRecord;
 import com.middleware.zeus.dao.BeanSqlExecuteRecordMapper;
@@ -536,11 +534,11 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public void dropUser(String clusterId, String namespace, String middlewareName, String username) {
+    public void dropUser(String clusterId, String namespace, String middlewareName, String username, String host) {
         if (!checkUserExists(namespace, middlewareName, username)) {
             throw new BusinessException(ErrorMessage.MYSQL_USER_NOT_EXISTS);
         }
-        JSONObject res = mysqlClient.dropUser(getPath(middlewareName,namespace), port, username);
+        JSONObject res = mysqlClient.dropUser(getPath(middlewareName,namespace), port, username, host);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.DELETE_MYSQL_USER_FAILED, res.getString("message"));
         }
@@ -586,16 +584,16 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public void lockUser(String clusterId, String namespace, String middlewareName, String username) {
-        JSONObject res = mysqlClient.lockUser(getPath(middlewareName,namespace), port, username);
+    public void lockUser(String clusterId, String namespace, String middlewareName, String username, String host) {
+        JSONObject res = mysqlClient.lockUser(getPath(middlewareName,namespace), port, username, host);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.LOCK_USER_FAILED, res.getString("message"));
         }
     }
 
     @Override
-    public void unLockUser(String clusterId, String namespace, String middlewareName, String username) {
-        JSONObject res = mysqlClient.unlockUser(getPath(middlewareName,namespace), port, username);
+    public void unLockUser(String clusterId, String namespace, String middlewareName, String username, String host) {
+        JSONObject res = mysqlClient.unlockUser(getPath(middlewareName, namespace), port, username, host);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.UNLOCK_USER_FAILED, res.getString("message"));
         }
