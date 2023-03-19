@@ -260,14 +260,14 @@ public class LicenseServiceImpl implements LicenseService {
         if (license == null) {
             throw new BusinessException(ErrorMessage.NOT_EXIST);
         }
-        /*JSONArray features = license.getJSONArray(FEATURES);
+        JSONArray features = license.getJSONArray(FEATURES);
         if (features == null){
             licenseInfo.setActiveActiveEnable(false);
             licenseInfo.setDisasterRecoveryEnable(false);
         } else{
             licenseInfo.setActiveActiveEnable(features.contains("同城双活"));
             licenseInfo.setDisasterRecoveryEnable(features.contains("灾备服务"));
-        }*/
+        }
         return licenseInfo;
     }
 
