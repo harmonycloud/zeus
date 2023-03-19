@@ -147,6 +147,15 @@ public interface HelmChartService {
     void upgrade(Middleware middleware, String updateValues, MiddlewareClusterDTO cluster);
 
     /**
+     * 更新已发布的helm chart
+     *
+     * @param middleware   中间件信息
+     * @param updateValues 修改的values，多个值用英文逗号分隔，如aliasName=n1,test=true
+     * @param clusterId      集群ID
+     */
+    void upgrade(Middleware middleware, String updateValues, String clusterId);
+
+    /**
      * 更新自定义配置参数
      *
      * @param middleware   中间件信息
@@ -237,4 +246,15 @@ public interface HelmChartService {
      * @return String
      */
     String getChartVersion(JSONObject values, String type);
+
+    /**
+     * 更新密码
+     * @param clusterId
+     * @param namespace
+     * @param middlewareName
+     * @param type
+     * @param password 新密码
+     */
+    void updatePassword(String clusterId, String namespace, String middlewareName, String type, String password);
+
 }

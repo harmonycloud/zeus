@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.LdapConfigDto;
+import com.middleware.caas.common.model.user.SystemConfigDto;
 import com.middleware.caas.common.model.user.UserDto;
 import com.middleware.caas.filters.token.JwtTokenComponent;
 import com.middleware.tool.date.DateUtils;
@@ -13,6 +14,7 @@ import com.middleware.zeus.service.user.AuthManager4Ldap;
 import com.middleware.zeus.service.user.AuthService;
 import com.middleware.zeus.service.user.LdapService;
 import com.middleware.zeus.service.user.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +33,7 @@ import static com.middleware.caas.filters.base.GlobalKey.USER_TOKEN;
  * @author dengyulong
  * @date 2021/04/02
  */
+@Slf4j
 @Service
 @ConditionalOnProperty(value="system.usercenter",havingValue = "zeus")
 public class AuthServiceImpl implements AuthService {
@@ -85,9 +88,11 @@ public class AuthServiceImpl implements AuthService {
         JSONObject res = convertResult(userName, isAdmin, token);
         //校验密码日期
         if (userDto.getPasswordTime() != null) {
-            long passwordTime = DateUtils.getIntervalDays(new Date(), userDto.getPasswordTime()) / 3600 / 24 / 1000;
-            if (passwordTime > accountExpireDay - accountExpireAlertDay) {
-                res.put("rePassword", passwordTime);
+            double passwordUsedDay = DateUtils.getIntervalDays(new Date(), userDto.getPasswordTime()) / 3600d / 24d / 1000d;
+            int passwordRemindCode = getPasswordRemindCode(passwordUsedDay);
+            res.put("passwordRemindCode", passwordRemindCode);
+            if (passwordRemindCode != 1) {
+                res.put("passwordUsedDay", (int) Math.round(passwordUsedDay));
             }
         }
         return res;
@@ -103,6 +108,26 @@ public class AuthServiceImpl implements AuthService {
         String userName = json.getString("username");
         response.setHeader(SET_TOKEN, "0");
         return userName;
+    }
+
+    /**
+     * 获取密码提醒code 1：正常，0：该修改密码了，2：密码已过期，必须修改密码了
+     * @param passwordUsedDay
+     */
+    private Integer getPasswordRemindCode(double passwordUsedDay) {
+        SystemConfigDto systemConfigDto = userService.getPasswordExpiredDay();
+        double expiredDay = Long.parseLong(systemConfigDto.getConfigValue());
+        double remindDay = expiredDay / 3;
+        double leftDay = expiredDay - passwordUsedDay;
+        if (leftDay <= 0) {
+            log.info("密码已过期");
+            return -1;
+        }
+        if (leftDay < remindDay) {
+            log.info("该修改密码了");
+            return 0;
+        }
+        return 1;
     }
 
     public JSONObject convertUserInfo(UserDto userDto){

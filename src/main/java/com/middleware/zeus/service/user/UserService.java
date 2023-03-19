@@ -3,6 +3,7 @@ package com.middleware.zeus.service.user;
 import com.middleware.caas.common.model.MailUserDTO;
 import com.middleware.caas.common.model.UploadImageFileDto;
 import com.middleware.caas.common.model.user.ResourceMenuDto;
+import com.middleware.caas.common.model.user.SystemConfigDto;
 import com.middleware.caas.common.model.user.UserDto;
 import com.middleware.zeus.bean.PersonalizedConfiguration;
 import com.middleware.zeus.bean.user.BeanUser;
@@ -152,4 +153,17 @@ public interface UserService {
     void switchProject(String projectId, HttpServletResponse response);
 
     Map<String, String> getPower();
+
+    /**
+     * 保存密码有效期天数
+     * @param days
+     */
+    void savePasswordExpiredDay(String days);
+
+    /**
+     * 获取密码有效期天数
+     * @return
+     */
+    SystemConfigDto getPasswordExpiredDay();
+
 }

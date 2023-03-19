@@ -25,6 +25,13 @@ public interface SystemConfigService {
     void updateConfig(String name, String value);
 
     /**
+     * 保存配置
+     * @param name
+     * @param value
+     */
+    void saveConfig(String name, String value);
+
+    /**
      * 获取配置
      * @param name 配置名称
      *

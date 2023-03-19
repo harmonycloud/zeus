@@ -116,6 +116,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private ClusterComponentService clusterComponentService;
     @Autowired
     private ServiceAccountService serviceAccountService;
+    @Autowired
+    private NodeService nodeService;
     @Value("${system.privateRegistry.middlewareServiceAccount:default}")
     private String middlewareServiceAccount;
 
@@ -709,12 +711,17 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 .setPodInfoGroup(middleware.getPodInfoGroup()).setMonitorResourceQuota(new MonitorResourceQuota());
         // 设置 PROVISIONER
         if (!CollectionUtils.isEmpty(middleware.getPods())) {
-            List<PodInfo> infos = middleware.getPods().stream()
-                    .filter(podInfo -> podInfo.getResources() != null
-                            && StringUtils.isNotEmpty(podInfo.getResources().getProvisioner()))
-                    .collect(Collectors.toList());
-            if (!CollectionUtils.isEmpty(infos)) {
-                middlewareTopologyDTO.setProvisioner(infos.get(0).getResources().getProvisioner());
+            loop:
+            for (PodInfo podInfo : middleware.getPods()) {
+                if (CollectionUtils.isEmpty(podInfo.getStorageResources())) {
+                    continue;
+                }
+                for (MiddlewareQuota scr : podInfo.getStorageResources()) {
+                    if (StringUtils.isNotEmpty(scr.getProvisioner())) {
+                        middlewareTopologyDTO.setProvisioner(scr.getProvisioner());
+                        break loop;
+                    }
+                }
             }
         }
         // 获取alias name
@@ -724,8 +731,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         if (MiddlewareTypeEnum.ELASTIC_SEARCH.getType().equals(type)) {
             Set<String> scSet = new HashSet<>();
             middleware.getPods().forEach(pod -> {
-                if (StringUtils.isNotEmpty(pod.getResources().getStorageClassName())) {
-                    scSet.add(pod.getResources().getStorageClassName());
+                if (!CollectionUtils.isEmpty(pod.getStorageResources())) {
+                    for (MiddlewareQuota sr : pod.getStorageResources()) {
+                        if (StringUtils.isNotEmpty(sr.getStorageClassName())) {
+                            scSet.add(sr.getStorageClassName());
+                        }
+                    }
                 }
             });
             StringBuilder sb = new StringBuilder();
@@ -977,6 +988,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         List<IngressDTO> ingressDTOS = ingressService.get(clusterId, namespace, type, name);
         String servicePort = ServiceNameConvertUtil.getManagePlatformServicePort(type);
         for (IngressDTO ingressDTO : ingressDTOS) {
+            // 如果是ingress7层方式暴露
             if (!CollectionUtils.isEmpty(ingressDTO.getRules())) {
                 List<IngressRuleDTO> rules = ingressDTO.getRules();
                 for (IngressRuleDTO rule : rules) {
@@ -993,12 +1005,20 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 }
             }
             List<ServiceDTO> serviceList = ingressDTO.getServiceList();
-            String exposeIp = ingressService.getIngressIp(clusterId, ingressDTO.getIngressClassName());
-            if (!CollectionUtils.isEmpty(serviceList)) {
-                for (ServiceDTO serviceDTO : serviceList) {
-                    if (serviceDTO.getServicePort().equals(servicePort)) {
-                        return (StringUtils.isBlank(ingressDTO.getExposeIP()) ? exposeIp : ingressDTO.getExposeIP()) + ":" + serviceDTO.getExposePort();
-                    }
+            if (CollectionUtils.isEmpty(serviceList)) {
+                continue;
+            }
+            String exposeIp = "";
+            if (StringUtils.isNotEmpty(ingressDTO.getIngressClassName())) {
+                // 如果服务暴露方式为ingress
+                exposeIp = ingressService.getIngressIp(clusterId, ingressDTO.getIngressClassName());
+            } else {
+                // 如果暴露方式为nodeport
+                exposeIp = nodeService.getNodeIp(clusterId);
+            }
+            for (ServiceDTO serviceDTO : serviceList) {
+                if (serviceDTO.getServicePort().equals(servicePort)) {
+                    return (StringUtils.isBlank(ingressDTO.getExposeIP()) ? exposeIp : ingressDTO.getExposeIP()) + ":" + serviceDTO.getExposePort();
                 }
             }
         }

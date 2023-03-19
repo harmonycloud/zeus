@@ -63,8 +63,6 @@ public class MiddlewareController {
         return BaseResult.ok(middlewareService.detail(clusterId, namespace, name, type));
     }
 
-
-
     @ApiOperation(value = "创建中间件", notes = "创建中间件")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),

@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.github.pagehelper.PageInfo;
 import com.middleware.caas.common.model.user.ResourceMenuDto;
+import com.middleware.caas.common.model.user.SystemConfigDto;
 import com.middleware.zeus.bean.PersonalizedConfiguration;
 import com.middleware.zeus.service.user.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -209,6 +210,22 @@ public class UserController {
     @GetMapping("/useOpenUserCenter")
     public BaseResult<Boolean> userCenter() {
         return BaseResult.ok(userCenter.contains("skyview2"));
+    }
+
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "systemConfigDto", value = "", paramType = "query", dataTypeClass = SystemConfigDto.class)
+    })
+    @ApiOperation(value = "保存密码有效期天数", notes = "保存密码有效期天数")
+    @PutMapping("/passwordExpiredDate")
+    public BaseResult savePasswordExpiredDate(@RequestBody SystemConfigDto systemConfigDto) {
+        userService.savePasswordExpiredDay(systemConfigDto.getConfigValue());
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "获取密码有效期天数", notes = "获取密码有效期天数")
+    @GetMapping("/passwordExpiredDate")
+    public BaseResult<SystemConfigDto> getPasswordExpiredDate() {
+        return BaseResult.ok(userService.getPasswordExpiredDay());
     }
 
     /**

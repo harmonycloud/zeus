@@ -397,8 +397,9 @@ public class MysqlDashboardController {
     public BaseResult<List<UserDto>> listUser(@PathVariable("clusterId") String clusterId,
                                               @PathVariable("namespace") String namespace,
                                               @PathVariable("middlewareName") String middlewareName,
-                                              @RequestParam(value = "keyword", defaultValue = "") String keyword) {
-        return BaseResult.ok(mysqlDashboardService.listUser(clusterId, namespace, middlewareName, keyword));
+                                              @RequestParam(value = "keyword", defaultValue = "") String keyword,
+                                              @RequestParam(value = "skipGrant", required = false, defaultValue = "false") Boolean skipGrant) {
+        return BaseResult.ok(mysqlDashboardService.listUser(clusterId, namespace, middlewareName, keyword, skipGrant));
     }
 
     @ApiOperation(value = "创建用户", notes = "创建用户")
@@ -472,15 +473,17 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "username", value = "用户名", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "userDto", value = "用户对象", paramType = "query", dataTypeClass = UserDto.class),
+            @ApiImplicitParam(name = "skipGrant", value = "是否通过mwtoken查询", paramType = "query", dataTypeClass = Boolean.class),
     })
     @PutMapping("/users/{username}/password")
     public BaseResult resetPassword(@PathVariable("clusterId") String clusterId,
                                     @PathVariable("namespace") String namespace,
                                     @PathVariable("middlewareName") String middlewareName,
-                                    @PathVariable("username") String username) {
+                                    @PathVariable("username") String username,
+                                    @RequestParam(value = "skipGrant", required = false, defaultValue = "false") Boolean skipGrant) {
         UserDto userDto = new UserDto();
         userDto.setPassword(defaultPassword);
-        mysqlDashboardService.updatePassword(clusterId, namespace, middlewareName, username, userDto);
+        mysqlDashboardService.updatePassword(clusterId, namespace, middlewareName, username, userDto, skipGrant);
         return BaseResult.ok();
     }
 

@@ -328,7 +328,7 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
      * 获取user列表
      *
      */
-    List<MiddlewareUserDto> listUser(String clusterId, String namespace, String middlewareName, String keyword);
+    List<MiddlewareUserDto> listUser(String clusterId, String namespace, String middlewareName, String keyword, Boolean skipGrant);
 
     /**
      * 创建用户
@@ -372,8 +372,9 @@ public interface PostgresqlDashboardService extends BaseMiddlewareApiService {
      * @param namespace 分区
      * @param middlewareName 中间件名称
      * @param username 用户名
+     * @param skipGrant
      */
-    void resetPassword(String clusterId, String namespace, String middlewareName, String username);
+    void resetPassword(String clusterId, String namespace, String middlewareName, String username, Boolean skipGrant);
 
     /**
      * 修改密码

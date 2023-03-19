@@ -14,10 +14,17 @@ import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.middleware.caas.common.enums.SystemConfigKeyEnum;
+import com.middleware.caas.common.model.user.SystemConfigDto;
+import com.middleware.zeus.bean.BeanSystemConfig;
+import com.middleware.zeus.service.system.SystemConfigService;
+import com.middleware.zeus.service.user.UserRoleService;
+import com.middleware.zeus.service.user.UserService;
 import com.middleware.zeus.service.user.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
@@ -80,6 +87,11 @@ public class UserServiceImpl implements UserService {
     private ClusterMiddlewareInfoService clusterMiddlewareInfoService;
     @Autowired
     private OrganizationUserService organizationUserService;
+    @Autowired
+    private SystemConfigService systemConfigService;
+
+    @Value("${system.user.passwordExpiredDate:90}")
+    private Integer defaultPasswordExpiredDate;
 
     public String getUsername() {
         CurrentUser currentUser = CurrentUserRepository.getUser();
@@ -446,6 +458,31 @@ public class UserServiceImpl implements UserService {
             }
         }
         return new HashMap<>();
+    }
+
+    @Override
+    public void savePasswordExpiredDay(String days) {
+        systemConfigService.saveConfig(SystemConfigKeyEnum.PASSWORD_EXPIRED_DAY.getNameKey(), days);
+    }
+
+    @Override
+    public SystemConfigDto getPasswordExpiredDay() {
+        BeanSystemConfig config = systemConfigService.getConfig(SystemConfigKeyEnum.PASSWORD_EXPIRED_DAY.getNameKey());
+        if (config == null) {
+            initDefaultPasswordExpiredDate();
+            config = systemConfigService.getConfig(SystemConfigKeyEnum.PASSWORD_EXPIRED_DAY.getNameKey());
+        }
+        SystemConfigDto systemConfigDto = new SystemConfigDto();
+        systemConfigDto.setConfigName(SystemConfigKeyEnum.PASSWORD_EXPIRED_DAY.getNameKey());
+        systemConfigDto.setConfigValue(config.getConfigValue());
+        return systemConfigDto;
+    }
+
+    /**
+     * 初始化密码有效期
+     */
+    private void initDefaultPasswordExpiredDate() {
+        systemConfigService.saveConfig(SystemConfigKeyEnum.PASSWORD_EXPIRED_DAY.getNameKey(), String.valueOf(defaultPasswordExpiredDate));
     }
 
     /**

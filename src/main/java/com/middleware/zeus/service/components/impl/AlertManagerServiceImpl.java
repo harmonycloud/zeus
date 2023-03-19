@@ -1,21 +1,29 @@
 package com.middleware.zeus.service.components.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.middleware.caas.common.enums.ComponentsEnum;
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.ClusterComponentsDto;
 import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.caas.common.model.middleware.PodInfo;
+import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.zeus.annotation.Operator;
+import com.middleware.zeus.bean.BeanSystemConfig;
+import com.middleware.zeus.dao.BeanSystemConfigMapper;
 import com.middleware.zeus.service.components.AbstractBaseOperator;
 import com.middleware.zeus.service.components.api.AlertManagerService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import static com.middleware.caas.common.constants.CommonConstant.SIMPLE;
 
 import java.io.File;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +36,9 @@ import java.util.Map;
 @Operator(paramTypes4One = String.class)
 @Slf4j
 public class AlertManagerServiceImpl extends AbstractBaseOperator implements AlertManagerService {
+
+    @Autowired
+    private BeanSystemConfigMapper beanSystemConfigMapper;
 
     @Override
     public boolean support(String name) {
@@ -108,4 +119,34 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
         }
     }
 
+    @Override
+    public void record2SystemConfig(ClusterComponentsDto clusterComponentsDto) {
+        QueryWrapper<BeanSystemConfig> wrapper = new QueryWrapper<>();
+        wrapper.eq("config_name", "Alertmanager_SilentTime");
+        List<BeanSystemConfig> beanSystemConfigs = beanSystemConfigMapper.selectList(wrapper);
+        BeanSystemConfig beanSystemConfig;
+        if (!CollectionUtils.isEmpty(beanSystemConfigs)) {
+            beanSystemConfig = beanSystemConfigs.get(0);
+            beanSystemConfig.setConfigValue(clusterComponentsDto.getSilentTime());
+            beanSystemConfig.setUpdateUser(CurrentUserRepository.getUser().getUsername());
+            beanSystemConfigMapper.update(beanSystemConfig, wrapper);
+        } else {
+            beanSystemConfig = new BeanSystemConfig();
+            beanSystemConfig.setConfigName("Alertmanager_SilentTime");
+            beanSystemConfig.setConfigValue(clusterComponentsDto.getSilentTime());
+            beanSystemConfig.setCreateTime(LocalDateTime.now());
+            beanSystemConfig.setCreateUser(CurrentUserRepository.getUser().getUsername());
+            beanSystemConfigMapper.insert(beanSystemConfig);
+        }
+    }
+
+    @Override
+    public void readSystemConfig(ClusterComponentsDto clusterComponentsDto) {
+        QueryWrapper<BeanSystemConfig> wrapper = new QueryWrapper<>();
+        wrapper.eq("config_name", "Alertmanager_SilentTime");
+        List<BeanSystemConfig> beanSystemConfigs = beanSystemConfigMapper.selectList(wrapper);
+        if (!CollectionUtils.isEmpty(beanSystemConfigs)) {
+            clusterComponentsDto.setSilentTime(beanSystemConfigs.get(0).getConfigValue());
+        }
+    }
 }

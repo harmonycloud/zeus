@@ -11,9 +11,14 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.middleware.caas.common.model.dashboard.*;
 import com.middleware.caas.common.model.dashboard.mysql.ColumnDto;
+import com.middleware.caas.common.model.middleware.Middleware;
 import com.middleware.zeus.service.dashboard.ExecuteSqlService;
 import com.middleware.zeus.service.dashboard.PostgresqlDashboardService;
+import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.k8s.ServiceService;
+import com.middleware.zeus.service.middleware.MiddlewareDashboardAuthService;
+import com.middleware.zeus.service.middleware.MiddlewareService;
+import com.middleware.zeus.service.registry.HelmChartService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,6 +72,14 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     private ServiceService serviceService;
     @Autowired
     private ExecuteSqlService executeSqlService;
+    @Autowired
+    private MiddlewareDashboardAuthService middlewareDashboardAuthService;
+    @Autowired
+    private HelmChartService helmChartService;
+    @Autowired
+    private ClusterService clusterService;
+    @Autowired
+    private MiddlewareService middlewareService;
 
     @Override
     public boolean support(String type) {
@@ -167,7 +180,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         }
         DatabaseDto databaseDto = databaseDtoList.get(0);
         // 查询owner
-        List<MiddlewareUserDto> userDtoList = this.listUser(clusterId, namespace, middlewareName, null);
+        List<MiddlewareUserDto> userDtoList = this.listUser(clusterId, namespace, middlewareName, null, false);
         userDtoList = userDtoList.stream().filter(userDto -> userDto.getId().equals(databaseDto.getOwner()))
             .collect(Collectors.toList());
         // 查询comment
@@ -261,7 +274,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         // 获取schema
         Map<String, String> schema = schemaList.get(0);
         // 查询owner
-        List<MiddlewareUserDto> userDtoList = this.listUser(clusterId, namespace, middlewareName, null);
+        List<MiddlewareUserDto> userDtoList = this.listUser(clusterId, namespace, middlewareName, null, false);
         userDtoList = userDtoList.stream().filter(userDto -> userDto.getId().equals(schema.get("nspowner")))
             .collect(Collectors.toList());
         // 查询comment
@@ -978,7 +991,10 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     @Override
-    public List<MiddlewareUserDto> listUser(String clusterId, String namespace, String middlewareName, String keyword) {
+    public List<MiddlewareUserDto> listUser(String clusterId, String namespace, String middlewareName, String keyword, Boolean skipGrant) {
+        if (skipGrant) {
+            middlewareDashboardAuthService.addMWToken(clusterId, namespace, middlewareName, MiddlewareTypeEnum.POSTGRESQL.getType());
+        }
         String path = getPath(middlewareName, namespace);
         setPort(clusterId, namespace, middlewareName);
         JSONObject listUsers = postgresqlClient.listUsers(path, port);
@@ -1197,8 +1213,14 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
     }
 
     @Override
-    public void resetPassword(String clusterId, String namespace, String middlewareName, String username) {
+    public void resetPassword(String clusterId, String namespace, String middlewareName, String username, Boolean skipGrant) {
+        if (skipGrant) {
+            middlewareDashboardAuthService.addMWToken(clusterId, namespace, middlewareName, MiddlewareTypeEnum.POSTGRESQL.getType());
+        }
         this.updatePassword(clusterId, namespace, middlewareName, username, "zeus123.com");
+        if ("postgres".equals(username)) {
+            helmChartService.updatePassword(clusterId, namespace, middlewareName, MiddlewareTypeEnum.MYSQL.getType(), "zeus123.com");
+        }
     }
 
     @Override

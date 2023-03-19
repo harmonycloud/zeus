@@ -16,6 +16,7 @@ import com.middleware.zeus.service.k8s.NamespaceService;
 import com.middleware.zeus.service.k8s.PodService;
 import com.middleware.zeus.service.middleware.ImageRepositoryService;
 import com.middleware.zeus.service.registry.HelmChartService;
+import org.apache.xmlbeans.impl.xb.xsdschema.Public;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.CollectionUtils;
@@ -104,6 +105,18 @@ public abstract class AbstractBaseOperator {
     }
 
     /**
+     * 保存全局参数入数据库
+     * @param clusterComponentsDto
+     */
+    public void record2SystemConfig(ClusterComponentsDto clusterComponentsDto) {
+
+    }
+
+    public void readSystemConfig(ClusterComponentsDto clusterComponentsDto){
+
+    }
+
+    /**
      * 拼接参数
      *
      * @param repository 仓库地址
@@ -133,4 +146,5 @@ public abstract class AbstractBaseOperator {
      * @param clusterId 集群id
      */
     protected abstract List<PodInfo> getPodInfoList(String clusterId);
+
 }

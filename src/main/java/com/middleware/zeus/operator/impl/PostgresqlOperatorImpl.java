@@ -34,7 +34,9 @@ import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import com.middleware.zeus.operator.api.PostgresqlOperator;
 import com.middleware.zeus.operator.miiddleware.AbstractPostgresqlOperator;
 import com.middleware.zeus.util.ChartVersionUtil;
+import com.middleware.zeus.util.MiddlewareResourceCalculateUtil;
 import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServicePort;
 import org.apache.commons.lang3.StringUtils;
 
 import com.alibaba.fastjson.JSONObject;
@@ -44,6 +46,7 @@ import com.middleware.tool.encrypt.PasswordUtils;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author xutianhong
@@ -100,6 +103,21 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         // 主机网络配置
         if (middleware.getPostgresqlParam() != null && middleware.getPostgresqlParam().getHostNetwork() != null) {
             values.put("hostNetwork", middleware.getPostgresqlParam().getHostNetwork());
+        }
+
+        // 端口配置
+        JSONObject customEnvs = values.getJSONObject("customEnvs");
+        if (middleware.getPostgresqlParam() != null && customEnvs != null) {
+            PostgresqlParam pgParam = middleware.getPostgresqlParam();
+            if (pgParam.getPgPort() != null) {
+                customEnvs.put("PGPORT", pgParam.getPgPort());
+            }
+            if (pgParam.getApiPort() != null) {
+                customEnvs.put("APIPORT", pgParam.getApiPort());
+            }
+            if (pgParam.getExporterPort() != null) {
+                customEnvs.put("EXPORTERPORT", pgParam.getExporterPort());
+            }
         }
 
         // 备份恢复
@@ -162,9 +180,11 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
 
     public Boolean getAutoSwitch(Middleware middleware, MiddlewareClusterDTO cluster) {
         // 获取pod列表
-        List<PodInfo> podInfos = podService.listMiddlewarePods(cluster.getId(), middleware.getNamespace(), middleware.getName(), MiddlewareTypeEnum.POSTGRESQL.getType());
-        List<PodInfo> runningPods = podInfos.stream().filter(podInfo -> RUNNING.equalsIgnoreCase(podInfo.getStatus())).collect(Collectors.toList());
-        if (CollectionUtil.isEmpty(runningPods)){
+        List<PodInfo> podInfos = podService.listMiddlewarePods(cluster.getId(), middleware.getNamespace(),
+            middleware.getName(), MiddlewareTypeEnum.POSTGRESQL.getType());
+        List<PodInfo> runningPods = podInfos.stream().filter(podInfo -> RUNNING.equalsIgnoreCase(podInfo.getStatus()))
+            .collect(Collectors.toList());
+        if (CollectionUtil.isEmpty(runningPods)) {
             throw new BusinessException(ErrorMessage.MIDDLEWARE_CLUSTER_IS_NOT_RUNNING);
         }
         // 获取patroniService
@@ -173,11 +193,21 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
 
         if (patroniService == null) {
             log.error("无法找到patroni服务");
-            throw new BusinessException(DictEnum.SERVICE,patroniName,ErrorMessage.NOT_FOUND);
+            throw new BusinessException(DictEnum.SERVICE, patroniName, ErrorMessage.NOT_FOUND);
+        }
+        // 获取获取patroniService端口
+        String patroniPort = null;
+        if (patroniService.getSpec() == null || CollectionUtils.isEmpty(patroniService.getSpec().getPorts())) {
+            throw new BusinessException(DictEnum.SERVICE, patroniName, ErrorMessage.INVALID_PARAMETER);
+        }
+        for (ServicePort port : patroniService.getSpec().getPorts()) {
+            if ("patroni".equals(port.getName())) {
+                patroniPort = Integer.toString(port.getPort());
+            }
         }
         // pod执行命令
-        String execCommand = MessageFormat.format(POSTGRESQL_AUTO_SWITCH_STATUS,
-                runningPods.get(0).getPodName(), middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(), patroniName);
+        String execCommand = MessageFormat.format(POSTGRESQL_AUTO_SWITCH_STATUS, runningPods.get(0).getPodName(),
+            middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(), patroniName, patroniPort);
         List<String> resList;
         try {
             resList = CmdExecUtil.runCmd(execCommand);
@@ -227,14 +257,26 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             throw new BusinessException(DictEnum.SERVICE, patroniName, ErrorMessage.NOT_EXIST);
         }
         // 获取pod列表
-        List<PodInfo> podInfos = podService.listMiddlewarePods(cluster.getId(), middleware.getNamespace(), middleware.getName(), MiddlewareTypeEnum.POSTGRESQL.getType());
-        List<PodInfo> runningPods = podInfos.stream().filter(podInfo -> RUNNING.equalsIgnoreCase(podInfo.getStatus())).collect(Collectors.toList());
-        if (CollectionUtil.isEmpty(runningPods)){
+        List<PodInfo> podInfos = podService.listMiddlewarePods(cluster.getId(), middleware.getNamespace(),
+            middleware.getName(), MiddlewareTypeEnum.POSTGRESQL.getType());
+        List<PodInfo> runningPods = podInfos.stream().filter(podInfo -> RUNNING.equalsIgnoreCase(podInfo.getStatus()))
+            .collect(Collectors.toList());
+        if (CollectionUtil.isEmpty(runningPods)) {
             throw new BusinessException(ErrorMessage.MIDDLEWARE_CLUSTER_IS_NOT_RUNNING);
         }
-        String execCommand = MessageFormat.format(POSTGRESQL_AUTO_SWITCH,
-                runningPods.get(0).getPodName(), middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
-                !middleware.getAutoSwitch(), patroniName);
+        // 获取获取patroniService端口
+        String patroniPort = null;
+        if (patroniService.getSpec() == null || CollectionUtils.isEmpty(patroniService.getSpec().getPorts())) {
+            throw new BusinessException(DictEnum.SERVICE, patroniName, ErrorMessage.INVALID_PARAMETER);
+        }
+        for (ServicePort port : patroniService.getSpec().getPorts()) {
+            if ("patroni".equals(port.getName())) {
+                patroniPort = Integer.toString(port.getPort());
+            }
+        }
+        String execCommand =
+            MessageFormat.format(POSTGRESQL_AUTO_SWITCH, runningPods.get(0).getPodName(), middleware.getNamespace(),
+                cluster.getAddress(), cluster.getAccessToken(), !middleware.getAutoSwitch(), patroniName, patroniPort);
         k8sExecService.exec(execCommand);
         return null;
     }
@@ -250,17 +292,28 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         if (patroniService == null) {
             throw new BusinessException(DictEnum.SERVICE, patroniName, ErrorMessage.NOT_EXIST);
         }
+        // 获取获取patroniService端口
+        String patroniPort = null;
+        if (patroniService.getSpec() == null || CollectionUtils.isEmpty(patroniService.getSpec().getPorts())) {
+            throw new BusinessException(DictEnum.SERVICE, patroniName, ErrorMessage.INVALID_PARAMETER);
+        }
+        for (ServicePort port : patroniService.getSpec().getPorts()) {
+            if ("patroni".equals(port.getName())) {
+                patroniPort = Integer.toString(port.getPort());
+            }
+        }
         // 获取执行pod
-        List<PodInfo> podInfos = podService.listMiddlewarePods(cluster.getId(), middleware.getNamespace(), middleware.getName(), MiddlewareTypeEnum.POSTGRESQL.getType());
-        List<PodInfo> runningPods = podInfos.stream().filter(podInfo -> RUNNING.equalsIgnoreCase(podInfo.getStatus())
-                && SYNC_SLAVE.equalsIgnoreCase(podInfo.getRole())).collect(Collectors.toList());
+        List<PodInfo> podInfos = podService.listMiddlewarePods(cluster.getId(), middleware.getNamespace(),
+            middleware.getName(), MiddlewareTypeEnum.POSTGRESQL.getType());
+        List<PodInfo> runningPods = podInfos.stream().filter(
+            podInfo -> RUNNING.equalsIgnoreCase(podInfo.getStatus()) && SYNC_SLAVE.equalsIgnoreCase(podInfo.getRole()))
+            .collect(Collectors.toList());
         if (CollectionUtil.isEmpty(runningPods)) {
             throw new BusinessException(ROLE, SYNC_SLAVE, ErrorMessage.NOT_EXIST_OR_NOT_RUNNING);
         }
         String newMasterName = runningPods.get(0).getPodName();
-        String execCommand = MessageFormat.format(POSTGRESQL_HAND_SWITCH,
-                newMasterName, middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
-                patroniName, newMasterName);
+        String execCommand = MessageFormat.format(POSTGRESQL_HAND_SWITCH, newMasterName, middleware.getNamespace(),
+            cluster.getAddress(), cluster.getAccessToken(), patroniName, patroniPort, newMasterName);
         List<String> results = CmdExecUtil.runCmd(execCommand);
         // 判断结果
         parseHandSwitchResult(results);
@@ -311,9 +364,45 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         return Collections.emptyList();
     }
 
+    @Override
+    public void update(Middleware middleware, MiddlewareClusterDTO cluster) {
+        StringBuilder sb = new StringBuilder();
+        if (middleware.getQuota() != null && middleware.getQuota().get(middleware.getType()) != null) {
+            MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
+            // 设置limit的resources
+            setLimitResources(quota);
+            if (StringUtils.isNotBlank(quota.getCpu())) {
+                sb.append("resources.requests.cpu=").append(quota.getCpu()).append(",resources.limits.cpu=")
+                        .append(quota.getLimitCpu()).append(",");
+            }
+            if (StringUtils.isNotBlank(quota.getMemory())) {
+                sb.append("resources.requests.memory=").append(quota.getMemory()).append(",resources.limits.memory=")
+                        .append(quota.getLimitMemory()).append(",");
+            }
+            // 设置实例数量
+            if (quota.getNum() != null) {
+                checkInstanceNum(quota.getNum());
+                int instance = quota.getNum() + 1;
+                String mod = String.format("1m-%ds", quota.getNum());
+                sb.append("instances=").append(instance).append(",");
+                sb.append("mode=").append(mod);
+            }
+        }
+        helmChartService.upgrade(middleware, sb.toString(), middleware.getClusterId());
+    }
 
     public void buildClone(Middleware middleware, JSONObject values){
         middlewareBackupCRService.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getBackupFileName());
+    }
+
+    /**
+     * 检查从节点数量是否合法,pg的从节点数量范围为：1-3
+     * @param instanceNum
+     */
+    private void checkInstanceNum(int instanceNum){
+        if(instanceNum < 1 || instanceNum > 3){
+            throw new BusinessException(ErrorMessage.ERROR_PG_POD_NUm);
+        }
     }
 
 }

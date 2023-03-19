@@ -186,8 +186,17 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         }
         values.put("redisPassword", middleware.getPassword());
         // 端口
-        if (middleware.getPort() != null) {
-            values.put("redisServicePort", middleware.getPort());
+        if (middleware.getRedisParam() != null) {
+            RedisParam redisParam = middleware.getRedisParam();
+            if (redisParam.getRedisPort() != null) {
+                values.getJSONObject("redis").put("port", redisParam.getRedisPort());
+            }
+            if (redisParam.getPredixyPort() != null) {
+                values.getJSONObject("predixy").put("port", redisParam.getPredixyPort());
+            }
+            if (redisParam.getSentinelPort() != null) {
+                values.getJSONObject("sentinel").put("port", redisParam.getSentinelPort());
+            }
         }
 
         //主机网络配置
@@ -220,9 +229,12 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             middleware.getQuota().get(middleware.getType()).setNum(redisQuota.getInteger(REPLICAS));
             // 读写分离
             if (values.containsKey("predixy")) {
+                JSONObject predixy = values.getJSONObject("predixy");
                 ReadWriteProxy readWriteProxy = new ReadWriteProxy();
-                readWriteProxy.setEnabled(values.getJSONObject("predixy").getBoolean("enableProxy"));
+                readWriteProxy.setEnabled(predixy.getBoolean("enableProxy"));
                 middleware.setReadWriteProxy(readWriteProxy);
+                convertResourcesByHelmChart(middleware, "proxy", predixy.getJSONObject("resources"));
+                middleware.getQuota().get("proxy").setNum(predixy.getInteger("replicas"));
             } else {
                 ReadWriteProxy readWriteProxy = new ReadWriteProxy();
                 readWriteProxy.setEnabled(false);

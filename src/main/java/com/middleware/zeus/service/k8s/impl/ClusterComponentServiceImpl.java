@@ -11,6 +11,9 @@ import com.middleware.tool.date.DateUtils;
 import com.middleware.zeus.bean.BeanClusterComponents;
 import com.middleware.zeus.dao.BeanClusterComponentsMapper;
 import com.middleware.zeus.integration.registry.bean.harbor.HelmListInfo;
+import com.middleware.zeus.operator.BaseOperator;
+import com.middleware.zeus.service.components.AbstractBaseOperator;
+import com.middleware.zeus.service.components.api.AlertManagerService;
 import com.middleware.zeus.service.components.api.LoggingService;
 import com.middleware.zeus.service.k8s.NamespaceService;
 import com.middleware.zeus.service.middleware.MiddlewareManagerService;
@@ -171,6 +174,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
                 BaseComponentsService service =
                     getOperator(BaseComponentsService.class, BaseComponentsService.class, cc.getComponent());
                 service.updateStatus(cluster, cc);
+
             } finally {
                 count.countDown();
             }
@@ -185,6 +189,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
             if (cm.getStatus() == NUM_ONE || cm.getStatus() == NUM_THREE || cm.getStatus() == NUM_FOUR) {
                 getOperator(BaseComponentsService.class, BaseComponentsService.class, dto.getComponent()).setStatus(dto);
             }
+            getOperator(BaseComponentsService.class, BaseComponentsService.class, cm.getComponent()).readSystemConfig(dto);
             return dto;
         }).collect(Collectors.toList());
     }
@@ -256,6 +261,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         BeanUtils.copyProperties(componentsDto, cm, "component", "status");
         cm.setCreateTime(new Date());
         beanClusterComponentsMapper.update(cm, wrapper);
+        getOperator(BaseComponentsService.class, BaseComponentsService.class, componentsDto.getComponent()).record2SystemConfig(componentsDto);
     }
 
     /**
