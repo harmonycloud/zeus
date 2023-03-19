@@ -31,7 +31,7 @@ CREATE TABLE `organization_backup_server` (
 
 -- 创建组织项目表
 DROP TABLE IF EXISTS `organization_project`;
-CREATE TABLE `organization_user` (
+CREATE TABLE `organization_project` (
     `id` int NOT NULL AUTO_INCREMENT COMMENT '自增id',
     `organ_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '组织id',
     `project_id` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '项目id',
@@ -73,4 +73,36 @@ update `role` set weight='2' where name='组织管理员';
 update `role` set weight='3' where name='项目管理员';
 update `role` set weight='4' where name='运维人员';
 update `role` set weight='5' where name='普通用户';
+
+-- 初始化组织成员管理页面
+INSERT INTO `resource_menu` VALUES (23,'organUserManagement','成员管理','organUserManagement',3,NULL,0,NULL);
+
+-- 添加组织角色权限
+INSERT INTO `resource_menu_role` VALUES (null,1,23,0);
+INSERT INTO `resource_menu_role` VALUES (null,2,23,0);
+INSERT INTO `resource_menu_role` VALUES (null,3,23,0);
+INSERT INTO `resource_menu_role` VALUES (null,4,23,0);
+INSERT INTO `resource_menu_role` VALUES (null,5,1,0);
+INSERT INTO `resource_menu_role` VALUES (null,5,2,0);
+INSERT INTO `resource_menu_role` VALUES (null,5,3,1);
+INSERT INTO `resource_menu_role` VALUES (null,5,4,0);
+INSERT INTO `resource_menu_role` VALUES (null,5,5,0);
+INSERT INTO `resource_menu_role` VALUES (null,5,6,0);
+INSERT INTO `resource_menu_role` VALUES (null,5,7,0);
+INSERT INTO `resource_menu_role` VALUES (null,5,8,0);
+INSERT INTO `resource_menu_role` VALUES (null,5,9,0);
+INSERT INTO `resource_menu_role` VALUES (null,5,10,0);
+INSERT INTO `resource_menu_role` VALUES (null,5,11,0);
+INSERT INTO `resource_menu_role` VALUES (null,5,12,0);
+INSERT INTO `resource_menu_role` VALUES (null,5,13,0);
+INSERT INTO `resource_menu_role` VALUES (null,5,14,0);
+INSERT INTO `resource_menu_role` VALUES (null,5,15,0);
+INSERT INTO `resource_menu_role` VALUES (null,5,16,0);
+INSERT INTO `resource_menu_role` VALUES (null,5,17,0);
+INSERT INTO `resource_menu_role` VALUES (null,5,18,0);
+INSERT INTO `resource_menu_role` VALUES (null,5,19,0);
+INSERT INTO `resource_menu_role` VALUES (null,5,20,0);
+INSERT INTO `resource_menu_role` VALUES (null,5,21,0);
+INSERT INTO `resource_menu_role` VALUES (null,5,22,0);
+INSERT INTO `resource_menu_role` VALUES (null,5,23,1);
 

@@ -960,7 +960,7 @@ data:
     INSERT INTO `resource_menu` VALUES (12,'backupTask','备份任务','backupService/backupTask',81,'icon-fuwutiaokuan',8,NULL);
     INSERT INTO `resource_menu` VALUES (13,'backupServer','备份服务器','backupService/backupServer',82,'icon-fuwutiaokuan',8,NULL);
     INSERT INTO `resource_menu` VALUES (14,'dataMonitor','数据监控','monitorAlarm/dataMonitor',91,NULL,9,NULL);
-    INSERT INTO `resource_menu` VALUES (15,'logDetail','日志详情','monitorAlarm/logDetail',892,NULL,9,NULL);
+    INSERT INTO `resource_menu` VALUES (15,'logDetail','日志详情','monitorAlarm/logDetail',92,NULL,9,NULL);
     INSERT INTO `resource_menu` VALUES (16,'alarmCenter','服务告警','monitorAlarm/alarmCenter',93,NULL,9,NULL);
     INSERT INTO `resource_menu` VALUES (17,'resourcePoolManagement','集群管理','systemManagement/resourcePoolManagement',111,NULL,11,NULL);
     INSERT INTO `resource_menu` VALUES (18,'userManagement','用户管理','systemManagement/userManagement',112,NULL,11,NULL);
