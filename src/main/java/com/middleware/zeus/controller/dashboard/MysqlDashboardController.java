@@ -439,12 +439,13 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "middlewareName", value = "名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "username", value = "用户名称", paramType = "path", dataTypeClass = String.class),
     })
-    @DeleteMapping("/users/{username}")
+    @DeleteMapping("/users/{username}/host/{host}")
     public BaseResult dropUser(@PathVariable("clusterId") String clusterId,
                                @PathVariable("namespace") String namespace,
                                @PathVariable("middlewareName") String middlewareName,
-                               @PathVariable("username") String username) {
-        mysqlDashboardService.dropUser(clusterId, namespace, middlewareName, username);
+                               @PathVariable("username") String username,
+                               @PathVariable("host") String host) {
+        mysqlDashboardService.dropUser(clusterId, namespace, middlewareName, username, host);
         return BaseResult.ok();
     }
 
@@ -494,12 +495,13 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "middlewareName", value = "名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "username", value = "用户名称", paramType = "path", dataTypeClass = String.class),
     })
-    @PutMapping("/users/{username}/lock")
+    @PutMapping("/users/{username}/host/{host}/lock")
     public BaseResult lockUser(@PathVariable("clusterId") String clusterId,
                                @PathVariable("namespace") String namespace,
                                @PathVariable("middlewareName") String middlewareName,
-                               @PathVariable("username") String username) {
-        mysqlDashboardService.lockUser(clusterId, namespace, middlewareName, username);
+                               @PathVariable("username") String username,
+                               @PathVariable("host") String host) {
+        mysqlDashboardService.lockUser(clusterId, namespace, middlewareName, username, host);
         return BaseResult.ok();
     }
 
@@ -510,12 +512,13 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "middlewareName", value = "名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "username", value = "用户名称", paramType = "path", dataTypeClass = String.class),
     })
-    @PutMapping("/users/{username}/unlock")
+    @PutMapping("/users/{username}/host/{host}/unlock")
     public BaseResult unlockUser(@PathVariable("clusterId") String clusterId,
-                               @PathVariable("namespace") String namespace,
-                               @PathVariable("middlewareName") String middlewareName,
-                               @PathVariable("username") String username) {
-        mysqlDashboardService.unLockUser(clusterId, namespace, middlewareName, username);
+                                 @PathVariable("namespace") String namespace,
+                                 @PathVariable("middlewareName") String middlewareName,
+                                 @PathVariable("username") String username,
+                                 @PathVariable("host") String host) {
+        mysqlDashboardService.unLockUser(clusterId, namespace, middlewareName, username, host);
         return BaseResult.ok();
     }
 

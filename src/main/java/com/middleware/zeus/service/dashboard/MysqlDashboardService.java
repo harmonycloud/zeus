@@ -141,7 +141,7 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
      * 删除用户
      *
      */
-    void dropUser(String clusterId, String namespace, String middlewareName, String username);
+    void dropUser(String clusterId, String namespace, String middlewareName, String username, String host);
 
     /**
      * 修改用户
@@ -161,12 +161,12 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
     /**
      * 锁定用户
      */
-    void lockUser(String clusterId, String namespace, String middlewareName, String username);
+    void lockUser(String clusterId, String namespace, String middlewareName, String username, String host);
 
     /**
      * 解锁用户
      */
-    void unLockUser(String clusterId, String namespace, String middlewareName, String username);
+    void unLockUser(String clusterId, String namespace, String middlewareName, String username, String host);
 
     /**
      * 授权数据库
