@@ -502,6 +502,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
             JSONObject obj = (JSONObject) data;
             UserDto userDto = new UserDto();
             userDto.setUser(obj.getString("User"));
+            userDto.setHost(obj.getString("Host"));
             userDto.setGrantAble(MysqlUtil.convertGrantPriv(obj.getString("Grant_priv")));
             userDto.setUsable(!MysqlUtil.convertGrantPriv(obj.getString("account_locked")));
             return userDto;
@@ -650,10 +651,10 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public List<GrantOptionDto> listUserAuthority(String clusterId, String namespace, String middlewareName, String username) {
+    public List<GrantOptionDto> listUserAuthority(String clusterId, String namespace, String middlewareName, String username, String host) {
         JSONArray privilegeAry = new JSONArray();
-        JSONArray databasePrivilegeAry = mysqlClient.showDatabasePrivilege(getPath(middlewareName, namespace), port, username).getJSONArray("dataAry");
-        JSONArray tablePrivilegeAry = mysqlClient.showTablePrivilege(getPath(middlewareName, namespace), port, username).getJSONArray("dataAry");
+        JSONArray databasePrivilegeAry = mysqlClient.showDatabasePrivilege(getPath(middlewareName, namespace), port, username, host).getJSONArray("dataAry");
+        JSONArray tablePrivilegeAry = mysqlClient.showTablePrivilege(getPath(middlewareName, namespace), port, username, host).getJSONArray("dataAry");
         if (!CollectionUtils.isEmpty(databasePrivilegeAry)) {
             privilegeAry.addAll(databasePrivilegeAry);
         }

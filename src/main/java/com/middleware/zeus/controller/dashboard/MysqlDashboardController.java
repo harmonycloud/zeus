@@ -476,14 +476,16 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "userDto", value = "用户对象", paramType = "query", dataTypeClass = UserDto.class),
             @ApiImplicitParam(name = "skipGrant", value = "是否通过mwtoken查询", paramType = "query", dataTypeClass = Boolean.class),
     })
-    @PutMapping("/users/{username}/password")
+    @PutMapping("/users/{username}/host/{host}/password")
     public BaseResult resetPassword(@PathVariable("clusterId") String clusterId,
                                     @PathVariable("namespace") String namespace,
                                     @PathVariable("middlewareName") String middlewareName,
                                     @PathVariable("username") String username,
+                                    @PathVariable("host") String host,
                                     @RequestParam(value = "skipGrant", required = false, defaultValue = "false") Boolean skipGrant) {
         UserDto userDto = new UserDto();
         userDto.setPassword(defaultPassword);
+        userDto.setHost(host);
         mysqlDashboardService.updatePassword(clusterId, namespace, middlewareName, username, userDto, skipGrant);
         return BaseResult.ok();
     }
@@ -585,12 +587,13 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "username", value = "用户名称", paramType = "path", dataTypeClass = String.class),
     })
-    @GetMapping("/users/{username}/authority")
+    @GetMapping("/users/{username}/host/{host}/authority")
     public BaseResult<List<GrantOptionDto>> userAuthority(@PathVariable("clusterId") String clusterId,
-                                                  @PathVariable("namespace") String namespace,
-                                                  @PathVariable("middlewareName") String middlewareName,
-                                                  @PathVariable("username") String username) {
-        return BaseResult.ok(mysqlDashboardService.listUserAuthority(clusterId, namespace, middlewareName, username));
+                                                          @PathVariable("namespace") String namespace,
+                                                          @PathVariable("middlewareName") String middlewareName,
+                                                          @PathVariable("username") String username,
+                                                          @PathVariable("host") String host) {
+        return BaseResult.ok(mysqlDashboardService.listUserAuthority(clusterId, namespace, middlewareName, username, host));
     }
 
     @ApiOperation(value = "导出表sql", notes = "导出表sql")

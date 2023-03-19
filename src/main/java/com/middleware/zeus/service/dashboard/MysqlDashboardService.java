@@ -196,7 +196,7 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
     /**
      * 查询用户权限
      */
-    List<GrantOptionDto> listUserAuthority(String clusterId, String namespace, String middlewareName, String username);
+    List<GrantOptionDto> listUserAuthority(String clusterId, String namespace, String middlewareName, String username, String host);
 
     /**
      * 查询用户详情
