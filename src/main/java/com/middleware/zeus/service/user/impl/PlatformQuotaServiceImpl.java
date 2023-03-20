@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.api.R;
 import com.middleware.caas.common.model.QuotaBase;
 import com.middleware.caas.common.model.ResourceQuotaDo;
+import com.middleware.caas.common.model.StorageDto;
 import com.middleware.caas.common.model.StorageQuota;
+import com.middleware.caas.common.model.middleware.StorageClassInfo;
 import com.middleware.zeus.bean.user.BeanPlatformQuota;
 import com.middleware.zeus.dao.user.BeanPlatformQuotaMapper;
 import com.middleware.zeus.service.k8s.StorageService;
@@ -76,9 +78,12 @@ public class PlatformQuotaServiceImpl implements PlatformQuotaService {
     }
 
     @Override
-    public List<ResourceQuotaDo> getQuota(String type, String uid, String... target) {
+    public List<ResourceQuotaDo> getQuota(String type, String uid, String clusterId, String... target) {
         // 获取数据库配额使用情况
         QueryWrapper<BeanPlatformQuota> wrapper = new QueryWrapper<BeanPlatformQuota>().eq("type", type).eq("uid", uid);
+        if (StringUtils.isNotEmpty(clusterId)){
+            wrapper.eq("cluster_id", clusterId);
+        }
         convertWrapper(wrapper, target);
         List<BeanPlatformQuota> list = beanPlatformQuotaMapper.selectList(wrapper);
         // 根据集群id装换为map
@@ -232,11 +237,17 @@ public class PlatformQuotaServiceImpl implements PlatformQuotaService {
         for (ResourceQuotaDo quotaDo : resourceQuotaDoList) {
             // 封装获取包含storageClass 和 对应别名的map
 
-            Map<String, String> storageDtoMap = storageService.convertStorageName(quotaDo.getClusterId());
+            List<StorageDto> storageDtoList = storageService.list(quotaDo.getClusterId(), false);
+            Map<String, String> storageNameMap =
+                storageDtoList.stream().collect(Collectors.toMap(StorageDto::getStorageId, StorageDto::getAliasName));
+            Map<String, List<String>> storageTypeMap =
+                storageDtoList.stream().collect(Collectors.toMap(StorageDto::getStorageId, storageDto -> storageDto
+                    .getStorageClassList().stream().map(StorageClassInfo::getVolumeType).collect(Collectors.toList())));
             // 设置存储名称
             for (StorageQuota storageQuota : quotaDo.getStorageList()) {
-                if (storageDtoMap.containsKey(storageQuota.getStorageId())) {
-                    storageQuota.setName(storageDtoMap.get(storageQuota.getStorageId()));
+                if (storageNameMap.containsKey(storageQuota.getStorageId())) {
+                    storageQuota.setName(storageNameMap.get(storageQuota.getStorageId()));
+                    storageQuota.setStorageType(storageTypeMap.get(storageQuota.getStorageId()));
                 }
             }
         }

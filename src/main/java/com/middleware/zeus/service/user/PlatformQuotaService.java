@@ -32,7 +32,7 @@ public interface PlatformQuotaService {
      * @param uid 项目/组织id
      * @return ResourceQuotaDo
      */
-    List<ResourceQuotaDo> getQuota(String type, String uid, String... target);
+    List<ResourceQuotaDo> getQuota(String type, String uid, String clusterId, String... target);
 
     /**
      * 查询配额情况

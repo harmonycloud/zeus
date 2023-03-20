@@ -543,9 +543,9 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<ResourceQuotaDo> getStorageQuota(String organId, String projectId, boolean detail) {
+    public List<ResourceQuotaDo> getStorageQuota(String organId, String projectId, String clusterId, boolean detail) {
         // 获取租户自身存储配额
-        List<ResourceQuotaDo> resourceQuotaDoList = platformQuotaService.getQuota(PROJECT, organId, STORAGE);
+        List<ResourceQuotaDo> resourceQuotaDoList = platformQuotaService.getQuota(PROJECT, organId, clusterId, STORAGE);
         // 设置存储名称
         platformQuotaService.convertStorageName(resourceQuotaDoList);
         if (detail){
@@ -595,7 +595,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public List<ResourceQuotaDo> getCpuMemoryQuota(String organId, String projectId, boolean detail) {
         // 获取租户自身cpu memory 配额
-        List<ResourceQuotaDo> resourceQuotaDoList = platformQuotaService.getQuota(PROJECT, organId, CPU, MEMORY);
+        List<ResourceQuotaDo> resourceQuotaDoList = platformQuotaService.getQuota(PROJECT, organId, null, CPU, MEMORY);
         if (detail) {
             List<ResourceQuotaDo> namespaceQuotaList = new ArrayList<>();
             for (ResourceQuotaDo resourceQuotaDo : resourceQuotaDoList){
@@ -641,13 +641,20 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<BackupServerDTO> getBackupServer(String organId, String projectId, boolean detail) {
+    public List<BackupServerDTO> getBackupServer(String organId, String projectId, String clusterId, boolean detail) {
         List<ProjectBackupServerDTO> projectBackupServerDTOList =
             projectBackupServerService.listByProjectId(organId, projectId);
         List<Integer> idList = projectBackupServerDTOList.stream().map(ProjectBackupServerDTO::getBackupServerId)
             .collect(Collectors.toList());
         List<BackupServerDTO> backupServerDTOList = backupServerService.list(idList);
 
+        // 根据集群id过滤
+        if (StringUtils.isNotEmpty(clusterId)) {
+            backupServerDTOList = backupServerDTOList.stream()
+                .filter(backupServerDTO -> StringUtils.isNotEmpty(backupServerDTO.getClusterId())
+                    && backupServerDTO.getClusterId().equals(clusterId))
+                .collect(Collectors.toList());
+        }
         // 查询 备份服务器使用情况
         if (detail) {
             List<BackupPositionDTO> backupPositionDTOList = backupPositionService.list(organId, projectId, null);

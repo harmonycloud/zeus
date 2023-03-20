@@ -197,9 +197,9 @@ public class OrganizationServiceImpl implements OrganizationService {
     }
 
     @Override
-    public List<ResourceQuotaDo> getStorageQuota(String organId, boolean detail) {
+    public List<ResourceQuotaDo> getStorageQuota(String organId, String clusterId, boolean detail) {
         // 获取租户自身存储配额
-        List<ResourceQuotaDo> organResourceQuotaDoList = platformQuotaService.getQuota(ORGAN, organId, STORAGE);
+        List<ResourceQuotaDo> organResourceQuotaDoList = platformQuotaService.getQuota(ORGAN, organId, clusterId, STORAGE);
         // 设置存储名称
         platformQuotaService.convertStorageName(organResourceQuotaDoList);
         // 获取项目列表 和 项目资源分配总额
@@ -241,7 +241,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     @Override
     public List<ResourceQuotaDo> getCpuMemoryQuota(String organId, boolean detail) {
         // 获取租户自身cpu memory 配额
-        List<ResourceQuotaDo> resourceQuotaDoList = platformQuotaService.getQuota(ORGAN, organId, CPU, MEMORY);
+        List<ResourceQuotaDo> resourceQuotaDoList = platformQuotaService.getQuota(ORGAN, organId, null, CPU, MEMORY);
         if (detail) {
             // 获取项目id列表
             List<ProjectDto> projectDtoList = projectService.list(organId);
@@ -278,12 +278,14 @@ public class OrganizationServiceImpl implements OrganizationService {
     }
 
     @Override
-    public List<BackupServerDTO> getBackupServer(String organId, boolean detail) {
+    public List<BackupServerDTO> getBackupServer(String organId, String clusterId, boolean detail) {
         QueryWrapper<BeanOrganizationBackupServer> wrapper =
             new QueryWrapper<BeanOrganizationBackupServer>().eq("organ_id", organId);
         List<BeanOrganizationBackupServer> list = beanOrganizationBackupServerMapper.selectList(wrapper);
-        List<Integer> idList =
-            list.stream().map(BeanOrganizationBackupServer::getBackupServerId).collect(Collectors.toList());
+        List<Integer> idList = list.stream()
+            .filter(beanOrganizationBackupServer -> StringUtils.isEmpty(clusterId)
+                || beanOrganizationBackupServer.getClusterId().equals(clusterId))
+            .map(BeanOrganizationBackupServer::getBackupServerId).collect(Collectors.toList());
 
         // 查询备份服务器
         List<BackupServerDTO> backupServerDTOList = backupServerService.list(idList);
@@ -311,7 +313,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
     @Override
     public void removeBackupServer(String organId, Integer backupServerId, String clusterId) {
-        List<BackupServerDTO> backupServerDTOList = projectService.getBackupServer(organId, null, false);
+        List<BackupServerDTO> backupServerDTOList = projectService.getBackupServer(organId, null, null, false);
         if (!CollectionUtils.isEmpty(backupServerDTOList) && backupServerDTOList.stream()
             .anyMatch(backupServerDTO -> backupServerId.equals(backupServerDTO.getId()))) {
             throw new BusinessException(ErrorMessage.ORGANIZATION_BACKUP_SERVER_USING);
