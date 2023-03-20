@@ -186,14 +186,13 @@ public class OrganizationController {
     @ApiOperation(value = "添加组织用户成员", notes = "添加组织用户成员")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "organId", value = "组织id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "username", value = "用户名称", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "roleId", value = "角色id", paramType = "query", dataTypeClass = Integer.class),
+            @ApiImplicitParam(name = "organizationDto", value = "组织对象", paramType = "query", dataTypeClass = OrganizationDto.class),
     })
     @PostMapping("/{organId}/user")
     public BaseResult addOrganUser(@PathVariable("organId") String organId,
-                                   @RequestParam("username") String username,
-                                   @RequestParam("roleId") Integer roleId) {
-        organizationService.addOrganUser(organId, username, roleId);
+                                   @RequestBody OrganizationDto organizationDto) {
+        organizationDto.setOrganId(organId);
+        organizationService.addOrganUser(organizationDto);
         return BaseResult.ok();
     }
 

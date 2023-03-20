@@ -74,6 +74,7 @@ update `role` set weight='3' where name='项目管理员';
 update `role` set weight='4' where name='运维人员';
 update `role` set weight='5' where name='普通用户';
 
+-- 20230320 xutianhong
 -- 初始化组织成员管理页面
 INSERT INTO `resource_menu` VALUES (23,'organUserManagement','成员管理','organUserManagement',3,NULL,0,NULL);
 

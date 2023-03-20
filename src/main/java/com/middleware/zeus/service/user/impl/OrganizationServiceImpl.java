@@ -352,11 +352,13 @@ public class OrganizationServiceImpl implements OrganizationService {
     }
 
     @Override
-    public void addOrganUser(String organId, String username, Integer roleId) {
-        if (!checkExist(organId, null)){
+    public void addOrganUser(OrganizationDto organizationDto) {
+        String organId = organizationDto.getOrganId();
+        if (!checkExist(organId, null)) {
             throw new BusinessException(ErrorMessage.ORGANIZATION_NOT_EXIST);
         }
-        organizationUserService.insert(organId, username, roleId);
+        organizationDto.getUserDtoList()
+            .forEach(userDto -> organizationUserService.insert(organId, userDto.getUserName(), userDto.getRoleId()));
     }
 
     @Override

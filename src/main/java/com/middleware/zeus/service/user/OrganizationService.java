@@ -120,12 +120,10 @@ public interface OrganizationService {
 
     /**
      * 获取组织用户信息
-     * @param organId 组织id
-     * @param username 用户名称
-     * @param roleId 角色id
+     * @param organizationDto 租户对象
      *
      */
-    void addOrganUser(String organId, String username, Integer roleId);
+    void addOrganUser(OrganizationDto organizationDto);
 
     /**
      * 获取组织用户信息

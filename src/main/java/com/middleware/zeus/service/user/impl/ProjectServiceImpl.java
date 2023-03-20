@@ -545,7 +545,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public List<ResourceQuotaDo> getStorageQuota(String organId, String projectId, String clusterId, boolean detail) {
         // 获取租户自身存储配额
-        List<ResourceQuotaDo> resourceQuotaDoList = platformQuotaService.getQuota(PROJECT, organId, clusterId, STORAGE);
+        List<ResourceQuotaDo> resourceQuotaDoList = platformQuotaService.getQuota(PROJECT, projectId, clusterId, STORAGE);
         // 设置存储名称
         platformQuotaService.convertStorageName(resourceQuotaDoList);
         if (detail){
