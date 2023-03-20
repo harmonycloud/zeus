@@ -5,8 +5,10 @@ import java.util.stream.Collectors;
 
 import com.middleware.caas.common.model.user.UserDto;
 import com.middleware.zeus.bean.BeanMiddlewareInfo;
+import com.middleware.zeus.bean.LicenseInfo;
 import com.middleware.zeus.bean.user.BeanRoleAuthority;
 import com.middleware.zeus.service.middleware.MiddlewareInfoService;
+import com.middleware.zeus.service.system.LicenseService;
 import com.middleware.zeus.service.user.*;
 import com.middleware.zeus.service.user.*;
 import org.apache.commons.lang3.StringUtils;
@@ -38,10 +40,12 @@ import static com.middleware.caas.common.constants.CommonConstant.*;
 @Service
 public class RoleServiceImpl implements RoleService {
 
-    @Value("${system.disasterRecovery.enable:true}")
-    private String disasterEnable;
+//    @Value("${system.disasterRecovery.enable:true}")
+//    private String disasterEnable;
     @Value("${system.disasterRecovery.menu-id:10}")
     private String disasterMenuId;
+    @Value("${system.activeActive.menu-id:7}")
+    private String activeActiveMenuId;
 
     @Autowired
     private BeanRoleMapper beanRoleMapper;
@@ -57,6 +61,8 @@ public class RoleServiceImpl implements RoleService {
     private RoleAuthorityService roleAuthorityService;
     @Autowired
     private MiddlewareInfoService middlewareInfoService;
+    @Autowired
+    private LicenseService licenseService;
 
     @Override
     public void add(RoleDto roleDto) {
@@ -158,10 +164,25 @@ public class RoleServiceImpl implements RoleService {
         } else {
             list = resourceMenuRoleService.listAdminMenu();
         }
-        // 过滤是否开启灾备服务
-        if (!Boolean.parseBoolean(disasterEnable)) {
-            list = list.stream().filter(menuDto -> menuDto.getResourceMenuId() != Integer.parseInt(disasterMenuId))
-                .collect(Collectors.toList());
+        // 过滤是否开启灾备服务和双活
+        LicenseInfo features = new LicenseInfo();
+        try {
+            features = licenseService.getFeatures();
+        } catch (Exception e) {
+            log.error("查询license出错");
+            features.setActiveActiveEnable(false).setDisasterRecoveryEnable(false);
+        }
+        if (!features.getDisasterRecoveryEnable() || !features.getActiveActiveEnable()) {
+            LicenseInfo finalFeatures = features;
+            list = list.stream().filter(menuDto -> {
+                if (menuDto.getResourceMenuId() == Integer.parseInt(disasterMenuId)) {
+                    return finalFeatures.getDisasterRecoveryEnable();
+                } else if (menuDto.getResourceMenuId() == Integer.parseInt(activeActiveMenuId)) {
+                    return finalFeatures.getActiveActiveEnable();
+                } else {
+                    return true;
+                }
+            }).collect(Collectors.toList());
         }
         List<Integer> ids = list.stream().map(BeanResourceMenuRole::getResourceMenuId).collect(Collectors.toList());
         // 获取菜单信息
