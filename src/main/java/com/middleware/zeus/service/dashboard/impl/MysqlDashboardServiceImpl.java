@@ -60,13 +60,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     @Autowired
     private BeanSqlExecuteRecordMapper sqlExecuteRecordMapper;
     @Autowired
-    private MiddlewareDashboardAuthService middlewareDashboardAuthService;
-    @Autowired
     private HelmChartService helmChartService;
-    @Autowired
-    private ClusterService clusterService;
-    @Autowired
-    private MiddlewareService middlewareService;
 
     @Override
     public String login(String clusterId, String namespace, String middlewareName, String username, String password) {
