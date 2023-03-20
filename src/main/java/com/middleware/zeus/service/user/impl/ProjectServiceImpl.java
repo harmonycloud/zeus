@@ -23,6 +23,7 @@ import io.fabric8.kubernetes.api.model.ServiceAccount;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -65,6 +66,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Autowired
     private UserRoleService userRoleService;
     @Autowired
+    @Qualifier("Skyview")
     public UserService userService;
     @Autowired
     public MiddlewareCRService middlewareCRService;
@@ -734,7 +736,6 @@ public class ProjectServiceImpl implements ProjectService {
         // 获取分区项目绑定关系
         QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<BeanProjectNamespace>().eq("cluster_id", clusterId);
         List<BeanProjectNamespace> projectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
-        Map<String, String> projectNamespaceMap = projectNamespaceList.stream().collect(Collectors.toMap(BeanProjectNamespace::getNamespace, BeanProjectNamespace::getProjectId));
 
         // 获取项目信息
         QueryWrapper<BeanProject> pjWrapper = new QueryWrapper<>();
@@ -742,10 +743,9 @@ public class ProjectServiceImpl implements ProjectService {
         Map<String, String> projectNameMap = beanProjectList.stream().collect(Collectors.toMap(BeanProject::getProjectId, BeanProject::getName));
 
         List<ProjectNamespaceDo> projectNamespaceDoList = new ArrayList<>();
-        for (String key : projectNamespaceMap.keySet()){
+        for (BeanProjectNamespace beanProjectNamespace : projectNamespaceList){
             ProjectNamespaceDo projectNamespaceDo = new ProjectNamespaceDo();
-            projectNamespaceDo.setNamespace(key);
-            projectNamespaceDo.setProjectId(projectNamespaceMap.get(key));
+            BeanUtils.copyProperties(beanProjectNamespace, projectNamespaceDo);
             projectNamespaceDo.setProjectName(projectNameMap.get(projectNamespaceDo.getProjectId()));
 
             projectNamespaceDoList.add(projectNamespaceDo);

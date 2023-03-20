@@ -131,6 +131,7 @@ public class NamespaceServiceImpl implements NamespaceService {
             .collect(Collectors.toMap(ProjectNamespaceDo::getNamespace, projectNamespaceDo -> projectNamespaceDo));
         list.forEach(ns -> {
             if (projectNamespaceMap.containsKey(ns.getName())){
+                ns.setOrganId(projectNamespaceMap.get(ns.getName()).getOrganId());
                 ns.setProjectId(projectNamespaceMap.get(ns.getName()).getProjectId());
                 ns.setProjectName(projectNamespaceMap.get(ns.getName()).getProjectName());
             }
@@ -232,6 +233,9 @@ public class NamespaceServiceImpl implements NamespaceService {
         if (StringUtils.isNotEmpty(organId) && StringUtils.isNotEmpty(projectId)){
             Namespace namespace = new Namespace();
             namespace.setClusterId(clusterId).setName(name).setAliasName(aliasName).setOrganId(organId).setProjectId(projectId);
+            // 先解除现有绑定
+            projectService.unBindNamespace(null, null, clusterId, name);
+            // 重新绑定
             projectService.bindNamespace(namespace);
         }else {
             projectService.unBindNamespace(null, null, clusterId, name);
