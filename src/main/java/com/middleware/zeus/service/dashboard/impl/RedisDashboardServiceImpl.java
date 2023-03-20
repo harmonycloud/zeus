@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.middleware.ServicePortDTO;
 import com.middleware.zeus.annotation.Operator;
 import com.middleware.zeus.bean.BeanSqlExecuteRecord;
 import com.middleware.zeus.dao.BeanSqlExecuteRecordMapper;
@@ -13,6 +14,7 @@ import com.middleware.zeus.integration.dashboard.RedisClient;
 import com.middleware.zeus.service.dashboard.RedisDashboardService;
 import com.middleware.zeus.service.dashboard.RedisKVService;
 import com.middleware.zeus.service.k8s.ClusterService;
+import com.middleware.zeus.service.k8s.ServiceService;
 import com.middleware.zeus.service.middleware.MiddlewareService;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.util.K8sServiceNameUtil;
@@ -26,10 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -43,6 +42,7 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
 
     @Value("${system.middleware-api.redis.port:6379}")
     private String port;
+    private static final Map<String, String> REDIS_PORT_MAP = new HashMap<>();
 
     @Autowired
     private HelmChartService  helmChartService;
@@ -54,6 +54,24 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
     private RedisClient redisClient;
     @Autowired
     private MiddlewareService middlewareService;
+    @Autowired
+    private ServiceService serviceService;
+
+    public void setPort(String clusterId, String namespace, String middlewareName, Boolean proxyRedis) {
+        String middleware = clusterId + namespace + middlewareName;
+        if (REDIS_PORT_MAP.containsKey(middleware)) {
+            port = REDIS_PORT_MAP.get(middleware);
+            return;
+        }
+        ServicePortDTO servicePortDTO = serviceService.get(clusterId, namespace, middlewareName);
+        if (proxyRedis) {
+            servicePortDTO = serviceService.get(clusterId, namespace, middlewareName + "-predixy");
+        }
+        if (servicePortDTO != null && !CollectionUtils.isEmpty(servicePortDTO.getPortDetailDtoList())) {
+            port = servicePortDTO.getPortDetailDtoList().get(0).getPort();
+            REDIS_PORT_MAP.put(middlewareName, port);
+        }
+    }
 
     @Override
     public boolean support(String type) {
@@ -73,8 +91,11 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
         }
         int defaultDb = 0;
         String deployMod = RedisUtil.getRedisDeployMod(installedValues);
-        // redis哨兵模式和单机模式的连接方式是一样的，因此连接方式只有集群模式和单机模式
-        String redisPort = port;
+        // 1. 集群模式：连接redis服务，连接方式为集群连接方式
+        // 2. 集群代理模式：连接redis服务，连接方式为集群连接方式
+        // 3. 哨兵模式：连接redis服务，连接方式为单机模式
+        // 4. 哨兵代理模式：连接redis代理，连接方式为单机模式
+        setPort(clusterId,  namespace,  middlewareName, false);
         String clusterAddrs = "";
         String sentinelAddrs = "";
         String redisMod = "";
@@ -83,7 +104,7 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
             case "cluster":
             case "clusterProxy":
                 redisMod = "cluster";
-                clusterAddrs = getClusterAddress(clusterId, namespace, middlewareName);
+                clusterAddrs = getClusterAddress(clusterId, namespace, middlewareName, port);
                 break;
             case "sentinel":
                 redisMod = "single";
@@ -91,14 +112,14 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
                 break;
             case "sentinelProxy":
                 redisMod = "single";
-                redisPort = "7617";
+                setPort(clusterId, namespace, middlewareName, true);
                 host = K8sServiceNameUtil.getRedisPredixyServicePath(namespace, middlewareName);
                 break;
             default:
                 throw new BusinessException(ErrorMessage.UNKNOWN_REDIS_CLUSTER);
         }
         JSONObject res = redisClient.login(defaultDb, host, version,
-                redisMod, username, password, redisPort, clusterAddrs, sentinelAddrs);
+                redisMod, username, password, port, clusterAddrs, sentinelAddrs);
         if (res.get("data") == null) {
             throw new BusinessException(ErrorMessage.FAILED_TO_LOGIN_REDIS, res.getString("error"));
         }
@@ -251,8 +272,8 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
      * @param middlewareName
      * @return
      */
-    private String getClusterAddress(String clusterId, String namespace, String middlewareName) {
-        String clusterAddrsPrefix = K8sServiceNameUtil.getServicePath(namespace, middlewareName) + ":" + port;
+    private String getClusterAddress(String clusterId, String namespace, String middlewareName, String servicePort) {
+        String clusterAddrsPrefix = K8sServiceNameUtil.getServicePath(namespace, middlewareName) + ":" + servicePort;
         List<MiddlewareInfo> pods = listMasterPod(clusterId, namespace, middlewareName);
         StringBuilder sbf = new StringBuilder();
         for (int i = 0; i < pods.size(); i++) {

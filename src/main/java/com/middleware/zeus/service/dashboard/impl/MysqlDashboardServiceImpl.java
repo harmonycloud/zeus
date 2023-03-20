@@ -12,14 +12,13 @@ import com.middleware.caas.common.enums.middleware.MysqlOperationEnum;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.dashboard.ExecResult;
 import com.middleware.caas.common.model.dashboard.SqlQuery;
+import com.middleware.caas.common.model.middleware.ServicePortDTO;
 import com.middleware.zeus.annotation.Operator;
 import com.middleware.zeus.bean.BeanSqlExecuteRecord;
 import com.middleware.zeus.dao.BeanSqlExecuteRecordMapper;
 import com.middleware.zeus.integration.dashboard.MysqlClient;
 import com.middleware.zeus.service.dashboard.MysqlDashboardService;
-import com.middleware.zeus.service.k8s.ClusterService;
-import com.middleware.zeus.service.middleware.MiddlewareDashboardAuthService;
-import com.middleware.zeus.service.middleware.MiddlewareService;
+import com.middleware.zeus.service.k8s.ServiceService;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.util.ExcelUtil;
 import com.middleware.zeus.util.FileDownloadUtil;
@@ -57,14 +56,32 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     @Value("${system.middleware-api.mysql.excelPath:/usr/local/zeus-pv/excel/}")
     private String path;
 
+    private static final Map<String,String> MYSQL_PORT_MAP = new HashMap<>();
+    
     @Autowired
     private BeanSqlExecuteRecordMapper sqlExecuteRecordMapper;
     @Autowired
     private HelmChartService helmChartService;
+    @Autowired
+    private ServiceService serviceService;
 
+    public String getPort(String clusterId, String namespace, String middlewareName) {
+        String middleware = clusterId + namespace + middlewareName;
+        if (MYSQL_PORT_MAP.containsKey(middleware)) {
+            port = MYSQL_PORT_MAP.get(middleware);
+            return port;
+        }
+        ServicePortDTO servicePortDTO = serviceService.get(clusterId, namespace, middlewareName);
+        if (servicePortDTO != null && !CollectionUtils.isEmpty(servicePortDTO.getPortDetailDtoList())) {
+            port = servicePortDTO.getPortDetailDtoList().get(0).getPort();
+            MYSQL_PORT_MAP.put(middlewareName, port);
+        }
+        return port;
+    }
+    
     @Override
     public String login(String clusterId, String namespace, String middlewareName, String username, String password) {
-        JSONObject res = mysqlClient.login(getPath(middlewareName,namespace), port, username, password);
+        JSONObject res = mysqlClient.login(getPath(middlewareName,namespace), getPort(clusterId, namespace, middlewareName), username, password);
         if (res.getJSONObject("err") != null) {
             throw new BusinessException(ErrorMessage.MYSQL_LOGIN_FAILED, res.getString("message"));
         }
@@ -101,10 +118,10 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void createDatabase(String clusterId, String namespace, String middlewareName, DatabaseDto databaseDto) {
-        if(checkDatabaseExists(namespace, middlewareName,  databaseDto.getDb())){
+        if(checkDatabaseExists(clusterId, namespace, middlewareName, databaseDto.getDb())){
             throw new BusinessException(ErrorMessage.DATABASE_EXISTS);
         }
-        JSONObject res = mysqlClient.createDatabase(getPath(middlewareName,namespace), port, databaseDto);
+        JSONObject res = mysqlClient.createDatabase(getPath(middlewareName,namespace), getPort(clusterId, namespace, middlewareName), databaseDto);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.CREATE_DATABASE_FAILED, res.getString("message"));
         }
@@ -112,7 +129,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void updateDatabase(String clusterId, String namespace, String middlewareName, DatabaseDto databaseDto) {
-        JSONObject res = mysqlClient.alterDatabase(getPath(middlewareName,namespace), port, databaseDto);
+        JSONObject res = mysqlClient.alterDatabase(getPath(middlewareName,namespace), getPort(clusterId, namespace, middlewareName), databaseDto);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.ALTER_DATABASE_FAILED, res.getString("message"));
         }
@@ -120,7 +137,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void dropDatabase(String clusterId, String namespace, String middlewareName, String databaseName) {
-        JSONObject res = mysqlClient.dropDatabase(getPath(middlewareName,namespace), port, databaseName);
+        JSONObject res = mysqlClient.dropDatabase(getPath(middlewareName,namespace), getPort(clusterId, namespace, middlewareName), databaseName);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.DELETE_DATABASE_FAILED, res.getString("message"));
         }
@@ -137,7 +154,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public List<String> listCharsetCollation(String clusterId, String namespace, String middlewareName, String charset) {
-        JSONArray dataAry = mysqlClient.listCharsetCollations(getPath(middlewareName,namespace), port, charset).getJSONArray("dataAry");
+        JSONArray dataAry = mysqlClient.listCharsetCollations(getPath(middlewareName,namespace), getPort(clusterId, namespace, middlewareName), charset).getJSONArray("dataAry");
         return dataAry.stream().map(data -> {
             JSONObject obj = (JSONObject) data;
             return obj.getString("Collation");
@@ -164,7 +181,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public List<TableDto> listTables(String clusterId, String namespace, String middlewareName, String database) {
-        JSONArray dataAry = mysqlClient.listTables(getPath(middlewareName,namespace), port, database).getJSONArray("dataAry");
+        JSONArray dataAry = mysqlClient.listTables(getPath(middlewareName,namespace), getPort(clusterId, namespace, middlewareName), database).getJSONArray("dataAry");
         return dataAry.stream().map(data -> {
             JSONObject obj = (JSONObject) data;
             TableDto tableDto = new TableDto();
@@ -181,7 +198,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
             throw new BusinessException(ErrorMessage.INCOMPLETE_TABLE_COLUMN);
         }
         correctColumn(tableDto.getColumns());
-        JSONObject res = mysqlClient.createTable(getPath(middlewareName, namespace), port, database, tableDto);
+        JSONObject res = mysqlClient.createTable(getPath(middlewareName, namespace), getPort(clusterId, namespace, middlewareName), database, tableDto);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.CREATE_TABLE_FAILED, res.getString("message"));
         }
@@ -189,7 +206,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void updateTableOptions(String clusterId,String namespace, String middlewareName,String database,String table,TableDto tableDto) {
-        JSONObject res = mysqlClient.updateTableOptions(getPath(middlewareName,namespace), port, database, table,tableDto);
+        JSONObject res = mysqlClient.updateTableOptions(getPath(middlewareName,namespace), getPort(clusterId, namespace, middlewareName), database, table,tableDto);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.ALTER_TABLE_FAILED, res.getString("message"));
         }
@@ -197,7 +214,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void dropTable(String clusterId, String namespace, String middlewareName, String database, String table) {
-        JSONObject res = mysqlClient.dropTable(getPath(middlewareName,namespace), port, database, table);
+        JSONObject res = mysqlClient.dropTable(getPath(middlewareName,namespace), getPort(clusterId, namespace, middlewareName), database, table);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.DELETE_TABLE_FAILED, res.getString("message"));
         }
@@ -205,7 +222,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void updateTableName(String clusterId, String namespace, String middlewareName, String database, String table, TableDto tableDto) {
-        JSONObject res = mysqlClient.renameTable(getPath(middlewareName, namespace), port, database, table, tableDto);
+        JSONObject res = mysqlClient.renameTable(getPath(middlewareName, namespace), getPort(clusterId, namespace, middlewareName), database, table, tableDto);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.ALTER_TABLE_FAILED, res.getString("message"));
         }
@@ -213,7 +230,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public TableDto showTableDetail(String clusterId, String namespace, String middlewareName, String database, String table) {
-        JSONArray dataAry = mysqlClient.showTableOptions(getPath(middlewareName,namespace), port, database, table).getJSONArray("dataAry");
+        JSONArray dataAry = mysqlClient.showTableOptions(getPath(middlewareName,namespace), getPort(clusterId, namespace, middlewareName), database, table).getJSONArray("dataAry");
         TableDto tableDto = new TableDto();
         if (CollectionUtils.isEmpty(dataAry)) {
             throw new BusinessException(ErrorMessage.OBTAIN_TABLE_DETAIL_FAILED);
@@ -236,7 +253,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public PageInfo<Object> showTableData(String clusterId, String namespace, String middlewareName, String database, String table, QueryInfo queryInfo) {
-        JSONArray dataAry = mysqlClient.showTableData(getPath(middlewareName, namespace), port, database, table, queryInfo).getJSONArray("dataAry");
+        JSONArray dataAry = mysqlClient.showTableData(getPath(middlewareName, namespace), getPort(clusterId, namespace, middlewareName), database, table, queryInfo).getJSONArray("dataAry");
         PageInfo<Object> pageInfo = new PageInfo<>();
         pageInfo.setTotal(getTableRecordCount(clusterId, namespace, middlewareName, database, table));
         pageInfo.setList(dataAry);
@@ -245,7 +262,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public int getTableRecordCount(String clusterId, String namespace, String middlewareName, String database, String table) {
-        JSONArray dataAry = mysqlClient.getTableRecord(getPath(middlewareName,namespace), port, database, table).getJSONArray("dataAry");
+        JSONArray dataAry = mysqlClient.getTableRecord(getPath(middlewareName,namespace), getPort(clusterId, namespace, middlewareName), database, table).getJSONArray("dataAry");
         if (CollectionUtils.isEmpty(dataAry)) {
             throw new BusinessException(ErrorMessage.FAILED_TO_OBTAIN_TABLE_RECORD);
         }
@@ -255,7 +272,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public List<ColumnDto> listTableColumns(String clusterId, String namespace, String middlewareName, String database, String table) {
-        JSONArray dataAry = mysqlClient.listTableColumns(getPath(middlewareName,namespace), port, database, table).getJSONArray("dataAry");
+        JSONArray dataAry = mysqlClient.listTableColumns(getPath(middlewareName,namespace), getPort(clusterId, namespace, middlewareName), database, table).getJSONArray("dataAry");
         return dataAry.stream().map(data -> {
             JSONObject obj = (JSONObject) data;
             ColumnDto columnDto = new ColumnDto();
@@ -325,20 +342,20 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         tableDto.setPrimaryKeyAction(getPrimaryKeyActionCode(oldPrimaryKeys, newPrimaryKeys));
         if (!CollectionUtils.isEmpty(newColumnList)) {
             tableDto.setColumns(newColumnList);
-            JSONObject res = mysqlClient.saveTableColumns(getPath(middlewareName, namespace), port, database, table, tableDto);
+            JSONObject res = mysqlClient.saveTableColumns(getPath(middlewareName, namespace), getPort(clusterId, namespace, middlewareName), database, table, tableDto);
             if (!res.getBoolean("success")) {
                 throw new BusinessException(ErrorMessage.ALTER_TABLE_COLUMN_FAILED, res.getString("message"));
             }
         }
         if (!columnDtoList.equals(oldColumns) && columnDtoList.size() > 1) {
             tableDto.setColumns(columnDtoList);
-            mysqlClient.reorderTableColumns(getPath(middlewareName, namespace), port, database, table, tableDto);
+            mysqlClient.reorderTableColumns(getPath(middlewareName, namespace), getPort(clusterId, namespace, middlewareName), database, table, tableDto);
         }
     }
 
     @Override
     public List<IndexDto> listTableIndices(String clusterId, String namespace, String middlewareName, String database, String table) {
-        JSONArray dataAry = mysqlClient.listTableIndices(getPath(middlewareName, namespace), port, database, table).getJSONArray("dataAry");
+        JSONArray dataAry = mysqlClient.listTableIndices(getPath(middlewareName, namespace), getPort(clusterId, namespace, middlewareName), database, table).getJSONArray("dataAry");
         if (CollectionUtils.isEmpty(dataAry)) {
             return Collections.emptyList();
         }
@@ -404,7 +421,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
             }
         }
 
-        JSONObject res = mysqlClient.saveTableIndices(getPath(middlewareName, namespace), port, database, table, newIndexList);
+        JSONObject res = mysqlClient.saveTableIndices(getPath(middlewareName, namespace), getPort(clusterId, namespace, middlewareName), database, table, newIndexList);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.ALTER_TABLE_INDICES_FAILED, res.getString("message"));
         }
@@ -412,7 +429,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public List<ForeignKeyDto> listTableForeignKeys(String clusterId, String namespace, String middlewareName, String database, String table) {
-        JSONArray dataAry = mysqlClient.listTableForeignKeys(getPath(middlewareName, namespace), port, database, table).getJSONArray("dataAry");
+        JSONArray dataAry = mysqlClient.listTableForeignKeys(getPath(middlewareName, namespace), getPort(clusterId, namespace, middlewareName), database, table).getJSONArray("dataAry");
         Map<String, ForeignKeyDto> foreignKeyDtoMap = new HashMap<>();
         dataAry.forEach(data -> {
             JSONObject obj = (JSONObject) data;
@@ -479,7 +496,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         }
 
         if (!CollectionUtils.isEmpty(newForeignKeyList)) {
-            JSONObject res = mysqlClient.saveTableForeignKeys(getPath(middlewareName, namespace), port, database, table, newForeignKeyList);
+            JSONObject res = mysqlClient.saveTableForeignKeys(getPath(middlewareName, namespace), getPort(clusterId, namespace, middlewareName), database, table, newForeignKeyList);
             if (!res.getBoolean("success")) {
                 throw new BusinessException(ErrorMessage.ALTER_TABLE_FOREIGN_KEYS_FAILED, res.getString("message"));
             }
@@ -507,10 +524,10 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void addUser(String clusterId, String namespace, String middlewareName, UserDto userDto) {
-        if (checkUserExists(namespace, middlewareName, userDto.getUser(), userDto.getHost())) {
+        if (checkUserExists(clusterId, namespace, middlewareName, userDto.getUser(), userDto.getHost())) {
             throw new BusinessException(ErrorMessage.MYSQL_USER_EXISTS);
         }
-        JSONObject res = mysqlClient.createUser(getPath(middlewareName, namespace), port, userDto);
+        JSONObject res = mysqlClient.createUser(getPath(middlewareName, namespace), getPort(clusterId, namespace, middlewareName), userDto);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.CREATE_MYSQL_USER_FAILED, res.getString("message"));
         } else {
@@ -527,10 +544,10 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void dropUser(String clusterId, String namespace, String middlewareName, String username, String host) {
-        if (!checkUserExists(namespace, middlewareName, username, host)) {
+        if (!checkUserExists(clusterId, namespace, middlewareName, username, host)) {
             throw new BusinessException(ErrorMessage.MYSQL_USER_NOT_EXISTS);
         }
-        JSONObject res = mysqlClient.dropUser(getPath(middlewareName,namespace), port, username, host);
+        JSONObject res = mysqlClient.dropUser(getPath(middlewareName,namespace), getPort(clusterId, namespace, middlewareName), username, host);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.DELETE_MYSQL_USER_FAILED, res.getString("message"));
         }
@@ -538,7 +555,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void updateUser(String clusterId, String namespace, String middlewareName, String username, UserDto userDto) {
-        if (!checkUserExists(namespace, middlewareName, username, userDto.getHost())) {
+        if (!checkUserExists(clusterId, namespace, middlewareName, username, userDto.getHost())) {
             throw new BusinessException(ErrorMessage.MYSQL_USER_NOT_EXISTS);
         }
         if (!StringUtils.isEmpty(userDto.getPassword())) {
@@ -551,7 +568,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void updateUsername(String clusterId, String namespace, String middlewareName, String username, UserDto userDto) {
-        JSONObject res = mysqlClient.updateUsername(getPath(middlewareName, namespace), port, username, userDto);
+        JSONObject res = mysqlClient.updateUsername(getPath(middlewareName, namespace), getPort(clusterId, namespace, middlewareName), username, userDto);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.FAILED_TO_UPDATE_USER, res.getString("message"));
         }
@@ -559,10 +576,10 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void updatePassword(String clusterId, String namespace, String middlewareName, String username, UserDto userDto, Boolean skipGrant) {
-        if (!checkUserExists(namespace, middlewareName, username, userDto.getHost())) {
+        if (!checkUserExists(clusterId, namespace, middlewareName, username, userDto.getHost())) {
             throw new BusinessException(ErrorMessage.MYSQL_USER_NOT_EXISTS);
         }
-        JSONObject res = mysqlClient.updatePassword(getPath(middlewareName,namespace), port, username, userDto);
+        JSONObject res = mysqlClient.updatePassword(getPath(middlewareName,namespace), getPort(clusterId, namespace, middlewareName), username, userDto);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.FAILED_TO_UPDATE_USER_PASSWORD, res.getString("message"));
         }
@@ -574,7 +591,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void lockUser(String clusterId, String namespace, String middlewareName, String username, String host) {
-        JSONObject res = mysqlClient.lockUser(getPath(middlewareName,namespace), port, username, host);
+        JSONObject res = mysqlClient.lockUser(getPath(middlewareName,namespace), getPort(clusterId, namespace, middlewareName), username, host);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.LOCK_USER_FAILED, res.getString("message"));
         }
@@ -582,7 +599,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void unLockUser(String clusterId, String namespace, String middlewareName, String username, String host) {
-        JSONObject res = mysqlClient.unlockUser(getPath(middlewareName, namespace), port, username, host);
+        JSONObject res = mysqlClient.unlockUser(getPath(middlewareName, namespace), getPort(clusterId, namespace, middlewareName), username, host);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.UNLOCK_USER_FAILED, res.getString("message"));
         }
@@ -591,7 +608,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     @Override
     public void grantDatabasePrivilege(String clusterId, String namespace, String middlewareName, String database, GrantOptionDto grantOptionDto) {
         grantOptionDto.setPrivilege(MysqlPrivilegeEnum.findDbPrivilege(grantOptionDto.getPrivilegeType(), grantOptionDto.getGrantAble()));
-        JSONObject res = mysqlClient.grantDatabase(getPath(middlewareName, namespace), port, database, grantOptionDto);
+        JSONObject res = mysqlClient.grantDatabase(getPath(middlewareName, namespace), getPort(clusterId, namespace, middlewareName), database, grantOptionDto);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.GRANT_DATABASE_FAILED, res.getString("message"));
         }
@@ -600,7 +617,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     @Override
     public void grantTablePrivilege(String clusterId, String namespace, String middlewareName, String database, String table, GrantOptionDto grantOptionDto) {
         grantOptionDto.setPrivilege(MysqlPrivilegeEnum.findTablePrivilege(grantOptionDto.getPrivilegeType(), grantOptionDto.getGrantAble()));
-        JSONObject res = mysqlClient.grantTable(getPath(middlewareName, namespace), port, database, table, grantOptionDto);
+        JSONObject res = mysqlClient.grantTable(getPath(middlewareName, namespace), getPort(clusterId, namespace, middlewareName), database, table, grantOptionDto);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.GRANT_TABLE_FAILED, res.getString("message"));
         }
@@ -624,7 +641,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void revokeDatabasePrivilege(String clusterId, String namespace, String middlewareName, String database, GrantOptionDto grantOptionDto) {
-        JSONObject res = mysqlClient.revokeDatabasePrivilege(getPath(middlewareName, namespace), port, database, grantOptionDto);
+        JSONObject res = mysqlClient.revokeDatabasePrivilege(getPath(middlewareName, namespace), getPort(clusterId, namespace, middlewareName), database, grantOptionDto);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.REVOKE_DATABASE_FAILED, res.getString("message"));
         }
@@ -632,7 +649,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void revokeTablePrivilege(String clusterId, String namespace, String middlewareName, String database, String table, GrantOptionDto grantOptionDto) {
-        JSONObject res = mysqlClient.revokeTablePrivilege(getPath(middlewareName, namespace), port, database, table, grantOptionDto);
+        JSONObject res = mysqlClient.revokeTablePrivilege(getPath(middlewareName, namespace), getPort(clusterId, namespace, middlewareName), database, table, grantOptionDto);
         if (!res.getBoolean("success")) {
             throw new BusinessException(ErrorMessage.REVOKE_TABLE_FAILED, res.getString("message"));
         }
@@ -641,8 +658,8 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     @Override
     public List<GrantOptionDto> listUserAuthority(String clusterId, String namespace, String middlewareName, String username, String host) {
         JSONArray privilegeAry = new JSONArray();
-        JSONArray databasePrivilegeAry = mysqlClient.showDatabasePrivilege(getPath(middlewareName, namespace), port, username, host).getJSONArray("dataAry");
-        JSONArray tablePrivilegeAry = mysqlClient.showTablePrivilege(getPath(middlewareName, namespace), port, username, host).getJSONArray("dataAry");
+        JSONArray databasePrivilegeAry = mysqlClient.showDatabasePrivilege(getPath(middlewareName, namespace), getPort(clusterId, namespace, middlewareName), username, host).getJSONArray("dataAry");
+        JSONArray tablePrivilegeAry = mysqlClient.showTablePrivilege(getPath(middlewareName, namespace), getPort(clusterId, namespace, middlewareName), username, host).getJSONArray("dataAry");
         if (!CollectionUtils.isEmpty(databasePrivilegeAry)) {
             privilegeAry.addAll(databasePrivilegeAry);
         }
@@ -666,7 +683,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     @Override
     public void exportTableSql(String clusterId, String namespace, String middlewareName, String database, String table, HttpServletResponse response) {
         try {
-            JSONArray dataAry = mysqlClient.showTableScript(getPath(middlewareName, namespace), port, database, table).getJSONArray("dataAry");
+            JSONArray dataAry = mysqlClient.showTableScript(getPath(middlewareName, namespace), getPort(clusterId, namespace, middlewareName), database, table).getJSONArray("dataAry");
             if (CollectionUtils.isEmpty(dataAry)) {
                 throw new BusinessException(ErrorMessage.FAILED_TO_EXPORT_TABLE_SQL);
             }
@@ -686,7 +703,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public String showTableSql(String clusterId, String namespace, String middlewareName, String database, String table) {
-        JSONArray dataAry = mysqlClient.showTableScript(getPath(middlewareName, namespace), port, database, table).getJSONArray("dataAry");
+        JSONArray dataAry = mysqlClient.showTableScript(getPath(middlewareName, namespace), getPort(clusterId, namespace, middlewareName), database, table).getJSONArray("dataAry");
         if (CollectionUtils.isEmpty(dataAry)) {
             throw new BusinessException(ErrorMessage.FAILED_TO_EXPORT_TABLE_SQL);
         }
@@ -713,7 +730,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         try {
             StringBuilder dbSqlBuf = new StringBuilder();
             for (TableDto tableDto : tableDtoList) {
-                JSONArray dataAry = mysqlClient.showTableScript(getPath(middlewareName, namespace), port, database, tableDto.getTableName()).getJSONArray("dataAry");
+                JSONArray dataAry = mysqlClient.showTableScript(getPath(middlewareName, namespace), getPort(clusterId, namespace, middlewareName), database, tableDto.getTableName()).getJSONArray("dataAry");
                 if (CollectionUtils.isEmpty(dataAry)) {
                     throw new BusinessException(ErrorMessage.FAILED_TO_EXPORT_TABLE_SQL);
                 }
@@ -748,8 +765,8 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public UserDto showUserDetail(String namespace, String middlewareName, String username, String host) {
-        JSONArray dataAry = mysqlClient.showUserDetail(getPath(middlewareName, namespace), port, username, host).getJSONArray("dataAry");
+    public UserDto showUserDetail(String clusterId, String namespace, String middlewareName, String username, String host) {
+        JSONArray dataAry = mysqlClient.showUserDetail(getPath(middlewareName, namespace), getPort(clusterId, namespace, middlewareName), username, host).getJSONArray("dataAry");
         if (CollectionUtils.isEmpty(dataAry)) {
             return null;
         }
@@ -762,11 +779,11 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
     }
 
     @Override
-    public boolean checkDatabaseExists(String namespace, String middlewareName, String database) {
+    public boolean checkDatabaseExists(String clusterId, String namespace, String middlewareName, String database) {
         if (StringUtils.isEmpty(database)) {
             return false;
         }
-        JSONArray dataAry = mysqlClient.showDatabaseDetail(getPath(middlewareName, namespace), port, database).getJSONArray("dataAry");
+        JSONArray dataAry = mysqlClient.showDatabaseDetail(getPath(middlewareName, namespace), getPort(clusterId, namespace, middlewareName), database).getJSONArray("dataAry");
         return !CollectionUtils.isEmpty(dataAry);
     }
 
@@ -782,7 +799,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
         SqlQuery sqlQuery = new SqlQuery(sql);
         sqlQuery.convertAndSetQuery();
-        JSONObject res = mysqlClient.execSql(getPath(middlewareName, namespace), port, database, sqlQuery);
+        JSONObject res = mysqlClient.execSql(getPath(middlewareName, namespace), getPort(clusterId, namespace, middlewareName), database, sqlQuery);
         record.setExecTime(res.getString("execTime"));
         record.setExecStatus(res.getString("success"));
         if (!res.getBoolean("success")) {
@@ -811,8 +828,8 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
      * @param username
      * @return
      */
-    public boolean checkUserExists(String namespace, String middlewareName, String username, String host) {
-        UserDto userDto = showUserDetail(namespace, middlewareName, username, host);
+    public boolean checkUserExists(String clusterId, String namespace, String middlewareName, String username, String host) {
+        UserDto userDto = showUserDetail(clusterId, namespace, middlewareName, username, host);
         return userDto != null;
     }
 

@@ -4,23 +4,24 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.middleware.caas.common.model.dashboard.redis.ScanResult;
+import com.middleware.caas.common.model.middleware.ServicePortDTO;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.middleware.zeus.integration.dashboard.RedisClient;
 import com.middleware.zeus.service.dashboard.RedisKVService;
 import com.middleware.zeus.service.k8s.ClusterService;
+import com.middleware.zeus.service.k8s.ServiceService;
 import com.middleware.zeus.service.middleware.MiddlewareService;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.util.K8sServiceNameUtil;
 import com.middleware.zeus.util.RedisUtil;
+import io.netty.util.internal.UnstableApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -39,16 +40,34 @@ public class RedisAggregationKVServiceImpl implements RedisKVService {
     private HelmChartService helmChartService;
     @Autowired
     private ClusterService clusterService;
+    @Autowired
+    private ServiceService serviceService;
 
     @Value("${system.middleware-api.redis.port:6379}")
     private String port;
+    private static final Map<String,String> REDIS_PORT_MAP = new HashMap<>();
+
+    public String getPort(String clusterId, String namespace, String middlewareName) {
+        String middleware = clusterId + namespace + middlewareName;
+        if (REDIS_PORT_MAP.containsKey(middleware)) {
+            port = REDIS_PORT_MAP.get(middleware);
+            return port;
+        }
+        ServicePortDTO servicePortDTO = serviceService.get(clusterId, namespace, middlewareName);
+        if (servicePortDTO != null && !CollectionUtils.isEmpty(servicePortDTO.getPortDetailDtoList())) {
+            port = servicePortDTO.getPortDetailDtoList().get(0).getPort();
+            REDIS_PORT_MAP.put(middlewareName, port);
+        }
+        return port;
+    }
 
     @Override
     public JSONArray getKeys(String clusterId, String namespace, String middlewareName, Integer db) {
         List<String> paths = listServicePath(clusterId, namespace, middlewareName, true);
         JSONArray jsonArray = new JSONArray();
+        String port = getPort(clusterId, namespace, middlewareName);
         paths.forEach(path -> {
-            jsonArray.addAll(this.getKeys(path, db));
+            jsonArray.addAll(this.getKeys(path, db, port));
         });
         return jsonArray;
     }
@@ -57,8 +76,9 @@ public class RedisAggregationKVServiceImpl implements RedisKVService {
     public JSONArray getKeysWithPattern(String clusterId, String namespace, String middlewareName, Integer db, String keyword) {
         List<String> paths = listServicePath(clusterId, namespace, middlewareName, true);
         JSONArray jsonArray = new JSONArray();
+        String port = getPort(clusterId, namespace, middlewareName);
         paths.forEach(path -> {
-            jsonArray.addAll(getKeysWithPattern(path, db, keyword));
+            jsonArray.addAll(getKeysWithPattern(path, db, keyword, port));
         });
         return jsonArray;
     }
@@ -69,7 +89,7 @@ public class RedisAggregationKVServiceImpl implements RedisKVService {
         AtomicInteger dbSize = new AtomicInteger(0);
         paths.forEach(path -> {
             try {
-                dbSize.getAndSet(redisClient.DBSize(path, port, db).getInteger("data") + dbSize.get());
+                dbSize.getAndSet(redisClient.DBSize(path, getPort(clusterId, namespace, middlewareName), db).getInteger("data") + dbSize.get());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -86,16 +106,17 @@ public class RedisAggregationKVServiceImpl implements RedisKVService {
         scanResult.setKeys(new ArrayList<>());
         for (String servicePath : servicePaths) {
             boolean continueScan = true;
+            String port = getPort(clusterId, namespace, middlewareName);
             if (StringUtils.isEmpty(pod)) {
-                continueScan = scanAndConvert(servicePath, db, keyword, cursor, count, scanResult);
+                continueScan = scanAndConvert(servicePath, port, db, keyword, cursor, count, scanResult);
             } else {
                 if (!startScan) {
                     if (servicePath.equals(pod)) {
                         startScan = true;
-                        continueScan = scanAndConvert(servicePath, db, keyword, cursor, count, scanResult);
+                        continueScan = scanAndConvert(servicePath, port, db, keyword, cursor, count, scanResult);
                     }
                 } else {
-                    continueScan = scanAndConvert(servicePath, db, keyword, cursor, count, scanResult);
+                    continueScan = scanAndConvert(servicePath, port, db, keyword, cursor, count, scanResult);
                 }
             }
             if (startScan) {
@@ -116,7 +137,7 @@ public class RedisAggregationKVServiceImpl implements RedisKVService {
         } else if(firstCMD.equalsIgnoreCase("dbsize")){
             return execDBSizeCMD(clusterId, namespace, middlewareName, db);
         }else{
-            return redisClient.execCMD(K8sServiceNameUtil.getServicePath(namespace, middlewareName), port, db, cmd);
+            return redisClient.execCMD(K8sServiceNameUtil.getServicePath(namespace, middlewareName), getPort(clusterId, namespace, middlewareName), db, cmd);
         }
     }
 
@@ -127,7 +148,7 @@ public class RedisAggregationKVServiceImpl implements RedisKVService {
         AtomicInteger time = new AtomicInteger();
         paths.forEach(path -> {
             try {
-                JSONObject resObj = redisClient.execCMD(K8sServiceNameUtil.getServicePath(namespace, middlewareName), port, db, cmd);
+                JSONObject resObj = redisClient.execCMD(K8sServiceNameUtil.getServicePath(namespace, middlewareName), getPort(clusterId, namespace, middlewareName), db, cmd);
                 JSONArray data = resObj.getJSONArray("data");
                 time.getAndAdd(resObj.getInteger("execTime"));
                 keys.addAll(data.stream().map(Object::toString).collect(Collectors.toList()));
@@ -148,8 +169,8 @@ public class RedisAggregationKVServiceImpl implements RedisKVService {
         return res;
     }
 
-    private boolean scanAndConvert(String pod, Integer db, String keyword, Integer cursor, Integer count, ScanResult scanResult) {
-        JSONObject res = redisClient.scan(pod, port, db, keyword, cursor, count - scanResult.getKeys().size());
+    private boolean scanAndConvert(String pod, String servicePort, Integer db, String keyword, Integer cursor, Integer count, ScanResult scanResult) {
+        JSONObject res = redisClient.scan(pod, servicePort, db, keyword, cursor, count - scanResult.getKeys().size());
         ScanResult result = RedisUtil.convertScanResult(res);
         scanResult.getKeys().addAll(result.getKeys());
         scanResult.setPod(pod);
@@ -157,13 +178,13 @@ public class RedisAggregationKVServiceImpl implements RedisKVService {
         return scanResult.getKeys().size() != count;
     }
 
-    public JSONArray getKeys(String host, Integer db) {
-        JSONObject res = redisClient.getAllKeys(host, port, db);
+    public JSONArray getKeys(String host, Integer db, String servicePort) {
+        JSONObject res = redisClient.getAllKeys(host, servicePort, db);
         return RedisUtil.convertResult(res);
     }
 
-    public JSONArray getKeysWithPattern(String host, Integer db, String keyword) {
-        JSONObject res = redisClient.getKeys(host, port, db, keyword);
+    public JSONArray getKeysWithPattern(String host, Integer db, String keyword, String servicePort) {
+        JSONObject res = redisClient.getKeys(host, servicePort, db, keyword);
         return RedisUtil.convertResult(res);
     }
 
