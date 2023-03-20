@@ -257,17 +257,14 @@ public class LicenseServiceImpl implements LicenseService {
     public LicenseInfo getFeatures() {
         LicenseInfo licenseInfo = new LicenseInfo();
         JSONObject license = getLicense();
-        if (license == null) {
-            throw new BusinessException(ErrorMessage.NOT_EXIST);
-        }
-        /*JSONArray features = license.getJSONArray(FEATURES);
+        JSONArray features = license.getJSONArray(FEATURES);
         if (features == null){
             licenseInfo.setActiveActiveEnable(false);
             licenseInfo.setDisasterRecoveryEnable(false);
         } else{
             licenseInfo.setActiveActiveEnable(features.contains("同城双活"));
             licenseInfo.setDisasterRecoveryEnable(features.contains("灾备服务"));
-        }*/
+        }
         return licenseInfo;
     }
 
@@ -293,10 +290,6 @@ public class LicenseServiceImpl implements LicenseService {
             license.put(TYPE, "试用版");
             license.put(PRODUCE, 20);
             license.put(TEST, 20);
-            ArrayList<String> features = new ArrayList<>();
-            features.add("同城双活");
-            features.add("灾备服务");
-            //license.put(FEATURES,features);
             return license;
         }
         if (!secret.getData().containsKey(LICENSE)) {

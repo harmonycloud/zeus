@@ -237,10 +237,11 @@ public interface MysqlClient {
     /**
      * 查询用户详情
      */
-    @Get(url = "/mysql/{path}/port/{port}/users/{user}/detail")
+    @Get(url = "/mysql/{path}/port/{port}/users/{user}/host/{host}/detail")
     JSONObject showUserDetail(@Var("path") String path,
                               @Var("port") String port,
-                              @Var("user") String user);
+                              @Var("user") String user,
+                              @Var("host") String host);
 
     /**
      * 创建用户
@@ -314,15 +315,17 @@ public interface MysqlClient {
                           @Var("table") String table,
                           @JSONBody GrantOptionDto grantOption);
 
-    @Get(url = "/mysql/{path}/port/{port}/users/{user}/databasePrivilege")
+    @Get(url = "/mysql/{path}/port/{port}/users/{user}/host/{host}/databasePrivilege")
     JSONObject showDatabasePrivilege(@Var("path") String path,
                                      @Var("port") String port,
-                                     @Var("user") String user);
+                                     @Var("user") String user,
+                                     @Var("host") String host);
 
-    @Get(url = "/mysql/{path}/port/{port}/users/{user}/tablePrivilege")
+    @Get(url = "/mysql/{path}/port/{port}/users/{user}/host/{host}/tablePrivilege")
     JSONObject showTablePrivilege(@Var("path") String path,
                                   @Var("port") String port,
-                                  @Var("user") String user);
+                                  @Var("user") String user,
+                                  @Var("host") String host);
 
     /**
      * 释放数据库权限

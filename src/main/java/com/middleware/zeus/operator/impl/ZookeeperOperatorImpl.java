@@ -164,19 +164,6 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
     }
 
     @Override
-    public void replaceNodeAffinity(Middleware middleware, JSONObject values) {
-        if (!CollectionUtils.isEmpty(middleware.getNodeAffinity())) {
-            // convert to k8s model
-            JSONObject nodeAffinity = K8sConvert.convertNodeAffinity2Json(middleware.getNodeAffinity());
-            if (nodeAffinity != null) {
-                JSONObject affinity = new JSONObject();
-                affinity.put("nodeAffinity", nodeAffinity);
-                values.getJSONObject("pod").put("affinity", affinity);
-            }
-        }
-    }
-
-    @Override
     public void replaceToleration(Middleware middleware, JSONObject values) {
         if (!CollectionUtils.isEmpty(middleware.getTolerations())) {
             JSONArray jsonArray = K8sConvert.convertToleration2Json(middleware.getTolerations());
