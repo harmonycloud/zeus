@@ -595,7 +595,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public List<ResourceQuotaDo> getCpuMemoryQuota(String organId, String projectId, boolean detail) {
         // 获取租户自身cpu memory 配额
-        List<ResourceQuotaDo> resourceQuotaDoList = platformQuotaService.getQuota(PROJECT, organId, null, CPU, MEMORY);
+        List<ResourceQuotaDo> resourceQuotaDoList = platformQuotaService.getQuota(PROJECT, projectId, null, CPU, MEMORY);
         if (detail) {
             List<ResourceQuotaDo> namespaceQuotaList = new ArrayList<>();
             for (ResourceQuotaDo resourceQuotaDo : resourceQuotaDoList){
