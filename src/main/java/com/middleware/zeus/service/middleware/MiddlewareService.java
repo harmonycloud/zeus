@@ -257,4 +257,14 @@ public interface MiddlewareService {
      */
     List<MiddlewareInfo> listMiddlewareService(String clusterId, String namespace, String type, String middlewareName);
 
+    /**
+     * 获取web管理控制台服务端口
+     * @param clusterId
+     * @param namespace
+     * @param name
+     * @param type
+     * @return
+     */
+    String getManagePlatformServicePort(String clusterId, String namespace, String name, String type);
+
 }

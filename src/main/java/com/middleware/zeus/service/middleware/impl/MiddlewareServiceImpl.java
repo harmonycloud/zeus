@@ -981,7 +981,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             throw new BusinessException(ErrorMessage.MIDDLEWARE_MANAGER_PLATFORM_NOT_SUPPORT);
         }
         List<IngressDTO> ingressDTOS = ingressService.get(clusterId, namespace, type, name);
-        String servicePort = ServiceNameConvertUtil.getManagePlatformServicePort(type);
+        String servicePort = getManagePlatformServicePort(clusterId, namespace, name, type);
         for (IngressDTO ingressDTO : ingressDTOS) {
             // 如果是ingress7层方式暴露
             if (!CollectionUtils.isEmpty(ingressDTO.getRules())) {
@@ -1018,6 +1018,20 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             }
         }
         return null;
+    }
+
+    @Override
+    public String getManagePlatformServicePort(String clusterId, String namespace, String name, String type) {
+        if (type.equals(MiddlewareTypeEnum.ELASTIC_SEARCH.getType())) {
+            JSONObject values = helmChartService.getInstalledValues(name, namespace, clusterService.findById(clusterId));
+            return values.getJSONObject("port").getString("esKibanaPort");
+        } else if (type.equals(MiddlewareTypeEnum.KAFKA.getType())) {
+            return "9000";
+        } else if (type.equals(MiddlewareTypeEnum.ROCKET_MQ.getType())) {
+            return "8080";
+        } else {
+            return null;
+        }
     }
 
     @Override
