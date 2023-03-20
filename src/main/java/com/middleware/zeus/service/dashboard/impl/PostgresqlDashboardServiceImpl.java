@@ -992,9 +992,6 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
 
     @Override
     public List<MiddlewareUserDto> listUser(String clusterId, String namespace, String middlewareName, String keyword, Boolean skipGrant) {
-        if (skipGrant) {
-            middlewareDashboardAuthService.addMWToken(clusterId, namespace, middlewareName, MiddlewareTypeEnum.POSTGRESQL.getType());
-        }
         String path = getPath(middlewareName, namespace);
         setPort(clusterId, namespace, middlewareName);
         JSONObject listUsers = postgresqlClient.listUsers(path, port);

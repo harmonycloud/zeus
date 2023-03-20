@@ -494,9 +494,6 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public List<UserDto> listUser(String clusterId, String namespace, String middlewareName, String keyword, Boolean skipGrant) {
-        if (skipGrant) {
-            middlewareDashboardAuthService.addMWToken(clusterId, namespace, middlewareName, MiddlewareTypeEnum.MYSQL.getType());
-        }
         JSONArray dataAry = mysqlClient.listUser(getPath(middlewareName, namespace), port).getJSONArray("dataAry");
         return dataAry.stream().map(data -> {
             JSONObject obj = (JSONObject) data;
@@ -568,9 +565,6 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
 
     @Override
     public void updatePassword(String clusterId, String namespace, String middlewareName, String username, UserDto userDto, Boolean skipGrant) {
-        if (skipGrant) {
-            middlewareDashboardAuthService.addMWToken(clusterId, namespace, middlewareName, MiddlewareTypeEnum.MYSQL.getType());
-        }
         if (!checkUserExists(namespace, middlewareName, username, userDto.getHost())) {
             throw new BusinessException(ErrorMessage.MYSQL_USER_NOT_EXISTS);
         }
