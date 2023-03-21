@@ -5,11 +5,15 @@ import static com.middleware.caas.common.constants.NameConstant.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.zeus.bean.LicenseInfo;
+import com.middleware.zeus.dao.BeanSystemConfigMapper;
 import com.middleware.zeus.service.k8s.MiddlewareCRService;
 import com.middleware.zeus.service.k8s.MiddlewareClusterService;
 import com.middleware.zeus.service.k8s.NamespaceService;
@@ -55,8 +59,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LicenseServiceImpl implements LicenseService {
 
-    @Value("${system.license.enable: true}")
-    private String enable;
+//    @Value("${system.license.enable: true}")
+//    private String enable;
 
     @Autowired
     private MiddlewareClusterService clusterService;
@@ -74,8 +78,6 @@ public class LicenseServiceImpl implements LicenseService {
     private MiddlewareCrTypeService middlewareCrTypeService;
     @Autowired
     private SystemConfigService systemConfigService;
-    @Autowired
-    private SecretService secretService;
 
     private static final String PUBLIC_KEY =
         "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDqVEhXdhVabafquPgbeYmz8Ab+2qCh0ayKrFSD7FIQG1+qetvwKo0hmFxeTmgvLBr3IeoDO6nxcx/7MusQdESCApS9vIzU8hdKgzzWmQE84HZ/FNRhcrxwbOgx8FmU1RlPVf/rjoKnhNhQ6xgFXtnd7RBzWnc8lZNxAppdVps0ZwIDAQAB";
@@ -110,12 +112,7 @@ public class LicenseServiceImpl implements LicenseService {
     }
 
     public void saveLicense(JSONObject license) throws Exception {
-        Secret secret = new Secret().setName(ZEUS_LICENSE).setNamespace(ZEUS);
-        Map<String, String> data = new HashMap<>();
-        data.put(LICENSE, RSAUtils.encryptByPublicKey(license.toJSONString(), PUBLIC_KEY));
-        secret.setData(data);
-        secretService.create(K8sClient.DEFAULT_CLIENT, ZEUS, secret);
-
+        systemConfigService.addConfig(ZEUS_LICENSE,RSAUtils.encryptByPublicKey(license.toJSONString(), PUBLIC_KEY));
     }
 
     public void updateLicense(JSONObject license, JSONObject exist) throws Exception {
@@ -128,11 +125,12 @@ public class LicenseServiceImpl implements LicenseService {
 
         // 更新license
         String licenseStr = RSAUtils.encryptByPublicKey(exist.toJSONString(), PUBLIC_KEY);
-        Secret secret = new Secret().setName(ZEUS_LICENSE).setNamespace(ZEUS);
-        Map<String, String> data = new HashMap<>();
-        data.put(LICENSE, licenseStr);
-        secret.setData(data);
-        secretService.createOrReplace(K8sClient.DEFAULT_CLIENT, ZEUS, secret);
+        BeanSystemConfig zeusLicense = systemConfigService.getConfigForUpdate(ZEUS_LICENSE);
+        if (zeusLicense == null) {
+            systemConfigService.addConfig(ZEUS_LICENSE, licenseStr);
+        } else {
+            systemConfigService.updateConfig(ZEUS_LICENSE, licenseStr);
+        }
     }
 
     @Override
@@ -163,9 +161,9 @@ public class LicenseServiceImpl implements LicenseService {
 
     @Override
     public Boolean check(String clusterId) {
-        if (!Boolean.parseBoolean(enable)){
-            return true;
-        }
+//        if (!Boolean.parseBoolean(enable)){
+//            return true;
+//        }
         JSONObject license = getLicense();
         List<MiddlewareClusterDTO> clusterList = clusterService.listClusterDtos();
         clusterList =
@@ -183,9 +181,9 @@ public class LicenseServiceImpl implements LicenseService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void refreshMiddlewareResource() throws Exception {
-        if (!Boolean.parseBoolean(enable)){
-            return;
-        }
+//        if (!Boolean.parseBoolean(enable)){
+//            return;
+//        }
         BeanSystemConfig produceConfig = systemConfigService.getConfigForUpdate(PRODUCE);
         BeanSystemConfig testConfig = systemConfigService.getConfigForUpdate(TEST);
         if (produceConfig == null || testConfig == null) {
@@ -284,19 +282,15 @@ public class LicenseServiceImpl implements LicenseService {
      * 获取license
      */
     public JSONObject getLicense() {
-        Secret secret = secretService.get(K8sClient.DEFAULT_CLIENT, ZEUS, ZEUS_LICENSE);
+        BeanSystemConfig zeusLicenseConfig = systemConfigService.getConfig(ZEUS_LICENSE);
         JSONObject license = new JSONObject();
-        if (secret == null) {
+        if (zeusLicenseConfig == null) {
             license.put(TYPE, "试用版");
             license.put(PRODUCE, 20);
             license.put(TEST, 20);
             return license;
         }
-        if (!secret.getData().containsKey(LICENSE)) {
-            log.error("secret中获取license或code失败");
-            throw new BusinessException(ErrorMessage.LICENSE_CHECK_FAILED);
-        }
-        String licenseStr = secret.getData().get(LICENSE);
+        String licenseStr = zeusLicenseConfig.getConfigValue();
         try {
             license = JSONObject.parseObject(RSAUtils.decryptByPrivateKey(licenseStr, PRIVATE_KEY));
         } catch (Exception e) {
