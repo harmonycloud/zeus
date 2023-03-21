@@ -47,7 +47,7 @@ public class ResourceQuotaController {
     public BaseResult update(@PathVariable("clusterId") String clusterId,
                              @PathVariable("namespace") String namespace,
                              @RequestBody ResourceQuotaDo quotaDo) {
-        resourceQuotaService.update(clusterId, namespace, quotaDo);
+        //resourceQuotaService.update(clusterId, namespace, quotaDo);
         return BaseResult.ok();
     }
 

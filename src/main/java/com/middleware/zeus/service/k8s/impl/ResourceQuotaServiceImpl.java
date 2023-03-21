@@ -9,8 +9,11 @@ import java.util.stream.Collectors;
 
 import com.middleware.caas.common.model.QuotaBase;
 import com.middleware.caas.common.model.ResourceQuotaDo;
+import com.middleware.caas.common.model.StorageDto;
 import com.middleware.caas.common.model.StorageQuota;
+import com.middleware.caas.common.model.middleware.StorageClassInfo;
 import com.middleware.zeus.service.k8s.ResourceQuotaService;
+import com.middleware.zeus.service.k8s.StorageService;
 import com.middleware.zeus.util.CalculateUtil;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ResourceQuotaSpec;
@@ -40,6 +43,8 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
 
     @Autowired
     private ResourceQuotaWrapper resourceQuotaWrapper;
+    @Autowired
+    private StorageService storageService;
 
     @Override
     public void create(String clusterId, String namespace, ResourceQuotaDo resourceQuotaDo) {
@@ -233,7 +238,17 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
         }
         // 设置storage配额
         if (!CollectionUtils.isEmpty(resourceQuotaDo.getStorageList())) {
+            // 查询存储列表  并根据存储id转换为map
+            List<StorageDto> storageDtoList = storageService.list(resourceQuotaDo.getClusterId(), null);
+            Map<String, List<String>> storageClassListMap =
+                storageDtoList.stream().collect(Collectors.toMap(StorageDto::getClusterId, storageDto -> storageDto
+                    .getStorageClassList().stream().map(StorageClassInfo::getName).collect(Collectors.toList())));
+            // 封装存储数据
             for (StorageQuota storageQuota : resourceQuotaDo.getStorageList()) {
+                // 获取storageList
+                if (storageClassListMap.containsKey(storageQuota.getStorageId())){
+                    storageQuota.setStorageClass(storageClassListMap.get(storageQuota.getStorageId()));
+                }
                 if (!CollectionUtils.isEmpty(storageQuota.getStorageClass()) && storageQuota.getStorage() != null
                         && storageQuota.getStorage().getRequest() != null) {
                     for (String storageClass : storageQuota.getStorageClass()) {
