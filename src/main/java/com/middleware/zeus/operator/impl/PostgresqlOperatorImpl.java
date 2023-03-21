@@ -127,6 +127,10 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             if (pgParam.getExporterPort() != null) {
                 customEnvs.put("EXPORTERPORT", pgParam.getExporterPort().toString());
             }
+            if (pgParam.getBgMonPort() != null) {
+                customEnvs.put("BGMONPORT", pgParam.getBgMonPort().toString());
+            }
+
         }
 
         // 备份恢复

@@ -204,6 +204,9 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             if (redisParam.getSentinelPort() != null) {
                 values.getJSONObject("sentinel").put("port", redisParam.getSentinelPort());
             }
+            if (redisParam.getExporterPort() != null) {
+                values.getJSONObject("exporter").put("port", redisParam.getExporterPort());
+            }
         }
 
         //主机网络配置
