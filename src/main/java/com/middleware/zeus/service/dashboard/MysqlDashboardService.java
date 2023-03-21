@@ -159,6 +159,11 @@ public interface MysqlDashboardService extends BaseMiddlewareApiService {
     void updatePassword(String clusterId, String namespace, String middlewareName, String username, UserDto userDto, Boolean skipGrant);
 
     /**
+     * 修改用户账号状态
+     */
+    void changeUserStatus(String clusterId, String namespace, String middlewareName, String username, String host, Boolean usable);
+
+    /**
      * 锁定用户
      */
     void lockUser(String clusterId, String namespace, String middlewareName, String username, String host);

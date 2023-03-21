@@ -499,31 +499,16 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "username", value = "用户名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "usable", value = "用户账号状态", paramType = "query", dataTypeClass = String.class),
     })
     @PutMapping("/users/{username}/host/{host}/lock")
-    public BaseResult lockUser(@PathVariable("clusterId") String clusterId,
-                               @PathVariable("namespace") String namespace,
-                               @PathVariable("middlewareName") String middlewareName,
-                               @PathVariable("username") String username,
-                               @PathVariable("host") String host) {
-        mysqlDashboardService.lockUser(clusterId, namespace, middlewareName, username, host);
-        return BaseResult.ok();
-    }
-
-    @ApiOperation(value = "解锁用户", notes = "解锁用户")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "middlewareName", value = "名称", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "username", value = "用户名称", paramType = "path", dataTypeClass = String.class),
-    })
-    @PutMapping("/users/{username}/host/{host}/unlock")
-    public BaseResult unlockUser(@PathVariable("clusterId") String clusterId,
-                                 @PathVariable("namespace") String namespace,
-                                 @PathVariable("middlewareName") String middlewareName,
-                                 @PathVariable("username") String username,
-                                 @PathVariable("host") String host) {
-        mysqlDashboardService.unLockUser(clusterId, namespace, middlewareName, username, host);
+    public BaseResult changeUserStatus(@PathVariable("clusterId") String clusterId,
+                                       @PathVariable("namespace") String namespace,
+                                       @PathVariable("middlewareName") String middlewareName,
+                                       @PathVariable("username") String username,
+                                       @PathVariable("host") String host,
+                                       @RequestParam("usable") Boolean usable) {
+        mysqlDashboardService.changeUserStatus(clusterId, namespace, middlewareName, username, host, usable);
         return BaseResult.ok();
     }
 
