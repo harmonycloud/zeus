@@ -227,6 +227,8 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
         convertRegistry(middleware, values);
         convertCustomVolumesByHelmChart(middleware, values);
+        convertRedisParamByHelmChart(middleware,values);
+
 
         // 处理redis特有参数
         if (values != null) {
@@ -264,17 +266,40 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             }
         }
 
-        // 主机网络配置
-        RedisParam redisParam = new RedisParam();
-        JSONObject predixy = values.getJSONObject("predixy");
-        if (predixy != null) {
-            redisParam.setHostNetwork(predixy.getBoolean("hostNetwork"));
-        }
-        middleware.setRedisParam(redisParam);
+
         // 设置存储类型
         List<MiddlewareQuota> storageClasses = getMiddlewareStorageClasses(cluster.getId(), middleware, values);
         middleware.setStorageResource(storageClasses);
         return middleware;
+    }
+
+    private void convertRedisParamByHelmChart(Middleware middleware, JSONObject values) {
+        // 主机网络配置
+        RedisParam redisParam = middleware.getRedisParam();
+        if (redisParam == null) {
+            redisParam = new RedisParam();
+        }
+        JSONObject predixy = values.getJSONObject("predixy");
+        if (predixy != null) {
+            redisParam.setHostNetwork(predixy.getBoolean("hostNetwork"));
+        }
+
+        // 端口
+        Integer exportPort = values.getJSONObject("exporter").getInteger("port");
+        redisParam.setExporterPort(exportPort == null ? 9121:exportPort);
+        Integer redisPort = values.getJSONObject("redis").getInteger("port");
+        redisParam.setRedisPort(redisPort == null?6379:redisPort);
+
+        if (SENTINEL.equals(values.getString("type"))){
+            Integer sentinelPort = values.getJSONObject("sentinel").getInteger("port");
+            redisParam.setSentinelPort(sentinelPort == null?26379:sentinelPort);
+        }
+
+        if (TRUE.equals(values.getJSONObject("predixy").getBoolean("enableProxy"))){
+            Integer predixyPort = values.getJSONObject("predixy").getInteger("port");
+            redisParam.setPredixyPort(predixyPort == null ? 7617:predixyPort);
+        }
+        middleware.setRedisParam(redisParam);
     }
 
     @Override

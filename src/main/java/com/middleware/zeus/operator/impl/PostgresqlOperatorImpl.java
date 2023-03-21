@@ -25,7 +25,6 @@ import com.middleware.caas.common.model.middleware.*;
 import com.middleware.zeus.integration.cluster.Postgresql;
 import com.middleware.zeus.integration.cluster.PostgresqlWrapper;
 import com.middleware.zeus.integration.cluster.ServiceWrapper;
-import com.middleware.zeus.integration.cluster.bean.*;
 import com.middleware.zeus.service.k8s.K8sExecService;
 import com.middleware.zeus.service.k8s.MiddlewareBackupCRService;
 import com.middleware.zeus.service.k8s.PodService;
@@ -36,7 +35,6 @@ import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import com.middleware.zeus.operator.api.PostgresqlOperator;
 import com.middleware.zeus.operator.miiddleware.AbstractPostgresqlOperator;
 import com.middleware.zeus.util.ChartVersionUtil;
-import com.middleware.zeus.util.MiddlewareResourceCalculateUtil;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import org.apache.commons.lang3.StringUtils;
@@ -167,6 +165,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
         convertRegistry(middleware, values);
         convertCustomVolumesByHelmChart(middleware, values);
+        convertPostgresqlParamByHelmChart(middleware, values);
 
         middleware.setIsAllLvmStorage(true);
         middleware.setVersion(values.getString("pgsqlVersion"));
@@ -174,7 +173,6 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             middleware.setPassword(values.getJSONObject("userPasswords").getString("postgres"));
         }
         middleware.setPassword(values.getJSONObject("userPasswords").getString("postgres"));
-        middleware.setPostgresqlParam(new PostgresqlParam().setHostNetwork(values.getBoolean("hostNetwork")));
 
         if (middleware.getQuota() != null && middleware.getQuota().containsKey(middleware.getType())){
             middleware.getQuota().get(middleware.getType()).setNum(values.getInteger("instances") - 1);
@@ -183,6 +181,28 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         List<MiddlewareQuota> storageClasses = getMiddlewareStorageClasses(cluster.getId(), middleware, values);
         middleware.setStorageResource(storageClasses);
         return middleware;
+    }
+
+    private void convertPostgresqlParamByHelmChart(Middleware middleware, JSONObject values) {
+        // 主机网络配置
+        PostgresqlParam pgParam = middleware.getPostgresqlParam();
+        if (pgParam == null){
+            pgParam = new PostgresqlParam();
+        }
+        pgParam.setHostNetwork(values.getBoolean("hostNetwork"));
+
+        // 端口
+        JSONObject customEnvs = values.getJSONObject("customEnvs");
+        String pgPort = customEnvs.getString("PGPORT");
+        String apiPort = customEnvs.getString("APIPORT");
+        String exporterPort = customEnvs.getString("EXPORTERPORT");
+        String bgMonPort = customEnvs.getString("BGMONPORT");
+
+        pgParam.setApiPort(apiPort == null ? 8008 : Integer.parseInt(apiPort))
+            .setBgMonPort(bgMonPort == null ? 8080 : Integer.parseInt(bgMonPort))
+            .setPgPort(pgPort == null ? 5432 : Integer.parseInt(pgPort))
+            .setExporterPort(exporterPort == null ? 9187 : Integer.parseInt(exporterPort));
+        middleware.setPostgresqlParam(pgParam);
     }
 
     @Override

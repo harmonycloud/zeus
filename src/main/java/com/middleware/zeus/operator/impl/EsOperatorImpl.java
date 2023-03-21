@@ -121,6 +121,7 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
         convertCommonByHelmChart(middleware, values);
         convertRegistry(middleware, values);
+        convertEsParamByHelmChart(middleware, values);
 
         // 处理es特有参数
         if (values != null) {
@@ -187,6 +188,24 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
 
         middleware.setManagePlatform(true);
         return middleware;
+    }
+
+    private void convertEsParamByHelmChart(Middleware middleware, JSONObject values) {
+        // 端口
+        EsParam esParam = middleware.getEsParam();
+        if (esParam == null) {
+            esParam = new EsParam();
+        }
+        JSONObject port = values.getJSONObject("port");
+        Integer esExporterPort = port.getInteger("esExporterPort");
+        Integer esHttpPort = port.getInteger("esHttpPort");
+        Integer esKibanaPort = port.getInteger("esKibanaPort");
+        Integer esTcpPort = port.getInteger("esTcpPort");
+
+        esParam.setExportPort(esExporterPort == null ? 19114 : esExporterPort)
+            .setHttpPort(esHttpPort == null ? 9200 : esHttpPort)
+            .setKibanaPort(esKibanaPort == null ? 5200 : esKibanaPort).setTcpPort(esTcpPort == null ? 9300 : esTcpPort);
+        middleware.setEsParam(esParam);
     }
 
     @Override
