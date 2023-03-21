@@ -235,7 +235,8 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             convertResourcesByHelmChart(middleware, middleware.getType(), redisQuota.getJSONObject(RESOURCES));
             middleware.getQuota().get(middleware.getType()).setNum(redisQuota.getInteger(REPLICAS));
             // 读写分离
-            if (values.containsKey("predixy")) {
+            if (values.containsKey("predixy") && values.getJSONObject("predixy").getBoolean("enableProxy") != null
+                    && values.getJSONObject("predixy").getBoolean("enableProxy")) {
                 JSONObject predixy = values.getJSONObject("predixy");
                 ReadWriteProxy readWriteProxy = new ReadWriteProxy();
                 readWriteProxy.setEnabled(predixy.getBoolean("enableProxy"));
