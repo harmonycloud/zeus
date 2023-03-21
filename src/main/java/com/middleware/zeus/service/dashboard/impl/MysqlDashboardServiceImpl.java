@@ -537,6 +537,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
                 grantOptionDto.setGrantAble(false);
                 grantOptionDto.setUsername(userDto.getUser());
                 grantOptionDto.setDb("*");
+                grantOptionDto.setHost(userDto.getHost());
                 grantDatabasePrivilege(clusterId, namespace, middlewareName, "*", grantOptionDto);
             }
         }
@@ -586,6 +587,15 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         // 如果是root用户，则修改values.yaml里的密码,即arg.root_password
         if ("root".equals(username)) {
             helmChartService.updatePassword(clusterId, namespace, middlewareName, MiddlewareTypeEnum.MYSQL.getType(), userDto.getPassword());
+        }
+    }
+
+    @Override
+    public void changeUserStatus(String clusterId, String namespace, String middlewareName, String username, String host, Boolean usable) {
+        if (usable) {
+            unLockUser(clusterId, namespace, middlewareName, username, host);
+        } else {
+            lockUser(clusterId, namespace, middlewareName, username, host);
         }
     }
 
@@ -773,6 +783,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         UserDto userDto = new UserDto();
         JSONObject obj = dataAry.getJSONObject(0);
         userDto.setUser(obj.getString("User"));
+        userDto.setHost(obj.getString("Host"));
         userDto.setGrantAble(MysqlUtil.convertGrantPriv(obj.getString("Grant_priv")));
         userDto.setUsable(!MysqlUtil.convertGrantPriv(obj.getString("account_locked")));
         return userDto;
