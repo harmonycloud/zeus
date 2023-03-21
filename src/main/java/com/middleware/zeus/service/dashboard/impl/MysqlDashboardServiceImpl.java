@@ -773,6 +773,7 @@ public class MysqlDashboardServiceImpl implements MysqlDashboardService {
         UserDto userDto = new UserDto();
         JSONObject obj = dataAry.getJSONObject(0);
         userDto.setUser(obj.getString("User"));
+        userDto.setHost(obj.getString("Host"));
         userDto.setGrantAble(MysqlUtil.convertGrantPriv(obj.getString("Grant_priv")));
         userDto.setUsable(!MysqlUtil.convertGrantPriv(obj.getString("account_locked")));
         return userDto;
