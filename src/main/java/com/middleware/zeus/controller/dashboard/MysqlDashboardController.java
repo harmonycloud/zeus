@@ -574,13 +574,14 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "username", value = "用户名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "host", value = "用户Host", paramType = "query", dataTypeClass = String.class),
     })
-    @GetMapping("/users/{username}/host/{host}/authority")
+    @GetMapping("/users/{username}/authority")
     public BaseResult<List<GrantOptionDto>> userAuthority(@PathVariable("clusterId") String clusterId,
                                                           @PathVariable("namespace") String namespace,
                                                           @PathVariable("middlewareName") String middlewareName,
                                                           @PathVariable("username") String username,
-                                                          @PathVariable("host") String host) {
+                                                          @RequestParam("host") String host) {
         return BaseResult.ok(mysqlDashboardService.listUserAuthority(clusterId, namespace, middlewareName, username, host));
     }
 
