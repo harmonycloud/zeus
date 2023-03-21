@@ -119,13 +119,13 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         if (middleware.getPostgresqlParam() != null && customEnvs != null) {
             PostgresqlParam pgParam = middleware.getPostgresqlParam();
             if (pgParam.getPgPort() != null) {
-                customEnvs.put("PGPORT", pgParam.getPgPort());
+                customEnvs.put("PGPORT", pgParam.getPgPort().toString());
             }
             if (pgParam.getApiPort() != null) {
-                customEnvs.put("APIPORT", pgParam.getApiPort());
+                customEnvs.put("APIPORT", pgParam.getApiPort().toString());
             }
             if (pgParam.getExporterPort() != null) {
-                customEnvs.put("EXPORTERPORT", pgParam.getExporterPort());
+                customEnvs.put("EXPORTERPORT", pgParam.getExporterPort().toString());
             }
         }
 
