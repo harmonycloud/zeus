@@ -493,7 +493,7 @@ public class MysqlDashboardController {
         return BaseResult.ok();
     }
 
-    @ApiOperation(value = "锁定用户", notes = "锁定用户")
+    @ApiOperation(value = "修改用户账号状态", notes = "修改用户账号状态")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "分区", paramType = "path", dataTypeClass = String.class),
@@ -501,7 +501,7 @@ public class MysqlDashboardController {
             @ApiImplicitParam(name = "username", value = "用户名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "usable", value = "用户账号状态", paramType = "query", dataTypeClass = String.class),
     })
-    @PutMapping("/users/{username}/host/{host}/lock")
+    @PutMapping("/users/{username}/host/{host}/status")
     public BaseResult changeUserStatus(@PathVariable("clusterId") String clusterId,
                                        @PathVariable("namespace") String namespace,
                                        @PathVariable("middlewareName") String middlewareName,
