@@ -3,9 +3,11 @@ package com.middleware.zeus.service.k8s.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.model.YamlCheck;
+import com.middleware.zeus.integration.cluster.CustomResourceDefinitionWrapper;
 import com.middleware.zeus.service.k8s.YamlService;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.yaml.snakeyaml.Yaml;
@@ -23,6 +25,9 @@ import static com.middleware.caas.common.constants.middleware.MiddlewareConstant
 @Service
 @Slf4j
 public class YamlServiceImpl implements YamlService {
+
+    @Autowired
+    private CustomResourceDefinitionWrapper customResourceDefinitionWrapper;
 
     @Override
     public YamlCheck check(String yamlContent) {
@@ -92,6 +97,12 @@ public class YamlServiceImpl implements YamlService {
             log.error(ErrorMessage.PARSE_OBJECT_TO_CONFIGMAP_FAILED.getZhMsg(), e);
             msg.add(ErrorMessage.PARSE_OBJECT_TO_CONFIGMAP_FAILED.getZhMsg());
         }
+    }
+
+    @Override
+    public String view(String clusterId, String namespace, String plural, String name) {
+
+        return customResourceDefinitionWrapper.getCR(clusterId, namespace, plural, name);
     }
 
 }

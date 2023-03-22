@@ -3,10 +3,12 @@ package com.middleware.zeus.service.middleware;
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.base.BaseResult;
 import com.middleware.caas.common.model.ActiveAreaAnnotationDto;
+import com.middleware.caas.common.model.K8sResource;
 import com.middleware.caas.common.model.middleware.*;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareInfo;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author dengyulong
@@ -222,6 +224,16 @@ public interface MiddlewareService {
      * @return
      */
     ActiveAreaAnnotationDto getActiveAreaAnnotation(String clusterId, String namespace, String type, String middlewareName);
+
+    /**
+     * 获取中间件k8s资源(middleware.includes内全部资源，如果有cr则加上)
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param middlewareName
+     * @return
+     */
+    List<K8sResource> getResources(String clusterId, String namespace, String type, String middlewareName);
 
     /**
      * 中间件分区配额校验

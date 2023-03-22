@@ -10,4 +10,14 @@ public interface YamlService {
 
     YamlCheck check(String yamlContent);
 
+    /**
+     * 查看yaml
+     * @param clusterId
+     * @param namespace
+     * @param plural 资源类型：pods,deployments,mysqlclusters
+     * @param name 资源名称
+     * @return
+     */
+    String view(String clusterId, String namespace, String plural, String name);
+
 }
