@@ -642,8 +642,11 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
     public void reboot(String clusterId, String namespace, String name, String type) {
         RedisCluster rediscluster = redisClusterWrapper.get(clusterId, namespace, name);
         Map<String, String> annotations = rediscluster.getMetadata().getAnnotations();
-        String[] params = gracefulRestartParam.split(":");
-        annotations.put(params[0], params[1]);
+        String[] params = gracefulRestartParam.split(",");
+        for (String param : params) {
+            String[] pair = param.split(":");
+            annotations.put(pair[0], pair[1]);
+        }
         redisClusterWrapper.update(clusterId, namespace, rediscluster);
     }
 
