@@ -76,7 +76,7 @@ update `role` set weight='5' where name='普通用户';
 
 -- 20230320 xutianhong
 -- 初始化组织成员管理页面
-INSERT INTO `resource_menu` VALUES (23,'organUserManagement','成员管理','organUserManagement',3,NULL,0,NULL);
+INSERT INTO `resource_menu` VALUES (23,'organUserManagement','成员管理','organUserManagement',3,'icon-zuzhichengyuanguanli1',0,NULL);
 
 -- 添加组织角色权限
 INSERT INTO `resource_menu_role` VALUES (null,1,23,0);
