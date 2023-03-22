@@ -103,7 +103,9 @@ public class PlatformServiceImpl implements PlatformService {
             JSONObject res = platformClient.switchPlatform(request.getHeader("userToken"));
             if (res != null && res.getJSONObject("data").getBoolean("success")){
                 log.info("切换成功，res = {}",res);
-                newValues.put("type","master-slave");
+                newValues.put("type","slave-slave");
+                newValues.getJSONObject("args").put("isSource",false);
+                newValues.getJSONObject("args").put("isSwitched",true);
                 helmChartService.upgradeZeusMysql(values,newValues);
             }
         }else{
