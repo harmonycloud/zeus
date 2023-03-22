@@ -243,6 +243,11 @@ public class NamespaceServiceImpl implements NamespaceService {
     }
 
     @Override
+    public ResourceQuotaDo cpuMemory(String clusterId, String namespace) {
+        return resourceQuotaService.get(clusterId, namespace, namespace + "quota");
+    }
+
+    @Override
     public List<StorageDto> storage(String clusterId, String namespace) {
         // 查询已接入的存储服务
         List<StorageDto> storageDtoList = storageService.list(clusterId, null, null, false);

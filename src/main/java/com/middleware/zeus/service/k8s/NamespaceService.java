@@ -3,6 +3,7 @@ package com.middleware.zeus.service.k8s;
 import java.util.List;
 import java.util.Map;
 
+import com.middleware.caas.common.model.ResourceQuotaDo;
 import com.middleware.caas.common.model.StorageDto;
 import com.middleware.caas.common.model.middleware.Namespace;
 
@@ -161,7 +162,17 @@ public interface NamespaceService {
     void bindProject(String clusterId, String namespace, String aliasName, String organId, String projectId);
 
     /**
-     * 绑定/解绑分区
+     * 查询分区下cpu/memory
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     *
+     * @return List<StorageDto>
+     */
+    ResourceQuotaDo cpuMemory(String clusterId, String namespace);
+
+    /**
+     * 查询分区下storage
      *
      * @param clusterId 集群id
      * @param namespace 分区
