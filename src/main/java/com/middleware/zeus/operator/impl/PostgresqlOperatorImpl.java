@@ -72,7 +72,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
     @Autowired
     private PostgresqlWrapper postgresqlWrapper;
 
-    @Value("${system.gracefulRestartParam:middleware.maintenance.lock:graceful-restart}")
+    @Value("${system.gracefulRestartParam:middleware.maintenance.lock:graceful-restart,middleware.maintenance.step:0}")
     private String gracefulRestartParam;
 
     @Override
@@ -428,8 +428,11 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
     public void reboot(String clusterId, String namespace, String name, String type) {
         Postgresql postgresql = postgresqlWrapper.get(clusterId, namespace, name);
         Map<String, String> annotations = postgresql.getMetadata().getAnnotations();
-        String[] params = gracefulRestartParam.split(":");
-        annotations.put(params[0], params[1]);
+        String[] params = gracefulRestartParam.split(",");
+        for (String param : params) {
+            String[] kv = param.split(":");
+            annotations.put(kv[0], kv[1]);
+        }
         postgresqlWrapper.update(clusterId, namespace, postgresql);
     }
 

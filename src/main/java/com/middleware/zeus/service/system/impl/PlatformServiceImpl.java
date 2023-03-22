@@ -73,10 +73,14 @@ public class PlatformServiceImpl implements PlatformService {
         JSONObject values = helmChartService.getZeusMysqlInstallValues();
         JSONObject newValues = JSONObject.parseObject(values.toJSONString());
         JSONObject relation = newValues.getJSONObject("args").getJSONObject("relation");
+        if (relation == null) {
+            relation = new JSONObject();
+        }
         relation.put("protocol", urlInfo.getProtocol());
         relation.put("host", urlInfo.getHost());
         relation.put("port", urlInfo.getPort());
         relation.put("name", relationName);
+        newValues.getJSONObject("args").put("relation",relation);
         helmChartService.upgradeZeusMysql(values,newValues);
     }
 
@@ -85,10 +89,14 @@ public class PlatformServiceImpl implements PlatformService {
         JSONObject values = helmChartService.getZeusMysqlInstallValues();
         JSONObject newValues = JSONObject.parseObject(values.toJSONString());
         JSONObject chief = newValues.getJSONObject("args").getJSONObject("chief");
+        if (chief == null){
+            chief = new JSONObject();
+        }
         chief.put("chiefProtocol", urlInfo.getProtocol());
         chief.put("chiefHost", urlInfo.getHost());
         chief.put("chiefPort", urlInfo.getPort());
         chief.put("chiefName", chiefName);
+        newValues.getJSONObject("args").put("chief",chief);
         helmChartService.upgradeZeusMysql(values,newValues);
     }
 
