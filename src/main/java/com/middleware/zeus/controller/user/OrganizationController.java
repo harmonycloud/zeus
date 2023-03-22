@@ -200,12 +200,12 @@ public class OrganizationController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "organId", value = "组织id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "username", value = "用户名称", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "roleId", value = "角色id", paramType = "query", dataTypeClass = Integer.class),
+            @ApiImplicitParam(name = "roleId", required = false, value = "角色id", paramType = "query", dataTypeClass = Integer.class),
     })
     @PutMapping("/{organId}/user")
     public BaseResult updateOrganUser(@PathVariable("organId") String organId,
                                       @RequestParam("username") String username,
-                                      @RequestParam("roleId") Integer roleId) {
+                                      @RequestParam(value = "roleId", required = false) Integer roleId) {
         organizationService.updateOrganUser(organId, username, roleId);
         return BaseResult.ok();
     }
