@@ -126,6 +126,17 @@ public class NamespaceController {
         return BaseResult.ok();
     }
 
+    @ApiOperation(value = "查询分区下可使用cpu/Memory", notes = "查询分区下可使用cpu/Memory")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "path", dataTypeClass = String.class),
+    })
+    @GetMapping("/{namespace}/cpuMemory")
+    public BaseResult<List<StorageDto>> cpuMemory(@PathVariable("clusterId") String clusterId,
+                                                  @PathVariable("namespace") String namespace) {
+        return BaseResult.ok(namespaceService.cpuMemory(clusterId, namespace));
+    }
+
 
     @ApiOperation(value = "查询分区下可使用存储信息", notes = "查询分区下可使用存储信息")
     @ApiImplicitParams({
