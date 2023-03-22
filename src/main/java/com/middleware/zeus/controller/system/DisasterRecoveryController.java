@@ -1,6 +1,7 @@
 package com.middleware.zeus.controller.system;
 
 import com.middleware.caas.common.model.ServicePort;
+import com.middleware.caas.common.model.URLInfo;
 import com.middleware.zeus.service.system.PlatformService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -33,17 +34,17 @@ public class DisasterRecoveryController {
 
     @ApiOperation(value = "存储备平台访问信息",notes = "存储备平台访问信息")
     @PostMapping("spare/{spareName}")
-    public BaseResult saveSpareAddr(@RequestBody ServicePort servicePort,
+    public BaseResult saveSpareAddr(@RequestBody URLInfo urlInfo,
                                     @PathVariable String spareName){
-        platformService.saveRelationAddr(servicePort,spareName);
+        platformService.saveRelationAddr(urlInfo,spareName);
         return BaseResult.ok();
     }
 
     @ApiOperation(value = "保存主平台访问信息", notes = "保存主平台访问信息")
     @PostMapping("chief/{chiefName}")
-    public BaseResult saveChiefAddr(@RequestBody ServicePort servicePort,
+    public BaseResult saveChiefAddr(@RequestBody URLInfo urlInfo,
                                     @PathVariable String chiefName){
-        platformService.saveChiefAddr(servicePort,chiefName);
+        platformService.saveChiefAddr(urlInfo,chiefName);
         return BaseResult.ok();
     }
 

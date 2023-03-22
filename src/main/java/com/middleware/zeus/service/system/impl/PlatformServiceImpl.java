@@ -5,6 +5,7 @@ import com.middleware.caas.common.constants.NameConstant;
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.ServicePort;
+import com.middleware.caas.common.model.URLInfo;
 import com.middleware.zeus.integration.cluster.MysqlReplicateWrapper;
 import com.middleware.zeus.integration.cluster.bean.MysqlReplicateCR;
 import com.middleware.zeus.integration.platform.PlatformClient;
@@ -12,6 +13,7 @@ import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.system.PlatformService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
@@ -24,6 +26,8 @@ import java.io.IOException;
 @Service
 @Slf4j
 public class PlatformServiceImpl implements PlatformService {
+    @Value("${zeus.namespace:zeus}")
+    private String zeusNamespace;
 
     @Autowired
     private HelmChartService helmChartService;
@@ -42,17 +46,6 @@ public class PlatformServiceImpl implements PlatformService {
         JSONObject args = values.getJSONObject("args");
         Boolean isSource = args.getBoolean("isSource");
         res.put("isSource", isSource);
-        if (isSource == null || !isSource){
-            return res;
-        }
-        JSONObject chief = args.getJSONObject("chief");
-        if (chief != null) {
-            res.put("chief", chief);
-        }
-        JSONObject relation = args.getJSONObject("relation");
-        if (relation != null){
-            res.put("relation", relation);
-        }
         Boolean isSwitched = args.getBoolean("isSwitched");
         if (isSwitched != null && isSwitched){
             res.put("isSwitched",true);
@@ -60,31 +53,41 @@ public class PlatformServiceImpl implements PlatformService {
             res.put("isSwitched",false);
         }
 
+        if (isSource == null || !isSource){
+            res.put("isSource",false);
+            return res;
+        }
+        res.put("isSource", isSource);
+        JSONObject chief = args.getJSONObject("chief");
+        res.put("chief", chief);
+        JSONObject relation = args.getJSONObject("relation");
+        res.put("relation", relation);
+
         // TODO 获取主备平台健康状态
 
         return res;
     }
 
     @Override
-    public void saveRelationAddr(ServicePort servicePort, String relationName) {
+    public void saveRelationAddr(URLInfo urlInfo, String relationName) {
         JSONObject values = helmChartService.getZeusMysqlInstallValues();
         JSONObject newValues = JSONObject.parseObject(values.toJSONString());
         JSONObject relation = newValues.getJSONObject("args").getJSONObject("relation");
-        relation.put("protocol", servicePort.getProtocol());
-        relation.put("host", servicePort.getPort());
-        relation.put("port", servicePort.getPort());
+        relation.put("protocol", urlInfo.getProtocol());
+        relation.put("host", urlInfo.getHost());
+        relation.put("port", urlInfo.getPort());
         relation.put("name", relationName);
         helmChartService.upgradeZeusMysql(values,newValues);
     }
 
     @Override
-    public void saveChiefAddr(ServicePort servicePort, String chiefName) {
+    public void saveChiefAddr(URLInfo urlInfo, String chiefName) {
         JSONObject values = helmChartService.getZeusMysqlInstallValues();
         JSONObject newValues = JSONObject.parseObject(values.toJSONString());
         JSONObject chief = newValues.getJSONObject("args").getJSONObject("chief");
-        chief.put("chiefProtocol", servicePort.getProtocol());
-        chief.put("chiefHost", servicePort.getPort());
-        chief.put("chiefPort", servicePort.getPort());
+        chief.put("chiefProtocol", urlInfo.getProtocol());
+        chief.put("chiefHost", urlInfo.getHost());
+        chief.put("chiefPort", urlInfo.getPort());
         chief.put("chiefName", chiefName);
         helmChartService.upgradeZeusMysql(values,newValues);
     }
@@ -101,11 +104,13 @@ public class PlatformServiceImpl implements PlatformService {
             JSONObject res = platformClient.switchPlatform(request.getHeader("userToken"));
             if (res != null && res.getJSONObject("data").getBoolean("success")){
                 log.info("切换成功，res = {}",res);
-                newValues.put("type","master-slave");
+                newValues.put("type","slave-slave");
+                newValues.getJSONObject("args").put("isSource",false);
+                newValues.getJSONObject("args").put("isSwitched",true);
                 helmChartService.upgradeZeusMysql(values,newValues);
             }
         }else{
-            MysqlReplicateCR mr = mysqlReplicateWrapper.getMysqlReplicate(NameConstant.ZEUS, NameConstant.ZEUS_MYSQL_REPLICATE);
+            MysqlReplicateCR mr = mysqlReplicateWrapper.getMysqlReplicate(zeusNamespace, NameConstant.ZEUS_MYSQL_REPLICATE);
             mr.getSpec().setEnable(false);
             mysqlReplicateWrapper.updateMysqlReplicate(mr);
             JSONObject args = newValues.getJSONObject("args");

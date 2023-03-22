@@ -62,6 +62,9 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class HelmChartServiceImpl extends AbstractRegistryService implements HelmChartService {
 
+    @Value("${zeus.namespace:zeus}")
+    private String zeusNamespace;
+
     /**
      * helm chart的上传子目录
      */
@@ -524,7 +527,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             String targetValuesYamlPath = tempValuesYamlDir + File.separator + targetValuesYamlName;
 
             String cmd = String.format("helm upgrade --install %s %s -f %s -f %s -n %s",
-                    NameConstant.ZEUS_MYSQL, helmPath, tempValuesYamlPath, targetValuesYamlPath, NameConstant.ZEUS);
+                    NameConstant.ZEUS_MYSQL, helmPath, tempValuesYamlPath, targetValuesYamlPath, zeusNamespace);
             try {
                 execCmd(cmd, null);
             } finally {
@@ -804,7 +807,8 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     }
 
     private String loadZeusMySQLValuesStr(){
-        List<String> values = execCmd(CmdConstant.ZEUS_MYSQL_VALUES, notFoundMsg());
+        String cmd = String.format(CmdConstant.ZEUS_MYSQL_VALUES,zeusNamespace);
+        List<String> values = execCmd(cmd, notFoundMsg());
         if (CollectionUtils.isEmpty(values)) {
             return null;
         }
