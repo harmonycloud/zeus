@@ -114,7 +114,7 @@ public class OrganizationServiceImpl implements OrganizationService {
         QueryWrapper<BeanOrganization> wrapper = new QueryWrapper<>();
         List<BeanOrganization> list = beanOrganizationMapper.selectList(wrapper);
         // 根据当前用户进行组织过滤
-        filterByCurrentUser(list);
+        list = filterByCurrentUser(list);
         // 获取组织下用户数
         List<BeanOrganizationUser> organizationUserList = organizationUserService.list(null);
         Map<String, List<BeanOrganizationUser>> userCountMap =
@@ -405,7 +405,7 @@ public class OrganizationServiceImpl implements OrganizationService {
         return !CollectionUtils.isEmpty(list);
     }
 
-    public void filterByCurrentUser(List<BeanOrganization> list) {
+    public List<BeanOrganization> filterByCurrentUser(List<BeanOrganization> list) {
         // 获取当前用户
         CurrentUser currentUser = CurrentUserRepository.getUserExistNull();
         JSONObject user = JwtTokenComponent.checkToken(currentUser.getToken()).getValue();
@@ -419,6 +419,7 @@ public class OrganizationServiceImpl implements OrganizationService {
                     .anyMatch(currentUserOrgan -> currentUserOrgan.getOrganId().equals(beanOrganization.getOrganId())))
                 .collect(Collectors.toList());
         }
+        return list;
     }
 
 }
