@@ -71,7 +71,7 @@ public class CustomResourceDefinitionWrapper {
         }
     }
 
-    public String getCR(String clusterId, String namespace, String plural, String name) {
+    public String getCRYaml(String clusterId, String namespace, String plural, String name) {
         CustomResourceDefinitionContext context = crdContextMap.get(plural);
         if (context == null) {
             initCrdContextMap(clusterId);
