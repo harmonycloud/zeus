@@ -9,11 +9,13 @@ import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.system.PlatformService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
  * @auther wangpenglei
  * @date 2023/3/22 15:54
  */
+@Component
 public class PlatformAddress implements AddressSource {
     @Autowired
     private HelmChartService helmChartService;
