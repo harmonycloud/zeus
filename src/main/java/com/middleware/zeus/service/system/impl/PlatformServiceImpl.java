@@ -12,6 +12,7 @@ import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.system.PlatformService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
@@ -24,6 +25,8 @@ import java.io.IOException;
 @Service
 @Slf4j
 public class PlatformServiceImpl implements PlatformService {
+    @Value("${zeus.namespace:zeus}")
+    private String zeusNamespace;
 
     @Autowired
     private HelmChartService helmChartService;
@@ -42,9 +45,18 @@ public class PlatformServiceImpl implements PlatformService {
         JSONObject args = values.getJSONObject("args");
         Boolean isSource = args.getBoolean("isSource");
         res.put("isSource", isSource);
+        Boolean isSwitched = args.getBoolean("isSwitched");
+        if (isSwitched != null && isSwitched){
+            res.put("isSwitched",true);
+        } else {
+            res.put("isSwitched",false);
+        }
+
         if (isSource == null || !isSource){
+            res.put("isSource",false);
             return res;
         }
+        res.put("isSource", isSource);
         JSONObject chief = args.getJSONObject("chief");
         if (chief != null) {
             res.put("chief", chief);
@@ -52,12 +64,6 @@ public class PlatformServiceImpl implements PlatformService {
         JSONObject relation = args.getJSONObject("relation");
         if (relation != null){
             res.put("relation", relation);
-        }
-        Boolean isSwitched = args.getBoolean("isSwitched");
-        if (isSwitched != null && isSwitched){
-            res.put("isSwitched",true);
-        } else {
-            res.put("isSwitched",false);
         }
 
         // TODO 获取主备平台健康状态
@@ -105,7 +111,7 @@ public class PlatformServiceImpl implements PlatformService {
                 helmChartService.upgradeZeusMysql(values,newValues);
             }
         }else{
-            MysqlReplicateCR mr = mysqlReplicateWrapper.getMysqlReplicate(NameConstant.ZEUS, NameConstant.ZEUS_MYSQL_REPLICATE);
+            MysqlReplicateCR mr = mysqlReplicateWrapper.getMysqlReplicate(zeusNamespace, NameConstant.ZEUS_MYSQL_REPLICATE);
             mr.getSpec().setEnable(false);
             mysqlReplicateWrapper.updateMysqlReplicate(mr);
             JSONObject args = newValues.getJSONObject("args");
