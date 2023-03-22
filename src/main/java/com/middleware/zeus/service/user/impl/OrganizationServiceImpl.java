@@ -335,19 +335,23 @@ public class OrganizationServiceImpl implements OrganizationService {
                 return userList.stream().anyMatch(user -> userDto.getUserName().equals(user.getUsername()));
             }
         }).peek(userDto -> {
-            if (!CollectionUtils.isEmpty(userDto.getUserRoleList())) {
-                List<UserRole> userRoleList = userDto.getUserRoleList().stream()
-                    .filter(ur -> StringUtils.isNotEmpty(ur.getOrganId()) && ur.getOrganId().equals(organId))
+            boolean flag = !CollectionUtils.isEmpty(userDto.getUserRoleList()) && StringUtils.isNotEmpty(organId)
+                && userDto.getUserRoleList().stream().anyMatch(
+                    userRole -> userRole.getOrganId().equals(organId) && StringUtils.isEmpty(userRole.getProjectId()));
+            if (flag) {
+                List<UserRole> userRoleList = userDto
+                    .getUserRoleList().stream().filter(ur -> StringUtils.isNotEmpty(ur.getOrganId())
+                        && ur.getOrganId().equals(organId) && StringUtils.isEmpty(ur.getProjectId()))
                     .collect(Collectors.toList());
                 if (!CollectionUtils.isEmpty(userRoleList)) {
                     UserRole userRole = userRoleList.get(0);
                     userDto.setRoleId(userRole.getRoleId());
                     userDto.setRoleName(userRole.getRoleName());
                 }
-                userDto.setUserRoleList(null);
             } else {
                 userDto.setRoleName("普通用户");
             }
+            userDto.setUserRoleList(null);
         }).collect(Collectors.toList());
     }
 
