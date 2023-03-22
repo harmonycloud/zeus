@@ -142,9 +142,11 @@ public class ProjectServiceImpl implements ProjectService {
         // 判断是否为admin,并进行过滤
         if (!userDto.getIsAdmin()) {
             list = list.stream()
-                    .filter(projectDto -> userDto.getUserRoleList().stream()
-                            .anyMatch(userRole -> userRole.getProjectId().equals(projectDto.getProjectId())))
-                    .collect(Collectors.toList());
+                .filter(projectDto -> userDto.getUserRoleList().stream()
+                    .anyMatch(userRole -> StringUtils.isNotEmpty(userRole.getOrganId())
+                        && userRole.getOrganId().equals(organId) && StringUtils.isNotEmpty(userRole.getProjectId())
+                        && userRole.getProjectId().equals(projectDto.getProjectId())))
+                .collect(Collectors.toList());
         }
         // 获取项目下所有分区
         QueryWrapper<BeanProjectNamespace> nsWrapper = new QueryWrapper<>();
