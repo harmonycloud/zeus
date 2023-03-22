@@ -88,6 +88,14 @@ public interface HelmChartService {
     JSONObject getInstalledValues(Middleware middleware, MiddlewareClusterDTO cluster);
 
     /**
+     * 获取zeus-mysql的values
+     * @return
+     */
+    JSONObject getZeusMysqlInstallValues();
+
+
+
+    /**
      * 获取已发布helm chart的values
      *
      * @param name      helm发布实例的名称
@@ -164,6 +172,12 @@ public interface HelmChartService {
      * @param cluster      集群信息
      */
     void upgrade(Middleware middleware, JSONObject values, JSONObject newValues, MiddlewareClusterDTO cluster);
+
+    /**
+     * 更新zeus-mysql
+     * @param values
+     */
+    void upgradeZeusMysql(JSONObject values, JSONObject newValues);
 
     /**
      * 更新/发布 chart

@@ -5,6 +5,7 @@ import com.middleware.zeus.integration.cluster.bean.MysqlReplicateCR;
 import com.middleware.zeus.util.K8sClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -21,6 +22,8 @@ import static com.middleware.caas.common.constants.middleware.MiddlewareConstant
 @Slf4j
 @Component
 public class MysqlReplicateWrapper {
+    @Autowired
+    private K8sClient k8sClient;
 
     /**
      * MysqlReplicate的context
@@ -70,6 +73,25 @@ public class MysqlReplicateWrapper {
             return null;
         }
         return JSONObject.parseObject(JSONObject.toJSONString(map), MysqlReplicateCR.class);
+    }
+
+    public MysqlReplicateCR getMysqlReplicate(String namespace, String name){
+        Map<String, Object> map = null;
+        try {
+            map = k8sClient.getDefaultClient().customResource(CONTEXT).get(namespace, name);
+        } catch (Exception e) {
+            log.error("查询mysql复制关系出错了");
+            return null;
+        }
+        if (CollectionUtils.isEmpty(map)) {
+            return null;
+        }
+        return JSONObject.parseObject(JSONObject.toJSONString(map), MysqlReplicateCR.class);
+    }
+
+    public void updateMysqlReplicate(MysqlReplicateCR mr) throws IOException {
+        k8sClient.getDefaultClient().customResource(CONTEXT).createOrReplace(mr.getMetadata().getNamespace(),
+                JSONObject.parseObject(JSONObject.toJSONString(mr)));
     }
 
 }

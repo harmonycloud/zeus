@@ -14,7 +14,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONArray;
+import com.middleware.caas.common.constants.CmdConstant;
+import com.middleware.caas.common.constants.NameConstant;
 import com.middleware.caas.common.enums.ComponentsEnum;
+import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.middleware.caas.common.model.middleware.*;
 import com.middleware.zeus.bean.BeanImageRepository;
 import com.middleware.zeus.integration.registry.HelmChartWrapper;
@@ -24,6 +27,7 @@ import com.middleware.zeus.service.k8s.NamespaceService;
 import com.middleware.zeus.service.middleware.ImageRepositoryService;
 import com.middleware.zeus.service.registry.AbstractRegistryService;
 import com.middleware.zeus.service.registry.HelmChartService;
+import com.middleware.zeus.util.ChartVersionUtil;
 import com.middleware.zeus.util.YamlUtil;
 import com.middleware.zeus.service.k8s.ClusterCertService;
 import com.middleware.zeus.service.k8s.ClusterService;
@@ -115,6 +119,12 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         if (mwInfo.getChart() == null || mwInfo.getChart().length == 0) {
             throw new BusinessException(ErrorMessage.NOT_FOUND);
         }
+        return convertStreamToFile(mwInfo);
+    }
+
+    private HelmChartFile convertStreamToFile(BeanMiddlewareInfo mwInfo) {
+        String chartName = mwInfo.getChartName();
+        String chartVersion = mwInfo.getChartVersion();
         //创建upload路径
         File upload = new File(uploadPath);
         if (!upload.exists() && !upload.mkdirs()) {
@@ -299,6 +309,16 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     }
 
     @Override
+    public JSONObject getZeusMysqlInstallValues(){
+        String yamlStr = loadZeusMySQLValuesStr();
+        if (StringUtils.isEmpty(yamlStr)){
+            return null;
+        }
+        Yaml yaml = new Yaml();
+        return yaml.loadAs(yamlStr, JSONObject.class);
+    }
+
+    @Override
     public JSONObject getInstalledValuesAsNormalJson(String name, String namespace, MiddlewareClusterDTO cluster) {
         return YamlUtil.convertYamlAsNormalJsonObject(loadYamlAsStr(name, namespace, cluster));
     }
@@ -458,6 +478,73 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         }
         MiddlewareClusterDTO clusterDTO = clusterService.findById(middleware.getClusterId());
         this.upgrade(middleware, updateValues, clusterDTO);
+    }
+
+    @Override
+    public void upgradeZeusMysql(JSONObject values, JSONObject newValues){
+            String chartName = MiddlewareTypeEnum.MYSQL.getType();
+            String chartVersion = values.getString("chartVersion");
+            List<BeanMiddlewareInfo> mysqlCharts = middlewareInfoService.listByType(chartName);
+            if (CollectionUtils.isEmpty(mysqlCharts)){
+                throw new BusinessException(ErrorMessage.HELM_TEMPLATE_NOT_FOUND);
+            }
+            BeanMiddlewareInfo zeusMysqlChart;
+            if (chartVersion != null) {
+                zeusMysqlChart = mysqlCharts.stream().filter(mc -> chartVersion.equals(mc.getChartVersion())).collect(Collectors.toList()).get(0);
+                if (zeusMysqlChart == null) {
+                    zeusMysqlChart = getLastVersion(mysqlCharts);
+                }
+            } else {
+                zeusMysqlChart = getLastVersion(mysqlCharts);
+            }
+
+            String tempValuesYamlDir = getTempValuesYamlDir();
+
+            // 先获取chart文件
+            HelmChartFile helmChart = convertStreamToFile(zeusMysqlChart);
+
+            String tempValuesYamlName =
+                    chartName + "-" + chartVersion + "-" + "temp" + "-" + System.currentTimeMillis() + ".yaml";
+            String targetValuesYamlName =
+                    chartName + "-" + chartVersion + "-" + "target" + "-" + System.currentTimeMillis() + ".yaml";
+
+            Yaml yaml = new Yaml();
+            String tempValuesYaml = yaml.dumpAsMap(values);
+            String targetValuesYaml = yaml.dumpAsMap(newValues);
+            try {
+                FileUtil.writeToLocal(tempValuesYamlDir, tempValuesYamlName, tempValuesYaml);
+                FileUtil.writeToLocal(tempValuesYamlDir, targetValuesYamlName, targetValuesYaml);
+            } catch (IOException e) {
+                log.error("写出values.yaml文件异常：chart包{}:{}", helmChart.getChartName(), helmChart.getChartVersion(), e);
+                throw new BusinessException(ErrorMessage.HELM_CHART_WRITE_ERROR);
+            }
+
+            String helmPath = getHelmChartFilePath(chartName, chartVersion) + File.separator + chartName;
+            String tempValuesYamlPath = tempValuesYamlDir + File.separator + tempValuesYamlName;
+            String targetValuesYamlPath = tempValuesYamlDir + File.separator + targetValuesYamlName;
+
+            String cmd = String.format("helm upgrade --install %s %s -f %s -f %s -n %s",
+                    NameConstant.ZEUS_MYSQL, helmPath, tempValuesYamlPath, targetValuesYamlPath, NameConstant.ZEUS);
+            try {
+                execCmd(cmd, null);
+            } finally {
+                // 删除文件
+                FileUtil.deleteFile(tempValuesYamlPath, targetValuesYamlPath,
+                        getHelmChartFilePath(chartName, chartVersion));
+            }
+    }
+
+    private BeanMiddlewareInfo getLastVersion(List<BeanMiddlewareInfo> chartList) {
+        if (CollectionUtils.isEmpty(chartList)){
+            return null;
+        }
+        final BeanMiddlewareInfo[] mi = {chartList.get(0)};
+        chartList.forEach(chart -> {
+            if (ChartVersionUtil.compare(mi[0].getChartVersion(),chart.getChartVersion()) >= 0){
+                mi[0] = chart;
+            }
+        });
+        return mi[0];
     }
 
     @Override
@@ -705,6 +792,19 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         String cmd = String.format("helm get values %s -n %s -a --kube-apiserver %s --kubeconfig %s", name, namespace,
                 cluster.getAddress(), clusterCertService.getKubeConfigFilePath(cluster.getId()));
         List<String> values = execCmd(cmd, notFoundMsg());
+        if (CollectionUtils.isEmpty(values)) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        // 第0行是COMPUTED VALUES:，直接跳过
+        for (int i = 1; i < values.size(); i++) {
+            sb.append(values.get(i)).append("\n");
+        }
+        return sb.toString();
+    }
+
+    private String loadZeusMySQLValuesStr(){
+        List<String> values = execCmd(CmdConstant.ZEUS_MYSQL_VALUES, notFoundMsg());
         if (CollectionUtils.isEmpty(values)) {
             return null;
         }

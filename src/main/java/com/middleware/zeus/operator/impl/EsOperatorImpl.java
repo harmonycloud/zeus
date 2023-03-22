@@ -103,8 +103,8 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
                 if (param.getHttpPort() != null) {
                     port.put("esHttpPort", param.getHttpPort());
                 }
-                if (param.getExportPort() != null) {
-                    port.put("esExporterPort", param.getExportPort());
+                if (param.getExporterPort() != null) {
+                    port.put("esExporterPort", param.getExporterPort());
                 }
                 if (param.getKibanaPort() != null) {
                     port.put("esKibanaPort", param.getKibanaPort());
@@ -202,7 +202,7 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
         Integer esKibanaPort = port.getInteger("esKibanaPort");
         Integer esTcpPort = port.getInteger("esTcpPort");
 
-        esParam.setExportPort(esExporterPort == null ? 19114 : esExporterPort)
+        esParam.setExporterPort(esExporterPort == null ? 19114 : esExporterPort)
             .setHttpPort(esHttpPort == null ? 9200 : esHttpPort)
             .setKibanaPort(esKibanaPort == null ? 5200 : esKibanaPort).setTcpPort(esTcpPort == null ? 9300 : esTcpPort);
         middleware.setEsParam(esParam);

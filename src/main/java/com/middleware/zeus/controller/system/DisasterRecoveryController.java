@@ -1,14 +1,17 @@
 package com.middleware.zeus.controller.system;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.middleware.caas.common.model.ServicePort;
+import com.middleware.zeus.service.system.PlatformService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
 
 import com.middleware.caas.common.base.BaseResult;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 
 /**
  * @author xutianhong
@@ -16,16 +19,39 @@ import io.swagger.annotations.ApiOperation;
  */
 @Api(tags = {"平台管理", "灾备中心"}, value = "平台管理")
 @RestController
-@RequestMapping("/system/disasterRecovery")
+@RequestMapping("/platform/disasterRecovery/")
 public class DisasterRecoveryController {
 
-    @Value("${system.disasterRecovery.enable:true}")
-    private String enable;
+    @Autowired
+    private PlatformService platformService;
 
-    @ApiOperation(value = "灾备是否启用", notes = "灾备是否启用")
-    @GetMapping("/enable")
-    public BaseResult enable() {
-        return BaseResult.ok(enable);
+    @ApiOperation(value = "查询平台访问信息",notes = "查询平台访问信息")
+    @GetMapping("queryAccessInfo")
+    public BaseResult queryAccessInfo(){
+        return BaseResult.ok(platformService.queryAccessInfo());
+    }
+
+    @ApiOperation(value = "存储备平台访问信息",notes = "存储备平台访问信息")
+    @PostMapping("spare/{spareName}")
+    public BaseResult saveSpareAddr(@RequestBody ServicePort servicePort,
+                                    @PathVariable String spareName){
+        platformService.saveRelationAddr(servicePort,spareName);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "保存主平台访问信息", notes = "保存主平台访问信息")
+    @PostMapping("chief/{chiefName}")
+    public BaseResult saveChiefAddr(@RequestBody ServicePort servicePort,
+                                    @PathVariable String chiefName){
+        platformService.saveChiefAddr(servicePort,chiefName);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "平台主备切换", notes = "平台主备切换")
+    @PostMapping("switch")
+    public BaseResult switchPlatform(HttpServletRequest request) throws IOException {
+        platformService.switchPlatform(request);
+        return BaseResult.ok();
     }
 
 }
