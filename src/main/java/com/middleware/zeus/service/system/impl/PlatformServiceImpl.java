@@ -5,6 +5,7 @@ import com.middleware.caas.common.constants.NameConstant;
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.ServicePort;
+import com.middleware.caas.common.model.URLInfo;
 import com.middleware.zeus.integration.cluster.MysqlReplicateWrapper;
 import com.middleware.zeus.integration.cluster.bean.MysqlReplicateCR;
 import com.middleware.zeus.integration.platform.PlatformClient;
@@ -68,25 +69,25 @@ public class PlatformServiceImpl implements PlatformService {
     }
 
     @Override
-    public void saveRelationAddr(ServicePort servicePort, String relationName) {
+    public void saveRelationAddr(URLInfo urlInfo, String relationName) {
         JSONObject values = helmChartService.getZeusMysqlInstallValues();
         JSONObject newValues = JSONObject.parseObject(values.toJSONString());
         JSONObject relation = newValues.getJSONObject("args").getJSONObject("relation");
-        relation.put("protocol", servicePort.getProtocol());
-        relation.put("host", servicePort.getPort());
-        relation.put("port", servicePort.getPort());
+        relation.put("protocol", urlInfo.getProtocol());
+        relation.put("host", urlInfo.getHost());
+        relation.put("port", urlInfo.getPort());
         relation.put("name", relationName);
         helmChartService.upgradeZeusMysql(values,newValues);
     }
 
     @Override
-    public void saveChiefAddr(ServicePort servicePort, String chiefName) {
+    public void saveChiefAddr(URLInfo urlInfo, String chiefName) {
         JSONObject values = helmChartService.getZeusMysqlInstallValues();
         JSONObject newValues = JSONObject.parseObject(values.toJSONString());
         JSONObject chief = newValues.getJSONObject("args").getJSONObject("chief");
-        chief.put("chiefProtocol", servicePort.getProtocol());
-        chief.put("chiefHost", servicePort.getPort());
-        chief.put("chiefPort", servicePort.getPort());
+        chief.put("chiefProtocol", urlInfo.getProtocol());
+        chief.put("chiefHost", urlInfo.getHost());
+        chief.put("chiefPort", urlInfo.getPort());
         chief.put("chiefName", chiefName);
         helmChartService.upgradeZeusMysql(values,newValues);
     }

@@ -2,6 +2,7 @@ package com.middleware.zeus.service.system;
 
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.model.ServicePort;
+import com.middleware.caas.common.model.URLInfo;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -14,9 +15,9 @@ public interface PlatformService {
 
     JSONObject queryAccessInfo();
 
-    void saveRelationAddr(ServicePort servicePort, String spareName);
+    void saveRelationAddr(URLInfo urlInfo, String spareName);
 
-    void saveChiefAddr(ServicePort servicePort, String chiefName);
+    void saveChiefAddr(URLInfo urlInfo, String chiefName);
 
     void switchPlatform(HttpServletRequest request) throws IOException;
 }
