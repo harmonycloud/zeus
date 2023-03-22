@@ -31,4 +31,19 @@ public class YamlController {
         return BaseResult.ok(yamlService.check(yaml));
     }
 
+    @ApiOperation(value = "查看资源yaml", notes = "查看资源yaml")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "分区id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "plural", value = "资源类型", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "name", value = "资源名称", paramType = "path", dataTypeClass = String.class)
+    })
+    @GetMapping("/view")
+    public BaseResult<String> yaml(@RequestParam("clusterId") String clusterId,
+                                   @RequestParam("namespace") String namespace,
+                                   @RequestParam("plural") String plural,
+                                   @RequestParam("name") String name) {
+        return BaseResult.ok(yamlService.view(clusterId, namespace, plural, name));
+    }
+
 }

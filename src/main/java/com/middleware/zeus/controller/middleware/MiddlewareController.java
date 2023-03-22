@@ -1,6 +1,7 @@
 package com.middleware.zeus.controller.middleware;
 
 import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.K8sResource;
 import com.middleware.caas.common.model.middleware.*;
 import com.middleware.zeus.annotation.Authority;
 import com.middleware.zeus.service.middleware.MiddlewareService;
@@ -10,6 +11,9 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
 
 import static com.middleware.caas.common.constants.CommonConstant.ASTERISK;
 
@@ -336,6 +340,22 @@ public class MiddlewareController {
     public BaseResult<String> middlewareImage(@RequestParam("type") String type,
                                               @RequestParam("version") String version) {
         return BaseResult.ok(middlewareService.middlewareImage(type, version));
+    }
+
+    @ApiOperation(value = "查询服务全部资源", notes = "查询服务资源")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("{middlewareName}/resources")
+    @Authority(power = 1)
+    public BaseResult<List<K8sResource>> getResources(@PathVariable("clusterId") String clusterId,
+                                                      @PathVariable("namespace") String namespace,
+                                                      @PathVariable("middlewareName") String middlewareName,
+                                                      @RequestParam("type") String type) {
+        return BaseResult.ok(middlewareService.getResources(clusterId, namespace, type, middlewareName));
     }
 
 }

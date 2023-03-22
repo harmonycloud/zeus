@@ -20,13 +20,14 @@ import com.middleware.zeus.bean.BeanClusterMiddlewareInfo;
 import com.middleware.zeus.bean.BeanMiddlewareInfo;
 import com.middleware.zeus.bean.user.BeanRoleAuthority;
 import com.middleware.zeus.dao.BeanMiddlewareInfoMapper;
+import com.middleware.zeus.integration.cluster.CustomResourceDefinitionWrapper;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.middleware.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.middleware.zeus.operator.BaseOperator;
 import com.middleware.zeus.service.AbstractBaseService;
-import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.k8s.IngressService;
+import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.middleware.*;
 import com.middleware.zeus.service.prometheus.PrometheusResourceMonitorService;
 import com.middleware.zeus.service.registry.HelmChartService;
@@ -34,7 +35,10 @@ import com.middleware.zeus.service.system.LicenseService;
 import com.middleware.zeus.service.user.ProjectService;
 import com.middleware.zeus.service.user.RoleAuthorityService;
 import com.middleware.zeus.service.user.UserRoleService;
-import com.middleware.zeus.util.*;
+import com.middleware.zeus.util.ChartVersionUtil;
+import com.middleware.zeus.util.MiddlewareResourceCalculateUtil;
+import com.middleware.zeus.util.PrometheusQueryUtil;
+import com.middleware.zeus.util.YamlUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -59,7 +63,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.middleware.caas.common.constants.NameConstant.*;
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
 
 /**
  * @author dengyulong
@@ -123,6 +127,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
     @Value("${system.wrongTypeKeys:tolerations,customVolumes}")
     private String wrongTypeKeys;
+    @Autowired
+    private CustomResourceDefinitionWrapper customResourceDefinitionWrapper;
 
     @Override
     public List<Middleware> simpleList(String clusterId, String namespace, String type, String keyword) {
@@ -1058,6 +1064,22 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         middleware.setType(type);
         BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
         return operator.getActiveAreaAnnotation(clusterId, namespace, type, middlewareName);
+    }
+
+    @Override
+    public List<K8sResource> getResources(String clusterId, String namespace, String type, String middlewareName) {
+        MiddlewareCR cr = middlewareCRService.getCR(clusterId, namespace, type, middlewareName);
+        List<K8sResource> resources = new ArrayList<>();
+        Map<String, List<MiddlewareInfo>> include = cr.getStatus().getInclude();
+        include.forEach((k, v) -> {
+            List<String> resourceNameList = v.stream().map(MiddlewareInfo::getName).collect(Collectors.toList());
+            resources.add(new K8sResource(k, resourceNameList));
+        });
+        if (middlewareCrTypeService.isType(type)) {
+            String pluralName = customResourceDefinitionWrapper.getCRPluralName(clusterId, middlewareCrTypeService.findByType(type));
+            resources.add(new K8sResource(pluralName, Arrays.asList(middlewareName)));
+        }
+        return resources;
     }
 
     @Override
