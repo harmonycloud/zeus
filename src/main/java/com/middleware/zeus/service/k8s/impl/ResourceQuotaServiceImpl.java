@@ -241,7 +241,7 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
             // 查询存储列表  并根据存储id转换为map
             List<StorageDto> storageDtoList = storageService.list(resourceQuotaDo.getClusterId(), false);
             Map<String, List<String>> storageClassListMap =
-                storageDtoList.stream().collect(Collectors.toMap(StorageDto::getClusterId, storageDto -> storageDto
+                storageDtoList.stream().collect(Collectors.toMap(StorageDto::getStorageId, storageDto -> storageDto
                     .getStorageClassList().stream().map(StorageClassInfo::getName).collect(Collectors.toList())));
             // 封装存储数据
             for (StorageQuota storageQuota : resourceQuotaDo.getStorageList()) {
