@@ -212,17 +212,11 @@ public class PlatformQuotaServiceImpl implements PlatformQuotaService {
                 // 设置存储使用量
                 if (!CollectionUtils.isEmpty(quotaDo.getStorageList())
                     && !CollectionUtils.isEmpty(projectQuotaDo.getStorageList())) {
-                    Map<List<String>,
-                        Double> storageMap = projectQuotaDo.getStorageList().stream()
-                            .collect(Collectors.toMap(
-                                storageQuota -> storageQuota.getStorageClass().stream().sorted()
-                                    .collect(Collectors.toList()),
-                                storageQuota -> storageQuota.getStorage().getRequest()));
+                    Map<String, Double> storageMap = projectQuotaDo.getStorageList().stream().collect(Collectors
+                        .toMap(StorageQuota::getStorageId, storageQuota -> storageQuota.getStorage().getRequest()));
                     for (StorageQuota storageQuota : quotaDo.getStorageList()) {
-                        List<String> storageClassList =
-                            storageQuota.getStorageClass().stream().sorted().collect(Collectors.toList());
-                        if (storageMap.containsKey(storageClassList)) {
-                            storageQuota.getStorage().setUsed(storageMap.get(storageClassList));
+                        if (storageMap.containsKey(storageQuota.getStorageId())) {
+                            storageQuota.getStorage().setUsed(storageMap.get(storageQuota.getStorageId()));
                         }
                     }
                 }
