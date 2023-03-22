@@ -58,13 +58,9 @@ public class PlatformServiceImpl implements PlatformService {
         }
         res.put("isSource", isSource);
         JSONObject chief = args.getJSONObject("chief");
-        if (chief != null) {
-            res.put("chief", chief);
-        }
+        res.put("chief", chief);
         JSONObject relation = args.getJSONObject("relation");
-        if (relation != null){
-            res.put("relation", relation);
-        }
+        res.put("relation", relation);
 
         // TODO 获取主备平台健康状态
 
