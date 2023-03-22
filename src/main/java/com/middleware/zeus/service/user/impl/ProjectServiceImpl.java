@@ -764,7 +764,7 @@ public class ProjectServiceImpl implements ProjectService {
             BeanUtils.copyProperties(beanProjectNamespace, namespace);
             namespace.setClusterAliasName(clusterService.findById(namespace.getClusterId()).getNickname());
             namespace.setName(beanProjectNamespace.getNamespace());
-            setNamespaceAliasName(namespace);
+            //setNamespaceAliasName(namespace);
             return namespace;
         }).collect(Collectors.toList());
         // 查询quota
