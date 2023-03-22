@@ -556,6 +556,9 @@ public class PodServiceImpl implements PodService {
                 });
 
                 JSONObject statusObj = JSONObject.parseObject(status);
+                if (statusObj == null) {
+                    return podInfoList;
+                }
                 JSONArray conditions = statusObj.getJSONArray("conditions");
                 if (CollectionUtils.isEmpty(conditions)) {
                     return podInfoList;
