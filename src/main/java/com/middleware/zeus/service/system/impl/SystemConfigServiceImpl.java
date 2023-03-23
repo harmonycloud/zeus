@@ -1,6 +1,7 @@
 package com.middleware.zeus.service.system.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.middleware.caas.filters.user.CurrentUser;
 import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.zeus.bean.BeanSystemConfig;
 import com.middleware.zeus.dao.BeanSystemConfigMapper;
@@ -26,7 +27,11 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 
     @Override
     public void addConfig(String name, String value) {
-        String username = CurrentUserRepository.getUser().getUsername();
+        String username = null;
+        CurrentUser user = CurrentUserRepository.getUser();
+        if (user != null){
+            username = user.getUsername();
+        }
         BeanSystemConfig config = new BeanSystemConfig();
         config.setConfigName(name);
         config.setConfigValue(value);
