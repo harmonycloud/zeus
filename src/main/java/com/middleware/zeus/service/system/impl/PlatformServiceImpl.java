@@ -2,8 +2,6 @@ package com.middleware.zeus.service.system.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.constants.NameConstant;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.DisasterRecoveryDto;
 import com.middleware.caas.common.model.DisasterRecoveryInfo;
 import com.middleware.zeus.integration.cluster.MysqlReplicateWrapper;
@@ -110,7 +108,7 @@ public class PlatformServiceImpl implements PlatformService {
         addrInfo.put("host", info.getHost());
         addrInfo.put("port", info.getPort());
         addrInfo.put("name", name);
-        newValues.getJSONObject("args").put(info.getIsRemote() ? "relation" : "local", addrInfo);
+        newValues.getJSONObject("args").put(info.getIsRelation() ? "relation" : "local", addrInfo);
         helmChartService.upgradeZeusMysql(values, newValues);
     }
 
