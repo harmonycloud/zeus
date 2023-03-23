@@ -83,7 +83,6 @@ public class PodServiceImpl implements PodService {
     public Middleware list(String clusterId, String namespace, String middlewareName, String type) {
         MiddlewareCR mw = middlewareCRService.getCR(clusterId, namespace, type, middlewareName);
         Middleware middleware = listPodsWithMiddleware(mw, clusterId, namespace, middlewareName, type);
-        //middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(clusterId, middleware.getNamespace(), middleware.getType(), middleware.getName()));
         return middleware;
     }
 
