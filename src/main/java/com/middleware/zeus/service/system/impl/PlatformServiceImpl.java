@@ -69,7 +69,7 @@ public class PlatformServiceImpl implements PlatformService {
         return new DisasterRecoveryInfo().setHost(info.getString("host")).
                 setProtocol(info.getString("protocol")).
                 setPort(info.getInteger("port")).
-                setName("name");
+                setName(info.getString("name"));
     }
 
     @Override
