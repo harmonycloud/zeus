@@ -1005,6 +1005,9 @@ public class ClusterServiceImpl implements ClusterService {
                 storageQuota.setName(storageDto.getAliasName());
                 storageQuota.setStorageClass(storageDto.getStorageClassList().stream().map(StorageClassInfo::getName)
                     .collect(Collectors.toList()));
+                storageQuota.setStorageType(storageDto.getStorageClassList().stream()
+                    .map(StorageClassInfo::getVolumeType).collect(Collectors.toList()));
+                storageQuota.setStorageId(storageDto.getStorageId());
                 storageQuota.setStorage(storage);
                 return storageQuota;
             }).collect(Collectors.toList());

@@ -171,6 +171,7 @@ public class PlatformQuotaServiceImpl implements PlatformQuotaService {
                 StorageQuota storageQuota = new StorageQuota();
                 storageQuota.setStorage(new QuotaBase().setRequest(storageMap.get(storage)));
                 storageQuota.setStorageId(storage);
+                resourceQuotaDo.getStorageList().add(storageQuota);
             }
             quotaDoList.add(resourceQuotaDo);
         }
