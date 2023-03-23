@@ -53,5 +53,13 @@ public interface OrganizationUserService {
      */
     void delete(String organId, String username);
 
+    /**
+     * 获取组织用户列表
+     * @param organId 组织id
+     *
+     * @return List<BeanOrganizationUser>
+     */
+    List<UserRole> listUserRole(String organId);
+
 
 }

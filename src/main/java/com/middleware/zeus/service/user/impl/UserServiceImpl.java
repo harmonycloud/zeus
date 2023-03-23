@@ -143,15 +143,7 @@ public class UserServiceImpl implements UserService {
         // 获取用户项目下角色
         List<UserRole> userRoleList = userRoleService.list();
         // 获取用户组织下角色
-        userRoleList.addAll(organizationUserService.list(null).stream()
-            .filter(organizationUser -> organizationUser.getRoleId() != null).map(organizationUser -> {
-                UserRole userRole = new UserRole();
-                userRole.setUserName(organizationUser.getUsername());
-                userRole.setRoleName("组织管理员");
-                userRole.setOrganId(organizationUser.getOrganId());
-                userRole.setRoleId(organizationUser.getRoleId());
-                return userRole;
-            }).collect(Collectors.toList()));
+        userRoleList.addAll(organizationUserService.listUserRole(null));
         Map<String, List<UserRole>> userRoleMap =
                 userRoleList.stream().collect(Collectors.groupingBy(UserRole::getUserName));
         // 封装数据

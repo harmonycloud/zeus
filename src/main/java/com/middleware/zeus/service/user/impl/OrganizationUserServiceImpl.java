@@ -1,7 +1,14 @@
 package com.middleware.zeus.service.user.impl;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.middleware.caas.common.model.user.UserRole;
+import com.middleware.zeus.bean.user.BeanOrganization;
+import com.middleware.zeus.dao.user.BeanOrganizationMapper;
+import com.middleware.zeus.service.user.OrganizationService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,6 +33,8 @@ public class OrganizationUserServiceImpl implements OrganizationUserService {
 
     @Autowired
     private BeanOrganizationUserMapper beanOrganizationUserMapper;
+    @Autowired
+    private BeanOrganizationMapper beanOrganizationMapper;
 
     @Override
     public List<BeanOrganizationUser> list(String organId) {
@@ -62,12 +71,11 @@ public class OrganizationUserServiceImpl implements OrganizationUserService {
         if (!checkExist(organId, username)) {
             throw new BusinessException(ErrorMessage.NOT_EXIST);
         }
-        QueryWrapper<BeanOrganizationUser> wrapper =
-            new QueryWrapper<BeanOrganizationUser>().eq("organ_id", organId).eq("username", username);
+        UpdateWrapper<BeanOrganizationUser> wrapper = new UpdateWrapper<BeanOrganizationUser>().eq("organ_id", organId);
         BeanOrganizationUser beanOrganizationUser = new BeanOrganizationUser();
         beanOrganizationUser.setOrganId(organId);
         beanOrganizationUser.setUsername(username);
-        beanOrganizationUser.setRoleId(roleId);
+        wrapper.set("role_id", roleId);
 
         beanOrganizationUserMapper.update(beanOrganizationUser, wrapper);
     }
@@ -82,6 +90,26 @@ public class OrganizationUserServiceImpl implements OrganizationUserService {
             wrapper.eq("username", username);
         }
         beanOrganizationUserMapper.delete(wrapper);
+    }
+
+    @Override
+    public List<UserRole> listUserRole(String organId) {
+        QueryWrapper<BeanOrganization> wrapper = new QueryWrapper<>();
+        Map<String, String> nameMap = beanOrganizationMapper.selectList(wrapper).stream()
+            .collect(Collectors.toMap(BeanOrganization::getOrganId, BeanOrganization::getName));
+        return this.list(organId).stream().filter(organizationUser -> organizationUser.getRoleId() != null)
+            .map(organizationUser -> {
+                UserRole userRole = new UserRole();
+                userRole.setUserName(organizationUser.getUsername());
+                userRole.setRoleName("组织管理员");
+                userRole.setOrganId(organizationUser.getOrganId());
+                userRole.setRoleId(organizationUser.getRoleId());
+                if (StringUtils.isNotEmpty(organizationUser.getOrganId())
+                    && nameMap.containsKey(organizationUser.getOrganId())) {
+                    userRole.setOrganName(nameMap.get(organizationUser.getOrganId()));
+                }
+                return userRole;
+            }).collect(Collectors.toList());
     }
 
     public Boolean checkExist(String organId, String username) {

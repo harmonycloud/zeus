@@ -9,6 +9,7 @@ import com.middleware.caas.common.model.user.RoleDto;
 import com.middleware.zeus.bean.user.*;
 import com.middleware.zeus.bean.user.BeanProject;
 import com.middleware.zeus.bean.user.BeanUserRole;
+import com.middleware.zeus.dao.user.BeanOrganizationMapper;
 import com.middleware.zeus.dao.user.BeanProjectMapper;
 import com.middleware.zeus.service.user.RoleService;
 import com.middleware.zeus.service.user.UserRoleService;
@@ -39,6 +40,8 @@ public class UserRoleServiceImpl implements UserRoleService {
     private BeanUserRoleMapper beanUserRoleMapper;
     @Autowired
     private BeanProjectMapper beanProjectMapper;
+    @Autowired
+    private BeanOrganizationMapper beanOrganizationMapper;
 
     @Override
     public List<UserRole> get(String userName) {
@@ -89,6 +92,10 @@ public class UserRoleServiceImpl implements UserRoleService {
         QueryWrapper<BeanProject> wrapper = new QueryWrapper<>();
         Map<String, BeanProject> beanProjectMap =
             beanProjectMapper.selectList(wrapper).stream().collect(Collectors.toMap(BeanProject::getProjectId, b -> b));
+        // 获取组织名称
+        QueryWrapper<BeanOrganization> organWrapper = new QueryWrapper<>();
+        Map<String, String> organNameMap =
+                beanOrganizationMapper.selectList(organWrapper).stream().collect(Collectors.toMap(BeanOrganization::getOrganId, BeanOrganization::getName));
         // 获取所有角色信息
         List<RoleDto> beanRoleList = roleService.list(null);
         Map<Integer, String> beanSysRoleMap =
@@ -98,6 +105,9 @@ public class UserRoleServiceImpl implements UserRoleService {
             UserRole userRole = new UserRole();
             BeanUtils.copyProperties(beanUser, userRole);
             userRole.setUserName(beanUser.getUserName()).setRoleName(beanSysRoleMap.get(beanUser.getRoleId()));
+            if (StringUtils.isNotEmpty(userRole.getOrganId()) && organNameMap.containsKey(userRole.getOrganId())){
+                userRole.setOrganName(organNameMap.get(userRole.getOrganId()));
+            }
             if (StringUtils.isNotEmpty(userRole.getProjectId()) && beanProjectMap.containsKey(userRole.getProjectId())) {
                 userRole.setProjectName(beanProjectMap.get(userRole.getProjectId()).getAliasName());
             }
