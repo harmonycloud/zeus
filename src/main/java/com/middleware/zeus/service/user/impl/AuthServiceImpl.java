@@ -10,6 +10,9 @@ import com.middleware.caas.filters.token.JwtTokenComponent;
 import com.middleware.tool.date.DateUtils;
 import com.middleware.tool.encrypt.PasswordUtils;
 import com.middleware.tool.encrypt.RSAUtils;
+import com.middleware.zeus.integration.platform.PlatformClient;
+import com.middleware.zeus.service.registry.HelmChartService;
+import com.middleware.zeus.service.system.PlatformService;
 import com.middleware.zeus.service.user.AuthManager4Ldap;
 import com.middleware.zeus.service.user.AuthService;
 import com.middleware.zeus.service.user.LdapService;
@@ -44,6 +47,8 @@ public class AuthServiceImpl implements AuthService {
     private Double accountExpireDay;
     @Value("${system.user.account.alert:15}")
     private Double accountExpireAlertDay;
+    @Autowired
+    private HelmChartService helmChartService;
 
     @Autowired
     private UserService userService;
@@ -54,6 +59,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public JSONObject login(String userName, String password, HttpServletResponse response) throws Exception {
+        // 查看平台灾备切换状态
+        checkDisasterRecovery();
         //解密密码
         String decryptPassword;
         try {
@@ -96,6 +103,16 @@ public class AuthServiceImpl implements AuthService {
             }
         }
         return res;
+    }
+
+    private void checkDisasterRecovery() {
+        JSONObject values = helmChartService.getZeusMysqlInstallValues();
+        Boolean switched = values.getJSONObject("args").getBoolean("disasterRecoverySwitched");
+        Boolean isMaster = "master-slave".equals(values.getString("type"));
+        if (switched != null && switched && !isMaster) {
+            log.error("当前集群已由平台灾备功能进行切换，无法进行登录");
+            throw new BusinessException(ErrorMessage.UNKNOWN);
+        }
     }
 
     @Override

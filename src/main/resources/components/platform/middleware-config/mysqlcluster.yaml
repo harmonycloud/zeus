@@ -43,6 +43,9 @@ sysDynamicVariable:
   partition:
     objectType: middleware
     value: "0"
+  fullRestoreFlag:
+    jsonPath: '.metadata.annotations."recover-finish.full.result"'
+    objectType: middleware
 
 # 动态变量
 # objectType: 变量获取的对象，midleware/bakcup/restore

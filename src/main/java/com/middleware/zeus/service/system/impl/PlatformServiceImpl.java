@@ -1,7 +1,11 @@
 package com.middleware.zeus.service.system.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.dtflys.forest.exceptions.ForestNetworkException;
+import com.dtflys.forest.exceptions.ForestRuntimeException;
 import com.middleware.caas.common.constants.NameConstant;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.DisasterRecoveryDto;
 import com.middleware.caas.common.model.DisasterRecoveryInfo;
 import com.middleware.zeus.integration.cluster.MysqlReplicateWrapper;
@@ -52,7 +56,7 @@ public class PlatformServiceImpl implements PlatformService {
         res.setLocal(convertParam(_local)).setRelation(convertParam(_remote));
 
         // 上次切换时间
-        res.setLastSwitchTime(args.getDate("lastSwitchTime"));
+        res.setLastSwitchTime(values.getDate("lastSwitchTime"));
 
         // TODO 平台健康状态
         return res;
@@ -65,7 +69,7 @@ public class PlatformServiceImpl implements PlatformService {
         return new DisasterRecoveryInfo().setHost(info.getString("host")).
                 setProtocol(info.getString("protocol")).
                 setPort(info.getInteger("port")).
-                setName("name");
+                setName(info.getString("name"));
     }
 
     @Override
@@ -77,25 +81,36 @@ public class PlatformServiceImpl implements PlatformService {
             try {
                 JSONObject res = platformClient.switchPlatform(request.getHeader("userToken"));
                 log.info("切换结果:{}",res);
-                if (res != null && res.getJSONObject("data").getBoolean("success")) {
+                if (res != null && res.getBoolean("success")) {
                     log.info("切换成功，res = {}", res);
                     newValues.put("type", "slave-slave");
                     newValues.put("lastSwitchTime",new Date());
+                    newValues.getJSONObject("args").put("disasterRecoverySwitched",true);
                     helmChartService.upgradeZeusMysql(values, newValues);
+                } else {
+                    log.error("切换失败,res={}",res);
+                    throw new BusinessException(ErrorMessage.REMOTE_SWITCH_FAILED);
                 }
-            } catch (Exception e) {
-                log.error("切换失败{}", e.getMessage());
+            } catch (ForestNetworkException e) {
+                log.error("切换失败", e);
+                throw new BusinessException(ErrorMessage.CONNECT_REMOTE_HOST_FAILED);
             }
         } else {
             log.info("备平台接收切换请求，开始灾备切换");
-            MysqlReplicateCR mr =
-                mysqlReplicateWrapper.getMysqlReplicate(zeusNamespace, NameConstant.ZEUS_MYSQL_REPLICATE);
-            mr.getSpec().setEnable(false);
-            mysqlReplicateWrapper.updateMysqlReplicate(mr);
-            JSONObject args = newValues.getJSONObject("args");
-            newValues.put("type", "master-slave");
-            newValues.put("lastSwitchTime",new Date());
-            helmChartService.upgradeZeusMysql(values, newValues);
+            try{
+                MysqlReplicateCR mr =
+                        mysqlReplicateWrapper.getMysqlReplicate(zeusNamespace, NameConstant.ZEUS_MYSQL_REPLICATE);
+                mr.getSpec().setEnable(false);
+                mysqlReplicateWrapper.updateMysqlReplicate(mr);
+                JSONObject args = newValues.getJSONObject("args");
+                newValues.put("type", "master-slave");
+                newValues.put("lastSwitchTime",new Date());
+                newValues.getJSONObject("args").put("disasterRecoverySwitched",true);
+                helmChartService.upgradeZeusMysql(values, newValues);
+            }catch (Exception e){
+                log.error("切换失败",e);
+                throw new BusinessException(ErrorMessage.REMOTE_SWITCH_FAILED);
+            }
         }
     }
 
