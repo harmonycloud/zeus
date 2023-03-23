@@ -50,8 +50,8 @@ public class PlatformServiceImpl implements PlatformService {
         // 链接地址信息
         JSONObject args = values.getJSONObject("args");
         JSONObject _local = args.getJSONObject("local");
-        JSONObject _remote = args.getJSONObject("remote");
-        res.setLocal(convertParam(_local)).setRemote(convertParam(_remote));
+        JSONObject _remote = args.getJSONObject("relation");
+        res.setLocal(convertParam(_local)).setRelation(convertParam(_remote));
 
         // 上次切换时间
         res.setLastSwitchTime(args.getDate("lastSwitchTime"));
