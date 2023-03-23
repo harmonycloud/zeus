@@ -85,6 +85,7 @@ public class PlatformServiceImpl implements PlatformService {
                     log.info("切换成功，res = {}", res);
                     newValues.put("type", "slave-slave");
                     newValues.put("lastSwitchTime",new Date());
+                    newValues.getJSONObject("args").put("disasterRecoverySwitched",true);
                     helmChartService.upgradeZeusMysql(values, newValues);
                 } else {
                     log.error("切换失败,res={}",res);
@@ -104,6 +105,7 @@ public class PlatformServiceImpl implements PlatformService {
                 JSONObject args = newValues.getJSONObject("args");
                 newValues.put("type", "master-slave");
                 newValues.put("lastSwitchTime",new Date());
+                newValues.getJSONObject("args").put("disasterRecoverySwitched",true);
                 helmChartService.upgradeZeusMysql(values, newValues);
             }catch (Exception e){
                 log.error("切换失败",e);
