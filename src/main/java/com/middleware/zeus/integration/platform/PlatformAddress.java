@@ -8,6 +8,7 @@ import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.system.PlatformService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
  * @date 2023/3/22 15:54
  */
 @Component
+@Slf4j
 public class PlatformAddress implements AddressSource {
     @Autowired
     private HelmChartService helmChartService;
@@ -29,6 +31,7 @@ public class PlatformAddress implements AddressSource {
         String protocol = relation.getString("protocol");
         String host = relation.getString("host");
         Integer port = relation.getInteger("port");
+        log.info("发送请求，地址：{}://{}:{}",protocol,host,port);
         return new ForestAddress(protocol,host,port);
     }
 }

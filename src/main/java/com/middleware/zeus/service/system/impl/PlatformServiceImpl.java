@@ -109,13 +109,17 @@ public class PlatformServiceImpl implements PlatformService {
             throw new BusinessException(ErrorMessage.SWITCH_PLATFORM_NOT_SUPPORT);
         }
         if (isSource){
-            JSONObject res = platformClient.switchPlatform(request.getHeader("userToken"));
-            if (res != null && res.getJSONObject("data").getBoolean("success")){
-                log.info("切换成功，res = {}",res);
-                newValues.put("type","slave-slave");
-                newValues.getJSONObject("args").put("isSource",false);
-                newValues.getJSONObject("args").put("isSwitched",true);
-                helmChartService.upgradeZeusMysql(values,newValues);
+            try{
+                JSONObject res = platformClient.switchPlatform(request.getHeader("userToken"));
+                if (res != null && res.getJSONObject("data").getBoolean("success")){
+                    log.info("切换成功，res = {}",res);
+                    newValues.put("type","slave-slave");
+                    newValues.getJSONObject("args").put("isSource",false);
+                    newValues.getJSONObject("args").put("isSwitched",true);
+                    helmChartService.upgradeZeusMysql(values,newValues);
+                }
+            }catch (Exception e){
+                log.error("切换失败{}",e.getMessage());
             }
         }else{
             MysqlReplicateCR mr = mysqlReplicateWrapper.getMysqlReplicate(zeusNamespace, NameConstant.ZEUS_MYSQL_REPLICATE);
