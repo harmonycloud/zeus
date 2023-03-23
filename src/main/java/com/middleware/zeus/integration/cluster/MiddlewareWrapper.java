@@ -11,6 +11,7 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -33,6 +34,8 @@ import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 @Component
 @Slf4j
 public class MiddlewareWrapper {
+    @Autowired
+    private K8sClient k8sClient;
 
     /**
      * crd的context
@@ -71,6 +74,18 @@ public class MiddlewareWrapper {
     public MiddlewareCR get(String clusterId, String namespace, String name) {
         try {
             Map<String, Object> map = K8sClient.getClient(clusterId).customResource(CONTEXT).get(namespace, name);
+            return JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareCR.class);
+        } catch (KubernetesClientException e) {
+            if (e.getCode() == 404) {
+                throw new BusinessException(DictEnum.MIDDLEWARE, name, ErrorMessage.NOT_EXIST);
+            }
+            throw e;
+        }
+    }
+
+    public MiddlewareCR get(String namespace,String name) {
+        try {
+            Map<String, Object> map = k8sClient.getDefaultClient().customResource(CONTEXT).get(namespace, name);
             return JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareCR.class);
         } catch (KubernetesClientException e) {
             if (e.getCode() == 404) {

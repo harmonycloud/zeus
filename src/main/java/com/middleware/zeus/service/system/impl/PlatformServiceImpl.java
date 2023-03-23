@@ -8,7 +8,9 @@ import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.DisasterRecoveryDto;
 import com.middleware.caas.common.model.DisasterRecoveryInfo;
 import com.middleware.tool.date.DateUtils;
+import com.middleware.zeus.integration.cluster.MiddlewareWrapper;
 import com.middleware.zeus.integration.cluster.MysqlReplicateWrapper;
+import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import com.middleware.zeus.integration.cluster.bean.MysqlReplicateCR;
 import com.middleware.zeus.integration.cluster.bean.MysqlReplicateStatus;
 import com.middleware.zeus.integration.platform.PlatformClient;
@@ -44,6 +46,10 @@ public class PlatformServiceImpl implements PlatformService {
     @Autowired
     private PlatformClient platformClient;
 
+    @Autowired
+    private MiddlewareWrapper middlewareWrapper;
+
+
     @Override
     public DisasterRecoveryDto queryAccessInfo(HttpServletRequest request) {
         DisasterRecoveryDto res = new DisasterRecoveryDto();
@@ -55,12 +61,19 @@ public class PlatformServiceImpl implements PlatformService {
         // 链接地址信息
         JSONObject args = values.getJSONObject("args");
         JSONObject _local = args.getJSONObject("local");
-        JSONObject _remote = args.getJSONObject("relation");
-        res.setLocal(convertParam(_local)).setRelation(convertParam(_remote));
+        JSONObject _relation = args.getJSONObject("relation");
+        res.setLocal(convertParam(_local)).setRelation(convertParam(_relation));
 
         // 上次切换时间
         res.setLastSwitchTime(values.getDate("lastSwitchTime"));
 
+        // 当前服务运行状态
+        DisasterRecoveryInfo local = res.getLocal();
+        if (local == null) {
+            local = new DisasterRecoveryInfo();
+        }
+        local.setPhase(getZusMysqlPhase());
+        res.setLocal(local);
         try {
             log.info("获取同步器状态");
             JSONObject response = platformClient.getMysqlReplicateStatus(request.getHeader("userToken"));
@@ -68,6 +81,7 @@ public class PlatformServiceImpl implements PlatformService {
             if (data != null && response.getBoolean("success")) {
                 res.setReplicatePhase(data.getString("replicatePhase"));
                 res.setLastUpdateTime(data.getDate("lastUpdateTime"));
+                res.getRelation().setPhase(data.getJSONObject("local").getString("phase"));
             } else {
                 log.error("获取同步器状态失败,res={}",response);
             }
@@ -75,7 +89,6 @@ public class PlatformServiceImpl implements PlatformService {
             log.error("切换失败", e);
             throw new BusinessException(ErrorMessage.CONNECT_REMOTE_HOST_FAILED);
         }
-        // TODO 平台健康状态
         return res;
     }
 
@@ -146,6 +159,7 @@ public class PlatformServiceImpl implements PlatformService {
 
     @Override
     public DisasterRecoveryDto getMysqlReplicateStatus() {
+        log.info("获取同步器状态");
         MysqlReplicateCR mr =
                 mysqlReplicateWrapper.getMysqlReplicate(zeusNamespace, NameConstant.ZEUS_MYSQL_REPLICATE);
         if (mr == null || mr.getStatus() == null || mr.getStatus().getPhase() == null){
@@ -166,7 +180,19 @@ public class PlatformServiceImpl implements PlatformService {
             });
             res.setLastUpdateTime(lastUpdateTime[0]);
         }
+
+        // 获取服务状态
+        log.info("获取服务状态");
+        res.setLocal(new DisasterRecoveryInfo().setPhase(getZusMysqlPhase()));
         return res;
+    }
+
+    private String getZusMysqlPhase(){
+        MiddlewareCR cr = middlewareWrapper.get(zeusNamespace, NameConstant.ZEUS_MYSQL);
+        if (cr == null || cr.getStatus() == null || cr.getStatus().getPhase() == null) {
+            return "Unknown";
+        }
+        return cr.getStatus().getPhase();
     }
 
 }
