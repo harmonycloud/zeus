@@ -148,6 +148,10 @@ spec:
           value: "{{ .Values.global.crdGroup }}.cn"
         - name: CONFIG_DIR
           value: "/tmp/middleware-backupcontroller-config"
+        - name: REMOVE_BINLOG
+        {{- if eq  .Values.global.middlewarebackup_controller.removeBinlog "yes"}}
+          value: "yes"
+        {{- end }}
         command:
         - /manager
         image: "{{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.image }}:{{ .Values.global.middlewarebackup_controller.tag }}"

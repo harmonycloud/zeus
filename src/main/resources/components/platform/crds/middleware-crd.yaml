@@ -3,8 +3,6 @@ kind: CustomResourceDefinition
 metadata:
   name: middlewares.harmonycloud.cn
 spec:
-  conversion:
-    strategy: None
   group: harmonycloud.cn
   names:
     kind: Middleware
@@ -33,6 +31,8 @@ spec:
           spec:
             description: MiddlewareSpec defines the desired state of Middleware
             properties:
+              chart:
+                type: string
               name:
                 type: string
               type:
@@ -56,6 +56,8 @@ spec:
                   type: array
                 type: object
               phase:
+                type: string
+              process:
                 type: string
               reason:
                 type: string

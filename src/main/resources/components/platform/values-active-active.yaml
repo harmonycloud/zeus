@@ -25,6 +25,10 @@ imagePullSecrets:
 
 
 global:
+  middleware_controller:
+    controller:
+      pvTopology: true
+      gracefulRestart: false
   middlewarebackup_controller:
     job_creator:
       jobServiceAccount: default

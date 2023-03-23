@@ -1,0 +1,31 @@
+name: "redis-sentinel优雅重启"
+jobs:
+  # 检查状态
+  - name: "初始化状态检查"
+    cmd: "kubectl get -n $namespace $kind $name -o json |jq -r '.status.phase'"
+    result: "Running"
+  # 记录主从状态
+  - name: "记录当前主从状态"
+    func: SavePodType
+  # 重启从库
+  - name: "第一次重启从库"
+    func: DeletePod
+    para:
+      type: "slave"
+  # 等待ready
+  - name: "等待集群正常"
+    func: WaitReady
+  # 主从切换
+  - name: "主从切换"
+    para:
+      cmd: "port=$(kubectl -n $namespace get svc $name-sentinel -o json|jq '.spec.ports[0].port') && echo $port && kubectl -n $namespace exec  $podName -c redis-cluster -- redis-cli -p $port -h $name-sentinel sentinel failover mymaster"
+      type: "master"
+      containResult: "OK"
+    func: SwitchOver
+  # 重启从库
+  - name: "第二次重启从库"
+    func: DeletePod
+    para:
+      type: "slave"
+  - name: "重启完毕，等待状态恢复正常"
+    func: WaitReady
