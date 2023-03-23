@@ -62,11 +62,14 @@ public class PlatformServiceImpl implements PlatformService {
         res.setLastSwitchTime(values.getDate("lastSwitchTime"));
 
         try {
+            log.info("获取同步器状态");
             JSONObject response = platformClient.getMysqlReplicateStatus(request.getHeader("userToken"));
             JSONObject data = response.getJSONObject("data");
-            if (data != null) {
+            if (data != null && response.getBoolean("success")) {
                 res.setReplicatePhase(data.getString("replicatePhase"));
                 res.setLastUpdateTime(data.getDate("lastUpdateTime"));
+            } else {
+                log.error("获取同步器状态失败,res={}",response);
             }
         }catch (ForestNetworkException e){
             log.error("切换失败", e);
