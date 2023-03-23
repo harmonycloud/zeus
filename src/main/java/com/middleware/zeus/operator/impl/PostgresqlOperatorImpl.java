@@ -427,6 +427,11 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
     @Override
     public void reboot(String clusterId, String namespace, String name, String type) {
         Postgresql postgresql = postgresqlWrapper.get(clusterId, namespace, name);
+        Integer numberOfInstances = postgresql.getSpec().getNumberOfInstances();
+        if (numberOfInstances == 1) {
+            super.reboot(clusterId, namespace, name, type);
+            return;
+        }
         Map<String, String> annotations = postgresql.getMetadata().getAnnotations();
         String[] params = gracefulRestartParam.split(",");
         for (String param : params) {
