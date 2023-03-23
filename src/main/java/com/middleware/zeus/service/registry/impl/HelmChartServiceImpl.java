@@ -523,6 +523,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             }
 
             String helmPath = getHelmChartFilePath(chartName, chartVersion) + File.separator + chartName;
+            log.info("helmPath:{}",helmPath);
             String tempValuesYamlPath = tempValuesYamlDir + File.separator + tempValuesYamlName;
             String targetValuesYamlPath = tempValuesYamlDir + File.separator + targetValuesYamlName;
 
