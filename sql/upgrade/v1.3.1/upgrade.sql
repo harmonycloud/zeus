@@ -107,3 +107,8 @@ INSERT INTO `resource_menu_role` VALUES (null,5,21,0);
 INSERT INTO `resource_menu_role` VALUES (null,5,22,0);
 INSERT INTO `resource_menu_role` VALUES (null,5,23,1);
 
+--20230323 wangpenglei
+--灾备中心更名为平台灾备
+UPDATE resource_menu SET alias_name = '平台灾备' WHERE id = 10;
+
+
