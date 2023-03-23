@@ -285,10 +285,16 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         }
 
         // 端口
-        Integer exportPort = values.getJSONObject("exporter").getInteger("port");
-        redisParam.setExporterPort(exportPort == null ? 9121 : exportPort);
-        Integer redisPort = values.getJSONObject("redis").getInteger("port");
-        redisParam.setRedisPort(redisPort == null ? 6379 : redisPort);
+        Integer exportPort = 9121;
+        Integer redisPort = 6379;
+        if (values.containsKey("exporter")){
+            exportPort = values.getJSONObject("exporter").getInteger("exporter");
+        }
+        if (values.containsKey("redis")){
+            redisPort = values.getJSONObject("redis").getInteger("port");
+        }
+        redisParam.setExporterPort(exportPort);
+        redisParam.setRedisPort(redisPort);
 
         if (SENTINEL.equals(values.getString("type"))) {
             Integer sentinelPort = values.getJSONObject("sentinel").getInteger("port");
