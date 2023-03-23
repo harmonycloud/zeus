@@ -60,10 +60,13 @@ public class PlatformServiceImpl implements PlatformService {
         return res;
     }
 
-    private DisasterRecoveryInfo convertParam(JSONObject local) {
-        return new DisasterRecoveryInfo().setHost(local.getString("host")).
-                setProtocol(local.getString("protocol")).
-                setPort(local.getInteger("port")).
+    private DisasterRecoveryInfo convertParam(JSONObject info) {
+        if (info == null) {
+            return null;
+        }
+        return new DisasterRecoveryInfo().setHost(info.getString("host")).
+                setProtocol(info.getString("protocol")).
+                setPort(info.getInteger("port")).
                 setName("name");
     }
 
