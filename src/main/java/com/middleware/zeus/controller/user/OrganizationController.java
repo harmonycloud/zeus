@@ -210,7 +210,7 @@ public class OrganizationController {
         return BaseResult.ok();
     }
 
-    @ApiOperation(value = "更新组织用户成员角色", notes = "更新组织用户成员角色")
+    @ApiOperation(value = "移除组织用户成员角色", notes = "移除组织用户成员角色")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "organId", value = "组织id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "username", value = "用户名称", paramType = "query", dataTypeClass = String.class),
