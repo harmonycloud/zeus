@@ -56,7 +56,7 @@ public class PlatformServiceImpl implements PlatformService {
         res.setLocal(convertParam(_local)).setRelation(convertParam(_remote));
 
         // 上次切换时间
-        res.setLastSwitchTime(args.getDate("lastSwitchTime"));
+        res.setLastSwitchTime(values.getDate("lastSwitchTime"));
 
         // TODO 平台健康状态
         return res;
