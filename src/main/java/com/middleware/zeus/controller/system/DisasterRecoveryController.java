@@ -1,7 +1,6 @@
 package com.middleware.zeus.controller.system;
 
-import com.middleware.caas.common.model.ServicePort;
-import com.middleware.caas.common.model.URLInfo;
+import com.middleware.caas.common.model.DisasterRecoveryInfo;
 import com.middleware.zeus.service.system.PlatformService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -26,25 +25,16 @@ public class DisasterRecoveryController {
     @Autowired
     private PlatformService platformService;
 
-    @ApiOperation(value = "查询平台访问信息",notes = "查询平台访问信息")
+    @ApiOperation(value = "查询平台访问信息", notes = "查询平台访问信息")
     @GetMapping("queryAccessInfo")
-    public BaseResult queryAccessInfo(){
+    public BaseResult queryAccessInfo() {
         return BaseResult.ok(platformService.queryAccessInfo());
     }
 
-    @ApiOperation(value = "存储备平台访问信息",notes = "存储备平台访问信息")
-    @PostMapping("spare/{spareName}")
-    public BaseResult saveSpareAddr(@RequestBody URLInfo urlInfo,
-                                    @PathVariable String spareName){
-        platformService.saveRelationAddr(urlInfo,spareName);
-        return BaseResult.ok();
-    }
-
-    @ApiOperation(value = "保存主平台访问信息", notes = "保存主平台访问信息")
-    @PostMapping("chief/{chiefName}")
-    public BaseResult saveChiefAddr(@RequestBody URLInfo urlInfo,
-                                    @PathVariable String chiefName){
-        platformService.saveChiefAddr(urlInfo,chiefName);
+    @ApiOperation(value = "存储主备平台访问信息", notes = "存储主备平台访问信息")
+    @PostMapping("/{name}")
+    public BaseResult saveSpareAddr(@RequestBody DisasterRecoveryInfo disasterRecoveryInfo, @PathVariable String name) {
+        platformService.saveAddr(disasterRecoveryInfo, name);
         return BaseResult.ok();
     }
 

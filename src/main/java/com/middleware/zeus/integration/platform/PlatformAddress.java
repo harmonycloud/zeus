@@ -21,6 +21,7 @@ import org.springframework.stereotype.Component;
 public class PlatformAddress implements AddressSource {
     @Autowired
     private HelmChartService helmChartService;
+
     @Override
     public ForestAddress getAddress(ForestRequest forestRequest) {
         JSONObject values = helmChartService.getZeusMysqlInstallValues();
@@ -31,7 +32,10 @@ public class PlatformAddress implements AddressSource {
         String protocol = relation.getString("protocol");
         String host = relation.getString("host");
         Integer port = relation.getInteger("port");
-        log.info("发送请求，地址：{}://{}:{}",protocol,host,port);
-        return new ForestAddress(protocol,host,port);
+        if (port == null) {
+            port = 80;
+        }
+        log.info("发送请求，地址：{}://{}:{}", protocol, host, port);
+        return new ForestAddress(protocol, host, port);
     }
 }

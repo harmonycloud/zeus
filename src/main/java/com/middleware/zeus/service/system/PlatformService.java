@@ -1,8 +1,8 @@
 package com.middleware.zeus.service.system;
 
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.model.ServicePort;
-import com.middleware.caas.common.model.URLInfo;
+import com.middleware.caas.common.model.DisasterRecoveryDto;
+import com.middleware.caas.common.model.DisasterRecoveryInfo;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -13,11 +13,9 @@ import java.io.IOException;
  */
 public interface PlatformService {
 
-    JSONObject queryAccessInfo();
-
-    void saveRelationAddr(URLInfo urlInfo, String spareName);
-
-    void saveChiefAddr(URLInfo urlInfo, String chiefName);
+    DisasterRecoveryDto queryAccessInfo();
 
     void switchPlatform(HttpServletRequest request) throws IOException;
+
+    void saveAddr(DisasterRecoveryInfo info, String name);
 }
