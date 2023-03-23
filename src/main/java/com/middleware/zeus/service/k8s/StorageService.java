@@ -3,6 +3,7 @@ package com.middleware.zeus.service.k8s;
 import com.middleware.caas.common.model.QuotaBase;
 import com.middleware.caas.common.model.StorageDto;
 import com.middleware.caas.common.model.middleware.MiddlewareStorageInfoDto;
+import com.middleware.caas.common.model.middleware.StorageClassInfo;
 
 import java.util.List;
 import java.util.Map;
@@ -113,4 +114,13 @@ public interface StorageService {
      * @return Map<String, String>
      */
     Map<String, String> convertStorageName(String clusterId);
+
+    /**
+     * 查询storageClassInfo
+     *
+     * @param clusterId 集群id
+     * @param all 是否所有
+     * @return List<StorageClassInfo>
+     */
+    List<StorageClassInfo> listStorageClassInfo(String clusterId, Boolean all);
 }

@@ -128,6 +128,7 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
         double cpu = 0.0;
         double memory = 0.0;
         Map<String, Double> storageMap = new HashMap<>();
+        Map<String, String> storageIdMap = new HashMap<>();
         for (ResourceQuotaDo quota : resourceQuotaDoList){
             if (quota != null){
                 if (quota.getCpu() != null && quota.getCpu().getRequest() != null){
@@ -145,6 +146,7 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
                         }else {
                             storageMap.put(storageQuota.getName(), storageQuota.getStorage().getRequest());
                         }
+                        storageIdMap.put(storageQuota.getName(), storageQuota.getStorageId());
                     }
                 }
             }
@@ -157,6 +159,7 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
         for (String key : storageMap.keySet()){
             StorageQuota storageQuota = new StorageQuota();
             storageQuota.setName(key);
+            storageQuota.setStorageId(storageIdMap.get(key));
             QuotaBase storage = new QuotaBase();
             storage.setRequest(storageMap.get(key));
             storageQuota.setStorage(storage);

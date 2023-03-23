@@ -550,11 +550,28 @@ public class ProjectServiceImpl implements ProjectService {
         List<ResourceQuotaDo> resourceQuotaDoList = platformQuotaService.getQuota(PROJECT, projectId, clusterId, STORAGE);
         // 设置存储名称
         platformQuotaService.convertStorageName(resourceQuotaDoList);
-        if (detail){
+        if (detail) {
             List<ResourceQuotaDo> namespaceQuotaList = new ArrayList<>();
-            for (ResourceQuotaDo resourceQuotaDo : resourceQuotaDoList){
-                List<Namespace> namespaceList = getNamespace(organId, projectId, resourceQuotaDo.getClusterId(), true, false);
-                ResourceQuotaDo namespaceQuota = resourceQuotaService.calculateQuota(namespaceList.stream().map(Namespace::getQuotas).collect(Collectors.toList()));
+            for (ResourceQuotaDo resourceQuotaDo : resourceQuotaDoList) {
+                List<Namespace> namespaceList =
+                    getNamespace(organId, projectId, resourceQuotaDo.getClusterId(), true, false);
+                // 分区存储资源设置存储id
+                List<StorageClassInfo> storageClassInfoList =
+                    storageService.listStorageClassInfo(resourceQuotaDo.getClusterId(), false);
+                Map<String, String> storageClassIDMap =
+                    storageClassInfoList.stream().filter(sc -> StringUtils.isNotEmpty(sc.getStorageId()))
+                        .collect(Collectors.toMap(StorageClassInfo::getName, StorageClassInfo::getStorageId));
+                List<ResourceQuotaDo> nsResourceQuotaList = namespaceList.stream().map(ns -> {
+                    ResourceQuotaDo nsQuotas = ns.getQuotas();
+                    for (StorageQuota storageQuota : nsQuotas.getStorageList()) {
+                        if (storageClassIDMap.containsKey(storageQuota.getName())) {
+                            storageQuota.setStorageId(storageClassIDMap.get(storageQuota.getName()));
+                        }
+                    }
+                    return nsQuotas;
+                }).collect(Collectors.toList());
+                // 计算多分区配额总和
+                ResourceQuotaDo namespaceQuota = resourceQuotaService.calculateQuota(nsResourceQuotaList);
                 namespaceQuota.setClusterId(resourceQuotaDo.getClusterId());
                 namespaceQuotaList.add(namespaceQuota);
             }
@@ -857,7 +874,7 @@ public class ProjectServiceImpl implements ProjectService {
             });
             return namespaces;
         } catch (Exception e) {
-            log.error("查询双活分区状态失败", e);
+            log.error("查询双活分区状态失败");
             return namespaces;
         }
     }

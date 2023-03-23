@@ -490,6 +490,10 @@ public class StorageServiceImpl implements StorageService {
                 }
             }
         }
+        // 设置存储id
+        if(storageClass.getMetadata().getAnnotations() != null && storageClass.getMetadata().getAnnotations().containsKey(STORAGE_ID)){
+            sc.setStorageId(storageClass.getMetadata().getAnnotations().get(STORAGE_ID));
+        }
         sc.setParameters(storageClass.getParameters());
         return sc;
     }
@@ -545,6 +549,12 @@ public class StorageServiceImpl implements StorageService {
         List<StorageDto> storageDtoList = this.list(clusterId, false);
         // 封装获取包含storageClass 和 对应别名的map
         return storageDtoList.stream().collect(Collectors.toMap(StorageDto::getStorageId, StorageDto::getAliasName));
+    }
+
+    @Override
+    public List<StorageClassInfo> listStorageClassInfo(String clusterId, Boolean all) {
+        // todo all
+        return storageClassWrapper.list(clusterId).stream().map(this::convertSc).collect(Collectors.toList());
     }
 
 
