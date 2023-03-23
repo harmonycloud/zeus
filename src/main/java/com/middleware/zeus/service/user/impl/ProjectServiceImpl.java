@@ -558,17 +558,18 @@ public class ProjectServiceImpl implements ProjectService {
                 // 分区存储资源设置存储id
                 List<StorageClassInfo> storageClassInfoList =
                     storageService.listStorageClassInfo(resourceQuotaDo.getClusterId(), false);
-                Map<String, String> storageClassIDMap =
+                Map<String, String> storageClassIdMap =
                     storageClassInfoList.stream().filter(sc -> StringUtils.isNotEmpty(sc.getStorageId()))
                         .collect(Collectors.toMap(StorageClassInfo::getName, StorageClassInfo::getStorageId));
-                List<ResourceQuotaDo> nsResourceQuotaList = namespaceList.stream().map(ns -> {
-                    ResourceQuotaDo nsQuotas = ns.getQuotas();
-                    for (StorageQuota storageQuota : nsQuotas.getStorageList()) {
-                        if (storageClassIDMap.containsKey(storageQuota.getName())) {
-                            storageQuota.setStorageId(storageClassIDMap.get(storageQuota.getName()));
+                List<ResourceQuotaDo> nsResourceQuotaList =
+                    namespaceList.stream().filter(ns -> ns.getQuotas() != null).map(ns -> {
+                        ResourceQuotaDo nsQuotas = ns.getQuotas();
+                        for (StorageQuota storageQuota : nsQuotas.getStorageList()) {
+                            if (storageClassIdMap.containsKey(storageQuota.getName())) {
+                                storageQuota.setStorageId(storageClassIdMap.get(storageQuota.getName()));
+                            }
                         }
-                    }
-                    return nsQuotas;
+                        return nsQuotas;
                 }).collect(Collectors.toList());
                 // 计算多分区配额总和
                 ResourceQuotaDo namespaceQuota = resourceQuotaService.calculateQuota(nsResourceQuotaList);
