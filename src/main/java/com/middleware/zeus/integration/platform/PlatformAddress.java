@@ -24,19 +24,18 @@ public class PlatformAddress implements AddressSource {
 
     @Override
     public ForestAddress getAddress(ForestRequest forestRequest) {
-//        JSONObject values = helmChartService.getZeusMysqlInstallValues();
-//        JSONObject relation = values.getJSONObject("args").getJSONObject("relation");
-//        if (relation == null) {
-//            throw new BusinessException(ErrorMessage.RELATION_ADDR_NOT_EXIST);
-//        }
-//        String protocol = relation.getString("protocol");
-//        String host = relation.getString("host");
-//        Integer port = relation.getInteger("port");
-//        if (port == null) {
-//            port = 80;
-//        }
-//        log.info("发送请求，地址：{}://{}:{}", protocol, host, port);
-//        return new ForestAddress(protocol, host, port);
-        return new ForestAddress("http","10.10.102.52",30089);
+        JSONObject values = helmChartService.getZeusMysqlInstallValues();
+        JSONObject relation = values.getJSONObject("args").getJSONObject("relation");
+        if (relation == null) {
+            return null;
+        }
+        String protocol = relation.getString("protocol");
+        String host = relation.getString("host");
+        Integer port = relation.getInteger("port");
+        if (port == null) {
+            port = 80;
+        }
+        log.info("发送请求，地址：{}://{}:{}", protocol, host, port);
+        return new ForestAddress(protocol, host, port);
     }
 }
