@@ -224,6 +224,9 @@ public class K8sConvert {
         if (CollectionUtils.isNotEmpty(nodeAffinity.getPreferredDuringSchedulingIgnoredDuringExecution())) {
             List<PreferredSchedulingTerm> pstList = nodeAffinity.getPreferredDuringSchedulingIgnoredDuringExecution();
             for (PreferredSchedulingTerm pst : pstList) {
+                if (pst.getPreference() == null) {
+                    continue;
+                }
                 List<NodeSelectorRequirement> nsqList = pst.getPreference().getMatchExpressions();
                 if (nsqList != null && nsqList.size() > 0) {
                     for (NodeSelectorRequirement nsq : nsqList) {
