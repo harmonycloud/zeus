@@ -1,6 +1,5 @@
 package com.middleware.zeus.service.system;
 
-import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.model.DisasterRecoveryDto;
 import com.middleware.caas.common.model.DisasterRecoveryInfo;
 
@@ -13,9 +12,11 @@ import java.io.IOException;
  */
 public interface PlatformService {
 
-    DisasterRecoveryDto queryAccessInfo();
+    DisasterRecoveryDto queryAccessInfo(HttpServletRequest request);
 
     void switchPlatform(HttpServletRequest request) throws IOException;
 
     void saveAddr(DisasterRecoveryInfo info, String name);
+
+    DisasterRecoveryDto getMysqlReplicateStatus();
 }

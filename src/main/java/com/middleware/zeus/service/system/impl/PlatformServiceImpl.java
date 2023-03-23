@@ -2,14 +2,15 @@ package com.middleware.zeus.service.system.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.dtflys.forest.exceptions.ForestNetworkException;
-import com.dtflys.forest.exceptions.ForestRuntimeException;
 import com.middleware.caas.common.constants.NameConstant;
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.DisasterRecoveryDto;
 import com.middleware.caas.common.model.DisasterRecoveryInfo;
+import com.middleware.tool.date.DateUtils;
 import com.middleware.zeus.integration.cluster.MysqlReplicateWrapper;
 import com.middleware.zeus.integration.cluster.bean.MysqlReplicateCR;
+import com.middleware.zeus.integration.cluster.bean.MysqlReplicateStatus;
 import com.middleware.zeus.integration.platform.PlatformClient;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.system.PlatformService;
@@ -17,10 +18,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @auther wangpenglei
@@ -42,7 +45,7 @@ public class PlatformServiceImpl implements PlatformService {
     private PlatformClient platformClient;
 
     @Override
-    public DisasterRecoveryDto queryAccessInfo() {
+    public DisasterRecoveryDto queryAccessInfo(HttpServletRequest request) {
         DisasterRecoveryDto res = new DisasterRecoveryDto();
         JSONObject values = helmChartService.getZeusMysqlInstallValues();
 
@@ -58,6 +61,17 @@ public class PlatformServiceImpl implements PlatformService {
         // 上次切换时间
         res.setLastSwitchTime(values.getDate("lastSwitchTime"));
 
+        try {
+            JSONObject response = platformClient.getMysqlReplicateStatus(request.getHeader("userToken"));
+            JSONObject data = response.getJSONObject("data");
+            if (data != null) {
+                res.setReplicatePhase(data.getString("replicatePhase"));
+                res.setLastUpdateTime(data.getDate("lastUpdateTime"));
+            }
+        }catch (ForestNetworkException e){
+            log.error("切换失败", e);
+            throw new BusinessException(ErrorMessage.CONNECT_REMOTE_HOST_FAILED);
+        }
         // TODO 平台健康状态
         return res;
     }
@@ -125,6 +139,31 @@ public class PlatformServiceImpl implements PlatformService {
         addrInfo.put("name", name);
         newValues.getJSONObject("args").put(info.getIsRelation() ? "relation" : "local", addrInfo);
         helmChartService.upgradeZeusMysql(values, newValues);
+    }
+
+    @Override
+    public DisasterRecoveryDto getMysqlReplicateStatus() {
+        MysqlReplicateCR mr =
+                mysqlReplicateWrapper.getMysqlReplicate(zeusNamespace, NameConstant.ZEUS_MYSQL_REPLICATE);
+        if (mr == null || mr.getStatus() == null || mr.getStatus().getPhase() == null){
+            return null;
+        }
+        DisasterRecoveryDto res = new DisasterRecoveryDto();
+        res.setReplicatePhase(mr.getStatus().getPhase());
+        List<MysqlReplicateStatus.PodStatus> slaves = mr.getStatus().getSlaves();
+        if (!CollectionUtils.isEmpty(slaves)) {
+            final Date[] lastUpdateTime = {DateUtils.parseDate(slaves.get(0).getLastUpdateTime(), DateUtils.YYYY_MM_DD_HH_MM_SS)};
+            slaves.forEach(po -> {
+                if (po.getLastUpdateTime() != null) {
+                    Date date = DateUtils.parseDate(po.getLastUpdateTime(), DateUtils.YYYY_MM_DD_HH_MM_SS);
+                    if (date.after(lastUpdateTime[0])) {
+                        lastUpdateTime[0] = date;
+                    }
+                }
+            });
+            res.setLastUpdateTime(lastUpdateTime[0]);
+        }
+        return res;
     }
 
 }

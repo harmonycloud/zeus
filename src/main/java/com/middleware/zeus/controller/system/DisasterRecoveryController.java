@@ -27,8 +27,8 @@ public class DisasterRecoveryController {
 
     @ApiOperation(value = "查询平台访问信息", notes = "查询平台访问信息")
     @GetMapping("queryAccessInfo")
-    public BaseResult queryAccessInfo() {
-        return BaseResult.ok(platformService.queryAccessInfo());
+    public BaseResult queryAccessInfo(HttpServletRequest request) {
+        return BaseResult.ok(platformService.queryAccessInfo(request));
     }
 
     @ApiOperation(value = "存储主备平台访问信息", notes = "存储主备平台访问信息")
@@ -43,6 +43,12 @@ public class DisasterRecoveryController {
     public BaseResult switchPlatform(HttpServletRequest request) throws IOException {
         platformService.switchPlatform(request);
         return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "同步器运行状态", notes = "同步器运行状态")
+    @GetMapping("replicate")
+    public BaseResult getMysqlReplicateStatus(){
+        return BaseResult.ok(platformService.getMysqlReplicateStatus());
     }
 
 }
