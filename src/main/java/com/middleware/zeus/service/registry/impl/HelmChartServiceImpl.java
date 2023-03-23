@@ -493,14 +493,16 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             }
             BeanMiddlewareInfo zeusMysqlChart;
             if (chartVersion != null) {
-                zeusMysqlChart = mysqlCharts.stream().filter(mc -> chartVersion.equals(mc.getChartVersion())).collect(Collectors.toList()).get(0);
+                String finalChartVersion = chartVersion;
+                zeusMysqlChart = mysqlCharts.stream().filter(mc -> finalChartVersion.equals(mc.getChartVersion())).collect(Collectors.toList()).get(0);
                 if (zeusMysqlChart == null) {
                     zeusMysqlChart = getLastVersion(mysqlCharts);
                 }
             } else {
                 zeusMysqlChart = getLastVersion(mysqlCharts);
             }
-
+            chartVersion = zeusMysqlChart.getChartVersion();
+            newValues.put("chartVersion",chartVersion);
             String tempValuesYamlDir = getTempValuesYamlDir();
 
             // 先获取chart文件
@@ -523,7 +525,6 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             }
 
             String helmPath = getHelmChartFilePath(chartName, chartVersion) + File.separator + chartName;
-            log.info("helmPath:{}",helmPath);
             String tempValuesYamlPath = tempValuesYamlDir + File.separator + tempValuesYamlName;
             String targetValuesYamlPath = tempValuesYamlDir + File.separator + targetValuesYamlName;
 
