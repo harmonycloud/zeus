@@ -113,7 +113,7 @@ public class AuthServiceImpl implements AuthService {
         Boolean switched = values.getJSONObject("args").getBoolean("disasterRecoverySwitched");
         Boolean isMaster = "master-slave".equals(values.getString("type"));
         // 备平台没开灾备无法登录
-        if (!isMaster && licenseService.getFeatures().getDisasterRecoveryEnable()) {
+        if (!isMaster && !licenseService.getFeatures().getDisasterRecoveryEnable()) {
             throw new BusinessException(ErrorMessage.DISASTER_RECOVERY_NOT_SUPPORT);
         }
         // 主平台切换后无法登陆
