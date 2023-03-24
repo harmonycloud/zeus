@@ -251,10 +251,12 @@ public class PlatformServiceImpl implements PlatformService {
     }
 
     private String getZusMysqlPhase(){
+        log.info("查询{}分区下middlewareCR{}状态",zeusNamespace,"mysqlcluster-"+NameConstant.ZEUS_MYSQL);
         MiddlewareCR cr = middlewareWrapper.get(zeusNamespace, "mysqlcluster-"+NameConstant.ZEUS_MYSQL);
         if (cr == null || cr.getStatus() == null || cr.getStatus().getPhase() == null) {
             return "Unknown";
         }
+        log.info("查询状态为:{}",cr.getStatus().getPhase());
         return cr.getStatus().getPhase();
     }
 
