@@ -93,7 +93,7 @@ public class LicenseServiceImpl implements LicenseService {
         // 解析license
         JSONObject license = JSONObject.parseObject(RSAUtils.decryptByPrivateKey(licenseStr, PRIVATE_KEY));
         // check
-//        checkUid(license);
+        checkUid(license);
         // 查询数据库 是否已存在license
         JSONObject exist = getLicense();
         if (exist.containsKey(TYPE) && "试用版".equals(exist.getString(TYPE))) {
