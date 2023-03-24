@@ -12,6 +12,7 @@ import com.middleware.tool.encrypt.PasswordUtils;
 import com.middleware.tool.encrypt.RSAUtils;
 import com.middleware.zeus.integration.platform.PlatformClient;
 import com.middleware.zeus.service.registry.HelmChartService;
+import com.middleware.zeus.service.system.LicenseService;
 import com.middleware.zeus.service.system.PlatformService;
 import com.middleware.zeus.service.user.AuthManager4Ldap;
 import com.middleware.zeus.service.user.AuthService;
@@ -49,6 +50,8 @@ public class AuthServiceImpl implements AuthService {
     private Double accountExpireAlertDay;
     @Autowired
     private HelmChartService helmChartService;
+    @Autowired
+    private LicenseService licenseService;
 
     @Autowired
     private UserService userService;
@@ -109,6 +112,11 @@ public class AuthServiceImpl implements AuthService {
         JSONObject values = helmChartService.getZeusMysqlInstallValues();
         Boolean switched = values.getJSONObject("args").getBoolean("disasterRecoverySwitched");
         Boolean isMaster = "master-slave".equals(values.getString("type"));
+        // 备平台没开灾备无法登录
+        if (!isMaster && licenseService.getFeatures().getDisasterRecoveryEnable()) {
+            throw new BusinessException(ErrorMessage.DISASTER_RECOVERY_NOT_SUPPORT);
+        }
+        // 主平台切换后无法登陆
         if (switched != null && switched && !isMaster) {
             log.error("当前集群已由平台灾备功能进行切换，无法进行登录");
             throw new BusinessException(ErrorMessage.UNKNOWN);
