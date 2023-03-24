@@ -195,18 +195,18 @@ public class RoleServiceImpl implements RoleService {
             log.error("查询license出错");
             features.setActiveActiveEnable(false).setDisasterRecoveryEnable(false);
         }
-        if (!features.getDisasterRecoveryEnable() || !features.getActiveActiveEnable()) {
-            LicenseInfo finalFeatures = features;
-            list = list.stream().filter(menuDto -> {
-                if (menuDto.getResourceMenuId() == Integer.parseInt(disasterMenuId)) {
-                    return finalFeatures.getDisasterRecoveryEnable();
-                } else if (menuDto.getResourceMenuId() == Integer.parseInt(activeActiveMenuId)) {
-                    return finalFeatures.getActiveActiveEnable() && isMaster;
-                } else {
-                    return isMaster;
-                }
-            }).collect(Collectors.toSet());
-        }
+
+        LicenseInfo finalFeatures = features;
+        list = list.stream().filter(menuDto -> {
+            if (menuDto.getResourceMenuId() == Integer.parseInt(disasterMenuId)) {
+                return finalFeatures.getDisasterRecoveryEnable();
+            } else if (menuDto.getResourceMenuId() == Integer.parseInt(activeActiveMenuId)) {
+                return finalFeatures.getActiveActiveEnable() && isMaster;
+            } else {
+                return isMaster;
+            }
+        }).collect(Collectors.toSet());
+
         List<Integer> ids = list.stream().map(BeanResourceMenuRole::getResourceMenuId).collect(Collectors.toList());
         // 获取菜单信息
         List<ResourceMenuDto> resourceMenuDtoList = resourceMenuService.list(ids);
