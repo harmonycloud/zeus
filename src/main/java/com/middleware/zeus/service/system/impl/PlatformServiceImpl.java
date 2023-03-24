@@ -9,8 +9,10 @@ import com.middleware.caas.common.model.DisasterRecoveryInfo;
 import com.middleware.tool.date.DateUtils;
 import com.middleware.zeus.bean.BeanSystemConfig;
 import com.middleware.zeus.integration.cluster.MiddlewareWrapper;
+import com.middleware.zeus.integration.cluster.MysqlClusterWrapper;
 import com.middleware.zeus.integration.cluster.MysqlReplicateWrapper;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
+import com.middleware.zeus.integration.cluster.bean.MysqlCluster;
 import com.middleware.zeus.integration.cluster.bean.MysqlReplicateCR;
 import com.middleware.zeus.integration.cluster.bean.MysqlReplicateStatus;
 import com.middleware.zeus.integration.platform.PlatformClient;
@@ -48,6 +50,9 @@ public class PlatformServiceImpl implements PlatformService {
 
     @Autowired
     private PlatformClient platformClient;
+
+    @Autowired
+    private MysqlClusterWrapper mysqlClusterWrapper;
 
     @Autowired
     private MiddlewareWrapper middlewareWrapper;
@@ -238,9 +243,9 @@ public class PlatformServiceImpl implements PlatformService {
 
     @Override
     public String getMiddlewareUid() {
-        MiddlewareCR cr = middlewareWrapper.get(zeusNamespace, "mysqlcluster-"+NameConstant.ZEUS_MYSQL);
-        if (cr == null || cr.getMetadata() == null || CollectionUtils.isEmpty(cr.getMetadata().getLabels())){
-            return cr.getMetadata().getLabels().get("uid");
+        MysqlCluster mc = mysqlClusterWrapper.get(zeusNamespace, NameConstant.ZEUS_MYSQL);
+        if (mc == null || mc.getMetadata() == null || CollectionUtils.isEmpty(mc.getMetadata().getLabels())){
+            return mc.getMetadata().getLabels().get("uid");
         }
         return null;
     }

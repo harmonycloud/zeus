@@ -10,6 +10,7 @@ import java.util.Map;
 
 import com.middleware.zeus.integration.cluster.bean.MysqlCluster;
 import com.middleware.zeus.util.K8sClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -24,6 +25,8 @@ import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
  */
 @Component
 public class MysqlClusterWrapper {
+    @Autowired
+    private K8sClient k8sClient;
 
     /**
      * crd的context
@@ -49,6 +52,15 @@ public class MysqlClusterWrapper {
         // 获取所有的集群资源
         K8sClient.getClient(clusterId).customResource(CONTEXT).createOrReplace(namespace,
             MapUtils.objectToMap(mysqlCluster));
+    }
+
+    public MysqlCluster get(String namespace, String name) {
+        Map<String, Object> map = k8sClient.getDefaultClient().customResource(CONTEXT).get(namespace, name);
+        if (CollectionUtils.isEmpty(map)) {
+            return null;
+        }
+        JSONObject resObj = JSONObject.parseObject(JSONObject.toJSONString(map));
+        return JSONObject.parseObject(JSONObject.toJSONString(resObj), MysqlCluster.class);
     }
 
 }
