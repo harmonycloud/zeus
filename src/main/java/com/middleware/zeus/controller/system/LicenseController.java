@@ -54,13 +54,6 @@ public class LicenseController {
         return BaseResult.ok(licenseService.getFeatures());
     }
 
-//    @ApiOperation(value = "查询license使用信息", notes = "查询license使用信息")
-//    @ApiImplicitParams({
-//    })
-//    @GetMapping("/enable")
-//    public BaseResult<String> enable() throws Exception {
-//        return BaseResult.ok(enable);
-//    }
 
     @ApiOperation(value = "发布中间件能力校验", notes = "发布中间件能力校验")
     @ApiImplicitParams({

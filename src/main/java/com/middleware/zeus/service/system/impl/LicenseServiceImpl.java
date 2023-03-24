@@ -93,19 +93,19 @@ public class LicenseServiceImpl implements LicenseService {
         // 解析license
         JSONObject license = JSONObject.parseObject(RSAUtils.decryptByPrivateKey(licenseStr, PRIVATE_KEY));
         // check
-        checkUid(license);
+//        checkUid(license);
         // 查询数据库 是否已存在license
         JSONObject exist = getLicense();
         if (exist.containsKey(TYPE) && "试用版".equals(exist.getString(TYPE))) {
             // 记录license
-            recordLicense(license, licenseStr);
+            recordLicense(license, licenseStr,license.getJSONArray(FEATURES));
             // 发布license
             saveLicense(license);
         } else {
             // 校验是否已绑定
             checkUsed(exist, licenseStr);
             // 记录license
-            recordLicense(exist, licenseStr);
+            recordLicense(exist, licenseStr,license.getJSONArray(FEATURES));
             // 更新license
             updateLicense(license, exist);
         }
@@ -340,13 +340,14 @@ public class LicenseServiceImpl implements LicenseService {
     /**
      * 记录被绑定的license
      */
-    public void recordLicense(JSONObject license, String licenseStr) {
+    public void recordLicense(JSONObject license, String licenseStr, JSONArray features) {
         JSONArray array = license.getJSONArray(LICENSE);
         if (array == null) {
             array = new JSONArray();
         }
         array.add(licenseStr);
         license.put(LICENSE, array);
+        license.put(FEATURES,features);
     }
 
     /**
