@@ -30,4 +30,12 @@ public interface PlatformClient {
      */
     @Get(url = "/platform/disasterRecovery/replicate")
     JSONObject getMysqlReplicateStatus(@Header("userToken") String userToken);
+
+    /**
+     * 获取备平台uid
+     * @param userToken
+     * @return
+     */
+    @Get(url = "/platform/disasterRecovery/uid")
+    JSONObject getUid(@Header("userToken") String userToken);
 }

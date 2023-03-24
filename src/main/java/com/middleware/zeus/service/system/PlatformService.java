@@ -16,7 +16,9 @@ public interface PlatformService {
 
     void switchPlatform(HttpServletRequest request) throws IOException;
 
-    void saveAddr(DisasterRecoveryInfo info, String name);
+    void saveAddr(DisasterRecoveryInfo info, String name, HttpServletRequest request);
 
     DisasterRecoveryDto getMysqlReplicateStatus();
+
+    String getMiddlewareUid();
 }

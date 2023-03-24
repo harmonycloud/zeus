@@ -1,13 +1,13 @@
 package com.middleware.zeus.service.system.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.dtflys.forest.exceptions.ForestNetworkException;
 import com.middleware.caas.common.constants.NameConstant;
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.DisasterRecoveryDto;
 import com.middleware.caas.common.model.DisasterRecoveryInfo;
 import com.middleware.tool.date.DateUtils;
+import com.middleware.zeus.bean.BeanSystemConfig;
 import com.middleware.zeus.integration.cluster.MiddlewareWrapper;
 import com.middleware.zeus.integration.cluster.MysqlReplicateWrapper;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
@@ -16,12 +16,15 @@ import com.middleware.zeus.integration.cluster.bean.MysqlReplicateStatus;
 import com.middleware.zeus.integration.platform.PlatformClient;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.system.PlatformService;
+import com.middleware.zeus.service.system.SystemConfigService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Date;
@@ -48,6 +51,9 @@ public class PlatformServiceImpl implements PlatformService {
 
     @Autowired
     private MiddlewareWrapper middlewareWrapper;
+
+    @Autowired
+    private SystemConfigService systemConfigService;
 
 
     @Override
@@ -85,8 +91,8 @@ public class PlatformServiceImpl implements PlatformService {
             } else {
                 log.error("获取同步器状态失败,res={}",response);
             }
-        }catch (ForestNetworkException e){
-            log.error("连接失败", e);
+        }catch (Exception e){
+            log.error("连接失败,连接地址异常或不存在",e);
         }
         return res;
     }
@@ -104,47 +110,66 @@ public class PlatformServiceImpl implements PlatformService {
     @Override
     public void switchPlatform(HttpServletRequest request) throws IOException {
         JSONObject values = helmChartService.getZeusMysqlInstallValues();
-        JSONObject newValues = JSONObject.parseObject(values.toJSONString());
         Boolean isMaster = "master-slave".equals(values.getString("type"));
         if (isMaster) {
-            try {
-                JSONObject res = platformClient.switchPlatform(request.getHeader("userToken"));
-                log.info("切换结果:{}",res);
-                if (res != null && res.getBoolean("success")) {
-                    log.info("切换成功，res = {}", res);
-                    newValues.put("type", "slave-slave");
-                    newValues.put("lastSwitchTime",new Date());
-                    newValues.getJSONObject("args").put("disasterRecoverySwitched",true);
-                    helmChartService.upgradeZeusMysql(values, newValues);
-                } else {
-                    log.error("切换失败,res={}",res);
-                    throw new BusinessException(ErrorMessage.REMOTE_SWITCH_FAILED);
-                }
-            } catch (ForestNetworkException e) {
-                log.error("切换失败", e);
-                throw new BusinessException(ErrorMessage.CONNECT_REMOTE_HOST_FAILED);
-            }
+            masterSwitch(request,values);
         } else {
-            log.info("备平台接收切换请求，开始灾备切换");
-            try{
-                MysqlReplicateCR mr =
-                        mysqlReplicateWrapper.getMysqlReplicate(zeusNamespace, NameConstant.ZEUS_MYSQL_REPLICATE);
-                mr.getSpec().setEnable(false);
-                mysqlReplicateWrapper.updateMysqlReplicate(mr);
-                JSONObject args = newValues.getJSONObject("args");
-                newValues.put("type", "master-slave");
+            relationSwitch(values);
+        }
+    }
+
+    private void relationSwitch(JSONObject values){
+        JSONObject newValues = JSONObject.parseObject(values.toJSONString());
+        BeanSystemConfig conf = systemConfigService.getConfig("backupPlatformUid");
+        if (conf == null) {
+            throw new BusinessException(ErrorMessage.SWITCH_NO_POWER);
+        }
+
+        log.info("备平台接收切换请求，开始灾备切换");
+        try{
+            // 先检查是否有权限切换
+            String uid = getMiddlewareUid();
+            if (!conf.getConfigValue().equals(uid)) {
+                throw new BusinessException(ErrorMessage.SWITCH_NO_POWER);
+            }
+            MysqlReplicateCR mr =
+                    mysqlReplicateWrapper.getMysqlReplicate(zeusNamespace, NameConstant.ZEUS_MYSQL_REPLICATE);
+            mr.getSpec().setEnable(false);
+            mysqlReplicateWrapper.updateMysqlReplicate(mr);
+            JSONObject args = newValues.getJSONObject("args");
+            newValues.put("type", "master-slave");
+            newValues.put("lastSwitchTime",new Date());
+            newValues.getJSONObject("args").put("disasterRecoverySwitched",true);
+            helmChartService.upgradeZeusMysql(values, newValues);
+        }catch (Exception e){
+            log.error("切换失败",e);
+            throw new BusinessException(ErrorMessage.REMOTE_SWITCH_FAILED);
+        }
+    }
+
+    private void masterSwitch(HttpServletRequest request, JSONObject values){
+        JSONObject newValues = JSONObject.parseObject(values.toJSONString());
+        try {
+            JSONObject res = platformClient.switchPlatform(request.getHeader("userToken"));
+            log.info("切换结果:{}",res);
+            if (res != null && res.getBoolean("success")) {
+                log.info("切换成功，res = {}", res);
+                newValues.put("type", "slave-slave");
                 newValues.put("lastSwitchTime",new Date());
                 newValues.getJSONObject("args").put("disasterRecoverySwitched",true);
                 helmChartService.upgradeZeusMysql(values, newValues);
-            }catch (Exception e){
-                log.error("切换失败",e);
+            } else {
+                log.error("切换失败,res={}",res);
                 throw new BusinessException(ErrorMessage.REMOTE_SWITCH_FAILED);
             }
+        } catch (Exception e) {
+            log.error("切换失败,连接地址异常或不存在", e);
+            throw new BusinessException(ErrorMessage.CONNECT_REMOTE_HOST_FAILED);
         }
     }
 
     @Override
-    public void saveAddr(DisasterRecoveryInfo info, String name) {
+    public void saveAddr(DisasterRecoveryInfo info, String name, HttpServletRequest request) {
         JSONObject values = helmChartService.getZeusMysqlInstallValues();
         JSONObject newValues = JSONObject.parseObject(values.toJSONString());
         JSONObject addrInfo = new JSONObject();
@@ -152,8 +177,33 @@ public class PlatformServiceImpl implements PlatformService {
         addrInfo.put("host", info.getHost());
         addrInfo.put("port", info.getPort());
         addrInfo.put("name", name);
-        newValues.getJSONObject("args").put(info.getIsRelation() ? "relation" : "local", addrInfo);
+        // 备平台连接主平台后绑定主平台
+        if (info.getIsRelation()) {
+            saveRelationUid(request);
+        } else {
+            newValues.getJSONObject("args").put("local",addrInfo);
+        }
         helmChartService.upgradeZeusMysql(values, newValues);
+    }
+
+    private void saveRelationUid(HttpServletRequest request){
+        try{
+            JSONObject res = platformClient.getUid(request.getHeader("userToken"));
+            if (res != null && res.getBoolean("success")) {
+                log.info("获取备平台uid成功,res={}",res);
+                String uid = res.getString("data");
+                if (StringUtils.isNotBlank(uid)) {
+                    BeanSystemConfig conf = systemConfigService.getConfigForUpdate("backupPlatformUid");
+                    if (conf == null) {
+                        systemConfigService.addConfig("backupPlatformUid", uid);
+                    } else {
+                        systemConfigService.updateConfig("backupPlatformUid",uid);
+                    }
+                }
+            }
+        }catch (Exception e) {
+            throw new BusinessException(ErrorMessage.CONNECT_REMOTE_HOST_FAILED);
+        }
     }
 
     @Override
@@ -186,6 +236,15 @@ public class PlatformServiceImpl implements PlatformService {
         return res;
     }
 
+    @Override
+    public String getMiddlewareUid() {
+        MiddlewareCR cr = middlewareWrapper.get(zeusNamespace, "mysqlcluster-"+NameConstant.ZEUS_MYSQL);
+        if (cr == null || cr.getMetadata() == null || CollectionUtils.isEmpty(cr.getMetadata().getLabels())){
+            return cr.getMetadata().getLabels().get("uid");
+        }
+        return null;
+    }
+
     private String getZusMysqlPhase(){
         MiddlewareCR cr = middlewareWrapper.get(zeusNamespace, "mysqlcluster-"+NameConstant.ZEUS_MYSQL);
         if (cr == null || cr.getStatus() == null || cr.getStatus().getPhase() == null) {
@@ -193,5 +252,6 @@ public class PlatformServiceImpl implements PlatformService {
         }
         return cr.getStatus().getPhase();
     }
+
 
 }

@@ -33,8 +33,10 @@ public class DisasterRecoveryController {
 
     @ApiOperation(value = "存储主备平台访问信息", notes = "存储主备平台访问信息")
     @PostMapping("/{name}")
-    public BaseResult saveSpareAddr(@RequestBody DisasterRecoveryInfo disasterRecoveryInfo, @PathVariable String name) {
-        platformService.saveAddr(disasterRecoveryInfo, name);
+    public BaseResult saveSpareAddr(@RequestBody DisasterRecoveryInfo disasterRecoveryInfo,
+                                    @PathVariable String name,
+                                    HttpServletRequest request) {
+        platformService.saveAddr(disasterRecoveryInfo, name, request);
         return BaseResult.ok();
     }
 
@@ -49,6 +51,12 @@ public class DisasterRecoveryController {
     @GetMapping("replicate")
     public BaseResult getMysqlReplicateStatus(){
         return BaseResult.ok(platformService.getMysqlReplicateStatus());
+    }
+
+    @ApiOperation(value = "获取zeus-mysql唯一标识", notes = "获取zeus-mysql唯一标识")
+    @GetMapping("uid")
+    public BaseResult getUid(){
+        return BaseResult.ok(platformService.getMiddlewareUid());
     }
 
 }
