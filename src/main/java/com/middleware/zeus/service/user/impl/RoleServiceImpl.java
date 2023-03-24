@@ -3,11 +3,13 @@ package com.middleware.zeus.service.user.impl;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.model.user.UserDto;
 import com.middleware.zeus.bean.BeanMiddlewareInfo;
 import com.middleware.zeus.bean.LicenseInfo;
 import com.middleware.zeus.bean.user.BeanRoleAuthority;
 import com.middleware.zeus.service.middleware.MiddlewareInfoService;
+import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.system.LicenseService;
 import com.middleware.zeus.service.user.*;
 import com.middleware.zeus.service.user.*;
@@ -46,6 +48,8 @@ public class RoleServiceImpl implements RoleService {
     private String disasterMenuId;
     @Value("${system.activeActive.menu-id:7}")
     private String activeActiveMenuId;
+    @Autowired
+    private HelmChartService helmChartService;
 
     @Autowired
     private BeanRoleMapper beanRoleMapper;
@@ -180,6 +184,9 @@ public class RoleServiceImpl implements RoleService {
                 }
             }
         }
+        // 查询是否为灾备模式备平台
+        JSONObject values = helmChartService.getZeusMysqlInstallValues();
+        Boolean isMaster = "master-slave".equals(values.getString("type"));
         // 过滤是否开启灾备服务和双活
         LicenseInfo features = new LicenseInfo();
         try {
@@ -194,9 +201,9 @@ public class RoleServiceImpl implements RoleService {
                 if (menuDto.getResourceMenuId() == Integer.parseInt(disasterMenuId)) {
                     return finalFeatures.getDisasterRecoveryEnable();
                 } else if (menuDto.getResourceMenuId() == Integer.parseInt(activeActiveMenuId)) {
-                    return finalFeatures.getActiveActiveEnable();
+                    return finalFeatures.getActiveActiveEnable() && isMaster;
                 } else {
-                    return true;
+                    return isMaster;
                 }
             }).collect(Collectors.toSet());
         }
