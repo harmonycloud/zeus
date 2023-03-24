@@ -86,8 +86,7 @@ public class PlatformServiceImpl implements PlatformService {
                 log.error("获取同步器状态失败,res={}",response);
             }
         }catch (ForestNetworkException e){
-            log.error("切换失败", e);
-            throw new BusinessException(ErrorMessage.CONNECT_REMOTE_HOST_FAILED);
+            log.error("连接失败", e);
         }
         return res;
     }
@@ -188,7 +187,7 @@ public class PlatformServiceImpl implements PlatformService {
     }
 
     private String getZusMysqlPhase(){
-        MiddlewareCR cr = middlewareWrapper.get(zeusNamespace, NameConstant.ZEUS_MYSQL);
+        MiddlewareCR cr = middlewareWrapper.get(zeusNamespace, "mysqlcluster-"+NameConstant.ZEUS_MYSQL);
         if (cr == null || cr.getStatus() == null || cr.getStatus().getPhase() == null) {
             return "Unknown";
         }
