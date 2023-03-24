@@ -135,7 +135,7 @@ public class K8sConvert {
     }
 
     public static NodeSelectorTerm convertNodeSelectorTerm(String key, String value, String operator) {
-        if (StringUtils.isBlank(key) || StringUtils.isBlank(value)) {
+        if (StringUtils.isBlank(key)) {
             return null;
         }
         List<NodeSelectorRequirement> nsrList = new ArrayList<>(1);
@@ -249,7 +249,7 @@ public class K8sConvert {
                         for (NodeSelectorRequirement ns : nsr) {
                             json.put("required", true);
                             json.put("anti", ns.getOperator().contains("Not"));
-                            json.put("label", ns.getKey() + "=" + ns.getValues().get(0));
+                            json.put("label", ns.getKey() + "=" + (CollectionUtils.isEmpty(ns.getValues()) ? "" : ns.getValues().get(0)));
                             list.add(JSONObject.toJavaObject(json, tClass));
                         }
                     }
