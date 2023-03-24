@@ -15,10 +15,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.yaml.snakeyaml.Yaml;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.NAMESPACED;
 
@@ -78,8 +75,21 @@ public class CustomResourceDefinitionWrapper {
             context = crdContextMap.get(plural);
         }
         Map<String, Object> map = K8sClient.getClient(clusterId).customResource(context).get(namespace, name);
+        Map<String, Object> resMap = new LinkedHashMap<>();
+        if (map.get("apiVersion") != null) {
+            resMap.put("apiVersion", map.get("apiVersion"));
+        }
+        if (map.get("kind") != null) {
+            resMap.put("kind", map.get("kind"));
+        }
+        if (map.get("spec") != null) {
+            resMap.put("spec", map.get("spec"));
+        }
+        if (map.get("status") != null) {
+            resMap.put("status", map.get("status"));
+        }
         Yaml yaml = new Yaml();
-        return yaml.dumpAsMap(map);
+        return yaml.dumpAsMap(resMap);
     }
 
     public String getCRPluralName(String clusterId, String singular) {
