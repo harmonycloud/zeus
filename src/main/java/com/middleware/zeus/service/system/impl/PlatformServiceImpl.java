@@ -216,10 +216,13 @@ public class PlatformServiceImpl implements PlatformService {
         log.info("获取同步器状态");
         MysqlReplicateCR mr =
                 mysqlReplicateWrapper.getMysqlReplicate(zeusNamespace, NameConstant.ZEUS_MYSQL_REPLICATE);
-        if (mr == null || mr.getStatus() == null || mr.getStatus().getPhase() == null){
-            return null;
-        }
         DisasterRecoveryDto res = new DisasterRecoveryDto();
+        // 获取服务状态
+        log.info("获取服务状态");
+        res.setLocal(new DisasterRecoveryInfo().setPhase(getZusMysqlPhase()));
+        if (mr == null || mr.getStatus() == null || mr.getStatus().getPhase() == null){
+            return res;
+        }
         res.setReplicatePhase(mr.getStatus().getPhase());
         List<MysqlReplicateStatus.PodStatus> slaves = mr.getStatus().getSlaves();
         if (!CollectionUtils.isEmpty(slaves)) {
@@ -235,9 +238,6 @@ public class PlatformServiceImpl implements PlatformService {
             res.setLastUpdateTime(lastUpdateTime[0]);
         }
 
-        // 获取服务状态
-        log.info("获取服务状态");
-        res.setLocal(new DisasterRecoveryInfo().setPhase(getZusMysqlPhase()));
         return res;
     }
 
