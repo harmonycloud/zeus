@@ -60,6 +60,9 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private LdapService ldapService;
 
+    @Value("${system.user.superUserName:admin}")
+    private String superUserName;
+
     @Override
     public JSONObject login(String userName, String password, HttpServletResponse response) throws Exception {
         // 查看平台灾备切换状态
@@ -97,7 +100,7 @@ public class AuthServiceImpl implements AuthService {
         response.setHeader(SET_TOKEN, token);
         JSONObject res = convertResult(userName, isAdmin, token);
         //校验密码日期
-        if (userDto.getPasswordTime() != null) {
+        if (!superUserName.equals(userDto.getUserName()) && userDto.getPasswordTime() != null) {
             double passwordUsedDay = DateUtils.getIntervalDays(new Date(), userDto.getPasswordTime()) / 3600d / 24d / 1000d;
             int passwordRemindCode = getPasswordRemindCode(passwordUsedDay);
             res.put("passwordRemindCode", passwordRemindCode);
