@@ -66,7 +66,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public JSONObject login(String userName, String password, HttpServletResponse response) throws Exception {
         // 查看平台灾备切换状态
-        checkDisasterRecovery();
+//        checkDisasterRecovery();
         //解密密码
         String decryptPassword;
         try {
@@ -107,6 +107,8 @@ public class AuthServiceImpl implements AuthService {
             if (passwordRemindCode != 1) {
                 res.put("passwordUsedDay", (int) Math.round(passwordUsedDay));
             }
+        } else {
+            res.put("passwordRemindCode", 1);
         }
         return res;
     }
