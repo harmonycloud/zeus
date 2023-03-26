@@ -66,7 +66,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public JSONObject login(String userName, String password, HttpServletResponse response) throws Exception {
         // 查看平台灾备切换状态
-//        checkDisasterRecovery();
+        checkDisasterRecovery();
         //解密密码
         String decryptPassword;
         try {
