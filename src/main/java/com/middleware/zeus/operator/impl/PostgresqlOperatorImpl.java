@@ -450,7 +450,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
      * @param instanceNum
      */
     private void checkInstanceNum(int instanceNum){
-        if(instanceNum < 1 || instanceNum > 3){
+        if(instanceNum < 0 || instanceNum > 3){
             throw new BusinessException(ErrorMessage.ERROR_PG_POD_NUm);
         }
     }
