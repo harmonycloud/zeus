@@ -138,7 +138,7 @@ public class ProjectServiceImpl implements ProjectService {
         // 获取当前用户所在所有项目内的角色信息
         UserDto userDto = userService.getUserDto(user.getString(USERNAME));
         Map<String, UserRole> userRoleMap =
-                userDto.getUserRoleList().stream().collect(Collectors.toMap(UserRole::getProjectId, u -> u));
+                userDto.getUserRoleList().stream().filter(userRole -> userRole.getProjectId()!=null).collect(Collectors.toMap(UserRole::getProjectId, u -> u));
         // 判断是否为admin,并进行过滤
         if (!userDto.getIsAdmin()) {
             list = list.stream()
