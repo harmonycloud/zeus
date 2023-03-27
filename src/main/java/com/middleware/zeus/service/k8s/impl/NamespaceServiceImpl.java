@@ -7,6 +7,7 @@ import com.middleware.caas.common.model.ResourceQuotaDo;
 import com.middleware.caas.common.model.StorageDto;
 import com.middleware.caas.common.model.StorageQuota;
 import com.middleware.caas.common.model.user.ProjectNamespaceDo;
+import com.middleware.zeus.annotation.Skyview;
 import com.middleware.zeus.bean.user.BeanProjectNamespace;
 import com.middleware.zeus.dao.user.BeanProjectNamespaceMapper;
 import com.middleware.zeus.service.k8s.StorageService;
@@ -42,7 +43,6 @@ import static com.middleware.caas.common.constants.middleware.MiddlewareConstant
  */
 @Slf4j
 @Service
-@ConditionalOnProperty(value = "system.usercenter", havingValue = "zeus")
 public class NamespaceServiceImpl implements NamespaceService {
 
     private static final Set<String> protectNamespaceList = new HashSet<>();

@@ -14,7 +14,7 @@ import com.middleware.caas.common.base.CaasResult;
 import com.middleware.caas.filters.user.CurrentUser;
 import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.tool.encrypt.RSAUtils;
-import com.middleware.zeus.skyviewservice.Skyview2UserService;
+import com.middleware.zeus.skyview.Skyview2UserService;
 import com.middleware.zeus.util.CryptoUtils;
 
 import lombok.extern.slf4j.Slf4j;

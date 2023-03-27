@@ -1,6 +1,7 @@
 package com.middleware.zeus.service.user;
 
 import com.alibaba.fastjson.JSONObject;
+import com.middleware.zeus.annotation.Skyview;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -9,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
  * @author dengyulong
  * @date 2021/04/02
  */
+@Skyview
 public interface AuthService {
 
     /**

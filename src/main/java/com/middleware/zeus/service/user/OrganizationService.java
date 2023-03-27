@@ -5,6 +5,7 @@ import com.middleware.caas.common.model.ResourceQuotaDo;
 import com.middleware.caas.common.model.user.OrganizationDto;
 import com.middleware.caas.common.model.user.OrganizationQuota;
 import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.zeus.annotation.Skyview;
 
 import java.util.List;
 
@@ -12,6 +13,7 @@ import java.util.List;
  * @author xutianhong
  * @Date 2023/3/7 2:09 下午
  */
+@Skyview
 public interface OrganizationService {
 
     /**

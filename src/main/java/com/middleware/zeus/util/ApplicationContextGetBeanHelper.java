@@ -1,5 +1,6 @@
 package com.middleware.zeus.util;
 
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -16,8 +17,12 @@ public class ApplicationContextGetBeanHelper implements ApplicationContextAware 
     private static ApplicationContext applicationContext;
 
     @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
+    public void setApplicationContext(@NotNull ApplicationContext applicationContext) throws BeansException {
+        ApplicationContextGetBeanHelper.applicationContext = applicationContext;
+    }
+
+    public static ApplicationContext getApplicationContext() {
+        return applicationContext;
     }
 
     public static Object getBean(String className) throws BeansException, IllegalArgumentException {

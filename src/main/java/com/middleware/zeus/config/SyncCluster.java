@@ -22,7 +22,7 @@ public class SyncCluster {
 
     @PostConstruct
     public void init() throws Exception {
-        clusterService.listClusters();
+        //clusterService.listClusters();
     }
 
 }

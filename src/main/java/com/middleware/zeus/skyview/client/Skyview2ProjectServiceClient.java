@@ -1,4 +1,4 @@
-package com.middleware.zeus.skyviewservice.client;
+package com.middleware.zeus.skyview.client;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;

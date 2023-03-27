@@ -1,8 +1,10 @@
 package com.middleware.zeus.config;
 
+import com.alibaba.fastjson.JSONObject;
 import com.dtflys.forest.callback.SuccessWhen;
 import com.dtflys.forest.http.ForestRequest;
 import com.dtflys.forest.http.ForestResponse;
+import com.dtflys.forest.http.HttpStatus;
 import com.middleware.caas.common.enums.ErrorCodeMessage;
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.exception.BusinessException;
@@ -16,7 +18,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Slf4j
 @Configuration
-public class ForestUnauthrizedSuccessCondition implements SuccessWhen {
+public class ForestUnauthorizedSuccessCondition implements SuccessWhen {
 
     /**
      * 请求成功条件
@@ -29,14 +31,15 @@ public class ForestUnauthrizedSuccessCondition implements SuccessWhen {
         // req 为Forest请求对象，即 ForestRequest 类实例
         // res 为Forest响应对象，即 ForestResponse 类实例
         // 返回值为 ture 则表示请求成功，false 表示请求失败
-        log.info("请求完成:{},{}", req.getUrl(), res.getStatusCode());
-        String content = res.getContent();
-        if(content.contains(String.valueOf(ErrorCodeMessage.USER_NOT_AUTH.value()))){
-            throw new BusinessException(ErrorMessage.USER_NOT_AUTH);
-        }else if(content.contains(String.valueOf(ErrorCodeMessage.AUTH_FAIL.value()))){
-            throw new BusinessException(ErrorMessage.AUTH_FAILED);
-        }else if(content.contains(String.valueOf(ErrorCodeMessage.USER_DISABLED.value()))){
-            throw new BusinessException(ErrorMessage.USER_NOT_EXIT);
+        log.debug("请求完成:{},{}", req.getUrl(), res.getStatusCode());
+        // 请求失败
+        if (res.getStatusCode() != HttpStatus.OK){
+            return false;
+        }
+        // 接口返回异常信息
+        JSONObject content = JSONObject.parseObject(res.getContent());
+        if (content != null && !content.getBooleanValue("success")){
+            return false;
         }
         return res.noException();
     }

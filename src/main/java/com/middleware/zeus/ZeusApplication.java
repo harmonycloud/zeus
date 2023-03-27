@@ -18,7 +18,7 @@ import springfox.documentation.oas.annotations.EnableOpenApi;
 @EnableFeignClients
 @EnableTransactionManagement
 @MapperScan("com.middleware.zeus.dao")
-@ForestScan(basePackages = {"com.middleware.zeus.skyviewservice","com.middleware.zeus.httpservice", "com.middleware.zeus.integration.dashboard", "com.middleware.zeus.integration.platform"})
+@ForestScan(basePackages = {"com.middleware.zeus.skyviewservice","com.middleware.zeus.httpservice", "com.middleware.zeus.integration.dashboard", "com.middleware.zeus.skyview", "com.middleware.zeus.integration.platform"})
 @SpringBootApplication(scanBasePackages = "com.middleware", exclude = {LdapAutoConfiguration.class, RedisAutoConfiguration.class})
 public class ZeusApplication {
 

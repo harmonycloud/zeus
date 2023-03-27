@@ -399,10 +399,10 @@ public class StorageServiceImpl implements StorageService {
             mwStoInfo.setType(type);
             mwStoInfo.setMiddlewareAliasName(values.getOrDefault("aliasName", "").toString());
 
-            // 获取所在项目
-            ProjectDto projectDto = projectService.findProjectByNamespace(middlewareCr.getMetadata().getNamespace());
-            mwStoInfo.setProjectId(projectDto.getProjectId());
-            mwStoInfo.setProjectAliasName(projectDto.getAliasName());
+            // todo 修改此处设置中间件所在项目的逻辑
+            //ProjectDto projectDto = projectService.findProjectByNamespace(middlewareCr.getMetadata().getNamespace());
+            //mwStoInfo.setProjectId(projectDto.getProjectId());
+            //mwStoInfo.setProjectAliasName(projectDto.getAliasName());
             // 获取项目名称
             mwStoInfo.setNamespace(middlewareCr.getMetadata().getNamespace());
             mwStoInfo.setNamespaceAliasName(namespaceService.get(clusterId, mwStoInfo.getNamespace()).getAliasName());

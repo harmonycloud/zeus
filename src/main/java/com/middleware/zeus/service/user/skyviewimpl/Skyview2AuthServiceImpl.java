@@ -5,10 +5,14 @@ import com.middleware.caas.common.base.CaasResult;
 import com.middleware.caas.common.enums.CaasErrorMessage;
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.user.UserDto;
 import com.middleware.tool.encrypt.RSAUtils;
-import com.middleware.zeus.service.user.impl.AuthServiceImpl;
-import com.middleware.zeus.skyviewservice.Skyview2UserService;
-import com.middleware.zeus.skyviewservice.client.Skyview2UserServiceClient;
+import com.middleware.zeus.annotation.Skyview;
+import com.middleware.zeus.service.user.AuthService;
+import com.middleware.zeus.service.user.abstractService.AbstractAuthService;
+import com.middleware.zeus.skyview.Skyview2UserService;
+import com.middleware.zeus.skyview.client.Skyview2UserServiceClient;
+import com.middleware.zeus.skyview.v2.service.V2AuthService;
 import com.middleware.zeus.util.CaasResponseUtil;
 import com.middleware.zeus.util.CryptoUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -28,77 +32,38 @@ import static com.middleware.caas.filters.base.GlobalKey.SET_TOKEN;
  */
 @Slf4j
 @Service
-@ConditionalOnProperty(value="system.usercenter",havingValue = "skyview2")
-public class Skyview2AuthServiceImpl extends AuthServiceImpl {
+@Skyview(target = "skyview2")
+public class Skyview2AuthServiceImpl extends AbstractAuthService implements AuthService {
 
     @Autowired
-    private Skyview2UserServiceClient skyview2UserServiceClient;
-    @Autowired
-    private Skyview2UserService skyview2UserService;
+    private V2AuthService v2AuthService;
 
     @Value("${system.skyview.encryptPassword:false}")
     private boolean encryptPassword;
 
     @Override
     public JSONObject login(String userName, String password, HttpServletResponse response) throws Exception {
-        //解密密码
-        String decryptPassword;
-        try {
-            decryptPassword = RSAUtils.decryptByPrivateKey(password);
-        } catch (Exception e) {
-            throw new BusinessException(ErrorMessage.RSA_DECRYPT_FAILED);
-        }
-        String tempPassword =  decryptPassword;
-        if (encryptPassword) {
-            tempPassword = CryptoUtils.encrypt(decryptPassword);
-        }
-        // 连接观云台，登录
-        CaasResult<JSONObject> loginResult = skyview2UserService.login(userName, tempPassword, "ch");
 
-        // 检查账号是否可用
-        if (CaasResponseUtil.fitError(loginResult, CaasErrorMessage.AUTH_FAIL)) {
-            throw new BusinessException(ErrorMessage.AUTH_FAILED);
-        }
-        // 检查账号是否密码过期
-        if (CaasResponseUtil.fitError(loginResult, CaasErrorMessage.PASSWORD_IS_EXPIRED)) {
-            throw new BusinessException(ErrorMessage.PASSWORD_IS_EXPIRED);
-        }
+        // decrypt password
+        password = decrypt(password);
+        // login
+        JSONObject data = v2AuthService.login(userName, password);
+        // 获取token
+        String caasToken = data.getString("token");
+        // 获取用户详情
+        UserDto userDto = userService.getUserDto(userName);
+        // convert info
+        JSONObject userInfo = convertUserInfo(userDto);
+        userInfo.put("caasToken", caasToken);
 
-        String caasToken = loginResult.getStringVal("token");
-
-        CaasResult<JSONObject> currentResult = skyview2UserServiceClient.current(caasToken, true);
-
-        Boolean isAdmin = currentResult.getBooleanVal("isAdmin");
-        String realName = currentResult.getStringVal("realName");
-        String userId =  currentResult.getStringVal("userId");
-
-        JSONObject admin = convertUserInfo(userName, realName, userId, caasToken, isAdmin, password);
-        log.info("用户信息：{}", admin);
-        String token = generateToken(admin);
+        String token = generateToken(userInfo);
         response.setHeader(SET_TOKEN, token);
-        convertResult(userName, isAdmin, token);
-        //校验密码日期
-        return convertResult(userName, isAdmin, token);
+        return convertResult(userName, userDto.getIsAdmin(), token);
     }
 
     @Override
     public String logout(HttpServletRequest request, HttpServletResponse response) {
-        return super.logout(request, response);
-    }
-
-    public JSONObject convertUserInfo(String username, String realName, String userId, String caastoken, boolean isAdmin,String password) {
-        JSONObject admin = new JSONObject();
-        admin.put("username", username);
-        admin.put("realName", realName);
-        admin.put("aliasName", realName);
-        admin.put("userId", userId);
-        admin.put("phone", "");
-        JSONObject attributes = new JSONObject();
-        attributes.put("caastoken", caastoken);
-        attributes.put("isAdmin", isAdmin);
-        attributes.put("password", password);
-        admin.put("attributes", attributes);
-        return admin;
+        return null;
     }
 
 }

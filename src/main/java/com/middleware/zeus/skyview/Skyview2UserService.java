@@ -1,4 +1,4 @@
-package com.middleware.zeus.skyviewservice;
+package com.middleware.zeus.skyview;
 
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.base.CaasResult;

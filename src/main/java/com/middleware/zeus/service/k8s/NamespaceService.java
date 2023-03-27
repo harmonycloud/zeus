@@ -6,11 +6,13 @@ import java.util.Map;
 import com.middleware.caas.common.model.ResourceQuotaDo;
 import com.middleware.caas.common.model.StorageDto;
 import com.middleware.caas.common.model.middleware.Namespace;
+import com.middleware.zeus.annotation.Skyview;
 
 /**
  * @author dengyulong
  * @date 2021/03/25
  */
+@Skyview
 public interface NamespaceService {
 
     /**

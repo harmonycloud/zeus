@@ -6,6 +6,7 @@ import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.caas.common.model.middleware.Namespace;
 import com.middleware.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
 import com.middleware.caas.common.model.user.*;
+import com.middleware.zeus.annotation.Skyview;
 import com.middleware.zeus.bean.user.BeanProject;
 
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.Set;
  * @author xutianhong
  * @Date 2022/3/24 9:25 上午
  */
+@Skyview
 public interface ProjectService {
 
     /**
@@ -29,6 +31,14 @@ public interface ProjectService {
      * @param beanProject
      */
     void add(BeanProject beanProject);
+
+    /**
+     * 查询项目
+     * @param organId 组织id
+     * @param projectId 项目id
+     * @return
+     */
+    ProjectDto get(String organId, String projectId);
 
     /**
      * 查询项目列表
@@ -160,7 +170,10 @@ public interface ProjectService {
 
     /**
      * 获取项目下中间件资源
+     * @param organId 组织id
      * @param projectId 项目id
+     *
+     * @return List<ProjectMiddlewareResourceInfo>
      */
     List<ProjectMiddlewareResourceInfo> middlewareResource(String organId, String projectId) throws Exception;
 
@@ -177,30 +190,6 @@ public interface ProjectService {
      * @return List<ProjectDto>
      */
     List<ProjectDto> getMiddlewareCount(String organId, String projectId);
-
-
-    /**
-     * 通过分区查询项目
-     * @param namespace 分区
-     *
-     * @return ProjectDto
-     */
-    ProjectDto findProjectByNamespace(String namespace);
-
-    /**
-     * 查询项目
-     * @param projectId
-     * @return
-     */
-    BeanProject get(String projectId);
-
-    /**
-     * 查询指定集群分区所绑定的项目id
-     * @param clusterId
-     * @param namespace
-     * @return
-     */
-    String getProjectId(String clusterId, String namespace);
 
     /**
      * 资源分配

@@ -96,10 +96,6 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
             wrapper.eq("cluster_id", clusterId);
         }
         List<BeanMiddlewareCluster> beanMiddlewareClusters = middlewareClusterMapper.selectList(wrapper);
-        // todo 此逻辑是否可删除
-        if (CollectionUtils.isEmpty(beanMiddlewareClusters)){
-            beanMiddlewareClusters = initMiddlewareCluster();
-        }
         List<MiddlewareCluster> middlewareClusters = new ArrayList<>();
         beanMiddlewareClusters.forEach(beanMiddlewareCluster -> {
             MiddlewareCluster middlewareCluster = JSONObject.parseObject(JSONObject.toJSONString(JSON.parse(beanMiddlewareCluster.getMiddlewareCluster())), MiddlewareCluster.class);
@@ -139,31 +135,5 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
         Calendar calendar = Calendar.getInstance();
         Date now = calendar.getTime();
         return sdf.format(now);
-    }
-
-    /**
-     * 初始化middlewareCluster
-     */
-    public List<BeanMiddlewareCluster> initMiddlewareCluster() {
-        List<MiddlewareCluster> middlewareClusterList = clusterWrapper.listClusters();
-        if (CollectionUtils.isEmpty(middlewareClusterList)) {
-            return new ArrayList<>();
-        }
-        for (MiddlewareCluster middlewareCluster : middlewareClusterList) {
-            // 获取集群id
-            String clusterId = K8sClient.getClusterId(middlewareCluster.getMetadata());
-            // 创建集群在数据库中的记录
-            this.create(clusterId, middlewareCluster);
-            // 初始化集群默认的镜像仓库
-            try {
-                ImageRepositoryDTO imageRepositoryDTO =
-                    imageRepositoryService.convertRegistry(middlewareCluster.getSpec().getInfo().getRegistry());
-                imageRepositoryService.insert(clusterId, imageRepositoryDTO);
-            } catch (Exception e) {
-                log.error("集群{} 初始化镜像仓库失败", clusterId, e);
-            }
-        }
-        return middlewareClusterMapper.selectList(
-            new QueryWrapper<BeanMiddlewareCluster>().isNotNull("cluster_id").isNotNull("middleware_cluster"));
     }
 }

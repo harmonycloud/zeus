@@ -5,6 +5,7 @@ import com.middleware.caas.common.model.UploadImageFileDto;
 import com.middleware.caas.common.model.user.ResourceMenuDto;
 import com.middleware.caas.common.model.user.SystemConfigDto;
 import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.zeus.annotation.Skyview;
 import com.middleware.zeus.bean.PersonalizedConfiguration;
 import com.middleware.zeus.bean.user.BeanUser;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,6 +19,7 @@ import java.util.Map;
  * @author xutianhong
  * @Date 2021/7/22 1:50 下午
  */
+@Skyview
 public interface UserService {
 
     /**

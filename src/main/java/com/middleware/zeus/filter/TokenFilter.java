@@ -6,7 +6,7 @@ import com.middleware.caas.filters.exception.AuthRuntimeException;
 import com.middleware.caas.filters.token.JwtTokenComponent;
 import com.middleware.caas.filters.user.CurrentUser;
 import com.middleware.caas.filters.user.CurrentUserRepository;
-import com.middleware.zeus.skyviewservice.client.Skyview2UserServiceClient;
+import com.middleware.zeus.skyview.client.Skyview2UserServiceClient;
 import com.middleware.zeus.util.ApplicationContextGetBeanHelper;
 import com.middleware.zeus.util.ApplicationUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -118,37 +118,33 @@ public class TokenFilter implements Filter {
         } else {
             log.debug("Token 认证通过：{}", token);
             JSONObject userMap = resultEnum.getValue();
-            Map<String,String> attributes = new HashMap<>();
-            if (userMap.get("attributes") == null) {
-                userMap.remove("attributes");
-            } else {
-                JSONObject caasJson = (JSONObject) userMap.get("attributes");
-                attributes.put("caastoken", caasJson.getString("caastoken"));
-                attributes.put("isAdmin", caasJson.getString("isAdmin"));
-                attributes.put("password", caasJson.getString("password"));
+            if (userMap.containsKey("caasToken")) {
+                checkRefreshCaasToken(userMap);
             }
             long currentTime = System.currentTimeMillis();
             httpResponse.setHeader(USER_TOKEN, JwtTokenComponent.generateToken("userInfo", userMap,
                 new Date(currentTime + (long)(ApplicationUtil.getExpire() * 3600000L)), new Date(currentTime - 300000L)));
             CurrentUser currentUser = (new CurrentUser()).setUsername(userMap.getString("username"))
-                .setNickname(userMap.getString("realName")).setToken(token).setAttributes(attributes);
+                .setNickname(userMap.getString("aliasName")).setToken(token);
             CurrentUserRepository.setUser(currentUser);
-            if (userMap.get("attributes") != null) {
-                checkRefreshCaasToken(attributes);
-            }
         }
     }
 
     @Override
     public void destroy() {}
+
     /**
-     * 校验观云台token是否过期，如果过期则更新token
-     * @param attributes
+     * 手动刷新观云台token
+     * @param userMap 用户信息
      */
-    private void checkRefreshCaasToken(Map<String, String> attributes) {
-        String caastoken = attributes.get("caastoken");
-        Skyview2UserServiceClient userServiceClient = ApplicationContextGetBeanHelper.getBean(Skyview2UserServiceClient.class);
-        userServiceClient.currentWithHandleException(caastoken, true);
+    private void checkRefreshCaasToken(JSONObject userMap) {
+        // 手动刷新 caas token
+        String caasToken = userMap.getString("caasToken");
+        JSONObject caasUser = JwtTokenComponent.getClaimsFromToken("userInfo", caasToken);
+        long currentTime = System.currentTimeMillis();
+        String newCaasToken = JwtTokenComponent.generateToken("userInfo", caasUser,
+                new Date(currentTime + (long)(0.5 * 3600000L)), new Date(currentTime - 300000L));
+        userMap.put("caasToken", newCaasToken);
     }
 
 }
