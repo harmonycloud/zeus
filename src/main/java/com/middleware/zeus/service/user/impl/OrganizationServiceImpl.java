@@ -161,7 +161,7 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
     public void delete(String organId) {
         // 校验组织下项目
         List<ProjectDto> projectDtoList = projectService.list(organId);
-        if (CollectionUtils.isEmpty(projectDtoList)){
+        if (!CollectionUtils.isEmpty(projectDtoList)){
             throw new BusinessException(ErrorMessage.ORGANIZATION_INCLUDE_PROJECT);
         }
         // 删除组织下成员
