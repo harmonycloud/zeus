@@ -1,9 +1,9 @@
-package com.middleware.zeus.skyviewservice.impl;
+package com.middleware.zeus.skyview.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.base.CaasResult;
-import com.middleware.zeus.skyviewservice.Skyview2UserService;
-import com.middleware.zeus.skyviewservice.client.Skyview2UserServiceClient;
+import com.middleware.zeus.skyview.Skyview2UserService;
+import com.middleware.zeus.skyview.client.Skyview2UserServiceClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,15 +20,16 @@ public class Skyview2UserServiceImpl implements Skyview2UserService {
     @Value("${system.skyview.verifyCode:false}")
     private Boolean verifyCode;
 
-    @Autowired
-    private Skyview2UserServiceClient skyview2UserServiceClient;
+/*    @Autowired
+    private Skyview2UserServiceClient skyview2UserServiceClient;*/
 
     @Override
     public CaasResult<JSONObject> login(String username, String password, String language) {
-        if (!verifyCode){
+        /*if (!verifyCode){
             return skyview2UserServiceClient.login(username, password, language);
         }else {
             return skyview2UserServiceClient.loginWithVerify(username, password, language);
-        }
+        }*/
+        return null;
     }
 }

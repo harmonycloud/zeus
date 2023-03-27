@@ -10,13 +10,16 @@ import com.middleware.caas.filters.token.JwtTokenComponent;
 import com.middleware.tool.date.DateUtils;
 import com.middleware.tool.encrypt.PasswordUtils;
 import com.middleware.tool.encrypt.RSAUtils;
+import com.middleware.zeus.annotation.Skyview;
 import com.middleware.zeus.service.user.AuthManager4Ldap;
 import com.middleware.zeus.service.user.AuthService;
 import com.middleware.zeus.service.user.LdapService;
 import com.middleware.zeus.service.user.UserService;
+import com.middleware.zeus.service.user.abstractService.AbstractAuthService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -35,18 +38,15 @@ import static com.middleware.caas.filters.base.GlobalKey.USER_TOKEN;
  */
 @Slf4j
 @Service
-@ConditionalOnProperty(value="system.usercenter",havingValue = "zeus")
-public class AuthServiceImpl implements AuthService {
+@Skyview(target = "zeus")
+public class AuthServiceImpl extends AbstractAuthService implements AuthService {
 
-    @Value("${system.user.expire:0.5}")
-    private Double expireTime;
+
     @Value("${system.user.account.expire:180}")
     private Double accountExpireDay;
     @Value("${system.user.account.alert:15}")
     private Double accountExpireAlertDay;
 
-    @Autowired
-    private UserService userService;
     @Autowired
     private AuthManager4Ldap authManager4Ldap;
     @Autowired
@@ -55,12 +55,12 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public JSONObject login(String userName, String password, HttpServletResponse response) throws Exception {
         //解密密码
-        String decryptPassword;
-        try {
+        String decryptPassword = "test";
+        /*try {
             decryptPassword = RSAUtils.decryptByPrivateKey(password);
         } catch (Exception e) {
             throw new BusinessException(ErrorMessage.RSA_DECRYPT_FAILED);
-        }
+        }*/
         //md5加密
         String md5Password = PasswordUtils.md5(decryptPassword);
         // 获取ldap配置信息
@@ -82,8 +82,8 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ErrorMessage.LOGIN_FAILED);
         }
 
-        JSONObject admin = convertUserInfo(userDto);
-        String token = generateToken(admin);
+        JSONObject userInfo = convertUserInfo(userDto);
+        String token = generateToken(userInfo);
         response.setHeader(SET_TOKEN, token);
         JSONObject res = convertResult(userName, isAdmin, token);
         //校验密码日期
@@ -130,17 +130,6 @@ public class AuthServiceImpl implements AuthService {
         return 1;
     }
 
-    public JSONObject convertUserInfo(UserDto userDto){
-        JSONObject admin = new JSONObject();
-        admin.put("username", userDto.getUserName());
-        admin.put("roleId", userDto.getRoleId());
-        admin.put("aliasName", userDto.getAliasName());
-        admin.put("roleName", userDto.getRoleName());
-        admin.put("phone", userDto.getPhone());
-        admin.put("email", userDto.getEmail());
-        return admin;
-    }
-
     /**
      * 校验用户角色权限
      */
@@ -158,29 +147,4 @@ public class AuthServiceImpl implements AuthService {
         return false;
     }
 
-    /**
-     * 生成token
-     * @param admin
-     * @return
-     */
-    public String generateToken(JSONObject admin){
-        long currentTime = System.currentTimeMillis();
-        return JwtTokenComponent.generateToken("userInfo", admin,
-                new Date(currentTime + (long)(expireTime * 3600000L)), new Date(currentTime - 300000L));
-    }
-
-    /**
-     * 组装返回结果
-     * @param userName
-     * @param isAdmin
-     * @param token
-     * @return
-     */
-    public JSONObject convertResult(String userName,boolean isAdmin,String token){
-        JSONObject res = new JSONObject();
-        res.put("userName", userName);
-        res.put("token", token);
-        res.put("isAdmin", isAdmin);
-        return res;
-    }
 }

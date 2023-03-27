@@ -228,7 +228,7 @@ public abstract class AbstractBaseOperator {
 
     public void delete(Middleware middleware) {
         // 获取集群
-        MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(middleware.getClusterId());
+        MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
         // check exist
         List<HelmListInfo> list = helmChartService.listHelm(middleware.getNamespace(), middleware.getName(), cluster);
         if (CollectionUtils.isEmpty(list)) {

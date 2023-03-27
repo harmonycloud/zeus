@@ -7,6 +7,7 @@ import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.BackupPositionDTO;
 import com.middleware.caas.common.model.BackupServerDTO;
+import com.middleware.caas.common.model.user.ProjectDto;
 import com.middleware.zeus.bean.BeanBackupPosition;
 import com.middleware.zeus.bean.BeanBackupServer;
 import com.middleware.zeus.bean.BeanBackupServerDetail;
@@ -176,9 +177,9 @@ public class BackupPositionServiceImpl implements BackupPositionService {
         for (BeanBackupPosition beanBackupPosition : beanBackupPositions) {
             BackupPositionDTO backupPositionDTO = new BackupPositionDTO();
             BeanUtil.copyProperties(beanBackupPosition, backupPositionDTO);
-            BeanProject beanProject = projectService.get(beanBackupPosition.getProjectId());
-            if (beanProject != null) {
-                backupPositionDTO.setProjectName(beanProject.getAliasName());
+            ProjectDto projectDto = projectService.get(beanBackupPosition.getOrganId(), beanBackupPosition.getProjectId());
+            if (projectDto != null) {
+                backupPositionDTO.setProjectName(projectDto.getAliasName());
                 // todo 修改备份任务引用数量的查询逻辑
                 backupPositionDTO.setBackupTaskNum(middlewareBackupNameService.listByPositionId(beanBackupPosition.getId()).size());
                 positionList.add(backupPositionDTO);

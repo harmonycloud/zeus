@@ -6,6 +6,7 @@ import com.middleware.caas.common.model.ClusterNamespaceResourceDto;
 import com.middleware.caas.common.model.ClusterNodeResourceDto;
 import com.middleware.caas.common.model.ResourceQuotaDo;
 import com.middleware.caas.common.model.middleware.*;
+import com.middleware.zeus.annotation.Skyview;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,6 +18,7 @@ import java.util.Set;
  * @author dengyulong
  * @date 2021/03/25
  */
+@Skyview
 public interface ClusterService {
 
     /**
@@ -212,13 +214,6 @@ public interface ClusterService {
      * @return
      */
     ClusterQuotaDTO monitoring(String clusterId);
-
-    /**
-     * 查询项目下集群id列表
-     * @param projectId
-     * @return
-     */
-    Set<String> listClusterIds(String organId, String projectId);
 
     /**
      * 根据集群下资源配额情况

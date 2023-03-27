@@ -1,5 +1,7 @@
 package com.middleware.zeus.util;
 
+import com.alibaba.fastjson.JSONObject;
+import com.middleware.caas.filters.token.JwtTokenComponent;
 import com.middleware.caas.filters.user.CurrentUser;
 import com.middleware.caas.filters.user.CurrentUserRepository;
 
@@ -14,14 +16,14 @@ public class ZeusCurrentUser {
 
     public static String getCaasToken() {
         CurrentUser currentUser = CurrentUserRepository.getUser();
-        Map<String, String> attributes = currentUser.getAttributes();
-        return attributes.get("caastoken");
+        JSONObject userInfo = JwtTokenComponent.getClaimsFromToken("userInfo", currentUser.getToken());
+        return userInfo.getString("caasToken");
     }
 
-    public static boolean isAdmin() {
+    public static Boolean isAdmin(){
         CurrentUser currentUser = CurrentUserRepository.getUser();
-        Map<String, String> attributes = currentUser.getAttributes();
-        return Boolean.parseBoolean(attributes.get("isAdmin"));
+        JSONObject userInfo = JwtTokenComponent.getClaimsFromToken("userInfo", currentUser.getToken());
+        return userInfo.getBoolean("isAdmin");
     }
 
     public static String getUserName(){

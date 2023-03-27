@@ -36,7 +36,7 @@ public class BeanBackupPosition implements Serializable {
     /**
      * 组织id
      */
-    @TableField("project_id")
+    @TableField("organ_id")
     private String organId;
 
     /**
