@@ -14,7 +14,21 @@ import java.util.Map;
 @Data
 public class PostgresqlSpec {
 
+    private Object additionalVolumes;
+
+    private Object affinity;
+
+    private Object allowedSourceRanges;
+
+    private Object clone;
+
+    private Object connectionPooler;
+
     private Object customEnvs;
+
+    private Object customVolumes;
+
+    private Object databases;
 
     private String dockerImage;
 
@@ -26,25 +40,72 @@ public class PostgresqlSpec {
 
     private Boolean enableReplicaConnectionPooler;
 
+    private Boolean enableReplicaLoadBalancer;
+
+    private Boolean enableShmVolume;
+
+    private String exporterImage;
+
     private String  imagePullPolicy;
+
+    private Object initContainers;
+
+    private Object init_containers;
 
     private String logicalBackupSchedule;
 
+    private Object maintenanceWindows;
+
     private Object monitor;
+
+    private Object nodeAffinity;
 
     private Integer numberOfInstances;
 
     private Object patroni;
 
+    private Object podAnnotations;
+
+    private String podPriorityClassName;
+
+    private String pod_priority_class_name;
+
     private Object postgresql;
+
+    private Object preparedDatabases;
+
+    private Boolean replicaLoadBalancer;
 
     private Object resources;
 
+    private String schedulerName;
+
+    private Object serviceAnnotations;
+
+    private Object sidecars;
+
+    private Integer spiloFSGroup;
+
+    private Integer spiloRunAsGroup;
+
+    private Integer spiloRunAsUser;
+
+    private Object standby;
+
     private String teamId;
+
+    private Object tls;
+
+    private Object tolerations;
 
     private Object topologySpreadConstraints;
 
+    private Boolean useLoadBalancer;
+
     private Object userPasswords;
 
+    private Object users;
+
     private Object volume;
+
 }
