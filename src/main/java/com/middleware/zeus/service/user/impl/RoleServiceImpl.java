@@ -195,15 +195,18 @@ public class RoleServiceImpl implements RoleService {
             log.error("查询license出错");
             features.setActiveActiveEnable(false).setDisasterRecoveryEnable(false);
         }
-
+        if (!isMaster) {
+            // 平台灾备备集群开启灾备菜单
+            features.setDisasterRecoveryEnable(true);
+        }
         LicenseInfo finalFeatures = features;
         list = list.stream().filter(menuDto -> {
             if (menuDto.getResourceMenuId() == Integer.parseInt(disasterMenuId)) {
                 return finalFeatures.getDisasterRecoveryEnable();
             } else if (menuDto.getResourceMenuId() == Integer.parseInt(activeActiveMenuId)) {
-                return finalFeatures.getActiveActiveEnable() && isMaster;
+                return finalFeatures.getActiveActiveEnable();
             } else {
-                return isMaster;
+                return true;
             }
         }).collect(Collectors.toSet());
 
