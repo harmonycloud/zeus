@@ -135,12 +135,13 @@ public class RoleServiceImpl implements RoleService {
                     .collect(Collectors.toMap(BeanRoleAuthority::getType, BeanRoleAuthority::getPower)));
             }
             return roleDto;
-        }).sorted(Comparator.comparing(RoleDto::getWeight)).filter(roleDto -> {
-            if (StringUtils.isNotEmpty(key)) {
-                return roleDto.getName().contains(key) || roleDto.getDescription().contains(key);
-            }
-            return true;
-        }).collect(Collectors.toList());
+        }).sorted((o1, o2) -> o1.getWeight() == null && o2.getWeight() == null ? 0
+            : o1.getWeight() == null ? 1 : o2.getWeight() == null ? -1 : 0).filter(roleDto -> {
+                if (StringUtils.isNotEmpty(key)) {
+                    return roleDto.getName().contains(key) || roleDto.getDescription().contains(key);
+                }
+                return true;
+            }).collect(Collectors.toList());
     }
 
     @Override
