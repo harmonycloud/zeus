@@ -66,12 +66,7 @@ public class AuthServiceImpl extends AbstractAuthService implements AuthService 
     @Override
     public JSONObject login(String userName, String password, HttpServletResponse response) throws Exception {
         //解密密码
-        String decryptPassword = "test";
-        /*try {
-            decryptPassword = RSAUtils.decryptByPrivateKey(password);
-        } catch (Exception e) {
-            throw new BusinessException(ErrorMessage.RSA_DECRYPT_FAILED);
-        }*/
+        String decryptPassword = decrypt(password);
         //md5加密
         String md5Password = PasswordUtils.md5(decryptPassword);
         // 获取ldap配置信息
