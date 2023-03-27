@@ -302,7 +302,6 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
             } else {
                 userDto.setRoleName("普通用户");
             }
-            userDto.setUserRoleList(null);
         }).collect(Collectors.toList());
     }
 

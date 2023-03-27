@@ -71,10 +71,6 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
     @Autowired
     public MiddlewareInfoService middlewareInfoService;
     @Autowired
-    private ClusterMiddlewareInfoService clusterMiddlewareInfoService;
-    @Autowired
-    private ClusterComponentService clusterComponentService;
-    @Autowired
     private ServiceAccountService serviceAccountService;
     @Autowired
     private ImageRepositoryService imageRepositoryService;
@@ -88,6 +84,8 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
     private PlatformQuotaService platformQuotaService;
     @Autowired
     private StorageService storageService;
+    @Autowired
+    private OrganizationService organizationService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -220,10 +218,7 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
     public List<UserDto> getUser(String organId, String projectId, Boolean allocatable) {
         checkExist(organId, projectId);
         // 修改判断该用户是否可分配的逻辑
-        List<UserDto> userDtoList = userService.list(null).stream()
-            .filter(userDto -> userDto.getUserRoleList().stream().anyMatch(
-                userRole -> StringUtils.isNotEmpty(userRole.getOrganId()) && userRole.getOrganId().equals(organId)))
-            .collect(Collectors.toList());
+        List<UserDto> userDtoList = organizationService.listOrganUser(organId, false);
         if (allocatable) {
             // 获取可分配的
             userDtoList = userDtoList.stream()
