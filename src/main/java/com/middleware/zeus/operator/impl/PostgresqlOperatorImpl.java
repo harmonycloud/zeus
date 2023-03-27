@@ -400,8 +400,10 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
     @Override
     public void update(Middleware middleware, MiddlewareClusterDTO cluster) {
         StringBuilder sb = new StringBuilder();
+
         if (middleware.getQuota() != null && middleware.getQuota().get(middleware.getType()) != null) {
             MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
+
             // 设置limit的resources
             setLimitResources(quota);
             if (StringUtils.isNotBlank(quota.getCpu())) {
@@ -421,7 +423,16 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
                 sb.append("mode=").append(mod);
             }
         }
-        helmChartService.upgrade(middleware, sb.toString(), middleware.getClusterId());
+        updateCommonValues(sb, middleware);
+
+        if (sb.length() == 0) {
+            return;
+        }
+        // 去掉末尾的逗号
+        sb.deleteCharAt(sb.length() - 1);
+        // 更新helm
+        helmChartService.upgrade(middleware, sb.toString(), cluster);
+
     }
 
     @Override
