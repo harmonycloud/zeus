@@ -81,6 +81,11 @@ public abstract class AbstractProjectService {
                 projectBackupServerService.listByProjectId(organId, projectId);
         List<Integer> idList = projectBackupServerDTOList.stream().map(ProjectBackupServerDTO::getBackupServerId)
                 .collect(Collectors.toList());
+        // 判空
+        if (CollectionUtils.isEmpty(idList)){
+            return new ArrayList<>();
+        }
+        // 查询备份服务器信息
         List<BackupServerDTO> backupServerDTOList = backupServerService.list(idList);
 
         // 根据集群id过滤

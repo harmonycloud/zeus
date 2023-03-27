@@ -1,5 +1,6 @@
 package com.middleware.zeus.service.user.abstractService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -47,6 +48,9 @@ public abstract class AbstractOrganizationService {
                         || beanOrganizationBackupServer.getClusterId().equals(clusterId))
                 .map(BeanOrganizationBackupServer::getBackupServerId).collect(Collectors.toList());
 
+        if(CollectionUtils.isEmpty(idList)){
+            return new ArrayList<>();
+        }
         // 查询备份服务器
         List<BackupServerDTO> backupServerDTOList = backupServerService.list(idList);
         // 查询备份服务器 组织下分配情况
