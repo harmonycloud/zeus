@@ -14,6 +14,7 @@ import com.middleware.zeus.service.AbstractBaseService;
 import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.middleware.CustomConfigHistoryService;
 import com.middleware.zeus.service.middleware.MiddlewareCustomConfigService;
+import com.middleware.zeus.service.middleware.MiddlewareService;
 import com.middleware.zeus.service.registry.HelmChartService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -69,6 +70,8 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
     private BeanMiddlewareParamTopMapper beanMiddlewareParamTopMapper;
     @Autowired
     private MiddlewareCRService middlewareCRService;
+    @Autowired
+    private MiddlewareService middlewareService;
 
     @Override
     public List<CustomConfig> listCustomConfig(String clusterId, String namespace, String middlewareName, String type, String order)
@@ -163,6 +166,10 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         updateValues(middleware, data, cluster, values);
         // 添加修改历史
         customConfigHistoryService.insert(config.getName(), oldDate, config);
+        // 重启服务
+        if (config.getReboot() != null && config.getReboot()) {
+            middlewareService.reboot(config.getClusterId(), config.getNamespace(), config.getName(), config.getType());
+        }
     }
 
     @Override
