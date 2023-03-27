@@ -14,6 +14,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.zeus.bean.LicenseInfo;
 import com.middleware.zeus.dao.BeanSystemConfigMapper;
+import com.middleware.zeus.schedule.SystemManageTask;
 import com.middleware.zeus.service.k8s.MiddlewareCRService;
 import com.middleware.zeus.service.k8s.MiddlewareClusterService;
 import com.middleware.zeus.service.k8s.NamespaceService;
@@ -59,8 +60,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LicenseServiceImpl implements LicenseService {
 
-//    @Value("${system.license.enable: true}")
-//    private String enable;
 
     @Autowired
     private MiddlewareClusterService clusterService;
@@ -78,6 +77,8 @@ public class LicenseServiceImpl implements LicenseService {
     private MiddlewareCrTypeService middlewareCrTypeService;
     @Autowired
     private SystemConfigService systemConfigService;
+    @Autowired
+    private SystemManageTask systemManageTask;
 
     private static final String PUBLIC_KEY =
         "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDqVEhXdhVabafquPgbeYmz8Ab+2qCh0ayKrFSD7FIQG1+qetvwKo0hmFxeTmgvLBr3IeoDO6nxcx/7MusQdESCApS9vIzU8hdKgzzWmQE84HZ/FNRhcrxwbOgx8FmU1RlPVf/rjoKnhNhQ6xgFXtnd7RBzWnc8lZNxAppdVps0ZwIDAQAB";
@@ -161,9 +162,6 @@ public class LicenseServiceImpl implements LicenseService {
 
     @Override
     public Boolean check(String clusterId) {
-//        if (!Boolean.parseBoolean(enable)){
-//            return true;
-//        }
         JSONObject license = getLicense();
         List<MiddlewareClusterDTO> clusterList = clusterService.listClusterDtos();
         clusterList =
@@ -181,9 +179,6 @@ public class LicenseServiceImpl implements LicenseService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void refreshMiddlewareResource() throws Exception {
-//        if (!Boolean.parseBoolean(enable)){
-//            return;
-//        }
         BeanSystemConfig produceConfig = systemConfigService.getConfigForUpdate(PRODUCE);
         BeanSystemConfig testConfig = systemConfigService.getConfigForUpdate(TEST);
         if (produceConfig == null || testConfig == null) {
@@ -310,8 +305,9 @@ public class LicenseServiceImpl implements LicenseService {
             return 0.0;
         }
         try {
-            refreshMiddlewareResource();
+            systemManageTask.asyncRefreshMiddlewareResource();
         } catch (Exception ignored){
+            log.error(ignored.getMessage());
         }
         return Double.parseDouble(config.getConfigValue());
     }
