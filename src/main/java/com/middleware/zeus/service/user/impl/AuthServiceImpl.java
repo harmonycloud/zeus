@@ -65,8 +65,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public JSONObject login(String userName, String password, HttpServletResponse response) throws Exception {
-        // 查看平台灾备切换状态
-        checkDisasterRecovery();
         //解密密码
         String decryptPassword;
         try {
@@ -95,6 +93,9 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ErrorMessage.LOGIN_FAILED);
         }
 
+        // 查看平台灾备切换状态
+        checkDisasterRecovery(isAdmin);
+
         JSONObject admin = convertUserInfo(userDto);
         String token = generateToken(admin);
         response.setHeader(SET_TOKEN, token);
@@ -113,14 +114,13 @@ public class AuthServiceImpl implements AuthService {
         return res;
     }
 
-    private void checkDisasterRecovery() {
+    private void checkDisasterRecovery(Boolean isAdmin) {
+        if (!isAdmin) {
+            throw new BusinessException(ErrorMessage.DISASTER_ONLY_ADMIN_CAN_LOGING);
+        }
         JSONObject values = helmChartService.getZeusMysqlInstallValues();
         Boolean switched = values.getJSONObject("args").getBoolean("disasterRecoverySwitched");
         Boolean isMaster = "master-slave".equals(values.getString("type"));
-        // 备平台没开灾备无法登录
-        if (!isMaster && !licenseService.getFeatures().getDisasterRecoveryEnable()) {
-            throw new BusinessException(ErrorMessage.DISASTER_RECOVERY_NOT_SUPPORT);
-        }
         // 主平台切换后无法登陆
         if (switched != null && switched && !isMaster) {
             log.error("当前集群已由平台灾备功能进行切换，无法进行登录");
