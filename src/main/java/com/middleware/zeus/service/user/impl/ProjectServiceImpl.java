@@ -533,7 +533,10 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
     @Override
     public Set<String> getRelationClusterIds(String organId, String projectId) {
         QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<>();
-        wrapper.eq("organ_id", organId).eq("project_id", projectId);
+        if (StringUtils.isNotEmpty(organId)){
+            wrapper.eq("organ_id", organId);
+        }
+        wrapper.eq("project_id", projectId);
         List<BeanProjectNamespace> projectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
         return projectNamespaceList.stream().map(BeanProjectNamespace::getClusterId).collect(Collectors.toSet());
     }
