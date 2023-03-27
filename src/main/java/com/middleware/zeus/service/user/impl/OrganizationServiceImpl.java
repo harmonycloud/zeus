@@ -200,11 +200,13 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
             // 获取项目id列表
             List<ProjectDto> projectDtoList = projectService.list(organId);
             List<String> uidList = projectDtoList.stream().map(ProjectDto::getProjectId).collect(Collectors.toList());
-            // 查询项目申请配额总和
-            List<ResourceQuotaDo> projectResourceQuotaDoList = platformQuotaService.getQuota(PROJECT, uidList, STORAGE);
-            // 封装数据
-            organResourceQuotaDoList =
-                platformQuotaService.convertUsedResource(organResourceQuotaDoList, projectResourceQuotaDoList);
+            if (!CollectionUtils.isEmpty(uidList)){
+                // 查询项目申请配额总和
+                List<ResourceQuotaDo> projectResourceQuotaDoList = platformQuotaService.getQuota(PROJECT, uidList, STORAGE);
+                // 封装数据
+                organResourceQuotaDoList =
+                        platformQuotaService.convertUsedResource(organResourceQuotaDoList, projectResourceQuotaDoList);
+            }
         }
         // 设置集群名称
         Map<String, String> clusterNickNameMap = clusterService.getClusterAliasName();
@@ -239,12 +241,14 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
             // 获取项目id列表
             List<ProjectDto> projectDtoList = projectService.list(organId);
             List<String> uidList = projectDtoList.stream().map(ProjectDto::getProjectId).collect(Collectors.toList());
-            // 查询项目申请配额总和
-            List<ResourceQuotaDo> projectResourceQuotaDoList =
-                platformQuotaService.getQuota(PROJECT, uidList, CPU, MEMORY);
-            // 封装数据
-            resourceQuotaDoList =
-                platformQuotaService.convertUsedResource(resourceQuotaDoList, projectResourceQuotaDoList);
+            if(!CollectionUtils.isEmpty(uidList)){
+                // 查询项目申请配额总和
+                List<ResourceQuotaDo> projectResourceQuotaDoList =
+                        platformQuotaService.getQuota(PROJECT, uidList, CPU, MEMORY);
+                // 封装数据
+                resourceQuotaDoList =
+                        platformQuotaService.convertUsedResource(resourceQuotaDoList, projectResourceQuotaDoList);
+            }
         }
         // 设置集群别名
         Map<String, String> clusterNickNameMap = clusterService.getClusterAliasName();
