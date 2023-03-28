@@ -161,7 +161,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public List<ResourceMenuDto> listMenuByRoleId(UserDto userDto, String organId, String projectId) {
         Set<BeanResourceMenuRole> list;
-        if (userDto.getIsAdmin() || (StringUtils.isEmpty(organId) && StringUtils.isEmpty(projectId))) {
+        if (userDto.getIsAdmin() || StringUtils.isEmpty(organId) || StringUtils.isEmpty(projectId)) {
             list = new HashSet<>(resourceMenuRoleService.listAdminMenu());
         } else {
             list = new HashSet<>();
@@ -186,8 +186,9 @@ public class RoleServiceImpl implements RoleService {
             }
         }
         // 查询是否为灾备模式备平台
-        JSONObject values = helmChartService.getZeusMysqlInstallValues();
-        Boolean isMaster = "master-slave".equals(values.getString("type"));
+//        JSONObject values = helmChartService.getZeusMysqlInstallValues();
+//        Boolean isMaster = "master-slave".equals(values.getString("type"));
+        Boolean isMaster = true;
         // 过滤是否开启灾备服务和双活
         LicenseInfo features = new LicenseInfo();
         try {
