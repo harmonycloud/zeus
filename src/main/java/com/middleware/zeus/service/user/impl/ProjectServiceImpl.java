@@ -1,32 +1,15 @@
 package com.middleware.zeus.service.user.impl;
 
 import static com.middleware.caas.common.constants.NameConstant.*;
-import static com.middleware.caas.common.constants.NameConstant.MEMORY;
 import static com.middleware.caas.common.constants.user.UserConstant.USERNAME;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.middleware.caas.common.enums.ComponentsEnum;
-import com.middleware.caas.common.model.*;
-import com.middleware.caas.common.model.middleware.*;
-import com.middleware.caas.common.model.user.*;
-import com.middleware.caas.filters.token.JwtTokenComponent;
-import com.middleware.caas.filters.user.CurrentUser;
-import com.middleware.caas.filters.user.CurrentUserRepository;
-import com.middleware.zeus.annotation.Skyview;
-import com.middleware.zeus.bean.user.BeanOrganizationBackupServer;
-import com.middleware.zeus.service.k8s.*;
-import com.middleware.zeus.service.middleware.*;
-import com.middleware.zeus.service.user.*;
-import com.middleware.zeus.service.user.abstractService.AbstractProjectService;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.ServiceAccount;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -35,18 +18,36 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.middleware.caas.common.enums.DictEnum;
 import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.*;
+import com.middleware.caas.common.model.middleware.ImageRepositoryDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.model.middleware.Namespace;
+import com.middleware.caas.common.model.middleware.StorageClassInfo;
+import com.middleware.caas.common.model.user.*;
+import com.middleware.caas.filters.token.JwtTokenComponent;
+import com.middleware.caas.filters.user.CurrentUser;
+import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.tool.uuid.UUIDUtils;
-import com.middleware.zeus.bean.BeanClusterMiddlewareInfo;
-import com.middleware.zeus.bean.BeanMiddlewareInfo;
+import com.middleware.zeus.annotation.Skyview;
 import com.middleware.zeus.bean.user.BeanProject;
 import com.middleware.zeus.bean.user.BeanProjectNamespace;
 import com.middleware.zeus.dao.user.BeanProjectMapper;
 import com.middleware.zeus.dao.user.BeanProjectNamespaceMapper;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
+import com.middleware.zeus.service.k8s.MiddlewareCRService;
+import com.middleware.zeus.service.k8s.NamespaceService;
+import com.middleware.zeus.service.k8s.ServiceAccountService;
+import com.middleware.zeus.service.k8s.StorageService;
+import com.middleware.zeus.service.middleware.BackupPositionService;
+import com.middleware.zeus.service.middleware.ImageRepositoryService;
+import com.middleware.zeus.service.middleware.MiddlewareInfoService;
+import com.middleware.zeus.service.user.*;
+import com.middleware.zeus.service.user.abstractService.AbstractProjectService;
 import com.middleware.zeus.util.AssertUtil;
 
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.ServiceAccount;
 import lombok.extern.slf4j.Slf4j;
 
 /**
