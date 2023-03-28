@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import com.middleware.caas.common.enums.CaasRole;
 import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.zeus.service.user.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -36,6 +37,8 @@ public class V2ProjectServiceImpl implements V2ProjectService {
 
     @Autowired
     private V2ProjectServiceClient v2ProjectServiceClient;
+    @Autowired
+    private RoleService roleService;
 
     @Override
     public List<ProjectDto> list(String organId) {
@@ -96,7 +99,11 @@ public class V2ProjectServiceImpl implements V2ProjectService {
                 JSONObject role = user.getJSONObject("role");
                 CaasRole caasRole = CaasRole.findByName(role.getString("name"));
                 if (caasRole != null){
-                    userDto.setRoleId(caasRole.getId());
+                    if (caasRole.getId() == 5){
+                        userDto.setRoleId(roleService.getOrganManagerRoleId());
+                    }else {
+                        userDto.setRoleId(caasRole.getId());
+                    }
                     userDto.setRoleName(caasRole.getRoleName());
                 }
                 userDtoList.add(userDto);
