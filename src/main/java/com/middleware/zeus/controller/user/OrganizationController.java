@@ -99,14 +99,14 @@ public class OrganizationController {
     @ApiOperation(value = "查询组织存储配额", notes = "查询组织存储配额")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "organId", value = "组织id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "clusterId", value = "集群id", required = false, paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "clusterIds", value = "集群id", required = false, paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "detail", value = "是否包含项目配额分配情况", paramType = "query", dataTypeClass = Boolean.class),
     })
     @GetMapping("/{organId}/storage")
     public BaseResult<List<ResourceQuotaDo>> getStorageQuota(@PathVariable("organId") String organId,
-                                                             @RequestParam(value = "clusterId", required = false) String clusterId,
+                                                             @RequestParam(value = "clusterIds", required = false) String clusterIds,
                                                              @RequestParam(value = "detail", defaultValue = "false") Boolean detail) {
-        return BaseResult.ok(organizationService.getStorageQuota(organId, clusterId, detail));
+        return BaseResult.ok(organizationService.getStorageQuota(organId, clusterIds, detail));
     }
 
     @ApiOperation(value = "移除组织存储配额", notes = "移除组织存储配额")
@@ -149,14 +149,14 @@ public class OrganizationController {
     @ApiOperation(value = "查询备份服务器", notes = "查询备份服务器")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "organId", value = "组织id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "clusterId", value = "集群id", required = false, paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "clusterIds", value = "集群id", required = false, paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "detail", value = "查询备份服务器使用情况", paramType = "query", dataTypeClass = Boolean.class),
     })
     @GetMapping("/{organId}/backupServer")
     public BaseResult<List<BackupServerDTO>> listBackupServer(@PathVariable("organId") String organId,
-                                                              @RequestParam(value = "clusterId", required = false) String clusterId,
+                                                              @RequestParam(value = "clusterIds", required = false) String clusterIds,
                                                               @RequestParam(value = "detail", defaultValue = "false") Boolean detail) {
-        return BaseResult.ok(organizationService.getBackupServer(organId, clusterId, detail));
+        return BaseResult.ok(organizationService.getBackupServer(organId, clusterIds, detail));
     }
 
     @ApiOperation(value = "移除备份服务器", notes = "移除备份服务器")

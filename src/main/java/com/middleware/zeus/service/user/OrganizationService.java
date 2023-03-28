@@ -61,12 +61,12 @@ public interface OrganizationService {
     /**
      * 获取组织存储配额
      * @param organId 组织id
-     * @param clusterId 集群id
+     * @param clusterIds 集群id(逗号分隔)
      * @param detail 是否包含使用情况
      *
      * @return  List<ResourceQuotaDo>
      */
-    List<ResourceQuotaDo> getStorageQuota(String organId, String clusterId, boolean detail);
+    List<ResourceQuotaDo> getStorageQuota(String organId, String clusterIds, boolean detail);
 
     /**
      * 移除组织存储配额
@@ -97,12 +97,12 @@ public interface OrganizationService {
     /**
      * 获取组织备份服务器信息
      * @param organId 组织id
-     * @param clusterId 集群id
+     * @param clusterIds 集群id(逗号分隔)
      * @param detail 查询备份服务器使用情况
      *
      * @return  List<BackupServerDTO>
      */
-    List<BackupServerDTO> getBackupServer(String organId, String clusterId, boolean detail);
+    List<BackupServerDTO> getBackupServer(String organId, String clusterIds, boolean detail);
 
     /**
      * 移除组织备份服务器信息

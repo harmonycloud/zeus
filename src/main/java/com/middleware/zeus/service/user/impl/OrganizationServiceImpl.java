@@ -3,6 +3,7 @@ package com.middleware.zeus.service.user.impl;
 import static com.middleware.caas.common.constants.NameConstant.*;
 import static com.middleware.caas.common.constants.user.UserConstant.USERNAME;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -190,9 +191,17 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
     }
 
     @Override
-    public List<ResourceQuotaDo> getStorageQuota(String organId, String clusterId, boolean detail) {
+    public List<ResourceQuotaDo> getStorageQuota(String organId, String clusterIds, boolean detail) {
         // 获取租户自身存储配额
-        List<ResourceQuotaDo> organResourceQuotaDoList = platformQuotaService.getQuota(ORGAN, organId, clusterId, STORAGE);
+        List<ResourceQuotaDo> organResourceQuotaDoList = platformQuotaService.getQuota(ORGAN, organId, null, STORAGE);
+        // 根据集群id进行过滤
+        if (StringUtils.isNotEmpty(clusterIds)) {
+            List<String> clusterIdList = getClusterIdList(clusterIds);
+            organResourceQuotaDoList = organResourceQuotaDoList.stream()
+                .filter(org -> clusterIdList.stream().anyMatch(clusterId -> clusterId.equals(org.getClusterId())))
+                .collect(Collectors.toList());
+        }
+        
         // 设置存储名称
         platformQuotaService.convertStorageName(organResourceQuotaDoList);
         // 获取项目列表 和 项目资源分配总额
@@ -208,6 +217,8 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
                         platformQuotaService.convertUsedResource(organResourceQuotaDoList, projectResourceQuotaDoList);
             }
         }
+        
+        
         // 设置集群名称
         Map<String, String> clusterNickNameMap = clusterService.getClusterAliasName();
         for (ResourceQuotaDo resourceQuotaDo : organResourceQuotaDoList) {

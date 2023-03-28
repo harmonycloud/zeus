@@ -69,7 +69,7 @@ public class Skyview2OrganServiceImpl extends AbstractOrganizationService implem
     }
 
     @Override
-    public List<ResourceQuotaDo> getStorageQuota(String organId, String clusterId, boolean detail) {
+    public List<ResourceQuotaDo> getStorageQuota(String organId, String clusterIds, boolean detail) {
         return v2OrganService.quotas(organId);
     }
 

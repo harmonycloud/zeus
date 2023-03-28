@@ -1,10 +1,12 @@
 package com.middleware.zeus.service.user.abstractService;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.middleware.caas.common.constants.CommonConstant;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -39,14 +41,19 @@ public abstract class AbstractOrganizationService {
     @Autowired
     protected BeanOrganizationBackupServerMapper beanOrganizationBackupServerMapper;
 
-    public List<BackupServerDTO> getBackupServer(String organId, String clusterId, boolean detail) {
+    public List<BackupServerDTO> getBackupServer(String organId, String clusterIds, boolean detail) {
         QueryWrapper<BeanOrganizationBackupServer> wrapper =
                 new QueryWrapper<BeanOrganizationBackupServer>().eq("organ_id", organId);
         List<BeanOrganizationBackupServer> list = beanOrganizationBackupServerMapper.selectList(wrapper);
-        List<Integer> idList = list.stream()
-                .filter(beanOrganizationBackupServer -> StringUtils.isEmpty(clusterId)
-                        || beanOrganizationBackupServer.getClusterId().equals(clusterId))
-                .map(BeanOrganizationBackupServer::getBackupServerId).collect(Collectors.toList());
+        // 根据集群id进行过滤
+        if (StringUtils.isNotEmpty(clusterIds)) {
+            List<String> clusterIdList = getClusterIdList(clusterIds);
+            list = list.stream()
+                .filter(obs -> clusterIdList.stream().anyMatch(clusterId -> clusterId.equals(obs.getClusterId())))
+                .collect(Collectors.toList());
+        }
+        List<Integer> idList =
+            list.stream().map(BeanOrganizationBackupServer::getBackupServerId).collect(Collectors.toList());
 
         if(CollectionUtils.isEmpty(idList)){
             return new ArrayList<>();
@@ -98,5 +105,12 @@ public abstract class AbstractOrganizationService {
             server.setBackupServerId(backupServerDTO.getId());
             beanOrganizationBackupServerMapper.insert(server);
         }
+    }
+
+    public List<String> getClusterIdList(String clusterIds){
+        if (clusterIds.endsWith(CommonConstant.COMMA)) {
+            StringUtils.removeEnd(clusterIds, CommonConstant.COMMA);
+        }
+        return Arrays.asList(clusterIds.split(CommonConstant.COMMA));
     }
 }
