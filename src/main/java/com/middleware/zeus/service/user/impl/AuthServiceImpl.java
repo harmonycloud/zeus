@@ -110,12 +110,12 @@ public class AuthServiceImpl extends AbstractAuthService implements AuthService 
     }
 
     private void checkDisasterRecovery(Boolean isAdmin) {
-        if (!isAdmin) {
-            throw new BusinessException(ErrorMessage.DISASTER_ONLY_ADMIN_CAN_LOGING);
-        }
         JSONObject values = helmChartService.getZeusMysqlInstallValues();
         Boolean switched = values.getJSONObject("args").getBoolean("disasterRecoverySwitched");
         Boolean isMaster = "master-slave".equals(values.getString("type"));
+        if (!isAdmin && !isMaster) {
+            throw new BusinessException(ErrorMessage.DISASTER_ONLY_ADMIN_CAN_LOGING);
+        }
         // 主平台切换后无法登陆
         if (switched != null && switched && !isMaster) {
             log.error("当前集群已由平台灾备功能进行切换，无法进行登录");
