@@ -109,10 +109,11 @@ podAntiAffinity: "soft"
 
 replication:
   enabled: true
-  host: 127.0.0.1 #change this
-  port: 3306 #change this
-  user: root #change this
-  password: ZeuS@Middleware01 #change this
+  from:
+    host: 127.0.0.1 #change this
+    port: 3306 #change this
+    user: root #change this
+    password: ZeuS@Middleware01 #change this
 
 
 recycle:
