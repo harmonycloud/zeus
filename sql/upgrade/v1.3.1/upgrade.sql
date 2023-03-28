@@ -111,4 +111,8 @@ INSERT INTO `resource_menu_role` VALUES (null,5,23,1);
 --灾备中心更名为平台灾备
 UPDATE resource_menu SET alias_name = '平台灾备' WHERE id = 10;
 
+--20230328 wangpenglei
+--system_config表config_value更改类型为text
+ALTER TABLE system_config modify config_value text NULL;
+
 
