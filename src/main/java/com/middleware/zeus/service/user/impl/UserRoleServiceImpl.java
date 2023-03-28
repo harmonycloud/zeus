@@ -64,23 +64,16 @@ public class UserRoleServiceImpl implements UserRoleService {
     }
 
     @Override
-    public Integer getRoleId(String userName, String organId, String projectId) {
+    public UserRole getUserRole(String userName, String organId, String projectId) {
         QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("username", userName)
             .eq("organ_id", organId).eq("project_id", projectId);
         List<BeanUserRole> beanUserRoleList = beanUserRoleMapper.selectList(wrapper);
         if (!CollectionUtils.isEmpty(beanUserRoleList)) {
-            return beanUserRoleList.get(0).getRoleId();
+            UserRole userRole = new UserRole();
+            BeanUtils.copyProperties(beanUserRoleList.get(0), userRole);
+            return userRole;
         }
         return null;
-    }
-
-    @Override
-    public Boolean checkAdmin(String username) {
-        // 获取角色用户对应关系
-        QueryWrapper<BeanUserRole> roleUserWrapper =
-            new QueryWrapper<BeanUserRole>().eq("username", username).eq("role_id", "1");
-        List<BeanUserRole> beanUserRoleList = beanUserRoleMapper.selectList(roleUserWrapper);
-        return !CollectionUtils.isEmpty(beanUserRoleList);
     }
 
     @Override
@@ -217,31 +210,6 @@ public class UserRoleServiceImpl implements UserRoleService {
         } else {
             beanUserRoleMapper.update(beanUserRole, wrapper);
         }
-    }
-
-    @Override
-    public boolean checkExistsNormalRole(String userName) {
-        QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("username", userName).gt("role_id", 2);
-        List<BeanUserRole> beanUserRoleList = beanUserRoleMapper.selectList(wrapper);
-        return !CollectionUtils.isEmpty(beanUserRoleList);
-    }
-
-    @Override
-    public BeanUserRole get(String userName, String organId, String projectId) {
-        QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("username", userName)
-            .eq("organ_id", organId).eq("project_id", projectId);
-        List<BeanUserRole> userRoleList = beanUserRoleMapper.selectList(wrapper);
-        if (CollectionUtils.isEmpty(userRoleList)) {
-            return null;
-        }
-        return userRoleList.get(0);
-    }
-
-    @Override
-    public void deleteRedundantRole(String userName, List<String> projectIds) {
-        QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<>();
-        wrapper.notIn("project_id", projectIds);
-        beanUserRoleMapper.delete(wrapper);
     }
 
 }

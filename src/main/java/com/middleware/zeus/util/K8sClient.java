@@ -86,7 +86,7 @@ public class K8sClient {
      * 初始化
      */
     public void initClients() {
-        List<MiddlewareClusterDTO> middlewareClusters = middlewareClusterService.listClusterDtos();
+        List<MiddlewareClusterDTO> middlewareClusters = clusterService.listClusters();
         if (middlewareClusters.size() > 0) {
             addK8sClients(middlewareClusters);
             clusterService.initClusterAttributes(middlewareClusters);

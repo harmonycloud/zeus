@@ -195,16 +195,6 @@ public class UserController {
         return BaseResult.ok(userService.getUserList(alertRuleId));
     }
 
-    @ApiOperation(value = "切换项目", notes = "切换项目")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),})
-    @GetMapping("/switchProject")
-    public BaseResult<String> switchProject(@RequestParam(value = "projectId") String projectId,
-                                            HttpServletResponse response) {
-        userService.switchProject(projectId, response);
-        return BaseResult.ok();
-    }
-
     @ApiOperation(value = "查询是否接入观云台", notes = "查询是否接入观云台")
     @GetMapping("/useOpenUserCenter")
     public BaseResult<Boolean> userCenter() {

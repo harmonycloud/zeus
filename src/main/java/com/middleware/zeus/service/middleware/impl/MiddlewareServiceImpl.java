@@ -35,6 +35,7 @@ import com.middleware.zeus.service.system.LicenseService;
 import com.middleware.zeus.service.user.ProjectService;
 import com.middleware.zeus.service.user.RoleAuthorityService;
 import com.middleware.zeus.service.user.UserRoleService;
+import com.middleware.zeus.service.user.UserService;
 import com.middleware.zeus.util.ChartVersionUtil;
 import com.middleware.zeus.util.MiddlewareResourceCalculateUtil;
 import com.middleware.zeus.util.PrometheusQueryUtil;
@@ -101,7 +102,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Autowired
     private ProjectService projectService;
     @Autowired
-    private UserRoleService userRoleService;
+    private UserService userService;
     @Autowired
     private RoleAuthorityService roleAuthorityService;
     @Autowired
@@ -495,7 +496,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 .collect(Collectors.toList());
             // 根据类型进行过滤
             if (StringUtils.isEmpty(type)) {
-                Integer roleId = userRoleService.getRoleId(CurrentUserRepository.getUser().getUsername(), organId, projectId);
+                Integer roleId = userService.getUserRole(CurrentUserRepository.getUser().getUsername(), organId, projectId).getRoleId();
                 List<BeanRoleAuthority> power = roleAuthorityService.list(roleId);
                 result = result.stream()
                     .filter(mw -> power.stream()

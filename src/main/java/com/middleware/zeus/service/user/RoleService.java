@@ -67,4 +67,11 @@ public interface RoleService {
      */
     void initMiddlewareAuthority(String type);
 
+    /**
+     * 查询组织管理员角色id
+     *
+     * @return Integer
+     */
+    Integer getOrganManagerRoleId();
+
 }

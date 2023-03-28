@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.constants.ActiveAreaConstant;
+import com.middleware.caas.common.model.user.UserRole;
 import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.tool.date.DateUtils;
 import com.middleware.zeus.bean.*;
@@ -29,6 +30,7 @@ import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.user.ProjectService;
 import com.middleware.zeus.service.user.RoleAuthorityService;
 import com.middleware.zeus.service.user.UserRoleService;
+import com.middleware.zeus.service.user.UserService;
 import com.middleware.zeus.util.MathUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -101,6 +103,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private MiddlewareInfoService middlewareInfoService;
     @Autowired
     private MiddlewareBackupNameService backupNameService;
+    @Autowired
+    private UserService userService;
 
     @Override
     public List<MiddlewareBackupRecord> listBackup(String clusterId, String namespace, String middlewareName,
@@ -1528,11 +1532,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         } else {
             return Collections.emptyList();
         }
-        BeanUserRole beanUserRole = userRoleService.get(username, organId, projectId);
+        UserRole userRole = userService.getUserRole(username, organId, projectId);
         // 超级管理员在项目下没有角色，所以只有当用户为非超级管理员时才按中间件类型过滤
-        if (beanUserRole != null) {
+        if (userRole != null) {
             // 根据用户拥有运维权限当中间件类型类型过滤
-            Set<String> middlewareSet = roleAuthorityService.listOpsMiddleware(beanUserRole.getRoleId());
+            Set<String> middlewareSet = roleAuthorityService.listOpsMiddleware(userRole.getRoleId());
             if (!CollectionUtils.isEmpty(middlewareSet)) {
                 records = records.stream().filter(record -> middlewareSet.contains(record.getSourceType())).collect(Collectors.toList());
             } else {

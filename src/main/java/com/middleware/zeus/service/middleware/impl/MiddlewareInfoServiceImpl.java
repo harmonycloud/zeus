@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import com.middleware.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.middleware.caas.common.model.MiddlewareVersionDto;
+import com.middleware.caas.common.model.user.UserRole;
 import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.zeus.bean.BeanMiddlewareCluster;
 import com.middleware.zeus.bean.user.BeanUserRole;
@@ -30,6 +31,7 @@ import com.middleware.zeus.service.middleware.MiddlewareService;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.user.RoleAuthorityService;
 import com.middleware.zeus.service.user.UserRoleService;
+import com.middleware.zeus.service.user.UserService;
 import com.middleware.zeus.util.ChartVersionUtil;
 import com.middleware.zeus.util.MiddlewareVersionUtil;
 import com.middleware.caas.common.model.middleware.*;
@@ -85,7 +87,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     @Autowired
     private RoleAuthorityService roleAuthorityService;
     @Autowired
-    private UserRoleService userRoleService;
+    private UserService userService;
 
     @Override
     public List<BeanMiddlewareInfo> list(Boolean all) {
@@ -532,12 +534,12 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         String username = CurrentUserRepository.getUser().getUsername();
         String projectId = RequestUtil.getProjectId();
         String organId = RequestUtil.getOrganId();
-        BeanUserRole beanUserRole = userRoleService.get(username, organId, projectId);
+        UserRole userRole = userService.getUserRole(username, organId, projectId);
         // 因为超级管理员在项目下没有角色信息，所以超级管理员可以查看所有中间件的备份任务
-        if (beanUserRole == null) {
+        if (userRole == null) {
             return infoDTOList;
         }
-        Set<String> middlewareSet = roleAuthorityService.listOpsMiddleware(beanUserRole.getRoleId());
+        Set<String> middlewareSet = roleAuthorityService.listOpsMiddleware(userRole.getRoleId());
         return infoDTOList.stream().filter(middlewareInfoDTO -> middlewareSet.contains(middlewareInfoDTO.getChartName())).collect(Collectors.toList());
     }
 

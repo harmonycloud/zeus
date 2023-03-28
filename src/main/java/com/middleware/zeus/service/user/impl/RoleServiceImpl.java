@@ -236,6 +236,16 @@ public class RoleServiceImpl implements RoleService {
         }
     }
 
+    @Override
+    public Integer getOrganManagerRoleId() {
+        QueryWrapper<BeanRole> wrapper = new QueryWrapper<BeanRole>().eq("weight", 5);
+        BeanRole role = beanRoleMapper.selectOne(wrapper);
+        if (role == null){
+            return null;
+        }
+        return role.getId();
+    }
+
     /**
      * 校验角色名是否存在
      */

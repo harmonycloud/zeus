@@ -1,12 +1,15 @@
 package com.middleware.zeus.service.user.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.caas.common.model.user.UserRole;
 import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.zeus.bean.user.BeanRoleAuthority;
 import com.middleware.zeus.dao.user.BeanRoleAuthorityMapper;
 import com.middleware.zeus.service.user.ResourceMenuRoleService;
 import com.middleware.zeus.service.user.RoleAuthorityService;
 import com.middleware.zeus.service.user.UserRoleService;
+import com.middleware.zeus.service.user.UserService;
 import com.middleware.zeus.util.RequestUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -32,7 +35,7 @@ public class RoleAuthorityServiceImpl implements RoleAuthorityService {
     @Autowired
     private ResourceMenuRoleService resourceMenuRoleService;
     @Autowired
-    private UserRoleService userRoleService;
+    private UserService userService;
 
     @Override
     public void insert(Integer roleId, String type, String power) {
@@ -92,11 +95,18 @@ public class RoleAuthorityServiceImpl implements RoleAuthorityService {
         }
         if (StringUtils.isEmpty(roleId)) {
             String username = CurrentUserRepository.getUser().getUsername();
-            Integer rid = userRoleService.getRoleId(username, organId, projectId);
-            if (rid == null && userRoleService.checkAdmin(username)) {
+            UserDto userDto = userService.getUserDto(username);
+            if (userDto.getIsAdmin()) {
                 return true;
             }
-            roleId = String.valueOf(rid);
+            List<UserRole> userRoleList = userDto.getUserRoleList().stream()
+                .filter(userRole -> StringUtils.isNoneEmpty(userRole.getOrganId(), userRole.getProjectId())
+                    && userRole.getOrganId().equals(organId) && userRole.getProjectId().equals(projectId))
+                .collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(userRoleList)) {
+                return true;
+            }
+            roleId = String.valueOf(userRoleList.get(0).getRoleId());
         }
         QueryWrapper<BeanRoleAuthority> wrapper = new QueryWrapper<BeanRoleAuthority>().eq("role_id", roleId);
         if (StringUtils.isNotEmpty(type)) {

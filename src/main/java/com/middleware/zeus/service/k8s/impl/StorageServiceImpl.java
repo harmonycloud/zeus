@@ -6,6 +6,7 @@ import static com.middleware.caas.common.constants.NameConstant.TRUE;
 import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.middleware.caas.common.enums.DateType;
@@ -13,6 +14,7 @@ import com.middleware.caas.common.enums.DictEnum;
 import com.middleware.caas.common.model.QuotaBase;
 import com.middleware.caas.common.model.middleware.*;
 import com.middleware.caas.common.model.user.ProjectDto;
+import com.middleware.caas.common.model.user.ProjectNamespaceDo;
 import com.middleware.tool.uuid.UUIDUtils;
 import com.middleware.zeus.service.user.ProjectService;
 import com.middleware.zeus.util.DateUtil;
@@ -331,6 +333,11 @@ public class StorageServiceImpl implements StorageService {
             return middlewarePvcList.stream().anyMatch(middlewarePvc ->
                     pvcList.stream().anyMatch(pvc -> middlewarePvc.getName().equals(pvc.getName())));
         }).collect(Collectors.toList());
+        
+        // 获取所有分区对应项目 用于设置中间件所在项目
+        List<ProjectNamespaceDo> projectNsList = projectService.listNamespace(null);
+        Map<String, ProjectNamespaceDo> projectNsMap =
+            projectNsList.stream().collect(Collectors.toMap(ProjectNamespaceDo::getNamespace, Function.identity()));
 
         List<MiddlewareStorageInfoDto> mwStorageInfoList = new ArrayList<>();
         for (MiddlewareCR middlewareCr : middlewareCRList){
@@ -399,10 +406,13 @@ public class StorageServiceImpl implements StorageService {
             mwStoInfo.setType(type);
             mwStoInfo.setMiddlewareAliasName(values.getOrDefault("aliasName", "").toString());
 
-            // todo 修改此处设置中间件所在项目的逻辑
-            //ProjectDto projectDto = projectService.findProjectByNamespace(middlewareCr.getMetadata().getNamespace());
-            //mwStoInfo.setProjectId(projectDto.getProjectId());
-            //mwStoInfo.setProjectAliasName(projectDto.getAliasName());
+            // 设置中间件所在项目
+            if (projectNsMap.containsKey(middlewareCr.getMetadata().getNamespace())){
+                ProjectNamespaceDo projectNsDo = projectNsMap.get(middlewareCr.getMetadata().getNamespace());
+                mwStoInfo.setProjectId(projectNsDo.getProjectId());
+                mwStoInfo.setProjectAliasName(projectNsDo.getProjectName());
+            }
+
             // 获取项目名称
             mwStoInfo.setNamespace(middlewareCr.getMetadata().getNamespace());
             mwStoInfo.setNamespaceAliasName(namespaceService.get(clusterId, mwStoInfo.getNamespace()).getAliasName());
@@ -553,7 +563,7 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public List<StorageClassInfo> listStorageClassInfo(String clusterId, Boolean all) {
-        // todo all
+        // todo 根据all 是否为false  过滤掉未被平台纳管的storageClass
         return storageClassWrapper.list(clusterId).stream().map(this::convertSc).collect(Collectors.toList());
     }
 

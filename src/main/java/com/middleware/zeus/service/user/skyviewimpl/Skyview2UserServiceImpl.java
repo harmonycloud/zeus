@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.middleware.caas.common.model.user.UserRole;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,9 @@ import com.middleware.zeus.service.user.abstractService.AbstractUserService;
 import com.middleware.zeus.skyview.v2.service.V2UserService;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
+
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author liyinlong
@@ -99,6 +103,11 @@ public class Skyview2UserServiceImpl extends AbstractUserService implements User
     }
 
     @Override
+    public void bind(String userName, String role) {
+        throw new BusinessException(ErrorMessage.NO_AUTHORITY_WITH_EXTERNAL_SERVICE);
+    }
+
+    @Override
     public void changePassword(String userName, String password, String newPassword, String reNewPassword) throws Exception {
         throw new BusinessException(ErrorMessage.NO_AUTHORITY_WITH_EXTERNAL_SERVICE);
     }
@@ -122,6 +131,26 @@ public class Skyview2UserServiceImpl extends AbstractUserService implements User
 
     @Override
     public SystemConfigDto getPasswordExpiredDay() {
+        return null;
+    }
+
+    @Override
+    public UserRole getUserRole(String username, String organId, String projectId) {
+        UserDto userDto = this.getUserDto(username);
+        if (!CollectionUtils.isEmpty(userDto.getUserRoleList())) {
+            List<UserRole> userRoleList = userDto.getUserRoleList().stream()
+                .filter(userRole -> StringUtils.isNoneEmpty(userRole.getOrganId(), userRole.getProjectId())
+                    && userRole.getOrganId().equals(organId) && userRole.getProjectId().equals(projectId))
+                .collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(userRoleList)) {
+                return userRoleList.get(0);
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Boolean checkAdmin(String username) {
         return null;
     }
 }

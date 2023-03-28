@@ -83,7 +83,11 @@ public class Skyview2ProjectServiceImpl extends AbstractProjectService implement
         Boolean withMiddleware) {
         List<Namespace> nsList = v2ProjectService.nsList(organId, projectId, withQuota);
         if (withMiddleware) {
-            // todo
+            Map<String, List<Namespace>> namespaceMap =
+                nsList.stream().collect(Collectors.groupingBy(Namespace::getClusterId));
+            for (String key : namespaceMap.keySet()) {
+                namespaceService.listNamespaceWithMiddleware(namespaceMap.get(key), key);
+            }
         }
         return nsList;
     }

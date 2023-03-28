@@ -68,8 +68,6 @@ public class OperationAuditInterceptor {
     @Autowired
     private OperationAuditService operationAuditService;
     @Autowired
-    private UserRoleService userRoleService;
-    @Autowired
     private RoleAuthorityService roleAuthorityService;
     @Autowired
     private UserService userService;
@@ -90,7 +88,7 @@ public class OperationAuditInterceptor {
         if (StringUtils.isNotEmpty(projectId)) {
             // 校验角色权限
             JSONObject userMap = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue();
-            List<UserRole> userRoleList = userRoleService.get(userMap.getString("username"));
+            List<UserRole> userRoleList = userService.getUserDto(userMap.getString("username")).getUserRoleList();
             // 判断是否为超级管理员
             boolean notAdmin = CollectionUtils.isEmpty(
                     userRoleList.stream().filter(userRole -> userRole.getRoleId() == 1).collect(Collectors.toList()));

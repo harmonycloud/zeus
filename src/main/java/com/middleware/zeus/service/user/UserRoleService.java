@@ -28,15 +28,7 @@ public interface UserRoleService {
      * @param projectId 项目id
      * @return BeanSysRole
      */
-    Integer getRoleId(String userName, String organId, String projectId);
-
-    /**
-     * 校验是否为超级管理员权限
-     *
-     * @param username 用户名
-     * @return Boolean
-     */
-    Boolean checkAdmin(String username);
+    UserRole getUserRole(String userName, String organId, String projectId);
 
     /**
      * 获取绑定指定角色的用户
@@ -85,27 +77,4 @@ public interface UserRoleService {
      * @param userRole 用户角色信息
      */
     void update(UserRole userRole);
-
-    /**
-     * 查询用户是否存在普通角色（即非超级管理员、非项目管理员）
-     * @param userName
-     * @return
-     */
-    boolean checkExistsNormalRole(String userName);
-
-    /**
-     * 查询用户项目角色
-     * @param userName
-     * @param projectId
-     * @return
-     */
-    BeanUserRole get(String userName, String organId, String projectId);
-
-    /**
-     * 删除项目不存在角色信息
-     * @param userName
-     * @param projectIds
-     */
-    void deleteRedundantRole(String userName, List<String> projectIds);
-
 }

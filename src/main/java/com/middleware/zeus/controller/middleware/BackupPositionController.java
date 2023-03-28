@@ -18,7 +18,7 @@ import java.util.List;
  */
 @Api(tags = {"备份服务", "备份位置"}, value = "备份位置")
 @RestController
-@RequestMapping("/organizations/{organId}/project/{projectId}/backupServer/{backupServerId}/position")
+@RequestMapping("/organizations/{organId}/project/{projectId}/position")
 public class BackupPositionController {
 
     @Autowired
@@ -34,11 +34,9 @@ public class BackupPositionController {
     @PostMapping
     public BaseResult create(@PathVariable("organId") String organId,
                              @PathVariable("projectId") String projectId,
-                             @PathVariable("backupServerId") Integer backupServerId,
                              @RequestBody BackupPositionDTO backupPositionDTO) {
         backupPositionDTO.setOrganId(organId);
         backupPositionDTO.setProjectId(projectId);
-        backupPositionDTO.setBackupServerId(backupServerId);
         backupPositionService.create(backupPositionDTO);
         return BaseResult.ok();
     }
@@ -66,11 +64,9 @@ public class BackupPositionController {
     @PutMapping
     public BaseResult update(@PathVariable("organId") String organId,
                              @PathVariable("projectId") String projectId,
-                             @PathVariable("backupServerId") Integer backupServerId,
                              @RequestBody BackupPositionDTO backupPositionDTO) {
         backupPositionDTO.setOrganId(organId);
         backupPositionDTO.setProjectId(projectId);
-        backupPositionDTO.setBackupServerId(backupServerId);
         backupPositionService.update(backupPositionDTO);
         return BaseResult.ok();
     }
@@ -83,9 +79,8 @@ public class BackupPositionController {
     })
     @GetMapping
     public BaseResult<List<BackupPositionDTO>> list(@PathVariable("organId") String organId,
-                                                    @PathVariable("projectId") String projectId,
-                                                    @PathVariable("backupServerId") Integer backupServerId) {
-        return BaseResult.ok(backupPositionService.list(organId, projectId, backupServerId));
+                                                    @PathVariable("projectId") String projectId) {
+        return BaseResult.ok(backupPositionService.list(organId, projectId, null));
     }
 
     @ApiOperation(value = "查询集群分区可用备份位置列表", notes = "查询集群分区可用备份位置列表")

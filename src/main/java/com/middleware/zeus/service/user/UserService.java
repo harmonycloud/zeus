@@ -5,6 +5,7 @@ import com.middleware.caas.common.model.UploadImageFileDto;
 import com.middleware.caas.common.model.user.ResourceMenuDto;
 import com.middleware.caas.common.model.user.SystemConfigDto;
 import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.caas.common.model.user.UserRole;
 import com.middleware.zeus.annotation.Skyview;
 import com.middleware.zeus.bean.PersonalizedConfiguration;
 import com.middleware.zeus.bean.user.BeanUser;
@@ -147,15 +148,19 @@ public interface UserService {
      */
     UploadImageFileDto uploadFile(MultipartFile file) throws IOException;
 
+    /**
+     * 查询告警通知用户列表
+     * @param alertruleId 告警id
+     *
+     * @return MailUserDTO
+     */
     MailUserDTO getUserList(String alertruleId);
 
     /**
-     * 切换项目
-     * @param projectId 项目id
+     * 查询用户角色中间件权限
      *
+     * @return Map<String, String>
      */
-    void switchProject(String projectId, HttpServletResponse response);
-
     Map<String, String> getPower();
 
     /**
@@ -169,5 +174,21 @@ public interface UserService {
      * @return
      */
     SystemConfigDto getPasswordExpiredDay();
+
+    /**
+     * 获取用户角色绑定关系
+     * @param username 用户名
+     * @param organId 组织id
+     * @param projectId 项目id
+     * @return Integer
+     */
+    UserRole getUserRole(String username, String organId, String projectId);
+
+    /**
+     * 校验是否为超级管理员
+     * @param username 用户名
+     * @return Integer
+     */
+    Boolean checkAdmin(String username);
 
 }

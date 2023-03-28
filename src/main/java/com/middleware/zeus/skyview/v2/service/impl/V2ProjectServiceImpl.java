@@ -93,7 +93,7 @@ public class V2ProjectServiceImpl implements V2ProjectService {
 
                 //todo 转换角色
                 JSONObject role = user.getJSONObject("role");
-                userDto.setRoleId(role.getInteger("id"));
+                Integer roleId = role.getInteger("id");
                 userDto.setRoleName(role.getString("nickName"));
 
                 userDtoList.add(userDto);

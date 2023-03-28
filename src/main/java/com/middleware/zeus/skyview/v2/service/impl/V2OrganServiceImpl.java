@@ -9,6 +9,7 @@ import com.middleware.caas.common.model.StorageQuota;
 import com.middleware.caas.common.model.middleware.Namespace;
 import com.middleware.caas.common.model.user.OrganizationDto;
 import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.zeus.service.user.RoleService;
 import com.middleware.zeus.skyview.v2.client.V2OrganServiceClient;
 import com.middleware.zeus.skyview.v2.service.V2OrganService;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,8 @@ public class V2OrganServiceImpl implements V2OrganService {
 
     @Autowired
     private V2OrganServiceClient v2OrganServiceClient;
+    @Autowired
+    private RoleService roleService;
 
 
     @Override
@@ -83,8 +86,7 @@ public class V2OrganServiceImpl implements V2OrganService {
             for (UserDto userDto : userDtoList){
                 boolean flag =  organizationDto.getUserDtoList().stream().anyMatch(user -> user.getUserName().equals(userDto.getUserName()));
                 if (flag){
-                    // todo 获取组织管理员的角色id
-                    userDto.setRoleId(5);
+                    userDto.setRoleId(roleService.getOrganManagerRoleId());
                 }
             }
         }
