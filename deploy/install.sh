@@ -5,6 +5,7 @@ LINE_TYPE=$2
 IMAGE_REPO=$3
 STORAGE_CLASS=$4
 HA=$5
+DR=$6
 
 if [ $LINE_TYPE == "offline" ]; then
   echo "######  Push images  ######"
@@ -34,7 +35,14 @@ function deploy_helm() {
   if [ $HA == "true" ]; then
     MYSQL_REPLICATE="replicaCount=2"
   fi
-  helm install -n zeus zeus-mysql deploy/mysql-operator --set mysql-operator.enabled=false,image.repository=$IMAGE_REPO"/middleware",args.root_password="ZeuS@Middleware01",storageClassName=$STORAGE_CLASS,storageSize=10Gi,$MYSQL_REPLICATE
+
+  if [ $DR == "false" ]; then
+    helm install -n zeus zeus-mysql deploy/mysql-operator --set mysql-operator.enabled=false,image.repository=$IMAGE_REPO"/middleware",args.root_password="ZeuS@Middleware01",storageClassName=$STORAGE_CLASS,storageSize=10Gi,$MYSQL_REPLICATE
+  fi
+  if [ $DR == "true" ]; then
+    helm install -n zeus zeus-mysql -f deploy/mysql-operator/values-dr.yaml deploy/mysql-operator --set mysql-operator.enabled=false,image.repository=$IMAGE_REPO"/middleware",args.root_password="ZeuS@Middleware01",storageClassName=$STORAGE_CLASS,storageSize=10Gi,$MYSQL_REPLICATE
+  fi
+
   # install zeus platform
   HELM_ARGS="global.replicaCount=1"
   if [ $HA == "true" ]; then
