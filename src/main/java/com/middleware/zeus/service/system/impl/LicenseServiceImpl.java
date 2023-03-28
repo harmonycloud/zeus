@@ -5,20 +5,12 @@ import static com.middleware.caas.common.constants.NameConstant.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.filters.user.CurrentUserRepository;
-import com.middleware.zeus.bean.LicenseInfo;
-import com.middleware.zeus.dao.BeanSystemConfigMapper;
-import com.middleware.zeus.schedule.SystemManageTask;
-import com.middleware.zeus.service.k8s.MiddlewareCRService;
-import com.middleware.zeus.service.k8s.MiddlewareClusterService;
-import com.middleware.zeus.service.k8s.NamespaceService;
-import com.middleware.zeus.service.k8s.SecretService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,17 +24,20 @@ import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.LicenseInfoDto;
 import com.middleware.caas.common.model.MonitorResourceQuotaBase;
-import com.middleware.caas.common.model.Secret;
 import com.middleware.caas.common.model.middleware.Middleware;
 import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.caas.common.model.middleware.Namespace;
 import com.middleware.caas.common.util.ThreadPoolExecutorFactory;
-import com.middleware.tool.encrypt.Base64Utils;
 import com.middleware.tool.encrypt.RSAUtils;
 import com.middleware.tool.numeric.ResourceCalculationUtil;
 import com.middleware.zeus.bean.BeanSystemConfig;
+import com.middleware.zeus.bean.LicenseInfo;
 import com.middleware.zeus.integration.cluster.NamespaceWrapper;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
+import com.middleware.zeus.schedule.SystemManageTask;
+import com.middleware.zeus.service.k8s.ClusterService;
+import com.middleware.zeus.service.k8s.MiddlewareCRService;
+import com.middleware.zeus.service.k8s.NamespaceService;
 import com.middleware.zeus.service.middleware.MiddlewareCrTypeService;
 import com.middleware.zeus.service.middleware.MiddlewareService;
 import com.middleware.zeus.service.registry.HelmChartService;
@@ -62,7 +57,7 @@ public class LicenseServiceImpl implements LicenseService {
 
 
     @Autowired
-    private MiddlewareClusterService clusterService;
+    private ClusterService clusterService;
     @Autowired
     private NamespaceService namespaceService;
     @Autowired
@@ -163,7 +158,7 @@ public class LicenseServiceImpl implements LicenseService {
     @Override
     public Boolean check(String clusterId) {
         JSONObject license = getLicense();
-        List<MiddlewareClusterDTO> clusterList = clusterService.listClusterDtos();
+        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
         clusterList =
             clusterList.stream().filter(cluster -> cluster.getId().equals(clusterId)).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(clusterList)) {
@@ -184,7 +179,7 @@ public class LicenseServiceImpl implements LicenseService {
         if (produceConfig == null || testConfig == null) {
             return;
         }
-        List<MiddlewareClusterDTO> clusterList = clusterService.listClusterDtos();
+        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
         List<Double> produceList = new ArrayList<>();
         List<Double> testList = new ArrayList<>();
         for (MiddlewareClusterDTO cluster : clusterList) {

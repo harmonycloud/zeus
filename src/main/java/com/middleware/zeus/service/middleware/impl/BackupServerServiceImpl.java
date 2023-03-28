@@ -47,11 +47,7 @@ public class BackupServerServiceImpl implements BackupServerService {
     @Autowired
     private ProjectBackupServerService projectBackupServerService;
     @Autowired
-    private MiddlewareClusterService middlewareClusterService;
-    @Autowired
     private ClusterService clusterService;
-    @Autowired
-    private MiddlewareBackupNameService middlewareBackupNameService;
 
     @Override
     public List<BackupServerDTO> list(List<String> clusterIds, String keyword, Boolean withDetail) {
@@ -169,8 +165,8 @@ public class BackupServerServiceImpl implements BackupServerService {
         clusterBackupServerNumMap.put("clusterName", "全部");
         clusterBackupServerNumMap.put("clusterServerCount", Integer.toString(listByClusterId(null).size()));
         groupList.add(clusterBackupServerNumMap);
-        List<MiddlewareClusterDTO> clusterDTOS = middlewareClusterService.listClusterDtos();
-        for (MiddlewareClusterDTO cluster : clusterDTOS) {
+        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
+        for (MiddlewareClusterDTO cluster : clusterList) {
             int backupServerCount = listByClusterId(cluster.getId()).size();
             if (backupServerCount != 0) {
                 clusterBackupServerNumMap = new HashMap<>();

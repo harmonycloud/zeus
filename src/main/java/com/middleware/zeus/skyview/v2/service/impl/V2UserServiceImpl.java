@@ -19,10 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -68,7 +65,7 @@ public class V2UserServiceImpl implements V2UserService {
             List<UserRole> userRoleList = new ArrayList<>();
             JSONArray projectList = user.getJSONArray("otherProjects");
 
-            List<String> organIdList = new ArrayList<>();
+            Map<String, String> organMap = new HashMap<>();
             for (JSONObject project : projectList.toJavaList(JSONObject.class)){
                 UserRole userRole = new UserRole();
                 if (StringUtils.isEmpty(project.getString("roleId"))){
@@ -77,6 +74,7 @@ public class V2UserServiceImpl implements V2UserService {
                 String organId = project.getString("tenantId");
 
                 userRole.setOrganId(organId);
+                userRole.setOrganName(project.getString("tenantName"));
                 userRole.setProjectId(project.getString("projectId"));
                 userRole.setProjectName(project.getString("projectAliasName"));
 
@@ -86,7 +84,7 @@ public class V2UserServiceImpl implements V2UserService {
                 if (caasRole != null){
                     if (caasRole.getId() == 5){
                         userDto.setRoleId(roleService.getOrganManagerRoleId());
-                        organIdList.add(organId);
+                        organMap.put(organId, userRole.getOrganName());
                     }else {
                         userDto.setRoleId(caasRole.getId());
                     }
@@ -97,22 +95,34 @@ public class V2UserServiceImpl implements V2UserService {
                 userRoleList.add(userRole);
             }
             // 处理租户管理员应包含所有项目的项目管理员
-            solveOrganManager(userRoleList, organIdList);
-
+            userRoleList = solveOrganManager(userRoleList, organMap);
 
             userDto.setUserRoleList(userRoleList);
         }
         return userDto;
     }
 
-    public void solveOrganManager(List<UserRole> userRoleList, List<String> organIdList){
-        // 过滤掉额外的属于
-        List<ProjectDto> projectDtoList;
-/*        if (projectListMap.containsKey(organId)){
-            projectDtoList = projectListMap.get(organId);
-        }else {
-            projectDtoList = v2ProjectService.list(organId);
-            projectListMap.put(organId, projectDtoList);
-        }*/
+    public List<UserRole> solveOrganManager(List<UserRole> userRoleList, Map<String, String> organMap){
+        // 过滤掉额外的已是租户管理员的租户下的项目信息
+        userRoleList = userRoleList.stream()
+            .filter(userRole -> StringUtils.isNoneEmpty(userRole.getOrganId(), userRole.getProjectId())
+                && organMap.keySet().stream().anyMatch(organId -> organId.equals(userRole.getOrganId())))
+            .collect(Collectors.toList());
+
+        // 查询租户下的所有项目
+        for (String organId : organMap.keySet()){
+            List<ProjectDto> projectDtoList = v2ProjectService.list(organId);
+            for (ProjectDto projectDto : projectDtoList){
+                UserRole userRole = new UserRole();
+                userRole.setProjectId(projectDto.getProjectId());
+                userRole.setProjectName(projectDto.getName());
+                userRole.setRoleId(CaasRole.PM.getId());
+                userRole.setRoleName(CaasRole.PM.getRoleName());
+                userRole.setOrganId(organId);
+                userRole.setOrganName(organMap.get(organId));
+                userRoleList.add(userRole);
+            }
+        }
+        return userRoleList;
     }
 }
