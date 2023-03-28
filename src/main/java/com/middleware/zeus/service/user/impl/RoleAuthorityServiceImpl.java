@@ -90,7 +90,7 @@ public class RoleAuthorityServiceImpl implements RoleAuthorityService {
         boolean flag = false;
         String organId = RequestUtil.getOrganId();
         String projectId = RequestUtil.getProjectId();
-        if (StringUtils.isEmpty(projectId)) {
+        if (StringUtils.isEmpty(organId) || StringUtils.isEmpty(projectId)) {
             return false;
         }
         if (StringUtils.isEmpty(roleId)) {

@@ -3,6 +3,7 @@ package com.middleware.zeus.skyview.v2.service.impl;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.base.CaasResult;
+import com.middleware.caas.common.enums.CaasRole;
 import com.middleware.caas.common.enums.DateType;
 import com.middleware.caas.common.model.ResourceQuotaDo;
 import com.middleware.caas.common.model.user.UserDto;
@@ -66,9 +67,15 @@ public class V2UserServiceImpl implements V2UserService {
                 userRole.setOrganId(project.getString("tenantId"));
                 userRole.setProjectId(project.getString("projectId"));
                 userRole.setProjectName(project.getString("projectAliasName"));
-                userRole.setRoleId(project.getInteger("roleId"));
+
                 userRole.setUserName(userDto.getUserName());
-                // todo 需转换为中间件平台角色名称
+                // 转换为中间件平台角色名称
+                CaasRole caasRole = CaasRole.findByName(project.getString("roleName"));
+                if (caasRole != null){
+                    userRole.setRoleId(caasRole.getId());
+                    userRole.setRoleName(caasRole.getRoleName());
+                }
+                userRole.setRoleId(project.getInteger("roleId"));
                 userRole.setRoleName(project.getString("roleNickName"));
                 userRoleList.add(userRole);
             }

@@ -7,7 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.middleware.caas.common.enums.CaasRole;
 import com.middleware.caas.common.model.user.UserDto;
+import jdk.nashorn.internal.ir.CaseNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -91,11 +93,13 @@ public class V2ProjectServiceImpl implements V2ProjectService {
                 userDto.setUserName(user.getString("username"));
                 userDto.setAliasName(user.getString("nickName"));
 
-                //todo 转换角色
+                //转换角色
                 JSONObject role = user.getJSONObject("role");
-                Integer roleId = role.getInteger("id");
-                userDto.setRoleName(role.getString("nickName"));
-
+                CaasRole caasRole = CaasRole.findByName(role.getString("name"));
+                if (caasRole != null){
+                    userDto.setRoleId(caasRole.getId());
+                    userDto.setRoleName(caasRole.getRoleName());
+                }
                 userDtoList.add(userDto);
             }
             projectDto.setUserDtoList(userDtoList);
