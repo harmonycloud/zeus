@@ -39,16 +39,13 @@ public class PlatformQuotaServiceImpl implements PlatformQuotaService {
 
     @Override
     public void allocate(String type, String uid, ResourceQuotaDo resourceQuotaDo) {
-
         String clusterId = resourceQuotaDo.getClusterId();
         // 分配 cpu
         if (resourceQuotaDo.getCpu() != null && resourceQuotaDo.getCpu().getRequest() != null) {
-            remove(type, uid, CPU, CPU);
             this.insert(uid, type, clusterId, CPU, CPU, resourceQuotaDo.getCpu().getRequest());
         }
         // 分配memory
         if (resourceQuotaDo.getMemory() != null && resourceQuotaDo.getMemory().getRequest() != null) {
-            remove(type, uid, MEMORY, MEMORY);
             this.insert(uid, type, clusterId, MEMORY, MEMORY, resourceQuotaDo.getMemory().getRequest());
         }
 
@@ -56,7 +53,6 @@ public class PlatformQuotaServiceImpl implements PlatformQuotaService {
         if (!CollectionUtils.isEmpty(resourceQuotaDo.getStorageList())) {
             for (StorageQuota storageQuota : resourceQuotaDo.getStorageList()) {
                 if ( storageQuota.getStorage() != null && storageQuota.getStorage().getRequest() != null) {
-                    remove(type, uid, storageQuota.getStorageId(), STORAGE);
                     this.insert(uid, type, clusterId, STORAGE, storageQuota.getStorageId(),
                         storageQuota.getStorage().getRequest());
                 }

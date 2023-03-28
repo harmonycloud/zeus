@@ -362,6 +362,7 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
     public void allocateQuota(ProjectQuota projectQuota) {
         // 处理cpu\memory\storage
         if (!CollectionUtils.isEmpty(projectQuota.getQuotaList())) {
+            platformQuotaService.remove(PROJECT, projectQuota.getOrganId(), null, CPU, MEMORY, STORAGE);
             for (ResourceQuotaDo resourceQuotaDo : projectQuota.getQuotaList()){
                 platformQuotaService.allocate(PROJECT, projectQuota.getProjectId(), resourceQuotaDo);
             }

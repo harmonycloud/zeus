@@ -179,6 +179,7 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
     public void allocateQuota(OrganizationQuota organizationQuota) {
         // 处理cpu\memory\storage
         if (!CollectionUtils.isEmpty(organizationQuota.getQuotaList())) {
+            platformQuotaService.remove(ORGAN, organizationQuota.getOrganId(), null, CPU, MEMORY, STORAGE);
             for (ResourceQuotaDo resourceQuotaDo : organizationQuota.getQuotaList()){
                 platformQuotaService.allocate(ORGAN, organizationQuota.getOrganId(), resourceQuotaDo);
             }
