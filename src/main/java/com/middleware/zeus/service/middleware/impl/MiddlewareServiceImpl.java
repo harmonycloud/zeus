@@ -11,6 +11,7 @@ import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.*;
 import com.middleware.caas.common.model.middleware.*;
 import com.middleware.caas.common.model.registry.HelmChartFile;
+import com.middleware.caas.common.model.user.UserRole;
 import com.middleware.caas.common.util.ThreadPoolExecutorFactory;
 import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.tool.date.DateUtils;
@@ -496,12 +497,14 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 .collect(Collectors.toList());
             // 根据类型进行过滤
             if (StringUtils.isEmpty(type)) {
-                Integer roleId = userService.getUserRole(CurrentUserRepository.getUser().getUsername(), organId, projectId).getRoleId();
-                List<BeanRoleAuthority> power = roleAuthorityService.list(roleId);
-                result = result.stream()
-                    .filter(mw -> power.stream()
-                        .anyMatch(ra -> ra.getType().equals(mw.getType()) && !"0000".equals(ra.getPower())))
-                    .collect(Collectors.toList());
+                UserRole userRole = userService.getUserRole(CurrentUserRepository.getUser().getUsername(), organId, projectId);
+                if (userRole != null && userRole.getRoleId() != null){
+                    List<BeanRoleAuthority> power = roleAuthorityService.list(userRole.getRoleId());
+                    result = result.stream()
+                            .filter(mw -> power.stream()
+                                    .anyMatch(ra -> ra.getType().equals(mw.getType()) && !"0000".equals(ra.getPower())))
+                            .collect(Collectors.toList());
+                }
             }
         }
         result.sort(new MiddlewareComparator());
