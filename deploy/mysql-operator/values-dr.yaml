@@ -43,7 +43,7 @@ businessDeploy: []
 # user: user01
 
 init_at_setup:
-  enabled: false
+  enabled: true
   #init_sql: |-
   #  create database business_ability;
 
