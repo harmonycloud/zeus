@@ -334,8 +334,9 @@ public class ProjectController {
     public BaseResult<List<BackupServerDTO>> listBackupServer(@PathVariable("organId") String organId,
                                                               @PathVariable("projectId") String projectId,
                                                               @RequestParam(value = "clusterId", required = false) String clusterId,
-                                                              @RequestParam(value = "detail", defaultValue = "false") Boolean detail) {
-        return BaseResult.ok(projectService.getBackupServer(organId, projectId, clusterId, detail));
+                                                              @RequestParam(value = "detail", defaultValue = "false") Boolean detail,
+                                                              @RequestParam(value = "position", required = false, defaultValue = "false") Boolean position) {
+        return BaseResult.ok(projectService.getBackupServer(organId, projectId, clusterId, detail, position));
     }
 
     @ApiOperation(value = "移除备份服务器", notes = "移除备份服务器")

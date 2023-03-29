@@ -59,7 +59,7 @@ public abstract class AbstractOrganizationService {
             return new ArrayList<>();
         }
         // 查询备份服务器
-        List<BackupServerDTO> backupServerDTOList = backupServerService.list(idList);
+        List<BackupServerDTO> backupServerDTOList = backupServerService.list(idList, false);
         // 查询备份服务器 组织下分配情况
         if (detail) {
             List<ProjectBackupServerDTO> projectBackupServerDTOList =
@@ -83,7 +83,7 @@ public abstract class AbstractOrganizationService {
     }
 
     public void removeBackupServer(String organId, Integer backupServerId, String clusterId) {
-        List<BackupServerDTO> backupServerDTOList = projectService.getBackupServer(organId, null, null, false);
+        List<BackupServerDTO> backupServerDTOList = projectService.getBackupServer(organId, null, null, false, false);
         if (!CollectionUtils.isEmpty(backupServerDTOList) && backupServerDTOList.stream()
                 .anyMatch(backupServerDTO -> backupServerId.equals(backupServerDTO.getId()))) {
             throw new BusinessException(ErrorMessage.ORGANIZATION_BACKUP_SERVER_USING);

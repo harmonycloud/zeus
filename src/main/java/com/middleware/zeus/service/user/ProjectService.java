@@ -244,10 +244,11 @@ public interface ProjectService {
      * @param projectId 项目id
      * @param clusterId
      * @param detail 查询备份服务器使用情况
+     * @param position 查询备份位置
      *
      * @return  List<BackupServerDTO>
      */
-    List<BackupServerDTO> getBackupServer(String organId, String projectId, String clusterId, boolean detail);
+    List<BackupServerDTO> getBackupServer(String organId, String projectId, String clusterId, boolean detail, boolean position);
 
     /**
      * 移除项目备份服务器信息

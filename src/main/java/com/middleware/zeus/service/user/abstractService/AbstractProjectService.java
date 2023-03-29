@@ -76,7 +76,7 @@ public abstract class AbstractProjectService {
     @Autowired
     protected NamespaceService namespaceService;
 
-    public List<BackupServerDTO> getBackupServer(String organId, String projectId, String clusterId, boolean detail) {
+    public List<BackupServerDTO> getBackupServer(String organId, String projectId, String clusterId, boolean detail, boolean position) {
         List<ProjectBackupServerDTO> projectBackupServerDTOList =
                 projectBackupServerService.listByProjectId(organId, projectId);
         List<Integer> idList = projectBackupServerDTOList.stream().map(ProjectBackupServerDTO::getBackupServerId)
@@ -86,7 +86,7 @@ public abstract class AbstractProjectService {
             return new ArrayList<>();
         }
         // 查询备份服务器信息
-        List<BackupServerDTO> backupServerDTOList = backupServerService.list(idList);
+        List<BackupServerDTO> backupServerDTOList = backupServerService.list(idList, position);
 
         // 根据集群id过滤
         if (StringUtils.isNotEmpty(clusterId)) {
