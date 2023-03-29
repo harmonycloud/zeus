@@ -952,7 +952,7 @@ DROP TABLE IF EXISTS `organization`;
 CREATE TABLE `organization` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '自增id',
   `organ_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '组织id',
-  `name` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '组织名称',
+  `name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '组织名称',
   `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '描述',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='组织表';
@@ -1026,8 +1026,8 @@ DROP TABLE IF EXISTS `organization_user`;
 CREATE TABLE `organization_user` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '自增id',
   `organ_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '组织id',
-  `username` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '用户名',
-  `role_id` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '角色id',
+  `username` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '用户名',
+  `role_id` int DEFAULT NULL COMMENT '角色id',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='组织用户关联表';
 /*!40101 SET character_set_client = @saved_cs_client */;
