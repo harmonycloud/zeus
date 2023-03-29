@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.text.MessageFormat;
 import java.util.*;
 
+import com.middleware.caas.common.constants.DateStyle;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -311,8 +312,10 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
         meta.setName(cluster.getName());
         meta.setNamespace(cluster.getDcId());
         if (cluster.getAttributes() != null && cluster.getAttributes().containsKey(CREATE_TIME)
-            && cluster.getAttributes().get(CREATE_TIME) != null) {
+                && cluster.getAttributes().get(CREATE_TIME) != null) {
             meta.setCreationTimestamp(cluster.getAttributes().get(CREATE_TIME).toString());
+        } else {
+            meta.setCreationTimestamp(DateUtils.dateToString(new Date(), DateStyle.YYYY_MM_DD_T_HH_MM_SS_Z));
         }
         Map<String, String> annotations = new HashMap<>();
         annotations.put(NAME, cluster.getNickname());
