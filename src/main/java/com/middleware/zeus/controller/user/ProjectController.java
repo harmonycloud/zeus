@@ -329,6 +329,7 @@ public class ProjectController {
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "clusterId", value = "集群id", required = false, paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "detail", value = "查询备份服务器使用情况", paramType = "query", dataTypeClass = Boolean.class),
+            @ApiImplicitParam(name = "position", value = "查询备份位置", paramType = "query", dataTypeClass = Boolean.class),
     })
     @GetMapping("/{projectId}/backupServer")
     public BaseResult<List<BackupServerDTO>> listBackupServer(@PathVariable("organId") String organId,
