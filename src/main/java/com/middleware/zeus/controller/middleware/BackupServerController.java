@@ -31,9 +31,8 @@ public class BackupServerController {
     })
     @PostMapping("/list")
     public BaseResult<List<BackupServerDTO>> list(@RequestBody BackupServerQueryDto backupServerQueryDto) {
-        return BaseResult.ok(backupServerService.list(backupServerQueryDto.getClustersIds(), backupServerQueryDto.getKeyword(), backupServerQueryDto.getWithDetail()));
+        return BaseResult.ok(backupServerService.list(backupServerQueryDto.getClusterIds(), backupServerQueryDto.getKeyword(), backupServerQueryDto.getWithDetail()));
     }
-
 
     @ApiOperation(value = "创建备份服务器", notes = "创建备份服务器")
     @ApiImplicitParams({
