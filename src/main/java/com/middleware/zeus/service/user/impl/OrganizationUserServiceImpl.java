@@ -71,7 +71,8 @@ public class OrganizationUserServiceImpl implements OrganizationUserService {
         if (!checkExist(organId, username)) {
             throw new BusinessException(ErrorMessage.NOT_EXIST);
         }
-        UpdateWrapper<BeanOrganizationUser> wrapper = new UpdateWrapper<BeanOrganizationUser>().eq("organ_id", organId);
+        UpdateWrapper<BeanOrganizationUser> wrapper =
+            new UpdateWrapper<BeanOrganizationUser>().eq("organ_id", organId).eq("username", username);
         BeanOrganizationUser beanOrganizationUser = new BeanOrganizationUser();
         beanOrganizationUser.setOrganId(organId);
         beanOrganizationUser.setUsername(username);
