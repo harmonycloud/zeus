@@ -17,10 +17,9 @@ public interface BackupServerService {
     /**
      * 查询备份服务器列表
      * @param ids 备份服务器id列表
-     * @param detail 查询位置信息
      * @return List<BackupServerDTO>
      */
-    List<BackupServerDTO> list(List<Integer> ids, boolean detail);
+    List<BackupServerDTO> list(List<Integer> id);
 
     //List<BackupServerDTO> listProjectBackupServer(String projectId);
 

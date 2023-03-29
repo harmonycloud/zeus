@@ -86,8 +86,8 @@ public abstract class AbstractProjectService {
             return new ArrayList<>();
         }
         // 查询备份服务器信息
-        List<BackupServerDTO> backupServerDTOList = backupServerService.list(idList, position);
-
+        List<BackupServerDTO> backupServerDTOList = backupServerService.list(idList);
+        
         // 根据集群id过滤
         if (StringUtils.isNotEmpty(clusterId)) {
             backupServerDTOList = backupServerDTOList.stream()
@@ -95,6 +95,17 @@ public abstract class AbstractProjectService {
                             && backupServerDTO.getClusterId().equals(clusterId))
                     .collect(Collectors.toList());
         }
+        
+        // 获取备份位置
+        if (position) {
+            List<BackupPositionDTO> backupPositionDTOList = backupPositionService.list(organId, projectId, null);
+            Map<Integer, List<BackupPositionDTO>> backupPositionMap =
+                backupPositionDTOList.stream().collect(Collectors.groupingBy(BackupPositionDTO::getBackupServerId));
+            for (BackupServerDTO backupServerDTO : backupServerDTOList) {
+                backupServerDTO.setPositionList(backupPositionMap.get(backupServerDTO.getId()));
+            }
+        }
+        
         // 查询 备份服务器使用情况
         if (detail) {
             List<BackupPositionDTO> backupPositionDTOList = backupPositionService.list(organId, projectId, null);

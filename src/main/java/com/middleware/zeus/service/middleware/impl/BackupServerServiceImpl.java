@@ -69,13 +69,13 @@ public class BackupServerServiceImpl implements BackupServerService {
     }
 
     @Override
-    public List<BackupServerDTO> list(List<Integer> ids, boolean detail) {
+    public List<BackupServerDTO> list(List<Integer> ids) {
         QueryWrapper<BeanBackupServer> wrapper = new QueryWrapper<>();
         if (!CollectionUtils.isEmpty(ids)) {
             wrapper.in("id", ids);
         }
         List<BeanBackupServer> serverList = backupServerMapper.selectList(wrapper);
-        return convertToBackupServerDTO(serverList,  detail);
+        return convertToBackupServerDTO(serverList,  false);
     }
 
     @Override

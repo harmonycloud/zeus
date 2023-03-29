@@ -59,7 +59,7 @@ public abstract class AbstractOrganizationService {
             return new ArrayList<>();
         }
         // 查询备份服务器
-        List<BackupServerDTO> backupServerDTOList = backupServerService.list(idList, false);
+        List<BackupServerDTO> backupServerDTOList = backupServerService.list(idList);
         // 查询备份服务器 组织下分配情况
         if (detail) {
             List<ProjectBackupServerDTO> projectBackupServerDTOList =
