@@ -1,9 +1,11 @@
 package com.middleware.zeus.config;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.middleware.caas.common.constants.DateStyle;
 import com.middleware.zeus.bean.PersonalizedConfiguration;
 import com.middleware.zeus.dao.user.PersonalMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -67,7 +69,8 @@ public class InitPersonalImage {
         personal.setTabLogoPath("tablogo.svg");
         personal.setTitle("Zeus");
         personal.setSlogan("让IT更美好");
-        personal.setCopyrightNotice("Copyright © 2021 杭州谐云科技有限公司 All rights reserved.Copyright.");
+        String year = DateUtils.formatDate(new Date(), DateStyle.YYYY);
+        personal.setCopyrightNotice("Copyright © " + year + " 杭州谐云科技有限公司 All rights reserved.Copyright.");
         personal.setPlatformName("Zeus | 中间件管理一体化平台");
         personal.setPlatformAliasName("中间件一体化管理平台");
         personal.setCreateTime(new Date());
