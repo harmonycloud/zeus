@@ -11,6 +11,7 @@ import com.middleware.caas.common.model.middleware.MiddlewareResourceInfo;
 import com.middleware.caas.common.model.middleware.Namespace;
 import com.middleware.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
 import com.middleware.caas.common.model.user.ProjectDto;
+import com.middleware.caas.common.model.user.ProjectQuota;
 import com.middleware.caas.common.model.user.UserDto;
 import com.middleware.caas.filters.token.JwtTokenComponent;
 import com.middleware.caas.filters.user.CurrentUserRepository;
@@ -124,6 +125,17 @@ public abstract class AbstractProjectService {
                 backupServerDTO.setClusterNickName(clusterNickNameMap.get(backupServerDTO.getClusterId()));
             }
         }).collect(Collectors.toList());
+    }
+
+    public void allocateBackupServer(ProjectQuota projectQuota){
+        // 校验备份服务器是否已被使用
+        checkPositionUsed(projectQuota.getOrganId(), projectQuota.getProjectId(), projectQuota.getBackupServerDTOList());
+        projectBackupServerService.delete(projectQuota.getOrganId(), projectQuota.getProjectId(), null);
+        if (!CollectionUtils.isEmpty(projectQuota.getBackupServerDTOList())) {
+            // 删除当前所有绑定关系
+            projectBackupServerService.save(projectQuota.getOrganId(), projectQuota.getProjectId(), projectQuota
+                    .getBackupServerDTOList().stream().map(BackupServerDTO::getId).collect(Collectors.toList()));
+        }
     }
 
     public void removeBackupServer(String organId, String projectId, Integer backupServerId, String clusterId) {
@@ -248,6 +260,26 @@ public abstract class AbstractProjectService {
             projectDtoList.add(projectDto);
         }
         return projectDtoList;
+    }
+
+    public void checkPositionUsed(String organId, String projectId, List<BackupServerDTO> backupServerDTOList){
+        // 查询当前绑定的备份服务器  并确认哪些是会被移除的
+        List<ProjectBackupServerDTO> usedBackupServerList = projectBackupServerService.listByProjectId(organId, projectId);
+        if (!CollectionUtils.isEmpty(backupServerDTOList)) {
+            usedBackupServerList = usedBackupServerList.stream()
+                .filter(usedBackupServer -> backupServerDTOList.stream()
+                    .noneMatch(backupServerDTO -> backupServerDTO.getId().equals(usedBackupServer.getBackupServerId())))
+                .collect(Collectors.toList());
+        }
+        // 查询备份位置
+        List<BackupPositionDTO> backupPositionDTOList = backupPositionService.list(organId, projectId, null);
+        // 判断会被移除的备份服务器是否存在绑定的备份位置
+        for (ProjectBackupServerDTO projectBackupServerDTO : usedBackupServerList){
+            boolean flag = backupPositionDTOList.stream().anyMatch(backupPositionDTO -> backupPositionDTO.getBackupServerId().equals(projectBackupServerDTO.getBackupServerId()));
+            if (flag){
+                throw new BusinessException(ErrorMessage.PROJECT_BACKUP_SERVER_USING);
+            }
+        }
     }
 
 }

@@ -185,10 +185,7 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
             }
         }
         // 记录备份服务器
-        // todo 校验备份服务器是否已被使用
-        if (!CollectionUtils.isEmpty(organizationQuota.getBackupServerDTOList())) {
-            allocateBackupServer(organizationQuota);
-        }
+        allocateBackupServer(organizationQuota);
     }
 
     @Override

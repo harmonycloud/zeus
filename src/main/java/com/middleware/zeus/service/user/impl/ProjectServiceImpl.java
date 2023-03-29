@@ -368,12 +368,7 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
             }
         }
         // 记录备份服务器
-        // todo 校验备份服务器是否已被使用
-        if (!CollectionUtils.isEmpty(projectQuota.getBackupServerDTOList())) {
-            // 删除当前所有绑定关系
-            projectBackupServerService.save(projectQuota.getOrganId(), projectQuota.getProjectId(), projectQuota
-                .getBackupServerDTOList().stream().map(BackupServerDTO::getId).collect(Collectors.toList()));
-        }
+        allocateBackupServer(projectQuota);
     }
 
     @Override

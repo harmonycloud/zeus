@@ -51,8 +51,6 @@ public class ProjectBackupServerServiceImpl implements ProjectBackupServerServic
 
     @Override
     public void save(String organId, String projectId, List<Integer> backupServerIds) {
-        // 先删除已有的绑定关系
-        deleteByProjectId(organId, projectId);
         if (CollectionUtils.isEmpty(backupServerIds)) {
             return;
         }

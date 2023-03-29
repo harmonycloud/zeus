@@ -26,7 +26,7 @@ public class AlertManagerInfoController {
 
     @ApiOperation(value = "获取组件列表", notes = "获取组件列表")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", required = false, value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "clusterId", required = false, value = "集群id", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping
     public BaseResult<List<ClusterComponentsDto>> list(@RequestParam(value = "clusterId", required = false) String clusterId) throws Exception {

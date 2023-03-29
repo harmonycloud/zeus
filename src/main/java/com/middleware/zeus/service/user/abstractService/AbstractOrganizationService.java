@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.middleware.caas.common.constants.CommonConstant;
+import com.middleware.caas.common.model.BackupPositionDTO;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -93,17 +94,21 @@ public abstract class AbstractOrganizationService {
         beanOrganizationBackupServerMapper.delete(wrapper);
     }
 
-    protected void allocateBackupServer(OrganizationQuota organizationQuota){
+    protected void allocateBackupServer(OrganizationQuota organizationQuota) {
+        // 校验备份服务器是否被使用
+        checkBackupServerUsed(organizationQuota.getOrganId(), organizationQuota.getBackupServerDTOList());
         // 删除当前所有绑定关系
         QueryWrapper<BeanOrganizationBackupServer> delete =
-                new QueryWrapper<BeanOrganizationBackupServer>().eq("organ_id", organizationQuota.getOrganId());
+            new QueryWrapper<BeanOrganizationBackupServer>().eq("organ_id", organizationQuota.getOrganId());
         beanOrganizationBackupServerMapper.delete(delete);
-        for (BackupServerDTO backupServerDTO : organizationQuota.getBackupServerDTOList()) {
-            BeanOrganizationBackupServer server = new BeanOrganizationBackupServer();
-            server.setOrganId(organizationQuota.getOrganId());
-            server.setClusterId(backupServerDTO.getClusterId());
-            server.setBackupServerId(backupServerDTO.getId());
-            beanOrganizationBackupServerMapper.insert(server);
+        if (!CollectionUtils.isEmpty(organizationQuota.getBackupServerDTOList())) {
+            for (BackupServerDTO backupServerDTO : organizationQuota.getBackupServerDTOList()) {
+                BeanOrganizationBackupServer server = new BeanOrganizationBackupServer();
+                server.setOrganId(organizationQuota.getOrganId());
+                server.setClusterId(backupServerDTO.getClusterId());
+                server.setBackupServerId(backupServerDTO.getId());
+                beanOrganizationBackupServerMapper.insert(server);
+            }
         }
     }
 
@@ -112,5 +117,27 @@ public abstract class AbstractOrganizationService {
             StringUtils.removeEnd(clusterIds, CommonConstant.COMMA);
         }
         return Arrays.asList(clusterIds.split(CommonConstant.COMMA));
+    }
+
+    public void checkBackupServerUsed(String organId, List<BackupServerDTO> backupServerDTOList) {
+        // 查询当前绑定的备份服务器 并确认哪些是会被移除的
+        List<BackupServerDTO> usedBackupServerList = getBackupServer(organId, null, false);
+        if (!CollectionUtils.isEmpty(backupServerDTOList)) {
+            usedBackupServerList = usedBackupServerList.stream()
+                .filter(usedBackupServer -> backupServerDTOList.stream()
+                    .noneMatch(backupServerDTO -> backupServerDTO.getId().equals(usedBackupServer.getId())))
+                .collect(Collectors.toList());
+        }
+        // 查询项目下的备份服务器绑定情况
+        List<ProjectBackupServerDTO> projectBackupServerDTOList =
+            projectBackupServerService.listByProjectId(organId, null);
+        // 判断会被移除的备份服务器是否存在绑定的备份位置
+        for (BackupServerDTO backupServerDTO : usedBackupServerList) {
+            boolean flag = projectBackupServerDTOList.stream()
+                .anyMatch(backupPositionDTO -> backupPositionDTO.getBackupServerId().equals(backupServerDTO.getId()));
+            if (flag) {
+                throw new BusinessException(ErrorMessage.ORGANIZATION_BACKUP_SERVER_USING);
+            }
+        }
     }
 }
