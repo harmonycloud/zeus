@@ -161,7 +161,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public List<ResourceMenuDto> listMenuByRoleId(UserDto userDto, String organId, String projectId) {
         Set<BeanResourceMenuRole> list;
-        if (userDto.getIsAdmin() || StringUtils.isEmpty(organId) || StringUtils.isEmpty(projectId)) {
+        if (userDto.getIsAdmin() || (StringUtils.isEmpty(organId) && StringUtils.isEmpty(projectId))) {
             list = new HashSet<>(resourceMenuRoleService.listAdminMenu());
         } else {
             list = new HashSet<>();
@@ -183,6 +183,9 @@ public class RoleServiceImpl implements RoleService {
                 if (!CollectionUtils.isEmpty(userRoleList)) {
                     list.addAll(resourceMenuRoleService.list(String.valueOf(userRoleList.get(0).getRoleId())));
                 }
+            }
+            if(CollectionUtils.isEmpty(list)){
+                list.add(new BeanResourceMenuRole().setResourceMenuId(3));
             }
         }
         // 查询是否为灾备模式备平台

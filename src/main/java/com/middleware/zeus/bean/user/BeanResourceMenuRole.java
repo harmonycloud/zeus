@@ -6,12 +6,14 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
 
 /**
  * @author xutianhong
  * @Date 2021/7/28 5:39 下午
  */
 @Data
+@Accessors(chain = true)
 @EqualsAndHashCode(callSuper = false)
 @TableName("resource_menu_role")
 public class BeanResourceMenuRole  {
