@@ -59,6 +59,7 @@ public class ProjectBackupServerServiceImpl implements ProjectBackupServerServic
         // 重新保存绑定关系
         for (Integer backupServerId : backupServerIds) {
             BeanProjectBackupServer beanProjectBackupServer = new BeanProjectBackupServer();
+            beanProjectBackupServer.setOrganId(organId);
             beanProjectBackupServer.setProjectId(projectId);
             beanProjectBackupServer.setBackupServerId(backupServerId);
             projectBackupServerMapper.insert(beanProjectBackupServer);
