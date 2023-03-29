@@ -45,8 +45,6 @@ import java.util.stream.Collectors;
 public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingService {
 
     private static final String ES_NAME = "kubernetes-logging";
-    @Value("${system.log.logSaveTime:7d}")
-    private String logSaveTime;
     @Autowired
     private EsService esService;
     @Autowired
@@ -89,8 +87,6 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         Executors.newSingleThreadExecutor().execute(() -> {
             tryCreateEsTemplate(cluster, clusterComponentsDto);
         });
-        // 创建初始化生命周期管理，设置默认日志保留时间
-        esService.createOrUpdateLogSaveTime(cluster.getId(),logSaveTime);
     }
 
     @Override
