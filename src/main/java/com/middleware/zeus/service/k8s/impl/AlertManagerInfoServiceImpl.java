@@ -36,6 +36,7 @@ public class AlertManagerInfoServiceImpl implements AlertManagerInfoService {
         for (MiddlewareClusterDTO cluster : clusterList) {
             ClusterComponentsDto clusterComponentsDto =
                 clusterComponentService.get(cluster.getId(), ComponentsEnum.ALERTMANAGER.getName());
+            clusterComponentsDto.setClusterAliasName(cluster.getNickname());
             componentsDtoList.add(clusterComponentsDto);
         }
 
