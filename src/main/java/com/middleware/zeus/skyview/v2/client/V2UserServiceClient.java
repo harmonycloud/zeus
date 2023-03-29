@@ -19,10 +19,10 @@ import org.springframework.stereotype.Component;
 public interface V2UserServiceClient {
 
 
-    @Get(url = "#{system.skyview.prefix}/user/users/{username}/details", headers = {"Authorization: ${token}"})
-    CaasResult<JSONArray> getUser(@Var("token") String token, @Var("username") String username);
+    @Get(url = "#{system.skyview.prefix}/user/users/{username}/details")
+    CaasResult<JSONArray> getUser(@Var("username") String username);
 
-    @Get(url = "#{system.skyview.prefix}/user/users/details", headers = {"Authorization: ${token}"})
-    CaasResult<JSONArray> listUser(@Var("token") String token, @Query(value = "param") String param);
+    @Get(url = "#{system.skyview.prefix}/user/users/details")
+    CaasResult<JSONArray> listUser(@Query(value = "param") String param);
 
 }

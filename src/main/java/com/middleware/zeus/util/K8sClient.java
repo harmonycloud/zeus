@@ -1,5 +1,6 @@
 package com.middleware.zeus.util;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -88,6 +89,9 @@ public class K8sClient {
     public void initClients() {
         List<MiddlewareClusterDTO> middlewareClusters = clusterService.listClusters();
         if (middlewareClusters.size() > 0) {
+            // 初始化cert信息
+            middlewareClusters = initCertInfo(middlewareClusters);
+            // todo  cluster id 可行性校验
             addK8sClients(middlewareClusters);
             clusterService.initClusterAttributes(middlewareClusters);
         }
@@ -235,6 +239,14 @@ public class K8sClient {
         } catch (Exception e) {
             log.error("集群{}保存证书异常", c.getId());
         }
+    }
+
+    public List<MiddlewareClusterDTO> initCertInfo(List<MiddlewareClusterDTO> clusterList){
+        List<MiddlewareClusterDTO> newClusterList = new ArrayList<>();
+        for (MiddlewareClusterDTO cluster : clusterList){
+            newClusterList.add(clusterService.detail(cluster.getId()));
+        }
+        return newClusterList;
     }
 
     /**

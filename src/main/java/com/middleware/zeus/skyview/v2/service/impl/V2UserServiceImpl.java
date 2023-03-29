@@ -39,14 +39,14 @@ public class V2UserServiceImpl implements V2UserService {
 
     @Override
     public UserDto get(String username) {
-        CaasResult<JSONArray> res = v2UserServiceClient.getUser(null, username);
+        CaasResult<JSONArray> res = v2UserServiceClient.getUser(username);
         JSONObject user = res.getData().getJSONObject(0);
         return convertUser(user);
     }
 
     @Override
     public List<UserDto> list() {
-        CaasResult<JSONArray> res = v2UserServiceClient.getUser(null, null);
+        CaasResult<JSONArray> res = v2UserServiceClient.listUser(null);
         return res.getData().stream().map(user -> convertUser(JSONObject.parseObject(JSONObject.toJSONString(user))))
             .collect(Collectors.toList());
     }

@@ -19,8 +19,9 @@ import org.springframework.stereotype.Component;
 @Success(condition = ForestUnauthorizedSuccessCondition.class)
 public interface V2OrganServiceClient {
 
-    @Get(url = "#{system.skyview.prefix}/caas/tenants")
-    CaasResult<JSONArray> list(@Query("username") String username);
+    @Get(url = "#{system.skyview.prefix}/caas/tenants", headers = {"Authorization: ${token}"})
+    CaasResult<JSONArray> list(@Var("token") String token,
+                               @Query("username") String username);
 
     @Get(url = "#{system.skyview.prefix}/caas/tenants/{organId}")
     CaasResult<JSONObject> get(@Var("organId") String organId, @Query("includeMemberCount") Boolean includeMemberCount, @Query("includeBackupCount") Boolean includeBackupCount);
@@ -31,4 +32,6 @@ public interface V2OrganServiceClient {
     @Get(url = "#{system.skyview.prefix}/caas/tenants/{organId}}/members")
     CaasResult<JSONArray> userList(@Var("organId") String organId);
 
+    @Get(url = "#{system.skyview.prefix}/caas/tenants/{organId}")
+    CaasResult<JSONObject> nsList(@Var("organId") String organId, @Query("includeMemberCount") Boolean includeMemberCount, @Query("includeBackupCount") Boolean includeBackupCount);
 }

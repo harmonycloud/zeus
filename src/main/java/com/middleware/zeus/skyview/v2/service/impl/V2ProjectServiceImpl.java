@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import com.middleware.caas.common.enums.CaasRole;
 import com.middleware.caas.common.model.user.UserDto;
 import com.middleware.zeus.service.user.RoleService;
+import com.middleware.zeus.util.ZeusCurrentUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -42,7 +43,7 @@ public class V2ProjectServiceImpl implements V2ProjectService {
 
     @Override
     public List<ProjectDto> list(String organId) {
-        CaasResult<JSONArray> res = v2ProjectServiceClient.list(organId, true, true, true);
+        CaasResult<JSONArray> res = v2ProjectServiceClient.list(ZeusCurrentUser.getCaasToken(), organId, true, true, true);
         return res.getData().stream().map(project -> convertProject(JSONObject.parseObject(JSONObject.toJSONString(project))))
             .collect(Collectors.toList());
     }

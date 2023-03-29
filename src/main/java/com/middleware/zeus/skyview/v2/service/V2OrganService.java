@@ -21,7 +21,7 @@ public interface V2OrganService {
     List<OrganizationDto> list();
 
     /**
-     * 查询租户列表
+     * 查询租户详情
      *
      * @return List<ResourceQuotaDo>
      */
@@ -45,7 +45,7 @@ public interface V2OrganService {
     List<ResourceQuotaDo> quotas(String organId);
 
     /**
-     * 查询租户下资源配额
+     * 查询租户下用户列表
      * @param organId 组织id
      *
      * @return List<ResourceQuotaDo>

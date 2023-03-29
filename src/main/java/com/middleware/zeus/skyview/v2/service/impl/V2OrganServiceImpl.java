@@ -12,6 +12,7 @@ import com.middleware.caas.common.model.user.UserDto;
 import com.middleware.zeus.service.user.RoleService;
 import com.middleware.zeus.skyview.v2.client.V2OrganServiceClient;
 import com.middleware.zeus.skyview.v2.service.V2OrganService;
+import com.middleware.zeus.util.ZeusCurrentUser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -37,7 +38,7 @@ public class V2OrganServiceImpl implements V2OrganService {
 
     @Override
     public List<OrganizationDto> list() {
-        CaasResult<JSONArray> res = v2OrganServiceClient.list(null);
+        CaasResult<JSONArray> res = v2OrganServiceClient.list(ZeusCurrentUser.getCaasToken(), null);
         return res.getData().stream().map(user -> convertOrgan(JSONObject.parseObject(JSONObject.toJSONString(user))))
                 .collect(Collectors.toList());
     }

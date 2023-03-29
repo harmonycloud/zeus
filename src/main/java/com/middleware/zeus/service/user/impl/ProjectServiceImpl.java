@@ -384,9 +384,13 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         platformQuotaService.convertStorageName(resourceQuotaDoList);
         if (detail) {
             List<ResourceQuotaDo> namespaceQuotaList = new ArrayList<>();
+            // 获取指定组织 项目下的所有分区
+            List<Namespace> namespaceList = getNamespace(organId, projectId, null, true, false);
             for (ResourceQuotaDo resourceQuotaDo : resourceQuotaDoList) {
-                List<Namespace> namespaceList =
-                    getNamespace(organId, projectId, resourceQuotaDo.getClusterId(), true, false);
+                // 过滤获取指定集群下的分区列表
+                List<Namespace> nsListFilterByClusterId =
+                    namespaceList.stream().filter(ns -> ns.getClusterId().equals(resourceQuotaDo.getClusterId()))
+                        .collect(Collectors.toList());
                 // 分区存储资源设置存储id
                 List<StorageClassInfo> storageClassInfoList =
                     storageService.listStorageClassInfo(resourceQuotaDo.getClusterId(), false);
@@ -394,7 +398,7 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
                     storageClassInfoList.stream().filter(sc -> StringUtils.isNotEmpty(sc.getStorageId()))
                         .collect(Collectors.toMap(StorageClassInfo::getName, StorageClassInfo::getStorageId));
                 List<ResourceQuotaDo> nsResourceQuotaList =
-                    namespaceList.stream().filter(ns -> ns.getQuotas() != null).map(ns -> {
+                    nsListFilterByClusterId.stream().filter(ns -> ns.getQuotas() != null).map(ns -> {
                         ResourceQuotaDo nsQuotas = ns.getQuotas();
                         for (StorageQuota storageQuota : nsQuotas.getStorageList()) {
                             if (storageClassIdMap.containsKey(storageQuota.getName())) {
@@ -402,7 +406,7 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
                             }
                         }
                         return nsQuotas;
-                }).collect(Collectors.toList());
+                    }).collect(Collectors.toList());
                 // 计算多分区配额总和
                 ResourceQuotaDo namespaceQuota = resourceQuotaService.calculateQuota(nsResourceQuotaList);
                 namespaceQuota.setClusterId(resourceQuotaDo.getClusterId());

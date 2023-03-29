@@ -15,10 +15,14 @@ import java.util.Map;
  */
 public class ZeusCurrentUser {
 
+    public static String getAdminToken() {
+        return "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwidXNlckluZm8iOiJ7XCJyZWFsTmFtZVwiOlwiYWRtaW5cIixcInBob25lXCI6XCIxNTAwMDAwMDAwMFwiLFwicm9sZUlkXCI6XCIxXCIsXCJhdHRyaWJ1dGVzXCI6e30sXCJsYW5ndWFnZVwiOlwiY2hcIixcImlkXCI6XCIxXCIsXCJpc0FkbWluXCI6MSxcImVtYWlsXCI6XCJhZG1pbkBhZG1pbi5jb21cIixcInVzZXJuYW1lXCI6XCJhZG1pblwifSIsImV4cCI6MzMyMTE3NTY3NjIsImlhdCI6MTY3NTc1NTU2Mn0.2YQ5Yh99UHg-NrsW10thNbXuSU4ZqPlPfLyHQmnvBgg";
+    }
+
     public static String getCaasToken() {
         CurrentUser currentUser = CurrentUserRepository.getUserExistNull();
         if (currentUser == null){
-            return "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwidXNlckluZm8iOiJ7XCJyZWFsTmFtZVwiOlwiYWRtaW5cIixcInBob25lXCI6XCIxNTAwMDAwMDAwMFwiLFwicm9sZUlkXCI6XCIxXCIsXCJhdHRyaWJ1dGVzXCI6e30sXCJsYW5ndWFnZVwiOlwiY2hcIixcImlkXCI6XCIxXCIsXCJpc0FkbWluXCI6MSxcImVtYWlsXCI6XCJhZG1pbkBhZG1pbi5jb21cIixcInVzZXJuYW1lXCI6XCJhZG1pblwifSIsImV4cCI6MzMyMTE3NTY3NjIsImlhdCI6MTY3NTc1NTU2Mn0.2YQ5Yh99UHg-NrsW10thNbXuSU4ZqPlPfLyHQmnvBgg";
+            return getAdminToken();
         }
         JSONObject userInfo = JwtTokenComponent.getClaimsFromToken("userInfo", currentUser.getToken());
         return userInfo.getString("caasToken");

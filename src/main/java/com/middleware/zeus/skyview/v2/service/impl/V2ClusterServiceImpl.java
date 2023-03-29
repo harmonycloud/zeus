@@ -38,7 +38,7 @@ public class V2ClusterServiceImpl implements V2ClusterService {
     @Override
     public MiddlewareClusterDTO get(String clusterId) {
         CaasResult<JSONObject> res = v2ClusterServiceClient.get(clusterId);
-        return null;
+        return convertClusterDto(res.getData());
     }
 
     public MiddlewareClusterDTO convertClusterDto(JSONObject cluster){

@@ -82,6 +82,10 @@ public class Skyview2ProjectServiceImpl extends AbstractProjectService implement
     public List<Namespace> getNamespace(String organId, String projectId, String clusterId, Boolean withQuota,
         Boolean withMiddleware) {
         List<Namespace> nsList = v2ProjectService.nsList(organId, projectId, withQuota);
+        // 根据集群id过滤
+        if(StringUtils.isNotEmpty(clusterId)){
+            nsList = nsList.stream().filter(ns -> ns.getClusterId().equals(clusterId)).collect(Collectors.toList());
+        }
         if (withMiddleware) {
             Map<String, List<Namespace>> namespaceMap =
                 nsList.stream().collect(Collectors.groupingBy(Namespace::getClusterId));
@@ -100,7 +104,9 @@ public class Skyview2ProjectServiceImpl extends AbstractProjectService implement
     @Override
     public List<ProjectNamespaceDo> listNamespace(String clusterId) {
         if (CollectionUtils.isEmpty(ALL_PROJECT_NS_LIST)){
+            // todo  考虑在前端进行数据的分别查询
             refreshProjectNamespace();
+            //
         }
         List<Namespace> allProjectNsList = new ArrayList<>(ALL_PROJECT_NS_LIST);
 
@@ -227,6 +233,7 @@ public class Skyview2ProjectServiceImpl extends AbstractProjectService implement
 
     @Override
     public List<ResourceQuotaDo> getCpuMemoryQuota(String organId, String projectId, boolean detail) {
+        // todo
         List<Namespace> nsList = v2ProjectService.nsList(organId, projectId, true);
         List<ResourceQuotaDo> quotaDoList = nsList.stream().map(Namespace::getQuotas).collect(Collectors.toList());
 
