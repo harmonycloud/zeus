@@ -111,7 +111,7 @@ public class MiddlewareAlertsController {
     @PostMapping("/update")
     @Authority(power = 1)
     public BaseResult updateRules(@PathVariable("clusterId") String clusterId,
-                                  @PathVariable(value = "namespace", required = false) String namespace,
+                                  @PathVariable(value = "namespace") String namespace,
                                   @PathVariable(value = "middlewareName", required = false) String middlewareName,
                                   @RequestParam("ding") String ding,
                                   @RequestParam("alertRuleId") String alertRuleId,
