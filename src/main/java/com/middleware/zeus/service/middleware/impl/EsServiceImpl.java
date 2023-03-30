@@ -314,6 +314,30 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
     }
 
     @Override
+    public String resultByDeleteRestClient(RestHighLevelClient client, String clusterId, String endPoint) throws IOException {
+        Request request = new Request("DELETE", endPoint);
+        ClusterComponentsDto es = clusterComponentService.get(clusterId, ComponentsEnum.LOGGING.getName());
+        String userName = es.getUsername();
+        String password = es.getPassword();
+        if (StringUtils.isNotEmpty(userName) && StringUtils.isNotEmpty(password)) {
+            RequestOptions.Builder builder = RequestOptions.DEFAULT.toBuilder();
+            builder.addHeader("Authorization", "Basic " + getAuthorization(clusterId)); // (1)
+            builder.setHttpAsyncResponseConsumerFactory(           // (2)
+                    new HttpAsyncResponseConsumerFactory.HeapBufferedResponseConsumerFactory(30 * 1024 * 1024));
+            // 调用build()方法创建对象
+            RequestOptions build = builder.build();
+            request.setOptions(build);
+        }
+
+        RestClient restClient = client.getLowLevelClient();
+        Response response = restClient.performRequest(request);
+        if (response == null || Objects.isNull(response.getEntity())) {
+            return null;
+        }
+        return EntityUtils.toString(response.getEntity());
+    }
+
+    @Override
     public String resultByPutRestClient(RestHighLevelClient client, String clusterId, String endPoint,String body) throws IOException {
         Request request = new Request("PUT", endPoint);
         request.setJsonEntity(body);
@@ -505,10 +529,50 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
             JSONObject res = JSONObject.parseObject(response);
             return res.getJSONObject(EsPolicyTemplateEnum.LOG_SAVE_TIME_POLICY.getName()).getJSONObject("policy")
                 .getJSONObject("phases").getJSONObject("delete").getString("min_age");
+        } catch (ResponseException re){
+            if (re.getMessage().contains("404 Not Found")) {
+                return "ALWAYS";
+            }
         } catch (Exception e) {
             log.error("查询日志组件失败");
             return null;
         }
+        return null;
+    }
+
+    @Override
+    public void deleteLogSaveTime(String clusterId, String logSaveTime) {
+        // 获取client
+        RestHighLevelClient esClient = null;
+        try {
+            esClient = getEsClient(clusterId);
+        } catch (Exception e) {
+            log.error("日志组件连接失败");
+            throw new BusinessException(ErrorMessage.ELASTICSEARCH_CONNECT_FAILED);
+        }
+        // 将已绑定的索引解绑
+        String bd = String.format(EsPolicyTemplateEnum.INDEX_BIND_POLICY.getTemplate(),
+                "");
+        for (EsTemplateEnum template : EsTemplateEnum.values()) {
+            log.info("向索引{}解绑生命周期策略",template.getName());
+            String ep = "/" + template.getName() + "-*/_settings";
+            try{
+                resultByPutRestClient(esClient, clusterId, ep, bd);
+            }catch (ResponseException re){
+                log.error("索引{}不存在",template.getName());
+            } catch (IOException e) {
+                log.error("IO异常,{}",e.getMessage());
+            }
+        }
+
+        // 删除生命周期策略
+        String ep = "/_ilm/policy/" + EsPolicyTemplateEnum.LOG_SAVE_TIME_POLICY.getName();
+        try {
+            resultByDeleteRestClient(esClient,clusterId,ep);
+        } catch (IOException e) {
+            log.error("删除生命周期策略失败,{}",e.getMessage());
+        }
+
     }
 
 

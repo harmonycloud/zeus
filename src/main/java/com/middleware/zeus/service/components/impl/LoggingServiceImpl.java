@@ -221,7 +221,11 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
 
     @Override
     public void record2SystemConfig(ClusterComponentsDto clusterComponentsDto) {
-        esService.createOrUpdateLogSaveTime(clusterComponentsDto.getClusterId(),clusterComponentsDto.getLogSaveTime());
+        if ("ALWAYS".equalsIgnoreCase(clusterComponentsDto.getLogSaveTime())) {
+            esService.deleteLogSaveTime(clusterComponentsDto.getClusterId(),clusterComponentsDto.getLogSaveTime());
+        } else {
+            esService.createOrUpdateLogSaveTime(clusterComponentsDto.getClusterId(),clusterComponentsDto.getLogSaveTime());
+        }
     }
 
     @Override
