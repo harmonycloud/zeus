@@ -43,14 +43,14 @@ public class V2ProjectServiceImpl implements V2ProjectService {
 
     @Override
     public List<ProjectDto> list(String organId) {
-        CaasResult<JSONArray> res = v2ProjectServiceClient.list(ZeusCurrentUser.getCaasToken(), organId, true, true, true);
+        CaasResult<JSONArray> res = v2ProjectServiceClient.list(organId, true, true, true);
         return res.getData().stream().map(project -> convertProject(JSONObject.parseObject(JSONObject.toJSONString(project))))
             .collect(Collectors.toList());
     }
 
     @Override
     public List<ProjectDto> switchTenants(String organId) {
-        CaasResult<JSONObject> res = v2ProjectServiceClient.switchTenants(organId);
+        CaasResult<JSONObject> res = v2ProjectServiceClient.switchTenants(ZeusCurrentUser.getCaasToken(), organId);
         if (res.getData().containsKey("projectList")) {
             JSONArray projectArray = res.getData().getJSONArray("projectList");
             return projectArray.stream()
@@ -62,7 +62,7 @@ public class V2ProjectServiceImpl implements V2ProjectService {
 
     @Override
     public List<Namespace> nsList(String organId, String projectId, Boolean withQuota) {
-        CaasResult<JSONArray> res = v2ProjectServiceClient.nsList(organId, projectId, withQuota, true);
+        CaasResult<JSONArray> res = v2ProjectServiceClient.nsList(organId, projectId, true, true);
 
         return res.getData().stream().map(ns -> convertNamespace(JSONObject.parseObject(JSONObject.toJSONString(ns))))
             .collect(Collectors.toList());
@@ -82,7 +82,7 @@ public class V2ProjectServiceImpl implements V2ProjectService {
         projectDto.setMemberCount(project.getInteger("userNum"));
 
         JSONArray namespaceArray = project.getJSONArray("namespaceList");
-        if (CollectionUtils.isEmpty(namespaceArray)){
+        if (!CollectionUtils.isEmpty(namespaceArray)){
             projectDto.setNamespaceCount(namespaceArray.size());
         }
 

@@ -90,8 +90,7 @@ public class K8sClient {
         List<MiddlewareClusterDTO> middlewareClusters = clusterService.listClusters();
         if (middlewareClusters.size() > 0) {
             // 初始化cert信息
-            middlewareClusters = initCertInfo(middlewareClusters);
-            // todo  cluster id 可行性校验
+            initCertInfo(middlewareClusters);
             addK8sClients(middlewareClusters);
             clusterService.initClusterAttributes(middlewareClusters);
         }
@@ -241,12 +240,15 @@ public class K8sClient {
         }
     }
 
-    public List<MiddlewareClusterDTO> initCertInfo(List<MiddlewareClusterDTO> clusterList){
-        List<MiddlewareClusterDTO> newClusterList = new ArrayList<>();
-        for (MiddlewareClusterDTO cluster : clusterList){
-            newClusterList.add(clusterService.detail(cluster.getId()));
+    public void initCertInfo(List<MiddlewareClusterDTO> clusterList) {
+        for (MiddlewareClusterDTO cluster : clusterList) {
+            if (cluster.getCert() == null || StringUtils.isAnyEmpty(cluster.getCert().getCertificate(),
+                cluster.getCert().getClientCertificateData(), cluster.getCert().getCertificateAuthorityData(),
+                cluster.getCert().getClientKeyData())) {
+                MiddlewareClusterDTO detailCluster = clusterService.detail(cluster.getId());
+                cluster.setCert(detailCluster.getCert());
+            }
         }
-        return newClusterList;
     }
 
     /**
