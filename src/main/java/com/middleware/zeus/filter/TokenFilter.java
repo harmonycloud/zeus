@@ -141,6 +141,9 @@ public class TokenFilter implements Filter {
         // 手动刷新 caas token
         String caasToken = userMap.getString("caasToken");
         JSONObject caasUser = JwtTokenComponent.getClaimsFromToken("userInfo", caasToken);
+        if (caasUser == null){
+            return;
+        }
         long currentTime = System.currentTimeMillis();
         String newCaasToken = JwtTokenComponent.generateToken("userInfo", caasUser,
                 new Date(currentTime + (long)(0.5 * 3600000L)), new Date(currentTime - 300000L));

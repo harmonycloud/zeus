@@ -1,9 +1,12 @@
 package com.middleware.zeus.service.user.skyviewimpl;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import com.middleware.caas.common.model.user.*;
+import com.middleware.caas.common.util.ThreadPoolExecutorFactory;
 import com.middleware.zeus.service.user.OrganizationService;
 import com.middleware.zeus.skyview.v2.service.V2OrganService;
 import org.apache.commons.lang3.StringUtils;
@@ -37,7 +40,8 @@ import lombok.extern.slf4j.Slf4j;
 public class Skyview2ProjectServiceImpl extends AbstractProjectService implements ProjectService {
 
     public static final Set<Namespace> ALL_PROJECT_NS_LIST = new HashSet<>();
-
+    protected final ReentrantLock lock = new ReentrantLock();
+    
     @Autowired
     private V2ProjectService v2ProjectService;
     @Autowired
@@ -103,10 +107,10 @@ public class Skyview2ProjectServiceImpl extends AbstractProjectService implement
 
     @Override
     public List<ProjectNamespaceDo> listNamespace(String clusterId) {
-        if (CollectionUtils.isEmpty(ALL_PROJECT_NS_LIST)){
-            // todo  考虑在前端进行数据的分别查询
+        if (CollectionUtils.isEmpty(ALL_PROJECT_NS_LIST)) {
+            getProjectNamespace();
+        } else {
             refreshProjectNamespace();
-            //
         }
         List<Namespace> allProjectNsList = new ArrayList<>(ALL_PROJECT_NS_LIST);
 
@@ -247,8 +251,8 @@ public class Skyview2ProjectServiceImpl extends AbstractProjectService implement
     public void removeCpuMemoryQuota(String organId, String projectId, String clusterId) {
         throw new BusinessException(ErrorMessage.NO_AUTHORITY_WITH_EXTERNAL_SERVICE);
     }
-
-    public void refreshProjectNamespace(){
+    
+    public void getProjectNamespace(){
         List<Namespace> allNsList = new ArrayList<>();
         List<OrganizationDto> organList = v2OrganService.list();
         if (!CollectionUtils.isEmpty(organList)){
@@ -258,6 +262,29 @@ public class Skyview2ProjectServiceImpl extends AbstractProjectService implement
             }
         }
         ALL_PROJECT_NS_LIST.addAll(allNsList);
+    }
+
+    public void refreshProjectNamespace(){
+        ThreadPoolExecutorFactory.executor.execute(() -> {
+            try {
+                if (lock.tryLock(1, TimeUnit.SECONDS)) {
+                    try {
+                        getProjectNamespace();
+                        try {
+                            log.info("刷新项目下分区信息");
+                            Thread.sleep(10000);
+                        } catch (InterruptedException e) {
+                            log.error("刷新项目下分区信息线程休眠异常", e);
+                        }
+                    } finally {
+                        lock.unlock();
+                    }
+                }
+            } catch (Exception e) {
+                log.error("刷新项目分区信息失败");
+                log.debug("刷新项目分区信息失败", e);
+            }
+        });
     }
 
 }

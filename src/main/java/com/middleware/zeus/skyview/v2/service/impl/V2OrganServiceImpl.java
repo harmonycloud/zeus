@@ -134,6 +134,7 @@ public class V2OrganServiceImpl implements V2OrganService {
         QuotaBase memory = new QuotaBase();
         memory.setRequest(quota.getDouble("memoryQuota"));
         memory.setUsed(quota.getDouble("usedMemory"));
+        quotaDo.setMemory(memory);
 
         List<StorageQuota> storageQuotaList = new ArrayList<>();
         JSONArray storageQuotaArray = quota.getJSONArray("storageQuota");

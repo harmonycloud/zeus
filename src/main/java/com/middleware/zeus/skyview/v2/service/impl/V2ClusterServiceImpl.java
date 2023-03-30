@@ -50,13 +50,13 @@ public class V2ClusterServiceImpl implements V2ClusterService {
 
         ClusterCert cert = new ClusterCert();
         if (cluster.containsKey("apiCa")){
-            cert.setClientCertificateData(cluster.getString("apiCa"));
+            cert.setCertificateAuthorityData(cluster.getString("apiCa"));
+        }
+        if (cluster.containsKey("apiKey")){
+            cert.setClientKeyData(cluster.getString("apiKey"));
         }
         if (cluster.containsKey("apiCrt")){
             cert.setClientCertificateData(cluster.getString("apiCrt"));
-        }
-        if (cluster.containsKey("apiKey")){
-            cert.setCertificateAuthorityData(cluster.getString("apiKey"));
         }
         if (cluster.containsKey("certificate")){
             cert.setCertificate(cluster.getString("certificate"));
@@ -64,7 +64,7 @@ public class V2ClusterServiceImpl implements V2ClusterService {
         clusterDTO.setCert(cert);
 
         clusterDTO.setProtocol(cluster.getString("protocol"));
-        clusterDTO.setHost(cluster.getString("compAddress"));
+        clusterDTO.setHost(cluster.getString("host"));
         clusterDTO.setPort(cluster.getInteger("port"));
 
 

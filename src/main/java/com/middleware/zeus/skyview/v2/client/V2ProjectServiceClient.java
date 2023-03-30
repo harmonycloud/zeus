@@ -19,15 +19,15 @@ import org.springframework.stereotype.Component;
 @Success(condition = ForestUnauthorizedSuccessCondition.class)
 public interface V2ProjectServiceClient {
 
-    @Get(url = "#{system.skyview.prefix}/caas/tenants/{organId}/projects", headers = {"Authorization: ${token}"})
-    CaasResult<JSONArray> list(@Var("token") String token,
-                               @Var("organId") String organId,
+    @Get(url = "#{system.skyview.prefix}/caas/tenants/{organId}/projects")
+    CaasResult<JSONArray> list(@Var("organId") String organId,
                                @Query("withFed") Boolean withFed,
                                @Query("includeQuota") Boolean includeQuota,
                                @Query("includeIpStatistic") Boolean includeIpStatistic);
 
-    @Get(url = "#{system.skyview.prefix}/caas/tenants/{organId}/projects")
-    CaasResult<JSONObject> switchTenants(@Var("organId") String organId);
+    @Get(url = "#{system.skyview.prefix}/caas/tenants/{organId}/switchTenant", headers = {"Authorization: ${token}"})
+    CaasResult<JSONObject> switchTenants(@Var("token") String token,
+                                         @Var("organId") String organId);
 
     @Get(url = "#{system.skyview.prefix}/caas/tenants/{organId}/projects/{projectId}/namespaces")
     CaasResult<JSONArray> nsList(@Var("organId") String organId,

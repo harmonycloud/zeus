@@ -60,6 +60,7 @@ public class V2UserServiceImpl implements V2UserService {
         userDto.setEmail(user.getString("email"));
         userDto.setPhone(user.getString("phone"));
         userDto.setCreateTime(DateUtils.parseDate(user.getString("createTime"), DateType.YYYY_MM_DD_T_HH_MM_SS.getValue()));
+        userDto.setIsAdmin(user.getBoolean("admin"));
 
         if (user.containsKey("otherProjects")){
             List<UserRole> userRoleList = new ArrayList<>();
