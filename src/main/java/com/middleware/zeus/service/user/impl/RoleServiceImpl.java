@@ -189,9 +189,8 @@ public class RoleServiceImpl implements RoleService {
             }
         }
         // 查询是否为灾备模式备平台
-//        JSONObject values = helmChartService.getZeusMysqlInstallValues();
-//        Boolean isMaster = "master-slave".equals(values.getString("type"));
-        Boolean isMaster = true;
+        JSONObject values = helmChartService.getZeusMysqlInstallValues();
+        Boolean isMaster = "master-slave".equals(values.getString("type"));
         // 过滤是否开启灾备服务和双活
         LicenseInfo features = new LicenseInfo();
         try {
@@ -207,9 +206,9 @@ public class RoleServiceImpl implements RoleService {
         LicenseInfo finalFeatures = features;
         list = list.stream().filter(menuDto -> {
             if (menuDto.getResourceMenuId() == Integer.parseInt(disasterMenuId)) {
-                return finalFeatures.getDisasterRecoveryEnable();
+                return finalFeatures.getDisasterRecoveryEnable() && userDto.getIsAdmin();
             } else if (menuDto.getResourceMenuId() == Integer.parseInt(activeActiveMenuId)) {
-                return finalFeatures.getActiveActiveEnable();
+                return finalFeatures.getActiveActiveEnable() && userDto.getIsAdmin();
             } else {
                 return true;
             }
