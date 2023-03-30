@@ -89,10 +89,13 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         QueryWrapper<AlertRuleId> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("lay",lay);
         if(!"system".equals(lay)) {
+            if (clusterId != null) {
+                queryWrapper.eq("cluster_id",clusterId);
+            }
             if (StringUtils.isNotEmpty(namespace) && StringUtils.isNotEmpty(middlewareName)) {
-                queryWrapper.eq("cluster_id",clusterId).eq("namespace",namespace).eq("middleware_name",middlewareName);
+                queryWrapper.eq("namespace",namespace).eq("middleware_name",middlewareName);
             }else {
-                queryWrapper.eq("cluster_id",clusterId).isNotNull("namespace").isNotNull("middleware_name");
+                queryWrapper.isNotNull("namespace").isNotNull("middleware_name");
             }
         }
         if (StringUtils.isNotEmpty(keyword)) {
