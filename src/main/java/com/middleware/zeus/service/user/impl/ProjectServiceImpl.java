@@ -87,8 +87,6 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
     private StorageService storageService;
     @Autowired
     private OrganizationService organizationService;
-    @Autowired
-    private RoleService roleService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
