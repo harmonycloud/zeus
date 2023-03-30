@@ -137,8 +137,11 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
             list = list.stream()
                 .filter(projectDto -> userDto.getUserRoleList().stream()
                     .anyMatch(userRole -> StringUtils.isNotEmpty(userRole.getOrganId())
-                        && userRole.getOrganId().equals(organId) && StringUtils.isNotEmpty(userRole.getProjectId())
-                        && userRole.getProjectId().equals(projectDto.getProjectId())))
+                        && userRole.getOrganId().equals(organId)
+                        && ((userRole.getRoleId() != null
+                            && userRole.getRoleId().equals(roleService.getOrganManagerRoleId()))
+                            || (StringUtils.isNotEmpty(userRole.getProjectId())
+                                && userRole.getProjectId().equals(projectDto.getProjectId())))))
                 .collect(Collectors.toList());
         }
         // 获取项目下所有分区
@@ -171,8 +174,10 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
                 projectDto.setRoleId(1);
                 projectDto.setRoleName("超级管理员");
             } else {
-                projectDto.setRoleId(userRoleMap.get(projectDto.getProjectId()).getRoleId());
-                projectDto.setRoleName(userRoleMap.get(projectDto.getProjectId()).getRoleName());
+                if (userRoleMap.containsKey(projectDto.getProjectId())){
+                    projectDto.setRoleId(userRoleMap.get(projectDto.getProjectId()).getRoleId());
+                    projectDto.setRoleName(userRoleMap.get(projectDto.getProjectId()).getRoleName());
+                }
             }
             // 设置备份服务器
             if (projectBackupServerIdMap.containsKey(projectDto.getProjectId())) {

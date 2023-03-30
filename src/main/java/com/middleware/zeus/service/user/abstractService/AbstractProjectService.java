@@ -21,6 +21,7 @@ import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.middleware.*;
 import com.middleware.zeus.service.user.PlatformQuotaService;
+import com.middleware.zeus.service.user.RoleService;
 import com.middleware.zeus.service.user.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,6 +77,8 @@ public abstract class AbstractProjectService {
     protected MiddlewareCRService middlewareCrService;
     @Autowired
     protected NamespaceService namespaceService;
+    @Autowired
+    protected RoleService roleService;
 
     public List<BackupServerDTO> getBackupServer(String organId, String projectId, String clusterId, boolean detail, boolean position) {
         List<ProjectBackupServerDTO> projectBackupServerDTOList =
@@ -216,15 +219,20 @@ public abstract class AbstractProjectService {
             List<ProjectDto> projectDtoList = list(organId);
             // 获取该用户所属的各个项目
             List<ProjectDto> filteredProjectList = projectDtoList.stream()
-                    .filter(projectDto -> userDto.getUserRoleList().stream()
-                            .anyMatch(userRole -> userRole.getProjectId().equals(projectDto.getProjectId())))
-                    .collect(Collectors.toList());
+                .filter(projectDto -> userDto.getUserRoleList().stream()
+                    .anyMatch(userRole -> StringUtils.isNotEmpty(userRole.getOrganId())
+                        && userRole.getOrganId().equals(organId)
+                        && ((userRole.getRoleId() != null
+                            && userRole.getRoleId().equals(roleService.getOrganManagerRoleId()))
+                            || (StringUtils.isNotEmpty(userRole.getProjectId())
+                                && userRole.getProjectId().equals(projectDto.getProjectId())))))
+                .collect(Collectors.toList());
             // 获取n个项目的分区
             if (!CollectionUtils.isEmpty(filteredProjectList)) {
                 nsList = nsList.stream()
-                        .filter(ns -> filteredProjectList.stream()
-                                .anyMatch(projectDto -> projectDto.getProjectId().equals(ns.getProjectId())))
-                        .collect(Collectors.toList());
+                    .filter(ns -> filteredProjectList.stream()
+                        .anyMatch(projectDto -> projectDto.getProjectId().equals(ns.getProjectId())))
+                    .collect(Collectors.toList());
             }
         }
         // 分区为空
