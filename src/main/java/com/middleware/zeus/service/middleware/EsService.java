@@ -70,6 +70,8 @@ public interface EsService {
 
     String resultByGetRestClient(RestHighLevelClient client, String clusterId, String endPoint) throws Exception;
 
+    String resultByDeleteRestClient(RestHighLevelClient client, String clusterId, String endPoint) throws IOException;
+
     String resultByPutRestClient(RestHighLevelClient client, String clusterId, String endPoint, String body) throws Exception;
 
     String getLogIndexPrefix(boolean isPodLog);
@@ -101,4 +103,11 @@ public interface EsService {
      * @return
      */
     String getLogSaveTime(String clusterId);
+
+    /**
+     * 取消日志最大保留时间
+     * @param clusterId
+     * @param logSaveTime
+     */
+    void deleteLogSaveTime(String clusterId, String logSaveTime);
 }

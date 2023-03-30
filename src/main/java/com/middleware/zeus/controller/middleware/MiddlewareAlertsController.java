@@ -38,7 +38,7 @@ public class MiddlewareAlertsController {
     })
     @GetMapping("/used")
     @Authority(power = 1)
-    public BaseResult<List<MiddlewareAlertsDTO>> listUsedRules(@PathVariable("clusterId") String clusterId,
+    public BaseResult<List<MiddlewareAlertsDTO>> listUsedRules(@PathVariable(value = "clusterId",required = false) String clusterId,
                                                                @PathVariable(value = "namespace", required = false) String namespace,
                                                                @PathVariable(value = "middlewareName", required = false) String middlewareName,
                                                                @RequestParam(value = "lay") String lay,

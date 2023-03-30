@@ -1034,7 +1034,11 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     public String getManagePlatformServicePort(String clusterId, String namespace, String name, String type) {
         if (type.equals(MiddlewareTypeEnum.ELASTIC_SEARCH.getType())) {
             JSONObject values = helmChartService.getInstalledValues(name, namespace, clusterService.findById(clusterId));
-            return values.getJSONObject("port").getString("esKibanaPort");
+            if (values.getJSONObject("port") != null && values.getJSONObject("port").containsKey("esKibanaPort")) {
+                return values.getJSONObject("port").getString("esKibanaPort");
+            } else {
+                return "5200";
+            }
         } else if (type.equals(MiddlewareTypeEnum.KAFKA.getType())) {
             return "9000";
         } else if (type.equals(MiddlewareTypeEnum.ROCKET_MQ.getType())) {
