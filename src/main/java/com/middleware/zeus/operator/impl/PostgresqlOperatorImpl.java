@@ -429,7 +429,9 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             return;
         }
         // 去掉末尾的逗号
-        sb.deleteCharAt(sb.length() - 1);
+        if (sb.toString().endsWith(",")) {
+            sb.deleteCharAt(sb.length() - 1);
+        }
         // 更新helm
         helmChartService.upgrade(middleware, sb.toString(), cluster);
 
