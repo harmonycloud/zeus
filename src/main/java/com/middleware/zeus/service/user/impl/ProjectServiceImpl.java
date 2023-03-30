@@ -110,7 +110,9 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
     @Override
     public List<ProjectDto> list(String organId) {
         QueryWrapper<BeanProject> wrapper = new QueryWrapper<>();
-        wrapper.eq("organ_id", organId);
+        if (StringUtils.isNotEmpty(organId)){
+            wrapper.eq("organ_id", organId);
+        }
         List<BeanProject> beanProjectList = beanProjectMapper.selectList(wrapper);
         return beanProjectList.stream().map(bean -> {
             ProjectDto projectDto = new ProjectDto();
