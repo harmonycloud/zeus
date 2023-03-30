@@ -336,7 +336,7 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
      * 绑定或解绑超级管理员
      */
     public void bindAdmin(UserDto userDto) {
-        // 注释权限判断代码   使所有超级管理员用户可操作分配超级管理员角色
+        //todo 注释权限判断代码   使所有超级管理员用户可操作分配超级管理员角色
         /*String username =
                 JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue().getString(USERNAME);
         if (!ADMIN.equals(username)) {
@@ -366,6 +366,7 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
                     userRole.setRoleName("组织管理员");
                     userRole.setOrganId(organizationUser.getOrganId());
                     userRole.setRoleId(organizationUser.getRoleId());
+                    userRole.setWeight(5);
                     return userRole;
                 }).collect(Collectors.toList()));
         if (!CollectionUtils.isEmpty(userRoleList)) {

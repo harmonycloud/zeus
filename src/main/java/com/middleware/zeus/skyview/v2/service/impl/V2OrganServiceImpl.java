@@ -87,7 +87,7 @@ public class V2OrganServiceImpl implements V2OrganService {
             for (UserDto userDto : userDtoList){
                 boolean flag =  organizationDto.getUserDtoList().stream().anyMatch(user -> user.getUserName().equals(userDto.getUserName()));
                 if (flag){
-                    userDto.setRoleId(roleService.getOrganManagerRoleId());
+                    userDto.setRoleId(roleService.getOrganManagerRoleId().getId());
                 }
             }
         }

@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import com.middleware.caas.common.model.user.*;
 import com.middleware.caas.common.util.ThreadPoolExecutorFactory;
+import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.zeus.service.user.OrganizationService;
 import com.middleware.zeus.skyview.v2.service.V2OrganService;
 import org.apache.commons.lang3.StringUtils;
@@ -78,6 +79,18 @@ public class Skyview2ProjectServiceImpl extends AbstractProjectService implement
                 .filter(projectDto -> currentProjectList.stream()
                     .anyMatch(currentProject -> projectDto.getProjectId().equals(currentProject.getProjectId())))
                 .collect(Collectors.toList());
+            for (ProjectDto projectDto : projectDtoList) {
+                if (StringUtils.isNotEmpty(projectDto.getPmUserList())
+                    && !projectDto.getPmUserList().contains(CurrentUserRepository.getUser().getUsername())) {
+                    projectDto.setRoleId(2);
+                    projectDto.setRoleName("项目管理员");
+                    projectDto.setRoleWeight(3);
+                } else {
+                    projectDto.setRoleId(3);
+                    projectDto.setRoleName("运维人员");
+                    projectDto.setRoleWeight(4);
+                }
+            }
         }
         return projectDtoList;
     }

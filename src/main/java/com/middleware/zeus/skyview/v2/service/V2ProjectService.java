@@ -2,6 +2,7 @@ package com.middleware.zeus.skyview.v2.service;
 
 import com.middleware.caas.common.model.middleware.Namespace;
 import com.middleware.caas.common.model.user.ProjectDto;
+import com.middleware.caas.common.model.user.UserRole;
 
 import java.util.List;
 
@@ -44,5 +45,13 @@ public interface V2ProjectService {
      * @return List<ProjectDto>
      */
     ProjectDto get(String organId, String projectId, Boolean includeNsCount, Boolean includeQuota);
+
+    /**
+     * 查询项目列表(包含用户权限过滤)
+     * @param projectId 项目id
+     *
+     * @return List<ProjectDto>
+     */
+    UserRole switchProject(String projectId);
 
 }

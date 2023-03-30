@@ -6,6 +6,7 @@ import static com.middleware.caas.common.constants.user.UserConstant.USERNAME;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.middleware.zeus.bean.user.BeanRole;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -132,6 +133,8 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         UserDto userDto = userService.getUserDto(user.getString(USERNAME));
         Map<String, UserRole> userRoleMap =
                 userDto.getUserRoleList().stream().filter(userRole -> userRole.getProjectId()!=null).collect(Collectors.toMap(UserRole::getProjectId, u -> u));
+        // 获取组织管理员信息
+        BeanRole role = roleService.getOrganManagerRoleId();
         // 判断是否为admin,并进行过滤
         if (!userDto.getIsAdmin()) {
             list = list.stream()
@@ -139,7 +142,7 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
                     .anyMatch(userRole -> StringUtils.isNotEmpty(userRole.getOrganId())
                         && userRole.getOrganId().equals(organId)
                         && ((userRole.getRoleId() != null
-                            && userRole.getRoleId().equals(roleService.getOrganManagerRoleId()))
+                            && userRole.getRoleId().equals(role.getId()))
                             || (StringUtils.isNotEmpty(userRole.getProjectId())
                                 && userRole.getProjectId().equals(projectDto.getProjectId())))))
                 .collect(Collectors.toList());
@@ -177,6 +180,10 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
                 if (userRoleMap.containsKey(projectDto.getProjectId())){
                     projectDto.setRoleId(userRoleMap.get(projectDto.getProjectId()).getRoleId());
                     projectDto.setRoleName(userRoleMap.get(projectDto.getProjectId()).getRoleName());
+                }else {
+                    projectDto.setRoleId(role.getId());
+                    projectDto.setRoleName(role.getName());
+                    projectDto.setRoleWeight(role.getWeight());
                 }
             }
             // 设置备份服务器

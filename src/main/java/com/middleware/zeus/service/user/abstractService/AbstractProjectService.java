@@ -223,7 +223,7 @@ public abstract class AbstractProjectService {
                     .anyMatch(userRole -> StringUtils.isNotEmpty(userRole.getOrganId())
                         && userRole.getOrganId().equals(organId)
                         && ((userRole.getRoleId() != null
-                            && userRole.getRoleId().equals(roleService.getOrganManagerRoleId()))
+                            && userRole.getRoleId().equals(roleService.getOrganManagerRoleId().getId()))
                             || (StringUtils.isNotEmpty(userRole.getProjectId())
                                 && userRole.getProjectId().equals(projectDto.getProjectId())))))
                 .collect(Collectors.toList());

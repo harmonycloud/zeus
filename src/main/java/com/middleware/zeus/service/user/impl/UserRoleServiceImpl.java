@@ -58,6 +58,7 @@ public class UserRoleServiceImpl implements UserRoleService {
             UserRole userRole = new UserRole();
             BeanUtils.copyProperties(beanUserRole, userRole);
             userRole.setRoleName(roleDtoMap.get(beanUserRole.getRoleId()).getName());
+            userRole.setWeight(roleDtoMap.get(beanUserRole.getRoleId()).getWeight());
             userRole.setPower(roleDtoMap.get(beanUserRole.getRoleId()).getPower());
             return userRole;
         }).collect(Collectors.toList());

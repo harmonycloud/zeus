@@ -5,6 +5,7 @@ import java.util.List;
 import com.middleware.caas.common.model.user.ResourceMenuDto;
 import com.middleware.caas.common.model.user.RoleDto;
 import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.zeus.bean.user.BeanRole;
 
 /**
  * @author xutianhong
@@ -72,6 +73,6 @@ public interface RoleService {
      *
      * @return Integer
      */
-    Integer getOrganManagerRoleId();
+    BeanRole getOrganManagerRoleId();
 
 }

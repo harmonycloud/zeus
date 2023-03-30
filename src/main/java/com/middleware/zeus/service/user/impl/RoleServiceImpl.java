@@ -241,13 +241,9 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public Integer getOrganManagerRoleId() {
+    public BeanRole getOrganManagerRoleId() {
         QueryWrapper<BeanRole> wrapper = new QueryWrapper<BeanRole>().eq("weight", 2);
-        BeanRole role = beanRoleMapper.selectOne(wrapper);
-        if (role == null){
-            return null;
-        }
-        return role.getId();
+        return beanRoleMapper.selectOne(wrapper);
     }
 
     /**

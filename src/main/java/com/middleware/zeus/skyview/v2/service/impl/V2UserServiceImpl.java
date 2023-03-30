@@ -84,7 +84,7 @@ public class V2UserServiceImpl implements V2UserService {
                 CaasRole caasRole = CaasRole.findByName(project.getString("roleName"));
                 if (caasRole != null){
                     if (caasRole.getId() == 5){
-                        userDto.setRoleId(roleService.getOrganManagerRoleId());
+                        userDto.setRoleId(roleService.getOrganManagerRoleId().getId());
                         organMap.put(organId, userRole.getOrganName());
                     }else {
                         userDto.setRoleId(caasRole.getId());

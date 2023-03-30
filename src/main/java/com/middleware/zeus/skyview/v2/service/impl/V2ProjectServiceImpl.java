@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 
 import com.middleware.caas.common.enums.CaasRole;
 import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.caas.common.model.user.UserRole;
+import com.middleware.zeus.bean.user.BeanRole;
 import com.middleware.zeus.service.user.RoleService;
 import com.middleware.zeus.util.ZeusCurrentUser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,6 +76,12 @@ public class V2ProjectServiceImpl implements V2ProjectService {
         return convertProject(res.getData());
     }
 
+    @Override
+    public UserRole switchProject(String projectId) {
+        CaasResult<JSONArray> res = v2ProjectServiceClient.switchProject(ZeusCurrentUser.getCaasToken(), projectId);
+        return convertUserRole(res.getData());
+    }
+
     public ProjectDto convertProject(JSONObject project) {
         ProjectDto projectDto = new ProjectDto();
         projectDto.setProjectId(project.getString("projectId"));
@@ -92,6 +100,17 @@ public class V2ProjectServiceImpl implements V2ProjectService {
             JSONArray userArray = project.getJSONArray("userDataList");
             for (int i = 0; i < userArray.size(); ++i){
                 JSONObject user = userArray.getJSONObject(i);
+                // 过滤已添加用户，以项目管理员优先
+                boolean flag =
+                    userDtoList.stream().anyMatch(userDto -> userDto.getUserName().equals(user.getString("username")));
+                if (flag) {
+                    if (user.getJSONObject("role").getString("name").equals(CaasRole.PM.getName())) {
+                        userDtoList.removeIf(userDto -> userDto.getUserName().equals(user.getString("username")));
+                    } else {
+                        continue;
+                    }
+                }
+
                 UserDto userDto = new UserDto();
                 userDto.setUserName(user.getString("username"));
                 userDto.setAliasName(user.getString("nickName"));
@@ -101,7 +120,8 @@ public class V2ProjectServiceImpl implements V2ProjectService {
                 CaasRole caasRole = CaasRole.findByName(role.getString("name"));
                 if (caasRole != null){
                     if (caasRole.getId() == 5){
-                        userDto.setRoleId(roleService.getOrganManagerRoleId());
+                        BeanRole beanRole = roleService.getOrganManagerRoleId();
+                        userDto.setRoleId(beanRole.getId());
                     }else {
                         userDto.setRoleId(caasRole.getId());
                     }
@@ -109,6 +129,11 @@ public class V2ProjectServiceImpl implements V2ProjectService {
                 }
                 userDtoList.add(userDto);
             }
+
+            if (project.containsKey("pmUsernames")){
+                projectDto.setPmUserList(project.getString("pmUsernames"));
+            }
+
             projectDto.setUserDtoList(userDtoList);
         }
 
@@ -160,5 +185,27 @@ public class V2ProjectServiceImpl implements V2ProjectService {
         namespace.setQuotas(resourceQuotaDo);
 
         return namespace;
+    }
+
+    public UserRole convertUserRole(JSONArray userArray){
+        UserRole userRole = new UserRole();
+
+        if (userArray.stream().anyMatch(user -> JSONObject.parseObject(JSONObject.toJSONString(user)).getString("name")
+            .equals(CaasRole.TM.getName()))) {
+            userRole.setRoleId(CaasRole.TM.getId());
+            userRole.setRoleName(CaasRole.TM.getRoleName());
+            userRole.setWeight(CaasRole.TM.getWeight());
+
+        } else if (userArray.stream().anyMatch(user -> JSONObject.parseObject(JSONObject.toJSONString(user))
+            .getString("name").equals(CaasRole.PM.getName()))) {
+            userRole.setRoleId(CaasRole.PM.getId());
+            userRole.setRoleName(CaasRole.PM.getRoleName());
+            userRole.setWeight(CaasRole.PM.getWeight());
+        } else {
+            userRole.setRoleId(CaasRole.OPS.getId());
+            userRole.setRoleName(CaasRole.OPS.getRoleName());
+            userRole.setWeight(CaasRole.OPS.getWeight());
+        }
+        return userRole;
     }
 }

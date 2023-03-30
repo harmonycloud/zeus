@@ -29,6 +29,10 @@ public interface V2ProjectServiceClient {
     CaasResult<JSONObject> switchTenants(@Var("token") String token,
                                          @Var("organId") String organId);
 
+    @Get(url = "#{system.skyview.prefix}/user/switchProject", headers = {"Authorization: ${token}"})
+    CaasResult<JSONArray> switchProject(@Var("token") String token,
+                                         @Var("projectId") String projectId);
+
     @Get(url = "#{system.skyview.prefix}/caas/tenants/{organId}/projects/{projectId}/namespaces")
     CaasResult<JSONArray> nsList(@Var("organId") String organId,
                                  @Var("projectId") String projectId,
