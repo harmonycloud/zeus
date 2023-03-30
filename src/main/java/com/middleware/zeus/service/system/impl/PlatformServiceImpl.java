@@ -66,10 +66,6 @@ public class PlatformServiceImpl implements PlatformService {
         DisasterRecoveryDto res = new DisasterRecoveryDto();
         JSONObject values = helmChartService.getZeusMysqlInstallValues();
 
-        if (values == null){
-            return new DisasterRecoveryDto().setIsMaster(true);
-        }
-
         // 是否主平台
         res.setIsMaster("master-slave".equals(values.getString("type")));
 
