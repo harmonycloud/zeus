@@ -366,7 +366,7 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
                     userRole.setRoleName("组织管理员");
                     userRole.setOrganId(organizationUser.getOrganId());
                     userRole.setRoleId(organizationUser.getRoleId());
-                    userRole.setWeight(5);
+                    userRole.setWeight(2);
                     return userRole;
                 }).collect(Collectors.toList()));
         if (!CollectionUtils.isEmpty(userRoleList)) {
