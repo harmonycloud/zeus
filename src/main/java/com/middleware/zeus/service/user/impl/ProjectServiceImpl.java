@@ -180,6 +180,7 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
                 if (userRoleMap.containsKey(projectDto.getProjectId())){
                     projectDto.setRoleId(userRoleMap.get(projectDto.getProjectId()).getRoleId());
                     projectDto.setRoleName(userRoleMap.get(projectDto.getProjectId()).getRoleName());
+                    projectDto.setRoleWeight(userRoleMap.get(projectDto.getProjectId()).getWeight());
                 }else {
                     projectDto.setRoleId(role.getId());
                     projectDto.setRoleName(role.getName());
@@ -378,6 +379,8 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         if (!CollectionUtils.isEmpty(projectQuota.getQuotaList())) {
             platformQuotaService.remove(PROJECT, projectQuota.getProjectId(), null, CPU, MEMORY, STORAGE);
             for (ResourceQuotaDo resourceQuotaDo : projectQuota.getQuotaList()){
+                // todo
+                checkResource(projectQuota.getQuotaList());
                 platformQuotaService.allocate(PROJECT, projectQuota.getProjectId(), resourceQuotaDo);
             }
         }
@@ -701,6 +704,10 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         imageRepositoryService.createImagePullSecret(clusterId, namespace, imageRepositoryDTOS);
         List<Secret> allImagePullSecret = imageRepositoryService.listImagePullSecret(clusterId, namespace);
         serviceAccountService.bindImagePullSecret(clusterId, namespace, serviceAccount, allImagePullSecret);
+    }
+
+    public void checkResource(List<ResourceQuotaDo> resourceQuotaDoList){
+
     }
 
 }
