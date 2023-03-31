@@ -121,10 +121,10 @@ public abstract class AbstractUserService {
         List<ResourceMenuDto> firstMenuList = resourceMenuDtoMap.get(0);
         resourceMenuDtoMap.remove(0);
         firstMenuList.forEach(firstMenu -> {
-            if (!resourceMenuDtoMap.containsKey(firstMenu.getId())) {
+            if (!resourceMenuDtoMap.containsKey(firstMenu.getWeight())) {
                 return;
             }
-            firstMenu.setSubMenu(resourceMenuDtoMap.get(firstMenu.getId()));
+            firstMenu.setSubMenu(resourceMenuDtoMap.get(firstMenu.getWeight()));
             Collections.sort(firstMenu.getSubMenu());
         });
         Collections.sort(firstMenuList);
