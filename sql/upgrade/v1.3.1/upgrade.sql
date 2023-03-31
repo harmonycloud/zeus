@@ -65,7 +65,34 @@ alter table project add organ_id varchar(64) CHARACTER SET utf8mb4 COLLATE utf8m
 -- 初始化组织管理员角色
 insert into `role` values(null, '组织管理员', '拥有组织管理权限', null, null, null);
 -- menu修改
-update `resource_menu` set name='organizationManagement',alias_name='组织管理',url='systemManagement/organizationManagement' where id='19';
+delete from `resource_menu`;
+INSERT INTO `resource_menu` VALUES (1,'dataOverview','数据总览','dataOverview',1,'icon-shujuzonglan',0,NULL);
+INSERT INTO `resource_menu` VALUES (2,'middlewareRepository','中间件市场','middlewareRepository',2,'icon-cangku',0,NULL);
+INSERT INTO `resource_menu` VALUES (3,'myProject','我的项目','myProject',4,'icon-wodexiangmu',0,NULL);
+INSERT INTO `resource_menu` VALUES (4,'serviceList','服务列表','serviceList',6,'icon-fuwuliebiao',0,NULL);
+INSERT INTO `resource_menu` VALUES (5,'serviceAvailable','服务暴露','serviceAvailable',7,'icon-fuwutiaokuan',0,NULL);
+INSERT INTO `resource_menu` VALUES (6,'storageManagement','存储管理','storageManagement',8,'icon-cunchuguanli',0,NULL);
+INSERT INTO `resource_menu` VALUES (7,'activeActive','同城双活','activeActive',9,'icon-gky',0,NULL);
+INSERT INTO `resource_menu` VALUES (8,'backupService','备份服务','backupService',10,'icon-beifenfuwu',0,NULL);
+INSERT INTO `resource_menu` VALUES (9,'monitorAlarm','监控告警','monitorAlarm',11,'icon-gaojingshijian',0,NULL);
+INSERT INTO `resource_menu` VALUES (10,'disasterBackup','灾备中心','disasterBackup',12,'icon-rongzaibeifen',0,NULL);
+INSERT INTO `resource_menu` VALUES (11,'systemManagement','系统管理','systemManagement',13,'icon-shezhi01',0,NULL);
+INSERT INTO `resource_menu` VALUES (12,'backupTask','备份任务','backupService/backupTask',101,'icon-fuwutiaokuan',10,NULL);
+INSERT INTO `resource_menu` VALUES (13,'backupServer','备份服务器','backupService/backupServer',102,'icon-fuwutiaokuan',10,NULL);
+INSERT INTO `resource_menu` VALUES (14,'dataMonitor','数据监控','monitorAlarm/dataMonitor',111,NULL,11,NULL);
+INSERT INTO `resource_menu` VALUES (15,'logDetail','日志详情','monitorAlarm/logDetail',112,NULL,11,NULL);
+INSERT INTO `resource_menu` VALUES (16,'alarmCenter','服务告警','monitorAlarm/alarmCenter',113,NULL,11,NULL);
+INSERT INTO `resource_menu` VALUES (17,'resourcePoolManagement','集群管理','systemManagement/resourcePoolManagement',121,NULL,12,NULL);
+INSERT INTO `resource_menu` VALUES (18,'userManagement','用户管理','systemManagement/userManagement',122,NULL,12,NULL);
+INSERT INTO `resource_menu` VALUES (19,'organizationManagement','组织管理','systemManagement/organizationManagement',123,NULL,12,NULL);
+INSERT INTO `resource_menu` VALUES (20,'roleManagement','角色管理','systemManagement/roleManagement',124,NULL,12,NULL);
+INSERT INTO `resource_menu` VALUES (21,'systemAlarm','系统告警','systemManagement/systemAlarm',125,NULL,12,NULL);
+INSERT INTO `resource_menu` VALUES (22,'operationAudit','操作审计','systemManagement/operationAudit',116,NULL,12,NULL);
+INSERT INTO `resource_menu` VALUES (23,'organUserManagement','成员管理','organUserManagement',5,'icon-zuzhichengyuanguanli1',0,NULL);
+INSERT INTO `resource_menu` VALUES (24,'myOrganizationManagement','组织管理','myOrganizationManagement',3,'icon-myOrganizationManagement',0,NULL);
+
+
+
 -- 修改角色表列
 alter table role change parent weight int null comment '权重';
 update `role` set weight='1' where name='超级管理员';
@@ -83,6 +110,10 @@ INSERT INTO `resource_menu_role` VALUES (null,1,23,0);
 INSERT INTO `resource_menu_role` VALUES (null,2,23,0);
 INSERT INTO `resource_menu_role` VALUES (null,3,23,0);
 INSERT INTO `resource_menu_role` VALUES (null,4,23,0);
+INSERT INTO `resource_menu_role` VALUES (null,1,24,0);
+INSERT INTO `resource_menu_role` VALUES (null,2,24,0);
+INSERT INTO `resource_menu_role` VALUES (null,3,24,0);
+INSERT INTO `resource_menu_role` VALUES (null,4,24,0);
 INSERT INTO `resource_menu_role` VALUES (null,5,1,0);
 INSERT INTO `resource_menu_role` VALUES (null,5,2,0);
 INSERT INTO `resource_menu_role` VALUES (null,5,3,1);
@@ -106,6 +137,7 @@ INSERT INTO `resource_menu_role` VALUES (null,5,20,0);
 INSERT INTO `resource_menu_role` VALUES (null,5,21,0);
 INSERT INTO `resource_menu_role` VALUES (null,5,22,0);
 INSERT INTO `resource_menu_role` VALUES (null,5,23,1);
+INSERT INTO `resource_menu_role` VALUES (null,5,24,1);
 
 --20230323 wangpenglei
 --灾备中心更名为平台灾备
