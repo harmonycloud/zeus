@@ -167,13 +167,15 @@ public abstract class AbstractProjectService {
         UserDto userDto = userService.getUserDto(username);
         Map<String, String> power = new HashMap<>();
         if (!userDto.getIsAdmin()
-                && userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getProjectId().equals(projectId))) {
+            && userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getProjectId().equals(projectId))) {
             power
-                    .putAll(userDto.getUserRoleList().stream().filter(userRole -> userRole.getProjectId().equals(projectId))
-                            .collect(Collectors.toList()).get(0).getPower());
+                .putAll(
+                    userDto.getUserRoleList().stream()
+                        .filter(userRole -> StringUtils.isNotEmpty(userRole.getProjectId())
+                            && userRole.getProjectId().equals(projectId))
+                        .collect(Collectors.toList()).get(0).getPower());
         }
         // 过滤获取拥有权限的中间件
-        // todo 确认开启观云台时逻辑是否自洽
         if (!CollectionUtils.isEmpty(power)) {
             mwTypeSet = mwTypeSet.stream().filter(
                     mwType -> power.keySet().stream().anyMatch(key -> !"0000".equals(power.get(key)) && mwType.equals(key)))

@@ -150,7 +150,7 @@ public abstract class AbstractUserService {
         if (flag) {
             power.putAll(userDto
                 .getUserRoleList().stream().filter(userRole -> userRole.getOrganId().equals(organId)
-                    && StringUtils.isNotEmpty(projectId) && userRole.getProjectId().equals(projectId))
+                    && StringUtils.isNotEmpty(userRole.getProjectId()) && userRole.getProjectId().equals(projectId))
                 .collect(Collectors.toList()).get(0).getPower());
         }
 
