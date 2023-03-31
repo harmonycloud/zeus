@@ -296,8 +296,8 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
             }
         }).peek(userDto -> {
             boolean flag = !CollectionUtils.isEmpty(userDto.getUserRoleList()) && StringUtils.isNotEmpty(organId)
-                && userDto.getUserRoleList().stream().anyMatch(
-                    userRole -> userRole.getOrganId().equals(organId) && StringUtils.isEmpty(userRole.getProjectId()));
+                && userDto.getUserRoleList().stream().anyMatch(userRole -> StringUtils.isNotEmpty(userRole.getOrganId())
+                    && userRole.getOrganId().equals(organId) && StringUtils.isEmpty(userRole.getProjectId()));
             if (flag) {
                 List<UserRole> userRoleList = userDto
                     .getUserRoleList().stream().filter(ur -> StringUtils.isNotEmpty(ur.getOrganId())
