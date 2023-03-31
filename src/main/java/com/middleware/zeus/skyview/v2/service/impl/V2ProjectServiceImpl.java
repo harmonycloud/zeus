@@ -151,11 +151,13 @@ public class V2ProjectServiceImpl implements V2ProjectService {
         namespace.setProjectName(ns.getString("projectName"));
 
         ResourceQuotaDo resourceQuotaDo = new ResourceQuotaDo();
+        resourceQuotaDo.setClusterId(ns.getString("clusterId"));
         if (ns.containsKey(CPU) && !CollectionUtils.isEmpty(ns.getJSONArray(CPU))) {
             JSONArray cpuArray = ns.getJSONArray(CPU);
             QuotaBase cpu = new QuotaBase();
             cpu.setRequest(cpuArray.getDouble(0));
             cpu.setUsed(cpuArray.getDouble(1));
+            resourceQuotaDo.setCpu(cpu);
         }
 
         if (ns.containsKey(MEMORY) && !CollectionUtils.isEmpty(ns.getJSONArray(MEMORY))) {
@@ -163,6 +165,7 @@ public class V2ProjectServiceImpl implements V2ProjectService {
             QuotaBase memory = new QuotaBase();
             memory.setUsed(memoryArray.getDouble(1));
             memory.setRequest(memoryArray.getDouble(0));
+            resourceQuotaDo.setMemory(memory);
         }
 
         if (ns.containsKey("storageclasses")) {
@@ -176,6 +179,7 @@ public class V2ProjectServiceImpl implements V2ProjectService {
                     QuotaBase storage = new QuotaBase();
                     storage.setRequest(storageArray.getDouble(0));
                     storage.setUsed(storageArray.getDouble(1));
+                    storageQuota.setStorage(storage);
                     storageQuotaList.add(storageQuota);
                 }
             }

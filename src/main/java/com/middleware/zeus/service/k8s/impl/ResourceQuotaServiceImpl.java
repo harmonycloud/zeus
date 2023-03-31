@@ -126,8 +126,11 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
     @Override
     public ResourceQuotaDo calculateQuota(List<ResourceQuotaDo> resourceQuotaDoList) {
         double cpu = 0.0;
+        double usedCpu = 0.0;
         double memory = 0.0;
+        double usedMemory = 0.0;
         Map<String, Double> storageMap = new HashMap<>();
+        Map<String, Double> usedStorageMap = new HashMap<>();
         Map<String, String> storageIdMap = new HashMap<>();
         for (ResourceQuotaDo quota : resourceQuotaDoList){
             if (quota != null){
@@ -137,15 +140,30 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
                 if (quota.getMemory() != null && quota.getMemory().getRequest() != null){
                     memory += quota.getMemory().getRequest();
                 }
+                if (quota.getCpu() != null && quota.getCpu().getUsed() != null){
+                    usedCpu += quota.getCpu().getUsed();
+                }
+                if (quota.getMemory() != null && quota.getMemory().getUsed() != null){
+                    usedMemory += quota.getMemory().getUsed();
+                }
                 // 获取已分配storage
                 if (!CollectionUtils.isEmpty(quota.getStorageList())){
                     for (StorageQuota storageQuota : quota.getStorageList()){
+                        // 设置request
                         if (storageMap.containsKey(storageQuota.getName())){
                             Double request = storageMap.get(storageQuota.getName());
                             storageMap.put(storageQuota.getName(), request + storageQuota.getStorage().getRequest());
                         }else {
                             storageMap.put(storageQuota.getName(), storageQuota.getStorage().getRequest());
                         }
+                        // 设置used
+                        if (usedStorageMap.containsKey(storageQuota.getName())){
+                            Double used = usedStorageMap.get(storageQuota.getName());
+                            usedStorageMap.put(storageQuota.getName(), used + storageQuota.getStorage().getUsed());
+                        }else {
+                            usedStorageMap.put(storageQuota.getName(), storageQuota.getStorage().getUsed());
+                        }
+                        
                         storageIdMap.put(storageQuota.getName(), storageQuota.getStorageId());
                     }
                 }
@@ -154,6 +172,8 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
         ResourceQuotaDo resourceQuotaDo = new ResourceQuotaDo();
         resourceQuotaDo.getCpu().setRequest(cpu);
         resourceQuotaDo.getMemory().setRequest(memory);
+        resourceQuotaDo.getCpu().setUsed(usedCpu);
+        resourceQuotaDo.getMemory().setUsed(usedMemory);
         // 设置storage quota
         List<StorageQuota> storageList = new ArrayList<>();
         for (String key : storageMap.keySet()){
@@ -162,6 +182,7 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
             storageQuota.setStorageId(storageIdMap.get(key));
             QuotaBase storage = new QuotaBase();
             storage.setRequest(storageMap.get(key));
+            storage.setUsed(usedStorageMap.get(key));
             storageQuota.setStorage(storage);
             storageList.add(storageQuota);
         }
