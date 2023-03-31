@@ -90,7 +90,7 @@ public abstract class AbstractOrganizationService {
             throw new BusinessException(ErrorMessage.ORGANIZATION_BACKUP_SERVER_USING);
         }
         QueryWrapper<BeanOrganizationBackupServer> wrapper =
-                new QueryWrapper<BeanOrganizationBackupServer>().eq("backupServerId", backupServerId);
+                new QueryWrapper<BeanOrganizationBackupServer>().eq("backup_server_id", backupServerId);
         beanOrganizationBackupServerMapper.delete(wrapper);
     }
 
