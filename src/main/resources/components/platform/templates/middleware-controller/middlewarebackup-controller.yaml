@@ -146,12 +146,6 @@ spec:
         env:
         - name: CRD_GROUP
           value: "{{ .Values.global.crdGroup }}.cn"
-        - name: CONFIG_DIR
-          value: "/tmp/middleware-backupcontroller-config"
-        - name: REMOVE_BINLOG
-        {{- if eq  .Values.global.middlewarebackup_controller.removeBinlog "yes"}}
-          value: "yes"
-        {{- end }}
         command:
         - /manager
         image: "{{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.image }}:{{ .Values.global.middlewarebackup_controller.tag }}"
@@ -186,8 +180,6 @@ spec:
         volumeMounts:
         - mountPath: /operation
           name: operation
-        - mountPath: /tmp/middleware-backupcontroller-config
-          name: config
       volumes:
       - configMap:
           defaultMode: 420
@@ -198,9 +190,6 @@ spec:
               path: unlock-tables.sql
           name: backup-operation
         name: operation
-      - name: config
-        configMap:
-          name: middleware-backupcontroller-config
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
@@ -250,10 +239,3 @@ spec:
       serviceAccount: middlewarebackup-controller
       serviceAccountName: middlewarebackup-controller
       terminationGracePeriodSeconds: 10
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: middleware-backupcontroller-config
-data:
-{{ (tpl (.Files.Glob "middleware-config/*").AsConfig . ) | indent 2 }}
