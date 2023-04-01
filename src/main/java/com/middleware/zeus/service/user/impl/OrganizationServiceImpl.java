@@ -235,7 +235,7 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
         List<String> uidList = projectDtoList.stream().map(ProjectDto::getProjectId).collect(Collectors.toList());
         // 校验存储是否能存在已分配
         List<BeanPlatformQuota> beanPlatformQuotaList = platformQuotaService.findQuota(PROJECT, uidList, clusterId, storageId, STORAGE);
-        if (CollectionUtils.isEmpty(beanPlatformQuotaList)){
+        if (!CollectionUtils.isEmpty(beanPlatformQuotaList)){
             throw new BusinessException(ErrorMessage.ORGANIZATION_STORAGE_USING);
         }
         // 删除存储
