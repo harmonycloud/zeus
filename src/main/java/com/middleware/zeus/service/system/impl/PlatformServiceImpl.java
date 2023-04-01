@@ -70,6 +70,14 @@ public class PlatformServiceImpl implements PlatformService {
         if (res.getLocal() != null){
             res.getLocal().setPhase(getZusMysqlPhase());
         }
+        // 设置远程数据库状态
+        if (res.getRelation() != null) {
+            JSONObject relationMysqlPhase =
+                platformClient.getRelationMysqlPhase(CurrentUserRepository.getUser().getToken());
+            if (relationMysqlPhase.getBoolean("success") && relationMysqlPhase.containsKey("data")) {
+                res.getRelation().setPhase(relationMysqlPhase.getString("data"));
+            }
+        }
 
         // 上次平台灾备切换时间
         if (values.containsKey("lastPlatformSwitchTime")) {
@@ -169,18 +177,18 @@ public class PlatformServiceImpl implements PlatformService {
             newValues.getJSONObject("args").put("relation", addrInfo);
             helmChartService.upgradeZeusMysql(values, newValues);
             if ("master-slave".equals(values.getString("type")) && values.getJSONObject("args").containsKey("local")) {
-                platformClient.setAddress(CurrentUserRepository.getUser().getToken(), info);
+                platformClient.setAddress(CurrentUserRepository.getUser().getToken(), info.setIsRelation(false));
                 platformClient.setAddress(CurrentUserRepository.getUser().getToken(),
-                    convertParam(values.getJSONObject("args").getJSONObject("local")));
+                    convertParam(values.getJSONObject("args").getJSONObject("local")).setIsRelation(true));
             }
         } else {
             newValues.getJSONObject("args").put("local", addrInfo);
             helmChartService.upgradeZeusMysql(values, newValues);
             if ("master-slave".equals(values.getString("type"))
                 && values.getJSONObject("args").containsKey("relation")) {
-                platformClient.setAddress(CurrentUserRepository.getUser().getToken(), info);
+                platformClient.setAddress(CurrentUserRepository.getUser().getToken(), info.setIsRelation(true));
                 platformClient.setAddress(CurrentUserRepository.getUser().getToken(),
-                    convertParam(values.getJSONObject("args").getJSONObject("local")));
+                    convertParam(values.getJSONObject("args").getJSONObject("local")).setIsRelation(false));
             }
         }
     }
@@ -189,9 +197,6 @@ public class PlatformServiceImpl implements PlatformService {
     public DisasterRecoveryDto getMysqlReplicateStatus() {
 
         DisasterRecoveryDto res = new DisasterRecoveryDto();
-        // 获取服务状态
-        log.info("获取服务状态");
-        res.setLocal(new DisasterRecoveryInfo().setPhase(getZusMysqlPhase()));
 
         log.info("获取同步器状态");
         MysqlReplicateCR mr =
@@ -217,15 +222,6 @@ public class PlatformServiceImpl implements PlatformService {
         return res;
     }
 
-    @Override
-    public String getMiddlewareUid() {
-        MysqlCluster mc = mysqlClusterWrapper.get(zeusNamespace, NameConstant.ZEUS_MYSQL);
-        if (mc != null && mc.getMetadata() != null && !CollectionUtils.isEmpty(mc.getMetadata().getLabels())){
-            return mc.getMetadata().getLabels().get("uid");
-        }
-        return null;
-    }
-
     public DisasterRecoveryInfo getLocalPlatformAddress(JSONObject values) {
         if (values == null){
             values = helmChartService.getZeusMysqlInstallValues();
@@ -248,6 +244,11 @@ public class PlatformServiceImpl implements PlatformService {
             return convertParam(values.getJSONObject("args").getJSONObject("relation"));
         }
         return null;
+    }
+
+    @Override
+    public String getRelationMysqlPhase() {
+        return getZusMysqlPhase();
     }
 
     private String getZusMysqlPhase() {

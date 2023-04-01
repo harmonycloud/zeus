@@ -56,10 +56,10 @@ public class DisasterRecoveryController {
         return BaseResult.ok(platformService.getMysqlReplicateStatus());
     }
 
-    @ApiOperation(value = "获取zeus-mysql唯一标识", notes = "获取zeus-mysql唯一标识")
-    @GetMapping("uid")
-    public BaseResult getUid(){
-        return BaseResult.ok(platformService.getMiddlewareUid());
+    @ApiOperation(value = "同步器运行状态", notes = "同步器运行状态")
+    @GetMapping("mysql")
+    public BaseResult getRelationMysqlPhase(){
+        return BaseResult.ok(platformService.getRelationMysqlPhase());
     }
 
 }

@@ -37,13 +37,6 @@ public interface PlatformService {
      */
     DisasterRecoveryDto getMysqlReplicateStatus();
 
-    /**
-     * 获取zeus-mysql唯一标识
-     *
-     * @return String
-     */
-    String getMiddlewareUid();
-
 
     /**
      * 获取远程平台连接地址
@@ -51,4 +44,11 @@ public interface PlatformService {
      * @return String
      */
     DisasterRecoveryInfo getRelationPlatformAddress(JSONObject values);
+
+    /**
+     * 获取远程数据库状态
+     *
+     * @return String
+     */
+    String getRelationMysqlPhase();
 }

@@ -38,4 +38,11 @@ public interface PlatformClient {
     @Post(url = "/api/platform/disasterRecovery/address")
     JSONObject setAddress(@Header("userToken") String userToken,
                           @Body DisasterRecoveryInfo disasterRecoveryInfo);
+
+    /**
+     * 查询远程数据库状态
+     * @return
+     */
+    @Get(url = "/api/platform/disasterRecovery/mysql")
+    JSONObject getRelationMysqlPhase(@Header("userToken") String userToken);
 }
