@@ -1230,12 +1230,12 @@ INSERT INTO `resource_menu` VALUES (13,'backupServer','备份服务器','backupS
 INSERT INTO `resource_menu` VALUES (14,'dataMonitor','数据监控','monitorAlarm/dataMonitor',111,NULL,11,NULL);
 INSERT INTO `resource_menu` VALUES (15,'logDetail','日志详情','monitorAlarm/logDetail',112,NULL,11,NULL);
 INSERT INTO `resource_menu` VALUES (16,'alarmCenter','服务告警','monitorAlarm/alarmCenter',113,NULL,11,NULL);
-INSERT INTO `resource_menu` VALUES (17,'resourcePoolManagement','集群管理','systemManagement/resourcePoolManagement',121,NULL,12,NULL);
-INSERT INTO `resource_menu` VALUES (18,'userManagement','用户管理','systemManagement/userManagement',122,NULL,12,NULL);
-INSERT INTO `resource_menu` VALUES (19,'organizationManagement','组织管理','systemManagement/organizationManagement',123,NULL,12,NULL);
-INSERT INTO `resource_menu` VALUES (20,'roleManagement','角色管理','systemManagement/roleManagement',124,NULL,12,NULL);
-INSERT INTO `resource_menu` VALUES (21,'systemAlarm','系统告警','systemManagement/systemAlarm',125,NULL,12,NULL);
-INSERT INTO `resource_menu` VALUES (22,'operationAudit','操作审计','systemManagement/operationAudit',116,NULL,12,NULL);
+INSERT INTO `resource_menu` VALUES (17,'resourcePoolManagement','集群管理','systemManagement/resourcePoolManagement',131,NULL,13,NULL);
+INSERT INTO `resource_menu` VALUES (18,'userManagement','用户管理','systemManagement/userManagement',132,NULL,13,NULL);
+INSERT INTO `resource_menu` VALUES (19,'organizationManagement','组织管理','systemManagement/organizationManagement',133,NULL,13,NULL);
+INSERT INTO `resource_menu` VALUES (20,'roleManagement','角色管理','systemManagement/roleManagement',134,NULL,13,NULL);
+INSERT INTO `resource_menu` VALUES (21,'systemAlarm','系统告警','systemManagement/systemAlarm',135,NULL,13,NULL);
+INSERT INTO `resource_menu` VALUES (22,'operationAudit','操作审计','systemManagement/operationAudit',136,NULL,13,NULL);
 INSERT INTO `resource_menu` VALUES (23,'organUserManagement','成员管理','organUserManagement',5,'icon-zuzhichengyuanguanli1',0,NULL);
 INSERT INTO `resource_menu` VALUES (24,'myOrganizationManagement','组织概览','myOrganizationManagement',3,'icon-myOrganizationManagement',0,NULL);
 /*!40000 ALTER TABLE `resource_menu` ENABLE KEYS */;
