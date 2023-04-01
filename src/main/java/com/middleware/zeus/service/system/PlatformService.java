@@ -44,9 +44,16 @@ public interface PlatformService {
     String getMiddlewareUid();
 
     /**
-     * 获取备平台连接地址
+     * 获取本地平台连接地址
      *
      * @return String
      */
-    DisasterRecoveryInfo getRelationPlatformAddress(String relation);
+    DisasterRecoveryInfo getLocalPlatformAddress();
+
+    /**
+     * 获取远程平台连接地址
+     *
+     * @return String
+     */
+    DisasterRecoveryInfo getRelationPlatformAddress();
 }

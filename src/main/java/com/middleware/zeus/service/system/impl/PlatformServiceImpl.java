@@ -53,8 +53,6 @@ public class PlatformServiceImpl implements PlatformService {
     private PlatformClient platformClient;
     @Autowired
     private MysqlClusterWrapper mysqlClusterWrapper;
-    @Autowired
-    private SystemConfigService systemConfigService;
 
 
     @Override
@@ -65,23 +63,11 @@ public class PlatformServiceImpl implements PlatformService {
         // 是否主平台
         res.setIsMaster("master-slave".equals(values.getString("type")));
 
-        String local = res.getIsMaster() ? "master_platform" : "slave_platform";
-        String relation = res.getIsMaster() ? "slave_platform" : "master_platform";
+        res.setLocal(getLocalPlatformAddress());
+        res.setRelation(getRelationPlatformAddress());
 
-        // 获取当前访问平台链接地址
-        BeanSystemConfig localPlatformAddress = systemConfigService.getConfig(local + "_address");
-        if (localPlatformAddress != null) {
-            res.setLocal(convertAddress(localPlatformAddress.getConfigValue()));
-            // 获取主平台mysql状态
-            res.getLocal().setPhase(getZusMysqlPhase());
-            res.getLocal().setName(systemConfigService.getConfig(local + "_name").getConfigValue());
-        }
-        // 获取备平台连接地址
-        res.setRelation(getRelationPlatformAddress(relation));
-        BeanSystemConfig relationPlatformName = systemConfigService.getConfig(relation + "_name");
-        if (relationPlatformName != null) {
-            res.getRelation().setName(relationPlatformName.getConfigValue());
-        }
+        // 设置数据库状态
+        res.getLocal().setPhase(getZusMysqlPhase());
 
         // 上次平台灾备切换时间
         if (values.containsKey("lastPlatformSwitchTime")) {
@@ -120,11 +106,11 @@ public class PlatformServiceImpl implements PlatformService {
     }
 
     private void relationSwitch(){
-        BeanSystemConfig conf = systemConfigService.getConfig("slave_platform_address");
-        if (conf == null) {
+        DisasterRecoveryInfo disasterRecoveryInfo = getRelationPlatformAddress();
+        if (disasterRecoveryInfo == null) {
             throw new BusinessException(ErrorMessage.SWITCH_NO_POWER);
         }
-
+        
         log.info("备平台接收切换请求，开始灾备切换");
         try{
             // 关闭数据同步
@@ -170,37 +156,22 @@ public class PlatformServiceImpl implements PlatformService {
 
     @Override
     public void saveAddr(DisasterRecoveryInfo info) {
-        String address =
-            info.getProtocol() + "://" + info.getHost() + (info.getPort() == null ? ":" + info.getPort() : "");
-        // 备平台连接主平台后绑定主平台
         if (info.getIsRelation()) {
-            systemConfigService.saveConfig("slave_platform_address", address);
-            systemConfigService.saveConfig("slave_platform_name", info.getName());
+            // 备平台记录平台信息
+            info.setIsRelation(false);
+            platformClient.setAddress(CurrentUserRepository.getUser().getToken(), info);
         } else {
-            systemConfigService.saveConfig("master_platform_address", address);
-            systemConfigService.saveConfig("master_platform_name", info.getName());
+            JSONObject values = helmChartService.getZeusMysqlInstallValues();
+            JSONObject newValues = JSONObject.parseObject(values.toJSONString());
+            JSONObject addrInfo = new JSONObject();
+            addrInfo.put("protocol", info.getProtocol());
+            addrInfo.put("host", info.getHost());
+            addrInfo.put("port", info.getPort());
+            addrInfo.put("name", info.getName());
+            newValues.getJSONObject("args").put("local", addrInfo);
+            helmChartService.upgradeZeusMysql(values, newValues);
         }
     }
-
-/*    private void saveRelationUid(){
-        try{
-            JSONObject res = platformClient.getUid(request.getHeader("userToken"));
-            if (res != null && res.getBoolean("success")) {
-                log.info("获取备平台uid成功,res={}",res);
-                String uid = res.getString("data");
-                if (StringUtils.isNotBlank(uid)) {
-                    BeanSystemConfig conf = systemConfigService.getConfigForUpdate("backupPlatformUid");
-                    if (conf == null) {
-                        systemConfigService.addConfig("backupPlatformUid", uid);
-                    } else {
-                        systemConfigService.updateConfig("backupPlatformUid",uid);
-                    }
-                }
-            }
-        }catch (Exception e) {
-            throw new BusinessException(ErrorMessage.CONNECT_REMOTE_HOST_FAILED);
-        }
-    }*/
 
     @Override
     public DisasterRecoveryDto getMysqlReplicateStatus() {
@@ -244,11 +215,21 @@ public class PlatformServiceImpl implements PlatformService {
     }
 
     @Override
-    public DisasterRecoveryInfo getRelationPlatformAddress(String relation) {
+    public DisasterRecoveryInfo getLocalPlatformAddress() {
+        JSONObject values = helmChartService.getZeusMysqlInstallValues();
+        // 链接地址信息
+        if (values.containsKey("args") && values.getJSONObject("args").containsKey("local")) {
+            return convertParam(values.getJSONObject("args").getJSONObject("local"));
+        }
+        return null;
+    }
+
+    @Override
+    public DisasterRecoveryInfo getRelationPlatformAddress() {
         // 获取从平台链接地址
-        BeanSystemConfig slavePlatformAddress = systemConfigService.getConfig(relation + "_address");
-        if (slavePlatformAddress != null) {
-           return convertAddress(slavePlatformAddress.getConfigValue());
+        JSONObject res = platformClient.getAddress(CurrentUserRepository.getUser().getToken());
+        if (res.getBoolean("success") && res.containsKey("data") && res.getJSONObject("data") != null) {
+            return JSONObject.toJavaObject(res.getJSONObject("data"), DisasterRecoveryInfo.class);
         }
         return null;
     }
@@ -266,22 +247,14 @@ public class PlatformServiceImpl implements PlatformService {
         return "Unknown";
     }
 
-    public DisasterRecoveryInfo convertAddress(String address){
-        DisasterRecoveryInfo disasterRecoveryInfo = new DisasterRecoveryInfo();
-        if (address.contains("https://")){
-            address = address.replace("https://", "");
-            disasterRecoveryInfo.setProtocol("https");
-        }else {
-            address = address.replace("http://", "");
-            disasterRecoveryInfo.setProtocol("http");
+    private DisasterRecoveryInfo convertParam(JSONObject info) {
+        if (info == null) {
+            return null;
         }
-        String[] url = address.split(":");
-        disasterRecoveryInfo.setHost(url[0]);
-        if (address.contains(":")){
-            disasterRecoveryInfo.setPort(Integer.valueOf(url[1]));
-        }
-        return disasterRecoveryInfo;
+        return new DisasterRecoveryInfo().setHost(info.getString("host")).
+                setProtocol(info.getString("protocol")).
+                setPort(info.getInteger("port")).
+                setName(info.getString("name"));
     }
-
 
 }

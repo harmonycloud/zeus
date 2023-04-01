@@ -27,7 +27,7 @@ public class PlatformAddress implements AddressSource {
     @Override
     public ForestAddress getAddress(ForestRequest forestRequest) {
 
-        DisasterRecoveryInfo disasterRecoveryInfo = platformService.getRelationPlatformAddress("slave_platform");
+        DisasterRecoveryInfo disasterRecoveryInfo = platformService.getRelationPlatformAddress();
         if (disasterRecoveryInfo == null || StringUtils.isEmpty(disasterRecoveryInfo.getProtocol())
             || StringUtils.isEmpty(disasterRecoveryInfo.getHost())) {
             throw new BusinessException(ErrorMessage.NOT_EXIST);

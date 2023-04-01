@@ -2,6 +2,7 @@ package com.middleware.zeus.integration.platform;
 
 import com.alibaba.fastjson.JSONObject;
 import com.dtflys.forest.annotation.*;
+import com.middleware.caas.common.model.DisasterRecoveryInfo;
 import org.springframework.stereotype.Component;
 
 /**
@@ -34,6 +35,15 @@ public interface PlatformClient {
      * @param userToken
      * @return
      */
-    @Get(url = "/api/platform/disasterRecovery/uid")
-    JSONObject getUid(@Header("userToken") String userToken);
+    @Get(url = "/api/platform/disasterRecovery/address")
+    JSONObject getAddress(@Header("userToken") String userToken);
+
+    /**
+     * 设置远程平台地址
+     * @param disasterRecoveryInfo
+     * @return
+     */
+    @Post(url = "/api/platform/disasterRecovery/address")
+    JSONObject setAddress(@Header("userToken") String userToken,
+                          @Body DisasterRecoveryInfo disasterRecoveryInfo);
 }
