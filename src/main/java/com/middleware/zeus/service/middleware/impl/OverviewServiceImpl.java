@@ -780,8 +780,12 @@ public class OverviewServiceImpl implements OverviewService {
         platformOverviewDTO.setClusterQuota(clusterQuota);
 
         //获取控制器状态信息
-        MiddlewareOperatorDTO operatorInfo = middlewareInfoService.getOperatorInfo(clusterList);
-        platformOverviewDTO.setOperatorDTO(operatorInfo);
+        try {
+            MiddlewareOperatorDTO operatorInfo = middlewareInfoService.getOperatorInfo(clusterList);
+            platformOverviewDTO.setOperatorDTO(operatorInfo);
+        } catch (Exception e){
+            log.debug("获取operator信息失败", e);
+        }
 
         //获取审计信息
         List<BeanOperationAudit> auditList = operationAuditService.listRecent(20);
@@ -893,9 +897,13 @@ public class OverviewServiceImpl implements OverviewService {
                 continue;
             }
             // 获取多集群中间件类型并集
-            List<MiddlewareInfoDTO> infoDTOList = middlewareInfoService.list(cluster.getId()).stream().
-                    filter(mw -> !mw.getStatus().equals(2)).collect(Collectors.toList());
-            middlewareInfoDtoSet.addAll(infoDTOList);
+            try {
+                List<MiddlewareInfoDTO> infoDTOList = middlewareInfoService.list(cluster.getId()).stream().
+                        filter(mw -> !mw.getStatus().equals(2)).collect(Collectors.toList());
+                middlewareInfoDtoSet.addAll(infoDTOList);
+            } catch (Exception e){
+                log.debug("查询多集群中间件信息失败", e);
+            }
             // 获取已注册分区下的中间件
             List<Namespace> namespaceList = namespaceService.list(cluster.getId());
             List<Middleware> list = middlewareCRService.list(cluster.getId(), null, null, false);
