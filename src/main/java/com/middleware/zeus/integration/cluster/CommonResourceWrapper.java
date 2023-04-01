@@ -17,6 +17,7 @@ public class CommonResourceWrapper {
         Object res = null;
         switch (plural){
             case "deployments":
+            case "deploys":
                 res = K8sClient.getClient(clusterId).apps().deployments().inNamespace(namespace).withName(name).get();
                 break;
             case "statefulsets":
