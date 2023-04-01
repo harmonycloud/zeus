@@ -540,6 +540,9 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public Map<String, String> checkHitachiAndGetParams(String clusterId, String storageName) {
+        if (StringUtils.isEmpty(storageName)){
+            return new HashMap<>();
+        }
         if (storageName.contains(",")){
             storageName = storageName.split(",")[0];
         }else if (storageName.contains("/")){
