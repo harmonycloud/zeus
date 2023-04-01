@@ -189,6 +189,8 @@ public class IngressServiceImpl implements IngressService {
         }
         // 对部分中间件做特殊处理
         configCustomMiddleware(clusterId, namespace, middlewareName, ingressDTO);
+        // 对自定义端口设置服务端口号
+        configCustomPortMiddleware(clusterId, namespace, ingressDTO);
 
         if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_INGRESS)) {
             try {
@@ -358,6 +360,7 @@ public class IngressServiceImpl implements IngressService {
                         ConfigMap configMap = configMapWrapper.get(clusterId,
                                 getIngressTcpNamespace(cluster, ingressDTO.getIngressClassName()),
                                 ingressComponentDto.getConfigMapName());
+                        configCustomPortMiddleware(clusterId, namespace, ingressDTO);
                         removeTcpPort(configMap, ingressDTO.getServiceList());
                         configMapWrapper.update(clusterId,
                                 getIngressTcpNamespace(cluster, ingressDTO.getIngressClassName()), configMap);
@@ -569,6 +572,19 @@ public class IngressServiceImpl implements IngressService {
                 break;
             case "mysql":
                 setMysqlServicePort(clusterId, namespace, middlewareName, ingressDTO);
+                break;
+        }
+    }
+
+    /**
+     * 自定义端口后，创建或删除服务暴露时，需要查询service 端口号,并配置到servicedto中
+     * @param clusterId
+     * @param namespace
+     * @param ingressDTO
+     */
+    private void configCustomPortMiddleware(String clusterId, String namespace, IngressDTO ingressDTO) {
+        String middlewareType = ingressDTO.getMiddlewareType();
+        switch (middlewareType) {
             case "redis":
             case "elasticsearch":
             case "postgres":
@@ -577,6 +593,12 @@ public class IngressServiceImpl implements IngressService {
         }
     }
 
+    /**
+     * 自定义端口后，创建或删除服务暴露时，需要查询service 端口号
+     * @param clusterId
+     * @param namespace
+     * @param ingressDTO
+     */
     private void setCommonServicePort(String clusterId, String namespace, IngressDTO ingressDTO) {
         ingressDTO.getServiceList().forEach(serviceDTO -> {
             String serviceName = serviceDTO.getServiceName();
