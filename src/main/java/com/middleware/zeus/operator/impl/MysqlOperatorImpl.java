@@ -678,7 +678,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
 
     @Override
     public void createDisasterRecoveryMiddleware(Middleware middleware) {
-        if (licenseService.check(middleware.getClusterId())){
+        if (!licenseService.check(middleware.getClusterId())){
             throw new BusinessException(ErrorMessage.LICENSE_CPU_RESOURCE_NOT_ENOUGH);
         }
         MysqlDTO mysqlDTO = middleware.getMysqlDTO();
