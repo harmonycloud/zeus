@@ -234,6 +234,8 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             List<BeanSystemConfig> beanSystemConfigs = beanSystemConfigMapper.selectList(wrapper);
             if (!CollectionUtils.isEmpty(beanSystemConfigs)) {
                 silence = beanSystemConfigs.get(0).getConfigValue();
+            }else {
+                silence = silentTime;
             }
         }
         body.put("endsAt",
