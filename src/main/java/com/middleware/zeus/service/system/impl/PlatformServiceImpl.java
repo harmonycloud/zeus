@@ -67,7 +67,9 @@ public class PlatformServiceImpl implements PlatformService {
         res.setRelation(getRelationPlatformAddress(values));
 
         // 设置数据库状态
-        res.getLocal().setPhase(getZusMysqlPhase());
+        if (res.getLocal() != null){
+            res.getLocal().setPhase(getZusMysqlPhase());
+        }
 
         // 上次平台灾备切换时间
         if (values.containsKey("lastPlatformSwitchTime")) {
