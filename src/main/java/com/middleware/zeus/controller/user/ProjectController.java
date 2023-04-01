@@ -64,13 +64,13 @@ public class ProjectController {
         return BaseResult.ok(projectService.list(organId, key));
     }
 
-    @ApiOperation(value = "获取项目列表", notes = "获取项目列表")
+    @ApiOperation(value = "获取项目详情", notes = "获取项目详情")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "organId", value = "组织id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
     })
     @GetMapping("/{projectId}")
-    public BaseResult<List<ProjectDto>> detail(@PathVariable("organId") String organId,
+    public BaseResult<ProjectDto> detail(@PathVariable("organId") String organId,
                                                @PathVariable("projectId") String projectId) {
         return BaseResult.ok(projectService.get(organId, projectId));
     }
