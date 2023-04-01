@@ -244,7 +244,7 @@ public class PlatformServiceImpl implements PlatformService {
     @Override
     public String getMiddlewareUid() {
         MysqlCluster mc = mysqlClusterWrapper.get(zeusNamespace, NameConstant.ZEUS_MYSQL);
-        if (mc == null || mc.getMetadata() == null || CollectionUtils.isEmpty(mc.getMetadata().getLabels())){
+        if (mc != null && mc.getMetadata() != null && !CollectionUtils.isEmpty(mc.getMetadata().getLabels())){
             return mc.getMetadata().getLabels().get("uid");
         }
         return null;
