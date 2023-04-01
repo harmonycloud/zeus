@@ -1,5 +1,6 @@
 package com.middleware.zeus.service.user.impl;
 
+import static com.middleware.caas.common.constants.CommonConstant.NUM_TWO;
 import static com.middleware.caas.common.constants.NameConstant.*;
 import static com.middleware.caas.common.constants.user.UserConstant.USERNAME;
 
@@ -381,6 +382,14 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         }
         ProjectDto projectDto = new ProjectDto();
         BeanUtils.copyProperties(beanProjectList.get(0), projectDto);
+        // 设置用户信息
+        List<UserDto> userDtoList = getUser(organId, projectId, false);
+        if (!CollectionUtils.isEmpty(userDtoList)) {
+            userDtoList = userDtoList.stream()
+                .filter(userDto -> userDto.getRoleId() != null && userDto.getRoleId().equals(NUM_TWO))
+                .collect(Collectors.toList());
+        }
+        projectDto.setUserDtoList(userDtoList);
         return projectDto;
     }
 
