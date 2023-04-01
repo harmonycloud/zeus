@@ -1,10 +1,7 @@
 package com.middleware.zeus.integration.platform;
 
 import com.alibaba.fastjson.JSONObject;
-import com.dtflys.forest.annotation.Address;
-import com.dtflys.forest.annotation.Get;
-import com.dtflys.forest.annotation.Header;
-import com.dtflys.forest.annotation.Post;
+import com.dtflys.forest.annotation.*;
 import org.springframework.stereotype.Component;
 
 /**
@@ -20,15 +17,16 @@ public interface PlatformClient {
      * 
      * @return
      */
-    @Post(url = "/platform/disasterRecovery/switch")
-    JSONObject switchPlatform(@Header("userToken") String userToken);
+    @Post(url = "/api/platform/disasterRecovery/switch")
+    JSONObject switchPlatform(@Header("userToken") String userToken,
+                              @Var("isMaster") Boolean isMaster);
 
     /**
      * 获取同步器状态
      * @param userToken
      * @return
      */
-    @Get(url = "/platform/disasterRecovery/replicate")
+    @Get(url = "/api/platform/disasterRecovery/replicate")
     JSONObject getMysqlReplicateStatus(@Header("userToken") String userToken);
 
     /**
@@ -36,6 +34,6 @@ public interface PlatformClient {
      * @param userToken
      * @return
      */
-    @Get(url = "/platform/disasterRecovery/uid")
+    @Get(url = "/api/platform/disasterRecovery/uid")
     JSONObject getUid(@Header("userToken") String userToken);
 }

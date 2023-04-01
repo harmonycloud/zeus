@@ -1,17 +1,16 @@
 package com.middleware.zeus.controller.system;
 
-import com.middleware.caas.common.model.DisasterRecoveryInfo;
-import com.middleware.zeus.service.system.PlatformService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import com.middleware.caas.common.base.BaseResult;
+import com.middleware.caas.common.model.DisasterRecoveryInfo;
+import com.middleware.zeus.service.system.PlatformService;
 
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
-
-import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
 
 /**
  * @author xutianhong
@@ -27,23 +26,27 @@ public class DisasterRecoveryController {
 
     @ApiOperation(value = "查询平台访问信息", notes = "查询平台访问信息")
     @GetMapping("queryAccessInfo")
-    public BaseResult queryAccessInfo(HttpServletRequest request) {
-        return BaseResult.ok(platformService.queryAccessInfo(request));
+    public BaseResult queryAccessInfo() {
+        return BaseResult.ok(platformService.queryAccessInfo());
     }
 
     @ApiOperation(value = "存储主备平台访问信息", notes = "存储主备平台访问信息")
-    @PostMapping("/{name}")
-    public BaseResult saveSpareAddr(@RequestBody DisasterRecoveryInfo disasterRecoveryInfo,
-                                    @PathVariable String name,
-                                    HttpServletRequest request) {
-        platformService.saveAddr(disasterRecoveryInfo, name, request);
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "disasterRecoveryInfo", value = "平台灾备业务对象", paramType = "query", dataTypeClass = DisasterRecoveryInfo.class),
+    })
+    @PostMapping
+    public BaseResult saveSpareAddr(@RequestBody DisasterRecoveryInfo disasterRecoveryInfo) {
+        platformService.saveAddr(disasterRecoveryInfo);
         return BaseResult.ok();
     }
 
     @ApiOperation(value = "平台主备切换", notes = "平台主备切换")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "isMaster", value = "是否主平台", paramType = "query", dataTypeClass = Boolean.class),
+    })
     @PostMapping("switch")
-    public BaseResult switchPlatform(HttpServletRequest request) throws IOException {
-        platformService.switchPlatform(request);
+    public BaseResult switchPlatform(@RequestParam("isMaster") Boolean isMaster) {
+        platformService.switchPlatform(isMaster);
         return BaseResult.ok();
     }
 

@@ -12,13 +12,41 @@ import java.io.IOException;
  */
 public interface PlatformService {
 
-    DisasterRecoveryDto queryAccessInfo(HttpServletRequest request);
+    /**
+     * 查询平台访问信息
+     *
+     * @return DisasterRecoveryDto
+     */
+    DisasterRecoveryDto queryAccessInfo();
 
-    void switchPlatform(HttpServletRequest request) throws IOException;
+    /**
+     * 切换主备平台
+     */
+    void switchPlatform(Boolean isMaster);
 
-    void saveAddr(DisasterRecoveryInfo info, String name, HttpServletRequest request);
+    /**
+     * 切换主备平台
+     */
+    void saveAddr(DisasterRecoveryInfo info);
 
+    /**
+     * 查询同步器状态
+     *
+     * @return DisasterRecoveryDto
+     */
     DisasterRecoveryDto getMysqlReplicateStatus();
 
+    /**
+     * 获取zeus-mysql唯一标识
+     *
+     * @return String
+     */
     String getMiddlewareUid();
+
+    /**
+     * 获取备平台连接地址
+     *
+     * @return String
+     */
+    DisasterRecoveryInfo getRelationPlatformAddress(String relation);
 }
