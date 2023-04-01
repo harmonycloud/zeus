@@ -89,7 +89,7 @@ INSERT INTO `resource_menu` VALUES (20,'roleManagement','角色管理','systemMa
 INSERT INTO `resource_menu` VALUES (21,'systemAlarm','系统告警','systemManagement/systemAlarm',125,NULL,12,NULL);
 INSERT INTO `resource_menu` VALUES (22,'operationAudit','操作审计','systemManagement/operationAudit',116,NULL,12,NULL);
 INSERT INTO `resource_menu` VALUES (23,'organUserManagement','成员管理','organUserManagement',5,'icon-zuzhichengyuanguanli1',0,NULL);
-INSERT INTO `resource_menu` VALUES (24,'myOrganizationManagement','组织管理','myOrganizationManagement',3,'icon-myOrganizationManagement',0,NULL);
+INSERT INTO `resource_menu` VALUES (24,'myOrganizationManagement','组织概览','myOrganizationManagement',3,'icon-myOrganizationManagement',0,NULL);
 
 
 
