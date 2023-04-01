@@ -93,6 +93,8 @@ public class IngressServiceImpl implements IngressService {
     private NodeService nodeService;
     @Autowired
     private MiddlewareService middlewareService;
+    @Autowired
+    private ServiceService serviceService;
 
     @Value("${k8s.ingress.default.name:nginx-ingress-controller}")
     private String defaultIngressName;
@@ -567,7 +569,32 @@ public class IngressServiceImpl implements IngressService {
                 break;
             case "mysql":
                 setMysqlServicePort(clusterId, namespace, middlewareName, ingressDTO);
+            case "redis":
+            case "elasticsearch":
+            case "postgres":
+                setCommonServicePort(clusterId, namespace, ingressDTO);
+                break;
         }
+    }
+
+    private void setCommonServicePort(String clusterId, String namespace, IngressDTO ingressDTO) {
+        ingressDTO.getServiceList().forEach(serviceDTO -> {
+            String serviceName = serviceDTO.getServiceName();
+            io.fabric8.kubernetes.api.model.Service service = serviceWrapper.get(clusterId, namespace, serviceName);
+            if (service != null && service.getSpec() != null && !CollectionUtils.isEmpty(service.getSpec().getPorts())) {
+                List<ServicePort> ports = service.getSpec().getPorts();
+                if (!CollectionUtils.isEmpty(ports)) {
+                    List<ServicePort> servicePorts = ports.stream().filter(servicePort ->
+                            servicePort.getName().equals(serviceName)).collect(Collectors.toList());
+                    ServicePort servicePort = ports.get(0);
+                    if (!CollectionUtils.isEmpty(servicePorts)) {
+                        servicePort = servicePorts.get(0);
+                    }
+                    serviceDTO.setTargetPort(servicePort.getTargetPort().getStrVal());
+                    serviceDTO.setServicePort(servicePort.getPort().toString());
+                }
+            }
+        });
     }
 
     /**
