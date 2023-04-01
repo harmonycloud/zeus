@@ -93,6 +93,8 @@ public class IngressServiceImpl implements IngressService {
     private NodeService nodeService;
     @Autowired
     private MiddlewareService middlewareService;
+    @Autowired
+    private ServiceService serviceService;
 
     @Value("${k8s.ingress.default.name:nginx-ingress-controller}")
     private String defaultIngressName;
@@ -187,6 +189,8 @@ public class IngressServiceImpl implements IngressService {
         }
         // 对部分中间件做特殊处理
         configCustomMiddleware(clusterId, namespace, middlewareName, ingressDTO);
+        // 对自定义端口设置服务端口号
+        configCustomPortMiddleware(clusterId, namespace, ingressDTO);
 
         if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_INGRESS)) {
             try {
@@ -356,6 +360,7 @@ public class IngressServiceImpl implements IngressService {
                         ConfigMap configMap = configMapWrapper.get(clusterId,
                                 getIngressTcpNamespace(cluster, ingressDTO.getIngressClassName()),
                                 ingressComponentDto.getConfigMapName());
+                        configCustomPortMiddleware(clusterId, namespace, ingressDTO);
                         removeTcpPort(configMap, ingressDTO.getServiceList());
                         configMapWrapper.update(clusterId,
                                 getIngressTcpNamespace(cluster, ingressDTO.getIngressClassName()), configMap);
@@ -567,7 +572,51 @@ public class IngressServiceImpl implements IngressService {
                 break;
             case "mysql":
                 setMysqlServicePort(clusterId, namespace, middlewareName, ingressDTO);
+                break;
         }
+    }
+
+    /**
+     * 自定义端口后，创建或删除服务暴露时，需要查询service 端口号,并配置到servicedto中
+     * @param clusterId
+     * @param namespace
+     * @param ingressDTO
+     */
+    private void configCustomPortMiddleware(String clusterId, String namespace, IngressDTO ingressDTO) {
+        String middlewareType = ingressDTO.getMiddlewareType();
+        switch (middlewareType) {
+            case "redis":
+            case "elasticsearch":
+            case "postgres":
+                setCommonServicePort(clusterId, namespace, ingressDTO);
+                break;
+        }
+    }
+
+    /**
+     * 自定义端口后，创建或删除服务暴露时，需要查询service 端口号
+     * @param clusterId
+     * @param namespace
+     * @param ingressDTO
+     */
+    private void setCommonServicePort(String clusterId, String namespace, IngressDTO ingressDTO) {
+        ingressDTO.getServiceList().forEach(serviceDTO -> {
+            String serviceName = serviceDTO.getServiceName();
+            io.fabric8.kubernetes.api.model.Service service = serviceWrapper.get(clusterId, namespace, serviceName);
+            if (service != null && service.getSpec() != null && !CollectionUtils.isEmpty(service.getSpec().getPorts())) {
+                List<ServicePort> ports = service.getSpec().getPorts();
+                if (!CollectionUtils.isEmpty(ports)) {
+                    List<ServicePort> servicePorts = ports.stream().filter(servicePort ->
+                            servicePort.getName().equals(serviceName)).collect(Collectors.toList());
+                    ServicePort servicePort = ports.get(0);
+                    if (!CollectionUtils.isEmpty(servicePorts)) {
+                        servicePort = servicePorts.get(0);
+                    }
+                    serviceDTO.setTargetPort(servicePort.getTargetPort().getStrVal());
+                    serviceDTO.setServicePort(servicePort.getPort().toString());
+                }
+            }
+        });
     }
 
     /**

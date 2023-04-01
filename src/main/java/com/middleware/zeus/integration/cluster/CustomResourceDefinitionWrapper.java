@@ -106,7 +106,7 @@ public class CustomResourceDefinitionWrapper {
             context = crdContextMap.get(plural);
         }
         if(context == null){
-            throw new BusinessException(ErrorMessage.YAML_FORMAT_WRONG);
+            throw new BusinessException(ErrorMessage.UNSUPPORTED_YAML_TYPE);
         }
         return context;
     }
