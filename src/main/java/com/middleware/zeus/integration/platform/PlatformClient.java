@@ -31,14 +31,6 @@ public interface PlatformClient {
     JSONObject getMysqlReplicateStatus(@Header("userToken") String userToken);
 
     /**
-     * 获取备平台uid
-     * @param userToken
-     * @return
-     */
-    @Get(url = "/api/platform/disasterRecovery/address")
-    JSONObject getAddress(@Header("userToken") String userToken);
-
-    /**
      * 设置远程平台地址
      * @param disasterRecoveryInfo
      * @return

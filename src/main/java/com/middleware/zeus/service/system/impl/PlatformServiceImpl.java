@@ -63,8 +63,8 @@ public class PlatformServiceImpl implements PlatformService {
         // 是否主平台
         res.setIsMaster("master-slave".equals(values.getString("type")));
 
-        res.setLocal(getLocalPlatformAddress());
-        res.setRelation(getRelationPlatformAddress());
+        res.setLocal(getLocalPlatformAddress(values));
+        res.setRelation(getRelationPlatformAddress(values));
 
         // 设置数据库状态
         res.getLocal().setPhase(getZusMysqlPhase());
@@ -106,7 +106,7 @@ public class PlatformServiceImpl implements PlatformService {
     }
 
     private void relationSwitch(){
-        DisasterRecoveryInfo disasterRecoveryInfo = getRelationPlatformAddress();
+        DisasterRecoveryInfo disasterRecoveryInfo = getRelationPlatformAddress(null);
         if (disasterRecoveryInfo == null) {
             throw new BusinessException(ErrorMessage.SWITCH_NO_POWER);
         }
@@ -156,20 +156,30 @@ public class PlatformServiceImpl implements PlatformService {
 
     @Override
     public void saveAddr(DisasterRecoveryInfo info) {
+        JSONObject values = helmChartService.getZeusMysqlInstallValues();
+        JSONObject newValues = JSONObject.parseObject(values.toJSONString());
+        JSONObject addrInfo = new JSONObject();
+        addrInfo.put("protocol", info.getProtocol());
+        addrInfo.put("host", info.getHost());
+        addrInfo.put("port", info.getPort());
+        addrInfo.put("name", info.getName());
         if (info.getIsRelation()) {
-            // 备平台记录平台信息
-            info.setIsRelation(false);
-            platformClient.setAddress(CurrentUserRepository.getUser().getToken(), info);
+            newValues.getJSONObject("args").put("relation", addrInfo);
+            helmChartService.upgradeZeusMysql(values, newValues);
+            if ("master-slave".equals(values.getString("type")) && values.getJSONObject("args").containsKey("local")) {
+                platformClient.setAddress(CurrentUserRepository.getUser().getToken(), info);
+                platformClient.setAddress(CurrentUserRepository.getUser().getToken(),
+                    convertParam(values.getJSONObject("args").getJSONObject("local")));
+            }
         } else {
-            JSONObject values = helmChartService.getZeusMysqlInstallValues();
-            JSONObject newValues = JSONObject.parseObject(values.toJSONString());
-            JSONObject addrInfo = new JSONObject();
-            addrInfo.put("protocol", info.getProtocol());
-            addrInfo.put("host", info.getHost());
-            addrInfo.put("port", info.getPort());
-            addrInfo.put("name", info.getName());
             newValues.getJSONObject("args").put("local", addrInfo);
             helmChartService.upgradeZeusMysql(values, newValues);
+            if ("master-slave".equals(values.getString("type"))
+                && values.getJSONObject("args").containsKey("relation")) {
+                platformClient.setAddress(CurrentUserRepository.getUser().getToken(), info);
+                platformClient.setAddress(CurrentUserRepository.getUser().getToken(),
+                    convertParam(values.getJSONObject("args").getJSONObject("local")));
+            }
         }
     }
 
@@ -214,9 +224,10 @@ public class PlatformServiceImpl implements PlatformService {
         return null;
     }
 
-    @Override
-    public DisasterRecoveryInfo getLocalPlatformAddress() {
-        JSONObject values = helmChartService.getZeusMysqlInstallValues();
+    public DisasterRecoveryInfo getLocalPlatformAddress(JSONObject values) {
+        if (values == null){
+            values = helmChartService.getZeusMysqlInstallValues();
+        }
         // 链接地址信息
         if (values.containsKey("args") && values.getJSONObject("args").containsKey("local")) {
             return convertParam(values.getJSONObject("args").getJSONObject("local"));
@@ -225,11 +236,14 @@ public class PlatformServiceImpl implements PlatformService {
     }
 
     @Override
-    public DisasterRecoveryInfo getRelationPlatformAddress() {
+    public DisasterRecoveryInfo getRelationPlatformAddress(JSONObject values) {
         // 获取从平台链接地址
-        JSONObject res = platformClient.getAddress(CurrentUserRepository.getUser().getToken());
-        if (res.getBoolean("success") && res.containsKey("data") && res.getJSONObject("data") != null) {
-            return JSONObject.toJavaObject(res.getJSONObject("data"), DisasterRecoveryInfo.class);
+        if (values == null){
+            values = helmChartService.getZeusMysqlInstallValues();
+        }
+        // 链接地址信息
+        if (values.containsKey("args") && values.getJSONObject("args").containsKey("relation")) {
+            return convertParam(values.getJSONObject("args").getJSONObject("relation"));
         }
         return null;
     }

@@ -1,5 +1,6 @@
 package com.middleware.zeus.service.system;
 
+import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.model.DisasterRecoveryDto;
 import com.middleware.caas.common.model.DisasterRecoveryInfo;
 
@@ -43,17 +44,11 @@ public interface PlatformService {
      */
     String getMiddlewareUid();
 
-    /**
-     * 获取本地平台连接地址
-     *
-     * @return String
-     */
-    DisasterRecoveryInfo getLocalPlatformAddress();
 
     /**
      * 获取远程平台连接地址
      *
      * @return String
      */
-    DisasterRecoveryInfo getRelationPlatformAddress();
+    DisasterRecoveryInfo getRelationPlatformAddress(JSONObject values);
 }

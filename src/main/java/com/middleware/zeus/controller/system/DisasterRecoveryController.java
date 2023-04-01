@@ -40,14 +40,6 @@ public class DisasterRecoveryController {
         return BaseResult.ok();
     }
 
-    @ApiOperation(value = "获取平台访问信息", notes = "获取平台访问信息")
-    @ApiImplicitParams({
-    })
-    @GetMapping
-    public BaseResult<DisasterRecoveryInfo> getLocalAddr() {
-        return BaseResult.ok(platformService.getLocalPlatformAddress());
-    }
-
     @ApiOperation(value = "平台主备切换", notes = "平台主备切换")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "isMaster", value = "是否主平台", paramType = "query", dataTypeClass = Boolean.class),
