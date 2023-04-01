@@ -1,6 +1,8 @@
 package com.middleware.zeus.integration.cluster;
 
 import com.middleware.caas.common.constants.PostgresqlConstant;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.CRDBasicInfo;
 import com.middleware.zeus.util.K8sClient;
 import com.middleware.zeus.util.YamlUtil;
@@ -69,11 +71,7 @@ public class CustomResourceDefinitionWrapper {
     }
 
     public String getCRYaml(String clusterId, String namespace, String plural, String name) {
-        CustomResourceDefinitionContext context = crdContextMap.get(plural);
-        if (context == null) {
-            initCrdContextMap(clusterId);
-            context = crdContextMap.get(plural);
-        }
+        CustomResourceDefinitionContext context = getContext(clusterId, plural);
         Map<String, Object> map = K8sClient.getClient(clusterId).customResource(context).get(namespace, name);
         Map<String, Object> resMap = new LinkedHashMap<>();
         if (map.get("apiVersion") != null) {
@@ -99,6 +97,18 @@ public class CustomResourceDefinitionWrapper {
             pluralName = namesMap.get(singular);
         }
         return pluralName;
+    }
+
+    public CustomResourceDefinitionContext getContext(String clusterId, String plural){
+        CustomResourceDefinitionContext context = crdContextMap.get(plural);
+        if (context == null) {
+            initCrdContextMap(clusterId);
+            context = crdContextMap.get(plural);
+        }
+        if(context == null){
+            throw new BusinessException(ErrorMessage.YAML_FORMAT_WRONG);
+        }
+        return context;
     }
 
 }

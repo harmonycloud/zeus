@@ -6,7 +6,6 @@ import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.yaml.snakeyaml.Yaml;
@@ -42,6 +41,8 @@ public class CommonResourceWrapper {
             case "ingresses":
                 res = ingressWrapper.get(clusterId, namespace, name);
                 break;
+            default:
+                res = "暂不支持查看该类型yaml";
         }
         Yaml yaml = new Yaml();
         return yaml.dumpAsMap(res);
