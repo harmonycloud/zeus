@@ -146,7 +146,7 @@ public abstract class AbstractUserService {
         // 判断用户是否为admin 如果不是 则根据组织id、项目id  获取该用户的角色
         boolean flag = !userDto.getIsAdmin()
             && userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getOrganId().equals(organId)
-                && StringUtils.isNotEmpty(projectId) && userRole.getProjectId().equals(projectId));
+                && StringUtils.isNotEmpty(userRole.getProjectId()) && userRole.getProjectId().equals(projectId));
         if (flag) {
             power.putAll(userDto
                 .getUserRoleList().stream().filter(userRole -> userRole.getOrganId().equals(organId)
