@@ -288,7 +288,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         Integer exportPort = 9121;
         Integer redisPort = 6379;
         if (values.containsKey("exporter")){
-            exportPort = values.getJSONObject("exporter").getInteger("exporter");
+            exportPort = values.getJSONObject("exporter").getInteger("port");
         }
         if (values.containsKey("redis")){
             redisPort = values.getJSONObject("redis").getInteger("port");
