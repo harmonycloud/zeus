@@ -1,17 +1,10 @@
 package com.middleware.zeus.integration.cluster;
 
 import com.middleware.zeus.util.K8sClient;
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.ConfigMapList;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.client.KubernetesClientException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 import org.yaml.snakeyaml.Yaml;
-
-import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Component
