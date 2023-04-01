@@ -764,6 +764,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 middlewareTopologyDTO.setStorageClassName(values.getOrDefault("storageClassName", "").toString());
             }
         }
+        // 如果此时存储类型依然为空，则可能是分盘目录部署
+        if (StringUtils.isEmpty(middlewareTopologyDTO.getStorageClassName())
+            && !CollectionUtils.isEmpty(middlewareTopologyDTO.getPods())) {
+            middlewareTopologyDTO.setStorageClassName(
+                middlewareTopologyDTO.getPods().get(0).getStorageResources().get(0).getStorageClassName());
+        }
 
         StringBuilder pods = new StringBuilder();
         middleware.getPods().forEach(podInfo -> {
@@ -1275,8 +1281,14 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         Map<String, Double> map = new HashMap<>();
         response.getData().getResult().forEach(res -> {
             res.getMetric().forEach((k, v) -> {
-                map.put(v.substring(v.length() - 1), ResourceCalculationUtil.roundNumber(
-                    BigDecimal.valueOf(Double.parseDouble(res.getValue().get(1))), 2, RoundingMode.CEILING));
+                double value = ResourceCalculationUtil.roundNumber(
+                    BigDecimal.valueOf(Double.parseDouble(res.getValue().get(1))), 2, RoundingMode.CEILING);
+                String key = v.substring(v.length() - 1);
+                if (map.containsKey(key)) {
+                    map.put(key, map.get(key) + value);
+                } else {
+                    map.put(key, value);
+                }
             });
         });
         return map;

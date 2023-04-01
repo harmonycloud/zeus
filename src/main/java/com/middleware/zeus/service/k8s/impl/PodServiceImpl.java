@@ -465,7 +465,14 @@ public class PodServiceImpl implements PodService {
                 quotaMap.values().forEach(middlewareQuota -> {
                     middlewareQuota.setStorageClassQuota(middlewareQuota.getStorageClassQuotaValue() + MathUtil.extractUnit(middlewareQuota.getStorageClassQuota()));
                 });
-                pi.setStorageResources(new ArrayList<>(quotaMap.values()));
+                List<MiddlewareQuota> quotaList = new ArrayList<>(quotaMap.values());
+                pi.setStorageResources(quotaList);
+                if (!CollectionUtils.isEmpty(quotaList)){
+                    pi.getResources().setProvisioner(quotaList.get(0).getProvisioner());
+                    pi.getResources().setStorageClassName(quotaList.get(0).getStorageClassName());
+                    pi.getResources().setStorageClassAliasName(quotaList.get(0).getStorageClassAliasName());
+                    pi.getResources().setStorageClassQuota(String.valueOf(quotaList.get(0).getStorageClassQuotaValue()));
+                }
                 // 给pod设置绑定的pvc
                 setPodPvc(pi, pvcInfos);
             }
