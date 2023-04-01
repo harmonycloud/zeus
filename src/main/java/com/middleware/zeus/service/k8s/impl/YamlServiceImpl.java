@@ -32,7 +32,7 @@ public class YamlServiceImpl implements YamlService {
     @Autowired
     private CommonResourceWrapper commonResourceWrapper;
 
-    private List<String> originResource =  Arrays.asList("deployments", "statefulsets", "pods", "persistentvolumeclaims", "services");
+    private List<String> originResource =  Arrays.asList("deployments", "statefulsets", "pods", "persistentvolumeclaims", "services", "ingresses");
 
     @Override
     public YamlCheck check(String yamlContent) {

@@ -103,6 +103,14 @@ public class YamlUtil {
                     target.put(key, targetValue);
                 } else if (value instanceof JSONArray) {
                     JSONArray valueArray = (JSONArray) value;
+                    if (valueArray.size() == 0) {
+                        target.put(key, value);
+                        continue;
+                    }
+                    if (!(valueArray.get(0) instanceof JSONObject)) {
+                        target.put(key, value);
+                        continue;
+                    }
                     for (int i = 0; i < valueArray.size(); i++) {
                         JSONObject obj = (JSONObject) valueArray.get(i);
                         if ((target.getJSONArray(key).size() <= i)) {
