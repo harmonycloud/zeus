@@ -205,15 +205,18 @@ public class PlatformQuotaServiceImpl implements PlatformQuotaService {
                 ResourceQuotaDo projectQuotaDo = a2Map.get(quotaDo.getClusterId());
                 quotaDo.getCpu().setUsed(projectQuotaDo.getCpu().getRequest());
                 quotaDo.getMemory().setUsed(projectQuotaDo.getMemory().getRequest());
-
+                // 设置cpu memory的分区层面的使用量
+                quotaDo.getCpu().setOccupy(projectQuotaDo.getCpu().getUsed());
+                quotaDo.getMemory().setOccupy(projectQuotaDo.getMemory().getUsed());
                 // 设置存储使用量
                 if (!CollectionUtils.isEmpty(quotaDo.getStorageList())
                     && !CollectionUtils.isEmpty(projectQuotaDo.getStorageList())) {
-                    Map<String, Double> storageMap = projectQuotaDo.getStorageList().stream().collect(Collectors
-                        .toMap(StorageQuota::getStorageId, storageQuota -> storageQuota.getStorage().getRequest()));
+                    Map<String, StorageQuota> storageMap = projectQuotaDo.getStorageList().stream().collect(Collectors
+                        .toMap(StorageQuota::getStorageId, Function.identity()));
                     for (StorageQuota storageQuota : quotaDo.getStorageList()) {
                         if (storageMap.containsKey(storageQuota.getStorageId())) {
-                            storageQuota.getStorage().setUsed(storageMap.get(storageQuota.getStorageId()));
+                            storageQuota.getStorage().setUsed(storageMap.get(storageQuota.getStorageId()).getStorage().getRequest());
+                            storageQuota.getStorage().setOccupy(storageMap.get(storageQuota.getStorageId()).getStorage().getUsed());
                         }
                     }
                 }

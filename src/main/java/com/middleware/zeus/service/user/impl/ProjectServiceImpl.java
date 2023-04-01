@@ -299,6 +299,8 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         unBindNamespace(organId, projectId, null, null);
         // 解绑项目下用户
         unbindUser(organId, projectId, null);
+        // 回收资源
+        platformQuotaService.remove(PROJECT, projectId, null, CPU, MEMORY, STORAGE);
         // 解绑项目下备份位置
         unBindBackupPosition(organId, projectId);
         // 解绑项目下备份服务器

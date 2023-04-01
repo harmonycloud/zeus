@@ -243,7 +243,6 @@ public class Skyview2ProjectServiceImpl extends AbstractProjectService implement
 
     @Override
     public List<ResourceQuotaDo> getCpuMemoryQuota(String organId, String projectId, boolean detail) {
-        // todo
         List<Namespace> nsList = v2ProjectService.nsList(organId, projectId, true);
         List<ResourceQuotaDo> quotaDoList = nsList.stream().map(Namespace::getQuotas).collect(Collectors.toList());
 
