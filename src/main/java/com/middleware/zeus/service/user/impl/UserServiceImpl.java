@@ -53,6 +53,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.middleware.caas.common.constants.CommonConstant.NUM_TWO;
+import static com.middleware.caas.common.constants.user.UserConstant.ADMIN;
 import static com.middleware.caas.common.constants.user.UserConstant.USERNAME;
 import static com.middleware.caas.filters.base.GlobalKey.NUM_ROLE_ADMIN;
 import static com.middleware.caas.filters.base.GlobalKey.USER_TOKEN;
@@ -336,16 +337,14 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
      * 绑定或解绑超级管理员
      */
     public void bindAdmin(UserDto userDto) {
-        //todo 注释权限判断代码   使所有超级管理员用户可操作分配超级管理员角色
-        /*String username =
-                JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue().getString(USERNAME);
-        if (!ADMIN.equals(username)) {
-            throw new BusinessException(ErrorMessage.NO_AUTHORITY);
-        }*/
-        if (userDto.getIsAdmin()) {
-            userRoleService.insert(null, null, userDto.getUserName(), NUM_ROLE_ADMIN);
-        } else {
-            userRoleService.delete(userDto.getUserName(), null, null, NUM_ROLE_ADMIN);
+        String username =
+            JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue().getString(USERNAME);
+        if (ADMIN.equals(username)) {
+            if (userDto.getIsAdmin()) {
+                userRoleService.insert(null, null, userDto.getUserName(), NUM_ROLE_ADMIN);
+            } else {
+                userRoleService.delete(userDto.getUserName(), null, null, NUM_ROLE_ADMIN);
+            }
         }
     }
 
