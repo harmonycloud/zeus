@@ -103,8 +103,10 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         // 添加项目
         beanProjectMapper.insert(beanProject);
         // 绑定用户角色
-        if (StringUtils.isNotEmpty(projectDto.getUser())) {
-            userRoleService.insert(projectDto.getOrganId(), projectId, projectDto.getUser(), 2);
+        if (!CollectionUtils.isEmpty(projectDto.getUserDtoList())) {
+            for (UserDto userDto : projectDto.getUserDtoList()){
+                userRoleService.insert(projectDto.getOrganId(), projectId, userDto.getUserName(), 2);
+            }
         }
     }
 
@@ -314,6 +316,13 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         beanProject.setAliasName(projectDto.getName());
         beanProject.setDescription(projectDto.getDescription());
         beanProjectMapper.updateById(beanProject);
+        // 绑定用户角色
+        if (!CollectionUtils.isEmpty(projectDto.getUserDtoList())) {
+            userRoleService.delete(null, projectDto.getOrganId(), projectDto.getProjectId(), 2);
+            for (UserDto userDto : projectDto.getUserDtoList()){
+                userRoleService.insert(projectDto.getOrganId(), projectDto.getProjectId(), userDto.getUserName(), 2);
+            }
+        }
     }
 
     @Override
