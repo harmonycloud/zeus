@@ -6,6 +6,7 @@ import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.yaml.snakeyaml.Yaml;
@@ -16,6 +17,9 @@ import java.util.Map;
 @Slf4j
 @Component
 public class CommonResourceWrapper {
+
+    @Autowired
+    private IngressWrapper ingressWrapper;
 
     public  String getYaml(String clusterId, String namespace, String plural, String name) {
         Object res = null;
@@ -34,6 +38,9 @@ public class CommonResourceWrapper {
                 break;
             case "services":
                 res = K8sClient.getClient(clusterId).services().inNamespace(namespace).withName(name).get();
+                break;
+            case "ingresses":
+                res = ingressWrapper.get(clusterId, namespace, name);
                 break;
         }
         Yaml yaml = new Yaml();
