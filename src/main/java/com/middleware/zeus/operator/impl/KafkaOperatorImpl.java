@@ -77,6 +77,11 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
             }
             middleware.setKafkaDTO(kafkaDTO);
         }
+
+        // 获取kafka实例数
+        if (values.containsKey("replicas")){
+            middleware.getQuota().get(middleware.getType()).setNum(values.getInteger("replicas"));
+        }
         middleware.setManagePlatform(true);
         return middleware;
     }
