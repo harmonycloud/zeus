@@ -3,9 +3,8 @@ package com.middleware.zeus.service.user.impl;
 import static com.middleware.caas.common.constants.NameConstant.*;
 import static com.middleware.caas.common.constants.user.UserConstant.USERNAME;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.middleware.caas.common.model.*;
@@ -179,6 +178,8 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
     public void allocateQuota(OrganizationQuota organizationQuota) {
         // 处理cpu\memory\storage
         if (!CollectionUtils.isEmpty(organizationQuota.getQuotaList())) {
+            // todo check resource
+            //checkResource(organizationQuota.getOrganId(), organizationQuota.getQuotaList());
             platformQuotaService.remove(ORGAN, organizationQuota.getOrganId(), null, CPU, MEMORY, STORAGE);
             for (ResourceQuotaDo resourceQuotaDo : organizationQuota.getQuotaList()){
                 platformQuotaService.allocate(ORGAN, organizationQuota.getOrganId(), resourceQuotaDo);
@@ -320,6 +321,9 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
         if (!checkExist(organId, null)) {
             throw new BusinessException(ErrorMessage.ORGANIZATION_NOT_EXIST);
         }
+        if (CollectionUtils.isEmpty(organizationDto.getUserDtoList())){
+            throw new BusinessException(ErrorMessage.ORGANIZATION_ADD_USER_EMPTY_LIST);
+        }
         organizationDto.getUserDtoList()
             .forEach(userDto -> organizationUserService.insert(organId, userDto.getUserName(), userDto.getRoleId()));
     }
@@ -383,6 +387,36 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
                 .collect(Collectors.toList());
         }
         return list;
+    }
+
+    /**
+     * 校验资源是否足够
+     */
+    public void checkResource(String organId, List<ResourceQuotaDo> resourceQuotaDoList){
+        boolean flag = false;
+
+        // 获取当前分配情况
+        List<ResourceQuotaDo> resourceQuotaDos = platformQuotaService.getQuota(ORGAN, organId, null, CPU, MEMORY, STORAGE);
+        Map<String, ResourceQuotaDo> currentResourceQuotaMap = resourceQuotaDos.stream().collect(Collectors.toMap(ResourceQuotaDo::getClusterNickName, Function.identity()));
+
+        for (ResourceQuotaDo resourceQuotaDo : resourceQuotaDoList){
+            ResourceQuotaDo clusterQuota = clusterService.getResourceQuotaInfo(resourceQuotaDo.getClusterId(), true);
+
+
+            // todo
+            double cpu = clusterQuota.getCpu().getRequest() - clusterQuota.getCpu().getUsed() - resourceQuotaDo.getCpu().getRequest();
+            double memory = clusterQuota.getMemory().getRequest() - clusterQuota.getMemory().getUsed() - resourceQuotaDo.getMemory().getRequest();
+
+            Map<String, Double> currentStorageMap = resourceQuotaDo.getStorageList().stream().collect(Collectors.toMap(StorageQuota::getStorageId, storageQuota -> storageQuota.getStorage().getRequest()));
+            Map<String, Double> storageMap = new HashMap<>();
+            for (StorageQuota storageQuota : clusterQuota.getStorageList()) {
+                storageMap.put(storageQuota.getStorageId(),
+                    storageQuota.getStorage().getRequest() - storageQuota.getStorage().getUsed()
+                        - (currentStorageMap.containsKey(storageQuota.getStorageId())
+                            ? currentStorageMap.get(storageQuota.getStorageId()) : 0));
+            }
+
+        }
     }
 
 }

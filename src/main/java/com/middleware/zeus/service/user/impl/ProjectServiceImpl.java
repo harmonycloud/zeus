@@ -272,6 +272,9 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
     @Override
     public void bindUser(ProjectDto projectDto) {
         checkExist(projectDto.getOrganId(), projectDto.getProjectId());
+        if (CollectionUtils.isEmpty(projectDto.getUserDtoList())){
+            throw new BusinessException(ErrorMessage.PROJECT_ADD_USER_EMPTY_LIST);
+        }
         projectDto.getUserDtoList().forEach(
             userDto -> userRoleService.insert(projectDto.getOrganId(), projectDto.getProjectId(), userDto.getUserName(), userDto.getRoleId()));
     }
@@ -397,10 +400,10 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
     public void allocateQuota(ProjectQuota projectQuota) {
         // 处理cpu\memory\storage
         if (!CollectionUtils.isEmpty(projectQuota.getQuotaList())) {
+            // todo
+            checkResource(projectQuota.getQuotaList());
             platformQuotaService.remove(PROJECT, projectQuota.getProjectId(), null, CPU, MEMORY, STORAGE);
             for (ResourceQuotaDo resourceQuotaDo : projectQuota.getQuotaList()){
-                // todo
-                checkResource(projectQuota.getQuotaList());
                 platformQuotaService.allocate(PROJECT, projectQuota.getProjectId(), resourceQuotaDo);
             }
         }
