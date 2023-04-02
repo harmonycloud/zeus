@@ -368,7 +368,7 @@ public interface PostgresqlClient {
     /**
      * 更新密码
      */
-    @Put(url = "/postgresql/{path}/port/{port}/user/{usernmae}/password")
+    @Put(url = "/postgresql/{path}/port/{port}/user/{username}/password")
     JSONObject updatePassword(@Var("path") String path,
                               @Var("port") String port,
                               @Var("username") String username,
