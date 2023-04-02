@@ -193,4 +193,5 @@ spec:
       annotations:
         summary: 'Elasticsearch Open Fds Usage Too High (instance {{`{{ $labels.instance }}`}})'
         message: 'The Open Fds usage is over 90%\n  VALUE = {{`{{ $value }}`}}\n  LABELS: {{`{{ $labels }}`}}'
+
 {{- end }}

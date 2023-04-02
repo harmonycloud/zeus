@@ -26,9 +26,17 @@ image:
   exporterImageTag: 1.1.0rc1
   testImageTag: v0.3
 
+port:
+  esExporterPort: 19114
+  esHttpPort: 9200
+  esKibanaPort: 5200
+  esTcpPort: 9300
+
 # 集群名称
 clusterName: {}
 
+# kibana 副本
+kibanaReplicas: 1
 cluster:
   mode: simple
   masterReplacesCount: 3

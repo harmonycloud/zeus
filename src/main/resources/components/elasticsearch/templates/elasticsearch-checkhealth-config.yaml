@@ -2,7 +2,7 @@ apiVersion: v1
 data:
   checkHealth.sh: |
     #!/usr/bin/env bash
-    statusCode=`curl -I -o /dev/null -s -w %{http_code}  -u elastic:{{ .Values.elasticPassword | quote}}  ${PODIP}:9200`
+    statusCode=`curl -I -o /dev/null -s -w %{http_code}  -u elastic:{{ .Values.elasticPassword | quote}}  ${PODIP}:{{ .Values.port.esHttpPort }}`
     if [[ ${statusCode} == 503 || ${statusCode} == 200 || ${statusCode} == 401 ]];then
         exit 0
     else
