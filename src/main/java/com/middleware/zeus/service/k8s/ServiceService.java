@@ -19,6 +19,14 @@ public interface ServiceService {
      */
     List<ServicePortDTO> list(String clusterId, String namespace, String name, String type);
 
+    /**
+     * 查询服务列表
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @return List<ServicePortDTO>
+     */
+    List<ServicePortDTO> list(String clusterId, String namespace);
+
     ServicePortDTO get(String clusterId, String namespace, String name);
 
     /**

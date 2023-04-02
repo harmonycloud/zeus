@@ -111,25 +111,18 @@ public class ServiceServiceImpl implements ServiceService {
     }
 
     @Override
+    public List<ServicePortDTO> list(String clusterId, String namespace) {
+        List<io.fabric8.kubernetes.api.model.Service> serviceList = serviceWrapper.list(clusterId, namespace);
+        return serviceList.stream().map(this::convertService).collect(Collectors.toList());
+    }
+
+    @Override
     public ServicePortDTO get(String clusterId, String namespace, String name) {
         io.fabric8.kubernetes.api.model.Service service = serviceWrapper.get(clusterId, namespace, name);
         if (service == null || service.getSpec() == null || CollectionUtils.isEmpty(service.getSpec().getPorts())) {
             return null;
         }
-        ServiceSpec spec = service.getSpec();
-        ServicePort servicePort = spec.getPorts().get(0);
-        ServicePortDTO servicePortDTO = new ServicePortDTO();
-        List<PortDetailDTO> portDetailDtoList = new ArrayList<>();
-        PortDetailDTO portDetailDTO = new PortDetailDTO();
-        portDetailDTO.setPort(String.valueOf(servicePort.getPort().intValue()));
-        portDetailDTO.setTargetPort(String.valueOf(servicePort.getTargetPort().getIntVal()));
-        portDetailDTO.setProtocol(servicePort.getProtocol());
-        portDetailDtoList.add(portDetailDTO);
-
-        servicePortDTO.setServiceName(name);
-        servicePortDTO.setClusterIP(spec.getClusterIP());
-        servicePortDTO.setPortDetailDtoList(portDetailDtoList);
-        return servicePortDTO;
+        return convertService(service);
     }
 
     @Override
@@ -176,6 +169,23 @@ public class ServiceServiceImpl implements ServiceService {
         } else {
             return servicePortDTOS;
         }
+    }
+
+    public ServicePortDTO convertService(io.fabric8.kubernetes.api.model.Service service){
+        ServiceSpec spec = service.getSpec();
+        ServicePort servicePort = spec.getPorts().get(0);
+        ServicePortDTO servicePortDTO = new ServicePortDTO();
+        List<PortDetailDTO> portDetailDtoList = new ArrayList<>();
+        PortDetailDTO portDetailDTO = new PortDetailDTO();
+        portDetailDTO.setPort(String.valueOf(servicePort.getPort().intValue()));
+        portDetailDTO.setTargetPort(String.valueOf(servicePort.getTargetPort().getIntVal()));
+        portDetailDTO.setProtocol(servicePort.getProtocol());
+        portDetailDtoList.add(portDetailDTO);
+
+        servicePortDTO.setServiceName(service.getMetadata().getName());
+        servicePortDTO.setClusterIP(spec.getClusterIP());
+        servicePortDTO.setPortDetailDtoList(portDetailDtoList);
+        return servicePortDTO;
     }
 
     private List<ServicePortDTO> getMQInternalService(String middlewareName,String namespace) {

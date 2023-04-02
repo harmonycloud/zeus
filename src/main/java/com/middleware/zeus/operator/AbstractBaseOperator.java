@@ -1101,38 +1101,6 @@ public abstract class AbstractBaseOperator {
     }
 
     /**
-     * 尝试创建对外服务，当实例状态为Running时才创建对外服务
-     *
-     * @param middleware 中间件信息
-     * @param middlewareServiceNameIndex 服务名称
-     */
-    public void tryCreateOpenService(Middleware middleware, MiddlewareServiceNameIndex middlewareServiceNameIndex,
-        Boolean needRunningMiddleware) {
-        boolean success = false;
-        for (int i = 0; i < (60 * 10 * 60) && !success; i++) {
-            Middleware detail = middlewareService.detail(middleware.getClusterId(), middleware.getNamespace(),
-                middleware.getName(), middleware.getType());
-            log.info("为实例：{}创建对外服务：状态：{},已用时：{}s", detail.getName(), detail.getStatus(), i);
-            if (detail != null) {
-                if (needRunningMiddleware) {
-                    if (detail.getStatus() != null && "Running".equals(detail.getStatus())) {
-                        createOpenService(middleware, middlewareServiceNameIndex);
-                        success = true;
-                    }
-                } else {
-                    createOpenService(middleware, middlewareServiceNameIndex);
-                    success = true;
-                }
-            }
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    /**
      * 创建NodePort服务
      *
      * @param middleware 中间件信息
@@ -1155,8 +1123,7 @@ public abstract class AbstractBaseOperator {
             }
         }
 
-        List<ServicePortDTO> servicePortDTOS = serviceService.list(middleware.getClusterId(), middleware.getNamespace(),
-            middleware.getName(), middleware.getType());
+        List<ServicePortDTO> servicePortDTOS = serviceService.list(middleware.getClusterId(), middleware.getNamespace());
         String finalMiddlewareServiceNameSuffix = middlewareServiceNameIndex.getMiddlewareServiceNameSuffix();
         List<ServicePortDTO> serviceList = servicePortDTOS.stream()
             .filter(servicePortDTO -> servicePortDTO.getServiceName().endsWith(finalMiddlewareServiceNameSuffix))

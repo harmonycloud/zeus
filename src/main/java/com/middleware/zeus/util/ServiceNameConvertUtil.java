@@ -22,7 +22,7 @@ public class ServiceNameConvertUtil {
         String middlewareServiceNameSuffix;
         if (isReadonlyService) {
             nodePortServiceName = String.format("%s-readonly-nodeport", middlewareName);
-            middlewareServiceNameSuffix = "readonly";
+            middlewareServiceNameSuffix = middlewareName + "-readonly";
         } else {
             nodePortServiceName = String.format("%s-nodeport", middlewareName);
             middlewareServiceNameSuffix = middlewareName;

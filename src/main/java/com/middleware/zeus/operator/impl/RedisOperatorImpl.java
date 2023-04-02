@@ -114,7 +114,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
 
     private void executeCreateOpenService(Middleware middleware,
         MiddlewareServiceNameIndex middlewareServiceNameIndex) {
-        List<IngressComponentDto> ingressComponentList = ingressComponentService.list(middleware.getClusterId());
+        /*List<IngressComponentDto> ingressComponentList = ingressComponentService.list(middleware.getClusterId());
         log.info("开始为{}创建对外服务，参数：{}", middleware.getName(), middleware);
         if (CollectionUtils.isEmpty(ingressComponentList)) {
             log.info("不存在ingress，使用NodePort暴露服务");
@@ -122,7 +122,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         } else {
             log.info("存在ingress，使用ingress暴露服务");
             createIngressService(middleware);
-        }
+        }*/
     }
 
     @Override
