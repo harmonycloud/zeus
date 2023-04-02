@@ -43,8 +43,10 @@ public abstract class AbstractOrganizationService {
     protected BeanOrganizationBackupServerMapper beanOrganizationBackupServerMapper;
 
     public List<BackupServerDTO> getBackupServer(String organId, String clusterIds, boolean detail) {
-        QueryWrapper<BeanOrganizationBackupServer> wrapper =
-                new QueryWrapper<BeanOrganizationBackupServer>().eq("organ_id", organId);
+        QueryWrapper<BeanOrganizationBackupServer> wrapper = new QueryWrapper<>();
+        if (!StringUtils.isEmpty(organId)) {
+            wrapper.eq("organ_id", organId);
+        }
         List<BeanOrganizationBackupServer> list = beanOrganizationBackupServerMapper.selectList(wrapper);
         // 根据集群id进行过滤
         if (StringUtils.isNotEmpty(clusterIds)) {

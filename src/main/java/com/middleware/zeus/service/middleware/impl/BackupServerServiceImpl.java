@@ -21,6 +21,7 @@ import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.k8s.MiddlewareClusterService;
 import com.middleware.zeus.service.middleware.*;
 import com.middleware.zeus.service.middleware.*;
+import com.middleware.zeus.service.user.OrganizationService;
 import com.middleware.zeus.util.MinioUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +49,8 @@ public class BackupServerServiceImpl implements BackupServerService {
     private ProjectBackupServerService projectBackupServerService;
     @Autowired
     private ClusterService clusterService;
+    @Autowired
+    private OrganizationService organizationService;
 
     @Override
     public List<BackupServerDTO> list(List<String> clusterIds, String keyword, Boolean withDetail) {
@@ -125,6 +128,12 @@ public class BackupServerServiceImpl implements BackupServerService {
     @Override
     public void allocate(Integer id, String clusterId) {
         BeanBackupServer beanBackupServer = get(id);
+        // check used
+        List<BackupServerDTO> backupServerDTOList = organizationService.getBackupServer(null, null, false);
+        boolean flag = backupServerDTOList.stream().anyMatch(backupServerDTO -> backupServerDTO.getId().equals(id));
+        if (flag) {
+            throw new BusinessException(ErrorMessage.BACKUP_SERVER_BOUND);
+        }
         beanBackupServer.setClusterId(clusterId);
         backupServerMapper.updateById(beanBackupServer);
     }
