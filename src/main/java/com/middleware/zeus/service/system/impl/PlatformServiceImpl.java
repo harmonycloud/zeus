@@ -142,6 +142,7 @@ public class PlatformServiceImpl implements PlatformService {
             newValues.putAll(values);
             newValues.put("type", "master-slave");
             newValues.put("lastPlatformSwitchTime", DateUtils.DateToString(new Date(), DateUtils.YYYY_MM_DD_HH_MM_SS));
+            newValues.getJSONObject("args").remove("relation");
             newValues.getJSONObject("args").put("disasterRecoverySwitched",true);
             helmChartService.upgradeZeusMysql(values, newValues);
             // 尝试关闭主平台
