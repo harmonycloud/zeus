@@ -142,7 +142,6 @@ public class PlatformServiceImpl implements PlatformService {
             newValues.putAll(values);
             newValues.put("type", "master-slave");
             newValues.put("lastPlatformSwitchTime", DateUtils.DateToString(new Date(), DateUtils.YYYY_MM_DD_HH_MM_SS));
-            newValues.getJSONObject("args").remove("relation");
             helmChartService.upgradeZeusMysql(values, newValues);
             // 尝试关闭主平台
             try {
@@ -150,6 +149,9 @@ public class PlatformServiceImpl implements PlatformService {
             } catch (Exception e){
                 log.error("灾备平台切换，更新主平台信息失败", e);
             }
+            // 移除远程平台信息
+            newValues.getJSONObject("args").remove("relation");
+            helmChartService.upgradeZeusMysql(values, newValues);
         }catch (Exception e){
             log.error("切换失败",e);
             throw new BusinessException(ErrorMessage.REMOTE_SWITCH_FAILED);
