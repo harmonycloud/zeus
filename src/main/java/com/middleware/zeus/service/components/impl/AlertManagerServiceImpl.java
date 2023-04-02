@@ -73,16 +73,22 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
     }
 
     @Override
-    public String getValues(String repository, MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto){
-        String setValues = "image.alertmanager.repository=" + repository + "/alertmanager" +
-                ",clusterHost=" + cluster.getHost();
+    public String getValues(String repository, MiddlewareClusterDTO cluster,
+        ClusterComponentsDto clusterComponentsDto) {
+        String setValues = "image.alertmanager.repository=" + repository + "/alertmanager";
+        // 设置平台后端访问地址
+        if (StringUtils.isNoneEmpty(clusterComponentsDto.getPlatformProtocol(),
+            clusterComponentsDto.getPlatformHost())) {
+            setValues = setValues + ",clusterHost=" + clusterComponentsDto.getPlatformProtocol() + "://"
+                + clusterComponentsDto.getPlatformHost()
+                + (clusterComponentsDto.getPlatformPort() == null ? "" : ":" + clusterComponentsDto.getPlatformPort());
+        }
         if (SIMPLE.equals(clusterComponentsDto.getType())) {
             setValues = setValues + ",replicas=1";
-        }else {
+        } else {
             setValues = setValues + ",replicas=3";
         }
         return setValues;
-
     }
 
     @Override

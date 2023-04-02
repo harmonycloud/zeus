@@ -5,6 +5,8 @@ image:
 
 replicas: 1
 
+clusterHost: zeus.zeus:8080
+
 podAntiAffinityTopologKey: "zone"
 #取值[hard|soft] hard:强制反亲和 soft:非强制反亲和
 podAntiAffinity: "soft"
