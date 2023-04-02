@@ -18,7 +18,7 @@ import io.swagger.annotations.ApiOperation;
  */
 @Api(tags = {"平台管理", "灾备中心"}, value = "平台管理")
 @RestController
-@RequestMapping("/platform/disasterRecovery/")
+@RequestMapping("/platform/disasterRecovery")
 public class DisasterRecoveryController {
 
     @Autowired
