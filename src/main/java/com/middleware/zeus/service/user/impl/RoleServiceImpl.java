@@ -45,7 +45,7 @@ public class RoleServiceImpl implements RoleService {
 //    @Value("${system.disasterRecovery.enable:true}")
 //    private String disasterEnable;
     @Value("${system.disasterRecovery.menu-id:10}")
-    private String disasterMenuId;
+    private Integer disasterMenuId;
     @Value("${system.activeActive.menu-id:7}")
     private String activeActiveMenuId;
     @Autowired
@@ -189,9 +189,6 @@ public class RoleServiceImpl implements RoleService {
                 list.add(new BeanResourceMenuRole().setResourceMenuId(3));
             }
         }
-        // 查询是否为灾备模式备平台
-        JSONObject values = helmChartService.getZeusMysqlInstallValues();
-        Boolean isMaster = "master-slave".equals(values.getString("type"));
         // 过滤是否开启灾备服务和双活
         LicenseInfo features = new LicenseInfo();
         try {
@@ -200,13 +197,9 @@ public class RoleServiceImpl implements RoleService {
             log.error("查询license出错");
             features.setActiveActiveEnable(false).setDisasterRecoveryEnable(false);
         }
-        if (!isMaster) {
-            // 平台灾备备集群开启灾备菜单
-            features.setDisasterRecoveryEnable(true);
-        }
         LicenseInfo finalFeatures = features;
         list = list.stream().filter(menuDto -> {
-            if (menuDto.getResourceMenuId() == Integer.parseInt(disasterMenuId)) {
+            if (menuDto.getResourceMenuId() == disasterMenuId) {
                 return finalFeatures.getDisasterRecoveryEnable() && userDto.getIsAdmin();
             } else if (menuDto.getResourceMenuId() == Integer.parseInt(activeActiveMenuId)) {
                 return finalFeatures.getActiveActiveEnable() && userDto.getIsAdmin();
@@ -214,6 +207,14 @@ public class RoleServiceImpl implements RoleService {
                 return true;
             }
         }).collect(Collectors.toSet());
+
+        // 查询是否为灾备模式备平台
+        JSONObject values = helmChartService.getZeusMysqlInstallValues();
+        boolean isSlave = "slave-slave".equals(values.getString("type"));
+        if (isSlave) {
+            list = new HashSet<>();
+            list.add(new BeanResourceMenuRole().setResourceMenuId(disasterMenuId));
+        }
 
         List<Integer> ids = list.stream().map(BeanResourceMenuRole::getResourceMenuId).collect(Collectors.toList());
         // 获取菜单信息
