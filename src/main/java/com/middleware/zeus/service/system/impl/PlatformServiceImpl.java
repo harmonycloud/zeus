@@ -72,10 +72,14 @@ public class PlatformServiceImpl implements PlatformService {
         }
         // 设置远程数据库状态
         if (res.getRelation() != null) {
-            JSONObject relationMysqlPhase =
-                platformClient.getRelationMysqlPhase(CurrentUserRepository.getUser().getToken());
-            if (relationMysqlPhase.getBoolean("success") && relationMysqlPhase.containsKey("data")) {
-                res.getRelation().setPhase(relationMysqlPhase.getString("data"));
+            try {
+                JSONObject relationMysqlPhase =
+                        platformClient.getRelationMysqlPhase(CurrentUserRepository.getUser().getToken());
+                if (relationMysqlPhase.getBoolean("success") && relationMysqlPhase.containsKey("data")) {
+                    res.getRelation().setPhase(relationMysqlPhase.getString("data"));
+                }
+            } catch (Exception e){
+                log.error("获取远程数据库状态失败", e);
             }
         }
 
@@ -136,6 +140,12 @@ public class PlatformServiceImpl implements PlatformService {
             newValues.put("lastPlatformSwitchTime", DateUtils.DateToString(new Date(), DateUtils.YYYY_MM_DD_HH_MM_SS));
             newValues.getJSONObject("args").put("disasterRecoverySwitched",true);
             helmChartService.upgradeZeusMysql(values, newValues);
+            // 尝试关闭主平台
+            try {
+                platformClient.switchPlatform(CurrentUserRepository.getUser().getToken(), true);
+            } catch (Exception e){
+                log.error("灾备平台切换，更新主平台信息失败", e);
+            }
         }catch (Exception e){
             log.error("切换失败",e);
             throw new BusinessException(ErrorMessage.REMOTE_SWITCH_FAILED);
@@ -177,18 +187,26 @@ public class PlatformServiceImpl implements PlatformService {
             newValues.getJSONObject("args").put("relation", addrInfo);
             helmChartService.upgradeZeusMysql(values, newValues);
             if ("master-slave".equals(values.getString("type")) && values.getJSONObject("args").containsKey("local")) {
-                platformClient.setAddress(CurrentUserRepository.getUser().getToken(), info.setIsRelation(false));
-                platformClient.setAddress(CurrentUserRepository.getUser().getToken(),
-                    convertParam(values.getJSONObject("args").getJSONObject("local")).setIsRelation(true));
+                try {
+                    platformClient.setAddress(CurrentUserRepository.getUser().getToken(), info.setIsRelation(false));
+                    platformClient.setAddress(CurrentUserRepository.getUser().getToken(),
+                        convertParam(values.getJSONObject("args").getJSONObject("local")).setIsRelation(true));
+                } catch (Exception e) {
+                    log.error("更新备平台信息失败", e);
+                }
             }
         } else {
             newValues.getJSONObject("args").put("local", addrInfo);
             helmChartService.upgradeZeusMysql(values, newValues);
             if ("master-slave".equals(values.getString("type"))
                 && values.getJSONObject("args").containsKey("relation")) {
-                platformClient.setAddress(CurrentUserRepository.getUser().getToken(), info.setIsRelation(true));
-                platformClient.setAddress(CurrentUserRepository.getUser().getToken(),
-                    convertParam(values.getJSONObject("args").getJSONObject("local")).setIsRelation(false));
+                try {
+                    platformClient.setAddress(CurrentUserRepository.getUser().getToken(), info.setIsRelation(true));
+                    platformClient.setAddress(CurrentUserRepository.getUser().getToken(),
+                        convertParam(values.getJSONObject("args").getJSONObject("local")).setIsRelation(false));
+                } catch (Exception e) {
+                    log.error("更新备平台信息失败", e);
+                }
             }
         }
     }

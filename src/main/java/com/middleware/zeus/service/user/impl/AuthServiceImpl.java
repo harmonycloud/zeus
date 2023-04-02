@@ -112,7 +112,7 @@ public class AuthServiceImpl extends AbstractAuthService implements AuthService 
     private void checkDisasterRecovery(Boolean isAdmin) {
         JSONObject values = helmChartService.getZeusMysqlInstallValues();
         Boolean switched = values.getJSONObject("args").getBoolean("disasterRecoverySwitched");
-        Boolean isMaster = "master-slave".equals(values.getString("type"));
+        boolean isMaster = "master-slave".equals(values.getString("type"));
         if (!isAdmin && !isMaster) {
             throw new BusinessException(ErrorMessage.DISASTER_ONLY_ADMIN_CAN_LOGING);
         }
