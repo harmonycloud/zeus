@@ -78,6 +78,9 @@ public class BackupPositionServiceImpl implements BackupPositionService {
             if (beanBackupServer == null) {
                 return false;
             }
+            if (!beanBackupServer.getClusterId().equals(clusterId)){
+                return false;
+            }
             backupPositionDTO.setBackupServerName(beanBackupServer.getName());
             // 过滤双活备份服务器
             if (!openAvailableDomain) {
