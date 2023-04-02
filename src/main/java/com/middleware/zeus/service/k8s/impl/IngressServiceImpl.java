@@ -612,7 +612,7 @@ public class IngressServiceImpl implements IngressService {
                     if (!CollectionUtils.isEmpty(servicePorts)) {
                         servicePort = servicePorts.get(0);
                     }
-                    serviceDTO.setTargetPort(servicePort.getTargetPort().getStrVal());
+                    serviceDTO.setTargetPort(String.valueOf(servicePort.getTargetPort().getIntVal()));
                     serviceDTO.setServicePort(servicePort.getPort().toString());
                 }
             }
