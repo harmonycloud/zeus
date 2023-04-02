@@ -38,7 +38,7 @@ public interface PlatformClient {
      */
     @Post(url = "/api/platform/disasterRecovery")
     JSONObject setAddress(@Header("userToken") String userToken,
-                          @Body DisasterRecoveryInfo disasterRecoveryInfo);
+                          @JSONBody DisasterRecoveryInfo disasterRecoveryInfo);
 
     /**
      * 查询远程数据库状态
