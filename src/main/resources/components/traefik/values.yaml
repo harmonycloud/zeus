@@ -299,7 +299,7 @@ ports:
     # You SHOULD NOT expose the traefik port on production deployments.
     # If you want to access it from outside of your cluster,
     # use `kubectl port-forward` or create a secure ingress
-    expose: false
+    expose: true
     # The exposed port for this service
     exposedPort: 9000
     # The port protocol (TCP/UDP)
@@ -307,7 +307,7 @@ ports:
   web:
     port: 8000
     # hostPort: 8000
-    expose: false
+    expose: true
     exposedPort: 8000
     # The port protocol (TCP/UDP)
     protocol: TCP
@@ -321,7 +321,7 @@ ports:
   websecure:
     port: 8443
     # hostPort: 8443
-    expose: false
+    expose: true
     exposedPort: 8443
     # The port protocol (TCP/UDP)
     protocol: TCP
@@ -351,7 +351,7 @@ ports:
     # You may not want to expose the metrics port on production deployments.
     # If you want to access it from outside of your cluster,
     # use `kubectl port-forward` or create a secure ingress
-    expose: false
+    expose: true
     # The exposed port for this service
     exposedPort: 9101
     # The port protocol (TCP/UDP)
