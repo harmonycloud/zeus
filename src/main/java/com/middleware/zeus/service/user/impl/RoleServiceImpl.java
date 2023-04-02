@@ -199,7 +199,7 @@ public class RoleServiceImpl implements RoleService {
         }
         LicenseInfo finalFeatures = features;
         list = list.stream().filter(menuDto -> {
-            if (menuDto.getResourceMenuId() == disasterMenuId) {
+            if (menuDto.getResourceMenuId().equals(disasterMenuId)) {
                 return finalFeatures.getDisasterRecoveryEnable() && userDto.getIsAdmin();
             } else if (menuDto.getResourceMenuId() == Integer.parseInt(activeActiveMenuId)) {
                 return finalFeatures.getActiveActiveEnable() && userDto.getIsAdmin();
