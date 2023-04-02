@@ -3,6 +3,7 @@ package com.middleware.zeus.integration.platform;
 import com.alibaba.fastjson.JSONObject;
 import com.dtflys.forest.annotation.*;
 import com.middleware.caas.common.model.DisasterRecoveryInfo;
+import com.middleware.zeus.interceptor.PlatformDisasterInterceptor;
 import org.springframework.stereotype.Component;
 
 /**
@@ -11,7 +12,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Address(source = PlatformAddress.class)
-
+@BaseRequest(interceptor = PlatformDisasterInterceptor.class)
 public interface PlatformClient {
 
     /**

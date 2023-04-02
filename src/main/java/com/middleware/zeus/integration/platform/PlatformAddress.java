@@ -26,7 +26,6 @@ public class PlatformAddress implements AddressSource {
 
     @Override
     public ForestAddress getAddress(ForestRequest forestRequest) {
-
         DisasterRecoveryInfo disasterRecoveryInfo = platformService.getRelationPlatformAddress(null);
         if (disasterRecoveryInfo == null || StringUtils.isEmpty(disasterRecoveryInfo.getProtocol())
             || StringUtils.isEmpty(disasterRecoveryInfo.getHost())) {
