@@ -148,7 +148,7 @@ public abstract class AbstractBaseOperator {
      */
     public void checkIfExists(IngressComponentDto ingressComponentDto) {
         QueryWrapper<BeanIngressComponents> wrapper = new QueryWrapper<BeanIngressComponents>().eq("ingress_class_name",
-                ingressComponentDto.getIngressClassName()).eq("cluster_id", ingressComponentDto.getClusterId());
+                ingressComponentDto.getIngressClassName()).eq("cluster_id", ingressComponentDto.getClusterId()).last("for update");
         BeanIngressComponents beanIngressComponents = beanIngressComponentsMapper.selectOne(wrapper);
         if (beanIngressComponents != null) {
             throw new BusinessException(ErrorMessage.INGRESS_CLASS_EXISTED);
