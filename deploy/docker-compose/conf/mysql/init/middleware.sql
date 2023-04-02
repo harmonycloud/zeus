@@ -1223,7 +1223,7 @@ INSERT INTO `resource_menu` VALUES (6,'storageManagement','存储管理','storag
 INSERT INTO `resource_menu` VALUES (7,'activeActive','同城双活','activeActive',9,'icon-gky',0,NULL);
 INSERT INTO `resource_menu` VALUES (8,'backupService','备份服务','backupService',10,'icon-beifenfuwu',0,NULL);
 INSERT INTO `resource_menu` VALUES (9,'monitorAlarm','监控告警','monitorAlarm',11,'icon-gaojingshijian',0,NULL);
-INSERT INTO `resource_menu` VALUES (10,'disasterBackup','灾备中心','disasterBackup',12,'icon-rongzaibeifen',0,NULL);
+INSERT INTO `resource_menu` VALUES (10,'disasterBackup','平台灾备','disasterBackup',12,'icon-rongzaibeifen',0,NULL);
 INSERT INTO `resource_menu` VALUES (11,'systemManagement','系统管理','systemManagement',13,'icon-shezhi01',0,NULL);
 INSERT INTO `resource_menu` VALUES (12,'backupTask','备份任务','backupService/backupTask',101,'icon-fuwutiaokuan',10,NULL);
 INSERT INTO `resource_menu` VALUES (13,'backupServer','备份服务器','backupService/backupServer',102,'icon-fuwutiaokuan',10,NULL);
@@ -1237,7 +1237,7 @@ INSERT INTO `resource_menu` VALUES (20,'roleManagement','角色管理','systemMa
 INSERT INTO `resource_menu` VALUES (21,'systemAlarm','系统告警','systemManagement/systemAlarm',135,NULL,13,NULL);
 INSERT INTO `resource_menu` VALUES (22,'operationAudit','操作审计','systemManagement/operationAudit',136,NULL,13,NULL);
 INSERT INTO `resource_menu` VALUES (23,'organUserManagement','成员管理','organUserManagement',5,'icon-zuzhichengyuanguanli1',0,NULL);
-INSERT INTO `resource_menu` VALUES (24,'myOrganizationManagement','组织概览','myOrganizationManagement',3,'icon-myOrganizationManagement',0,NULL);
+INSERT INTO `resource_menu` VALUES (24,'myOrganizationManagement','组织概览','myOrganizationManagement',3,'icon-shuxiangjiegou',0,NULL);
 /*!40000 ALTER TABLE `resource_menu` ENABLE KEYS */;
 UNLOCK TABLES;
 
