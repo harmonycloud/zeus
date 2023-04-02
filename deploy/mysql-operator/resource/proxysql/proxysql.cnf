@@ -1,0 +1,81 @@
+datadir="/var/lib/proxysql"
+
+admin_variables=
+{
+  admin_credentials="{{ .Values.proxy.args.adminUser | default "proxy_harmonycloud" }}:{{ .Values.proxy.args.adminPassword | default "Ab123456" }}"
+  mysql_ifaces="0.0.0.0:6032"
+}
+
+mysql_variables=
+{
+  monitor_slave_lag_when_null=0
+  threads=2
+  max_connections={{ .Values.proxy.args.max_connections | default 16384 }}
+  default_query_delay=0
+  default_query_timeout=36000000
+  have_compress=true
+  poll_timeout=2000
+  interfaces="0.0.0.0:6033"
+  default_schema="information_schema"
+  stacksize=1048576
+  server_version="8.0.20"
+  connect_timeout_server=3000
+  monitor_username="{{ .Values.proxy.user | default "root"}}"
+  monitor_password="{{ .Values.args.root_password  | default "Hc@Cloud01"}}"
+  monitor_history=600000
+  monitor_connect_interval=5000
+  monitor_ping_interval=2000
+  monitor_read_only_interval=1500
+  monitor_read_only_timeout=500
+  ping_interval_server_msec=15000
+  ping_timeout_server=500
+  commands_stats=true
+  sessions_sort=true
+  connect_retries_on_failure=10
+  auto_increment_delay_multiplex=0
+}
+
+{{ $name := include "mysql.fullname" . }}
+
+# defines all the MySQL servers
+mysql_servers =
+(
+{{ $replicas := int (toString .Values.replicaCount) }}
+{{ range $i := until $replicas }}
+  { address="{{ $name }}-{{$i}}.{{ $name }}-headless" , port={{ $.Values.args.server_port |default 3306 }} , hostgroup=1, max_connections=5000, max_replication_lag=20},
+{{end}}
+)
+
+
+# defines all the MySQL users
+mysql_users:
+(
+  { username = "{{ .Values.proxy.user | default "root"}}" , password = "{{ .Values.args.root_password  | default "Hc@Cloud01" }}"},
+)
+
+#defines MySQL Query Rules
+
+mysql_query_rules:
+{{ .Values.proxy.args.mysql_query_rules | indent 2}}
+
+
+scheduler=
+(
+  {
+    id=1
+    active=1
+    interval_ms={{ .Values.proxy.args.sync_user_period | default 600000 }}
+    filename="/root/proxysql-admin-tool/sync-user.sh"
+    comment="sync-user"
+  }
+)
+
+
+mysql_replication_hostgroups=
+(
+  {
+    writer_hostgroup=0
+    reader_hostgroup=1
+    comment="RHG1"
+  }
+)

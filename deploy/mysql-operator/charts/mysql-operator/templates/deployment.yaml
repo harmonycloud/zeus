@@ -48,7 +48,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
           - name: TZ
-            value: CST-8
+            value: "Asia/Shanghai"
           - name: CRD_GROUP
             value: {{ .Values.crdGroup | default "harmonycloud" }}
           - name: aliyun_logs_middlewarestdout
@@ -71,6 +71,13 @@ spec:
             timeoutSeconds: 5
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: /resource/proxysql-cluster/templates/
+              name: resource
+      volumes:
+        - name: resource
+          configMap:
+            name: {{ include "mysql-operator.fullname" . }}-resource
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
