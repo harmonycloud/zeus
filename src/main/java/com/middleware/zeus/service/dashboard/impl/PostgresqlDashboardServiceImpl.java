@@ -1228,7 +1228,7 @@ public class PostgresqlDashboardServiceImpl implements PostgresqlDashboardServic
         JSONObject updatePassword = postgresqlClient.updatePassword(path, port, username, password);
         JSONObject err = updatePassword.getJSONObject("err");
         if (err != null) {
-            throw new BusinessException(ErrorMessage.POSTGRESQL_DELETE_USER_FAILED, err.getString("Message"));
+            throw new BusinessException(ErrorMessage.POSTGRESQL_USER_RESET_PASSWORD_FAILED, err.getString("Message"));
         }
     }
 
