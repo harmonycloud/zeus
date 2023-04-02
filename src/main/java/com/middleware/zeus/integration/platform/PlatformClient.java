@@ -21,7 +21,7 @@ public interface PlatformClient {
      */
     @Post(url = "/api/platform/disasterRecovery/switch")
     JSONObject switchPlatform(@Header("userToken") String userToken,
-                              @Var("isMaster") Boolean isMaster);
+                              @Body("isMaster") Boolean isMaster);
 
     /**
      * 获取同步器状态
