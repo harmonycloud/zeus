@@ -600,6 +600,9 @@ public class IngressServiceImpl implements IngressService {
      * @param ingressDTO
      */
     private void setCommonServicePort(String clusterId, String namespace, IngressDTO ingressDTO) {
+        if (CollectionUtils.isEmpty(ingressDTO.getServiceList())){
+            return;
+        }
         ingressDTO.getServiceList().forEach(serviceDTO -> {
             String serviceName = serviceDTO.getServiceName();
             io.fabric8.kubernetes.api.model.Service service = serviceWrapper.get(clusterId, namespace, serviceName);
