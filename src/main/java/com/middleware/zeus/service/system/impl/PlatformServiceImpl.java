@@ -124,7 +124,12 @@ public class PlatformServiceImpl implements PlatformService {
         if (disasterRecoveryInfo == null) {
             throw new BusinessException(ErrorMessage.SWITCH_NO_POWER);
         }
-        
+        JSONObject values = helmChartService.getZeusMysqlInstallValues();
+        // 根据切换信息判断是否直接返回， 避免主备平台循环调用
+        // 如果已经切换了  则不再执行
+        if("master-slave".equals(values.getString("type"))){
+            return;
+        }
         log.info("备平台接收切换请求，开始灾备切换");
         try{
             // 关闭数据同步
@@ -133,7 +138,6 @@ public class PlatformServiceImpl implements PlatformService {
             mr.getSpec().setEnable(false);
             mysqlReplicateWrapper.updateMysqlReplicate(mr);
             // 切换mysql 模式为一主一从
-            JSONObject values = helmChartService.getZeusMysqlInstallValues();
             JSONObject newValues = new JSONObject();
             newValues.putAll(values);
             newValues.put("type", "master-slave");
@@ -154,9 +158,17 @@ public class PlatformServiceImpl implements PlatformService {
 
     private void masterSwitch(){
         JSONObject values = helmChartService.getZeusMysqlInstallValues();
-        JSONObject newValues = new JSONObject();
-        newValues.putAll(values);
+        // 根据切换信息判断是否直接返回， 避免主备平台循环调用
+        if (values.getJSONObject("args").containsKey("disasterRecoverySwitched")
+            && values.getJSONObject("args").getBoolean("disasterRecoverySwitched")) {
+            return;
+        }
         try {
+            // 记录开始切换的操作
+            JSONObject newValues = JSONObject.parseObject(values.toJSONString());
+            newValues.getJSONObject("args").put("disasterRecoverySwitched",true);
+            helmChartService.upgradeZeusMysql(values, newValues);
+            // 切换备平台
             JSONObject res = platformClient.switchPlatform(CurrentUserRepository.getUser().getToken(), false);
             log.info("切换结果:{}",res);
             if (res != null && res.getBoolean("success")) {
@@ -166,6 +178,8 @@ public class PlatformServiceImpl implements PlatformService {
                 helmChartService.upgradeZeusMysql(values, newValues);
             } else {
                 log.error("切换失败,res={}",res);
+                newValues.getJSONObject("args").put("disasterRecoverySwitched",false);
+                helmChartService.upgradeZeusMysql(values, newValues);
                 throw new BusinessException(ErrorMessage.REMOTE_SWITCH_FAILED);
             }
         } catch (Exception e) {
