@@ -389,7 +389,14 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         JSONObject values = helmChartService.getInstalledValues(config.getName(), config.getNamespace(), cluster);
         String password = values.getString("redisPassword");
         // 获取端口
-        String port = values.getString("redisServicePort");
+        String port;
+        if (values.containsKey("redisServicePort")) {
+            port = values.getString("redisServicePort");
+        } else if (values.containsKey("redis") && values.getJSONObject("redis").containsKey("port")) {
+            port = values.getJSONObject("redis").getString("port");
+        } else {
+            port = "6379";
+        }
         // 获取pod列表
         MiddlewareCR middlewareCr = middlewareCRService.getCR(cluster.getId(), config.getNamespace(),
                 MiddlewareTypeEnum.REDIS.getType(), config.getName());
