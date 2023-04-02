@@ -119,7 +119,7 @@ public class AuthServiceImpl extends AbstractAuthService implements AuthService 
         // 主平台切换后无法登陆
         if (switched != null && switched && !isMaster) {
             log.error("当前集群已由平台灾备功能进行切换，无法进行登录");
-            throw new BusinessException(ErrorMessage.UNKNOWN);
+            throw new BusinessException(ErrorMessage.SWITCH_TO_BACKUP_PLATFORM);
         }
     }
 
