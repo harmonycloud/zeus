@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Address(source = PlatformAddress.class)
+
 public interface PlatformClient {
 
     /**
@@ -35,7 +36,7 @@ public interface PlatformClient {
      * @param disasterRecoveryInfo
      * @return
      */
-    @Post(url = "/api/platform/disasterRecovery/address")
+    @Post(url = "/api/platform/disasterRecovery")
     JSONObject setAddress(@Header("userToken") String userToken,
                           @Body DisasterRecoveryInfo disasterRecoveryInfo);
 
