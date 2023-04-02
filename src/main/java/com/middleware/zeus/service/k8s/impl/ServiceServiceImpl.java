@@ -138,6 +138,9 @@ public class ServiceServiceImpl implements ServiceService {
             return getMQInternalService(name, namespace);
         }
         List<ServicePortDTO> servicePortDTOList = list(clusterId, namespace, name, type);
+        if(servicePortDTOList == null){
+            servicePortDTOList = new ArrayList<>();
+        }
         servicePortDTOList.forEach(service -> {
             service.setServicePurpose(MiddlewareServicePurposeUtil.convertChinesePurpose(name, type, service.getServiceName()));
             List<PortDetailDTO> portDetailDtoList = service.getPortDetailDtoList();
