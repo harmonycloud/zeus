@@ -214,7 +214,7 @@ public class NamespaceServiceImpl implements NamespaceService {
         }
         namespaceWrapper.save(clusterId, ns);
         // 修改数据表 project_namespace 中分区中文名
-        updateAliasName(name, namespace.getAliasName());
+        updateAliasName(clusterId, name, namespace.getAliasName());
     }
 
     @Override
@@ -367,12 +367,14 @@ public class NamespaceServiceImpl implements NamespaceService {
 
     /**
      * 更新数据库中的分区中文名
+     * @param clusterId
      * @param namespace
      * @param aliasName
      */
-    private void updateAliasName(String namespace, String aliasName) {
+    private void updateAliasName(String clusterId, String namespace, String aliasName) {
         QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<>();
         wrapper.eq("namespace", namespace);
+        wrapper.eq("cluster_id", clusterId);
         List<BeanProjectNamespace> namespaces = beanProjectNamespaceMapper.selectList(wrapper);
         for (BeanProjectNamespace beanProjectNamespace : namespaces) {
             beanProjectNamespace.setAliasName(aliasName);
