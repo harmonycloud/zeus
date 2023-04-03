@@ -162,6 +162,7 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
         if (beanIngressComponents == null) {
             throw new BusinessException(ErrorMessage.INGRESS_CLASS_NOT_EXISTED);
         }
+        checkExist(ingressComponentDto);
         // 更新数据库
         BeanUtils.copyProperties(ingressComponentDto, beanIngressComponents, "status");
         beanIngressComponentsMapper.updateById(beanIngressComponents);
@@ -281,6 +282,17 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
     @Override
     public void upgrade(MiddlewareValues middlewareValues, String ingressName) {
         super.upgrade(middlewareValues, ingressName, "traefik");
+    }
+
+    @Override
+    public void checkExist(IngressComponentDto ingressComponentDto) {
+        // 获取values.yaml
+        JSONObject values = helmChartService.getInstalledValues(ingressComponentDto.getName(),
+            ingressComponentDto.getNamespace(), clusterService.findById(ingressComponentDto.getClusterId()));
+        if (values == null) {
+            log.error("负载均衡{} 查询values.yaml失败", ingressComponentDto.getName());
+            throw new BusinessException(ErrorMessage.INGRESS_COMPONENTS_VALUES_NOT_FOUND);
+        }
     }
 
     private List<String> execCmd(String cmd, Function<String, String> dealWithErrMsg) {

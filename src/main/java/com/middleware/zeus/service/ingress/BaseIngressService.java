@@ -92,5 +92,12 @@ public interface BaseIngressService {
      */
     void upgrade(MiddlewareValues middlewareValues, String ingressName);
 
+    /**
+     * 校验ingress组件是否存在
+     *
+     * @param ingressComponentDto 业务对象
+     */
+    void checkExist(IngressComponentDto ingressComponentDto);
+
 
 }
