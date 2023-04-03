@@ -166,7 +166,7 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
         BeanUtils.copyProperties(ingressComponentDto, beanIngressComponents);
         beanIngressComponentsMapper.updateById(beanIngressComponents);
         // 更新端口
-        if (!CollectionUtils.isEmpty(ingressComponentDto.getTraefikPortList())) {
+        if (!CollectionUtils.isEmpty(ingressComponentDto.getTraefikPortList()) && beanIngressComponents.getStatus() != 1) {
             String path = componentsPath + File.separator + "traefik";
             MiddlewareClusterDTO cluster = clusterService.findById(ingressComponentDto.getClusterId());
             // 获取values.yaml
