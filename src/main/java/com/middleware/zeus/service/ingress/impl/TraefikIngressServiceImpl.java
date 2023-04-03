@@ -163,7 +163,7 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
             throw new BusinessException(ErrorMessage.INGRESS_CLASS_NOT_EXISTED);
         }
         // 更新数据库
-        BeanUtils.copyProperties(ingressComponentDto, beanIngressComponents);
+        BeanUtils.copyProperties(ingressComponentDto, beanIngressComponents, "status");
         beanIngressComponentsMapper.updateById(beanIngressComponents);
         // 更新端口
         if (!CollectionUtils.isEmpty(ingressComponentDto.getTraefikPortList()) && beanIngressComponents.getStatus() != 1) {
