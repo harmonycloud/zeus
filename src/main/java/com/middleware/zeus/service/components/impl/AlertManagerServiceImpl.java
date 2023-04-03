@@ -16,6 +16,7 @@ import com.middleware.zeus.service.components.api.AlertManagerService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -36,6 +37,9 @@ import java.util.Map;
 @Operator(paramTypes4One = String.class)
 @Slf4j
 public class AlertManagerServiceImpl extends AbstractBaseOperator implements AlertManagerService {
+
+    @Value("${system.alert.silent:1h}")
+    private String silentTime;
 
     @Autowired
     private BeanSystemConfigMapper beanSystemConfigMapper;
@@ -131,6 +135,9 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
         wrapper.eq("config_name", "Alertmanager_SilentTime");
         List<BeanSystemConfig> beanSystemConfigs = beanSystemConfigMapper.selectList(wrapper);
         BeanSystemConfig beanSystemConfig;
+        if (StringUtils.isEmpty(clusterComponentsDto.getSilentTime())){
+            clusterComponentsDto.setSilentTime(silentTime);
+        }
         if (!CollectionUtils.isEmpty(beanSystemConfigs)) {
             beanSystemConfig = beanSystemConfigs.get(0);
             beanSystemConfig.setConfigValue(clusterComponentsDto.getSilentTime());

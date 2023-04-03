@@ -234,9 +234,10 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             List<BeanSystemConfig> beanSystemConfigs = beanSystemConfigMapper.selectList(wrapper);
             if (!CollectionUtils.isEmpty(beanSystemConfigs)) {
                 silence = beanSystemConfigs.get(0).getConfigValue();
-            }else {
-                silence = silentTime;
             }
+        }
+        if (silence == null) {
+            silence = silentTime;
         }
         body.put("endsAt",
             DateUtils.dateToString(calculateEndTime(now, silence), DateStyle.YYYY_MM_DD_T_HH_MM_SS_Z_SSS));
