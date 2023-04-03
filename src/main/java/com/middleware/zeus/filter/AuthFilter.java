@@ -36,15 +36,7 @@ public class AuthFilter implements Filter {
         log.debug("auth filter is in calling");
         HttpServletRequest httpRequest = (HttpServletRequest)request;
         HttpServletResponse httpResponse = (HttpServletResponse)response;
-        // 平台不可用  直接登出
-        if (PlatformServiceImpl.AVAILABLE.containsKey("available") && !PlatformServiceImpl.AVAILABLE.get("available")) {
-            httpResponse.setContentType("application/json; charset=UTF-8");
-            PrintWriter out = httpResponse.getWriter();
-            out.append(
-                JSONObject.toJSONString(BaseResult.exception(HttpStatus.UNAUTHORIZED.value(), "平台已停止访问", "平台已停止访问")));
-            out.close();
-            return;
-        }
+        
         String path = httpRequest.getRequestURI();
         if (!acceptPath(path)
             && StringUtils.isEmpty(httpRequest.getHeader("userToken"))
@@ -53,6 +45,17 @@ public class AuthFilter implements Filter {
             PrintWriter out = httpResponse.getWriter();
             out.append(
                 JSONObject.toJSONString(BaseResult.exception(HttpStatus.UNAUTHORIZED.value(), "auth failed", "用户未登录")));
+            out.close();
+            return;
+        }
+
+        // 平台不可用  直接登出
+        if (!acceptPath(path) && PlatformServiceImpl.AVAILABLE.containsKey("available")
+            && !PlatformServiceImpl.AVAILABLE.get("available")) {
+            httpResponse.setContentType("application/json; charset=UTF-8");
+            PrintWriter out = httpResponse.getWriter();
+            out.append(
+                JSONObject.toJSONString(BaseResult.exception(HttpStatus.UNAUTHORIZED.value(), "平台已停止访问", "平台已停止访问")));
             out.close();
             return;
         }
