@@ -418,7 +418,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
                 || !middlewareCr.getStatus().getInclude().containsKey("pods")) {
             throw new BusinessException(ErrorMessage.FIND_POD_IN_MIDDLEWARE_FAIL);
         }
-        String serviceName = middlewareCr.getStatus().getInclude().get("services").get(0).getName();
+        String serviceName = middlewareCr.getStatus().getInclude().get("services").get(1).getName();
         middlewareCr.getStatus().getInclude().get("pods").forEach(pods -> {
             if ("master".equals(pods.getType()) || "slave".equals(pods.getType())) {
                 String execCommand = MessageFormat.format(
