@@ -235,9 +235,11 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
         List<ProjectDto> projectDtoList = projectService.list(organId);
         List<String> uidList = projectDtoList.stream().map(ProjectDto::getProjectId).collect(Collectors.toList());
         // 校验存储是否能存在已分配
-        List<BeanPlatformQuota> beanPlatformQuotaList = platformQuotaService.findQuota(PROJECT, uidList, clusterId, storageId, STORAGE);
-        if (!CollectionUtils.isEmpty(beanPlatformQuotaList)){
-            throw new BusinessException(ErrorMessage.ORGANIZATION_STORAGE_USING);
+        if (!CollectionUtils.isEmpty(uidList)){
+            List<BeanPlatformQuota> beanPlatformQuotaList = platformQuotaService.findQuota(PROJECT, uidList, clusterId, storageId, STORAGE);
+            if (!CollectionUtils.isEmpty(beanPlatformQuotaList)){
+                throw new BusinessException(ErrorMessage.ORGANIZATION_STORAGE_USING);
+            }
         }
         // 删除存储
         platformQuotaService.remove(ORGAN, organId, storageId, STORAGE);
@@ -276,9 +278,11 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
         List<ProjectDto> projectDtoList = projectService.list(organId);
         List<String> uidList = projectDtoList.stream().map(ProjectDto::getProjectId).collect(Collectors.toList());
         // 校验cpu memory是否能存在已分配
-        List<BeanPlatformQuota> beanPlatformQuotaList = platformQuotaService.findQuota(PROJECT, uidList, clusterId, null, CPU, MEMORY);
-        if (CollectionUtils.isEmpty(beanPlatformQuotaList)){
-            throw new BusinessException(ErrorMessage.ORGANIZATION_CPU_MEMORY_USING);
+        if (!CollectionUtils.isEmpty(uidList)){
+            List<BeanPlatformQuota> beanPlatformQuotaList = platformQuotaService.findQuota(PROJECT, uidList, clusterId, null, CPU, MEMORY);
+            if (CollectionUtils.isEmpty(beanPlatformQuotaList)){
+                throw new BusinessException(ErrorMessage.ORGANIZATION_CPU_MEMORY_USING);
+            }
         }
         // 删除cpu memory
         platformQuotaService.remove(ORGAN, organId, null, CPU, MEMORY);
