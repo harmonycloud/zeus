@@ -69,7 +69,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         // 部署组件
         service.deploy(cluster, clusterComponentsDto);
         // 记录数据库
-        record(cluster.getId(), clusterComponentsDto, 2);
+        record(cluster.getId(), clusterComponentsDto, 2, clusterComponentsDto.getComponent().equals(ComponentsEnum.LOGGING.getName()));
         // 检查是否安装成功
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
@@ -135,7 +135,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
             updateLogPilot(clusterComponentsDto);
         }
         Integer status = update ? null : 1;
-        record(clusterComponentsDto.getClusterId(), clusterComponentsDto, status);
+        record(clusterComponentsDto.getClusterId(), clusterComponentsDto, status, false);
     }
 
     @Override
@@ -249,7 +249,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
     /**
      * 记入数据库
      */
-    private void record(String clusterId, ClusterComponentsDto componentsDto, Integer status) {
+    private void record(String clusterId, ClusterComponentsDto componentsDto, Integer status, boolean skipRecord) {
         QueryWrapper<BeanClusterComponents> wrapper = new QueryWrapper<BeanClusterComponents>()
             .eq("cluster_id", clusterId).eq("component", componentsDto.getComponent());
         BeanClusterComponents cm = new BeanClusterComponents();
@@ -261,7 +261,9 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         BeanUtils.copyProperties(componentsDto, cm, "component", "status");
         cm.setCreateTime(new Date());
         beanClusterComponentsMapper.update(cm, wrapper);
-        getOperator(BaseComponentsService.class, BaseComponentsService.class, componentsDto.getComponent()).record2SystemConfig(componentsDto);
+        if (!skipRecord) {
+            getOperator(BaseComponentsService.class, BaseComponentsService.class, componentsDto.getComponent()).record2SystemConfig(componentsDto);
+        }
     }
 
     /**
