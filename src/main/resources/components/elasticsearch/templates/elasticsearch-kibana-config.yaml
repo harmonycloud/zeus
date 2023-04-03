@@ -3,11 +3,11 @@ data:
   kibana.yml: |-
     server.name: kibana
     server.host: "0"
-    server.port: "5200"
+    server.port: "{{ .Values.port.esKibanaPort }}"
   {{- if eq .Values.version "6.8" }}
-    elasticsearch.url: http://elasticsearch:9200
+    elasticsearch.url: http://elasticsearch:{{ .Values.port.esHttpPort }}
   {{- else }}
-    elasticsearch.hosts: ["http://elasticsearch:9200"]
+    elasticsearch.hosts: ["http://elasticsearch:{{ .Values.port.esHttpPort }}"]
   {{- end }}
     elasticsearch.username: elastic
     elasticsearch.password: {{ .Values.elasticPassword | quote}}
