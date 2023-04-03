@@ -56,11 +56,11 @@ import lombok.extern.slf4j.Slf4j;
 public class LicenseServiceImpl implements LicenseService {
 
 
-    @Value("${system.license.enable: true}")
+    @Value("${system.license.enable:true}")
     private String enable;
     @Value("${system.disasterRecovery:true}")
     private String disasterRecovery;
-    @Value("${system.active:true}")
+    @Value("${system.active:false}")
     private String active;
 
     @Autowired
