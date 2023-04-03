@@ -64,7 +64,7 @@ public class IngressComponentController {
     public BaseResult update(@PathVariable("clusterId") String clusterId,
                              @RequestBody IngressComponentDto ingressComponentDto,
                              @PathVariable("ingressClassName") String ingressClassName) {
-        ingressComponentDto.setIngressClassName(ingressClassName).setClusterId(clusterId);
+        ingressComponentDto.setClusterId(clusterId);
         ingressComponentService.update(ingressComponentDto);
         return BaseResult.ok();
     }

@@ -19,12 +19,14 @@ import com.middleware.tool.date.DateUtils;
 import com.middleware.zeus.annotation.Operator;
 import com.middleware.zeus.bean.BeanIngressComponents;
 import com.middleware.zeus.dao.BeanIngressComponentsMapper;
+import com.middleware.zeus.integration.cluster.ConfigMapWrapper;
 import com.middleware.zeus.service.ingress.AbstractBaseOperator;
 import com.middleware.zeus.service.ingress.api.NginxIngressService;
 import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.k8s.PodService;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.util.K8sConvert;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.NodeAffinity;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -57,6 +59,8 @@ public class NginxIngressServiceImpl extends AbstractBaseOperator implements Ngi
     private HelmChartService helmChartService;
     @Autowired
     private BeanIngressComponentsMapper beanIngressComponentsMapper;
+    @Autowired
+    private ConfigMapWrapper configMapWrapper;
     @Autowired
     private PodService podService;
     @Value("${k8s.component.components:/usr/local/zeus-pv/components}")
@@ -161,6 +165,7 @@ public class NginxIngressServiceImpl extends AbstractBaseOperator implements Ngi
         if (beanIngressComponents == null) {
             throw new BusinessException(ErrorMessage.INGRESS_CLASS_NOT_EXISTED);
         }
+        checkExist(ingressComponentDto);
         // 更新数据库
         BeanUtils.copyProperties(ingressComponentDto, beanIngressComponents);
         beanIngressComponentsMapper.updateById(beanIngressComponents);
@@ -309,6 +314,14 @@ public class NginxIngressServiceImpl extends AbstractBaseOperator implements Ngi
     @Override
     public void upgrade(MiddlewareValues middlewareValues, String ingressName) {
         super.upgrade(middlewareValues, ingressName, "ingress-nginx/charts/ingress-nginx");
+    }
+
+    @Override
+    public void checkExist(IngressComponentDto ingressComponentDto) {
+        ConfigMap configMap = configMapWrapper.get(ingressComponentDto.getClusterId(), ingressComponentDto.getNamespace(), ingressComponentDto.getConfigMapName());
+        if (configMap == null) {
+            throw new BusinessException(ErrorMessage.INGRESS_CONFIGMAP_NOT_EXIST);
+        }
     }
 
 }

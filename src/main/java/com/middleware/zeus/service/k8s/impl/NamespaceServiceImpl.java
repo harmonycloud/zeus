@@ -213,6 +213,8 @@ public class NamespaceServiceImpl implements NamespaceService {
             resourceQuotaService.update(clusterId, name, namespace.getQuotas());
         }
         namespaceWrapper.save(clusterId, ns);
+        // 修改数据表 project_namespace 中分区中文名
+        updateAliasName(clusterId, name, namespace.getAliasName());
     }
 
     @Override
@@ -363,6 +365,22 @@ public class NamespaceServiceImpl implements NamespaceService {
         return namespaces;
     }
 
+    /**
+     * 更新数据库中的分区中文名
+     * @param clusterId
+     * @param namespace
+     * @param aliasName
+     */
+    private void updateAliasName(String clusterId, String namespace, String aliasName) {
+        QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<>();
+        wrapper.eq("namespace", namespace);
+        wrapper.eq("cluster_id", clusterId);
+        List<BeanProjectNamespace> namespaces = beanProjectNamespaceMapper.selectList(wrapper);
+        for (BeanProjectNamespace beanProjectNamespace : namespaces) {
+            beanProjectNamespace.setAliasName(aliasName);
+            beanProjectNamespaceMapper.updateById(beanProjectNamespace);
+        }
+    }
 
     public boolean checkAliasNameExist(String clusterId, String aliasName) {
         List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId);

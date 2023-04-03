@@ -58,8 +58,6 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
     @Autowired
     private IngressService ingressService;
     @Autowired
-    private ConfigMapWrapper configMapWrapper;
-    @Autowired
     private TraefikIngressService traefikIngressService;
 
     @Override
@@ -78,13 +76,9 @@ public class IngressComponentServiceImpl extends AbstractBaseService implements 
         if (beanIngressComponents != null) {
             throw new BusinessException(ErrorMessage.INGRESS_CLASS_EXISTED);
         }
-        // 如果接入ingress，判断ingress tcp文件是否存在
-        if (IngressEnum.NGINX.getName().equals(ingressComponentDto.getType())) {
-            ConfigMap configMap = configMapWrapper.get(ingressComponentDto.getClusterId(), ingressComponentDto.getNamespace(), ingressComponentDto.getConfigMapName());
-            if (configMap == null) {
-                throw new BusinessException(ErrorMessage.INGRESS_CONFIGMAP_NOT_EXIST);
-            }
-        }
+        // 校验是否实际可查询到
+        getOperator(BaseIngressService.class, BaseIngressService.class, ingressComponentDto.getType()).checkExist(ingressComponentDto);
+
         // save to mysql
         insert(ingressComponentDto.getClusterId(), ingressComponentDto, 1);
     }

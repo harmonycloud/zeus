@@ -17,9 +17,11 @@ import com.middleware.zeus.integration.cluster.bean.MysqlCluster;
 import com.middleware.zeus.integration.cluster.bean.MysqlReplicateCR;
 import com.middleware.zeus.integration.cluster.bean.MysqlReplicateStatus;
 import com.middleware.zeus.integration.platform.PlatformClient;
+import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.system.PlatformService;
 import com.middleware.zeus.service.system.SystemConfigService;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +33,9 @@ import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.middleware.caas.common.constants.NameConstant.RUNNING;
 
@@ -42,8 +46,14 @@ import static com.middleware.caas.common.constants.NameConstant.RUNNING;
 @Service
 @Slf4j
 public class PlatformServiceImpl implements PlatformService {
+
     @Value("${zeus.namespace:zeus}")
     private String zeusNamespace;
+
+    /**
+     *  设置平台可用
+     */
+    public static final Map<String, Boolean> AVAILABLE = new HashMap<>();
 
     @Autowired
     private HelmChartService helmChartService;
@@ -53,6 +63,20 @@ public class PlatformServiceImpl implements PlatformService {
     private PlatformClient platformClient;
     @Autowired
     private MysqlClusterWrapper mysqlClusterWrapper;
+
+    @PostConstruct
+    public void init(){
+        try {
+            JSONObject values = helmChartService.getZeusMysqlInstallValues();
+            boolean isSlave = "master-slave".equals(values.getString("type"));
+            if (!isSlave && values.getJSONObject("args") != null && values.getJSONObject("args").containsKey("disasterRecoverySwitched")
+                    && values.getJSONObject("args").getBoolean("disasterRecoverySwitched")){
+                AVAILABLE.put("available", false);
+            }
+        } catch (Exception e){
+            log.error("初始化平台灾备可访问失败");
+        }
+    }
 
 
     @Override
@@ -161,11 +185,11 @@ public class PlatformServiceImpl implements PlatformService {
     private void masterSwitch(){
         JSONObject values = helmChartService.getZeusMysqlInstallValues();
         // 根据切换信息判断是否直接返回， 避免主备平台循环调用
-        if (values.getJSONObject("args").containsKey("disasterRecoverySwitched")
-            && values.getJSONObject("args").getBoolean("disasterRecoverySwitched")) {
+        if (AVAILABLE.containsKey("available") && !AVAILABLE.get("available")){
             return;
         }
         try {
+            AVAILABLE.put("available", false);
             // 记录开始切换的操作
             JSONObject newValues = JSONObject.parseObject(values.toJSONString());
             newValues.getJSONObject("args").put("disasterRecoverySwitched",true);
@@ -180,12 +204,14 @@ public class PlatformServiceImpl implements PlatformService {
                 helmChartService.upgradeZeusMysql(values, newValues);
             } else {
                 log.error("切换失败,res={}",res);
+                AVAILABLE.put("available", true);
                 newValues.getJSONObject("args").put("disasterRecoverySwitched",false);
                 helmChartService.upgradeZeusMysql(values, newValues);
                 throw new BusinessException(ErrorMessage.REMOTE_SWITCH_FAILED);
             }
         } catch (Exception e) {
             log.error("切换失败,连接地址异常或不存在", e);
+            AVAILABLE.put("available", true);
             throw new BusinessException(ErrorMessage.CONNECT_REMOTE_HOST_FAILED);
         }
     }

@@ -158,16 +158,18 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             }
             data.put(customConfig.getName(), customConfig.getValue());
         }
-        // mysql和redis手动执行set global
-        if ((config.getType().equals(MiddlewareTypeEnum.MYSQL.getType()) || config.getType().equals(MiddlewareTypeEnum.REDIS.getType()))) {
-                doUpdateCustomConfig(config, cluster, config.getType());
+        // mysql和redis手动执行参数设置
+        if ((config.getType().equals(MiddlewareTypeEnum.MYSQL.getType())
+            || config.getType().equals(MiddlewareTypeEnum.REDIS.getType()))) {
+            doUpdateCustomConfig(config, cluster, config.getType());
         }
 
         updateValues(middleware, data, cluster, values);
         // 添加修改历史
         customConfigHistoryService.insert(config.getName(), oldDate, config);
         // 重启服务
-        if (config.getReboot() != null && config.getReboot()) {
+        if (config.getReboot() != null && config.getReboot()
+            && !config.getType().equals(MiddlewareTypeEnum.POSTGRESQL.getType())) {
             middlewareService.reboot(config.getClusterId(), config.getNamespace(), config.getName(), config.getType());
         }
     }
@@ -418,7 +420,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
                 || !middlewareCr.getStatus().getInclude().containsKey("pods")) {
             throw new BusinessException(ErrorMessage.FIND_POD_IN_MIDDLEWARE_FAIL);
         }
-        String serviceName = middlewareCr.getStatus().getInclude().get("services").get(0).getName();
+        String serviceName = middlewareCr.getStatus().getInclude().get("services").get(1).getName();
         middlewareCr.getStatus().getInclude().get("pods").forEach(pods -> {
             if ("master".equals(pods.getType()) || "slave".equals(pods.getType())) {
                 String execCommand = MessageFormat.format(

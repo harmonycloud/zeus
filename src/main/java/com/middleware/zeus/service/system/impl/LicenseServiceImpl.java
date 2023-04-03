@@ -56,6 +56,13 @@ import lombok.extern.slf4j.Slf4j;
 public class LicenseServiceImpl implements LicenseService {
 
 
+    @Value("${system.license.enable:true}")
+    private String enable;
+    @Value("${system.disasterRecovery:true}")
+    private String disasterRecovery;
+    @Value("${system.active:false}")
+    private String active;
+
     @Autowired
     private ClusterService clusterService;
     @Autowired
@@ -157,6 +164,9 @@ public class LicenseServiceImpl implements LicenseService {
 
     @Override
     public Boolean check(String clusterId) {
+        if (!Boolean.parseBoolean(enable)){
+            return true;
+        }
         JSONObject license = getLicense();
         List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
         clusterList =
@@ -174,6 +184,9 @@ public class LicenseServiceImpl implements LicenseService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void refreshMiddlewareResource() throws Exception {
+        if (!Boolean.parseBoolean(enable)){
+            return;
+        }
         BeanSystemConfig produceConfig = systemConfigService.getConfigForUpdate(PRODUCE);
         BeanSystemConfig testConfig = systemConfigService.getConfigForUpdate(TEST);
         if (produceConfig == null || testConfig == null) {
@@ -244,6 +257,11 @@ public class LicenseServiceImpl implements LicenseService {
     @Override
     public LicenseInfo getFeatures() {
         LicenseInfo licenseInfo = new LicenseInfo();
+        if (enable.equals(FALSE)){
+            licenseInfo.setDisasterRecoveryEnable(Boolean.parseBoolean(disasterRecovery));
+            licenseInfo.setActiveActiveEnable(Boolean.parseBoolean(active));
+            return licenseInfo;
+        }
         JSONObject license = getLicense();
         JSONArray features = license.getJSONArray(FEATURES);
         if (features == null){

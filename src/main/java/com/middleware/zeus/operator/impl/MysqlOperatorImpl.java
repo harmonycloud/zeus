@@ -32,6 +32,7 @@ import com.middleware.zeus.service.middleware.impl.MiddlewareServiceImpl;
 import com.middleware.zeus.service.middleware.impl.MysqlBackupServiceImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson.JSONArray;
@@ -77,6 +78,9 @@ import static com.middleware.caas.common.constants.middleware.MiddlewareConstant
 @Slf4j
 @Operator(paramTypes4One = Middleware.class)
 public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOperator {
+
+    @Value("${system.gracefulRestartParam:middleware.maintenance.lock:graceful-restart}")
+    private String gracefulRestartParam;
 
     @Autowired
     private MysqlClusterWrapper mysqlClusterWrapper;
@@ -922,5 +926,26 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     @Override
     public List<IngressDTO> listHostNetworkAddress(String clusterId, String namespace, String middlewareName, String type) {
         return null;
+    }
+
+    @Override
+    public void reboot(String clusterId, String namespace, String name, String type) {
+        MysqlCluster mysqlCluster = mysqlClusterWrapper.get(clusterId, namespace, name);
+        Integer replicas = mysqlCluster.getSpec().getReplicas();
+        if (replicas == 1) {
+            super.reboot(clusterId, namespace, name, type);
+            return;
+        }
+        Map<String, String> annotations = mysqlCluster.getMetadata().getAnnotations();
+        String[] params = gracefulRestartParam.split(",");
+        for (String param : params) {
+            String[] kv = param.split(":");
+            annotations.put(kv[0], kv[1]);
+        }
+        try {
+            mysqlClusterWrapper.update(clusterId, namespace, mysqlCluster);
+        }catch (Exception e){
+            log.error("触发mysql优雅重启失败", e);
+        }
     }
 }

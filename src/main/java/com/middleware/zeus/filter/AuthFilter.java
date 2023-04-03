@@ -3,8 +3,11 @@ package com.middleware.zeus.filter;
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.filters.base.BaseResult;
 import com.middleware.zeus.config.InitMiddlewareImage;
+import com.middleware.zeus.service.system.PlatformService;
+import com.middleware.zeus.service.system.impl.PlatformServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
 import javax.servlet.*;
@@ -33,6 +36,15 @@ public class AuthFilter implements Filter {
         log.debug("auth filter is in calling");
         HttpServletRequest httpRequest = (HttpServletRequest)request;
         HttpServletResponse httpResponse = (HttpServletResponse)response;
+        // 平台不可用  直接登出
+        if (PlatformServiceImpl.AVAILABLE.containsKey("available") && !PlatformServiceImpl.AVAILABLE.get("available")) {
+            httpResponse.setContentType("application/json; charset=UTF-8");
+            PrintWriter out = httpResponse.getWriter();
+            out.append(
+                JSONObject.toJSONString(BaseResult.exception(HttpStatus.UNAUTHORIZED.value(), "平台已停止访问", "平台已停止访问")));
+            out.close();
+            return;
+        }
         String path = httpRequest.getRequestURI();
         if (!acceptPath(path)
             && StringUtils.isEmpty(httpRequest.getHeader("userToken"))
