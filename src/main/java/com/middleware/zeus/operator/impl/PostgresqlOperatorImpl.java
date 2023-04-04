@@ -219,7 +219,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         List<PodInfo> runningPods = podInfos.stream().filter(podInfo -> RUNNING.equalsIgnoreCase(podInfo.getStatus()))
             .collect(Collectors.toList());
         if (CollectionUtil.isEmpty(runningPods)) {
-            throw new BusinessException(ErrorMessage.MIDDLEWARE_CLUSTER_IS_NOT_RUNNING);
+            throw new BusinessException(ErrorMessage.GET_AUTOSWITCH_FAILED);
         }
         // 获取patroniService
         String patroniName = middleware.getName() + "-patroni";
