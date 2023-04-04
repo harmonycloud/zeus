@@ -335,9 +335,10 @@ public class StorageServiceImpl implements StorageService {
         }).collect(Collectors.toList());
         
         // 获取所有分区对应项目 用于设置中间件所在项目
-        List<ProjectNamespaceDo> projectNsList = projectService.listNamespace(null);
+        List<ProjectNamespaceDo> projectNsList = projectService.listNamespace(clusterId);
         Map<String, ProjectNamespaceDo> projectNsMap =
             projectNsList.stream().collect(Collectors.toMap(ProjectNamespaceDo::getNamespace, Function.identity()));
+        
 
         List<MiddlewareStorageInfoDto> mwStorageInfoList = new ArrayList<>();
         for (MiddlewareCR middlewareCr : middlewareCRList){

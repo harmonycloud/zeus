@@ -585,7 +585,10 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
     @Override
     public List<ProjectNamespaceDo> listNamespace(String clusterId) {
         // 获取分区项目绑定关系
-        QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<BeanProjectNamespace>().eq("cluster_id", clusterId);
+        QueryWrapper<BeanProjectNamespace> wrapper = new QueryWrapper<>();
+        if (StringUtils.isNotEmpty(clusterId)){
+            wrapper.eq("cluster_id", clusterId);
+        }
         List<BeanProjectNamespace> projectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
 
         // 获取项目信息
