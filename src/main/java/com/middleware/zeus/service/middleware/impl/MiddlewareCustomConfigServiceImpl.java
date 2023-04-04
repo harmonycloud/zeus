@@ -404,13 +404,11 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
                 MiddlewareTypeEnum.REDIS.getType(), config.getName());
         // 拼接redis-cli命令
         StringBuilder sb = new StringBuilder();
-        sb.append("'");
         config.getCustomConfigList().forEach(customConfig -> {
             if (!customConfig.getRestart()) {
-                sb.append("config set ").append(customConfig.getName()).append(" ").append("\\\"").append(customConfig.getValue()).append("\\\"").append("\\n");
+                sb.append("config set ").append(customConfig.getName()).append(" ").append(" '").append(customConfig.getValue()).append("' ").append("\\n");
             }
         });
-        sb.append("'");
         // 没有要更新的则不执行
         if ("''".equals(sb.toString())) {
             return;
@@ -420,19 +418,13 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
                 || !middlewareCr.getStatus().getInclude().containsKey("pods")) {
             throw new BusinessException(ErrorMessage.FIND_POD_IN_MIDDLEWARE_FAIL);
         }
-        List<MiddlewareInfo> services = middlewareCr.getStatus().getInclude().get("services");
-        List<MiddlewareInfo> usableServices = services.stream().filter(middlewareInfo -> config.getName().equals(middlewareInfo.getName())).collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(usableServices)) {
-            return;
-        }
-        String serviceName = usableServices.get(0).getName();
         middlewareCr.getStatus().getInclude().get("pods").forEach(pods -> {
             if ("master".equals(pods.getType()) || "slave".equals(pods.getType())) {
                 String execCommand = MessageFormat.format(
                         "kubectl exec {0} -n {1} -c redis-cluster --server={2} --token={3} --insecure-skip-tls-verify=true " +
-                                "-- bash -c \"echo -en {4} | redis-cli -h {5}.{6} -p {7} -a {8} --pipe\"",
+                                "-- bash -c '' redis-cli -h $PODIP -p $REDIS_INSTANCE_PORT -a {4} {5} ''",
                         pods.getName(), config.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
-                        sb.toString(), pods.getName(), serviceName, port, password);
+                        password, sb.toString());
                 k8sExecService.exec(execCommand);
             }
         });
