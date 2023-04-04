@@ -103,6 +103,7 @@ update `role` set weight='5' where name='普通用户';
 
 -- 20230320 xutianhong
 -- 添加组织角色权限
+select id INTO @roleid from role where weight = '2';
 INSERT INTO `resource_menu_role` VALUES (null,1,23,0);
 INSERT INTO `resource_menu_role` VALUES (null,2,23,0);
 INSERT INTO `resource_menu_role` VALUES (null,3,23,0);
@@ -111,30 +112,31 @@ INSERT INTO `resource_menu_role` VALUES (null,1,24,0);
 INSERT INTO `resource_menu_role` VALUES (null,2,24,0);
 INSERT INTO `resource_menu_role` VALUES (null,3,24,0);
 INSERT INTO `resource_menu_role` VALUES (null,4,24,0);
-INSERT INTO `resource_menu_role` VALUES (null,5,1,0);
-INSERT INTO `resource_menu_role` VALUES (null,5,2,0);
-INSERT INTO `resource_menu_role` VALUES (null,5,3,1);
-INSERT INTO `resource_menu_role` VALUES (null,5,4,0);
-INSERT INTO `resource_menu_role` VALUES (null,5,5,0);
-INSERT INTO `resource_menu_role` VALUES (null,5,6,0);
-INSERT INTO `resource_menu_role` VALUES (null,5,7,0);
-INSERT INTO `resource_menu_role` VALUES (null,5,8,0);
-INSERT INTO `resource_menu_role` VALUES (null,5,9,0);
-INSERT INTO `resource_menu_role` VALUES (null,5,10,0);
-INSERT INTO `resource_menu_role` VALUES (null,5,11,0);
-INSERT INTO `resource_menu_role` VALUES (null,5,12,0);
-INSERT INTO `resource_menu_role` VALUES (null,5,13,0);
-INSERT INTO `resource_menu_role` VALUES (null,5,14,0);
-INSERT INTO `resource_menu_role` VALUES (null,5,15,0);
-INSERT INTO `resource_menu_role` VALUES (null,5,16,0);
-INSERT INTO `resource_menu_role` VALUES (null,5,17,0);
-INSERT INTO `resource_menu_role` VALUES (null,5,18,0);
-INSERT INTO `resource_menu_role` VALUES (null,5,19,0);
-INSERT INTO `resource_menu_role` VALUES (null,5,20,0);
-INSERT INTO `resource_menu_role` VALUES (null,5,21,0);
-INSERT INTO `resource_menu_role` VALUES (null,5,22,0);
-INSERT INTO `resource_menu_role` VALUES (null,5,23,1);
-INSERT INTO `resource_menu_role` VALUES (null,5,24,1);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,1,0);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,2,0);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,3,1);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,4,0);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,5,0);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,5,0);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,6,0);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,7,0);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,8,0);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,9,0);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,10,0);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,11,0);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,12,0);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,13,0);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,14,0);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,15,0);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,16,0);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,17,0);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,18,0);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,19,0);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,20,0);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,21,0);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,22,0);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,23,1);
+INSERT INTO `resource_menu_role` VALUES (null,@roleid,24,1);
 
 --20230328 wangpenglei
 --system_config表config_value更改类型为text
