@@ -6,7 +6,7 @@ global:
       pvTopology: false
       gracefulRestart: true
     image: middleware-controller
-    tag: v1.2.15
+    tag: v1.2.16
     resources:
       limits:
         cpu: 200m
