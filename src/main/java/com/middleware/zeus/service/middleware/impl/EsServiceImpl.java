@@ -489,6 +489,7 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
 
     @Override
     public void createOrUpdateLogSaveTime(String clusterId, String logSaveTime) {
+        boolean unbind = "ALWAYS".equalsIgnoreCase(logSaveTime);
         RestHighLevelClient esClient = null;
         try {
             esClient = getEsClient(clusterId);
@@ -497,27 +498,54 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
             throw new BusinessException(ErrorMessage.ELASTICSEARCH_CONNECT_FAILED);
         }
         // 创建/覆盖生命周期模板
-        String endPoint = "/_ilm/policy/" + EsPolicyTemplateEnum.LOG_SAVE_TIME_POLICY.getName();
-        String body = String.format(EsPolicyTemplateEnum.LOG_SAVE_TIME_POLICY.getTemplate(), logSaveTime);
         try {
-            resultByPutRestClient(esClient, clusterId, endPoint, body);
+            String endPoint = "/_ilm/policy/" + EsPolicyTemplateEnum.LOG_SAVE_TIME_POLICY.getName();
+            if (!unbind) {
+                String body = String.format(EsPolicyTemplateEnum.LOG_SAVE_TIME_POLICY.getTemplate(), logSaveTime);
+                resultByPutRestClient(esClient, clusterId, endPoint, body);
+            }
             // 绑定模版与索引
-            StringBuilder sb = new StringBuilder();
             String bd = String.format(EsPolicyTemplateEnum.INDEX_BIND_POLICY.getTemplate(),
-                    EsPolicyTemplateEnum.LOG_SAVE_TIME_POLICY.getName());
+                unbind ? "" : EsPolicyTemplateEnum.LOG_SAVE_TIME_POLICY.getName());
             for (EsTemplateEnum template : EsTemplateEnum.values()) {
-                log.info("向索引{}绑定生命周期策略",template.getName());
+                log.info("向索引{}绑定生命周期策略", template.getName());
                 String ep = "/" + template.getName() + "-*/_settings";
-                try{
+                try {
+                    updatePolicy2Template(esClient, clusterId, template, unbind);
                     resultByPutRestClient(esClient, clusterId, ep, bd);
-                }catch (ResponseException re){
-                    log.error("索引{}不存在",template.getName());
+                } catch (ResponseException re) {
+                    log.error("索引{}不存在", template.getName());
                 }
+
+            }
+            if (unbind) {
+                resultByDeleteRestClient(esClient, clusterId, endPoint);
             }
         } catch (IOException e) {
             throw new BusinessException(ErrorMessage.UPDATE_MAXIMUM_LOG_RETENTION_TIME_FAILED);
         }
 
+    }
+
+    private void updatePolicy2Template(RestHighLevelClient esClient, String clusterId, EsTemplateEnum template, boolean unbind)
+        throws IOException {
+
+        String endPoint = "/_template/" + template.getName();
+        JSONObject body = JSONObject.parseObject(template.getCode());
+        JSONObject settings = body.getJSONObject("settings");
+        if (settings == null) {
+            settings = new JSONObject();
+            body.put("settings", settings);
+        }
+        JSONObject index = settings.getJSONObject("index");
+        if (index == null) {
+            index = new JSONObject();
+            settings.put("index", index);
+        }
+        JSONObject lifecycle = new JSONObject();
+        lifecycle.put("name", unbind ? "" : EsPolicyTemplateEnum.LOG_SAVE_TIME_POLICY.getName());
+        index.put("lifecycle", lifecycle);
+        resultByPutRestClient(esClient, clusterId, endPoint, body.toString());
     }
 
     @Override
@@ -538,41 +566,6 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
             return null;
         }
         return null;
-    }
-
-    @Override
-    public void deleteLogSaveTime(String clusterId, String logSaveTime) {
-        // 获取client
-        RestHighLevelClient esClient = null;
-        try {
-            esClient = getEsClient(clusterId);
-        } catch (Exception e) {
-            log.error("日志组件连接失败");
-            throw new BusinessException(ErrorMessage.ELASTICSEARCH_CONNECT_FAILED);
-        }
-        // 将已绑定的索引解绑
-        String bd = String.format(EsPolicyTemplateEnum.INDEX_BIND_POLICY.getTemplate(),
-                "");
-        for (EsTemplateEnum template : EsTemplateEnum.values()) {
-            log.info("向索引{}解绑生命周期策略",template.getName());
-            String ep = "/" + template.getName() + "-*/_settings";
-            try{
-                resultByPutRestClient(esClient, clusterId, ep, bd);
-            }catch (ResponseException re){
-                log.error("索引{}不存在",template.getName());
-            } catch (IOException e) {
-                log.error("IO异常,{}",e.getMessage());
-            }
-        }
-
-        // 删除生命周期策略
-        String ep = "/_ilm/policy/" + EsPolicyTemplateEnum.LOG_SAVE_TIME_POLICY.getName();
-        try {
-            resultByDeleteRestClient(esClient,clusterId,ep);
-        } catch (IOException e) {
-            log.error("删除生命周期策略失败,{}",e.getMessage());
-        }
-
     }
 
 

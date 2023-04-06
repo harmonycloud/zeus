@@ -103,11 +103,4 @@ public interface EsService {
      * @return
      */
     String getLogSaveTime(String clusterId);
-
-    /**
-     * 取消日志最大保留时间
-     * @param clusterId
-     * @param logSaveTime
-     */
-    void deleteLogSaveTime(String clusterId, String logSaveTime);
 }
