@@ -16,10 +16,12 @@ public interface MiddlewareAlertRecordService {
      * @param namespace
      * @param middlewareName
      * @param current
-     * @param pageSize
+     * @param size
      * @param keyword
+     * @param level
+     * @param normalTimeOrder
      * @return
      */
-    List<BeanAlertRecord> list(String clusterId, String namespace, String middlewareName, Integer current, Integer pageSize, String keyword);
+    List<BeanAlertRecord> list(String clusterId, String namespace, String middlewareName, Integer current, Integer size, String keyword, String level, Boolean normalTimeOrder);
 
 }
