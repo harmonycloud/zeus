@@ -207,7 +207,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         checkBaseParam(middleware);
         checkLicense(middleware.getClusterId());
         BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
-        MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(middleware.getClusterId());
+        MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
         // pre check
         operator.createPreCheck(middleware, cluster);
         updateRegistry(middleware,cluster);
@@ -245,7 +245,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Override
     public void recovery(Middleware middleware) {
         checkLicense(middleware.getClusterId());
-        MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(middleware.getClusterId());
+        MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
         // pre check
         BeanCacheMiddleware beanCacheMiddleware = cacheMiddlewareService.get(middleware);
         // 1. download and read helm chart from registry
@@ -268,7 +268,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     public void update(Middleware middleware) {
         checkBaseParam(middleware);
         BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
-        MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(middleware.getClusterId());
+        MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
         // pre check
         operator.updatePreCheck(middleware, cluster);
         // update

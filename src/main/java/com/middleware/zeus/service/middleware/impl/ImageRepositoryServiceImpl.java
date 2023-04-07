@@ -69,13 +69,13 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         beanImageRepository.setCreateTime(new Date());
         beanImageRepositoryMapper.insert(beanImageRepository);
         // 更新集群默认镜像仓库
-        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+        /*MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         Registry registry = new Registry();
         BeanUtils.copyProperties(imageRepositoryDTO, registry);
         registry.setUser(imageRepositoryDTO.getUsername()).setAddress(imageRepositoryDTO.getHostAddress())
                 .setType("harbor").setChartRepo(imageRepositoryDTO.getProject()).setId(beanImageRepository.getId());
         cluster.setRegistry(registry);
-        clusterService.update(cluster);
+        clusterService.update(cluster);*/
     }
 
     @Override
@@ -124,7 +124,7 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         beanImageRepository.setUpdateTime(new Date());
         beanImageRepositoryMapper.updateById(beanImageRepository);
         // 更新集群默认镜像仓库
-        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+        /*MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         if (cluster.getRegistry() != null && cluster.getRegistry().getId() != null
                 && cluster.getRegistry().getId().equals(imageRepositoryDTO.getId())) {
             Registry registry = cluster.getRegistry();
@@ -133,7 +133,7 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
                     .setChartRepo(imageRepositoryDTO.getProject()).setId(beanImageRepository.getId());
             cluster.setRegistry(registry);
             clusterService.update(cluster);
-        }
+        }*/
     }
 
     @Override

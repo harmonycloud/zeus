@@ -705,7 +705,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         relationMiddleware.setMysqlDTO(sourceDto);
 
          //3 修改灾备实例镜像仓库
-        MiddlewareClusterDTO cluster = clusterService.findByIdAndCheckRegistry(relationMiddleware.getClusterId());
+        MiddlewareClusterDTO cluster = clusterService.findById(relationMiddleware.getClusterId());
         if (StringUtils.isNotEmpty(middleware.getMirrorImageId())) {
             cluster.setRegistry(imageRepositoryService.generateRegistry(middleware.getMirrorImageId()));
         }

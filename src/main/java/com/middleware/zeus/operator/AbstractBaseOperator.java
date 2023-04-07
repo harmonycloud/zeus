@@ -176,7 +176,7 @@ public abstract class AbstractBaseOperator {
 
     public void create(Middleware middleware, MiddlewareClusterDTO cluster) {
         if (cluster == null) {
-            cluster = clusterService.findByIdAndCheckRegistry(middleware.getClusterId());
+            cluster = clusterService.findById(middleware.getClusterId());
         }
         // 1. download and read helm chart from registry
         HelmChartFile helmChart =
