@@ -466,22 +466,24 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
             return false;
         }
         try {
+            boolean unbind = "ALWAYS".equals(getLogSaveTime(clusterId));
+            log.info(unbind ? "查询不到Policy" : "查询Policy成功");
             RestHighLevelClient esClient = getEsClient(clusterId);
             int esVersion = getEsVersion(clusterId);
 
-                //初始化mysql慢日志模板
-                initMysqlSlowLogIndexTemplate(esClient);
-                //初始化标准输入日志索引模板
-                initStdoutIndexTemplate(esClient, esVersion);
-                //初始化文件日志索引模板
-                initLogstashIndexTemplate(esClient, esVersion);
-                //初始化mysql SQL审计模版
-                initAuditSqlTemplate(esClient, esVersion);
-                //初始化postgresql SQL审计模版
-                initPostgresqlAuditSqlTemplate(esClient, esVersion);
-                log.info("集群:{}索引模板初始化完成", clusterId);
-                return true;
-            } catch (Exception e) {
+            // 初始化mysql慢日志模板
+            initMysqlSlowLogIndexTemplate(esClient, unbind);
+            // 初始化标准输入日志索引模板
+            initStdoutIndexTemplate(esClient, esVersion, unbind);
+            // 初始化文件日志索引模板
+            initLogstashIndexTemplate(esClient, esVersion, unbind);
+            // 初始化mysql SQL审计模版
+            initAuditSqlTemplate(esClient, esVersion, unbind);
+            // 初始化postgresql SQL审计模版
+            initPostgresqlAuditSqlTemplate(esClient, esVersion, unbind);
+            log.info("集群:{}索引模板初始化完成", clusterId);
+            return true;
+        } catch (Exception e) {
                 log.error("集群:{}索引模板初始化失败", clusterId, e);
                 return false;
             }
@@ -497,14 +499,14 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
             log.error("日志组件连接失败");
             throw new BusinessException(ErrorMessage.ELASTICSEARCH_CONNECT_FAILED);
         }
-        // 创建/覆盖生命周期模板
+        // 创建/覆盖生命周期策略
         try {
             String endPoint = "/_ilm/policy/" + EsPolicyTemplateEnum.LOG_SAVE_TIME_POLICY.getName();
             if (!unbind) {
                 String body = String.format(EsPolicyTemplateEnum.LOG_SAVE_TIME_POLICY.getTemplate(), logSaveTime);
                 resultByPutRestClient(esClient, clusterId, endPoint, body);
             }
-            // 绑定模版与索引
+            // 绑定生命周期策略与索引
             String bd = String.format(EsPolicyTemplateEnum.INDEX_BIND_POLICY.getTemplate(),
                 unbind ? "" : EsPolicyTemplateEnum.LOG_SAVE_TIME_POLICY.getName());
             for (EsTemplateEnum template : EsTemplateEnum.values()) {
@@ -532,6 +534,11 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
 
         String endPoint = "/_template/" + template.getName();
         JSONObject body = JSONObject.parseObject(template.getCode());
+        getTemplateWithPolicy(body, unbind);
+        resultByPutRestClient(esClient, clusterId, endPoint, body.toString());
+    }
+    
+    private void getTemplateWithPolicy(JSONObject body, boolean unbind) {
         JSONObject settings = body.getJSONObject("settings");
         if (settings == null) {
             settings = new JSONObject();
@@ -545,7 +552,6 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
         JSONObject lifecycle = new JSONObject();
         lifecycle.put("name", unbind ? "" : EsPolicyTemplateEnum.LOG_SAVE_TIME_POLICY.getName());
         index.put("lifecycle", lifecycle);
-        resultByPutRestClient(esClient, clusterId, endPoint, body.toString());
     }
 
     @Override
@@ -573,13 +579,15 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
      * 初始化mysql慢日志索引模板
      *
      * @param esClient
+     * @param unbind
      * @author liyinlong
      * @date 2021/7/20 3:56 下午
      */
-    public void initMysqlSlowLogIndexTemplate(RestHighLevelClient esClient) {
+    public void initMysqlSlowLogIndexTemplate(RestHighLevelClient esClient, boolean unbind) {
         try {
             PutIndexTemplateRequest request = new PutIndexTemplateRequest(EsTemplateEnum.MYSQL_SLOW_LOG.getName());
             JSONObject codeJson = JSONObject.parseObject(EsTemplateEnum.MYSQL_SLOW_LOG.getCode());
+            getTemplateWithPolicy(codeJson,unbind);
             setCommonTemplate(request, codeJson);
             esClient.indices().putTemplate(request, RequestOptions.DEFAULT);
             log.info("mysql慢日志索引模板初始化成功");
@@ -592,13 +600,15 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
      * 初始化标准输出日志索引模板
      *
      * @param esClient
+     * @param unbind
      * @author liyinlong
      * @date 2021/8/11 4:54 下午
      */
-    public void initStdoutIndexTemplate(RestHighLevelClient esClient, int esVersion) {
+    public void initStdoutIndexTemplate(RestHighLevelClient esClient, int esVersion, boolean unbind) {
         try {
             PutIndexTemplateRequest request = new PutIndexTemplateRequest(EsTemplateEnum.STDOUT.getName());
             JSONObject codeJson = JSONObject.parseObject(EsTemplateEnum.STDOUT.getCode());
+            getTemplateWithPolicy(codeJson,unbind);
             setCommonTemplate(request, codeJson);
             JSONObject mappings = getMappings(codeJson, esVersion);
             request.mapping(mappings.toString(), XContentType.JSON);
@@ -613,13 +623,15 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
      * 初始化文件日志索引模板
      *
      * @param esClient
+     * @param unbind
      * @author liyinlong
      * @date 2021/8/11 4:58 下午
      */
-    public void initLogstashIndexTemplate(RestHighLevelClient esClient, int esVersion) {
+    public void initLogstashIndexTemplate(RestHighLevelClient esClient, int esVersion, boolean unbind) {
         try {
             PutIndexTemplateRequest request = new PutIndexTemplateRequest(EsTemplateEnum.LOG_STASH.getName());
             JSONObject codeJson = JSONObject.parseObject(EsTemplateEnum.LOG_STASH.getCode());
+            getTemplateWithPolicy(codeJson, unbind);
             setCommonTemplate(request, codeJson);
             JSONObject mappings = getMappings(codeJson, esVersion);
             request.mapping(mappings.toString(), XContentType.JSON);
@@ -634,11 +646,13 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
      * 初始化mysql sql审计索引模板
      *
      * @param esClient
+     * @param unbind
      */
-    public void initAuditSqlTemplate(RestHighLevelClient esClient, int esVersion) {
+    public void initAuditSqlTemplate(RestHighLevelClient esClient, int esVersion, boolean unbind) {
         try {
             PutIndexTemplateRequest request = new PutIndexTemplateRequest(EsTemplateEnum.MYSQL_AUDIT_SQL.getName());
             JSONObject codeJson = JSONObject.parseObject(EsTemplateEnum.MYSQL_AUDIT_SQL.getCode());
+            getTemplateWithPolicy(codeJson, unbind);
             setCommonTemplate(request, codeJson);
             JSONObject mappings = getMappings(codeJson, esVersion);
             request.mapping(mappings.toString(), XContentType.JSON);
@@ -653,11 +667,13 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
     /**
      * 初始化mysql sql审计索引模板
      * @param esClient
+     * @param unbind
      */
-    public void initPostgresqlAuditSqlTemplate(RestHighLevelClient esClient, int esVersion) {
+    public void initPostgresqlAuditSqlTemplate(RestHighLevelClient esClient, int esVersion, boolean unbind) {
         try {
             PutIndexTemplateRequest request = new PutIndexTemplateRequest(EsTemplateEnum.POSTGRESQL_AUDIT_SQL.getName());
             JSONObject codeJson = JSONObject.parseObject(EsTemplateEnum.POSTGRESQL_AUDIT_SQL.getCode());
+            getTemplateWithPolicy(codeJson, unbind);
             setCommonTemplate(request, codeJson);
             JSONObject mappings = getMappings(codeJson, esVersion);
             request.mapping(mappings.toString(), XContentType.JSON);

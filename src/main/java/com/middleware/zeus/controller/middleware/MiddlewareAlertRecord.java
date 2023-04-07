@@ -1,5 +1,6 @@
 package com.middleware.zeus.controller.middleware;
 
+import com.github.pagehelper.PageInfo;
 import com.middleware.caas.common.base.BaseResult;
 import com.middleware.zeus.bean.BeanAlertRecord;
 import com.middleware.zeus.service.middleware.MiddlewareAlertRecordService;
@@ -36,14 +37,14 @@ public class MiddlewareAlertRecord {
             @ApiImplicitParam(name = "normalTimeOrder", value = "按时间正序", paramType = "query", dataTypeClass = Boolean.class),
     })
     @GetMapping()
-    public BaseResult<List<BeanAlertRecord>> getAlertsRecord(@PathVariable(value = "clusterId") String clusterId,
-                                                             @PathVariable(value = "namespace") String namespace,
-                                                             @PathVariable(value = "middlewareName") String middlewareName,
-                                                             @RequestParam(value = "current", required = false, defaultValue = "1") Integer current,
-                                                             @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
-                                                             @RequestParam(value = "keyword", required = false) String keyword,
-                                                             @RequestParam(value = "level", required = false, defaultValue = "") String level,
-                                                             @RequestParam(value = "normalTimeOrder", required = false, defaultValue = "true") Boolean normalTimeOrder) {
+    public BaseResult<PageInfo> getAlertsRecord(@PathVariable(value = "clusterId") String clusterId,
+                                                @PathVariable(value = "namespace") String namespace,
+                                                @PathVariable(value = "middlewareName") String middlewareName,
+                                                @RequestParam(value = "current", required = false, defaultValue = "1") Integer current,
+                                                @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
+                                                @RequestParam(value = "keyword", required = false) String keyword,
+                                                @RequestParam(value = "level", required = false, defaultValue = "") String level,
+                                                @RequestParam(value = "normalTimeOrder", required = false, defaultValue = "true") Boolean normalTimeOrder) {
         if ("*".equals(namespace)) {
             namespace = "";
         }

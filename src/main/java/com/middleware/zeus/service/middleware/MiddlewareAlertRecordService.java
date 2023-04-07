@@ -1,8 +1,7 @@
 package com.middleware.zeus.service.middleware;
 
+import com.github.pagehelper.PageInfo;
 import com.middleware.zeus.bean.BeanAlertRecord;
-
-import java.util.List;
 
 /**
  * @author liyinlong
@@ -22,6 +21,6 @@ public interface MiddlewareAlertRecordService {
      * @param normalTimeOrder
      * @return
      */
-    List<BeanAlertRecord> list(String clusterId, String namespace, String middlewareName, Integer current, Integer size, String keyword, String level, Boolean normalTimeOrder);
+    PageInfo list(String clusterId, String namespace, String middlewareName, Integer current, Integer size, String keyword, String level, Boolean normalTimeOrder);
 
 }

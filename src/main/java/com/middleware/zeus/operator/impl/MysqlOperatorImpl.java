@@ -329,10 +329,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             sb.append(String.format("%s=%s,", MysqlConstant.SPEC_TYPE, mysqlDTO.getType()));
         }
 
-        if (mysqlDTO != null && mysqlDTO.getType() != null) {
-            sb.append(String.format("%s=%s,", MysqlConstant.SPEC_TYPE, mysqlDTO.getType()));
-        }
-
         // 慢日志更新
         if (middleware.getSlowSql() != null){
             sb.append("args.slow_query_log=").append(middleware.getSlowSql() ? ON : OFF).append(",");
