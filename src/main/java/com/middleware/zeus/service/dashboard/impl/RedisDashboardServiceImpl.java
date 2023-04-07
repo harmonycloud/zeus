@@ -300,7 +300,10 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
      * 检查是否是新增key
      */
     private boolean checkIsAdd(KeyValueDto keyValueDto) {
-        return keyValueDto.getValue() != null;
+        if ("hash".equals(keyValueDto.getKeyType())) {
+            return keyValueDto.getValue() != null;
+        }
+        return !"set".equals(keyValueDto.getKeyType());
     }
 
     /**
