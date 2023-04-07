@@ -110,7 +110,7 @@ spec:
           {{- end }}
         spec:
         {{- with .Values.statefulSetConfiguration }}
-        {{- toYaml . | nindent 11 }}
+        {{- toYaml . | nindent 10 }}
         {{- end }}
         {{- with .Values.tolerations }}
           tolerations:

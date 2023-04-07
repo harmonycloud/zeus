@@ -3,4 +3,4 @@ appVersion: 1.7.10
 description: Elasticsearch by Harmonycloud
 name: elasticsearch-operator
 type: application
-version: 1.7.10-1
+version: 1.7.10-2
