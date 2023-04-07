@@ -1,12 +1,11 @@
 package com.middleware.zeus.config;
 
 import com.middleware.zeus.filter.AuthFilter;
+import com.middleware.zeus.filter.CurrentStateFilter;
 import com.middleware.zeus.filter.TokenFilter;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import com.middleware.caas.filters.filters.CurrentStateFilter;
 
 /**
  * @author chwetion

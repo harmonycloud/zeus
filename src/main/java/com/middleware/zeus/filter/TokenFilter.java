@@ -140,7 +140,7 @@ public class TokenFilter implements Filter {
     private void checkRefreshCaasToken(JSONObject userMap) {
         // 手动刷新 caas token
         String caasToken = userMap.getString("caasToken");
-        JSONObject caasUser = JwtTokenComponent.getClaimsFromToken("userInfo", caasToken);
+        JSONObject caasUser = JwtTokenComponent.getClaimsFromOldToken(caasToken);
         if (caasUser == null){
             return;
         }

@@ -15,16 +15,20 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.user.RoleDto;
 import com.middleware.caas.common.model.user.UserDto;
 import com.middleware.caas.common.model.user.UserRole;
 import com.middleware.caas.filters.token.JwtTokenComponent;
+import com.middleware.caas.filters.user.CurrentUser;
 import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.zeus.bean.user.BeanRoleAuthority;
 import com.middleware.zeus.service.user.RoleAuthorityService;
+import com.middleware.zeus.service.user.RoleService;
 import com.middleware.zeus.service.user.UserRoleService;
 import com.middleware.zeus.service.user.UserService;
 import com.middleware.zeus.util.RequestUtil;
 import com.middleware.zeus.bean.BeanOperationAudit;
+import io.swagger.models.auth.In;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -53,6 +57,8 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.middleware.caas.common.constants.CommonConstant.*;
+import static com.middleware.caas.common.constants.user.UserConstant.ADMIN;
+import static com.middleware.caas.common.constants.user.UserConstant.SUPER_MANAGER;
 
 /**
  * 操作审计拦截器
@@ -64,13 +70,15 @@ import static com.middleware.caas.common.constants.CommonConstant.*;
 @Component
 @Slf4j
 public class OperationAuditInterceptor {
+    
+    private static final Map<Integer, String> ROLE_NAME_MAP = new HashMap<>();
 
     @Autowired
     private OperationAuditService operationAuditService;
     @Autowired
     private RoleAuthorityService roleAuthorityService;
     @Autowired
-    private UserService userService;
+    private RoleService roleService;
 
     @Pointcut("@annotation(io.swagger.annotations.ApiOperation) && (!@annotation(com.middleware.zeus.annotation.ExcludeAuditMethod)) &&(!@annotation(org.springframework.web.bind.annotation.GetMapping))")
     public void pointcut() {
@@ -84,34 +92,28 @@ public class OperationAuditInterceptor {
 
     @Before("authcut() && @annotation(authority)")
     public void before(JoinPoint joinPoint, Authority authority) {
+        String organId = RequestUtil.getOrganId();
         String projectId = RequestUtil.getProjectId();
-        if (StringUtils.isNotEmpty(projectId)) {
+        if (StringUtils.isNotEmpty(organId) && StringUtils.isNotEmpty(projectId)) {
             // 校验角色权限
-            JSONObject userMap = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue();
-            List<UserRole> userRoleList = userService.getUserDto(userMap.getString("username")).getUserRoleList();
+            CurrentUser currentUser = CurrentUserRepository.getUser();
+            if(currentUser == null || StringUtils.isEmpty(currentUser.getRoleId())){
+                return;
+            }
+            int roleId = Integer.parseInt(currentUser.getRoleId());
             // 判断是否为超级管理员
-            boolean notAdmin = CollectionUtils.isEmpty(
-                    userRoleList.stream().filter(userRole -> userRole.getRoleId() == 1).collect(Collectors.toList()));
-            if (notAdmin) {
-                userRoleList = userRoleList.stream().filter(userRole -> StringUtils.isNotEmpty(userRole.getProjectId())
-                        && userRole.getProjectId().equals(projectId)).collect(Collectors.toList());
-                if (CollectionUtils.isEmpty(userRoleList)) {
-                    throw new BusinessException(ErrorMessage.NO_AUTHORITY);
-                }
-                UserRole userRole = userRoleList.get(0);
-                if (userRole.getRoleId() != 1) {
-                    JSONObject params =
-                            getParams(((MethodSignature)joinPoint.getSignature()).getParameterNames(), joinPoint.getArgs());
-                    String type = tryGetType(params);
-                    if (StringUtils.isNotEmpty(type)) {
-                        List<BeanRoleAuthority> beanRoleAuthorityList = roleAuthorityService.list(userRole.getRoleId())
-                                .stream().filter(beanRoleAuthority -> beanRoleAuthority.getType().equals(type))
-                                .collect(Collectors.toList());
-                        if (!CollectionUtils.isEmpty(beanRoleAuthorityList)) {
-                            String[] power = beanRoleAuthorityList.get(0).getPower().split("");
-                            if (Integer.parseInt(power[authority.power()]) == 0) {
-                                throw new BusinessException(ErrorMessage.NO_AUTHORITY);
-                            }
+            if (roleId != NUM_ONE) {
+                JSONObject params =
+                        getParams(((MethodSignature)joinPoint.getSignature()).getParameterNames(), joinPoint.getArgs());
+                String type = tryGetType(params);
+                if (StringUtils.isNotEmpty(type)) {
+                    List<BeanRoleAuthority> beanRoleAuthorityList = roleAuthorityService.list(roleId)
+                            .stream().filter(beanRoleAuthority -> beanRoleAuthority.getType().equals(type))
+                            .collect(Collectors.toList());
+                    if (!CollectionUtils.isEmpty(beanRoleAuthorityList)) {
+                        String[] power = beanRoleAuthorityList.get(0).getPower().split("");
+                        if (Integer.parseInt(power[authority.power()]) == 0) {
+                            throw new BusinessException(ErrorMessage.NO_AUTHORITY);
                         }
                     }
                 }
@@ -323,12 +325,22 @@ public class OperationAuditInterceptor {
      * 设置用户角色
      */
     private void setUserRole(String username, BeanOperationAudit operationAudit) {
-        UserDto userDto = userService.getUserDto(username);
-        if (userDto == null) {
+        if (username.equals(ADMIN)) {
+            operationAudit.setRoleName(SUPER_MANAGER);
             return;
         }
-        if (!CollectionUtils.isEmpty(userDto.getUserRoleList())) {
-            operationAudit.setRoleName(userDto.getUserRoleList().get(0).getRoleName());
+        CurrentUser currentUser = CurrentUserRepository.getUser();
+        if (currentUser != null && currentUser.getRoleId() != null) {
+            Integer roleId = Integer.valueOf(currentUser.getRoleId());
+            if (!ROLE_NAME_MAP.containsKey(roleId)) {
+                RoleDto roleDto = roleService.get(roleId);
+                if (roleDto != null) {
+                    operationAudit.setRoleName(roleDto.getName());
+                    ROLE_NAME_MAP.put(roleId, roleDto.getName());
+                }
+            } else {
+                operationAudit.setRoleName(ROLE_NAME_MAP.get(roleId));
+            }
         }
     }
 

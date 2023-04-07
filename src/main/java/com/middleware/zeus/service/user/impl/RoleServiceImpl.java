@@ -96,7 +96,7 @@ public class RoleServiceImpl implements RoleService {
         QueryWrapper<BeanRole> roleWrapper = new QueryWrapper<BeanRole>().eq("id", roleId);
         BeanRole beanRole = beanRoleMapper.selectOne(roleWrapper);
         if (ObjectUtils.isEmpty(beanRole)) {
-            throw new BusinessException(ErrorMessage.ROLE_NOT_EXIST);
+            return null;
         }
         RoleDto role = new RoleDto();
         BeanUtils.copyProperties(beanRole, role);

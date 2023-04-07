@@ -1,5 +1,18 @@
 package com.middleware.zeus.service.system.impl;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.middleware.caas.common.base.BaseResult;
@@ -9,18 +22,7 @@ import com.middleware.zeus.bean.BeanOperationAudit;
 import com.middleware.zeus.bean.OperationAuditQueryDto;
 import com.middleware.zeus.dao.BeanOperationAuditMapper;
 import com.middleware.zeus.service.system.OperationAuditService;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import com.middleware.zeus.service.user.RoleService;
 
 /**
  * 操作审计服务
@@ -35,6 +37,8 @@ public class OperationAuditServiceImpl implements OperationAuditService {
 
     @Autowired
     private BeanOperationAuditMapper operationAuditMapper;
+    @Autowired
+    private RoleService roleService;
 
     /**
      * ip地址正则表达式，仅包含数字或小数点即为ip
@@ -115,6 +119,7 @@ public class OperationAuditServiceImpl implements OperationAuditService {
                 -> !tableFieldInfo.getColumn().equals("request_params") && !tableFieldInfo.getColumn().equals("response"));
         Page<BeanOperationAudit> page = new Page<>(operationAuditQueryDto.getCurrent(), operationAuditQueryDto.getSize());
         Page<BeanOperationAudit> beanOperationAuditPage = operationAuditMapper.selectPage(page, queryWrapper);
+        
         return BaseResult.ok(beanOperationAuditPage);
     }
 
