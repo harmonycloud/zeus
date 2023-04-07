@@ -205,7 +205,7 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         List<BeanImageRepository> defaultRegistries = repositories.stream().
                 filter(beanImageRepository -> beanImageRepository.getIsDefault() != null && beanImageRepository.getIsDefault() == 1).
                 collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(defaultRegistries)) {
+        if (!CollectionUtils.isEmpty(defaultRegistries)) {
             return defaultRegistries.get(0);
         } else {
             return repositories.get(0);
