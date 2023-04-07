@@ -555,6 +555,11 @@ public abstract class AbstractBaseOperator {
                     middleware.setAudit(features.getJSONObject(MysqlConstant.KEY_FEATURES_AUDITLOG).getBoolean("enabled"));
                 }
             }
+            // 扩展调度器
+            if (values.containsKey("statefulSetConfiguration") && values.getJSONObject("statefulSetConfiguration").containsKey("schedulerName")){
+                middleware.setScheduler(values.getJSONObject("statefulSetConfiguration").getBoolean("schedulerName"));
+            }
+
             // 设置服务备份状态
             /*middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(middleware.getClusterId(),
                 middleware.getNamespace(), middleware.getType(), middleware.getName()));*/
