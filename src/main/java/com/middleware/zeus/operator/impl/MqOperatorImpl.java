@@ -117,6 +117,14 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
             rocketMQParam.setReplicas(clusterInfo.getInteger("membersPerGroup"));
             rocketMQParam.setGroup(clusterInfo.getInteger("groupReplica"));
             middleware.setRocketMQParam(rocketMQParam);
+            
+            // 设置从节点数量
+            if (rocketMQParam.getReplicas() != null && rocketMQParam.getGroup() != null) {
+                MiddlewareQuota mqQuota = new MiddlewareQuota();
+                mqQuota.setNum(rocketMQParam.getReplicas() * rocketMQParam.getGroup() > 0
+                    ? (rocketMQParam.getReplicas() - 1) * rocketMQParam.getGroup() : 0);
+            }
+            
         }
         middleware.setManagePlatform(true);
         return middleware;
