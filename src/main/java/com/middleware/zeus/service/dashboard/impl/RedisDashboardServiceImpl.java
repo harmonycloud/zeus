@@ -176,7 +176,7 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
 
     @Override
     public void setKeyValue(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto) {
-        if (checkKeyExists(clusterId, namespace, middlewareName, db, key)) {
+        if (checkIsAdd(keyValueDto) && checkKeyExists(clusterId, namespace, middlewareName, db, key)) {
             throw new BusinessException(ErrorMessage.KEY_ALREADY_EXISTS);
         }
         keyValueDto.setValue(keyValueDto.wrapValue());
@@ -294,6 +294,13 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
         List<MiddlewareInfo> pods = middlewareService.listMiddlewarePod(clusterId, namespace, MiddlewareTypeEnum.REDIS.getType(), middlewareName);
         return pods.stream().filter(middlewareInfo -> middlewareInfo.getType() != null && middlewareInfo.getType().equals("master")).collect(Collectors.toList()).
                 stream().sorted(new RedisAggregationKVServiceImpl.MiddlewareInfoComparator()).collect(Collectors.toList());
+    }
+
+    /**
+     * 检查是否是新增key
+     */
+    private boolean checkIsAdd(KeyValueDto keyValueDto) {
+        return keyValueDto.getValue() != null;
     }
 
     /**
