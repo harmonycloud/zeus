@@ -914,6 +914,15 @@ public abstract class AbstractBaseOperator {
         }
         // 自定义目录
         replaceCustomVolumeValues(middleware, values);
+
+        // 扩展调度器
+        if(middleware.getScheduler() != null && middleware.getScheduler()){
+            JSONObject statefulSetConfiguration = values.getJSONObject("statefulSetConfiguration");
+            if (statefulSetConfiguration == null){
+                statefulSetConfiguration = new JSONObject();
+            }
+            statefulSetConfiguration.put("schedulerName", "middleware-scheduler");
+        }
     }
 
     // 处理自定义目录
