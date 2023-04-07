@@ -29,6 +29,8 @@ import com.middleware.zeus.util.ZeusCurrentUser;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.PostConstruct;
+
 /**
  * @author liyinlong
  * @since 2022/6/14 5:28 下午
@@ -261,7 +263,8 @@ public class Skyview2ProjectServiceImpl extends AbstractProjectService implement
     public void removeCpuMemoryQuota(String organId, String projectId, String clusterId) {
         throw new BusinessException(ErrorMessage.NO_AUTHORITY_WITH_EXTERNAL_SERVICE);
     }
-    
+
+    @PostConstruct
     public void getProjectNamespace(){
         List<Namespace> allNsList = new ArrayList<>();
         List<OrganizationDto> organList = v2OrganService.list();

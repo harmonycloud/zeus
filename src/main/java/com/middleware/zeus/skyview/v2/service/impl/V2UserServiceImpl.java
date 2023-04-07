@@ -19,6 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -59,7 +60,15 @@ public class V2UserServiceImpl implements V2UserService {
         userDto.setAliasName(user.getString("realName"));
         userDto.setEmail(user.getString("email"));
         userDto.setPhone(user.getString("phone"));
-        userDto.setCreateTime(DateUtils.parseDate(user.getString("createTime"), DateType.YYYY_MM_DD_T_HH_MM_SS.getValue()));
+
+        try {
+            String createTime = user.getString("createTime");
+            Date date = new SimpleDateFormat(DateType.EEE_MMM_DD_HH_MM_SS_ZZZ_YYYY.getValue(), java.util.Locale.ENGLISH).parse(createTime);
+            userDto.setCreateTime(date);
+        } catch (Exception e){
+            log.error("转换失败", e);
+        }
+
         userDto.setIsAdmin(user.getBoolean("admin"));
 
         if (user.containsKey("otherProjects")){
