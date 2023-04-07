@@ -524,6 +524,7 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
                 resultByDeleteRestClient(esClient, clusterId, endPoint);
             }
         } catch (IOException e) {
+            log.error("更新日志组件信息失败", e);
             throw new BusinessException(ErrorMessage.UPDATE_MAXIMUM_LOG_RETENTION_TIME_FAILED);
         }
 
