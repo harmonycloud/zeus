@@ -6,6 +6,7 @@ import static com.middleware.caas.common.constants.NameConstant.RESOURCES;
 import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.ARGS;
 
 import com.alibaba.fastjson.JSONArray;
+import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.middleware.zeus.service.k8s.PodService;
 import com.middleware.caas.common.model.middleware.*;
 import com.middleware.zeus.operator.api.MqOperator;
@@ -120,7 +121,7 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
             
             // 设置从节点数量
             if (rocketMQParam.getReplicas() != null && rocketMQParam.getGroup() != null) {
-                MiddlewareQuota mqQuota = new MiddlewareQuota();
+                MiddlewareQuota mqQuota = middleware.getQuota().get(MiddlewareTypeEnum.ROCKET_MQ.getType());
                 mqQuota.setNum(rocketMQParam.getReplicas() * rocketMQParam.getGroup() > 0
                     ? (rocketMQParam.getReplicas() - 1) * rocketMQParam.getGroup() : 0);
             }
