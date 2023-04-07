@@ -259,10 +259,20 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
 
     @Override
     public void deleteSystemRules(String clusterId, String alert, String alertRuleId) {
-        deletePrometheusRules(clusterId,alert);
-        QueryWrapper<AlertRuleId> wrapper = new QueryWrapper<>();
-        wrapper.eq("alert",alert);
-        alertRuleIdMapper.delete(wrapper);
+        QueryWrapper<AlertRuleId> wrapper =
+            new QueryWrapper<AlertRuleId>().eq("cluster_id", clusterId).eq("lay", "system");
+        if (!StringUtils.isEmpty(alert)) {
+            wrapper.eq("alert", alert);
+        }
+        List<AlertRuleId> alertRuleIdList = alertRuleIdMapper.selectList(wrapper);
+        if (!CollectionUtils.isEmpty(alertRuleIdList)){
+            try {
+                deletePrometheusRules(clusterId, alertRuleIdList.stream().map(AlertRuleId::getAlert).collect(Collectors.toList()));
+            } catch (Exception e){
+                log.error("集群{} 清理prometheus rules 系统告警规则失败", clusterId, e);
+            }
+            alertRuleIdMapper.delete(wrapper);
+        }
     }
 
     /**
@@ -270,13 +280,13 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
      * @param clusterId
      * @param alert
      */
-    public void deletePrometheusRules(String clusterId, String alert) {
+    public void deletePrometheusRules(String clusterId, List<String> alert) {
         // 获取cr
         PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, NameConstant.MONITORING, NameConstant.PROMETHEUS_K8S_RULES);
         boolean status = false;
         for (PrometheusRuleGroups prometheusRuleGroups : prometheusRule.getSpec().getGroups()) {
             prometheusRuleGroups.getRules().removeIf(prometheusRules -> !StringUtils.isEmpty(prometheusRules.getAlert())
-                    && prometheusRules.getAlert().equals(alert));
+                && alert.stream().anyMatch(al -> al.equals(prometheusRules.getAlert())));
             if (SYSTEM_ALERT.equals(prometheusRuleGroups.getName()) && prometheusRuleGroups.getRules().size() == 0) {
                 status = true;
             }

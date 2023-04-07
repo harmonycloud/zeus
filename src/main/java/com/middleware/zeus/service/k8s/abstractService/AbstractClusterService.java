@@ -643,7 +643,9 @@ public abstract class AbstractClusterService {
         } catch (Exception e) {
             log.error("查询middleware失败，默认可以删除");
         }
-        return true;
+        // check organization
+        List<ResourceQuotaDo> resourceQuotaDoList = platformQuotaService.getQuota(ORGAN, new ArrayList<>(), clusterId, STORAGE, CPU, MEMORY);
+        return CollectionUtils.isEmpty(resourceQuotaDoList);
     }
 
     /**
