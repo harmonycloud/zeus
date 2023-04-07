@@ -383,10 +383,6 @@ public class OverviewServiceImpl implements OverviewService {
         if (CollectionUtils.isEmpty(recordList)) {
             return alertDTOPage;
         }
-
-        // 查询分区所在组织.项目
-        List<ProjectNamespaceDo> projectNamespaceDoList = projectService.listNamespace(clusterId);
-        Map<String, ProjectNamespaceDo> projectNamespaceDoMap = projectNamespaceDoList.stream().collect(Collectors.toMap(pn -> pn.getClusterId() + "-" + pn.getNamespace(), Function.identity()));
         
         Map<Middleware, String> middlewareMap = new HashMap<>();
         alertDTOPage.setList(recordList.stream().map(record -> {
@@ -410,16 +406,6 @@ public class OverviewServiceImpl implements OverviewService {
                     }
                 } catch (Exception e) {
                     alertDTO.setChartVersion(null);
-                }
-            }
-            
-            // 设置所在组织，项目
-            if (StringUtils.isNotEmpty(middleware.getClusterId())
-                && StringUtils.isNotEmpty(middleware.getNamespace())) {
-                String key = middleware.getClusterId() + "-" + middleware.getNamespace();
-                if (projectNamespaceDoMap.containsKey(key)) {
-                    alertDTO.setOrganId(projectNamespaceDoMap.get(key).getOrganId());
-                    alertDTO.setProjectId(projectNamespaceDoMap.get(key).getProjectId());
                 }
             }
 
@@ -838,6 +824,7 @@ public class OverviewServiceImpl implements OverviewService {
         Date ago = DateUtil.addHour(now, -24);
         String beginTime = DateUtils.DateToString(ago, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
         String endTime = DateUtils.DateToString(now, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
+        // 构建查询语句
         QueryWrapper<BeanAlertRecord> recordQueryWrapper = new QueryWrapper<>();
         if (StringUtils.isNotBlank(level)) {
             recordQueryWrapper.eq("level", level);
@@ -851,13 +838,21 @@ public class OverviewServiceImpl implements OverviewService {
         recordQueryWrapper.le("time", endTime);
         recordQueryWrapper.orderByDesc("time");
         PageHelper.startPage(current, size);
+        // 查询告警记录
         List<BeanAlertRecord> alertRecordList = beanAlertRecordMapper.selectList(recordQueryWrapper);
+        // 转换为page数据结构
         PageInfo<AlertDTO> pageInfo = new PageInfo<>();
         BeanUtils.copyProperties(new PageInfo<>(alertRecordList), pageInfo);
+
+        // 查询分区所在组织.项目
+        List<ProjectNamespaceDo> projectNamespaceDoList = projectService.listNamespace(clusterId);
+        Map<String, ProjectNamespaceDo> projectNamespaceDoMap = projectNamespaceDoList.stream().collect(Collectors.toMap(pn -> pn.getClusterId() + "-" + pn.getNamespace(), Function.identity()));
+
         Map<Middleware, String> middlewareMap = new HashMap<>();
         pageInfo.setList(alertRecordList.stream().map(record -> {
             AlertDTO alertDTO = new AlertDTO();
             BeanUtils.copyProperties(record, alertDTO);
+            // 查询chartVersion
             Middleware middleware = new Middleware().setName(alertDTO.getName()).setNamespace(alertDTO.getNamespace())
                     .setClusterId(alertDTO.getClusterId());
             if (middlewareMap.containsKey(middleware)) {
@@ -877,6 +872,17 @@ public class OverviewServiceImpl implements OverviewService {
                     alertDTO.setChartVersion(null);
                 }
             }
+
+            // 设置所在组织，项目
+            if (StringUtils.isNotEmpty(middleware.getClusterId())
+                    && StringUtils.isNotEmpty(middleware.getNamespace())) {
+                String key = middleware.getClusterId() + "-" + middleware.getNamespace();
+                if (projectNamespaceDoMap.containsKey(key)) {
+                    alertDTO.setOrganId(projectNamespaceDoMap.get(key).getOrganId());
+                    alertDTO.setProjectId(projectNamespaceDoMap.get(key).getProjectId());
+                }
+            }
+
             alertDTO.setCapitalType(MiddlewareOfficialNameEnum.findByChartName(record.getType()));
             return alertDTO;
         }).collect(Collectors.toList()));
