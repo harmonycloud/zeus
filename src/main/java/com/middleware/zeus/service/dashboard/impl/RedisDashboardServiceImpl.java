@@ -195,10 +195,6 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
         redisClient.setKeyValue(db, key, keyValueDto);
     }
 
-    private boolean checkIsAdd(KeyValueDto keyValueDto) {
-        return keyValueDto.getValue() != null;
-    }
-
     @Override
     public void updateValue(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto) {
         keyValueDto.setValue(keyValueDto.wrapValue());
@@ -298,6 +294,13 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
         List<MiddlewareInfo> pods = middlewareService.listMiddlewarePod(clusterId, namespace, MiddlewareTypeEnum.REDIS.getType(), middlewareName);
         return pods.stream().filter(middlewareInfo -> middlewareInfo.getType() != null && middlewareInfo.getType().equals("master")).collect(Collectors.toList()).
                 stream().sorted(new RedisAggregationKVServiceImpl.MiddlewareInfoComparator()).collect(Collectors.toList());
+    }
+
+    /**
+     * 检查是否是新增key
+     */
+    private boolean checkIsAdd(KeyValueDto keyValueDto) {
+        return keyValueDto.getValue() != null;
     }
 
     /**
