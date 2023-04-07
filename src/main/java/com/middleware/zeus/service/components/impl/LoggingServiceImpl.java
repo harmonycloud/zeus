@@ -226,7 +226,11 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         } catch (Exception e) {
             log.error("更新日志组件缓存出错了", e);
         }
-        esService.createOrUpdateLogSaveTime(clusterComponentsDto.getClusterId(),clusterComponentsDto.getLogSaveTime());
+        try {
+            esService.createOrUpdateLogSaveTime(clusterComponentsDto.getClusterId(), clusterComponentsDto.getLogSaveTime());
+        } catch (Exception e) {
+            log.error("更新日志保留时间出错了");
+        }
     }
 
     @Override
