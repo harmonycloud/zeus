@@ -33,7 +33,7 @@ spec:
       template:
         spec:
         {{- /*拓扑策略*/ -}}
-        {{- include "middlware.topologyDistribution" . | indent 11 -}}
+        {{- include "middlware.topologyDistribution" . | indent 10 -}}
         {{- with .Values.statefulSetConfiguration }}
           {{- toYaml . | nindent 10 }}
         {{- end }}
