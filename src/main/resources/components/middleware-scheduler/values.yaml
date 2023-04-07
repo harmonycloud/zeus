@@ -11,3 +11,7 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+podAntiAffinityTopologKey: "kubernetes.io/hostname"
+
+podAntiAffinity: "soft"
