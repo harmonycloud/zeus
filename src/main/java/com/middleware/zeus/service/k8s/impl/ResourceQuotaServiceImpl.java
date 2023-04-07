@@ -1,5 +1,6 @@
 package com.middleware.zeus.service.k8s.impl;
 
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -236,7 +237,7 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
                 double hardStorage =
                         ResourceCalculationUtil.getResourceValue(v.toString(), DISK, ResourceUnitEnum.GI.getUnit());
                 double usedStorage = ResourceCalculationUtil.getResourceValue(used.get(k).toString(), DISK,
-                        ResourceUnitEnum.GI.getUnit());
+                        ResourceUnitEnum.GI.getUnit(), 0, RoundingMode.UP);
                 String scName = k.substring(0, k.indexOf(".storageclass"));
                 StorageQuota storageQuota = new StorageQuota().setName(scName).setStorage(new QuotaBase().setRequest(hardStorage).setUsed(usedStorage));
                 quota.getStorageList().add(storageQuota);
