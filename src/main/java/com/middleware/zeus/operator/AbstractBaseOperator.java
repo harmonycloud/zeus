@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.middleware.caas.common.constants.ActiveAreaConstant;
 import com.middleware.caas.common.constants.CommonConstant;
 import com.middleware.caas.common.constants.MysqlConstant;
+import com.middleware.caas.common.enums.ComponentsEnum;
 import com.middleware.caas.common.enums.DictEnum;
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
@@ -556,8 +557,12 @@ public abstract class AbstractBaseOperator {
                 }
             }
             // 扩展调度器
-            if (values.containsKey("statefulSetConfiguration") && values.getJSONObject("statefulSetConfiguration").containsKey("schedulerName")){
-                middleware.setScheduler(values.getJSONObject("statefulSetConfiguration").getBoolean("schedulerName"));
+            if (values.containsKey("statefulSetConfiguration")
+                && values.getJSONObject("statefulSetConfiguration").containsKey("schedulerName")) {
+                if (values.getJSONObject("statefulSetConfiguration").getString("schedulerName")
+                    .equals(ComponentsEnum.MIDDLEWARE_SCHEDULER.getName())) {
+                    middleware.setScheduler(true);
+                }
             }
 
             // 设置服务备份状态
