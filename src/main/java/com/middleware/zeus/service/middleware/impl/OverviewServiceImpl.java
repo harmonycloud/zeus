@@ -12,6 +12,7 @@ import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.middleware.caas.common.enums.middleware.ResourceUnitEnum;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.exception.CaasRuntimeException;
+import com.middleware.caas.common.model.user.ProjectNamespaceDo;
 import com.middleware.tool.date.DateUtils;
 import com.middleware.tool.numeric.ResourceCalculationUtil;
 import com.middleware.zeus.bean.*;
@@ -32,6 +33,7 @@ import com.middleware.zeus.service.middleware.MiddlewareService;
 import com.middleware.zeus.service.middleware.OverviewService;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.system.OperationAuditService;
+import com.middleware.zeus.service.user.ProjectService;
 import com.middleware.zeus.util.AlertDataUtil;
 import com.middleware.zeus.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -95,6 +97,8 @@ public class OverviewServiceImpl implements OverviewService {
     private BeanClusterComponentsMapper beanClusterComponentsMapper;
     @Value("${system.platform.version:v0.1.0}")
     private String version;
+    @Autowired
+    private ProjectService projectService;
 
     /**
      * 查询中间件状态
@@ -379,10 +383,16 @@ public class OverviewServiceImpl implements OverviewService {
         if (CollectionUtils.isEmpty(recordList)) {
             return alertDTOPage;
         }
+
+        // 查询分区所在组织.项目
+        List<ProjectNamespaceDo> projectNamespaceDoList = projectService.listNamespace(clusterId);
+        Map<String, ProjectNamespaceDo> projectNamespaceDoMap = projectNamespaceDoList.stream().collect(Collectors.toMap(pn -> pn.getClusterId() + "-" + pn.getNamespace(), Function.identity()));
+        
         Map<Middleware, String> middlewareMap = new HashMap<>();
         alertDTOPage.setList(recordList.stream().map(record -> {
             AlertDTO alertDTO = new AlertDTO();
             BeanUtils.copyProperties(record, alertDTO);
+            // 获取middleware chartVersion
             Middleware middleware = new Middleware().setName(alertDTO.getName()).setNamespace(alertDTO.getNamespace())
                 .setClusterId(alertDTO.getClusterId());
             if (middlewareMap.containsKey(middleware)) {
@@ -402,8 +412,19 @@ public class OverviewServiceImpl implements OverviewService {
                     alertDTO.setChartVersion(null);
                 }
             }
-           if (record.getAlertId() != null) {
-                //告警记录ID
+            
+            // 设置所在组织，项目
+            if (StringUtils.isNotEmpty(middleware.getClusterId())
+                && StringUtils.isNotEmpty(middleware.getNamespace())) {
+                String key = middleware.getClusterId() + "-" + middleware.getNamespace();
+                if (projectNamespaceDoMap.containsKey(key)) {
+                    alertDTO.setOrganId(projectNamespaceDoMap.get(key).getOrganId());
+                    alertDTO.setProjectId(projectNamespaceDoMap.get(key).getProjectId());
+                }
+            }
+
+            //告警记录ID
+            if (record.getAlertId() != null) {
                 alertDTO.setAlertId(middlewareAlertsService.calculateID(record.getAlertId())
                         + "-" + middlewareAlertsService.createId(record.getId()));
             }
