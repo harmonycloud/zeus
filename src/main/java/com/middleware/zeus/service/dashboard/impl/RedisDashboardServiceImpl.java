@@ -176,7 +176,7 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
 
     @Override
     public void setKeyValue(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto) {
-        if (checkKeyExists(clusterId, namespace, middlewareName, db, key)) {
+        if (checkIsAdd(keyValueDto) && checkKeyExists(clusterId, namespace, middlewareName, db, key)) {
             throw new BusinessException(ErrorMessage.KEY_ALREADY_EXISTS);
         }
         keyValueDto.setValue(keyValueDto.wrapValue());
@@ -193,6 +193,10 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
             keyValueDto.setValue(keyValueDto.wrapValue());
         }
         redisClient.setKeyValue(db, key, keyValueDto);
+    }
+
+    private boolean checkIsAdd(KeyValueDto keyValueDto) {
+        return keyValueDto.getValue() != null;
     }
 
     @Override
