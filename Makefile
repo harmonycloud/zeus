@@ -3,7 +3,7 @@ TYPE ?= docker-compose
 DEPLOY ?= online
 STORAGE_CLASS ?= default
 HA ?= false
-DR ?= false
+DISASTER ?= master
 
 release:
 	build/release.sh build/image.conf $(IMAGE_REPO)
@@ -15,7 +15,7 @@ image:
 	make build && docker build -t zeus:v1.0.0 .
 
 install:
-	chmod +x ./deploy/install.sh && sh deploy/install.sh $(TYPE) $(DEPLOY) $(IMAGE_REPO) $(STORAGE_CLASS) $(HA) $(DR)
+	chmod +x ./deploy/install.sh && sh deploy/install.sh $(TYPE) $(DEPLOY) $(IMAGE_REPO) $(STORAGE_CLASS) $(HA) $(DISASTER)
 
 upgrade:
 	sh build/upgrade.sh $(TYPE) $(IMAGE_REPO) $(STORAGE_CLASS)
