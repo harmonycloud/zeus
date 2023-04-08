@@ -36,9 +36,9 @@ function deploy_helm() {
     MYSQL_REPLICATE="replicaCount=2"
   fi
   # install mysql type
-  MYSQL_TYPE = "type=master-slave"
+  MYSQL_TYPE="type=master-slave"
   if [ $DISASTER == "slave" ]; then
-      MYSQL_TYPE = "type=slave-slave"
+      MYSQL_TYPE="type=slave-slave"
   fi
   helm install -n zeus zeus-mysql deploy/mysql-operator --set mysql-operator.enabled=false,image.repository=$IMAGE_REPO"/middleware",args.root_password="ZeuS@Middleware01",storageClassName=$STORAGE_CLASS,storageSize=10Gi,$MYSQL_REPLICATE,$MYSQL_TYPE
 
