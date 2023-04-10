@@ -61,7 +61,7 @@ public class PlatformQuotaServiceImpl implements PlatformQuotaService {
     }
 
     @Override
-    public void remove(String type, String uid, String name, String... target) {
+    public void remove(String type, String uid, String clusterId, String name, String... target) {
         QueryWrapper<BeanPlatformQuota> wrapper = new QueryWrapper<BeanPlatformQuota>().eq("type", type);
         convertWrapper(wrapper, target);
         if (StringUtils.isNotEmpty(uid)){

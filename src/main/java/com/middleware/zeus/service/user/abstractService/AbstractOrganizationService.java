@@ -86,13 +86,23 @@ public abstract class AbstractOrganizationService {
     }
 
     public void removeBackupServer(String organId, Integer backupServerId, String clusterId) {
-        List<BackupServerDTO> backupServerDTOList = projectService.getBackupServer(organId, null, null, false, false);
-        if (!CollectionUtils.isEmpty(backupServerDTOList) && backupServerDTOList.stream()
-                .anyMatch(backupServerDTO -> backupServerId.equals(backupServerDTO.getId()))) {
-            throw new BusinessException(ErrorMessage.ORGANIZATION_BACKUP_SERVER_USING);
+        if (StringUtils.isNotEmpty(organId)){
+            List<BackupServerDTO> backupServerDTOList = projectService.getBackupServer(organId, null, null, false, false);
+            if (!CollectionUtils.isEmpty(backupServerDTOList) && backupServerDTOList.stream()
+                    .anyMatch(backupServerDTO -> backupServerId.equals(backupServerDTO.getId()))) {
+                throw new BusinessException(ErrorMessage.ORGANIZATION_BACKUP_SERVER_USING);
+            }
         }
-        QueryWrapper<BeanOrganizationBackupServer> wrapper =
-                new QueryWrapper<BeanOrganizationBackupServer>().eq("backup_server_id", backupServerId);
+        QueryWrapper<BeanOrganizationBackupServer> wrapper = new QueryWrapper<>();
+        if (StringUtils.isNotEmpty(organId)) {
+            wrapper.eq("organ_id", organId);
+        }
+        if (backupServerId != null) {
+            wrapper.eq("backup_server_id", backupServerId);
+        }
+        if (StringUtils.isNotEmpty(clusterId)) {
+            wrapper.eq("cluster_id", clusterId);
+        }
         beanOrganizationBackupServerMapper.delete(wrapper);
     }
 

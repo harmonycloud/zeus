@@ -144,4 +144,11 @@ public interface OrganizationService {
      */
     void deleteOrganUser(String organId, String username);
 
+    /**
+     * 数据清理
+     * @param clusterId 集群id
+     *
+     */
+    void clear(String clusterId);
+
 }

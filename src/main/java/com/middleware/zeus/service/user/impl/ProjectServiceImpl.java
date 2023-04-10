@@ -306,7 +306,7 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         // 解绑项目下用户
         unbindUser(organId, projectId, null);
         // 回收资源
-        platformQuotaService.remove(PROJECT, projectId, null, CPU, MEMORY, STORAGE);
+        platformQuotaService.remove(PROJECT, projectId, null, null, CPU, MEMORY, STORAGE);
         // 解绑项目下备份位置
         unBindBackupPosition(organId, projectId);
         // 解绑项目下备份服务器
@@ -402,7 +402,7 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         if (!CollectionUtils.isEmpty(projectQuota.getQuotaList())) {
             // todo
             checkResource(projectQuota.getQuotaList());
-            platformQuotaService.remove(PROJECT, projectQuota.getProjectId(), null, CPU, MEMORY, STORAGE);
+            platformQuotaService.remove(PROJECT, projectQuota.getProjectId(), null, null, CPU, MEMORY, STORAGE);
             for (ResourceQuotaDo resourceQuotaDo : projectQuota.getQuotaList()){
                 platformQuotaService.allocate(PROJECT, projectQuota.getProjectId(), resourceQuotaDo);
             }
@@ -480,7 +480,7 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
             throw new BusinessException(ErrorMessage.PROJECT_STORAGE_USING);
         }
         // 删除存储
-        platformQuotaService.remove(PROJECT, projectId, storageId, STORAGE);
+        platformQuotaService.remove(PROJECT, projectId, null, storageId, STORAGE);
     }
 
     @Override
@@ -528,7 +528,7 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
             throw new BusinessException(ErrorMessage.PROJECT_CPU_MEMORY_USING);
         }
         // 删除cpu memory
-        platformQuotaService.remove(PROJECT, projectId, null, CPU, MEMORY);
+        platformQuotaService.remove(PROJECT, projectId, null, null, CPU, MEMORY);
     }
 
     @Override

@@ -24,7 +24,7 @@ public interface PlatformQuotaService {
      * @param type 类型: 组织  项目
      * @param uid 项目/组织id
      */
-    void remove(String type, String uid, String name, String... target);
+    void remove(String type, String uid, String clusterId, String name, String... target);
 
     /**
      * 查询配额情况

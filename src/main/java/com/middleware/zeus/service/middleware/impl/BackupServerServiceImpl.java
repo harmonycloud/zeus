@@ -148,6 +148,12 @@ public class BackupServerServiceImpl implements BackupServerService {
         for (BeanBackupServer beanBackupServer : beanBackupServers) {
             beanBackupServer.setClusterId("");
             backupServerMapper.updateById(beanBackupServer);
+            // 移除该备份服务器所对应的备份位置
+            backupPositionService.deleteByBackupServer(beanBackupServer.getId());
+            // 移除该备份服务器与项目的绑定关系
+            projectBackupServerService.delete(null, null, beanBackupServer.getId());
+            // 移除该备份服务器与组织的绑定关系
+            organizationService.removeBackupServer(null, beanBackupServer.getId(), clusterId);
         }
     }
 

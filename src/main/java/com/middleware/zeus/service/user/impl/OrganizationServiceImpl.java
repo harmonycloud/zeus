@@ -171,7 +171,7 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
         beanOrganizationMapper.delete(wrapper);
 
         // 删除组织下分配资源记录
-        platformQuotaService.remove(ORGAN, organId, null);
+        platformQuotaService.remove(ORGAN, organId, null, null);
     }
 
     @Override
@@ -180,7 +180,7 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
         if (!CollectionUtils.isEmpty(organizationQuota.getQuotaList())) {
             // todo check resource
             //checkResource(organizationQuota.getOrganId(), organizationQuota.getQuotaList());
-            platformQuotaService.remove(ORGAN, organizationQuota.getOrganId(), null, CPU, MEMORY, STORAGE);
+            platformQuotaService.remove(ORGAN, organizationQuota.getOrganId(), null, null, CPU, MEMORY, STORAGE);
             for (ResourceQuotaDo resourceQuotaDo : organizationQuota.getQuotaList()){
                 platformQuotaService.allocate(ORGAN, organizationQuota.getOrganId(), resourceQuotaDo);
             }
@@ -242,7 +242,7 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
             }
         }
         // 删除存储
-        platformQuotaService.remove(ORGAN, organId, storageId, STORAGE);
+        platformQuotaService.remove(ORGAN, organId, null, storageId, STORAGE);
     }
 
     @Override
@@ -285,7 +285,7 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
             }
         }
         // 删除cpu memory
-        platformQuotaService.remove(ORGAN, organId, null, CPU, MEMORY);
+        platformQuotaService.remove(ORGAN, organId, null, null, CPU, MEMORY);
     }
 
     @Override
@@ -351,6 +351,14 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
             throw new BusinessException(ErrorMessage.ORGANIZATION_USER_USED_IN_PROJECT);
         }
         organizationUserService.delete(organId, username);
+    }
+
+    @Override
+    public void clear(String clusterId) {
+        // 移除项目下的资源分配
+        platformQuotaService.remove(PROJECT, null, clusterId, null, CPU, MEMORY, STORAGE);
+        // 移除组织下的资源分配
+        platformQuotaService.remove(ORGAN, null, clusterId, null, CPU, MEMORY, STORAGE);
     }
 
 

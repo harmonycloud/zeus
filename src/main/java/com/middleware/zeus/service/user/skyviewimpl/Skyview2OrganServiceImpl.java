@@ -107,4 +107,8 @@ public class Skyview2OrganServiceImpl extends AbstractOrganizationService implem
     public void deleteOrganUser(String organId, String username) {
         throw new BusinessException(ErrorMessage.NO_AUTHORITY_WITH_EXTERNAL_SERVICE);
     }
+
+    @Override
+    public void clear(String clusterId) {
+    }
 }
