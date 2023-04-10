@@ -179,6 +179,7 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
         keyValueDto.setValue(keyValueDto.wrapValue());
         // 给过期时间添加时间单位：秒
         if (!StringUtils.isEmpty(keyValueDto.getExpiration())) {
+            checkExpirationTime(Long.parseLong(keyValueDto.getExpiration()));
             keyValueDto.setExpiration(keyValueDto.getExpiration() + "s");
         }
         // 如果zset数据类型没有值，则添加一个默认值
@@ -221,6 +222,7 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
     @Override
     public void expireKey(String clusterId, String namespace, String middlewareName, Integer db, String key, KeyValueDto keyValueDto) {
         if (!StringUtils.isEmpty(keyValueDto.getExpiration())) {
+            checkExpirationTime(Long.parseLong(keyValueDto.getExpiration()));
             // 添加时间单位：秒
             keyValueDto.setExpiration(keyValueDto.getExpiration() + "s");
             redisClient.setKeyExpiration(db, key, keyValueDto);
@@ -260,6 +262,16 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
     public boolean checkKeyExists(String clusterId, String namespace, String middlewareName, Integer db, String key) {
         DataDto keyValue = getKeyValue(clusterId, namespace, middlewareName, db, key);
         return keyValue != null && !"none".equals(keyValue.getKeyType());
+    }
+
+    /**
+     * 检查过期时间 redis key过期时间最大值为2^31-1=2147483647
+     * @param expire
+     */
+    private void checkExpirationTime(Long expire){
+        if(expire > (Integer.MAX_VALUE -1)){
+            throw new BusinessException(ErrorMessage.TOO_LONG_EXPIRE_TIME);
+        }
     }
 
     /**
