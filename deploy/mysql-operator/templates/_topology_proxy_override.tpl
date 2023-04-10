@@ -6,14 +6,14 @@ topologySpreadConstraints:
 {{- if ne .Values.podAntiAffinityTopologKey "kubernetes.io/hostname"}}
 - maxSkew: 1
   topologyKey: {{ .Values.podAntiAffinityTopologKey | default "" }}
-  whenUnsatisfiable: DoNotSchedule
+  {{- include "middlware.proxy.whenUnsatisfiable" . }}
   labelSelector:
       matchLabels:
         {{ include "middleware.proxy.key" . }}: {{ include "middleware.proxy.name" . }}
 {{- end }}
 - maxSkew: 1
   topologyKey: "kubernetes.io/hostname"
-  whenUnsatisfiable: DoNotSchedule
+  {{- include "middlware.proxy.whenUnsatisfiable" . }}
   labelSelector:
       matchLabels:
         {{ include "middleware.proxy.key" . }}: {{ include "middleware.proxy.name" . }}
@@ -33,8 +33,8 @@ affinity:
   {{- if eq .Values.podAntiAffinity "hard"}}
   podAntiAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:
-    - labelSelector:
-        topologyKey: {{ .Values.podAntiAffinityTopologKey }}
+    - topologyKey: {{ .Values.podAntiAffinityTopologKey }}
+      labelSelector:
         matchExpressions:
         - key: {{ include "middleware.proxy.key" . }}
           operator: In

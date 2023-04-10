@@ -48,7 +48,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
           - name: TZ
-            value: CST-8
+            value: "Asia/Shanghai"
           - name: CRD_GROUP
             value: {{ .Values.crdGroup | default "harmonycloud" }}
           - name: aliyun_logs_middlewarestdout
@@ -57,7 +57,7 @@ spec:
             value: middleware_name={{ include "mysql-operator.fullname" . }}
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 8080
               protocol: TCP
           livenessProbe:
             failureThreshold: 3
@@ -71,6 +71,13 @@ spec:
             timeoutSeconds: 5
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: /resource/proxysql-cluster/templates/
+              name: resource
+      volumes:
+        - name: resource
+          configMap:
+            name: {{ include "mysql-operator.fullname" . }}-resource
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -108,3 +115,17 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccount: {{ include "mysql-operator.fullname" . }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mysql-operator.fullname" . }}
+  labels:
+    {{- include "mysql-operator.labels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "mysql-operator.selectorLabels" . | nindent 6 }}
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080

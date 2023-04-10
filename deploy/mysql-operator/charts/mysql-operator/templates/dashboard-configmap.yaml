@@ -449,6 +449,113 @@ data:
           "valueName": "current"
         },
         {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 5
+          },
+          "hiddenSeries": false,
+          "id": 405,
+          "legend": {
+            "avg": true,
+            "current": true,
+            "max": true,
+            "min": true,
+            "show": true,
+            "total": false,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "7.3.5",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+             "exemplar": true,
+             "expr": "spc_volume_used_capacity_rate{namespace=\"$namespace\",persistentvolumeclaim=\"$pvc\"}*100",
+             "format": "time_series",
+             "instant": false,
+             "interval": "",
+             "intervalFactor": 1,
+             "legendFormat": "Volume Usage-Hitachi",
+             "refId": "A"
+            },
+            {
+             "expr": "kubelet_volume_stats_used_bytes{namespace=\"$namespace\",persistentvolumeclaim=\"$pvc\"}/kubelet_volume_stats_capacity_bytes{namespace=\"$namespace\",persistentvolumeclaim=\"$pvc\"}*100",
+             "instant": false,
+             "interval": "",
+             "intervalFactor": 2,
+             "legendFormat": "Volume Usage-Common",
+             "refId": "B"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Volume Capacity Usage(%)",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
           "collapsed": false,
           "datasource": null,
           "gridPos": {
@@ -4742,7 +4849,7 @@ data:
           }
         }
       ],
-      "refresh": "30s",
+      "refresh": "5s",
       "schemaVersion": 26,
       "style": "dark",
       "tags": [
@@ -4898,6 +5005,48 @@ data:
             "tagValuesQuery": null,
             "tags": [],
             "tagsQuery": null,
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "allValue": null,
+            "current": {
+              "selected": true,
+              "text": [
+                "All"
+              ],
+              "value": [
+                "$__all"
+              ]
+            },
+            "datasource": "Prometheus",
+            "definition": "query_result(kube_pod_spec_volumes_persistentvolumeclaims_info{namespace=\"$namespace\", pod=\"$pod\"})",
+            "error": null,
+            "hide": 0,
+            "includeAll": true,
+            "label": "pvc",
+            "multi": true,
+            "name": "pvc",
+            "options": [
+              {
+                "selected": false,
+                "text": "All",
+                "value": "$__all"
+              },
+              {
+                "selected": true,
+                "text": "mysql-data-mysql-0",
+                "value": "mysql-data-mysql-0"
+              }
+            ],
+            "query": "query_result(kube_pod_spec_volumes_persistentvolumeclaims_info{namespace=\"$namespace\", pod=\"$pod\"})",
+            "refresh": 0,
+            "regex": "/.*persistentvolumeclaim=\"([^\"]+).*/",
+            "skipUrlSync": false,
+            "sort": 1,
+            "tagValuesQuery": "",
+            "tags": [],
+            "tagsQuery": "",
             "type": "query",
             "useTags": false
           },

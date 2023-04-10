@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "mysql-operator.fullname" . }}-resource
+  labels:
+    app.kubernetes.io/name: {{ include "mysql-operator.fullname" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+{{ (.Files.Glob "resource/proxysql-cluster/templates/*").AsConfig | indent 2 }}

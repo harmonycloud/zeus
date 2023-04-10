@@ -15,10 +15,10 @@ spec:
   checkHealthConfigMap: {{ include "elasticsearch.fullname" . }}-checkhealth-config
   elasticKibanaConfigMap: {{ include "elasticsearch.fullname" . }}-kibana-config
   elasticSearchConfigMap: {{ include "elasticsearch.fullname" . }}-es-config
-  esExporterPort: 19114
-  esHttpPort: 9200
-  esKibanaPort: 5200
-  esTcpPort: 9300
+  esExporterPort: {{ .Values.port.esExporterPort }}
+  esHttpPort: {{ .Values.port.esHttpPort }}
+  esKibanaPort: {{ .Values.port.esKibanaPort }}
+  esTcpPort: {{ .Values.port.esTcpPort }}
   elasticPass: {{ .Values.elasticPassword | quote}}
   {{- if .Values.kibanaPassword }}
   kibanaPass: {{ .Values.kibanaPassword }}
@@ -27,12 +27,13 @@ spec:
   nodeSelector:
     {{- toYaml . | nindent 4 }}
   {{- end }}
-{{- if eq .Values.version "6.8" }}
-  kibanaImage: {{ .Values.image.repository }}/kibana:{{ .Values.image.kibanaImageTag }}
+{{- if contains "6.8" .Values.version }}
+  kibanaImage: {{ .Values.image.repository }}/kibana:{{ .Values.image.kibanaImageTag_6_8_10 }}
 {{- else }}
-  kibanaImage: {{ .Values.image.repository }}/kibana:{{ .Values.image.kibanaImageTag_7 }}
+  kibanaImage: {{ .Values.image.repository }}/kibana:{{ .Values.image.kibanaImageTag_7_16_3 }}
 {{- end }}
   elasticBusyImage: {{ .Values.image.repository }}/busybox:{{ .Values.image.busyImageTag }}
+  kibanaReplicas: {{ .Values.kibanaReplicas }}
   masterReplaces: {{ .Values.cluster.masterReplacesCount }}
   dataReplaces: {{ .Values.cluster.dataReplacesCount }}
   clientReplaces: {{ .Values.cluster.clientReplacesCount }}
@@ -74,10 +75,10 @@ spec:
     extraVolumeMounts:
     {{- toYaml .| nindent 6 }}
     {{- end }}
-  {{- if eq .Values.version "6.8" }}
-    middlewareImage: {{ .Values.image.repository }}/elastic:{{ .Values.image.elasticImageTag }}
+  {{- if contains "6.8" .Values.version }}
+    middlewareImage: {{ .Values.image.repository }}/elastic:{{ .Values.image.elasticImageTag_6_8_22 }}
   {{- else }}
-    middlewareImage: {{ .Values.image.repository }}/elastic:{{ .Values.image.elasticImageTag_7 }}
+    middlewareImage: {{ .Values.image.repository }}/elastic:{{ .Values.image.elasticImageTag_7_16_3 }}
   {{- end }}
     monitorImage: {{ .Values.image.repository }}/es-exporter:{{ .Values.image.exporterImageTag }}
     hostNetwork: {{ default false .Values.hostNetwork }}
@@ -88,10 +89,10 @@ spec:
   repository: {{ .Values.image.repository }}
   type: {{ .Values.cluster.mode }}
   updateStrategy: {}
-{{- if eq .Values.version "6.8" }}
-  version: "6.8"
+{{- if contains "6.8" .Values.version }}
+  version: "6.8.22"
 {{- else }}
-  version: "7.16"
+  version: "7.16.3"
 {{- end }}
   statefulset:
     spec:
@@ -109,7 +110,7 @@ spec:
           {{- end }}
         spec:
         {{- with .Values.statefulSetConfiguration }}
-        {{- toYaml . | nindent 11 }}
+        {{- toYaml . | nindent 10 }}
         {{- end }}
         {{- with .Values.tolerations }}
           tolerations:

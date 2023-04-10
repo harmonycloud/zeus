@@ -374,7 +374,7 @@ tlsOptions: {}
 # from.
 service:
   enabled: true
-  type: NodePort
+  type: ClusterIP
   # Additional annotations applied to both TCP and UDP services (e.g. for cloud provider specific config)
   annotations: {}
   # Additional annotations for TCP service only
@@ -523,4 +523,7 @@ securityContext:
 
 podSecurityContext:
   fsGroup: 65532
+
+podAntiAffinity: "soft"
+podAntiAffinityTopologKey: "zone"
 

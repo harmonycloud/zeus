@@ -1,7 +1,6 @@
 name: minio
 version: 1.5.3-4
-provider: harmonycloud.cn
-description: "Harmonycloud minio是一个基于Apache License v2.0开源协议的对象存储服务。它兼容亚马逊S3云存储服务接口，非常适合于存储大容量非结构化的数据。"
+description: "minio是一个基于Apache License v2.0开源协议的对象存储服务。它兼容亚马逊S3云存储服务接口，非常适合于存储大容量非结构化的数据。"
 serviceInstances:
 - minio
 changes: |
@@ -32,10 +31,5 @@ observabilities:
 features:
 - Master Replica
 capabilities: Basic Install
-maintainers:
-- name: 张盼
-  email: zhangpan@harmonycloud.cn
-- name: 沈宏杰
-  email: hongjieshen@harmonycloud.cn
 
 

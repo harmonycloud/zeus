@@ -1,6 +1,6 @@
 apiVersion: v2
 appVersion: RELEASE.2021-02-14T04-01-33Z
-description: Minio by Harmonycloud
+description: Minio
 name: minio
 type: application
 version: 1.5.3-4

@@ -6,7 +6,7 @@ capabilities:
   - alert
 questions:
   - variable: image.repository
-    default: "middleware.harmonycloud.com.cn:58080/middleware"
+    default: "harbor.middleware.com.cn:58080/middleware"
     label: 镜像仓库地址
     detail: true
     type: string

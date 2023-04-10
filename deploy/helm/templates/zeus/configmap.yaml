@@ -46,8 +46,8 @@ data:
 
     k8s:
       namespace:
-        protect: default,kube-system,kube-node-lease,kube-public,caas-system,harbor-system,logging,monitoring,velero,middleware-system,zeus,minio
-        label: middleware=true
+        protect: default,kube-system,kube-node-lease,kube-public,caas-system,harbor-system,logging,monitoring,velero,middleware-system,zeus,minio,middleware-operator
+        label: middleware=middleware
       kubeconfig:
         path: /usr/local/kubeconfig
       crd:
@@ -58,9 +58,10 @@ data:
       images:
         path: /usr/local/zeus-pv/images/middleware
       platform:
-        version: v1.2.4
+        version: v1.3.2
       user:
         expire: 1
+        passwordExpire: 90
       usercenter: zeus
       skyview:
         encryptPassword: true
@@ -77,6 +78,9 @@ data:
       backup:
         storageTypeCheck: true
         storages: localplugin.csi.alibabacloud.com
+      privateRegistry:
+        enable: false
+        imagePullSecret: middleware-zeus-secret
 
     overview:
       overall:
@@ -97,6 +101,8 @@ data:
       timeout: 30000
       connect-timeout: 30000
       read-timeout: 30000
+      # 日志总开关，打开/关闭Forest请求/响应日志
+      log-enabled: false
 kind: ConfigMap
 metadata:
   name: zeus-config

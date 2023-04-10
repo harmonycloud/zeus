@@ -1,0 +1,17 @@
+
+replicaCount: 2
+
+image:
+  repository: harbor.middleware.com/middleware/middleware-scheduler
+  pullPolicy: IfNotPresent
+  tag: v1.0.0-hc
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+podAntiAffinityTopologKey: "kubernetes.io/hostname"
+
+podAntiAffinity: "soft"

@@ -32,12 +32,6 @@
 - docker-compose >= 1.18.0
 - kubernetes >= 1.17.2
 
-Zeus平台使用docker-compose进行部署。
-
-```
-git clone https://github.com/harmonycloud/zeus.git
-make install
-```
 
 访问方式
 
@@ -48,7 +42,6 @@ http://<your ip>:31088
 密码：zeus123.com
 ```
 
-详细部署方式参考：[https://github.com/harmonycloud/zeus/blob/main/deploy/README.md](https://github.com/harmonycloud/zeus/blob/main/deploy/README.md)
 
 ## 支持组件版本
 
@@ -63,19 +56,6 @@ http://<your ip>:31088
 |Minio| RELEASE.2021-02-14T04-01-33Z | 集群 |
 |Nacos| 1.4 / 2.0 | 集群 |
 
-## 平台组件
-
-zeus-ui: https: https://github.com/harmonycloud/zeus-ui
-
-redis-operator: https://github.com/harmonycloud/redis-operator
-
-其余operator暂未开源
-
-## 手册
-
-用户手册：https://github.com/harmonycloud/zeus/blob/main/docs/user-guide/README.md
-
-开发手册：https://github.com/harmonycloud/zeus/blob/main/docs/developer-guide/README.md
 
 ## License
 

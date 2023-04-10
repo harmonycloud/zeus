@@ -713,3 +713,7 @@ imageRenderer:
 #   requests:
 #     cpu: 50m
 #     memory: 50Mi
+
+
+podAntiAffinity: "soft"
+podAntiAffinityTopologKey: "zone"

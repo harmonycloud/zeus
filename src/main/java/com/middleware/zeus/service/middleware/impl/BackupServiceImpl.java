@@ -1,0 +1,152 @@
+package com.middleware.zeus.service.middleware.impl;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.middleware.zeus.integration.cluster.bean.BackupStorageProvider;
+import com.middleware.zeus.service.middleware.BackupService;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
+
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.CaasRuntimeException;
+import com.middleware.caas.common.model.middleware.Backup;
+import com.middleware.caas.common.model.middleware.Middleware;
+import com.middleware.zeus.integration.cluster.BackupWrapper;
+import com.middleware.zeus.integration.cluster.bean.BackupCR;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * @author xutianhong
+ * @Date 2021/4/2 4:23 下午
+ */
+@Service
+@Slf4j
+public class BackupServiceImpl implements BackupService {
+
+    @Autowired
+    private BackupWrapper backupWrapper;
+
+    /**
+     * 查询备份列表
+     *
+     * @param clusterId
+     * @param namespace
+     * @return List<BackupDto>
+     */
+    @Override
+    public List<Backup> listBackup(String clusterId, String namespace) {
+        List<BackupCR> backupCRList = null;
+        try {
+            backupCRList = backupWrapper.list(clusterId, namespace);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+        if (CollectionUtils.isEmpty(backupCRList)) {
+            return new ArrayList<>(0);
+        }
+        return convertBackupCR(backupCRList);
+    }
+
+
+    private List<Backup> convertBackupCR(List<BackupCR> backupCRList) {
+        List<Backup> backupList = new ArrayList<>();
+        backupCRList.forEach(backupCRD -> {
+            Backup backup = new Backup().setName(backupCRD.getSpec().getClusterName())
+                    .setBackupName(backupCRD.getMetadata().getName())
+                    .setCrName(backupCRD.getMetadata().getName())
+                    .setNamespace(backupCRD.getMetadata().getNamespace())
+                    .setControllerName(backupCRD.getMetadata().getLabels().get("controllername"))
+                    .setMiddlewareCluster(backupCRD.getSpec().getClusterName())
+                    .setBucketName(backupCRD.getSpec().getStorageProvider().getMinio().getBucketName())
+                    .setEndPoint(backupCRD.getSpec().getStorageProvider().getMinio().getEndpoint())
+                    .setAddressId(backupCRD.getMetadata().getLabels().get("addressId"))
+                    .setBackupId(backupCRD.getMetadata().getLabels().get("backupId"))
+                    .setType(backupCRD.getMetadata().getLabels().get("type"))
+                    .setCreationTime(backupCRD.getMetadata().getCreationTimestamp());
+
+            if (backupCRD.getMetadata().getLabels().containsKey("backup-schedule")) {
+                backup.setOwner(backupCRD.getMetadata().getLabels().get("backup-schedule"));
+                //backup.setBackupName(backupCRD.getMetadata().getLabels().get("backup-schedule"));
+            } /*else {
+                backup.setBackupName(backupCRD.getMetadata().getName());
+                backup.setOwner(backupCRD.getMetadata().getName());
+                if (StringUtils.isEmpty(backup.getTaskName())){
+                    backup.setTaskName(backupCRD.getMetadata().getName());
+                }
+            }*/
+            if (!ObjectUtils.isEmpty(backupCRD.getStatus())) {
+                backup.setBackupFileName(backupCRD.getStatus().getBackupFileName())
+                        .setBackupTime(backupCRD.getStatus().getBackupTime()).setPhase(backupCRD.getStatus().getPhase());
+            }
+            backupList.add(backup);
+        });
+
+        return backupList;
+    }
+
+    /**
+     * 创建备份
+     *
+     * @param backupCR
+     * @return
+     */
+    @Override
+    public void create(String clusterId, BackupCR backupCR) {
+        try {
+            backupWrapper.create(clusterId, backupCR);
+        } catch (IOException e) {
+            log.error("备份{}创建失败", backupCR.getMetadata().getName());
+            throw new CaasRuntimeException(ErrorMessage.CREATE_BACKUP_FAILED);
+        }
+    }
+
+    /**
+     * 删除备份cr
+     *
+     * @param clusterId
+     * @param namespace
+     * @param name
+     * @return List<BackupDto>
+     */
+    @Override
+    public void delete(String clusterId, String namespace, String name) throws Exception {
+        try {
+            backupWrapper.delete(clusterId, namespace, name);
+        } catch (Exception e){
+            log.error("删除备份失败", e);
+            throw new CaasRuntimeException(ErrorMessage.DELETE_BACKUP_FAILED);
+        }
+    }
+
+    /**
+     * 获取备份文件信息（用于创建实例）
+     *
+     * @param middleware
+     * @return BackupStorageProvider
+     */
+    @Override
+    public BackupStorageProvider getStorageProvider(Middleware middleware) {
+        List<BackupCR> backupCRList = backupWrapper.list(middleware.getClusterId(), middleware.getNamespace());
+
+        backupCRList = backupCRList.stream()
+            .filter(crd -> crd.getStatus() != null
+                && StringUtils.equals(crd.getStatus().getBackupFileName(), middleware.getBackupFileName()))
+            .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(backupCRList)) {
+            throw new CaasRuntimeException(ErrorMessage.BACKUP_FILE_NOT_EXIST);
+        }
+
+        BackupStorageProvider backupStorageProvider = backupCRList.get(0).getSpec().getStorageProvider();
+        backupStorageProvider.getMinio().setBackupFileName(middleware.getBackupFileName());
+        return backupStorageProvider;
+    }
+}

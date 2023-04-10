@@ -49,9 +49,6 @@ items:
         name: {{ $name }}
         targetPort: {{ $name | quote }}
         protocol: TCP
-        {{- if $config.nodePort }}
-        nodePort: {{ $config.nodePort }}
-        {{- end }}
       {{- end }}
       {{- end }}
       {{- if eq $type "LoadBalancer" }}

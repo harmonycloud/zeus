@@ -7,3 +7,4 @@ resources:
     memory: 2048Mi
 
 storageSize: 10G
+version: "5.7.39"

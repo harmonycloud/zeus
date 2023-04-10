@@ -1,6 +1,7 @@
 annotations:
   owner: harmonycloud
   type: db
+  version: 5.7,8.0
 apiVersion: v2
 appVersion: "5.7"
 dependencies:
@@ -8,8 +9,8 @@ dependencies:
   condition: mysql-operator.enabled
   name: mysql-operator
   repository: file://./charts/mysql-operator
-  version: 1.8.16-1
+  version: 1.8.31-1
 description: mysql instance chart
 name: mysql
 type: application
-version: 1.8.16-1
+version: 1.8.31-1

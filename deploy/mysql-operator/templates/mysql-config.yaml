@@ -1,14 +1,20 @@
 apiVersion: v1
 data:
   my.cnf.tmpl: |
+    {{- $bigVersion := regexFind "[5|8]" .Values.version }}
     # version 1
     [mysqld]
+    #************** memory ***************
+    {{- include "mysql.parameters" . | nindent 4 }}
+
     #************** basic ***************
-    {{- if eq .Values.version "8.0" }}
+    {{- if eq $bigVersion "8" }}
     default-authentication-plugin   =mysql_native_password
     plugin_dir=/usr/lib64/mysql/plugin/
+    {{- $sql_mode := regexReplaceAll "NO_AUTO_CREATE_USER," .Values.args.sql_mode ""}}
+    sql_mode                        ={{ $sql_mode | default "NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO" }}
     {{- end }}
-    {{- if eq .Values.version "5.7" }}
+    {{- if eq $bigVersion "5" }}
     query_cache_type                ={{ .Values.args.query_cache_type | default "OFF" }}
     query_cache_size                ={{ .Values.args.query_cache_size | default 0 }}
     sql_mode                        ={{ .Values.args.sql_mode | default "NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,ERROR_FOR_DIVISION_BY_ZERO" }}
@@ -23,27 +29,10 @@ data:
     socket                          =/data/mysql/DBNAME/conf/mysql.sock
     pid_file                        =/data/mysql/DBNAME/conf/mysql.pid
     #************** connection ***************
-    {{- $memory := regexFind "[0-9,.]*" .Values.resources.limits.memory }}
-    {{- if or (contains "MI" (upper .Values.resources.limits.memory)) (contains "M" (upper .Values.resources.limits.memory)) }}
-    {{- $bufferMemory := div (mul $memory  1) 2 }}
-    {{- $maxConnectionsMemory := div (div (sub $memory $bufferMemory) 3) 2 }}
-    {{- $bufferMemoryStr := printf "%d%s" (div (mul $memory  1) 2) "M" }}
-    max_connections                 ={{ .Values.args.max_connections | default $maxConnectionsMemory }}
-    innodb_buffer_pool_size         ={{ .Values.args.innodb_buffer_pool_size | default $bufferMemoryStr }}
-    {{- $maxUserConnections := div (mul $maxConnectionsMemory  1) 2 }}
-    max_user_connections            ={{ .Values.args.max_user_connections | default $maxUserConnections }}
-    {{- else if or (contains "GI" (upper .Values.resources.limits.memory)) (contains "G" (upper .Values.resources.limits.memory)) }}
-    {{- $bufferMemory := div (mul (ceil $memory)  1024) 2 }}
-    {{- $memory := ceil ($memory | float64 ) }}
-    {{- $maxConnectionsMemory := div (div (sub (mul ($memory|int64) 1024) $bufferMemory) 3) 2 }}
-    {{- $bufferMemoryStr := printf "%d%s"  (div (mul $memory  1024) 2) "M" }}
-
-    max_connections                 ={{ .Values.args.max_connections | default $maxConnectionsMemory }}
-    innodb_buffer_pool_size         ={{ .Values.args.innodb_buffer_pool_size | default $bufferMemoryStr  }}
-    {{- $maxUserConnections := div (mul $maxConnectionsMemory  1) 2 }}
-    max_user_connections            ={{ .Values.args.max_user_connections | default $maxUserConnections }}
-    {{- end }}
     max_connect_errors              ={{ .Values.args.max_connect_errors | default 100000 }}
+    {{- if (default .Values.args.skip_ssl false)}}
+    skip-ssl
+    {{ end }}
     #************** sql timeout & limits ***************
     max_execution_time              ={{ .Values.args.max_execution_time | default 10000 }}
     group_concat_max_len            ={{ .Values.args.group_concat_max_len | default 1048576 }}
@@ -92,7 +81,7 @@ data:
     relay_log_purge                 ={{ .Values.args.relay_log_purge | default "ON" }}
     relay_log_recovery              ={{ .Values.args.relay_log_recovery | default "ON" }}
     #*************** rpl_semi_sync ***************
-    {{- if eq .Values.version "5.7" }}
+    {{- if eq $bigVersion "5" }}
     rpl_semi_sync_master_enabled                =ON
     rpl_semi_sync_master_timeout                =100000000000
     rpl_semi_sync_master_trace_level            =32
@@ -102,7 +91,7 @@ data:
     rpl_semi_sync_slave_enabled                 =ON
     rpl_semi_sync_slave_trace_level             =32
     {{- end }}
-    {{- if eq .Values.version "8.0" }}
+    {{- if eq $bigVersion "8" }}
     loose-rpl_semi_sync_master_enabled                =ON
     loose-rpl_semi_sync_master_timeout                =100000000000
     loose-rpl_semi_sync_master_trace_level            =32
@@ -194,6 +183,7 @@ data:
     innodb_adaptive_hash_index          ={{ .Values.args.innodb_adaptive_hash_index | default "ON" }}
     performance_schema_max_table_instances ={{ .Values.args.performance_schema_max_table_instances | default -1 }}
     #*************** plugins ***************
+    default_authentication_plugin=mysql_native_password
     {{- if .Values.features.threadpool.enabled }}
     plugin-load-add=threadpool.so
     {{- end }}
@@ -209,10 +199,17 @@ data:
     {{- end }}
 
     {{- if .Values.features.auditLog.enabled }}
+    {{- if eq $bigVersion "5" }}
     plugin-load-add=libaudit_plugin.so
     audit_json_log_file             =/data/mysql/DBNAME/elog/mysql-audit.json
     audit_whitelist_users           =operator,healthchecker,replic,zabbixjk,boot,skip-grants user
     audit_json_file                 =ON
+    {{- else}}
+    loose-plugin-load-add=libaudit_plugin.so
+    loose-audit_json_log_file       =/data/mysql/DBNAME/elog/mysql-audit.json
+    loose-audit_whitelist_users     =operator,healthchecker,replic,zabbixjk,boot,skip-grants user
+    loose-audit_json_file           =ON
+    {{- end}}
     {{- end }}
 
 kind: ConfigMap

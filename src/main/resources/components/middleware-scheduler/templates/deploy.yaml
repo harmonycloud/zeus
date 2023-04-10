@@ -1,0 +1,155 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    component: scheduler
+    tier: control-plane
+  name: middleware-scheduler
+  namespace: middleware-operator
+spec:
+  selector:
+    matchLabels:
+      component: scheduler
+      tier: control-plane
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        component: scheduler
+        tier: control-plane
+        version: v0.1
+    spec:
+      serviceAccount: middleware-scheduler
+      containers:
+        - image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: Always
+          command:
+            - /bin/kube-scheduler
+            - --config=/etc/kubernetes/scheduler-config/scheduler-config.yaml
+          #            - --v=2
+          name: scheduler
+          volumeMounts:
+            - mountPath: /etc/kubernetes/scheduler-config
+              name: middleware-scheduler-config
+      volumes:
+        - configMap:
+            name: middleware-scheduler-config
+          name: middleware-scheduler-config
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      affinity:
+      {{- if eq .Values.podAntiAffinity "hard"}}
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/instance
+                    operator: In
+                    values:
+                      - {{ .Release.Name }}
+              topologyKey: {{ .Values.podAntiAffinityTopologKey }}
+      {{- else if eq .Values.podAntiAffinity "soft"}}
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: {{ .Values.podAntiAffinityTopologKey }}
+                labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/instance
+                      operator: In
+                      values:
+                        - {{ .Release.Name }}
+      {{- end}}
+        {{- with .Values.nodeAffinity }}
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: middleware-scheduler-config
+  namespace: middleware-operator
+data:
+  scheduler-config.yaml: |
+    apiVersion: kubescheduler.config.k8s.io/v1beta1
+    kind: KubeSchedulerConfiguration
+    leaderElection:
+      leaderElect: true
+      resourceName: middleware-scheduler
+    profiles:
+      - schedulerName: middleware-scheduler
+        plugins:
+          filter:
+            enabled:
+              - name: "LvmScheduling"
+          score:
+            enabled:
+              - name: "LvmScheduling"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: middleware-scheduler
+  namespace: middleware-operator
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: middleware-scheduler
+rules:
+  - apiGroups: [ "scheduling.sigs.k8s.io" ]
+    resources: [ "*" ]
+    verbs: [ "get","list","watch" ]
+  - apiGroups: [ "" ]
+    resources: [ "nodes" ]
+    verbs: [ "get", "list", "patch" ]
+  - apiGroups: [ "" ]
+    resources: [ "pods","pods/status" ]
+    verbs: [ "get","list","watch","update" ]
+  - apiGroups: [ "rbac.authorization.k8s.io" ]
+    resources: [ "*" ]
+    verbs: [ "*" ]
+  - apiGroups: [ "","apps","storage.k8s.io","policy" ]
+    resources: [ "*" ]
+    verbs: [ "list","watch","get","update" ]
+  # 加锁
+  - apiGroups: [ "coordination.k8s.io" ]
+    resources: [ "leases" ]
+    verbs: [ "create","update","list","watch","get" ]
+  # 事件
+  - apiGroups: [ "*" ]
+    resources: [ "events" ]
+    verbs: [ "create" ]
+  - apiGroups: [ "events.k8s.io" ]
+    resources: [ "events" ]
+    verbs: ["patch" ]
+  # pod绑定
+  - apiGroups: [ "" ]
+    resources: [ "pods/status","pods/binding" ]
+    verbs: [ "patch","create" ]
+  # 更新pvc, 在绑定阶段提示需要更新pvc
+  - apiGroups: [ "" ]
+    resources: [ "persistentvolumeclaims" ]
+    verbs: [ "update" ]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: middleware-scheduler
+subjects:
+  - kind: ServiceAccount
+    name: middleware-scheduler
+    namespace: middleware-operator
+roleRef:
+  kind: ClusterRole
+  name: middleware-scheduler
+  apiGroup: rbac.authorization.k8s.io
+

@@ -22,6 +22,11 @@ data:
       multiline.match: after
       multiline.pattern: '^\# Time|^\# User'
       {{`{{end}}`}}
+      {{`{{if eq .Format "csv"}}`}}
+      multiline.negate: true
+      multiline.match: after
+      multiline.pattern: '^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}.\d{3}'
+      {{`{{end}}`}}
       fields:
           {{`{{range $key, $value := .Tags}}`}}
           {{`{{ $key }}`}}: {{`{{ $value }}`}}

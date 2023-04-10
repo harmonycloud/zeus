@@ -47,6 +47,7 @@ rules:
   - update
   - watch
   - create
+  - delete
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -114,6 +115,18 @@ spec:
         env:
         - name: CRD_GROUP
           value: {{ .Values.global.crdGroup }}
+        {{- if .Values.global.middleware_controller.controller.pvTopology}}
+        - name: ENBALE_PV_TOPOLOGY
+          value: "true"
+        {{- end }}
+        {{- if .Values.global.middleware_controller.controller.gracefulRestart}}
+        - name: ENBALE_GRADE_RESTART
+          value: "true"
+        - name: USE_DEFAULT_STATUS_MAP
+          value: "true"
+        {{- end }}
+        - name: "CONFIG_PATH"
+          value: "/tmp/graceful-restart-config"
         command:
         - /manager
         image: "{{ .Values.global.repository }}/{{ .Values.global.middleware_controller.image }}:{{ .Values.global.middleware_controller.tag }}"
@@ -135,6 +148,13 @@ spec:
           {{- toYaml .Values.global.middleware_controller.resources | nindent 12 }}
         securityContext:
           allowPrivilegeEscalation: false
+        volumeMounts:
+        - mountPath: /tmp/graceful-restart-config
+          name: graceful-restart-config
+      volumes:
+      - name: graceful-restart-config
+        configMap:
+          name: graceful-restart-config
       securityContext:
         runAsNonRoot: true
       {{- with .Values.global.middleware_controller.nodeSelector }}
@@ -179,3 +199,10 @@ spec:
       {{- end }}
       serviceAccountName: middleware-controller-manager
       terminationGracePeriodSeconds: 10
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: graceful-restart-config
+data:
+{{ (.Files.Glob "graceful-restart-config/*").AsConfig | indent 2 }}

@@ -34,6 +34,18 @@ data:
           remove_field => ["message","offset"]
         }
       }
+      else if [index] == "mysqlaudit" {
+        if [cmd] != "create_db" and [cmd] != "create_table" and [cmd] != "create_user" and [cmd] != "create_index"
+          and [cmd] != "drop_db" and [cmd] != "drop_table" and [cmd] != "drop_user" and [cmd] != "drop_index"
+          and [cmd] != "alter_user" and [cmd] != "alert_table"
+          and [cmd] != "truncate"
+          and [cmd] != "revoke"
+          and [cmd] != "rename_table"
+          and [cmd] != "select" and [cmd] != "insert" and [cmd] != "update" and [cmd] != "delete" and [cmd] != "lock_tables" and [cmd] != "unlock_tables"
+        {
+          drop{}
+        }
+      }
       else if [index] == "mysqlslow" {
         json {
           source => "message"
@@ -50,6 +62,49 @@ data:
         }
         mutate {
           remove_field => "@version"
+          remove_field => "message"
+        }
+      }
+      # pgsql审计日志，默认只记录ddl操作，
+      # 如果想记录表数据的增删改，可以将psgql的参数log_statement设置为mod
+      # 如果想记录记录数据表查询操作，可以将psgql的参数log_statement设置为all
+      else if [index] == "postgresqlaudit" {
+        csv {
+          columns => ["log_time","user_name","database_name","process_id","connection_from","session_id","session_line_num","command_tag","session_start_time","virtual_transaction_id","transaction_id","error_severity","sql_state_code","message","detail","hint","internal_query","internal_query_pos","context","query","query_pos","location","application_name","backend_type","leader_pid","query_id"]
+        }
+        ruby {
+            code => "
+              # 增加date unix时间戳，取自@timestamp
+              event.set('date', (event.get('@timestamp').to_f).to_i)
+              # 丢弃部分日志
+              if event.get('error_severity') == 'ERROR' or event.get('backend_type') == 'checkpointer' or event.get('message').include?'connection' or event.get('application_name').empty? or event.get('application_name') == 'Patroni' or event.get('application_name') == 'pgq ticker' then
+                event.cancel
+              end
+            "
+        }
+        date {
+          match => ["log_time","UNIX"]
+          target => "@timestamp"
+        }
+        mutate {
+          remove_field => ["@version","detail","hint","internal_query","internal_query_pos","context","query_pos","location"]
+          rename => {
+            "user_name" => "user"
+            "database_name" => "db"
+            "connection_from" => "ip"
+          }
+          gsub => [
+            "message", "statement: ", ""
+          ]
+          copy => { "message" => "query" }
+        }
+        # cmd命令提取
+        mutate {
+          split => { "message" => " " }
+          add_field => { "cmd" => "%{[message][0]}" }
+        }
+        mutate {
+          uppercase => ["cmd"]
           remove_field => "message"
         }
       }
@@ -96,6 +151,14 @@ data:
           password => "Hc@Cloud01"
         }
       }
+      else if [index] == "mysqlaudit"{
+        elasticsearch {
+          hosts => ["kubernetes-logging-master:9200"]
+          index => "mysqlaudit-%{+YYYY.MM.dd}"
+          user => "elastic"
+          password => "Hc@Cloud01"
+        }
+      }
       else if [index] == "middlewarestdout"{
         elasticsearch {
           hosts => ["kubernetes-logging-master:9200"]
@@ -114,14 +177,14 @@ data:
           document_type =>"_doc"
         }
       }
-     else if [index] == "mysqlaudit"{
+      else if [index] == "postgresqlaudit"{
         elasticsearch {
-        hosts => ["kubernetes-logging-master:9200"]
-        index => "mysqlaudit-%{+YYYY.MM.dd}"
-        user => "elastic"
-        password => "Hc@Cloud01"
-        document_type =>"_doc"
-       }
+          hosts => ["kubernetes-logging-master:9200"]
+          index => "postgresqlaudit-%{+YYYY.MM.dd}"
+          user => "elastic"
+          password => "Hc@Cloud01"
+          document_type =>"_doc"
+        }
       }
       else {
         elasticsearch {

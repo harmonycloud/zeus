@@ -1,0 +1,130 @@
+package com.middleware.zeus.integration.cluster;
+
+import com.alibaba.fastjson.JSONObject;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupCR;
+import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupList;
+import com.middleware.zeus.util.K8sClient;
+import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
+
+/**
+ * @description 中间件备份记录
+ * @author  liyinlong
+ * @since 2021/9/14 10:52 上午
+ */
+@Slf4j
+@Component
+public class MiddlewareBackupWrapper {
+
+    /**
+     * MiddlewareBackup的context
+     */
+    private static final CustomResourceDefinitionContext CONTEXT = new CustomResourceDefinitionContext.Builder()
+            .withGroup(CR_GROUP)
+            .withVersion(V1)
+            .withScope(NAMESPACED)
+            .withPlural(MIDDLEWAREBACKUP)
+            .build();
+
+    /**
+     * 创建备份(立即备份)
+     * @param clusterId
+     * @param middlewareBackupCR
+     * @throws IOException
+     */
+    public void create(String clusterId, MiddlewareBackupCR middlewareBackupCR) throws IOException {
+        K8sClient.getClient(clusterId).customResource(CONTEXT).create(middlewareBackupCR.getMetadata().getNamespace(),
+                JSONObject.parseObject(JSONObject.toJSONString(middlewareBackupCR)));
+    }
+
+    /**
+     * 删除
+     * @param clusterId
+     * @param namespace
+     * @param name
+     * @throws IOException
+     */
+    public void delete(String clusterId, String namespace, String name) {
+        try {
+            K8sClient.getClient(clusterId).customResource(CONTEXT).delete(namespace, name);
+        } catch (IOException e) {
+            throw new BusinessException(ErrorMessage.BACKUP_RECORD_MAY_NOT_EXIST);
+        }
+    }
+
+    /**
+     * 查询备份记录列表
+     * @param clusterId
+     * @param namespace
+     * @param labels
+     * @return
+     */
+    public List<MiddlewareBackupCR> list(String clusterId, String namespace, Map<String, String> labels) {
+        Map<String, Object> map;
+        try {
+            if ("*".equals(namespace) || null == namespace) {
+                map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(null, labels);
+            } else {
+                map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace, labels);
+            }
+        } catch (Exception e) {
+            log.error("查询MiddlewareBackupList出错了", e);
+            return null;
+        }
+        if (CollectionUtils.isEmpty(map)) {
+            return null;
+        }
+        MiddlewareBackupList middlewareBackupList = JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareBackupList.class);
+        if (middlewareBackupList != null && middlewareBackupList.getItems().size() > 0) {
+            return middlewareBackupList.getItems();
+        }
+        return Collections.emptyList();
+    }
+
+    public List<MiddlewareBackupCR> list(String clusterId, String namespace){
+        Map<String, Object> map = null;
+        try {
+            if ("*".equals(namespace)) {
+                map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(null);
+            } else {
+                map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace);
+            }
+        } catch (Exception e) {
+            log.error("查询MiddlewareBackupList出错了", e);
+            return Collections.emptyList();
+        }
+        if (CollectionUtils.isEmpty(map)) {
+            return Collections.emptyList();
+        }
+        MiddlewareBackupList middlewareBackupList = JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareBackupList.class);
+        if(middlewareBackupList != null && !CollectionUtils.isEmpty(middlewareBackupList.getItems())){
+            return middlewareBackupList.getItems();
+        }
+        return Collections.emptyList();
+    }
+
+    public MiddlewareBackupCR get(String clusterId, String namespace, String name){
+        Map<String, Object> map = null;
+        try {
+            map = K8sClient.getClient(clusterId).customResource(CONTEXT).get(namespace, name);
+        } catch (Exception e) {
+            log.error("查询middlewareBackup出错了", e);
+        }
+        if (CollectionUtils.isEmpty(map)) {
+            return null;
+        }
+        return JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareBackupCR.class);
+    }
+
+}
