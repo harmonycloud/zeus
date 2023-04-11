@@ -171,6 +171,14 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
                 if (cc.getStatus() == 1) {
                     return;
                 }
+                // 倒计时超时更新
+                if (cc.getStatus() == NUM_TWO){
+                    long seconds = DateUtils.getIntervalDays(new Date(), cc.getCreateTime());
+                    if (seconds > 59){
+                        cc.setStatus(NUM_SIX);
+                    }
+                }
+                // 更新状态
                 BaseComponentsService service =
                     getOperator(BaseComponentsService.class, BaseComponentsService.class, cc.getComponent());
                 service.updateStatus(cluster, cc);
