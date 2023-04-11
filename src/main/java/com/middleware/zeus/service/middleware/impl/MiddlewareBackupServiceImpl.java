@@ -898,9 +898,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (cr != null && !CollectionUtils.isEmpty(cr.getMetadata().getLabels()) && cr.getMetadata().getLabels().containsKey(BACKUP_ID)){
             backupId = cr.getMetadata().getLabels().get(BACKUP_ID);
         }
-        // 根据时间降序
+        // 根据时间升序
         recordList.sort((o1, o2) -> o1.getBackupTime() == null ? -1
-            : o2.getBackupTime() == null ? -1 : o2.getBackupTime().compareTo(o1.getBackupTime()));
+            : o2.getBackupTime() == null ? -1 : o1.getBackupTime().compareTo(o2.getBackupTime()));
         // 获取任务对应的中文名称
         setTaskName(recordList, clusterId, backupId);
         // 设置备份记录名称
