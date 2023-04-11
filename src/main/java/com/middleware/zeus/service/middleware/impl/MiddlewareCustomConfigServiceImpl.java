@@ -177,9 +177,12 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
     @Override
     public List<CustomConfigHistoryDTO> getCustomConfigHistory(String clusterId, String namespace,
                                                                String middlewareName, String type, String item, String startTime, String endTime) {
+        // 更新状态
+        updateStatus(clusterId, namespace, middlewareName, type);
+
         // 查询数据库历史
         List<BeanCustomConfigHistory> beanCustomConfigHistoryList =
-            customConfigHistoryService.get(clusterId, namespace, middlewareName);
+                customConfigHistoryService.get(clusterId, namespace, middlewareName);
 
         // 筛选名称
         if (StringUtils.isNotEmpty(item)) {
@@ -201,10 +204,14 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         beanCustomConfigHistoryList.forEach(beanCustomConfigHistory -> {
             CustomConfigHistoryDTO customConfigHistoryDTO = new CustomConfigHistoryDTO();
             BeanUtils.copyProperties(beanCustomConfigHistory, customConfigHistoryDTO);
+            if (!customConfigHistoryDTO.getStatus()) {
+                if (!customConfigHistoryDTO.getRestart()
+                    && DateUtils.getIntervalDays(new Date(), customConfigHistoryDTO.getDate()) > 15) {
+                    customConfigHistoryDTO.setStatus(true);
+                }
+            }
             customConfigHistoryDTOList.add(customConfigHistoryDTO);
         });
-        ThreadPoolExecutorFactory.executor
-            .execute(() -> updateStatus(clusterId, namespace, middlewareName, type, customConfigHistoryDTOList));
         customConfigHistoryDTOList.sort(
             (o1, o2) -> o1.getDate() == null ? -1 : o2.getDate() == null ? -1 : o2.getDate().compareTo(o1.getDate()));
         return customConfigHistoryDTOList;
@@ -292,37 +299,50 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
     /**
      * 拉一个线程去更新是否已启用的状态
      */
-    public void updateStatus(String clusterId, String namespace, String middlewareName, String type,
-        List<CustomConfigHistoryDTO> customConfigHistoryDTOList) {
-        customConfigHistoryDTOList.forEach(customConfigHistoryDTO -> {
-            if (!customConfigHistoryDTO.getStatus()) {
-                boolean status = true;
-                if (customConfigHistoryDTO.getRestart()) {
-                    // 获取pod列表
-                    Middleware middleware = podService.list(clusterId, namespace, middlewareName, type);
-                    for (PodInfo podInfo : middleware.getPods()) {
-                        if (StringUtils.isNotEmpty(podInfo.getRole())
-                            && (podInfo.getRole().equals(SENTINEL) || podInfo.getRole().equals(PROXY))) {
-                            continue;
-                        }
-                        Date date =
-                            DateUtils.addInteger(DateUtils.parseDate(StringUtils.isEmpty(podInfo.getLastRestartTime())
-                                ? podInfo.getCreateTime() : podInfo.getLastRestartTime(),
-                                DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z), Calendar.HOUR_OF_DAY, 8);
-                        if (customConfigHistoryDTO.getDate().after(date)) {
-                            status = false;
-                        }
+    public void updateStatus(String clusterId, String namespace, String middlewareName, String type) {
+        // 查询数据库历史
+        List<BeanCustomConfigHistory> beanCustomConfigHistoryList =
+                customConfigHistoryService.get(clusterId, namespace, middlewareName);
+        // 过滤获取状态未生效的参数历史
+        beanCustomConfigHistoryList =
+                beanCustomConfigHistoryList.stream().filter(ch -> !ch.getStatus()).collect(Collectors.toList());
+        // 状态皆为已生效 直接返回
+        if (CollectionUtils.isEmpty(beanCustomConfigHistoryList)) {
+            return;
+        }
+        // 存在需重启的参数
+        List<PodInfo> podInfoList = new ArrayList<>();
+        if (beanCustomConfigHistoryList.stream().anyMatch(BeanCustomConfigHistory::getRestart)) {
+            podInfoList.addAll(podService.listMiddlewarePods(clusterId, namespace, middlewareName, type));
+        }
+        // 状态处理
+        beanCustomConfigHistoryList.forEach(customConfigHistoryDTO -> {
+            boolean status = true;
+            // 处理需重启的参数，根据pod重启时间判断
+            if (customConfigHistoryDTO.getRestart()) {
+                for (PodInfo podInfo : podInfoList) {
+                    if (StringUtils.isNotEmpty(podInfo.getRole())
+                        && (podInfo.getRole().equals(SENTINEL) || podInfo.getRole().equals(PROXY))) {
+                        continue;
                     }
-                } else {
-                    Date now = new Date();
-                    status = DateUtils.getIntervalDays(now, customConfigHistoryDTO.getDate()) > 15;
+                    Date date = DateUtils.addInteger(
+                        DateUtils.parseDate(StringUtils.isEmpty(podInfo.getLastRestartTime()) ? podInfo.getCreateTime()
+                            : podInfo.getLastRestartTime(), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z),
+                        Calendar.HOUR_OF_DAY, 8);
+                    if (customConfigHistoryDTO.getDate().after(date)) {
+                        status = false;
+                    }
                 }
-                if (status) {
-                    BeanCustomConfigHistory beanCustomConfigHistory = new BeanCustomConfigHistory();
-                    BeanUtils.copyProperties(customConfigHistoryDTO, beanCustomConfigHistory);
-                    beanCustomConfigHistory.setStatus(true);
-                    customConfigHistoryService.update(beanCustomConfigHistory);
-                }
+                // 处理不需重启的参数  15s生效
+            } else {
+                Date now = new Date();
+                status = DateUtils.getIntervalDays(now, customConfigHistoryDTO.getDate()) > 15;
+            }
+            if (status) {
+                BeanCustomConfigHistory beanCustomConfigHistory = new BeanCustomConfigHistory();
+                BeanUtils.copyProperties(customConfigHistoryDTO, beanCustomConfigHistory);
+                beanCustomConfigHistory.setStatus(true);
+                customConfigHistoryService.update(beanCustomConfigHistory);
             }
         });
     }
