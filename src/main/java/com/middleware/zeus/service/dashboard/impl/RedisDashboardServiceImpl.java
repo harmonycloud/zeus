@@ -269,7 +269,7 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
      * @param expire
      */
     private void checkExpirationTime(Long expire){
-        if(expire > (Integer.MAX_VALUE -1)){
+        if(expire > Integer.MAX_VALUE){
             throw new BusinessException(ErrorMessage.TOO_LONG_EXPIRE_TIME);
         }
     }
