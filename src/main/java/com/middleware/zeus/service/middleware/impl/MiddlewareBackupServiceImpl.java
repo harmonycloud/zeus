@@ -898,14 +898,16 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (cr != null && !CollectionUtils.isEmpty(cr.getMetadata().getLabels()) && cr.getMetadata().getLabels().containsKey(BACKUP_ID)){
             backupId = cr.getMetadata().getLabels().get(BACKUP_ID);
         }
-        // 根据时间升序
+        // 根据时间降序
         recordList.sort((o1, o2) -> o1.getBackupTime() == null ? -1
             : o2.getBackupTime() == null ? -1 : o1.getBackupTime().compareTo(o2.getBackupTime()));
         // 获取任务对应的中文名称
         setTaskName(recordList, clusterId, backupId);
         // 设置备份记录名称
         for (int i = 0; i < recordList.size(); i++) {
-            recordList.get(i).setRecordName(recordList.get(i).getTaskName() + "-" + "记录" + (i + 1));
+            MiddlewareBackupRecord bak = recordList.get(i);
+            String[] bakNameSplit = bak.getBackupName().split("-");
+            bak.setRecordName(bak.getTaskName() + "-" + bakNameSplit[bakNameSplit.length-1]);
         }
         return recordList;
     }
