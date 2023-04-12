@@ -195,19 +195,20 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         // 端口
         if (middleware.getRedisParam() != null) {
             RedisParam redisParam = middleware.getRedisParam();
-            if (redisParam.getRedisPort() != null && redisParam.getRedisPort() != 0 && values.containsKey("redis")) {
+            if (redisParam.getRedisPort() != null && redisParam.getRedisPort() != 0
+                    && values.containsKey("redis") && values.getJSONObject("redis").containsKey("port")) {
                 values.getJSONObject("redis").put("port", redisParam.getRedisPort());
             }
             if (redisParam.getPredixyPort() != null && redisParam.getPredixyPort() != 0
-                && values.containsKey("predixy")) {
+                && values.containsKey("predixy") && values.getJSONObject("predixy").containsKey("port")) {
                 values.getJSONObject("predixy").put("port", redisParam.getPredixyPort());
             }
             if (redisParam.getSentinelPort() != null && redisParam.getSentinelPort() != 0
-                && values.containsKey("sentinel")) {
+                && values.containsKey("sentinel") && values.getJSONObject("sentinel").containsKey("port")) {
                 values.getJSONObject("sentinel").put("port", redisParam.getSentinelPort());
             }
             if (redisParam.getExporterPort() != null && redisParam.getExporterPort() != 0
-                && values.containsKey("exporter")) {
+                && values.containsKey("exporter") && values.getJSONObject("exporter").containsKey("port")) {
                 values.getJSONObject("exporter").put("port", redisParam.getExporterPort());
             }
         }
