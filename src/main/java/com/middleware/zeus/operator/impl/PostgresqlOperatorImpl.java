@@ -392,6 +392,9 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
                 ingressDTO.setServicePurpose(podInfo.getPodName());
                 ingressDTO.setExposeIP(podInfo.getHostIp());
                 ingressDTO.setExposePort("5432");
+                if (values.containsKey("customEnvs") && values.getJSONObject("customEnvs").containsKey("PGPORT")) {
+                    ingressDTO.setExposePort(values.getJSONObject("customEnvs").getString("PGPORT"));
+                }
                 return ingressDTO;
             }).collect(Collectors.toList());
         }
