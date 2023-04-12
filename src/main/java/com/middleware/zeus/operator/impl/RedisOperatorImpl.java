@@ -291,24 +291,24 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         // 端口
         Integer exportPort = 9121;
         Integer redisPort = 6379;
+        Integer sentinelPort = 26379;
+        Integer predixyPort = 7617;
         if (values.containsKey("exporter") && values.getJSONObject("exporter").containsKey("port")){
             exportPort = values.getJSONObject("exporter").getInteger("port");
         }
         if (values.containsKey("redis") && values.getJSONObject("redis").containsKey("port")){
             redisPort = values.getJSONObject("redis").getInteger("port");
         }
+        if (SENTINEL.equals(values.getString("type")) && values.containsKey("sentinel") && values.getJSONObject("sentinel").containsKey("port")) {
+            sentinelPort = values.getJSONObject("sentinel").getInteger("port");
+        }
+        if (predixy != null && predixy.getBoolean("enableProxy") && values.containsKey("predixy") && values.getJSONObject("predixy").containsKey("port")) {
+            predixyPort = values.getJSONObject("predixy").getInteger("port");
+        }
         redisParam.setExporterPort(exportPort);
         redisParam.setRedisPort(redisPort);
-
-        if (SENTINEL.equals(values.getString("type"))) {
-            Integer sentinelPort = values.getJSONObject("sentinel").getInteger("port");
-            redisParam.setSentinelPort(sentinelPort == null ? 26379 : sentinelPort);
-        }
-
-        if (predixy != null && predixy.getBoolean("enableProxy")) {
-            Integer predixyPort = values.getJSONObject("predixy").getInteger("port");
-            redisParam.setPredixyPort(predixyPort == null ? 7617 : predixyPort);
-        }
+        redisParam.setSentinelPort(sentinelPort);
+        redisParam.setPredixyPort(predixyPort);
         middleware.setRedisParam(redisParam);
     }
 
