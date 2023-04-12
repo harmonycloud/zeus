@@ -195,16 +195,19 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         // 端口
         if (middleware.getRedisParam() != null) {
             RedisParam redisParam = middleware.getRedisParam();
-            if (redisParam.getRedisPort() != null && redisParam.getRedisPort() != 0) {
+            if (redisParam.getRedisPort() != null && redisParam.getRedisPort() != 0 && values.containsKey("redis")) {
                 values.getJSONObject("redis").put("port", redisParam.getRedisPort());
             }
-            if (redisParam.getPredixyPort() != null && redisParam.getPredixyPort() != 0) {
+            if (redisParam.getPredixyPort() != null && redisParam.getPredixyPort() != 0
+                && values.containsKey("predixy")) {
                 values.getJSONObject("predixy").put("port", redisParam.getPredixyPort());
             }
-            if (redisParam.getSentinelPort() != null && redisParam.getSentinelPort() != 0) {
+            if (redisParam.getSentinelPort() != null && redisParam.getSentinelPort() != 0
+                && values.containsKey("sentinel")) {
                 values.getJSONObject("sentinel").put("port", redisParam.getSentinelPort());
             }
-            if (redisParam.getExporterPort() != null && redisParam.getExporterPort() != 0) {
+            if (redisParam.getExporterPort() != null && redisParam.getExporterPort() != 0
+                && values.containsKey("exporter")) {
                 values.getJSONObject("exporter").put("port", redisParam.getExporterPort());
             }
         }
