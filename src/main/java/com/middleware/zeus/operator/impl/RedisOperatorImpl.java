@@ -646,7 +646,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
                 ingressDTO.setExposeType(podInfo.getRole());
                 ingressDTO.setServicePurpose(podInfo.getPodName());
                 ingressDTO.setExposeIP(podInfo.getHostIp());
-                ingressDTO.setExposePort(RedisUtil.getServicePort(podInfo.getRole()));
+                ingressDTO.setExposePort(RedisUtil.getServicePort(podInfo.getRole(),values));
                 return ingressDTO;
             }).collect(Collectors.toList());
         }
