@@ -207,9 +207,13 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
                 && values.containsKey("sentinel")) {
                 values.getJSONObject("sentinel").put("port", redisParam.getSentinelPort());
             }
-            if (redisParam.getExporterPort() != null && redisParam.getExporterPort() != 0
-                && values.containsKey("exporter")) {
-                values.getJSONObject("exporter").put("port", redisParam.getExporterPort());
+            if (redisParam.getExporterPort() != null && redisParam.getExporterPort() != 0 ) {
+                JSONObject exporter = values.getJSONObject("exporter");
+                if (exporter == null) {
+                    exporter = new JSONObject();
+                }
+                exporter.put("port", redisParam.getExporterPort());
+                values.put("exporter", exporter);
             }
         }
 
