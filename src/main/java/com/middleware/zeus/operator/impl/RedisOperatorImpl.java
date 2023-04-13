@@ -195,17 +195,25 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         // 端口
         if (middleware.getRedisParam() != null) {
             RedisParam redisParam = middleware.getRedisParam();
-            if (redisParam.getRedisPort() != null && redisParam.getRedisPort() != 0) {
+            if (redisParam.getRedisPort() != null && redisParam.getRedisPort() != 0
+                    && values.containsKey("redis")) {
                 values.getJSONObject("redis").put("port", redisParam.getRedisPort());
             }
-            if (redisParam.getPredixyPort() != null && redisParam.getPredixyPort() != 0) {
+            if (redisParam.getPredixyPort() != null && redisParam.getPredixyPort() != 0
+                && values.containsKey("predixy")) {
                 values.getJSONObject("predixy").put("port", redisParam.getPredixyPort());
             }
-            if (redisParam.getSentinelPort() != null && redisParam.getSentinelPort() != 0) {
+            if (redisParam.getSentinelPort() != null && redisParam.getSentinelPort() != 0
+                && values.containsKey("sentinel")) {
                 values.getJSONObject("sentinel").put("port", redisParam.getSentinelPort());
             }
-            if (redisParam.getExporterPort() != null && redisParam.getExporterPort() != 0) {
-                values.getJSONObject("exporter").put("port", redisParam.getExporterPort());
+            if (redisParam.getExporterPort() != null && redisParam.getExporterPort() != 0 ) {
+                JSONObject exporter = values.getJSONObject("exporter");
+                if (exporter == null) {
+                    exporter = new JSONObject();
+                }
+                exporter.put("port", redisParam.getExporterPort());
+                values.put("exporter", exporter);
             }
         }
 
@@ -288,24 +296,24 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         // 端口
         Integer exportPort = 9121;
         Integer redisPort = 6379;
+        Integer sentinelPort = 26379;
+        Integer predixyPort = 7617;
         if (values.containsKey("exporter") && values.getJSONObject("exporter").containsKey("port")){
             exportPort = values.getJSONObject("exporter").getInteger("port");
         }
         if (values.containsKey("redis") && values.getJSONObject("redis").containsKey("port")){
             redisPort = values.getJSONObject("redis").getInteger("port");
         }
+        if (SENTINEL.equals(values.getString("type")) && values.containsKey("sentinel") && values.getJSONObject("sentinel").containsKey("port")) {
+            sentinelPort = values.getJSONObject("sentinel").getInteger("port");
+        }
+        if (predixy != null && predixy.getBoolean("enableProxy") && values.containsKey("predixy") && values.getJSONObject("predixy").containsKey("port")) {
+            predixyPort = values.getJSONObject("predixy").getInteger("port");
+        }
         redisParam.setExporterPort(exportPort);
         redisParam.setRedisPort(redisPort);
-
-        if (SENTINEL.equals(values.getString("type"))) {
-            Integer sentinelPort = values.getJSONObject("sentinel").getInteger("port");
-            redisParam.setSentinelPort(sentinelPort == null ? 26379 : sentinelPort);
-        }
-
-        if (predixy != null && predixy.getBoolean("enableProxy")) {
-            Integer predixyPort = values.getJSONObject("predixy").getInteger("port");
-            redisParam.setPredixyPort(predixyPort == null ? 7617 : predixyPort);
-        }
+        redisParam.setSentinelPort(sentinelPort);
+        redisParam.setPredixyPort(predixyPort);
         middleware.setRedisParam(redisParam);
     }
 
@@ -541,8 +549,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         // 获取数据库密码
         JSONObject values = helmChartService.getInstalledValues(middleware.getName(), middleware.getNamespace(), cluster);
         String password = values.getString("redisPassword");
-        // 获取端口
-        String port = values.getString("redisServicePort");
+
         MiddlewareCR cr = middlewareCRService.getCR(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
 
         //获取从节点信息
@@ -567,7 +574,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         //从节点执行命令
         String execCommand = MessageFormat.format(
                 "kubectl exec {0} -n {1} -c redis-cluster --server={2} --token={3} --insecure-skip-tls-verify=true " +
-                        "-- bash -c \"redis-cli -h {4} -a {5} cluster failover\"",
+                        "-- bash -c \"redis-cli -h {4} -p $REDIS_INSTANCE_PORT -a {5} cluster failover\"",
                 slaveName, middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
                 slaveIP, password);
         k8sExecService.exec(execCommand);
@@ -638,7 +645,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
                 ingressDTO.setExposeType(podInfo.getRole());
                 ingressDTO.setServicePurpose(podInfo.getPodName());
                 ingressDTO.setExposeIP(podInfo.getHostIp());
-                ingressDTO.setExposePort(RedisUtil.getServicePort(podInfo.getRole()));
+                ingressDTO.setExposePort(RedisUtil.getServicePort(podInfo.getRole(),values));
                 return ingressDTO;
             }).collect(Collectors.toList());
         }

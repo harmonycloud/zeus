@@ -196,11 +196,20 @@ public class RedisUtil {
         }
     }
 
-    public static String getServicePort(String podType) {
+    public static String getServicePort(String podType, JSONObject values) {
         if ("proxy".equals(podType)) {
+            if (values.containsKey("predixy") && values.getJSONObject("predixy").containsKey("port")) {
+                return values.getJSONObject("predixy").getString("port");
+            }
             return "7617";
         } else if ("sentinel".equals(podType)) {
+            if (values.containsKey("sentinel") && values.getJSONObject("sentinel").containsKey("port")) {
+                return values.getJSONObject("sentinel").getString("port");
+            }
             return "26379";
+        }
+        if (values.containsKey("redis") && values.getJSONObject("redis").containsKey("port")){
+            return values.getJSONObject("redis").getString("port");
         }
         return "6379";
     }

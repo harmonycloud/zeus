@@ -197,13 +197,11 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
             esParam = new EsParam();
         }
         JSONObject port = values.getJSONObject("port");
-        if (port == null) {
-            return;
-        }
-        Integer esExporterPort = port.getInteger("esExporterPort");
-        Integer esHttpPort = port.getInteger("esHttpPort");
-        Integer esKibanaPort = port.getInteger("esKibanaPort");
-        Integer esTcpPort = port.getInteger("esTcpPort");
+        
+        Integer esExporterPort = port == null ? 19114 : port.getInteger("esExporterPort");
+        Integer esHttpPort = port == null ? 9200 : port.getInteger("esHttpPort");
+        Integer esKibanaPort = port == null ? 5200 : port.getInteger("esKibanaPort");
+        Integer esTcpPort = port == null ? 9300 : port.getInteger("esTcpPort");
 
         esParam.setExporterPort(esExporterPort == null ? 19114 : esExporterPort)
             .setHttpPort(esHttpPort == null ? 9200 : esHttpPort)

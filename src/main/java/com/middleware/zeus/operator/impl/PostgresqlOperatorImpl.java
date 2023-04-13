@@ -194,10 +194,10 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
 
         // 端口
         JSONObject customEnvs = values.getJSONObject("customEnvs");
-        String pgPort = customEnvs.getString("PGPORT");
-        String apiPort = customEnvs.getString("APIPORT");
-        String exporterPort = customEnvs.getString("EXPORTERPORT");
-        String bgMonPort = customEnvs.getString("BGMONPORT");
+        String pgPort = customEnvs == null ? "5432" : customEnvs.getString("PGPORT");
+        String apiPort = customEnvs == null ? "8008" : customEnvs.getString("APIPORT");
+        String exporterPort = customEnvs == null ? "9187" : customEnvs.getString("EXPORTERPORT");
+        String bgMonPort = customEnvs == null ? "8080" : customEnvs.getString("BGMONPORT");
 
         pgParam.setApiPort(apiPort == null ? 8008 : Integer.parseInt(apiPort))
             .setBgMonPort(bgMonPort == null ? 8080 : Integer.parseInt(bgMonPort))
@@ -392,6 +392,9 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
                 ingressDTO.setServicePurpose(podInfo.getPodName());
                 ingressDTO.setExposeIP(podInfo.getHostIp());
                 ingressDTO.setExposePort("5432");
+                if (values.containsKey("customEnvs") && values.getJSONObject("customEnvs").containsKey("PGPORT")) {
+                    ingressDTO.setExposePort(values.getJSONObject("customEnvs").getString("PGPORT"));
+                }
                 return ingressDTO;
             }).collect(Collectors.toList());
         }
