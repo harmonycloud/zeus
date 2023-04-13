@@ -766,9 +766,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         }
         // 如果此时存储类型依然为空，则可能是分盘目录部署
         if (StringUtils.isEmpty(middlewareTopologyDTO.getStorageClassName())
-            && !CollectionUtils.isEmpty(middlewareTopologyDTO.getPods())) {
+            && !CollectionUtils.isEmpty(middlewareTopologyDTO.getPods())
+            && !CollectionUtils.isEmpty(middlewareTopologyDTO.getPods().get(0).getStorageResources())) {
             middlewareTopologyDTO.setStorageClassName(
-                middlewareTopologyDTO.getPods().get(0).getStorageResources().get(0).getStorageClassName());
+                    middlewareTopologyDTO.getPods().get(0).getStorageResources().get(0).getStorageClassName());
         }
 
         StringBuilder pods = new StringBuilder();
