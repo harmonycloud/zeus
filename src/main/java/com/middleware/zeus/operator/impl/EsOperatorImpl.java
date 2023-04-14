@@ -260,6 +260,8 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
                     case CLIENT:
                         replicasKey = "cluster.clientReplacesCount";
                         break;
+                    case COLD:
+                        replicasKey = "cluster.coldReplacesCount";
                     default:
                 }
                 if (quota.getNum() != null && replicasKey != null) {
