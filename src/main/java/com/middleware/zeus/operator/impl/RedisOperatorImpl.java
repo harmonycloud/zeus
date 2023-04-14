@@ -574,7 +574,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         //从节点执行命令
         String execCommand = MessageFormat.format(
                 "kubectl exec {0} -n {1} -c redis-cluster --server={2} --token={3} --insecure-skip-tls-verify=true " +
-                        "-- bash -c \"redis-cli -h {4} -p $REDIS_INSTANCE_PORT -a {5} cluster failover\"",
+                        "-- bash -c ''redis-cli -h {4} -p $REDIS_INSTANCE_PORT -a {5} cluster failover''",
                 slaveName, middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(),
                 slaveIP, password);
         k8sExecService.exec(execCommand);
