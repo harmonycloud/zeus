@@ -269,6 +269,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         }
         BeanUtils.copyProperties(componentsDto, cm, "component", "status");
         cm.setCreateTime(new Date());
+        log.error("安装时间{}",new Date());
         beanClusterComponentsMapper.update(cm, wrapper);
         if (!skipRecord) {
             getOperator(BaseComponentsService.class, BaseComponentsService.class, componentsDto.getComponent()).record2SystemConfig(componentsDto);
