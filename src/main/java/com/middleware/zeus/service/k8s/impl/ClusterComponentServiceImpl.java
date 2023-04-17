@@ -174,6 +174,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
                 // 倒计时超时更新
                 if (cc.getStatus() == NUM_TWO){
                     long seconds = DateUtils.getIntervalDays(new Date(), cc.getCreateTime());
+                    log.error("当前时间{},seconds={}",new Date(),seconds);
                     if (seconds > 59){
                         cc.setStatus(NUM_SIX);
                     }
