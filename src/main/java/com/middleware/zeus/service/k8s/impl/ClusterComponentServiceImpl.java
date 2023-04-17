@@ -174,7 +174,6 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
                 // 倒计时超时更新
                 if (cc.getStatus() == NUM_TWO){
                     long seconds = DateUtils.getIntervalDays(new Date(), cc.getCreateTime());
-                    log.error("当前时间{},seconds={}",new Date(),seconds);
                     if (seconds > 59){
                         cc.setStatus(NUM_SIX);
                     }
@@ -269,7 +268,6 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         }
         BeanUtils.copyProperties(componentsDto, cm, "component", "status");
         cm.setCreateTime(new Date());
-        log.error("安装时间{}",new Date());
         beanClusterComponentsMapper.update(cm, wrapper);
         if (!skipRecord) {
             getOperator(BaseComponentsService.class, BaseComponentsService.class, componentsDto.getComponent()).record2SystemConfig(componentsDto);

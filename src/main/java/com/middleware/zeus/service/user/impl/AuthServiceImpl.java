@@ -97,7 +97,7 @@ public class AuthServiceImpl extends AbstractAuthService implements AuthService 
         JSONObject res = convertResult(userName, isAdmin, token);
         //校验密码日期
         if (!superUserName.equals(userDto.getUserName()) && userDto.getPasswordTime() != null) {
-            double passwordUsedDay = DateUtils.getIntervalDays(new Date(), userDto.getPasswordTime()) / 3600d / 24d / 1000d;
+            double passwordUsedDay = DateUtils.getIntervalDays(new Date(), userDto.getPasswordTime()) / 3600d / 24d ;
             int passwordRemindCode = getPasswordRemindCode(passwordUsedDay);
             res.put("passwordRemindCode", passwordRemindCode);
             if (passwordRemindCode != 1) {
